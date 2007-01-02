@@ -27,6 +27,7 @@ package com.zimbra.cs.zclient;
 
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
 
 public class ZSearchParams {
@@ -126,6 +127,45 @@ public class ZSearchParams {
     
     private Cursor mCursor;
 
+    /**
+     * used only for equals/hascode purposes
+     */
+    private String mConvId;
+
+    public int hashCode() {
+        if (mConvId != null)
+            return (mQuery+mConvId).hashCode();
+        else
+            return mQuery.hashCode();
+    }
+
+    public boolean equals(Object obj) {
+        if (obj == this) return true;
+        if (! (obj instanceof ZSearchParams)) return false;
+
+        ZSearchParams that = (ZSearchParams) obj;
+
+        if (    this.mLimit != that.mLimit ||
+                this.mOffset != that.mOffset ||
+                this.mSortBy != that.mSortBy ||
+                this.mFetch != that.mFetch ||
+                this.mPreferHtml != that.mPreferHtml ||
+                this.mMarkAsRead != that.mMarkAsRead ||
+                this.mRecipientMode != that.mRecipientMode)
+            return false;
+
+        if (    !StringUtil.equal(this.mTypes, that.mTypes) ||
+                !StringUtil.equal(this.mQuery, that.mQuery) ||
+                !StringUtil.equal(this.mConvId, that.mConvId) ||
+                !StringUtil.equal(this.mField, that.mField))
+            return false;
+
+        if (this.mCursor == null || that.mCursor == null)
+            return this.mCursor == that.mCursor;
+        else
+            return this.mCursor.equals(that.mCursor);
+    }
+
     public ZSearchParams(ZSearchParams that) {
         this.mCursor = that.mCursor;
         this.mFetch = that.mFetch;
@@ -138,6 +178,7 @@ public class ZSearchParams {
         this.mSortBy = that.mSortBy;
         this.mTypes = that.mTypes;
         this.mField = that.mField;
+        this.mConvId = that.mConvId;
     }
 
     public ZSearchParams(String query) {
@@ -184,6 +225,14 @@ public class ZSearchParams {
 
     public void setMarkAsRead(boolean markAsRead) {
         mMarkAsRead = markAsRead;
+    }
+
+    public void setConvId(String convId) {
+        mConvId = convId;
+    }
+
+    public String getConvId() {
+        return mConvId;
     }
 
     public int getOffset() {
@@ -279,6 +328,19 @@ public class ZSearchParams {
 
         public String getPreviousSortValue() {
             return mPreviousSortValue;
+        }
+
+        public int hashCode() {
+            return (mPreviousId + mPreviousSortValue).hashCode();
+        }
+
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (! (obj instanceof Cursor)) return false;
+            Cursor that = (Cursor) obj;
+            if (!StringUtil.equal(this.mPreviousId, that.mPreviousId)) return false;
+            if (!StringUtil.equal(this.mPreviousSortValue, that.mPreviousSortValue)) return false;
+            return true;
         }
     }
 }
