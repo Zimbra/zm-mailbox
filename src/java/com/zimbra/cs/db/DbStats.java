@@ -84,7 +84,7 @@ class DbStats implements RealtimeStatsCallback {
 
     private String getStatus(String variable)
     throws ServiceException {
-        DbResults results = DbUtil.executeQuery("SHOW STATUS LIKE '" + variable + "'");
+        DbResults results = DbUtil.executeQuery("SHOW GLOBAL STATUS LIKE '" + variable + "'");
         return results.getString(2);
     }
 }
