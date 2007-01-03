@@ -149,6 +149,10 @@ public class ResultsPager
             //  currently hold up with ProxiedHits: we need to convert Hit sorting to
             //  use ItemIds (instead of int's) TODO FIXME
             if (comp == 0) {
+                // special case prevId of 0 
+                if (mParams.getPrevMailItemId().getId() == 0)
+                    return hit;
+                
                 if (mParams.getSortBy().isDescending()) {
                     if (hit.getItemId() < mParams.getPrevMailItemId().getId())
                         return hit;

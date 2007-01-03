@@ -240,22 +240,22 @@ public class Search extends MailDocumentHandler  {
             
             switch (params.getSortBy()) {
                 case DATE_ASCENDING:
-                    addedPart = "date:>="+sortVal+(endSortVal!=null ? " date:<"+endSortVal : "");
+                    addedPart = "date:"+quote(">=", sortVal)+(endSortVal!=null ? " date:"+quote("<", endSortVal) : "");
                     break;
                 case DATE_DESCENDING:
-                    addedPart = "date:<="+sortVal+(endSortVal!=null ? " date:>"+endSortVal : "");
+                    addedPart = "date:"+quote("<=",sortVal)+(endSortVal!=null ? " date:"+quote(">", endSortVal) : "");
                     break;
                 case SUBJ_ASCENDING:
-                    addedPart = "subject:>="+sortVal+(endSortVal!=null ? " subject:<"+endSortVal : "");
+                    addedPart = "subject:"+quote(">=", sortVal)+(endSortVal!=null ? " subject:"+quote("<", endSortVal) : "");
                     break;
                 case SUBJ_DESCENDING:
-                    addedPart = "subject:<="+sortVal+(endSortVal!=null ? " subject:>"+endSortVal : "");
+                    addedPart = "subject:"+quote("<=", sortVal)+(endSortVal!=null ? " subject:"+quote(">", endSortVal) : "");
                     break;
                 case NAME_ASCENDING:
-                    addedPart = "from:>="+sortVal+(endSortVal!=null ? " from:<"+endSortVal : "");
+                    addedPart = "from:"+quote(">=", sortVal)+(endSortVal!=null ? " from:"+quote("<", endSortVal) : "");
                     break;
                 case NAME_DESCENDING:
-                    addedPart = "from:<="+sortVal+(endSortVal!=null ? " from:>"+endSortVal : "");
+                    addedPart = "from:"+quote("<=", sortVal)+(endSortVal!=null ? " from:"+quote(">", endSortVal) : "");
                     break;
             }
             
@@ -264,6 +264,10 @@ public class Search extends MailDocumentHandler  {
         }
 
         return params;
+    }
+    
+    private final String quote(String s1, String s2) {
+        return "\""+s1+s2+"\"";
     }
 
     protected int getLimit(Element request) throws ServiceException {
