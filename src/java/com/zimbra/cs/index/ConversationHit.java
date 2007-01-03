@@ -120,7 +120,7 @@ public final class ConversationHit extends ZimbraHit {
 
     public String getSubject() throws ServiceException {
         if (mCachedSubj == null) {
-            mCachedSubj = getConversation().getSubject();
+            mCachedSubj = getConversation().getNormalizedSubject();
         } 
         return mCachedSubj;
     }

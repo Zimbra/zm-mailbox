@@ -483,7 +483,7 @@ public class Search extends MailDocumentHandler  {
             mp.addAttribute(MailService.A_SCORE, mph.getScore());
 
         ToXML.encodeEmail(mp, msg.getSender(), EmailType.FROM);
-        String subject = mph.getSubject();
+        String subject = msg.getSubject();
         if (subject != null)
             mp.addAttribute(MailService.E_SUBJECT, subject, Element.DISP_CONTENT);
 

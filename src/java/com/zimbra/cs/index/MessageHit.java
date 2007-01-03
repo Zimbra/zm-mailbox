@@ -197,7 +197,7 @@ public class MessageHit extends ZimbraHit {
                 if (mDoc != null) {
                     mCachedSubj = mDoc.get(LuceneFields.L_SORT_SUBJECT);
                 } else {
-                    mCachedSubj = getMessage().getSubject();
+                    mCachedSubj = getMessage().getNormalizedSubject();
                 }
             }
         }
