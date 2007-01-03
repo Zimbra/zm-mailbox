@@ -430,8 +430,8 @@ public class ProvUtil implements DebugListener {
             mProv.modifyAttrs(lookupServer(args[1]), getMap(args, 2), true);            
             break;            
         case DELETE_ACCOUNT:
-            mProv.deleteAccount(lookupAccount(args[1]).getId());
-            break;            
+            doDeleteAccount(args);
+            break;
         case DELETE_COS:
             mProv.deleteCos(lookupCos(args[1]).getId());
             break;            
@@ -646,7 +646,19 @@ public class ProvUtil implements DebugListener {
             }
         }
     }
-    
+
+    private void doDeleteAccount(String[] args) throws ServiceException {
+        String key = args[1];
+        Account acct = lookupAccount(key);
+        if (key.equalsIgnoreCase(acct.getId()) ||
+                key.equalsIgnoreCase(acct.getName()) ||
+                acct.getName().equalsIgnoreCase(key+"@"+acct.getDomainName())) {
+            mProv.deleteAccount(acct.getId());
+        } else {
+            throw ServiceException.INVALID_REQUEST("argument to deleteAccount must be an account id or the account's primary name", null);
+        }
+
+    }
     private void doGetAccountIdentities(String[] args) throws ServiceException {
         Account account = lookupAccount(args[1]);
         for (Identity identity : mProv.getAllIdentities(account)) {
