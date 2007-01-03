@@ -95,7 +95,7 @@
        <comp type="event|todo"
             [status="TENT|CONF|CANC|NEED|COMP|INPR|WAITING|DEFERRED"]
                             // TENTative, CONFirmed, CANCelled, COMPleted,
-                            // INPRocess, WAITING, DEFERRED
+                            // INPRogress, WAITING, DEFERRED
                             // Waiting and Deferred are custom values not found
                             // in iCalendar spec.
             [fb="F|B|T|O"]  // free-busy status:
