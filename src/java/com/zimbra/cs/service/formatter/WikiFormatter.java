@@ -169,6 +169,8 @@ public class WikiFormatter extends Formatter {
     
 	@Override
 	public void formatCallback(Context context, MailItem item) throws UserServletException, ServiceException, IOException {
+		if (!context.targetAccount.getBooleanAttr("zimbraFeatureNotebookEnabled", false))
+			throw UserServletException.badRequest("Notebook is not enabled for user "+context.targetAccount.getName());
 		//long t0 = System.currentTimeMillis();
         if (item instanceof Folder && context.itemId == null && !context.itemPath.endsWith("/")) {
         	context.resp.sendRedirect(context.req.getRequestURI() + "/");

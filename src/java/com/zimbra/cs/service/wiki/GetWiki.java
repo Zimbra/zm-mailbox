@@ -51,6 +51,7 @@ public class GetWiki extends WikiDocumentHandler {
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
+		checkEnabled(lc);
         OperationContext octxt = lc.getOperationContext();
         Element wElem = request.getElement(MailService.E_WIKIWORD);
         String word = wElem.getAttribute(MailService.A_NAME, null);

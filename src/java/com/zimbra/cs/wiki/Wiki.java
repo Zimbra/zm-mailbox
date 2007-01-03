@@ -283,9 +283,6 @@ public abstract class Wiki {
 		protected int mFolderId;
 		
 		WikiById(WikiContext ctxt, Account acct, int fid) throws ServiceException {
-			if (!acct.getBooleanAttr("zimbraFeatureNotebookEnabled", false))
-				throw WikiServiceException.NOT_ENABLED();
-			
 			mWikiAccount = acct.getId();
 			mFolderId = fid;
 			
@@ -352,9 +349,6 @@ public abstract class Wiki {
 		private String mPath;
 		
 		WikiByPath(Account acct, String path) throws ServiceException {
-			if (!acct.getBooleanAttr("zimbraFeatureNotebookEnabled", false))
-				throw WikiServiceException.NOT_ENABLED();
-			
 			mWikiAccount = acct.getId();
 			mPath = path;
 		}
