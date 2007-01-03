@@ -60,6 +60,7 @@ import com.zimbra.cs.zclient.event.ZCreateMessageEvent;
 import com.zimbra.cs.zclient.event.ZModifyMessageEvent;
 import com.zimbra.cs.zclient.event.ZCreateContactEvent;
 import com.zimbra.cs.httpclient.EasySSLProtocolSocketFactory;
+import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.Element.XMLElement;
 import com.zimbra.soap.SoapFaultException;
@@ -223,6 +224,22 @@ public class ZMailbox {
     public static ZMailbox getMailbox(Options options) throws ServiceException {
     	return new ZMailbox(options);
     }
+
+    /**
+     * for use with changePassword
+     */
+    private ZMailbox() { }
+
+    /**
+     * change password. You must pass in an options with an account, password, newPassword, and Uri.
+     * @param options
+     * @throws ServiceException
+     */
+    public static void changePassword(Options options) throws ServiceException {
+        ZMailbox mailbox = new ZMailbox();
+        mailbox.initPreAuth(options.getUri(), options.getDebugListener());
+        mailbox.changePassword(options.getAccount(), options.getAccountBy(), options.getPassword(), options.getNewPassword());
+    }
     
     public ZMailbox(Options options) throws ServiceException {
     	mHandlers.add(new InternalEventHandler());
@@ -315,7 +332,7 @@ public class ZMailbox {
     private void setSoapURI(String uri) {
         if (mTransport != null) mTransport.shutdown();
         mTransport = new SoapHttpTransport(uri);
-        mTransport.setUserAgent("zclient", "1.0");
+        mTransport.setUserAgent("zclient", BuildInfo.VERSION);
         mTransport.setMaxNoitfySeq(0);
         if (mAuthToken != null)
             mTransport.setAuthToken(mAuthToken);
