@@ -215,7 +215,7 @@ User Agent
 
 userAgent is an optional context element that is used for identifying the
 type of SOAP client that's making the request.  The user agent is written
-to zimbra.log messages with the context string "ua".
+to mailbox.log messages with the context string "ua".
 
 -----------------------------
 
