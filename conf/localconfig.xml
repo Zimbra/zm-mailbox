@@ -12,7 +12,7 @@
     Full list of properties are documented at:
     http://dev.mysql.com/doc/connector/j/en/cj-configuration-properties.html#id2757028
   -->
-  <!-- Uncomment to enable SQL tracing.  Traces go to zimbra.log. -->
+  <!-- Uncomment to enable SQL tracing.  Traces go to mailbox.log. -->
   <!--
   <key name="zimbra_mysql_connector_profileSQL">
     <value>true</value>
