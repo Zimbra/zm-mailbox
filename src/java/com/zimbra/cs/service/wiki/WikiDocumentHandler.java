@@ -74,4 +74,11 @@ public abstract class WikiDocumentHandler extends MailDocumentHandler {
 		}
 		return Wiki.getInstance(ctxt, accountId, fid.getId());
 	}
+	
+	protected void checkEnabled(ZimbraSoapContext lc) throws ServiceException {
+		Account requestedAccount = Provisioning.getInstance().get(AccountBy.id,
+				lc.getRequestedAccountId());
+		if (!requestedAccount.getBooleanAttr("zimbraFeatureNotebookEnabled", false))
+			throw WikiServiceException.NOT_ENABLED();
+	}
 }
