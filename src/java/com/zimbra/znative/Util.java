@@ -45,14 +45,7 @@ public class Util {
             return false;
         } else {
             try {
-                if (osName.equalsIgnoreCase("Mac OS X")) {
-                    /* TODO: is this really required?  I think not.
-                     * loadLibrary should just work on the mac...
-                     */ 
-                    System.load("/opt/zimbra/lib/libzimbra-native.jnilib");
-                } else {
-                    System.loadLibrary("zimbra-native");
-                }
+                System.loadLibrary("zimbra-native");
                 return true;
             } catch (UnsatisfiedLinkError ule) {
                 /* On non-Windows, we fail if the shared library is
