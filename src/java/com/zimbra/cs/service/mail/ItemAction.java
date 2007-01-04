@@ -165,7 +165,7 @@ public class ItemAction extends MailDocumentHandler {
         			throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
                 else if (folderId != null && iidFolder.getId() <= 0)
                     throw MailServiceException.NO_SUCH_FOLDER(iidFolder.getId());
-                String name  = action.getAttribute(MailService.A_NAME);
+                String name  = action.getAttribute(MailService.A_NAME, null);
         		String flags = action.getAttribute(MailService.A_FLAGS, null);
         		String tags  = action.getAttribute(MailService.A_TAGS, null);
         		byte color   = (byte) action.getAttributeLong(MailService.A_COLOR, -1);
