@@ -63,6 +63,7 @@ import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
+import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
@@ -247,8 +248,30 @@ public class CalendarCollection extends Collection {
 					throw new DavException("event has different etag ("+etagProp.getStringValue()+") vs "+etag, HttpServletResponse.SC_CONFLICT, null);
 			}
 			for (Invite i : invites) {
-	            if (i.getUid() == null)
-	                i.setUid(LdapUtil.generateUUID());
+				// check for valid uid.
+				if (i.getUid() == null)
+					i.setUid(LdapUtil.generateUUID());
+				// check for valid organizer field.
+				if (i.hasOrganizer()) {
+					String addr = i.getOrganizer().getAddress();
+					if (addr.startsWith("http://")) {
+						// XXX workaround for iCal build 9A321
+						// iCal sets the organizer field to be the URL of
+						// CalDAV account.
+						//     ORGANIZER:http://jylee-macbook:7070/service/dav/user1
+						int pos = addr.indexOf("/service/dav/");
+						if (pos != -1) {
+							int start = pos + 13;
+							int end = addr.indexOf("/", start);
+							String userId = (end == -1) ? addr.substring(start) : addr.substring(start, end);
+							Account organizer = prov.get(AccountBy.name, userId);
+							if (organizer == null)
+								throw new DavException("user not found: "+userId, HttpServletResponse.SC_BAD_REQUEST, null);
+							i.setOrganizer(new ZOrganizer(organizer.getName(), organizer.getAttr(Provisioning.A_cn)));
+						}
+					}
+				}
+				//ZimbraLog.dav.debug(i);
 				mbox.addInvite(ctxt.getOperationContext(), i, mId, false, null);
 			}
 			calItem = mbox.getCalendarItemByUid(ctxt.getOperationContext(), uid);
