@@ -31,26 +31,87 @@
  */
 package com.zimbra.cs.db;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * @author schemers
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Generation - Code and Comments
  */
-public class Db 
-{
-
-    public static final String END_OF_TIME_STRING = "9999-12-31 23:59:59";
-    public static final long   END_OF_TIME_LONG   = 253402329599000L;
-
-    public static final long AUTO_INCREMENT_ID = 0;
+public abstract class Db {
 
     public static class Error {
-    	public static final int DUPLICATE_ROW = 1062;
-    	public static final int DEADLOCK_DETECTED = 1213;
-    	public static final int FOREIGN_KEY_NO_PARENT = 1216;
-    	public static final int FOREIGN_KEY_CHILD_EXISTS = 1217;
-        public static final int NO_SUCH_TABLE = 1146;
+    	public static int DUPLICATE_ROW;
+    	public static int DEADLOCK_DETECTED;
+    	public static int FOREIGN_KEY_NO_PARENT;
+    	public static int FOREIGN_KEY_CHILD_EXISTS;
+        public static int NO_SUCH_TABLE;
+    }
+
+    public static class Capability {
+        public static boolean LIMIT_CLAUSE;
+        public static boolean BOOLEAN_DATATYPE;
+        public static boolean ON_DUPLICATE_KEY;
+        public static boolean ON_UPDATE_CASCADE;
+        public static boolean MULTITABLE_UPDATE;
+        public static boolean BITWISE_OPERATIONS;
+        public static boolean DISABLE_CONSTRAINT_CHECK;
+    }
+
+    private static Db sDatabase;
+
+    public synchronized static Db getInstance() {
+        if (sDatabase == null) {
+            String className = LC.zimbra_class_database.value();
+            if (className != null && !className.equals("")) {
+                try {
+                    sDatabase = (Db) Class.forName(className).newInstance();
+                } catch (Exception e) {
+                    ZimbraLog.system.error("could not instantiate database configuration '" + className + "'; defaulting to MySQL", e);
+                }
+            }
+            if (sDatabase == null)
+                sDatabase = new MySQL();
+
+            // now that the database has been selected, configure the constants
+            sDatabase.setErrorConstants();
+            sDatabase.setCapabilities();
+        }
+        return sDatabase;
+    }
+
+    abstract void setErrorConstants();
+    abstract void setCapabilities();
+
+    abstract DbPool.PoolConfig getPoolConfig();
+
+    /** Generates a SELECT expression representing a BOOLEAN.  For databases
+     *  that don't support a BOOLEAN datatype, returns an appropriate CASE
+     *  clause that evaluates to 1 when the given BOOLEAN clause is true and
+     *  0 when it's false. */
+    static String selectBOOLEAN(String clause) {
+        if (Capability.BOOLEAN_DATATYPE)
+            return clause;
+        else
+            return "CASE WHEN " + clause + " THEN 1 ELSE 0 END";
+    }
+
+    /** Generates a WHERE-type clause that evaluates to true when the given
+     *  column matches a bitmask later specified by <tt>stmt.setLong()</tt>.
+     *  Note that this is only valid when the bitmask has only 1 bit set. */
+    static String bitmaskAND(String column) {
+        if (Capability.BITWISE_OPERATIONS)
+            return column + " & ?";
+        else
+            return "MOD(" + column + " / ?, 2) = 1";
+    }
+
+    /** Generates a WHERE-type clause that evaluates to true when the given
+     *  column matches the given bitmask.  Note that this is only valid when
+     *  the bitmask has only 1 bit set. */
+    static String bitmaskAND(String column, long bitmask) {
+        if (Capability.BITWISE_OPERATIONS)
+            return column + " & " + bitmask;
+        else
+            return "MOD(" + column + " / " + bitmask + ", 2) = 1";
     }
 }

@@ -106,9 +106,11 @@ public class DbMailbox {
         try {
             boolean explicitId = (mailboxId != Mailbox.ID_AUTO_INCREMENT);
             String idSource = (explicitId ? "?" : "next_mailbox_id");
-            stmt = conn.prepareStatement("INSERT INTO mailbox(account_id, id, " + (!DebugConfig.disableMailboxGroup ? "group_id, " : "") + "index_volume_id, item_id_checkpoint, comment)" +
-                                         " SELECT ?, " + idSource + (!DebugConfig.disableMailboxGroup ? ", 0" : "") +", index_volume_id, " + (Mailbox.FIRST_USER_ID - 1) + ", ?" +
-                                         " FROM current_volumes ORDER BY index_volume_id LIMIT 1");
+            String limitClause = Db.Capability.LIMIT_CLAUSE ? " ORDER BY index_volume_id LIMIT 1" : "";
+            stmt = conn.prepareStatement("INSERT INTO mailbox" +
+                    "(account_id, id, " + (!DebugConfig.disableMailboxGroup ? "group_id, " : "") + "index_volume_id, item_id_checkpoint, comment)" +
+                    " SELECT ?, " + idSource + (!DebugConfig.disableMailboxGroup ? ", 0" : "") + ", index_volume_id, " + (Mailbox.FIRST_USER_ID - 1) + ", ?" +
+                    " FROM current_volumes" + limitClause);
             int attr = 1;
             stmt.setString(attr++, accountId);
             if (explicitId)
@@ -118,7 +120,8 @@ public class DbMailbox {
             stmt.close();
             stmt = null;
 
-            stmt = conn.prepareStatement("UPDATE current_volumes SET next_mailbox_id = IF(? > next_mailbox_id, ?, next_mailbox_id) + 1");
+            stmt = conn.prepareStatement("UPDATE current_volumes" +
+                    " SET next_mailbox_id = CASE WHEN ? > next_mailbox_id THEN ? + 1 ELSE next_mailbox_id + 1 END");
             stmt.setInt(1, mailboxId);
             stmt.setInt(2, mailboxId);
             stmt.executeUpdate();
@@ -163,8 +166,7 @@ public class DbMailbox {
     }
 
     /**
-     * Create a database for the specified mailbox.  The DDL runs on its own connection
-     * so that it doesn't interfere with transactions on the main connection.
+     * Create a database for the specified mailbox.
      * 
      * @throws ServiceException if the database creation fails
      */
@@ -217,13 +219,13 @@ public class DbMailbox {
         for (int i = 0; i < sTables.length; i++) {
             String table = getDatabaseName(mailboxId, groupId) + "." + sTables[i];
 
-            String sql = "DESCRIBE " + table;
+            String sql = "SELECT * FROM " + table + (Db.Capability.LIMIT_CLAUSE ? " LIMIT 1" : "");
             PreparedStatement stmt = null;
             ResultSet rs = null;
             try {
                 stmt = conn.prepareStatement(sql);
                 rs = stmt.executeQuery();
-                while (rs.next()) {}
+                rs.next();
             } catch (SQLException e) {
                 return false;
             } finally {
@@ -276,9 +278,12 @@ public class DbMailbox {
         int mailboxId = mbox.getId();
         int groupId = mbox.getSchemaGroupId();        
         ZimbraLog.mailbox.info("Clearing contents of mailbox " + mailboxId + ", group " + groupId);
+
         if (conn == null)
             conn = mbox.getOperationConnection();
-        conn.disableForeignKeyConstraints();
+        if (Db.Capability.DISABLE_CONSTRAINT_CHECK)
+            conn.disableForeignKeyConstraints();
+
         try {
             String dbname = getDatabaseName(mailboxId, groupId);
 
@@ -297,7 +302,8 @@ public class DbMailbox {
             throw ServiceException.FAILURE("dropMailboxFromGroup(" + mailboxId + ")", e);
         } finally {
             try {
-                conn.enableForeignKeyConstraints();
+                if (Db.Capability.DISABLE_CONSTRAINT_CHECK)
+                    conn.enableForeignKeyConstraints();
             } catch (ServiceException e) {
                 ZimbraLog.mailbox.error("Error enabling foreign key constraints during mailbox deletion", e);
                 // Don't rethrow to avoid masking any exception from DELETE statements.
@@ -305,13 +311,11 @@ public class DbMailbox {
         }
     }
 
-    public static void clearMailboxContent(Mailbox mbox)
-    throws ServiceException {
+    public static void clearMailboxContent(Mailbox mbox) throws ServiceException {
         clearMailboxContent(null, mbox);
     }
 
-    public static void clearMailboxContent(Connection conn, Mailbox mbox)
-    throws ServiceException {
+    public static void clearMailboxContent(Connection conn, Mailbox mbox) throws ServiceException {
         if (!DebugConfig.disableMailboxGroup)
             dropMailboxFromGroup(conn, mbox);
         else
@@ -390,23 +394,22 @@ public class DbMailbox {
     }
 
     public static void updateConfig(Mailbox mbox, String section, Metadata config) throws ServiceException {
-        boolean unset = config == null;
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            if (unset)
-                stmt = conn.prepareStatement("DELETE FROM mailbox_metadata WHERE mailbox_id = ? AND section = ?");
-            else
-                stmt = conn.prepareStatement("INSERT INTO mailbox_metadata (mailbox_id, section, metadata) VALUES (?, ?, ?)" +
-                        " ON DUPLICATE KEY UPDATE metadata = ?");
+            stmt = conn.prepareStatement("DELETE FROM mailbox_metadata WHERE mailbox_id = ? AND section = ?");
             stmt.setInt(1, mbox.getId());
             stmt.setString(2, section);
-            if (!unset) {
-                String serialized = config.toString();
-                stmt.setString(3, serialized);
-                stmt.setString(4, serialized);
-            }
             stmt.executeUpdate();
+            stmt.close();
+
+            if (config != null) {
+                stmt = conn.prepareStatement("INSERT INTO mailbox_metadata (mailbox_id, section, metadata) VALUES (?, ?, ?)");
+                stmt.setInt(1, mbox.getId());
+                stmt.setString(2, section);
+                stmt.setString(3, config.toString());
+                stmt.executeUpdate();
+            }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("setting metadata section '" + section + "' in mailbox " + mbox.getId(), e);
         } finally {
@@ -482,8 +485,8 @@ public class DbMailbox {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement(
-                    "SELECT account_id, " + (!DebugConfig.disableMailboxGroup ? "group_id, " : "") +
-                    "size_checkpoint, contact_count, item_id_checkpoint, change_checkpoint, tracking_sync," +
+                    "SELECT account_id," + (!DebugConfig.disableMailboxGroup ? " group_id," : "") +
+                    " size_checkpoint, contact_count, item_id_checkpoint, change_checkpoint, tracking_sync," +
                     " tracking_imap, index_volume_id " +
                     "FROM mailbox WHERE id = ?");
             stmt.setInt(1, mailboxId);

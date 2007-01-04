@@ -171,20 +171,15 @@ public class DbTableMaintenance {
         Integer numRowsObject = new Integer(numRows);
         
         if (getOperation().equals(OPERATION_OPTIMIZE)) {
-            sql = "INSERT INTO  " + TABLE_NAME +
-                " (database_name, table_name, maintenance_date, last_optimize_date, num_rows) " +
-                " VALUES (?, ?, ?, ?, ?) " +
-                "ON DUPLICATE KEY UPDATE maintenance_date = ?, last_optimize_date = ?, num_rows = ?";
-            params = new Object[] {
-                dbName, tableName, now, now, numRowsObject, now, now, numRowsObject };
-        }
-        else {
-            sql = "INSERT INTO  " + TABLE_NAME +
-            " (database_name, table_name, maintenance_date, num_rows) " +
-            " VALUES (?, ?, ?, ?) " +
-            "ON DUPLICATE KEY UPDATE maintenance_date = ?, num_rows = ?";
-            params = new Object[] {
-                dbName, tableName, now, numRowsObject, now, numRowsObject };
+            sql = "INSERT INTO " + TABLE_NAME + " (database_name, table_name, maintenance_date, last_optimize_date, num_rows)" +
+                " VALUES (?, ?, ?, ?, ?)" +
+                " ON DUPLICATE KEY UPDATE maintenance_date = ?, last_optimize_date = ?, num_rows = ?";
+            params = new Object[] { dbName, tableName, now, now, numRowsObject, now, now, numRowsObject };
+        } else {
+            sql = "INSERT INTO " + TABLE_NAME + " (database_name, table_name, maintenance_date, num_rows)" +
+                " VALUES (?, ?, ?, ?)" +
+                " ON DUPLICATE KEY UPDATE maintenance_date = ?, num_rows = ?";
+            params = new Object[] { dbName, tableName, now, numRowsObject, now, numRowsObject };
         }
         
         DbUtil.executeUpdate(sql, params);

@@ -67,33 +67,33 @@ public class DbConfig {
     private Timestamp mDbModified;
     
     public static DbConfig set(Connection conn, String name, String value) throws ServiceException {
+        Timestamp modified = new Timestamp(System.currentTimeMillis());
+
         PreparedStatement stmt = null;
         try {
-            
-            // on dup key is mysql specific. can make this more portable by doing an update first, checking for no
-            // matches and then doing an insert. That requires two database updates...
         	// HUM... should this be UPDATE and require you can't create any new config files?
-            stmt = conn.prepareStatement("INSERT INTO config(name, value, modified ) values(?, ?, ?) " +
-                    " ON DUPLICATE KEY UPDATE value=?, modified=?");
-            Timestamp modified = new Timestamp(System.currentTimeMillis());
+            stmt = conn.prepareStatement("DELETE FROM config WHERE name = ?");
+            stmt.setString(1, name);
+            stmt.executeUpdate();
+            
+            stmt = conn.prepareStatement("INSERT INTO config(name, value, modified) VALUES (?, ?, ?)");
             stmt.setString(1, name);
             stmt.setString(2, value);
             stmt.setTimestamp(3, modified);
-            stmt.setString(4, value);
-            stmt.setTimestamp(5, modified);
             int num = stmt.executeUpdate();
             if (num == 0) 
                 throw new SQLException("unable to update config for "+name+" = "+value);
-            DbConfig c = new DbConfig();
-            c.mDbName = name;
-            c.mDbValue = value;
-            c.mDbModified = modified;
-            return c;
         } catch (SQLException e) {
-        	throw ServiceException.FAILURE("writing config entry: " + name, e);
+            throw ServiceException.FAILURE("writing config entry: " + name, e);
         } finally {
             DbPool.closeStatement(stmt);
         }        
+
+        DbConfig c = new DbConfig();
+        c.mDbName = name;
+        c.mDbValue = value;
+        c.mDbModified = modified;
+        return c;
     }
 
     /**

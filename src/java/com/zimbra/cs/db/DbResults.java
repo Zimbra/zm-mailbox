@@ -58,8 +58,8 @@ import java.util.Map;
  */
 public class DbResults {
 
-    private List /* Object[] */ mData = new ArrayList();
-    private Map /* String, Integer */ mColumnIndexes = new HashMap();
+    private List<Object[]> mData = new ArrayList<Object[]>();
+    private Map<String, Integer> mColumnIndexes = new HashMap<String, Integer>();
     private int mRowNum = 0;
     
     /**
@@ -69,17 +69,14 @@ public class DbResults {
      * 
      * @throws SQLException
      */
-    public DbResults (ResultSet resultSet)
-    throws SQLException {
+    public DbResults(ResultSet resultSet) throws SQLException {
         if (resultSet == null) {
             throw new IllegalArgumentException("resultSet cannot be null");
         }
-        
-        mData = new ArrayList();
 
         boolean isFirst = true;
         int numCols = 0;
-        
+
         while (resultSet.next()) {
             if (isFirst) {
                 // Initialize the column map
@@ -127,7 +124,7 @@ public class DbResults {
      * Returns the row of data at the specified index.
      */
     public Object[] getRow(int row) {
-        return (Object[]) mData.get(row - 1);
+        return mData.get(row - 1);
     }
     
     ////////// Null checks //////////

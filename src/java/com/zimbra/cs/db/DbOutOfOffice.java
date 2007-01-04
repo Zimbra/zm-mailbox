@@ -38,6 +38,7 @@ import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox;
 
 // TODO mailbox migration between servers
@@ -126,37 +127,48 @@ public class DbOutOfOffice {
      * @param sentOn the timestamp of the out-of-office message
      * @throws ServiceException if a database error occurred
      */
-    public static void setSentTime(Connection conn, Mailbox mbox,
-            String sentTo, long sentOn) throws ServiceException {
+    public static void setSentTime(Connection conn, Mailbox mbox, String sentTo, long sentOn) throws ServiceException {
+        Timestamp ts = new Timestamp(sentOn);
+
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement(
                     "INSERT INTO " + TABLE_NAME + "(mailbox_id, sent_to, sent_on) VALUES (?, ?, ?) " +
-                    "ON DUPLICATE KEY UPDATE sent_on = ?");
+                    (Db.Capability.ON_DUPLICATE_KEY ? "ON DUPLICATE KEY UPDATE sent_on = ?" : ""));
             stmt.setInt(1, mbox.getId());
             stmt.setString(2, sentTo);
-            Timestamp ts = new Timestamp(sentOn);
             stmt.setTimestamp(3, ts);
-            stmt.setTimestamp(4, ts);
+            if (Db.Capability.ON_DUPLICATE_KEY)
+                stmt.setTimestamp(4, ts);
             int num = stmt.executeUpdate();
             if (num > 0) {
                 if (mLog.isDebugEnabled()) {
-                    mLog.debug("DbOutOfOffice.setSentTime: ok (mailbox_id="
-                            + mbox.getId() + " sent_to=" + sentTo + " sent_on="
-                            + sentOn + " rows=" + num + ")");
+                    mLog.debug("DbOutOfOffice.setSentTime: ok (mailbox_id=" + mbox.getId() +
+                            " sent_to=" + sentTo + " sent_on=" + sentOn + " rows=" + num + ")");
                 }
             } else {
-                mLog.error("DbOutOfOffice.setSentTime: no rows updated (mailbox_id="
-                        + mbox.getId()
-                        + " sent_to="
-                        + sentTo
-                        + " sent_on=" + sentOn + " rows=" + num + ")");
+                mLog.error("DbOutOfOffice.setSentTime: no rows updated (mailbox_id=" + mbox.getId()
+                        + " sent_to=" + sentTo + " sent_on=" + sentOn + " rows=" + num + ")");
             }
         } catch (SQLException e) {
-            throw ServiceException.FAILURE(
-                    "DbOutOfOffice.setSentTime: sql exception (mailbox_id="
-                    + mbox.getId() + " sent_to" + sentTo + " sent_on="
-                    + sentOn + ")", e);
+            if (!Db.Capability.ON_DUPLICATE_KEY && e.getErrorCode() == Db.Error.DUPLICATE_ROW) {
+                try {
+                    stmt.close();
+
+                    stmt = conn.prepareStatement("UPDATE " + TABLE_NAME +
+                            " SET sent_on = ? WHERE mailbox_id = ? AND sent_to = ?");
+                    stmt.setTimestamp(1, ts);
+                    stmt.setInt(2, mbox.getId());
+                    stmt.setString(3, sentTo);
+                    stmt.executeUpdate();
+                } catch (SQLException nested) {
+                    throw ServiceException.FAILURE("DbOutOfOffice.setSentTime: sql exception " +
+                            "(mailbox_id=" + mbox.getId() + " sent_to" + sentTo + " sent_on=" + sentOn + ")", nested);
+                }
+            } else {
+                throw ServiceException.FAILURE("DbOutOfOffice.setSentTime: sql exception " +
+                        "(mailbox_id=" + mbox.getId() + " sent_to" + sentTo + " sent_on=" + sentOn + ")", e);
+            }
         } finally {
             DbPool.closeStatement(stmt);
         }
