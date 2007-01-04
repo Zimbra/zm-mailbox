@@ -30,7 +30,7 @@ import java.util.Map;
 
 public class KnownKey {
 
-    private static final Map mKnownKeys = new HashMap();
+    private static final Map<String, KnownKey> mKnownKeys = new HashMap<String, KnownKey>();
 
     static {
         // Since all the known keys are actually defined
@@ -42,13 +42,13 @@ public class KnownKey {
     static String[] getAll() {
         return (String[])mKnownKeys.keySet().toArray(new String[0]);
     }
-
+    
     static boolean isKnown(String key) {
         return mKnownKeys.containsKey(key);
     }
     
     static String getDoc(String key) {
-        KnownKey kk = (KnownKey)mKnownKeys.get(key);
+        KnownKey kk = mKnownKeys.get(key);
         if (kk == null) {
             return null;
         }
@@ -56,15 +56,31 @@ public class KnownKey {
     }
     
     static String getDefaultValue(String key) {
-        KnownKey kk = (KnownKey)mKnownKeys.get(key);
+        KnownKey kk = mKnownKeys.get(key);
         if (kk == null) {
             return null;
         }
         return kk.mDefaultValue;
     }
     
+    static void expandAll(LocalConfig lc) throws ConfigException {
+        String[] keys = KnownKey.getAll();
+        for (String key : keys) {
+        	KnownKey kk = mKnownKeys.get(key);
+        	kk.mValue = lc.expand(key, kk.mDefaultValue);
+        }
+    }
+    
+    static String getValue(String key) {
+        KnownKey kk = mKnownKeys.get(key);
+        if (kk == null) {
+            return null;
+        }
+        return kk.mValue;
+    }
+    
     static boolean needForceToEdit(String key) {
-        KnownKey kk = (KnownKey)mKnownKeys.get(key);
+        KnownKey kk = mKnownKeys.get(key);
         if (kk == null) {
             return false;
         }
@@ -78,6 +94,7 @@ public class KnownKey {
     private final String mKey;
     private String mDoc;
     private String mDefaultValue;
+    private String mValue; //cached value after expansion
     private boolean mForceToEdit;
     
     /**
