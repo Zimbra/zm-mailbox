@@ -685,13 +685,8 @@ public abstract class CalendarItem extends MailItem {
             if ((cur.getRecurId() != null && cur.getRecurId().equals(newInvite.getRecurId())) ||
                     (cur.getRecurId() == null && newInvite.getRecurId() == null)) {
                 if (force ||
-                        ((cur.getSeqNo() < newInvite.getSeqNo())
-                        // in the CANCEL case, accept one with the exact same DTSTAMP as the request
-                        // being cancelled ( >= instead of strictly > for DTSTAMP)
-                        || (
-                                (!isCancel && (cur.getSeqNo() == newInvite.getSeqNo() && cur.getDTStamp() < newInvite.getDTStamp())) 
-                                || 
-                                (isCancel && (cur.getSeqNo() == newInvite.getSeqNo() && cur.getDTStamp() <= newInvite.getDTStamp()))))) 
+                        (cur.getSeqNo() < newInvite.getSeqNo()) ||
+                        (cur.getSeqNo() == newInvite.getSeqNo() && cur.getDTStamp() <= newInvite.getDTStamp())) 
                 {
                     Invite inf = mInvites.get(i);
                     toRemove.add(inf);
