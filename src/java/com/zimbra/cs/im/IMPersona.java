@@ -44,6 +44,7 @@ import org.xmpp.packet.Packet;
 import org.xmpp.packet.Presence;
 import org.xmpp.packet.Roster;
 import org.xmpp.packet.IQ.Type;
+import org.xmpp.packet.IQ;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -91,6 +92,60 @@ public class IMPersona {
     IMPersona(IMAddr addr) {
         assert(addr != null);
         mAddr = addr;
+    }
+    
+    /**
+     * @return The set of gateways this user has access to
+     */
+    public IMGatewayType[] getAvailableGateways() {
+        return new IMGatewayType[] { IMGatewayType.aol, IMGatewayType.msn, IMGatewayType.yahoo };
+    }
+    
+    private JID getJIDForGateway(IMGatewayType type) {
+        // FIXME 
+        String host = mAddr.getAddr().substring(mAddr.getAddr().indexOf('@')+1);
+        return new JID(type.getShortName()+"."+host);
+    }
+    
+    public boolean gatewayRegister(IMGatewayType type, String username, String password) throws ServiceException {
+        IQ iq = new IQ();
+        { // <iq>
+            iq.setFrom(mAddr.makeJID());
+            iq.setTo(getJIDForGateway(type));
+            iq.setType(Type.set);
+        
+            org.dom4j.Element queryElt = iq.setChildElement("query", "jabber:iq:register");
+            { // <query>
+                org.dom4j.Element usernameElt = queryElt.addElement("username");
+                usernameElt.setText(username);
+                org.dom4j.Element passwordElt = queryElt.addElement("password");
+                passwordElt.setText(password);
+            } // </query>
+        } // </iq>
+        
+        xmppRoute(iq);
+        
+        pushMyPresence();
+        
+        return true;
+    }
+    
+    public boolean gatewayUnRegister(IMGatewayType type) {
+        IQ iq = new IQ();
+        { // <iq>
+            iq.setFrom(mAddr.makeJID());
+            iq.setTo(getJIDForGateway(type));
+            iq.setType(Type.set);
+        
+            org.dom4j.Element queryElt = iq.setChildElement("query", "jabber:iq:register");
+            { // <query>
+                queryElt.addElement("remove");
+            } // </query>
+        } // </iq>
+        
+        xmppRoute(iq);
+        
+        return true;
     }
     
     void init() {

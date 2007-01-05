@@ -46,7 +46,12 @@ public class IMService implements DocumentService {
     public static final QName IM_MODIFY_CHAT_REQUEST   = QName.get("IMModifyChatRequest", NAMESPACE);    
     public static final QName IM_MODIFY_CHAT_RESPONSE  = QName.get("IMModifyChatResponse", NAMESPACE);    
     public static final QName IM_SEND_MESSAGE_REQUEST  = QName.get("IMSendMessageRequest", NAMESPACE);    
-    public static final QName IM_SEND_MESSAGE_RESPONSE = QName.get("IMSendMessageResponse", NAMESPACE);    
+    public static final QName IM_SEND_MESSAGE_RESPONSE = QName.get("IMSendMessageResponse", NAMESPACE);
+    
+    public static final QName IM_GATEWAY_LIST_REQUEST = QName.get("IMGatewayListRequest", NAMESPACE);    
+    public static final QName IM_GATEWAY_LIST_RESPONSE = QName.get("IMGatewayListResponse", NAMESPACE);    
+    public static final QName IM_GATEWAY_REGISTER_REQUEST = QName.get("IMGatewayRegisterRequest", NAMESPACE);    
+    public static final QName IM_GATEWAY_REGISTER_RESPONSE = QName.get("IMGatewayRegisterResponse", NAMESPACE);    
     
     public static final String A_THREAD_ID      = "thread";
     public static final String A_ADDRESS        = "addr";
@@ -88,7 +93,8 @@ public class IMService implements DocumentService {
         dispatcher.registerHandler(IM_SEND_MESSAGE_REQUEST, new IMSendMessage());
         dispatcher.registerHandler(IM_GET_CHAT_REQUEST, new IMGetChat());
         dispatcher.registerHandler(IM_MODIFY_CHAT_REQUEST, new IMModifyChat());
-        
+        dispatcher.registerHandler(IM_GATEWAY_REGISTER_REQUEST, new IMGatewayRegister());
+        dispatcher.registerHandler(IM_GATEWAY_LIST_REQUEST, new IMGatewayList());
     }
 
 }

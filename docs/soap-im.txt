@@ -114,6 +114,26 @@ IMModifyWhitelist -- block/allow
 -----------------
 
 
+
+IMGatewayList - gateways to external IM services
+--------------
+<IMGatewayList/>
+
+
+<IMGatewayListResponse>
+  <service name="name" type="aim|msn|yahoo|icq"/>
+</IMGatewayListResponse/>
+
+
+IMGatewayRegister 
+-----------------
+<IMGatewayRegister op="register" service="SERVICE_NAME" name="remoteName" password="remotePassword"/>
+<IMGatewayRegister op="unregister" service="SERVICE_NAME"/>
+
+<IMGatewayRegisterResponse result="0|1"/>
+
+
+
 ============================================================
 IM NOTIFICATIONS
 ============================================================

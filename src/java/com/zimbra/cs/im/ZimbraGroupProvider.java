@@ -65,9 +65,8 @@ public class ZimbraGroupProvider implements GroupProvider {
         throw new UnsupportedOperationException();
     }
 
-    public Group getGroup(String name) throws GroupNotFoundException {
-
-        
+    public Group getGroup(String name) throws GroupNotFoundException 
+    {
         try {
             DistributionList dl = Provisioning.getInstance().get(Provisioning.DistributionListBy.name, name);
 

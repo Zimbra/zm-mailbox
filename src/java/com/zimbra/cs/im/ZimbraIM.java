@@ -14,6 +14,8 @@ public class ZimbraIM {
     public synchronized static void startup() throws ServiceException {
         try {
             System.setProperty("wildfireHome", "/opt/zimbra");
+            System.setProperty("pluginDirs", "/opt/zimbra/im/plugins/gateway");
+            
             String defaultDomain = Provisioning.getInstance().getConfig().getAttr(Provisioning.A_zimbraDefaultDomainName, null);
             if (defaultDomain != null) {
                 ZimbraLog.im.info("Setting default XMPP domain to: "+defaultDomain);
