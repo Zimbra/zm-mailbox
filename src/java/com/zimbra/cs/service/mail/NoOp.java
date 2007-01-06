@@ -30,6 +30,7 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -38,8 +39,21 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class NoOp extends MailDocumentHandler  {
 
-	public Element handle(Element request, Map<String, Object> context) {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-	    return lc.createElement(MailService.NO_OP_RESPONSE);
+	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        
+        boolean wait = request.getAttributeBool("wait", false);
+        if (wait) {
+            synchronized(zsc) {
+                if (zsc.beginWaitForNotifications()) {
+                    while (zsc.waitingForNotifications()) {
+                        try {
+                            zsc.wait();
+                        } catch (InterruptedException e) { }
+                    }
+                }
+            }
+        }
+        return zsc.createElement(MailService.NO_OP_RESPONSE);
 	}
 }

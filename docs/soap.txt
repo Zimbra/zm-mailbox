@@ -1788,12 +1788,17 @@ EXAMPLE:
 
 -----------------------
 
- <NoOpRequest/>
+ <NoOpRequest [wait='1']/>
 
  <NoOpResponse/>
 
 A request that does nothing and always returns nothing. Used to keep a session alive, and return
 any pending notifications.
+
+If "wait" is set, and if the current session allows them, this request will block until there are
+new notifications for the client.  Note that the soap envelope must reference an existing session
+that has notifications enabled, and the notification sequencing number should be specified.
+
 
 ---------------------------
 

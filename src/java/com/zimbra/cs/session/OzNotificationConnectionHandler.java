@@ -42,6 +42,7 @@ import com.zimbra.cs.ozserver.OzByteBufferGatherer;
 import com.zimbra.cs.ozserver.OzConnection;
 import com.zimbra.cs.ozserver.OzConnectionHandler;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapProtocol;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -177,6 +178,28 @@ public class OzNotificationConnectionHandler implements OzConnectionHandler
             ZimbraLog.mailbox.debug("Notification Handler got new connection: "+mConnection.getRemoteAddress().toString());
     }
     
+    public static class OzPushChannel implements SoapSession.PushChannel {
+        private OzNotificationConnectionHandler mHandler;
+        
+        OzPushChannel(OzNotificationConnectionHandler notify) {
+            mHandler = notify;
+        }
+        
+        public void close() { mHandler.close(); }
+        public int getLastKnownSeqNo() { return mHandler.getLastKnownSeqNo(); }
+        public ZimbraSoapContext getSoapContext() { return mHandler.getZimbraContext(); }
+        public void notificationsReady(SoapSession session) throws ServiceException {
+            try {
+                Element e = new Element.XMLElement("notify");
+                session.putNotifications(getSoapContext(), e, getLastKnownSeqNo());
+                mHandler.writeHttpResponse(200, "OK", "text/xml", e.toUTF8());
+                mHandler.close();
+            } catch (IOException ex) {
+                throw ServiceException.FAILURE("IOException writing HTTP response to stream "+ex, ex);
+            }
+        }
+    }
+    
     public void handleInput(ByteBuffer buffer, boolean matched) throws IOException {
         mCurrentData.add(buffer);
         if (!matched) 
@@ -274,12 +297,13 @@ public class OzNotificationConnectionHandler implements OzConnectionHandler
         
         Session s = SessionCache.lookup(sessionId, mAuthToken.getAccountId());
         
-        if (s != null) {
+        if (s != null && s instanceof SoapSession) {
+            SoapSession ss = (SoapSession) s;
             ZimbraLog.mailbox.info("Found Session: "+s.toString());
             try {
                 mLastKnownSeqNo = seqNo;
-                Session.RegisterNotificationResult result = s.registerNotificationConnection(this);
-                if (result != Session.RegisterNotificationResult.WAITING) {
+                SoapSession.RegisterNotificationResult result = ss.registerNotificationConnection(new OzPushChannel(this));
+                if (result != SoapSession.RegisterNotificationResult.BLOCKING) {
                     mConnection.close();
                 }
             } catch (ServiceException e) {

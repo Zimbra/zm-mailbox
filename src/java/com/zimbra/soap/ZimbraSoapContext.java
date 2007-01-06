@@ -53,6 +53,10 @@ import com.zimbra.common.util.StringUtil;
 
 /**
  * @author schemers
+ * 
+ * This class models the soap context (the data from the soap envelope)  
+ * for a single request 
+ * 
  */
 public class ZimbraSoapContext {
 
@@ -76,15 +80,15 @@ public class ZimbraSoapContext {
         public String toString()  { return session.getSessionId(); }
     }
 
-	private static Log sLog = LogFactory.getLog(ZimbraSoapContext.class);
+    private static Log sLog = LogFactory.getLog(ZimbraSoapContext.class);
 
     private static final int MAX_HOP_COUNT = 5;
 
-	public static final QName CONTEXT = QName.get("context", ZimbraNamespace.ZIMBRA);
+    public static final QName CONTEXT = QName.get("context", ZimbraNamespace.ZIMBRA);
     public static final String E_NO_NOTIFY  = "nonotify";
     public static final String E_FORMAT     = "format";
     public static final String A_TYPE       = "type";
-	public static final String E_AUTH_TOKEN = "authToken";
+    public static final String E_AUTH_TOKEN = "authToken";
     public static final String E_ACCOUNT    = "account";   
     public static final String A_BY         = "by";
     public static final String A_HOPCOUNT   = "hops";
@@ -115,22 +119,23 @@ public class ZimbraSoapContext {
     public static final String SESSION_ADMIN = "admin";
 
     private String    mRawAuthToken;
-	private AuthToken mAuthToken;
-	private String    mAuthTokenAccountId;
-	private String    mRequestedAccountId;
+    private AuthToken mAuthToken;
+    private String    mAuthTokenAccountId;
+    private String    mRequestedAccountId;
 
     private SoapProtocol mRequestProtocol;
     private SoapProtocol mResponseProtocol;
 
     private boolean mChangeConstraintType = OperationContext.CHECK_MODIFIED;
     private int     mMaximumChangeId = -1;
-    
+
     private int mNotificationSeqNo = -1;
 
     private List<SessionInfo> mSessionInfo = new ArrayList<SessionInfo>();
-    private boolean mSessionSuppressed;
-    private boolean mHaltNotifications;
+    private boolean mSessionSuppressed; // don't create a new session for this request
+    private boolean mHaltNotifications; // if true, then no notifications are sent to this context
     private boolean mUnqualifiedItemIds;
+    private boolean mWaitForNotifications = false;
 
     private ProxyTarget mProxyTarget;
     private boolean     mIsProxyRequest;
@@ -139,7 +144,7 @@ public class ZimbraSoapContext {
 
     private String      mUserAgent;
     private String      mRequestIP;
-    
+
     public ZimbraSoapContext(ZimbraSoapContext lc, String targetAccountId) throws ServiceException {
         mRawAuthToken = lc.mRawAuthToken;
         mAuthToken = lc.mAuthToken;
@@ -158,15 +163,15 @@ public class ZimbraSoapContext {
         mMountpointTraversed = lc.mMountpointTraversed;
     }
 
-	/**
-	 * @param ctxt can be null if not present in request
-	 * @param context the engine context, which might have the auth token in it
-	 * @param requestProtocol TODO
-	 * @throws ServiceException
-	 */
-	public ZimbraSoapContext(Element ctxt, Map context, SoapProtocol requestProtocol) throws ServiceException {
-	    if (ctxt != null && !ctxt.getQName().equals(CONTEXT)) 
-	        throw new IllegalArgumentException("expected ctxt, got: " + ctxt.getQualifiedName());
+    /**
+     * @param ctxt can be null if not present in request
+     * @param context the engine context, which might have the auth token in it
+     * @param requestProtocol TODO
+     * @throws ServiceException
+     */
+    public ZimbraSoapContext(Element ctxt, Map context, SoapProtocol requestProtocol) throws ServiceException {
+        if (ctxt != null && !ctxt.getQName().equals(CONTEXT)) 
+            throw new IllegalArgumentException("expected ctxt, got: " + ctxt.getQualifiedName());
 
         Provisioning prov = Provisioning.getInstance();
 
@@ -184,21 +189,21 @@ public class ZimbraSoapContext {
         // find out if we're executing in another user's context
         Account account = null;
         Element eAccount = ctxt == null ? null : ctxt.getOptionalElement(E_ACCOUNT);
-		if (eAccount != null) {
-		    String key = eAccount.getAttribute(A_BY, null);
-		    String value = eAccount.getText();
+        if (eAccount != null) {
+            String key = eAccount.getAttribute(A_BY, null);
+            String value = eAccount.getText();
 
             if (key == null) {
                 mRequestedAccountId = null;
             } else if (key.equals(BY_NAME)) {
-	            account = prov.get(AccountBy.name, value);
-	            if (account == null)
+                account = prov.get(AccountBy.name, value);
+                if (account == null)
                     throw AccountServiceException.NO_SUCH_ACCOUNT(value);
-	            mRequestedAccountId = account.getId();
-	        } else if (key.equals(BY_ID)) {
-	            mRequestedAccountId = value;
+                mRequestedAccountId = account.getId();
+            } else if (key.equals(BY_ID)) {
+                mRequestedAccountId = value;
             } else {
-	            throw ServiceException.INVALID_REQUEST("unknown value for by: " + key, null);
+                throw ServiceException.INVALID_REQUEST("unknown value for by: " + key, null);
             }
 
             // while we're here, check the hop count to detect loops
@@ -206,33 +211,33 @@ public class ZimbraSoapContext {
             if (mHopCount > MAX_HOP_COUNT)
                 throw ServiceException.TOO_MANY_HOPS();
             mMountpointTraversed = eAccount.getAttributeBool(A_MOUNTPOINT, false);
-		} else {
-		    mRequestedAccountId = null;
-		}
+        } else {
+            mRequestedAccountId = null;
+        }
 
         // check for auth token in engine context if not in header  
-		mRawAuthToken = (ctxt == null ? null : ctxt.getAttribute(E_AUTH_TOKEN, null));
-		if (mRawAuthToken == null)
-		    mRawAuthToken = (String) context.get(SoapServlet.ZIMBRA_AUTH_TOKEN);
+        mRawAuthToken = (ctxt == null ? null : ctxt.getAttribute(E_AUTH_TOKEN, null));
+        if (mRawAuthToken == null)
+            mRawAuthToken = (String) context.get(SoapServlet.ZIMBRA_AUTH_TOKEN);
 
         // parse auth token and check validity
-		if (mRawAuthToken != null && !mRawAuthToken.equals("")) {
-			try {
-				mAuthToken = AuthToken.getAuthToken(mRawAuthToken);
-				if (mAuthToken.isExpired())
-					throw ServiceException.AUTH_EXPIRED();
-				mAuthTokenAccountId = mAuthToken.getAccountId();
-			} catch (AuthTokenException e) {
-				// ignore and leave null
-				mAuthToken = null;
-				if (sLog.isDebugEnabled())
-					sLog.debug("ZimbraContext AuthToken error: " + e.getMessage(), e);
-			}
-		}
-        
+        if (mRawAuthToken != null && !mRawAuthToken.equals("")) {
+            try {
+                mAuthToken = AuthToken.getAuthToken(mRawAuthToken);
+                if (mAuthToken.isExpired())
+                    throw ServiceException.AUTH_EXPIRED();
+                mAuthTokenAccountId = mAuthToken.getAccountId();
+            } catch (AuthTokenException e) {
+                // ignore and leave null
+                mAuthToken = null;
+                if (sLog.isDebugEnabled())
+                    sLog.debug("ZimbraContext AuthToken error: " + e.getMessage(), e);
+            }
+        }
+
         // look for the notification sequence id, for notification reliability
         // <notify seq="nn">
-		Element notify = (ctxt == null ? null : ctxt.getOptionalElement(E_NOTIFY));
+        Element notify = (ctxt == null ? null : ctxt.getOptionalElement(E_NOTIFY));
         if (notify != null) 
             mNotificationSeqNo = (int) notify.getAttributeLong(A_SEQNO, 0);
 
@@ -257,7 +262,7 @@ public class ZimbraSoapContext {
         if (targetServerId != null) {
             HttpServletRequest req = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
             if (req != null) {
-            	mProxyTarget = new ProxyTarget(targetServerId, mRawAuthToken, req);
+                mProxyTarget = new ProxyTarget(targetServerId, mRawAuthToken, req);
                 mIsProxyRequest = !mProxyTarget.isTargetLocal();
             } else {
                 sLog.warn("Missing SERVLET_REQUEST key in request context");
@@ -277,7 +282,7 @@ public class ZimbraSoapContext {
 
         // temporary hack: don't qualify item ids in reponses, if so requested
         mUnqualifiedItemIds = (ctxt != null && ctxt.getOptionalElement(E_NO_QUALIFY) != null);
-        
+
         // Handle user agent if specified by the client.  The user agent string is formatted
         // as "name/version".
         Element userAgent = (ctxt == null ? null : ctxt.getOptionalElement(E_USER_AGENT));
@@ -290,7 +295,7 @@ public class ZimbraSoapContext {
                     mUserAgent = mUserAgent + "/" + version;
             }
         }
-        
+
         mRequestIP = (String)context.get(SoapEngine.REQUEST_IP);
     }
 
@@ -369,12 +374,12 @@ public class ZimbraSoapContext {
         return octxt;
     }
 
-	/** Returns the account id the request is supposed to operate on.  This
+    /** Returns the account id the request is supposed to operate on.  This
      *  can be explicitly specified in the supplied context; it defaults to
      *  the account id in the auth token. */
-	public String getRequestedAccountId() {
-	    return (mRequestedAccountId != null ? mRequestedAccountId : mAuthTokenAccountId);
-	} 
+    public String getRequestedAccountId() {
+        return (mRequestedAccountId != null ? mRequestedAccountId : mAuthTokenAccountId);
+    } 
 
     /** Returns the id of the account in the auth token.  Operations should
      *  normally use {@link #getRequestAccountId}, as that's the context
@@ -383,7 +388,7 @@ public class ZimbraSoapContext {
         return mAuthTokenAccountId;
     }
 
-    
+
     /** Returns the account of the auth token. 
      * @throws ServiceException 
      */
@@ -440,7 +445,7 @@ public class ZimbraSoapContext {
      * @param type  One of the types defined in the {@link SessionCache} class.
      * @return A new or existing Session object, or <code>null</code> if
      *         <code>&lt;nosession></code> was specified. */
-	public Session getSession(int type) {
+    public Session getSession(int type) {
         Session s = null;
         SessionInfo sinfo = findSessionInfo(type);
         if (sinfo != null)
@@ -453,6 +458,53 @@ public class ZimbraSoapContext {
         if (s instanceof SoapSession && mHaltNotifications)
             ((SoapSession) s).haltNotifications();
         return s;
+    }
+
+    private class SoapPushChannel implements SoapSession.PushChannel {
+        public void close() { }
+        public int getLastKnownSeqNo() { return mNotificationSeqNo; }
+        public ZimbraSoapContext getSoapContext() { return ZimbraSoapContext.this; }
+        public void notificationsReady(SoapSession session) throws ServiceException {
+            signalNotification();
+        }
+    }
+
+    synchronized public boolean beginWaitForNotifications() throws ServiceException {
+        boolean someBlocked = false;
+        boolean someReady = false;
+        
+        // synchronized against 
+        for (SessionInfo sinfo : mSessionInfo) {
+            if (sinfo.session instanceof SoapSession) {
+                SoapSession ss = (SoapSession) sinfo.session;
+                SoapSession.RegisterNotificationResult result = ss.registerNotificationConnection(new SoapPushChannel());
+                switch (result) {
+                    case NO_NOTIFY: break;
+                    case DATA_READY: someReady = true; break;
+                    case BLOCKING: someBlocked = true; break;
+                }
+            }
+        }
+        
+        if (someBlocked && !someReady) {
+            mWaitForNotifications = true;
+        } else { 
+            mWaitForNotifications = false;
+        }
+        
+        return mWaitForNotifications;
+    }
+
+    /**
+     * Called by the Session object if a new notification comes in 
+     */
+    synchronized public void signalNotification() {
+        mWaitForNotifications = false;
+        this.notifyAll();
+    }
+    
+    synchronized public boolean waitingForNotifications() {
+        return mWaitForNotifications;
     }
 
     /** Creates a <code>&lt;context></code> element for the SOAP Header containing
@@ -482,14 +534,14 @@ public class ZimbraSoapContext {
                 if (session instanceof SoapSession)
                     ((SoapSession) session).putNotifications(this, ctxt, mNotificationSeqNo);
             }
-//            if (ctxt != null && mAuthToken != null)
-//                ctxt.addAttribute(E_AUTH_TOKEN, mAuthToken.toString(), Element.DISP_CONTENT);
+//          if (ctxt != null && mAuthToken != null)
+//          ctxt.addAttribute(E_AUTH_TOKEN, mAuthToken.toString(), Element.DISP_CONTENT);
             return ctxt;
         } catch (ServiceException e) {
             sLog.info("ServiceException while putting soap session refresh data", e);
             return null;
         }
-	}
+    }
 
     /** Serializes this object for use in a proxied SOAP request.  The
      *  attributes encapsulated by the <code>ZimbraContext</code> -- the
@@ -513,7 +565,7 @@ public class ZimbraSoapContext {
         if (mRequestedAccountId != null && !mRequestedAccountId.equalsIgnoreCase(mAuthTokenAccountId))
             eAcct.addAttribute(A_BY, BY_ID).setText(mRequestedAccountId);
         if (mSessionSuppressed)
-        	ctxt.addUniqueElement(E_NO_SESSION);
+            ctxt.addUniqueElement(E_NO_SESSION);
         if (mUnqualifiedItemIds)
             ctxt.addUniqueElement(E_NO_QUALIFY);
         return ctxt;
@@ -535,7 +587,7 @@ public class ZimbraSoapContext {
 
         Element eSession = unique ? parent.addUniqueElement(E_SESSION_ID) : parent.addElement(E_SESSION_ID);
         eSession.addAttribute(A_TYPE, sessionType).addAttribute(A_ID, session.getSessionId())
-                .setText(session.getSessionId());
+        .setText(session.getSessionId());
         return eSession;
     }
 
@@ -549,18 +601,18 @@ public class ZimbraSoapContext {
      * @param authToken  The serialized authorization token for the user.
      * @param noSession  Whether to suppress the default new session creation.
      * @return A new <code>context</code> Element in the appropriate markup. */
-	static Element toCtxt(SoapProtocol protocol, String authToken, String targetAccountId, String targetAccountName, boolean noSession) {
-		Element ctxt = toCtxt(protocol, authToken, noSession);
+    static Element toCtxt(SoapProtocol protocol, String authToken, String targetAccountId, String targetAccountName, boolean noSession) {
+        Element ctxt = toCtxt(protocol, authToken, noSession);
 
-		if (targetAccountId != null || targetAccountName != null) {
-			Element acctElt = ctxt.addUniqueElement(E_ACCOUNT);
-			acctElt.addAttribute(A_BY, targetAccountId != null ? BY_ID : BY_NAME);
-			acctElt.setText(targetAccountId != null ? targetAccountId : targetAccountName);
-		}
-		
-		return ctxt;
-	}
-	
+        if (targetAccountId != null || targetAccountName != null) {
+            Element acctElt = ctxt.addUniqueElement(E_ACCOUNT);
+            acctElt.addAttribute(A_BY, targetAccountId != null ? BY_ID : BY_NAME);
+            acctElt.setText(targetAccountId != null ? targetAccountId : targetAccountName);
+        }
+
+        return ctxt;
+    }
+
     /** Creates a SOAP request <code>&lt;context></code> {@link Element}.<p>
      * 
      *  All requests except Auth and a few others must specify an auth token.
@@ -571,14 +623,14 @@ public class ZimbraSoapContext {
      * @param authToken  The serialized authorization token for the user.
      * @param noSession  Whether to suppress the default new session creation.
      * @return A new <code>context</code> Element in the appropriate markup. */
-	static Element toCtxt(SoapProtocol protocol, String authToken, boolean noSession) {
-		Element ctxt = protocol.getFactory().createElement(CONTEXT);
-		if (authToken != null)
-			ctxt.addAttribute(E_AUTH_TOKEN, authToken, Element.DISP_CONTENT);
+    static Element toCtxt(SoapProtocol protocol, String authToken, boolean noSession) {
+        Element ctxt = protocol.getFactory().createElement(CONTEXT);
+        if (authToken != null)
+            ctxt.addAttribute(E_AUTH_TOKEN, authToken, Element.DISP_CONTENT);
         if (noSession)
             ctxt.addUniqueElement(E_NO_SESSION);
-		return ctxt;
-	}	
+        return ctxt;
+    }	
 
     /** Adds session information to a <code>&lt;context></code> {@link Element}
      *  created by a call to {@link #toCtxt}.  By default, the server creates
@@ -602,12 +654,12 @@ public class ZimbraSoapContext {
             return ctxt;
 
         Element eSession = ctxt.addElement(E_SESSION_ID).addAttribute(A_ID, sessionId)
-                               .setText(sessionId);
+        .setText(sessionId);
         if (noNotify)
             eSession.addAttribute(A_NOTIFY, false);
         return ctxt;
     }
-    
+
     /** Adds user agent information to a <code>&lt;context></code> {@link Element}
      *  created by a call to {@link #toCtxt}.
      *  
@@ -644,7 +696,7 @@ public class ZimbraSoapContext {
      * @return A new <code>context</code> Element in the appropriate markup.
      * @see #toCtxt(SoapProtocol, String, boolean) */
     public static Element toCtxt(SoapProtocol protocol, String authToken, String sessionId) {
-    	Element ctxt = toCtxt(protocol, authToken, false);
+        Element ctxt = toCtxt(protocol, authToken, false);
         return addSessionToCtxt(ctxt, sessionId, false);
     }
 
@@ -668,7 +720,7 @@ public class ZimbraSoapContext {
     }
 
     public ProxyTarget getProxyTarget() {
-    	return mProxyTarget;
+        return mProxyTarget;
     }
 
     public boolean isProxyRequest() {
@@ -682,7 +734,7 @@ public class ZimbraSoapContext {
     public String getUserAgent() {
         return mUserAgent;
     }
-    
+
     /** Formats the {@link MailItem}'s ID into a <code>String</code> that's
      *  addressable by the request's originator.  In other words, if the owner
      *  of the item matches the auth token's principal, you just get a bare

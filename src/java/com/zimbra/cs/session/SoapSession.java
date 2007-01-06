@@ -67,7 +67,7 @@ public class SoapSession extends Session {
     private List<PendingModifications> mSentChanges = new LinkedList<PendingModifications>();
     private PendingModifications mChanges = new PendingModifications(1);
 
-    private OzNotificationConnectionHandler mPushChannel = null;
+    private PushChannel mPushChannel = null;
 
     private static final long SOAP_SESSION_TIMEOUT_MSEC = 10 * Constants.MILLIS_PER_MINUTE;
 
@@ -107,7 +107,6 @@ public class SoapSession extends Session {
         if (!mNotify)
             return;
 
-//        mIMNotifications.add(imn);
         PendingModifications pm = new PendingModifications();
         pm.addIMNotification(imn);
         notifyPendingChanges(pm);
@@ -115,14 +114,41 @@ public class SoapSession extends Session {
     
     protected boolean shouldRegisterWithIM() { return true; }
     
-    public synchronized RegisterNotificationResult registerNotificationConnection(OzNotificationConnectionHandler conn) throws ServiceException {
+    /**
+     * A callback interface which is listening on this session and waiting for new notifications
+     */
+    public static interface PushChannel {
+        public void close();
+        public int getLastKnownSeqNo();
+        public ZimbraSoapContext getSoapContext();
+        public void notificationsReady(SoapSession session) throws ServiceException; 
+    }
+    
+    public static enum RegisterNotificationResult {
+        NO_NOTIFY,  // notifications not available for this session
+        DATA_READY,     // notifications already here
+        BLOCKING;  // none here yet, wait
+    }
+    
+    /**
+     * A push channel has come online
+     *
+     * @return TRUE if the PushChannel is waiting (no data  and notifications turned on),
+     * or FALSE if the channel is not waiting
+     * 
+     * @param push channel 
+     * @throws ServiceException 
+     */
+    public synchronized RegisterNotificationResult registerNotificationConnection(PushChannel sc) throws ServiceException {
         if (mPushChannel != null) {
             mPushChannel.close();
             mPushChannel = null;
         }
-
-        if (!mNotify || mMailbox == null)
+        
+        if (!mNotify || mMailbox == null) {
+            sc.close();
             return RegisterNotificationResult.NO_NOTIFY;
+        }
 
         // must lock the Mailbox before locking the Session to avoid deadlock
         //   because ToXML functions can now call back into the Mailbox
@@ -130,25 +156,19 @@ public class SoapSession extends Session {
             synchronized (this) {
                 // are there any notifications already pending given the passed-in seqno?
                 boolean notifying = mChanges.hasNotifications();
-                int lastSeqNo = conn.getLastKnownSeqNo();
+                int lastSeqNo = sc.getLastKnownSeqNo();
                 boolean isEmpty = mSentChanges.isEmpty();
                 if (notifying || (mChanges.getSequence() > lastSeqNo + 1 && !isEmpty)) {
-                    // yes!
-                    Element e = new Element.XMLElement("notify");
-                    putNotifications(conn.getZimbraContext(), e, conn.getLastKnownSeqNo());
-                    try {
-                        conn.writeHttpResponse(200, "OK", "text/xml", e.toUTF8());
-                        return RegisterNotificationResult.SENT_DATA;
-                    } catch (IOException ex) {
-                        throw ServiceException.FAILURE("IOException writing HTTP response to stream "+ex, ex);
-                    }
+                    sc.notificationsReady(this);  
+                    return RegisterNotificationResult.DATA_READY;
                 } else {
-                    mPushChannel = conn;
-                    return RegisterNotificationResult.WAITING;
+                    mPushChannel = sc;
+                    return RegisterNotificationResult.BLOCKING;
                 }
             }
         }
     }
+    
 
     /** Handles the set of changes from a single Mailbox transaction.
      *  <p>
@@ -197,14 +217,7 @@ public class SoapSession extends Session {
                     }
                     
                     if (mPushChannel != null) {
-                        Element e = new Element.XMLElement("notify");
-                        putNotifications(mPushChannel.getZimbraContext(), e, mPushChannel.getLastKnownSeqNo());
-                        try {
-                            mPushChannel.writeHttpResponse(200, "OK", "text/xml", e.toUTF8());
-                        } catch (IOException ex) {
-                            throw ServiceException.FAILURE("IOException writing HTTP response to stream "+ex, ex);
-                        }
-                        mPushChannel.close();
+                        mPushChannel.notificationsReady(this);
                         mPushChannel = null;
                     }
                 }
