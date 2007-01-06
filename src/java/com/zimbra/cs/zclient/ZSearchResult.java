@@ -56,6 +56,18 @@ public class ZSearchResult {
         }
     }
 
+    public ZSearchResult(List<ZSearchHit> hits,
+                         ZConversationSummary convSummary,
+                         boolean hasMore,
+                         String sortBy,
+                         int offset) {
+        mHits = hits;
+        mConvSummary = convSummary;
+        mHasMore = hasMore;
+        mSortBy = sortBy;
+        mOffset = offset;
+    }
+
     private void init(Element resp, Element hits) throws ServiceException {
         mSortBy = resp.getAttribute(MailService.A_SORTBY);
         mHasMore = resp.getAttributeBool(MailService.A_QUERY_MORE);
