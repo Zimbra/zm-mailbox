@@ -369,6 +369,10 @@ public class ToXML {
             return elem;
         }
 
+        try {
+            elem.addAttribute(MailService.A_FILE_AS_STR, contact.getFileAsString());
+        } catch (ServiceException e) { }
+
         Map<String, String> attrs = contact.getFields();
         if (attrFilter != null) {
             for (String name : attrFilter) {

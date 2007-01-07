@@ -1551,15 +1551,15 @@ needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
 
 Contacts: 
  
-  <cn id="{contact-id}" [t="{tags}"] [f="{flags}"] md="{mod-date}" [l="{folder}"]>
+  <cn id="{contact-id}" [t="{tags}"] [f="{flags}"] md="{modified-date}" [l="{folder}"] [fileAsStr="{file-as}"]>
     <a [n="{attr-name}" id="{attr-id}"] [ref="{attr-id}"]>{attr-data}</a>+
     <!-- <mp>...</mp>* -->
   </cn>
 
   {contact-id} = unique contact id
   {flags} = (f)lagged, has (a)ttachment
-  // {created-date}  = secs since epoch, date contact was created
   {modified-date}  = secs since epoch, date contact was modified
+  {file-as} = current "file as" string for display/sorting purposes; *cannot* be used to *set* the file-as value
   {attr-name} = name of the attribute (firstName, etc)
   {attr-id} = for the scope of a response, a unique id assigned to the attr-name. The first contact with
                a given attr will include the name and id, the second will only include the ref.
