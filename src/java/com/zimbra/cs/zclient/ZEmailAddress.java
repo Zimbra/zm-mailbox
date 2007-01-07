@@ -97,6 +97,25 @@ public class ZEmailAddress {
         return mDisplay;
     }
 
+
+    private String quoteAddress(String addr) {
+        if (addr.startsWith("<"))
+            return addr;
+        else
+            return "<" + addr +">";
+    }
+
+    public String getFullAddressQuoted() {
+        if (mPersonal == null) {
+            return quoteAddress(mAddress);
+        } else {
+            String p = mPersonal;
+            if (p.indexOf("\"") != -1)
+                p = p.replaceAll("\"", "\\\"");
+            return "\"" + p + "\" "+ quoteAddress(mAddress);
+        }
+    }
+
     public String getFullAddress() {
         try {
             if (mPersonal == null)
