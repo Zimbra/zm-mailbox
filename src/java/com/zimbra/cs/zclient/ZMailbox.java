@@ -109,7 +109,8 @@ public class ZMailbox {
 
     public final static int MAX_NUM_CACHED_SEARCH_PAGERS = 5;
     public final static int MAX_NUM_CACHED_SEARCH_CONV_PAGERS = 5;
-    public final static int MAX_NUM_CACHED_MESSAGES = 5;    
+    public final static int MAX_NUM_CACHED_MESSAGES = 5;
+    public final static int MAX_NUM_CACHED_CONTACTS = 25;    
     
     public final static String PATH_SEPARATOR = "/";
     
@@ -216,6 +217,7 @@ public class ZMailbox {
     private ZSearchPagerCache mSearchPagerCache;
     private ZSearchPagerCache mSearchConvPagerCache;
     private LRUMap mMessageCache;
+    private LRUMap mContactCache;
 
     private long mSize;
 
@@ -232,8 +234,8 @@ public class ZMailbox {
 
     /**
      * change password. You must pass in an options with an account, password, newPassword, and Uri.
-     * @param options
-     * @throws ServiceException
+     * @param options uri/name/pass/newPass
+     * @throws ServiceException on error
      */
     public static void changePassword(Options options) throws ServiceException {
         ZMailbox mailbox = new ZMailbox();
@@ -248,6 +250,7 @@ public class ZMailbox {
         mSearchConvPagerCache = new ZSearchPagerCache(MAX_NUM_CACHED_SEARCH_CONV_PAGERS, false);
         mHandlers.add(mSearchConvPagerCache);
         mMessageCache = new LRUMap(MAX_NUM_CACHED_MESSAGES);
+        mContactCache = new LRUMap(MAX_NUM_CACHED_CONTACTS);        
         
         if (options.getEventHandler() != null)
     		mHandlers.add(options.getEventHandler());
@@ -475,6 +478,8 @@ public class ZMailbox {
         public synchronized void handleRefresh(ZRefreshEvent event, ZMailbox mailbox) {
             mNameToTag.clear();
             mIdToItem.clear();
+            mMessageCache.clear();
+            mContactCache.clear();
             mTransport.setMaxNoitfySeq(0);
             mSize = event.getSize();
             mUserRoot = event.getUserRoot();
@@ -526,12 +531,18 @@ public class ZMailbox {
                 CachedMessage cm = (CachedMessage) mMessageCache.get(mme.getId());
                 if (cm != null)
                     cm.zm.modifyNotification(event);
+            } else if (event instanceof ZModifyContactEvent) {
+                ZModifyContactEvent mce = (ZModifyContactEvent) event;
+                ZContact contact = (ZContact) mContactCache.get(mce.getId());
+                if (contact != null)
+                    contact.modifyNotification(mce);
             }
         }
         
         public synchronized void handleDelete(ZDeleteEvent event, ZMailbox mailbox) throws ServiceException {
             for (String id : event.toList()) {
                 mMessageCache.remove(id);
+                mContactCache.remove(id);                
                 ZItem item = mIdToItem.get(id);
                 if (item instanceof ZMountpoint) {
                     ZMountpoint sl = (ZMountpoint) item;
@@ -885,7 +896,25 @@ public class ZMailbox {
         }
         return result;
     }   
-    
+
+    /**
+     *
+     * @param id single contact id to fetch
+     * @return fetched contact
+     * @throws ServiceException on error
+     */
+    public synchronized ZContact getContact(String id) throws ServiceException {
+        ZContact result = (ZContact) mContactCache.get(id);
+        if (result == null) {
+            XMLElement req = new XMLElement(MailService.GET_CONTACTS_REQUEST);
+            req.addAttribute(MailService.A_SYNC, true);
+            req.addElement(MailService.E_CONTACT).addAttribute(MailService.A_ID, id);
+            result = new ZContact(invoke(req).getElement(MailService.E_CONTACT));
+            mContactCache.put(id, result);
+        }
+        return result;
+    }
+
     private Element contactAction(String op, String id) {
         XMLElement req = new XMLElement(MailService.CONTACT_ACTION_REQUEST);
         Element actionEl = req.addElement(MailService.E_ACTION);
