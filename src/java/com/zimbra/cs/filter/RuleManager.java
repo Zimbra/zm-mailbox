@@ -103,8 +103,10 @@ public class RuleManager {
             }
 
         } catch (ParseException e) {
+            ZimbraLog.filter.error("Unable to parse script:\n" + script);
             throw ServiceException.PARSE_ERROR("parsing Sieve script", e);
         } catch (SieveException e) {
+            ZimbraLog.filter.error("Unable to evaluate script:\n" + script);
             throw ServiceException.PARSE_ERROR("evaluating Sieve script", e);
         }
     }
