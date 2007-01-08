@@ -806,7 +806,7 @@ public class LdapProvisioning extends Provisioning {
         throws ServiceException
     {
         //flags &= ~Provisioning.SA_DOMAIN_FLAG; // leaving on for now
-        return searchObjects(query, returnAttrs, sortAttr, sortAscending, "", flags);          
+        return searchObjects(query, returnAttrs, sortAttr, sortAscending, "", flags, 0);
     }
     
     private static String getObjectClassQuery(int flags) {
@@ -854,7 +854,7 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#searchAccounts(java.lang.String)
      */
-    List<NamedEntry> searchObjects(String query, String returnAttrs[], final String sortAttr, final boolean sortAscending, String base, int flags)  
+    List<NamedEntry> searchObjects(String query, String returnAttrs[], final String sortAttr, final boolean sortAscending, String base, int flags, int maxResults)
     throws ServiceException {
         final List<NamedEntry> result = new ArrayList<NamedEntry>();
         
@@ -864,7 +864,7 @@ public class LdapProvisioning extends Provisioning {
             }
         };
         
-        searchObjects(query, returnAttrs, base, flags, visitor);
+        searchObjects(query, returnAttrs, base, flags, visitor, maxResults);
 
         final boolean byName = sortAttr == null || sortAttr.equals("name"); 
         Comparator<NamedEntry> comparator = new Comparator<NamedEntry>() {
@@ -891,7 +891,7 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#searchAccounts(java.lang.String)
      */
-    void searchObjects(String query, String returnAttrs[], String base, int flags, NamedEntry.Visitor visitor)
+    void searchObjects(String query, String returnAttrs[], String base, int flags, NamedEntry.Visitor visitor, int maxResults)
         throws ServiceException
     {
         DirContext ctxt = null;
@@ -913,7 +913,7 @@ public class LdapProvisioning extends Provisioning {
             returnAttrs = fixReturnAttrs(returnAttrs, flags);
 
             SearchControls searchControls = 
-                new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, returnAttrs, false, false);
+                new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, returnAttrs, false, false);
 
             //Set the page size and initialize the cookie that we pass back in subsequent pages
             int pageSize = 1000;
@@ -952,6 +952,8 @@ public class LdapProvisioning extends Provisioning {
         } catch (NameNotFoundException e) {
             // happens when base doesn't exist
             ZimbraLog.account.warn("unable to list all objects", e);
+        } catch (SizeLimitExceededException e) {
+            throw AccountServiceException.TOO_MANY_SEARCH_RESULTS("too many search results returned", e);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to list all objects", e);
         } catch (IOException e) {
@@ -2941,7 +2943,7 @@ public class LdapProvisioning extends Provisioning {
         return searchObjects(query, returnAttrs,
                               sortAttr, sortAscending,
                               base,
-                              Provisioning.SA_CALENDAR_RESOURCE_FLAG);
+                              Provisioning.SA_CALENDAR_RESOURCE_FLAG, 0);
     }
 
     private Account makeAccount(String dn, Attributes attrs, LdapProvisioning prov) throws NamingException, ServiceException {
@@ -3150,7 +3152,7 @@ public class LdapProvisioning extends Provisioning {
     @Override
     public void getAllAccounts(Domain d, NamedEntry.Visitor visitor) throws ServiceException {
         LdapDomain ld = (LdapDomain) d;
-        searchObjects("(objectclass=zimbraAccount)", null, "ou=people,"+ld.getDN(), Provisioning.SA_ACCOUNT_FLAG, visitor);
+        searchObjects("(objectclass=zimbraAccount)", null, "ou=people,"+ld.getDN(), Provisioning.SA_ACCOUNT_FLAG, visitor, 0);
     }
 
     @Override
@@ -3167,7 +3169,7 @@ public class LdapProvisioning extends Provisioning {
         searchObjects("(objectclass=zimbraCalendarResource)",
                              null, "ou=people," + ld.getDN(),
                              Provisioning.SA_CALENDAR_RESOURCE_FLAG,
-                             visitor);
+                             visitor, 0);
     }
 
     @Override
@@ -3179,7 +3181,13 @@ public class LdapProvisioning extends Provisioning {
     public List searchAccounts(Domain d, String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException
     {
         LdapDomain ld = (LdapDomain) d;
-        return searchObjects(query, returnAttrs, sortAttr, sortAscending, "ou=people,"+ld.getDN(), flags);
+        return searchObjects(query, returnAttrs, sortAttr, sortAscending, "ou=people,"+ld.getDN(), flags, 0);
+    }
+
+    public List<NamedEntry> searchDirectory(SearchOptions options) throws ServiceException {
+        LdapDomain ld = (LdapDomain) options.getDomain();
+        String base = ld == null ? "" : "ou=people,"+ld.getDN();
+        return searchObjects(options.getQuery(), options.getReturnAttrs(), options.getSortAttr(), options.isSortAscending(), base, options.getFlags(), options.getMaxResults());
     }
 
     @Override

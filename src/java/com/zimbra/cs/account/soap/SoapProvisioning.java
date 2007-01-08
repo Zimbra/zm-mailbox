@@ -982,6 +982,34 @@ public class SoapProvisioning extends Provisioning {
         return result;
     }
 
+    public List<NamedEntry> searchDirectory(SearchOptions options) throws ServiceException {
+        List<NamedEntry> result = new ArrayList<NamedEntry>();
+        XMLElement req = new XMLElement(AdminService.SEARCH_DIRECTORY_REQUEST);
+        req.addElement(AdminService.E_QUERY).setText(options.getQuery());
+        if (options.getMaxResults() != 0) req.addAttribute(AdminService.A_MAX_RESULTS, options.getMaxResults());
+        if (options.getDomain() != null) req.addAttribute(AdminService.A_DOMAIN, options.getDomain().getName());
+        if (options.getSortAttr() != null) req.addAttribute(AdminService.A_SORT_BY, options.getSortAttr());
+        if (options.getFlags() != 0) req.addAttribute(AdminService.A_TYPES, Provisioning.searchAccountMaskToString(options.getFlags()));
+        req.addAttribute(AdminService.A_SORT_ASCENDING, options.isSortAscending() ? "1" : "0");
+        if (options.getReturnAttrs() != null) {
+            req.addAttribute(AdminService.A_ATTRS, StringUtil.join(",", options.getReturnAttrs()));
+        }
+        // TODO: handle ApplyCos, limit, offset?
+        Element resp = invoke(req);
+        for (Element e: resp.listElements(AdminService.E_DL))
+            result.add(new SoapDistributionList(e));
+
+        for (Element e: resp.listElements(AdminService.E_ALIAS))
+            result.add(new SoapAlias(e));
+
+        for (Element e: resp.listElements(AdminService.E_ACCOUNT))
+            result.add(new SoapAccount(e));
+
+        for (Element e: resp.listElements(AdminService.E_DOMAIN))
+            result.add(new SoapDomain(e));
+        return result;
+    }
+
     @Override
     public List searchCalendarResources(Domain d, EntrySearchFilter filter, String[] returnAttrs, String sortAttr, boolean sortAscending) throws ServiceException {
         // TODO

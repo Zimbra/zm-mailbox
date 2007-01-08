@@ -73,6 +73,7 @@ public class AccountServiceException extends ServiceException {
     public static final String DATA_SOURCE_EXISTS = "account.DATA_SOURCE_EXISTS";        
     public static final String TOO_MANY_DATA_SOURCES = "account.TOO_MANY_DATA_SOURCES";
     public static final String TOO_MANY_ACCOUNTS = "account.TOO_MANY_ACCOUNTS";
+    public static final String TOO_MANY_SEARCH_RESULTS = "account.TOO_MANY_SEARCH_RESULTS";
 
     private AccountServiceException(String message, String code, boolean isReceiversFault) {
         super(message, code, isReceiversFault);
@@ -218,5 +219,9 @@ public class AccountServiceException extends ServiceException {
 
     public static AccountServiceException TOO_MANY_ACCOUNTS(String str) {
     	return new AccountServiceException("number of accounts reached the limit: "+str, TOO_MANY_ACCOUNTS, RECEIVERS_FAULT);
+    }
+
+    public static AccountServiceException TOO_MANY_SEARCH_RESULTS(String str, Exception e) {
+    	return new AccountServiceException("number of results exceeded the limit: "+str, TOO_MANY_SEARCH_RESULTS, RECEIVERS_FAULT, e);
     }
 }

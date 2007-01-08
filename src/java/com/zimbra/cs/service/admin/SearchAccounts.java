@@ -28,9 +28,6 @@
  */
 package com.zimbra.cs.service.admin;
 
-import java.util.*;
-import java.util.Map.Entry;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -46,6 +43,11 @@ import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * @author schemers
@@ -104,7 +106,7 @@ public class SearchAccounts extends AdminDocumentHandler {
         List accounts;
         AdminSession session = (AdminSession) lc.getSession(SessionCache.SESSION_ADMIN);
         if (session != null) {
-            accounts = session.searchAccounts(d, query, attrs, sortBy, sortAscending, flags, offset);
+            accounts = session.searchAccounts(d, query, attrs, sortBy, sortAscending, flags, offset, 0);
         } else {
             if (d != null) {
                 accounts = prov.searchAccounts(d, query, attrs, sortBy, sortAscending, flags);

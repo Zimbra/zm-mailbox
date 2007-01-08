@@ -28,9 +28,6 @@
  */
 package com.zimbra.cs.service.admin;
 
-import java.util.*;
-import java.util.Map.Entry;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -41,11 +38,17 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.Provisioning.SearchOptions;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * @author schemers
@@ -54,6 +57,8 @@ public class SearchDirectory extends AdminDocumentHandler {
 
     public static final String BY_NAME = "name";
     public static final String BY_ID = "id";
+
+    public static final int MAX_SEARCH_RESULTS = 5000;
     
     /**
      * must be careful and only allow access to domain if domain admin
@@ -69,6 +74,7 @@ public class SearchDirectory extends AdminDocumentHandler {
 
         String query = request.getAttribute(AdminService.E_QUERY);
 
+        int maxResults = (int) request.getAttributeLong(AdminService.A_MAX_RESULTS, MAX_SEARCH_RESULTS);
         int limit = (int) request.getAttributeLong(AdminService.A_LIMIT, Integer.MAX_VALUE);
         if (limit == 0)
             limit = Integer.MAX_VALUE;
@@ -113,13 +119,17 @@ public class SearchDirectory extends AdminDocumentHandler {
         List accounts;
         AdminSession session = (AdminSession) lc.getSession(SessionCache.SESSION_ADMIN);
         if (session != null) {
-            accounts = session.searchAccounts(d, query, attrs, sortBy, sortAscending, flags, offset);
+            accounts = session.searchAccounts(d, query, attrs, sortBy, sortAscending, flags, offset, maxResults);
         } else {
-            if (d != null) {
-                accounts = prov.searchAccounts(d, query, attrs, sortBy, sortAscending, flags);
-            } else {
-                accounts = prov.searchAccounts(query, attrs, sortBy, sortAscending, flags);
-            }
+            SearchOptions options = new SearchOptions();
+            options.setDomain(d);
+            options.setFlags(flags);
+            options.setMaxResults(maxResults);
+            options.setQuery(query);
+            options.setReturnAttrs(attrs);
+            options.setSortAscending(sortAscending);
+            options.setSortAttr(sortBy);
+            accounts = prov.searchDirectory(options);
         }
 
         Element response = lc.createElement(AdminService.SEARCH_DIRECTORY_RESPONSE);
