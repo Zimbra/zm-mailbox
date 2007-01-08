@@ -27,15 +27,20 @@
  */
 package com.zimbra.cs.session;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.SearchOptions;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.DomainBy;
 
+/**
+ * this class needs to be replaced with new SearchOptions, not enough time right now,
+ * so we'll just create one inside...
+ */
 class AccountSearchParams {
     String mDomainId;
     String mQuery;
@@ -44,9 +49,11 @@ class AccountSearchParams {
     String mSortBy;
     boolean mSortAscending;
     int mFlags;
+    int mMaxResult;
+    SearchOptions mOptions;
     List mResult;
     
-    AccountSearchParams(Domain d, String query, String[] attrs, String sortBy, boolean sortAscending, int flags) {
+    AccountSearchParams(Domain d, String query, String[] attrs, String sortBy, boolean sortAscending, int flags, int maxResults) {
         mDomainId = (d == null) ? "" : d.getId();
         mQuery = (query == null) ? "" : query;
         mAttrs = new String[attrs == null ? 0 : attrs.length];
@@ -55,8 +62,17 @@ class AccountSearchParams {
         mSortBy = (sortBy == null) ? "" : sortBy;
         mSortAscending = sortAscending;
         mFlags = flags;
+        mMaxResult = maxResults;
+        mOptions = new SearchOptions();
+        mOptions.setDomain(d);
+        mOptions.setFlags(mFlags);
+        mOptions.setMaxResults(maxResults);
+        mOptions.setQuery(mQuery);
+        mOptions.setReturnAttrs(mAttrs);
+        mOptions.setSortAscending(mSortAscending);
+        mOptions.setSortAttr(mSortBy);
     }
-
+    
     public boolean equals(Object o) {
         if (!(o instanceof AccountSearchParams)) return false;
         if (o == this) return true;
@@ -71,13 +87,12 @@ class AccountSearchParams {
             mFlags == other.mFlags;
     }
     
-    void doSearch() throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
-        if (!mDomainId.equals("")) {
-            mResult = prov.searchAccounts(prov.get(DomainBy.id, mDomainId), mQuery, mAttrs, mSortBy, mSortAscending, mFlags);
-        } else {
-            mResult = prov.searchAccounts(mQuery, mAttrs, mSortBy, mSortAscending, mFlags);
-        }
+    public int hashCode() {
+        return mQuery == null ? "".hashCode() : mQuery.hashCode();
     }
     
+    void doSearch() throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        mResult = prov.searchDirectory(mOptions);
+    }
 }

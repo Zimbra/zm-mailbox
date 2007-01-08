@@ -27,18 +27,18 @@
  */
 package com.zimbra.cs.session;
 
-import java.io.IOException;
-import java.io.Writer;
-import java.util.HashMap;
-import java.util.List;
-
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Constants;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapEntrySearchFilter;
 import com.zimbra.cs.im.IMNotification;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Constants;
+
+import java.io.IOException;
+import java.io.Writer;
+import java.util.HashMap;
+import java.util.List;
 
 /** @author dkarp */
 public class AdminSession extends Session {
@@ -75,8 +75,8 @@ public class AdminSession extends Session {
     }
 
     public List searchAccounts(Domain d, String query, String[] attrs, String sortBy,
-            boolean sortAscending, int flags, int offset) throws ServiceException {
-        AccountSearchParams params = new AccountSearchParams(d, query, attrs, sortBy, sortAscending, flags);
+            boolean sortAscending, int flags, int offset, int maxResults) throws ServiceException {
+        AccountSearchParams params = new AccountSearchParams(d, query, attrs, sortBy, sortAscending, flags, maxResults);
         boolean needToSearch =  (offset == 0) || (mSearchParams == null) || !mSearchParams.equals(params);
         //ZimbraLog.account.info("this="+this+" mSearchParams="+mSearchParams+" equal="+!params.equals(mSearchParams));
         if (needToSearch) {
@@ -97,6 +97,6 @@ public class AdminSession extends Session {
         return searchAccounts(
                 d, query, attrs, sortBy, sortAscending,
                 Provisioning.SA_CALENDAR_RESOURCE_FLAG,
-                offset);
+                offset, 0);
     }
 }

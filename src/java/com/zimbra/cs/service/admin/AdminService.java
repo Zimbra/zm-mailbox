@@ -29,17 +29,16 @@
 package com.zimbra.cs.service.admin;
 
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.dom4j.Namespace;
-import org.dom4j.QName;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.soap.DocumentDispatcher;
 import com.zimbra.soap.DocumentService;
 import com.zimbra.soap.Element;
+import org.dom4j.Namespace;
+import org.dom4j.QName;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author schemers
@@ -330,6 +329,7 @@ public class AdminService implements DocumentService {
     public static final String A_APPLY_CONFIG = "applyConfig";
     public static final String A_APPLY_COS = "applyCos";
     public static final String A_ID = "id";
+    public static final String A_MAX_RESULTS = "maxResults";
     public static final String A_LIMIT = "limit";
     public static final String A_OFFSET = "offset";    
     public static final String A_DOMAIN = "domain";

@@ -1701,6 +1701,76 @@ public abstract class Provisioning {
      */
     public abstract List<NamedEntry> searchAccounts(Domain d, String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException;  
 
+
+    public static class SearchOptions {
+        private Domain mDomain;
+        private String mQuery;
+        private String mReturnAttrs[];
+        private String mSortAttr;
+        private boolean mSortAscending;
+        private int mFlags;
+        private int mMaxResults;
+
+
+        public Domain getDomain() {
+            return mDomain;
+        }
+
+        public void setDomain(Domain domain) {
+            mDomain = domain;
+        }
+
+        public String getQuery() {
+            return mQuery;
+        }
+
+        public void setQuery(String query) {
+            mQuery = query;
+        }
+
+        public String[] getReturnAttrs() {
+            return mReturnAttrs;
+        }
+
+        public void setReturnAttrs(String[] returnAttrs) {
+            mReturnAttrs = returnAttrs;
+        }
+
+        public String getSortAttr() {
+            return mSortAttr;
+        }
+
+        public void setSortAttr(String sortAttr) {
+            mSortAttr = sortAttr;
+        }
+
+        public boolean isSortAscending() {
+            return mSortAscending;
+        }
+
+        public void setSortAscending(boolean sortAscending) {
+            mSortAscending = sortAscending;
+        }
+
+        public int getFlags() {
+            return mFlags;
+        }
+
+        public void setFlags(int flags) {
+            mFlags = flags;
+        }
+
+        public int getMaxResults() {
+            return mMaxResults;
+        }
+
+        public void setMaxResults(int maxResults) {
+            mMaxResults = maxResults;
+        }
+    }
+
+    public abstract List<NamedEntry> searchDirectory(SearchOptions options) throws ServiceException;
+
     /**
      * 
      * @param query LDAP search query
