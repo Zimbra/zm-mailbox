@@ -31,6 +31,8 @@
  */
 package com.zimbra.cs.db;
 
+import java.sql.SQLException;
+
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -39,23 +41,27 @@ import com.zimbra.common.util.ZimbraLog;
  */
 public abstract class Db {
 
-    public static class Error {
-    	public static int DUPLICATE_ROW;
-    	public static int DEADLOCK_DETECTED;
-    	public static int FOREIGN_KEY_NO_PARENT;
-    	public static int FOREIGN_KEY_CHILD_EXISTS;
-        public static int NO_SUCH_TABLE;
+    public static enum Error {
+        DEADLOCK_DETECTED,
+        DUPLICATE_ROW,
+        FOREIGN_KEY_CHILD_EXISTS,
+        FOREIGN_KEY_NO_PARENT,
+        NO_SUCH_DATABASE,
+        NO_SUCH_TABLE;
     }
 
-    public static class Capability {
-        public static boolean LIMIT_CLAUSE;
-        public static boolean BOOLEAN_DATATYPE;
-        public static boolean ON_DUPLICATE_KEY;
-        public static boolean ON_UPDATE_CASCADE;
-        public static boolean MULTITABLE_UPDATE;
-        public static boolean BITWISE_OPERATIONS;
-        public static boolean DISABLE_CONSTRAINT_CHECK;
+    public static enum Capability {
+        BITWISE_OPERATIONS,
+        BOOLEAN_DATATYPE,
+        CASE_SENSITIVE_COMPARISON,
+        DISABLE_CONSTRAINT_CHECK,
+        LIMIT_CLAUSE,
+        MULTITABLE_UPDATE,
+        NULL_IN_UNIQUE_INDEXES,
+        ON_DUPLICATE_KEY,
+        ON_UPDATE_CASCADE;
     }
+
 
     private static Db sDatabase;
 
@@ -71,35 +77,74 @@ public abstract class Db {
             }
             if (sDatabase == null)
                 sDatabase = new MySQL();
-
-            // now that the database has been selected, configure the constants
-            sDatabase.setErrorConstants();
-            sDatabase.setCapabilities();
         }
         return sDatabase;
     }
 
-    abstract void setErrorConstants();
-    abstract void setCapabilities();
+
+    /** Returns whether the currently-configured database supports the given
+     *  {@link Db.Capability}. */
+    public static boolean supports(Db.Capability capability) {
+        return getInstance().supportsCapability(capability);
+    }
+
+    abstract boolean supportsCapability(Db.Capability capability);
+
+
+    /** Returns whether the given {@link SQLException} is an instance of the
+     *  specified {@link Db.Error}. */
+    public static boolean errorMatches(SQLException e, Db.Error error) {
+        return getInstance().compareError(e, error);
+    }
+
+    abstract boolean compareError(SQLException e, Db.Error error);
+
 
     abstract DbPool.PoolConfig getPoolConfig();
+
 
     /** Generates a SELECT expression representing a BOOLEAN.  For databases
      *  that don't support a BOOLEAN datatype, returns an appropriate CASE
      *  clause that evaluates to 1 when the given BOOLEAN clause is true and
      *  0 when it's false. */
     static String selectBOOLEAN(String clause) {
-        if (Capability.BOOLEAN_DATATYPE)
+        if (supports(Capability.BOOLEAN_DATATYPE))
             return clause;
         else
             return "CASE WHEN " + clause + " THEN 1 ELSE 0 END";
     }
 
+
+    /** Generates a WHERE-type clause that evaluates to true when the given
+     *  column equals a string later specified by <tt>stmt.setString()</tt>
+     *  under a case-insensitive comparison.  Note that the caller should
+     *  pass an upcased version of the comparison string in the subsequent
+     *  call to <tt>stmt.setString()</tt>. */
+    static String equalsSTRING(String column) {
+        if (supports(Capability.CASE_SENSITIVE_COMPARISON))
+            return "UPPER(" + column + ") = ?";
+        else
+            return column + " = ?";
+    }
+
+    /** Generates a WHERE-type clause that evaluates to true when the given
+     *  column is a case-insensitive match to a SQL pattern string later
+     *  specified by <tt>stmt.setString()</tt> under a  comparison.  Note that
+     *  the caller should pass an upcased version of the comparison string in
+     *  the subsequent call to <tt>stmt.setString()</tt>. */
+    static String likeSTRING(String column) {
+        if (supports(Capability.CASE_SENSITIVE_COMPARISON))
+            return "UPPER(" + column + ") LIKE ?";
+        else
+            return column + " LIKE ?";
+    }
+
+
     /** Generates a WHERE-type clause that evaluates to true when the given
      *  column matches a bitmask later specified by <tt>stmt.setLong()</tt>.
      *  Note that this is only valid when the bitmask has only 1 bit set. */
     static String bitmaskAND(String column) {
-        if (Capability.BITWISE_OPERATIONS)
+        if (supports(Capability.BITWISE_OPERATIONS))
             return column + " & ?";
         else
             return "MOD(" + column + " / ?, 2) = 1";
@@ -109,7 +154,7 @@ public abstract class Db {
      *  column matches the given bitmask.  Note that this is only valid when
      *  the bitmask has only 1 bit set. */
     static String bitmaskAND(String column, long bitmask) {
-        if (Capability.BITWISE_OPERATIONS)
+        if (supports(Capability.BITWISE_OPERATIONS))
             return column + " & " + bitmask;
         else
             return "MOD(" + column + " / " + bitmask + ", 2) = 1";

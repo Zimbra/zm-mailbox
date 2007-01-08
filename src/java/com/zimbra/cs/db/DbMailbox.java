@@ -106,7 +106,7 @@ public class DbMailbox {
         try {
             boolean explicitId = (mailboxId != Mailbox.ID_AUTO_INCREMENT);
             String idSource = (explicitId ? "?" : "next_mailbox_id");
-            String limitClause = Db.Capability.LIMIT_CLAUSE ? " ORDER BY index_volume_id LIMIT 1" : "";
+            String limitClause = Db.supports(Db.Capability.LIMIT_CLAUSE) ? " ORDER BY index_volume_id LIMIT 1" : "";
             stmt = conn.prepareStatement("INSERT INTO mailbox" +
                     "(account_id, id, " + (!DebugConfig.disableMailboxGroup ? "group_id, " : "") + "index_volume_id, item_id_checkpoint, comment)" +
                     " SELECT ?, " + idSource + (!DebugConfig.disableMailboxGroup ? ", 0" : "") + ", index_volume_id, " + (Mailbox.FIRST_USER_ID - 1) + ", ?" +
@@ -134,8 +134,8 @@ public class DbMailbox {
                 return ret;
             }
 
-            stmt = conn.prepareStatement("SELECT id FROM mailbox WHERE account_id = ?");
-            stmt.setString(1, accountId);
+            stmt = conn.prepareStatement("SELECT id FROM mailbox WHERE " + Db.equalsSTRING("account_id"));
+            stmt.setString(1, accountId.toUpperCase());
             rs = stmt.executeQuery();
             if (rs.next())
                 ret.id = rs.getInt(1);
@@ -219,7 +219,7 @@ public class DbMailbox {
         for (int i = 0; i < sTables.length; i++) {
             String table = getDatabaseName(mailboxId, groupId) + "." + sTables[i];
 
-            String sql = "SELECT * FROM " + table + (Db.Capability.LIMIT_CLAUSE ? " LIMIT 1" : "");
+            String sql = "SELECT * FROM " + table + (Db.supports(Db.Capability.LIMIT_CLAUSE) ? " LIMIT 1" : "");
             PreparedStatement stmt = null;
             ResultSet rs = null;
             try {
@@ -281,7 +281,7 @@ public class DbMailbox {
 
         if (conn == null)
             conn = mbox.getOperationConnection();
-        if (Db.Capability.DISABLE_CONSTRAINT_CHECK)
+        if (Db.supports(Db.Capability.DISABLE_CONSTRAINT_CHECK))
             conn.disableForeignKeyConstraints();
 
         try {
@@ -302,7 +302,7 @@ public class DbMailbox {
             throw ServiceException.FAILURE("dropMailboxFromGroup(" + mailboxId + ")", e);
         } finally {
             try {
-                if (Db.Capability.DISABLE_CONSTRAINT_CHECK)
+                if (Db.supports(Db.Capability.DISABLE_CONSTRAINT_CHECK))
                     conn.enableForeignKeyConstraints();
             } catch (ServiceException e) {
                 ZimbraLog.mailbox.error("Error enabling foreign key constraints during mailbox deletion", e);
@@ -326,7 +326,8 @@ public class DbMailbox {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement("UPDATE mailbox SET item_id_checkpoint = ?, contact_count = ?, change_checkpoint = ?, size_checkpoint = ?" +
+            stmt = conn.prepareStatement("UPDATE mailbox" +
+                    " SET item_id_checkpoint = ?, contact_count = ?, change_checkpoint = ?, size_checkpoint = ?" +
                     " WHERE id = ?");
             stmt.setInt(1, mbox.getLastItemId());
             stmt.setInt(2, mbox.getContactCount());
@@ -397,14 +398,16 @@ public class DbMailbox {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement("DELETE FROM mailbox_metadata WHERE mailbox_id = ? AND section = ?");
+            stmt = conn.prepareStatement("DELETE FROM mailbox_metadata" +
+                    " WHERE mailbox_id = ? AND " + Db.equalsSTRING("section"));
             stmt.setInt(1, mbox.getId());
-            stmt.setString(2, section);
+            stmt.setString(2, section.toUpperCase());
             stmt.executeUpdate();
             stmt.close();
 
             if (config != null) {
-                stmt = conn.prepareStatement("INSERT INTO mailbox_metadata (mailbox_id, section, metadata) VALUES (?, ?, ?)");
+                stmt = conn.prepareStatement("INSERT INTO mailbox_metadata (mailbox_id, section, metadata)" +
+                        " VALUES (?, ?, ?)");
                 stmt.setInt(1, mbox.getId());
                 stmt.setString(2, section);
                 stmt.setString(3, config.toString());

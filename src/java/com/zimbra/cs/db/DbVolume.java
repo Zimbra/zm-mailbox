@@ -93,7 +93,7 @@ public class DbVolume {
             stmt.setLong(pos++, compressionThreshold);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            if (e.getErrorCode() == Db.Error.DUPLICATE_ROW)
+            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
                 throw VolumeServiceException.ALREADY_EXISTS(nextId, name, path, e);
             else
                 throw ServiceException.FAILURE("inserting new volume " + nextId, e);
@@ -131,7 +131,7 @@ public class DbVolume {
             stmt.setShort(pos++, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            if (e.getErrorCode() == Db.Error.DUPLICATE_ROW)
+            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
                 throw VolumeServiceException.ALREADY_EXISTS(id, name, path, e);
             else
                 throw ServiceException.FAILURE("updating volume " + id, e);
@@ -156,7 +156,7 @@ public class DbVolume {
             int num = stmt.executeUpdate();
             return num == 1;
         } catch (SQLException e) {
-            if (e.getErrorCode() == Db.Error.FOREIGN_KEY_CHILD_EXISTS)
+            if (Db.errorMatches(e, Db.Error.FOREIGN_KEY_CHILD_EXISTS))
                 throw VolumeServiceException.CANNOT_DELETE_VOLUME_IN_USE(id, e);
             else
                 throw ServiceException.FAILURE("deleting volume entry: " + id, e);

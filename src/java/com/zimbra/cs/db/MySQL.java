@@ -24,6 +24,9 @@
  */
 package com.zimbra.cs.db;
 
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import com.zimbra.common.localconfig.LC;
@@ -31,24 +34,38 @@ import com.zimbra.common.util.ZimbraLog;
 
 public class MySQL extends Db {
 
-    @Override
-    void setErrorConstants() {
-        Error.DUPLICATE_ROW = 1062;
-        Error.DEADLOCK_DETECTED = 1213;
-        Error.FOREIGN_KEY_NO_PARENT = 1216;
-        Error.FOREIGN_KEY_CHILD_EXISTS = 1217;
-        Error.NO_SUCH_TABLE = 1146;
+    private Map<Db.Error, Integer> mErrorCodes;
+
+    MySQL() {
+        mErrorCodes = new HashMap<Db.Error, Integer>(6);
+        mErrorCodes.put(Db.Error.DEADLOCK_DETECTED,        1213);
+        mErrorCodes.put(Db.Error.DUPLICATE_ROW,            1062);
+        mErrorCodes.put(Db.Error.FOREIGN_KEY_NO_PARENT,    1216);
+        mErrorCodes.put(Db.Error.FOREIGN_KEY_CHILD_EXISTS, 1217);
+        mErrorCodes.put(Db.Error.NO_SUCH_DATABASE,         1146);
+        mErrorCodes.put(Db.Error.NO_SUCH_TABLE,            1146);
     }
 
     @Override
-    void setCapabilities() {
-        Capability.LIMIT_CLAUSE = true;
-        Capability.BOOLEAN_DATATYPE = true;
-        Capability.ON_DUPLICATE_KEY = true;
-        Capability.ON_UPDATE_CASCADE = true;
-        Capability.MULTITABLE_UPDATE = true;
-        Capability.BITWISE_OPERATIONS = true;
-        Capability.DISABLE_CONSTRAINT_CHECK = true;
+    boolean supportsCapability(Db.Capability capability) {
+        switch (capability) {
+            case BITWISE_OPERATIONS:         return true;
+            case BOOLEAN_DATATYPE:           return true;
+            case CASE_SENSITIVE_COMPARISON:  return false;
+            case DISABLE_CONSTRAINT_CHECK:   return true;
+            case LIMIT_CLAUSE:               return true;
+            case MULTITABLE_UPDATE:          return true;
+            case NULL_IN_UNIQUE_INDEXES:     return true;
+            case ON_DUPLICATE_KEY:           return true;
+            case ON_UPDATE_CASCADE:          return true;
+        }
+        return false;
+    }
+
+    @Override
+    boolean compareError(SQLException e, Db.Error error) {
+        Integer code = mErrorCodes.get(error);
+        return (code != null && e.getErrorCode() == code);
     }
 
     @Override

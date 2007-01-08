@@ -97,6 +97,8 @@ public class DbMailItem {
         if (data == null || data.id <= 0 || data.folderId <= 0 || data.parentId == 0 || data.indexId == 0)
             throw ServiceException.FAILURE("invalid data for DB item create", null);
 
+        checkNamingConstraint(mbox, data.folderId, data.name, data.id);
+
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -160,11 +162,38 @@ public class DbMailItem {
             }
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
-            if (e.getErrorCode() == Db.Error.DUPLICATE_ROW)
+            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
                 throw MailServiceException.ALREADY_EXISTS(data.id, e);
             else
                 throw ServiceException.FAILURE("writing new object of type " + data.type, e);
         } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    private static void checkNamingConstraint(Mailbox mbox, int folderId, String name, int modifiedItemId) throws ServiceException {
+        if (name == null || name.equals("") || Db.supports(Db.Capability.NULL_IN_UNIQUE_INDEXES))
+            return;
+
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT COUNT(*) FROM " + getMailItemTableName(mbox) +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND id <> ? AND " + Db.equalsSTRING("name"));
+            int pos = 1;
+            if (!DebugConfig.disableMailboxGroup)
+                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, folderId);
+            stmt.setInt(pos++, modifiedItemId);
+            stmt.setString(pos++, name.toUpperCase());
+            rs = stmt.executeQuery();
+            if (!rs.next() || rs.getInt(1) > 0)
+                throw MailServiceException.ALREADY_EXISTS(name);
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("checking for naming conflicts", e);
+        } finally {
+            DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
         }
     }
@@ -174,6 +203,8 @@ public class DbMailItem {
         Mailbox mbox = item.getMailbox();
         if (id <= 0 || indexId <= 0 || folder == null || parentId == 0)
             throw ServiceException.FAILURE("invalid data for DB item copy", null);
+
+        checkNamingConstraint(mbox, folder.getId(), item.getName(), id);
 
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -215,7 +246,7 @@ public class DbMailItem {
                 throw ServiceException.FAILURE("failed to create object", null);
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
-            if (e.getErrorCode() == Db.Error.DUPLICATE_ROW)
+            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
                 throw MailServiceException.ALREADY_EXISTS(id, e);
             else
                 throw ServiceException.FAILURE("copying " + MailItem.getNameForType(item.getType()) + ": " + item.getId(), e);
@@ -228,6 +259,8 @@ public class DbMailItem {
         Mailbox mbox = source.getMailbox();
         if (data == null || data.id <= 0 || data.folderId <= 0 || data.parentId == 0 || data.indexId == 0)
             throw ServiceException.FAILURE("invalid data for DB item i-copy", null);
+
+        checkNamingConstraint(mbox, data.folderId, source.getName(), data.id);
 
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -287,7 +320,7 @@ public class DbMailItem {
                 changeOpenTarget(Mailbox.getHash(((Message) source).getNormalizedSubject()), source, data.id);
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
-            if (e.getErrorCode() == Db.Error.DUPLICATE_ROW)
+            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
                 throw MailServiceException.ALREADY_EXISTS(data.id, e);
             else
                 throw ServiceException.FAILURE("i-copying " + MailItem.getNameForType(source.getType()) + ": " + source.getId(), e);
@@ -319,8 +352,10 @@ public class DbMailItem {
         Mailbox mbox = item.getMailbox();
         if (mbox != folder.getMailbox())
             throw MailServiceException.WRONG_MAILBOX();
-        Connection conn = mbox.getOperationConnection();
 
+        checkNamingConstraint(mbox, folder.getId(), item.getName(), item.getId());
+
+        Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
             String imapRenumber = mbox.isTrackingImap() ? ", imap_id = CASE WHEN imap_id IS NULL THEN NULL ELSE 0 END" : "";
@@ -349,7 +384,7 @@ public class DbMailItem {
             stmt.executeUpdate();
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
-            if (e.getErrorCode() == Db.Error.DUPLICATE_ROW)
+            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
                 throw MailServiceException.ALREADY_EXISTS(item.getName(), e);
             else
                 throw ServiceException.FAILURE("writing new folder data for item " + item.getId(), e);
@@ -362,8 +397,8 @@ public class DbMailItem {
         if (itemIDs == null || itemIDs.isEmpty())
             return;
         Mailbox mbox = folder.getMailbox();
-        Connection conn = mbox.getOperationConnection();
 
+        Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
             String imapRenumber = mbox.isTrackingImap() ? ", imap_id = CASE WHEN imap_id IS NULL THEN NULL ELSE 0 END" : "";
@@ -381,7 +416,7 @@ public class DbMailItem {
             stmt.executeUpdate();
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
-            if (e.getErrorCode() == Db.Error.DUPLICATE_ROW)
+            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
                 throw MailServiceException.ALREADY_EXISTS("", e);
             else
                 throw ServiceException.FAILURE("writing new folder data for item [" + itemIDs + ']', e);
@@ -429,8 +464,8 @@ public class DbMailItem {
         Mailbox mbox = oldParent.getMailbox();
         if (mbox != newParent.getMailbox())
             throw MailServiceException.WRONG_MAILBOX();
-        Connection conn = mbox.getOperationConnection();
 
+        Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
             String relation = (oldParent instanceof VirtualConversation ? "id = ?" : "parent_id = ?");
@@ -458,6 +493,7 @@ public class DbMailItem {
 
     public static void saveMetadata(MailItem item, String metadata) throws ServiceException {
         Mailbox mbox = item.getMailbox();
+
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -484,6 +520,7 @@ public class DbMailItem {
 
     public static void persistCounts(MailItem item, String metadata) throws ServiceException {
         Mailbox mbox = item.getMailbox();
+
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -511,9 +548,9 @@ public class DbMailItem {
     // need to kill the Note class sooner rather than later
     public static void saveSubject(Note note) throws ServiceException {
         Mailbox mbox = note.getMailbox();
+
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
-
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(note) +
                         " SET date = ?, size = ?, subject = ?, mod_metadata = ?, change_date = ?, mod_content = ?" +
@@ -538,10 +575,12 @@ public class DbMailItem {
 
     public static void saveName(MailItem item, int folderId) throws ServiceException {
         Mailbox mbox = item.getMailbox();
+        String name = item.getName().equals("") ? null : item.getName();
+
+        checkNamingConstraint(mbox, folderId, name, item.getId());
+
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
-
-        String name = item.getName().equals("") ? null : item.getName();
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                         " SET date = ?, size = ?, name = ?, subject = ?, folder_id = ?, mod_metadata = ?, change_date = ?, mod_content = ?" +
@@ -561,7 +600,7 @@ public class DbMailItem {
             stmt.executeUpdate();
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
-            if (e.getErrorCode() == Db.Error.DUPLICATE_ROW)
+            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
                 throw MailServiceException.ALREADY_EXISTS(name, e);
             else
                 throw ServiceException.FAILURE("writing name for mailbox " + item.getMailboxId() + ", item " + item.getId(), e);
@@ -573,8 +612,6 @@ public class DbMailItem {
     public static void saveData(MailItem item, String sender, String metadata)
     throws ServiceException {
         Mailbox mbox = item.getMailbox();
-        Connection conn = mbox.getOperationConnection();
-        PreparedStatement stmt = null;
 
         String name = item.getName().equals("") ? null : item.getName();
 
@@ -584,6 +621,10 @@ public class DbMailItem {
         else if (item instanceof Message)
             subject = ((Message) item).getNormalizedSubject();
 
+        checkNamingConstraint(mbox, item.getFolderId(), name, item.getId());
+
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                         " SET type = ?, parent_id = ?, date = ?, size = ?, blob_digest = ?, flags = ?," +
@@ -626,7 +667,7 @@ public class DbMailItem {
             }
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
-            if (e.getErrorCode() == Db.Error.DUPLICATE_ROW)
+            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
                 throw MailServiceException.ALREADY_EXISTS(item.getName(), e);
             else
                 throw ServiceException.FAILURE("rewriting row data for mailbox " + item.getMailboxId() + ", item " + item.getId(), e);
@@ -642,19 +683,17 @@ public class DbMailItem {
             stmt = conn.prepareStatement("INSERT INTO " + getConversationTableName(item) +
                         "(" + (!DebugConfig.disableMailboxGroup ? "mailbox_id, " : "") + "hash, conv_id)" +
                         " VALUES (" + (!DebugConfig.disableMailboxGroup ? "?, " : "") + "?, ?)" +
-                        (Db.Capability.ON_DUPLICATE_KEY ? " ON DUPLICATE KEY UPDATE conv_id = ?" : ""));
+                        (Db.supports(Db.Capability.ON_DUPLICATE_KEY) ? " ON DUPLICATE KEY UPDATE conv_id = ?" : ""));
             int pos = 1;
             if (!DebugConfig.disableMailboxGroup)
                 stmt.setInt(pos++, item.getMailboxId());
             stmt.setString(pos++, hash);
             stmt.setInt(pos++, item.getId());
-            if (Db.Capability.ON_DUPLICATE_KEY)
+            if (Db.supports(Db.Capability.ON_DUPLICATE_KEY))
                 stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
-//          return (num == 1);  // This doesn't work.  In the UPDATE case MySQL returns 2 instead of 1. (bug)
-//          return num > 0;
         } catch (SQLException e) {
-            if (!Db.Capability.ON_DUPLICATE_KEY && e.getErrorCode() == Db.Error.DUPLICATE_ROW) {
+            if (!Db.supports(Db.Capability.ON_DUPLICATE_KEY) && Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
                 try {
                     stmt.close();
 
@@ -718,6 +757,7 @@ public class DbMailItem {
 
     public static void saveImapUid(MailItem item) throws ServiceException {
         Mailbox mbox = item.getMailbox();
+
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -742,8 +782,8 @@ public class DbMailItem {
             throw MailServiceException.WRONG_MAILBOX();
         if (tag.getId() == Flag.ID_FLAG_UNREAD)
             throw ServiceException.FAILURE("unread state must be updated with alterUnread()", null);
-        Connection conn = mbox.getOperationConnection();
 
+        Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
             String relation, column = (tag instanceof Flag ? "flags" : "tags");
@@ -797,8 +837,8 @@ public class DbMailItem {
         if (itemIDs == null || itemIDs.isEmpty())
             return;
         Mailbox mbox = tag.getMailbox();
-        Connection conn = mbox.getOperationConnection();
 
+        Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
             String column = (tag instanceof Flag ? "flags" : "tags");
@@ -872,8 +912,8 @@ public class DbMailItem {
     public static void alterUnread(MailItem item, boolean unread)
     throws ServiceException {
         Mailbox mbox = item.getMailbox();
-        Connection conn = mbox.getOperationConnection();
 
+        Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
             String relation;
@@ -912,8 +952,8 @@ public class DbMailItem {
     throws ServiceException {
         if (itemIDs == null || itemIDs.isEmpty())
             return;
-        Connection conn = mbox.getOperationConnection();
 
+        Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
@@ -947,12 +987,12 @@ public class DbMailItem {
      */
     public static List<Integer> markDeletionTargets(Folder folder, Set<Integer> candidates) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
-        Connection conn = mbox.getOperationConnection();
 
+        Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            if (Db.Capability.MULTITABLE_UPDATE) {
+            if (Db.supports(Db.Capability.MULTITABLE_UPDATE)) {
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(folder) + ", " +
                             "(SELECT parent_id pid, COUNT(*) count FROM " + getMailItemTableName(folder) +
                             " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND parent_id IS NOT NULL GROUP BY parent_id) AS x" +
@@ -1028,13 +1068,13 @@ public class DbMailItem {
     public static List<Integer> markDeletionTargets(Mailbox mbox, List<Integer> ids, Set<Integer> candidates) throws ServiceException {
         if (ids == null)
             return null;
-        Connection conn = mbox.getOperationConnection();
         String table = getMailItemTableName(mbox);
 
+        Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            if (Db.Capability.MULTITABLE_UPDATE) {
+            if (Db.supports(Db.Capability.MULTITABLE_UPDATE)) {
                 for (int i = 0; i < ids.size(); i += DbUtil.IN_CLAUSE_BATCH_SIZE) {
                     int count = Math.min(DbUtil.IN_CLAUSE_BATCH_SIZE, ids.size() - i);
                     stmt = conn.prepareStatement("UPDATE " + table + ", " +
@@ -1106,9 +1146,9 @@ public class DbMailItem {
         if (candidates == null || candidates.isEmpty())
             return Collections.emptyList();
 
-        Connection conn = mbox.getOperationConnection();
         List<Integer> purgedConvs = new ArrayList<Integer>();
 
+        Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -1184,6 +1224,7 @@ public class DbMailItem {
     }
 
     public static void deleteContents(MailItem item) throws ServiceException {
+        Mailbox mbox = item.getMailbox();
         String target;
         if (item instanceof VirtualConversation)  target = "id = ?";
         else if (item instanceof Conversation)    target = "parent_id = ?";
@@ -1191,7 +1232,6 @@ public class DbMailItem {
         else if (item instanceof Folder)          target = "folder_id = ?";
         else                                      return;
 
-        Mailbox mbox = item.getMailbox();
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -1235,8 +1275,8 @@ public class DbMailItem {
     private static void writeTombstone(Mailbox mbox, byte type, String ids) throws ServiceException {
         if (ids == null || ids.equals(""))
             return;
-        Connection conn = mbox.getOperationConnection();
 
+        Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("INSERT INTO " + getTombstoneTableName(mbox) +
@@ -1259,9 +1299,9 @@ public class DbMailItem {
     }
 
     public static MailItem.TypedIdList readTombstones(Mailbox mbox, long lastSync) throws ServiceException {
-        Connection conn = mbox.getOperationConnection();
         MailItem.TypedIdList tombstones = new MailItem.TypedIdList();
 
+        Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -1330,9 +1370,9 @@ public class DbMailItem {
 
     private static String sortField(byte sort) {
         switch (sort & SORT_FIELD_MASK) {
-            case SORT_BY_SENDER:   return "sender";
-            case SORT_BY_SUBJECT:  return "subject";
-            case SORT_BY_NAME:     return "name";
+            case SORT_BY_SENDER:   return Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON) ? "UPPER(sender)" : "sender";
+            case SORT_BY_SUBJECT:  return Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON) ? "UPPER(subject)" : "subject";
+            case SORT_BY_NAME:     return Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON) ? "UPPER(name)" : "name";
             case SORT_BY_ID:       return "id";
             case SORT_NONE:        return "NULL";
             case SORT_BY_DATE:
@@ -1362,8 +1402,8 @@ public class DbMailItem {
         boolean fetchTags    = tagData != null;
         if (!fetchFolders && !fetchTags && !reload)
             return null;
-        Connection conn = mbox.getOperationConnection();
 
+        Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -1447,9 +1487,9 @@ public class DbMailItem {
     public static List<UnderlyingData> getByType(Mailbox mbox, byte type, byte sort) throws ServiceException {
         if (Mailbox.isCachedType(type))
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
-        Connection conn = mbox.getOperationConnection();
-
         ArrayList<UnderlyingData> result = new ArrayList<UnderlyingData>();
+
+        Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -1479,8 +1519,9 @@ public class DbMailItem {
 
     public static List<UnderlyingData> getByParent(MailItem parent, byte sort) throws ServiceException {
         Mailbox mbox = parent.getMailbox();
-        Connection conn = mbox.getOperationConnection();
         ArrayList<UnderlyingData> result = new ArrayList<UnderlyingData>();
+
+        Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -1510,8 +1551,9 @@ public class DbMailItem {
 
     public static List<UnderlyingData> getUnreadMessages(MailItem relativeTo) throws ServiceException {
         Mailbox mbox = relativeTo.getMailbox();
-        Connection conn = mbox.getOperationConnection();
         ArrayList<UnderlyingData> result = new ArrayList<UnderlyingData>();
+
+        Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -1556,9 +1598,9 @@ public class DbMailItem {
         if (Mailbox.isCachedType(type))
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
         Mailbox mbox = folder.getMailbox();
-        Connection conn = mbox.getOperationConnection();
-
         ArrayList<UnderlyingData> result = new ArrayList<UnderlyingData>();
+
+        Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -1586,8 +1628,8 @@ public class DbMailItem {
     public static UnderlyingData getById(Mailbox mbox, int id, byte type) throws ServiceException {
         if (Mailbox.isCachedType(type))
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
-        Connection conn = mbox.getOperationConnection();
 
+        Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -1618,7 +1660,6 @@ public class DbMailItem {
 
     public static UnderlyingData getByImapId(Mailbox mbox, int imapId, int folderId) throws ServiceException {
         Connection conn = mbox.getOperationConnection();
-
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -1698,19 +1739,20 @@ public class DbMailItem {
     public static UnderlyingData getByName(Mailbox mbox, int folderId, String name, byte type) throws ServiceException {
         if (Mailbox.isCachedType(type))
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
-        Connection conn = mbox.getOperationConnection();
 
+        Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                         " FROM " + getMailItemTableName(mbox, "mi") +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND name = ? AND type IN " + typeConstraint(type));
+                        " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type IN " + typeConstraint(type) +
+                        " AND " + Db.equalsSTRING("name"));
             int pos = 1;
             if (!DebugConfig.disableMailboxGroup)
                 stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, folderId);
-            stmt.setString(pos++, name);
+            stmt.setString(pos++, name.toUpperCase());
             rs = stmt.executeQuery();
 
             if (!rs.next())
@@ -1770,10 +1812,10 @@ public class DbMailItem {
         if (visible != null && visible.isEmpty())
             return new Pair<List<Integer>,MailItem.TypedIdList>(EMPTY_DATA, EMPTY_TYPED_ID_LIST);
 
-        Connection conn = mbox.getOperationConnection();
         List<Integer> modified = new ArrayList<Integer>();
         MailItem.TypedIdList missed = new MailItem.TypedIdList();
 
+        Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -1892,7 +1934,7 @@ public class DbMailItem {
 
     // note: need "Db.getInstance().selectBOOLEAN" here because we need the Capability settings to be initialized by getInstance()...
     private static final String LEAF_NODE_FIELDS = "id, size, type, unread, folder_id, parent_id, " +
-                                                   Db.getInstance().selectBOOLEAN("blob_digest IS NOT NULL") + ',' +
+                                                   Db.selectBOOLEAN("blob_digest IS NOT NULL") + ',' +
                                                    " mod_content, mod_metadata, flags, index_id, volume_id";
 
     private static final int LEAF_CI_ID           = 1;
@@ -2289,7 +2331,7 @@ public class DbMailItem {
             statement.append(" WHERE " + IN_THIS_MAILBOX_AND);
             encodeConstraint(mbox, node, statement, conn);
             statement.append(sortQuery(sort));
-            if (validLIMIT && Db.Capability.LIMIT_CLAUSE)
+            if (validLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE))
                 statement.append(" LIMIT ?, ?");
 
             stmt = conn.prepareStatement(statement.toString());
@@ -2298,7 +2340,7 @@ public class DbMailItem {
                 stmt.setInt(param++, mailboxId);
             param = setSearchVars(stmt, node, param++);
 //          FIXME: include COLLATION for sender/subject sort
-            if (validLIMIT && Db.Capability.LIMIT_CLAUSE) {
+            if (validLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
                 stmt.setInt(param++, offset);
                 stmt.setInt(param++, limit);
             }
@@ -2308,7 +2350,7 @@ public class DbMailItem {
 
             rs = stmt.executeQuery();
             while (rs.next()) {
-                if (validLIMIT && !Db.Capability.LIMIT_CLAUSE) {
+                if (validLIMIT && !Db.supports(Db.Capability.LIMIT_CLAUSE)) {
                     if (offset-- > 0)
                         continue;
                     if (limit-- <= 0)
@@ -2861,7 +2903,7 @@ public class DbMailItem {
             stmt = conn.prepareStatement("INSERT INTO " + getCalendarItemTableName(mbox) +
                         " (" + (!DebugConfig.disableMailboxGroup ? "mailbox_id, " : "") + "uid, item_id, start_time, end_time)" +
                         " VALUES (" + (!DebugConfig.disableMailboxGroup ? "?, " : "") + "?, ?, ?, ?)" +
-                        (Db.Capability.ON_DUPLICATE_KEY ? " ON DUPLICATE KEY UPDATE uid = ?, item_id = ?, start_time = ?, end_time = ?" : ""));
+                        (Db.supports(Db.Capability.ON_DUPLICATE_KEY) ? " ON DUPLICATE KEY UPDATE uid = ?, item_id = ?, start_time = ?, end_time = ?" : ""));
             int pos = 1;
             if (!DebugConfig.disableMailboxGroup)
                 stmt.setInt(pos++, mbox.getId());
@@ -2869,7 +2911,7 @@ public class DbMailItem {
             stmt.setInt(pos++, calItem.getId());
             stmt.setTimestamp(pos++, startTs);
             stmt.setTimestamp(pos++, endTs);
-            if (Db.Capability.ON_DUPLICATE_KEY) {
+            if (Db.supports(Db.Capability.ON_DUPLICATE_KEY)) {
                 stmt.setString(pos++, calItem.getUid());
                 stmt.setInt(pos++, calItem.getId());
                 stmt.setTimestamp(pos++, startTs);
@@ -2878,7 +2920,7 @@ public class DbMailItem {
 
             stmt.executeUpdate();
         } catch (SQLException e) {
-            if (!Db.Capability.ON_DUPLICATE_KEY && e.getErrorCode() == Db.Error.DUPLICATE_ROW) {
+            if (!Db.supports(Db.Capability.ON_DUPLICATE_KEY) && Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
                 try {
                     stmt.close();
 
