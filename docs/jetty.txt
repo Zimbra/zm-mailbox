@@ -1,0 +1,19 @@
+NOTE: Currently on main you can switch to jetty by setting env variable ZIMBRA_USE_JETTY=1.  If not set, everything will still use tomcat.  This will change when we move away from tomcat.  At this point jetty support is only experimental and only 4 projects have been tested: ZimbraServer, ZimbraWebClient, ZimbraSync and ZimbraOffline.  So far jetty has only been test on Mac OS X but should also work on Linux and Windows+cygwin.
+
+1. Download jetty 6.1.  As of writing it's jetty-6.1.0rc3.zip.
+2. Unzip to /opt/zimbra/jetty-6.1.0rc3 and symlink 'ln -s /opt/zimbra/jetty-6.1.0rc3 /opt/zimbra/jetty'.
+3. Download slf4j (Simple Logging Facade for Java to replace Log4J).  As of writing it's slf4j-1.1.0.tar.gz.  Extra three jar files, jcl104-over-slf4j-1.1.0.jar, slf4j-simple-1.1.0.jar and slf4j-api-1.1.0.jar and put them in /opt/zimbra/jetty/lib.
+4. Set env variable ZIMBRA_USE_JETTY=1.  You also need to set env var JAVA_HOME to the right place.  On Mac OS X it should be /System/Library/Frameworks/JavaVM.framework/Home.
+5. Run 'ant reset-the-world' under ZimbraServer. Then run 'ant deploy' and 'ant admin-deploy' under ZimbraSync as usual.  For offline, run 'ant offline-reset-the-world'.
+6. You should also be able to bounce jetty with command line 'jetty start' and 'jetty stop' because reset-the-world copies a script 'jetty' to /opt/zimbra/bin. 
+
+Debugging in Eclipse (there are more than one way and this is not necessarily the best):
+
+1. Go to http://docs.codehaus.org/display/JETTY/Jetty+Documentation and click on "Importing Jetty Source into Eclipse".  Follow the instructions to download and install/run maven.  Import at least the "start" project into eclipse.
+2. Don't follow the instructions in "Debugging Jetty with Eclipse" under jetty docs (at least it didn't work for me).  Instead, setup a debug configuration in eclipse for the "start" project.  Note that under project "start" the org.mortbay.start.Main is the main class when you launch "java -jar start.jar".  Anyway, follow the following steps to set it up.
+3. Run/Debug... and right click on Java Application to "New" a configuration.
+4. Choose project "start" and set the main class to be org.mortbay.start.Main.
+5. Switch to the Arguments tab and set VM arguments to "-DSTART=/opt/zimbra/jetty/etc/start.config -DSTOP.PORT=7867 -DSTOP.KEY=stop -Dzimbra.config=/opt/zimbra/conf/localconfig.xml -Djava.library.path=/opt/zimbra/lib".  Then choose "Other" under working directory and set it to /opt/zimbra/jetty-6.1.0rc3.
+6. Now switch to source tab and add some zimbra projects to the list.  That allows you to set break points in your zimbra project source files.
+7. Save the debug configuration and click Debug.  If everything goes well, you should be able to stop in your source code with break points.
+8. To stop jetty you can do this on command line "java -DSTOP.PORT=7867 -DSTOP.KEY=stop -jar start.jar --stop".  Or you could run the "stop-jetty-java" target under ZimbraServer.
