@@ -26,6 +26,8 @@ package com.zimbra.cs.service.im;
 
 import java.util.Map;
 
+import org.xmpp.packet.Roster;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.im.IMBuddy;
@@ -82,6 +84,10 @@ public class IMGetRoster extends IMDocumentHandler {
                         e.addAttribute(IMService.A_NAME, buddy.getName());
                     
                     e.addAttribute(IMService.A_SUBSCRIPTION, buddy.getSubType().toString());
+                    
+                    if (buddy.getAsk() != null) {
+                        e.addAttribute("ask", buddy.getAsk().name());
+                    }
                     
                     // presence
                     IMPresence presence = buddy.getPresence();

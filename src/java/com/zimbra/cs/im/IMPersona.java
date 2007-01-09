@@ -288,19 +288,20 @@ public class IMPersona {
                         // it could potentially have been deleted, so re-create it if necessary
                         IMBuddy buddy = getOrCreateBuddy(address, address.toString());
                         
+                        buddy.setAsk(null);
                         SubType st = buddy.getSubType();
                         if (!st.isOutgoing())
                             buddy.setSubType(st.setOutgoing());
                         
                         try {
-                            postIMNotification(new IMSubscribedNotification(address, buddy.getName(), null, false));
+                            postIMNotification(IMSubscribedNotification.create(address, buddy.getName(), true, null));
                             postIMNotification(new IMPresenceUpdateNotification(address, buddy.getPresence()));
                         } catch(ServiceException ex) {
                             ZimbraLog.im.warn("Caught Exception: " + ex.toString(), ex);
                         }
                     }
                     break;
-                    case unsubscribe:
+                    case unsubscribe: // remote user is unsubscribing from us
                         ZimbraLog.im.info("Presence.unsubscribe: " +pres.toString());
                         // auto-accept for now
                         reply = new Presence();
@@ -309,23 +310,16 @@ public class IMPersona {
                         reply.setType(Presence.Type.unsubscribed);
                         xmppRoute(reply);
                         break;
-                    case unsubscribed:
+                    case unsubscribed: // you've unsubscribed 
                     {
                         ZimbraLog.im.info("Presence.unsubscribed: " +pres.toString());
-                        
-//                        IMAddr address = IMAddr.fromJID(pres.getFrom());
-//                        IMBuddy buddy = getOrCreateBuddy(address, address.toString());
-    //
-//                        SubType st = buddy.getSubType();
-//                        if (st.isOutgoing())
-//                            buddy.setSubType(st.clearOutgoing());
-//                      
-//                        try {
-//                            postIMNotification(new SubscribedNotification(address, buddy.getName(), null, true));
-//                        } catch(ServiceException ex) {
-//                            ZimbraLog.im.warn("Caught Exception: " + ex.toString(), ex);
-//                        }
-                        
+
+                        IMAddr address = IMAddr.fromJID(pres.getFrom());
+                        try {
+                            postIMNotification(IMSubscribedNotification.create(address, address.toString(), false, null));
+                        } catch(ServiceException ex) {
+                            ZimbraLog.im.warn("Caught Exception: " + ex.toString(), ex);
+                        }
                     }
                     break;
                     case probe:
@@ -347,144 +341,219 @@ public class IMPersona {
                 mBuddyList.clear();
                 
                 for (Roster.Item item : roster.getItems()) {
-                    IMAddr buddyAddr = IMAddr.fromJID(item.getJID());
-                    IMBuddy newBuddy = new IMBuddy(buddyAddr, item.getName());
-                    
-                    boolean doAdd = false;
-                    
-                    Roster.Subscription subscript = item.getSubscription();
-                    switch (subscript) {
-                        case none:
-                            newBuddy.setSubType(SubType.NONE);
-                            break;
-                        case to:
-                            doAdd = true;
-                            newBuddy.setSubType(SubType.TO);
-                            break;
-                        case from:
-                            newBuddy.setSubType(SubType.FROM);
-                            break;
-                        case both:
-                            doAdd = true;
-                            newBuddy.setSubType(SubType.BOTH);
-                            break;
-                        case remove:
-                            newBuddy.setSubType(SubType.NONE);
-                            break;
-                    }
-                    
-                    if (doAdd) {
-                        newBuddy.setPresence(new IMPresence(Show.OFFLINE, (byte) 0, "offline"));
-                        
-                        if (mBuddyList.containsKey(buddyAddr)) {
-                            System.out.println("Key: "+buddyAddr+ " already in buddy list!\n");
-                        }
-                        
-                        mBuddyList.put(buddyAddr, newBuddy);
-                        
-                        for (String group : item.getGroups()) {
-                            if (!mGroups.containsKey(group))
-                                mGroups.put(group, new IMGroup(group));
-                            newBuddy.addGroup(mGroups.get(group));
-                        }
-
-                        try {
-                            postIMNotification(IMSubscribedNotification.create(buddyAddr, newBuddy.getName(), newBuddy.groups(), false));
-                            postIMNotification(new IMPresenceUpdateNotification(buddyAddr, newBuddy.getPresence()));
-                        } catch(ServiceException ex) {
-                            ZimbraLog.im.warn("Caught Exception: " + ex.toString(), ex);
-                        }
-                        
-                        
-//                        // HACKHACK
-//                        {
-//                            Presence reply;
-//                            reply = new Presence();
-//                            reply.setTo(newBuddy.getAddress().makeJID());
-//                            reply.setFrom(mAddr.makeJID());
-//                            reply.setType(Presence.Type.probe);
-//                            xmppRoute(reply);
+                    handleRosterItemSet(item);
+//                    IMAddr buddyAddr = IMAddr.fromJID(item.getJID());
+//                    IMBuddy newBuddy = new IMBuddy(buddyAddr, item.getName());
+//                    
+//                    boolean doRemove = false;
+//                    
+//                    Roster.Subscription subscript = item.getSubscription();
+//                    switch (subscript) {
+//                        case none:
+//                            newBuddy.setSubType(SubType.NONE);
+//                            break;
+//                        case to:
+//                            newBuddy.setSubType(SubType.TO);
+//                            break;
+//                        case from:
+//                            newBuddy.setSubType(SubType.FROM);
+//                            break;
+//                        case both:
+//                            newBuddy.setSubType(SubType.BOTH);
+//                            break;
+//                        case remove:
+//                            doRemove = true;
+//                            newBuddy.setSubType(SubType.NONE);
+//                            break;
+//                    }
+//                    
+//                    if (!doRemove) {
+//                        newBuddy.setPresence(new IMPresence(Show.OFFLINE, (byte) 0, "offline"));
+//                        
+//                        if (mBuddyList.containsKey(buddyAddr)) {
+//                            System.out.println("Key: "+buddyAddr+ " already in buddy list!\n");
 //                        }
-                        
-                        
-                    } else {
-                        try {
-                            postIMNotification(IMSubscribedNotification.create(buddyAddr, newBuddy.getName(), newBuddy.groups(), true));
-                        } catch(ServiceException ex) {
-                            ZimbraLog.im.warn("Caught Exception: " + ex.toString(), ex);
-                        }
-                    }
+//                        
+//                        mBuddyList.put(buddyAddr, newBuddy);
+//                        
+//                        for (String group : item.getGroups()) {
+//                            if (!mGroups.containsKey(group))
+//                                mGroups.put(group, new IMGroup(group));
+//                            newBuddy.addGroup(mGroups.get(group));
+//                        }
+//
+//                        try {
+//                            postIMNotification(IMSubscribedNotification.create(buddyAddr, newBuddy.getName(), newBuddy.groups(), newBuddy.getSubType().isOutgoing(), item.getAsk()));
+//                            postIMNotification(new IMPresenceUpdateNotification(buddyAddr, newBuddy.getPresence()));
+//                        } catch(ServiceException ex) {
+//                            ZimbraLog.im.warn("Caught Exception: " + ex.toString(), ex);
+//                        }
+//                        
+//                        
+////                        // HACKHACK
+////                        {
+////                            Presence reply;
+////                            reply = new Presence();
+////                            reply.setTo(newBuddy.getAddress().makeJID());
+////                            reply.setFrom(mAddr.makeJID());
+////                            reply.setType(Presence.Type.probe);
+////                            xmppRoute(reply);
+////                        }
+//                        
+//                    } else {
+//                        mBuddyList.remove(buddyAddr);
+//                        
+//                        try {
+//                            postIMNotification(IMSubscribedNotification.create(buddyAddr, newBuddy.getName(), newBuddy.groups(), false, null));
+//                        } catch(ServiceException ex) {
+//                            ZimbraLog.im.warn("Caught Exception: " + ex.toString(), ex);
+//                        }
+//                  }
                 }
             } else if (roster.getType() == Type.set) {
                 for (Roster.Item item : roster.getItems()) {
-                    IMAddr buddyAddr = IMAddr.fromJID(item.getJID());
-                    
-                    boolean doAdd = false;
-                    
-                    IMBuddy newBuddy = getOrCreateBuddy(buddyAddr, item.getName());
-                    Roster.Subscription subscript = item.getSubscription();
-                    switch (subscript) {
-                        case none:
-                            newBuddy.setSubType(SubType.NONE);
-                            break;
-                        case to:
-                            doAdd = true;
-                            newBuddy.setSubType(SubType.TO);
-                            break;
-                        case from:
-                            newBuddy.setSubType(SubType.FROM);
-                            break;
-                        case both:
-                            doAdd = true;
-                            newBuddy.setSubType(SubType.BOTH);
-                            break;
-                        case remove:
-                            newBuddy.setSubType(SubType.NONE);
-                            break;
-                    }
-                    
-                    if (doAdd) {
-                    
-                        newBuddy.setPresence(new IMPresence(Show.OFFLINE, (byte) 0, "offline"));
-                        
-                        newBuddy.clearGroups();
-                        for (String group : item.getGroups()) {
-                            if (!mGroups.containsKey(group))
-                                mGroups.put(group, new IMGroup(group));
-                            newBuddy.addGroup(mGroups.get(group));
-                        }
-                        
-                        try {
-                            postIMNotification(IMSubscribedNotification.create(buddyAddr, newBuddy.getName(), newBuddy.groups(), false));
-                            postIMNotification(new IMPresenceUpdateNotification(buddyAddr, newBuddy.getPresence()));
-                        } catch(ServiceException ex) {
-                            ZimbraLog.im.warn("Caught Exception: " + ex.toString(), ex);
-                        }
-                        
-//                        // HACKHACK
-//                        {
-//                            Presence reply;
-//                            reply = new Presence();
-//                            reply.setTo(newBuddy.getAddress().makeJID());
-//                            reply.setFrom(mAddr.makeJID());
-//                            reply.setType(Presence.Type.probe);
-//                            xmppRoute(reply);
+                    handleRosterItemSet(item);
+//                    IMAddr buddyAddr = IMAddr.fromJID(item.getJID());
+//                    
+//                    boolean doAdd = false;
+//                    
+//                    IMBuddy newBuddy = getOrCreateBuddy(buddyAddr, item.getName());
+//                    Roster.Subscription subscript = item.getSubscription();
+//                    switch (subscript) {
+//                        case none:
+//                            newBuddy.setSubType(SubType.NONE);
+//                            break;
+//                        case to:
+//                            doAdd = true;
+//                            newBuddy.setSubType(SubType.TO);
+//                            break;
+//                        case from:
+//                            newBuddy.setSubType(SubType.FROM);
+//                            break;
+//                        case both:
+//                            doAdd = true;
+//                            newBuddy.setSubType(SubType.BOTH);
+//                            break;
+//                        case remove:
+//                            newBuddy.setSubType(SubType.NONE);
+//                            break;
+//                    }
+//                    
+//                    if (doAdd) {
+//                    
+//                        newBuddy.setPresence(new IMPresence(Show.OFFLINE, (byte) 0, "offline"));
+//                        
+//                        newBuddy.clearGroups();
+//                        for (String group : item.getGroups()) {
+//                            if (!mGroups.containsKey(group))
+//                                mGroups.put(group, new IMGroup(group));
+//                            newBuddy.addGroup(mGroups.get(group));
 //                        }
-                        
-                        
-                    } else {
-                        try {
-                            mBuddyList.remove(newBuddy.getAddress());
-                            postIMNotification(IMSubscribedNotification.create(buddyAddr, newBuddy.getName(), newBuddy.groups(), true));
-                        } catch(ServiceException ex) {
-                            ZimbraLog.im.warn("Caught Exception: " + ex.toString(), ex);
-                        }
-                    }                        
+//                        
+//                        try {
+//                            postIMNotification(IMSubscribedNotification.create(buddyAddr, newBuddy.getName(), newBuddy.groups(), false));
+//                            postIMNotification(new IMPresenceUpdateNotification(buddyAddr, newBuddy.getPresence()));
+//                        } catch(ServiceException ex) {
+//                            ZimbraLog.im.warn("Caught Exception: " + ex.toString(), ex);
+//                        }
+//                        
+////                        // HACKHACK
+////                        {
+////                            Presence reply;
+////                            reply = new Presence();
+////                            reply.setTo(newBuddy.getAddress().makeJID());
+////                            reply.setFrom(mAddr.makeJID());
+////                            reply.setType(Presence.Type.probe);
+////                            xmppRoute(reply);
+////                        }
+//                        
+//                        
+//                    } else {
+//                        try {
+//                            mBuddyList.remove(newBuddy.getAddress());
+//                            postIMNotification(IMSubscribedNotification.create(buddyAddr, newBuddy.getName(), newBuddy.groups(), true));
+//                        } catch(ServiceException ex) {
+//                            ZimbraLog.im.warn("Caught Exception: " + ex.toString(), ex);
+//                        }
+//                    }                        
                 }
                 
             }
             mSubsLoaded = true;
         }
+    }
+    
+    private void handleRosterItemSet(Roster.Item item) {
+        IMAddr buddyAddr = IMAddr.fromJID(item.getJID());
+        IMBuddy newBuddy = new IMBuddy(buddyAddr, item.getName());
+        
+        boolean doRemove = false;
+        
+        Roster.Subscription subscript = item.getSubscription();
+        switch (subscript) {
+            case none:
+                newBuddy.setSubType(SubType.NONE);
+                break;
+            case to:
+                newBuddy.setSubType(SubType.TO);
+                break;
+            case from:
+                newBuddy.setSubType(SubType.FROM);
+                break;
+            case both:
+                newBuddy.setSubType(SubType.BOTH);
+                break;
+            case remove:
+                doRemove = true;
+                newBuddy.setSubType(SubType.NONE);
+                break;
+        }
+        
+        if (!doRemove) {
+            newBuddy.setPresence(new IMPresence(Show.OFFLINE, (byte) 0, "offline"));
+            
+            if (mBuddyList.containsKey(buddyAddr)) {
+                System.out.println("Key: "+buddyAddr+ " already in buddy list!\n");
+            }
+            
+            mBuddyList.put(buddyAddr, newBuddy);
+            
+            for (String group : item.getGroups()) {
+                if (!mGroups.containsKey(group))
+                    mGroups.put(group, new IMGroup(group));
+                newBuddy.addGroup(mGroups.get(group));
+            }
+            
+            newBuddy.setAsk(item.getAsk());
+
+            try {
+                postIMNotification(IMSubscribedNotification.create(buddyAddr, newBuddy.getName(), newBuddy.groups(), newBuddy.getSubType().isOutgoing(), item.getAsk()));
+                postIMNotification(new IMPresenceUpdateNotification(buddyAddr, newBuddy.getPresence()));
+            } catch(ServiceException ex) {
+                ZimbraLog.im.warn("Caught Exception: " + ex.toString(), ex);
+            }
+            
+            
+//            // HACKHACK
+//            {
+//                Presence reply;
+//                reply = new Presence();
+//                reply.setTo(newBuddy.getAddress().makeJID());
+//                reply.setFrom(mAddr.makeJID());
+//                reply.setType(Presence.Type.probe);
+//                xmppRoute(reply);
+//            }
+            
+        } else {
+            mBuddyList.remove(buddyAddr);
+            
+            try {
+                postIMNotification(IMSubscribedNotification.create(buddyAddr, newBuddy.getName(), newBuddy.groups(), false, null));
+            } catch(ServiceException ex) {
+                ZimbraLog.im.warn("Caught Exception: " + ex.toString(), ex);
+            }
+        }
+    
     }
     
     private void onRemotePresenceChange(Presence pres, Show imShow) {
@@ -533,6 +602,7 @@ public class IMPersona {
     {
         IMBuddy buddy = getOrCreateBuddy(address, name);
         
+        buddy.setAsk(Roster.Ask.subscribe);
         buddy.clearGroups();
         buddy.setName(name);
         for (String grpName : groups) {
@@ -554,7 +624,7 @@ public class IMPersona {
         unsubscribePacket.setTo(address.makeJID());
         xmppRoute(unsubscribePacket);
         
-        postIMNotification(new IMSubscribedNotification(address, name, groups, true));
+        postIMNotification(IMSubscribedNotification.create(address, name, groups, false, Roster.Ask.unsubscribe));
     }
     
     /**

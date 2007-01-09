@@ -17,7 +17,7 @@ IMGetRoster -- get buddy list
      
      <items>
         [
-          <item addr="foo@bar.com" [name="friendly name"] subscription="both|from|to" groups="group,group,group">
+          <item addr="foo@bar.com" [name="friendly name"] [ask="ASK"] subscription="both|from|to" groups="group,group,group">
              [<presence SEE BELOW>]*
              
              [ // block/allow list 
@@ -36,6 +36,12 @@ IMGetRoster -- get buddy list
      </subscription-defaults>
 </IMGetRosterResponse>
 
+For "item"
+===========
+  'subscription' is the current confirmed state of the subcription
+   'ask' means we are pending a response to our request to subscribe/unsubscribe
+      ---> EG:  (subscription="none" ask="subscribe") means we're waiting
+           for a response to subscribe, but we haven't received one yet
 
 
 IMSubscribe -- subscribe to someone's presence / modify subscription 
@@ -166,10 +172,10 @@ IM NOTIFICATIONS
                    <subscribe from="FROMADDR"/> // they added you to their buddy list
                 ]*
                 [
-                   <subscribed to="TOADDR" name="NAME" groups="GROUPS" /> // you added them to your buddy list
+                   <subscribed to="TOADDR" name="NAME" groups="GROUPS" [ask="subscribe|unsubscribe"]/> // you added them to your buddy list
                 ]*
                 [
-                   <unsubscribed to="TOADDR" groups="GROUPS" /> // you removed them from your buddy list
+                   <unsubscribed to="TOADDR" groups="GROUPS" [ask="subscribe|unsubscribe"]/> // you removed them from your buddy list
                 ]*
                 [
                    <leftchat thread="UID" addr="ADDRESS"> // specified user left the chat

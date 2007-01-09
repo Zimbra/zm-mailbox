@@ -30,21 +30,24 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import com.zimbra.cs.mailbox.Metadata;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.StringUtil;
+import org.xmpp.packet.Roster;
 
 public class IMBuddy {
     private IMAddr mAddress;
     private String mName;
     private IMPresence mPresence;
     private SubType mSubType;
+    private Roster.Ask mAsk;
     
-    private Map<String, IMChat> mChats = new HashMap();
-    private List<IMGroup> mGroups = new LinkedList();
+    private Map<String, IMChat> mChats = new HashMap<String, IMChat>();
+    private List<IMGroup> mGroups = new LinkedList<IMGroup> ();
     
     /**
      * @author tim
+     *
+     * The SubType represents the current confirmed state of the subscription.
+     * We might be trying to change the state, depending on the ASK value,
+     * but that is not reflected in the SubType
      *
      * VERY confusing lingo here -- think about this this way:
      * 
@@ -131,6 +134,8 @@ public class IMBuddy {
         return "BUDDY: "+mAddress+"("+mName+") ["+mPresence == null ? "null" : mPresence.toString() + "]";
     }
     
+    void setAsk(Roster.Ask ask) { mAsk = ask; }
+    
     void setName(String name) { mName = name; }
 
     void setSubType(SubType st) { mSubType = st; }
@@ -178,4 +183,6 @@ public class IMBuddy {
     }
     
     public SubType getSubType() { return mSubType; }
+    public Roster.Ask getAsk() { return mAsk; }
+    
 }

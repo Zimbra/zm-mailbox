@@ -26,6 +26,8 @@ package com.zimbra.cs.im;
 
 import java.util.List;
 
+import org.xmpp.packet.Roster;
+
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.service.im.IMService;
@@ -35,33 +37,48 @@ class IMSubscribedNotification implements IMNotification {
     IMAddr mAddr;
     String mName;
     String[] mGroups;
-    boolean mRemove;
+    boolean mSubscribed;
+    Roster.Ask mAsk;
 
-    static IMSubscribedNotification create(IMAddr address, String name, List<IMGroup> groups, boolean remove) {
+    static IMSubscribedNotification create(IMAddr address, String name, List<IMGroup> groups, boolean subscribed, Roster.Ask ask) {
         String[] str = new String[groups.size()];
         int i = 0;
         for (IMGroup grp : groups) 
             str[i++] = grp.getName();
 
-        return new IMSubscribedNotification(address, name, str, remove);
+        return new IMSubscribedNotification(address, name, str, subscribed, ask);
     }
     
-    IMSubscribedNotification(IMAddr address, String name, String[] groups, boolean remove) {
+    static IMSubscribedNotification create(IMAddr address, String name, String[] groups, boolean subscribed, Roster.Ask ask) {
+        return new IMSubscribedNotification(address, name, groups, subscribed, ask);
+    }
+    
+    static IMSubscribedNotification create(IMAddr address, String name, boolean subscribed, Roster.Ask ask) {
+        return new IMSubscribedNotification(address, name, null, subscribed, ask);
+    }
+    
+    private IMSubscribedNotification(IMAddr address, String name, String[] groups, boolean subscribed, Roster.Ask ask) {
         mAddr = address;
         mName = name;
         mGroups = groups;
-        mRemove = remove;
-        
+        mSubscribed = subscribed;
+        mAsk = ask;
     }
     
     public Element toXml(Element parent) {
-        ZimbraLog.im.info("IMSubscribedNotification " + mAddr + " " + mName + " " +mRemove);
+        ZimbraLog.im.info("IMSubscribedNotification " + mAddr + " " + mName + " Subscribed=" +mSubscribed
+                    + mAsk != null ? " Ask="+mAsk.toString() : "");
+        
         Element e;
-        if (mRemove) { 
-            e = parent.addElement(IMService.E_UNSUBSCRIBED);
-        } else {
+        if (mSubscribed) { 
             e = parent.addElement(IMService.E_SUBSCRIBED);
             e.addAttribute(IMService.A_NAME, mName);
+        } else {
+            e = parent.addElement(IMService.E_UNSUBSCRIBED);
+        }
+        
+        if (mAsk != null) {
+            e.addAttribute("ask", mAsk.name());
         }
         
         if (mGroups != null) {
