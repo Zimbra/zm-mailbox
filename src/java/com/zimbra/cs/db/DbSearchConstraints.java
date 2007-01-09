@@ -194,6 +194,31 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
     public Collection<StringRange> senderRanges = new ArrayList<StringRange>(); /* optional */
     
 
+    public boolean isSimpleSingleFolderMessageQuery() {
+        boolean typeIsMsg = false;
+        if (types.size() == 1) {
+            for (Byte type : types) {
+                if (type == MailItem.TYPE_MESSAGE)
+                    typeIsMsg = true;
+            }
+        }
+        return
+            folders.size() == 1 && excludeFolders.isEmpty() &&
+            typeIsMsg &&
+            (tagConstraints == null ||
+             (tagConstraints.searchFlagsets == null &&
+              tagConstraints.searchTagsets == null &&
+              tagConstraints.unread == null)) &&
+            convId == 0 && prohibitedConvIds.isEmpty() &&
+            itemIds.isEmpty() && prohibitedItemIds.isEmpty() &&
+            indexIds.isEmpty() &&
+            dates.isEmpty() &&
+            modified.isEmpty() &&
+            sizes.isEmpty() &&
+            subjectRanges.isEmpty() &&
+            senderRanges.isEmpty() &&
+            remoteFolders.isEmpty() && excludeRemoteFolders.isEmpty();
+    }
 
     public Object clone() throws CloneNotSupportedException {
         DbSearchConstraints toRet = (DbSearchConstraints)super.clone();
