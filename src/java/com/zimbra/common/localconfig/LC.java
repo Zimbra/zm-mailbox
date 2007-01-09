@@ -223,6 +223,8 @@ public class LC {
 
     public static final KnownKey timezone_file;
 
+    public static final KnownKey search_disable_database_hints;
+
     static {
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
                 "Changing this setting does not immediately reflect in MySQL server.  " +
@@ -797,5 +799,10 @@ public class LC {
         timezone_file = new KnownKey("timezone_file");
         timezone_file.setDefault("${zimbra_home}" + FS + "conf" + FS + "timezones.ics");
         timezone_file.setDoc("iCalendar file listing well-known time zones");
+
+        search_disable_database_hints = new KnownKey("search_disable_database_hints");
+        search_disable_database_hints.setDefault("false");
+        search_disable_database_hints.setDoc
+        ("If true, do not use database hints in queries generated during search");
     }
 }
