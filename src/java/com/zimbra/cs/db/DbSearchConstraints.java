@@ -24,7 +24,6 @@
  */
 package com.zimbra.cs.db;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -194,6 +193,47 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
     public Collection<StringRange> senderRanges = new ArrayList<StringRange>(); /* optional */
     
 
+    /**
+     * Returns true if query is for a single folder, item type list
+     * includes <code>MaliItem.TYPE_MESSAGE</code>, and no other conditions
+     * are specified.
+     * @return
+     */
+    public boolean isSimpleSingleFolderMessageQuery() {
+        boolean typeListIncludesMessage = false;
+        if (types.size() > 0) {
+            for (Byte type : types) {
+                if (type == MailItem.TYPE_MESSAGE) {
+                    typeListIncludesMessage = true;
+                    break;
+                }
+            }
+        }
+        if (typeListIncludesMessage && excludeTypes.size() > 0) {
+            for (Byte type : excludeTypes) {
+                if (type == MailItem.TYPE_MESSAGE) {
+                    typeListIncludesMessage = false;
+                    break;
+                }
+            }
+        }
+        return
+            folders.size() == 1 && excludeFolders.isEmpty() &&
+            typeListIncludesMessage &&
+            (tagConstraints == null ||
+             (tagConstraints.searchFlagsets == null &&
+              tagConstraints.searchTagsets == null &&
+              tagConstraints.unread == null)) &&
+            convId == 0 && prohibitedConvIds.isEmpty() &&
+            itemIds.isEmpty() && prohibitedItemIds.isEmpty() &&
+            indexIds.isEmpty() &&
+            dates.isEmpty() &&
+            modified.isEmpty() &&
+            sizes.isEmpty() &&
+            subjectRanges.isEmpty() &&
+            senderRanges.isEmpty() &&
+            remoteFolders.isEmpty() && excludeRemoteFolders.isEmpty();
+    }
 
     public Object clone() throws CloneNotSupportedException {
         DbSearchConstraints toRet = (DbSearchConstraints)super.clone();

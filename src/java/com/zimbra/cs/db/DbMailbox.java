@@ -615,9 +615,11 @@ public class DbMailbox {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT DISTINCT tags " +
+            stmt = conn.prepareStatement(
+                    "SELECT " +
+                    (!DebugConfig.disableMailboxGroup ? "" : "DISTINCT ") + "tags " +
                     "FROM " + DbMailItem.getMailItemTableName(mbox) +
-                    (!DebugConfig.disableMailboxGroup ? " WHERE mailbox_id = ?" : ""));
+                    (!DebugConfig.disableMailboxGroup ? " WHERE mailbox_id = ? GROUP BY mailbox_id, tags" : ""));
             if (!DebugConfig.disableMailboxGroup)
                 stmt.setInt(1, mbox.getId());
             rs = stmt.executeQuery();
@@ -639,9 +641,11 @@ public class DbMailbox {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT DISTINCT flags " +
+            stmt = conn.prepareStatement(
+                    "SELECT " +
+                    (!DebugConfig.disableMailboxGroup ? "" : "DISTINCT ") + "flags " +
                     "FROM " + DbMailItem.getMailItemTableName(mbox) +
-                    (!DebugConfig.disableMailboxGroup ? " WHERE mailbox_id = ?" : ""));
+                    (!DebugConfig.disableMailboxGroup ? " WHERE mailbox_id = ? GROUP BY mailbox_id, flags" : ""));
             if (!DebugConfig.disableMailboxGroup)
                 stmt.setInt(1, mbox.getId());
             rs = stmt.executeQuery();

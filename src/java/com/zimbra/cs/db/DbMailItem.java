@@ -56,6 +56,7 @@ import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.pop3.Pop3Message;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ListUtil;
@@ -1420,6 +1421,50 @@ public class DbMailItem {
         return statement.toString();
     }
 
+    // Indexes on mail_item table
+    private static final String MI_I_MBOX_FOLDER_DATE = "i_folder_id_date";
+//    private static final String MI_I_MBOX_ID_PKEY     = "PRIMARY";
+//    private static final String MI_I_MBOX_PARENT      = "i_parent_id";
+//    private static final String MI_I_MBOX_INDEX       = "i_index_id";
+//    private static final String MI_I_MBOX_DATE        = "i_date";
+//    private static final String MI_I_MBOX_TAGS_DATE   = "i_tags_date";
+//    private static final String MI_I_MBOX_FLAGS_DATE  = "i_flags_date";
+//    private static final String MI_I_MBOX_TYPE        = "i_type";
+//    private static final String MI_I_MBOX_UNREAD      = "i_unread";
+//    private static final String MI_I_MBOX_MODMETADATA = "i_mod_metadata";
+//    private static final String MI_I_MBOX_FOLDER_NAME = "i_name_folder_id";
+
+    private static final String NO_HINT = "";
+
+    private static String getForceIndexClause(
+            DbSearchConstraintsNode node, byte sortInfo, boolean hasLimit) {
+        if (LC.search_disable_database_hints.booleanValue()) return NO_HINT;
+
+        int sortBy = sortInfo & SORT_FIELD_MASK;
+        String index = null;
+
+        DbSearchConstraintsNode.NodeType ntype = node.getNodeType();
+        if (sortBy == SORT_BY_DATE && hasLimit && ntype == DbSearchConstraintsNode.NodeType.LEAF) {
+            DbSearchConstraints constraints = node.getSearchConstraints();
+            if (constraints.isSimpleSingleFolderMessageQuery()) {
+                // Optimization for folder query
+                //
+                // If looking at a single folder and sorting by date with a limit,
+                // force the use of i_folder_id_date index.  Typical example of
+                // such a query is the default "in:Inbox" search.
+                index = MI_I_MBOX_FOLDER_DATE;
+            }
+        }
+
+        // Whenever we learn a new case of mysql choosing wrong index, add
+        // a case here.
+
+        if (index != null)
+            return " FORCE INDEX (" + index + ")";
+        else
+            return NO_HINT;
+    }
+
 
     public static Mailbox.MailboxData getFoldersAndTags(Mailbox mbox, Map<Integer, UnderlyingData> folderData, Map<Integer, UnderlyingData> tagData, boolean reload)
     throws ServiceException {
@@ -2329,10 +2374,13 @@ public class DbMailItem {
             DbPool.closeStatement(stmt);
         }
     }
-    
-    public static Collection<SearchResult> search(Collection<SearchResult> result, Connection conn, DbSearchConstraintsNode node, 
-                Mailbox mbox, byte sort, int offset, int limit, SearchResult.ExtraData extra)
-                throws ServiceException {
+
+    public static Collection<SearchResult> search(
+            Collection<SearchResult> result, Connection conn,
+            DbSearchConstraintsNode node, 
+            Mailbox mbox, byte sort, int offset, int limit,
+            SearchResult.ExtraData extra)
+    throws ServiceException {
         int mailboxId = mbox.getId();
         boolean validLIMIT = offset >= 0 && limit >= 0;
 
@@ -2345,20 +2393,27 @@ public class DbMailItem {
              *    (AND folder_id [NOT] IN (?,?,?)) (AND date > ?) (AND date < ?) (AND mod_metadata > ?) (AND mod_metadata < ?)
              *    ORDER BY date|subject|sender|name (DESC)? LIMIT ?, ?
              */
-            StringBuilder statement = new StringBuilder("SELECT id, index_id, type, " + sortField(sort));
+            StringBuilder select = new StringBuilder("SELECT id, index_id, type, " + sortField(sort));
             if (extra == SearchResult.ExtraData.MAIL_ITEM)
-                statement.append(", " + DB_FIELDS);
+                select.append(", " + DB_FIELDS);
             else if (extra == SearchResult.ExtraData.IMAP_MSG)
-                statement.append(", mi.imap_id, mi.unread, mi.flags, mi.tags");
+                select.append(", mi.imap_id, mi.unread, mi.flags, mi.tags");
 
-            statement.append(" FROM " + getMailItemTableName(mbox, "mi"));
-            statement.append(" WHERE " + IN_THIS_MAILBOX_AND);
-            encodeConstraint(mbox, node, statement, conn);
-            statement.append(sortQuery(sort));
-            if (validLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE))
-                statement.append(" LIMIT ?, ?");
+            select.append(" FROM " + getMailItemTableName(mbox, "mi"));
 
-            stmt = conn.prepareStatement(statement.toString());
+            StringBuilder where = new StringBuilder(" WHERE " + IN_THIS_MAILBOX_AND);
+
+            encodeConstraint(mbox, node, where, conn);
+            where.append(sortQuery(sort));
+            boolean hasLimit = false;
+            if (validLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
+                hasLimit = true;
+                where.append(" LIMIT ?, ?");
+            }
+
+            String forceIndex = getForceIndexClause(node, sort, hasLimit);
+            select.append(forceIndex).append(where);
+            stmt = conn.prepareStatement(select.toString());
             int param = 1;
             if (!DebugConfig.disableMailboxGroup)
                 stmt.setInt(param++, mailboxId);
@@ -2370,7 +2425,7 @@ public class DbMailItem {
             }
 
             if (sLog.isDebugEnabled())
-                sLog.debug("SQL: " + statement);
+                sLog.debug("SQL: " + select);
 
             rs = stmt.executeQuery();
             while (rs.next()) {
@@ -2392,7 +2447,10 @@ public class DbMailItem {
     }
 
 
-    private static void encodeConstraint(Mailbox mbox, DbSearchConstraintsNode node, StringBuilder statement, Connection conn) throws ServiceException {
+    private static void encodeConstraint(
+            Mailbox mbox, DbSearchConstraintsNode node,
+            StringBuilder statement, Connection conn)
+    throws ServiceException {
         DbSearchConstraintsNode.NodeType ntype = node.getNodeType();
         if (ntype == DbSearchConstraintsNode.NodeType.AND || ntype == DbSearchConstraintsNode.NodeType.OR) {
             boolean first = true, and = ntype == DbSearchConstraintsNode.NodeType.AND;
@@ -2420,10 +2478,15 @@ public class DbMailItem {
 
         statement.append('(');
 
-        if (ListUtil.isEmpty(c.types))
+        if (ListUtil.isEmpty(c.types)) {
             statement.append("type NOT IN " + NON_SEARCHABLE_TYPES);
-        else
-            statement.append("type IN").append(DbUtil.suitableNumberOfVariables(c.types));
+        } else {
+            int size = c.types.size();
+            if (size == 1)
+                statement.append("type = ?");
+            else
+                statement.append("type IN").append(DbUtil.suitableNumberOfVariables(c.types));
+        }
 
         if (!ListUtil.isEmpty(c.excludeTypes))
             statement.append(" AND type NOT IN").append(DbUtil.suitableNumberOfVariables(c.excludeTypes));
@@ -2435,29 +2498,59 @@ public class DbMailItem {
 
         if (c.hasTags != null)
             statement.append(" AND tags ").append(c.hasTags.booleanValue() ? "!= 0" : "= 0");
-        if (tc.searchTagsets != null)
-            statement.append(" AND tags IN").append(DbUtil.suitableNumberOfVariables(tc.searchTagsets));
-        if (tc.searchFlagsets != null)
-            statement.append(" AND flags IN").append(DbUtil.suitableNumberOfVariables(tc.searchFlagsets));
+        if (tc.searchTagsets != null) {
+            int size = tc.searchTagsets.size();
+            if (size == 1)
+                statement.append(" AND tags = ?");
+            else
+                statement.append(" AND tags IN").append(DbUtil.suitableNumberOfVariables(size));
+        }
+        if (tc.searchFlagsets != null) {
+            int size = tc.searchFlagsets.size();
+            if (size == 1)
+                statement.append(" AND flags = ?");
+            else
+                statement.append(" AND flags IN").append(DbUtil.suitableNumberOfVariables(size));
+        }
         if (tc.unread != null)
             statement.append(" AND unread = ?");
 
         Collection<Folder> targetFolders = (!ListUtil.isEmpty(c.folders)) ? c.folders : c.excludeFolders;
-        if (!ListUtil.isEmpty(targetFolders))
-            statement.append(" AND folder_id").append(targetFolders == c.folders ? "" : " NOT").append(" IN").append(DbUtil.suitableNumberOfVariables(targetFolders));
+        if (!ListUtil.isEmpty(targetFolders)) {
+            int size = targetFolders.size();
+            if (size == 1) {
+                if (targetFolders == c.folders)
+                    statement.append(" AND folder_id = ?");
+                else
+                    statement.append(" AND folder_id != ?");
+            } else
+                statement.append(" AND folder_id").
+                          append(targetFolders == c.folders ? "" : " NOT").append(" IN").
+                          append(DbUtil.suitableNumberOfVariables(size));
+        }
 
         if (c.convId > 0)
             statement.append(" AND parent_id = ?");
         else if (!ListUtil.isEmpty(c.prohibitedConvIds))
             statement.append(" AND parent_id NOT IN").append(DbUtil.suitableNumberOfVariables(c.prohibitedConvIds));
 
-        if (!ListUtil.isEmpty(c.itemIds))
-            statement.append(" AND id IN").append(DbUtil.suitableNumberOfVariables(c.itemIds));
+        if (!ListUtil.isEmpty(c.itemIds)) {
+            int size= c.itemIds.size();
+            if (size == 1)
+                statement.append(" AND id = ?");
+            else
+                statement.append(" AND id IN").append(DbUtil.suitableNumberOfVariables(c.itemIds));
+        }
         if (!ListUtil.isEmpty(c.prohibitedItemIds))
             statement.append(" AND id NOT IN").append(DbUtil.suitableNumberOfVariables(c.prohibitedItemIds));
 
-        if (!ListUtil.isEmpty(c.indexIds))
-            statement.append(" AND index_id IN").append(DbUtil.suitableNumberOfVariables(c.indexIds));
+        if (!ListUtil.isEmpty(c.indexIds)) {
+            int size = c.indexIds.size();
+            if (size == 1)
+                statement.append(" AND index_id = ?");
+            else
+                statement.append(" AND index_id IN").append(DbUtil.suitableNumberOfVariables(size));
+        }
 
         if (!ListUtil.isEmpty(c.dates))
             encodeRanges(c.dates, "date", 1, statement);
