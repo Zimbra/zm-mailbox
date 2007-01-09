@@ -69,6 +69,11 @@ public class MySQL extends Db {
     }
 
     @Override
+    String forceIndexClause(String index) {
+        return " FORCE INDEX (" + index + ')';
+    }
+
+    @Override
     DbPool.PoolConfig getPoolConfig() {
         return new MySQLConfig();
     }

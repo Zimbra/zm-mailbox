@@ -1436,9 +1436,9 @@ public class DbMailItem {
 
     private static final String NO_HINT = "";
 
-    private static String getForceIndexClause(
-            DbSearchConstraintsNode node, byte sortInfo, boolean hasLimit) {
-        if (LC.search_disable_database_hints.booleanValue()) return NO_HINT;
+    private static String getForceIndexClause(DbSearchConstraintsNode node, byte sortInfo, boolean hasLimit) {
+        if (LC.search_disable_database_hints.booleanValue())
+            return NO_HINT;
 
         int sortBy = sortInfo & SORT_FIELD_MASK;
         String index = null;
@@ -1446,6 +1446,7 @@ public class DbMailItem {
         DbSearchConstraintsNode.NodeType ntype = node.getNodeType();
         if (sortBy == SORT_BY_DATE && hasLimit && ntype == DbSearchConstraintsNode.NodeType.LEAF) {
             DbSearchConstraints constraints = node.getSearchConstraints();
+            // Whenever we learn a new case of mysql choosing wrong index, add a case here.
             if (constraints.isSimpleSingleFolderMessageQuery()) {
                 // Optimization for folder query
                 //
@@ -1456,13 +1457,7 @@ public class DbMailItem {
             }
         }
 
-        // Whenever we learn a new case of mysql choosing wrong index, add
-        // a case here.
-
-        if (index != null)
-            return " FORCE INDEX (" + index + ")";
-        else
-            return NO_HINT;
+        return Db.forceIndex(index);
     }
 
 

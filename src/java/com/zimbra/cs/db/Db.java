@@ -100,7 +100,23 @@ public abstract class Db {
     abstract boolean compareError(SQLException e, Db.Error error);
 
 
+    /** Returns the set of configuration settings necessary to initialize the
+     *  appropriate database connection pool.
+     * @see DbPool#getPool() */
     abstract DbPool.PoolConfig getPoolConfig();
+
+
+    /** Generates the correct SQL to direct the current database engine to use
+     *  a particular index to perform a SELECT query.  This string should come
+     *  after the FROM clause and before the WHERE clause in the final SQL
+     *  query. */
+    public static String forceIndex(String index) {
+        if (index == null || index.trim().equals(""))
+            return "";
+        return getInstance().forceIndexClause(index);
+    }
+
+    abstract String forceIndexClause(String index);
 
 
     /** Generates a SELECT expression representing a BOOLEAN.  For databases
