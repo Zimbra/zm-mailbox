@@ -118,6 +118,7 @@ public class L10nUtil {
     // class loader that loads ZsMsg.properties files from
     // /opt/zimbra/conf/msgs directory
     private static ClassLoader sMsgClassLoader;
+    public static ClassLoader getMsgClassLoader() { return sMsgClassLoader; } 
 
     private static Map<String, Locale> sLocaleMap;
 

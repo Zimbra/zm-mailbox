@@ -23,6 +23,7 @@ public class ZimbraIM {
             } else {
                 ZimbraLog.im.warn("No default domain has been set, domain must be set in JiveProperties table or IM will not work"+defaultDomain);
             }
+            org.jivesoftware.util.LocaleUtils.sMsgsClassLoader = com.zimbra.cs.util.L10nUtil.getMsgClassLoader();             
             XMPPServer srv = new XMPPServer();
             InterceptorManager.getInstance().addInterceptor(new com.zimbra.cs.im.PacketInterceptor());
             
@@ -34,6 +35,7 @@ public class ZimbraIM {
     }
     
     public synchronized static void shutdown() {
+        XMPPServer.getInstance().stop();
         if (sRunning) {
             sRunning = false;
         }
