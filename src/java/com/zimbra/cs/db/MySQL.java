@@ -55,9 +55,9 @@ public class MySQL extends Db {
             case DISABLE_CONSTRAINT_CHECK:   return true;
             case LIMIT_CLAUSE:               return true;
             case MULTITABLE_UPDATE:          return true;
-            case NULL_IN_UNIQUE_INDEXES:     return true;
             case ON_DUPLICATE_KEY:           return true;
             case ON_UPDATE_CASCADE:          return true;
+            case UNIQUE_NAME_INDEX:          return true;
         }
         return false;
     }

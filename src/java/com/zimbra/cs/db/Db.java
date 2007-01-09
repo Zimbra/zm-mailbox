@@ -57,9 +57,9 @@ public abstract class Db {
         DISABLE_CONSTRAINT_CHECK,
         LIMIT_CLAUSE,
         MULTITABLE_UPDATE,
-        NULL_IN_UNIQUE_INDEXES,
         ON_DUPLICATE_KEY,
-        ON_UPDATE_CASCADE;
+        ON_UPDATE_CASCADE,
+        UNIQUE_NAME_INDEX;
     }
 
 

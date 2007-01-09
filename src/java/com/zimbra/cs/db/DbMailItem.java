@@ -172,7 +172,9 @@ public class DbMailItem {
     }
 
     private static void checkNamingConstraint(Mailbox mbox, int folderId, String name, int modifiedItemId) throws ServiceException {
-        if (name == null || name.equals("") || Db.supports(Db.Capability.NULL_IN_UNIQUE_INDEXES))
+        if (name == null || name.equals(""))
+            return;
+        if (Db.supports(Db.Capability.UNIQUE_NAME_INDEX) && !Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON))
             return;
 
         Connection conn = mbox.getOperationConnection();
@@ -400,27 +402,49 @@ public class DbMailItem {
 
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
+        ResultSet rs = null;
         try {
+            if (!Db.supports(Db.Capability.UNIQUE_NAME_INDEX) || Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON)) {
+                stmt = conn.prepareStatement("SELECT mi.name" +
+                        " FROM " + getMailItemTableName(mbox, "mi") + ", " + getMailItemTableName(mbox, "m2") +
+                        " WHERE mi.id IN " + DbUtil.suitableNumberOfVariables(itemIDs) +
+                        " AND m2.folder_id = ? AND mi.id <> m2.id" +
+                        " AND " + (Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON) ? "UPPER(mi.name) = UPPER(m2.name)" : "mi.name = m2.name") +
+                        (!DebugConfig.disableMailboxGroup ? " AND mi.mailbox_id = ? AND m2.mailbox_id = mi.mailbox_id" : ""));
+                int pos = 1;
+                for (int id : itemIDs)
+                    stmt.setInt(pos++, id);
+                stmt.setInt(pos++, folder.getId());
+                if (!DebugConfig.disableMailboxGroup)
+                    stmt.setInt(pos++, mbox.getId());
+                rs = stmt.executeQuery();
+                if (rs.next())
+                    throw MailServiceException.ALREADY_EXISTS(rs.getString(1));
+                rs.close();
+                stmt.close();
+            }
+
             String imapRenumber = mbox.isTrackingImap() ? ", imap_id = CASE WHEN imap_id IS NULL THEN NULL ELSE 0 END" : "";
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(folder) +
                         " SET folder_id = ?, mod_metadata = ?, change_date = ?" + imapRenumber +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(itemIDs));
-            int arg = 1;
-            stmt.setInt(arg++, folder.getId());
-            stmt.setInt(arg++, mbox.getOperationChangeID());
-            stmt.setInt(arg++, mbox.getOperationTimestamp());
+            int pos = 1;
+            stmt.setInt(pos++, folder.getId());
+            stmt.setInt(pos++, mbox.getOperationChangeID());
+            stmt.setInt(pos++, mbox.getOperationTimestamp());
             if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(arg++, mbox.getId());
+                stmt.setInt(pos++, mbox.getId());
             for (int id : itemIDs)
-                stmt.setInt(arg++, id);
+                stmt.setInt(pos++, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
             if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
-                throw MailServiceException.ALREADY_EXISTS("", e);
+                throw MailServiceException.ALREADY_EXISTS(itemIDs.toString(), e);
             else
                 throw ServiceException.FAILURE("writing new folder data for item [" + itemIDs + ']', e);
         } finally {
+            DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
         }
     }
@@ -428,6 +452,7 @@ public class DbMailItem {
     public static void setParent(MailItem child, MailItem parent) throws ServiceException {
         setParent(new MailItem[] { child }, parent);
     }
+
     public static void setParent(MailItem[] children, MailItem parent) throws ServiceException {
         if (children == null || children.length == 0)
             return;
@@ -1424,12 +1449,11 @@ public class DbMailItem {
                 rs.getInt(CI_UNREAD);
                 reload |= rs.wasNull();
             }
+            rs.close();
+            stmt.close();
 
             if (!reload)
                 return null;
-
-            rs.close();
-            stmt.close();
 
             // going to recalculate counts, so discard any existing counts...
             if (fetchFolders)
