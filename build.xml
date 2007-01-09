@@ -900,27 +900,47 @@
 			<arg value="apache tomcat" />
 		</exec>
 	</target>
-
+	
 	<target name="start-tomcat-unix" if="is-unix">
 		<exec executable="${zimbra.home.dir}/bin/tomcat">
 			<arg value="start" />
 		</exec>
 	</target>
- 
-	<target name="start-jetty" if="use-jetty">
+		
+	<target name="start-jetty-windows" if="is-windows">
+		<exec executable="net">
+			<arg value="start" />
+			<arg value="jetty" />
+		</exec>
+	</target>
+		
+	<target name="start-jetty-unix" if="is-unix">
 		<exec executable="${zimbra.home.dir}/bin/jetty">
 			<arg value="start" />
 		</exec>
+	</target>
+
+	<target name="start-jetty" depends="start-jetty-windows,start-jetty-unix" if="use-jetty">
 		<echo>Waiting for jetty to start</echo>
 		<waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
 			<http url="http://${deploy.host}:${deploy.port}/" />
 		</waitfor>
 	</target>
 	
-	<target name="stop-jetty" if="use-jetty">
+	<target name="stop-jetty-windows" if="is-windows">
+		<exec executable="net">
+			<arg value="stop" />
+			<arg value="jetty" />
+		</exec>
+	</target>
+	
+	<target name="stop-jetty-unix" if="is-unix">
 		<exec executable="${zimbra.home.dir}/bin/jetty">
 			<arg value="stop" />
 		</exec>
+	</target>
+	
+	<target name="stop-jetty" depends="stop-jetty-windows,stop-jetty-unix" if="use-jetty">
 		<echo>Waiting for jetty to stop</echo>
 		<waitfor checkevery="1" checkeveryunit="second" maxwait="10" maxwaitunit="second">
 			<not>

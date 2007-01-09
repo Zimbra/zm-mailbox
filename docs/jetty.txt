@@ -1,11 +1,12 @@
-NOTE: Currently on main you can switch to jetty by setting env variable ZIMBRA_USE_JETTY=1.  If not set, everything will still use tomcat.  This will change when we move away from tomcat.  At this point jetty support is only experimental and only 4 projects have been tested: ZimbraServer, ZimbraWebClient, ZimbraSync and ZimbraOffline.  So far jetty has only been test on Mac OS X but should also work on Linux and Windows+cygwin.
+NOTE: Currently on main you can switch to jetty by setting env variable ZIMBRA_USE_JETTY=1.  If not set, everything will still use tomcat.  This will change when we move away from tomcat.  At this point jetty support is only experimental and only 4 projects have been tested: ZimbraServer, ZimbraWebClient, ZimbraSync and ZimbraOffline.
 
-1. Download jetty 6.1.  As of writing it's jetty-6.1.0rc3.zip.
-2. Unzip to /opt/zimbra/jetty-6.1.0rc3 and symlink 'ln -s /opt/zimbra/jetty-6.1.0rc3 /opt/zimbra/jetty'.
+1. Download jetty 6.1.
+2. Unzip to /opt/zimbra/jetty-6.1.0 and symlink 'ln -s /opt/zimbra/jetty-6.1.0 /opt/zimbra/jetty'.  On Windows unzip as C:\opt\zimbra\jetty.
 3. Download slf4j (Simple Logging Facade for Java to replace Log4J).  As of writing it's slf4j-1.1.0.tar.gz.  Extra three jar files, jcl104-over-slf4j-1.1.0.jar, slf4j-simple-1.1.0.jar and slf4j-api-1.1.0.jar and put them in /opt/zimbra/jetty/lib.
-4. Set env variable ZIMBRA_USE_JETTY=1.  You also need to set env var JAVA_HOME to the right place.  On Mac OS X it should be /System/Library/Frameworks/JavaVM.framework/Home.
-5. Run 'ant reset-the-world' under ZimbraServer. Then run 'ant deploy' and 'ant admin-deploy' under ZimbraSync as usual.  For offline, run 'ant offline-reset-the-world'.
-6. You should also be able to bounce jetty with command line 'jetty start' and 'jetty stop' because reset-the-world copies a script 'jetty' to /opt/zimbra/bin. 
+4. Set env variable ZIMBRA_USE_JETTY=1.  You also need to set env var JAVA_HOME to the right place.  On Mac OS X it should be /System/Library/Frameworks/JavaVM.framework/Home.  On Windows it depends on where you installed JDK.
+5. On Windows you need to install jetty as a Windows service.  This can be achieved using Java Service Wrapper.  Download wrapper-windows-x86-32-3.2.3.zip and unzip it.  Copy the wrapper.exe file under the unzipped bin directory to C:\opt\zimbra\bin.  Copy wrapper.jar and wrapper.dll under the unzipped lib directory to C:\opt\zimbra\lib.  Finally, copy your p4 ZimbraServer\conf\wrapper.conf to C:\opt\zimbra\jetty\etc.  Now run 'wrapper.exe -i C:\opt\zimbra\jetty\etc\wrapper.conf to install jetty as a Windows Service.
+6. Run 'ant reset-the-world' under ZimbraServer. Then run 'ant deploy' and 'ant admin-deploy' under ZimbraSync as usual.  For offline, run 'ant offline-reset-the-world'.
+7. On Mac OS X or Linux you should be able to bounce jetty with command line 'jetty start' and 'jetty stop' because reset-the-world copies a script 'jetty' to /opt/zimbra/bin.  On Windows you can start/stop jetty by running command line 'net start jetty' and 'net stop jetty'.
 
 Debugging in Eclipse (there are more than one way and this is not necessarily the best):
 
