@@ -124,7 +124,7 @@ public class IMChat {
     private Map<IMAddr, Participant> mParticipants = Collections.synchronizedMap(new HashMap<IMAddr, Participant>());
     private Mailbox mMailbox;
     private IMPersona mPersona;
-    private int mDraftId = -1;
+    private int mSavedChatId = -1;
     
     static enum TIMER_STATE {
         WAITING_TO_CLOSE,
@@ -433,12 +433,12 @@ public class IMChat {
             Message msg;
             
             try {
-                msg = mMailbox.updateOrCreateChat(null, pm, mDraftId);
+                msg = mMailbox.updateOrCreateChat(null, pm, mSavedChatId);
             } catch(NoSuchItemException e) {
                 // they deleted the chat from their mailbox.  Bad user.
                 msg = mMailbox.updateOrCreateChat(null, pm, -1);
             }
-            mDraftId = msg.getId();
+            mSavedChatId = msg.getId();
         } catch (ServiceException e) {
             System.out.println("Caught ServiceException " + e);
             e.printStackTrace();

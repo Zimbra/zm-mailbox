@@ -4698,7 +4698,7 @@ public class Mailbox {
         }
         // special-case saving a new Chat
         if (id == ID_AUTO_INCREMENT) {
-            return createChat(octxt, pm, ID_FOLDER_IM_LOGS, Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME, null);
+            return createChat(octxt, pm, ID_FOLDER_IM_LOGS, Flag.BITMASK_FROM_ME, null);
         } else {
             Message toRet = updateChat(octxt, pm, id);
             return toRet;
@@ -4728,7 +4728,7 @@ public class Mailbox {
         Blob blob = null;
         
         try {
-            beginTransaction("createDoc", octxt, redoRecorder);
+            beginTransaction("createChat", octxt, redoRecorder);
 
             long   tags    = Tag.tagsToBitmask(tagsStr);
             CreateChat redoPlayer = (octxt == null ? null : (CreateChat) octxt.getPlayer());
