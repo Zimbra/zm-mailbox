@@ -31,7 +31,7 @@
 
 	<property name="build.dir" location="build" />
 	<property name="build.classes.dir" location="${build.dir}/classes" />
-	<property name="build.zmprov" location="${build.dir}/data/zmprov.txt" />	
+	<property name="build.zmprov" location="${build.dir}/data/zmprov.txt" />
 	<property name="dist.dir" location="build/dist" />
 	<property name="generated.java.dir" location="${build.dir}/generated/src/java" />
 	<property name="warfile" location="${build.dir}/service.war" />
@@ -371,6 +371,36 @@
 		<chmod perm="a+rx"><fileset dir="${zimbra.home.dir}/bin"/><fileset dir="${zimbra.home.dir}/libexec"/></chmod>
 	</target>
 
+    <target name="enable-im">
+      <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
+           classpathref="class.path" onerror="abort" src="${im.dir}/src/db/wildfireInit.sql" />
+      <copy file="${im.dir}/conf/wildfire.xml" todir="${zimbra.home.dir}/conf"/>
+      <chmod file="${im.dir}/conf/wildfire.xml" perm="u+w"/>
+      <copy todir="${zimbra.home.dir}/conf/msgs">
+        <fileset dir="${im.dir}/src/i18n"/>
+      </copy>
+      <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+        <arg line="-l -v mcf zimbraXMPPEnabled TRUE" />
+      </java>
+
+<!--      <mkdir dir="${zimbra.home.dir}/im/plugins/gateway"/>
+      <unzip src="${im.dir}/plugins/gateway.jar" dest="${zimbra.home.dir}/im/plugins/gateway"/> -->
+      
+      <antcall target="restart-tomcat"/>
+    </target>
+
+    <target name="disable-im">
+      <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+        <arg line="-l -v mcf zimbraXMPPEnabled FALSE" />
+      </java>
+    </target>
+
+    <target name="reset-im" depends="disable-im">
+      <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
+           classpathref="class.path" onerror="abort" src="${im.dir}/src/db/wildfireDrop.sql" />
+      <antcall target="enable-im" />
+    </target>
+    
 	<target name="dev-dist" depends="war,dev-dist-unix,choose-db-schema">
 		<!-- bin, libexec -->
 		<copy todir="${dist.dir}/bin" overwrite="true"><fileset dir="${src.dir}/bin" excludes="*.production"/></copy>
