@@ -1183,11 +1183,11 @@ public class ZMailboxUtil implements DebugListener {
         mSearchParams.setSortBy(sortBy != null ?  sortBy : SearchSortBy.dateDesc);
             
         String types = typesOpt();
-        mSearchParams.setTypes(types != null ? types : ZSearchParams.TYPE_CONVERSATION);        
+        mSearchParams.setTypes(types != null ? types : ZSearchParams.TYPE_CONVERSATION);
         
         mIndexToId.clear();
         mSearchPage = 0;
-        ZSearchPagerResult pager = mMbox.search(mSearchParams, mSearchPage, true, false);
+        ZSearchPagerResult pager = mMbox.search(mSearchParams, mSearchPage, false, false);
         //System.out.println(result);
         dumpSearch(pager.getResult(), verboseOpt());                
     }
