@@ -78,13 +78,14 @@ public class ZimbraSuite extends TestSuite
         suite.addTest(new TestSuite(TestConcurrency.class));
         suite.addTest(new TestSuite(TestFolderFilterRules.class));
         suite.addTest(new TestSuite(TestPop3Import.class));
+        suite.addTest(new TestSuite(TestFilter.class));
 
         synchronized (sAdditionalTests) {
             for (Test additional : sAdditionalTests) {
                 suite.addTest(additional);
             }
         }
-
+        
         return TestUtil.runTest(suite, outputStream);
     }
 }

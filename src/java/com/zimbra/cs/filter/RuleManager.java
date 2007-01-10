@@ -83,6 +83,7 @@ public class RuleManager {
      */
     public void setRules(Account account, String script) throws ServiceException {
         String accountId = account.getId();
+        ZimbraLog.filter.debug("Setting filter rules for account %s:\n%s", accountId, script);
         Mailbox mailbox =  MailboxManager.getInstance().getMailboxByAccount(account);
         if (script == null) {
             script = "";
