@@ -2400,13 +2400,10 @@ public class DbMailItem {
 
             encodeConstraint(mbox, node, where, conn);
             where.append(sortQuery(sort));
-            boolean hasLimit = false;
-            if (validLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
-                hasLimit = true;
+            if (validLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE))
                 where.append(" LIMIT ?, ?");
-            }
 
-            String forceIndex = getForceIndexClause(node, sort, hasLimit);
+            String forceIndex = getForceIndexClause(node, sort, validLIMIT);
             select.append(forceIndex).append(where);
             stmt = conn.prepareStatement(select.toString());
             int param = 1;
