@@ -32,6 +32,8 @@ import com.zimbra.cs.zclient.event.ZModifyContactEvent;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.soap.Element;
 
+import java.util.Map;
+
 public class ZContactHit implements ZSearchHit {
 
     private String mId;
@@ -43,7 +45,7 @@ public class ZContactHit implements ZSearchHit {
     private String mRevision;
     private String mFolderId;
     private String mType;
-    private boolean mIsGroup;
+    private String mDlist;
     private float mScore;
     private long mMetaDataDate;
         
@@ -61,7 +63,7 @@ public class ZContactHit implements ZSearchHit {
         mEmail2 = e.getAttribute(Contact.A_email2, null);
         mEmail3 = e.getAttribute(Contact.A_email3, null);
         mMetaDataDate = e.getAttributeLong(MailService.A_MODIFIED_DATE, 0) * 1000;
-        mIsGroup = e.getAttributeBool(Contact.A_dlist, false);
+        mDlist = e.getAttribute(Contact.A_dlist, null);
     }
 
     public String toString() {
@@ -76,10 +78,10 @@ public class ZContactHit implements ZSearchHit {
         sb.add("fileAsStr", mFileAsStr);
         sb.add("revision", mRevision);
         sb.add("folderId", mFolderId);
+        sb.add(Contact.A_dlist, mDlist);
         sb.add(Contact.A_email, mEmail);
         sb.add(Contact.A_email2, mEmail2);
         sb.add(Contact.A_email3, mEmail3);
-        sb.add(Contact.A_dlist, mIsGroup);
         sb.endStruct();
         return sb.toString();
     }
@@ -92,6 +94,10 @@ public class ZContactHit implements ZSearchHit {
         return !isGroup();
     }
 
+    public String getDlist() {
+        return mDlist;
+    }
+    
     public String getType() {
         return mType;
     }
@@ -153,7 +159,9 @@ public class ZContactHit implements ZSearchHit {
                 mEmail2 = cevent.getEmail(mEmail2);
                 mEmail3 = cevent.getEmail(mEmail3);
                 //mMetaDataChangedDate = cevent.getMetaDataChangedDate(mMetaDataChangedDate);
-                //mAttrs = cevent.getAttrs(mAttrs);
+                Map<String, String> attrs = cevent.getAttrs(null);
+                String dlist = attrs != null ? attrs.get(Contact.A_dlist) : null;
+                if (dlist != null) mDlist = dlist;
             }
         }
 	}

@@ -361,13 +361,12 @@ public class ToXML {
                     elem.addAttribute(Contact.A_email3, email);
 
                 String type = contact.get(Contact.A_type);
-                if (type == null) {
-                    String dlist = contact.get(Contact.A_dlist);
-                    if (dlist != null) type = Contact.TYPE_GROUP;
-                }
+                String dlist = contact.get(Contact.A_dlist);
+                if (type == null && dlist != null) type = Contact.TYPE_GROUP;
                 if (type != null)
                     elem.addAttribute(Contact.A_type,  type);
-
+                if (dlist != null)
+                    elem.addAttribute(Contact.A_dlist,  dlist);
                 
                 // send back date with summary via search results
                 elem.addAttribute(MailService.A_CHANGE_DATE, contact.getChangeDate() / 1000);
