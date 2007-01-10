@@ -1943,6 +1943,7 @@ public final class MailboxIndex
                 appendContactField(searchText, contact, Contact.A_company);
                 appendContactField(searchText, contact, Contact.A_firstName);
                 appendContactField(searchText, contact, Contact.A_lastName);
+                appendContactField(searchText, contact, Contact.A_nickname);
 
                 StringBuilder emailStrBuf = new StringBuilder();
                 List<String> emailList = contact.getEmailAddresses();
@@ -1954,7 +1955,7 @@ public final class MailboxIndex
 
                 contentText.append(ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, emailStr));
                 searchText.append(ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, emailStr));
-
+                
                 /* put the email addresses in the "To" field so they can be more easily searched */
                 doc.add(new Field(LuceneFields.L_H_TO, emailStr,                                               false/*store*/, true/*index*/, true/*token*/));
 

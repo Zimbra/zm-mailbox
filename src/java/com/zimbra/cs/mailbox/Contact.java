@@ -406,7 +406,7 @@ public class Contact extends MailItem {
     /** The list of all "email" fields in the contact's map. */
     private static final String[] EMAIL_FIELDS = new String[] { A_email, A_email2, A_email3 };
 
-    /** Returns a list of all email addresses for this contact.  This is used
+    /** Returns a list of all email address fields for this contact.  This is used
      *  by {@link com.zimbra.cs.index.Indexer#indexContact} to populate the
      *  "To" field with the contact's email addresses. */
     public List<String> getEmailAddresses() {
@@ -416,6 +416,12 @@ public class Contact extends MailItem {
             if (value != null && !value.trim().equals(""))
                 result.add(value);
         }
+
+        // if the dlist is set, return it as a single value
+        String dlist = get(A_dlist);
+        if (dlist != null)
+            result.add(dlist);
+        
         return result;
     }
     
