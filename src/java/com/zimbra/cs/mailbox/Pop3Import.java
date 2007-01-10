@@ -105,9 +105,9 @@ implements MailItemImport {
         try {
             fetchMessages(account, dataSource);
         } catch (MessagingException e) {
-            throw ServiceException.FAILURE("Importing data from " + dataSource, e);
+            throw ServiceException.FAILURE(e.getMessage(), e);
         } catch (IOException e) {
-            throw ServiceException.FAILURE("Importing data from " + dataSource, e);
+            throw ServiceException.FAILURE(e.getMessage(), e);
         }
     }
 
