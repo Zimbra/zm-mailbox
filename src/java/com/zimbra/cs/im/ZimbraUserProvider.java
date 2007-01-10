@@ -57,6 +57,9 @@ public class ZimbraUserProvider implements UserProvider {
         try {
             Account acct = lookupAccount(username);
             
+            if (acct == null) 
+                throw new UserNotFoundException("Unknown user: "+username);
+            
             String un = acct.getName();
             int atSign = un.indexOf('@');
             if (atSign >= 0)

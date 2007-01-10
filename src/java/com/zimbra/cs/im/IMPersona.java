@@ -98,7 +98,11 @@ public class IMPersona {
      * @return The set of gateways this user has access to
      */
     public IMGatewayType[] getAvailableGateways() {
-        return new IMGatewayType[] { IMGatewayType.aol, IMGatewayType.msn, IMGatewayType.yahoo };
+        if ( XMPPServer.getInstance().getPluginManager().getPlugin("gateway") != null) {
+            return new IMGatewayType[] { IMGatewayType.aol, IMGatewayType.msn, IMGatewayType.yahoo };
+        } else {
+            return new IMGatewayType[] {};
+        }
     }
     
     private JID getJIDForGateway(IMGatewayType type) {
@@ -513,7 +517,7 @@ public class IMPersona {
             newBuddy.setPresence(new IMPresence(Show.OFFLINE, (byte) 0, "offline"));
             
             if (mBuddyList.containsKey(buddyAddr)) {
-                System.out.println("Key: "+buddyAddr+ " already in buddy list!\n");
+                ZimbraLog.im.info("Key: "+buddyAddr+ " already in buddy list!\n");
             }
             
             mBuddyList.put(buddyAddr, newBuddy);

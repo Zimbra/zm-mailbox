@@ -67,7 +67,7 @@ class IMSubscribedNotification implements IMNotification {
     
     public Element toXml(Element parent) {
         ZimbraLog.im.info("IMSubscribedNotification " + mAddr + " " + mName + " Subscribed=" +mSubscribed
-                    + mAsk != null ? " Ask="+mAsk.toString() : "");
+                    + (mAsk != null ? " Ask="+mAsk.toString() : ""));
         
         Element e;
         if (mSubscribed) { 

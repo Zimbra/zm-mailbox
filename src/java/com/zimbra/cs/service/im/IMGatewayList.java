@@ -29,7 +29,6 @@ public class IMGatewayList extends IMDocumentHandler {
                 }
             }
         }
-        
         return response;
     }
 }
