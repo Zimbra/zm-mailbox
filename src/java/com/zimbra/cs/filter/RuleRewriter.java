@@ -58,7 +58,7 @@ import com.zimbra.soap.Element;
  *
  * Rewrites a parsed Sieve tree to XML or vice versa.
  */
-class RuleRewriter {
+public class RuleRewriter {
     final static Set MATCH_TYPES = new HashSet();
     static {
         MATCH_TYPES.add(":is");
@@ -93,7 +93,7 @@ class RuleRewriter {
      * @param xmlRules
      * @see RuleRewriter#getScript()
      */
-    RuleRewriter(Element eltRules, Mailbox mbox) {
+    public RuleRewriter(Element eltRules, Mailbox mbox) {
         mRoot = eltRules;
         mMailbox = mbox;
     }
@@ -317,9 +317,11 @@ class RuleRewriter {
                 if (op != null)
                     sb.append(op).append(" ");
                 String k0 = subnode.getAttribute("k0", null);
+                checkValue(k0, ruleName);
                 if (k0 != null)
                     sb.append("\"").append(k0).append("\"").append(" ");
                 String k1 = subnode.getAttribute("k1", null);
+                checkValue(k1, ruleName);
                 if (k1 != null) {
                     if (!isSize)            // size cannot be quoted
                         sb.append("\"");
@@ -340,6 +342,23 @@ class RuleRewriter {
         }
         if (actionOpenBrace)
             sb.append("}\n");
+    }
+    
+    private void checkValue(String k, String ruleName)
+    throws ServiceException {
+        if (k == null) {
+            return;
+        }
+        if (k.contains("\"")) {
+            String msg = String.format(
+                "Doublequote not allowed for value '%s' in filter rule %s", k, ruleName);
+            throw ServiceException.INVALID_REQUEST(msg, null);
+        }
+        if (k.contains("\\")) {
+            String msg = String.format(
+                "Backslash not allowed for value '%s' in filter rule %s", k, ruleName);
+            throw ServiceException.INVALID_REQUEST(msg, null);
+        }
     }
 
     private void action(StringBuffer sb, String actionName, Element element, String ruleName) throws ServiceException {
