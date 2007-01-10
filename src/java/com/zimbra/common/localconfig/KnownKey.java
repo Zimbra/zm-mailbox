@@ -67,14 +67,17 @@ public class KnownKey {
         String[] keys = KnownKey.getAll();
         for (String key : keys) {
         	KnownKey kk = mKnownKeys.get(key);
-        	kk.mValue = lc.expand(key, kk.mDefaultValue);
+        	kk.expand(lc);
         }
     }
     
-    static String getValue(String key) {
+    static String getValue(String key) throws ConfigException {
         KnownKey kk = mKnownKeys.get(key);
         if (kk == null) {
             return null;
+        }
+        if (kk.mValue == null) {
+        	kk.expand(LocalConfig.getInstance());
         }
         return kk.mValue;
     }
@@ -140,9 +143,9 @@ public class KnownKey {
         if (mKnownKeys.containsKey(key)) {
             Logging.warn("programming error - known key added more than once: " + key);
         }
-        mKnownKeys.put(key, this);
-        mDefaultValue = defaultValue;
+        setDefault(defaultValue);
         mDoc = doc;
+        mKnownKeys.put(key, this);
     }
 
     public KnownKey(String key) 
@@ -160,9 +163,19 @@ public class KnownKey {
     
     public void setDefault(String defaultValue) {
         mDefaultValue = defaultValue;
+        mValue = null;
     }
     
     public void setForceToEdit(boolean value) {
         mForceToEdit = value;
+    }
+    
+    private void expand(LocalConfig lc) throws ConfigException {
+    	try {
+    		mValue = lc.expand(mKey, mDefaultValue);
+    	} catch (ConfigException x) {
+    		Logging.error("Can't expand config key " + mKey + "=" + mDefaultValue, x);
+    		throw x;
+    	}
     }
 }
