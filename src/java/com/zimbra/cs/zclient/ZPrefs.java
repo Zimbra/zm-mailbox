@@ -62,6 +62,8 @@ public class ZPrefs {
     }
 
     public Map<String, List<String>> getPrefs() { return mPrefs; }
+
+    public boolean getReadingPaneEnabled() { return getBool(Provisioning.A_zimbraPrefReadingPaneEnabled); }
     
     public boolean getIncludeSpamInSearch() { return getBool(Provisioning.A_zimbraPrefIncludeSpamInSearch); }
 

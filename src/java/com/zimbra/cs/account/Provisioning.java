@@ -589,6 +589,8 @@ public abstract class Provisioning {
 
     public static final String A_zimbraPrefReplyToAddress = "zimbraPrefReplyToAddress";
 
+    public static final String A_zimbraPrefReadingPaneEnabled = "zimbraPrefReadingPaneEnabled";
+
     public static final String A_zimbraPrefUseKeyboardShortcuts = "zimbraPrefUseKeyboardShortcuts";
 
     public static final String A_zimbraPrefNewMailNotificationEnabled = "zimbraPrefNewMailNotificationEnabled";
