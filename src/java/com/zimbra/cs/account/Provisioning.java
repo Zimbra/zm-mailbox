@@ -348,7 +348,13 @@ public abstract class Provisioning {
      * the account's status (see ACCOUNT_STATUS_*). Must be "active" to allow logins.
      */
     public static final String A_zimbraAccountStatus = "zimbraAccountStatus";
+    
+    /**
+     * Object classes to add to a zimbraAccount
+     */
+    public static final String A_zimbraAccountExtraObjectClass = "zimbraAccountExtraObjectClass";
 
+    
     public static final String A_zimbraLocale = "zimbraLocale";
 
     /**
@@ -1087,8 +1093,6 @@ public abstract class Provisioning {
     /*
      * data sources
      */
-    
-
     public static final String A_zimbraDataSourceId = "zimbraDataSourceId";
     public static final String A_zimbraDataSourceName = "zimbraDataSourceName";
     public static final String A_zimbraDataSourceEnabled = "zimbraDataSourceEnabled";
@@ -1100,6 +1104,7 @@ public abstract class Provisioning {
     public static final String A_zimbraDataSourceConnectionType = "zimbraDataSourceConnectionType";    
     public static final String A_zimbraDataSourceMaxNumEntries = "zimbraDataSourceMaxNumEntries";    
     public static final String A_zimbraDataSourceLeaveOnServer = "zimbraDataSourceLeaveOnServer";
+
     /*
      * Extension Text Analyzer
      */

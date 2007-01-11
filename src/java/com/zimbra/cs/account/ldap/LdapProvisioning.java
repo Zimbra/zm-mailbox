@@ -630,7 +630,13 @@ public class LdapProvisioning extends Provisioning {
             
             Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, "organizationalPerson");
             oc.add(C_zimbraAccount);
+
+            String[] extraObjectClasses = getConfig().getMultiAttr(A_zimbraAccountExtraObjectClass);
+            for (String eoc : extraObjectClasses) {
+                oc.add(eoc);
+            }
             oc.add(C_amavisAccount);
+            
             if (additionalObjectClasses != null) {
                 for (int i = 0; i < additionalObjectClasses.length; i++)
                     oc.add(additionalObjectClasses[i]);

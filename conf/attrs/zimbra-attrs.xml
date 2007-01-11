@@ -1962,7 +1962,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Specifies whether imported POP3 messages should be left on the server or deleted.</desc>
 </attr>
 
-<attr id="435" name="zimbraSmtpSendAddOriginatingIP" type="boolean" cardinality="single"  optionalIn="globalConfig">
+<attr id="435" name="zimbraSmtpSendAddOriginatingIP" type="boolean" cardinality="single" optionalIn="globalConfig">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Whether X-Originating-IP will be added to messages sent via SendMsgRequest.</desc>
 </attr>
@@ -1975,8 +1975,13 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="437" name="zimbraSyncWindowSize" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>0</defaultCOSValue>
   <desc>
-    The maximum batch size for each ZimbraSync transaction.  Default value of 0 means to follow client requested size.  If set to any positive integer, the value
-    will be the maximum number of items to sync even if client requests more.  This setting affects all sync categories including email, contacts, calendar and tasks.
+    The maximum batch size for each ZimbraSync transaction.  Default value of 0 means to follow client requested size.  If set to any positive integer, the value will be the maximum number of items to sync even if client requests more.  This setting affects all sync categories including email, contacts, calendar and tasks.
+  </desc>
+</attr>
+
+<attr id="438" name="zimbraAccountExtraObjectClass" type="string" max="256" cardinality="multi" optionalIn="globalConfig">
+  <globalConfigValue>amavisAccount</globalConfigValue>
+  <desc>Object classes to add when creating a zimbra account object.  Useful if you want to add sambaSamAccount etc to zimbra accounts.
   </desc>
 </attr>
 
