@@ -59,8 +59,10 @@ public class IMRouter implements Runnable {
         Account acct = Provisioning.getInstance().get(AccountBy.name, addr.getAddr());
         if (acct != null) 
             return MailboxManager.getInstance().getMailboxByAccount(acct);
-        else
+        else {
+            ZimbraLog.im.warn("Couldn't find Mailbox for "+addr.toString());
             throw MailServiceException.NO_SUCH_MBOX(addr.getAddr());
+        }
     }
     
     public synchronized IMPersona findPersona(OperationContext octxt, IMAddr addr, boolean loadSubs) throws ServiceException 

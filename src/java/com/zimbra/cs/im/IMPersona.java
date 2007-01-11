@@ -212,8 +212,8 @@ public class IMPersona {
         
         if (packet instanceof Message) {
             Message msg = (Message)packet;
-            String toAddr = msg.getTo().getNode() + '@'+  msg.getTo().getDomain();
-            String fromAddr = msg.getFrom().getNode() + '@' + msg.getFrom().getDomain();
+            String toAddr = msg.getTo().toBareJID();
+            String fromAddr = msg.getFrom().toBareJID();
             String threadId = msg.getThread();
             
             String subject = msg.getSubject();
@@ -494,23 +494,27 @@ public class IMPersona {
         boolean doRemove = false;
         
         Roster.Subscription subscript = item.getSubscription();
-        switch (subscript) {
-            case none:
-                newBuddy.setSubType(SubType.NONE);
-                break;
-            case to:
-                newBuddy.setSubType(SubType.TO);
-                break;
-            case from:
-                newBuddy.setSubType(SubType.FROM);
-                break;
-            case both:
-                newBuddy.setSubType(SubType.BOTH);
-                break;
-            case remove:
-                doRemove = true;
-                newBuddy.setSubType(SubType.NONE);
-                break;
+        if (subscript == null)
+            newBuddy.setSubType(SubType.NONE);
+        else {
+            switch (subscript) {
+                case none:
+                    newBuddy.setSubType(SubType.NONE);
+                    break;
+                case to:
+                    newBuddy.setSubType(SubType.TO);
+                    break;
+                case from:
+                    newBuddy.setSubType(SubType.FROM);
+                    break;
+                case both:
+                    newBuddy.setSubType(SubType.BOTH);
+                    break;
+                case remove:
+                    doRemove = true;
+                    newBuddy.setSubType(SubType.NONE);
+                    break;
+            }
         }
         
         if (!doRemove) {

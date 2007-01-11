@@ -50,10 +50,7 @@ public class IMAddr {
     }
     
     public static IMAddr fromJID(JID jid) {
-        if (jid.getDomain() != null && jid.getDomain().length() > 0)
-            return new IMAddr(jid.getNode() + '@' + jid.getDomain());
-        else
-            return new IMAddr(jid.getNode());
+        return new IMAddr(jid.toBareJID());
     }
     
     public boolean equals(Object other) {

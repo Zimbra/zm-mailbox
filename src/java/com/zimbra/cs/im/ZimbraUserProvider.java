@@ -61,9 +61,9 @@ public class ZimbraUserProvider implements UserProvider {
                 throw new UserNotFoundException("Unknown user: "+username);
             
             String un = acct.getName();
-            int atSign = un.indexOf('@');
-            if (atSign >= 0)
-                un = un.substring(0, atSign);
+//            int atSign = un.indexOf('@');
+//            if (atSign >= 0)
+//                un = un.substring(0, atSign);
             
             // return new User(username, name, email, creationDate, modificationDate)
             return new User(un, acct.getAttr(Provisioning.A_displayName, null), acct.getAttr(Provisioning.A_zimbraMailDeliveryAddress),  new Date(0), new Date(0));

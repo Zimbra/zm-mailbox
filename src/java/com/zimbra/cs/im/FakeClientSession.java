@@ -90,13 +90,14 @@ public class FakeClientSession extends ClientSession {
     }
     
     void addRoutes() {
+        assert(false);
         setAuthToken(new AuthToken(mAddr));
         try {
             // if there is already a "zcs" session, kick it off
             if (sessionManager.isActiveRoute(mAddr, "zcs")) {
                 ClientSession oldSession = null;
                 
-                oldSession = sessionManager.getSession(mAddr, "timsmac.local", "zcs");
+                oldSession = sessionManager.getSession(mAddr+ "@timsmac.local", "zcs");
                 Connection conn = oldSession.getConnection();
                 if (conn != null) {
                     // Kick out the old connection that is conflicting with the new one

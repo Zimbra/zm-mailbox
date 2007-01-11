@@ -41,6 +41,9 @@ public class ZimbraAuthProvider implements AuthProvider {
     public void authenticate(String username, String password) throws UnauthorizedException {
         try {
             Account acct = ZimbraUserProvider.getInstance().lookupAccount(username);
+            if (acct == null) {
+                throw new UnauthorizedException("Unknown user: "+username);
+            }
             Provisioning.getInstance().authAccount(acct, password, "im"); 
         } catch (ServiceException e) {
             throw new UnauthorizedException(e);
