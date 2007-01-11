@@ -1080,6 +1080,8 @@ public abstract class Provisioning {
     public static final String A_zimbraRemoteManagementPrivateKeyPath = "zimbraRemoteManagementPrivateKeyPath";
     public static final String A_zimbraRemoteManagementPort = "zimbraRemoteManagementPort";
 
+    /* orphaned here because of network extension dependencies */
+    public static final String A_zimbraArchiveAccount = "zimbraArchiveAccount";
     
     /*
      * Wiki
