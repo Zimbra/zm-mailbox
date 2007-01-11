@@ -299,7 +299,9 @@
 	</target>
 
 	<target name="clean" description="Removes any temporary files">
-		<delete dir="${build.dir}" />
+		<ant dir="${common.dir}" target="clean" inheritAll="false" />
+		<ant dir="${im.dir}" target="clean" inheritAll="false" />
+        <delete dir="${build.dir}" />
 	</target>
 
 	<!-- activation.jar keeps mail.jar open.  As a result, on
