@@ -25,42 +25,42 @@
 
 package com.zimbra.cs.zclient;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.account.Provisioning.IdentityBy;
+import com.zimbra.cs.httpclient.EasySSLProtocolSocketFactory;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.zclient.ZGrant.GranteeType;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.MessagePart;
 import com.zimbra.cs.zclient.ZSearchParams.Cursor;
+import com.zimbra.cs.zclient.event.ZCreateContactEvent;
+import com.zimbra.cs.zclient.event.ZCreateConversationEvent;
 import com.zimbra.cs.zclient.event.ZCreateEvent;
 import com.zimbra.cs.zclient.event.ZCreateFolderEvent;
+import com.zimbra.cs.zclient.event.ZCreateMessageEvent;
 import com.zimbra.cs.zclient.event.ZCreateMountpointEvent;
 import com.zimbra.cs.zclient.event.ZCreateSearchFolderEvent;
 import com.zimbra.cs.zclient.event.ZCreateTagEvent;
 import com.zimbra.cs.zclient.event.ZDeleteEvent;
 import com.zimbra.cs.zclient.event.ZEventHandler;
 import com.zimbra.cs.zclient.event.ZModifyContactEvent;
+import com.zimbra.cs.zclient.event.ZModifyConversationEvent;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZModifyFolderEvent;
 import com.zimbra.cs.zclient.event.ZModifyMailboxEvent;
+import com.zimbra.cs.zclient.event.ZModifyMessageEvent;
 import com.zimbra.cs.zclient.event.ZModifyMountpointEvent;
 import com.zimbra.cs.zclient.event.ZModifySearchFolderEvent;
 import com.zimbra.cs.zclient.event.ZModifyTagEvent;
 import com.zimbra.cs.zclient.event.ZRefreshEvent;
-import com.zimbra.cs.zclient.event.ZModifyConversationEvent;
-import com.zimbra.cs.zclient.event.ZCreateConversationEvent;
-import com.zimbra.cs.zclient.event.ZCreateMessageEvent;
-import com.zimbra.cs.zclient.event.ZModifyMessageEvent;
-import com.zimbra.cs.zclient.event.ZCreateContactEvent;
-import com.zimbra.cs.httpclient.EasySSLProtocolSocketFactory;
-import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.Element.XMLElement;
 import com.zimbra.soap.SoapFaultException;
@@ -68,6 +68,7 @@ import com.zimbra.soap.SoapHttpTransport;
 import com.zimbra.soap.SoapTransport;
 import com.zimbra.soap.ZimbraNamespace;
 import com.zimbra.soap.ZimbraSoapContext;
+import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpState;
@@ -80,7 +81,6 @@ import org.apache.commons.httpclient.methods.multipart.ByteArrayPartSource;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
-import org.apache.commons.collections.map.LRUMap;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
@@ -2284,6 +2284,17 @@ public class ZMailbox {
     public void deleteDataSource(ZDataSource source) throws ServiceException {
         XMLElement req = new XMLElement(MailConstants.DELETE_DATA_SOURCE_REQUEST);
         source.toIdElement(req);
+        invoke(req);
+    }
+
+    public ZFilterRules getFilterRules() throws ServiceException {
+        XMLElement req = new XMLElement(MailConstants.GET_RULES_REQUEST);
+        return new ZFilterRules(invoke(req).getElement(MailConstants.E_RULES));
+    }
+
+    public void saveFilterRules(ZFilterRules rules) throws ServiceException {
+        XMLElement req = new XMLElement(MailConstants.SAVE_RULES_REQUEST);
+        rules.toElement(req);
         invoke(req);
     }
 
