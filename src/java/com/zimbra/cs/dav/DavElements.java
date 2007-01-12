@@ -146,13 +146,18 @@ public class DavElements {
 	public static final String P_READ_ACL = "read-acl";
 	public static final String P_READ_CURRENT_USER_PRIVILEGE_SET = "read-current-user-privilege-set";
 	public static final String P_READ_FREE_BUSY = "read-free-busy";
+	public static final String P_RECIPIENT = "recipient";
 	public static final String P_REMOVE = "remove";
 	public static final String P_REPORT = "report";
+	public static final String P_REQUEST_STATUS = "request-status";
 	public static final String P_REQUIRED_PRINCIPAL = "required-principal";
 	public static final String P_RESOURCE = "resource";
 	public static final String P_RESOURCETYPE = "resourcetype";
 	public static final String P_RESPONSE = "response";
 	
+	public static final String P_SCHEDULE_INBOX = "schedule-inbox";
+	public static final String P_SCHEDULE_OUTBOX = "schedule-outbox";
+	public static final String P_SCHEDULE_RESPONSE = "schedule-response";
 	public static final String P_SELF = "self";
 	public static final String P_SET = "set";
 	public static final String P_SHARED = "shared";
@@ -265,12 +270,18 @@ public class DavElements {
 	public static final QName E_PROPSTAT = QName.get(P_PROPSTAT, WEBDAV_NS);
 	
 	public static final QName E_READ   = QName.get(P_READ, WEBDAV_NS);
+	public static final QName E_RECIPIENT = QName.get(P_RECIPIENT, CALDAV_NS);
 	public static final QName E_REPORT = QName.get(P_REPORT, WEBDAV_NS);
+	public static final QName E_REQUEST_STATUS = QName.get(P_REQUEST_STATUS, CALDAV_NS);
 	public static final QName E_REQUIRED_PRINCIPAL = QName.get(P_REQUIRED_PRINCIPAL, WEBDAV_NS);
 	public static final QName E_RESOURCE = QName.get(P_RESOURCE, WEBDAV_NS);
 	public static final QName E_RESOURCETYPE = QName.get(P_RESOURCETYPE, WEBDAV_NS);
 	public static final QName E_RESPONSE = QName.get(P_RESPONSE, WEBDAV_NS);
+	public static final QName E_CALDAV_RESPONSE = QName.get(P_RESPONSE, CALDAV_NS);
 	
+	public static final QName E_SCHEDULE_INBOX = QName.get(P_SCHEDULE_INBOX, CALDAV_NS);
+	public static final QName E_SCHEDULE_OUTBOX = QName.get(P_SCHEDULE_OUTBOX, CALDAV_NS);
+	public static final QName E_SCHEDULE_RESPONSE = QName.get(P_SCHEDULE_RESPONSE, CALDAV_NS);
 	public static final QName E_SHARED = QName.get(P_SHARED, WEBDAV_NS);
 	public static final QName E_SOURCE = QName.get(P_SOURCE, WEBDAV_NS);
 	public static final QName E_STATUS = QName.get(P_STATUS, WEBDAV_NS);

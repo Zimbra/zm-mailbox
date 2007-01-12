@@ -26,7 +26,6 @@ package com.zimbra.cs.service;
 
 import java.io.IOException;
 import java.util.Date;
-import java.util.Iterator;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -43,8 +42,6 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.calendar.FreeBusy;
-import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
-import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.servlet.ZimbraServlet;
 
@@ -55,8 +52,6 @@ public class PublicICalServlet extends ZimbraServlet {
     private static Log sLog = LogFactory.getLog(PublicICalServlet.class);
 
     private static final long MAX_PERIOD_SIZE_IN_DAYS = 200;
-
-    private static final String VCAL_NEWLINE = "\n";
 
 
     public final void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
@@ -129,62 +124,11 @@ public class PublicICalServlet extends ZimbraServlet {
                 return;             
             }
 
-            ParsedDateTime dtStart = ParsedDateTime.fromUTCTime(rangeStart);
-            ParsedDateTime dtEnd = ParsedDateTime.fromUTCTime(rangeEnd);
-            ParsedDateTime dtNow = ParsedDateTime.fromUTCTime(now);
-
-            //StringBuffer toRet = new StringBuffer("BEGIN:VFREEBUSY").append(NL);
-            StringBuilder vfb = new StringBuilder("BEGIN:VCALENDAR").append(VCAL_NEWLINE);
-            vfb.append("VERSION:2.0").append(VCAL_NEWLINE);
-            vfb.append("METHOD:PUBLISH").append(VCAL_NEWLINE);
-            vfb.append("BEGIN:VFREEBUSY").append(VCAL_NEWLINE);
-
-            vfb.append("ORGANIZER:").append(mbox.getAccount().getName()).append(VCAL_NEWLINE);
-            vfb.append("DTSTAMP:").append(dtNow.toString()).append(VCAL_NEWLINE);
-            vfb.append("DTSTART:").append(dtStart.toString()).append(VCAL_NEWLINE);
-            vfb.append("DTEND:").append(dtEnd.toString()).append(VCAL_NEWLINE);
-            vfb.append("URL:").append(req.getRequestURL()).append('?').append(req.getQueryString()).append(VCAL_NEWLINE);
-
             FreeBusy fb = mbox.getFreeBusy(rangeStart, rangeEnd);
 
-//            BEGIN:VFREEBUSY
-//            ORGANIZER:jsmith@host.com
-//            DTSTART:19980313T141711Z
-//            DTEND:19980410T141711Z
-//            FREEBUSY:19980314T233000Z/19980315T003000Z
-//            FREEBUSY:19980316T153000Z/19980316T163000Z
-//            FREEBUSY:19980318T030000Z/19980318T040000Z
-//            URL:http://www.host.com/calendar/busytime/jsmith.ifb
-//            END:VFREEBUSY
-
-
-            for (Iterator<FreeBusy.Interval> iter = fb.iterator(); iter.hasNext(); ) {
-                FreeBusy.Interval cur = iter.next();
-                String status = cur.getStatus();
-
-                if (status.equals(IcalXmlStrMap.FBTYPE_FREE)) {
-                    continue;
-                } else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY)) {
-                    vfb.append("FREEBUSY:");
-                } else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_TENTATIVE)) {
-                    vfb.append("FREEBUSY;FBTYPE=BUSY-TENTATIVE:");
-                } else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE)) {
-                    vfb.append("FREEBUSY;FBTYPE=BUSY-UNAVAILABLE:");
-                } else {
-                    assert(false);
-                    vfb.append(":");
-                }
-
-                ParsedDateTime curStart = ParsedDateTime.fromUTCTime(cur.getStart());
-                ParsedDateTime curEnd = ParsedDateTime.fromUTCTime(cur.getEnd());
-
-                vfb.append(curStart.toString()).append('/').append(curEnd.toString()).append(VCAL_NEWLINE);
-            }
-
-            vfb.append("END:VFREEBUSY").append(VCAL_NEWLINE);
-            vfb.append("END:VCALENDAR").append(VCAL_NEWLINE);
-
-            resp.getOutputStream().write(vfb.toString().getBytes());
+            String url = req.getRequestURL() + "?" + req.getQueryString();
+            String fbMsg = fb.toVCalendar(FreeBusy.Method.PUBLISH, mbox.getAccount().getName(), null, url);
+            resp.getOutputStream().write(fbMsg.getBytes());
 
         } catch (ServiceException e) {
             e.printStackTrace();

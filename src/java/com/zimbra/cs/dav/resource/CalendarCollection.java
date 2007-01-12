@@ -59,9 +59,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.calendar.FreeBusy;
-import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
-import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
@@ -189,7 +187,8 @@ public class CalendarCollection extends Collection {
 		 * to work correctly with those headers, like Evolution 2.8.
 		 */
 		String userAgent = req.getHeader(DavProtocol.HEADER_USER_AGENT);
-		boolean beLessRestrictive = (userAgent == null) || !userAgent.startsWith("Evolution");
+		boolean beLessRestrictive = (userAgent == null) || 
+			(!userAgent.startsWith("Evolution")); // && !userAgent.startsWith("DAVKit"));
 		
 		String etag = req.getHeader(DavProtocol.HEADER_IF_MATCH);
 
@@ -285,46 +284,6 @@ public class CalendarCollection extends Collection {
 	public String getFreeBusyReport(DavContext ctxt, TimeRange range) throws ServiceException, DavException {
 		Mailbox mbox = getMailbox(ctxt);
 		FreeBusy fb = mbox.getFreeBusy(range.getStart(), range.getEnd());
-		ParsedDateTime now = ParsedDateTime.fromUTCTime(System.currentTimeMillis());
-		ParsedDateTime startTime = ParsedDateTime.fromUTCTime(range.getStart());
-		ParsedDateTime endTime = ParsedDateTime.fromUTCTime(range.getEnd());
-		
-		StringBuilder buf = new StringBuilder();
-		buf.append("BEGIN:VCALENDAR\r\n");
-		buf.append("VERSION:").append(ZCalendar.sIcalVersion).append("\r\n");
-		buf.append("PRODID:").append(ZCalendar.sZimbraProdID).append("\r\n");
-		buf.append("BEGIN:VFREEBUSY\r\n");
-		buf.append("ORGANIZER:").append(ctxt.getAuthAccount().getName()).append("\r\n");
-		buf.append("ATENDEE:").append(mbox.getAccount().getName()).append("\r\n");
-		buf.append("DTSTART:").append(startTime.toString()).append("\r\n");
-		buf.append("DTEND:").append(endTime.toString()).append("\r\n");
-		buf.append("DTSTAMP:").append(now.toString()).append("\r\n");
-
-		Iterator iter = fb.iterator();
-		while (iter.hasNext()) {
-			FreeBusy.Interval cur = (FreeBusy.Interval)iter.next();
-			String status = cur.getStatus();
-
-			if (status.equals(IcalXmlStrMap.FBTYPE_FREE)) {
-				continue;
-			} else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY)) {
-				buf.append("FREEBUSY:");
-			} else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_TENTATIVE)) {
-				buf.append("FREEBUSY;FBTYPE=BUSY-TENTATIVE:");
-			} else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE)) {
-				buf.append("FREEBUSY;FBTYPE=BUSY-UNAVAILABLE:");
-			} else {
-				continue;
-			}
-
-			ParsedDateTime curStart = ParsedDateTime.fromUTCTime(cur.getStart());
-			ParsedDateTime curEnd = ParsedDateTime.fromUTCTime(cur.getEnd());
-
-			buf.append(curStart.toString()).append('/').append(curEnd.toString()).append("\r\n");
-		}
-        
-		buf.append("END:VFREEBUSY\r\n");
-		buf.append("END:VCALENDAR\r\n");
-		return buf.toString();
+		return fb.toVCalendar(FreeBusy.Method.REPLY, ctxt.getAuthAccount().getName(), mbox.getAccount().getName(), null);
 	}
 }

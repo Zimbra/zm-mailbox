@@ -26,8 +26,16 @@ package com.zimbra.cs.dav.service.method;
 
 import java.io.IOException;
 
+import javax.servlet.http.HttpServletResponse;
+
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.dav.resource.CalendarCollection;
+import com.zimbra.cs.dav.resource.DavResource;
+import com.zimbra.cs.dav.resource.ScheduleOutbox;
+import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavMethod;
 
 public class Post extends DavMethod {
@@ -36,5 +44,32 @@ public class Post extends DavMethod {
 		return POST;
 	}
 	public void handle(DavContext ctxt) throws DavException, IOException {
+		String user = ctxt.getUser();
+		String name = ctxt.getItem();
+		
+		if (user == null || name == null)
+			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_ACCEPTABLE, null);
+		
+		DavResource rs = null;
+		try {
+			rs = UrlNamespace.getResource(ctxt);
+		} catch (DavException e) {
+			DavResource parent = UrlNamespace.getCollectionAtUrl(ctxt, ctxt.getPath());
+			if (parent instanceof CalendarCollection) {
+				String item = ctxt.getItem();
+				if (item.equals("outbox"))
+					item = "sent";
+				rs = UrlNamespace.getResourceAt(ctxt, item);
+			}
+		}
+		
+		if (rs instanceof ScheduleOutbox) {
+			try {
+				((ScheduleOutbox)rs).handleScheduleRequest(ctxt);
+				sendResponse(ctxt);
+			} catch (ServiceException se) {
+				ZimbraLog.dav.error("can't schedule", se);
+			}
+		}
 	}
 }

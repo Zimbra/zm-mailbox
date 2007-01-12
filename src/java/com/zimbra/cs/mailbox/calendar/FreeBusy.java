@@ -42,7 +42,6 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
-import com.zimbra.cs.service.*;
 
 /**
  * @author tim
@@ -61,10 +60,15 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
 
     private static Log sLog = LogFactory.getLog(FreeBusy.class);
     
-    private FreeBusy(IntervalList list) {
+    private FreeBusy(IntervalList list, long start, long end) {
         mList = list;
+        mStart = start;
+        mEnd = end;
     }
     IntervalList mList; 
+    
+    private long mStart;
+    private long mEnd;
     
     private static class IntervalIterator implements Iterator<Interval> {
         private Interval mCur;
@@ -385,7 +389,7 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
             CalendarResource resource = (CalendarResource) acct;
             if (resource.autoAcceptDecline() && !resource.autoDeclineIfBusy()) {
                 IntervalList intervals = new IntervalList(start, end);
-                return new FreeBusy(intervals);
+                return new FreeBusy(intervals, start, end);
             }
         }
 
@@ -450,7 +454,7 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
                 }
             }
         }
-        return new FreeBusy(intervals);
+        return new FreeBusy(intervals, start, end);
     }
 
 
@@ -490,6 +494,87 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
             return freeBusy2;
     }
 
+    public enum Method {
+    	PUBLISH, REQUEST, REPLY
+    }
+
+    private static final String NL = "\n";
+    private static final String MAILTO = "mailto:";
+
+    /*
+     * attendee is required for METHOD == REQUEST || METHOD == REPLY
+     * url is required for METHOD == PUBLISH || METHOD == REPLY
+     * 
+     */
+    public String toVCalendar(Method m, String organizer, String attendee, String url) {
+    	if (m == null || organizer == null) {
+    		throw new IllegalArgumentException("missing method or organizer");
+    	}
+		ParsedDateTime now = ParsedDateTime.fromUTCTime(System.currentTimeMillis());
+		ParsedDateTime startTime = ParsedDateTime.fromUTCTime(mStart);
+		ParsedDateTime endTime = ParsedDateTime.fromUTCTime(mEnd);
+		
+		StringBuffer toRet = new StringBuffer("BEGIN:VCALENDAR").append(NL);
+ 		toRet.append("METHOD:").append(m.name()).append(NL);
+ 		toRet.append("VERSION:").append(ZCalendar.sIcalVersion).append("\n");
+		toRet.append("PRODID:").append(ZCalendar.sZimbraProdID).append("\n");
+		toRet.append("BEGIN:VFREEBUSY").append(NL);
+
+		toRet.append("ORGANIZER:").append(organizer).append(NL);
+		if (!organizer.startsWith(MAILTO) && !organizer.startsWith("http:"))
+			toRet.append(MAILTO);
+		toRet.append(organizer).append(NL);
+		if (attendee != null) {
+			toRet.append("ATTENDEE:");
+			if (!attendee.startsWith(MAILTO))
+				toRet.append(MAILTO);
+			toRet.append(attendee).append(NL);
+		}
+		toRet.append("DTSTAMP:").append(now.toString()).append(NL);
+		toRet.append("DTSTART:").append(startTime.toString()).append(NL);
+		toRet.append("DTEND:").append(endTime.toString()).append(NL);
+		if (url != null)
+			toRet.append("URL:").append(url).append(NL);
+
+
+//		BEGIN:VFREEBUSY
+//		ORGANIZER:jsmith@host.com
+//		DTSTART:19980313T141711Z
+//		DTEND:19980410T141711Z
+//		FREEBUSY:19980314T233000Z/19980315T003000Z
+//		FREEBUSY:19980316T153000Z/19980316T163000Z
+//		FREEBUSY:19980318T030000Z/19980318T040000Z
+//		URL:http://www.host.com/calendar/busytime/jsmith.ifb
+//		END:VFREEBUSY
+
+
+		for (Iterator iter = this.iterator(); iter.hasNext(); ) {
+			FreeBusy.Interval cur = (FreeBusy.Interval)iter.next();
+			String status = cur.getStatus();
+
+			if (status.equals(IcalXmlStrMap.FBTYPE_FREE)) {
+				continue;
+			} else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY)) {
+				toRet.append("FREEBUSY:");
+			} else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_TENTATIVE)) {
+				toRet.append("FREEBUSY;FBTYPE=BUSY-TENTATIVE:");
+			} else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE)) {
+				toRet.append("FREEBUSY;FBTYPE=BUSY-UNAVAILABLE:");
+			} else {
+				assert(false);
+				toRet.append(":");
+			}
+
+			ParsedDateTime curStart = ParsedDateTime.fromUTCTime(cur.getStart());
+			ParsedDateTime curEnd = ParsedDateTime.fromUTCTime(cur.getEnd());
+
+			toRet.append(curStart.toString()).append('/').append(curEnd.toString()).append(NL);
+		}
+
+		toRet.append("END:VFREEBUSY").append(NL);
+		toRet.append("END:VCALENDAR").append(NL);
+		return toRet.toString();
+    }
 
     public String toString() { return mList.toString(); };
 

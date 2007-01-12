@@ -188,12 +188,12 @@ public class UrlNamespace {
 			case MailItem.TYPE_FOLDER :
 			case MailItem.TYPE_MOUNTPOINT :
 				Folder f = (Folder) item;
-                byte viewType = f.getDefaultView();
+				byte viewType = f.getDefaultView();
 				if (viewType == MailItem.TYPE_APPOINTMENT ||
                     viewType == MailItem.TYPE_TASK)
-					resource = new CalendarCollection(ctxt, (Folder)item);
+					resource = new CalendarCollection(ctxt, f);
 				else
-					resource = new Collection(ctxt, (Folder)item);
+					resource = new Collection(ctxt, f);
 				break;
 			case MailItem.TYPE_WIKI :
 			case MailItem.TYPE_DOCUMENT :

@@ -24,6 +24,7 @@
  */
 package com.zimbra.cs.dav.service;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collection;
@@ -38,6 +39,7 @@ import org.dom4j.QName;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -118,6 +120,13 @@ public class DavResponse {
 		mResponse = org.dom4j.DocumentHelper.createDocument();
 	}
 	
+	public Element getTop(QName topName) {
+		Element top = mResponse.getRootElement();
+		if (top == null)
+			top = mResponse.addElement(topName);
+		return top;
+	}
+	
 	public void addProperty(DavContext ctxt, ResourceProperty prop) throws DavException {
 		Element top = mResponse.addElement(DavElements.E_PROP);
 		prop.toElement(ctxt, top, false);
@@ -171,7 +180,12 @@ public class DavResponse {
 		OutputFormat format = OutputFormat.createPrettyPrint();
 		format.setTrimText(false);
 		format.setOmitEncoding(false);
-		XMLWriter writer = new XMLWriter(out, format);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		XMLWriter writer = new XMLWriter(baos, format);
 		writer.write(mResponse);
+		byte[] msg = baos.toByteArray();
+		if (ZimbraLog.dav.isDebugEnabled())
+			ZimbraLog.dav.debug(new String(msg, "UTF-8"));
+		out.write(msg);
 	}
 }
