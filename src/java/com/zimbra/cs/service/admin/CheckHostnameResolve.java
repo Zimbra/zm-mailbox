@@ -31,6 +31,7 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.ldap.Check;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -44,15 +45,15 @@ public class CheckHostnameResolve extends AdminDocumentHandler {
 
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
-	    String host = request.getAttribute(AdminService.E_HOSTNAME).toLowerCase();
+	    String host = request.getAttribute(AdminConstants.E_HOSTNAME).toLowerCase();
 
         Check.Result r = Check.checkHostnameResolve(host);
 
-	    Element response = lc.createElement(AdminService.CHECK_HOSTNAME_RESOLVE_RESPONSE);
-        response.addElement(AdminService.E_CODE).addText(r.getCode());
+	    Element response = lc.createElement(AdminConstants.CHECK_HOSTNAME_RESOLVE_RESPONSE);
+        response.addElement(AdminConstants.E_CODE).addText(r.getCode());
         String message = r.getMessage();
         if (message != null)
-            response.addElement(AdminService.E_MESSAGE).addText(message);
+            response.addElement(AdminConstants.E_MESSAGE).addText(message);
 	    return response;
 	}
 }

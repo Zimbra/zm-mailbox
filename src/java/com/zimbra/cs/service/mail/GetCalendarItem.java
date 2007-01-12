@@ -31,6 +31,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -45,7 +46,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class GetCalendarItem extends CalendarRequest {
     private static Log sLog = LogFactory.getLog(GetCalendarItem.class);
 
-    private static final String[] TARGET_ITEM_PATH = new String[] { MailService.A_ID };
+    private static final String[] TARGET_ITEM_PATH = new String[] { MailConstants.A_ID };
     private static final String[] RESPONSE_ITEM_PATH = new String[] { };
     protected String[] getProxiedIdPath(Element request)     { return TARGET_ITEM_PATH; }
     protected boolean checkMountpointProxy(Element request)  { return false; }
@@ -56,7 +57,7 @@ public class GetCalendarItem extends CalendarRequest {
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
 
-        boolean sync = request.getAttributeBool(MailService.A_SYNC, false);
+        boolean sync = request.getAttributeBool(MailConstants.A_SYNC, false);
         ItemId iid = new ItemId(request.getAttribute("id"), lc);
         sLog.info("<GetCalendarItem id=" + iid.getId() + "> " + lc);
 

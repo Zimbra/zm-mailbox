@@ -33,6 +33,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -50,7 +51,7 @@ public class DeleteDistributionList extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-        String id = request.getAttribute(AdminService.E_ID);
+        String id = request.getAttribute(AdminConstants.E_ID);
 
         DistributionList distributionList = prov.get(DistributionListBy.id, id);
         if (distributionList == null)
@@ -64,7 +65,7 @@ public class DeleteDistributionList extends AdminDocumentHandler {
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                                                       new String[] {"cmd", "DeleteDistributionList","name", distributionList.getName(), "id", distributionList.getId()}));
 
-        Element response = lc.createElement(AdminService.DELETE_DISTRIBUTION_LIST_RESPONSE);
+        Element response = lc.createElement(AdminConstants.DELETE_DISTRIBUTION_LIST_RESPONSE);
         return response;
     }
 }

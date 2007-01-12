@@ -35,6 +35,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -43,7 +44,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class DeleteCalendarResource extends AdminDocumentHandler {
 
-    private static final String[] TARGET_RESOURCE_PATH = new String[] { AdminService.E_ID };
+    private static final String[] TARGET_RESOURCE_PATH = new String[] { AdminConstants.E_ID };
     protected String[] getProxiedResourcePath()  { return TARGET_RESOURCE_PATH; }
 
     /**
@@ -60,7 +61,7 @@ public class DeleteCalendarResource extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-        String id = request.getAttribute(AdminService.E_ID);
+        String id = request.getAttribute(AdminConstants.E_ID);
 
         // Confirm that the account exists and that the mailbox is located
         // on the current host
@@ -83,7 +84,7 @@ public class DeleteCalendarResource extends AdminDocumentHandler {
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(new String[] {"cmd", "DeleteCalendarResource", "name", resource.getName(), "id", resource.getId()}));
 
-        Element response = zsc.createElement(AdminService.DELETE_CALENDAR_RESOURCE_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.DELETE_CALENDAR_RESOURCE_RESPONSE);
         return response;
     }
 }

@@ -40,8 +40,8 @@ import org.dom4j.DocumentHelper;
 
 import com.zimbra.soap.DomUtil;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.client.*;
-import com.zimbra.cs.service.mail.MailService;
 
 public class LmcSendMsgRequest extends LmcSoapRequest {
 
@@ -69,24 +69,24 @@ public class LmcSendMsgRequest extends LmcSoapRequest {
     }
 
     protected Element getRequestXML() {
-        Element request = DocumentHelper.createElement(MailService.SEND_MSG_REQUEST);
+        Element request = DocumentHelper.createElement(MailConstants.SEND_MSG_REQUEST);
         addMsg(request, mMsg, mInReplyTo, mFwdMsgID, mFwdPartNumbers);
         return request;
     }
 
-    protected LmcSoapResponse parseResponseXML(Element responseXML) 
+    protected LmcSoapResponse parseResponseXML(Element responseXML)
         throws ServiceException
     {
         // this assumes, per soap.txt, that only the ID attribute is needed
-        Element m = DomUtil.get(responseXML, MailService.E_MSG);
+        Element m = DomUtil.get(responseXML, MailConstants.E_MSG);
         LmcSendMsgResponse response = new LmcSendMsgResponse();
-        response.setID(m.attributeValue(MailService.A_ID));
+        response.setID(m.attributeValue(MailConstants.A_ID));
         return response;
     }
-    
+
     /*
-     * Post the attachment represented by File f and return the attachment ID
-     */ 
+    * Post the attachment represented by File f and return the attachment ID
+    */
     public String postAttachment(String uploadURL,
                                  LmcSession session,
                                  File f,
@@ -95,7 +95,7 @@ public class LmcSendMsgRequest extends LmcSoapRequest {
         throws LmcSoapClientException, IOException
     {
         String aid = null;
-        
+
         // set the cookie.
         if (session == null)
             System.err.println(System.currentTimeMillis() + " " + Thread.currentThread() + " LmcSendMsgRequest.postAttachment session=null");
@@ -105,16 +105,16 @@ public class LmcSendMsgRequest extends LmcSoapRequest {
         HttpClient client = new HttpClient();
         client.setState(initialState);
         client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
-        
+
         // make the post
         PostMethod post = new PostMethod(uploadURL);
         client.getHttpConnectionManager().getParams().setConnectionTimeout(msTimeout);
         int statusCode = -1;
         try {
-    		String contentType = URLConnection.getFileNameMap().getContentTypeFor(f.getName());
-    		Part[] parts = { new FilePart(f.getName(), f, contentType, "UTF-8") };
-        	post.setRequestEntity( new MultipartRequestEntity(parts, post.getParams()) );
-        	statusCode = client.executeMethod(post);
+            String contentType = URLConnection.getFileNameMap().getContentTypeFor(f.getName());
+            Part[] parts = { new FilePart(f.getName(), f, contentType, "UTF-8") };
+            post.setRequestEntity( new MultipartRequestEntity(parts, post.getParams()) );
+            statusCode = client.executeMethod(post);
 
             // parse the response
             if (statusCode == 200) {
@@ -131,10 +131,10 @@ public class LmcSendMsgRequest extends LmcSoapRequest {
             }
         } catch (IOException e) {
             System.err.println("Attachment post failed");
-        	e.printStackTrace();
+            e.printStackTrace();
             throw e;
         } finally {
-        	post.releaseConnection();
+            post.releaseConnection();
         }
 
         return aid;

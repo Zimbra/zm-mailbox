@@ -48,9 +48,9 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.Element;
 
 /**
@@ -117,8 +117,8 @@ public class RuleRewriter {
                     ruleName = "";
                 }
                 Element ruleElem = 
-                    mRoot.addElement(MailService.E_RULE).addAttribute(MailService.A_NAME, ruleName);
-                ruleElem.addAttribute(MailService.A_ACTIVE, !"disabled_if".equals(name));
+                    mRoot.addElement(MailConstants.E_RULE).addAttribute(MailConstants.A_NAME, ruleName);
+                ruleElem.addAttribute(MailConstants.A_ACTIVE, !"disabled_if".equals(name));
                 rule(ruleElem, childNode);
             } else {
                 traverse(childNode);
@@ -135,7 +135,7 @@ public class RuleRewriter {
             if (node instanceof ASTtest) {
                 if ("anyof".equals(name) || "allof".equals(name)) {
                     Element condsElem = 
-                        elem.addElement(MailService.E_CONDITION_GROUP).addAttribute(MailService.A_OPERATION, name);
+                        elem.addElement(MailConstants.E_CONDITION_GROUP).addAttribute(MailConstants.A_OPERATION, name);
                     rule(condsElem, node);
                 } else if ("not".equals(name)){ 
                     stack.push(name);
@@ -145,13 +145,13 @@ public class RuleRewriter {
                         name = stack.pop() + " " + name;
                     }
                     Element cElem = 
-                        elem.addElement(MailService.E_CONDITION).addAttribute(MailService.A_NAME, name);
+                        elem.addElement(MailConstants.E_CONDITION).addAttribute(MailConstants.A_NAME, name);
                     x = 0;
                     test(cElem, node);
                 }
             } else if (node instanceof ASTcommand) {
                 Element actionElem = 
-                    elem.addElement(MailService.E_ACTION).addAttribute(MailService.A_NAME, ((SieveNode) node).getName());
+                    elem.addElement(MailConstants.E_ACTION).addAttribute(MailConstants.A_NAME, ((SieveNode) node).getName());
                 action(actionElem, node);
             } else {
                 rule(elem, node);
@@ -170,23 +170,23 @@ public class RuleRewriter {
                     if (MATCH_TYPES.contains(val.toString())) {
                         if (!stack.isEmpty())
                             val = (String) stack.pop() + " " + val;
-                        elem.addAttribute(MailService.A_OPERATION, val.toString());
+                        elem.addAttribute(MailConstants.A_OPERATION, val.toString());
                     } else {
-                        String cname = elem.getAttribute(MailService.A_NAME, null);
+                        String cname = elem.getAttribute(MailConstants.A_NAME, null);
                         if ("size".equals(cname)) {
                             // special casing size test
-                            elem.addAttribute(MailService.A_RHS, getSize(val.toString()));
+                            elem.addAttribute(MailConstants.A_RHS, getSize(val.toString()));
                         } else {
-                            elem.addAttribute(MailService.A_MODIFIER, val.toString());
+                            elem.addAttribute(MailConstants.A_MODIFIER, val.toString());
                         }
                     }
                 }
             } else if (childNode instanceof ASTstring_list) {
                 List val = getStringList(childNode);
-                String cname = elem.getAttribute(MailService.A_NAME, null);
+                String cname = elem.getAttribute(MailConstants.A_NAME, null);
                 String param = null;
                 if ("date".equals(cname) || "body".equals(cname))
-                    param = MailService.A_RHS;
+                    param = MailConstants.A_RHS;
                 else
                     param = PARAM_PREFIX + String.valueOf(x++);
                 elem.addAttribute(param, val.toString());
@@ -212,7 +212,7 @@ public class RuleRewriter {
         return szStr + "B";
     }
 
-    private static final char PARAM_PREFIX = MailService.A_LHS.charAt(0);
+    private static final char PARAM_PREFIX = MailConstants.A_LHS.charAt(0);
     
     private int x = 0;
     
@@ -235,7 +235,7 @@ public class RuleRewriter {
                 if (val.startsWith("text:")) {
                     elem.addText(val.substring(5));
                 } else {
-                    elem.addElement(MailService.E_FILTER_ARG).setText(val);
+                    elem.addElement(MailConstants.E_FILTER_ARG).setText(val);
                 }
             } else {
                 action(elem, childNode);
@@ -268,7 +268,7 @@ public class RuleRewriter {
             if ("r".equals(nodeName)) {
                 String ruleName = subnode.getAttribute("name");
                 sb.append("# " + ruleName + "\n");
-                boolean active = subnode.getAttributeBool(MailService.A_ACTIVE, true);
+                boolean active = subnode.getAttributeBool(MailConstants.A_ACTIVE, true);
                 sb.append(active ? "if " : "disabled_if ");
                 condition(sb, subnode, false, ruleName);
             } else {

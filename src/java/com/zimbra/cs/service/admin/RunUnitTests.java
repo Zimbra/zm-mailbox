@@ -34,23 +34,24 @@ import com.zimbra.qa.unittest.ZimbraSuite;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.common.soap.AdminConstants;
 
 /**
  * @author bburtin
  */
 public class RunUnitTests extends DocumentHandler {
-    
-	public Element handle(Element request, Map<String, Object> context) {
+
+    public Element handle(Element request, Map<String, Object> context) {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         TestResult result = ZimbraSuite.runTestSuite(os);
-        
+
         ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Element response = lc.createElement(AdminService.RUN_UNIT_TESTS_RESPONSE);
-        response.addAttribute(AdminService.A_NUM_EXECUTED, Integer.toString(result.runCount()));
-        response.addAttribute(AdminService.A_NUM_FAILED,
+        Element response = lc.createElement(AdminConstants.RUN_UNIT_TESTS_RESPONSE);
+        response.addAttribute(AdminConstants.A_NUM_EXECUTED, Integer.toString(result.runCount()));
+        response.addAttribute(AdminConstants.A_NUM_FAILED,
             Integer.toString(result.failureCount() + result.errorCount()));
-        response.addAttribute(AdminService.A_OUTPUT, os.toString());
-    	return response;
-	}
+        response.addAttribute(AdminConstants.A_OUTPUT, os.toString());
+        return response;
+    }
 }
 

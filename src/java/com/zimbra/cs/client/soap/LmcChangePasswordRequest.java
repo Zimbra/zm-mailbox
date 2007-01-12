@@ -30,38 +30,38 @@ import org.dom4j.DocumentHelper;
 
 import com.zimbra.soap.DomUtil;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.account.AccountService;
-import com.zimbra.cs.service.admin.AdminService;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
 
 public class LmcChangePasswordRequest extends LmcSoapRequest {
 
     private String mOldPassword;
     private String mPassword;
     private String mAccount;
-    
+
     private static final String BY_NAME = "name";
-    
+
     public void setOldPassword(String o) { mOldPassword = o; }
     public void setPassword(String p) { mPassword = p; }
     public void setAccount(String a) { mAccount = a; }
-    
+
     public String getOldPassword() { return mOldPassword; }
     public String getPassword() { return mPassword; }
     public String getAccount() { return mAccount; }
 
     protected Element getRequestXML() {
-        Element request = DocumentHelper.createElement(AccountService.CHANGE_PASSWORD_REQUEST);
+        Element request = DocumentHelper.createElement(AccountConstants.CHANGE_PASSWORD_REQUEST);
         // <account>
-        Element a = DomUtil.add(request, AccountService.E_ACCOUNT, mAccount);
-        DomUtil.addAttr(a, AdminService.A_BY, BY_NAME);
+        Element a = DomUtil.add(request, AccountConstants.E_ACCOUNT, mAccount);
+        DomUtil.addAttr(a, AdminConstants.A_BY, BY_NAME);
         // <old password>
-        DomUtil.add(request, AccountService.E_OLD_PASSWORD, mOldPassword);  
+        DomUtil.add(request, AccountConstants.E_OLD_PASSWORD, mOldPassword);
         // <password>
-        DomUtil.add(request, AccountService.E_PASSWORD, mPassword);  
+        DomUtil.add(request, AccountConstants.E_PASSWORD, mPassword);
         return request;
     }
 
-    protected LmcSoapResponse parseResponseXML(Element responseXML) 
+    protected LmcSoapResponse parseResponseXML(Element responseXML)
         throws ServiceException
     {
         // there is no response to the request, only a fault

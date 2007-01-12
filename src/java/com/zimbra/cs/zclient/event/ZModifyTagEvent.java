@@ -26,7 +26,7 @@
 package com.zimbra.cs.zclient.event;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.ZTag.Color;
 import com.zimbra.cs.zclient.ZSoapSB;
 import com.zimbra.soap.Element;
@@ -44,7 +44,7 @@ public class ZModifyTagEvent implements ZModifyItemEvent {
      * @throws com.zimbra.common.service.ServiceException
      */
     public String getId() throws ServiceException {
-        return mTagEl.getAttribute(MailService.A_ID);
+        return mTagEl.getAttribute(MailConstants.A_ID);
     }
 
     /**
@@ -52,7 +52,7 @@ public class ZModifyTagEvent implements ZModifyItemEvent {
      * @return new name or defaultValue if unchanged
      */
     public String getName(String defaultValue) {
-        return mTagEl.getAttribute(MailService.A_NAME, defaultValue);
+        return mTagEl.getAttribute(MailConstants.A_NAME, defaultValue);
     }
 
     /**
@@ -60,7 +60,7 @@ public class ZModifyTagEvent implements ZModifyItemEvent {
      * @return new color, or default value.
      */
     public Color getColor(Color defaultValue) {
-        String newColor = mTagEl.getAttribute(MailService.A_COLOR, null);
+        String newColor = mTagEl.getAttribute(MailConstants.A_COLOR, null);
         if (newColor != null) {
             try {
                 return Color.fromString(newColor);
@@ -77,7 +77,7 @@ public class ZModifyTagEvent implements ZModifyItemEvent {
      * @throws com.zimbra.common.service.ServiceException on error
      */
     public int getUnreadCount(int defaultValue) throws ServiceException {
-        return (int) mTagEl.getAttributeLong(MailService.A_UNREAD, defaultValue);
+        return (int) mTagEl.getAttributeLong(MailConstants.A_UNREAD, defaultValue);
     }
 
     public String toString() {

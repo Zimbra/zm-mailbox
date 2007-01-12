@@ -30,7 +30,7 @@ import org.dom4j.DocumentHelper;
 
 import com.zimbra.soap.DomUtil;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.client.*;
 
 public class LmcCreateFolderRequest extends LmcSoapRequest {
@@ -61,12 +61,12 @@ public class LmcCreateFolderRequest extends LmcSoapRequest {
     public String getView() { return mView; }
 
     protected Element getRequestXML() {
-        Element request = DocumentHelper.createElement(MailService.CREATE_FOLDER_REQUEST);
-        Element f = DomUtil.add(request, MailService.E_FOLDER, "");  
-        DomUtil.addAttr(f, MailService.A_NAME, mName);
-        DomUtil.addAttr(f, MailService.A_FOLDER, mParentID);
+        Element request = DocumentHelper.createElement(MailConstants.CREATE_FOLDER_REQUEST);
+        Element f = DomUtil.add(request, MailConstants.E_FOLDER, "");
+        DomUtil.addAttr(f, MailConstants.A_NAME, mName);
+        DomUtil.addAttr(f, MailConstants.A_FOLDER, mParentID);
         if (mView != null) {
-        	DomUtil.addAttr(f, MailService.A_DEFAULT_VIEW, mView);
+        	DomUtil.addAttr(f, MailConstants.A_DEFAULT_VIEW, mView);
         }
         return request;
     }
@@ -74,7 +74,7 @@ public class LmcCreateFolderRequest extends LmcSoapRequest {
     protected LmcSoapResponse parseResponseXML(Element responseXML) 
         throws ServiceException
     {
-        Element folderElem = DomUtil.get(responseXML, MailService.E_FOLDER);
+        Element folderElem = DomUtil.get(responseXML, MailConstants.E_FOLDER);
         LmcFolder f = parseFolder(folderElem);
         LmcCreateFolderResponse response = new LmcCreateFolderResponse();
         response.setFolder(f);

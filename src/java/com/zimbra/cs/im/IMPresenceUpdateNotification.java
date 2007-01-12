@@ -27,7 +27,7 @@ package com.zimbra.cs.im;
 import java.util.Formatter;
 
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.service.im.IMService;
+import com.zimbra.common.soap.IMConstants;
 import com.zimbra.soap.Element;
 
 public class IMPresenceUpdateNotification implements IMNotification {
@@ -48,9 +48,9 @@ public class IMPresenceUpdateNotification implements IMNotification {
     
     public Element toXml(Element parent) {
         ZimbraLog.im.info(this.toString());
-        Element toRet = parent.addElement(IMService.E_PRESENCE); 
+        Element toRet = parent.addElement(IMConstants.E_PRESENCE);
         mPresence.toXml(toRet);
-        toRet.addAttribute(IMService.A_FROM, mFromAddr.getAddr());
+        toRet.addAttribute(IMConstants.A_FROM, mFromAddr.getAddr());
         return toRet;
     }
     

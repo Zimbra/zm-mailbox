@@ -31,6 +31,7 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
@@ -38,7 +39,6 @@ import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -55,19 +55,19 @@ public class AutoCompleteGal extends AdminDocumentHandler {
     }
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        String n = request.getAttribute(AdminService.E_NAME);
+        String n = request.getAttribute(AdminConstants.E_NAME);
 
         ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Element response = lc.createElement(AdminService.AUTO_COMPLETE_GAL_RESPONSE);
+        Element response = lc.createElement(AdminConstants.AUTO_COMPLETE_GAL_RESPONSE);
         Account acct = getRequestedAccount(getZimbraSoapContext(context));
 
         while (n.endsWith("*"))
             n = n.substring(0, n.length() - 1);
 
-        String domain = request.getAttribute(AdminService.A_DOMAIN);
-        String typeStr = request.getAttribute(AdminService.A_TYPE, "account");
+        String domain = request.getAttribute(AdminConstants.A_DOMAIN);
+        String typeStr = request.getAttribute(AdminConstants.A_TYPE, "account");
 
-        int max = (int) request.getAttributeLong(AdminService.A_LIMIT);
+        int max = (int) request.getAttributeLong(AdminConstants.A_LIMIT);
         Provisioning.GAL_SEARCH_TYPE type;
         if (typeStr.equals("all"))
             type = Provisioning.GAL_SEARCH_TYPE.ALL;
@@ -91,7 +91,7 @@ public class AutoCompleteGal extends AdminDocumentHandler {
 
         SearchGalResult result = prov.autoCompleteGal(d, n, type, max);
 
-        response.addAttribute(AdminService.A_MORE, result.hadMore);
+        response.addAttribute(AdminConstants.A_MORE, result.hadMore);
         
         for (GalContact contact : result.matches)
             SearchGal.addContact(response, contact);

@@ -31,18 +31,19 @@ import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 import com.zimbra.cs.util.BuildInfo;
+import com.zimbra.common.soap.AdminConstants;
 
 public class GetVersionInfo extends AdminDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
-        Element response = lc.createElement(AdminService.GET_VERSION_INFO_RESPONSE);
-        Element infoEl = response.addElement(AdminService.A_VERSION_INFO_INFO);
-        infoEl.addAttribute(AdminService.A_VERSION_INFO_VERSION, BuildInfo.VERSION);
-        infoEl.addAttribute(AdminService.A_VERSION_INFO_RELEASE, BuildInfo.RELEASE);
-        infoEl.addAttribute(AdminService.A_VERSION_INFO_DATE, BuildInfo.DATE);
-        infoEl.addAttribute(AdminService.A_VERSION_INFO_HOST, BuildInfo.HOST);
+        Element response = lc.createElement(AdminConstants.GET_VERSION_INFO_RESPONSE);
+        Element infoEl = response.addElement(AdminConstants.A_VERSION_INFO_INFO);
+        infoEl.addAttribute(AdminConstants.A_VERSION_INFO_VERSION, BuildInfo.VERSION);
+        infoEl.addAttribute(AdminConstants.A_VERSION_INFO_RELEASE, BuildInfo.RELEASE);
+        infoEl.addAttribute(AdminConstants.A_VERSION_INFO_DATE, BuildInfo.DATE);
+        infoEl.addAttribute(AdminConstants.A_VERSION_INFO_HOST, BuildInfo.HOST);
         return response;
     }
 

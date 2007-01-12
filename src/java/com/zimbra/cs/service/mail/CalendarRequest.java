@@ -38,6 +38,7 @@ import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -101,9 +102,9 @@ public abstract class CalendarRequest extends MailDocumentHandler {
 
         // check to see if this message is a reply -- if so, then we'll want to note that so 
         // we can more-correctly match the conversations up
-        csd.mOrigId = (int) msgElem.getAttributeLong(MailService.A_ORIG_ID, 0);
-        csd.mReplyType = msgElem.getAttribute(MailService.A_REPLY_TYPE, MailSender.MSGTYPE_REPLY);
-        csd.mIdentityId = msgElem.getAttribute(MailService.A_IDENTITY_ID, null);
+        csd.mOrigId = (int) msgElem.getAttributeLong(MailConstants.A_ORIG_ID, 0);
+        csd.mReplyType = msgElem.getAttribute(MailConstants.A_REPLY_TYPE, MailSender.MSGTYPE_REPLY);
+        csd.mIdentityId = msgElem.getAttribute(MailConstants.A_IDENTITY_ID, null);
 
         // parse the data
         csd.mMm = ParseMimeMessage.parseMimeMsgSoap(lc, mbox, msgElem, null, inviteParser, csd);
@@ -373,12 +374,12 @@ public abstract class CalendarRequest extends MailDocumentHandler {
     
                 if (response != null && ids != null) {
                     String id = lc.formatItemId(ids[0]);
-                    response.addAttribute(MailService.A_CAL_ID, id);
+                    response.addAttribute(MailConstants.A_CAL_ID, id);
                     if (csd.mInvite.isEvent())
-                        response.addAttribute(MailService.A_APPT_ID_DEPRECATE_ME, id);  // for backward compat
-                    response.addAttribute(MailService.A_CAL_INV_ID, lc.formatItemId(ids[0], ids[1]));
+                        response.addAttribute(MailConstants.A_APPT_ID_DEPRECATE_ME, id);  // for backward compat
+                    response.addAttribute(MailConstants.A_CAL_INV_ID, lc.formatItemId(ids[0], ids[1]));
                     if (msgId > 0)
-                        response.addUniqueElement(MailService.E_MSG).addAttribute(MailService.A_ID, lc.formatItemId(msgId));
+                        response.addUniqueElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ID, lc.formatItemId(msgId));
                 }
             }
         }

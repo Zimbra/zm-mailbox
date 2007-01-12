@@ -27,6 +27,7 @@ package com.zimbra.cs.service.mail;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -39,8 +40,8 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetItem extends MailDocumentHandler {
 
-    private static final String[] TARGET_ITEM_PATH = new String[] { MailService.E_ITEM, MailService.A_ID };
-    private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_ITEM, MailService.A_FOLDER };
+    private static final String[] TARGET_ITEM_PATH = new String[] { MailConstants.E_ITEM, MailConstants.A_ID };
+    private static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.E_ITEM, MailConstants.A_FOLDER };
     private static final String[] RESPONSE_ITEM_PATH = new String[] { };
     protected String[] getProxiedIdPath(Element request) {
         if (getXPath(request, TARGET_ITEM_PATH) != null)    return TARGET_ITEM_PATH;
@@ -57,10 +58,10 @@ public class GetItem extends MailDocumentHandler {
         OperationContext octxt = zsc.getOperationContext();
         Session session = getSession(context);
 
-        Element target = request.getElement(MailService.E_ITEM);
-        String id = target.getAttribute(MailService.A_ID, null);
-        String folder = target.getAttribute(MailService.A_FOLDER, null);
-        String path = target.getAttribute(MailService.A_PATH, null);
+        Element target = request.getElement(MailConstants.E_ITEM);
+        String id = target.getAttribute(MailConstants.A_ID, null);
+        String folder = target.getAttribute(MailConstants.A_FOLDER, null);
+        String path = target.getAttribute(MailConstants.A_PATH, null);
 
         GetItemOperation op;
         if (id != null) {
@@ -68,7 +69,7 @@ public class GetItem extends MailDocumentHandler {
             op = new GetItemOperation(session, octxt, mbox, Requester.SOAP, new ItemId(id, zsc).getId(), MailItem.TYPE_UNKNOWN);
         } else if (folder != null) {
             // get item by name within containing folder id
-            String name = target.getAttribute(MailService.A_NAME);
+            String name = target.getAttribute(MailConstants.A_NAME);
             op = new GetItemOperation(session, octxt, mbox, Requester.SOAP, name, new ItemId(folder, zsc).getId(), MailItem.TYPE_UNKNOWN);
         } else if (path != null) {
             // get item by user-root-relative absolute path
@@ -79,7 +80,7 @@ public class GetItem extends MailDocumentHandler {
         op.schedule();
         MailItem item = op.getItem();
 
-        Element response = zsc.createElement(MailService.GET_ITEM_RESPONSE);
+        Element response = zsc.createElement(MailConstants.GET_ITEM_RESPONSE);
         ToXML.encodeItem(response, zsc, item);
         return response;
     }

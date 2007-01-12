@@ -42,6 +42,7 @@ import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -95,11 +96,11 @@ public class SyncOperation extends Operation {
             mbox.beginTrackingSync(null);
 
             if (mToken <= 0) {
-                mResponse.addAttribute(MailService.A_TOKEN, mbox.getLastChangeID());
-                mResponse.addAttribute(MailService.A_SIZE, mbox.getSize());
+                mResponse.addAttribute(MailConstants.A_TOKEN, mbox.getLastChangeID());
+                mResponse.addAttribute(MailConstants.A_SIZE, mbox.getSize());
                 Folder root = null;
                 try {
-                    int folderId = (int) mRequest.getAttributeLong(MailService.A_FOLDER, DEFAULT_FOLDER_ID);
+                    int folderId = (int) mRequest.getAttributeLong(MailConstants.A_FOLDER, DEFAULT_FOLDER_ID);
                     OperationContext octxtOwner = new OperationContext(mbox.getAccount());
                     root = mbox.getFolderById(octxtOwner, folderId);
                 } catch (MailServiceException.NoSuchItemException nsie) { }
@@ -108,11 +109,11 @@ public class SyncOperation extends Operation {
                 boolean anyFolders = folderSync(mSoapContext, mResponse, mbox, root, visible, SyncPhase.INITIAL);
                 // if no folders are visible, add an empty "<folder/>" as a hint
                 if (!anyFolders)
-                    mResponse.addElement(MailService.E_FOLDER);
+                    mResponse.addElement(MailConstants.E_FOLDER);
             } else {
-                boolean typedDeletes = mRequest.getAttributeBool(MailService.A_TYPED_DELETES, false);
+                boolean typedDeletes = mRequest.getAttributeBool(MailConstants.A_TYPED_DELETES, false);
                 String token = deltaSync(mSoapContext, mResponse, mbox, mToken, typedDeletes);
-                mResponse.addAttribute(MailService.A_TOKEN, token);
+                mResponse.addAttribute(MailConstants.A_TOKEN, token);
             }
         }
     }
@@ -141,11 +142,11 @@ public class SyncOperation extends Operation {
                 if (folder.getId() == Mailbox.ID_FOLDER_TAGS) {
                     initialTagSync(zsc, f, mbox);
                 } else {
-                    initialItemSync(f, MailService.E_MSG, mbox.listItemIds(octxt, MailItem.TYPE_MESSAGE, folder.getId()));
-                    initialItemSync(f, MailService.E_CONTACT, mbox.listItemIds(octxt, MailItem.TYPE_CONTACT, folder.getId()));
-                    initialItemSync(f, MailService.E_NOTE, mbox.listItemIds(octxt, MailItem.TYPE_NOTE, folder.getId()));
-                    initialItemSync(f, MailService.E_APPOINTMENT, mbox.listItemIds(octxt, MailItem.TYPE_APPOINTMENT, folder.getId()));
-                    initialItemSync(f, MailService.E_TASK, mbox.listItemIds(octxt, MailItem.TYPE_TASK, folder.getId()));
+                    initialItemSync(f, MailConstants.E_MSG, mbox.listItemIds(octxt, MailItem.TYPE_MESSAGE, folder.getId()));
+                    initialItemSync(f, MailConstants.E_CONTACT, mbox.listItemIds(octxt, MailItem.TYPE_CONTACT, folder.getId()));
+                    initialItemSync(f, MailConstants.E_NOTE, mbox.listItemIds(octxt, MailItem.TYPE_NOTE, folder.getId()));
+                    initialItemSync(f, MailConstants.E_APPOINTMENT, mbox.listItemIds(octxt, MailItem.TYPE_APPOINTMENT, folder.getId()));
+                    initialItemSync(f, MailConstants.E_TASK, mbox.listItemIds(octxt, MailItem.TYPE_TASK, folder.getId()));
                 }
             } else {
                 // anything else to be done for searchfolders?
@@ -182,7 +183,7 @@ public class SyncOperation extends Operation {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < items.length; i++)
             sb.append(i == 0 ? "" : ",").append(items[i]);
-        e.addAttribute(MailService.A_IDS, sb.toString());
+        e.addAttribute(MailConstants.A_IDS, sb.toString());
     }
 
     private static final int FETCH_BATCH_SIZE = 200;
@@ -204,7 +205,7 @@ public class SyncOperation extends Operation {
 
         // first, fetch deleted items
         MailItem.TypedIdList tombstones = mbox.getTombstoneSet(begin);
-        Element eDeleted = response.addElement(MailService.E_DELETED);
+        Element eDeleted = response.addElement(MailConstants.E_DELETED);
 
         // then, handle created/modified folders
         if (zsc.isDelegatedRequest()) {
@@ -215,7 +216,7 @@ public class SyncOperation extends Operation {
                 boolean anyFolders = folderSync(zsc, response, mbox, mbox.getFolderById(null, DEFAULT_FOLDER_ID), visible, SyncPhase.DELTA);
                 // if no folders are visible, add an empty "<folder/>" as a hint
                 if (!anyFolders)
-                    response.addElement(MailService.E_FOLDER);
+                    response.addElement(MailConstants.E_FOLDER);
             }
         } else {
             for (Folder folder : mbox.getModifiedFolders(begin))
@@ -239,7 +240,7 @@ public class SyncOperation extends Operation {
 
                 // if we've overflowed this sync response, set things up so that a subsequent sync starts from where we're cutting off
                 if (itemCount >= MAXIMUM_CHANGE_COUNT) {
-                    response.addAttribute(MailService.A_QUERY_MORE, true);
+                    response.addAttribute(MailConstants.A_QUERY_MORE, true);
                     newToken = (item.getModifiedSequence() - 1) + "-" + item.getId();
                     break delta;
                 }
@@ -276,10 +277,10 @@ public class SyncOperation extends Operation {
                     // only add typed delete information if the client explicitly requested it
                     String eltName = elementNameForType(entry.getKey());
                     if (eltName != null)
-                        eDeleted.addElement(eltName).addAttribute(MailService.A_IDS, typed.toString());
+                        eDeleted.addElement(eltName).addAttribute(MailConstants.A_IDS, typed.toString());
                 }
             }
-            eDeleted.addAttribute(MailService.A_IDS, deleted.toString());
+            eDeleted.addAttribute(MailConstants.A_IDS, deleted.toString());
         }
 
         return newToken;
@@ -287,38 +288,38 @@ public class SyncOperation extends Operation {
 
     public static String elementNameForType(byte type) {
         switch (type) {
-            case MailItem.TYPE_FOLDER:       return MailService.E_FOLDER;
-            case MailItem.TYPE_SEARCHFOLDER: return MailService.E_SEARCH;
-            case MailItem.TYPE_MOUNTPOINT:   return MailService.E_MOUNT;
+            case MailItem.TYPE_FOLDER:       return MailConstants.E_FOLDER;
+            case MailItem.TYPE_SEARCHFOLDER: return MailConstants.E_SEARCH;
+            case MailItem.TYPE_MOUNTPOINT:   return MailConstants.E_MOUNT;
             case MailItem.TYPE_FLAG:
-            case MailItem.TYPE_TAG:          return MailService.E_TAG;
+            case MailItem.TYPE_TAG:          return MailConstants.E_TAG;
             case MailItem.TYPE_VIRTUAL_CONVERSATION:
-            case MailItem.TYPE_CONVERSATION: return MailService.E_CONV;
-            case MailItem.TYPE_MESSAGE:      return MailService.E_MSG;
-            case MailItem.TYPE_CONTACT:      return MailService.E_CONTACT;
-            case MailItem.TYPE_APPOINTMENT:  return MailService.E_APPOINTMENT;
-            case MailItem.TYPE_TASK:         return MailService.E_TASK;
-            case MailItem.TYPE_NOTE:         return MailService.E_NOTE;
-            case MailItem.TYPE_WIKI:         return MailService.E_WIKIWORD;
-            case MailItem.TYPE_DOCUMENT:     return MailService.E_DOC;
-            case MailItem.TYPE_CHAT:      return MailService.E_MSG;
+            case MailItem.TYPE_CONVERSATION: return MailConstants.E_CONV;
+            case MailItem.TYPE_MESSAGE:      return MailConstants.E_MSG;
+            case MailItem.TYPE_CONTACT:      return MailConstants.E_CONTACT;
+            case MailItem.TYPE_APPOINTMENT:  return MailConstants.E_APPOINTMENT;
+            case MailItem.TYPE_TASK:         return MailConstants.E_TASK;
+            case MailItem.TYPE_NOTE:         return MailConstants.E_NOTE;
+            case MailItem.TYPE_WIKI:         return MailConstants.E_WIKIWORD;
+            case MailItem.TYPE_DOCUMENT:     return MailConstants.E_DOC;
+            case MailItem.TYPE_CHAT:      return MailConstants.E_MSG;
             default:                         return null;
         }
     }
 
     public static byte typeForElementName(String name) {
-        if (name.equals(MailService.E_FOLDER))            return MailItem.TYPE_FOLDER;
-        else if (name.equals(MailService.E_SEARCH))       return MailItem.TYPE_SEARCHFOLDER;
-        else if (name.equals(MailService.E_MOUNT))        return MailItem.TYPE_MOUNTPOINT;
-        else if (name.equals(MailService.E_TAG))          return MailItem.TYPE_TAG;
-        else if (name.equals(MailService.E_CONV))         return MailItem.TYPE_CONVERSATION;
-        else if (name.equals(MailService.E_MSG))          return MailItem.TYPE_MESSAGE;
-        else if (name.equals(MailService.E_CONTACT))      return MailItem.TYPE_CONTACT;
-        else if (name.equals(MailService.E_APPOINTMENT))  return MailItem.TYPE_APPOINTMENT;
-        else if (name.equals(MailService.E_TASK))         return MailItem.TYPE_TASK;
-        else if (name.equals(MailService.E_NOTE))         return MailItem.TYPE_NOTE;
-        else if (name.equals(MailService.E_WIKIWORD))     return MailItem.TYPE_WIKI;
-        else if (name.equals(MailService.E_DOC))          return MailItem.TYPE_DOCUMENT;
+        if (name.equals(MailConstants.E_FOLDER))            return MailItem.TYPE_FOLDER;
+        else if (name.equals(MailConstants.E_SEARCH))       return MailItem.TYPE_SEARCHFOLDER;
+        else if (name.equals(MailConstants.E_MOUNT))        return MailItem.TYPE_MOUNTPOINT;
+        else if (name.equals(MailConstants.E_TAG))          return MailItem.TYPE_TAG;
+        else if (name.equals(MailConstants.E_CONV))         return MailItem.TYPE_CONVERSATION;
+        else if (name.equals(MailConstants.E_MSG))          return MailItem.TYPE_MESSAGE;
+        else if (name.equals(MailConstants.E_CONTACT))      return MailItem.TYPE_CONTACT;
+        else if (name.equals(MailConstants.E_APPOINTMENT))  return MailItem.TYPE_APPOINTMENT;
+        else if (name.equals(MailConstants.E_TASK))         return MailItem.TYPE_TASK;
+        else if (name.equals(MailConstants.E_NOTE))         return MailItem.TYPE_NOTE;
+        else if (name.equals(MailConstants.E_WIKIWORD))     return MailItem.TYPE_WIKI;
+        else if (name.equals(MailConstants.E_DOC))          return MailItem.TYPE_DOCUMENT;
         else                                              return MailItem.TYPE_UNKNOWN;
     }
 }

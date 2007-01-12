@@ -27,6 +27,7 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
@@ -40,15 +41,15 @@ public class GetZimlet extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-        Element z = request.getElement(AdminService.E_ZIMLET);
-	    String n = z.getAttribute(AdminService.A_NAME);
+        Element z = request.getElement(AdminConstants.E_ZIMLET);
+	    String n = z.getAttribute(AdminConstants.A_NAME);
 
 	    Zimlet zimlet = prov.getZimlet(n);
 
         if (zimlet == null)
             throw AccountServiceException.NO_SUCH_ZIMLET(n);
 
-	    Element response = lc.createElement(AdminService.GET_ZIMLET_RESPONSE);
+	    Element response = lc.createElement(AdminConstants.GET_ZIMLET_RESPONSE);
 	    doZimlet(response, zimlet);
 	    
 	    return response;
@@ -57,18 +58,18 @@ public class GetZimlet extends AdminDocumentHandler {
 	static Element doZimlet(Element response, Zimlet zimlet) throws ServiceException {
 	    Map<String,Object> attrs = zimlet.getAttrs();
 	    
-        Element zim = response.addElement(AdminService.E_ZIMLET);
-    	zim.addAttribute(AdminService.A_NAME, zimlet.getName());
-    	zim.addAttribute(AdminService.A_ID, zimlet.getId());
+        Element zim = response.addElement(AdminConstants.E_ZIMLET);
+    	zim.addAttribute(AdminConstants.A_NAME, zimlet.getName());
+    	zim.addAttribute(AdminConstants.A_ID, zimlet.getId());
         for (Map.Entry<String, Object> entry : attrs.entrySet()) {
             String name = entry.getKey();
             Object value = entry.getValue();
             if (value instanceof String[]) {
                 String zv[] = (String[]) value;
                 for (int i = 0; i < zv.length; i++)
-                	zim.addElement(AdminService.E_A).addAttribute(AdminService.A_N, name).setText(zv[i]);
+                	zim.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText(zv[i]);
             } else if (value instanceof String)
-                zim.addElement(AdminService.E_A).addAttribute(AdminService.A_N, name).setText((String) value);
+                zim.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText((String) value);
         }
         return zim;
 	}

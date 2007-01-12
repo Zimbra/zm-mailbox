@@ -43,6 +43,7 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -82,17 +83,17 @@ public class SendMsg extends MailDocumentHandler {
         sLog.info("<SendMsg> " + zsc.toString());
 
         // <m>
-        Element msgElem = request.getElement(MailService.E_MSG);
+        Element msgElem = request.getElement(MailConstants.E_MSG);
 
         // check to see whether the entire message has been uploaded under separate cover
-        String attachId = msgElem.getAttribute(MailService.A_ATTACHMENT_ID, null);
+        String attachId = msgElem.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
 
-        boolean needCalendarSentByFixup = request.getAttributeBool(MailService.A_NEED_CALENDAR_SENTBY_FIXUP, false);
-        boolean noSaveToSent = request.getAttributeBool(MailService.A_NO_SAVE_TO_SENT, false);
+        boolean needCalendarSentByFixup = request.getAttributeBool(MailConstants.A_NEED_CALENDAR_SENTBY_FIXUP, false);
+        boolean noSaveToSent = request.getAttributeBool(MailConstants.A_NO_SAVE_TO_SENT, false);
 
-        int origId = (int) msgElem.getAttributeLong(MailService.A_ORIG_ID, 0);
-        String replyType = msgElem.getAttribute(MailService.A_REPLY_TYPE, MailSender.MSGTYPE_REPLY);
-        String identityId = msgElem.getAttribute(MailService.A_IDENTITY_ID, null);
+        int origId = (int) msgElem.getAttributeLong(MailConstants.A_ORIG_ID, 0);
+        String replyType = msgElem.getAttribute(MailConstants.A_REPLY_TYPE, MailSender.MSGTYPE_REPLY);
+        String identityId = msgElem.getAttribute(MailConstants.A_IDENTITY_ID, null);
 
 
         SendState state = SendState.NEW;
@@ -100,7 +101,7 @@ public class SendMsg extends MailDocumentHandler {
         Pair<String, Integer> sendRecord = null;
 
         // get the "send uid" and check that this isn't a retry of a pending send
-        String sendUid = request.getAttribute(MailService.A_SEND_UID, null);
+        String sendUid = request.getAttribute(MailConstants.A_SEND_UID, null);
         if (sendUid != null) {
             long delay = MAX_IN_FLIGHT_DELAY_MSECS;
             do {
@@ -152,10 +153,10 @@ public class SendMsg extends MailDocumentHandler {
             }
         }
 
-        Element response = zsc.createElement(MailService.SEND_MSG_RESPONSE);
-        Element respElement = response.addElement(MailService.E_MSG);
+        Element response = zsc.createElement(MailConstants.SEND_MSG_RESPONSE);
+        Element respElement = response.addElement(MailConstants.E_MSG);
         if (savedMsgId > 0)
-            respElement.addAttribute(MailService.A_ID, zsc.formatItemId(savedMsgId));
+            respElement.addAttribute(MailConstants.A_ID, zsc.formatItemId(savedMsgId));
         return response;
     }
 

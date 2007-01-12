@@ -28,8 +28,8 @@ package com.zimbra.cs.account.soap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Config;
-import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.Element.XMLElement;
 
@@ -44,13 +44,13 @@ class SoapConfig extends Config implements SoapEntry {
     }
     
     public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.MODIFY_CONFIG_REQUEST);
+        XMLElement req = new XMLElement(AdminConstants.MODIFY_CONFIG_REQUEST);
         SoapProvisioning.addAttrElements(req, attrs);
         setAttrs(SoapProvisioning.getAttrs(prov.invoke(req)));
     }
 
     public void reload(SoapProvisioning prov) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.GET_ALL_CONFIG_REQUEST);
+        XMLElement req = new XMLElement(AdminConstants.GET_ALL_CONFIG_REQUEST);
         setAttrs(SoapProvisioning.getAttrs(prov.invoke(req)));
     }
 }

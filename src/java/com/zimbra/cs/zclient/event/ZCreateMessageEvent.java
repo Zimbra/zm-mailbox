@@ -27,10 +27,10 @@ package com.zimbra.cs.zclient.event;
 
 import com.zimbra.soap.Element;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.ZItem;
 import com.zimbra.cs.zclient.ZEmailAddress;
 import com.zimbra.cs.zclient.ZSoapSB;
-import com.zimbra.cs.service.mail.MailService;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -48,7 +48,7 @@ public class ZCreateMessageEvent implements ZCreateItemEvent {
      * @throws com.zimbra.common.service.ServiceException on error
      */
     public String getId() throws ServiceException {
-        return mMessageEl.getAttribute(MailService.A_ID);
+        return mMessageEl.getAttribute(MailConstants.A_ID);
     }
 
     /**
@@ -56,7 +56,7 @@ public class ZCreateMessageEvent implements ZCreateItemEvent {
      * @return new flags or default value if flags didn't change
      */
     public String getFlags(String defaultValue) {
-        return mMessageEl.getAttribute(MailService.A_FLAGS, defaultValue);
+        return mMessageEl.getAttribute(MailConstants.A_FLAGS, defaultValue);
     }
 
     /**
@@ -64,7 +64,7 @@ public class ZCreateMessageEvent implements ZCreateItemEvent {
      * @return new tags or default value if tags didn't change
      */
     public String getTagIds(String defaultValue) {
-        return mMessageEl.getAttribute(MailService.A_TAGS, defaultValue);
+        return mMessageEl.getAttribute(MailConstants.A_TAGS, defaultValue);
     }
 
     /**
@@ -73,7 +73,7 @@ public class ZCreateMessageEvent implements ZCreateItemEvent {
      * @throws com.zimbra.common.service.ServiceException on error
      */
     public int getSize(int defaultValue) throws ServiceException {
-        return (int) mMessageEl.getAttributeLong(MailService.A_SIZE, defaultValue);
+        return (int) mMessageEl.getAttributeLong(MailConstants.A_SIZE, defaultValue);
     }
 
     /**
@@ -81,7 +81,7 @@ public class ZCreateMessageEvent implements ZCreateItemEvent {
      * @return new folder id or defaultValue if unchanged
      */
     public String getFolderId(String defaultValue) {
-        return mMessageEl.getAttribute(MailService.A_FOLDER, defaultValue);
+        return mMessageEl.getAttribute(MailConstants.A_FOLDER, defaultValue);
     }
 
     /**
@@ -89,7 +89,7 @@ public class ZCreateMessageEvent implements ZCreateItemEvent {
      * @return new conv id or defaultValue if unchanged
      */
     public String getConversationId(String defaultValue) {
-        return mMessageEl.getAttribute(MailService.A_CONV_ID, defaultValue);
+        return mMessageEl.getAttribute(MailConstants.A_CONV_ID, defaultValue);
     }
 
     /**
@@ -97,7 +97,7 @@ public class ZCreateMessageEvent implements ZCreateItemEvent {
      * @return new subject or defaultValue if unchanged
      */
     public String getSubject(String defaultValue) {
-        Element sub = mMessageEl.getOptionalElement(MailService.E_SUBJECT);
+        Element sub = mMessageEl.getOptionalElement(MailConstants.E_SUBJECT);
         return sub == null ? defaultValue : sub.getText();
     }
 
@@ -106,7 +106,7 @@ public class ZCreateMessageEvent implements ZCreateItemEvent {
      * @return new fragment or defaultValue if unchanged
      */
     public String getFragment(String defaultValue) {
-        Element frag = mMessageEl.getOptionalElement(MailService.E_FRAG);
+        Element frag = mMessageEl.getOptionalElement(MailConstants.E_FRAG);
         return frag == null ? defaultValue : frag.getText();
     }
 
@@ -116,7 +116,7 @@ public class ZCreateMessageEvent implements ZCreateItemEvent {
      * @throws com.zimbra.common.service.ServiceException on error
      */
     public long getReceivedDate(long defaultValue) throws ServiceException {
-        return mMessageEl.getAttributeLong(MailService.A_DATE, defaultValue);
+        return mMessageEl.getAttributeLong(MailConstants.A_DATE, defaultValue);
     }
 
     /**
@@ -125,7 +125,7 @@ public class ZCreateMessageEvent implements ZCreateItemEvent {
      * @throws com.zimbra.common.service.ServiceException on error
      */
     public long getSentDate(long defaultValue) throws ServiceException {
-        return mMessageEl.getAttributeLong(MailService.A_SENT_DATE, defaultValue);
+        return mMessageEl.getAttributeLong(MailConstants.A_SENT_DATE, defaultValue);
     }
 
     /**
@@ -135,7 +135,7 @@ public class ZCreateMessageEvent implements ZCreateItemEvent {
      */
     public List<ZEmailAddress> getEmailAddresses(List<ZEmailAddress> defaultValue) throws ServiceException {
         List<ZEmailAddress> result  = null;
-        for (Element emailEl: mMessageEl.listElements(MailService.E_EMAIL)) {
+        for (Element emailEl: mMessageEl.listElements(MailConstants.E_EMAIL)) {
             if (result == null) result = new ArrayList<ZEmailAddress>();
             result.add(new ZEmailAddress(emailEl));
         }

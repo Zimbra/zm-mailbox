@@ -28,7 +28,7 @@ package com.zimbra.cs.zclient;
 import java.util.Arrays;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.Element;
 
 public class ZGrant {
@@ -111,12 +111,12 @@ public class ZGrant {
 
 
     public ZGrant(Element e) throws ServiceException {
-        mArgs = e.getAttribute(MailService.A_ARGS, null);
-        mPermissions = e.getAttribute(MailService.A_RIGHTS);
-        mGranteeName = e.getAttribute(MailService.A_DISPLAY, null);
-        mGranteeId = e.getAttribute(MailService.A_ZIMBRA_ID, null);        
-        mGranteeType = GranteeType.fromString(e.getAttribute(MailService.A_GRANT_TYPE));
-        mInherit = e.getAttributeBool(MailService.A_INHERIT);
+        mArgs = e.getAttribute(MailConstants.A_ARGS, null);
+        mPermissions = e.getAttribute(MailConstants.A_RIGHTS);
+        mGranteeName = e.getAttribute(MailConstants.A_DISPLAY, null);
+        mGranteeId = e.getAttribute(MailConstants.A_ZIMBRA_ID, null);
+        mGranteeType = GranteeType.fromString(e.getAttribute(MailConstants.A_GRANT_TYPE));
+        mInherit = e.getAttributeBool(MailConstants.A_INHERIT);
     }
     
     /**

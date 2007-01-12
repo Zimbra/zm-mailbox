@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
@@ -58,13 +59,13 @@ public class GetQuotaUsage extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-        int limit = (int) request.getAttributeLong(AdminService.A_LIMIT, Integer.MAX_VALUE);
+        int limit = (int) request.getAttributeLong(AdminConstants.A_LIMIT, Integer.MAX_VALUE);
         if (limit == 0)
             limit = Integer.MAX_VALUE;
-        int offset = (int) request.getAttributeLong(AdminService.A_OFFSET, 0);        
-        String domain = request.getAttribute(AdminService.A_DOMAIN, null);
-        String sortBy = request.getAttribute(AdminService.A_SORT_BY, SORT_TOTAL_USED);        
-        final boolean sortAscending = request.getAttributeBool(AdminService.A_SORT_ASCENDING, false);        
+        int offset = (int) request.getAttributeLong(AdminConstants.A_OFFSET, 0);
+        String domain = request.getAttribute(AdminConstants.A_DOMAIN, null);
+        String sortBy = request.getAttribute(AdminConstants.A_SORT_BY, SORT_TOTAL_USED);
+        final boolean sortAscending = request.getAttributeBool(AdminConstants.A_SORT_ASCENDING, false);
 
         if (!(sortBy.equals(SORT_TOTAL_USED) || sortBy.equals(SORT_PERCENT_USED) || sortBy.equals(SORT_QUOTA_LIMIT)))
             throw ServiceException.INVALID_REQUEST("sortBy must be percentUsed or totalUsed", null);
@@ -104,18 +105,18 @@ public class GetQuotaUsage extends AdminDocumentHandler {
             quotas = params.doSearch();
         }
 
-        Element response = lc.createElement(AdminService.GET_QUOTA_USAGE_RESPONSE);
+        Element response = lc.createElement(AdminConstants.GET_QUOTA_USAGE_RESPONSE);
         int i, limitMax = offset+limit;
         for (i=offset; i < limitMax && i < quotas.size(); i++) {
             AccountQuota quota = quotas.get(i);
-            Element account = response.addElement(AdminService.E_ACCOUNT);
-            account.addAttribute(AdminService.A_NAME, quota.name);
-            account.addAttribute(AdminService.A_ID, quota.id);
-            account.addAttribute(AdminService.A_QUOTA_USED, quota.quotaUsed);
-            account.addAttribute(AdminService.A_QUOTA_LIMIT, quota.quotaLimit);
+            Element account = response.addElement(AdminConstants.E_ACCOUNT);
+            account.addAttribute(AdminConstants.A_NAME, quota.name);
+            account.addAttribute(AdminConstants.A_ID, quota.id);
+            account.addAttribute(AdminConstants.A_QUOTA_USED, quota.quotaUsed);
+            account.addAttribute(AdminConstants.A_QUOTA_LIMIT, quota.quotaLimit);
         }
-        response.addAttribute(AdminService.A_MORE, i < quotas.size());
-        response.addAttribute(AdminService.A_SEARCH_TOTAL, quotas.size());        
+        response.addAttribute(AdminConstants.A_MORE, i < quotas.size());
+        response.addAttribute(AdminConstants.A_SEARCH_TOTAL, quotas.size());
         return response;
     }
     

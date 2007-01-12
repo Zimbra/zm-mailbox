@@ -34,6 +34,7 @@ import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -42,7 +43,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class RenameCalendarResource extends AdminDocumentHandler {
 
-    private static final String[] TARGET_RESOURCE_PATH = new String[] { AdminService.E_ID };
+    private static final String[] TARGET_RESOURCE_PATH = new String[] { AdminConstants.E_ID };
     protected String[] getProxiedResourcePath()  { return TARGET_RESOURCE_PATH; }
 
     /**
@@ -57,8 +58,8 @@ public class RenameCalendarResource extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-        String id = request.getAttribute(AdminService.E_ID);
-        String newName = request.getAttribute(AdminService.E_NEW_NAME);
+        String id = request.getAttribute(AdminConstants.E_ID);
+        String newName = request.getAttribute(AdminConstants.E_NEW_NAME);
 
         CalendarResource resource = prov.get(CalendarResourceBy.id, id);
         if (resource == null)
@@ -83,7 +84,7 @@ public class RenameCalendarResource extends AdminDocumentHandler {
         resource = prov.get(CalendarResourceBy.id, id);
         if (resource == null)
             throw ServiceException.FAILURE("unable to get calendar resource after rename: " + id, null);
-        Element response = zsc.createElement(AdminService.RENAME_CALENDAR_RESOURCE_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.RENAME_CALENDAR_RESOURCE_RESPONSE);
         ToXML.encodeCalendarResource(response, resource, true);
         return response;
     }

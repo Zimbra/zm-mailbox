@@ -31,13 +31,13 @@ import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.Element;
 
 /**
@@ -147,30 +147,30 @@ public class Alarm {
     }
 
     public Element toXml(Element parent) {
-        Element alarm = parent.addElement(MailService.E_CAL_ALARM);
-        alarm.addAttribute(MailService.A_CAL_ALARM_ACTION, mAction.toString());
-        Element trigger = alarm.addElement(MailService.E_CAL_ALARM_TRIGGER);
+        Element alarm = parent.addElement(MailConstants.E_CAL_ALARM);
+        alarm.addAttribute(MailConstants.A_CAL_ALARM_ACTION, mAction.toString());
+        Element trigger = alarm.addElement(MailConstants.E_CAL_ALARM_TRIGGER);
         if (TriggerType.ABSOLUTE.equals(mTriggerType)) {
-            Element absolute = trigger.addElement(MailService.E_CAL_ALARM_ABSOLUTE);
-            absolute.addAttribute(MailService.A_DATE, mTriggerAbsolute.getDateTimePartString(false));
+            Element absolute = trigger.addElement(MailConstants.E_CAL_ALARM_ABSOLUTE);
+            absolute.addAttribute(MailConstants.A_DATE, mTriggerAbsolute.getDateTimePartString(false));
         } else {
-            Element relative = mTriggerRelative.toXml(trigger, MailService.E_CAL_ALARM_RELATIVE);
+            Element relative = mTriggerRelative.toXml(trigger, MailConstants.E_CAL_ALARM_RELATIVE);
             if (mTriggerRelated != null)
-                relative.addAttribute(MailService.A_CAL_ALARM_RELATED, mTriggerRelated.toString());
+                relative.addAttribute(MailConstants.A_CAL_ALARM_RELATED, mTriggerRelated.toString());
         }
         if (mRepeatDuration != null) {
-            Element repeat = mRepeatDuration.toXml(alarm, MailService.E_CAL_ALARM_REPEAT);
-            repeat.addAttribute(MailService.A_CAL_ALARM_COUNT, mRepeatCount);
+            Element repeat = mRepeatDuration.toXml(alarm, MailConstants.E_CAL_ALARM_REPEAT);
+            repeat.addAttribute(MailConstants.A_CAL_ALARM_COUNT, mRepeatCount);
         }
         if (!Action.AUDIO.equals(mAction)) {
-            Element desc = alarm.addElement(MailService.E_CAL_ALARM_DESCRIPTION);
+            Element desc = alarm.addElement(MailConstants.E_CAL_ALARM_DESCRIPTION);
             if (mDescription != null)
                 desc.setText(mDescription);
         }
         if (mAttach != null)
             mAttach.toXml(alarm);
         if (Action.EMAIL.equals(mAction)) {
-            Element summary = alarm.addElement(MailService.E_CAL_ALARM_SUMMARY);
+            Element summary = alarm.addElement(MailConstants.E_CAL_ALARM_SUMMARY);
             if (mSummary != null)
                 summary.setText(mSummary);
             if (mAttendees != null) {
@@ -214,38 +214,38 @@ public class Alarm {
         List<ZAttendee> attendees = null;
 
         String val;
-        val = alarmElem.getAttribute(MailService.A_CAL_ALARM_ACTION);
+        val = alarmElem.getAttribute(MailConstants.A_CAL_ALARM_ACTION);
         try {
             action = Action.valueOf(val);
         } catch (IllegalArgumentException e) {
             throw ServiceException.INVALID_REQUEST(
-                    "Invalid " + MailService.A_CAL_ALARM_ACTION + " value " + val, e);
+                    "Invalid " + MailConstants.A_CAL_ALARM_ACTION + " value " + val, e);
         }
         if (!actionAllowed(action))
             return null;
 
-        Element triggerElem = alarmElem.getElement(MailService.E_CAL_ALARM_TRIGGER);
-        Element triggerRelativeElem = triggerElem.getOptionalElement(MailService.E_CAL_ALARM_RELATIVE);
+        Element triggerElem = alarmElem.getElement(MailConstants.E_CAL_ALARM_TRIGGER);
+        Element triggerRelativeElem = triggerElem.getOptionalElement(MailConstants.E_CAL_ALARM_RELATIVE);
         if (triggerRelativeElem != null) {
             triggerType = TriggerType.RELATIVE;
-            String related = triggerRelativeElem.getAttribute(MailService.A_CAL_ALARM_RELATED, null);
+            String related = triggerRelativeElem.getAttribute(MailConstants.A_CAL_ALARM_RELATED, null);
             try {
                 if (related != null)
                     triggerRelated = TriggerRelated.valueOf(related);
             } catch (IllegalArgumentException e) {
                 throw ServiceException.INVALID_REQUEST(
-                        "Invalid " + MailService.A_CAL_ALARM_RELATED + " value " + val, e);
+                        "Invalid " + MailConstants.A_CAL_ALARM_RELATED + " value " + val, e);
             }
             triggerRelative = ParsedDuration.parse(triggerRelativeElem);
         } else {
             triggerType = TriggerType.ABSOLUTE;
-            Element triggerAbsoluteElem = triggerElem.getOptionalElement(MailService.E_CAL_ALARM_ABSOLUTE);
+            Element triggerAbsoluteElem = triggerElem.getOptionalElement(MailConstants.E_CAL_ALARM_ABSOLUTE);
             if (triggerAbsoluteElem == null)
                 throw ServiceException.INVALID_REQUEST(
-                        "<" + MailService.E_CAL_ALARM_TRIGGER + "> must have either <" +
-                        MailService.E_CAL_ALARM_RELATIVE + "> or <" +
-                        MailService.E_CAL_ALARM_ABSOLUTE + "> child element", null);
-            String datetime = triggerAbsoluteElem.getAttribute(MailService.A_DATE);
+                        "<" + MailConstants.E_CAL_ALARM_TRIGGER + "> must have either <" +
+                        MailConstants.E_CAL_ALARM_RELATIVE + "> or <" +
+                        MailConstants.E_CAL_ALARM_ABSOLUTE + "> child element", null);
+            String datetime = triggerAbsoluteElem.getAttribute(MailConstants.A_DATE);
             try {
                 triggerAbsolute = ParsedDateTime.parseUtcOnly(datetime);
             } catch (ParseException e) {
@@ -253,27 +253,27 @@ public class Alarm {
             }
         }
 
-        Element repeatElem = alarmElem.getOptionalElement(MailService.E_CAL_ALARM_REPEAT);
+        Element repeatElem = alarmElem.getOptionalElement(MailConstants.E_CAL_ALARM_REPEAT);
         if (repeatElem != null) {
             repeatDuration = ParsedDuration.parse(repeatElem);
-            repeatCount = (int) repeatElem.getAttributeLong(MailService.A_CAL_ALARM_COUNT, 0);
+            repeatCount = (int) repeatElem.getAttributeLong(MailConstants.A_CAL_ALARM_COUNT, 0);
         }
 
-        Element descElem = alarmElem.getOptionalElement(MailService.E_CAL_ALARM_DESCRIPTION);
+        Element descElem = alarmElem.getOptionalElement(MailConstants.E_CAL_ALARM_DESCRIPTION);
         if (descElem != null) {
             description = descElem.getTextTrim();
         }
 
-        Element summaryElem = alarmElem.getOptionalElement(MailService.E_CAL_ALARM_SUMMARY);
+        Element summaryElem = alarmElem.getOptionalElement(MailConstants.E_CAL_ALARM_SUMMARY);
         if (summaryElem != null) {
             summary = summaryElem.getTextTrim();
         }
 
-        Element attachElem = alarmElem.getOptionalElement(MailService.E_CAL_ATTACH);
+        Element attachElem = alarmElem.getOptionalElement(MailConstants.E_CAL_ATTACH);
         if (attachElem != null)
             attach = Attach.parse(attachElem);
 
-        Iterator<Element> attendeesIter = alarmElem.elementIterator(MailService.E_CAL_ATTENDEE);
+        Iterator<Element> attendeesIter = alarmElem.elementIterator(MailConstants.E_CAL_ATTENDEE);
         while (attendeesIter.hasNext()) {
             ZAttendee at = ZAttendee.parse(attendeesIter.next());
             if (attendees == null)

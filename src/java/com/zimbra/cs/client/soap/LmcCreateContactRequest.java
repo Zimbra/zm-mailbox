@@ -30,7 +30,7 @@ import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.DomUtil;
 import com.zimbra.soap.SoapParseException;
 import com.zimbra.cs.client.*;
@@ -50,10 +50,10 @@ public class LmcCreateContactRequest extends LmcSoapRequest {
     public LmcContact getContact() { return mContact; }
     
 	protected Element getRequestXML() throws LmcSoapClientException {
-		Element request = DocumentHelper.createElement(MailService.CREATE_CONTACT_REQUEST);
-        Element newCN = DomUtil.add(request, MailService.E_CONTACT, "");
-        LmcSoapRequest.addAttrNotNull(newCN, MailService.A_FOLDER, mContact.getFolder());
-        LmcSoapRequest.addAttrNotNull(newCN, MailService.A_TAGS, mContact.getTags());
+		Element request = DocumentHelper.createElement(MailConstants.CREATE_CONTACT_REQUEST);
+        Element newCN = DomUtil.add(request, MailConstants.E_CONTACT, "");
+        LmcSoapRequest.addAttrNotNull(newCN, MailConstants.A_FOLDER, mContact.getFolder());
+        LmcSoapRequest.addAttrNotNull(newCN, MailConstants.A_TAGS, mContact.getTags());
         
         // emit contact attributes if any
         LmcContactAttr attrs[] = mContact.getAttrs();
@@ -67,7 +67,7 @@ public class LmcCreateContactRequest extends LmcSoapRequest {
 			throws SoapParseException, ServiceException, LmcSoapClientException {
 		
         LmcCreateContactResponse response = new LmcCreateContactResponse();
-        LmcContact c = parseContact(DomUtil.get(responseXML, MailService.E_CONTACT));
+        LmcContact c = parseContact(DomUtil.get(responseXML, MailConstants.E_CONTACT));
         response.setContact(c);
         return response;
 	}

@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
@@ -37,7 +39,6 @@ import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -47,7 +48,7 @@ public class ReIndex extends AdminDocumentHandler {
     private final String ACTION_STATUS = "status";
     private final String ACTION_CANCEL = "cancel";
 
-    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminService.E_MAILBOX, AdminService.A_ACCOUNTID };
+    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminConstants.E_MAILBOX, AdminConstants.A_ACCOUNTID };
     protected String[] getProxiedAccountPath()  { return TARGET_ACCOUNT_PATH; }
 
     /**
@@ -60,10 +61,10 @@ public class ReIndex extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zc = getZimbraSoapContext(context);
 
-        String action = request.getAttribute(MailService.E_ACTION);
+        String action = request.getAttribute(MailConstants.E_ACTION);
 
-        Element mreq = request.getElement(AdminService.E_MAILBOX);
-        String accountId = mreq.getAttribute(AdminService.A_ACCOUNTID);
+        Element mreq = request.getElement(AdminConstants.E_MAILBOX);
+        String accountId = mreq.getAttribute(AdminConstants.A_ACCOUNTID);
         
         Account account = Provisioning.getInstance().get(AccountBy.id, accountId);
         if (account == null)
@@ -75,7 +76,7 @@ public class ReIndex extends AdminDocumentHandler {
         if (mbox == null)
             throw ServiceException.FAILURE("mailbox not found for account " + accountId, null);
 
-        Element response = zc.createElement(AdminService.REINDEX_RESPONSE);
+        Element response = zc.createElement(AdminConstants.REINDEX_RESPONSE);
 
         if (action.equalsIgnoreCase(ACTION_START)) {
             if (mbox.isReIndexInProgress()) {
@@ -83,13 +84,13 @@ public class ReIndex extends AdminDocumentHandler {
             }
             
             byte[] types = null;
-            String typesStr = mreq.getAttribute(MailService.A_SEARCH_TYPES, null);
+            String typesStr = mreq.getAttribute(MailConstants.A_SEARCH_TYPES, null);
             if (typesStr != null) {
                 types = MailboxIndex.parseTypesString(typesStr);
             }
             
             Set<Integer> itemIds = null;
-            String idsStr = mreq.getAttribute(MailService.A_IDS, null);
+            String idsStr = mreq.getAttribute(MailConstants.A_IDS, null);
             if (idsStr != null) {
                 itemIds = new HashSet<Integer>();
                 String targets[] = idsStr.split(",");
@@ -100,7 +101,7 @@ public class ReIndex extends AdminDocumentHandler {
             ReIndexThread thread = new ReIndexThread(mbox, zc.getOperationContext(), types, itemIds);
             thread.start();
 
-            response.addAttribute(AdminService.A_STATUS, "started");
+            response.addAttribute(AdminConstants.A_STATUS, "started");
         } else if (action.equalsIgnoreCase(ACTION_STATUS)) {
             synchronized (mbox) {
                 if (!mbox.isReIndexInProgress()) {
@@ -109,7 +110,7 @@ public class ReIndex extends AdminDocumentHandler {
                 Mailbox.ReIndexStatus status = mbox.getReIndexStatus();
                 addStatus(response, status);
             }
-            response.addAttribute(AdminService.A_STATUS, "running");
+            response.addAttribute(AdminConstants.A_STATUS, "running");
 
         } else if (action.equalsIgnoreCase(ACTION_CANCEL)) {
             synchronized (mbox) {
@@ -120,7 +121,7 @@ public class ReIndex extends AdminDocumentHandler {
                 Mailbox.ReIndexStatus status = mbox.getReIndexStatus();
                 status.mCancel = true;
 
-                response.addAttribute(AdminService.A_STATUS, "cancelled");
+                response.addAttribute(AdminConstants.A_STATUS, "cancelled");
                 addStatus(response, status);
             }
         } else {
@@ -131,10 +132,10 @@ public class ReIndex extends AdminDocumentHandler {
     }
 
     public static void addStatus(Element response, Mailbox.ReIndexStatus status) {
-        Element prog = response.addElement(AdminService.E_PROGRESS);
-        prog.addAttribute(AdminService.A_NUM_SUCCEEDED, (status.mNumProcessed-status.mNumFailed));
-        prog.addAttribute(AdminService.A_NUM_FAILED, status.mNumFailed);
-        prog.addAttribute(AdminService.A_NUM_REMAINING, (status.mNumToProcess-status.mNumProcessed));
+        Element prog = response.addElement(AdminConstants.E_PROGRESS);
+        prog.addAttribute(AdminConstants.A_NUM_SUCCEEDED, (status.mNumProcessed-status.mNumFailed));
+        prog.addAttribute(AdminConstants.A_NUM_FAILED, status.mNumFailed);
+        prog.addAttribute(AdminConstants.A_NUM_REMAINING, (status.mNumToProcess-status.mNumProcessed));
     }
 
     public static class ReIndexThread extends Thread

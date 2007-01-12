@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -48,7 +49,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class ModifyContact extends MailDocumentHandler  {
 
-    private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_CONTACT, MailService.A_ID };
+    private static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.E_CONTACT, MailConstants.A_ID };
     protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
     protected boolean checkMountpointProxy(Element request)  { return false; }
 
@@ -58,18 +59,18 @@ public class ModifyContact extends MailDocumentHandler  {
         OperationContext octxt = lc.getOperationContext();
         Session session = getSession(context);
 
-        boolean replace = request.getAttributeBool(MailService.A_REPLACE, false);
+        boolean replace = request.getAttributeBool(MailConstants.A_REPLACE, false);
 
-        Element cn = request.getElement(MailService.E_CONTACT);
-        ItemId iid = new ItemId(cn.getAttribute(MailService.A_ID), lc);
-        Map<String, String> fields = parseFields(cn.listElements(MailService.E_ATTRIBUTE));
+        Element cn = request.getElement(MailConstants.E_CONTACT);
+        ItemId iid = new ItemId(cn.getAttribute(MailConstants.A_ID), lc);
+        Map<String, String> fields = parseFields(cn.listElements(MailConstants.E_ATTRIBUTE));
 
         ModifyContactOperation op = new ModifyContactOperation(session, octxt, mbox, Requester.SOAP, iid, fields, replace);
         op.schedule();
 
 
         Contact con = mbox.getContactById(octxt, iid.getId());
-        Element response = lc.createElement(MailService.MODIFY_CONTACT_RESPONSE);
+        Element response = lc.createElement(MailConstants.MODIFY_CONTACT_RESPONSE);
         if (con != null)
             ToXML.encodeContact(response, lc, con, null, true, null);
         return response;
@@ -81,7 +82,7 @@ public class ModifyContact extends MailDocumentHandler  {
 
         HashMap<String, String> attrs = new HashMap<String, String>();
         for (Element e : elist) {
-            String name = e.getAttribute(MailService.A_ATTRIBUTE_NAME);
+            String name = e.getAttribute(MailConstants.A_ATTRIBUTE_NAME);
             attrs.put(name, e.getText());
         }
         return attrs;

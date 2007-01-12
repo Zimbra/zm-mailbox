@@ -30,7 +30,7 @@ import org.dom4j.DocumentHelper;
 
 import com.zimbra.soap.DomUtil;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 
 public class LmcFolderActionRequest extends LmcSoapRequest {
 
@@ -41,7 +41,7 @@ public class LmcFolderActionRequest extends LmcSoapRequest {
         private String mTargetFolder;
 
         private String mName;
-        
+
         private String mPerm;
         private String mGrantee;
         private String mD;
@@ -72,12 +72,12 @@ public class LmcFolderActionRequest extends LmcSoapRequest {
         }
 
         public void setGrant(String perm, String grantee, String d, boolean inherit) {
-        	mPerm = perm;
-        	mGrantee = grantee;
-        	mD = d;
-        	mInherit = inherit;
+            mPerm = perm;
+            mGrantee = grantee;
+            mD = d;
+            mInherit = inherit;
         }
-        
+
         public String getFolderList() {
                 return mIDList;
         }
@@ -95,37 +95,37 @@ public class LmcFolderActionRequest extends LmcSoapRequest {
         }
 
         protected Element getRequestXML() {
-                Element request = DocumentHelper.createElement(MailService.FOLDER_ACTION_REQUEST);
-                Element a = DomUtil.add(request, MailService.E_ACTION, "");
+                Element request = DocumentHelper.createElement(MailConstants.FOLDER_ACTION_REQUEST);
+                Element a = DomUtil.add(request, MailConstants.E_ACTION, "");
                 if (mIDList != null)
-                    DomUtil.addAttr(a, MailService.A_ID, mIDList);
+                    DomUtil.addAttr(a, MailConstants.A_ID, mIDList);
                 if (mOp != null) {
-                    DomUtil.addAttr(a, MailService.A_OPERATION, mOp);
+                    DomUtil.addAttr(a, MailConstants.A_OPERATION, mOp);
                     if (mOp.equals("grant") ||
-                    		mOp.equals("!grant")) {
-                    	Element grant = DomUtil.add(a, MailService.E_GRANT, "");
-                    	if (mPerm != null)
-                    		DomUtil.addAttr(grant, MailService.A_RIGHTS, mPerm);
-                    	if (mGrantee != null)
-                    		DomUtil.addAttr(grant, MailService.A_GRANT_TYPE, mGrantee);
-                    	if (mD != null)
-                    		DomUtil.addAttr(grant, MailService.A_DISPLAY, mD);
-                		DomUtil.addAttr(grant, MailService.A_INHERIT, mInherit);
+                            mOp.equals("!grant")) {
+                        Element grant = DomUtil.add(a, MailConstants.E_GRANT, "");
+                        if (mPerm != null)
+                            DomUtil.addAttr(grant, MailConstants.A_RIGHTS, mPerm);
+                        if (mGrantee != null)
+                            DomUtil.addAttr(grant, MailConstants.A_GRANT_TYPE, mGrantee);
+                        if (mD != null)
+                            DomUtil.addAttr(grant, MailConstants.A_DISPLAY, mD);
+                        DomUtil.addAttr(grant, MailConstants.A_INHERIT, mInherit);
                     }
                 }
                 if (mName != null)
-                    DomUtil.addAttr(a, MailService.A_NAME, mName);
+                    DomUtil.addAttr(a, MailConstants.A_NAME, mName);
                 if (mTargetFolder != null)
-                    DomUtil.addAttr(a, MailService.A_FOLDER, mTargetFolder);
+                    DomUtil.addAttr(a, MailConstants.A_FOLDER, mTargetFolder);
                 return request;
         }
 
         protected LmcSoapResponse parseResponseXML(Element responseXML)
                         throws ServiceException {
                 LmcFolderActionResponse response = new LmcFolderActionResponse();
-                Element a = DomUtil.get(responseXML, MailService.E_ACTION);
-                response.setFolderList(DomUtil.getAttr(a, MailService.A_ID));
-                response.setOp(DomUtil.getAttr(a, MailService.A_OPERATION));
+                Element a = DomUtil.get(responseXML, MailConstants.E_ACTION);
+                response.setFolderList(DomUtil.getAttr(a, MailConstants.A_ID));
+                response.setOp(DomUtil.getAttr(a, MailConstants.A_OPERATION));
                 return response;
         }
 }

@@ -36,11 +36,11 @@ import java.net.URL;
 
 import org.dom4j.DocumentException;
 
-import com.zimbra.cs.service.account.AccountService;
-import com.zimbra.cs.service.admin.AdminService;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -104,7 +104,7 @@ public class RulesUtil {
         // authenticate 
         Element authReq = createAuthRequest(acctEmail, pwd);
         Element authResp = trans.invokeWithoutSession(authReq);
-        String authToken = authResp.getAttribute(AdminService.E_AUTH_TOKEN);
+        String authToken = authResp.getAttribute(AdminConstants.E_AUTH_TOKEN);
         String sessionId = authResp.getAttribute(ZimbraSoapContext.E_SESSION_ID, null);
         trans.setAuthToken(authToken);
         if (sessionId != null)
@@ -127,7 +127,7 @@ public class RulesUtil {
         String content = new String(ByteUtil.getContent(new File(path)), "utf-8");
         // gonna go with XML here; may want to switch to a binary protocol at some point
         Element rules = Element.parseXML(content);
-        Element request = new Element.XMLElement(MailService.SAVE_RULES_REQUEST);
+        Element request = new Element.XMLElement(MailConstants.SAVE_RULES_REQUEST);
         request.addUniqueElement(rules);
         return request;
     }
@@ -139,9 +139,9 @@ public class RulesUtil {
      */
     private Element createAuthRequest(String acctEmail, String pwd) {
         // gonna go with XML here; may want to switch to a binary protocol at some point
-        Element request = new Element.XMLElement(AccountService.AUTH_REQUEST);
-        request.addAttribute(AccountService.E_ACCOUNT, acctEmail, Element.DISP_CONTENT);
-        request.addAttribute(AccountService.E_PASSWORD, pwd, Element.DISP_CONTENT);
+        Element request = new Element.XMLElement(AccountConstants.AUTH_REQUEST);
+        request.addAttribute(AccountConstants.E_ACCOUNT, acctEmail, Element.DISP_CONTENT);
+        request.addAttribute(AccountConstants.E_PASSWORD, pwd, Element.DISP_CONTENT);
         return request;
     }
 }

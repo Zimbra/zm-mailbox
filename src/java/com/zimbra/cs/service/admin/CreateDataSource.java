@@ -27,13 +27,14 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
@@ -41,7 +42,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class CreateDataSource extends AdminDocumentHandler {
 
-    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminService.E_ID };
+    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminConstants.E_ID };
     protected String[] getProxiedAccountPath()  { return TARGET_ACCOUNT_PATH; }
 
     /**
@@ -55,7 +56,7 @@ public class CreateDataSource extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-        String id = request.getAttribute(AdminService.E_ID);
+        String id = request.getAttribute(AdminConstants.E_ID);
         
 
         Account account = prov.get(AccountBy.id, id);
@@ -65,7 +66,7 @@ public class CreateDataSource extends AdminDocumentHandler {
         if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
 
-        Element dsEl = request.getElement(AccountService.E_DATA_SOURCE);
+        Element dsEl = request.getElement(AccountConstants.E_DATA_SOURCE);
         Map<String, Object> attrs = AdminService.getAttrs(dsEl);
         
         if (isDomainAdminOnly(zsc)) {
@@ -79,10 +80,10 @@ public class CreateDataSource extends AdminDocumentHandler {
         }
         
 
-        String name = dsEl.getAttribute(AccountService.A_NAME);
-        DataSource.Type type = DataSource.Type.fromString(dsEl.getAttribute(AccountService.A_TYPE));        
+        String name = dsEl.getAttribute(AccountConstants.A_NAME);
+        DataSource.Type type = DataSource.Type.fromString(dsEl.getAttribute(AccountConstants.A_TYPE));
         DataSource ds = Provisioning.getInstance().createDataSource(account, type, name, attrs);
-        Element response = zsc.createElement(AdminService.CREATE_DATA_SOURCE_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.CREATE_DATA_SOURCE_RESPONSE);
         ToXML.encodeDataSource(response, ds);
         return response;
     }

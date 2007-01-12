@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.Element;
@@ -53,7 +54,7 @@ public class GetAllDomains extends AdminDocumentHandler {
 
         List domains = prov.getAllDomains();
         
-        Element response = lc.createElement(AdminService.GET_ALL_DOMAINS_RESPONSE);        
+        Element response = lc.createElement(AdminConstants.GET_ALL_DOMAINS_RESPONSE);
         for (Iterator it = domains.iterator(); it.hasNext(); )
             GetDomain.doDomain(response, (Domain) it.next());
 

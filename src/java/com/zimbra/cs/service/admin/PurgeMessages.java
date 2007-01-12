@@ -32,6 +32,7 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -46,14 +47,14 @@ public class PurgeMessages extends AdminDocumentHandler {
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
-        Element mreq = request.getOptionalElement(AdminService.E_MAILBOX);
+        Element mreq = request.getOptionalElement(AdminConstants.E_MAILBOX);
         String[] accounts;
         if (mreq != null)
-            accounts = new String[] { mreq.getAttribute(AdminService.A_ACCOUNTID) };
+            accounts = new String[] { mreq.getAttribute(AdminConstants.A_ACCOUNTID) };
         else
             accounts = MailboxManager.getInstance().getAccountIds();
 
-        Element response = lc.createElement(AdminService.PURGE_MESSAGES_RESPONSE);
+        Element response = lc.createElement(AdminConstants.PURGE_MESSAGES_RESPONSE);
         for (int i = 0; i < accounts.length; i++) {
             Mailbox mbox = null;
             try {
@@ -71,9 +72,9 @@ public class PurgeMessages extends AdminDocumentHandler {
             if (mbox == null)
                 continue;
 
-            Element mresp = response.addElement(AdminService.E_MAILBOX);
-            mresp.addAttribute(AdminService.A_MAILBOXID, mbox.getId());
-            mresp.addAttribute(AdminService.A_SIZE, mbox.getSize());
+            Element mresp = response.addElement(AdminConstants.E_MAILBOX);
+            mresp.addAttribute(AdminConstants.A_MAILBOXID, mbox.getId());
+            mresp.addAttribute(AdminConstants.A_SIZE, mbox.getSize());
         }
         return response;
 	}

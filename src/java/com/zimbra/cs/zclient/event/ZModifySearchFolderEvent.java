@@ -27,7 +27,7 @@ package com.zimbra.cs.zclient.event;
 
 import com.zimbra.soap.Element;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.ZSoapSB;
 import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
 
@@ -43,7 +43,7 @@ public class ZModifySearchFolderEvent extends ZModifyFolderEvent {
      * @return new name or defaultValue if unchanged
      */
     public String getQuery(String defaultValue) {
-        return mFolderEl.getAttribute(MailService.A_QUERY, defaultValue);
+        return mFolderEl.getAttribute(MailConstants.A_QUERY, defaultValue);
     }
 
     /**
@@ -51,7 +51,7 @@ public class ZModifySearchFolderEvent extends ZModifyFolderEvent {
      * @return new name or defaultValue if unchanged
      */
     public String getTypes(String defaultValue) {
-        return mFolderEl.getAttribute(MailService.A_SEARCH_TYPES, defaultValue);
+        return mFolderEl.getAttribute(MailConstants.A_SEARCH_TYPES, defaultValue);
     }
 
     /**
@@ -60,7 +60,7 @@ public class ZModifySearchFolderEvent extends ZModifyFolderEvent {
      */
     public SearchSortBy getSortBy(SearchSortBy defaultValue) {
         try {
-            String newSort = mFolderEl.getAttribute(MailService.A_SORTBY, null);
+            String newSort = mFolderEl.getAttribute(MailConstants.A_SORTBY, null);
             return newSort == null ? defaultValue : SearchSortBy.fromString(newSort);
         } catch (ServiceException se) {
             return defaultValue;

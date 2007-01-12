@@ -25,7 +25,7 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.soap.Element;
 
@@ -37,9 +37,9 @@ public class ZDocumentHit implements ZSearchHit {
 	private float mScore;
 	
     public ZDocumentHit(Element e) throws ServiceException {
-    	mId = e.getAttribute(MailService.A_ID);
-    	mSortField = e.getAttribute(MailService.A_SORT_FIELD, null);
-    	mScore = (float) e.getAttributeDouble(MailService.A_SCORE, 0);
+    	mId = e.getAttribute(MailConstants.A_ID);
+    	mSortField = e.getAttribute(MailConstants.A_SORT_FIELD, null);
+    	mScore = (float) e.getAttributeDouble(MailConstants.A_SCORE, 0);
     	mDoc = new ZDocument(e);
     }
     

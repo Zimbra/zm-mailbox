@@ -25,11 +25,11 @@
 package com.zimbra.cs.service.wiki;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.mail.MailDocumentHandler;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
@@ -37,8 +37,8 @@ import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public abstract class WikiDocumentHandler extends MailDocumentHandler {
-    private static final String[] TARGET_ID_PATH = new String[] { MailService.E_WIKIWORD, MailService.A_ID };
-    private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_WIKIWORD, MailService.A_FOLDER };
+    private static final String[] TARGET_ID_PATH = new String[] { MailConstants.E_WIKIWORD, MailConstants.A_ID };
+    private static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.E_WIKIWORD, MailConstants.A_FOLDER };
     protected String[] getProxiedIdPath(Element request)     {
     	String id = getXPath(request, TARGET_ID_PATH);
     	if (id == null)
@@ -53,7 +53,7 @@ public abstract class WikiDocumentHandler extends MailDocumentHandler {
 	
 	protected ItemId getRequestedFolder(Element request, ZimbraSoapContext lc) throws ServiceException {
 		for (Element elem : request.listElements()) {
-	        String fid = elem.getAttribute(MailService.A_FOLDER, null);
+	        String fid = elem.getAttribute(MailConstants.A_FOLDER, null);
 	        if (fid != null) {
 	        	return new ItemId(fid, lc);
 	        }

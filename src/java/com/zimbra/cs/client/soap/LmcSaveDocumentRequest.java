@@ -30,7 +30,7 @@ import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.DomUtil;
 import com.zimbra.cs.client.*;
 
@@ -43,20 +43,20 @@ public class LmcSaveDocumentRequest extends LmcSendMsgRequest {
     public LmcDocument getDocument() { return mDoc; }
     
 	protected Element getRequestXML() {
-		Element request = DocumentHelper.createElement(MailService.SAVE_DOCUMENT_REQUEST);
-        Element doc = DomUtil.add(request, MailService.E_DOC, "");
-        LmcSoapRequest.addAttrNotNull(doc, MailService.A_NAME, mDoc.getName());
-        LmcSoapRequest.addAttrNotNull(doc, MailService.A_CONTENT_TYPE, mDoc.getContentType());
-        LmcSoapRequest.addAttrNotNull(doc, MailService.A_FOLDER, mDoc.getFolder());
-        Element upload = DomUtil.add(doc, MailService.E_UPLOAD, "");
-        LmcSoapRequest.addAttrNotNull(upload, MailService.A_ID, mDoc.getAttachmentId());
+		Element request = DocumentHelper.createElement(MailConstants.SAVE_DOCUMENT_REQUEST);
+        Element doc = DomUtil.add(request, MailConstants.E_DOC, "");
+        LmcSoapRequest.addAttrNotNull(doc, MailConstants.A_NAME, mDoc.getName());
+        LmcSoapRequest.addAttrNotNull(doc, MailConstants.A_CONTENT_TYPE, mDoc.getContentType());
+        LmcSoapRequest.addAttrNotNull(doc, MailConstants.A_FOLDER, mDoc.getFolder());
+        Element upload = DomUtil.add(doc, MailConstants.E_UPLOAD, "");
+        LmcSoapRequest.addAttrNotNull(upload, MailConstants.A_ID, mDoc.getAttachmentId());
         return request;
     }
 
 	protected LmcSoapResponse parseResponseXML(Element responseXML) throws ServiceException {
 		
         LmcSaveDocumentResponse response = new LmcSaveDocumentResponse();
-        LmcDocument doc = parseDocument(DomUtil.get(responseXML, MailService.E_DOC));
+        LmcDocument doc = parseDocument(DomUtil.get(responseXML, MailConstants.E_DOC));
         response.setDocument(doc);
         return response;
 	}

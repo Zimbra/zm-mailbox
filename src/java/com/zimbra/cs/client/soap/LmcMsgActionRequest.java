@@ -30,7 +30,7 @@ import org.dom4j.DocumentHelper;
 
 import com.zimbra.soap.DomUtil;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 
 public class LmcMsgActionRequest extends LmcSoapRequest {
 
@@ -38,7 +38,7 @@ public class LmcMsgActionRequest extends LmcSoapRequest {
     private String mOp;
     private String mTag;
     private String mFolder;
-    
+
 
     /**
      * Set the list of Msg ID's to operate on
@@ -53,31 +53,31 @@ public class LmcMsgActionRequest extends LmcSoapRequest {
     public void setOp(String op) { mOp = op; }
 
     public void setTag(String t) { mTag = t; }
-    
+
     public void setFolder(String f) { mFolder = f; }
-    
+
     public String getMsgList() { return mIDList; }
     public String getOp() { return mOp; }
     public String getTag() { return mTag; }
     public String getFolder() { return mFolder; }
 
     protected Element getRequestXML() {
-        Element request = DocumentHelper.createElement(MailService.MSG_ACTION_REQUEST);
-        Element a = DomUtil.add(request, MailService.E_ACTION, "");
-        DomUtil.addAttr(a, MailService.A_ID, mIDList);
-        DomUtil.addAttr(a, MailService.A_OPERATION, mOp);
-        DomUtil.addAttr(a, MailService.A_TAG, mTag);
-        DomUtil.addAttr(a, MailService.A_FOLDER, mFolder);
+        Element request = DocumentHelper.createElement(MailConstants.MSG_ACTION_REQUEST);
+        Element a = DomUtil.add(request, MailConstants.E_ACTION, "");
+        DomUtil.addAttr(a, MailConstants.A_ID, mIDList);
+        DomUtil.addAttr(a, MailConstants.A_OPERATION, mOp);
+        DomUtil.addAttr(a, MailConstants.A_TAG, mTag);
+        DomUtil.addAttr(a, MailConstants.A_FOLDER, mFolder);
         return request;
     }
 
-    protected LmcSoapResponse parseResponseXML(Element responseXML) 
+    protected LmcSoapResponse parseResponseXML(Element responseXML)
         throws ServiceException
     {
         LmcMsgActionResponse response = new LmcMsgActionResponse();
-        Element a = DomUtil.get(responseXML, MailService.E_ACTION);
-        response.setMsgList(DomUtil.getAttr(a, MailService.A_ID));
-        response.setOp(DomUtil.getAttr(a, MailService.A_OPERATION));
+        Element a = DomUtil.get(responseXML, MailConstants.E_ACTION);
+        response.setMsgList(DomUtil.getAttr(a, MailConstants.A_ID));
+        response.setOp(DomUtil.getAttr(a, MailConstants.A_OPERATION));
         return response;
     }
 

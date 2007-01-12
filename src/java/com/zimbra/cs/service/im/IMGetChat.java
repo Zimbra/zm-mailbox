@@ -27,6 +27,7 @@ package com.zimbra.cs.service.im;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.IMConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 
@@ -44,9 +45,9 @@ public class IMGetChat extends IMDocumentHandler {
     {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         
-        Element response = lc.createElement(IMService.IM_GET_CHAT_RESPONSE);
+        Element response = lc.createElement(IMConstants.IM_GET_CHAT_RESPONSE);
         
-        String threadId = request.getAttribute(IMService.A_THREAD_ID); 
+        String threadId = request.getAttribute(IMConstants.A_THREAD_ID);
         
         Object lock = super.getLock(lc);
         synchronized (lock) {
@@ -60,41 +61,41 @@ public class IMGetChat extends IMDocumentHandler {
             response = chatToXml(chat, response);
         }
         
-        response.addAttribute(IMService.A_THREAD_ID, threadId);
+        response.addAttribute(IMConstants.A_THREAD_ID, threadId);
         
         return response;        
     }
     
     public static Element chatToXml(IMChat chat, Element parent) {
         // chat
-        Element ce = parent.addElement(IMService.E_CHAT);
-        ce.addAttribute(IMService.A_THREAD_ID, chat.getThreadId());
+        Element ce = parent.addElement(IMConstants.E_CHAT);
+        ce.addAttribute(IMConstants.A_THREAD_ID, chat.getThreadId());
         
         // participants
         {
-            Element e = ce.addElement(IMService.E_PARTICIPANTS);
+            Element e = ce.addElement(IMConstants.E_PARTICIPANTS);
             for (Participant part : chat.participants()) {
-                Element pe = e.addElement(IMService.E_PARTICIPANT);
-                pe.addAttribute(IMService.A_ADDRESS, part.getAddress().getAddr());
+                Element pe = e.addElement(IMConstants.E_PARTICIPANT);
+                pe.addAttribute(IMConstants.A_ADDRESS, part.getAddress().getAddr());
             }
         }
         
         // messages
         {
-            Element messages = ce.addElement(IMService.E_MESSAGES);
+            Element messages = ce.addElement(IMConstants.E_MESSAGES);
             int curOffset = 0;
             
             for (IMMessage msg : chat.messages()) {
-                Element me = messages.addElement(IMService.E_MESSAGE);
-                me.addAttribute(IMService.A_SEQ, curOffset+chat.getFirstSeqNo());
-                me.addAttribute(IMService.A_TIMESTAMP, msg.getTimestamp());
-                me.addAttribute(IMService.A_FROM, msg.getFrom().getAddr());
+                Element me = messages.addElement(IMConstants.E_MESSAGE);
+                me.addAttribute(IMConstants.A_SEQ, curOffset+chat.getFirstSeqNo());
+                me.addAttribute(IMConstants.A_TIMESTAMP, msg.getTimestamp());
+                me.addAttribute(IMConstants.A_FROM, msg.getFrom().getAddr());
                 
                 // subject 
                 {
                     TextPart subj = msg.getSubject(Lang.DEFAULT);
                     if (subj != null) {
-                        Element se = me.addElement(IMService.E_SUBJECT);
+                        Element se = me.addElement(IMConstants.E_SUBJECT);
                         se.setText(subj.getHtmlText());
                     }
                 }
@@ -103,7 +104,7 @@ public class IMGetChat extends IMDocumentHandler {
                 {
                     TextPart body = msg.getBody(Lang.DEFAULT);
                     if (body != null) {
-                        Element se = me.addElement(IMService.E_BODY);
+                        Element se = me.addElement(IMConstants.E_BODY);
                         se.setText(body.getHtmlText());
                     }
                 }

@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.operation.GetMsgOperation;
@@ -52,12 +53,12 @@ public class GetMsgMetadata extends MailDocumentHandler {
         Mailbox.OperationContext octxt = zsc.getOperationContext();
         Session session = getSession(context);
 
-        String ids = request.getElement(MailService.E_MSG).getAttribute(MailService.A_IDS);
+        String ids = request.getElement(MailConstants.E_MSG).getAttribute(MailConstants.A_IDS);
         ArrayList<Integer> local = new ArrayList<Integer>();
         HashMap<String, StringBuffer> remote = new HashMap<String, StringBuffer>();
         ItemAction.partitionItems(zsc, ids, local, remote);
 
-        Element response = zsc.createElement(MailService.GET_MSG_METADATA_RESPONSE);
+        Element response = zsc.createElement(MailConstants.GET_MSG_METADATA_RESPONSE);
 
         if (remote.size() > 0) {
             List<Element> responses = proxyRemote(request, remote, context);
@@ -83,9 +84,9 @@ public class GetMsgMetadata extends MailDocumentHandler {
     throws ServiceException {
         List<Element> responses = new ArrayList<Element>();
 
-        Element eMsg = request.getElement(MailService.E_MSG);
+        Element eMsg = request.getElement(MailConstants.E_MSG);
         for (Map.Entry<String, StringBuffer> entry : remote.entrySet()) {
-            eMsg.addAttribute(MailService.A_IDS, entry.getValue().toString());
+            eMsg.addAttribute(MailConstants.A_IDS, entry.getValue().toString());
 
             Element response = proxyRequest(request, context, entry.getKey());
             for (Element e : response.listElements())

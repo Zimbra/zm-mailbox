@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.Element;
@@ -49,8 +50,8 @@ public class ModifyPrefs extends AccountDocumentHandler {
         HashMap<String, String> prefs = new HashMap<String, String>();
 //        HashMap specialPrefs = new HashMap();
 
-        for (Element e : request.listElements(AccountService.E_PREF)) {
-            String name = e.getAttribute(AccountService.A_NAME);
+        for (Element e : request.listElements(AccountConstants.E_PREF)) {
+            String name = e.getAttribute(AccountConstants.A_NAME);
             String value = e.getText();
 		    if (!name.startsWith("zimbraPref")) {
 		        throw ServiceException.INVALID_REQUEST("pref name must start with zimbraPref", null);
@@ -65,7 +66,7 @@ public class ModifyPrefs extends AccountDocumentHandler {
         // call modifyAttrs and pass true to checkImmutable
         
         Provisioning.getInstance().modifyAttrs(acct, prefs, true);
-        Element response = lc.createElement(AccountService.MODIFY_PREFS_RESPONSE);
+        Element response = lc.createElement(AccountConstants.MODIFY_PREFS_RESPONSE);
         return response;
 	}
 }

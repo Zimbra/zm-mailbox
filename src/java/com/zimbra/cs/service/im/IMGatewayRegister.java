@@ -3,6 +3,7 @@ package com.zimbra.cs.service.im;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.IMConstants;
 import com.zimbra.cs.im.IMGatewayType;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.soap.Element;
@@ -14,7 +15,7 @@ public class IMGatewayRegister extends IMDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         
-        Element response = lc.createElement(IMService.IM_GATEWAY_REGISTER_RESPONSE);
+        Element response = lc.createElement(IMConstants.IM_GATEWAY_REGISTER_RESPONSE);
         
         Object lock = super.getLock(lc);
         synchronized (lock) {

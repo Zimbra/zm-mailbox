@@ -26,7 +26,7 @@
 package com.zimbra.cs.zclient.event;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.ZSoapSB;
 import com.zimbra.soap.Element;
 
@@ -43,7 +43,7 @@ public class ZModifyMessageEvent implements ZModifyItemEvent, ZModifyItemFolderE
      * @throws com.zimbra.common.service.ServiceException on error
      */
     public String getId() throws ServiceException {
-        return mMessageEl.getAttribute(MailService.A_ID);
+        return mMessageEl.getAttribute(MailConstants.A_ID);
     }
 
     /**
@@ -51,7 +51,7 @@ public class ZModifyMessageEvent implements ZModifyItemEvent, ZModifyItemFolderE
      * @return new flags or default value if flags didn't change
      */
     public String getFlags(String defaultValue) {
-        return mMessageEl.getAttribute(MailService.A_FLAGS, defaultValue);
+        return mMessageEl.getAttribute(MailConstants.A_FLAGS, defaultValue);
     }
 
     /**
@@ -59,11 +59,11 @@ public class ZModifyMessageEvent implements ZModifyItemEvent, ZModifyItemFolderE
      * @return new tags or default value if tags didn't change
      */
     public String getTagIds(String defaultValue) {
-        return mMessageEl.getAttribute(MailService.A_TAGS, defaultValue);
+        return mMessageEl.getAttribute(MailConstants.A_TAGS, defaultValue);
     }
 
     public String getFolderId(String defaultValue) {
-        return mMessageEl.getAttribute(MailService.A_FOLDER, defaultValue);
+        return mMessageEl.getAttribute(MailConstants.A_FOLDER, defaultValue);
     }
 
     /**
@@ -71,7 +71,7 @@ public class ZModifyMessageEvent implements ZModifyItemEvent, ZModifyItemFolderE
      * @return new conv id or defaultValue if unchanged
      */
     public String getConversationId(String defaultValue) {
-        return mMessageEl.getAttribute(MailService.A_CONV_ID, defaultValue);
+        return mMessageEl.getAttribute(MailConstants.A_CONV_ID, defaultValue);
     }
 
     public String toString() {

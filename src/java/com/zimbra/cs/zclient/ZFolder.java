@@ -26,7 +26,7 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyFolderEvent;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.soap.Element;
@@ -161,43 +161,43 @@ public class ZFolder implements ZItem, Comparable {
     
     public ZFolder(Element e, ZFolder parent) throws ServiceException {
         mParent = parent;
-        mId = e.getAttribute(MailService.A_ID);
-        mName = e.getAttribute(MailService.A_NAME);
-        mParentId = e.getAttribute(MailService.A_FOLDER);
-        mFlags = e.getAttribute(MailService.A_FLAGS, null);
+        mId = e.getAttribute(MailConstants.A_ID);
+        mName = e.getAttribute(MailConstants.A_NAME);
+        mParentId = e.getAttribute(MailConstants.A_FOLDER);
+        mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
         try {
-            mColor = ZFolder.Color.fromString(e.getAttribute(MailService.A_COLOR, "0"));
+            mColor = ZFolder.Color.fromString(e.getAttribute(MailConstants.A_COLOR, "0"));
         } catch (ServiceException se) {
             mColor = ZFolder.Color.orange;
         }
-        mUnreadCount = (int) e.getAttributeLong(MailService.A_UNREAD, 0);
-        mMessageCount = (int) e.getAttributeLong(MailService.A_NUM, 0);
-        mDefaultView = View.fromString(e.getAttribute(MailService.A_DEFAULT_VIEW, View.conversation.name()));
-        mRestURL = e.getAttribute(MailService.A_REST_URL, null);
-        mRemoteURL = e.getAttribute(MailService.A_URL, null);
-        mEffectivePerms = e.getAttribute(MailService.A_RIGHTS, null);
+        mUnreadCount = (int) e.getAttributeLong(MailConstants.A_UNREAD, 0);
+        mMessageCount = (int) e.getAttributeLong(MailConstants.A_NUM, 0);
+        mDefaultView = View.fromString(e.getAttribute(MailConstants.A_DEFAULT_VIEW, View.conversation.name()));
+        mRestURL = e.getAttribute(MailConstants.A_REST_URL, null);
+        mRemoteURL = e.getAttribute(MailConstants.A_URL, null);
+        mEffectivePerms = e.getAttribute(MailConstants.A_RIGHTS, null);
         
         mGrants = new ArrayList<ZGrant>();            
         mSubFolders = new ArrayList<ZFolder>();
 
-        Element aclEl = e.getOptionalElement(MailService.E_ACL);
+        Element aclEl = e.getOptionalElement(MailConstants.E_ACL);
 
         if (aclEl != null) {
-            for (Element grant : aclEl.listElements(MailService.E_GRANT)) {
+            for (Element grant : aclEl.listElements(MailConstants.E_GRANT)) {
                 mGrants.add(new ZGrant(grant));
             }
         }
 
         // sub folders
-        for (Element child : e.listElements(MailService.E_FOLDER))
+        for (Element child : e.listElements(MailConstants.E_FOLDER))
             addChild(new ZFolder(child, this));
         
         // search
-        for (Element s : e.listElements(MailService.E_SEARCH))
+        for (Element s : e.listElements(MailConstants.E_SEARCH))
             addChild(new ZSearchFolder(s, this));
         
         // link
-        for (Element l : e.listElements(MailService.E_MOUNT))
+        for (Element l : e.listElements(MailConstants.E_MOUNT))
             addChild(new ZMountpoint(l, this));
     }
 

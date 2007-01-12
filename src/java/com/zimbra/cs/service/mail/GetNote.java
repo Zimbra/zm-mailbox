@@ -31,6 +31,7 @@ package com.zimbra.cs.service.mail;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Note;
@@ -51,8 +52,8 @@ public class GetNote extends MailDocumentHandler {
 		Mailbox.OperationContext octxt = lc.getOperationContext();
 		Session session = getSession(context);
 		
-		Element enote = request.getElement(MailService.E_NOTE);
-		int noteId = (int) enote.getAttributeLong(MailService.A_ID);
+		Element enote = request.getElement(MailConstants.E_NOTE);
+		int noteId = (int) enote.getAttributeLong(MailConstants.A_ID);
 		
 		GetNoteOperation op = new GetNoteOperation(session, octxt, mbox, Requester.SOAP, noteId);
 		op.schedule();
@@ -61,7 +62,7 @@ public class GetNote extends MailDocumentHandler {
 		if (note == null)
 			throw MailServiceException.NO_SUCH_NOTE(noteId);
 		
-		Element response = lc.createElement(MailService.GET_NOTE_RESPONSE);
+		Element response = lc.createElement(MailConstants.GET_NOTE_RESPONSE);
 		ToXML.encodeNote(response, lc, note);
 		return response;
 	}

@@ -28,10 +28,10 @@ package com.zimbra.cs.service.wiki;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.mail.ItemAction;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
 import com.zimbra.soap.Element;
@@ -43,16 +43,16 @@ public class WikiAction extends ItemAction {
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
-        Element action = request.getElement(MailService.E_ACTION);
-        String operation = action.getAttribute(MailService.A_OPERATION).toLowerCase();
+        Element action = request.getElement(MailConstants.E_ACTION);
+        String operation = action.getAttribute(MailConstants.A_OPERATION).toLowerCase();
 
         String successes;
         if (operation.equals(OP_RENAME)) {
     		Account author = lc.getAuthtokenAccount();
-    		String id = action.getAttribute(MailService.A_ID);
+    		String id = action.getAttribute(MailConstants.A_ID);
     		if (id.indexOf(",") > 0)
     			throw WikiServiceException.ERROR("cannot use more than one id for rename");
-    		String name = action.getAttribute(MailService.A_NAME);
+    		String name = action.getAttribute(MailConstants.A_NAME);
     		WikiContext ctxt = new WikiContext(lc.getOperationContext(), lc.getRawAuthToken());
     		Wiki wiki = Wiki.getInstance(ctxt, lc.getRequestedAccountId());
     		wiki.renameDocument(ctxt, Integer.parseInt(id), name, author.getName());
@@ -61,10 +61,10 @@ public class WikiAction extends ItemAction {
         	successes = handleCommon(context, request, operation, MailItem.TYPE_WIKI);
         }
         
-        Element response = lc.createElement(MailService.WIKI_ACTION_RESPONSE);
-        Element act = response.addUniqueElement(MailService.E_ACTION);
-        act.addAttribute(MailService.A_ID, successes);
-        act.addAttribute(MailService.A_OPERATION, operation);
+        Element response = lc.createElement(MailConstants.WIKI_ACTION_RESPONSE);
+        Element act = response.addUniqueElement(MailConstants.E_ACTION);
+        act.addAttribute(MailConstants.A_ID, successes);
+        act.addAttribute(MailConstants.A_OPERATION, operation);
         return response;
 	}
 }

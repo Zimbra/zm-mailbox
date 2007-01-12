@@ -25,7 +25,6 @@
 
 package com.zimbra.cs.service.admin;
 
-import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.cs.account.AccountServiceException;
@@ -36,6 +35,7 @@ import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -44,7 +44,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class ModifyCalendarResource extends AdminDocumentHandler {
 
-    private static final String[] TARGET_RESOURCE_PATH = new String[] { AdminService.E_ID };
+    private static final String[] TARGET_RESOURCE_PATH = new String[] { AdminConstants.E_ID };
     protected String[] getProxiedResourcePath()  { return TARGET_RESOURCE_PATH; }
 
     /**
@@ -59,7 +59,7 @@ public class ModifyCalendarResource extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-        String id = request.getAttribute(AdminService.E_ID);
+        String id = request.getAttribute(AdminConstants.E_ID);
         Map<String, Object> attrs = AdminService.getAttrs(request);
 
         CalendarResource resource = prov.get(CalendarResourceBy.id, id);
@@ -83,7 +83,7 @@ public class ModifyCalendarResource extends AdminDocumentHandler {
                 new String[] {"cmd", "ModifyCalendarResource", "name",
                               resource.getName()}, attrs));
 
-        Element response = zsc.createElement(AdminService.MODIFY_CALENDAR_RESOURCE_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.MODIFY_CALENDAR_RESOURCE_RESPONSE);
         ToXML.encodeCalendarResource(response, resource, true);
         return response;
     }

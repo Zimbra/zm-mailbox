@@ -42,7 +42,7 @@ import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.client.LmcSession;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.admin.AdminService;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
@@ -162,12 +162,12 @@ public abstract class SoapCLI {
         mTrans = trans;
         mAuth = false;
         
-        Element authReq = new Element.XMLElement(AdminService.AUTH_REQUEST);
-        authReq.addAttribute(AdminService.E_NAME, mUser, Element.DISP_CONTENT);
-        authReq.addAttribute(AdminService.E_PASSWORD, mPassword, Element.DISP_CONTENT);
+        Element authReq = new Element.XMLElement(AdminConstants.AUTH_REQUEST);
+        authReq.addAttribute(AdminConstants.E_NAME, mUser, Element.DISP_CONTENT);
+        authReq.addAttribute(AdminConstants.E_PASSWORD, mPassword, Element.DISP_CONTENT);
         try {
             Element authResp = mTrans.invokeWithoutSession(authReq);
-            String authToken = authResp.getAttribute(AdminService.E_AUTH_TOKEN);
+            String authToken = authResp.getAttribute(AdminConstants.E_AUTH_TOKEN);
             String sessionId = authResp.getAttribute(ZimbraSoapContext.E_SESSION_ID, null);
             mTrans.setAuthToken(authToken);
             if (sessionId != null) {

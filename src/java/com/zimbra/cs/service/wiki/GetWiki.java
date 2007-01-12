@@ -34,12 +34,12 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.cs.wiki.WikiPage;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
@@ -53,14 +53,14 @@ public class GetWiki extends WikiDocumentHandler {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
 		checkEnabled(lc);
         OperationContext octxt = lc.getOperationContext();
-        Element wElem = request.getElement(MailService.E_WIKIWORD);
-        String word = wElem.getAttribute(MailService.A_NAME, null);
-        String id = wElem.getAttribute(MailService.A_ID, null);
-        int traverse = (int)wElem.getAttributeLong(MailService.A_TRAVERSE, 0);
-        int rev = (int)wElem.getAttributeLong(MailService.A_VERSION, -1);
-        int count = (int)wElem.getAttributeLong(MailService.A_COUNT, -1);
+        Element wElem = request.getElement(MailConstants.E_WIKIWORD);
+        String word = wElem.getAttribute(MailConstants.A_NAME, null);
+        String id = wElem.getAttribute(MailConstants.A_ID, null);
+        int traverse = (int)wElem.getAttributeLong(MailConstants.A_TRAVERSE, 0);
+        int rev = (int)wElem.getAttributeLong(MailConstants.A_VERSION, -1);
+        int count = (int)wElem.getAttributeLong(MailConstants.A_COUNT, -1);
 
-        Element response = lc.createElement(MailService.GET_WIKI_RESPONSE);
+        Element response = lc.createElement(MailConstants.GET_WIKI_RESPONSE);
 
         WikiItem wikiItem;
         
@@ -83,7 +83,7 @@ public class GetWiki extends WikiDocumentHandler {
         		Element wikiElem = ToXML.encodeWikiPage(response, wikiPage);
         		String contents = wikiPage.getContents(wctxt);
         		if (contents != null && contents != "") {
-        			wikiElem.addAttribute(MailService.A_BODY, contents, Element.DISP_CONTENT);
+        			wikiElem.addAttribute(MailConstants.A_BODY, contents, Element.DISP_CONTENT);
         		}
         		return response;
         	}
@@ -117,7 +117,7 @@ public class GetWiki extends WikiDocumentHandler {
         		// old revision is gone, and revision.getContent() returns null.
         		if (is != null) {
         			byte[] raw = ByteUtil.getContent(is, 0);
-        			wikiElem.addAttribute(MailService.A_BODY, new String(raw, "UTF-8"), Element.DISP_CONTENT);
+        			wikiElem.addAttribute(MailConstants.A_BODY, new String(raw, "UTF-8"), Element.DISP_CONTENT);
         		}
         	} catch (IOException ioe) {
         		ZimbraLog.wiki.error("cannot read the wiki message body", ioe);

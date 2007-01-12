@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.SearchFolder;
@@ -53,7 +54,7 @@ public class GetSearchFolder extends MailDocumentHandler  {
 		OperationContext octxt = lc.getOperationContext();
 		Session session = getSession(context);
 		
-		Element response = lc.createElement(MailService.GET_SEARCH_FOLDER_RESPONSE);
+		Element response = lc.createElement(MailConstants.GET_SEARCH_FOLDER_RESPONSE);
         
 		GetItemListOperation op = new GetItemListOperation(session, octxt, mbox, Requester.SOAP, MailItem.TYPE_SEARCHFOLDER);
 		op.schedule();

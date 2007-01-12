@@ -30,7 +30,7 @@ import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.DomUtil;
 import com.zimbra.soap.SoapParseException;
 import com.zimbra.cs.client.*;
@@ -44,10 +44,10 @@ public class LmcSaveWikiRequest extends LmcSoapRequest {
     public LmcWiki getWiki() { return mWiki; }
     
 	protected Element getRequestXML() throws LmcSoapClientException {
-		Element request = DocumentHelper.createElement(MailService.SAVE_WIKI_REQUEST);
-        Element w = DomUtil.add(request, MailService.E_WIKIWORD, "");
-        LmcSoapRequest.addAttrNotNull(w, MailService.A_NAME, mWiki.getWikiWord());
-        LmcSoapRequest.addAttrNotNull(w, MailService.A_FOLDER, mWiki.getFolder());
+		Element request = DocumentHelper.createElement(MailConstants.SAVE_WIKI_REQUEST);
+        Element w = DomUtil.add(request, MailConstants.E_WIKIWORD, "");
+        LmcSoapRequest.addAttrNotNull(w, MailConstants.A_NAME, mWiki.getWikiWord());
+        LmcSoapRequest.addAttrNotNull(w, MailConstants.A_FOLDER, mWiki.getFolder());
         w.addText(mWiki.getContents());
         return request;
     }
@@ -56,7 +56,7 @@ public class LmcSaveWikiRequest extends LmcSoapRequest {
 			throws SoapParseException, ServiceException, LmcSoapClientException {
 		
         LmcSaveDocumentResponse response = new LmcSaveDocumentResponse();
-        LmcDocument doc = parseDocument(DomUtil.get(responseXML, MailService.E_WIKIWORD));
+        LmcDocument doc = parseDocument(DomUtil.get(responseXML, MailConstants.E_WIKIWORD));
         response.setDocument(doc);
         return response;
 	}

@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
@@ -50,48 +51,48 @@ public class ModifyDataSource extends MailDocumentHandler {
         Account account = getRequestedAccount(zsc);
         boolean wipeOutOldData = false;
         
-        Element ePop3 = request.getElement(MailService.E_DS_POP3);
-        String id = ePop3.getAttribute(MailService.A_ID);
+        Element ePop3 = request.getElement(MailConstants.E_DS_POP3);
+        String id = ePop3.getAttribute(MailConstants.A_ID);
         DataSource ds = prov.get(account, DataSourceBy.id, id);
 
         Map<String, Object> dsAttrs = new HashMap<String, Object>();
-        String value = ePop3.getAttribute(MailService.A_NAME, null);
+        String value = ePop3.getAttribute(MailConstants.A_NAME, null);
         if (value != null)
             dsAttrs.put(Provisioning.A_zimbraDataSourceName, value);
-        value = ePop3.getAttribute(MailService.A_DS_IS_ENABLED, null); 
+        value = ePop3.getAttribute(MailConstants.A_DS_IS_ENABLED, null);
         if (value != null)
             dsAttrs.put(Provisioning.A_zimbraDataSourceEnabled,
-                LdapUtil.getBooleanString(ePop3.getAttributeBool(MailService.A_DS_IS_ENABLED)));
-        value = ePop3.getAttribute(MailService.A_FOLDER, null);
+                LdapUtil.getBooleanString(ePop3.getAttributeBool(MailConstants.A_DS_IS_ENABLED)));
+        value = ePop3.getAttribute(MailConstants.A_FOLDER, null);
         if (value != null)
         	dsAttrs.put(Provisioning.A_zimbraDataSourceFolderId, value);
         
-        value = ePop3.getAttribute(MailService.A_DS_HOST, null);
+        value = ePop3.getAttribute(MailConstants.A_DS_HOST, null);
         if (value != null && !value.equals(ds.getHost())) {
             dsAttrs.put(Provisioning.A_zimbraDataSourceHost, value);
             wipeOutOldData = true;
         }
         
-        value = ePop3.getAttribute(MailService.A_DS_PORT, null);
+        value = ePop3.getAttribute(MailConstants.A_DS_PORT, null);
         if (value != null)
         	dsAttrs.put(Provisioning.A_zimbraDataSourcePort, value);
-        value = ePop3.getAttribute(MailService.A_DS_CONNECTION_TYPE, null);
+        value = ePop3.getAttribute(MailConstants.A_DS_CONNECTION_TYPE, null);
         if (value != null)
             dsAttrs.put(Provisioning.A_zimbraDataSourceConnectionType, value);
         
-        value = ePop3.getAttribute(MailService.A_DS_USERNAME, null);
+        value = ePop3.getAttribute(MailConstants.A_DS_USERNAME, null);
         if (value != null && !value.equals(ds.getUsername())) {
         	dsAttrs.put(Provisioning.A_zimbraDataSourceUsername, value);
         	wipeOutOldData = true;
         }
     
-        value = ePop3.getAttribute(MailService.A_DS_PASSWORD, null);
+        value = ePop3.getAttribute(MailConstants.A_DS_PASSWORD, null);
         if (value != null)
         	dsAttrs.put(Provisioning.A_zimbraDataSourcePassword, value);
 
-        value = ePop3.getAttribute(MailService.A_DS_LEAVE_ON_SERVER, null);
+        value = ePop3.getAttribute(MailConstants.A_DS_LEAVE_ON_SERVER, null);
         if (value != null) {
-            boolean newValue = ePop3.getAttributeBool(MailService.A_DS_LEAVE_ON_SERVER);
+            boolean newValue = ePop3.getAttributeBool(MailConstants.A_DS_LEAVE_ON_SERVER);
             if (newValue != ds.leaveOnServer()) {
                 dsAttrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer,
                     LdapUtil.getBooleanString(newValue));
@@ -108,7 +109,7 @@ public class ModifyDataSource extends MailDocumentHandler {
             DbPop3Message.deleteUids(mbox, ds.getId());
         }
 
-        Element response = zsc.createElement(MailService.MODIFY_DATA_SOURCE_RESPONSE);
+        Element response = zsc.createElement(MailConstants.MODIFY_DATA_SOURCE_RESPONSE);
 
         return response;
     }

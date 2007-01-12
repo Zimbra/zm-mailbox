@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
@@ -47,27 +48,27 @@ public class CreateDataSource extends MailDocumentHandler {
         Account account = getRequestedAccount(zsc);
         
         // Create the data source.  Currently only POP3 is supported.
-        Element ePop3 = request.getElement(MailService.E_DS_POP3);
+        Element ePop3 = request.getElement(MailConstants.E_DS_POP3);
         Map<String, Object> dsAttrs = new HashMap<String, Object>();
         
-        String name = ePop3.getAttribute(MailService.A_NAME);
-        dsAttrs.put(Provisioning.A_zimbraDataSourceFolderId, ePop3.getAttribute(MailService.A_FOLDER));
+        String name = ePop3.getAttribute(MailConstants.A_NAME);
+        dsAttrs.put(Provisioning.A_zimbraDataSourceFolderId, ePop3.getAttribute(MailConstants.A_FOLDER));
         dsAttrs.put(Provisioning.A_zimbraDataSourceEnabled,
-            LdapUtil.getBooleanString(ePop3.getAttributeBool(MailService.A_DS_IS_ENABLED)));
-        dsAttrs.put(Provisioning.A_zimbraDataSourceHost, ePop3.getAttribute(MailService.A_DS_HOST));
-        dsAttrs.put(Provisioning.A_zimbraDataSourcePort, ePop3.getAttribute(MailService.A_DS_PORT));
-        dsAttrs.put(Provisioning.A_zimbraDataSourceConnectionType, ePop3.getAttribute(MailService.A_DS_CONNECTION_TYPE));
-        dsAttrs.put(Provisioning.A_zimbraDataSourceUsername, ePop3.getAttribute(MailService.A_DS_USERNAME));
-        dsAttrs.put(Provisioning.A_zimbraDataSourcePassword, ePop3.getAttribute(MailService.A_DS_PASSWORD));
+            LdapUtil.getBooleanString(ePop3.getAttributeBool(MailConstants.A_DS_IS_ENABLED)));
+        dsAttrs.put(Provisioning.A_zimbraDataSourceHost, ePop3.getAttribute(MailConstants.A_DS_HOST));
+        dsAttrs.put(Provisioning.A_zimbraDataSourcePort, ePop3.getAttribute(MailConstants.A_DS_PORT));
+        dsAttrs.put(Provisioning.A_zimbraDataSourceConnectionType, ePop3.getAttribute(MailConstants.A_DS_CONNECTION_TYPE));
+        dsAttrs.put(Provisioning.A_zimbraDataSourceUsername, ePop3.getAttribute(MailConstants.A_DS_USERNAME));
+        dsAttrs.put(Provisioning.A_zimbraDataSourcePassword, ePop3.getAttribute(MailConstants.A_DS_PASSWORD));
         dsAttrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer,
-            LdapUtil.getBooleanString(ePop3.getAttributeBool(MailService.A_DS_LEAVE_ON_SERVER, true)));
+            LdapUtil.getBooleanString(ePop3.getAttributeBool(MailConstants.A_DS_LEAVE_ON_SERVER, true)));
         
         DataSource ds = prov.createDataSource(account, DataSource.Type.pop3, name, dsAttrs);
         
         // Assemble response
-        Element response = zsc.createElement(MailService.CREATE_DATA_SOURCE_RESPONSE);
-        ePop3 = response.addElement(MailService.E_DS_POP3);
-        ePop3.addAttribute(MailService.A_ID, ds.getId());
+        Element response = zsc.createElement(MailConstants.CREATE_DATA_SOURCE_RESPONSE);
+        ePop3 = response.addElement(MailConstants.E_DS_POP3);
+        ePop3.addAttribute(MailConstants.A_ID, ds.getId());
         
         return response;
     }

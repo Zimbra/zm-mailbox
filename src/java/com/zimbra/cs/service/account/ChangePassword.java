@@ -31,6 +31,7 @@ package com.zimbra.cs.service.account;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
@@ -49,9 +50,9 @@ public class ChangePassword extends AccountDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         
-        String name = request.getAttribute(AccountService.E_ACCOUNT);
+        String name = request.getAttribute(AccountConstants.E_ACCOUNT);
         
-        Element virtualHostEl = request.getOptionalElement(AccountService.E_VIRTUAL_HOST);
+        Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
         String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
         
         if (virtualHost != null && name.indexOf('@') == -1) {
@@ -63,11 +64,11 @@ public class ChangePassword extends AccountDocumentHandler {
         Account acct = prov.get(AccountBy.name, name);
         if (acct == null)
             throw AccountServiceException.AUTH_FAILED(name);
-		String oldPassword = request.getAttribute(AccountService.E_OLD_PASSWORD);
-		String newPassword = request.getAttribute(AccountService.E_PASSWORD);
+		String oldPassword = request.getAttribute(AccountConstants.E_OLD_PASSWORD);
+		String newPassword = request.getAttribute(AccountConstants.E_PASSWORD);
 		prov.changePassword(acct, oldPassword, newPassword);
 
-        Element response = lc.createElement(AccountService.CHANGE_PASSWORD_RESPONSE);
+        Element response = lc.createElement(AccountConstants.CHANGE_PASSWORD_RESPONSE);
         return response;
 	}
 

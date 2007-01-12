@@ -31,6 +31,7 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.db.DbTableMaintenance;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -44,8 +45,8 @@ public class MaintainTables extends AdminDocumentHandler {
         int numTables = DbTableMaintenance.runMaintenance();
         
         ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Element response = lc.createElement(AdminService.MAINTAIN_TABLES_RESPONSE);
-        response.addAttribute(AdminService.A_NUM_TABLES, numTables);
+        Element response = lc.createElement(AdminConstants.MAINTAIN_TABLES_RESPONSE);
+        response.addAttribute(AdminConstants.A_NUM_TABLES, numTables);
     	return response;
 	}
 }

@@ -27,6 +27,7 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.operation.Scheduler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
@@ -40,7 +41,7 @@ public class SetThrottle extends AdminDocumentHandler {
 
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         
-        String concurStr = request.getAttribute(AdminService.A_CONCURRENCY, null);
+        String concurStr = request.getAttribute(AdminConstants.A_CONCURRENCY, null);
         
         if (concurStr != null) {
             int[] params = Scheduler.readOpsFromString(concurStr);
@@ -49,7 +50,7 @@ public class SetThrottle extends AdminDocumentHandler {
             Scheduler.setConcurrency(params);    
         }
         
-        Element response = lc.createElement(AdminService.SET_THROTTLE_RESPOSNE);
+        Element response = lc.createElement(AdminConstants.SET_THROTTLE_RESPOSNE);
         
         Scheduler s = Scheduler.get(null);
         concurStr = "";
@@ -59,7 +60,7 @@ public class SetThrottle extends AdminDocumentHandler {
                 concurStr+=",";
             concurStr += concur[i];
         }
-        response.addAttribute(AdminService.A_CONCURRENCY, concurStr);
+        response.addAttribute(AdminConstants.A_CONCURRENCY, concurStr);
         
         return response;
     }

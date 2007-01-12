@@ -28,6 +28,7 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
@@ -41,8 +42,8 @@ public class DeleteZimlet extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 	    
-        Element z = request.getElement(AdminService.E_ZIMLET);
-	    String name = z.getAttribute(AdminService.A_NAME);
+        Element z = request.getElement(AdminConstants.E_ZIMLET);
+	    String name = z.getAttribute(AdminConstants.A_NAME);
 
 	    Zimlet zimlet = prov.getZimlet(name);
         if (zimlet == null)
@@ -53,7 +54,7 @@ public class DeleteZimlet extends AdminDocumentHandler {
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(new String[] {"cmd", "DeleteZimlet","name", name, "id", id }));
 
-	    Element response = lc.createElement(AdminService.DELETE_ZIMLET_RESPONSE);
+	    Element response = lc.createElement(AdminConstants.DELETE_ZIMLET_RESPONSE);
 	    return response;
 	}
 }

@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
@@ -57,11 +58,11 @@ public class GetAllDistributionLists extends AdminDocumentHandler {
 
         Element response = null;
         
-        Element d = request.getOptionalElement(AdminService.E_DOMAIN);
+        Element d = request.getOptionalElement(AdminConstants.E_DOMAIN);
         Domain domain = null;
         
         if (d != null) {
-            String key = d.getAttribute(AdminService.A_BY);
+            String key = d.getAttribute(AdminConstants.A_BY);
             String value = d.getText();
         
             if (key.equals(BY_NAME)) {
@@ -82,10 +83,10 @@ public class GetAllDistributionLists extends AdminDocumentHandler {
         }
 
         if (domain != null) {
-            response = lc.createElement(AdminService.GET_ALL_DISTRIBUTION_LISTS_RESPONSE);
+            response = lc.createElement(AdminConstants.GET_ALL_DISTRIBUTION_LISTS_RESPONSE);
             doDomain(response, domain);
         } else {
-            response = lc.createElement(AdminService.GET_ALL_DISTRIBUTION_LISTS_RESPONSE);
+            response = lc.createElement(AdminConstants.GET_ALL_DISTRIBUTION_LISTS_RESPONSE);
             List domains = prov.getAllDomains();
             for (Iterator dit=domains.iterator(); dit.hasNext(); ) {
                 Domain dm = (Domain) dit.next();

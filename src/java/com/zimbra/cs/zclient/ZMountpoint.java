@@ -26,7 +26,7 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyMountpointEvent;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.soap.Element;
@@ -39,9 +39,9 @@ public class ZMountpoint extends ZFolder {
     
     public ZMountpoint(Element e, ZFolder parent) throws ServiceException {
         super(e, parent);
-        mOwnerDisplayName = e.getAttribute(MailService.A_OWNER_NAME, null); // TODO: change back to required when DF is on main
-        mRemoteId = e.getAttribute(MailService.A_REMOTE_ID);
-        mOwnerId = e.getAttribute(MailService.A_ZIMBRA_ID);
+        mOwnerDisplayName = e.getAttribute(MailConstants.A_OWNER_NAME, null); // TODO: change back to required when DF is on main
+        mRemoteId = e.getAttribute(MailConstants.A_REMOTE_ID);
+        mOwnerId = e.getAttribute(MailConstants.A_ZIMBRA_ID);
     }
 
     public void modifyNotification(ZModifyEvent e) throws ServiceException {

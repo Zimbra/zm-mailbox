@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
@@ -53,18 +54,18 @@ public class GetDistributionList extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 	    
-        int limit = (int) request.getAttributeLong(AdminService.A_LIMIT, 0);
+        int limit = (int) request.getAttributeLong(AdminConstants.A_LIMIT, 0);
         if (limit < 0) {
         	throw ServiceException.INVALID_REQUEST("limit" + limit + " is negative", null);
         }
-        int offset = (int) request.getAttributeLong(AdminService.A_OFFSET, 0);
+        int offset = (int) request.getAttributeLong(AdminConstants.A_OFFSET, 0);
         if (offset < 0) {
         	throw ServiceException.INVALID_REQUEST("offset" + offset + " is negative", null);
         }
-        boolean sortAscending = request.getAttributeBool(AdminService.A_SORT_ASCENDING, true);        
+        boolean sortAscending = request.getAttributeBool(AdminConstants.A_SORT_ASCENDING, true);
 
-        Element d = request.getElement(AdminService.E_DL);
-        String key = d.getAttribute(AdminService.A_BY);
+        Element d = request.getElement(AdminConstants.E_DL);
+        String key = d.getAttribute(AdminConstants.A_BY);
         String value = d.getText();
 	    
         DistributionList distributionList = prov.get(DistributionListBy.fromString(key), value);
@@ -75,7 +76,7 @@ public class GetDistributionList extends AdminDocumentHandler {
         if (!canAccessEmail(lc, distributionList.getName()))
             throw ServiceException.PERM_DENIED("can not access dl");
             
-        Element response = lc.createElement(AdminService.GET_DISTRIBUTION_LIST_RESPONSE);
+        Element response = lc.createElement(AdminConstants.GET_DISTRIBUTION_LIST_RESPONSE);
         Element dlElement = doDistributionList(response, distributionList);
         
         String[] members = distributionList.getAllMembers();
@@ -96,18 +97,18 @@ public class GetDistributionList extends AdminDocumentHandler {
         	Arrays.sort(members, Collections.reverseOrder());
         }
         for (int i = offset; i < stop; i++) {
-        	dlElement.addElement(AdminService.E_DLM).setText(members[i]);
+        	dlElement.addElement(AdminConstants.E_DLM).setText(members[i]);
         }
         
-        response.addAttribute(AdminService.A_MORE, stop < members.length);
-        response.addAttribute(AdminService.A_TOTAL, members.length);        
+        response.addAttribute(AdminConstants.A_MORE, stop < members.length);
+        response.addAttribute(AdminConstants.A_TOTAL, members.length);
         return response;
     }
 
     public static Element doDistributionList(Element e, DistributionList d) throws ServiceException {
-        Element distributionList = e.addElement(AdminService.E_DL);
-        distributionList.addAttribute(AdminService.A_NAME, d.getName());
-        distributionList.addAttribute(AdminService.A_ID,d.getId());
+        Element distributionList = e.addElement(AdminConstants.E_DL);
+        distributionList.addAttribute(AdminConstants.A_NAME, d.getName());
+        distributionList.addAttribute(AdminConstants.A_ID,d.getId());
         doAttrs(distributionList, d.getAttrs());
         return distributionList;
     }
@@ -126,9 +127,9 @@ public class GetDistributionList extends AdminDocumentHandler {
            if (value instanceof String[]) {
                String sv[] = (String[]) value;
                for (int i = 0; i < sv.length; i++)
-                   e.addElement(AdminService.E_A).addAttribute(AdminService.A_N, name).setText(sv[i]);
+                   e.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText(sv[i]);
            } else if (value instanceof String) {
-               e.addElement(AdminService.E_A).addAttribute(AdminService.A_N, name).setText((String) value);
+               e.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText((String) value);
            }
        }       
    }

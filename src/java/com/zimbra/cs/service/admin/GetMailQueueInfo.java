@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.ServerBy;
@@ -44,8 +45,8 @@ public class GetMailQueueInfo extends AdminDocumentHandler {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 	    
-	    Element serverElem = request.getElement(AdminService.E_SERVER);
-	    String serverName = serverElem.getAttribute(AdminService.A_NAME);
+	    Element serverElem = request.getElement(AdminConstants.E_SERVER);
+	    String serverName = serverElem.getAttribute(AdminConstants.A_NAME);
 	    
 	    Server server = prov.get(ServerBy.name, serverName);
 	    if (server == null) {
@@ -64,13 +65,13 @@ public class GetMailQueueInfo extends AdminDocumentHandler {
             throw ServiceException.FAILURE("server " + serverName + " returned no result", null);
         }
 
-        Element response = lc.createElement(AdminService.GET_MAIL_QUEUE_INFO_RESPONSE);
-        serverElem = response.addElement(AdminService.E_SERVER);
-        serverElem.addAttribute(AdminService.A_NAME, serverName);
+        Element response = lc.createElement(AdminConstants.GET_MAIL_QUEUE_INFO_RESPONSE);
+        serverElem = response.addElement(AdminConstants.E_SERVER);
+        serverElem.addAttribute(AdminConstants.A_NAME, serverName);
         for (String k : queueInfo.keySet()) {
-            Element queue = serverElem.addElement(AdminService.E_QUEUE);
-            queue.addAttribute(AdminService.A_NAME, k);
-            queue.addAttribute(AdminService.A_N, queueInfo.get(k));
+            Element queue = serverElem.addElement(AdminConstants.E_QUEUE);
+            queue.addAttribute(AdminConstants.A_NAME, k);
+            queue.addAttribute(AdminConstants.A_N, queueInfo.get(k));
         }
         return response;
 	}

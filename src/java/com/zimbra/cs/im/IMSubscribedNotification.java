@@ -30,7 +30,7 @@ import org.xmpp.packet.Roster;
 
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.service.im.IMService;
+import com.zimbra.common.soap.IMConstants;
 import com.zimbra.soap.Element;
 
 class IMSubscribedNotification implements IMNotification {
@@ -71,10 +71,10 @@ class IMSubscribedNotification implements IMNotification {
         
         Element e;
         if (mSubscribed) { 
-            e = parent.addElement(IMService.E_SUBSCRIBED);
-            e.addAttribute(IMService.A_NAME, mName);
+            e = parent.addElement(IMConstants.E_SUBSCRIBED);
+            e.addAttribute(IMConstants.A_NAME, mName);
         } else {
-            e = parent.addElement(IMService.E_UNSUBSCRIBED);
+            e = parent.addElement(IMConstants.E_UNSUBSCRIBED);
         }
         
         if (mAsk != null) {
@@ -82,10 +82,10 @@ class IMSubscribedNotification implements IMNotification {
         }
         
         if (mGroups != null) {
-            e.addAttribute(IMService.A_GROUPS, StringUtil.join(",", mGroups));
+            e.addAttribute(IMConstants.A_GROUPS, StringUtil.join(",", mGroups));
         }
         
-        e.addAttribute(IMService.A_TO, mAddr.getAddr());
+        e.addAttribute(IMConstants.A_TO, mAddr.getAddr());
 
         return e;
     }

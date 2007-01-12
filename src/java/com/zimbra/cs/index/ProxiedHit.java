@@ -29,7 +29,7 @@
 package com.zimbra.cs.index;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.soap.Element;
@@ -56,7 +56,7 @@ public class ProxiedHit extends ZimbraHit
 
     public ItemId getParsedItemID() throws ServiceException {
         if (itemID == null)
-            itemID = new ItemId(mElement.getAttribute(MailService.A_ID), null);
+            itemID = new ItemId(mElement.getAttribute(MailConstants.A_ID), null);
         return itemID;
     }
 
@@ -66,14 +66,14 @@ public class ProxiedHit extends ZimbraHit
     }
 
     int getSize() throws ServiceException {
-        return (int) mElement.getAttributeLong(MailService.A_SIZE, 0);
+        return (int) mElement.getAttributeLong(MailConstants.A_SIZE, 0);
     }
 
     long getDate() throws ServiceException {
         if (mProxiedDate < 0) {
-            mProxiedDate = mElement.getAttributeLong(MailService.A_DATE, 0);
+            mProxiedDate = mElement.getAttributeLong(MailConstants.A_DATE, 0);
             if (mProxiedDate == 0) {
-                mProxiedDate = mElement.getAttributeLong(MailService.A_SORT_FIELD, 0);
+                mProxiedDate = mElement.getAttributeLong(MailConstants.A_SORT_FIELD, 0);
             }
         }
         return mProxiedDate;
@@ -81,7 +81,7 @@ public class ProxiedHit extends ZimbraHit
 
     int getConversationId() throws ServiceException {
         if (mProxiedConvId <= 0) {
-            mProxiedConvId = (int) mElement.getAttributeLong(MailService.A_CONV_ID, 0);
+            mProxiedConvId = (int) mElement.getAttributeLong(MailConstants.A_CONV_ID, 0);
         }
         return mProxiedConvId;
     }
@@ -98,7 +98,7 @@ public class ProxiedHit extends ZimbraHit
 
     byte getItemType() throws ServiceException {
         if (mProxiedItemType <= 0) {
-            mProxiedItemType = (byte) mElement.getAttributeLong(MailService.A_ITEM_TYPE);
+            mProxiedItemType = (byte) mElement.getAttributeLong(MailConstants.A_ITEM_TYPE);
         }
         return mProxiedItemType;
     }
@@ -114,16 +114,16 @@ public class ProxiedHit extends ZimbraHit
 
     String getSubject() throws ServiceException {
         if (mProxiedSubject == null) {
-            mProxiedSubject = mElement.getAttribute(MailService.E_SUBJECT, null);
+            mProxiedSubject = mElement.getAttribute(MailConstants.E_SUBJECT, null);
             if (mProxiedSubject == null) {
-                mProxiedSubject = mElement.getAttribute(MailService.A_SORT_FIELD);
+                mProxiedSubject = mElement.getAttribute(MailConstants.A_SORT_FIELD);
             }
         }
         return mProxiedSubject;
     }
 
     String getFragment() throws ServiceException {
-        Element frag = mElement.getOptionalElement(MailService.E_FRAG);
+        Element frag = mElement.getOptionalElement(MailConstants.E_FRAG);
         if (frag != null) {
             return frag.getText();
         }
@@ -132,7 +132,7 @@ public class ProxiedHit extends ZimbraHit
 
     String getName() throws ServiceException {
         if (mProxiedName == null) {
-            mProxiedName = mElement.getAttribute(MailService.A_SORT_FIELD);
+            mProxiedName = mElement.getAttribute(MailConstants.A_SORT_FIELD);
         }
         return mProxiedName;
     }

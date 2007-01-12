@@ -30,29 +30,30 @@ import java.util.Map;
 import com.zimbra.cs.store.Volume;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.common.soap.AdminConstants;
 
 public class GetCurrentVolumes extends AdminDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
-        Element response = lc.createElement(AdminService.GET_CURRENT_VOLUMES_RESPONSE);
+        Element response = lc.createElement(AdminConstants.GET_CURRENT_VOLUMES_RESPONSE);
 
         Volume msgVol = Volume.getCurrentMessageVolume();
-        response.addElement(AdminService.E_VOLUME)
-                .addAttribute(AdminService.A_VOLUME_TYPE, Volume.TYPE_MESSAGE)
-                .addAttribute(AdminService.A_ID, msgVol.getId());
+        response.addElement(AdminConstants.E_VOLUME)
+                .addAttribute(AdminConstants.A_VOLUME_TYPE, Volume.TYPE_MESSAGE)
+                .addAttribute(AdminConstants.A_ID, msgVol.getId());
 
         Volume secondaryMsgVol = Volume.getCurrentSecondaryMessageVolume();
-        if (secondaryMsgVol != null) 
-            response.addElement(AdminService.E_VOLUME)
-                    .addAttribute(AdminService.A_VOLUME_TYPE, Volume.TYPE_MESSAGE_SECONDARY)
-                    .addAttribute(AdminService.A_ID, secondaryMsgVol.getId());
+        if (secondaryMsgVol != null)
+            response.addElement(AdminConstants.E_VOLUME)
+                    .addAttribute(AdminConstants.A_VOLUME_TYPE, Volume.TYPE_MESSAGE_SECONDARY)
+                    .addAttribute(AdminConstants.A_ID, secondaryMsgVol.getId());
 
         Volume indexVol = Volume.getCurrentIndexVolume();
-        response.addElement(AdminService.E_VOLUME)
-                .addAttribute(AdminService.A_VOLUME_TYPE, Volume.TYPE_INDEX)
-                .addAttribute(AdminService.A_ID, indexVol.getId());
+        response.addElement(AdminConstants.E_VOLUME)
+                .addAttribute(AdminConstants.A_VOLUME_TYPE, Volume.TYPE_INDEX)
+                .addAttribute(AdminConstants.A_ID, indexVol.getId());
 
         return response;
     }

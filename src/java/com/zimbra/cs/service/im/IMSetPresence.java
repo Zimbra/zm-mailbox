@@ -27,6 +27,7 @@ package com.zimbra.cs.service.im;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.IMConstants;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.im.IMPresence;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -41,13 +42,13 @@ public class IMSetPresence extends IMDocumentHandler {
     {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
-        Element response = lc.createElement(IMService.IM_SET_PRESENCE_RESPONSE);
+        Element response = lc.createElement(IMConstants.IM_SET_PRESENCE_RESPONSE);
         
-        Element e = request.getElement(IMService.E_PRESENCE);
+        Element e = request.getElement(IMConstants.E_PRESENCE);
         
-        String showStr = e.getAttribute(IMService.A_SHOW, IMPresence.Show.ONLINE.toString());
+        String showStr = e.getAttribute(IMConstants.A_SHOW, IMPresence.Show.ONLINE.toString());
         String statusStr = null;
-        Element status = e.getOptionalElement(IMService.E_STATUS);
+        Element status = e.getOptionalElement(IMConstants.E_STATUS);
         if (status != null) {
             statusStr = status.getText();
         }

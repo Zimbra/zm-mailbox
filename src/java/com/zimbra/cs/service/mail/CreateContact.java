@@ -52,6 +52,7 @@ import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.cs.session.Session;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -60,7 +61,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class CreateContact extends MailDocumentHandler  {
 
-    private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_CONTACT, MailService.A_FOLDER };
+    private static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.E_CONTACT, MailConstants.A_FOLDER };
     private static final String[] RESPONSE_ITEM_PATH = new String[] { };
     protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
     protected boolean checkMountpointProxy(Element request)  { return true; }
@@ -74,18 +75,18 @@ public class CreateContact extends MailDocumentHandler  {
         Mailbox.OperationContext octxt = lc.getOperationContext();
         Session session = getSession(context);
 
-        Element cn = request.getElement(MailService.E_CONTACT);
-        ItemId iidFolder = new ItemId(cn.getAttribute(MailService.A_FOLDER, DEFAULT_FOLDER), lc);
-        String tagsStr = cn.getAttribute(MailService.A_TAGS, null);
+        Element cn = request.getElement(MailConstants.E_CONTACT);
+        ItemId iidFolder = new ItemId(cn.getAttribute(MailConstants.A_FOLDER, DEFAULT_FOLDER), lc);
+        String tagsStr = cn.getAttribute(MailConstants.A_TAGS, null);
 
         Map<String, String> attrs;
-        Element vcard = cn.getOptionalElement(MailService.E_VCARD);
+        Element vcard = cn.getOptionalElement(MailConstants.E_VCARD);
         if (vcard != null) {
             attrs = parseAttachedVCard(lc, mbox, vcard);
         } else {
             attrs = new HashMap<String, String>();
-            for (Element e : cn.listElements(MailService.E_ATTRIBUTE)) {
-                String name = e.getAttribute(MailService.A_ATTRIBUTE_NAME);
+            for (Element e : cn.listElements(MailConstants.E_ATTRIBUTE)) {
+                String name = e.getAttribute(MailConstants.A_ATTRIBUTE_NAME);
                 if (name.trim().equals(""))
                     throw ServiceException.INVALID_REQUEST("at least one contact field name is blank", null);
                 String value = e.getText();
@@ -99,7 +100,7 @@ public class CreateContact extends MailDocumentHandler  {
         op.schedule();
         Contact con = op.getContact();
         
-        Element response = lc.createElement(MailService.CREATE_CONTACT_RESPONSE);
+        Element response = lc.createElement(MailConstants.CREATE_CONTACT_RESPONSE);
         if (con != null)
             ToXML.encodeContact(response, lc, con, null, true, null);
         return response;
@@ -108,8 +109,8 @@ public class CreateContact extends MailDocumentHandler  {
     private static Map<String, String> parseAttachedVCard(ZimbraSoapContext lc, Mailbox mbox, Element vcard)
     throws ServiceException {
         String text = null;
-        String messageId = vcard.getAttribute(MailService.A_MESSAGE_ID, null);
-        String attachId = vcard.getAttribute(MailService.A_ATTACHMENT_ID, null);
+        String messageId = vcard.getAttribute(MailConstants.A_MESSAGE_ID, null);
+        String attachId = vcard.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
 
         if (attachId != null) {
             // separately-uploaded vcard attachment
@@ -125,7 +126,7 @@ public class CreateContact extends MailDocumentHandler  {
         } else {
             // part of existing message
             ItemId iid = new ItemId(messageId, lc);
-            String part = vcard.getAttribute(MailService.A_PART);
+            String part = vcard.getAttribute(MailConstants.A_PART);
             if (iid.isLocal())
                 try {
                     // fetch from local store

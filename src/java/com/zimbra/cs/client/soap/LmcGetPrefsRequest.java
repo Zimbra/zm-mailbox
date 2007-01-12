@@ -33,13 +33,13 @@ import org.dom4j.DocumentHelper;
 
 import com.zimbra.soap.DomUtil;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.account.AccountService;
+import com.zimbra.common.soap.AccountConstants;
 
 
 public class LmcGetPrefsRequest extends LmcSoapRequest {
 
     private String mPrefsToGet[];
-    
+
 
     /**
      * Set the preferences to retrieve.
@@ -47,26 +47,26 @@ public class LmcGetPrefsRequest extends LmcSoapRequest {
      * for all preferences
      */
     public void setPrefsToGet(String prefsToGet[]) { mPrefsToGet = prefsToGet; }
-    
+
     public String[] getPrefsToGet() { return mPrefsToGet; }
 
     protected Element getRequestXML() {
-        Element request = DocumentHelper.createElement(AccountService.GET_PREFS_REQUEST);
+        Element request = DocumentHelper.createElement(AccountConstants.GET_PREFS_REQUEST);
         if (mPrefsToGet != null) {
             for (int i = 0; i < mPrefsToGet.length; i++) {
-                    Element pe = DomUtil.add(request, AccountService.E_PREF, "");  
-                    DomUtil.addAttr(pe, AccountService.A_NAME, mPrefsToGet[i]);  
+                    Element pe = DomUtil.add(request, AccountConstants.E_PREF, "");
+                    DomUtil.addAttr(pe, AccountConstants.A_NAME, mPrefsToGet[i]);
             }
         }
         return request;
     }
 
-    protected LmcSoapResponse parseResponseXML(Element responseXML) 
+    protected LmcSoapResponse parseResponseXML(Element responseXML)
         throws ServiceException
     {
         // iterate over all the <pref> elements in the response
         HashMap prefMap = new HashMap();
-        for (Iterator ait = responseXML.elementIterator(AccountService.E_PREF); ait.hasNext(); ) {
+        for (Iterator ait = responseXML.elementIterator(AccountConstants.E_PREF); ait.hasNext(); ) {
             Element a = (Element) ait.next();
             addPrefToMultiMap(prefMap, a);
         }

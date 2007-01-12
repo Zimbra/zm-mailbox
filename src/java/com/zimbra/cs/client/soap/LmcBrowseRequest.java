@@ -33,7 +33,7 @@ import org.dom4j.Element;
 
 import com.zimbra.soap.DomUtil;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.SoapParseException;
 import com.zimbra.cs.client.*;
 
@@ -46,14 +46,14 @@ public class LmcBrowseRequest extends LmcSoapRequest {
     public String getBrowseBy() { return mBrowseBy; }
     
 	protected Element getRequestXML() throws LmcSoapClientException {
-        Element request = DocumentHelper.createElement(MailService.BROWSE_REQUEST);
-        DomUtil.addAttr(request, MailService.A_BROWSE_BY, mBrowseBy);
+        Element request = DocumentHelper.createElement(MailConstants.BROWSE_REQUEST);
+        DomUtil.addAttr(request, MailConstants.A_BROWSE_BY, mBrowseBy);
         return request;
 	}
 
     protected LmcBrowseData parseBrowseData(Element bdElem) {
     	LmcBrowseData bd = new LmcBrowseData();
-        bd.setFlags(bdElem.attributeValue(MailService.A_BROWSE_DOMAIN_HEADER));
+        bd.setFlags(bdElem.attributeValue(MailConstants.A_BROWSE_DOMAIN_HEADER));
         bd.setData(bdElem.getText());
         return bd;
     }
@@ -63,7 +63,7 @@ public class LmcBrowseRequest extends LmcSoapRequest {
     {
 		LmcBrowseResponse response = new LmcBrowseResponse();
         ArrayList bdArray = new ArrayList();
-        for (Iterator ait = parentElem.elementIterator(MailService.E_BROWSE_DATA); ait.hasNext(); ) {
+        for (Iterator ait = parentElem.elementIterator(MailConstants.E_BROWSE_DATA); ait.hasNext(); ) {
             Element a = (Element) ait.next();
             bdArray.add(parseBrowseData(a));
         }

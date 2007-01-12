@@ -28,9 +28,9 @@ import junit.framework.TestCase;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.filter.RuleRewriter;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapProtocol;
 
@@ -65,23 +65,23 @@ extends TestCase {
             </r>
           </rules>
          */
-        Element rules = Element.create(SoapProtocol.Soap12, MailService.E_RULES);
+        Element rules = Element.create(SoapProtocol.Soap12, MailConstants.E_RULES);
 
-        Element rule = rules.addElement(MailService.E_RULE);
-        rule.addAttribute(MailService.A_NAME, "testQuoteValidation");
-        rule.addAttribute(MailService.A_ACTIVE, true);
+        Element rule = rules.addElement(MailConstants.E_RULE);
+        rule.addAttribute(MailConstants.A_NAME, "testQuoteValidation");
+        rule.addAttribute(MailConstants.A_ACTIVE, true);
         
         Element group =
-            rule.addElement(MailService.E_CONDITION_GROUP).addAttribute(MailService.A_OPERATION, "anyof");
+            rule.addElement(MailConstants.E_CONDITION_GROUP).addAttribute(MailConstants.A_OPERATION, "anyof");
         
-        Element condition = group.addElement(MailService.E_CONDITION);
-        condition.addAttribute(MailService.A_NAME, "header");
+        Element condition = group.addElement(MailConstants.E_CONDITION);
+        condition.addAttribute(MailConstants.A_NAME, "header");
         condition.addAttribute("k0", "subject");
         condition.addAttribute("op", ":is");
         condition.addAttribute("k1", "a \" b");
         
-        rule.addElement(MailService.E_ACTION).addAttribute(MailService.A_NAME, "keep");
-        rule.addElement(MailService.E_ACTION).addAttribute(MailService.A_NAME, "stop");
+        rule.addElement(MailConstants.E_ACTION).addAttribute(MailConstants.A_NAME, "keep");
+        rule.addElement(MailConstants.E_ACTION).addAttribute(MailConstants.A_NAME, "stop");
         
         Mailbox mbox = TestUtil.getMailbox("user1");
         

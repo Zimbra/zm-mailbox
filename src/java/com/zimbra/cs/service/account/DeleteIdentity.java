@@ -27,6 +27,7 @@ package com.zimbra.cs.service.account;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
@@ -43,20 +44,20 @@ public class DeleteIdentity extends DocumentHandler {
         Account account = getRequestedAccount(zsc);
         Provisioning prov = Provisioning.getInstance();
 
-        Element eIdentity = request.getElement(AccountService.E_IDENTITY);
+        Element eIdentity = request.getElement(AccountConstants.E_IDENTITY);
 
         // identity can be specified by name or by ID
         Identity ident = null;
-        String id = eIdentity.getAttribute(AccountService.A_ID, null);
+        String id = eIdentity.getAttribute(AccountConstants.A_ID, null);
         if (id != null)
             ident = prov.get(account, IdentityBy.id, id);
         else
-            ident = prov.get(account, IdentityBy.name, eIdentity.getAttribute(AccountService.A_NAME));
+            ident = prov.get(account, IdentityBy.name, eIdentity.getAttribute(AccountConstants.A_NAME));
 
         if (ident != null)
             Provisioning.getInstance().deleteIdentity(account, ident.getName());
 
-        Element response = zsc.createElement(AccountService.DELETE_IDENTITY_RESPONSE);
+        Element response = zsc.createElement(AccountConstants.DELETE_IDENTITY_RESPONSE);
         return response;
     }
 }

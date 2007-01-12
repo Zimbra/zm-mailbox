@@ -30,7 +30,7 @@ import org.dom4j.Element;
 
 import com.zimbra.soap.DomUtil;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.admin.AdminService;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.cs.client.*;
 
@@ -57,9 +57,9 @@ public class LmcAdminAuthRequest extends LmcSoapRequest {
     } 
 
     protected Element getRequestXML() {
-        Element request = DocumentHelper.createElement(AdminService.AUTH_REQUEST);
-        DomUtil.addAttr(request, AdminService.A_NAME, mUsername);
-        DomUtil.addAttr(request, AdminService.E_PASSWORD, mPassword);
+        Element request = DocumentHelper.createElement(AdminConstants.AUTH_REQUEST);
+        DomUtil.addAttr(request, AdminConstants.A_NAME, mUsername);
+        DomUtil.addAttr(request, AdminConstants.E_PASSWORD, mPassword);
         return request;
     }
 
@@ -67,7 +67,7 @@ public class LmcAdminAuthRequest extends LmcSoapRequest {
             throws ServiceException 
     {
         // get the auth token out, no default, must be present or a service exception is thrown
-        String authToken = DomUtil.getString(responseXML, AdminService.E_AUTH_TOKEN);
+        String authToken = DomUtil.getString(responseXML, AdminConstants.E_AUTH_TOKEN);
         // get the session id, if not present, default to null
         String sessionId = DomUtil.getString(responseXML, ZimbraSoapContext.E_SESSION_ID, null);
 

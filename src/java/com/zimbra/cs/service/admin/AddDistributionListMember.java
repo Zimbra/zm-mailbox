@@ -36,6 +36,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -53,9 +54,9 @@ public class AddDistributionListMember extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         
-        String id = request.getAttribute(AdminService.E_ID);
+        String id = request.getAttribute(AdminConstants.E_ID);
         List<String> memberList = new LinkedList<String>();
-        for (Element elem : request.listElements(AdminService.E_DLM)) {
+        for (Element elem : request.listElements(AdminConstants.E_DLM)) {
         	memberList.add(elem.getTextTrim());
         }
         if (memberList.isEmpty()) {
@@ -74,7 +75,7 @@ public class AddDistributionListMember extends AdminDocumentHandler {
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                                                       new String[] {"cmd", "AddDistributionListMember","name", dl.getName(), "members", Arrays.deepToString(members)})); 
         
-        Element response = lc.createElement(AdminService.ADD_DISTRIBUTION_LIST_MEMBER_RESPONSE);
+        Element response = lc.createElement(AdminConstants.ADD_DISTRIBUTION_LIST_MEMBER_RESPONSE);
         return response;
     }
 }

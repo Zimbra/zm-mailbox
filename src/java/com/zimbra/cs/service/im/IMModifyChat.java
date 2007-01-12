@@ -27,6 +27,7 @@ package com.zimbra.cs.service.im;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.IMConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 
@@ -45,9 +46,9 @@ public class IMModifyChat extends IMDocumentHandler
     {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
-        Element response = lc.createElement(IMService.IM_MODIFY_CHAT_RESPONSE);
+        Element response = lc.createElement(IMConstants.IM_MODIFY_CHAT_RESPONSE);
         
-        String threadId = request.getAttribute(IMService.A_THREAD_ID);
+        String threadId = request.getAttribute(IMConstants.A_THREAD_ID);
         
         Object lock = super.getLock(lc);
         
@@ -59,7 +60,7 @@ public class IMModifyChat extends IMDocumentHandler
             if (chat == null) {
                 throw ServiceException.FAILURE("Unknown thread: "+threadId, null);
             } else {
-                String opStr = request.getAttribute(IMService.A_OPERATION);
+                String opStr = request.getAttribute(IMConstants.A_OPERATION);
                 Op op = Op.valueOf(opStr.toUpperCase());
                 
                 switch(op) {
@@ -67,7 +68,7 @@ public class IMModifyChat extends IMDocumentHandler
                         persona.closeChat(lc.getOperationContext(), chat);
                         break;
                     case ADDUSER:
-                        String newUser = request.getAttribute(IMService.A_ADDRESS);
+                        String newUser = request.getAttribute(IMConstants.A_ADDRESS);
                         persona.addUserToChat(chat, new IMAddr(newUser));
                         break;
                 }

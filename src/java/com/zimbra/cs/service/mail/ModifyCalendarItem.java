@@ -44,6 +44,7 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -52,7 +53,7 @@ public class ModifyCalendarItem extends CalendarRequest {
 
     private static Log sLog = LogFactory.getLog(ModifyCalendarItem.class);
 
-    private static final String[] TARGET_PATH = new String[] { MailService.A_ID };
+    private static final String[] TARGET_PATH = new String[] { MailConstants.A_ID };
     protected String[] getProxiedIdPath(Element request)     { return TARGET_PATH; }
     protected boolean checkMountpointProxy(Element request)  { return false; }
 
@@ -91,8 +92,8 @@ public class ModifyCalendarItem extends CalendarRequest {
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
         
-        ItemId iid = new ItemId(request.getAttribute(MailService.A_ID), lc);
-        int compNum = (int) request.getAttributeLong(MailService.E_INVITE_COMPONENT, 0);
+        ItemId iid = new ItemId(request.getAttribute(MailConstants.A_ID), lc);
+        int compNum = (int) request.getAttributeLong(MailConstants.E_INVITE_COMPONENT, 0);
         sLog.info("<ModifyCalendarItem id=" + iid + " comp=" + compNum + ">");
         
         synchronized(mbox) {
@@ -116,7 +117,7 @@ public class ModifyCalendarItem extends CalendarRequest {
             CalendarItem calItem, Invite inv, Element response) throws ServiceException
     {
         // <M>
-        Element msgElem = request.getElement(MailService.E_MSG);
+        Element msgElem = request.getElement(MailConstants.E_MSG);
         
         ModifyCalendarItemParser parser = new ModifyCalendarItemParser(mbox, inv);
         

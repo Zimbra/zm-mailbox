@@ -31,6 +31,7 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
@@ -60,8 +61,8 @@ public class GetAccountInfo extends AdminDocumentHandler  {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
    
-        Element a = request.getElement(AdminService.E_ACCOUNT);
-        String key = a.getAttribute(AdminService.A_BY);
+        Element a = request.getElement(AdminConstants.E_ACCOUNT);
+        String key = a.getAttribute(AdminConstants.A_BY);
         String value = a.getText();
 
         Provisioning prov = Provisioning.getInstance();
@@ -73,8 +74,8 @@ public class GetAccountInfo extends AdminDocumentHandler  {
         if (!canAccessAccount(lc, account))
             throw ServiceException.PERM_DENIED("can not access account");
 
-        Element response = lc.createElement(AdminService.GET_ACCOUNT_INFO_RESPONSE);
-        response.addElement(AdminService.E_NAME).setText(account.getName());
+        Element response = lc.createElement(AdminConstants.GET_ACCOUNT_INFO_RESPONSE);
+        response.addElement(AdminConstants.E_NAME).setText(account.getName());
         addAttr(response, Provisioning.A_zimbraId, account.getId());
         addAttr(response, Provisioning.A_zimbraMailHost, account.getAttr(Provisioning.A_zimbraMailHost));
  
@@ -94,20 +95,20 @@ public class GetAccountInfo extends AdminDocumentHandler  {
         String https = URLUtil.getSoapURL(server, true);
 
         if (http != null)
-            response.addElement(AdminService.E_SOAP_URL).setText(http);
+            response.addElement(AdminConstants.E_SOAP_URL).setText(http);
         
         if (https != null && !https.equalsIgnoreCase(http))
-            response.addElement(AdminService.E_SOAP_URL).setText(https);
+            response.addElement(AdminConstants.E_SOAP_URL).setText(https);
         
         String adminUrl = URLUtil.getAdminURL(server);
         if (adminUrl != null)
-            response.addElement(AdminService.E_ADMIN_SOAP_URL).setText(adminUrl);
+            response.addElement(AdminConstants.E_ADMIN_SOAP_URL).setText(adminUrl);
     }
 
     private static void addAttr(Element response, String name, String value) {
         if (value != null && !value.equals("")) {
-            Element e = response.addElement(AdminService.E_A);
-            e.addAttribute(AdminService.A_N, name);
+            Element e = response.addElement(AdminConstants.E_A);
+            e.addAttribute(AdminConstants.A_N, name);
             e.setText(value);
         }
     }

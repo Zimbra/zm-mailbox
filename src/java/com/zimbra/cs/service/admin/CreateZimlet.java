@@ -30,6 +30,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -40,7 +41,7 @@ public class CreateZimlet extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 	    
-	    String name = request.getAttribute(AdminService.E_NAME).toLowerCase();
+	    String name = request.getAttribute(AdminConstants.E_NAME).toLowerCase();
 	    Map<String, Object> attrs = AdminService.getAttrs(request, true);
 
 	    Zimlet zimlet = prov.createZimlet(name, attrs);
@@ -48,7 +49,7 @@ public class CreateZimlet extends AdminDocumentHandler {
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "CreateZimlet","name", name}, attrs));
 
-	    Element response = lc.createElement(AdminService.CREATE_ZIMLET_RESPONSE);
+	    Element response = lc.createElement(AdminConstants.CREATE_ZIMLET_RESPONSE);
 	    GetZimlet.doZimlet(response, zimlet);
 
 	    return response;

@@ -29,6 +29,7 @@
 package com.zimbra.cs.service.admin;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
@@ -57,9 +58,9 @@ public class GetDomain extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 	    
-        boolean applyConfig = request.getAttributeBool(AdminService.A_APPLY_CONFIG, true);
-        Element d = request.getElement(AdminService.E_DOMAIN);
-	    String key = d.getAttribute(AdminService.A_BY);
+        boolean applyConfig = request.getAttributeBool(AdminConstants.A_APPLY_CONFIG, true);
+        Element d = request.getElement(AdminConstants.E_DOMAIN);
+	    String key = d.getAttribute(AdminConstants.A_BY);
         String value = d.getText();
 	    
 	    Domain domain = prov.get(DomainBy.fromString(key), value);
@@ -70,7 +71,7 @@ public class GetDomain extends AdminDocumentHandler {
         if (!canAccessDomain(lc, domain))
             throw ServiceException.PERM_DENIED("can not access domain");
 
-        Element response = lc.createElement(AdminService.GET_DOMAIN_RESPONSE);
+        Element response = lc.createElement(AdminConstants.GET_DOMAIN_RESPONSE);
         doDomain(response, domain, applyConfig);
 
 	    return response;
@@ -81,9 +82,9 @@ public class GetDomain extends AdminDocumentHandler {
     }
     
     public static void doDomain(Element e, Domain d, boolean applyConfig) throws ServiceException {
-        Element domain = e.addElement(AdminService.E_DOMAIN);
-        domain.addAttribute(AdminService.A_NAME,d.getName());
-        domain.addAttribute(AdminService.A_ID,d.getId());
+        Element domain = e.addElement(AdminConstants.E_DOMAIN);
+        domain.addAttribute(AdminConstants.A_NAME,d.getName());
+        domain.addAttribute(AdminConstants.A_ID,d.getId());
         Map attrs = d.getAttrs(applyConfig);
         for (Iterator mit = attrs.entrySet().iterator(); mit.hasNext(); ) {
             Map.Entry entry = (Entry) mit.next();
@@ -92,9 +93,9 @@ public class GetDomain extends AdminDocumentHandler {
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;
                 for (int i = 0; i < sv.length; i++)
-                    domain.addElement(AdminService.E_A).addAttribute(AdminService.A_N, name).setText(sv[i]);
+                    domain.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText(sv[i]);
             } else if (value instanceof String)
-                domain.addElement(AdminService.E_A).addAttribute(AdminService.A_N, name).setText((String) value);
+                domain.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText((String) value);
         }
     }
 }

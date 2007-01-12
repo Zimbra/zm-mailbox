@@ -36,6 +36,7 @@ import org.dom4j.QName;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.soap.MailConstants;
 
 /**
  * @author dkarp
@@ -50,7 +51,7 @@ public abstract class Element {
     public static final byte DISP_ATTRIBUTE = 0;
     public static final byte DISP_CONTENT   = 1;
     public static final byte DISP_ELEMENT   = 2;
-    
+
     /**
      * Call element.addElement if you have an existing element, only use this for new
      * trees.
@@ -67,7 +68,7 @@ public abstract class Element {
             return new XMLElement(name);
         throw ServiceException.INVALID_REQUEST("Unknown SoapProtocol: "+proto, null);
     }
-    
+
     /**
      * Call element.addElement if you have an existing element, only use this for new
      * trees.
@@ -84,7 +85,7 @@ public abstract class Element {
             return new XMLElement(qname);
         throw ServiceException.INVALID_REQUEST("Unknown SoapProtocol: "+proto, null);
     }
-    
+
 
     public abstract ElementFactory getFactory();
 
@@ -245,7 +246,7 @@ public abstract class Element {
         d4elt.setText(getText());
         return d4elt;
     }
-    
+
     /**
      * Return the attribute value that is at the specified path, or null if
      * one could not be found
@@ -260,7 +261,7 @@ public abstract class Element {
             cur = cur.getOptionalElement(xpath[depth++]);
         return (cur == null ? null : cur.getAttribute(xpath[depth], null));
     }
-    
+
     /**
      * Return the first Element matching the specified path, or null if none was found
      * 
@@ -272,10 +273,10 @@ public abstract class Element {
         Element cur = this;
         while (depth < xpath.length && cur != null)
             cur = cur.getOptionalElement(xpath[depth++]);
-        
+
         return cur;
     }
-    
+
     /**
      * Return the list of Elements matching the specified path, or null
      * if none were found.
@@ -288,13 +289,13 @@ public abstract class Element {
         Element cur = this;
         while (depth < xpath.length-1 && cur != null)
             cur = cur.getOptionalElement(xpath[depth++]);
-        
+
         if (cur == null)
             return null;
-        
+
         return cur.listElements(xpath[xpath.length-1]);
     }
-    
+
 
     /**
      * Set the attribute at the specified path, thowing an exception if the
@@ -315,7 +316,7 @@ public abstract class Element {
             throw ServiceException.INVALID_REQUEST("could not find path", null);
         cur.addAttribute(xpath[depth], value);
     }
-    
+
 
     public static Element parseJSON(InputStream is) throws SoapParseException { return parseJSON(is, JavaScriptElement.mFactory); }
     public static Element parseJSON(InputStream is, ElementFactory factory) throws SoapParseException {
@@ -638,7 +639,7 @@ public abstract class Element {
             char peekChar() throws SoapParseException  { skipWhitespace(); return js.charAt(offset); }
             char readChar() throws SoapParseException  { skipWhitespace(); return js.charAt(offset++); }
             void skipChar() throws SoapParseException  { readChar(); }
-            void skipChar(char c) throws SoapParseException  { if (readChar() != c) error("expected character: " + c); } 
+            void skipChar(char c) throws SoapParseException  { if (readChar() != c) error("expected character: " + c); }
 
             private void skipWhitespace() throws SoapParseException {
                 if (offset >= max)
@@ -748,7 +749,7 @@ public abstract class Element {
             sb.append('}');
         }
     }
-    
+
     public static class XMLElement extends Element {
         private String        mText;
         private List<Element> mChildren;
@@ -778,7 +779,7 @@ public abstract class Element {
 
         public Element addElement(String name) throws ContainerException { return addElement(new XMLElement(name)); }
 
-        public Element addElement(QName qname) throws ContainerException { return addElement(new XMLElement(qname)); } 
+        public Element addElement(QName qname) throws ContainerException { return addElement(new XMLElement(qname)); }
 
         public Element addElement(Element elt) throws ContainerException {
             if (elt == null || elt.mParent == this)
@@ -883,7 +884,7 @@ public abstract class Element {
             if (name == null || name.trim().equals(""))
                 list.addAll(mChildren);
             else
-            	for (Element elt : mChildren)
+                for (Element elt : mChildren)
                     if (elt.getName().equals(name))
                         list.add(elt);
             return list;
@@ -989,7 +990,7 @@ public abstract class Element {
 
         com.zimbra.soap.SoapProtocol proto = com.zimbra.soap.SoapProtocol.SoapJS;
         Element env = new JavaScriptElement(proto.getEnvelopeQName());
-        env.addUniqueElement(proto.getBodyQName()).addUniqueElement(com.zimbra.cs.service.mail.MailService.GET_MSG_RESPONSE)
+        env.addUniqueElement(proto.getBodyQName()).addUniqueElement(MailConstants.GET_MSG_RESPONSE)
            .addUniqueElement(qm).addAttribute("id", 1115).addAttribute("f", "aw").addAttribute("t", "64,67").addAttribute("score", 0.953)
            .addAttribute("s", "Subject of the message has a \"\\\" in it", DISP_CONTENT).addAttribute("mid", "<kashdfgiai67r3wtuwfg@goo.com>", DISP_CONTENT)
            .addElement("mp").addAttribute("part", "TEXT").addAttribute("ct", "multipart/mixed").addAttribute("s", 3718);
@@ -998,7 +999,7 @@ public abstract class Element {
 
         proto = com.zimbra.soap.SoapProtocol.Soap12;
         env = new XMLElement(proto.getEnvelopeQName());
-        env.addUniqueElement(proto.getBodyQName()).addUniqueElement(com.zimbra.cs.service.mail.MailService.GET_MSG_RESPONSE)
+        env.addUniqueElement(proto.getBodyQName()).addUniqueElement(MailConstants.GET_MSG_RESPONSE)
            .addUniqueElement(qm).addAttribute("id", 1115).addAttribute("f", "aw").addAttribute("t", "64,67").addAttribute("score", 0.953)
            .addAttribute("s", "Subject of the message has a \"\\\" in it", DISP_CONTENT).addAttribute("mid", "<kashdfgiai67r3wtuwfg@goo.com>", DISP_CONTENT)
            .addElement("mp").addAttribute("part", "TEXT").addAttribute("ct", "multipart/mixed").addAttribute("s", 3718);
@@ -1007,7 +1008,7 @@ public abstract class Element {
         System.out.println("   qualified name: " + env.getQualifiedName());
         System.out.println("            qname: " + env.getQName());
 
-        Element e = new JavaScriptElement(com.zimbra.cs.service.mail.MailService.GET_CONTACTS_RESPONSE);
+        Element e = new JavaScriptElement(MailConstants.GET_CONTACTS_RESPONSE);
         e.addElement("cn");
         e.addElement("cn").addAttribute("id", 256).addAttribute("md", 1111196674000L).addAttribute("l", 7).addAttribute("x", false)
          .addAttribute("workPhone", "(408) 973-0500 x112", DISP_ELEMENT).addAttribute("notes", "These are &\nrandom notes", DISP_ELEMENT)
@@ -1019,7 +1020,7 @@ public abstract class Element {
         System.out.println(e.prettyPrint());
         System.out.println(Element.parseJSON(e.toString()).toString());
 
-        e = new XMLElement(com.zimbra.cs.service.mail.MailService.GET_CONTACTS_RESPONSE);
+        e = new XMLElement(MailConstants.GET_CONTACTS_RESPONSE);
         e.addElement("cn");
         e.addElement("cn").addAttribute("id", 256).addAttribute("md", 1111196674000L).addAttribute("l", 7).addAttribute("x", false)
          .addAttribute("workPhone", "(408) 973-0500 x112", DISP_ELEMENT).addAttribute("notes", "These are &\nrandom notes", DISP_ELEMENT)
@@ -1029,7 +1030,7 @@ public abstract class Element {
          .addAttribute("firstname", "Satish", DISP_ELEMENT).addAttribute("lastName", "Dharmaraj", DISP_ELEMENT);
         System.out.println(e);
         for (Element cn : e.listElements())
-        	System.out.println("  found: id=" + cn.getAttribute("ID", null));
+            System.out.println("  found: id=" + cn.getAttribute("ID", null));
 
 //        System.out.println(com.zimbra.soap.SoapProtocol.toString(e.toXML(), true));
         System.out.println(new XMLElement("test").setText("  this\t    is\nthe\rway ").getTextTrim() + "|");

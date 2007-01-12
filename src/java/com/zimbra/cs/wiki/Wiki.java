@@ -48,7 +48,6 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.formatter.WikiFormatter;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.wiki.WikiServiceException;
 import com.zimbra.cs.session.WikiSession;
@@ -57,6 +56,7 @@ import com.zimbra.common.service.ServiceException.Argument;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapHttpTransport;
 
@@ -319,7 +319,7 @@ public abstract class Wiki {
 		public synchronized void renameDocument(WikiContext ctxt, int id, String newName, String author) throws ServiceException {
 			WikiPage p = lookupWiki(ctxt, newName);
 			if (p != null)
-				throw MailServiceException.MODIFY_CONFLICT(new Argument(MailService.A_NAME, newName, Argument.Type.STR));
+				throw MailServiceException.MODIFY_CONFLICT(new Argument(MailConstants.A_NAME, newName, Argument.Type.STR));
 
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mWikiAccount);
             mbox.rename(ctxt.octxt, id, MailItem.TYPE_DOCUMENT, newName);
@@ -362,14 +362,14 @@ public abstract class Wiki {
 			transport.setAuthToken(ctxt.auth);
 			transport.setTargetAcctId(mWikiAccount);
 			try {
-				Element req = new Element.XMLElement(MailService.GET_WIKI_REQUEST);
-				Element w = req.addElement(MailService.E_WIKIWORD);
-				w.addAttribute(MailService.A_NAME, mPath + "/" + page);
+				Element req = new Element.XMLElement(MailConstants.GET_WIKI_REQUEST);
+				Element w = req.addElement(MailConstants.E_WIKIWORD);
+				w.addAttribute(MailConstants.A_NAME, mPath + "/" + page);
 				Element resp = transport.invoke(req);
 				Iterator<Element> iter = resp.elementIterator();
 				while (iter.hasNext()) {
 					Element e = iter.next();
-					if (e.getName().equals(MailService.E_WIKIWORD))
+					if (e.getName().equals(MailConstants.E_WIKIWORD))
 						return WikiPage.create(mWikiAccount, mPath, e);
 				}
 			} catch (IOException ioe) {
@@ -605,9 +605,9 @@ public abstract class Wiki {
 				WikiPage pg = w.lookupWiki(ctxt, wikiWord);
 				if (pg != null)
 					throw MailServiceException.ALREADY_EXISTS("wiki word "+wikiWord+" in folder "+fid,
-							new Argument(MailService.A_NAME, wikiWord, Argument.Type.STR),
-							new Argument(MailService.A_ID, pg.getId(), Argument.Type.IID),
-							new Argument(MailService.A_VERSION, pg.getLastRevision(), Argument.Type.NUM));
+							new Argument(MailConstants.A_NAME, wikiWord, Argument.Type.STR),
+							new Argument(MailConstants.A_ID, pg.getId(), Argument.Type.IID),
+							new Argument(MailConstants.A_VERSION, pg.getLastRevision(), Argument.Type.NUM));
 
 				// create a new page
 				page.create(ctxt, w);
@@ -619,9 +619,9 @@ public abstract class Wiki {
 				throw new WikiServiceException.NoSuchWikiException("page id="+id+" not found");
 			if (oldPage.getLastRevision() != ver) {
 				throw MailServiceException.MODIFY_CONFLICT(
-						new Argument(MailService.A_NAME, wikiWord, Argument.Type.STR),
-						new Argument(MailService.A_ID, oldPage.getId(), Argument.Type.IID),
-						new Argument(MailService.A_VERSION, oldPage.getLastRevision(), Argument.Type.NUM));
+						new Argument(MailConstants.A_NAME, wikiWord, Argument.Type.STR),
+						new Argument(MailConstants.A_ID, oldPage.getId(), Argument.Type.IID),
+						new Argument(MailConstants.A_VERSION, oldPage.getLastRevision(), Argument.Type.NUM));
 			}
 			oldPage.add(ctxt, page);
 		}

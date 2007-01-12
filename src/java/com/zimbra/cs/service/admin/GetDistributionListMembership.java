@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
@@ -56,18 +57,18 @@ public class GetDistributionListMembership extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         
-        int limit = (int) request.getAttributeLong(AdminService.A_LIMIT, 0);
+        int limit = (int) request.getAttributeLong(AdminConstants.A_LIMIT, 0);
         if (limit < 0) {
             throw ServiceException.INVALID_REQUEST("limit" + limit + " is negative", null);
         }
-        int offset = (int) request.getAttributeLong(AdminService.A_OFFSET, 0);
+        int offset = (int) request.getAttributeLong(AdminConstants.A_OFFSET, 0);
         if (offset < 0) {
             throw ServiceException.INVALID_REQUEST("offset" + offset + " is negative", null);
         }
 //        boolean sortAscending = request.getAttributeBool(AdminService.A_SORT_ASCENDING, true);        
 
-        Element d = request.getElement(AdminService.E_DL);
-        String key = d.getAttribute(AdminService.A_BY);
+        Element d = request.getElement(AdminConstants.E_DL);
+        String key = d.getAttribute(AdminConstants.A_BY);
         String value = d.getText();
         
         DistributionList distributionList = prov.get(DistributionListBy.fromString(key), value);        
@@ -81,13 +82,13 @@ public class GetDistributionListMembership extends AdminDocumentHandler {
         HashMap<String,String> via = new HashMap<String, String>();
         List<DistributionList> lists = prov.getDistributionLists(distributionList, false, via);
         
-        Element response = lc.createElement(AdminService.GET_DISTRIBUTION_LIST_MEMBERSHIP_RESPONSE);
+        Element response = lc.createElement(AdminConstants.GET_DISTRIBUTION_LIST_MEMBERSHIP_RESPONSE);
         for (DistributionList dl: lists) {
-            Element dlEl = response.addElement(AdminService.E_DL);
-            dlEl.addAttribute(AdminService.A_NAME, dl.getName());
-            dlEl.addAttribute(AdminService.A_ID,dl.getId());
+            Element dlEl = response.addElement(AdminConstants.E_DL);
+            dlEl.addAttribute(AdminConstants.A_NAME, dl.getName());
+            dlEl.addAttribute(AdminConstants.A_ID,dl.getId());
             String viaDl = via.get(dl.getName());
-            if (viaDl != null) dlEl.addAttribute(AdminService.A_VIA, viaDl);
+            if (viaDl != null) dlEl.addAttribute(AdminConstants.A_VIA, viaDl);
         }
 
         return response;

@@ -29,12 +29,12 @@ import java.text.ParseException;
 import java.util.Date;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.Element;
 
 public class RecurId 
@@ -204,9 +204,9 @@ public class RecurId
     }
     
     public Element toXml(Element parent) {
-        parent.addAttribute(MailService.A_CAL_RECURRENCE_ID, mDateTime.getDateTimePartString());
-        parent.addAttribute(MailService.A_CAL_TIMEZONE, mDateTime.getTZName());
-        parent.addAttribute(MailService.A_CAL_RECURRENCE_RANGE_TYPE, mRange);
+        parent.addAttribute(MailConstants.A_CAL_RECURRENCE_ID, mDateTime.getDateTimePartString());
+        parent.addAttribute(MailConstants.A_CAL_TIMEZONE, mDateTime.getTZName());
+        parent.addAttribute(MailConstants.A_CAL_RECURRENCE_RANGE_TYPE, mRange);
         return parent;
     }
     

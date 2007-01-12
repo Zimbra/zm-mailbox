@@ -31,6 +31,7 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
@@ -45,7 +46,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class GetMailbox extends AdminDocumentHandler {
 
-    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminService.E_MAILBOX, AdminService.A_ACCOUNTID };
+    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminConstants.E_MAILBOX, AdminConstants.A_ACCOUNTID };
     protected String[] getProxiedAccountPath()  { return TARGET_ACCOUNT_PATH; }
 
     /**
@@ -58,8 +59,8 @@ public class GetMailbox extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zc = getZimbraSoapContext(context);
 
-        Element mreq = request.getElement(AdminService.E_MAILBOX);
-        String accountId = mreq.getAttribute(AdminService.A_ACCOUNTID);
+        Element mreq = request.getElement(AdminConstants.E_MAILBOX);
+        String accountId = mreq.getAttribute(AdminConstants.A_ACCOUNTID);
 
         Account account = Provisioning.getInstance().get(AccountBy.id, accountId);
         if (account == null)
@@ -69,10 +70,10 @@ public class GetMailbox extends AdminDocumentHandler {
             throw ServiceException.PERM_DENIED("can not access account");
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(accountId);
-        Element response = zc.createElement(AdminService.GET_MAILBOX_RESPONSE);
-        Element m = response.addElement(AdminService.E_MAILBOX);
-        m.addAttribute(AdminService.A_MAILBOXID, mbox.getId());
-        m.addAttribute(AdminService.A_SIZE, mbox.getSize());
+        Element response = zc.createElement(AdminConstants.GET_MAILBOX_RESPONSE);
+        Element m = response.addElement(AdminConstants.E_MAILBOX);
+        m.addAttribute(AdminConstants.A_MAILBOXID, mbox.getId());
+        m.addAttribute(AdminConstants.A_SIZE, mbox.getSize());
         return response;
     }
 }

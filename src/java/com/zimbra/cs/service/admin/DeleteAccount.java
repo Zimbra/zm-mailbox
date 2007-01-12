@@ -38,6 +38,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -46,7 +47,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class DeleteAccount extends AdminDocumentHandler {
 
-    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminService.E_ID };
+    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminConstants.E_ID };
     protected String[] getProxiedAccountPath()  { return TARGET_ACCOUNT_PATH; }
 
     /**
@@ -63,7 +64,7 @@ public class DeleteAccount extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-        String id = request.getAttribute(AdminService.E_ID);
+        String id = request.getAttribute(AdminConstants.E_ID);
 
         // Confirm that the account exists and that the mailbox is located
         // on the current host
@@ -82,7 +83,7 @@ public class DeleteAccount extends AdminDocumentHandler {
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
             new String[] {"cmd", "DeleteAccount","name", account.getName(), "id", account.getId()}));
 
-        Element response = lc.createElement(AdminService.DELETE_ACCOUNT_RESPONSE);
+        Element response = lc.createElement(AdminConstants.DELETE_ACCOUNT_RESPONSE);
         return response;
     }
     

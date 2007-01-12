@@ -29,7 +29,7 @@ import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.DomUtil;
 
 public class LmcContactActionRequest extends LmcSoapRequest {
@@ -84,12 +84,12 @@ public class LmcContactActionRequest extends LmcSoapRequest {
     }
     
     protected Element getRequestXML() {
-    	Element request = DocumentHelper.createElement(MailService.CONTACT_ACTION_REQUEST);
-    	Element a = DomUtil.add(request, MailService.E_ACTION, "");
-    	DomUtil.addAttr(a, MailService.A_ID, mIDList);
-    	DomUtil.addAttr(a, MailService.A_OPERATION, mOp);
-    	addAttrNotNull(a, MailService.A_TAG, mTag);
-    	addAttrNotNull(a, MailService.A_FOLDER, mFolder);
+    	Element request = DocumentHelper.createElement(MailConstants.CONTACT_ACTION_REQUEST);
+    	Element a = DomUtil.add(request, MailConstants.E_ACTION, "");
+    	DomUtil.addAttr(a, MailConstants.A_ID, mIDList);
+    	DomUtil.addAttr(a, MailConstants.A_OPERATION, mOp);
+    	addAttrNotNull(a, MailConstants.A_TAG, mTag);
+    	addAttrNotNull(a, MailConstants.A_FOLDER, mFolder);
     	return request;
     }
 
@@ -97,9 +97,9 @@ public class LmcContactActionRequest extends LmcSoapRequest {
         throws ServiceException 
     {
     	LmcContactActionResponse response = new LmcContactActionResponse();
-    	Element a = DomUtil.get(responseXML, MailService.E_ACTION);
-    	response.setIDList(DomUtil.getAttr(a, MailService.A_ID));
-    	response.setOp(DomUtil.getAttr(a, MailService.A_OPERATION));
+    	Element a = DomUtil.get(responseXML, MailConstants.E_ACTION);
+    	response.setIDList(DomUtil.getAttr(a, MailConstants.A_ID));
+    	response.setOp(DomUtil.getAttr(a, MailConstants.A_OPERATION));
     	return response;
     }
 }

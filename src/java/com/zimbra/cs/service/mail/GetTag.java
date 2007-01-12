@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -59,7 +60,7 @@ public class GetTag extends MailDocumentHandler  {
 		op.schedule();
 		List tags = op.getResults();
 
-		Element response = lc.createElement(MailService.GET_TAG_RESPONSE);
+		Element response = lc.createElement(MailConstants.GET_TAG_RESPONSE);
 		if (tags != null) {
 			for (Iterator it = tags.iterator(); it.hasNext(); ) {
 				Tag tag = (Tag) it.next();

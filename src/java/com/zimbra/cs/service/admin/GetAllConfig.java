@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -49,7 +50,7 @@ public class GetAllConfig extends AdminDocumentHandler {
 
 	    Map attrs = prov.getConfig().getAttrs();
 
-	    Element response = lc.createElement(AdminService.GET_ALL_CONFIG_RESPONSE);
+	    Element response = lc.createElement(AdminConstants.GET_ALL_CONFIG_RESPONSE);
 	    
         for (Iterator mit = attrs.entrySet().iterator(); mit.hasNext(); ) {
             Map.Entry entry = (Entry) mit.next();

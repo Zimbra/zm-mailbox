@@ -36,6 +36,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -49,7 +50,7 @@ public class DeleteServer extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
-	    String id = request.getAttribute(AdminService.E_ID);
+	    String id = request.getAttribute(AdminConstants.E_ID);
 	    
 	    Server server = prov.get(ServerBy.id, id);
         if (server == null)
@@ -60,7 +61,7 @@ public class DeleteServer extends AdminDocumentHandler {
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "DeleteServer","name", server.getName(), "id", server.getId()}));
 
-	    Element response = lc.createElement(AdminService.DELETE_SERVER_RESPONSE);
+	    Element response = lc.createElement(AdminConstants.DELETE_SERVER_RESPONSE);
 	    return response;
 	}
 }

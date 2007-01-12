@@ -36,9 +36,10 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.zimlet.ZimletFile;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.cs.zimlet.ZimletUtil.DeployListener;
@@ -76,9 +77,9 @@ public class DeployZimlet extends AdminDocumentHandler {
 		public void writeResponse(Element resp) {
 			Set<Map.Entry<String,String>> entries = mStatus.entrySet();
 			for (Map.Entry<String, String> entry : entries) {
-				Element progress = resp.addElement(AdminService.E_PROGRESS);
-				progress.addAttribute(AdminService.A_SERVER, entry.getKey());
-				progress.addAttribute(AdminService.A_STATUS, entry.getValue());
+				Element progress = resp.addElement(AdminConstants.E_PROGRESS);
+				progress.addAttribute(AdminConstants.A_SERVER, entry.getKey());
+				progress.addAttribute(AdminConstants.A_STATUS, entry.getValue());
 			}
 		}
 	}
@@ -126,20 +127,20 @@ public class DeployZimlet extends AdminDocumentHandler {
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
-		String action = request.getAttribute(AdminService.A_ACTION).toLowerCase();
-		Element content = request.getElement(MailService.E_CONTENT);
-		String aid = content.getAttribute(MailService.A_ATTACHMENT_ID, null);
+		String action = request.getAttribute(AdminConstants.A_ACTION).toLowerCase();
+		Element content = request.getElement(MailConstants.E_CONTENT);
+		String aid = content.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
 		
-		if (action.equals(AdminService.A_STATUS)) {
+		if (action.equals(AdminConstants.A_STATUS)) {
 			// just print the status
-		} else if (action.equals(AdminService.A_DEPLOYALL)) {
+		} else if (action.equals(AdminConstants.A_DEPLOYALL)) {
 			deploy(lc, aid, lc.getRawAuthToken());
-		} else if (action.equals(AdminService.A_DEPLOYLOCAL)) {
+		} else if (action.equals(AdminConstants.A_DEPLOYLOCAL)) {
 			deploy(lc, aid, null);
 		} else {
 			throw ServiceException.INVALID_REQUEST("invalid action "+action, null);
 		}
-		Element response = lc.createElement(AdminService.DEPLOY_ZIMLET_RESPONSE);
+		Element response = lc.createElement(AdminConstants.DEPLOY_ZIMLET_RESPONSE);
 		Progress progress = (Progress)mProgressMap.get(aid);
 		if (progress != null)
 			progress.writeResponse(response);

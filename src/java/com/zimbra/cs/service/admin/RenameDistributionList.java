@@ -36,6 +36,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -53,8 +54,8 @@ public class RenameDistributionList extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
-	    String id = request.getAttribute(AdminService.E_ID);
-        String newName = request.getAttribute(AdminService.E_NEW_NAME);
+	    String id = request.getAttribute(AdminConstants.E_ID);
+        String newName = request.getAttribute(AdminConstants.E_NEW_NAME);
 
 	    DistributionList dl = prov.get(DistributionListBy.id, id);
         if (dl == null)
@@ -78,7 +79,7 @@ public class RenameDistributionList extends AdminDocumentHandler {
         dl = prov.get(DistributionListBy.id, id);
         if (dl == null)
             throw ServiceException.FAILURE("unable to get distribution list after rename: " + id, null);
-	    Element response = lc.createElement(AdminService.RENAME_DISTRIBUTION_LIST_RESPONSE);
+	    Element response = lc.createElement(AdminConstants.RENAME_DISTRIBUTION_LIST_RESPONSE);
 	    GetDistributionList.doDistributionList(response, dl);
 	    return response;
 

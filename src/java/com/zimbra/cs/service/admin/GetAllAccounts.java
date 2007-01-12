@@ -35,6 +35,7 @@ import java.util.Map;
 import org.dom4j.QName;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
@@ -67,10 +68,10 @@ public class GetAllAccounts extends AdminDocumentHandler {
 	    
         Element response = null;
 
-        Element d = request.getOptionalElement(AdminService.E_DOMAIN);
+        Element d = request.getOptionalElement(AdminConstants.E_DOMAIN);
         if (d != null || isDomainAdminOnly(lc)) {
             
-            String key = d == null ? BY_NAME : d.getAttribute(AdminService.A_BY);
+            String key = d == null ? BY_NAME : d.getAttribute(AdminConstants.A_BY);
             String value = d == null ? getAuthTokenAccountDomain(lc).getName() : d.getText();
 	    
             Domain domain = null;
@@ -104,7 +105,7 @@ public class GetAllAccounts extends AdminDocumentHandler {
 	}
 
     protected QName getResponseQName() {
-        return AdminService.GET_ALL_ACCOUNTS_RESPONSE;
+        return AdminConstants.GET_ALL_ACCOUNTS_RESPONSE;
     }
 
     protected void doDomain(final Element e, Domain d) throws ServiceException {

@@ -31,6 +31,7 @@ package com.zimbra.cs.service.mail;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.Element;
@@ -47,10 +48,10 @@ public class Sync extends MailDocumentHandler {
         Mailbox.OperationContext octxt = zsc.getOperationContext();
         Session session = getSession(context);
 
-        String token = request.getAttribute(MailService.A_TOKEN, "0");
+        String token = request.getAttribute(MailConstants.A_TOKEN, "0");
 
-        Element response = zsc.createElement(MailService.SYNC_RESPONSE);
-        response.addAttribute(MailService.A_CHANGE_DATE, System.currentTimeMillis() / 1000);
+        Element response = zsc.createElement(MailConstants.SYNC_RESPONSE);
+        response.addAttribute(MailConstants.A_CHANGE_DATE, System.currentTimeMillis() / 1000);
         
         SyncOperation op = new SyncOperation(session, octxt, mbox, zsc, request, response, token);
         op.schedule();

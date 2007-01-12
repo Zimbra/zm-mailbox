@@ -26,7 +26,7 @@
 package com.zimbra.cs.zclient.event;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.ZFolder.Color;
 import com.zimbra.cs.zclient.ZFolder.View;
 import com.zimbra.cs.zclient.ZFolder;
@@ -50,7 +50,7 @@ public class ZModifyFolderEvent implements ZModifyItemEvent {
      * @throws ServiceException
      */
     public String getId() throws ServiceException {
-        return mFolderEl.getAttribute(MailService.A_ID);
+        return mFolderEl.getAttribute(MailConstants.A_ID);
     }
 
     /**
@@ -58,7 +58,7 @@ public class ZModifyFolderEvent implements ZModifyItemEvent {
      * @return new name or defaultValue if unchanged
      */
     public String getName(String defaultValue) {
-        return mFolderEl.getAttribute(MailService.A_NAME, defaultValue);
+        return mFolderEl.getAttribute(MailConstants.A_NAME, defaultValue);
     }
 
     /**
@@ -66,7 +66,7 @@ public class ZModifyFolderEvent implements ZModifyItemEvent {
      * @return new parent id or defaultValue if parent didn't change
      */
     public String getParentId(String defaultValue) {
-        return mFolderEl.getAttribute(MailService.A_FOLDER, defaultValue);
+        return mFolderEl.getAttribute(MailConstants.A_FOLDER, defaultValue);
     }
 
     /**
@@ -74,7 +74,7 @@ public class ZModifyFolderEvent implements ZModifyItemEvent {
      * @return new flags or default value if flags didn't change
      */
     public String getFlags(String defaultValue) {
-        return mFolderEl.getAttribute(MailService.A_FLAGS, defaultValue);
+        return mFolderEl.getAttribute(MailConstants.A_FLAGS, defaultValue);
     }
 
     /**
@@ -82,7 +82,7 @@ public class ZModifyFolderEvent implements ZModifyItemEvent {
      * @return new color, or default value.
      */
     public Color getColor(Color defaultValue) {
-        String newColor = mFolderEl.getAttribute(MailService.A_COLOR, null);
+        String newColor = mFolderEl.getAttribute(MailConstants.A_COLOR, null);
         if (newColor != null) {
             try {
                 return ZFolder.Color.fromString(newColor);
@@ -99,7 +99,7 @@ public class ZModifyFolderEvent implements ZModifyItemEvent {
      * @throws ServiceException on error
      */
     public int getUnreadCount(int defaultValue) throws ServiceException {
-        return (int) mFolderEl.getAttributeLong(MailService.A_UNREAD, defaultValue);
+        return (int) mFolderEl.getAttributeLong(MailConstants.A_UNREAD, defaultValue);
     }
 
     /**
@@ -108,7 +108,7 @@ public class ZModifyFolderEvent implements ZModifyItemEvent {
      * @throws ServiceException on error
      */
     public int getMessageCount(int defaultValue) throws ServiceException {
-        return (int) mFolderEl.getAttributeLong(MailService.A_NUM, defaultValue);
+        return (int) mFolderEl.getAttributeLong(MailConstants.A_NUM, defaultValue);
     }
 
     /**
@@ -117,7 +117,7 @@ public class ZModifyFolderEvent implements ZModifyItemEvent {
      * @throws ServiceException on error
      */
     public View getDefaultView(View defaultValue) throws ServiceException {
-        String newView = mFolderEl.getAttribute(MailService.A_DEFAULT_VIEW, null);
+        String newView = mFolderEl.getAttribute(MailConstants.A_DEFAULT_VIEW, null);
         return (newView != null) ? View.fromString(newView) : defaultValue;        
     }
 
@@ -126,7 +126,7 @@ public class ZModifyFolderEvent implements ZModifyItemEvent {
      * @return new rest URL or defaultValue if unchanged
      */
     public String getRestURL(String defaultValue) {
-        return mFolderEl.getAttribute(MailService.A_REST_URL, defaultValue);
+        return mFolderEl.getAttribute(MailConstants.A_REST_URL, defaultValue);
     }
 
     /**
@@ -134,7 +134,7 @@ public class ZModifyFolderEvent implements ZModifyItemEvent {
      * @return new remote URL or defaultValue if unchanged
      */
     public String getRemoteURL(String defaultValue) {
-        return mFolderEl.getAttribute(MailService.A_URL, defaultValue);
+        return mFolderEl.getAttribute(MailConstants.A_URL, defaultValue);
     }
 
     /**
@@ -142,7 +142,7 @@ public class ZModifyFolderEvent implements ZModifyItemEvent {
      * @return new effective perms or defaultValue if unchanged
      */
     public String getEffectivePerm(String defaultValue) {
-        return mFolderEl.getAttribute(MailService.A_RIGHTS, defaultValue);
+        return mFolderEl.getAttribute(MailConstants.A_RIGHTS, defaultValue);
     }
 
     /**
@@ -151,10 +151,10 @@ public class ZModifyFolderEvent implements ZModifyItemEvent {
      * @throws com.zimbra.common.service.ServiceException on error
      */
     public List<ZGrant> getGrants(List<ZGrant> defaultValue) throws ServiceException {
-        Element aclEl = mFolderEl.getOptionalElement(MailService.E_ACL);
+        Element aclEl = mFolderEl.getOptionalElement(MailConstants.E_ACL);
         if (aclEl != null) {
             List<ZGrant> grants = new ArrayList<ZGrant>();
-            for (Element grant : aclEl.listElements(MailService.E_GRANT)) {
+            for (Element grant : aclEl.listElements(MailConstants.E_GRANT)) {
                 grants.add(new ZGrant(grant));
             }
             return grants;

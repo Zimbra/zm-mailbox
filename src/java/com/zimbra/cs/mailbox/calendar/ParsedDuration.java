@@ -34,7 +34,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.Element;
 
 public final class ParsedDuration
@@ -168,29 +168,29 @@ public final class ParsedDuration
     }
     
     public Element toXml(Element parent) {
-        return toXml(parent, MailService.E_CAL_DURATION);
+        return toXml(parent, MailConstants.E_CAL_DURATION);
     }
 
     public Element toXml(Element parent, String name) {
         Element elt = parent.addElement(name);
         if (mNegative) {
-            elt.addAttribute(MailService.A_CAL_DURATION_NEGATIVE, true);
+            elt.addAttribute(MailConstants.A_CAL_DURATION_NEGATIVE, true);
         }
         
         if (mWeeks > 0) {
-            elt.addAttribute(MailService.A_CAL_DURATION_WEEKS, mWeeks);
+            elt.addAttribute(MailConstants.A_CAL_DURATION_WEEKS, mWeeks);
         } else {
             if (mDays > 0) {
-                elt.addAttribute(MailService.A_CAL_DURATION_DAYS, mDays);
+                elt.addAttribute(MailConstants.A_CAL_DURATION_DAYS, mDays);
             }
             if (mHours> 0) {
-                elt.addAttribute(MailService.A_CAL_DURATION_HOURS, mHours);
+                elt.addAttribute(MailConstants.A_CAL_DURATION_HOURS, mHours);
             }
             if (mMins> 0) {
-                elt.addAttribute(MailService.A_CAL_DURATION_MINUTES, mMins);
+                elt.addAttribute(MailConstants.A_CAL_DURATION_MINUTES, mMins);
             }
             if (mSecs> 0) {
-                elt.addAttribute(MailService.A_CAL_DURATION_SECONDS, mSecs);
+                elt.addAttribute(MailConstants.A_CAL_DURATION_SECONDS, mSecs);
             }
         }
         return elt;
@@ -198,12 +198,12 @@ public final class ParsedDuration
     
     public static ParsedDuration parse(Element elt) throws ServiceException {
         ParsedDuration toRet = new ParsedDuration();
-        toRet.mNegative = elt.getAttributeBool(MailService.A_CAL_DURATION_NEGATIVE, false);
-        toRet.mWeeks = (int)elt.getAttributeLong(MailService.A_CAL_DURATION_WEEKS, 0);
-        toRet.mDays= (int)elt.getAttributeLong(MailService.A_CAL_DURATION_DAYS, 0);
-        toRet.mHours= (int)elt.getAttributeLong(MailService.A_CAL_DURATION_HOURS, 0);
-        toRet.mMins = (int)elt.getAttributeLong(MailService.A_CAL_DURATION_MINUTES, 0);
-        toRet.mSecs = (int)elt.getAttributeLong(MailService.A_CAL_DURATION_SECONDS, 0);
+        toRet.mNegative = elt.getAttributeBool(MailConstants.A_CAL_DURATION_NEGATIVE, false);
+        toRet.mWeeks = (int)elt.getAttributeLong(MailConstants.A_CAL_DURATION_WEEKS, 0);
+        toRet.mDays= (int)elt.getAttributeLong(MailConstants.A_CAL_DURATION_DAYS, 0);
+        toRet.mHours= (int)elt.getAttributeLong(MailConstants.A_CAL_DURATION_HOURS, 0);
+        toRet.mMins = (int)elt.getAttributeLong(MailConstants.A_CAL_DURATION_MINUTES, 0);
+        toRet.mSecs = (int)elt.getAttributeLong(MailConstants.A_CAL_DURATION_SECONDS, 0);
         
         if (toRet.mDays!=0 || toRet.mHours!=0 || toRet.mMins!=0 || toRet.mSecs!=0) {
             if (toRet.mWeeks != 0) {

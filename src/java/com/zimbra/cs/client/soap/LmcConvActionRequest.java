@@ -30,7 +30,7 @@ import org.dom4j.DocumentHelper;
 
 import com.zimbra.soap.DomUtil;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 
 
 public class LmcConvActionRequest extends LmcSoapRequest {
@@ -41,7 +41,7 @@ public class LmcConvActionRequest extends LmcSoapRequest {
     private String mFolder;
     private String mPosition;
     private String mContent;
-    
+
 
     /**
      * Set the list of Conv ID's to operate on
@@ -59,7 +59,7 @@ public class LmcConvActionRequest extends LmcSoapRequest {
     public void setFolder(String f) { mFolder = f; }
     public void setPosition(String p) { mPosition = p; }
     public void setContent(String c) { mContent = c; }
-    
+
     public String getConvList() { return mIDList; }
     public String getOp() { return mOp; }
     public String getTag() { return mTag; }
@@ -68,24 +68,24 @@ public class LmcConvActionRequest extends LmcSoapRequest {
     public String getPosition() { return mPosition; }
 
     protected Element getRequestXML() {
-        Element request = DocumentHelper.createElement(MailService.CONV_ACTION_REQUEST);
-        Element a = DomUtil.add(request, MailService.E_ACTION, "");
-        DomUtil.addAttr(a, MailService.A_ID, mIDList);
-        DomUtil.addAttr(a, MailService.A_OPERATION, mOp);
-        DomUtil.addAttr(a, MailService.A_TAG, mTag);
-        DomUtil.addAttr(a, MailService.A_FOLDER, mFolder);
+        Element request = DocumentHelper.createElement(MailConstants.CONV_ACTION_REQUEST);
+        Element a = DomUtil.add(request, MailConstants.E_ACTION, "");
+        DomUtil.addAttr(a, MailConstants.A_ID, mIDList);
+        DomUtil.addAttr(a, MailConstants.A_OPERATION, mOp);
+        DomUtil.addAttr(a, MailConstants.A_TAG, mTag);
+        DomUtil.addAttr(a, MailConstants.A_FOLDER, mFolder);
         if (mContent != null)
-        	DomUtil.add(a, MailService.E_CONTENT, mContent);
+            DomUtil.add(a, MailConstants.E_CONTENT, mContent);
         return request;
     }
 
-    protected LmcSoapResponse parseResponseXML(Element responseXML) 
+    protected LmcSoapResponse parseResponseXML(Element responseXML)
         throws ServiceException
     {
         LmcConvActionResponse response = new LmcConvActionResponse();
-        Element a = DomUtil.get(responseXML, MailService.E_ACTION);
-        response.setConvList(DomUtil.getAttr(a, MailService.A_ID));
-        response.setOp(DomUtil.getAttr(a, MailService.A_OPERATION));
+        Element a = DomUtil.get(responseXML, MailConstants.E_ACTION);
+        response.setConvList(DomUtil.getAttr(a, MailConstants.A_ID));
+        response.setOp(DomUtil.getAttr(a, MailConstants.A_OPERATION));
         return response;
     }
 

@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -53,7 +54,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class ImportContacts extends MailDocumentHandler  {
 
-    private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.A_FOLDER };
+    private static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.A_FOLDER };
     protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
     protected boolean checkMountpointProxy(Element request)  { return true; }
 
@@ -65,18 +66,18 @@ public class ImportContacts extends MailDocumentHandler  {
         OperationContext octxt = lc.getOperationContext();
         Session session = getSession(context);
 
-        String folder = request.getAttribute(MailService.A_FOLDER, DEFAULT_FOLDER_ID);
+        String folder = request.getAttribute(MailConstants.A_FOLDER, DEFAULT_FOLDER_ID);
         ItemId iidFolder = new ItemId(folder, lc);
 
-        String ct = request.getAttribute(MailService.A_CONTENT_TYPE);
+        String ct = request.getAttribute(MailConstants.A_CONTENT_TYPE);
         if (!ct.equals("csv"))
             throw ServiceException.INVALID_REQUEST("unsupported content type: " + ct, null);
         
-        Element content = request.getElement(MailService.E_CONTENT);
+        Element content = request.getElement(MailConstants.E_CONTENT);
         List<Map<String, String>> contacts = null;
         List<Upload> uploads = null;
         BufferedReader reader = null;
-        String attachment = content.getAttribute(MailService.A_ATTACHMENT_ID, null);
+        String attachment = content.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
         try {
             if (attachment == null)
                 reader = new BufferedReader(new StringReader(content.getText()));
@@ -110,10 +111,10 @@ public class ImportContacts extends MailDocumentHandler  {
             ids.append(iid.toString(lc));
         }
 
-        Element response = lc.createElement(MailService.IMPORT_CONTACTS_RESPONSE);
-        Element cn = response.addElement(MailService.E_CONTACT);
-        cn.addAttribute(MailService.A_IDS, ids.toString());
-        cn.addAttribute(MailService.A_NUM, contacts.size());
+        Element response = lc.createElement(MailConstants.IMPORT_CONTACTS_RESPONSE);
+        Element cn = response.addElement(MailConstants.E_CONTACT);
+        cn.addAttribute(MailConstants.A_IDS, ids.toString());
+        cn.addAttribute(MailConstants.A_NUM, contacts.size());
         return response;
     }
     

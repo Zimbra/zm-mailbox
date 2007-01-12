@@ -30,13 +30,13 @@ import org.dom4j.DocumentHelper;
 
 import com.zimbra.soap.DomUtil;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.client.*;
-import com.zimbra.cs.service.mail.MailService;
 
 public class LmcAddMsgRequest extends LmcSoapRequest {
 
     private LmcMessage mMsg;
-    
+
     /**
      * Set the message that will be added
      * @param m - the message to be added
@@ -46,17 +46,17 @@ public class LmcAddMsgRequest extends LmcSoapRequest {
     public LmcMessage getMsg() { return mMsg; }
 
     protected Element getRequestXML() {
-        Element request = DocumentHelper.createElement(MailService.ADD_MSG_REQUEST);
+        Element request = DocumentHelper.createElement(MailConstants.ADD_MSG_REQUEST);
         addMsg(request, mMsg, null, null, null);
         return request;
     }
 
-    protected LmcSoapResponse parseResponseXML(Element responseXML) 
+    protected LmcSoapResponse parseResponseXML(Element responseXML)
         throws ServiceException
     {
-        Element m = DomUtil.get(responseXML, MailService.E_MSG);
+        Element m = DomUtil.get(responseXML, MailConstants.E_MSG);
         LmcAddMsgResponse response = new LmcAddMsgResponse();
-        response.setID(DomUtil.getAttr(m, MailService.A_ID));
+        response.setID(DomUtil.getAttr(m, MailConstants.A_ID));
         return response;
     }
 

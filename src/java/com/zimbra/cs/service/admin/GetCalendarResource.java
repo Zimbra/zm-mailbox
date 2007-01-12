@@ -28,6 +28,7 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.CalendarResource;
@@ -55,9 +56,9 @@ public class GetCalendarResource extends AdminDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
 
         boolean applyCos =
-            request.getAttributeBool(AdminService.A_APPLY_COS, true);        
-        Element cr = request.getElement(AdminService.E_CALENDAR_RESOURCE);
-        String key = cr.getAttribute(AdminService.A_BY);
+            request.getAttributeBool(AdminConstants.A_APPLY_COS, true);
+        Element cr = request.getElement(AdminConstants.E_CALENDAR_RESOURCE);
+        String key = cr.getAttribute(AdminConstants.A_BY);
         String value = cr.getText();
 
         CalendarResource resource = prov.get(CalendarResourceBy.fromString(key), value);
@@ -70,7 +71,7 @@ public class GetCalendarResource extends AdminDocumentHandler {
                     "can not access calendar resource account");
 
         Element response = lc.createElement(
-                AdminService.GET_CALENDAR_RESOURCE_RESPONSE);
+                AdminConstants.GET_CALENDAR_RESOURCE_RESPONSE);
         ToXML.encodeCalendarResource(response, resource, applyCos);
 
         return response;

@@ -28,11 +28,11 @@ package com.zimbra.cs.client.soap;
 import org.dom4j.Element;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 
 import org.dom4j.DocumentHelper;
 
 import com.zimbra.soap.DomUtil;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.client.*;
 
 
@@ -55,19 +55,19 @@ public class LmcCreateNoteRequest extends LmcSoapRequest {
 
 
     protected Element getRequestXML() {
-        Element request = DocumentHelper.createElement(MailService.CREATE_NOTE_REQUEST);
-        Element f = DomUtil.add(request, MailService.E_NOTE, "");  
-        Element c = DomUtil.add(f, MailService.E_CONTENT, mContent);  
-        addAttrNotNull(f, MailService.A_BOUNDS, mPosition);
-        addAttrNotNull(f, MailService.A_FOLDER, mParentID);
-        addAttrNotNull(f, MailService.A_COLOR, mColor);
+        Element request = DocumentHelper.createElement(MailConstants.CREATE_NOTE_REQUEST);
+        Element f = DomUtil.add(request, MailConstants.E_NOTE, "");
+        Element c = DomUtil.add(f, MailConstants.E_CONTENT, mContent);
+        addAttrNotNull(f, MailConstants.A_BOUNDS, mPosition);
+        addAttrNotNull(f, MailConstants.A_FOLDER, mParentID);
+        addAttrNotNull(f, MailConstants.A_COLOR, mColor);
         return request;
     }
 
     protected LmcSoapResponse parseResponseXML(Element responseXML) 
         throws ServiceException
     {
-        Element noteElem = DomUtil.get(responseXML, MailService.E_NOTE);
+        Element noteElem = DomUtil.get(responseXML, MailConstants.E_NOTE);
         LmcNote f = parseNote(noteElem);
         LmcCreateNoteResponse response = new LmcCreateNoteResponse();
         response.setNote(f);

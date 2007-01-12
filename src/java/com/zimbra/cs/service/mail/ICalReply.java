@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -48,7 +49,7 @@ public class ICalReply extends MailDocumentHandler {
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
 
-        Element icalElem = request.getElement(MailService.E_CAL_ICAL);
+        Element icalElem = request.getElement(MailConstants.E_CAL_ICAL);
         String icalStr = icalElem.getText();
         ZVCalendar cal;
         StringReader sr = null;

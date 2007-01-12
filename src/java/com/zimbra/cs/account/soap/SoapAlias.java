@@ -28,8 +28,8 @@ package com.zimbra.cs.account.soap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Alias;
-import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
 
 class SoapAlias extends Alias implements SoapEntry {
@@ -39,7 +39,7 @@ class SoapAlias extends Alias implements SoapEntry {
     }
 
     SoapAlias(Element e) throws ServiceException {
-        super(e.getAttribute(AdminService.A_NAME), e.getAttribute(AdminService.A_ID), SoapProvisioning.getAttrs(e));
+        super(e.getAttribute(AdminConstants.A_NAME), e.getAttribute(AdminConstants.A_ID), SoapProvisioning.getAttrs(e));
     }
 
     public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {

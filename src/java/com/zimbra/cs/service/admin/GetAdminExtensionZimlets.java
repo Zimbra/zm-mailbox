@@ -28,9 +28,10 @@ import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
-import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -44,8 +45,8 @@ public class GetAdminExtensionZimlets extends AdminDocumentHandler  {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
 		
-        Element response = lc.createElement(AdminService.GET_ADMIN_EXTENSION_ZIMLETS_RESPONSE);
-        Element zimlets = response.addUniqueElement(AccountService.E_ZIMLETS);
+        Element response = lc.createElement(AdminConstants.GET_ADMIN_EXTENSION_ZIMLETS_RESPONSE);
+        Element zimlets = response.addUniqueElement(AccountConstants.E_ZIMLETS);
         doExtensionZimlets(zimlets);
         
         return response;

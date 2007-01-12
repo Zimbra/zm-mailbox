@@ -28,6 +28,7 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
@@ -48,9 +49,9 @@ public class ImportData extends MailDocumentHandler {
         Account account = getRequestedAccount(zsc);
 
         for (Element elem : request.listElements()) {
-        	if (elem.getName().equals(MailService.E_DS_POP3)) {
+        	if (elem.getName().equals(MailConstants.E_DS_POP3)) {
         		try {
-        			String id = elem.getAttribute(MailService.A_ID);
+        			String id = elem.getAttribute(MailConstants.A_ID);
                     DataSource ds = prov.get(account, DataSourceBy.id, id);
         			new Thread(new Pop3Client(account, ds)).start();
         		} catch (Exception e) {
@@ -62,7 +63,7 @@ public class ImportData extends MailDocumentHandler {
         	}
         }
         
-        Element response = zsc.createElement(MailService.IMPORT_DATA_RESPONSE);
+        Element response = zsc.createElement(MailConstants.IMPORT_DATA_RESPONSE);
         return response;
     }
     

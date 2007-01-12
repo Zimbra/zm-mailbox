@@ -29,6 +29,7 @@
 package com.zimbra.cs.service.admin;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Alias;
@@ -66,18 +67,18 @@ public class SearchAccounts extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-        String query = request.getAttribute(AdminService.E_QUERY);
+        String query = request.getAttribute(AdminConstants.E_QUERY);
 
-        int limit = (int) request.getAttributeLong(AdminService.A_LIMIT, Integer.MAX_VALUE);
+        int limit = (int) request.getAttributeLong(AdminConstants.A_LIMIT, Integer.MAX_VALUE);
         if (limit == 0)
             limit = Integer.MAX_VALUE;
-        int offset = (int) request.getAttributeLong(AdminService.A_OFFSET, 0);        
-        String domain = request.getAttribute(AdminService.A_DOMAIN, null);
-        boolean applyCos = request.getAttributeBool(AdminService.A_APPLY_COS, true);
-        String attrsStr = request.getAttribute(AdminService.A_ATTRS, null);
-        String sortBy = request.getAttribute(AdminService.A_SORT_BY, null);        
-        String types = request.getAttribute(AdminService.A_TYPES, "accounts");
-        boolean sortAscending = request.getAttributeBool(AdminService.A_SORT_ASCENDING, true);        
+        int offset = (int) request.getAttributeLong(AdminConstants.A_OFFSET, 0);
+        String domain = request.getAttribute(AdminConstants.A_DOMAIN, null);
+        boolean applyCos = request.getAttributeBool(AdminConstants.A_APPLY_COS, true);
+        String attrsStr = request.getAttribute(AdminConstants.A_ATTRS, null);
+        String sortBy = request.getAttribute(AdminConstants.A_SORT_BY, null);
+        String types = request.getAttribute(AdminConstants.A_TYPES, "accounts");
+        boolean sortAscending = request.getAttributeBool(AdminConstants.A_SORT_ASCENDING, true);
 
         int flags = Provisioning.searchAccountStringToMask(types);
 
@@ -115,7 +116,7 @@ public class SearchAccounts extends AdminDocumentHandler {
             }
         }
 
-        Element response = lc.createElement(AdminService.SEARCH_ACCOUNTS_RESPONSE);
+        Element response = lc.createElement(AdminConstants.SEARCH_ACCOUNTS_RESPONSE);
         int i, limitMax = offset+limit;
         for (i=offset; i < limitMax && i < accounts.size(); i++) {
             NamedEntry entry = (NamedEntry) accounts.get(i);
@@ -132,23 +133,23 @@ public class SearchAccounts extends AdminDocumentHandler {
             }
         }          
 
-        response.addAttribute(AdminService.A_MORE, i < accounts.size());
-        response.addAttribute(AdminService.A_SEARCH_TOTAL, accounts.size());        
+        response.addAttribute(AdminConstants.A_MORE, i < accounts.size());
+        response.addAttribute(AdminConstants.A_SEARCH_TOTAL, accounts.size());
         return response;
     }
 
     static void doDistributionList(Element e, DistributionList list) throws ServiceException {
-        Element elist = e.addElement(AdminService.E_DL);
-        elist.addAttribute(AdminService.A_NAME, list.getName());
-        elist.addAttribute(AdminService.A_ID, list.getId());
+        Element elist = e.addElement(AdminConstants.E_DL);
+        elist.addAttribute(AdminConstants.A_NAME, list.getName());
+        elist.addAttribute(AdminConstants.A_ID, list.getId());
         Map attrs = list.getAttrs();
         doAttrs(elist, attrs);
     }
 
     static void doAlias(Element e, Alias a) throws ServiceException {
-        Element ealias = e.addElement(AdminService.E_ALIAS);
-        ealias.addAttribute(AdminService.A_NAME, a.getName());
-        ealias.addAttribute(AdminService.A_ID, a.getId());        
+        Element ealias = e.addElement(AdminConstants.E_ALIAS);
+        ealias.addAttribute(AdminConstants.A_NAME, a.getName());
+        ealias.addAttribute(AdminConstants.A_ID, a.getId());
         Map attrs = a.getAttrs();
         doAttrs(ealias, attrs);
     }
@@ -161,9 +162,9 @@ public class SearchAccounts extends AdminDocumentHandler {
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;
                 for (int i = 0; i < sv.length; i++)
-                    e.addElement(AdminService.E_A).addAttribute(AdminService.A_N, name).setText(sv[i]);
+                    e.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText(sv[i]);
             } else if (value instanceof String)
-                e.addElement(AdminService.E_A).addAttribute(AdminService.A_N, name).setText((String) value);
+                e.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText((String) value);
         }       
     }   
 }

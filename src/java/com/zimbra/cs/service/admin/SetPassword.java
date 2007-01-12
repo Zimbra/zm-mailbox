@@ -36,6 +36,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -44,7 +45,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class SetPassword extends AdminDocumentHandler {
 
-    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminService.E_ID };
+    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminConstants.E_ID };
     protected String[] getProxiedAccountPath()  { return TARGET_ACCOUNT_PATH; }
 
     /**
@@ -59,8 +60,8 @@ public class SetPassword extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
-	    String id = request.getAttribute(AdminService.E_ID);
-        String newPassword = request.getAttribute(AdminService.E_NEW_PASSWORD);
+	    String id = request.getAttribute(AdminConstants.E_ID);
+        String newPassword = request.getAttribute(AdminConstants.E_NEW_PASSWORD);
 
 	    Account account = prov.get(AccountBy.id, id);
         if (account == null)
@@ -74,7 +75,7 @@ public class SetPassword extends AdminDocumentHandler {
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "SetPassword","name", account.getName()}));
 
-	    Element response = lc.createElement(AdminService.SET_PASSWORD_RESPONSE);
+	    Element response = lc.createElement(AdminConstants.SET_PASSWORD_RESPONSE);
 	    return response;
 	}
 

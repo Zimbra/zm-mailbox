@@ -26,7 +26,7 @@
 package com.zimbra.cs.zclient.event;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.ZSoapSB;
 import com.zimbra.soap.Element;
 
@@ -44,7 +44,7 @@ public class ZModifyMailboxEvent implements ZModifyEvent {
      * @throws ServiceException on error
      */
     public long getSize(long defaultValue) throws ServiceException {
-        return mMailboxEl.getAttributeLong(MailService.A_SIZE, defaultValue);                
+        return mMailboxEl.getAttributeLong(MailConstants.A_SIZE, defaultValue);
     }
     
     public String toString() {

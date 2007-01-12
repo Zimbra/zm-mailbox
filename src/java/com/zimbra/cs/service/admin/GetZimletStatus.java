@@ -29,10 +29,11 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
-import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -44,8 +45,8 @@ public class GetZimletStatus extends AdminDocumentHandler {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
 		Provisioning prov = Provisioning.getInstance();
 		
-        Element response = lc.createElement(AdminService.GET_ZIMLET_STATUS_RESPONSE);
-        Element elem = response.addElement(AccountService.E_ZIMLETS);
+        Element response = lc.createElement(AdminConstants.GET_ZIMLET_STATUS_RESPONSE);
+        Element elem = response.addElement(AccountConstants.E_ZIMLETS);
 		@SuppressWarnings({"unchecked"})
 		List<Zimlet> zimlets = prov.listAllZimlets();
     	zimlets = ZimletUtil.orderZimletsByPriority(zimlets);
@@ -57,8 +58,8 @@ public class GetZimletStatus extends AdminDocumentHandler {
 		Iterator<Cos> cos = prov.getAllCos().iterator();
 		while (cos.hasNext()) {
 			Cos c = (Cos) cos.next();
-			elem = response.addElement(AdminService.E_COS);
-			elem.addAttribute(AdminService.E_NAME, c.getName());
+			elem = response.addElement(AdminConstants.E_COS);
+			elem.addAttribute(AdminConstants.E_NAME, c.getName());
 			String[] z = c.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
 			for (int i = 0; i < z.length; i++) {
 				doZimlet(prov.getZimlet(z[i]), elem, -1);
@@ -70,12 +71,12 @@ public class GetZimletStatus extends AdminDocumentHandler {
 	private void doZimlet(Zimlet z, Element elem, int priority) {
 		if (z == null)
 			return;
-        Element zim = elem.addElement(AccountService.E_ZIMLET);
-		zim.addAttribute(AdminService.A_NAME, z.getName());
-		zim.addAttribute(AdminService.A_STATUS, (z.isEnabled() ? "enabled" : "disabled"));
-		zim.addAttribute(AdminService.A_EXTENSION, (z.isExtension() ? "true" : "false"));
+        Element zim = elem.addElement(AccountConstants.E_ZIMLET);
+		zim.addAttribute(AdminConstants.A_NAME, z.getName());
+		zim.addAttribute(AdminConstants.A_STATUS, (z.isEnabled() ? "enabled" : "disabled"));
+		zim.addAttribute(AdminConstants.A_EXTENSION, (z.isExtension() ? "true" : "false"));
 		if (priority >= 0) {
-			zim.addAttribute(AdminService.A_PRIORITY, priority);
+			zim.addAttribute(AdminConstants.A_PRIORITY, priority);
 		}
     }
 }

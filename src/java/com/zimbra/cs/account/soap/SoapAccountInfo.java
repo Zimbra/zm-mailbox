@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.admin.AdminService;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.Element;
 
 
@@ -43,12 +43,12 @@ public class SoapAccountInfo {
     
      SoapAccountInfo(Element e) throws ServiceException {
         mAttrs = SoapProvisioning.getAttrs(e);
-        mName = e.getElement(AdminService.E_NAME).getText();
+        mName = e.getElement(AdminConstants.E_NAME).getText();
         mSoapURL = new ArrayList<String>();
-        for (Element su : e.listElements(AdminService.E_SOAP_URL)) {
+        for (Element su : e.listElements(AdminConstants.E_SOAP_URL)) {
             mSoapURL.add(su.getText());
         }
-        mAdminSoapURL = e.getElement(AdminService.E_ADMIN_SOAP_URL).getText();
+        mAdminSoapURL = e.getElement(AdminConstants.E_ADMIN_SOAP_URL).getText();
     }
     
     public List<String> getSoapURL() { return mSoapURL; }

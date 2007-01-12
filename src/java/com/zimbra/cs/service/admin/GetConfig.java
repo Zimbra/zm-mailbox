@@ -31,6 +31,7 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -45,12 +46,12 @@ public class GetConfig extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
-        Element a = request.getElement(AdminService.E_A);
-	    String name = a.getAttribute(AdminService.A_N);
+        Element a = request.getElement(AdminConstants.E_A);
+	    String name = a.getAttribute(AdminConstants.A_N);
 
         String value[] = prov.getConfig().getMultiAttr(name);
 
-	    Element response = lc.createElement(AdminService.GET_CONFIG_RESPONSE);
+	    Element response = lc.createElement(AdminConstants.GET_CONFIG_RESPONSE);
         doConfig(response, name, value);
 
 	    return response;
@@ -60,12 +61,12 @@ public class GetConfig extends AdminDocumentHandler {
 	    if (value == null)
 	        return;
 	    for (int i = 0; i < value.length; i++)
-            e.addElement(AdminService.E_A).addAttribute(AdminService.A_N, name).setText(value[i]);
+            e.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText(value[i]);
     }
 
 	public static void doConfig(Element e, String name, String value) {
 	    if (value == null)
 	        return;
-        e.addElement(AdminService.E_A).addAttribute(AdminService.A_N, name).setText(value);
+        e.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText(value);
     }
 }

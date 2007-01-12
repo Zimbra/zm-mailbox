@@ -34,6 +34,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -47,7 +48,7 @@ public class CreateServer extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 	    
-	    String name = request.getAttribute(AdminService.E_NAME).toLowerCase();
+	    String name = request.getAttribute(AdminConstants.E_NAME).toLowerCase();
 	    Map<String, Object> attrs = AdminService.getAttrs(request, true);
 	    
 	    Server server = prov.createServer(name, attrs);
@@ -55,7 +56,7 @@ public class CreateServer extends AdminDocumentHandler {
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "CreateServer","name", name}, attrs));
 
-	    Element response = lc.createElement(AdminService.CREATE_SERVER_RESPONSE);
+	    Element response = lc.createElement(AdminConstants.CREATE_SERVER_RESPONSE);
 	    GetServer.doServer(response, server);
 
 	    return response;

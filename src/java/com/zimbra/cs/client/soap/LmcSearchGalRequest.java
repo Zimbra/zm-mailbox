@@ -30,7 +30,7 @@ import org.dom4j.Element;
 
 import com.zimbra.soap.DomUtil;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.account.AccountService;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.SoapParseException;
 import com.zimbra.cs.client.*;
 
@@ -43,8 +43,8 @@ public class LmcSearchGalRequest extends LmcSoapRequest {
     public String getName() { return mName; }
     
 	protected Element getRequestXML() throws LmcSoapClientException {
-		Element request = DocumentHelper.createElement(AccountService.SEARCH_GAL_REQUEST);
-		DomUtil.add(request, AccountService.E_NAME, mName);
+		Element request = DocumentHelper.createElement(AccountConstants.SEARCH_GAL_REQUEST);
+		DomUtil.add(request, AccountConstants.E_NAME, mName);
         return request;
     }
 

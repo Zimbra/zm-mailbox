@@ -36,6 +36,7 @@ import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.service.wiki.WikiServiceException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.cs.wiki.WikiUtil;
@@ -51,23 +52,23 @@ public class InitNotebook extends AdminDocumentHandler {
 	    for (Element el : request.listElements()) {
 	    	reqAttrs.put(el.getName(), el.getText());
 	    }
-	    String username = reqAttrs.get(AdminService.E_NAME);
-	    String password = reqAttrs.get(AdminService.E_PASSWORD);
+	    String username = reqAttrs.get(AdminConstants.E_NAME);
+	    String password = reqAttrs.get(AdminConstants.E_PASSWORD);
 
-	    Element t = request.getOptionalElement(AdminService.E_TEMPLATE);
+	    Element t = request.getOptionalElement(AdminConstants.E_TEMPLATE);
 	    String template = null, dest = null;
 	    if (t != null) {
 	    	template = t.getText();
-	    	dest = t.getAttribute(AdminService.A_DEST, "Template");
+	    	dest = t.getAttribute(AdminConstants.A_DEST, "Template");
 	    }
-        Element response = lc.createElement(AdminService.INIT_NOTEBOOK_RESPONSE);
+        Element response = lc.createElement(AdminConstants.INIT_NOTEBOOK_RESPONSE);
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(new String[] {"cmd", "InitNotebook" }, reqAttrs));         
 
         WikiUtil wiki = null;
-        Element d = request.getOptionalElement(AdminService.E_DOMAIN);
+        Element d = request.getOptionalElement(AdminConstants.E_DOMAIN);
         if (d != null || isDomainAdminOnly(lc)) {
-        	String key = (d == null) ? DomainBy.name.name() : d.getAttribute(AdminService.A_BY);
+        	String key = (d == null) ? DomainBy.name.name() : d.getAttribute(AdminConstants.A_BY);
         	String value = (d == null) ? getAuthTokenAccountDomain(lc).getName() : d.getText();
 
         	Domain domain = prov.get(DomainBy.fromString(key), value);

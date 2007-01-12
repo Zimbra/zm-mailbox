@@ -38,6 +38,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -55,11 +56,11 @@ public class DelegateAuth extends AdminDocumentHandler {
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
-        Element a = request.getElement(AdminService.E_ACCOUNT);
-        String key = a.getAttribute(AdminService.A_BY);
+        Element a = request.getElement(AdminConstants.E_ACCOUNT);
+        String key = a.getAttribute(AdminConstants.A_BY);
         String value = a.getText();
 
-        long lifetime = request.getAttributeLong(AdminService.A_DURATION, DEFAULT_AUTH_LIFETIME) * 1000;
+        long lifetime = request.getAttributeLong(AdminConstants.A_DURATION, DEFAULT_AUTH_LIFETIME) * 1000;
         
 		Provisioning prov = Provisioning.getInstance();
         
@@ -79,7 +80,7 @@ public class DelegateAuth extends AdminDocumentHandler {
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "DelegateAuth","accountId", account.getId()})); 
 
-        Element response = lc.createElement(AdminService.DELEGATE_AUTH_RESPONSE);
+        Element response = lc.createElement(AdminConstants.DELEGATE_AUTH_RESPONSE);
         long maxLifetime = account.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, DEFAULT_AUTH_LIFETIME*1000); 
 
         // take the min of requested lifetime vs maxLifetime
@@ -95,8 +96,8 @@ public class DelegateAuth extends AdminDocumentHandler {
         } catch (AuthTokenException e) {
             throw  ServiceException.FAILURE("unable to encode auth token", e);
         }
-        response.addAttribute(AdminService.E_AUTH_TOKEN, token, Element.DISP_CONTENT);
-        response.addAttribute(AdminService.E_LIFETIME, lifetime, Element.DISP_CONTENT);
+        response.addAttribute(AdminConstants.E_AUTH_TOKEN, token, Element.DISP_CONTENT);
+        response.addAttribute(AdminConstants.E_LIFETIME, lifetime, Element.DISP_CONTENT);
 		return response;
 	}
 

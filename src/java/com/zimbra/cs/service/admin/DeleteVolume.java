@@ -28,6 +28,7 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.store.Volume;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -37,14 +38,14 @@ public class DeleteVolume extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
-        long idLong = request.getAttributeLong(AdminService.A_ID);
+        long idLong = request.getAttributeLong(AdminConstants.A_ID);
         Volume.validateID(idLong);  // avoid Java truncation
         short id = (short) idLong;
         // make sure the volume exists before doing anything heavyweight...
         Volume.getById(id);
         Volume.delete(id);
 
-        Element response = lc.createElement(AdminService.DELETE_VOLUME_RESPONSE);
+        Element response = lc.createElement(AdminConstants.DELETE_VOLUME_RESPONSE);
         return response;
     }
 }

@@ -37,6 +37,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
@@ -53,7 +54,7 @@ public class AddMsg extends MailDocumentHandler {
     private static Log mLog = LogFactory.getLog(AddMsg.class);
     private static Pattern sNumeric = Pattern.compile("\\d+");
 
-    private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_MSG, MailService.A_FOLDER };
+    private static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.E_MSG, MailConstants.A_FOLDER };
     protected String[] getProxiedIdPath(Element request) {
         String folder = getXPath(request, TARGET_FOLDER_PATH);
         return folder != null && (folder.indexOf(':') > 0 || sNumeric.matcher(folder).matches()) ? TARGET_FOLDER_PATH : null;
@@ -69,13 +70,13 @@ public class AddMsg extends MailDocumentHandler {
         OperationContext octxt = zsc.getOperationContext();
         Session session = getSession(context);
         
-        Element msgElem = request.getElement(MailService.E_MSG);
+        Element msgElem = request.getElement(MailConstants.E_MSG);
         
-        String flagsStr = msgElem.getAttribute(MailService.A_FLAGS, null);
-        String tagsStr = msgElem.getAttribute(MailService.A_TAGS, null);
-        String folderStr = msgElem.getAttribute(MailService.A_FOLDER);
-        boolean noICal = msgElem.getAttributeBool(MailService.A_NO_ICAL, false);
-        long date = msgElem.getAttributeLong(MailService.A_DATE, System.currentTimeMillis());
+        String flagsStr = msgElem.getAttribute(MailConstants.A_FLAGS, null);
+        String tagsStr = msgElem.getAttribute(MailConstants.A_TAGS, null);
+        String folderStr = msgElem.getAttribute(MailConstants.A_FOLDER);
+        boolean noICal = msgElem.getAttributeBool(MailConstants.A_NO_ICAL, false);
+        long date = msgElem.getAttributeLong(MailConstants.A_DATE, System.currentTimeMillis());
         
         if (mLog.isDebugEnabled()) {
             StringBuffer toPrint = new StringBuffer("<AddMsg ");
@@ -115,7 +116,7 @@ public class AddMsg extends MailDocumentHandler {
             mLog.debug("folder = " + folder.getName());
         
         // check to see whether the entire message has been uploaded under separate cover
-        String attachment = msgElem.getAttribute(MailService.A_ATTACHMENT_ID, null);
+        String attachment = msgElem.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
         
         ParseMimeMessage.MimeMessageData mimeData = new ParseMimeMessage.MimeMessageData();
         MimeMessage mm;
@@ -132,7 +133,7 @@ public class AddMsg extends MailDocumentHandler {
         if (mimeData.uploads != null)
             FileUploadServlet.deleteUploads(mimeData.uploads);
         
-        Element response = zsc.createElement(MailService.ADD_MSG_RESPONSE);
+        Element response = zsc.createElement(MailConstants.ADD_MSG_RESPONSE);
         if (msg != null)
             ToXML.encodeMessageSummary(response, zsc, msg, null, GetMsgMetadata.SUMMARY_FIELDS);
         

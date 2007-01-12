@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -47,7 +48,7 @@ public class GetPrefs extends AccountDocumentHandler  {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(lc);
 
-        Element response = lc.createElement(AccountService.GET_PREFS_RESPONSE);
+        Element response = lc.createElement(AccountConstants.GET_PREFS_RESPONSE);
         handle(request, response, acct);
         return response;
     }
@@ -63,11 +64,11 @@ public class GetPrefs extends AccountDocumentHandler  {
 	 */
 	public static void handle(Element request, Element response, Account acct) throws ServiceException {
 		HashSet<String> specificPrefs = null;
-		for (Iterator it = request.elementIterator(AccountService.E_PREF); it.hasNext(); ) {
+		for (Iterator it = request.elementIterator(AccountConstants.E_PREF); it.hasNext(); ) {
 			if (specificPrefs == null)
 				specificPrefs = new HashSet<String>();
 			Element e = (Element) it.next();
-			String name = e.getAttribute(AccountService.A_NAME);
+			String name = e.getAttribute(AccountConstants.A_NAME);
 			if (name != null)
 				specificPrefs.add(name);
 		}
@@ -87,13 +88,13 @@ public class GetPrefs extends AccountDocumentHandler  {
     	        if (value instanceof String[]) {
     	            String sa[] = (String[]) value;
     	            for (int i = 0; i < sa.length; i++) {
-	    	            Element pref = response.addElement(AccountService.E_PREF);
-                        pref.addAttribute(AccountService.A_NAME, key);
+	    	            Element pref = response.addElement(AccountConstants.E_PREF);
+                        pref.addAttribute(AccountConstants.A_NAME, key);
                         pref.setText(sa[i]);
     	            }
     	        } else {
-    	            Element pref = response.addElement(AccountService.E_PREF);
-                    pref.addAttribute(AccountService.A_NAME, key);
+    	            Element pref = response.addElement(AccountConstants.E_PREF);
+                    pref.addAttribute(AccountConstants.A_NAME, key);
                     pref.setText((String) value);
     	        }
     	    }

@@ -29,6 +29,7 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.Element;
@@ -48,7 +49,7 @@ public class CreateDistributionList extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 	    
-        String name = request.getAttribute(AdminService.E_NAME).toLowerCase();
+        String name = request.getAttribute(AdminConstants.E_NAME).toLowerCase();
         Map<String, Object> attrs = AdminService.getAttrs(request, true);
 
         if (!canAccessEmail(lc, name))
@@ -59,7 +60,7 @@ public class CreateDistributionList extends AdminDocumentHandler {
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                  new String[] {"cmd", "CreateDistributionList","name", name}, attrs));         
 
-        Element response = lc.createElement(AdminService.CREATE_DISTRIBUTION_LIST_RESPONSE);
+        Element response = lc.createElement(AdminConstants.CREATE_DISTRIBUTION_LIST_RESPONSE);
         
         GetDistributionList.doDistributionList(response, dl);
 

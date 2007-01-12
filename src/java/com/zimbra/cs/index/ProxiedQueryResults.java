@@ -33,11 +33,11 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.service.admin.AdminService;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.util.ParseMailboxID;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
@@ -268,24 +268,24 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
 
             Element searchElt;
             if (isMultipleMailboxes) {
-                searchElt = Element.create(mResponseProto, AdminService.SEARCH_MULTIPLE_MAILBOXES_REQUEST);
+                searchElt = Element.create(mResponseProto, AdminConstants.SEARCH_MULTIPLE_MAILBOXES_REQUEST);
             } else {
 //              searchElt = new Element.XMLElement(MailService.SEARCH_REQUEST);
-                searchElt = Element.create(mResponseProto, MailService.SEARCH_REQUEST);
+                searchElt = Element.create(mResponseProto, MailConstants.SEARCH_REQUEST);
             }
 
-            searchElt.addAttribute(MailService.A_SEARCH_TYPES, mSearchParams.getTypesStr());
-            searchElt.addAttribute(MailService.A_SORTBY, mSearchParams.getSortByStr());
-            searchElt.addAttribute(MailService.A_QUERY_OFFSET, mBufferStartOffset);
-            searchElt.addAttribute(MailService.A_QUERY_LIMIT, chunkSizeToUse);
+            searchElt.addAttribute(MailConstants.A_SEARCH_TYPES, mSearchParams.getTypesStr());
+            searchElt.addAttribute(MailConstants.A_SORTBY, mSearchParams.getSortByStr());
+            searchElt.addAttribute(MailConstants.A_QUERY_OFFSET, mBufferStartOffset);
+            searchElt.addAttribute(MailConstants.A_QUERY_LIMIT, chunkSizeToUse);
 
-            searchElt.addAttribute(MailService.E_QUERY, mSearchParams.getQueryStr(), Element.DISP_CONTENT);
+            searchElt.addAttribute(MailConstants.E_QUERY, mSearchParams.getQueryStr(), Element.DISP_CONTENT);
 
             if (isMultipleMailboxes) {
                 if (isAllMailboxes) {
-                    Element mbxElt = searchElt.addElement(MailService.E_MAILBOX);
+                    Element mbxElt = searchElt.addElement(MailConstants.E_MAILBOX);
                     ParseMailboxID id = ParseMailboxID.serverAll(mServer);
-                    mbxElt.addAttribute(MailService.A_ID, id.getString()); 
+                    mbxElt.addAttribute(MailConstants.A_ID, id.getString());
                 } else {
                     for (Iterator iter = mMailboxes.iterator(); iter.hasNext();) {
                         ParseMailboxID id = (ParseMailboxID)iter.next();
@@ -293,7 +293,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
                         //                    assert(!id.isLocal());
                         //                    assert(id.getServer().equals(serverID));
 
-                        searchElt.addElement(MailService.E_MAILBOX).addAttribute(MailService.A_ID, id.getString());
+                        searchElt.addElement(MailConstants.E_MAILBOX).addAttribute(MailConstants.A_ID, id.getString());
                     }
                 }
             }
@@ -320,8 +320,8 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
             
 
 
-            int hitOffset = (int) searchResp.getAttributeLong(MailService.A_QUERY_OFFSET);
-            boolean hasMore = searchResp.getAttributeBool(MailService.A_QUERY_MORE);
+            int hitOffset = (int) searchResp.getAttributeLong(MailConstants.A_QUERY_OFFSET);
+            boolean hasMore = searchResp.getAttributeBool(MailConstants.A_QUERY_MORE);
 
             assert(mBufferStartOffset == hitOffset);
 
@@ -330,7 +330,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
             int stop = mBufferEndOffset - mBufferStartOffset;
             for (Iterator iter = searchResp.elementIterator(); iter.hasNext() && bufferIdx < stop;) {
                 Element e = (Element)iter.next();
-                if (e.getName().equalsIgnoreCase(MailService.E_INFO)) {
+                if (e.getName().equalsIgnoreCase(MailConstants.E_INFO)) {
                     for (Iterator<Element> infoIter = e.elementIterator(); infoIter.hasNext();)  
                         mInfo.add(new ProxiedQueryInfo(infoIter.next()));
                 } else {

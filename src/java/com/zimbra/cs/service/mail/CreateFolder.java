@@ -40,6 +40,7 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -48,7 +49,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class CreateFolder extends MailDocumentHandler {
 
-    private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_FOLDER, MailService.A_FOLDER };
+    private static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.E_FOLDER, MailConstants.A_FOLDER };
     private static final String[] RESPONSE_ITEM_PATH = new String[] { };
     protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
     protected boolean checkMountpointProxy(Element request)  { return true; }
@@ -60,15 +61,15 @@ public class CreateFolder extends MailDocumentHandler {
         Mailbox.OperationContext octxt = lc.getOperationContext();
         Session session = getSession(context);
 
-        Element t = request.getElement(MailService.E_FOLDER);
-        String name      = t.getAttribute(MailService.A_NAME);
-        String view      = t.getAttribute(MailService.A_DEFAULT_VIEW, null);
-        String flags     = t.getAttribute(MailService.A_FLAGS, null);
-        byte color       = (byte) t.getAttributeLong(MailService.A_COLOR, MailItem.DEFAULT_COLOR);
-        String url       = t.getAttribute(MailService.A_URL, null);
-        ItemId iidParent = new ItemId(t.getAttribute(MailService.A_FOLDER), lc);
-        boolean fetchIfExists = t.getAttributeBool(MailService.A_FETCH_IF_EXISTS, false);
-        ACL acl          = FolderAction.parseACL(t.getOptionalElement(MailService.E_ACL));
+        Element t = request.getElement(MailConstants.E_FOLDER);
+        String name      = t.getAttribute(MailConstants.A_NAME);
+        String view      = t.getAttribute(MailConstants.A_DEFAULT_VIEW, null);
+        String flags     = t.getAttribute(MailConstants.A_FLAGS, null);
+        byte color       = (byte) t.getAttributeLong(MailConstants.A_COLOR, MailItem.DEFAULT_COLOR);
+        String url       = t.getAttribute(MailConstants.A_URL, null);
+        ItemId iidParent = new ItemId(t.getAttribute(MailConstants.A_FOLDER), lc);
+        boolean fetchIfExists = t.getAttributeBool(MailConstants.A_FETCH_IF_EXISTS, false);
+        ACL acl          = FolderAction.parseACL(t.getOptionalElement(MailConstants.E_ACL));
 
         CreateFolderOperation op = new CreateFolderOperation(session, octxt, mbox, Requester.SOAP, name, iidParent, view, flags, color, url, fetchIfExists);
         op.schedule();
@@ -89,7 +90,7 @@ public class CreateFolder extends MailDocumentHandler {
             }
         }
 
-        Element response = lc.createElement(MailService.CREATE_FOLDER_RESPONSE);
+        Element response = lc.createElement(MailConstants.CREATE_FOLDER_RESPONSE);
         if (folder != null)
             ToXML.encodeFolder(response, lc, folder);
         return response;

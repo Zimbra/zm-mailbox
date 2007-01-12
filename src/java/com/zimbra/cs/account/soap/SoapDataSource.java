@@ -28,8 +28,8 @@ package com.zimbra.cs.account.soap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.cs.account.DataSource;
-import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.soap.Element;
 
 class SoapDataSource extends DataSource implements SoapEntry {
@@ -39,8 +39,8 @@ class SoapDataSource extends DataSource implements SoapEntry {
     }
 
     SoapDataSource(Element e) throws ServiceException {
-        super(DataSource.Type.fromString(e.getAttribute(AccountService.A_TYPE)),
-                e.getAttribute(AccountService.A_NAME), e.getAttribute(AccountService.A_ID), SoapProvisioning.getAttrs(e));
+        super(DataSource.Type.fromString(e.getAttribute(AccountConstants.A_TYPE)),
+                e.getAttribute(AccountConstants.A_NAME), e.getAttribute(AccountConstants.A_ID), SoapProvisioning.getAttrs(e));
     }
 
     public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {

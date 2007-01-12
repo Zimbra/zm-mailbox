@@ -31,6 +31,7 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -56,9 +57,9 @@ public class GetAccount extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-        boolean applyCos = request.getAttributeBool(AdminService.A_APPLY_COS, true);        
-        Element a = request.getElement(AdminService.E_ACCOUNT);
-	    String key = a.getAttribute(AdminService.A_BY);
+        boolean applyCos = request.getAttributeBool(AdminConstants.A_APPLY_COS, true);
+        Element a = request.getElement(AdminConstants.E_ACCOUNT);
+	    String key = a.getAttribute(AdminConstants.A_BY);
         String value = a.getText();
 
 	    Account account = prov.get(AccountBy.fromString(key), value);
@@ -69,7 +70,7 @@ public class GetAccount extends AdminDocumentHandler {
         if (!canAccessAccount(lc, account))
             throw ServiceException.PERM_DENIED("can not access account");
 
-	    Element response = lc.createElement(AdminService.GET_ACCOUNT_RESPONSE);
+	    Element response = lc.createElement(AdminConstants.GET_ACCOUNT_RESPONSE);
         ToXML.encodeAccount(response, account, applyCos);
 
 	    return response;

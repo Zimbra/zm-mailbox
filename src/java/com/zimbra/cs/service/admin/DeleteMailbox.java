@@ -31,13 +31,13 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -46,7 +46,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class DeleteMailbox extends AdminDocumentHandler {
 
-    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminService.E_MAILBOX, AdminService.A_ACCOUNTID };
+    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminConstants.E_MAILBOX, AdminConstants.A_ACCOUNTID };
     protected String[] getProxiedAccountPath()  { return TARGET_ACCOUNT_PATH; }
 
     /**
@@ -59,8 +59,8 @@ public class DeleteMailbox extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zc = getZimbraSoapContext(context);
 
-        Element mreq = request.getElement(AdminService.E_MAILBOX);
-        String accountId = mreq.getAttribute(AdminService.A_ACCOUNTID);
+        Element mreq = request.getElement(AdminConstants.E_MAILBOX);
+        String accountId = mreq.getAttribute(AdminConstants.A_ACCOUNTID);
         
         Account account = Provisioning.getInstance().get(AccountBy.id, accountId);
         if (account == null) {
@@ -84,10 +84,10 @@ public class DeleteMailbox extends AdminDocumentHandler {
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
             new String[] {"cmd", "DeleteMailbox","id", idString}));
         
-        Element response = zc.createElement(AdminService.DELETE_MAILBOX_RESPONSE);
+        Element response = zc.createElement(AdminConstants.DELETE_MAILBOX_RESPONSE);
         if (mbox != null)
-            response.addElement(AdminService.E_MAILBOX)
-            .addAttribute(AdminService.A_MAILBOXID, mailboxId);
+            response.addElement(AdminConstants.E_MAILBOX)
+            .addAttribute(AdminConstants.A_MAILBOXID, mailboxId);
         return response;
     }
 }

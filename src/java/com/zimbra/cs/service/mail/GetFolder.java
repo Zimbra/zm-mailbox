@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.operation.GetFolderTreeOperation;
@@ -48,8 +49,8 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class GetFolder extends MailDocumentHandler {
 
-    private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_FOLDER, MailService.A_FOLDER };
-    private static final String[] RESPONSE_ITEM_PATH = new String[] { MailService.E_FOLDER };
+    private static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.E_FOLDER, MailConstants.A_FOLDER };
+    private static final String[] RESPONSE_ITEM_PATH = new String[] { MailConstants.E_FOLDER };
     protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
     protected boolean checkMountpointProxy(Element request)  { return false; }
     protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
@@ -63,17 +64,17 @@ public class GetFolder extends MailDocumentHandler {
 		Session session = getSession(context);
 		
 		String parentId = DEFAULT_FOLDER_ID;
-		Element eFolder = request.getOptionalElement(MailService.E_FOLDER);
+		Element eFolder = request.getOptionalElement(MailConstants.E_FOLDER);
 		if (eFolder != null) {
-            String path = eFolder.getAttribute(MailService.A_PATH, null);
+            String path = eFolder.getAttribute(MailConstants.A_PATH, null);
             if (path != null)
                 parentId = mbox.getFolderByPath(octxt, path).getId() + "";
             else
-                parentId = eFolder.getAttribute(MailService.A_FOLDER, DEFAULT_FOLDER_ID);
+                parentId = eFolder.getAttribute(MailConstants.A_FOLDER, DEFAULT_FOLDER_ID);
         }
 		ItemId iid = new ItemId(parentId, lc);
 
-		Element response = lc.createElement(MailService.GET_FOLDER_RESPONSE);
+		Element response = lc.createElement(MailConstants.GET_FOLDER_RESPONSE);
 		
 		GetFolderTreeOperation op = new GetFolderTreeOperation(session, octxt, mbox, Requester.SOAP, iid);
 		op.schedule();
@@ -125,13 +126,13 @@ public class GetFolder extends MailDocumentHandler {
 		ItemId iidRemote = new ItemId(mpt.getOwnerId(), mpt.getRemoteId());
 		Element proxied = proxyRequest(request, context, iidLocal, iidRemote);
         // return the children of the remote folder as children of the mountpoint
-		proxied = proxied.getOptionalElement(MailService.E_FOLDER);
+		proxied = proxied.getOptionalElement(MailConstants.E_FOLDER);
 		if (proxied != null) {
-			eRoot.addAttribute(MailService.A_RIGHTS, proxied.getAttribute(MailService.A_RIGHTS, null));
+			eRoot.addAttribute(MailConstants.A_RIGHTS, proxied.getAttribute(MailConstants.A_RIGHTS, null));
 			for (Iterator it = proxied.elementIterator(); it.hasNext(); ) {
 				Element eRemote = (Element) it.next();
 				// skip the <acl> element, if any
-				if (!eRemote.getName().equals(MailService.E_ACL))
+				if (!eRemote.getName().equals(MailConstants.E_ACL))
 					eRoot.addElement(eRemote.detach());
 			}
 		}

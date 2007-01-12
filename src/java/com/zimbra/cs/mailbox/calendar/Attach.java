@@ -25,11 +25,11 @@
 package com.zimbra.cs.mailbox.calendar;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.Element;
 
 /**
@@ -62,11 +62,11 @@ public class Attach {
     }
 
     public Element toXml(Element parent) {
-        Element attachElem = parent.addElement(MailService.E_CAL_ATTACH);
+        Element attachElem = parent.addElement(MailConstants.E_CAL_ATTACH);
         if (mUri != null) {
-            attachElem.addAttribute(MailService.A_CAL_ATTACH_URI, mUri);
+            attachElem.addAttribute(MailConstants.A_CAL_ATTACH_URI, mUri);
             if (mContentType != null) {
-                attachElem.addAttribute(MailService.A_CAL_ATTACH_CONTENT_TYPE, mContentType);
+                attachElem.addAttribute(MailConstants.A_CAL_ATTACH_CONTENT_TYPE, mContentType);
             }
         } else {
             attachElem.setText(mBinaryB64Data);
@@ -75,9 +75,9 @@ public class Attach {
     }
 
     public static Attach parse(Element element) throws ServiceException {
-        String uri = element.getAttribute(MailService.A_CAL_ATTACH_URI, null);
+        String uri = element.getAttribute(MailConstants.A_CAL_ATTACH_URI, null);
         if (uri != null) {
-            String ct = element.getAttribute(MailService.A_CAL_ATTACH_CONTENT_TYPE, null);
+            String ct = element.getAttribute(MailConstants.A_CAL_ATTACH_CONTENT_TYPE, null);
             return new Attach(uri, ct);
         } else {
             String binB64 = element.getTextTrim();

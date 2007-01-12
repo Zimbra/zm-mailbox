@@ -26,7 +26,7 @@
 package com.zimbra.cs.zclient.event;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.ZSoapSB;
 import com.zimbra.soap.Element;
 
@@ -42,7 +42,7 @@ public class ZModifyMountpointEvent extends ZModifyFolderEvent {
      * @return new name or defaultValue if unchanged
      */
     public String getOwnerDisplayName(String defaultValue) {
-        return mFolderEl.getAttribute(MailService.A_OWNER_NAME, defaultValue);
+        return mFolderEl.getAttribute(MailConstants.A_OWNER_NAME, defaultValue);
     }
 
     /**
@@ -50,7 +50,7 @@ public class ZModifyMountpointEvent extends ZModifyFolderEvent {
      * @return new name or defaultValue if unchanged
      */
     public String getRemoteId(String defaultValue) {
-        return mFolderEl.getAttribute(MailService.A_REMOTE_ID, defaultValue);
+        return mFolderEl.getAttribute(MailConstants.A_REMOTE_ID, defaultValue);
     }
 
     /**
@@ -58,7 +58,7 @@ public class ZModifyMountpointEvent extends ZModifyFolderEvent {
      * @return new name or defaultValue if unchanged
      */
     public String getOwnerId(String defaultValue) {
-        return mFolderEl.getAttribute(MailService.A_ZIMBRA_ID, defaultValue);
+        return mFolderEl.getAttribute(MailConstants.A_ZIMBRA_ID, defaultValue);
     }
     
     public String toString() {

@@ -31,8 +31,8 @@ package com.zimbra.soap;
 import java.io.IOException;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
-import com.zimbra.cs.service.account.AccountService;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.SoapFaultException;
@@ -50,15 +50,15 @@ public class SoapTestClient {
         SoapHttpTransport trans = null;
         try {
             trans = new SoapHttpTransport("http://localhost" + ZimbraServlet.USER_SERVICE_URI);
-            Element request = Element.XMLElement.mFactory.createElement(AccountService.AUTH_REQUEST);
-            request.addAttribute(AccountService.E_ACCOUNT, "user1@example.zimbra.com", Element.DISP_CONTENT);
-            request.addAttribute(AccountService.E_PASSWORD, "test123", Element.DISP_CONTENT);
+            Element request = Element.XMLElement.mFactory.createElement(AccountConstants.AUTH_REQUEST);
+            request.addAttribute(AccountConstants.E_ACCOUNT, "user1@example.zimbra.com", Element.DISP_CONTENT);
+            request.addAttribute(AccountConstants.E_PASSWORD, "test123", Element.DISP_CONTENT);
             Element response = trans.invoke(request);
 
             System.out.println(response.prettyPrint());
 
             // get the auth token out, no default, must be present or a service exception is thrown
-            String authToken = response.getAttribute(AccountService.E_AUTH_TOKEN);
+            String authToken = response.getAttribute(AccountConstants.E_AUTH_TOKEN);
             // get the session id, if not present, default to null
             String sessionId = response.getAttribute(ZimbraSoapContext.E_SESSION_ID, null);
 
@@ -67,7 +67,7 @@ public class SoapTestClient {
             if (sessionId != null)
                 trans.setSessionId(sessionId);
             
-            Element tagsRequest = Element.XMLElement.mFactory.createElement(MailService.GET_TAG_REQUEST);
+            Element tagsRequest = Element.XMLElement.mFactory.createElement(MailConstants.GET_TAG_REQUEST);
             Element tagsResponse = trans.invoke(tagsRequest);
 
             System.out.println(tagsResponse.prettyPrint());

@@ -25,7 +25,7 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.soap.Element;
 
@@ -46,16 +46,16 @@ public class ZDocument implements ZItem {
 	
     public ZDocument(Element e) throws ServiceException {
     	mIsWiki = "w".equals(e.getName());
-    	mName = e.getAttribute(MailService.A_NAME);
-    	mId = e.getAttribute(MailService.A_ID);
-    	mFolderId = e.getAttribute(MailService.A_FOLDER);
-    	mVersion = e.getAttribute(MailService.A_VERSION);
-    	mEditor = e.getAttribute(MailService.A_LAST_EDITED_BY);
-    	mCreator = e.getAttribute(MailService.A_CREATOR);
-    	mRestUrl = e.getAttribute(MailService.A_REST_URL);
-    	mCreatedDate = e.getAttributeLong(MailService.A_CREATED_DATE, 0) * 1000;
-    	mModifiedDate = e.getAttributeLong(MailService.A_MODIFIED_DATE, 0) * 1000;
-    	mMetaDataChangedDate = e.getAttributeLong(MailService.A_MODIFIED_DATE, 0) * 1000;
+    	mName = e.getAttribute(MailConstants.A_NAME);
+    	mId = e.getAttribute(MailConstants.A_ID);
+    	mFolderId = e.getAttribute(MailConstants.A_FOLDER);
+    	mVersion = e.getAttribute(MailConstants.A_VERSION);
+    	mEditor = e.getAttribute(MailConstants.A_LAST_EDITED_BY);
+    	mCreator = e.getAttribute(MailConstants.A_CREATOR);
+    	mRestUrl = e.getAttribute(MailConstants.A_REST_URL);
+    	mCreatedDate = e.getAttributeLong(MailConstants.A_CREATED_DATE, 0) * 1000;
+    	mModifiedDate = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0) * 1000;
+    	mMetaDataChangedDate = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0) * 1000;
     }
     
 	public String getId() {

@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.DataSourceManager;
 import com.zimbra.cs.mailbox.ImportStatus;
@@ -45,17 +46,17 @@ public class GetImportStatus extends MailDocumentHandler {
         Account account = getRequestedAccount(zsc);
         
         List<ImportStatus> statusList = DataSourceManager.getImportStatus(account);
-        Element response = zsc.createElement(MailService.GET_IMPORT_STATUS_RESPONSE);
+        Element response = zsc.createElement(MailConstants.GET_IMPORT_STATUS_RESPONSE);
 
         for (ImportStatus status : statusList) {
-            Element ePop3 = response.addElement(MailService.E_DS_POP3);
-            ePop3.addAttribute(MailService.A_ID, status.getDataSourceId());
-            ePop3.addAttribute(MailService.A_DS_IS_RUNNING, status.isRunning());
+            Element ePop3 = response.addElement(MailConstants.E_DS_POP3);
+            ePop3.addAttribute(MailConstants.A_ID, status.getDataSourceId());
+            ePop3.addAttribute(MailConstants.A_DS_IS_RUNNING, status.isRunning());
             
             if (status.hasRun() && !status.isRunning()) { // Has finished at least one run
-                ePop3.addAttribute(MailService.A_DS_SUCCESS, status.getSuccess());
+                ePop3.addAttribute(MailConstants.A_DS_SUCCESS, status.getSuccess());
                 if (!status.getSuccess() && status.getError() != null) { // Failed, error available
-                    ePop3.addAttribute(MailService.A_DS_ERROR, status.getError());
+                    ePop3.addAttribute(MailConstants.A_DS_ERROR, status.getError());
                 }
             }
         }

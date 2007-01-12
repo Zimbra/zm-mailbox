@@ -33,11 +33,12 @@ import java.util.Map;
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -61,13 +62,13 @@ public class Auth extends AdminDocumentHandler {
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
-        String name = request.getAttribute(AdminService.E_NAME);
-		String password = request.getAttribute(AdminService.E_PASSWORD);
+        String name = request.getAttribute(AdminConstants.E_NAME);
+		String password = request.getAttribute(AdminConstants.E_PASSWORD);
 		Provisioning prov = Provisioning.getInstance();
 		Account acct = null;
         boolean isDomainAdmin = false;
         
-        Element virtualHostEl = request.getOptionalElement(AccountService.E_VIRTUAL_HOST);
+        Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
         String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
  
         try {
@@ -108,7 +109,7 @@ public class Auth extends AdminDocumentHandler {
             throw se;
         }
 
-        Element response = lc.createElement(AdminService.AUTH_RESPONSE);
+        Element response = lc.createElement(AdminConstants.AUTH_RESPONSE);
         String token;
         AuthToken at = new AuthToken(acct, true);
         try {
@@ -116,9 +117,9 @@ public class Auth extends AdminDocumentHandler {
         } catch (AuthTokenException e) {
             throw  ServiceException.FAILURE("unable to encode auth token", e);
         }
-        response.addAttribute(AdminService.E_AUTH_TOKEN, token, Element.DISP_CONTENT);
-        response.addAttribute(AdminService.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.DISP_CONTENT);
-        response.addElement(AdminService.E_A).addAttribute(AdminService.A_N, Provisioning.A_zimbraIsDomainAdminAccount).setText(isDomainAdmin+"");
+        response.addAttribute(AdminConstants.E_AUTH_TOKEN, token, Element.DISP_CONTENT);
+        response.addAttribute(AdminConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.DISP_CONTENT);
+        response.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, Provisioning.A_zimbraIsDomainAdminAccount).setText(isDomainAdmin+"");
         Session session = lc.getNewSession(acct.getId(), SessionCache.SESSION_ADMIN);
         if (session != null)
             ZimbraSoapContext.encodeSession(response, session, true);

@@ -26,7 +26,7 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.account.AccountService;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.Element;
 
 public class ZAuthResult {
@@ -36,10 +36,10 @@ public class ZAuthResult {
     private String mRefer;
 
     public ZAuthResult(Element e) throws ServiceException {
-        mAuthToken = e.getElement(AccountService.E_AUTH_TOKEN).getText();
-        mLifetime = e.getAttributeLong(AccountService.E_LIFETIME);
+        mAuthToken = e.getElement(AccountConstants.E_AUTH_TOKEN).getText();
+        mLifetime = e.getAttributeLong(AccountConstants.E_LIFETIME);
         mExpires = System.currentTimeMillis() + mLifetime;
-        Element re = e.getOptionalElement(AccountService.E_REFERRAL); 
+        Element re = e.getOptionalElement(AccountConstants.E_REFERRAL);
         if (re != null) mRefer = re.getText();
     }
 

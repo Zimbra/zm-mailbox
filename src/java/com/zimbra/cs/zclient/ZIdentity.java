@@ -27,8 +27,8 @@ package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.soap.Element;
 
 import java.util.HashMap;
@@ -42,11 +42,11 @@ public class ZIdentity  {
     private Map<String, Object> mAttrs;
 
     public ZIdentity(Element e) throws ServiceException {
-        mName = e.getAttribute(AccountService.A_NAME);
-        mId = e.getAttribute(AccountService.A_ID, null);
+        mName = e.getAttribute(AccountConstants.A_NAME);
+        mId = e.getAttribute(AccountConstants.A_ID, null);
         mAttrs = new HashMap<String, Object>();
-        for (Element a : e.listElements(AccountService.E_A)) {
-            StringUtil.addToMultiMap(mAttrs, a.getAttribute(AccountService.A_NAME), a.getText()); 
+        for (Element a : e.listElements(AccountConstants.E_A)) {
+            StringUtil.addToMultiMap(mAttrs, a.getAttribute(AccountConstants.A_NAME), a.getText());
         }
     }
 
@@ -187,19 +187,19 @@ public class ZIdentity  {
     public boolean getWhenSentToEnabled() { return getBool(Provisioning.A_zimbraPrefWhenSentToEnabled); }
 
     public Element toElement(Element parent) {
-        Element identity = parent.addElement(AccountService.E_IDENTITY);
-        identity.addAttribute(AccountService.A_NAME, mName).addAttribute(AccountService.A_ID, mId);
+        Element identity = parent.addElement(AccountConstants.E_IDENTITY);
+        identity.addAttribute(AccountConstants.A_NAME, mName).addAttribute(AccountConstants.A_ID, mId);
         for (Map.Entry<String,Object> entry : mAttrs.entrySet()) {
             if (entry.getValue() instanceof String[]) {
                 String[] values = (String[]) entry.getValue();
                 for (String value : values) {
-                    Element a = identity.addElement(AccountService.E_A);
-                    a.addAttribute(AccountService.A_NAME, entry.getKey());
+                    Element a = identity.addElement(AccountConstants.E_A);
+                    a.addAttribute(AccountConstants.A_NAME, entry.getKey());
                     a.setText(value);
                 }
             } else {
-                Element a = identity.addElement(AccountService.E_A);
-                a.addAttribute(AccountService.A_NAME, entry.getKey());
+                Element a = identity.addElement(AccountConstants.E_A);
+                a.addAttribute(AccountConstants.A_NAME, entry.getKey());
                 a.setText(entry.getValue().toString());
             }
         }

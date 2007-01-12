@@ -38,11 +38,11 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
 import com.zimbra.cs.wiki.WikiPage;
@@ -50,8 +50,8 @@ import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class SaveDocument extends WikiDocumentHandler {
-    private static String[] TARGET_DOC_ID_PATH = new String[] { MailService.E_DOC, MailService.A_ID };
-    private static String[] TARGET_DOC_FOLDER_PATH = new String[] { MailService.E_DOC, MailService.A_FOLDER };
+    private static String[] TARGET_DOC_ID_PATH = new String[] { MailConstants.E_DOC, MailConstants.A_ID };
+    private static String[] TARGET_DOC_FOLDER_PATH = new String[] { MailConstants.E_DOC, MailConstants.A_FOLDER };
     protected String[] getProxiedIdPath(Element request)     {
     	String id = getXPath(request, TARGET_DOC_ID_PATH);
     	if (id == null)
@@ -112,27 +112,27 @@ public class SaveDocument extends WikiDocumentHandler {
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
-        Element docElem = request.getElement(MailService.E_DOC);
+        Element docElem = request.getElement(MailConstants.E_DOC);
         OperationContext octxt = lc.getOperationContext();
 
         Doc doc;
-        Element attElem = docElem.getOptionalElement(MailService.E_UPLOAD);
+        Element attElem = docElem.getOptionalElement(MailConstants.E_UPLOAD);
         if (attElem != null) {
-            String aid = attElem.getAttribute(MailService.A_ID, null);
+            String aid = attElem.getAttribute(MailConstants.A_ID, null);
             doc = getDocumentDataFromUpload(lc, aid);
         } else {
-        	attElem = docElem.getElement(MailService.E_MSG);
-            String msgid = attElem.getAttribute(MailService.A_ID, null);
-            String part = attElem.getAttribute(MailService.A_PART, null);
+        	attElem = docElem.getElement(MailConstants.E_MSG);
+            String msgid = attElem.getAttribute(MailConstants.A_ID, null);
+            String part = attElem.getAttribute(MailConstants.A_PART, null);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(lc.getRequestedAccountId());
         	doc = getDocumentDataFromMimePart(octxt, mbox, msgid, part);
         }
 
         
-        String name = docElem.getAttribute(MailService.A_NAME, doc.name);
-        String ctype = docElem.getAttribute(MailService.A_CONTENT_TYPE, doc.contentType);
-        String id = docElem.getAttribute(MailService.A_ID, null);
-        int ver = (int)docElem.getAttributeLong(MailService.A_VERSION, 0);
+        String name = docElem.getAttribute(MailConstants.A_NAME, doc.name);
+        String ctype = docElem.getAttribute(MailConstants.A_CONTENT_TYPE, doc.contentType);
+        String id = docElem.getAttribute(MailConstants.A_ID, null);
+        int ver = (int)docElem.getAttributeLong(MailConstants.A_VERSION, 0);
         int itemId;
         if (id == null) {
         	itemId = 0;
@@ -146,10 +146,10 @@ public class SaveDocument extends WikiDocumentHandler {
         Wiki.addPage(ctxt, page, itemId, ver, getRequestedFolder(request, lc));
         Document docItem = page.getWikiItem(ctxt);
 
-        Element response = lc.createElement(MailService.SAVE_DOCUMENT_RESPONSE);
-        Element m = response.addElement(MailService.E_DOC);
-        m.addAttribute(MailService.A_ID, lc.formatItemId(docItem));
-        m.addAttribute(MailService.A_VERSION, docItem.getVersion());
+        Element response = lc.createElement(MailConstants.SAVE_DOCUMENT_RESPONSE);
+        Element m = response.addElement(MailConstants.E_DOC);
+        m.addAttribute(MailConstants.A_ID, lc.formatItemId(docItem));
+        m.addAttribute(MailConstants.A_VERSION, docItem.getVersion());
         ToXML.encodeRestUrl(m, docItem);
         doc.cleanup();
         return response;

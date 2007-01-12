@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
@@ -48,7 +49,7 @@ public class GetIdentities extends AccountDocumentHandler  {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(lc);
 
-        Element response = lc.createElement(AccountService.GET_IDENTITIES_RESPONSE);
+        Element response = lc.createElement(AccountConstants.GET_IDENTITIES_RESPONSE);
         List<Identity> identities = Provisioning.getInstance().getAllIdentities(acct);
         for (Identity i : identities) {
             ToXML.encodeIdentity(response, i);

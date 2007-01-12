@@ -39,6 +39,7 @@ import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -52,13 +53,13 @@ public class CheckSpelling extends MailDocumentHandler {
     public Element handle(Element request, Map<String, Object> context)
     throws ServiceException {
         ZimbraSoapContext zc = getZimbraSoapContext(context);
-        Element response = zc.createElement(MailService.CHECK_SPELLING_RESPONSE);
+        Element response = zc.createElement(MailConstants.CHECK_SPELLING_RESPONSE);
         SoapSession session = (SoapSession) zc.getSession(SessionCache.SESSION_SOAP);
         
         String text = request.getTextTrim();
         if (StringUtil.isNullOrEmpty(text)) {
             sLog.debug("<CheckSpellingRequest> was empty");
-            response.addAttribute(MailService.A_AVAILABLE, true);
+            response.addAttribute(MailConstants.A_AVAILABLE, true);
             return response;
         }
         
@@ -101,11 +102,11 @@ public class CheckSpelling extends MailDocumentHandler {
                 int colonPos = line.indexOf(':');
                 
                 if (colonPos >= 0) {
-                    Element wordEl = response.addElement(MailService.E_MISSPELLED);
+                    Element wordEl = response.addElement(MailConstants.E_MISSPELLED);
                     String word = line.substring(0, colonPos);
                     String suggestions = line.substring(colonPos + 1, line.length());
-                    wordEl.addAttribute(MailService.A_WORD, word);
-                    wordEl.addAttribute(MailService.A_SUGGESTIONS, suggestions);
+                    wordEl.addAttribute(MailConstants.A_WORD, word);
+                    wordEl.addAttribute(MailConstants.A_SUGGESTIONS, suggestions);
                     numMisspelled++;
                 }
             }
@@ -114,7 +115,7 @@ public class CheckSpelling extends MailDocumentHandler {
             return unavailable(response);
         }
         
-        response.addAttribute(MailService.A_AVAILABLE, true);
+        response.addAttribute(MailConstants.A_AVAILABLE, true);
         sLog.debug(
             "CheckSpelling: found %d misspelled words in %d lines", numMisspelled, numLines);
         
@@ -122,7 +123,7 @@ public class CheckSpelling extends MailDocumentHandler {
     }
     
     private Element unavailable(Element response) {
-        response.addAttribute(MailService.A_AVAILABLE, false);
+        response.addAttribute(MailConstants.A_AVAILABLE, false);
         return response;
     }
 }

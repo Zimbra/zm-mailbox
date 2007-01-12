@@ -46,6 +46,7 @@ import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -55,9 +56,9 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class ItemAction extends MailDocumentHandler {
 
-	protected static final String[] OPERATION_PATH = new String[] { MailService.E_ACTION, MailService.A_OPERATION };
-	protected static final String[] TARGET_ITEM_PATH = new String[] { MailService.E_ACTION, MailService.A_ID };
-	protected static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_ACTION, MailService.A_FOLDER };
+	protected static final String[] OPERATION_PATH = new String[] { MailConstants.E_ACTION, MailConstants.A_OPERATION };
+	protected static final String[] TARGET_ITEM_PATH = new String[] { MailConstants.E_ACTION, MailConstants.A_ID };
+	protected static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.E_ACTION, MailConstants.A_FOLDER };
 	protected String[] getProxiedIdPath(Element request) {
 		String operation = getXPath(request, OPERATION_PATH);
 		if (operation == null)
@@ -82,20 +83,20 @@ public class ItemAction extends MailDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
-        Element action = request.getElement(MailService.E_ACTION);
-        String operation = action.getAttribute(MailService.A_OPERATION).toLowerCase();
+        Element action = request.getElement(MailConstants.E_ACTION);
+        String operation = action.getAttribute(MailConstants.A_OPERATION).toLowerCase();
 
         String successes = handleCommon(context, request, operation, MailItem.TYPE_UNKNOWN);
 
-        Element response = zsc.createElement(MailService.ITEM_ACTION_RESPONSE);
-        Element act = response.addUniqueElement(MailService.E_ACTION);
-        act.addAttribute(MailService.A_ID, successes);
-        act.addAttribute(MailService.A_OPERATION, operation);
+        Element response = zsc.createElement(MailConstants.ITEM_ACTION_RESPONSE);
+        Element act = response.addUniqueElement(MailConstants.E_ACTION);
+        act.addAttribute(MailConstants.A_ID, successes);
+        act.addAttribute(MailConstants.A_OPERATION, operation);
         return response;
     }
 
     protected String handleCommon(Map<String,Object> context, Element request, String opAttr, byte type) throws ServiceException, SoapFaultException {
-        Element action = request.getElement(MailService.E_ACTION);
+        Element action = request.getElement(MailConstants.E_ACTION);
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         SoapSession session = (SoapSession) zsc.getSession(SessionCache.SESSION_SOAP);
@@ -112,7 +113,7 @@ public class ItemAction extends MailDocumentHandler {
         // figure out which items are local and which ones are remote, and proxy accordingly
         ArrayList<Integer> local = new ArrayList<Integer>();
         HashMap<String, StringBuffer> remote = new HashMap<String, StringBuffer>();
-        partitionItems(zsc, action.getAttribute(MailService.A_ID), local, remote);
+        partitionItems(zsc, action.getAttribute(MailConstants.A_ID), local, remote);
         
         // we don't yet support moving from a remote mailbox
         if (opStr.equals(OP_MOVE) && !remote.isEmpty())
@@ -121,14 +122,14 @@ public class ItemAction extends MailDocumentHandler {
 
         if (!local.isEmpty()) {
             OperationContext octxt = zsc.getOperationContext();
-        	String constraint = action.getAttribute(MailService.A_TARGET_CONSTRAINT, null);
+        	String constraint = action.getAttribute(MailConstants.A_TARGET_CONSTRAINT, null);
         	TargetConstraint tcon = TargetConstraint.parseConstraint(mbox, constraint);
         	
         	String localResults;
         	
         	// set additional parameters (depends on op type)
         	if (opStr.equals(OP_TAG)) {
-        		int tagId = (int) action.getAttributeLong(MailService.A_TAG);
+        		int tagId = (int) action.getAttributeLong(MailConstants.A_TAG);
         		localResults = ItemActionOperation.TAG(zsc, session, octxt, mbox,
         					Requester.SOAP, local, type, flagValue, tcon, tagId).getResult();
         	} else if (opStr.equals(OP_FLAG)) {
@@ -138,37 +139,37 @@ public class ItemAction extends MailDocumentHandler {
         		localResults = ItemActionOperation.READ(zsc, session, octxt, mbox,
         					Requester.SOAP, local, type, flagValue, tcon).getResult();
         	} else if (opStr.equals(OP_COLOR)) {
-        		byte color = (byte) action.getAttributeLong(MailService.A_COLOR);
+        		byte color = (byte) action.getAttributeLong(MailConstants.A_COLOR);
         		localResults = ItemActionOperation.COLOR(zsc, session, octxt, mbox,
         					Requester.SOAP, local, type, flagValue, tcon, color).getResult();
         	} else if (opStr.equals(OP_HARD_DELETE)) {
         		localResults = ItemActionOperation.HARD_DELETE(zsc, session, octxt, mbox,
         					Requester.SOAP, local, type, flagValue, tcon).getResult();
         	} else if (opStr.equals(OP_MOVE)) {
-        		ItemId iidFolder = new ItemId(action.getAttribute(MailService.A_FOLDER), zsc);
+        		ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER), zsc);
         		localResults = ItemActionOperation.MOVE(zsc, session, octxt, mbox,
         					Requester.SOAP, local, type, flagValue, tcon, iidFolder).getResult();
         	} else if (opStr.equals(OP_SPAM)) {
         		int defaultFolder = flagValue ? Mailbox.ID_FOLDER_SPAM : Mailbox.ID_FOLDER_INBOX;
-        		int folderId = (int) action.getAttributeLong(MailService.A_FOLDER, defaultFolder);
+        		int folderId = (int) action.getAttributeLong(MailConstants.A_FOLDER, defaultFolder);
         		localResults = ItemActionOperation.SPAM(zsc, session, octxt, mbox,
         					Requester.SOAP, local, type, flagValue, tcon, folderId).getResult();
             } else if (opStr.equals(OP_RENAME)) {
-                String name = action.getAttribute(MailService.A_NAME);
-                ItemId iidFolder = new ItemId(action.getAttribute(MailService.A_FOLDER, "-1"), zsc);
+                String name = action.getAttribute(MailConstants.A_NAME);
+                ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER, "-1"), zsc);
                 localResults = ItemActionOperation.RENAME(zsc, session, octxt, mbox,
                             Requester.SOAP, local, type, flagValue, tcon, name, iidFolder).getResult();
         	} else if (opStr.equals(OP_UPDATE)) {
-                String folderId = action.getAttribute(MailService.A_FOLDER, null);
+                String folderId = action.getAttribute(MailConstants.A_FOLDER, null);
                 ItemId iidFolder = new ItemId(folderId == null ? "-1" : folderId, zsc);
         		if (!iidFolder.belongsTo(mbox))
         			throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
                 else if (folderId != null && iidFolder.getId() <= 0)
                     throw MailServiceException.NO_SUCH_FOLDER(iidFolder.getId());
-                String name  = action.getAttribute(MailService.A_NAME, null);
-        		String flags = action.getAttribute(MailService.A_FLAGS, null);
-        		String tags  = action.getAttribute(MailService.A_TAGS, null);
-        		byte color   = (byte) action.getAttributeLong(MailService.A_COLOR, -1);
+                String name  = action.getAttribute(MailConstants.A_NAME, null);
+        		String flags = action.getAttribute(MailConstants.A_FLAGS, null);
+        		String tags  = action.getAttribute(MailConstants.A_TAGS, null);
+        		byte color   = (byte) action.getAttributeLong(MailConstants.A_COLOR, -1);
         		localResults = ItemActionOperation.UPDATE(zsc, session, octxt, mbox,
         					Requester.SOAP, local, type, tcon, name, iidFolder, 
         					flags, tags, color).getResult();
@@ -203,7 +204,7 @@ public class ItemAction extends MailDocumentHandler {
         StringBuffer successes = new StringBuffer();
         for (Iterator it = remote.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry entry = (Map.Entry) it.next();
-            action.addAttribute(MailService.A_ID, entry.getValue().toString());
+            action.addAttribute(MailConstants.A_ID, entry.getValue().toString());
             Element response = proxyRequest(request, context, entry.getKey().toString());
             String completed = extractSuccesses(response);
             successes.append(completed.length() > 0 && successes.length() > 0 ? "," : "").append(completed);
@@ -213,7 +214,7 @@ public class ItemAction extends MailDocumentHandler {
 
     protected String extractSuccesses(Element response) {
         try {
-            return response.getElement(MailService.E_ACTION).getAttribute(MailService.A_ID);
+            return response.getElement(MailConstants.E_ACTION).getAttribute(MailConstants.A_ID);
         } catch (ServiceException e) {
             ZimbraLog.misc.warn("could not extract ItemAction successes from proxied response", e);
             return "";

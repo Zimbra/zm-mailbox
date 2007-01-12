@@ -40,13 +40,14 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.HttpUtil.Browser;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 
 public class GetICal extends MailDocumentHandler {
 
-    private static final String[] TARGET_OBJ_PATH = new String[] { MailService.A_ID };
+    private static final String[] TARGET_OBJ_PATH = new String[] { MailConstants.A_ID };
     protected String[] getProxiedIdPath(Element request)     { return TARGET_OBJ_PATH; }
 
     /* (non-Javadoc)
@@ -57,9 +58,9 @@ public class GetICal extends MailDocumentHandler {
         Mailbox mbx = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
         
-        String iidStr = request.getAttribute(MailService.A_ID, null);
-        long rangeStart = request.getAttributeLong(MailService.A_CAL_START_TIME, -1);
-        long rangeEnd = request.getAttributeLong(MailService.A_CAL_END_TIME, -1);
+        String iidStr = request.getAttribute(MailConstants.A_ID, null);
+        long rangeStart = request.getAttributeLong(MailConstants.A_CAL_START_TIME, -1);
+        long rangeEnd = request.getAttributeLong(MailConstants.A_CAL_END_TIME, -1);
         
 //        int compNum = (int)request.getAttributeLong(MailService.A_CAL_COMPONENT_NUM);
         int compNum = 0;
@@ -92,10 +93,10 @@ public class GetICal extends MailDocumentHandler {
                     
                     Element response = getResponseElement(lc);
                     
-                    Element icalElt = response.addElement(MailService.E_CAL_ICAL);
+                    Element icalElt = response.addElement(MailConstants.E_CAL_ICAL);
 
                     if (iid != null)
-                        icalElt.addAttribute(MailService.A_ID, lc.formatItemId(iid));
+                        icalElt.addAttribute(MailConstants.A_ID, lc.formatItemId(iid));
                     
                     icalElt.addText(buf.toString());
                     

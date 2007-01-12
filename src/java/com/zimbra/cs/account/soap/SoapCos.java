@@ -28,9 +28,9 @@ package com.zimbra.cs.account.soap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning.CosBy;
-import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.Element.XMLElement;
 
@@ -41,21 +41,21 @@ class SoapCos extends Cos implements SoapEntry {
     }
 
     SoapCos(Element e) throws ServiceException {
-        super(e.getAttribute(AdminService.A_NAME), e.getAttribute(AdminService.A_ID), SoapProvisioning.getAttrs(e));
+        super(e.getAttribute(AdminConstants.A_NAME), e.getAttribute(AdminConstants.A_ID), SoapProvisioning.getAttrs(e));
     }
     
     public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.MODIFY_COS_REQUEST);
-        req.addElement(AdminService.E_ID).setText(getId());
+        XMLElement req = new XMLElement(AdminConstants.MODIFY_COS_REQUEST);
+        req.addElement(AdminConstants.E_ID).setText(getId());
         SoapProvisioning.addAttrElements(req, attrs);
-        setAttrs(SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_COS)));        
+        setAttrs(SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminConstants.E_COS)));
     }
 
     public void reload(SoapProvisioning prov) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.GET_COS_REQUEST);
-        Element a = req.addElement(AdminService.E_COS);
+        XMLElement req = new XMLElement(AdminConstants.GET_COS_REQUEST);
+        Element a = req.addElement(AdminConstants.E_COS);
         a.setText(getId());
-        a.addAttribute(AdminService.A_BY, CosBy.id.name());
-        setAttrs(SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_COS)));        
+        a.addAttribute(AdminConstants.A_BY, CosBy.id.name());
+        setAttrs(SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminConstants.E_COS)));
     }
 }

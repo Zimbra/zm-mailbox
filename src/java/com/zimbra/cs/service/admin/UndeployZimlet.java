@@ -28,6 +28,7 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -53,13 +54,13 @@ public class UndeployZimlet extends AdminDocumentHandler {
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
-	    String name = request.getAttribute(AdminService.A_NAME);
-		String action = request.getAttribute(AdminService.A_ACTION, null);
+	    String name = request.getAttribute(AdminConstants.A_NAME);
+		String action = request.getAttribute(AdminConstants.A_ACTION, null);
 		String auth = null;
 		
 		if (action == null)
 			auth = lc.getRawAuthToken();
-	    Element response = lc.createElement(AdminService.UNDEPLOY_ZIMLET_RESPONSE);
+	    Element response = lc.createElement(AdminConstants.UNDEPLOY_ZIMLET_RESPONSE);
 	    new Thread(new UndeployThread(name, auth)).start();
 		return response;
 	}

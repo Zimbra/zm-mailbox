@@ -27,6 +27,7 @@ package com.zimbra.cs.service.account;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
@@ -41,12 +42,12 @@ public class CreateIdentity extends DocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getRequestedAccount(zsc);
         
-        Element identityEl = request.getElement(AccountService.E_IDENTITY);
-        String name = identityEl.getAttribute(AccountService.A_NAME);
-        Map<String,Object> attrs = AccountService.getAttrs(identityEl, AccountService.A_NAME);
+        Element identityEl = request.getElement(AccountConstants.E_IDENTITY);
+        String name = identityEl.getAttribute(AccountConstants.A_NAME);
+        Map<String,Object> attrs = AccountService.getAttrs(identityEl, AccountConstants.A_NAME);
         Identity identity = Provisioning.getInstance().createIdentity(account, name, attrs);
         
-        Element response = zsc.createElement(AccountService.CREATE_IDENTITY_RESPONSE);
+        Element response = zsc.createElement(AccountConstants.CREATE_IDENTITY_RESPONSE);
         ToXML.encodeIdentity(response, identity);
         return response;
     }

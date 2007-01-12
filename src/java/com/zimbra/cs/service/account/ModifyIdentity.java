@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Identity;
@@ -44,8 +45,8 @@ public class ModifyIdentity extends DocumentHandler {
         Account account = getRequestedAccount(zsc);
         Provisioning prov = Provisioning.getInstance();
 
-        Element eIdentity = request.getElement(AccountService.E_IDENTITY);
-        Map<String,Object> attrs = AccountService.getAttrs(eIdentity, AccountService.A_NAME);
+        Element eIdentity = request.getElement(AccountConstants.E_IDENTITY);
+        Map<String,Object> attrs = AccountService.getAttrs(eIdentity, AccountConstants.A_NAME);
         
         // remove anything that doesn't start with zimbraPref. ldap will also do additional checks
         for (Iterator<String> it = attrs.keySet().iterator(); it.hasNext(); )
@@ -53,18 +54,18 @@ public class ModifyIdentity extends DocumentHandler {
                 it.remove();
 
         Identity ident = null;
-        String key, id = eIdentity.getAttribute(AccountService.A_ID, null);
+        String key, id = eIdentity.getAttribute(AccountConstants.A_ID, null);
         if (id != null) {
             ident = prov.get(account, IdentityBy.id, key = id);
         } else {
-            ident = prov.get(account, IdentityBy.name, key = eIdentity.getAttribute(AccountService.A_NAME));
+            ident = prov.get(account, IdentityBy.name, key = eIdentity.getAttribute(AccountConstants.A_NAME));
         }
         if (ident == null)
             throw AccountServiceException.NO_SUCH_IDENTITY(key);
 
         prov.modifyIdentity(account, ident.getName(), attrs);
         
-        Element response = zsc.createElement(AccountService.MODIFY_IDENTITY_RESPONSE);
+        Element response = zsc.createElement(AccountConstants.MODIFY_IDENTITY_RESPONSE);
         return response;
     }
 }

@@ -27,7 +27,7 @@ package com.zimbra.cs.zclient.event;
 
 import com.zimbra.soap.Element;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.ZEmailAddress;
 import com.zimbra.cs.zclient.ZSoapSB;
 
@@ -47,7 +47,7 @@ public class ZConversationSummaryEvent {
      * @throws com.zimbra.common.service.ServiceException on error
      */
     public String getId() throws ServiceException {
-        return mConvEl.getAttribute(MailService.A_ID);
+        return mConvEl.getAttribute(MailConstants.A_ID);
     }
 
     /**
@@ -55,7 +55,7 @@ public class ZConversationSummaryEvent {
      * @return new flags or default value if flags didn't change
      */
     public String getFlags(String defaultValue) {
-        return mConvEl.getAttribute(MailService.A_FLAGS, defaultValue);
+        return mConvEl.getAttribute(MailConstants.A_FLAGS, defaultValue);
     }
 
     /**
@@ -63,7 +63,7 @@ public class ZConversationSummaryEvent {
      * @return new tags or default value if tags didn't change
      */
     public String getTagIds(String defaultValue) {
-        return mConvEl.getAttribute(MailService.A_TAGS, defaultValue);
+        return mConvEl.getAttribute(MailConstants.A_TAGS, defaultValue);
     }
 
     /**
@@ -72,7 +72,7 @@ public class ZConversationSummaryEvent {
      * @throws com.zimbra.common.service.ServiceException on error
      */
     public int getMessageCount(int defaultValue) throws ServiceException {
-        return (int) mConvEl.getAttributeLong(MailService.A_NUM, defaultValue);
+        return (int) mConvEl.getAttributeLong(MailConstants.A_NUM, defaultValue);
     }
 
     /**
@@ -80,7 +80,7 @@ public class ZConversationSummaryEvent {
      * @return new subject or defaultValue if unchanged
      */
     public String getSubject(String defaultValue) {
-        Element sub = mConvEl.getOptionalElement(MailService.E_SUBJECT);
+        Element sub = mConvEl.getOptionalElement(MailConstants.E_SUBJECT);
         return sub == null ? defaultValue : sub.getText();
     }
 
@@ -89,7 +89,7 @@ public class ZConversationSummaryEvent {
      * @return new fragment or defaultValue if unchanged
      */
     public String getFragment(String defaultValue) {
-        Element frag = mConvEl.getOptionalElement(MailService.E_FRAG);
+        Element frag = mConvEl.getOptionalElement(MailConstants.E_FRAG);
         return frag == null ? defaultValue : frag.getText();
     }
 
@@ -99,7 +99,7 @@ public class ZConversationSummaryEvent {
      * @throws com.zimbra.common.service.ServiceException on error
      */
     public long getDate(long defaultValue) throws ServiceException {
-        return mConvEl.getAttributeLong(MailService.A_DATE, defaultValue);
+        return mConvEl.getAttributeLong(MailConstants.A_DATE, defaultValue);
     }
 
     /**
@@ -109,7 +109,7 @@ public class ZConversationSummaryEvent {
      */
     public List<ZEmailAddress> getRecipients(List<ZEmailAddress> defaultValue) throws ServiceException {
         List<ZEmailAddress> result  = null;
-        for (Element emailEl: mConvEl.listElements(MailService.E_EMAIL)) {
+        for (Element emailEl: mConvEl.listElements(MailConstants.E_EMAIL)) {
             if (result == null) result = new ArrayList<ZEmailAddress>();
             result.add(new ZEmailAddress(emailEl));
         }

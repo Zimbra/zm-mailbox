@@ -31,6 +31,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -47,7 +48,7 @@ public class CreateCalendarItemException extends CreateCalendarItem {
     
     private static Log sLog = LogFactory.getLog(CreateCalendarItemException.class);
 
-    private static final String[] TARGET_PATH = new String[] { MailService.A_ID };
+    private static final String[] TARGET_PATH = new String[] { MailConstants.A_ID };
     protected String[] getProxiedIdPath(Element request)     { return TARGET_PATH; }
     protected boolean checkMountpointProxy(Element request)  { return false; }
 
@@ -86,14 +87,14 @@ public class CreateCalendarItemException extends CreateCalendarItem {
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
         
-        ItemId iid = new ItemId(request.getAttribute(MailService.A_ID), lc);
-        int compNum = (int) request.getAttributeLong(MailService.E_INVITE_COMPONENT);
+        ItemId iid = new ItemId(request.getAttribute(MailConstants.A_ID), lc);
+        int compNum = (int) request.getAttributeLong(MailConstants.E_INVITE_COMPONENT);
         sLog.info("<CreateCalendarItemException id=" + lc.formatItemId(iid) + " comp=" + compNum + "> " + lc.toString());
         
         // <M>
-        Element msgElem = request.getElement(MailService.E_MSG);
+        Element msgElem = request.getElement(MailConstants.E_MSG);
         
-        if (msgElem.getAttribute(MailService.A_FOLDER, null) != null) {
+        if (msgElem.getAttribute(MailConstants.A_FOLDER, null) != null) {
             throw ServiceException.FAILURE("You may not specify a target Folder when creating an Exception for an existing calendar item", null);
         }
         

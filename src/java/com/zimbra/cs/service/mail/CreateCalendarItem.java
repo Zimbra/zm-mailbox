@@ -34,6 +34,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.util.ItemId;
@@ -47,7 +48,7 @@ public class CreateCalendarItem extends CalendarRequest {
     
     private static Log sLog = LogFactory.getLog(CreateCalendarItem.class);
 
-    private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_MSG, MailService.A_FOLDER };
+    private static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.E_MSG, MailConstants.A_FOLDER };
     private static final String[] RESPONSE_ITEM_PATH = new String[] { };
     protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
     protected boolean checkMountpointProxy(Element request)  { return true; }
@@ -69,10 +70,10 @@ public class CreateCalendarItem extends CalendarRequest {
         Mailbox mbox = getRequestedMailbox(lc);
         
         // <M>
-        Element msgElem = request.getElement(MailService.E_MSG);
+        Element msgElem = request.getElement(MailConstants.E_MSG);
         
         // no existing calendar item referenced -- this is a new create!
-        String folderIdStr = msgElem.getAttribute(MailService.A_FOLDER, DEFAULT_FOLDER);
+        String folderIdStr = msgElem.getAttribute(MailConstants.A_FOLDER, DEFAULT_FOLDER);
         ItemId iidFolder = new ItemId(folderIdStr, lc);
         sLog.info("<CreateCalendarItem folder=" + iidFolder.getId() + "> " + lc.toString());
         

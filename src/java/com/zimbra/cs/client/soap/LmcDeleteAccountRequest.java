@@ -28,12 +28,12 @@ package com.zimbra.cs.client.soap;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
-import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.DomUtil;
+import com.zimbra.common.soap.AdminConstants;
 
 public class LmcDeleteAccountRequest extends LmcSoapRequest {
     String mAccountId;
-    
+
     public LmcDeleteAccountRequest(String accountId) {
         if (accountId == null) {
             throw new IllegalArgumentException("accountId cannot be null");
@@ -42,8 +42,8 @@ public class LmcDeleteAccountRequest extends LmcSoapRequest {
     }
 
     protected Element getRequestXML() {
-        Element request = DocumentHelper.createElement(AdminService.DELETE_ACCOUNT_REQUEST);
-        DomUtil.add(request, AdminService.E_ID, mAccountId);
+        Element request = DocumentHelper.createElement(AdminConstants.DELETE_ACCOUNT_REQUEST);
+        DomUtil.add(request, AdminConstants.E_ID, mAccountId);
         return request;
     }
 

@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.EntrySearchFilter;
@@ -50,12 +51,12 @@ public class SearchCalendarResources extends AccountDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Element response = lc.createElement(AccountService.SEARCH_CALENDAR_RESOURCES_RESPONSE);
+        Element response = lc.createElement(AccountConstants.SEARCH_CALENDAR_RESOURCES_RESPONSE);
         Account acct = getRequestedAccount(getZimbraSoapContext(context));
 
-        String sortBy = request.getAttribute(AccountService.A_SORT_BY, null);        
-        boolean sortAscending = request.getAttributeBool(AccountService.A_SORT_ASCENDING, true);        
-        String attrsStr = request.getAttribute(AccountService.A_ATTRS, null);
+        String sortBy = request.getAttribute(AccountConstants.A_SORT_BY, null);
+        boolean sortAscending = request.getAttributeBool(AccountConstants.A_SORT_ASCENDING, true);
+        String attrsStr = request.getAttribute(AccountConstants.A_ATTRS, null);
         String[] attrs = attrsStr == null ? null : attrsStr.split(",");
 
         EntrySearchFilter filter = parseSearchFilter(request);
@@ -71,10 +72,10 @@ public class SearchCalendarResources extends AccountDocumentHandler {
     }
 
     public static EntrySearchFilter parseSearchFilter(Element request) throws ServiceException {
-        Element filterElem = request.getElement(AccountService.E_ENTRY_SEARCH_FILTER);
-        Element termElem = filterElem.getOptionalElement(AccountService.E_ENTRY_SEARCH_FILTER_MULTICOND);
+        Element filterElem = request.getElement(AccountConstants.E_ENTRY_SEARCH_FILTER);
+        Element termElem = filterElem.getOptionalElement(AccountConstants.E_ENTRY_SEARCH_FILTER_MULTICOND);
         if (termElem == null)
-            termElem = filterElem.getElement(AccountService.E_ENTRY_SEARCH_FILTER_SINGLECOND);
+            termElem = filterElem.getElement(AccountConstants.E_ENTRY_SEARCH_FILTER_SINGLECOND);
         Term term = parseFilterTermElem(termElem);
         EntrySearchFilter filter = new EntrySearchFilter(term);
 
@@ -85,9 +86,9 @@ public class SearchCalendarResources extends AccountDocumentHandler {
     throws ServiceException {
         Term term;
         String elemName = termElem.getName();
-        boolean negation = termElem.getAttributeBool(AccountService.A_ENTRY_SEARCH_FILTER_NEGATION, false);
-        if (elemName.equals(AccountService.E_ENTRY_SEARCH_FILTER_MULTICOND)) {
-            boolean or = termElem.getAttributeBool(AccountService.A_ENTRY_SEARCH_FILTER_OR, false);
+        boolean negation = termElem.getAttributeBool(AccountConstants.A_ENTRY_SEARCH_FILTER_NEGATION, false);
+        if (elemName.equals(AccountConstants.E_ENTRY_SEARCH_FILTER_MULTICOND)) {
+            boolean or = termElem.getAttributeBool(AccountConstants.A_ENTRY_SEARCH_FILTER_OR, false);
             Multi multiTerm = new Multi(negation, or ? AndOr.or : AndOr.and);
             for (Iterator<Element> iter = termElem.elementIterator();
                  iter.hasNext(); ) {
@@ -95,14 +96,14 @@ public class SearchCalendarResources extends AccountDocumentHandler {
                 multiTerm.add(child);
             }
             term = multiTerm;
-        } else if (elemName.equals(AccountService.E_ENTRY_SEARCH_FILTER_SINGLECOND)) {
-            String attr = termElem.getAttribute(AccountService.A_ENTRY_SEARCH_FILTER_ATTR);
+        } else if (elemName.equals(AccountConstants.E_ENTRY_SEARCH_FILTER_SINGLECOND)) {
+            String attr = termElem.getAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_ATTR);
             if (attr == null)
                 throw ServiceException.INVALID_REQUEST("Missing search term attr", null);
-            String op = termElem.getAttribute(AccountService.A_ENTRY_SEARCH_FILTER_OP);
+            String op = termElem.getAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_OP);
             if (op == null)
                 throw ServiceException.INVALID_REQUEST("Missing search term op", null);
-            String value = termElem.getAttribute(AccountService.A_ENTRY_SEARCH_FILTER_VALUE);
+            String value = termElem.getAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_VALUE);
             if (value == null)
                 throw ServiceException.INVALID_REQUEST("Missing search term value", null);
             term = new Single(negation, attr, op, value);

@@ -30,11 +30,11 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.Element;
 
 public class RdateExdate {
@@ -121,24 +121,24 @@ public class RdateExdate {
     }
 
     public Element toXml(Element parent) {
-        Element dateElem = parent.addElement(MailService.E_CAL_DATES);
+        Element dateElem = parent.addElement(MailConstants.E_CAL_DATES);
         if (mTimeZone != null)
-            dateElem.addAttribute(MailService.A_CAL_TIMEZONE, mTimeZone.getID());
+            dateElem.addAttribute(MailConstants.A_CAL_TIMEZONE, mTimeZone.getID());
         for (Object val : mValues) {
-            Element dtvalElem = dateElem.addElement(MailService.E_CAL_DATE_VAL);
+            Element dtvalElem = dateElem.addElement(MailConstants.E_CAL_DATE_VAL);
             if (val instanceof ParsedDateTime) {
                 ParsedDateTime dt = (ParsedDateTime) val;
-                Element startElem = dtvalElem.addElement(MailService.E_CAL_START_TIME);
-                startElem.addAttribute(MailService.A_CAL_DATETIME,
+                Element startElem = dtvalElem.addElement(MailConstants.E_CAL_START_TIME);
+                startElem.addAttribute(MailConstants.A_CAL_DATETIME,
                                        dt.getDateTimePartString(false));
             } else if (val instanceof Period) {
                 Period p = (Period) val;
-                Element startElem = dtvalElem.addElement(MailService.E_CAL_START_TIME);
-                startElem.addAttribute(MailService.A_CAL_DATETIME,
+                Element startElem = dtvalElem.addElement(MailConstants.E_CAL_START_TIME);
+                startElem.addAttribute(MailConstants.A_CAL_DATETIME,
                                        p.getStart().getDateTimePartString(false));
                 if (p.hasEnd()) {
-                    Element endElem = dtvalElem.addElement(MailService.E_CAL_END_TIME);
-                    endElem.addAttribute(MailService.A_CAL_DATETIME,
+                    Element endElem = dtvalElem.addElement(MailConstants.E_CAL_END_TIME);
+                    endElem.addAttribute(MailConstants.A_CAL_DATETIME,
                                          p.getEnd().getDateTimePartString(false));
                 } else {
                     p.getDuration().toXml(dtvalElem);

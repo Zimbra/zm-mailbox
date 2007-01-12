@@ -37,7 +37,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.admin.AdminService;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.util.SoapCLI;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.Element;
@@ -143,10 +143,10 @@ public class VolumeUtil extends SoapCLI {
     		System.err.println("Volume " + id + " does not exist");
     		System.exit(1);
     	}
-    	short type = (short) ((Integer) vol.get(AdminService.A_VOLUME_TYPE)).intValue();
-    	Element req = new Element.XMLElement(AdminService.SET_CURRENT_VOLUME_REQUEST);
-        req.addAttribute(AdminService.A_VOLUME_TYPE, type);
-        req.addAttribute(AdminService.A_ID, id);
+    	short type = (short) ((Integer) vol.get(AdminConstants.A_VOLUME_TYPE)).intValue();
+    	Element req = new Element.XMLElement(AdminConstants.SET_CURRENT_VOLUME_REQUEST);
+        req.addAttribute(AdminConstants.A_VOLUME_TYPE, type);
+        req.addAttribute(AdminConstants.A_ID, id);
         auth();
         getTransport().invokeWithoutSession(req);
         System.out.println("Volume " + id + " is now the current " +
@@ -155,9 +155,9 @@ public class VolumeUtil extends SoapCLI {
 
     private void unsetCurrentSecondaryMessageVolume()
     throws SoapFaultException, IOException, ServiceException {
-        Element req = new Element.XMLElement(AdminService.SET_CURRENT_VOLUME_REQUEST);
-        req.addAttribute(AdminService.A_VOLUME_TYPE, Volume.TYPE_MESSAGE_SECONDARY);
-        req.addAttribute(AdminService.A_ID, Volume.ID_NONE);
+        Element req = new Element.XMLElement(AdminConstants.SET_CURRENT_VOLUME_REQUEST);
+        req.addAttribute(AdminConstants.A_VOLUME_TYPE, Volume.TYPE_MESSAGE_SECONDARY);
+        req.addAttribute(AdminConstants.A_ID, Volume.ID_NONE);
         auth();
         getTransport().invokeWithoutSession(req);
         System.out.println("Turned off the current secondary message volume.");
@@ -166,11 +166,11 @@ public class VolumeUtil extends SoapCLI {
     private void displayCurrentVolumes()
     throws SoapFaultException, IOException, ServiceException {
     	Map vols = getVolumes(null, true);
-        Element req = new Element.XMLElement(AdminService.GET_CURRENT_VOLUMES_REQUEST);
+        Element req = new Element.XMLElement(AdminConstants.GET_CURRENT_VOLUMES_REQUEST);
         Element resp = getTransport().invokeWithoutSession(req);
-        for (Iterator it = resp.elementIterator(AdminService.E_VOLUME); it.hasNext(); ) {
+        for (Iterator it = resp.elementIterator(AdminConstants.E_VOLUME); it.hasNext(); ) {
             Element volElem = (Element) it.next();
-            Integer key = new Integer(volElem.getAttribute(AdminService.A_ID));
+            Integer key = new Integer(volElem.getAttribute(AdminConstants.A_ID));
             Map vol = (Map) vols.get(key);
             listVolume(vol);
         }
@@ -183,37 +183,37 @@ public class VolumeUtil extends SoapCLI {
             auth();
         Element req = null;
         if (id == null) {
-            req = new Element.XMLElement(AdminService.GET_ALL_VOLUMES_REQUEST);
+            req = new Element.XMLElement(AdminConstants.GET_ALL_VOLUMES_REQUEST);
         } else {
-            req = new Element.XMLElement(AdminService.GET_VOLUME_REQUEST);
-            req.addAttribute(AdminService.A_ID, id);
+            req = new Element.XMLElement(AdminConstants.GET_VOLUME_REQUEST);
+            req.addAttribute(AdminConstants.A_ID, id);
         }
         Element resp = getTransport().invokeWithoutSession(req);
-        for (Iterator it = resp.elementIterator(AdminService.E_VOLUME); it.hasNext(); ) {
+        for (Iterator it = resp.elementIterator(AdminConstants.E_VOLUME); it.hasNext(); ) {
             Element volElem = (Element) it.next();
-            String vid = volElem.getAttribute(AdminService.A_ID);
-            String name = volElem.getAttribute(AdminService.A_VOLUME_NAME);
-            short type = (short) volElem.getAttributeLong(AdminService.A_VOLUME_TYPE);
-            String path = volElem.getAttribute(AdminService.A_VOLUME_ROOTPATH);
+            String vid = volElem.getAttribute(AdminConstants.A_ID);
+            String name = volElem.getAttribute(AdminConstants.A_VOLUME_NAME);
+            short type = (short) volElem.getAttributeLong(AdminConstants.A_VOLUME_TYPE);
+            String path = volElem.getAttribute(AdminConstants.A_VOLUME_ROOTPATH);
 //            String fbits = volElem.getAttribute(AdminService.A_VOLUME_FBITS);
 //            String fgbits = volElem.getAttribute(AdminService.A_VOLUME_FGBITS);
 //            String mbits = volElem.getAttribute(AdminService.A_VOLUME_MBITS);
 //            String mgbits = volElem.getAttribute(AdminService.A_VOLUME_MGBITS);
-            boolean compressed = volElem.getAttributeBool(AdminService.A_VOLUME_COMPRESS_BLOBS);
-            String threshold = volElem.getAttribute(AdminService.A_VOLUME_COMPRESSION_THRESHOLD);
+            boolean compressed = volElem.getAttributeBool(AdminConstants.A_VOLUME_COMPRESS_BLOBS);
+            String threshold = volElem.getAttribute(AdminConstants.A_VOLUME_COMPRESSION_THRESHOLD);
 
             Map vol = new HashMap();
             Integer key = new Integer(vid);
-            vol.put(AdminService.A_ID, key);
-            vol.put(AdminService.A_VOLUME_NAME, name);
-            vol.put(AdminService.A_VOLUME_TYPE, new Integer(type));
-            vol.put(AdminService.A_VOLUME_ROOTPATH, path);
+            vol.put(AdminConstants.A_ID, key);
+            vol.put(AdminConstants.A_VOLUME_NAME, name);
+            vol.put(AdminConstants.A_VOLUME_TYPE, new Integer(type));
+            vol.put(AdminConstants.A_VOLUME_ROOTPATH, path);
 //            vol.put(AdminService.A_VOLUME_FBITS, new Integer(fbits));
 //            vol.put(AdminService.A_VOLUME_FGBITS, new Integer(fgbits));
 //            vol.put(AdminService.A_VOLUME_MBITS, new Integer(mbits));
 //            vol.put(AdminService.A_VOLUME_MGBITS, new Integer(mgbits));
-            vol.put(AdminService.A_VOLUME_COMPRESS_BLOBS, new Boolean(compressed));
-            vol.put(AdminService.A_VOLUME_COMPRESSION_THRESHOLD, new Integer(threshold));
+            vol.put(AdminConstants.A_VOLUME_COMPRESS_BLOBS, new Boolean(compressed));
+            vol.put(AdminConstants.A_VOLUME_COMPRESSION_THRESHOLD, new Integer(threshold));
             vols.put(key, vol);
         }
 
@@ -221,19 +221,19 @@ public class VolumeUtil extends SoapCLI {
     }
 
     private void listVolume(Map vol) {
-		short vid = (short) ((Integer) vol.get(AdminService.A_ID)).intValue();
-        short type = (short) ((Integer) vol.get(AdminService.A_VOLUME_TYPE)).intValue();
-        boolean compressed = ((Boolean) vol.get(AdminService.A_VOLUME_COMPRESS_BLOBS)).booleanValue();
-        int threshold = ((Integer) vol.get(AdminService.A_VOLUME_COMPRESSION_THRESHOLD)).intValue();
+		short vid = (short) ((Integer) vol.get(AdminConstants.A_ID)).intValue();
+        short type = (short) ((Integer) vol.get(AdminConstants.A_VOLUME_TYPE)).intValue();
+        boolean compressed = ((Boolean) vol.get(AdminConstants.A_VOLUME_COMPRESS_BLOBS)).booleanValue();
+        int threshold = ((Integer) vol.get(AdminConstants.A_VOLUME_COMPRESSION_THRESHOLD)).intValue();
 //        int fbits = ((Integer) vol.get(AdminService.A_VOLUME_FBITS)).intValue();
 //        int fgbits = ((Integer) vol.get(AdminService.A_VOLUME_FGBITS)).intValue();
 //        int mbits = ((Integer) vol.get(AdminService.A_VOLUME_MBITS)).intValue();
 //        int mgbits = ((Integer) vol.get(AdminService.A_VOLUME_MGBITS)).intValue();
 
         System.out.println("   Volume id: " + vid);
-        System.out.println("        name: " + vol.get(AdminService.A_VOLUME_NAME));
+        System.out.println("        name: " + vol.get(AdminConstants.A_VOLUME_NAME));
         System.out.println("        type: " + VolumeUtil.getTypeName(type));
-        System.out.println("        path: " + vol.get(AdminService.A_VOLUME_ROOTPATH));
+        System.out.println("        path: " + vol.get(AdminConstants.A_VOLUME_ROOTPATH));
         System.out.print("  compressed: " + compressed);
         if (compressed)
             System.out.println("\t         threshold: " + threshold + " bytes");
@@ -255,8 +255,8 @@ public class VolumeUtil extends SoapCLI {
     }
 
     private void deleteVolume(String id) throws SoapFaultException, IOException, ServiceException {
-        Element req = new Element.XMLElement(AdminService.DELETE_VOLUME_REQUEST);
-        req.addAttribute(AdminService.A_ID, id);
+        Element req = new Element.XMLElement(AdminConstants.DELETE_VOLUME_REQUEST);
+        req.addAttribute(AdminConstants.A_ID, id);
         auth();
         getTransport().invokeWithoutSession(req);
         System.out.println("Deleted volume " + id);
@@ -267,9 +267,9 @@ public class VolumeUtil extends SoapCLI {
             String mailboxGroupBits, String compress, String compressThreshold)
     throws ParseException, SoapFaultException, IOException, ServiceException {
 
-        Element req = new Element.XMLElement(AdminService.MODIFY_VOLUME_REQUEST);
-        req.addAttribute(AdminService.A_ID, id);
-        Element vol = req.addElement(AdminService.E_VOLUME);
+        Element req = new Element.XMLElement(AdminConstants.MODIFY_VOLUME_REQUEST);
+        req.addAttribute(AdminConstants.A_ID, id);
+        Element vol = req.addElement(AdminConstants.E_VOLUME);
         addAttributes(vol, name, type, path, fileBits, fileGroupBits,
                 mailboxBits, mailboxGroupBits, compress, compressThreshold);
         auth();
@@ -284,8 +284,8 @@ public class VolumeUtil extends SoapCLI {
 
         if (name == null || type == null || path == null)
             throw new ParseException("at least one of the required parameters (name, type, path) is missing");
-        Element req = new Element.XMLElement(AdminService.CREATE_VOLUME_REQUEST);
-        Element vol = req.addElement(AdminService.E_VOLUME);
+        Element req = new Element.XMLElement(AdminConstants.CREATE_VOLUME_REQUEST);
+        Element vol = req.addElement(AdminConstants.E_VOLUME);
 //        if (fileBits == null)
 //            fileBits = "12";
 //        if (fileGroupBits == null)
@@ -302,8 +302,8 @@ public class VolumeUtil extends SoapCLI {
                 mailboxBits, mailboxGroupBits, compress, compressThreshold);
         auth();
         Element resp = getTransport().invokeWithoutSession(req);
-        vol = resp.getElement(AdminService.E_VOLUME);
-        String id = vol.getAttribute(AdminService.A_ID);
+        vol = resp.getElement(AdminConstants.E_VOLUME);
+        String id = vol.getAttribute(AdminConstants.A_ID);
         System.out.println("Volume " + id + " is created");
     }
 
@@ -354,12 +354,12 @@ public class VolumeUtil extends SoapCLI {
             short t = VolumeUtil.getTypeId(type);
             if (t < 0)
                 throw new ParseException("invalid volume type: " + type);
-            vol.addAttribute(AdminService.A_VOLUME_TYPE, t);
+            vol.addAttribute(AdminConstants.A_VOLUME_TYPE, t);
         }
         if (name != null)
-            vol.addAttribute(AdminService.A_VOLUME_NAME, name);
+            vol.addAttribute(AdminConstants.A_VOLUME_NAME, name);
         if (path != null)
-            vol.addAttribute(AdminService.A_VOLUME_ROOTPATH, path);
+            vol.addAttribute(AdminConstants.A_VOLUME_ROOTPATH, path);
 //        if (fileBits != null)
 //            vol.addAttribute(AdminService.A_VOLUME_FBITS, fileBits);
 //        if (fileGroupBits != null)
@@ -369,9 +369,9 @@ public class VolumeUtil extends SoapCLI {
 //        if (mailboxGroupBits != null)
 //            vol.addAttribute(AdminService.A_VOLUME_MGBITS, mailboxGroupBits);
         if (compress != null)
-            vol.addAttribute(AdminService.A_VOLUME_COMPRESS_BLOBS, "true".equals(compress));
+            vol.addAttribute(AdminConstants.A_VOLUME_COMPRESS_BLOBS, "true".equals(compress));
         if (compressThreshold != null)
-            vol.addAttribute(AdminService.A_VOLUME_COMPRESSION_THRESHOLD,
+            vol.addAttribute(AdminConstants.A_VOLUME_COMPRESSION_THRESHOLD,
                     compressThreshold);
     }
 

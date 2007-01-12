@@ -31,12 +31,13 @@ package com.zimbra.cs.service.account;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -47,14 +48,14 @@ public class SyncGal extends AccountDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Element response = lc.createElement(AccountService.SYNC_GAL_RESPONSE);
-        String tokenAttr = request.getAttribute(MailService.A_TOKEN, "");        
+        Element response = lc.createElement(AccountConstants.SYNC_GAL_RESPONSE);
+        String tokenAttr = request.getAttribute(MailConstants.A_TOKEN, "");
         Account acct = getRequestedAccount(getZimbraSoapContext(context));
 
         Domain d = Provisioning.getInstance().getDomain(acct);
         SearchGalResult result = Provisioning.getInstance().searchGal(d, "", Provisioning.GAL_SEARCH_TYPE.ALL, tokenAttr);
         if (result.token != null)
-            response.addAttribute(MailService.A_TOKEN, result.token);
+            response.addAttribute(MailConstants.A_TOKEN, result.token);
         for (GalContact contact : result.matches)
             SearchGal.addContact(response, contact);
         return response;

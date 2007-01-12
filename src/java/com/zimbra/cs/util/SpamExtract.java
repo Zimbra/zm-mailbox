@@ -68,9 +68,9 @@ import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.client.LmcSession;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.admin.AdminService;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.service.mail.ItemAction;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.Element;
@@ -230,10 +230,10 @@ public class SpamExtract {
         boolean haveMore = true;
         int offset = 0;
         while (haveMore) {
-            Element searchReq = new Element.XMLElement(MailService.SEARCH_REQUEST);
-            searchReq.addElement(MailService.A_QUERY).setText(query);
-            searchReq.addAttribute(MailService.A_SEARCH_TYPES, TYPE_MESSAGE);
-            searchReq.addAttribute(MailService.A_QUERY_OFFSET, offset);
+            Element searchReq = new Element.XMLElement(MailConstants.SEARCH_REQUEST);
+            searchReq.addElement(MailConstants.A_QUERY).setText(query);
+            searchReq.addAttribute(MailConstants.A_SEARCH_TYPES, TYPE_MESSAGE);
+            searchReq.addAttribute(MailConstants.A_QUERY_OFFSET, offset);
 
             try {
                 if (mLog.isDebugEnabled()) mLog.debug(searchReq.prettyPrint());
@@ -242,10 +242,10 @@ public class SpamExtract {
                 
                 StringBuilder deleteList = new StringBuilder();
 
-                for (Iterator<Element> iter = searchResp.elementIterator(MailService.E_MSG); iter.hasNext();) {
+                for (Iterator<Element> iter = searchResp.elementIterator(MailConstants.E_MSG); iter.hasNext();) {
                     offset++;
                     Element e = iter.next();
-                    String mid = e.getAttribute(MailService.A_ID);
+                    String mid = e.getAttribute(MailConstants.A_ID);
                     if (mid == null) {
                         mLog.warn("null message id SOAP response");
                         continue;
@@ -258,7 +258,7 @@ public class SpamExtract {
                 }
                 
                 haveMore = false;
-                String more = searchResp.getAttribute(MailService.A_QUERY_MORE);
+                String more = searchResp.getAttribute(MailConstants.A_QUERY_MORE);
                 if (more != null && more.length() > 0) {
                     try {
                         int m = Integer.parseInt(more);
@@ -272,10 +272,10 @@ public class SpamExtract {
                 
                 if (delete && deleteList.length() > 0) {
                     deleteList.deleteCharAt(deleteList.length()-1); // -1 removes trailing comma
-                    Element msgActionReq = new Element.XMLElement(MailService.MSG_ACTION_REQUEST);
-                    Element action = msgActionReq.addElement(MailService.E_ACTION);
-                    action.addAttribute(MailService.A_ID, deleteList.toString());
-                    action.addAttribute(MailService.A_OPERATION, ItemAction.OP_HARD_DELETE);
+                    Element msgActionReq = new Element.XMLElement(MailConstants.MSG_ACTION_REQUEST);
+                    Element action = msgActionReq.addElement(MailConstants.E_ACTION);
+                    action.addAttribute(MailConstants.A_ID, deleteList.toString());
+                    action.addAttribute(MailConstants.A_OPERATION, ItemAction.OP_HARD_DELETE);
                     
                     if (mLog.isDebugEnabled()) mLog.debug(msgActionReq.prettyPrint());
                     Element msgActionResp = transport.invoke(msgActionReq, false, true, true, account.getId());
@@ -424,15 +424,15 @@ public class SpamExtract {
         transport.setRetryCount(1);
         transport.setTimeout(0);
 
-        Element authReq = new Element.XMLElement(AdminService.AUTH_REQUEST);
-        authReq.addAttribute(AdminService.E_NAME, adminUser, Element.DISP_CONTENT);
-        authReq.addAttribute(AdminService.E_PASSWORD, adminPassword, Element.DISP_CONTENT);
+        Element authReq = new Element.XMLElement(AdminConstants.AUTH_REQUEST);
+        authReq.addAttribute(AdminConstants.E_NAME, adminUser, Element.DISP_CONTENT);
+        authReq.addAttribute(AdminConstants.E_PASSWORD, adminPassword, Element.DISP_CONTENT);
         try {
             if (mVerbose) mLog.info("Auth request to: " + adminURL);
             if (mLog.isDebugEnabled()) mLog.debug(authReq.prettyPrint());
             Element authResp = transport.invokeWithoutSession(authReq);
             if (mLog.isDebugEnabled()) mLog.debug(authResp.prettyPrint());
-            String authToken = authResp.getAttribute(AdminService.E_AUTH_TOKEN);
+            String authToken = authResp.getAttribute(AdminConstants.E_AUTH_TOKEN);
             return authToken;
         } catch (Exception e) {
             throw ServiceException.FAILURE("admin auth failed url=" + adminURL, e);

@@ -31,11 +31,10 @@ package com.zimbra.cs.service.admin;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.DocumentDispatcher;
 import com.zimbra.soap.DocumentService;
 import com.zimbra.soap.Element;
-import org.dom4j.Namespace;
-import org.dom4j.QName;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -45,510 +44,134 @@ import java.util.Map;
  */
 public class AdminService implements DocumentService {
 
-	public static final String NAMESPACE_STR = "urn:zimbraAdmin";
-	public static final Namespace NAMESPACE = Namespace.get(NAMESPACE_STR);
-	
-	public static final QName PING_REQUEST = QName.get("PingRequest", NAMESPACE);
-	public static final QName PING_RESPONSE = QName.get("PingResponse", NAMESPACE);
-    public static final QName CHECK_HEALTH_REQUEST = QName.get("CheckHealthRequest", NAMESPACE);
-    public static final QName CHECK_HEALTH_RESPONSE = QName.get("CheckHealthResponse", NAMESPACE);
-
-	public static final QName EXPORTMAILBOX_REQUEST = QName.get("ExportMailboxRequest", NAMESPACE);
-	public static final QName EXPORTMAILBOX_RESPONSE = QName.get("ExportMailboxResponse", NAMESPACE);
-	
-    public static final QName AUTH_REQUEST = QName.get("AuthRequest", NAMESPACE);
-    public static final QName AUTH_RESPONSE = QName.get("AuthResponse", NAMESPACE);
-    public static final QName CREATE_ACCOUNT_REQUEST = QName.get("CreateAccountRequest", NAMESPACE);
-    public static final QName CREATE_ACCOUNT_RESPONSE = QName.get("CreateAccountResponse", NAMESPACE);
-    public static final QName CREATE_ADMIN_ACCOUNT_REQUEST = QName.get("CreateAdminAccountRequest", NAMESPACE);
-    public static final QName CREATE_ADMIN_ACCOUNT_RESPONSE = QName.get("CreateAdminAccountResponse", NAMESPACE);
-    public static final QName DELEGATE_AUTH_REQUEST = QName.get("DelegateAuthRequest", NAMESPACE);
-    public static final QName DELEGATE_AUTH_RESPONSE = QName.get("DelegateAuthResponse", NAMESPACE);    
-    public static final QName GET_ACCOUNT_REQUEST = QName.get("GetAccountRequest", NAMESPACE);
-    public static final QName GET_ACCOUNT_RESPONSE = QName.get("GetAccountResponse", NAMESPACE);
-    public static final QName GET_ACCOUNT_INFO_REQUEST = QName.get("GetAccountInfoRequest", NAMESPACE);
-    public static final QName GET_ACCOUNT_INFO_RESPONSE = QName.get("GetAccountInfoResponse", NAMESPACE);    
-    public static final QName GET_ALL_ACCOUNTS_REQUEST = QName.get("GetAllAccountsRequest", NAMESPACE);
-    public static final QName GET_ALL_ACCOUNTS_RESPONSE = QName.get("GetAllAccountsResponse", NAMESPACE);    
-    public static final QName GET_ALL_ADMIN_ACCOUNTS_REQUEST = QName.get("GetAllAdminAccountsRequest", NAMESPACE);
-    public static final QName GET_ALL_ADMIN_ACCOUNTS_RESPONSE = QName.get("GetAllAdminAccountsResponse", NAMESPACE);
-    public static final QName MODIFY_ACCOUNT_REQUEST = QName.get("ModifyAccountRequest", NAMESPACE);
-    public static final QName MODIFY_ACCOUNT_RESPONSE = QName.get("ModifyAccountResponse", NAMESPACE);
-    public static final QName DELETE_ACCOUNT_REQUEST = QName.get("DeleteAccountRequest", NAMESPACE);
-    public static final QName DELETE_ACCOUNT_RESPONSE = QName.get("DeleteAccountResponse", NAMESPACE);
-    public static final QName SET_PASSWORD_REQUEST = QName.get("SetPasswordRequest", NAMESPACE);
-    public static final QName SET_PASSWORD_RESPONSE = QName.get("SetPasswordResponse", NAMESPACE);
-    public static final QName ADD_ACCOUNT_ALIAS_REQUEST = QName.get("AddAccountAliasRequest", NAMESPACE);
-    public static final QName ADD_ACCOUNT_ALIAS_RESPONSE = QName.get("AddAccountAliasResponse", NAMESPACE);
-    public static final QName REMOVE_ACCOUNT_ALIAS_REQUEST = QName.get("RemoveAccountAliasRequest", NAMESPACE);
-    public static final QName REMOVE_ACCOUNT_ALIAS_RESPONSE = QName.get("RemoveAccountAliasResponse", NAMESPACE);
-    public static final QName SEARCH_ACCOUNTS_REQUEST = QName.get("SearchAccountsRequest", NAMESPACE);
-    public static final QName SEARCH_ACCOUNTS_RESPONSE = QName.get("SearchAccountsResponse", NAMESPACE);    
-    public static final QName RENAME_ACCOUNT_REQUEST = QName.get("RenameAccountRequest", NAMESPACE);
-    public static final QName RENAME_ACCOUNT_RESPONSE = QName.get("RenameAccountResponse", NAMESPACE);
-
-    public static final QName CREATE_DOMAIN_REQUEST = QName.get("CreateDomainRequest", NAMESPACE);
-    public static final QName CREATE_DOMAIN_RESPONSE = QName.get("CreateDomainResponse", NAMESPACE);
-    public static final QName GET_DOMAIN_REQUEST = QName.get("GetDomainRequest", NAMESPACE);
-    public static final QName GET_DOMAIN_RESPONSE = QName.get("GetDomainResponse", NAMESPACE);
-    public static final QName MODIFY_DOMAIN_REQUEST = QName.get("ModifyDomainRequest", NAMESPACE);
-    public static final QName MODIFY_DOMAIN_RESPONSE = QName.get("ModifyDomainResponse", NAMESPACE);
-    public static final QName DELETE_DOMAIN_REQUEST = QName.get("DeleteDomainRequest", NAMESPACE);
-    public static final QName DELETE_DOMAIN_RESPONSE = QName.get("DeleteDomainResponse", NAMESPACE);
-    public static final QName GET_ALL_DOMAINS_REQUEST = QName.get("GetAllDomainsRequest", NAMESPACE);
-    public static final QName GET_ALL_DOMAINS_RESPONSE = QName.get("GetAllDomainsResponse", NAMESPACE);
-    
-    public static final QName CREATE_COS_REQUEST = QName.get("CreateCosRequest", NAMESPACE);
-    public static final QName CREATE_COS_RESPONSE = QName.get("CreateCosResponse", NAMESPACE);
-    public static final QName GET_COS_REQUEST = QName.get("GetCosRequest", NAMESPACE);
-    public static final QName GET_COS_RESPONSE = QName.get("GetCosResponse", NAMESPACE);
-    public static final QName MODIFY_COS_REQUEST = QName.get("ModifyCosRequest", NAMESPACE);
-    public static final QName MODIFY_COS_RESPONSE = QName.get("ModifyCosResponse", NAMESPACE);
-    public static final QName DELETE_COS_REQUEST = QName.get("DeleteCosRequest", NAMESPACE);
-    public static final QName DELETE_COS_RESPONSE = QName.get("DeleteCosResponse", NAMESPACE);
-    public static final QName GET_ALL_COS_REQUEST = QName.get("GetAllCosRequest", NAMESPACE);
-    public static final QName GET_ALL_COS_RESPONSE = QName.get("GetAllCosResponse", NAMESPACE);    
-    public static final QName RENAME_COS_REQUEST = QName.get("RenameCosRequest", NAMESPACE);        
-    public static final QName RENAME_COS_RESPONSE = QName.get("RenameCosResponse", NAMESPACE);            
-    
-    public static final QName CREATE_SERVER_REQUEST = QName.get("CreateServerRequest", NAMESPACE);
-    public static final QName CREATE_SERVER_RESPONSE = QName.get("CreateServerResponse", NAMESPACE);
-    public static final QName GET_SERVER_REQUEST = QName.get("GetServerRequest", NAMESPACE);
-    public static final QName GET_SERVER_RESPONSE = QName.get("GetServerResponse", NAMESPACE);
-    public static final QName MODIFY_SERVER_REQUEST = QName.get("ModifyServerRequest", NAMESPACE);
-    public static final QName MODIFY_SERVER_RESPONSE = QName.get("ModifyServerResponse", NAMESPACE);
-    public static final QName DELETE_SERVER_REQUEST = QName.get("DeleteServerRequest", NAMESPACE);
-    public static final QName DELETE_SERVER_RESPONSE = QName.get("DeleteServerResponse", NAMESPACE);
-    public static final QName GET_ALL_SERVERS_REQUEST = QName.get("GetAllServersRequest", NAMESPACE);
-    public static final QName GET_ALL_SERVERS_RESPONSE = QName.get("GetAllServersResponse", NAMESPACE);        
-
-    public static final QName GET_CONFIG_REQUEST = QName.get("GetConfigRequest", NAMESPACE);
-    public static final QName GET_CONFIG_RESPONSE = QName.get("GetConfigResponse", NAMESPACE);
-    public static final QName MODIFY_CONFIG_REQUEST = QName.get("ModifyConfigRequest", NAMESPACE);
-    public static final QName MODIFY_CONFIG_RESPONSE = QName.get("ModifyConfigResponse", NAMESPACE);
-    public static final QName GET_ALL_CONFIG_REQUEST = QName.get("GetAllConfigRequest", NAMESPACE);
-    public static final QName GET_ALL_CONFIG_RESPONSE = QName.get("GetAllConfigResponse", NAMESPACE);    
-    
-    public static final QName GET_SERVICE_STATUS_REQUEST = QName.get("GetServiceStatusRequest", NAMESPACE);
-    public static final QName GET_SERVICE_STATUS_RESPONSE = QName.get("GetServiceStatusResponse", NAMESPACE);
-    
-    public static final QName PURGE_MESSAGES_REQUEST = QName.get("PurgeMessagesRequest", NAMESPACE);
-    public static final QName PURGE_MESSAGES_RESPONSE= QName.get("PurgeMessagesResponse", NAMESPACE);
-    public static final QName DELETE_MAILBOX_REQUEST = QName.get("DeleteMailboxRequest", NAMESPACE);
-    public static final QName DELETE_MAILBOX_RESPONSE= QName.get("DeleteMailboxResponse", NAMESPACE);
-    public static final QName GET_MAILBOX_REQUEST = QName.get("GetMailboxRequest", NAMESPACE);
-    public static final QName GET_MAILBOX_RESPONSE= QName.get("GetMailboxResponse", NAMESPACE);    
-
-    public static final QName MAINTAIN_TABLES_REQUEST = QName.get("MaintainTablesRequest", NAMESPACE);
-    public static final QName MAINTAIN_TABLES_RESPONSE = QName.get("MaintainTablesResponse", NAMESPACE);
-    
-    public static final QName RUN_UNIT_TESTS_REQUEST = QName.get("RunUnitTestsRequest", NAMESPACE);
-    public static final QName RUN_UNIT_TESTS_RESPONSE = QName.get("RunUnitTestsResponse", NAMESPACE);
-    
-    public static final QName CHECK_HOSTNAME_RESOLVE_REQUEST = QName.get("CheckHostnameResolveRequest", NAMESPACE);
-    public static final QName CHECK_HOSTNAME_RESOLVE_RESPONSE = QName.get("CheckHostnameResolveResponse", NAMESPACE);    
-    public static final QName CHECK_AUTH_CONFIG_REQUEST = QName.get("CheckAuthConfigRequest", NAMESPACE);
-    public static final QName CHECK_AUTH_CONFIG_RESPONSE = QName.get("CheckAuthConfigResponse", NAMESPACE);    
-    public static final QName CHECK_GAL_CONFIG_REQUEST = QName.get("CheckGalConfigRequest", NAMESPACE);
-    public static final QName CHECK_GAL_CONFIG_RESPONSE = QName.get("CheckGalConfigResponse", NAMESPACE);        
-
-    public static final QName AUTO_COMPLETE_GAL_REQUEST = QName.get("AutoCompleteGalRequest", NAMESPACE);
-    public static final QName AUTO_COMPLETE_GAL_RESPONSE = QName.get("AutoCompleteGalResponse", NAMESPACE);
-    public static final QName SEARCH_GAL_REQUEST = QName.get("SearchGalRequest", NAMESPACE);
-    public static final QName SEARCH_GAL_RESPONSE = QName.get("SearchGalResponse", NAMESPACE);    
-
-    public static final QName CREATE_VOLUME_REQUEST = QName.get("CreateVolumeRequest", NAMESPACE);
-    public static final QName CREATE_VOLUME_RESPONSE = QName.get("CreateVolumeResponse", NAMESPACE);
-    public static final QName GET_VOLUME_REQUEST = QName.get("GetVolumeRequest", NAMESPACE);
-    public static final QName GET_VOLUME_RESPONSE = QName.get("GetVolumeResponse", NAMESPACE);
-    public static final QName MODIFY_VOLUME_REQUEST = QName.get("ModifyVolumeRequest", NAMESPACE);
-    public static final QName MODIFY_VOLUME_RESPONSE = QName.get("ModifyVolumeResponse", NAMESPACE);
-    public static final QName DELETE_VOLUME_REQUEST = QName.get("DeleteVolumeRequest", NAMESPACE);
-    public static final QName DELETE_VOLUME_RESPONSE = QName.get("DeleteVolumeResponse", NAMESPACE);
-    public static final QName GET_ALL_VOLUMES_REQUEST = QName.get("GetAllVolumesRequest", NAMESPACE);
-    public static final QName GET_ALL_VOLUMES_RESPONSE = QName.get("GetAllVolumesResponse", NAMESPACE);
-    public static final QName GET_CURRENT_VOLUMES_REQUEST = QName.get("GetCurrentVolumesRequest", NAMESPACE);
-    public static final QName GET_CURRENT_VOLUMES_RESPONSE = QName.get("GetCurrentVolumesResponse", NAMESPACE);
-    public static final QName SET_CURRENT_VOLUME_REQUEST = QName.get("SetCurrentVolumeRequest", NAMESPACE);
-    public static final QName SET_CURRENT_VOLUME_RESPONSE = QName.get("SetCurrentVolumeResponse", NAMESPACE);
-
-    public static final QName CREATE_DISTRIBUTION_LIST_REQUEST = QName.get("CreateDistributionListRequest", NAMESPACE);
-    public static final QName CREATE_DISTRIBUTION_LIST_RESPONSE = QName.get("CreateDistributionListResponse", NAMESPACE);
-    public static final QName GET_DISTRIBUTION_LIST_REQUEST = QName.get("GetDistributionListRequest", NAMESPACE);
-    public static final QName GET_DISTRIBUTION_LIST_RESPONSE = QName.get("GetDistributionListResponse", NAMESPACE);
-    public static final QName GET_ALL_DISTRIBUTION_LISTS_REQUEST = QName.get("GetAllDistributionListsRequest", NAMESPACE);
-    public static final QName GET_ALL_DISTRIBUTION_LISTS_RESPONSE = QName.get("GetAllDistributionListsResponse", NAMESPACE);
-    public static final QName ADD_DISTRIBUTION_LIST_MEMBER_REQUEST = QName.get("AddDistributionListMemberRequest", NAMESPACE);
-    public static final QName ADD_DISTRIBUTION_LIST_MEMBER_RESPONSE = QName.get("AddDistributionListMemberResponse", NAMESPACE);
-    public static final QName REMOVE_DISTRIBUTION_LIST_MEMBER_REQUEST = QName.get("RemoveDistributionListMemberRequest", NAMESPACE);
-    public static final QName REMOVE_DISTRIBUTION_LIST_MEMBER_RESPONSE = QName.get("RemoveDistributionListMemberResponse", NAMESPACE);
-    public static final QName MODIFY_DISTRIBUTION_LIST_REQUEST = QName.get("ModifyDistributionListRequest", NAMESPACE);
-    public static final QName MODIFY_DISTRIBUTION_LIST_RESPONSE = QName.get("ModifyDistributionListResponse", NAMESPACE);
-    public static final QName DELETE_DISTRIBUTION_LIST_REQUEST = QName.get("DeleteDistributionListRequest", NAMESPACE);
-    public static final QName DELETE_DISTRIBUTION_LIST_RESPONSE = QName.get("DeleteDistributionListResponse", NAMESPACE);
-    public static final QName ADD_DISTRIBUTION_LIST_ALIAS_REQUEST = QName.get("AddDistributionListAliasRequest", NAMESPACE);
-    public static final QName ADD_DISTRIBUTION_LIST_ALIAS_RESPONSE = QName.get("AddDistributionListAliasResponse", NAMESPACE);
-    public static final QName REMOVE_DISTRIBUTION_LIST_ALIAS_REQUEST = QName.get("RemoveDistributionListAliasRequest", NAMESPACE);
-    public static final QName REMOVE_DISTRIBUTION_LIST_ALIAS_RESPONSE = QName.get("RemoveDistributionListAliasResponse", NAMESPACE);
-    public static final QName RENAME_DISTRIBUTION_LIST_REQUEST = QName.get("RenameDistributionListRequest", NAMESPACE);
-    public static final QName RENAME_DISTRIBUTION_LIST_RESPONSE = QName.get("RenameDistributionListResponse", NAMESPACE);
-
-    public static final QName GET_VERSION_INFO_REQUEST = QName.get("GetVersionInfoRequest", NAMESPACE);
-    public static final QName GET_VERSION_INFO_RESPONSE = QName.get("GetVersionInfoResponse", NAMESPACE);
-
-    public static final QName GET_LICENSE_INFO_REQUEST = QName.get("GetLicenseInfoRequest", NAMESPACE);
-    public static final QName GET_LICENSE_INFO_RESPONSE = QName.get("GetLicenseInfoResponse", NAMESPACE);
-    
-    public static final QName REINDEX_REQUEST = QName.get("ReIndexRequest", NAMESPACE);
-    public static final QName REINDEX_RESPONSE = QName.get("ReIndexResponse", NAMESPACE);
-    
-    public static final QName GET_ZIMLET_REQUEST = QName.get("GetZimletRequest", NAMESPACE);
-    public static final QName GET_ZIMLET_RESPONSE = QName.get("GetZimletResponse", NAMESPACE);
-    public static final QName CREATE_ZIMLET_REQUEST = QName.get("CreateZimletRequest", NAMESPACE);
-    public static final QName CREATE_ZIMLET_RESPONSE = QName.get("CreateZimletResponse", NAMESPACE);
-    public static final QName DELETE_ZIMLET_REQUEST = QName.get("DeleteZimletRequest", NAMESPACE);
-    public static final QName DELETE_ZIMLET_RESPONSE = QName.get("DeleteZimletResponse", NAMESPACE);
-    public static final QName GET_ADMIN_EXTENSION_ZIMLETS_REQUEST = QName.get("GetAdminExtensionZimletsRequest", NAMESPACE);
-    public static final QName GET_ADMIN_EXTENSION_ZIMLETS_RESPONSE = QName.get("GetAdminExtensionZimletsResponse", NAMESPACE);
-    public static final QName GET_ALL_ZIMLETS_REQUEST = QName.get("GetAllZimletsRequest", NAMESPACE);
-    public static final QName GET_ALL_ZIMLETS_RESPONSE = QName.get("GetAllZimletsResponse", NAMESPACE);
-    public static final QName GET_ZIMLET_STATUS_REQUEST = QName.get("GetZimletStatusRequest", NAMESPACE);
-    public static final QName GET_ZIMLET_STATUS_RESPONSE = QName.get("GetZimletStatusResponse", NAMESPACE);
-    public static final QName DEPLOY_ZIMLET_REQUEST = QName.get("DeployZimletRequest", NAMESPACE);
-    public static final QName DEPLOY_ZIMLET_RESPONSE = QName.get("DeployZimletResponse", NAMESPACE);
-    public static final QName UNDEPLOY_ZIMLET_REQUEST = QName.get("UndeployZimletRequest", NAMESPACE);
-    public static final QName UNDEPLOY_ZIMLET_RESPONSE = QName.get("UndeployZimletResponse", NAMESPACE);
-    public static final QName CONFIGURE_ZIMLET_REQUEST = QName.get("ConfigureZimletRequest", NAMESPACE);
-    public static final QName CONFIGURE_ZIMLET_RESPONSE = QName.get("ConfigureZimletResponse", NAMESPACE);
-    public static final QName MODIFY_ZIMLET_REQUEST = QName.get("ModifyZimletRequest", NAMESPACE);
-    public static final QName MODIFY_ZIMLET_RESPONSE = QName.get("ModifyZimletResponse", NAMESPACE);
-
-    public static final QName CREATE_CALENDAR_RESOURCE_REQUEST    = QName.get("CreateCalendarResourceRequest",   NAMESPACE);
-    public static final QName CREATE_CALENDAR_RESOURCE_RESPONSE   = QName.get("CreateCalendarResourceResponse",  NAMESPACE);
-    public static final QName DELETE_CALENDAR_RESOURCE_REQUEST    = QName.get("DeleteCalendarResourceRequest",   NAMESPACE);
-    public static final QName DELETE_CALENDAR_RESOURCE_RESPONSE   = QName.get("DeleteCalendarResourceResponse",  NAMESPACE);
-    public static final QName MODIFY_CALENDAR_RESOURCE_REQUEST    = QName.get("ModifyCalendarResourceRequest",   NAMESPACE);
-    public static final QName MODIFY_CALENDAR_RESOURCE_RESPONSE   = QName.get("ModifyCalendarResourceResponse",  NAMESPACE);
-    public static final QName RENAME_CALENDAR_RESOURCE_REQUEST    = QName.get("RenameCalendarResourceRequest",   NAMESPACE);
-    public static final QName RENAME_CALENDAR_RESOURCE_RESPONSE   = QName.get("RenameCalendarResourceResponse",  NAMESPACE);
-    public static final QName GET_CALENDAR_RESOURCE_REQUEST       = QName.get("GetCalendarResourceRequest",      NAMESPACE);
-    public static final QName GET_CALENDAR_RESOURCE_RESPONSE      = QName.get("GetCalendarResourceResponse",     NAMESPACE);
-    public static final QName GET_ALL_CALENDAR_RESOURCES_REQUEST  = QName.get("GetAllCalendarResourcesRequest",  NAMESPACE);
-    public static final QName GET_ALL_CALENDAR_RESOURCES_RESPONSE = QName.get("GetAllCalendarResourcesResponse", NAMESPACE);
-    public static final QName SEARCH_CALENDAR_RESOURCES_REQUEST   = QName.get("SearchCalendarResourcesRequest",  NAMESPACE);
-    public static final QName SEARCH_CALENDAR_RESOURCES_RESPONSE  = QName.get("SearchCalendarResourcesResponse", NAMESPACE);
-
-    public static final QName SEARCH_MULTIPLE_MAILBOXES_REQUEST = QName.get("SearchMultiMailboxRequest", NAMESPACE);
-    public static final QName SEARCH_MULTIPLE_MAILBOXES_RESPONSE = QName.get("SearchMultiMailboxResponse", NAMESPACE);
-
-    public static final QName DUMP_SESSIONS_REQUEST = QName.get("DumpSessionsRequest", NAMESPACE);
-    public static final QName DUMP_SESSIONS_RESPONSE = QName.get("DumpSessionsResponse", NAMESPACE);
-
-    public static final QName GET_QUOTA_USAGE_REQUEST = QName.get("GetQuotaUsageRequest", NAMESPACE);
-    public static final QName GET_QUOTA_USAGE_RESPONSE = QName.get("GetQuotaUsageResponse", NAMESPACE);
-    
-    public static final QName GET_MAIL_QUEUE_INFO_REQUEST = QName.get("GetMailQueueInfoRequest", NAMESPACE);
-    public static final QName GET_MAIL_QUEUE_INFO_RESPONSE = QName.get("GetMailQueueInfoResponse", NAMESPACE);
-    public static final QName GET_MAIL_QUEUE_REQUEST = QName.get("GetMailQueueRequest", NAMESPACE);
-    public static final QName GET_MAIL_QUEUE_RESPONSE = QName.get("GetMailQueueResponse", NAMESPACE);
-    public static final QName MAIL_QUEUE_ACTION_REQUEST = QName.get("MailQueueActionRequest", NAMESPACE);
-    public static final QName MAIL_QUEUE_ACTION_RESPONSE = QName.get("MailQueueActionResponse", NAMESPACE);
-    public static final QName MAIL_QUEUE_FLUSH_REQUEST = QName.get("MailQueueFlushRequest", NAMESPACE);
-    public static final QName MAIL_QUEUE_FLUSH_RESPONSE = QName.get("MailQueueFlushResponse", NAMESPACE);
-    
-    public static final QName SEARCH_DIRECTORY_REQUEST = QName.get("SearchDirectoryRequest", NAMESPACE);
-    public static final QName SEARCH_DIRECTORY_RESPONSE = QName.get("SearchDirectoryResponse", NAMESPACE);
-    
-    public static final QName GET_ACCOUNT_MEMBERSHIP_REQUEST = QName.get("GetAccountMembershipRequest", NAMESPACE);
-    public static final QName GET_ACCOUNT_MEMBERSHIP_RESPONSE = QName.get("GetAccountMembershipResponse", NAMESPACE);
-    
-    public static final QName GET_DISTRIBUTION_LIST_MEMBERSHIP_REQUEST = QName.get("GetDistributionListMembershipRequest", NAMESPACE);
-    public static final QName GET_DISTRIBUTION_LIST_MEMBERSHIP_RESPONSE = QName.get("GetDistributionListMembershipResponse", NAMESPACE);    
-
-    public static final QName INIT_NOTEBOOK_REQUEST  = QName.get("InitNotebookRequest",  NAMESPACE);
-    public static final QName INIT_NOTEBOOK_RESPONSE = QName.get("InitNotebookResponse", NAMESPACE);
-    
-    public static final QName SET_THROTTLE_REQUEST = QName.get("SetThrottleRequest", NAMESPACE);
-    public static final QName SET_THROTTLE_RESPOSNE = QName.get("SetThrottleResponse", NAMESPACE);
-
-    // data sources
-    public static final QName CREATE_DATA_SOURCE_REQUEST = QName.get("CreateDataSourceRequest", NAMESPACE);
-    public static final QName CREATE_DATA_SOURCE_RESPONSE = QName.get("CreateDataSourceResponse", NAMESPACE);
-    public static final QName GET_DATA_SOURCES_REQUEST = QName.get("GetDataSourcesRequest", NAMESPACE);
-    public static final QName GET_DATA_SOURCES_RESPONSE = QName.get("GetDataSourcesResponse", NAMESPACE);
-    public static final QName MODIFY_DATA_SOURCE_REQUEST = QName.get("ModifyDataSourceRequest", NAMESPACE);
-    public static final QName MODIFY_DATA_SOURCE_RESPONSE = QName.get("ModifyDataSourceResponse", NAMESPACE);
-    public static final QName DELETE_DATA_SOURCE_REQUEST = QName.get("DeleteDataSourceRequest", NAMESPACE);
-    public static final QName DELETE_DATA_SOURCE_RESPONSE = QName.get("DeleteDataSourceResponse", NAMESPACE);
-    
-    public static final String E_ACCOUNT = "account";
-    public static final String E_CALENDAR_RESOURCE = "calresource";
-    public static final String E_AUTH_TOKEN = "authToken";
-    public static final String E_NAME = "name";
-    public static final String E_NEW_NAME = "newName";
-    public static final String E_BINDDN = "bindDn";
-    public static final String E_CODE = "code";
-    public static final String E_COS = "cos";
-    public static final String A_COS = "cos";
-    public static final String E_CN = "cn";    
-    public static final String E_DOMAIN = "domain";
-    public static final String E_DL = "dl";
-    public static final String E_DLM = "dlm";
-    public static final String E_HOSTNAME = "hostname";    
-    public static final String E_LIFETIME = "lifetime";
-    public static final String E_MESSAGE = "message";
-    public static final String E_PASSWORD = "password";
-    public static final String E_NEW_PASSWORD = "newPassword";
-    public static final String E_QUERY = "query";
-    public static final String E_QUEUE = "queue";
-    public static final String E_ACTION = "action";
-    public static final String E_SERVER = "server";
-    public static final String E_STATUS = "status";    
-    public static final String E_END_TIME = "endTime";
-    public static final String E_START_TIME = "startTime";
-    public static final String E_STAT_NAME = "statName";
-    public static final String E_PERIOD = "period";
-    public static final String E_A = "a";
-    public static final String E_S = "s";
-    public static final String E_ALIAS = "alias";    
-	public static final String E_ID = "id";		
-	public static final String E_PAGE_NUMBER = "pagenum";
-	public static final String E_ORDER_BY = "orderby";
-	public static final String E_IS_ASCENDING = "isascending";
-	public static final String E_RESULTS_PERPAGE = "pageresultsnum";
-	public static final String E_ATTRS_TO_GET = "attrstoget";
-	public static final String E_MAX_SEARCH_RESULTS = "maxsearchresults";
-	public static final String E_MAILBOX = "mbox";
-	public static final String E_NUM_OF_PAGES = "numpages";
-    public static final String E_VOLUME = "volume";
-    public static final String E_PROGRESS = "progress";
-    public static final String E_SOAP_URL = "soapURL";
-    public static final String E_ADMIN_SOAP_URL = "adminSoapURL";    
-    
-    public static final String A_ACTION = "action";
-    public static final String A_APPLY_CONFIG = "applyConfig";
-    public static final String A_APPLY_COS = "applyCos";
-    public static final String A_ID = "id";
-    public static final String A_MAX_RESULTS = "maxResults";
-    public static final String A_LIMIT = "limit";
-    public static final String A_OFFSET = "offset";    
-    public static final String A_DOMAIN = "domain";
-    public static final String A_ATTRS = "attrs";  
-    public static final String A_SEARCH_TOTAL = "searchTotal";
-    public static final String A_SORT_BY = "sortBy";
-    public static final String A_SORT_ASCENDING = "sortAscending";
-    public static final String A_TYPE = "type";
-    public static final String A_C = "c";    
-    public static final String A_T = "t";    
-    public static final String A_NAME = "name"; 
-    public static final String A_MORE = "more";     
-    public static final String A_BY = "by";
-	public static final String A_N = "n";
-	public static final String A_HOSTNAME = "hn";
-    public static final String A_ACCOUNTID = "id";
-    public static final String A_MAILBOXID = "mbxid";
-    public static final String A_TOTAL = "total";
-    public static final String A_TOKEN = "token";
-    public static final String A_VIA = "via";
-    public static final String A_EXCLUDE = "exclude";
-    
-    public static final String BY_ID = "id";
-    public static final String BY_QUERY = "query";
-    public static final String BY_NAME = "name";
-
-	public static final String E_FIELD = "field";
-	public static final String E_MATCH = "match";
-    public static final String A_SCAN = "scan";
-    public static final String A_WAIT = "wait";
-    public static final String A_QUEUE_SUMMARY = "qs";
-    public static final String A_QUEUE_SUMMARY_ITEM = "qsi";
-    public static final String A_QUEUE_ITEM = "qi";
-    public static final String A_OP = "op";
-
-    public static final String A_HEALTHY = "healthy";
-    public static final String A_SIZE = "s";
-    public static final String A_SERVICE = "service";
-    public static final String A_SERVER = "server";
-    public static final String A_STATUS = "status";        
-    public static final String A_TIME = "time";
-    public static final String A_TYPES = "types";
-    public static final String A_NUM_TABLES = "numTables";
-    
-    public static final String A_NUM_EXECUTED = "numExecuted";
-    public static final String A_NUM_SUCCEEDED= "numSucceeded";
-    public static final String A_NUM_FAILED = "numFailed";
-    public static final String A_NUM_REMAINING = "numRemaining";
-    public static final String A_OUTPUT = "output";
-    public static final String A_DURATION = "duration";
-
-    public static final String A_VOLUME_TYPE = "type";
-    public static final String A_VOLUME_NAME = "name";
-    public static final String A_VOLUME_ROOTPATH = "rootpath";
-    public static final String A_VOLUME_MGBITS = "mgbits";
-    public static final String A_VOLUME_MBITS = "mbits";
-    public static final String A_VOLUME_FGBITS = "fgbits";
-    public static final String A_VOLUME_FBITS = "fbits";
-    public static final String A_VOLUME_COMPRESS_BLOBS = "compressBlobs";
-    public static final String A_VOLUME_COMPRESSION_THRESHOLD = "compressionThreshold";
-
-    public static final String A_VERSION_INFO_INFO = "info";
-    public static final String A_VERSION_INFO_VERSION = "version";
-    public static final String A_VERSION_INFO_RELEASE = "release";
-    public static final String A_VERSION_INFO_DATE = "buildDate";
-    public static final String A_VERSION_INFO_HOST = "host";
-
-    public static final String E_LICENSE_EXPIRATION = "expiration";
-    public static final String A_LICENSE_EXPIRATION_DATE = "date";
-
-    public static final String E_ZIMLET = "zimlet";
-    public static final String E_ACL = "acl";
-    public static final String E_PRIORITY = "priority";
-    public static final String A_EXTENSION = "extension";
-    public static final String A_MAIL = "mail";    
-    public static final String A_VALUE = "value";
-    public static final String A_PRIORITY = "priority";
-    public static final String A_ACL = "acl";
-    public static final String A_NONE = "none";
-    
-    public static final String A_QUOTA_USED = "used";
-    public static final String A_QUOTA_LIMIT = "limit";
-
-    public static final String E_TEMPLATE = "template";
-    public static final String A_DEST = "dest";
-    
-    public static final String A_CONCURRENCY = "concurrency";
-    
-    public static final String A_DEPLOYALL = "deployall";
-    public static final String A_DEPLOYLOCAL = "deploylocal";
-    
     public void registerHandlers(DocumentDispatcher dispatcher) {
-        dispatcher.registerHandler(PING_REQUEST, new Ping());
-        dispatcher.registerHandler(CHECK_HEALTH_REQUEST, new CheckHealth());
+        dispatcher.registerHandler(AdminConstants.PING_REQUEST, new Ping());
+        dispatcher.registerHandler(AdminConstants.CHECK_HEALTH_REQUEST, new CheckHealth());
 
-        dispatcher.registerHandler(AUTH_REQUEST, new Auth());
-		dispatcher.registerHandler(CREATE_ACCOUNT_REQUEST, new CreateAccount());
-        dispatcher.registerHandler(DELEGATE_AUTH_REQUEST, new DelegateAuth());        
-        dispatcher.registerHandler(GET_ACCOUNT_REQUEST, new GetAccount());
-        dispatcher.registerHandler(GET_ACCOUNT_INFO_REQUEST, new GetAccountInfo());        
-        dispatcher.registerHandler(GET_ALL_ACCOUNTS_REQUEST, new GetAllAccounts());        
-        dispatcher.registerHandler(GET_ALL_ADMIN_ACCOUNTS_REQUEST, new GetAllAdminAccounts());
-        dispatcher.registerHandler(MODIFY_ACCOUNT_REQUEST, new ModifyAccount());
-        dispatcher.registerHandler(DELETE_ACCOUNT_REQUEST, new DeleteAccount());
-        dispatcher.registerHandler(SET_PASSWORD_REQUEST, new SetPassword());
-        dispatcher.registerHandler(ADD_ACCOUNT_ALIAS_REQUEST, new AddAccountAlias());
-        dispatcher.registerHandler(REMOVE_ACCOUNT_ALIAS_REQUEST, new RemoveAccountAlias());
-        dispatcher.registerHandler(SEARCH_ACCOUNTS_REQUEST, new SearchAccounts());        
-        dispatcher.registerHandler(RENAME_ACCOUNT_REQUEST, new RenameAccount());        
+        dispatcher.registerHandler(AdminConstants.AUTH_REQUEST, new Auth());
+        dispatcher.registerHandler(AdminConstants.CREATE_ACCOUNT_REQUEST, new CreateAccount());
+        dispatcher.registerHandler(AdminConstants.DELEGATE_AUTH_REQUEST, new DelegateAuth());
+        dispatcher.registerHandler(AdminConstants.GET_ACCOUNT_REQUEST, new GetAccount());
+        dispatcher.registerHandler(AdminConstants.GET_ACCOUNT_INFO_REQUEST, new GetAccountInfo());
+        dispatcher.registerHandler(AdminConstants.GET_ALL_ACCOUNTS_REQUEST, new GetAllAccounts());
+        dispatcher.registerHandler(AdminConstants.GET_ALL_ADMIN_ACCOUNTS_REQUEST, new GetAllAdminAccounts());
+        dispatcher.registerHandler(AdminConstants.MODIFY_ACCOUNT_REQUEST, new ModifyAccount());
+        dispatcher.registerHandler(AdminConstants.DELETE_ACCOUNT_REQUEST, new DeleteAccount());
+        dispatcher.registerHandler(AdminConstants.SET_PASSWORD_REQUEST, new SetPassword());
+        dispatcher.registerHandler(AdminConstants.ADD_ACCOUNT_ALIAS_REQUEST, new AddAccountAlias());
+        dispatcher.registerHandler(AdminConstants.REMOVE_ACCOUNT_ALIAS_REQUEST, new RemoveAccountAlias());
+        dispatcher.registerHandler(AdminConstants.SEARCH_ACCOUNTS_REQUEST, new SearchAccounts());
+        dispatcher.registerHandler(AdminConstants.RENAME_ACCOUNT_REQUEST, new RenameAccount());
 
-        dispatcher.registerHandler(SEARCH_DIRECTORY_REQUEST, new SearchDirectory());        
-        dispatcher.registerHandler(GET_ACCOUNT_MEMBERSHIP_REQUEST, new GetAccountMembership());
-        
-        dispatcher.registerHandler(CREATE_DOMAIN_REQUEST, new CreateDomain());
-        dispatcher.registerHandler(GET_DOMAIN_REQUEST, new GetDomain());
-        dispatcher.registerHandler(GET_ALL_DOMAINS_REQUEST, new GetAllDomains());
-        dispatcher.registerHandler(MODIFY_DOMAIN_REQUEST, new ModifyDomain());
-        dispatcher.registerHandler(DELETE_DOMAIN_REQUEST, new DeleteDomain());
+        dispatcher.registerHandler(AdminConstants.SEARCH_DIRECTORY_REQUEST, new SearchDirectory());
+        dispatcher.registerHandler(AdminConstants.GET_ACCOUNT_MEMBERSHIP_REQUEST, new GetAccountMembership());
 
-        dispatcher.registerHandler(CREATE_COS_REQUEST, new CreateCos());
-        dispatcher.registerHandler(GET_COS_REQUEST, new GetCos());
-        dispatcher.registerHandler(GET_ALL_COS_REQUEST, new GetAllCos());
-        dispatcher.registerHandler(MODIFY_COS_REQUEST, new ModifyCos());
-        dispatcher.registerHandler(DELETE_COS_REQUEST, new DeleteCos());
-        dispatcher.registerHandler(RENAME_COS_REQUEST, new RenameCos());                
-        
-        dispatcher.registerHandler(CREATE_SERVER_REQUEST, new CreateServer());
-        dispatcher.registerHandler(GET_SERVER_REQUEST, new GetServer());
-        dispatcher.registerHandler(GET_ALL_SERVERS_REQUEST, new GetAllServers());
-        dispatcher.registerHandler(MODIFY_SERVER_REQUEST, new ModifyServer());
-        dispatcher.registerHandler(DELETE_SERVER_REQUEST, new DeleteServer());
-        
-        dispatcher.registerHandler(GET_CONFIG_REQUEST, new GetConfig());
-        dispatcher.registerHandler(GET_ALL_CONFIG_REQUEST, new GetAllConfig());
-        dispatcher.registerHandler(MODIFY_CONFIG_REQUEST, new ModifyConfig());
-        
-        dispatcher.registerHandler(GET_SERVICE_STATUS_REQUEST, new GetServiceStatus());        
-        
-        dispatcher.registerHandler(PURGE_MESSAGES_REQUEST, new PurgeMessages());
-        dispatcher.registerHandler(DELETE_MAILBOX_REQUEST, new DeleteMailbox());
-        dispatcher.registerHandler(GET_MAILBOX_REQUEST, new GetMailbox());        
+        dispatcher.registerHandler(AdminConstants.CREATE_DOMAIN_REQUEST, new CreateDomain());
+        dispatcher.registerHandler(AdminConstants.GET_DOMAIN_REQUEST, new GetDomain());
+        dispatcher.registerHandler(AdminConstants.GET_ALL_DOMAINS_REQUEST, new GetAllDomains());
+        dispatcher.registerHandler(AdminConstants.MODIFY_DOMAIN_REQUEST, new ModifyDomain());
+        dispatcher.registerHandler(AdminConstants.DELETE_DOMAIN_REQUEST, new DeleteDomain());
 
-        dispatcher.registerHandler(MAINTAIN_TABLES_REQUEST, new MaintainTables());
-        
-        dispatcher.registerHandler(RUN_UNIT_TESTS_REQUEST, new RunUnitTests());
-        
-        dispatcher.registerHandler(CHECK_AUTH_CONFIG_REQUEST, new CheckAuthConfig());
-        dispatcher.registerHandler(CHECK_GAL_CONFIG_REQUEST, new CheckGalConfig());
-        dispatcher.registerHandler(CHECK_HOSTNAME_RESOLVE_REQUEST, new CheckHostnameResolve());
+        dispatcher.registerHandler(AdminConstants.CREATE_COS_REQUEST, new CreateCos());
+        dispatcher.registerHandler(AdminConstants.GET_COS_REQUEST, new GetCos());
+        dispatcher.registerHandler(AdminConstants.GET_ALL_COS_REQUEST, new GetAllCos());
+        dispatcher.registerHandler(AdminConstants.MODIFY_COS_REQUEST, new ModifyCos());
+        dispatcher.registerHandler(AdminConstants.DELETE_COS_REQUEST, new DeleteCos());
+        dispatcher.registerHandler(AdminConstants.RENAME_COS_REQUEST, new RenameCos());
 
-        dispatcher.registerHandler(CREATE_VOLUME_REQUEST, new CreateVolume());
-        dispatcher.registerHandler(GET_VOLUME_REQUEST, new GetVolume());
-        dispatcher.registerHandler(GET_ALL_VOLUMES_REQUEST, new GetAllVolumes());
-        dispatcher.registerHandler(MODIFY_VOLUME_REQUEST, new ModifyVolume());
-        dispatcher.registerHandler(DELETE_VOLUME_REQUEST, new DeleteVolume());
-        dispatcher.registerHandler(GET_CURRENT_VOLUMES_REQUEST, new GetCurrentVolumes());
-        dispatcher.registerHandler(SET_CURRENT_VOLUME_REQUEST, new SetCurrentVolume());
-    
-        dispatcher.registerHandler(CREATE_DISTRIBUTION_LIST_REQUEST, new CreateDistributionList());
-        dispatcher.registerHandler(GET_DISTRIBUTION_LIST_REQUEST, new GetDistributionList());
-        dispatcher.registerHandler(GET_ALL_DISTRIBUTION_LISTS_REQUEST, new GetAllDistributionLists());
-        dispatcher.registerHandler(ADD_DISTRIBUTION_LIST_MEMBER_REQUEST, new AddDistributionListMember());
-        dispatcher.registerHandler(REMOVE_DISTRIBUTION_LIST_MEMBER_REQUEST, new RemoveDistributionListMember());
-        dispatcher.registerHandler(MODIFY_DISTRIBUTION_LIST_REQUEST, new ModifyDistributionList());
-        dispatcher.registerHandler(DELETE_DISTRIBUTION_LIST_REQUEST, new DeleteDistributionList());
-        dispatcher.registerHandler(ADD_DISTRIBUTION_LIST_ALIAS_REQUEST, new AddDistributionListAlias());
-        dispatcher.registerHandler(REMOVE_DISTRIBUTION_LIST_ALIAS_REQUEST, new RemoveDistributionListAlias());
-        dispatcher.registerHandler(RENAME_DISTRIBUTION_LIST_REQUEST, new RenameDistributionList());
-        dispatcher.registerHandler(GET_DISTRIBUTION_LIST_MEMBERSHIP_REQUEST, new GetDistributionListMembership());
-        
-        dispatcher.registerHandler(GET_VERSION_INFO_REQUEST, new GetVersionInfo());
-        dispatcher.registerHandler(GET_LICENSE_INFO_REQUEST, new GetLicenseInfo());
-        
-        dispatcher.registerHandler(REINDEX_REQUEST, new ReIndex());
-        
+        dispatcher.registerHandler(AdminConstants.CREATE_SERVER_REQUEST, new CreateServer());
+        dispatcher.registerHandler(AdminConstants.GET_SERVER_REQUEST, new GetServer());
+        dispatcher.registerHandler(AdminConstants.GET_ALL_SERVERS_REQUEST, new GetAllServers());
+        dispatcher.registerHandler(AdminConstants.MODIFY_SERVER_REQUEST, new ModifyServer());
+        dispatcher.registerHandler(AdminConstants.DELETE_SERVER_REQUEST, new DeleteServer());
+
+        dispatcher.registerHandler(AdminConstants.GET_CONFIG_REQUEST, new GetConfig());
+        dispatcher.registerHandler(AdminConstants.GET_ALL_CONFIG_REQUEST, new GetAllConfig());
+        dispatcher.registerHandler(AdminConstants.MODIFY_CONFIG_REQUEST, new ModifyConfig());
+
+        dispatcher.registerHandler(AdminConstants.GET_SERVICE_STATUS_REQUEST, new GetServiceStatus());
+
+        dispatcher.registerHandler(AdminConstants.PURGE_MESSAGES_REQUEST, new PurgeMessages());
+        dispatcher.registerHandler(AdminConstants.DELETE_MAILBOX_REQUEST, new DeleteMailbox());
+        dispatcher.registerHandler(AdminConstants.GET_MAILBOX_REQUEST, new GetMailbox());
+
+        dispatcher.registerHandler(AdminConstants.MAINTAIN_TABLES_REQUEST, new MaintainTables());
+
+        dispatcher.registerHandler(AdminConstants.RUN_UNIT_TESTS_REQUEST, new RunUnitTests());
+
+        dispatcher.registerHandler(AdminConstants.CHECK_AUTH_CONFIG_REQUEST, new CheckAuthConfig());
+        dispatcher.registerHandler(AdminConstants.CHECK_GAL_CONFIG_REQUEST, new CheckGalConfig());
+        dispatcher.registerHandler(AdminConstants.CHECK_HOSTNAME_RESOLVE_REQUEST, new CheckHostnameResolve());
+
+        dispatcher.registerHandler(AdminConstants.CREATE_VOLUME_REQUEST, new CreateVolume());
+        dispatcher.registerHandler(AdminConstants.GET_VOLUME_REQUEST, new GetVolume());
+        dispatcher.registerHandler(AdminConstants.GET_ALL_VOLUMES_REQUEST, new GetAllVolumes());
+        dispatcher.registerHandler(AdminConstants.MODIFY_VOLUME_REQUEST, new ModifyVolume());
+        dispatcher.registerHandler(AdminConstants.DELETE_VOLUME_REQUEST, new DeleteVolume());
+        dispatcher.registerHandler(AdminConstants.GET_CURRENT_VOLUMES_REQUEST, new GetCurrentVolumes());
+        dispatcher.registerHandler(AdminConstants.SET_CURRENT_VOLUME_REQUEST, new SetCurrentVolume());
+
+        dispatcher.registerHandler(AdminConstants.CREATE_DISTRIBUTION_LIST_REQUEST, new CreateDistributionList());
+        dispatcher.registerHandler(AdminConstants.GET_DISTRIBUTION_LIST_REQUEST, new GetDistributionList());
+        dispatcher.registerHandler(AdminConstants.GET_ALL_DISTRIBUTION_LISTS_REQUEST, new GetAllDistributionLists());
+        dispatcher.registerHandler(AdminConstants.ADD_DISTRIBUTION_LIST_MEMBER_REQUEST, new AddDistributionListMember());
+        dispatcher.registerHandler(AdminConstants.REMOVE_DISTRIBUTION_LIST_MEMBER_REQUEST, new RemoveDistributionListMember());
+        dispatcher.registerHandler(AdminConstants.MODIFY_DISTRIBUTION_LIST_REQUEST, new ModifyDistributionList());
+        dispatcher.registerHandler(AdminConstants.DELETE_DISTRIBUTION_LIST_REQUEST, new DeleteDistributionList());
+        dispatcher.registerHandler(AdminConstants.ADD_DISTRIBUTION_LIST_ALIAS_REQUEST, new AddDistributionListAlias());
+        dispatcher.registerHandler(AdminConstants.REMOVE_DISTRIBUTION_LIST_ALIAS_REQUEST, new RemoveDistributionListAlias());
+        dispatcher.registerHandler(AdminConstants.RENAME_DISTRIBUTION_LIST_REQUEST, new RenameDistributionList());
+        dispatcher.registerHandler(AdminConstants.GET_DISTRIBUTION_LIST_MEMBERSHIP_REQUEST, new GetDistributionListMembership());
+
+        dispatcher.registerHandler(AdminConstants.GET_VERSION_INFO_REQUEST, new GetVersionInfo());
+        dispatcher.registerHandler(AdminConstants.GET_LICENSE_INFO_REQUEST, new GetLicenseInfo());
+
+        dispatcher.registerHandler(AdminConstants.REINDEX_REQUEST, new ReIndex());
+
         // zimlet
-        dispatcher.registerHandler(GET_ZIMLET_REQUEST, new GetZimlet());
-        dispatcher.registerHandler(CREATE_ZIMLET_REQUEST, new CreateZimlet());
-        dispatcher.registerHandler(DELETE_ZIMLET_REQUEST, new DeleteZimlet());
-        dispatcher.registerHandler(GET_ADMIN_EXTENSION_ZIMLETS_REQUEST, new GetAdminExtensionZimlets());
-        dispatcher.registerHandler(GET_ZIMLET_STATUS_REQUEST, new GetZimletStatus());
-        dispatcher.registerHandler(GET_ALL_ZIMLETS_REQUEST, new GetAllZimlets());
-        dispatcher.registerHandler(DEPLOY_ZIMLET_REQUEST, new DeployZimlet());
-        dispatcher.registerHandler(UNDEPLOY_ZIMLET_REQUEST, new UndeployZimlet());
-        dispatcher.registerHandler(CONFIGURE_ZIMLET_REQUEST, new ConfigureZimlet());
-        dispatcher.registerHandler(MODIFY_ZIMLET_REQUEST, new ModifyZimlet());
-        dispatcher.registerHandler(DUMP_SESSIONS_REQUEST, new DumpSessions());
+        dispatcher.registerHandler(AdminConstants.GET_ZIMLET_REQUEST, new GetZimlet());
+        dispatcher.registerHandler(AdminConstants.CREATE_ZIMLET_REQUEST, new CreateZimlet());
+        dispatcher.registerHandler(AdminConstants.DELETE_ZIMLET_REQUEST, new DeleteZimlet());
+        dispatcher.registerHandler(AdminConstants.GET_ADMIN_EXTENSION_ZIMLETS_REQUEST, new GetAdminExtensionZimlets());
+        dispatcher.registerHandler(AdminConstants.GET_ZIMLET_STATUS_REQUEST, new GetZimletStatus());
+        dispatcher.registerHandler(AdminConstants.GET_ALL_ZIMLETS_REQUEST, new GetAllZimlets());
+        dispatcher.registerHandler(AdminConstants.DEPLOY_ZIMLET_REQUEST, new DeployZimlet());
+        dispatcher.registerHandler(AdminConstants.UNDEPLOY_ZIMLET_REQUEST, new UndeployZimlet());
+        dispatcher.registerHandler(AdminConstants.CONFIGURE_ZIMLET_REQUEST, new ConfigureZimlet());
+        dispatcher.registerHandler(AdminConstants.MODIFY_ZIMLET_REQUEST, new ModifyZimlet());
+        dispatcher.registerHandler(AdminConstants.DUMP_SESSIONS_REQUEST, new DumpSessions());
 
         // calendar resources
-        dispatcher.registerHandler(CREATE_CALENDAR_RESOURCE_REQUEST,   new CreateCalendarResource());
-        dispatcher.registerHandler(DELETE_CALENDAR_RESOURCE_REQUEST,   new DeleteCalendarResource());
-        dispatcher.registerHandler(MODIFY_CALENDAR_RESOURCE_REQUEST,   new ModifyCalendarResource());
-        dispatcher.registerHandler(RENAME_CALENDAR_RESOURCE_REQUEST,   new RenameCalendarResource());
-        dispatcher.registerHandler(GET_CALENDAR_RESOURCE_REQUEST,      new GetCalendarResource());
-        dispatcher.registerHandler(GET_ALL_CALENDAR_RESOURCES_REQUEST, new GetAllCalendarResources());
-        dispatcher.registerHandler(SEARCH_CALENDAR_RESOURCES_REQUEST,  new SearchCalendarResources());
+        dispatcher.registerHandler(AdminConstants.CREATE_CALENDAR_RESOURCE_REQUEST,   new CreateCalendarResource());
+        dispatcher.registerHandler(AdminConstants.DELETE_CALENDAR_RESOURCE_REQUEST,   new DeleteCalendarResource());
+        dispatcher.registerHandler(AdminConstants.MODIFY_CALENDAR_RESOURCE_REQUEST,   new ModifyCalendarResource());
+        dispatcher.registerHandler(AdminConstants.RENAME_CALENDAR_RESOURCE_REQUEST,   new RenameCalendarResource());
+        dispatcher.registerHandler(AdminConstants.GET_CALENDAR_RESOURCE_REQUEST,      new GetCalendarResource());
+        dispatcher.registerHandler(AdminConstants.GET_ALL_CALENDAR_RESOURCES_REQUEST, new GetAllCalendarResources());
+        dispatcher.registerHandler(AdminConstants.SEARCH_CALENDAR_RESOURCES_REQUEST,  new SearchCalendarResources());
 
         // QUOTA
-        dispatcher.registerHandler(GET_QUOTA_USAGE_REQUEST, new GetQuotaUsage());
+        dispatcher.registerHandler(AdminConstants.GET_QUOTA_USAGE_REQUEST, new GetQuotaUsage());
 
         // Mail queue management
-        dispatcher.registerHandler(GET_MAIL_QUEUE_INFO_REQUEST, new GetMailQueueInfo());
-        dispatcher.registerHandler(GET_MAIL_QUEUE_REQUEST, new GetMailQueue());
-        dispatcher.registerHandler(MAIL_QUEUE_ACTION_REQUEST, new MailQueueAction());
-        dispatcher.registerHandler(MAIL_QUEUE_FLUSH_REQUEST, new MailQueueFlush());
-        
-        dispatcher.registerHandler(INIT_NOTEBOOK_REQUEST, new InitNotebook());
-        
-        dispatcher.registerHandler(AUTO_COMPLETE_GAL_REQUEST, new AutoCompleteGal());
-        dispatcher.registerHandler(SEARCH_GAL_REQUEST, new SearchGal());
-        
+        dispatcher.registerHandler(AdminConstants.GET_MAIL_QUEUE_INFO_REQUEST, new GetMailQueueInfo());
+        dispatcher.registerHandler(AdminConstants.GET_MAIL_QUEUE_REQUEST, new GetMailQueue());
+        dispatcher.registerHandler(AdminConstants.MAIL_QUEUE_ACTION_REQUEST, new MailQueueAction());
+        dispatcher.registerHandler(AdminConstants.MAIL_QUEUE_FLUSH_REQUEST, new MailQueueFlush());
+
+        dispatcher.registerHandler(AdminConstants.INIT_NOTEBOOK_REQUEST, new InitNotebook());
+
+        dispatcher.registerHandler(AdminConstants.AUTO_COMPLETE_GAL_REQUEST, new AutoCompleteGal());
+        dispatcher.registerHandler(AdminConstants.SEARCH_GAL_REQUEST, new SearchGal());
+
         // throttling
-        dispatcher.registerHandler(SET_THROTTLE_REQUEST, new SetThrottle());
-        
+        dispatcher.registerHandler(AdminConstants.SET_THROTTLE_REQUEST, new SetThrottle());
+
         // data source
-        dispatcher.registerHandler(GET_DATA_SOURCES_REQUEST, new GetDataSources());
-        dispatcher.registerHandler(CREATE_DATA_SOURCE_REQUEST, new CreateDataSource());
-        dispatcher.registerHandler(MODIFY_DATA_SOURCE_REQUEST, new ModifyDataSource());
-        dispatcher.registerHandler(DELETE_DATA_SOURCE_REQUEST, new DeleteDataSource());
+        dispatcher.registerHandler(AdminConstants.GET_DATA_SOURCES_REQUEST, new GetDataSources());
+        dispatcher.registerHandler(AdminConstants.CREATE_DATA_SOURCE_REQUEST, new CreateDataSource());
+        dispatcher.registerHandler(AdminConstants.MODIFY_DATA_SOURCE_REQUEST, new ModifyDataSource());
+        dispatcher.registerHandler(AdminConstants.DELETE_DATA_SOURCE_REQUEST, new DeleteDataSource());
     }
 
     /**
@@ -567,8 +190,8 @@ public class AdminService implements DocumentService {
      */
     public static Map<String, Object> getAttrs(Element request, boolean ignoreEmptyValues) throws ServiceException {
         Map<String, Object> result = new HashMap<String, Object>();
-        for (Element a : request.listElements(AdminService.E_A)) {
-            String name = a.getAttribute(AdminService.A_N);
+        for (Element a : request.listElements(AdminConstants.E_A)) {
+            String name = a.getAttribute(AdminConstants.A_N);
             String value = a.getText();
             if (!ignoreEmptyValues || (value != null && value.length() > 0))
                 StringUtil.addToMultiMap(result, name, value);

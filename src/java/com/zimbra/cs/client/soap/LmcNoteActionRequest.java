@@ -29,7 +29,7 @@ import org.dom4j.Element;
 import org.dom4j.DocumentHelper;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.DomUtil;
 
 public class LmcNoteActionRequest extends LmcSoapRequest {
@@ -66,13 +66,13 @@ public class LmcNoteActionRequest extends LmcSoapRequest {
 
 
     protected Element getRequestXML() {
-        Element request = DocumentHelper.createElement(MailService.NOTE_ACTION_REQUEST);
-        Element a = DomUtil.add(request, MailService.E_ACTION, "");
-        DomUtil.addAttr(a, MailService.A_ID, mIDList);
-        DomUtil.addAttr(a, MailService.A_OPERATION, mOp);
-        DomUtil.addAttr(a, MailService.A_TAG, mTag);
-        DomUtil.addAttr(a, MailService.A_FOLDER, mTargetFolder);
-        DomUtil.addAttr(a, MailService.A_COLOR, mColor);
+        Element request = DocumentHelper.createElement(MailConstants.NOTE_ACTION_REQUEST);
+        Element a = DomUtil.add(request, MailConstants.E_ACTION, "");
+        DomUtil.addAttr(a, MailConstants.A_ID, mIDList);
+        DomUtil.addAttr(a, MailConstants.A_OPERATION, mOp);
+        DomUtil.addAttr(a, MailConstants.A_TAG, mTag);
+        DomUtil.addAttr(a, MailConstants.A_FOLDER, mTargetFolder);
+        DomUtil.addAttr(a, MailConstants.A_COLOR, mColor);
         return request;
     }
 
@@ -80,9 +80,9 @@ public class LmcNoteActionRequest extends LmcSoapRequest {
         throws ServiceException
     {
         LmcNoteActionResponse response = new LmcNoteActionResponse();
-        Element a = DomUtil.get(responseXML, MailService.E_ACTION);
-        response.setNoteList(DomUtil.getAttr(a, MailService.A_ID));
-        response.setOp(DomUtil.getAttr(a, MailService.A_OPERATION));
+        Element a = DomUtil.get(responseXML, MailConstants.E_ACTION);
+        response.setNoteList(DomUtil.getAttr(a, MailConstants.A_ID));
+        response.setOp(DomUtil.getAttr(a, MailConstants.A_OPERATION));
         return response;
     }
 

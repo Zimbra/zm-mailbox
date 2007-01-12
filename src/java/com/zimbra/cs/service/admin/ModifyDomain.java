@@ -36,6 +36,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -49,7 +50,7 @@ public class ModifyDomain extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
-	    String id = request.getAttribute(AdminService.E_ID);
+	    String id = request.getAttribute(AdminConstants.E_ID);
 	    Map<String, Object> attrs = AdminService.getAttrs(request);
 	    
 	    Domain domain = prov.get(DomainBy.id, id);
@@ -62,7 +63,7 @@ public class ModifyDomain extends AdminDocumentHandler {
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "ModifyDomain","name", domain.getName()}, attrs));	    
 
-        Element response = lc.createElement(AdminService.MODIFY_DOMAIN_RESPONSE);
+        Element response = lc.createElement(AdminConstants.MODIFY_DOMAIN_RESPONSE);
 	    GetDomain.doDomain(response, domain);
 	    return response;
 	}

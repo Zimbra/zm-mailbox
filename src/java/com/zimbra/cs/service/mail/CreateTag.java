@@ -31,6 +31,7 @@ package com.zimbra.cs.service.mail;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
@@ -52,16 +53,16 @@ public class CreateTag extends MailDocumentHandler  {
         Session session = getSession(context);
         
 
-        Element t = request.getElement(MailService.E_TAG);
-        String name = t.getAttribute(MailService.A_NAME);
-        byte color = (byte) t.getAttributeLong(MailService.A_COLOR, MailItem.DEFAULT_COLOR);
+        Element t = request.getElement(MailConstants.E_TAG);
+        String name = t.getAttribute(MailConstants.A_NAME);
+        byte color = (byte) t.getAttributeLong(MailConstants.A_COLOR, MailItem.DEFAULT_COLOR);
         
         CreateTagOperation op = new CreateTagOperation(session, octxt, mbox, Requester.SOAP,
         			name, color);
         op.schedule();
         Tag tag = op.getTag();
         
-        Element response = lc.createElement(MailService.CREATE_TAG_RESPONSE);
+        Element response = lc.createElement(MailConstants.CREATE_TAG_RESPONSE);
         if (tag != null)
         	ToXML.encodeTag(response, lc, tag);
         return response;

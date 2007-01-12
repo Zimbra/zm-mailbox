@@ -32,18 +32,18 @@ import org.dom4j.Element;
 import org.dom4j.DocumentHelper;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.account.AccountService;
+import com.zimbra.common.soap.AccountConstants;
 
 
 public class LmcGetInfoRequest extends LmcSoapRequest {
 
 
     protected Element getRequestXML() {
-        Element request = DocumentHelper.createElement(AccountService.GET_INFO_REQUEST);
+        Element request = DocumentHelper.createElement(AccountConstants.GET_INFO_REQUEST);
         return request;
     }
 
-    protected LmcSoapResponse parseResponseXML(Element responseXML) 
+    protected LmcSoapResponse parseResponseXML(Element responseXML)
         throws ServiceException
     {
         HashMap prefMap = new HashMap();
@@ -55,17 +55,17 @@ public class LmcGetInfoRequest extends LmcSoapRequest {
 
             // find out what element it is and go process that
             String elementType = e.getQName().getName();
-            if (elementType.equals(AccountService.E_NAME)) {
+            if (elementType.equals(AccountConstants.E_NAME)) {
                 response.setAcctName(e.getText());
-            } else if (elementType.equals(AccountService.E_LIFETIME)) {
+            } else if (elementType.equals(AccountConstants.E_LIFETIME)) {
                 response.setLifetime(e.getText());
-            } else if (elementType.equals(AccountService.E_PREF)) {
+            } else if (elementType.equals(AccountConstants.E_PREF)) {
                 // add this preference to our map
                 addPrefToMultiMap(prefMap, e);
             }
         }
 
-        if (!prefMap.isEmpty()) 
+        if (!prefMap.isEmpty())
             response.setPrefMap(prefMap);
 
         return response;

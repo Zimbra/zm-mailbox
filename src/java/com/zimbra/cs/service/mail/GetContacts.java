@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.MailboxIndex;
@@ -52,7 +53,7 @@ public class GetContacts extends MailDocumentHandler  {
 
 	private static final int ALL_FOLDERS = -1;
 
-	protected static final String[] TARGET_FOLDER_PATH = new String[] { MailService.A_FOLDER };
+	protected static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.A_FOLDER };
 	protected String[] getProxiedIdPath(Element request) {
 		return TARGET_FOLDER_PATH;
 	}
@@ -63,8 +64,8 @@ public class GetContacts extends MailDocumentHandler  {
 		Mailbox.OperationContext octxt = zsc.getOperationContext();
 		Session session = getSession(context);
 
-		boolean sync = request.getAttributeBool(MailService.A_SYNC, false);
-		String folderIdStr  = request.getAttribute(MailService.A_FOLDER, null);
+		boolean sync = request.getAttributeBool(MailConstants.A_SYNC, false);
+		String folderIdStr  = request.getAttribute(MailConstants.A_FOLDER, null);
 		int folderId = ALL_FOLDERS;
 		if (folderIdStr != null) { 
 			ItemId iidFolder = new ItemId(folderIdStr, zsc);
@@ -75,7 +76,7 @@ public class GetContacts extends MailDocumentHandler  {
 		}
 
 		byte sort = DbMailItem.SORT_NONE;
-		String sortStr = request.getAttribute(MailService.A_SORTBY, "");
+		String sortStr = request.getAttribute(MailConstants.A_SORTBY, "");
 		if (sortStr.equals(MailboxIndex.SortBy.NAME_ASCENDING.toString()))
 			sort = DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_ASCENDING;
 		else if (sortStr.equals(MailboxIndex.SortBy.NAME_DESCENDING.toString()))
@@ -85,13 +86,13 @@ public class GetContacts extends MailDocumentHandler  {
 		ArrayList<ItemId> ids = null;
 
 		for (Element e : request.listElements())
-			if (e.getName().equals(MailService.E_ATTRIBUTE)) {
-				String name = e.getAttribute(MailService.A_ATTRIBUTE_NAME);
+			if (e.getName().equals(MailConstants.E_ATTRIBUTE)) {
+				String name = e.getAttribute(MailConstants.A_ATTRIBUTE_NAME);
 				if (attrs == null)
 					attrs = new ArrayList<String>();
 				attrs.add(name);
-			} else if (e.getName().equals(MailService.E_CONTACT)) {
-				String idStr = e.getAttribute(MailService.A_ID);
+			} else if (e.getName().equals(MailConstants.E_CONTACT)) {
+				String idStr = e.getAttribute(MailConstants.A_ID);
 				String targets[] = idStr.split(",");
 				for (String target : targets) { 
 					ItemId iid = new ItemId(target, zsc);
@@ -104,7 +105,7 @@ public class GetContacts extends MailDocumentHandler  {
 				e.detach();
 			}
 
-		Element response = zsc.createElement(MailService.GET_CONTACTS_RESPONSE);
+		Element response = zsc.createElement(MailConstants.GET_CONTACTS_RESPONSE);
 		ContactAttrCache cacache = null;
 
 		// want to return modified date only on sync-related requests
@@ -173,9 +174,9 @@ public class GetContacts extends MailDocumentHandler  {
 		List<Element> responses = new ArrayList<Element>();
 
         // note that we removed all <cn> elements from the request during handle(), above
-        Element cn = request.addElement(MailService.E_CONTACT);
+        Element cn = request.addElement(MailConstants.E_CONTACT);
         for (Map.Entry<String, StringBuffer> entry : remote.entrySet()) {
-			cn.addAttribute(MailService.A_ID, entry.getValue().toString());
+			cn.addAttribute(MailConstants.A_ID, entry.getValue().toString());
 
 			Element response = proxyRequest(request, context, entry.getKey());
             for (Element e : response.listElements())

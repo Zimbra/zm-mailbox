@@ -26,8 +26,8 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.Contact;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.zclient.event.ZModifyContactEvent;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.soap.Element;
@@ -50,19 +50,19 @@ public class ZContactHit implements ZSearchHit {
     private long mMetaDataDate;
         
     public ZContactHit(Element e) throws ServiceException {
-        mId = e.getAttribute(MailService.A_ID);
-        mFlags = e.getAttribute(MailService.A_FLAGS, null);        
-        mTagIds = e.getAttribute(MailService.A_TAGS, null);        
-        mSortField = e.getAttribute(MailService.A_SORT_FIELD, null);
-        mScore = (float) e.getAttributeDouble(MailService.A_SCORE, 0);
-        mFileAsStr = e.getAttribute(MailService.A_FILE_AS_STR, null);
-        mRevision = e.getAttribute(MailService.A_REVISION, null);
-        mFolderId = e.getAttribute(MailService.A_FOLDER);
-        mType = e.getAttribute(MailService.A_CONTACT_TYPE, null);
+        mId = e.getAttribute(MailConstants.A_ID);
+        mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
+        mTagIds = e.getAttribute(MailConstants.A_TAGS, null);
+        mSortField = e.getAttribute(MailConstants.A_SORT_FIELD, null);
+        mScore = (float) e.getAttributeDouble(MailConstants.A_SCORE, 0);
+        mFileAsStr = e.getAttribute(MailConstants.A_FILE_AS_STR, null);
+        mRevision = e.getAttribute(MailConstants.A_REVISION, null);
+        mFolderId = e.getAttribute(MailConstants.A_FOLDER);
+        mType = e.getAttribute(MailConstants.A_CONTACT_TYPE, null);
         mEmail = e.getAttribute(Contact.A_email, null);
         mEmail2 = e.getAttribute(Contact.A_email2, null);
         mEmail3 = e.getAttribute(Contact.A_email3, null);
-        mMetaDataDate = e.getAttributeLong(MailService.A_MODIFIED_DATE, 0) * 1000;
+        mMetaDataDate = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0) * 1000;
         mDlist = e.getAttribute(Contact.A_dlist, null);
     }
 

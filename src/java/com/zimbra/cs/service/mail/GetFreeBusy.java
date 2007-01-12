@@ -35,6 +35,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -70,8 +71,8 @@ public class GetFreeBusy extends MailDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zc = getZimbraSoapContext(context);
         
-        long rangeStart = request.getAttributeLong(MailService.A_CAL_START_TIME);
-        long rangeEnd = request.getAttributeLong(MailService.A_CAL_END_TIME);
+        long rangeStart = request.getAttributeLong(MailConstants.A_CAL_START_TIME);
+        long rangeEnd = request.getAttributeLong(MailConstants.A_CAL_END_TIME);
         
         if (rangeEnd < rangeStart)
             throw ServiceException.INVALID_REQUEST("End time must be after Start time", null);
@@ -82,7 +83,7 @@ public class GetFreeBusy extends MailDocumentHandler {
 
         Element response = getResponseElement(zc);
         
-        String idParam = request.getAttribute(MailService.A_UID);
+        String idParam = request.getAttribute(MailConstants.A_UID);
         
         List<ParseMailboxID> local = new ArrayList<ParseMailboxID>();
         Map<String, StringBuilder> remote = new HashMap<String, StringBuilder>();
@@ -108,10 +109,10 @@ public class GetFreeBusy extends MailDocumentHandler {
             String[] idStrs = paramStr.split(",");
 
             try {
-                Element req = zc.getRequestProtocol().getFactory().createElement(MailService.GET_FREE_BUSY_REQUEST);
-                req.addAttribute(MailService.A_CAL_START_TIME, rangeStart);
-                req.addAttribute(MailService.A_CAL_END_TIME, rangeEnd);
-                req.addAttribute(MailService.A_UID, paramStr);
+                Element req = zc.getRequestProtocol().getFactory().createElement(MailConstants.GET_FREE_BUSY_REQUEST);
+                req.addAttribute(MailConstants.A_CAL_START_TIME, rangeStart);
+                req.addAttribute(MailConstants.A_CAL_END_TIME, rangeEnd);
+                req.addAttribute(MailConstants.A_UID, paramStr);
 
                 // hack: use the ID of the first user 
                 Account acct = Provisioning.getInstance().get(AccountBy.name, idStrs[0]);
@@ -161,18 +162,18 @@ public class GetFreeBusy extends MailDocumentHandler {
 
     protected static void addFailureInfo(Element response, long rangeStart, long rangeEnd, String idStr, Exception e) {
         sLog.debug("Could not get FreeBusy data for id " + idStr, e);
-        Element usr = response.addElement(MailService.E_FREEBUSY_USER);
-        usr.addAttribute(MailService.A_ID, idStr);
-        usr.addElement(MailService.E_FREEBUSY_NO_DATA)
-           .addAttribute(MailService.A_CAL_START_TIME, rangeStart)
-           .addAttribute(MailService.A_CAL_END_TIME, rangeEnd);
+        Element usr = response.addElement(MailConstants.E_FREEBUSY_USER);
+        usr.addAttribute(MailConstants.A_ID, idStr);
+        usr.addElement(MailConstants.E_FREEBUSY_NO_DATA)
+           .addAttribute(MailConstants.A_CAL_START_TIME, rangeStart)
+           .addAttribute(MailConstants.A_CAL_END_TIME, rangeEnd);
     }
     
     protected static void getForOneMailbox(ZimbraSoapContext zc, Element response, ParseMailboxID id, long start, long end)
     throws ServiceException {
         if (id.isLocal()) {
-            Element mbxResp = response.addElement(MailService.E_FREEBUSY_USER);
-            mbxResp.addAttribute(MailService.A_ID,id.getString());
+            Element mbxResp = response.addElement(MailConstants.E_FREEBUSY_USER);
+            mbxResp.addAttribute(MailConstants.A_ID,id.getString());
             
             Mailbox mbox = id.getMailbox();
 
@@ -183,20 +184,20 @@ public class GetFreeBusy extends MailDocumentHandler {
                 String status = cur.getStatus();
                 Element elt;
                 if (status.equals(IcalXmlStrMap.FBTYPE_FREE)) {
-                    elt = mbxResp.addElement(MailService.E_FREEBUSY_FREE);
+                    elt = mbxResp.addElement(MailConstants.E_FREEBUSY_FREE);
                 } else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY)) {
-                    elt = mbxResp.addElement(MailService.E_FREEBUSY_BUSY);
+                    elt = mbxResp.addElement(MailConstants.E_FREEBUSY_BUSY);
                 } else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_TENTATIVE)) {
-                    elt = mbxResp.addElement(MailService.E_FREEBUSY_BUSY_TENTATIVE);
+                    elt = mbxResp.addElement(MailConstants.E_FREEBUSY_BUSY_TENTATIVE);
                 } else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE)) {
-                    elt = mbxResp.addElement(MailService.E_FREEBUSY_BUSY_UNAVAILABLE);
+                    elt = mbxResp.addElement(MailConstants.E_FREEBUSY_BUSY_UNAVAILABLE);
                 } else {
                     assert(false);
                     elt = null;
                 }
                 
-                elt.addAttribute(MailService.A_CAL_START_TIME, cur.getStart());
-                elt.addAttribute(MailService.A_CAL_END_TIME, cur.getEnd());
+                elt.addAttribute(MailConstants.A_CAL_START_TIME, cur.getStart());
+                elt.addAttribute(MailConstants.A_CAL_END_TIME, cur.getEnd());
             }
         } else {
             throw new IllegalArgumentException("REMOTE MAILBOXES NOT SUPPORTED YET\n");

@@ -29,7 +29,7 @@ import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.client.*;
 import com.zimbra.soap.DomUtil;
 
@@ -45,7 +45,7 @@ public class LmcGetContactsRequest extends LmcSoapRequest {
     public LmcContactAttr[] getAttrs() { return mAttrs; }
 
     protected Element getRequestXML() {
-        Element request = DocumentHelper.createElement(MailService.GET_CONTACTS_REQUEST);
+        Element request = DocumentHelper.createElement(MailConstants.GET_CONTACTS_REQUEST);
         
         // emit contact attributes if any
         for (int i = 0; mAttrs != null && i < mAttrs.length; i++)
@@ -53,8 +53,8 @@ public class LmcGetContactsRequest extends LmcSoapRequest {
         
         // emit specified contacts if any
         for (int i = 0; mIDList != null && i < mIDList.length; i++) {
-            Element newCN = DomUtil.add(request, MailService.E_CONTACT, "");
-            DomUtil.addAttr(newCN, MailService.A_ID, mIDList[i]);
+            Element newCN = DomUtil.add(request, MailConstants.E_CONTACT, "");
+            DomUtil.addAttr(newCN, MailConstants.A_ID, mIDList[i]);
         }
 
         return request;

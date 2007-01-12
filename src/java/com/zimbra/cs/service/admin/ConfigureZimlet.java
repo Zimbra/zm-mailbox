@@ -30,9 +30,10 @@ import java.util.Map;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.soap.Element;
@@ -43,13 +44,13 @@ public class ConfigureZimlet extends AdminDocumentHandler {
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Element content = request.getElement(MailService.E_CONTENT);
-        String attachment = content.getAttribute(MailService.A_ATTACHMENT_ID, null);
+        Element content = request.getElement(MailConstants.E_CONTENT);
+        String attachment = content.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
         Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), attachment, lc.getRawAuthToken());
         if (up == null)
             throw MailServiceException.NO_SUCH_UPLOAD(attachment);
 
-        Element response = lc.createElement(AdminService.CONFIGURE_ZIMLET_RESPONSE);
+        Element response = lc.createElement(AdminConstants.CONFIGURE_ZIMLET_RESPONSE);
 		try {
 			byte[] blob = ByteUtil.getContent(up.getInputStream(), 0);
 			ZimletUtil.installConfig(new String(blob));

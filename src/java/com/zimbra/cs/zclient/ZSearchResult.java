@@ -26,7 +26,7 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZModifyConversationEvent;
 import com.zimbra.soap.Element;
@@ -50,7 +50,7 @@ public class ZSearchResult {
         if (!convNest) {
             init(e, e);
         } else {
-            Element c = e.getElement(MailService.E_CONV);
+            Element c = e.getElement(MailConstants.E_CONV);
             mConvSummary = new ZConversationSummary(c);
             init(e, c);
         }
@@ -69,20 +69,20 @@ public class ZSearchResult {
     }
 
     private void init(Element resp, Element hits) throws ServiceException {
-        mSortBy = resp.getAttribute(MailService.A_SORTBY);
-        mHasMore = resp.getAttributeBool(MailService.A_QUERY_MORE);
-        mOffset = (int) resp.getAttributeLong(MailService.A_QUERY_OFFSET);
+        mSortBy = resp.getAttribute(MailConstants.A_SORTBY);
+        mHasMore = resp.getAttributeBool(MailConstants.A_QUERY_MORE);
+        mOffset = (int) resp.getAttributeLong(MailConstants.A_QUERY_OFFSET);
         mHits = new ArrayList<ZSearchHit>();
         for (Element h: hits.listElements()) {
-            if (h.getName().equals(MailService.E_CONV)) {
+            if (h.getName().equals(MailConstants.E_CONV)) {
                 mHits.add(new ZConversationHit(h));
-            } else if (h.getName().equals(MailService.E_MSG)) {
+            } else if (h.getName().equals(MailConstants.E_MSG)) {
                 mHits.add(new ZMessageHit(h));
-            } else if (h.getName().equals(MailService.E_CONTACT)) {
+            } else if (h.getName().equals(MailConstants.E_CONTACT)) {
                 mHits.add(new ZContactHit(h));
-            } else if (h.getName().equals(MailService.E_DOC)) {
+            } else if (h.getName().equals(MailConstants.E_DOC)) {
                 mHits.add(new ZDocumentHit(h));
-            } else if (h.getName().equals(MailService.E_WIKIWORD)) {
+            } else if (h.getName().equals(MailConstants.E_WIKIWORD)) {
                 mHits.add(new ZDocumentHit(h));
             }
         }
@@ -142,10 +142,10 @@ public class ZSearchResult {
         private int mMessageCount;
 
         public ZConversationSummary(Element e) throws ServiceException {
-            mId = e.getAttribute(MailService.A_ID);
-            mFlags = e.getAttribute(MailService.A_FLAGS, null);
-            mTags = e.getAttribute(MailService.A_TAGS, null);
-            mMessageCount = (int) e.getAttributeLong(MailService.A_NUM);
+            mId = e.getAttribute(MailConstants.A_ID);
+            mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
+            mTags = e.getAttribute(MailConstants.A_TAGS, null);
+            mMessageCount = (int) e.getAttributeLong(MailConstants.A_NUM);
         }
 
         public void modifyNotification(ZModifyEvent event) throws ServiceException {

@@ -33,6 +33,7 @@ import java.util.Map;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -54,7 +55,7 @@ public class ModifyConfig extends AdminDocumentHandler {
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "ModifyConfig",}, attrs));
         
-	    Element response = lc.createElement(AdminService.MODIFY_CONFIG_RESPONSE);
+	    Element response = lc.createElement(AdminConstants.MODIFY_CONFIG_RESPONSE);
 	    return response;
 	}
 }

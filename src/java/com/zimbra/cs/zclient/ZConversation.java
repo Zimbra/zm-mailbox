@@ -26,7 +26,7 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyConversationEvent;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZModifyMessageEvent;
@@ -81,15 +81,15 @@ public class ZConversation implements ZItem {
     private List<ZMessageSummary> mMessageSummaries;
         
     public ZConversation(Element e) throws ServiceException {
-        mId = e.getAttribute(MailService.A_ID);
-        mFlags = e.getAttribute(MailService.A_FLAGS, null);
-        mTags = e.getAttribute(MailService.A_TAGS, null);
-        Element sub = e.getOptionalElement(MailService.E_SUBJECT);
+        mId = e.getAttribute(MailConstants.A_ID);
+        mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
+        mTags = e.getAttribute(MailConstants.A_TAGS, null);
+        Element sub = e.getOptionalElement(MailConstants.E_SUBJECT);
         if (sub != null) mSubject = sub.getText();        
-        mMessageCount = (int) e.getAttributeLong(MailService.A_NUM);
+        mMessageCount = (int) e.getAttributeLong(MailConstants.A_NUM);
         
         mMessageSummaries = new ArrayList<ZMessageSummary>();
-        for (Element msgEl: e.listElements(MailService.E_MSG)) {
+        for (Element msgEl: e.listElements(MailConstants.E_MSG)) {
             mMessageSummaries.add(new ZMessageSummary(msgEl));
         }        
     }
@@ -157,15 +157,15 @@ public class ZConversation implements ZItem {
         private long mSize;
         
         public ZMessageSummary(Element e) throws ServiceException {
-            mId = e.getAttribute(MailService.A_ID);
-            mFlags = e.getAttribute(MailService.A_FLAGS, null);
-            mDate = e.getAttributeLong(MailService.A_DATE);
-            mTags = e.getAttribute(MailService.A_TAGS, null);
-            mFolderId = e.getAttribute(MailService.A_FOLDER, null);
-            Element fr = e.getOptionalElement(MailService.E_FRAG);
+            mId = e.getAttribute(MailConstants.A_ID);
+            mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
+            mDate = e.getAttributeLong(MailConstants.A_DATE);
+            mTags = e.getAttribute(MailConstants.A_TAGS, null);
+            mFolderId = e.getAttribute(MailConstants.A_FOLDER, null);
+            Element fr = e.getOptionalElement(MailConstants.E_FRAG);
             if (fr != null) mFragment = fr.getText();        
-            mSize = e.getAttributeLong(MailService.A_SIZE);
-            Element emailEl = e.getOptionalElement(MailService.E_EMAIL);
+            mSize = e.getAttributeLong(MailConstants.A_SIZE);
+            Element emailEl = e.getOptionalElement(MailConstants.E_EMAIL);
             if (emailEl != null) mSender = new ZEmailAddress(emailEl);
         }
         

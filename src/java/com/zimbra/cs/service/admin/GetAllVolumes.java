@@ -32,6 +32,7 @@ import java.util.Map;
 import com.zimbra.cs.store.Volume;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.common.soap.AdminConstants;
 
 public class GetAllVolumes extends AdminDocumentHandler {
 
@@ -39,7 +40,7 @@ public class GetAllVolumes extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
         List vols = Volume.getAll();
-        Element response = lc.createElement(AdminService.GET_ALL_VOLUMES_RESPONSE);
+        Element response = lc.createElement(AdminConstants.GET_ALL_VOLUMES_RESPONSE);
         for (Iterator it = vols.iterator(); it.hasNext(); )
             GetVolume.addVolumeElement(response, (Volume) it.next());
         return response;

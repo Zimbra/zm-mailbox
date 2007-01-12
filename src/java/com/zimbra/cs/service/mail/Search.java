@@ -42,6 +42,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.*;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
@@ -81,15 +82,15 @@ public class Search extends MailDocumentHandler  {
         
         try {
             // create the XML response Element
-            Element response = zsc.createElement(MailService.SEARCH_RESPONSE);
+            Element response = zsc.createElement(MailConstants.SEARCH_RESPONSE);
 
             // must use results.getSortBy() because the results might have ignored our sortBy
             // request and used something else...
             SortBy sb = results.getSortBy();
-            response.addAttribute(MailService.A_SORTBY, sb.toString());
+            response.addAttribute(MailConstants.A_SORTBY, sb.toString());
 
             ResultsPager pager = ResultsPager.create(results, params);
-            response.addAttribute(MailService.A_QUERY_OFFSET, params.getOffset());
+            response.addAttribute(MailConstants.A_QUERY_OFFSET, params.getOffset());
 
             putHits(zsc, response, pager, DONT_INCLUDE_MAILBOX_INFO, params);
             
@@ -105,7 +106,7 @@ public class Search extends MailDocumentHandler  {
     protected static void putInfo(Element response, SearchParams params, ZimbraQueryResults results) {
         List<QueryInfo> qinfo = results.getResultInfo();
         if ((qinfo.size() > 0) || params.getEstimateSize()) {  
-            Element qinfoElt = response.addElement(MailService.E_INFO);
+            Element qinfoElt = response.addElement(MailConstants.E_INFO);
             Element sizeEst = qinfoElt.addElement("sizeEstimate");
             try {
                 sizeEst.addAttribute("value", results.estimateResultSize());
@@ -155,7 +156,7 @@ public class Search extends MailDocumentHandler  {
     }
     
     protected java.util.TimeZone parseTimeZonePart(Element tzElt, ZimbraSoapContext zsc) throws ServiceException {
-        String id = tzElt.getAttribute(MailService.A_ID);
+        String id = tzElt.getAttribute(MailConstants.A_ID);
 
         // is it a well-known timezone?  if so then we're done here
         ICalTimeZone knownTZ = WellKnownTimeZones.getTimeZoneById(id);
@@ -164,15 +165,15 @@ public class Search extends MailDocumentHandler  {
 
         // custom timezone!
         
-        String test = tzElt.getAttribute(MailService.A_CAL_TZ_STDOFFSET, null);
+        String test = tzElt.getAttribute(MailConstants.A_CAL_TZ_STDOFFSET, null);
         if (test == null)
-            throw ServiceException.INVALID_REQUEST("Unknown TZ: \""+id+"\" and no "+MailService.A_CAL_TZ_STDOFFSET+" specified", null);
+            throw ServiceException.INVALID_REQUEST("Unknown TZ: \""+id+"\" and no "+MailConstants.A_CAL_TZ_STDOFFSET+" specified", null);
         
         return CalendarUtils.parseTzElement(tzElt);
     }
 
     protected SearchParams parseCommonParameters(Element request, ZimbraSoapContext zsc) throws ServiceException {
-        String query = request.getAttribute(MailService.E_QUERY, null);
+        String query = request.getAttribute(MailConstants.E_QUERY, null);
         if (query == null)
             query = getRequestedAccount(zsc).getAttr(Provisioning.A_zimbraPrefMailInitialSearch);
 
@@ -183,14 +184,14 @@ public class Search extends MailDocumentHandler  {
         
         
         // field
-        String field = request.getAttribute(MailService.A_FIELD, null);
+        String field = request.getAttribute(MailConstants.A_FIELD, null);
         if (field != null) {
             params.setDefaultField(field);
         }
         
         //
         // <loc>
-        Element locElt = request.getOptionalElement(MailService.E_LOCALE);
+        Element locElt = request.getOptionalElement(MailConstants.E_LOCALE);
         if (locElt != null) {
             Locale loc = parseLocale(locElt, zsc);
             params.setLocale(loc);
@@ -198,7 +199,7 @@ public class Search extends MailDocumentHandler  {
 
         //
         // <tz>
-        Element tzElt = request.getOptionalElement(MailService.E_CAL_TZ);
+        Element tzElt = request.getOptionalElement(MailConstants.E_CAL_TZ);
         if (tzElt != null) {
             TimeZone tz = parseTimeZonePart(tzElt, zsc);
             params.setTimeZone(tz);
@@ -207,33 +208,33 @@ public class Search extends MailDocumentHandler  {
         params.setOffset(getOffset(request));
         params.setLimit(getLimit(request));
         params.setQueryStr(query);
-        String groupByStr = request.getAttribute(MailService.A_SEARCH_TYPES, null);
+        String groupByStr = request.getAttribute(MailConstants.A_SEARCH_TYPES, null);
         if (groupByStr == null)
-            groupByStr = request.getAttribute(MailService.A_GROUPBY, MailboxIndex.GROUP_BY_CONVERSATION);
+            groupByStr = request.getAttribute(MailConstants.A_GROUPBY, MailboxIndex.GROUP_BY_CONVERSATION);
         params.setTypesStr(groupByStr);
-        params.setSortByStr(request.getAttribute(MailService.A_SORTBY, MailboxIndex.SortBy.DATE_DESCENDING.toString()));
-        params.setFetchFirst(ExpandResults.get(request.getAttribute(MailService.A_FETCH, null)));
+        params.setSortByStr(request.getAttribute(MailConstants.A_SORTBY, MailboxIndex.SortBy.DATE_DESCENDING.toString()));
+        params.setFetchFirst(ExpandResults.get(request.getAttribute(MailConstants.A_FETCH, null)));
         if (params.getFetchFirst() != ExpandResults.NONE) {
-            params.setWantHtml(request.getAttributeBool(MailService.A_WANT_HTML, false));
-            params.setMarkRead(request.getAttributeBool(MailService.A_MARK_READ, false));
-            params.setNeuterImages(request.getAttributeBool(MailService.A_NEUTER, true));
+            params.setWantHtml(request.getAttributeBool(MailConstants.A_WANT_HTML, false));
+            params.setMarkRead(request.getAttributeBool(MailConstants.A_MARK_READ, false));
+            params.setNeuterImages(request.getAttributeBool(MailConstants.A_NEUTER, true));
         }
-        params.setWantRecipients(request.getAttributeBool(MailService.A_RECIPIENTS, false));
+        params.setWantRecipients(request.getAttributeBool(MailConstants.A_RECIPIENTS, false));
 
-        Element cursor = request.getOptionalElement(MailService.E_CURSOR);
+        Element cursor = request.getOptionalElement(MailConstants.E_CURSOR);
         if (cursor != null) {
 //            int prevMailItemId = (int)cursor.getAttributeLong(MailService.A_ID);
 //          int prevOffset = (int)cursor.getAttributeLong(MailService.A_QUERY_OFFSET);
             
-            String cursorStr = cursor.getAttribute(MailService.A_ID);
+            String cursorStr = cursor.getAttribute(MailConstants.A_ID);
             ItemId prevMailItemId = null;
             if (cursorStr != null)
                 prevMailItemId = new ItemId(cursorStr, zsc);
             
             int prevOffset = 0;
-            String sortVal = cursor.getAttribute(MailService.A_SORTVAL);
+            String sortVal = cursor.getAttribute(MailConstants.A_SORTVAL);
             
-            String endSortVal = cursor.getAttribute(MailService.A_ENDSORTVAL, null);
+            String endSortVal = cursor.getAttribute(MailConstants.A_ENDSORTVAL, null);
             params.setCursor(prevMailItemId, sortVal, prevOffset, endSortVal);
             
             String addedPart = null;
@@ -271,7 +272,7 @@ public class Search extends MailDocumentHandler  {
     }
 
     protected int getLimit(Element request) throws ServiceException {
-        int limit = (int) request.getAttributeLong(MailService.A_QUERY_LIMIT, -1);
+        int limit = (int) request.getAttributeLong(MailConstants.A_QUERY_LIMIT, -1);
         if (limit <= 0 || limit > 1000)
             limit = 30; // default limit of...say..30...
         return limit;
@@ -279,7 +280,7 @@ public class Search extends MailDocumentHandler  {
 
     protected int getOffset(Element request) throws ServiceException {
         // Lookup the offset= and limit= parameters in the soap request
-        return (int) request.getAttributeLong(MailService.A_QUERY_OFFSET, 0);
+        return (int) request.getAttributeLong(MailConstants.A_QUERY_OFFSET, 0);
     }
 
     // just to make the argument lists a bit more readable:
@@ -340,16 +341,16 @@ public class Search extends MailDocumentHandler  {
                 continue;
             }
             if (e != null && addSortField) {
-                e.addAttribute(MailService.A_SORT_FIELD, hit.getSortField(pager.getSortOrder()).toString());
+                e.addAttribute(MailConstants.A_SORT_FIELD, hit.getSortField(pager.getSortOrder()).toString());
             }
             if (e != null && includeMailbox) {
 //              String idStr = hit.getMailboxIdStr() + "/" + hit.getItemId();
                 ItemId iid = new ItemId(hit.getAcctIdStr(), hit.getItemId());
-                e.addAttribute(MailService.A_ID, iid.toString());
+                e.addAttribute(MailConstants.A_ID, iid.toString());
             }
         }
 
-        response.addAttribute(MailService.A_QUERY_MORE, pager.hasNext());
+        response.addAttribute(MailConstants.A_QUERY_MORE, pager.hasNext());
         
 
         return response;
@@ -362,15 +363,15 @@ public class Search extends MailDocumentHandler  {
         MessageHit mh = ch.getFirstMessageHit();
         Element c = ToXML.encodeConversationSummary(response, zsc, conv, mh == null ? null : mh.getMessage(), params.getWantRecipients());
         if (ch.getScore() != 0)
-            c.addAttribute(MailService.A_SCORE, ch.getScore());
+            c.addAttribute(MailConstants.A_SCORE, ch.getScore());
 
         Collection s = ch.getMessageHits();
         if (s != null) {
             for (Iterator mit = s.iterator(); mit.hasNext(); ) {
                 mh = (MessageHit) mit.next();
                 Message msg = mh.getMessage();
-                Element e = c.addElement(MailService.E_MSG);
-                e.addAttribute(MailService.A_ID, msg.getId());
+                Element e = c.addElement(MailConstants.E_MSG);
+                e.addAttribute(MailConstants.A_ID, msg.getId());
             }
         }
         return c;
@@ -389,10 +390,10 @@ public class Search extends MailDocumentHandler  {
         }
 
         if (ah.getScore() != 0) {
-            m.addAttribute(MailService.A_SCORE, ah.getScore());
+            m.addAttribute(MailConstants.A_SCORE, ah.getScore());
         }
 
-        m.addAttribute(MailService.A_CONTENTMATCHED, true);
+        m.addAttribute(MailConstants.A_CONTENTMATCHED, true);
 
         return m;
     }
@@ -418,14 +419,14 @@ public class Search extends MailDocumentHandler  {
         if (inline) {
             m = ToXML.encodeMessageAsMP(response, zsc, msg, null, params.getWantHtml(), params.getNeuterImages());
             if (!msg.getFragment().equals(""))
-                m.addAttribute(MailService.E_FRAG, msg.getFragment(), Element.DISP_CONTENT);
+                m.addAttribute(MailConstants.E_FRAG, msg.getFragment(), Element.DISP_CONTENT);
         } else {
             m = ToXML.encodeMessageSummary(response, zsc, msg, params.getWantRecipients());
         }
         if (mh.getScore() != 0)
-            m.addAttribute(MailService.A_SCORE, mh.getScore());
+            m.addAttribute(MailConstants.A_SCORE, mh.getScore());
 
-        m.addAttribute(MailService.A_CONTENTMATCHED, true);
+        m.addAttribute(MailConstants.A_CONTENTMATCHED, true);
 
         List<MessagePartHit> parts = mh.getMatchedMimePartNames();
         if (parts != null) {
@@ -433,8 +434,8 @@ public class Search extends MailDocumentHandler  {
                 String partNameStr = mph.getPartName();
 
                 if (partNameStr.length() > 0) {
-                    Element mp = m.addElement(MailService.E_HIT_MIMEPART);
-                    mp.addAttribute(MailService.A_PART, partNameStr);
+                    Element mp = m.addElement(MailConstants.E_HIT_MIMEPART);
+                    mp.addAttribute(MailConstants.A_PART, partNameStr);
                 }
             }
         }
@@ -460,7 +461,7 @@ public class Search extends MailDocumentHandler  {
         if (inline) {
             m = ToXML.encodeMessageAsMP(response, zsc, msg, null, params.getWantHtml(), params.getNeuterImages());
             if (!msg.getFragment().equals(""))
-                m.addAttribute(MailService.E_FRAG, msg.getFragment(), Element.DISP_CONTENT);
+                m.addAttribute(MailConstants.E_FRAG, msg.getFragment(), Element.DISP_CONTENT);
         } else {
             m = ToXML.encodeMessageSummary(response, zsc, msg, params.getWantRecipients());
         }
@@ -470,22 +471,22 @@ public class Search extends MailDocumentHandler  {
     protected Element addMessagePartHit(Element response, MessagePartHit mph) throws ServiceException {
         MessageHit mh = mph.getMessageResult();
         Message msg = mh.getMessage();
-        Element mp = response.addElement(MailService.E_MIMEPART);
+        Element mp = response.addElement(MailConstants.E_MIMEPART);
 
-        mp.addAttribute(MailService.A_SIZE, msg.getSize());
-        mp.addAttribute(MailService.A_DATE, msg.getDate());
-        mp.addAttribute(MailService.A_CONV_ID, msg.getConversationId());
-        mp.addAttribute(MailService.A_MESSAGE_ID, msg.getId());
-        mp.addAttribute(MailService.A_CONTENT_TYPE, mph.getType());
-        mp.addAttribute(MailService.A_CONTENT_NAME, mph.getFilename());
-        mp.addAttribute(MailService.A_PART, mph.getPartName());        
+        mp.addAttribute(MailConstants.A_SIZE, msg.getSize());
+        mp.addAttribute(MailConstants.A_DATE, msg.getDate());
+        mp.addAttribute(MailConstants.A_CONV_ID, msg.getConversationId());
+        mp.addAttribute(MailConstants.A_MESSAGE_ID, msg.getId());
+        mp.addAttribute(MailConstants.A_CONTENT_TYPE, mph.getType());
+        mp.addAttribute(MailConstants.A_CONTENT_NAME, mph.getFilename());
+        mp.addAttribute(MailConstants.A_PART, mph.getPartName());
         if (mph.getScore() != 0)
-            mp.addAttribute(MailService.A_SCORE, mph.getScore());
+            mp.addAttribute(MailConstants.A_SCORE, mph.getScore());
 
         ToXML.encodeEmail(mp, msg.getSender(), EmailType.FROM);
         String subject = msg.getSubject();
         if (subject != null)
-            mp.addAttribute(MailService.E_SUBJECT, subject, Element.DISP_CONTENT);
+            mp.addAttribute(MailConstants.E_SUBJECT, subject, Element.DISP_CONTENT);
 
         return mp;
     }

@@ -32,6 +32,7 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.Element;
@@ -47,7 +48,7 @@ public class CreateCos extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 	    
-	    String name = request.getAttribute(AdminService.E_NAME).toLowerCase();
+	    String name = request.getAttribute(AdminConstants.E_NAME).toLowerCase();
 	    Map<String, Object> attrs = AdminService.getAttrs(request, true);
 	    
 	    Cos cos = prov.createCos(name, attrs);
@@ -55,7 +56,7 @@ public class CreateCos extends AdminDocumentHandler {
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "CreateCos","name", name}, attrs));         
 
-	    Element response = lc.createElement(AdminService.CREATE_COS_RESPONSE);
+	    Element response = lc.createElement(AdminConstants.CREATE_COS_RESPONSE);
 	    GetCos.doCos(response, cos);
 
 	    return response;

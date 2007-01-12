@@ -27,6 +27,7 @@ package com.zimbra.cs.service.im;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.IMConstants;
 import com.zimbra.cs.im.IMAddr;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -40,16 +41,16 @@ public class IMSubscribe extends IMDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException 
     {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Element response = lc.createElement(IMService.IM_SUBSCRIBE_RESPONSE);
+        Element response = lc.createElement(IMConstants.IM_SUBSCRIBE_RESPONSE);
         
-        String op = request.getAttribute(IMService.A_OPERATION);
+        String op = request.getAttribute(IMConstants.A_OPERATION);
         boolean add = true;
         if (op.equalsIgnoreCase("remove")) 
             add = false;
 
-        IMAddr addr = new IMAddr(request.getAttribute(IMService.A_ADDRESS));
-        String name = request.getAttribute(IMService.A_NAME, "");
-        String groupStr = request.getAttribute(IMService.A_GROUPS, null);
+        IMAddr addr = new IMAddr(request.getAttribute(IMConstants.A_ADDRESS));
+        String name = request.getAttribute(IMConstants.A_NAME, "");
+        String groupStr = request.getAttribute(IMConstants.A_GROUPS, null);
         String[] groups;
         if (groupStr != null) 
             groups = groupStr.split(",");

@@ -37,6 +37,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -45,7 +46,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class RenameAccount extends AdminDocumentHandler {
 
-    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminService.E_ID };
+    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminConstants.E_ID };
     protected String[] getProxiedAccountPath()  { return TARGET_ACCOUNT_PATH; }
 
     /**
@@ -60,8 +61,8 @@ public class RenameAccount extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
-	    String id = request.getAttribute(AdminService.E_ID);
-        String newName = request.getAttribute(AdminService.E_NEW_NAME);
+	    String id = request.getAttribute(AdminConstants.E_ID);
+        String newName = request.getAttribute(AdminConstants.E_NEW_NAME);
 
 	    Account account = prov.get(AccountBy.id, id);
         if (account == null)
@@ -85,7 +86,7 @@ public class RenameAccount extends AdminDocumentHandler {
         account = prov.get(AccountBy.id, id);
         if (account == null)
             throw ServiceException.FAILURE("unable to get account after rename: " + id, null);
-	    Element response = lc.createElement(AdminService.RENAME_ACCOUNT_RESPONSE);
+	    Element response = lc.createElement(AdminConstants.RENAME_ACCOUNT_RESPONSE);
         ToXML.encodeAccount(response, account);
 	    return response;
 	}

@@ -32,21 +32,21 @@ import org.dom4j.Element;
 import org.dom4j.DocumentHelper;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 
 public class LmcGetTagRequest extends LmcSoapRequest {
 
     protected Element getRequestXML() {
-        Element request = DocumentHelper.createElement(MailService.GET_TAG_REQUEST);
+        Element request = DocumentHelper.createElement(MailConstants.GET_TAG_REQUEST);
         return request;
     }
 
-    protected LmcSoapResponse parseResponseXML(Element responseXML) 
+    protected LmcSoapResponse parseResponseXML(Element responseXML)
         throws ServiceException
     {
         // iterate over all the <tag> elements in the response
         ArrayList tags = new ArrayList();
-        for (Iterator ait = responseXML.elementIterator(MailService.E_TAG); ait.hasNext(); ) {
+        for (Iterator ait = responseXML.elementIterator(MailConstants.E_TAG); ait.hasNext(); ) {
             Element a = (Element) ait.next();
             tags.add(parseTag(a));
         }

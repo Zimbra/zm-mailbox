@@ -28,11 +28,10 @@
  */
 package com.zimbra.cs.service.admin;
 
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning;
@@ -50,9 +49,9 @@ public class GetServer extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
-        boolean applyConfig = request.getAttributeBool(AdminService.A_APPLY_CONFIG, true);
-        Element d = request.getElement(AdminService.E_SERVER);
-	    String method = d.getAttribute(AdminService.A_BY);
+        boolean applyConfig = request.getAttributeBool(AdminConstants.A_APPLY_CONFIG, true);
+        Element d = request.getElement(AdminConstants.E_SERVER);
+	    String method = d.getAttribute(AdminConstants.A_BY);
         String name = d.getText();
 
         if (name == null || name.equals(""))
@@ -65,7 +64,7 @@ public class GetServer extends AdminDocumentHandler {
         else
             prov.reload(server);
         
-	    Element response = lc.createElement(AdminService.GET_SERVER_RESPONSE);
+	    Element response = lc.createElement(AdminConstants.GET_SERVER_RESPONSE);
         doServer(response, server, applyConfig);
 
 	    return response;
@@ -76,9 +75,9 @@ public class GetServer extends AdminDocumentHandler {
     }
 
     public static void doServer(Element e, Server s, boolean applyConfig) throws ServiceException {
-        Element server = e.addElement(AdminService.E_SERVER);
-        server.addAttribute(AdminService.A_NAME, s.getName());
-        server.addAttribute(AdminService.A_ID, s.getId());
+        Element server = e.addElement(AdminConstants.E_SERVER);
+        server.addAttribute(AdminConstants.A_NAME, s.getName());
+        server.addAttribute(AdminConstants.A_ID, s.getId());
         Map<String, Object> attrs = s.getAttrs(applyConfig);
         for (Map.Entry<String, Object> entry : attrs.entrySet()) {
             String name = entry.getKey();
@@ -86,9 +85,9 @@ public class GetServer extends AdminDocumentHandler {
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;
                 for (int i = 0; i < sv.length; i++)
-                    server.addElement(AdminService.E_A).addAttribute(AdminService.A_N, name).setText(sv[i]);
+                    server.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText(sv[i]);
             } else if (value instanceof String)
-                server.addElement(AdminService.E_A).addAttribute(AdminService.A_N, name).setText((String) value);
+                server.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText((String) value);
         }
     }
 }

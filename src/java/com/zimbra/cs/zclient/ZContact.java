@@ -26,7 +26,7 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyContactEvent;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.soap.Element;
@@ -92,15 +92,15 @@ public class ZContact implements ZItem {
     }
 
     public ZContact(Element e) throws ServiceException {
-        mId = e.getAttribute(MailService.A_ID);
-        mFolderId = e.getAttribute(MailService.A_FOLDER, null);
-        mFlags = e.getAttribute(MailService.A_FLAGS, null);
-        mTagIds = e.getAttribute(MailService.A_TAGS, null);
-        mRevision = e.getAttribute(MailService.A_REVISION, null);
-        mMetaDataChangedDate = e.getAttributeLong(MailService.A_MODIFIED_DATE, 0) * 1000;
+        mId = e.getAttribute(MailConstants.A_ID);
+        mFolderId = e.getAttribute(MailConstants.A_FOLDER, null);
+        mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
+        mTagIds = e.getAttribute(MailConstants.A_TAGS, null);
+        mRevision = e.getAttribute(MailConstants.A_REVISION, null);
+        mMetaDataChangedDate = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0) * 1000;
         mAttrs = new HashMap<String, String>();
-        for (Element a : e.listElements(MailService.E_ATTRIBUTE)) {
-            mAttrs.put(a.getAttribute(MailService.A_ATTRIBUTE_NAME), a.getText());
+        for (Element a : e.listElements(MailConstants.E_ATTRIBUTE)) {
+            mAttrs.put(a.getAttribute(MailConstants.A_ATTRIBUTE_NAME), a.getText());
         }
     }
 

@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
@@ -58,8 +59,8 @@ public class GetAccountMembership extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-        Element a = request.getElement(AdminService.E_ACCOUNT);
-        String key = a.getAttribute(AdminService.A_BY);
+        Element a = request.getElement(AdminConstants.E_ACCOUNT);
+        String key = a.getAttribute(AdminConstants.A_BY);
         String value = a.getText();
 
         Account account = prov.get(AccountBy.fromString(key), value);
@@ -73,13 +74,13 @@ public class GetAccountMembership extends AdminDocumentHandler {
         HashMap<String,String> via = new HashMap<String, String>();
         List<DistributionList> lists = prov.getDistributionLists(account, false, via);
         
-        Element response = lc.createElement(AdminService.GET_ACCOUNT_MEMBERSHIP_RESPONSE);
+        Element response = lc.createElement(AdminConstants.GET_ACCOUNT_MEMBERSHIP_RESPONSE);
         for (DistributionList dl: lists) {
-            Element distributionList = response.addElement(AdminService.E_DL);
-            distributionList.addAttribute(AdminService.A_NAME, dl.getName());
-            distributionList.addAttribute(AdminService.A_ID,dl.getId());
+            Element distributionList = response.addElement(AdminConstants.E_DL);
+            distributionList.addAttribute(AdminConstants.A_NAME, dl.getName());
+            distributionList.addAttribute(AdminConstants.A_ID,dl.getId());
             String viaDl = via.get(dl.getName());
-            if (viaDl != null) distributionList.addAttribute(AdminService.A_VIA, viaDl);
+            if (viaDl != null) distributionList.addAttribute(AdminConstants.A_VIA, viaDl);
         }
         return response;
     }

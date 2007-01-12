@@ -29,6 +29,7 @@ import java.util.Map;
 import org.apache.lucene.search.Query;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.ServerBy;
@@ -44,32 +45,32 @@ public class MailQueueAction extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         
-        Element serverElem = request.getElement(AdminService.E_SERVER);
-        String serverName = serverElem.getAttribute(AdminService.A_NAME);
+        Element serverElem = request.getElement(AdminConstants.E_SERVER);
+        String serverName = serverElem.getAttribute(AdminConstants.A_NAME);
         
         Server server = prov.get(ServerBy.name, serverName);
         if (server == null) {
             throw ServiceException.INVALID_REQUEST("server with name " + serverName + " could not be found", null);
         }
         
-        Element queueElem = serverElem.getElement(AdminService.E_QUEUE);
-        String queueName = queueElem.getAttribute(AdminService.A_NAME);
+        Element queueElem = serverElem.getElement(AdminConstants.E_QUEUE);
+        String queueName = queueElem.getAttribute(AdminConstants.A_NAME);
 
         RemoteMailQueue rmq = RemoteMailQueue.getRemoteMailQueue(server, queueName, false);
 
-        Element actionElem = queueElem.getElement(AdminService.E_ACTION);
-        String op = actionElem.getAttribute(AdminService.A_OP);
+        Element actionElem = queueElem.getElement(AdminConstants.E_ACTION);
+        String op = actionElem.getAttribute(AdminConstants.A_OP);
         QueueAction action = QueueAction.valueOf(op);
         if (action == null) {
-        	throw ServiceException.INVALID_REQUEST("bad " + AdminService.A_OP + ":" + op, null);
+        	throw ServiceException.INVALID_REQUEST("bad " + AdminConstants.A_OP + ":" + op, null);
         }
-        String by = actionElem.getAttribute(AdminService.A_BY);
+        String by = actionElem.getAttribute(AdminConstants.A_BY);
         String[] ids;
-        if (by.equals(AdminService.BY_ID)) {
+        if (by.equals(AdminConstants.BY_ID)) {
             String idText = actionElem.getText();
             ids = actionElem.getText().split(",");
-        } else if (by.equals(AdminService.BY_QUERY)) {
-        	Element queryElem = actionElem.getElement(AdminService.E_QUERY);
+        } else if (by.equals(AdminConstants.BY_QUERY)) {
+        	Element queryElem = actionElem.getElement(AdminConstants.E_QUERY);
         	Query query = GetMailQueue.buildLuceneQuery(queryElem);
             RemoteMailQueue.SearchResult sr = rmq.search(query, 0, 0);
             ids = new String[sr.qitems.size()];
@@ -78,12 +79,12 @@ public class MailQueueAction extends AdminDocumentHandler {
             	ids[i++] = qitem.get(QueueAttr.id); 
             }
         } else {
-        	throw ServiceException.INVALID_REQUEST("bad " + AdminService.A_BY + ": " + by, null);
+        	throw ServiceException.INVALID_REQUEST("bad " + AdminConstants.A_BY + ": " + by, null);
         }
 
         rmq.action(server, action, ids);
         
-        Element response = lc.createElement(AdminService.MAIL_QUEUE_ACTION_RESPONSE);
+        Element response = lc.createElement(AdminConstants.MAIL_QUEUE_ACTION_RESPONSE);
 	    return response;
 	}
 

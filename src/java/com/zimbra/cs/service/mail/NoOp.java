@@ -31,6 +31,7 @@ package com.zimbra.cs.service.mail;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -54,6 +55,6 @@ public class NoOp extends MailDocumentHandler  {
                 }
             }
         }
-        return zsc.createElement(MailService.NO_OP_RESPONSE);
+        return zsc.createElement(MailConstants.NO_OP_RESPONSE);
 	}
 }

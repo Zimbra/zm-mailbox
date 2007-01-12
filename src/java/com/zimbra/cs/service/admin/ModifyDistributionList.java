@@ -33,6 +33,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -50,7 +51,7 @@ public class ModifyDistributionList extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-        String id = request.getAttribute(AdminService.E_ID);
+        String id = request.getAttribute(AdminConstants.E_ID);
         Map<String, Object> attrs = AdminService.getAttrs(request);
 	    
         DistributionList distributionList = prov.get(DistributionListBy.id, id);
@@ -66,7 +67,7 @@ public class ModifyDistributionList extends AdminDocumentHandler {
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                   new String[] {"cmd", "ModifyDistributionList","name", distributionList.getName()}, attrs));	    
 
-        Element response = lc.createElement(AdminService.MODIFY_DISTRIBUTION_LIST_RESPONSE);
+        Element response = lc.createElement(AdminConstants.MODIFY_DISTRIBUTION_LIST_RESPONSE);
         GetDistributionList.doDistributionList(response, distributionList);
         return response;
     }

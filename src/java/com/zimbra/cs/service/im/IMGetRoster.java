@@ -26,10 +26,9 @@ package com.zimbra.cs.service.im;
 
 import java.util.Map;
 
-import org.xmpp.packet.Roster;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.IMConstants;
 import com.zimbra.cs.im.IMBuddy;
 import com.zimbra.cs.im.IMChat;
 import com.zimbra.cs.im.IMGroup;
@@ -45,28 +44,28 @@ public class IMGetRoster extends IMDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
-        Element response = lc.createElement(IMService.IM_GET_ROSTER_RESPONSE);
+        Element response = lc.createElement(IMConstants.IM_GET_ROSTER_RESPONSE);
 
         Object lock = super.getLock(lc);
         synchronized (lock) { 
             IMPersona persona = super.getRequestedPersona(lc, lock);
             
             {
-                Element pe = response.addUniqueElement(IMService.E_PRESENCE);
+                Element pe = response.addUniqueElement(IMConstants.E_PRESENCE);
                 persona.getEffectivePresence().toXml(pe);
             }
 
             // chats
             {
-                Element chats = response.addUniqueElement(IMService.E_CHATS);
+                Element chats = response.addUniqueElement(IMConstants.E_CHATS);
                 for (IMChat chat : persona.chats()) {
-                    Element e = chats.addElement(IMService.E_CHATS);
-                    e.addAttribute(IMService.A_THREAD_ID, chat.getThreadId());
+                    Element e = chats.addElement(IMConstants.E_CHATS);
+                    e.addAttribute(IMConstants.A_THREAD_ID, chat.getThreadId());
                     
-                    Element participantsElt = e.addElement(IMService.E_PARTICIPANTS);
+                    Element participantsElt = e.addElement(IMConstants.E_PARTICIPANTS);
                     for (Participant part : chat.participants()) {
-                        Element pe = participantsElt.addElement(IMService.E_PARTICIPANT);
-                        pe.addAttribute(IMService.A_ADDRESS, part.getAddress().getAddr());
+                        Element pe = participantsElt.addElement(IMConstants.E_PARTICIPANT);
+                        pe.addAttribute(IMConstants.A_ADDRESS, part.getAddress().getAddr());
                     }
                     
                 }
@@ -74,16 +73,16 @@ public class IMGetRoster extends IMDocumentHandler {
             
             // items (buddies)
             {
-                Element items = response.addUniqueElement(IMService.E_ITEMS);
+                Element items = response.addUniqueElement(IMConstants.E_ITEMS);
                 for (IMBuddy buddy : persona.buddies()) {
-                    Element e = items.addElement(IMService.E_ITEM);
-                    e.addAttribute(IMService.A_ADDRESS, buddy.getAddress().getAddr());
+                    Element e = items.addElement(IMConstants.E_ITEM);
+                    e.addAttribute(IMConstants.A_ADDRESS, buddy.getAddress().getAddr());
                     
                     String buddyName = buddy.getName();
                     if (buddyName != null && buddyName.length()>0) 
-                        e.addAttribute(IMService.A_NAME, buddy.getName());
+                        e.addAttribute(IMConstants.A_NAME, buddy.getName());
                     
-                    e.addAttribute(IMService.A_SUBSCRIPTION, buddy.getSubType().toString());
+                    e.addAttribute(IMConstants.A_SUBSCRIPTION, buddy.getSubType().toString());
                     
                     if (buddy.getAsk() != null) {
                         e.addAttribute("ask", buddy.getAsk().name());
@@ -92,9 +91,9 @@ public class IMGetRoster extends IMDocumentHandler {
                     // presence
                     IMPresence presence = buddy.getPresence();
                     if (presence == null) 
-                        e.addUniqueElement(IMService.E_PRESENCE);
+                        e.addUniqueElement(IMConstants.E_PRESENCE);
                     else {
-                        Element pe = e.addUniqueElement(IMService.E_PRESENCE);
+                        Element pe = e.addUniqueElement(IMConstants.E_PRESENCE);
                         presence.toXml(pe);
                     }
                     
@@ -107,7 +106,7 @@ public class IMGetRoster extends IMDocumentHandler {
                             groupStr.append(',').append(grp.getName());
                     }
                     if (groupStr != null) 
-                        e.addAttribute(IMService.A_GROUPS, groupStr.toString());
+                        e.addAttribute(IMConstants.A_GROUPS, groupStr.toString());
                     
                 }
             }

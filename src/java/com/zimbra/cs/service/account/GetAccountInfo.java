@@ -31,6 +31,7 @@ package com.zimbra.cs.service.account;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
@@ -48,8 +49,8 @@ public class GetAccountInfo extends AccountDocumentHandler  {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
    
-        Element a = request.getElement(AccountService.E_ACCOUNT);
-        String key = a.getAttribute(AccountService.A_BY);
+        Element a = request.getElement(AccountConstants.E_ACCOUNT);
+        String key = a.getAttribute(AccountConstants.A_BY);
         String value = a.getText();
 
         Provisioning prov = Provisioning.getInstance();
@@ -58,8 +59,8 @@ public class GetAccountInfo extends AccountDocumentHandler  {
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(value);
 
-        Element response = lc.createElement(AccountService.GET_ACCOUNT_INFO_RESPONSE);
-        response.addElement(AccountService.E_NAME).setText(account.getName());
+        Element response = lc.createElement(AccountConstants.GET_ACCOUNT_INFO_RESPONSE);
+        response.addElement(AccountConstants.E_NAME).setText(account.getName());
         addAttr(response, Provisioning.A_zimbraId, account.getId());
         addAttr(response, Provisioning.A_zimbraMailHost, account.getAttr(Provisioning.A_zimbraMailHost));
  
@@ -78,17 +79,17 @@ public class GetAccountInfo extends AccountDocumentHandler  {
         String https = URLUtil.getSoapURL(server, true);
 
         if (http != null)
-            response.addElement(AccountService.E_SOAP_URL).setText(http);
+            response.addElement(AccountConstants.E_SOAP_URL).setText(http);
         
         if (https != null && !https.equalsIgnoreCase(http))
-            response.addElement(AccountService.E_SOAP_URL).setText(https);
+            response.addElement(AccountConstants.E_SOAP_URL).setText(https);
 
     }
 
     private static void addAttr(Element response, String name, String value) {
         if (value != null && !value.equals("")) {
-            Element e = response.addElement(AccountService.E_ATTR);
-            e.addAttribute(AccountService.A_NAME, name);
+            Element e = response.addElement(AccountConstants.E_ATTR);
+            e.addAttribute(AccountConstants.A_NAME, name);
             e.setText(value);
         }
     }

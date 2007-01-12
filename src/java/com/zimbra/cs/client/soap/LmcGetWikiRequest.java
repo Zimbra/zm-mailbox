@@ -30,7 +30,7 @@ import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.DomUtil;
 import com.zimbra.soap.SoapParseException;
 import com.zimbra.cs.client.*;
@@ -54,16 +54,16 @@ public class LmcGetWikiRequest extends LmcSoapRequest {
     public LmcWiki getWiki() { return mWiki; }
     
 	protected Element getRequestXML() throws LmcSoapClientException {
-		Element request = DocumentHelper.createElement(MailService.GET_WIKI_REQUEST);
-        Element w = DomUtil.add(request, MailService.E_WIKIWORD, "");
+		Element request = DocumentHelper.createElement(MailConstants.GET_WIKI_REQUEST);
+        Element w = DomUtil.add(request, MailConstants.E_WIKIWORD, "");
         if (mName != null)
-        	LmcSoapRequest.addAttrNotNull(w, MailService.A_NAME, mName);
+        	LmcSoapRequest.addAttrNotNull(w, MailConstants.A_NAME, mName);
         else if (mId != null)
-        	LmcSoapRequest.addAttrNotNull(w, MailService.A_ID, mId);
+        	LmcSoapRequest.addAttrNotNull(w, MailConstants.A_ID, mId);
         else
         	return request;
-        LmcSoapRequest.addAttrNotNull(w, MailService.A_FOLDER, mFolder);
-        LmcSoapRequest.addAttrNotNull(w, MailService.A_TRAVERSE, mTraverse);
+        LmcSoapRequest.addAttrNotNull(w, MailConstants.A_FOLDER, mFolder);
+        LmcSoapRequest.addAttrNotNull(w, MailConstants.A_TRAVERSE, mTraverse);
         return request;
     }
 
@@ -71,7 +71,7 @@ public class LmcGetWikiRequest extends LmcSoapRequest {
 			throws SoapParseException, ServiceException, LmcSoapClientException {
 		
         LmcGetWikiResponse response = new LmcGetWikiResponse();
-        LmcWiki wiki = parseWiki(DomUtil.get(responseXML, MailService.E_WIKIWORD));
+        LmcWiki wiki = parseWiki(DomUtil.get(responseXML, MailConstants.E_WIKIWORD));
         response.setWiki(wiki);
         return response;
 	}

@@ -31,6 +31,7 @@ package com.zimbra.cs.service.mail;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.operation.GetMsgOperation;
@@ -46,7 +47,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class GetMsg extends MailDocumentHandler {
 
-    private static final String[] TARGET_MSG_PATH = new String[] { MailService.E_MSG, MailService.A_ID };
+    private static final String[] TARGET_MSG_PATH = new String[] { MailConstants.E_MSG, MailConstants.A_ID };
     protected String[] getProxiedIdPath(Element request)     { return TARGET_MSG_PATH; }
     protected boolean checkMountpointProxy(Element request)  { return false; }
 
@@ -56,21 +57,21 @@ public class GetMsg extends MailDocumentHandler {
         OperationContext octxt = lc.getOperationContext();
         Session session = getSession(context);
         
-        Element eMsg = request.getElement(MailService.E_MSG);
-        ItemId iid = new ItemId(eMsg.getAttribute(MailService.A_ID), lc);
-        boolean raw = eMsg.getAttributeBool(MailService.A_RAW, false);
-        boolean read = eMsg.getAttributeBool(MailService.A_MARK_READ, false);
-        boolean neuter = eMsg.getAttributeBool(MailService.A_NEUTER, true);
-        String part = eMsg.getAttribute(MailService.A_PART, null);
+        Element eMsg = request.getElement(MailConstants.E_MSG);
+        ItemId iid = new ItemId(eMsg.getAttribute(MailConstants.A_ID), lc);
+        boolean raw = eMsg.getAttributeBool(MailConstants.A_RAW, false);
+        boolean read = eMsg.getAttributeBool(MailConstants.A_MARK_READ, false);
+        boolean neuter = eMsg.getAttributeBool(MailConstants.A_NEUTER, true);
+        String part = eMsg.getAttribute(MailConstants.A_PART, null);
         
         GetMsgOperation op = new GetMsgOperation(session, octxt, mbox, Requester.SOAP, iid, read);
         op.schedule();
         
-        Element response = lc.createElement(MailService.GET_MSG_RESPONSE);
+        Element response = lc.createElement(MailConstants.GET_MSG_RESPONSE);
         if (raw) {
             ToXML.encodeMessageAsMIME(response, lc, op.getMsg(), part);
         } else {
-            boolean wantHTML = eMsg.getAttributeBool(MailService.A_WANT_HTML, false);
+            boolean wantHTML = eMsg.getAttributeBool(MailConstants.A_WANT_HTML, false);
             if (op.getMsg() != null)
                 ToXML.encodeMessageAsMP(response, lc, op.getMsg(), part, wantHTML, neuter);
             else if (op.getCalendarItem() != null)

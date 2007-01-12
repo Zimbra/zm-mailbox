@@ -26,7 +26,7 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyConversationEvent;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.soap.Element;
@@ -50,24 +50,24 @@ public class ZConversationHit implements ZSearchHit {
     private List<ZEmailAddress> mRecipients;
         
     public ZConversationHit(Element e) throws ServiceException {
-        mId = e.getAttribute(MailService.A_ID);
-        mFlags = e.getAttribute(MailService.A_FLAGS, null);
-        mDate = e.getAttributeLong(MailService.A_DATE);
-        mTags = e.getAttribute(MailService.A_TAGS, null);
-        Element fr = e.getOptionalElement(MailService.E_FRAG);
+        mId = e.getAttribute(MailConstants.A_ID);
+        mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
+        mDate = e.getAttributeLong(MailConstants.A_DATE);
+        mTags = e.getAttribute(MailConstants.A_TAGS, null);
+        Element fr = e.getOptionalElement(MailConstants.E_FRAG);
         if (fr != null) mFragment = fr.getText();
-        Element su = e.getOptionalElement(MailService.E_SUBJECT);
+        Element su = e.getOptionalElement(MailConstants.E_SUBJECT);
         if (su != null) mSubject = su.getText();
-        mSortField = e.getAttribute(MailService.A_SORT_FIELD, null);
-        mMessageCount = (int) e.getAttributeLong(MailService.A_NUM);
-        mScore = (float) e.getAttributeDouble(MailService.A_SCORE, 0);
+        mSortField = e.getAttribute(MailConstants.A_SORT_FIELD, null);
+        mMessageCount = (int) e.getAttributeLong(MailConstants.A_NUM);
+        mScore = (float) e.getAttributeDouble(MailConstants.A_SCORE, 0);
         mMessageIds = new ArrayList<String>();
-        for (Element m: e.listElements(MailService.E_MSG)) {
-            mMessageIds.add(m.getAttribute(MailService.A_ID));
+        for (Element m: e.listElements(MailConstants.E_MSG)) {
+            mMessageIds.add(m.getAttribute(MailConstants.A_ID));
         }
         
         mRecipients = new ArrayList<ZEmailAddress>();
-        for (Element emailEl: e.listElements(MailService.E_EMAIL)) {
+        for (Element emailEl: e.listElements(MailConstants.E_EMAIL)) {
             mRecipients.add(new ZEmailAddress(emailEl));
         }        
     }

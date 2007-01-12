@@ -27,7 +27,7 @@ package com.zimbra.cs.zclient.event;
 
 import com.zimbra.soap.Element;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.zclient.ZSoapSB;
 
@@ -47,7 +47,7 @@ public class ZContactEvent {
      * @throws com.zimbra.common.service.ServiceException on error
      */
     public String getId() throws ServiceException {
-        return mContactEl.getAttribute(MailService.A_ID);
+        return mContactEl.getAttribute(MailConstants.A_ID);
     }
 
     /**
@@ -55,7 +55,7 @@ public class ZContactEvent {
      * @return new flags or default value if flags didn't change
      */
     public String getFlags(String defaultValue) {
-        return mContactEl.getAttribute(MailService.A_FLAGS, defaultValue);
+        return mContactEl.getAttribute(MailConstants.A_FLAGS, defaultValue);
     }
 
     /**
@@ -63,23 +63,23 @@ public class ZContactEvent {
      * @return new tags or default value if tags didn't change
      */
     public String getTagIds(String defaultValue) {
-        return mContactEl.getAttribute(MailService.A_TAGS, defaultValue);
+        return mContactEl.getAttribute(MailConstants.A_TAGS, defaultValue);
     }
 
     public String getFolderId(String defaultValue) {
-        return mContactEl.getAttribute(MailService.A_FOLDER, defaultValue);
+        return mContactEl.getAttribute(MailConstants.A_FOLDER, defaultValue);
     }
 
     public long getMetaDataChangedDate(long defaultValue) throws ServiceException {
-        return mContactEl.getAttributeLong(MailService.A_MODIFIED_DATE, defaultValue);
+        return mContactEl.getAttributeLong(MailConstants.A_MODIFIED_DATE, defaultValue);
     }
 
     public String getFileAsStr(String defaultValue) {
-        return mContactEl.getAttribute(MailService.A_FILE_AS_STR, defaultValue);
+        return mContactEl.getAttribute(MailConstants.A_FILE_AS_STR, defaultValue);
     }
 
     public String getRevision(String defaultValue) {
-        return mContactEl.getAttribute(MailService.A_REVISION, defaultValue);
+        return mContactEl.getAttribute(MailConstants.A_REVISION, defaultValue);
     }
 
     public String getEmail(String defaultValue) {
@@ -96,9 +96,9 @@ public class ZContactEvent {
 
     public Map<String, String> getAttrs(Map<String, String> defaultValue) throws ServiceException {
     	Map<String, String> attrs = null;
-        for (Element a : mContactEl.listElements(MailService.E_ATTRIBUTE)) {
+        for (Element a : mContactEl.listElements(MailConstants.E_ATTRIBUTE)) {
         	if (attrs == null) attrs = new HashMap<String, String>();
-            attrs.put(a.getAttribute(MailService.A_ATTRIBUTE_NAME), a.getText());
+            attrs.put(a.getAttribute(MailConstants.A_ATTRIBUTE_NAME), a.getText());
         }
         return attrs != null ? attrs : defaultValue;
     }

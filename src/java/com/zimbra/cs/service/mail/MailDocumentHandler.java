@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailItem;
@@ -88,9 +89,9 @@ public abstract class MailDocumentHandler extends DocumentHandler {
         String local = iidLocal.toString(lc);
         for (Iterator it = response.elementIterator(); it.hasNext(); ) {
             Element elt = (Element) it.next();
-            String folder = elt.getAttribute(MailService.A_FOLDER, null);
+            String folder = elt.getAttribute(MailConstants.A_FOLDER, null);
             if (local.equalsIgnoreCase(folder))
-                elt.addAttribute(MailService.A_FOLDER, iidMountpoint.toString(lc));
+                elt.addAttribute(MailConstants.A_FOLDER, iidMountpoint.toString(lc));
         }
     }
 

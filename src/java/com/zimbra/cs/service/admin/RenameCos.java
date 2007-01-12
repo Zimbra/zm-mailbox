@@ -36,6 +36,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -49,8 +50,8 @@ public class RenameCos extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
-	    String id = request.getAttribute(AdminService.E_ID);
-        String newName = request.getAttribute(AdminService.E_NEW_NAME);
+	    String id = request.getAttribute(AdminConstants.E_ID);
+        String newName = request.getAttribute(AdminConstants.E_NEW_NAME);
 
 	    Cos cos = prov.get(CosBy.id, id);
         if (cos == null)
@@ -68,7 +69,7 @@ public class RenameCos extends AdminDocumentHandler {
         cos = prov.get(CosBy.id, id);
         if (cos == null)
             throw ServiceException.FAILURE("unabled to get renamed cos: "+id, null);
-	    Element response = lc.createElement(AdminService.RENAME_COS_RESPONSE);
+	    Element response = lc.createElement(AdminConstants.RENAME_COS_RESPONSE);
 	    GetCos.doCos(response, cos);
 	    return response;
 	}

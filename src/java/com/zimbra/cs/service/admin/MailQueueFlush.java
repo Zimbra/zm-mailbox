@@ -27,6 +27,7 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.ServerBy;
@@ -41,8 +42,8 @@ public class MailQueueFlush extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
  
-        Element serverElem = request.getElement(AdminService.E_SERVER);
-        String serverName = serverElem.getAttribute(AdminService.A_NAME);
+        Element serverElem = request.getElement(AdminConstants.E_SERVER);
+        String serverName = serverElem.getAttribute(AdminConstants.A_NAME);
         
         Server server = prov.get(ServerBy.name, serverName);
         if (server == null) {
@@ -51,7 +52,7 @@ public class MailQueueFlush extends AdminDocumentHandler {
         
         RemoteManager rmgr = RemoteManager.getRemoteManager(server);
         rmgr.execute(RemoteCommands.FLUSHQUEUE);
-        Element response = lc.createElement(AdminService.MAIL_QUEUE_FLUSH_RESPONSE);
+        Element response = lc.createElement(AdminConstants.MAIL_QUEUE_FLUSH_RESPONSE);
 	    return response;
 	}
 }

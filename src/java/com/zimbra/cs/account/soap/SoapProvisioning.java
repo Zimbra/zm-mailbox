@@ -28,6 +28,9 @@ package com.zimbra.cs.account.soap;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Config;
@@ -46,9 +49,6 @@ import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mime.MimeTypeInfo;
-import com.zimbra.cs.service.account.AccountService;
-import com.zimbra.cs.service.admin.AdminService;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.zclient.ZClientException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.Element.XMLElement;
@@ -122,12 +122,12 @@ public class SoapProvisioning extends Provisioning {
      */
     public void soapAdminAuthenticate(String name, String password) throws ServiceException {
        if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling adminAuthenticate", null);
-       XMLElement req = new XMLElement(AdminService.AUTH_REQUEST);
-       req.addElement(AdminService.E_NAME).setText(name);
-       req.addElement(AdminService.E_PASSWORD).setText(password);
+       XMLElement req = new XMLElement(AdminConstants.AUTH_REQUEST);
+       req.addElement(AdminConstants.E_NAME).setText(name);
+       req.addElement(AdminConstants.E_PASSWORD).setText(password);
        Element response = invoke(req);
-       mAuthToken = response.getElement(AdminService.E_AUTH_TOKEN).getText();
-       mAuthTokenLifetime = response.getAttributeLong(AdminService.E_LIFETIME);
+       mAuthToken = response.getElement(AdminConstants.E_AUTH_TOKEN).getText();
+       mAuthTokenLifetime = response.getAttributeLong(AdminConstants.E_LIFETIME);
        mAuthTokenExpiration = System.currentTimeMillis() + mAuthTokenLifetime;
        mTransport.setAuthToken(mAuthToken);
     }
@@ -192,12 +192,12 @@ public class SoapProvisioning extends Provisioning {
     }
 
     static Map<String, Object> getAttrs(Element e) throws ServiceException {
-        return getAttrs(e, AdminService.A_N);
+        return getAttrs(e, AdminConstants.A_N);
     }
     
     static Map<String, Object> getAttrs(Element e, String nameAttr) throws ServiceException {
         Map<String, Object> result = new HashMap<String,Object>();
-        for (Element a : e.listElements(AdminService.E_A)) {
+        for (Element a : e.listElements(AdminConstants.E_A)) {
             StringUtil.addToMultiMap(result, a.getAttribute(nameAttr), a.getText());
         }
         return result;
@@ -210,14 +210,14 @@ public class SoapProvisioning extends Provisioning {
             String key = (String) entry.getKey();
             Object value = entry.getValue();
             if (value instanceof String) {
-                Element  a = req.addElement(AdminService.E_A);
-                a.addAttribute(AdminService.A_N, key);
+                Element  a = req.addElement(AdminConstants.E_A);
+                a.addAttribute(AdminConstants.A_N, key);
                 a.setText((String)value);
             } else if (value instanceof String[]) {
                 String[] values = (String[]) value;
                 for (String v: values) {
-                    Element  a = req.addElement(AdminService.E_A);
-                    a.addAttribute(AdminService.A_N, key);
+                    Element  a = req.addElement(AdminConstants.E_A);
+                    a.addAttribute(AdminConstants.A_N, key);
                     a.setText((String)v);                    
                 }
             } else {
@@ -228,9 +228,9 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public void addAlias(Account acct, String alias) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.ADD_ACCOUNT_ALIAS_REQUEST);
-        req.addElement(AdminService.E_ID).setText(acct.getId());
-        req.addElement(AdminService.E_ALIAS).setText(alias);
+        XMLElement req = new XMLElement(AdminConstants.ADD_ACCOUNT_ALIAS_REQUEST);
+        req.addElement(AdminConstants.E_ID).setText(acct.getId());
+        req.addElement(AdminConstants.E_ALIAS).setText(alias);
         invoke(req);
         reload(acct);
     }
@@ -238,9 +238,9 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public void addAlias(DistributionList dl, String alias)
             throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.ADD_DISTRIBUTION_LIST_ALIAS_REQUEST);
-        req.addElement(AdminService.E_ID).setText(dl.getId());
-        req.addElement(AdminService.E_ALIAS).setText(alias);
+        XMLElement req = new XMLElement(AdminConstants.ADD_DISTRIBUTION_LIST_ALIAS_REQUEST);
+        req.addElement(AdminConstants.E_ID).setText(dl.getId());
+        req.addElement(AdminConstants.E_ALIAS).setText(alias);
         invoke(req); 
         reload(dl);
     }
@@ -248,23 +248,23 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public void authAccount(Account acct, String password, String proto)
             throws ServiceException {
-        XMLElement req = new XMLElement(AccountService.AUTH_REQUEST);
-        Element a = req.addElement(AccountService.E_ACCOUNT);
-        a.addAttribute(AccountService.A_BY, "name");
+        XMLElement req = new XMLElement(AccountConstants.AUTH_REQUEST);
+        Element a = req.addElement(AccountConstants.E_ACCOUNT);
+        a.addAttribute(AccountConstants.A_BY, "name");
         a.setText(acct.getName());
-        req.addElement(AccountService.E_PASSWORD).setText(password);        
+        req.addElement(AccountConstants.E_PASSWORD).setText(password);
         invoke(req);
     }
 
     @Override
     public void changePassword(Account acct, String currentPassword,
             String newPassword) throws ServiceException {
-        XMLElement req = new XMLElement(AccountService.CHANGE_PASSWORD_REQUEST);
-        Element a = req.addElement(AccountService.E_ACCOUNT);
-        a.addAttribute(AccountService.A_BY, "name");
+        XMLElement req = new XMLElement(AccountConstants.CHANGE_PASSWORD_REQUEST);
+        Element a = req.addElement(AccountConstants.E_ACCOUNT);
+        a.addAttribute(AccountConstants.A_BY, "name");
         a.setText(acct.getName());
-        req.addElement(AccountService.E_OLD_PASSWORD).setText(currentPassword);
-        req.addElement(AccountService.E_PASSWORD).setText(newPassword);        
+        req.addElement(AccountConstants.E_OLD_PASSWORD).setText(currentPassword);
+        req.addElement(AccountConstants.E_PASSWORD).setText(newPassword);
         invoke(req);
     }
 
@@ -272,57 +272,57 @@ public class SoapProvisioning extends Provisioning {
     public Account createAccount(String emailAddress, String password, Map<String, Object> attrs) 
         throws ServiceException 
     {
-        XMLElement req = new XMLElement(AdminService.CREATE_ACCOUNT_REQUEST);
-        req.addElement(AdminService.E_NAME).setText(emailAddress);
-        req.addElement(AdminService.E_PASSWORD).setText(password);
+        XMLElement req = new XMLElement(AdminConstants.CREATE_ACCOUNT_REQUEST);
+        req.addElement(AdminConstants.E_NAME).setText(emailAddress);
+        req.addElement(AdminConstants.E_PASSWORD).setText(password);
         addAttrElements(req, attrs);
-        return new SoapAccount(invoke(req).getElement(AdminService.E_ACCOUNT));
+        return new SoapAccount(invoke(req).getElement(AdminConstants.E_ACCOUNT));
     }
 
     @Override
     public CalendarResource createCalendarResource(String emailAddress, String password,
             Map<String, Object> attrs) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.CREATE_CALENDAR_RESOURCE_REQUEST);
-        req.addElement(AdminService.E_NAME).setText(emailAddress);
-        req.addElement(AdminService.E_PASSWORD).setText(password);
+        XMLElement req = new XMLElement(AdminConstants.CREATE_CALENDAR_RESOURCE_REQUEST);
+        req.addElement(AdminConstants.E_NAME).setText(emailAddress);
+        req.addElement(AdminConstants.E_PASSWORD).setText(password);
         addAttrElements(req, attrs);
-        return new SoapCalendarResource(invoke(req).getElement(AdminService.E_CALENDAR_RESOURCE));
+        return new SoapCalendarResource(invoke(req).getElement(AdminConstants.E_CALENDAR_RESOURCE));
     }
 
     @Override
     public Cos createCos(String name, Map<String, Object> attrs)
             throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.CREATE_COS_REQUEST);
-        req.addElement(AdminService.E_NAME).setText(name);
+        XMLElement req = new XMLElement(AdminConstants.CREATE_COS_REQUEST);
+        req.addElement(AdminConstants.E_NAME).setText(name);
         addAttrElements(req, attrs);
-        return new SoapCos(invoke(req).getElement(AdminService.E_COS));
+        return new SoapCos(invoke(req).getElement(AdminConstants.E_COS));
     }
 
     @Override
     public DistributionList createDistributionList(String listAddress,
             Map<String, Object> listAttrs) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.CREATE_DISTRIBUTION_LIST_REQUEST);
-        req.addElement(AdminService.E_NAME).setText(listAddress);
+        XMLElement req = new XMLElement(AdminConstants.CREATE_DISTRIBUTION_LIST_REQUEST);
+        req.addElement(AdminConstants.E_NAME).setText(listAddress);
         addAttrElements(req, listAttrs);
-        return new SoapDistributionList(invoke(req).getElement(AdminService.E_DL));
+        return new SoapDistributionList(invoke(req).getElement(AdminConstants.E_DL));
     }
 
     @Override
     public Domain createDomain(String name, Map<String, Object> attrs)
             throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.CREATE_DOMAIN_REQUEST);
-        req.addElement(AdminService.E_NAME).setText(name);
+        XMLElement req = new XMLElement(AdminConstants.CREATE_DOMAIN_REQUEST);
+        req.addElement(AdminConstants.E_NAME).setText(name);
         addAttrElements(req, attrs);
-        return new SoapDomain(invoke(req).getElement(AdminService.E_DOMAIN));
+        return new SoapDomain(invoke(req).getElement(AdminConstants.E_DOMAIN));
     }
 
     @Override
     public Server createServer(String name, Map<String, Object> attrs)
             throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.CREATE_SERVER_REQUEST);
-        req.addElement(AdminService.E_NAME).setText(name);
+        XMLElement req = new XMLElement(AdminConstants.CREATE_SERVER_REQUEST);
+        req.addElement(AdminConstants.E_NAME).setText(name);
         addAttrElements(req, attrs);
-        return new SoapServer(invoke(req).getElement(AdminService.E_SERVER));
+        return new SoapServer(invoke(req).getElement(AdminConstants.E_SERVER));
     }
 
     /**
@@ -336,43 +336,43 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public void deleteAccount(String zimbraId) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.DELETE_ACCOUNT_REQUEST);
-        req.addElement(AdminService.E_ID).setText(zimbraId);
+        XMLElement req = new XMLElement(AdminConstants.DELETE_ACCOUNT_REQUEST);
+        req.addElement(AdminConstants.E_ID).setText(zimbraId);
         invoke(req);
     }
 
     @Override
     public void deleteCalendarResource(String zimbraId) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.DELETE_CALENDAR_RESOURCE_REQUEST);
-        req.addElement(AdminService.E_ID).setText(zimbraId);
+        XMLElement req = new XMLElement(AdminConstants.DELETE_CALENDAR_RESOURCE_REQUEST);
+        req.addElement(AdminConstants.E_ID).setText(zimbraId);
         invoke(req);        
     }
 
     @Override
     public void deleteCos(String zimbraId) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.DELETE_COS_REQUEST);
-        req.addElement(AdminService.E_ID).setText(zimbraId);
+        XMLElement req = new XMLElement(AdminConstants.DELETE_COS_REQUEST);
+        req.addElement(AdminConstants.E_ID).setText(zimbraId);
         invoke(req);                
     }
 
     @Override
     public void deleteDistributionList(String zimbraId) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.DELETE_DISTRIBUTION_LIST_REQUEST);
-        req.addElement(AdminService.E_ID).setText(zimbraId);
+        XMLElement req = new XMLElement(AdminConstants.DELETE_DISTRIBUTION_LIST_REQUEST);
+        req.addElement(AdminConstants.E_ID).setText(zimbraId);
         invoke(req);
     }
 
     @Override
     public void deleteDomain(String zimbraId) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.DELETE_DOMAIN_REQUEST);
-        req.addElement(AdminService.E_ID).setText(zimbraId);
+        XMLElement req = new XMLElement(AdminConstants.DELETE_DOMAIN_REQUEST);
+        req.addElement(AdminConstants.E_ID).setText(zimbraId);
         invoke(req);                        
     }
 
     @Override
     public void deleteServer(String zimbraId) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.DELETE_SERVER_REQUEST);
-        req.addElement(AdminService.E_ID).setText(zimbraId);
+        XMLElement req = new XMLElement(AdminConstants.DELETE_SERVER_REQUEST);
+        req.addElement(AdminConstants.E_ID).setText(zimbraId);
         invoke(req);
     }
 
@@ -390,10 +390,10 @@ public class SoapProvisioning extends Provisioning {
         private long mLifetime;
 
         DelegateAuthResponse(Element e) throws ServiceException {
-            mAuthToken = e.getElement(AccountService.E_AUTH_TOKEN).getText();
-            mLifetime = e.getAttributeLong(AccountService.E_LIFETIME);
+            mAuthToken = e.getElement(AccountConstants.E_AUTH_TOKEN).getText();
+            mLifetime = e.getAttributeLong(AccountConstants.E_LIFETIME);
             mExpires = System.currentTimeMillis() + mLifetime;
-            Element re = e.getOptionalElement(AccountService.E_REFERRAL); 
+            Element re = e.getOptionalElement(AccountConstants.E_REFERRAL);
         }
 
         public String getAuthToken() {
@@ -410,37 +410,37 @@ public class SoapProvisioning extends Provisioning {
     }
     
     public DelegateAuthResponse delegateAuth(AccountBy keyType, String key, int durationSeconds) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.DELEGATE_AUTH_REQUEST);
-        req.addAttribute(AdminService.A_DURATION, durationSeconds);
-        Element acct = req.addElement(AdminService.E_ACCOUNT);
-        acct.addAttribute(AccountService.A_BY, keyType.name());
+        XMLElement req = new XMLElement(AdminConstants.DELEGATE_AUTH_REQUEST);
+        req.addAttribute(AdminConstants.A_DURATION, durationSeconds);
+        Element acct = req.addElement(AdminConstants.E_ACCOUNT);
+        acct.addAttribute(AccountConstants.A_BY, keyType.name());
         acct.setText(key);
         return new DelegateAuthResponse(invoke(req));
     }
 
     public SoapAccountInfo getAccountInfo(AccountBy keyType, String key) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.GET_ACCOUNT_INFO_REQUEST);
-        Element a = req.addElement(AdminService.E_ACCOUNT);
+        XMLElement req = new XMLElement(AdminConstants.GET_ACCOUNT_INFO_REQUEST);
+        Element a = req.addElement(AdminConstants.E_ACCOUNT);
         a.setText(key);
-        a.addAttribute(AdminService.A_BY, keyType.name());
+        a.addAttribute(AdminConstants.A_BY, keyType.name());
         return new SoapAccountInfo(invoke(req));
     }
 
     @Override
     public Account get(AccountBy keyType, String key) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.GET_ACCOUNT_REQUEST);
-        Element a = req.addElement(AdminService.E_ACCOUNT);
+        XMLElement req = new XMLElement(AdminConstants.GET_ACCOUNT_REQUEST);
+        Element a = req.addElement(AdminConstants.E_ACCOUNT);
         a.setText(key);
-        a.addAttribute(AdminService.A_BY, keyType.name());
-        return new SoapAccount(invoke(req).getElement(AdminService.E_ACCOUNT));
+        a.addAttribute(AdminConstants.A_BY, keyType.name());
+        return new SoapAccount(invoke(req).getElement(AdminConstants.E_ACCOUNT));
     }
 
     @Override
     public List<Account> getAllAdminAccounts() throws ServiceException {
         ArrayList<Account> result = new ArrayList<Account>();
-        XMLElement req = new XMLElement(AdminService.GET_ALL_ADMIN_ACCOUNTS_REQUEST);
+        XMLElement req = new XMLElement(AdminConstants.GET_ALL_ADMIN_ACCOUNTS_REQUEST);
         Element resp = invoke(req);
-        for (Element a: resp.listElements(AdminService.E_ACCOUNT)) {
+        for (Element a: resp.listElements(AdminConstants.E_ACCOUNT)) {
             result.add(new SoapAccount(a));
         }
         return result;
@@ -449,9 +449,9 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public List<Cos> getAllCos() throws ServiceException {
         ArrayList<Cos> result = new ArrayList<Cos>();
-        XMLElement req = new XMLElement(AdminService.GET_ALL_COS_REQUEST);
+        XMLElement req = new XMLElement(AdminConstants.GET_ALL_COS_REQUEST);
         Element resp = invoke(req);
-        for (Element a: resp.listElements(AdminService.E_COS)) {
+        for (Element a: resp.listElements(AdminConstants.E_COS)) {
             result.add(new SoapCos(a));
         }
         return result;        
@@ -460,9 +460,9 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public List<Domain> getAllDomains() throws ServiceException {
         ArrayList<Domain> result = new ArrayList<Domain>();
-        XMLElement req = new XMLElement(AdminService.GET_ALL_DOMAINS_REQUEST);
+        XMLElement req = new XMLElement(AdminConstants.GET_ALL_DOMAINS_REQUEST);
         Element resp = invoke(req);
-        for (Element a: resp.listElements(AdminService.E_DOMAIN)) {
+        for (Element a: resp.listElements(AdminConstants.E_DOMAIN)) {
             result.add(new SoapDomain(a));
         }
         return result;        
@@ -471,9 +471,9 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public List<Server> getAllServers() throws ServiceException {
         ArrayList<Server> result = new ArrayList<Server>();
-        XMLElement req = new XMLElement(AdminService.GET_ALL_SERVERS_REQUEST);
+        XMLElement req = new XMLElement(AdminConstants.GET_ALL_SERVERS_REQUEST);
         Element resp = invoke(req);
-        for (Element a: resp.listElements(AdminService.E_SERVER)) {
+        for (Element a: resp.listElements(AdminConstants.E_SERVER)) {
             result.add(new SoapServer(a));
         }
         return result;        
@@ -491,18 +491,18 @@ public class SoapProvisioning extends Provisioning {
         public long getLimit() { return mLimit; }
 
         QuotaUsage(Element e) throws ServiceException {
-            mName = e.getAttribute(AdminService.A_NAME);
-            mId = e.getAttribute(AdminService.A_ID);
-            mUsed = e.getAttributeLong(AdminService.A_QUOTA_USED);
-            mLimit = e.getAttributeLong(AdminService.A_QUOTA_LIMIT);
+            mName = e.getAttribute(AdminConstants.A_NAME);
+            mId = e.getAttribute(AdminConstants.A_ID);
+            mUsed = e.getAttributeLong(AdminConstants.A_QUOTA_USED);
+            mLimit = e.getAttributeLong(AdminConstants.A_QUOTA_LIMIT);
         }
     }
 
     public List<QuotaUsage> getQuotaUsage(String server) throws ServiceException {
             ArrayList<QuotaUsage> result = new ArrayList<QuotaUsage>();
-        XMLElement req = new XMLElement(AdminService.GET_QUOTA_USAGE_REQUEST);
+        XMLElement req = new XMLElement(AdminConstants.GET_QUOTA_USAGE_REQUEST);
         Element resp = invoke(req, server);
-        for (Element a: resp.listElements(AdminService.E_ACCOUNT)) {
+        for (Element a: resp.listElements(AdminConstants.E_ACCOUNT)) {
             result.add(new QuotaUsage(a));
         }
         return result;        
@@ -522,24 +522,24 @@ public class SoapProvisioning extends Provisioning {
     }
 
     public MailboxInfo getMailbox(Account acct) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.GET_MAILBOX_REQUEST);
-        Element mboxReq = req.addElement(AdminService.E_MAILBOX);
-        mboxReq.addAttribute(AdminService.A_ID, acct.getId());
+        XMLElement req = new XMLElement(AdminConstants.GET_MAILBOX_REQUEST);
+        Element mboxReq = req.addElement(AdminConstants.E_MAILBOX);
+        mboxReq.addAttribute(AdminConstants.A_ID, acct.getId());
         Server server = getServer(acct);
         String serviceHost = server.getAttr(A_zimbraServiceHostname);
-        Element mbox = invoke(req, serviceHost).getElement(AdminService.E_MAILBOX);
+        Element mbox = invoke(req, serviceHost).getElement(AdminConstants.E_MAILBOX);
         return new MailboxInfo(
-                mbox.getAttribute(AdminService.A_MAILBOXID), 
-                mbox.getAttributeLong(AdminService.A_SIZE));
+                mbox.getAttribute(AdminConstants.A_MAILBOXID),
+                mbox.getAttributeLong(AdminConstants.A_SIZE));
     }
 
     @Override
     public List<Server> getAllServers(String service) throws ServiceException {
         ArrayList<Server> result = new ArrayList<Server>();
-        XMLElement req = new XMLElement(AdminService.GET_ALL_SERVERS_REQUEST);
-        req.addAttribute(AdminService.A_SERVICE, service);
+        XMLElement req = new XMLElement(AdminConstants.GET_ALL_SERVERS_REQUEST);
+        req.addAttribute(AdminConstants.A_SERVICE, service);
         Element resp = invoke(req);
-        for (Element a: resp.listElements(AdminService.E_SERVER)) {
+        for (Element a: resp.listElements(AdminConstants.E_SERVER)) {
             result.add(new SoapServer(a));
         }
         return result;        
@@ -547,44 +547,44 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public CalendarResource get(CalendarResourceBy keyType, String key) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.GET_CALENDAR_RESOURCE_REQUEST);
-        Element a = req.addElement(AdminService.E_CALENDAR_RESOURCE);
+        XMLElement req = new XMLElement(AdminConstants.GET_CALENDAR_RESOURCE_REQUEST);
+        Element a = req.addElement(AdminConstants.E_CALENDAR_RESOURCE);
         a.setText(key);
-        a.addAttribute(AdminService.A_BY, keyType.name());
-        return new SoapCalendarResource(invoke(req).getElement(AdminService.E_CALENDAR_RESOURCE));
+        a.addAttribute(AdminConstants.A_BY, keyType.name());
+        return new SoapCalendarResource(invoke(req).getElement(AdminConstants.E_CALENDAR_RESOURCE));
     }
 
     @Override
     public Config getConfig() throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.GET_ALL_CONFIG_REQUEST);
+        XMLElement req = new XMLElement(AdminConstants.GET_ALL_CONFIG_REQUEST);
         return new SoapConfig(invoke(req));
     }
 
     @Override
     public Cos get(CosBy keyType, String key) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.GET_COS_REQUEST);
-        Element a = req.addElement(AdminService.E_COS);
+        XMLElement req = new XMLElement(AdminConstants.GET_COS_REQUEST);
+        Element a = req.addElement(AdminConstants.E_COS);
         a.setText(key);
-        a.addAttribute(AdminService.A_BY, keyType.name());
-        return new SoapCos(invoke(req).getElement(AdminService.E_COS));
+        a.addAttribute(AdminConstants.A_BY, keyType.name());
+        return new SoapCos(invoke(req).getElement(AdminConstants.E_COS));
     }
 
     @Override
     public DistributionList get(DistributionListBy keyType, String key) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.GET_DISTRIBUTION_LIST_REQUEST);
-        Element a = req.addElement(AdminService.E_DL);
+        XMLElement req = new XMLElement(AdminConstants.GET_DISTRIBUTION_LIST_REQUEST);
+        Element a = req.addElement(AdminConstants.E_DL);
         a.setText(key);
-        a.addAttribute(AdminService.A_BY, keyType.name());
-        return new SoapDistributionList(invoke(req).getElement(AdminService.E_DL));
+        a.addAttribute(AdminConstants.A_BY, keyType.name());
+        return new SoapDistributionList(invoke(req).getElement(AdminConstants.E_DL));
     }
 
     @Override
     public Domain get(DomainBy keyType, String key) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.GET_DOMAIN_REQUEST);
-        Element a = req.addElement(AdminService.E_DOMAIN);
+        XMLElement req = new XMLElement(AdminConstants.GET_DOMAIN_REQUEST);
+        Element a = req.addElement(AdminConstants.E_DOMAIN);
         a.setText(key);
-        a.addAttribute(AdminService.A_BY, keyType.name());
-        return new SoapDomain(invoke(req).getElement(AdminService.E_DOMAIN));
+        a.addAttribute(AdminConstants.A_BY, keyType.name());
+        return new SoapDomain(invoke(req).getElement(AdminConstants.E_DOMAIN));
     }
 
     @Override
@@ -625,11 +625,11 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public Server get(ServerBy keyType, String key) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.GET_SERVER_REQUEST);
-        Element a = req.addElement(AdminService.E_SERVER);
+        XMLElement req = new XMLElement(AdminConstants.GET_SERVER_REQUEST);
+        Element a = req.addElement(AdminConstants.E_SERVER);
         a.setText(key);
-        a.addAttribute(AdminService.A_BY, keyType.name());
-        return new SoapServer(invoke(req).getElement(AdminService.E_SERVER));
+        a.addAttribute(AdminConstants.A_BY, keyType.name());
+        return new SoapServer(invoke(req).getElement(AdminConstants.E_SERVER));
     }
 
     /**
@@ -642,9 +642,9 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public boolean healthCheck() throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.CHECK_HEALTH_REQUEST);
+        XMLElement req = new XMLElement(AdminConstants.CHECK_HEALTH_REQUEST);
         Element response = invoke(req);
-        return response.getAttributeBool(AdminService.A_HEALTHY);
+        return response.getAttributeBool(AdminConstants.A_HEALTHY);
     }
 
     /**
@@ -667,23 +667,23 @@ public class SoapProvisioning extends Provisioning {
     public void preAuthAccount(Account acct, String accountName,
             String accountBy, long timestamp, long expires, String preAuth)
             throws ServiceException {
-        XMLElement req = new XMLElement(AccountService.AUTH_REQUEST);
-        Element a = req.addElement(AccountService.E_ACCOUNT);
-        a.addAttribute(AccountService.A_BY, "name");
+        XMLElement req = new XMLElement(AccountConstants.AUTH_REQUEST);
+        Element a = req.addElement(AccountConstants.E_ACCOUNT);
+        a.addAttribute(AccountConstants.A_BY, "name");
         a.setText(accountName);
-        Element p = req.addElement(AccountService.E_PREAUTH);
-        p.addAttribute(AccountService.A_TIMESTAMP, timestamp);
-        p.addAttribute(AccountService.A_BY, accountBy);
-        p.addAttribute(AccountService.A_EXPIRES, expires);
+        Element p = req.addElement(AccountConstants.E_PREAUTH);
+        p.addAttribute(AccountConstants.A_TIMESTAMP, timestamp);
+        p.addAttribute(AccountConstants.A_BY, accountBy);
+        p.addAttribute(AccountConstants.A_EXPIRES, expires);
         p.setText(preAuth);
         invoke(req);
     }
 
     @Override
     public void removeAlias(Account acct, String alias) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.REMOVE_ACCOUNT_ALIAS_REQUEST);
-        req.addElement(AdminService.E_ID).setText(acct.getId());
-        req.addElement(AdminService.E_ALIAS).setText(alias);
+        XMLElement req = new XMLElement(AdminConstants.REMOVE_ACCOUNT_ALIAS_REQUEST);
+        req.addElement(AdminConstants.E_ID).setText(acct.getId());
+        req.addElement(AdminConstants.E_ALIAS).setText(alias);
         invoke(req);
         reload(acct);
     }
@@ -691,9 +691,9 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public void removeAlias(DistributionList dl, String alias)
             throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.REMOVE_DISTRIBUTION_LIST_ALIAS_REQUEST);
-        req.addElement(AdminService.E_ID).setText(dl.getId());
-        req.addElement(AdminService.E_ALIAS).setText(alias);
+        XMLElement req = new XMLElement(AdminConstants.REMOVE_DISTRIBUTION_LIST_ALIAS_REQUEST);
+        req.addElement(AdminConstants.E_ID).setText(dl.getId());
+        req.addElement(AdminConstants.E_ALIAS).setText(alias);
         invoke(req);
         reload(dl);
     }
@@ -701,36 +701,36 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public void renameAccount(String zimbraId, String newName)
             throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.RENAME_ACCOUNT_REQUEST);
-        req.addElement(AdminService.E_ID).setText(zimbraId);
-        req.addElement(AdminService.E_NEW_NAME).setText(newName);
+        XMLElement req = new XMLElement(AdminConstants.RENAME_ACCOUNT_REQUEST);
+        req.addElement(AdminConstants.E_ID).setText(zimbraId);
+        req.addElement(AdminConstants.E_NEW_NAME).setText(newName);
         invoke(req);
     }
 
     @Override
     public void renameCalendarResource(String zimbraId, String newName)
             throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.RENAME_CALENDAR_RESOURCE_REQUEST);
-        req.addElement(AdminService.E_ID).setText(zimbraId);
-        req.addElement(AdminService.E_NEW_NAME).setText(newName);
+        XMLElement req = new XMLElement(AdminConstants.RENAME_CALENDAR_RESOURCE_REQUEST);
+        req.addElement(AdminConstants.E_ID).setText(zimbraId);
+        req.addElement(AdminConstants.E_NEW_NAME).setText(newName);
         invoke(req);
     }
 
     @Override
     public void renameCos(String zimbraId, String newName)
             throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.RENAME_COS_REQUEST);
-        req.addElement(AdminService.E_ID).setText(zimbraId);
-        req.addElement(AdminService.E_NEW_NAME).setText(newName);
+        XMLElement req = new XMLElement(AdminConstants.RENAME_COS_REQUEST);
+        req.addElement(AdminConstants.E_ID).setText(zimbraId);
+        req.addElement(AdminConstants.E_NEW_NAME).setText(newName);
         invoke(req);        
     }
 
     @Override
     public void renameDistributionList(String zimbraId, String newName)
             throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.RENAME_DISTRIBUTION_LIST_REQUEST);
-        req.addElement(AdminService.E_ID).setText(zimbraId);
-        req.addElement(AdminService.E_NEW_NAME).setText(newName);
+        XMLElement req = new XMLElement(AdminConstants.RENAME_DISTRIBUTION_LIST_REQUEST);
+        req.addElement(AdminConstants.E_ID).setText(zimbraId);
+        req.addElement(AdminConstants.E_NEW_NAME).setText(newName);
         invoke(req);
     }
 
@@ -759,9 +759,9 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public void setPassword(Account acct, String newPassword)
             throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.SET_PASSWORD_REQUEST);
-        req.addElement(AdminService.E_ID).setText(acct.getId());
-        req.addElement(AdminService.E_NEW_PASSWORD).setText(newPassword);
+        XMLElement req = new XMLElement(AdminConstants.SET_PASSWORD_REQUEST);
+        req.addElement(AdminConstants.E_ID).setText(acct.getId());
+        req.addElement(AdminConstants.E_NEW_PASSWORD).setText(newPassword);
         invoke(req);
     }
 
@@ -813,13 +813,13 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public List<DistributionList> getDistributionLists(Account acct, boolean directOnly, Map<String, String> via) throws ServiceException {
         ArrayList<DistributionList> result = new ArrayList<DistributionList>();
-        XMLElement req = new XMLElement(AdminService.GET_ACCOUNT_MEMBERSHIP_REQUEST);
-        Element acctEl = req.addElement(AdminService.E_ACCOUNT);
-        acctEl.addAttribute(AdminService.A_BY, AccountBy.id.name());
+        XMLElement req = new XMLElement(AdminConstants.GET_ACCOUNT_MEMBERSHIP_REQUEST);
+        Element acctEl = req.addElement(AdminConstants.E_ACCOUNT);
+        acctEl.addAttribute(AdminConstants.A_BY, AccountBy.id.name());
         acctEl.setText(acct.getId());
         Element resp = invoke(req);
-        for (Element a: resp.listElements(AdminService.E_DL)) {
-            String viaList = a.getAttribute(AdminService.A_VIA, null);
+        for (Element a: resp.listElements(AdminConstants.E_DL)) {
+            String viaList = a.getAttribute(AdminConstants.A_VIA, null);
             if (directOnly && viaList != null) continue;
             DistributionList dl = new SoapDistributionList(a);
             if (via != null && viaList != null) {
@@ -846,13 +846,13 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public List<DistributionList> getDistributionLists(DistributionList list, boolean directOnly, Map<String, String> via) throws ServiceException {
         ArrayList<DistributionList> result = new ArrayList<DistributionList>();
-        XMLElement req = new XMLElement(AdminService.GET_DISTRIBUTION_LIST_MEMBERSHIP_REQUEST);
-        Element acctEl = req.addElement(AdminService.E_DL);
-        acctEl.addAttribute(AdminService.A_BY, DistributionListBy.id.name());
+        XMLElement req = new XMLElement(AdminConstants.GET_DISTRIBUTION_LIST_MEMBERSHIP_REQUEST);
+        Element acctEl = req.addElement(AdminConstants.E_DL);
+        acctEl.addAttribute(AdminConstants.A_BY, DistributionListBy.id.name());
         acctEl.setText(list.getId());
         Element resp = invoke(req);
-        for (Element a: resp.listElements(AdminService.E_DL)) {
-            String viaList = a.getAttribute(AdminService.A_VIA, null);
+        for (Element a: resp.listElements(AdminConstants.E_DL)) {
+            String viaList = a.getAttribute(AdminConstants.A_VIA, null);
             if (directOnly && viaList != null) continue;
             DistributionList dl = new SoapDistributionList(a);
             if (via != null && viaList != null) {
@@ -866,12 +866,12 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public List getAllAccounts(Domain d) throws ServiceException {
         ArrayList<Account> result = new ArrayList<Account>();
-        XMLElement req = new XMLElement(AdminService.GET_ALL_ACCOUNTS_REQUEST);
-        Element domainEl = req.addElement(AdminService.E_DOMAIN);
-        domainEl.addAttribute(AdminService.A_BY, AccountBy.id.name());
+        XMLElement req = new XMLElement(AdminConstants.GET_ALL_ACCOUNTS_REQUEST);
+        Element domainEl = req.addElement(AdminConstants.E_DOMAIN);
+        domainEl.addAttribute(AdminConstants.A_BY, AccountBy.id.name());
         domainEl.setText(d.getId());
         Element resp = invoke(req);
-        for (Element a: resp.listElements(AdminService.E_ACCOUNT)) {
+        for (Element a: resp.listElements(AdminConstants.E_ACCOUNT)) {
             result.add(new SoapAccount(a));
         }
         return result;
@@ -879,12 +879,12 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public void getAllAccounts(Domain d, Visitor visitor) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.GET_ALL_ACCOUNTS_REQUEST);
-        Element domainEl = req.addElement(AdminService.E_DOMAIN);
-        domainEl.addAttribute(AdminService.A_BY, DomainBy.id.name());
+        XMLElement req = new XMLElement(AdminConstants.GET_ALL_ACCOUNTS_REQUEST);
+        Element domainEl = req.addElement(AdminConstants.E_DOMAIN);
+        domainEl.addAttribute(AdminConstants.A_BY, DomainBy.id.name());
         domainEl.setText(d.getId());
         Element resp = invoke(req);
-        for (Element a: resp.listElements(AdminService.E_ACCOUNT)) {
+        for (Element a: resp.listElements(AdminConstants.E_ACCOUNT)) {
             visitor.visit(new SoapAccount(a));
         }
     }
@@ -892,12 +892,12 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public List getAllCalendarResources(Domain d) throws ServiceException {
         ArrayList<CalendarResource> result = new ArrayList<CalendarResource>();
-        XMLElement req = new XMLElement(AdminService.GET_ALL_CALENDAR_RESOURCES_REQUEST);
-        Element domainEl = req.addElement(AdminService.E_DOMAIN);
-        domainEl.addAttribute(AdminService.A_BY, CalendarResourceBy.id.name());
+        XMLElement req = new XMLElement(AdminConstants.GET_ALL_CALENDAR_RESOURCES_REQUEST);
+        Element domainEl = req.addElement(AdminConstants.E_DOMAIN);
+        domainEl.addAttribute(AdminConstants.A_BY, CalendarResourceBy.id.name());
         domainEl.setText(d.getId());
         Element resp = invoke(req);
-        for (Element a: resp.listElements(AdminService.E_CALENDAR_RESOURCE)) {
+        for (Element a: resp.listElements(AdminConstants.E_CALENDAR_RESOURCE)) {
             result.add(new SoapCalendarResource(a));
         }
         return result;
@@ -905,12 +905,12 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public void getAllCalendarResources(Domain d, Visitor visitor) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.GET_ALL_CALENDAR_RESOURCES_REQUEST);
-        Element domainEl = req.addElement(AdminService.E_DOMAIN);
-        domainEl.addAttribute(AdminService.A_BY, CalendarResourceBy.id.name());
+        XMLElement req = new XMLElement(AdminConstants.GET_ALL_CALENDAR_RESOURCES_REQUEST);
+        Element domainEl = req.addElement(AdminConstants.E_DOMAIN);
+        domainEl.addAttribute(AdminConstants.A_BY, CalendarResourceBy.id.name());
         domainEl.setText(d.getId());
         Element resp = invoke(req);
-        for (Element a: resp.listElements(AdminService.E_CALENDAR_RESOURCE)) {
+        for (Element a: resp.listElements(AdminConstants.E_CALENDAR_RESOURCE)) {
             
             visitor.visit(new SoapCalendarResource(a));
         }
@@ -919,12 +919,12 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public List getAllDistributionLists(Domain d) throws ServiceException {
         ArrayList<DistributionList> result = new ArrayList<DistributionList>();
-        XMLElement req = new XMLElement(AdminService.GET_ALL_DISTRIBUTION_LISTS_REQUEST);
-        Element domainEl = req.addElement(AdminService.E_DOMAIN);
-        domainEl.addAttribute(AdminService.A_BY, DomainBy.id.name());
+        XMLElement req = new XMLElement(AdminConstants.GET_ALL_DISTRIBUTION_LISTS_REQUEST);
+        Element domainEl = req.addElement(AdminConstants.E_DOMAIN);
+        domainEl.addAttribute(AdminConstants.A_BY, DomainBy.id.name());
         domainEl.setText(d.getId());
         Element resp = invoke(req);
-        for (Element a: resp.listElements(AdminService.E_DL)) {
+        for (Element a: resp.listElements(AdminConstants.E_DL)) {
             result.add(new SoapDistributionList(a));
         }
         return result;
@@ -939,19 +939,19 @@ public class SoapProvisioning extends Provisioning {
         else if (type == GAL_SEARCH_TYPE.CALENDAR_RESOURCE) typeStr = "resource";
         else typeStr = "all";
         
-        XMLElement req = new XMLElement(AdminService.AUTO_COMPLETE_GAL_REQUEST);
-        req.addElement(AdminService.E_NAME).setText(query);
-        req.addAttribute(AdminService.A_DOMAIN, d.getName());
-        req.addAttribute(AdminService.A_TYPE, typeStr);
-        req.addAttribute(AdminService.A_LIMIT, limit);
+        XMLElement req = new XMLElement(AdminConstants.AUTO_COMPLETE_GAL_REQUEST);
+        req.addElement(AdminConstants.E_NAME).setText(query);
+        req.addAttribute(AdminConstants.A_DOMAIN, d.getName());
+        req.addAttribute(AdminConstants.A_TYPE, typeStr);
+        req.addAttribute(AdminConstants.A_LIMIT, limit);
 
         Element resp = invoke(req);
 
         SearchGalResult result = new SearchGalResult();
         result.matches = new ArrayList<GalContact>();
-        result.hadMore = resp.getAttributeBool(AdminService.A_MORE);
-        for (Element e: resp.listElements(AdminService.E_CN)) {
-            result.matches.add(new GalContact(AdminService.A_ID, getAttrs(e)));
+        result.hadMore = resp.getAttributeBool(AdminConstants.A_MORE);
+        for (Element e: resp.listElements(AdminConstants.E_CN)) {
+            result.matches.add(new GalContact(AdminConstants.A_ID, getAttrs(e)));
         }
         return result;
     }
@@ -959,24 +959,24 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public List<NamedEntry> searchAccounts(Domain d, String query, String[] returnAttrs, String sortAttr, boolean sortAscending, int flags) throws ServiceException {
         List<NamedEntry> result = new ArrayList<NamedEntry>();
-        XMLElement req = new XMLElement(AdminService.SEARCH_ACCOUNTS_REQUEST);
-        req.addElement(AdminService.E_QUERY).setText(query);
-        if (d != null) req.addAttribute(AdminService.A_DOMAIN, d.getName());
-        if (sortAttr != null) req.addAttribute(AdminService.A_SORT_BY, sortAttr);
-        if (flags != 0) req.addAttribute(AdminService.A_TYPES, Provisioning.searchAccountMaskToString(flags));
-        req.addAttribute(AdminService.A_SORT_ASCENDING, sortAscending ? "1" : "0");
+        XMLElement req = new XMLElement(AdminConstants.SEARCH_ACCOUNTS_REQUEST);
+        req.addElement(AdminConstants.E_QUERY).setText(query);
+        if (d != null) req.addAttribute(AdminConstants.A_DOMAIN, d.getName());
+        if (sortAttr != null) req.addAttribute(AdminConstants.A_SORT_BY, sortAttr);
+        if (flags != 0) req.addAttribute(AdminConstants.A_TYPES, Provisioning.searchAccountMaskToString(flags));
+        req.addAttribute(AdminConstants.A_SORT_ASCENDING, sortAscending ? "1" : "0");
         if (returnAttrs != null) {
-            req.addAttribute(AdminService.A_ATTRS, StringUtil.join(",", returnAttrs));
+            req.addAttribute(AdminConstants.A_ATTRS, StringUtil.join(",", returnAttrs));
         }
         // TODO: handle ApplyCos, limit, offset?
         Element resp = invoke(req);
-        for (Element e: resp.listElements(AdminService.E_DL))
+        for (Element e: resp.listElements(AdminConstants.E_DL))
             result.add(new SoapDistributionList(e));
 
-        for (Element e: resp.listElements(AdminService.E_ALIAS))
+        for (Element e: resp.listElements(AdminConstants.E_ALIAS))
             result.add(new SoapAlias(e));
         
-        for (Element e: resp.listElements(AdminService.E_ACCOUNT))
+        for (Element e: resp.listElements(AdminConstants.E_ACCOUNT))
             result.add(new SoapAccount(e));
         
         return result;
@@ -984,28 +984,28 @@ public class SoapProvisioning extends Provisioning {
 
     public List<NamedEntry> searchDirectory(SearchOptions options) throws ServiceException {
         List<NamedEntry> result = new ArrayList<NamedEntry>();
-        XMLElement req = new XMLElement(AdminService.SEARCH_DIRECTORY_REQUEST);
-        req.addElement(AdminService.E_QUERY).setText(options.getQuery());
-        if (options.getMaxResults() != 0) req.addAttribute(AdminService.A_MAX_RESULTS, options.getMaxResults());
-        if (options.getDomain() != null) req.addAttribute(AdminService.A_DOMAIN, options.getDomain().getName());
-        if (options.getSortAttr() != null) req.addAttribute(AdminService.A_SORT_BY, options.getSortAttr());
-        if (options.getFlags() != 0) req.addAttribute(AdminService.A_TYPES, Provisioning.searchAccountMaskToString(options.getFlags()));
-        req.addAttribute(AdminService.A_SORT_ASCENDING, options.isSortAscending() ? "1" : "0");
+        XMLElement req = new XMLElement(AdminConstants.SEARCH_DIRECTORY_REQUEST);
+        req.addElement(AdminConstants.E_QUERY).setText(options.getQuery());
+        if (options.getMaxResults() != 0) req.addAttribute(AdminConstants.A_MAX_RESULTS, options.getMaxResults());
+        if (options.getDomain() != null) req.addAttribute(AdminConstants.A_DOMAIN, options.getDomain().getName());
+        if (options.getSortAttr() != null) req.addAttribute(AdminConstants.A_SORT_BY, options.getSortAttr());
+        if (options.getFlags() != 0) req.addAttribute(AdminConstants.A_TYPES, Provisioning.searchAccountMaskToString(options.getFlags()));
+        req.addAttribute(AdminConstants.A_SORT_ASCENDING, options.isSortAscending() ? "1" : "0");
         if (options.getReturnAttrs() != null) {
-            req.addAttribute(AdminService.A_ATTRS, StringUtil.join(",", options.getReturnAttrs()));
+            req.addAttribute(AdminConstants.A_ATTRS, StringUtil.join(",", options.getReturnAttrs()));
         }
         // TODO: handle ApplyCos, limit, offset?
         Element resp = invoke(req);
-        for (Element e: resp.listElements(AdminService.E_DL))
+        for (Element e: resp.listElements(AdminConstants.E_DL))
             result.add(new SoapDistributionList(e));
 
-        for (Element e: resp.listElements(AdminService.E_ALIAS))
+        for (Element e: resp.listElements(AdminConstants.E_ALIAS))
             result.add(new SoapAlias(e));
 
-        for (Element e: resp.listElements(AdminService.E_ACCOUNT))
+        for (Element e: resp.listElements(AdminConstants.E_ACCOUNT))
             result.add(new SoapAccount(e));
 
-        for (Element e: resp.listElements(AdminService.E_DOMAIN))
+        for (Element e: resp.listElements(AdminConstants.E_DOMAIN))
             result.add(new SoapDomain(e));
         return result;
     }
@@ -1043,29 +1043,29 @@ public class SoapProvisioning extends Provisioning {
         else if (type == GAL_SEARCH_TYPE.CALENDAR_RESOURCE) typeStr = "resource";
         else typeStr = "all";
         
-        XMLElement req = new XMLElement(AdminService.SEARCH_GAL_REQUEST);
-        req.addElement(AdminService.E_NAME).setText(query);
-        req.addAttribute(AdminService.A_DOMAIN, d.getName());
-        req.addAttribute(AdminService.A_TYPE, typeStr);
-        if (token != null) req.addAttribute(AdminService.A_TOKEN, token);
+        XMLElement req = new XMLElement(AdminConstants.SEARCH_GAL_REQUEST);
+        req.addElement(AdminConstants.E_NAME).setText(query);
+        req.addAttribute(AdminConstants.A_DOMAIN, d.getName());
+        req.addAttribute(AdminConstants.A_TYPE, typeStr);
+        if (token != null) req.addAttribute(AdminConstants.A_TOKEN, token);
 
         Element resp = invoke(req);
 
         SearchGalResult result = new SearchGalResult();
         result.matches = new ArrayList<GalContact>();
-        result.hadMore = resp.getAttributeBool(AdminService.A_MORE);
-        for (Element e: resp.listElements(AdminService.E_CN)) {
-            result.matches.add(new GalContact(AdminService.A_ID, getAttrs(e)));
+        result.hadMore = resp.getAttributeBool(AdminConstants.A_MORE);
+        for (Element e: resp.listElements(AdminConstants.E_CN)) {
+            result.matches.add(new GalContact(AdminConstants.A_ID, getAttrs(e)));
         }
         return result;
     }
 
     @Override
     public void addMembers(DistributionList list, String[] members) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.ADD_DISTRIBUTION_LIST_MEMBER_REQUEST);
-        req.addElement(AdminService.E_ID).setText(list.getId());
+        XMLElement req = new XMLElement(AdminConstants.ADD_DISTRIBUTION_LIST_MEMBER_REQUEST);
+        req.addElement(AdminConstants.E_ID).setText(list.getId());
         for (String m : members) {
-            req.addElement(AdminService.E_DLM).setText(m);
+            req.addElement(AdminConstants.E_DLM).setText(m);
         }
         invoke(req);
         reload(list);        
@@ -1073,10 +1073,10 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public void removeMembers(DistributionList list, String[] members) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.REMOVE_DISTRIBUTION_LIST_MEMBER_REQUEST);
-        req.addElement(AdminService.E_ID).setText(list.getId());
+        XMLElement req = new XMLElement(AdminConstants.REMOVE_DISTRIBUTION_LIST_MEMBER_REQUEST);
+        req.addElement(AdminConstants.E_ID).setText(list.getId());
         for (String m : members) {
-            req.addElement(AdminService.E_DLM).setText(m);
+            req.addElement(AdminConstants.E_DLM).setText(m);
         }
         invoke(req);
         reload(list);
@@ -1089,14 +1089,14 @@ public class SoapProvisioning extends Provisioning {
             String key = (String) entry.getKey();
             Object value = entry.getValue();
             if (value instanceof String) {
-                Element  a = req.addElement(MailService.E_ATTRIBUTE);
-                a.addAttribute(MailService.A_NAME, key);
+                Element  a = req.addElement(MailConstants.E_ATTRIBUTE);
+                a.addAttribute(MailConstants.A_NAME, key);
                 a.setText((String)value);
             } else if (value instanceof String[]) {
                 String[] values = (String[]) value;
                 for (String v: values) {
-                    Element  a = req.addElement(MailService.E_ATTRIBUTE);
-                    a.addAttribute(MailService.A_NAME, key);
+                    Element  a = req.addElement(MailConstants.E_ATTRIBUTE);
+                    a.addAttribute(MailConstants.A_NAME, key);
                     a.setText((String)v);                    
                 }
             } else {
@@ -1107,28 +1107,28 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public Identity createIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException {
-        XMLElement req = new XMLElement(AccountService.CREATE_IDENTITY_REQUEST);
-        Element identity = req.addElement(AccountService.E_IDENTITY);
-        identity.addAttribute(AccountService.A_NAME, identityName);
+        XMLElement req = new XMLElement(AccountConstants.CREATE_IDENTITY_REQUEST);
+        Element identity = req.addElement(AccountConstants.E_IDENTITY);
+        identity.addAttribute(AccountConstants.A_NAME, identityName);
         addAttrElementsMailService(identity, attrs);
-        Element response = invokeOnTargetAccount(req, account.getId()).getElement(AccountService.E_IDENTITY);
+        Element response = invokeOnTargetAccount(req, account.getId()).getElement(AccountConstants.E_IDENTITY);
         return new SoapIdentity(response);
     }
 
     @Override
     public void deleteIdentity(Account account, String identityName) throws ServiceException {
-        XMLElement req = new XMLElement(AccountService.DELETE_IDENTITY_REQUEST);
-        Element identity = req.addElement(AccountService.E_IDENTITY);
-        identity.addAttribute(AccountService.A_NAME, identityName);
+        XMLElement req = new XMLElement(AccountConstants.DELETE_IDENTITY_REQUEST);
+        Element identity = req.addElement(AccountConstants.E_IDENTITY);
+        identity.addAttribute(AccountConstants.A_NAME, identityName);
         invokeOnTargetAccount(req, account.getId());
     }
 
     @Override
     public List<Identity> getAllIdentities(Account account) throws ServiceException {
         List<Identity> result = new ArrayList<Identity>();
-        XMLElement req = new XMLElement(AccountService.GET_IDENTITIES_REQUEST);
+        XMLElement req = new XMLElement(AccountConstants.GET_IDENTITIES_REQUEST);
         Element resp = invokeOnTargetAccount(req, account.getId());
-        for (Element identity: resp.listElements(AccountService.E_IDENTITY)) {
+        for (Element identity: resp.listElements(AccountConstants.E_IDENTITY)) {
             result.add(new SoapIdentity(identity));
         }
         return result;
@@ -1136,22 +1136,22 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public void modifyIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException {
-        XMLElement req = new XMLElement(AccountService.MODIFY_IDENTITY_REQUEST);
-        Element identity = req.addElement(AccountService.E_IDENTITY);
-        identity.addAttribute(AccountService.A_NAME, identityName);
+        XMLElement req = new XMLElement(AccountConstants.MODIFY_IDENTITY_REQUEST);
+        Element identity = req.addElement(AccountConstants.E_IDENTITY);
+        identity.addAttribute(AccountConstants.A_NAME, identityName);
         addAttrElementsMailService(identity, attrs);
         invokeOnTargetAccount(req, account.getId());
     }
 
     @Override
     public DataSource createDataSource(Account account, DataSource.Type dsType, String dsName, Map<String, Object> attrs) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.CREATE_DATA_SOURCE_REQUEST);
-        req.addElement(AdminService.E_ID).setText(account.getId());
-        Element ds = req.addElement(AccountService.E_DATA_SOURCE);
-        ds.addAttribute(AccountService.A_NAME, dsName);
-        ds.addAttribute(AccountService.A_TYPE, dsType.name());
+        XMLElement req = new XMLElement(AdminConstants.CREATE_DATA_SOURCE_REQUEST);
+        req.addElement(AdminConstants.E_ID).setText(account.getId());
+        Element ds = req.addElement(AccountConstants.E_DATA_SOURCE);
+        ds.addAttribute(AccountConstants.A_NAME, dsName);
+        ds.addAttribute(AccountConstants.A_TYPE, dsType.name());
         addAttrElements(ds, attrs);
-        Element response = invoke(req).getElement(AccountService.E_DATA_SOURCE);
+        Element response = invoke(req).getElement(AccountConstants.E_DATA_SOURCE);
         return new SoapDataSource(response);
     }
 
@@ -1162,20 +1162,20 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public void deleteDataSource(Account account, String dataSourceId) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.DELETE_DATA_SOURCE_REQUEST);
-        req.addElement(AdminService.E_ID).setText(account.getId());        
-        Element ds = req.addElement(AccountService.E_DATA_SOURCE);
-        ds.addAttribute(AccountService.A_ID, dataSourceId);
+        XMLElement req = new XMLElement(AdminConstants.DELETE_DATA_SOURCE_REQUEST);
+        req.addElement(AdminConstants.E_ID).setText(account.getId());
+        Element ds = req.addElement(AccountConstants.E_DATA_SOURCE);
+        ds.addAttribute(AccountConstants.A_ID, dataSourceId);
         invoke(req);
     }
 
     @Override
     public List<DataSource> getAllDataSources(Account account) throws ServiceException {
         List<DataSource> result = new ArrayList<DataSource>();
-        XMLElement req = new XMLElement(AdminService.GET_DATA_SOURCES_REQUEST);
-        req.addElement(AdminService.E_ID).setText(account.getId());        
+        XMLElement req = new XMLElement(AdminConstants.GET_DATA_SOURCES_REQUEST);
+        req.addElement(AdminConstants.E_ID).setText(account.getId());
         Element resp = invoke(req);
-        for (Element dataSource: resp.listElements(AccountService.E_DATA_SOURCE)) {
+        for (Element dataSource: resp.listElements(AccountConstants.E_DATA_SOURCE)) {
             result.add(new SoapDataSource(dataSource));
         }
         return result;        
@@ -1183,10 +1183,10 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public void modifyDataSource(Account account, String dataSourceId, Map<String, Object> attrs) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.MODIFY_DATA_SOURCE_REQUEST);
-        req.addElement(AdminService.E_ID).setText(account.getId());        
-        Element ds = req.addElement(AccountService.E_DATA_SOURCE);
-        ds.addAttribute(AccountService.A_ID, dataSourceId);
+        XMLElement req = new XMLElement(AdminConstants.MODIFY_DATA_SOURCE_REQUEST);
+        req.addElement(AdminConstants.E_ID).setText(account.getId());
+        Element ds = req.addElement(AccountConstants.E_DATA_SOURCE);
+        ds.addAttribute(AccountConstants.A_ID, dataSourceId);
         addAttrElements(ds, attrs);
         invoke(req);
     }

@@ -33,6 +33,7 @@ import java.util.Map;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.Element;
@@ -55,8 +56,8 @@ public class CreateAccount extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
-	    String name = request.getAttribute(AdminService.E_NAME).toLowerCase();
-	    String password = request.getAttribute(AdminService.E_PASSWORD, null);
+	    String name = request.getAttribute(AdminConstants.E_NAME).toLowerCase();
+	    String password = request.getAttribute(AdminConstants.E_PASSWORD, null);
 	    Map<String, Object> attrs = AdminService.getAttrs(request, true);
 
         if (!canAccessEmail(lc, name))
@@ -67,7 +68,7 @@ public class CreateAccount extends AdminDocumentHandler {
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "CreateAccount","name", name}, attrs));         
 
-	    Element response = lc.createElement(AdminService.CREATE_ACCOUNT_RESPONSE);
+	    Element response = lc.createElement(AdminConstants.CREATE_ACCOUNT_RESPONSE);
 
         ToXML.encodeAccount(response, account);
 

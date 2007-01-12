@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Config;
@@ -52,8 +53,8 @@ public class GetCos extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-        Element d = request.getElement(AdminService.E_COS);
-	    String key = d.getAttribute(AdminService.A_BY);
+        Element d = request.getElement(AdminConstants.E_COS);
+	    String key = d.getAttribute(AdminConstants.A_BY);
         String value = d.getText();
 
 	    Cos cos = prov.get(CosBy.fromString(key), value);
@@ -61,7 +62,7 @@ public class GetCos extends AdminDocumentHandler {
         if (cos == null)
             throw AccountServiceException.NO_SUCH_COS(value);
 
-	    Element response = lc.createElement(AdminService.GET_COS_RESPONSE);
+	    Element response = lc.createElement(AdminConstants.GET_COS_RESPONSE);
         doCos(response, cos);
 
 	    return response;
@@ -69,9 +70,9 @@ public class GetCos extends AdminDocumentHandler {
 
 	public static void doCos(Element e, Cos c) throws ServiceException {
         Config config = Provisioning.getInstance().getConfig();
-        Element cos = e.addElement(AdminService.E_COS);
-        cos.addAttribute(AdminService.A_NAME, c.getName());
-        cos.addAttribute(AdminService.E_ID, c.getId());
+        Element cos = e.addElement(AdminConstants.E_COS);
+        cos.addAttribute(AdminConstants.A_NAME, c.getName());
+        cos.addAttribute(AdminConstants.E_ID, c.getId());
         Map attrs = c.getAttrs();
         AttributeManager attrMgr = AttributeManager.getInstance();
         for (Iterator mit=attrs.entrySet().iterator(); mit.hasNext(); ) {
@@ -82,17 +83,17 @@ public class GetCos extends AdminDocumentHandler {
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;
                 for (int i = 0; i < sv.length; i++) {
-                    Element attr = cos.addElement(AdminService.E_A);
-                    attr.addAttribute(AdminService.A_N, name);
+                    Element attr = cos.addElement(AdminConstants.E_A);
+                    attr.addAttribute(AdminConstants.A_N, name);
                     if (isCosAttr) 
-                        attr.addAttribute(AdminService.A_C, "1");
+                        attr.addAttribute(AdminConstants.A_C, "1");
                     attr.setText(sv[i]);
                 }
             } else if (value instanceof String){
-                Element attr = cos.addElement(AdminService.E_A);
-                attr.addAttribute(AdminService.A_N, name);
+                Element attr = cos.addElement(AdminConstants.E_A);
+                attr.addAttribute(AdminConstants.A_N, name);
                 if (isCosAttr) 
-                    attr.addAttribute(AdminService.A_C, "1");                
+                    attr.addAttribute(AdminConstants.A_C, "1");
                 attr.setText((String) value);
             }
         }

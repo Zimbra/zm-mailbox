@@ -31,37 +31,38 @@ package com.zimbra.cs.service.mail;
 import java.util.HashMap;
 
 import com.zimbra.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 
 /**
  * @author schemers
  */
 public class ContactAttrCache {
 
-	public int mId;
-	public HashMap<String, Long> mCache;
+    public int mId;
+    public HashMap<String, Long> mCache;
 
-	public ContactAttrCache() {
-		mId = 0;
-		mCache = new HashMap<String, Long>();
-	}
+    public ContactAttrCache() {
+        mId = 0;
+        mCache = new HashMap<String, Long>();
+    }
 
-	public Element makeAttr(Element parent, String name, String value) {
-		
-		if (value == null || value.equals(""))
-		    return null;
-		    
-		Element e = parent.addElement(MailService.E_ATTRIBUTE);
-		
-		Long id = mCache.get(name);
-		if (id == null) {
-		    id = new Long(mId++);
-			mCache.put(name, id);
-			e.addAttribute(MailService.A_ATTRIBUTE_NAME, name);
-			e.addAttribute(MailService.A_ID, id.longValue());
-		} else {
-		    e.addAttribute(MailService.A_REF, id.longValue());
-		}
-		e.setText(value);
-		return e;
-	}
+    public Element makeAttr(Element parent, String name, String value) {
+
+        if (value == null || value.equals(""))
+            return null;
+
+        Element e = parent.addElement(MailConstants.E_ATTRIBUTE);
+
+        Long id = mCache.get(name);
+        if (id == null) {
+            id = new Long(mId++);
+            mCache.put(name, id);
+            e.addAttribute(MailConstants.A_ATTRIBUTE_NAME, name);
+            e.addAttribute(MailConstants.A_ID, id.longValue());
+        } else {
+            e.addAttribute(MailConstants.A_REF, id.longValue());
+        }
+        e.setText(value);
+        return e;
+    }
 }

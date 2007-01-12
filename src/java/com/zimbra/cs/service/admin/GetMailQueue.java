@@ -35,6 +35,7 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.ServerBy;
@@ -54,58 +55,58 @@ public class GetMailQueue extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         
-        Element serverElem = request.getElement(AdminService.E_SERVER);
-        String serverName = serverElem.getAttribute(AdminService.A_NAME);
+        Element serverElem = request.getElement(AdminConstants.E_SERVER);
+        String serverName = serverElem.getAttribute(AdminConstants.A_NAME);
         
         Server server = prov.get(ServerBy.name, serverName);
         if (server == null) {
             throw ServiceException.INVALID_REQUEST("server with name " + serverName + " could not be found", null);
         }
         
-        Element queueElem = serverElem.getElement(AdminService.E_QUEUE);
-        String queueName = queueElem.getAttribute(AdminService.A_NAME);
-        boolean scan = queueElem.getAttributeBool(AdminService.A_SCAN, false);
-        long waitMillis = (queueElem.getAttributeLong(AdminService.A_WAIT, MAIL_QUEUE_SCAN_DEFUALT_WAIT_SECONDS)) * 1000;
+        Element queueElem = serverElem.getElement(AdminConstants.E_QUEUE);
+        String queueName = queueElem.getAttribute(AdminConstants.A_NAME);
+        boolean scan = queueElem.getAttributeBool(AdminConstants.A_SCAN, false);
+        long waitMillis = (queueElem.getAttributeLong(AdminConstants.A_WAIT, MAIL_QUEUE_SCAN_DEFUALT_WAIT_SECONDS)) * 1000;
         
-        Element queryElem = queueElem.getElement(AdminService.E_QUERY);
-        int offset = (int)queryElem.getAttributeLong(AdminService.A_OFFSET, 0);
-        int limit = (int)queryElem.getAttributeLong(AdminService.A_LIMIT, MAIL_QUEUE_QUERY_DEFAULT_LIMIT);
+        Element queryElem = queueElem.getElement(AdminConstants.E_QUERY);
+        int offset = (int)queryElem.getAttributeLong(AdminConstants.A_OFFSET, 0);
+        int limit = (int)queryElem.getAttributeLong(AdminConstants.A_LIMIT, MAIL_QUEUE_QUERY_DEFAULT_LIMIT);
         Query query = buildLuceneQuery(queryElem);
         
         RemoteMailQueue rmq = RemoteMailQueue.getRemoteMailQueue(server, queueName, scan);
         boolean stillScanning = rmq.waitForScan(waitMillis);
         RemoteMailQueue.SearchResult sr = rmq.search(query, offset, limit);
         
-        Element response = lc.createElement(AdminService.GET_MAIL_QUEUE_RESPONSE);
-        serverElem = response.addElement(AdminService.E_SERVER);
-        serverElem.addAttribute(AdminService.A_NAME, serverName);
+        Element response = lc.createElement(AdminConstants.GET_MAIL_QUEUE_RESPONSE);
+        serverElem = response.addElement(AdminConstants.E_SERVER);
+        serverElem.addAttribute(AdminConstants.A_NAME, serverName);
      
-        queueElem = serverElem.addElement(AdminService.E_QUEUE);
-        queueElem.addAttribute(AdminService.A_NAME, queueName);
-        queueElem.addAttribute(AdminService.A_TIME, rmq.getScanTime());
-        queueElem.addAttribute(AdminService.A_SCAN, stillScanning);
-        queueElem.addAttribute(AdminService.A_TOTAL, rmq.getNumMessages());
-        queueElem.addAttribute(AdminService.A_MORE, ((offset + limit) < sr.hits)); 
+        queueElem = serverElem.addElement(AdminConstants.E_QUEUE);
+        queueElem.addAttribute(AdminConstants.A_NAME, queueName);
+        queueElem.addAttribute(AdminConstants.A_TIME, rmq.getScanTime());
+        queueElem.addAttribute(AdminConstants.A_SCAN, stillScanning);
+        queueElem.addAttribute(AdminConstants.A_TOTAL, rmq.getNumMessages());
+        queueElem.addAttribute(AdminConstants.A_MORE, ((offset + limit) < sr.hits));
         
         for (QueueAttr attr : sr.sitems.keySet()) {
             List<SummaryItem> slist = sr.sitems.get(attr);
             Collections.sort(slist);
-            Element qsElem = queueElem.addElement(AdminService.A_QUEUE_SUMMARY);
-            qsElem.addAttribute(AdminService.A_TYPE, attr.toString());
+            Element qsElem = queueElem.addElement(AdminConstants.A_QUEUE_SUMMARY);
+            qsElem.addAttribute(AdminConstants.A_TYPE, attr.toString());
             int i = 0;
             for (SummaryItem sitem : slist) {
                 i++;
                 if (i > MAIL_QUEUE_SUMMARY_CUTOFF) {
                     break;
                 }
-                Element qsiElem = qsElem.addElement(AdminService.A_QUEUE_SUMMARY_ITEM);
-                qsiElem.addAttribute(AdminService.A_N, sitem.count());
-                qsiElem.addAttribute(AdminService.A_T, sitem.term());
+                Element qsiElem = qsElem.addElement(AdminConstants.A_QUEUE_SUMMARY_ITEM);
+                qsiElem.addAttribute(AdminConstants.A_N, sitem.count());
+                qsiElem.addAttribute(AdminConstants.A_T, sitem.term());
             }
         }
 
         for (Map<QueueAttr,String> qitem : sr.qitems) {
-            Element qiElem = queueElem.addElement(AdminService.A_QUEUE_ITEM);
+            Element qiElem = queueElem.addElement(AdminConstants.A_QUEUE_ITEM);
             for (QueueAttr attr : qitem.keySet()) {
                 qiElem.addAttribute(attr.toString(), qitem.get(attr));
             }
@@ -116,14 +117,14 @@ public class GetMailQueue extends AdminDocumentHandler {
 	public static Query buildLuceneQuery(Element queryElem) throws ServiceException {
 		BooleanQuery fq = new BooleanQuery();
 		boolean emptyQuery = true;
-        for (Iterator fieldIter = queryElem.elementIterator(AdminService.E_FIELD); fieldIter.hasNext();) {
+        for (Iterator fieldIter = queryElem.elementIterator(AdminConstants.E_FIELD); fieldIter.hasNext();) {
         	emptyQuery = false;
         	Element fieldElement = (Element)fieldIter.next();
-        	String fieldName = fieldElement.getAttribute(AdminService.A_NAME);
+        	String fieldName = fieldElement.getAttribute(AdminConstants.A_NAME);
         	BooleanQuery mq = new BooleanQuery();
-        	for (Iterator matchIter = fieldElement.elementIterator(AdminService.E_MATCH); matchIter.hasNext();) {
+        	for (Iterator matchIter = fieldElement.elementIterator(AdminConstants.E_MATCH); matchIter.hasNext();) {
         		Element matchElement = (Element)matchIter.next();
-        		String matchValue = matchElement.getAttribute(AdminService.A_VALUE);
+        		String matchValue = matchElement.getAttribute(AdminConstants.A_VALUE);
         		Term term = new Term(fieldName, matchValue);
         		TermQuery termQuery = new TermQuery(term);
                 mq.add(new TermQuery(term), false, false); // OR all the matches

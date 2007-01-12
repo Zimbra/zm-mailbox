@@ -37,6 +37,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.soap.Element;
@@ -62,14 +63,14 @@ public class Auth extends AccountDocumentHandler {
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
-        Element acctEl = request.getElement(AccountService.E_ACCOUNT);
+        Element acctEl = request.getElement(AccountConstants.E_ACCOUNT);
         String value = acctEl.getText();
-        String byStr = acctEl.getAttribute(AccountService.A_BY, AccountBy.name.name());
-        Element preAuthEl = request.getOptionalElement(AccountService.E_PREAUTH);
-        String password = request.getAttribute(AccountService.E_PASSWORD, null);
+        String byStr = acctEl.getAttribute(AccountConstants.A_BY, AccountBy.name.name());
+        Element preAuthEl = request.getOptionalElement(AccountConstants.E_PREAUTH);
+        String password = request.getAttribute(AccountConstants.E_PASSWORD, null);
         Provisioning prov = Provisioning.getInstance();
         
-        Element virtualHostEl = request.getOptionalElement(AccountService.E_VIRTUAL_HOST);
+        Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
         String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
         
         AccountBy by = AccountBy.fromString(byStr);
@@ -91,12 +92,12 @@ public class Auth extends AccountDocumentHandler {
         if (password != null) {
             prov.authAccount(acct, password, "soap");
         } else if (preAuthEl != null) {
-            long timestamp = preAuthEl.getAttributeLong(AccountService.A_TIMESTAMP);
-            expires = preAuthEl.getAttributeLong(AccountService.A_EXPIRES, 0);
+            long timestamp = preAuthEl.getAttributeLong(AccountConstants.A_TIMESTAMP);
+            expires = preAuthEl.getAttributeLong(AccountConstants.A_EXPIRES, 0);
             String preAuth = preAuthEl.getTextTrim();
             prov.preAuthAccount(acct, value, byStr, timestamp, expires, preAuth);
         } else {
-            throw ServiceException.INVALID_REQUEST("must specify "+AccountService.E_PASSWORD, null);
+            throw ServiceException.INVALID_REQUEST("must specify "+AccountConstants.E_PASSWORD, null);
         }
 
         AuthToken at = expires ==  0 ? new AuthToken(acct) : new AuthToken(acct, expires);
@@ -108,9 +109,9 @@ public class Auth extends AccountDocumentHandler {
             throw  ServiceException.FAILURE("unable to encode auth token", e);
         }
 
-        Element response = lc.createElement(AccountService.AUTH_RESPONSE);
-        response.addAttribute(AccountService.E_AUTH_TOKEN, token, Element.DISP_CONTENT);
-        response.addAttribute(AccountService.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.DISP_CONTENT);
+        Element response = lc.createElement(AccountConstants.AUTH_RESPONSE);
+        response.addAttribute(AccountConstants.E_AUTH_TOKEN, token, Element.DISP_CONTENT);
+        response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.DISP_CONTENT);
         boolean isCorrectHost =  Provisioning.onLocalServer(acct);
         if (isCorrectHost) {
             Session session = lc.getNewSession(acct.getId(), SessionCache.SESSION_SOAP);
@@ -118,21 +119,21 @@ public class Auth extends AccountDocumentHandler {
                 ZimbraSoapContext.encodeSession(response, session, true);
         }
         if (!isCorrectHost || LC.zimbra_auth_always_send_refer.booleanValue())
-            response.addAttribute(AccountService.E_REFERRAL, acct.getAttr(Provisioning.A_zimbraMailHost), Element.DISP_CONTENT);
+            response.addAttribute(AccountConstants.E_REFERRAL, acct.getAttr(Provisioning.A_zimbraMailHost), Element.DISP_CONTENT);
 
-		Element prefsRequest = request.getOptionalElement(AccountService.E_PREFS);
+		Element prefsRequest = request.getOptionalElement(AccountConstants.E_PREFS);
 		if (prefsRequest != null) {
-			Element prefsResponse = response.addElement(AccountService.E_PREFS);
+			Element prefsResponse = response.addElement(AccountConstants.E_PREFS);
 			GetPrefs.handle( prefsRequest, prefsResponse, acct);
 		}
 
-        Element attrsRequest = request.getOptionalElement(AccountService.E_ATTRS);
+        Element attrsRequest = request.getOptionalElement(AccountConstants.E_ATTRS);
         if (attrsRequest != null) {
-            Element attrsResponse = response.addElement(AccountService.E_ATTRS);
+            Element attrsResponse = response.addElement(AccountConstants.E_ATTRS);
             Set<String> attrList = AttributeManager.getInstance().getAttrsWithFlag(AttributeFlag.accountInfo);
-            for (Iterator it = attrsRequest.elementIterator(AccountService.E_ATTR); it.hasNext(); ) {
+            for (Iterator it = attrsRequest.elementIterator(AccountConstants.E_ATTR); it.hasNext(); ) {
                 Element e = (Element) it.next();
-                String name = e.getAttribute(AccountService.A_NAME);
+                String name = e.getAttribute(AccountConstants.A_NAME);
                 if (name != null && attrList.contains(name)) {
                     Object v = acct.getMultiAttr(name);
                     if (v != null) GetInfo.doAttr(attrsResponse,name, v);

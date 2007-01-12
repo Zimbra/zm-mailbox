@@ -30,7 +30,7 @@ import org.dom4j.DocumentHelper;
 
 import com.zimbra.soap.DomUtil;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.client.*;
 
 
@@ -43,10 +43,10 @@ public class LmcGetFolderRequest extends LmcSoapRequest {
     public String getFolderToGet() { return mFolderID; }
 
     protected Element getRequestXML() {
-        Element request = DocumentHelper.createElement(MailService.GET_FOLDER_REQUEST);
+        Element request = DocumentHelper.createElement(MailConstants.GET_FOLDER_REQUEST);
         if (mFolderID != null) {
-            Element folder = DomUtil.add(request, MailService.E_FOLDER, "");
-            DomUtil.addAttr(folder, MailService.A_FOLDER, mFolderID);
+            Element folder = DomUtil.add(request, MailConstants.E_FOLDER, "");
+            DomUtil.addAttr(folder, MailConstants.A_FOLDER, mFolderID);
         }
         return request;
     }
@@ -55,7 +55,7 @@ public class LmcGetFolderRequest extends LmcSoapRequest {
         throws ServiceException
     {
         // LmcGetFolderResponse always has the 1 top level folder
-        Element fElem = DomUtil.get(responseXML, MailService.E_FOLDER);
+        Element fElem = DomUtil.get(responseXML, MailConstants.E_FOLDER);
         LmcFolder f = parseFolder(fElem);
         
         LmcGetFolderResponse response = new LmcGetFolderResponse();

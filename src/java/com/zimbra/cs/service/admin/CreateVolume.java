@@ -28,6 +28,7 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.store.Volume;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -37,10 +38,10 @@ public class CreateVolume extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
-        Element eVol = request.getElement(AdminService.E_VOLUME);
-        String name  = eVol.getAttribute(AdminService.A_VOLUME_NAME);
-        String path  = eVol.getAttribute(AdminService.A_VOLUME_ROOTPATH);
-        short type   = (short) eVol.getAttributeLong(AdminService.A_VOLUME_TYPE);
+        Element eVol = request.getElement(AdminConstants.E_VOLUME);
+        String name  = eVol.getAttribute(AdminConstants.A_VOLUME_NAME);
+        String path  = eVol.getAttribute(AdminConstants.A_VOLUME_ROOTPATH);
+        short type   = (short) eVol.getAttributeLong(AdminConstants.A_VOLUME_TYPE);
 
         // TODO: These "bits" parameters are ignored inside Volume.create() for now.
 //        short mgbits = (short) eVol.getAttributeLong(AdminService.A_VOLUME_MGBITS);
@@ -48,15 +49,15 @@ public class CreateVolume extends AdminDocumentHandler {
 //        short fgbits = (short) eVol.getAttributeLong(AdminService.A_VOLUME_FGBITS);
 //        short fbits  = (short) eVol.getAttributeLong(AdminService.A_VOLUME_FBITS);
 
-        boolean compressBlobs = eVol.getAttributeBool(AdminService.A_VOLUME_COMPRESS_BLOBS);
-        long compressionThreshold = eVol.getAttributeLong(AdminService.A_VOLUME_COMPRESSION_THRESHOLD);
+        boolean compressBlobs = eVol.getAttributeBool(AdminConstants.A_VOLUME_COMPRESS_BLOBS);
+        long compressionThreshold = eVol.getAttributeLong(AdminConstants.A_VOLUME_COMPRESSION_THRESHOLD);
 //        Volume vol = Volume.create(Volume.ID_AUTO_INCREMENT, type, name, path,
 //                                   mgbits, mbits, fgbits, fbits, compressBlobs, compressionThreshold);
         Volume vol = Volume.create(Volume.ID_AUTO_INCREMENT, type, name, path,
                                    (short) 0, (short) 0, (short) 0, (short) 0,
                                    compressBlobs, compressionThreshold);
 
-        Element response = lc.createElement(AdminService.CREATE_VOLUME_RESPONSE);
+        Element response = lc.createElement(AdminConstants.CREATE_VOLUME_RESPONSE);
         GetVolume.addVolumeElement(response, vol);
         return response;
     }

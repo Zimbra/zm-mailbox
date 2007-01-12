@@ -28,6 +28,7 @@ package com.zimbra.cs.service.admin;
 import org.dom4j.QName;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
@@ -41,7 +42,7 @@ import com.zimbra.soap.Element;
 public class GetAllCalendarResources extends GetAllAccounts {
 
     protected QName getResponseQName() {
-        return AdminService.GET_ALL_CALENDAR_RESOURCES_RESPONSE;
+        return AdminConstants.GET_ALL_CALENDAR_RESOURCES_RESPONSE;
     }
     
     protected void doDomain(final Element e, Domain d)

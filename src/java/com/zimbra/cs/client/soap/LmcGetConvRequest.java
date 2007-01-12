@@ -30,7 +30,7 @@ import org.dom4j.DocumentHelper;
 
 import com.zimbra.soap.DomUtil;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.client.*;
 
 
@@ -51,17 +51,17 @@ public class LmcGetConvRequest extends LmcSoapRequest {
 
 
     protected Element getRequestXML() {
-        Element request = DocumentHelper.createElement(MailService.GET_CONV_REQUEST);
+        Element request = DocumentHelper.createElement(MailConstants.GET_CONV_REQUEST);
 
         // set the ID of the conversation to get
-        Element convElement = DomUtil.add(request, MailService.E_CONV, "");
-        DomUtil.addAttr(convElement, MailService.A_ID, mConvID);  
+        Element convElement = DomUtil.add(request, MailConstants.E_CONV, "");
+        DomUtil.addAttr(convElement, MailConstants.A_ID, mConvID);
 
         // add message elements within the conversation element if desired
         if (mMsgsToGet != null) {
             for (int i = 0; i < mMsgsToGet.length; i++) {
-                Element m = DomUtil.add(convElement, MailService.E_MSG, "");
-                DomUtil.addAttr(m, MailService.A_ID, mMsgsToGet[i]);
+                Element m = DomUtil.add(convElement, MailConstants.E_MSG, "");
+                DomUtil.addAttr(m, MailConstants.A_ID, mMsgsToGet[i]);
             }
         }
 
@@ -72,7 +72,7 @@ public class LmcGetConvRequest extends LmcSoapRequest {
         throws ServiceException, LmcSoapClientException
     {
         // the response will always be exactly one conversation
-        LmcConversation c = parseConversation(DomUtil.get(responseXML, MailService.E_CONV));
+        LmcConversation c = parseConversation(DomUtil.get(responseXML, MailConstants.E_CONV));
         LmcGetConvResponse response = new LmcGetConvResponse();
         response.setConv(c);
         return response;

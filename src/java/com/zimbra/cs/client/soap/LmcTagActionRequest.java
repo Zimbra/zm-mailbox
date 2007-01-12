@@ -30,7 +30,7 @@ import org.dom4j.DocumentHelper;
 
 import com.zimbra.soap.DomUtil;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 
 public class LmcTagActionRequest extends LmcSoapRequest {
 
@@ -38,7 +38,7 @@ public class LmcTagActionRequest extends LmcSoapRequest {
     private String mOp;
     private String mColor;
     private String mName;
-    
+
 
     public void setTagList(String idList) { mIDList = idList; }
     public void setOp(String op) { mOp = op; }
@@ -52,22 +52,22 @@ public class LmcTagActionRequest extends LmcSoapRequest {
 
 
     protected Element getRequestXML() {
-        Element request = DocumentHelper.createElement(MailService.TAG_ACTION_REQUEST);
-        Element a = DomUtil.add(request, MailService.E_ACTION, "");
-        DomUtil.addAttr(a, MailService.A_OPERATION, mOp);
-        DomUtil.addAttr(a, MailService.A_ID, mIDList);
-        DomUtil.addAttr(a, MailService.A_NAME, mName);
-        DomUtil.addAttr(a, MailService.A_COLOR, mColor);
+        Element request = DocumentHelper.createElement(MailConstants.TAG_ACTION_REQUEST);
+        Element a = DomUtil.add(request, MailConstants.E_ACTION, "");
+        DomUtil.addAttr(a, MailConstants.A_OPERATION, mOp);
+        DomUtil.addAttr(a, MailConstants.A_ID, mIDList);
+        DomUtil.addAttr(a, MailConstants.A_NAME, mName);
+        DomUtil.addAttr(a, MailConstants.A_COLOR, mColor);
         return request;
     }
 
-    protected LmcSoapResponse parseResponseXML(Element responseXML) 
+    protected LmcSoapResponse parseResponseXML(Element responseXML)
         throws ServiceException
     {
         LmcTagActionResponse response = new LmcTagActionResponse();
-        Element a = DomUtil.get(responseXML, MailService.E_ACTION);
-        response.setOp(DomUtil.getAttr(a, MailService.A_OPERATION));
-        response.setTagList(DomUtil.getAttr(a, MailService.A_ID));
+        Element a = DomUtil.get(responseXML, MailConstants.E_ACTION);
+        response.setOp(DomUtil.getAttr(a, MailConstants.A_OPERATION));
+        response.setTagList(DomUtil.getAttr(a, MailConstants.A_ID));
         return response;
     }
 }

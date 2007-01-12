@@ -35,7 +35,7 @@ import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.SoapParseException;
 
 /**
@@ -50,7 +50,7 @@ public class LmcNoOpRequest extends LmcSoapRequest {
 	 * @see com.zimbra.cs.client.soap.LmcSoapRequest#getRequestXML()
 	 */
 	protected Element getRequestXML() throws LmcSoapClientException {
-        Element request = DocumentHelper.createElement(MailService.NO_OP_REQUEST);
+        Element request = DocumentHelper.createElement(MailConstants.NO_OP_REQUEST);
         return request;
 	}
 

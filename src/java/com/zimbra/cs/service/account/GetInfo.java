@@ -36,6 +36,7 @@ import java.util.Map.Entry;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.AttributeManager;
@@ -58,29 +59,29 @@ public class GetInfo extends AccountDocumentHandler  {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(lc);
 		
-        Element response = lc.createElement(AccountService.GET_INFO_RESPONSE);
-        response.addAttribute(AccountService.E_ID, acct.getId(), Element.DISP_CONTENT);        
-        response.addAttribute(AccountService.E_NAME, acct.getName(), Element.DISP_CONTENT);
+        Element response = lc.createElement(AccountConstants.GET_INFO_RESPONSE);
+        response.addAttribute(AccountConstants.E_ID, acct.getId(), Element.DISP_CONTENT);
+        response.addAttribute(AccountConstants.E_NAME, acct.getName(), Element.DISP_CONTENT);
         long lifetime = lc.getAuthToken().getExpires() - System.currentTimeMillis();
-        response.addAttribute(AccountService.E_LIFETIME, lifetime, Element.DISP_CONTENT);
+        response.addAttribute(AccountConstants.E_LIFETIME, lifetime, Element.DISP_CONTENT);
         try {
-            response.addAttribute(AccountService.E_QUOTA_USED, getRequestedMailbox(lc).getSize(), Element.DISP_CONTENT);
+            response.addAttribute(AccountConstants.E_QUOTA_USED, getRequestedMailbox(lc).getSize(), Element.DISP_CONTENT);
         } catch (ServiceException e) { }
 
         Map attrMap = acct.getAttrs();
         // take this out when client is updated
         //doPrefs(response, attrMap);
-        Element prefs = response.addUniqueElement(AccountService.E_PREFS);
+        Element prefs = response.addUniqueElement(AccountConstants.E_PREFS);
         doPrefs(prefs, attrMap);
-        Element attrs = response.addUniqueElement(AccountService.E_ATTRS);
+        Element attrs = response.addUniqueElement(AccountConstants.E_ATTRS);
         doAttrs(attrs, attrMap);
-        Element zimlets = response.addUniqueElement(AccountService.E_ZIMLETS);
+        Element zimlets = response.addUniqueElement(AccountConstants.E_ZIMLETS);
         doZimlets(zimlets, acct);
-        Element props = response.addUniqueElement(AccountService.E_PROPERTIES);
+        Element props = response.addUniqueElement(AccountConstants.E_PROPERTIES);
         doProperties(props, acct);
-        Element ids = response.addUniqueElement(AccountService.E_IDENTITIES);
+        Element ids = response.addUniqueElement(AccountConstants.E_IDENTITIES);
         doIdentities(ids, acct);
-        Element ds = response.addUniqueElement(AccountService.E_DATA_SOURCES);
+        Element ds = response.addUniqueElement(AccountConstants.E_DATA_SOURCES);
         doDataSources(ds, acct, lc);
         GetAccountInfo.addUrls(response, acct);
         
@@ -97,13 +98,13 @@ public class GetInfo extends AccountDocumentHandler  {
             if (value instanceof String[]) {
                 String sa[] = (String[]) value;
                 for (int i = 0; i < sa.length; i++) {
-                    Element pref = prefs.addElement(AccountService.E_PREF);
-                    pref.addAttribute(AccountService.A_NAME, key);
+                    Element pref = prefs.addElement(AccountConstants.E_PREF);
+                    pref.addAttribute(AccountConstants.A_NAME, key);
                     pref.setText(sa[i]);
                 }
             } else {
-                Element pref = prefs.addElement(AccountService.E_PREF);
-                pref.addAttribute(AccountService.A_NAME, key);
+                Element pref = prefs.addElement(AccountConstants.E_PREF);
+                pref.addAttribute(AccountConstants.A_NAME, key);
                 pref.setText((String) value);
             }
         }
@@ -123,14 +124,14 @@ public class GetInfo extends AccountDocumentHandler  {
             for (int i = 0; i < sa.length; i++)
                 if (sa[i] != null && !sa[i].equals("")) {
                     // FIXME: change to "a"/"n" rather than "attr"/"name"
-                    Element pref = response.addElement(AccountService.E_ATTR);
-                    pref.addAttribute(AccountService.A_NAME, key);
+                    Element pref = response.addElement(AccountConstants.E_ATTR);
+                    pref.addAttribute(AccountConstants.A_NAME, key);
                     pref.setText(sa[i]);
                 }
         } else {
             if (value != null && !value.equals("")) {
-                Element pref = response.addElement(AccountService.E_ATTR);
-                pref.addAttribute(AccountService.A_NAME, key);
+                Element pref = response.addElement(AccountConstants.E_ATTR);
+                pref.addAttribute(AccountConstants.A_NAME, key);
                 pref.setText((String) value);
             }
         }        
@@ -157,9 +158,9 @@ public class GetInfo extends AccountDocumentHandler  {
     	Iterator iter = props.iterator();
     	while (iter.hasNext()) {
     		ZimletProperty prop = (ZimletProperty) iter.next();
-    		Element elem = response.addElement(AccountService.E_PROPERTY);
-    		elem.addAttribute(AccountService.A_ZIMLET, prop.getZimletName());
-    		elem.addAttribute(AccountService.A_NAME, prop.getKey());
+    		Element elem = response.addElement(AccountConstants.E_PROPERTY);
+    		elem.addAttribute(AccountConstants.A_ZIMLET, prop.getZimletName());
+    		elem.addAttribute(AccountConstants.A_NAME, prop.getKey());
     		elem.setText(prop.getValue());
     	}
     }

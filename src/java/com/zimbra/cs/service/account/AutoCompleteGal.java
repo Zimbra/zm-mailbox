@@ -31,11 +31,12 @@ package com.zimbra.cs.service.account;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -45,17 +46,17 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class AutoCompleteGal extends AccountDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        String n = request.getAttribute(AccountService.E_NAME);
+        String n = request.getAttribute(AccountConstants.E_NAME);
 
         ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Element response = lc.createElement(AccountService.AUTO_COMPLETE_GAL_RESPONSE);
+        Element response = lc.createElement(AccountConstants.AUTO_COMPLETE_GAL_RESPONSE);
         Account acct = getRequestedAccount(getZimbraSoapContext(context));
 
         while (n.endsWith("*"))
             n = n.substring(0, n.length() - 1);
 
-        String typeStr = request.getAttribute(AccountService.A_TYPE, "account");
-        int max = (int) request.getAttributeLong(AccountService.A_LIMIT);
+        String typeStr = request.getAttribute(AccountConstants.A_TYPE, "account");
+        int max = (int) request.getAttributeLong(AccountConstants.A_LIMIT);
         Provisioning.GAL_SEARCH_TYPE type;
         if (typeStr.equals("all"))
             type = Provisioning.GAL_SEARCH_TYPE.ALL;
@@ -70,7 +71,7 @@ public class AutoCompleteGal extends AccountDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
         SearchGalResult result = prov.autoCompleteGal(prov.getDomain(acct), n, type, max);
 
-        response.addAttribute(AccountService.A_MORE, result.hadMore);
+        response.addAttribute(AccountConstants.A_MORE, result.hadMore);
         
         for (GalContact contact : result.matches)
             addContact(response, contact);
@@ -83,8 +84,8 @@ public class AutoCompleteGal extends AccountDocumentHandler {
     }
 
     public static void addContact(Element response, GalContact contact) {
-        Element cn = response.addElement(MailService.E_CONTACT);
-        cn.addAttribute(MailService.A_ID, contact.getId());
+        Element cn = response.addElement(MailConstants.E_CONTACT);
+        cn.addAttribute(MailConstants.A_ID, contact.getId());
         Map<String, Object> attrs = contact.getAttrs();
         for (Map.Entry entry : attrs.entrySet()) {
             Object value = entry.getValue();
@@ -93,13 +94,13 @@ public class AutoCompleteGal extends AccountDocumentHandler {
             if (value instanceof String[]) {
                 String sa[] = (String[]) value;
                 for (int i = 0; i < sa.length; i++) {
-                    cn.addElement(MailService.E_ATTRIBUTE)
-                      .addAttribute(MailService.A_ATTRIBUTE_NAME, (String) entry.getKey())
+                    cn.addElement(MailConstants.E_ATTRIBUTE)
+                      .addAttribute(MailConstants.A_ATTRIBUTE_NAME, (String) entry.getKey())
                       .setText(sa[i]);
                 }
             } else {
-                cn.addElement(MailService.E_ATTRIBUTE)
-                  .addAttribute(MailService.A_ATTRIBUTE_NAME, (String) entry.getKey())
+                cn.addElement(MailConstants.E_ATTRIBUTE)
+                  .addAttribute(MailConstants.A_ATTRIBUTE_NAME, (String) entry.getKey())
                   .setText((String) entry.getValue());
             }
         }

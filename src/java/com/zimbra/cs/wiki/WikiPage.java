@@ -37,12 +37,12 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.UserServlet;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.wiki.WikiServiceException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
 import com.zimbra.soap.Element;
 
@@ -217,23 +217,23 @@ public abstract class WikiPage {
 		
 		RemoteWikiPage(String accountId, String path, Element elem) throws ServiceException {
 			mAccountId = accountId;
-			ItemId iid = new ItemId(elem.getAttribute(MailService.A_ID), null);
-			ItemId fid = new ItemId(elem.getAttribute(MailService.A_FOLDER), null);
+			ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_ID), null);
+			ItemId fid = new ItemId(elem.getAttribute(MailConstants.A_FOLDER), null);
 			mId = iid.getId();
 			mFolderId = fid.getId();
-			mWikiWord = elem.getAttribute(MailService.A_NAME);
-			mRevision = (int)elem.getAttributeLong(MailService.A_VERSION);
-			mModifiedDate = elem.getAttributeLong(MailService.A_MODIFIED_DATE);
-			mModifiedBy = elem.getAttribute(MailService.A_LAST_EDITED_BY);
-			mRestUrl = elem.getAttribute(MailService.A_REST_URL);
-			mCreatedDate = elem.getAttributeLong(MailService.A_DATE);
-			mCreator = elem.getAttribute(MailService.A_CREATOR);
+			mWikiWord = elem.getAttribute(MailConstants.A_NAME);
+			mRevision = (int)elem.getAttributeLong(MailConstants.A_VERSION);
+			mModifiedDate = elem.getAttributeLong(MailConstants.A_MODIFIED_DATE);
+			mModifiedBy = elem.getAttribute(MailConstants.A_LAST_EDITED_BY);
+			mRestUrl = elem.getAttribute(MailConstants.A_REST_URL);
+			mCreatedDate = elem.getAttributeLong(MailConstants.A_DATE);
+			mCreator = elem.getAttribute(MailConstants.A_CREATOR);
 			Iterator<Element> iter = elem.elementIterator();
 			while (iter.hasNext()) {
 				Element e = iter.next();
-				if (e.getName().equals(MailService.E_FRAG))
+				if (e.getName().equals(MailConstants.E_FRAG))
 					mFragment = e.getText();
-				else if (e.getName().equals(MailService.A_BODY))
+				else if (e.getName().equals(MailConstants.A_BODY))
 					mContent = e.getText();
 			}
 		}
