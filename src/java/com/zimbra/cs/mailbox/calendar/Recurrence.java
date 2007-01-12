@@ -646,12 +646,11 @@ public class Recurrence
 
             List<Instance> toRet = null;
             try {
-//                net.fortuna.ical4j.model.DateTime dateStart = new net.fortuna.ical4j.model.DateTime(start);
-//                net.fortuna.ical4j.model.DateTime endDate = new net.fortuna.ical4j.model.DateTime(end);
-                
-//                List dateList = mRecur.getDates(mDtStart.iCal4jDate(), dateStart, endDate, Value.DATE_TIME);  
-                List <java.util.Date> dateList = mRecur.expandRecurrenceOverRange(mDtStart, start, end);
-                
+                long duration = 0;
+                if (mDuration != null)
+                    duration = mDuration.getDurationAsMsecs(mDtStart.getDate());
+                List <java.util.Date> dateList = mRecur.expandRecurrenceOverRange(mDtStart, start - duration, end);
+
                 toRet = new ArrayList<Instance>(dateList.size());
                 
                 int num = 0;
