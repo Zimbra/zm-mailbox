@@ -38,10 +38,10 @@ import org.dom4j.DocumentException;
 
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.SoapHttpTransport;
@@ -85,7 +85,7 @@ public class RulesUtil {
     }
     
     public static void main(String[] args) throws Exception {
-        Zimbra.toolSetup();
+        CliUtil.toolSetup();
         RulesUtil util = new RulesUtil();
         RuleManager mgr = RuleManager.getInstance();
         if (args.length !=5) {

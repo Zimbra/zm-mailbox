@@ -30,6 +30,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.soap.SoapAccountInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning;
@@ -37,7 +38,6 @@ import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zclient.ZConversation.ZMessageSummary;
 import com.zimbra.cs.zclient.ZGrant.GranteeType;
 import com.zimbra.cs.zclient.ZMailbox.Fetch;
@@ -1761,7 +1761,7 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     public static void main(String args[]) throws IOException, ParseException, ServiceException {
-        Zimbra.toolSetup();
+        CliUtil.toolSetup();
 
         ZMailboxUtil pu = new ZMailboxUtil();
         CommandLineParser parser = new GnuParser();

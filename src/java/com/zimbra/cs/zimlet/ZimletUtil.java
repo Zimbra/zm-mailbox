@@ -66,11 +66,7 @@ import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.FileUtil;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.Pair;
-import com.zimbra.cs.util.Zimbra;
-import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.*;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -1466,9 +1462,9 @@ public class ZimletUtil {
     public static void main(String[] args) throws IOException {
     	getOpt(args);
     	if (sQuietMode) {
-    		Zimbra.toolSetup("WARN");
+    		CliUtil.toolSetup("WARN");
     	} else {
-    		Zimbra.toolSetup();
+    		CliUtil.toolSetup();
     	}
         setup();
         dispatch(args);

@@ -32,7 +32,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.db.Versions;
 import com.zimbra.cs.extension.ExtensionUtil;
-import com.zimbra.cs.httpclient.EasySSLProtocolSocketFactory;
+import com.zimbra.common.util.EasySSLProtocolSocketFactory;
 import com.zimbra.cs.im.IMRouter;
 import com.zimbra.cs.im.ZimbraIM;
 import com.zimbra.cs.imap.ImapServer;
@@ -199,20 +199,4 @@ public class Zimbra {
             Runtime.getRuntime().halt(1);
         }
     }
-
-    public static void toolSetup() {
-        toolSetup("INFO");
-    }
-
-    public static void toolSetup(String defaultLogLevel) {
-    	toolSetup(defaultLogLevel, null, false);
-    }
-    
-    public static void toolSetup(String defaultLogLevel, String logFile, boolean showThreads) {
-        ZimbraLog.toolSetupLog4j(defaultLogLevel, logFile, showThreads);
-        if (LC.ssl_allow_untrusted_certs.booleanValue())
-            EasySSLProtocolSocketFactory.init();
-    }
-
-
 }

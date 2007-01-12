@@ -33,8 +33,8 @@ import java.io.IOException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
 
@@ -45,7 +45,7 @@ public class SoapTestClient {
 
     public static void main(String args[]) 
     {
-        Zimbra.toolSetup();
+        CliUtil.toolSetup();
     	
         SoapHttpTransport trans = null;
         try {

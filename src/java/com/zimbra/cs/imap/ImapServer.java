@@ -51,6 +51,7 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.cs.util.NetUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.CliUtil;
 
 /**
  * @author dkarp
@@ -64,15 +65,15 @@ implements RealtimeStatsCallback {
     private boolean mConnectionSSL;
 
 
-	public ImapServer(int numThreads, ServerSocket serverSocket, boolean ssl) {
+    public ImapServer(int numThreads, ServerSocket serverSocket, boolean ssl) {
         super(ssl ? "ImapSSLServer" : "ImapServer", numThreads, serverSocket);
         mConnectionSSL = ssl;
         ZimbraPerf.addStatsCallback(this);
     }
 
-	protected ProtocolHandler newProtocolHandler() {
+    protected ProtocolHandler newProtocolHandler() {
         return new ImapHandler(this);
-	}
+    }
 
     boolean allowCleartextLogins() {
         try {
@@ -83,32 +84,32 @@ implements RealtimeStatsCallback {
         }
         return false;
     }
-    
+
     boolean isConnectionSSL()       { return mConnectionSSL; }
 
-	public int getConfigMaxIdleMilliSeconds() {
-		return (int)ImapSession.IMAP_IDLE_TIMEOUT_MSEC;
-	}
+    public int getConfigMaxIdleMilliSeconds() {
+        return (int)ImapSession.IMAP_IDLE_TIMEOUT_MSEC;
+    }
 
     static String getBanner() {
         return "OK " + LC.zimbra_server_hostname.value() + " Zimbra IMAP4rev1 service ready";
     }
-    
+
     static String getGoodbye() {
         return "BYE Zimbra IMAP4rev1 server terminating connection";
     }
-    
+
     public static final int IMAP_READ_SIZE_HINT = 4096;
-    
+
     /* Throw out connections that do not authenticate in a minute */
     public static final long IMAP_UNAUTHED_CONNECTION_MAX_IDLE_MILLISECONDS = 1 * Constants.MILLIS_PER_MINUTE;
-    
+
     public static final int IMAP_WRITE_QUEUE_MAX_SIZE_UNAUTH = LC.nio_imap_write_queue_max_size_unauth.intValue();
-    
+
     public synchronized static void startupImapServer() throws ServiceException {
         if (sImapServer != null)
             return;
-        
+
         Server server = Provisioning.getInstance().getLocalServer();
         int threads = server.getIntAttr(Provisioning.A_zimbraImapNumThreads, 10);
         boolean loginOK = server.getBooleanAttr(Provisioning.A_zimbraImapCleartextLoginEnabled, false);
@@ -153,12 +154,12 @@ implements RealtimeStatsCallback {
         int threads = server.getIntAttr(Provisioning.A_zimbraImapNumThreads, 10);
         String address = server.getAttr(Provisioning.A_zimbraImapSSLBindAddress, null);
         int port = server.getIntAttr(Provisioning.A_zimbraImapSSLBindPort, Config.D_IMAP_SSL_BIND_PORT);
-        
+
         if (LC.nio_imap_enable.booleanValue()) {
             ServerSocket serverSocket = NetUtil.getOzServerSocket(address, port);
-            
+
             final boolean debugLogging = LC.nio_imap_debug_logging.booleanValue();
-            
+
             OzConnectionHandlerFactory imapHandlerFactory = new OzConnectionHandlerFactory() {
                 public OzConnectionHandler newConnectionHandler(OzConnection conn) {
                     conn.setAlarm(IMAP_UNAUTHED_CONNECTION_MAX_IDLE_MILLISECONDS);
@@ -177,13 +178,13 @@ implements RealtimeStatsCallback {
             }
         } else {
             ServerSocket serverSocket = NetUtil.getSslTcpServerSocket(address, port);
-            
+
             ImapServer imapsServer = new ImapServer(threads, serverSocket, true);
             imapsServer.setSSL(true);
             sImapSSLServer = imapsServer;
             Thread imaps = new Thread(imapsServer);
             imaps.setName("ImapSSLServer");
-            imaps.start();            
+            imaps.start();
         }
     }
 
@@ -206,7 +207,7 @@ implements RealtimeStatsCallback {
             sImapSSLServer = null;
         }
     }
-    
+
     /**
      * Implementation of <code>RealtimeStatsCallback</code> that returns the number
      * of active handlers for this server.
@@ -217,9 +218,9 @@ implements RealtimeStatsCallback {
         data.put(statName, numActiveHandlers());
         return data;
     }
-    
+
     public static void main(String args[]) throws ServiceException {
-        Zimbra.toolSetup("INFO");
+        CliUtil.toolSetup("INFO");
         startupImapServer();
     }
 }

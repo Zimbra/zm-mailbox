@@ -42,7 +42,7 @@ import org.apache.commons.cli.ParseException;
 import org.dom4j.DocumentException;
 
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.cs.util.Zimbra;
+import com.zimbra.common.util.CliUtil;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
 
@@ -61,7 +61,7 @@ public class SoapTest {
        throws SoapFaultException, IOException, UnsupportedEncodingException, 
 	   DocumentException {
 
-        Zimbra.toolSetup();
+        CliUtil.toolSetup();
 
         CommandLineParser parser = new GnuParser();
         Options options = new Options();

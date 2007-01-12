@@ -44,11 +44,8 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
 
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.DummySSLSocketFactory;
+import com.zimbra.common.util.*;
 
 /**
  * Simple command line SMTP client for testing purposes.
@@ -58,7 +55,7 @@ public class SmtpInject {
     private static Log mLog = LogFactory.getLog(SmtpInject.class);
 
     private static Options mOptions = new Options();
-    
+
     static {
         mOptions.addOption("h", "help",      false, "show help text");
         mOptions.addOption("f", "file",      true,  "rfc822/MIME formatted text file");
@@ -76,7 +73,7 @@ public class SmtpInject {
     }
 
     private static void usage(String errmsg) {
-        if (errmsg != null) { 
+        if (errmsg != null) {
             mLog.error(errmsg);
         }
         HelpFormatter formatter = new HelpFormatter();
@@ -90,7 +87,7 @@ public class SmtpInject {
             gotCL.append("'").append(args[i]).append("' ");
         }
         //mLog.info(gotCL);
-        
+
         CommandLineParser parser = new GnuParser();
         CommandLine cl = null;
         try {
@@ -102,7 +99,7 @@ public class SmtpInject {
     }
 
     public static void main(String[] args) {
-        Zimbra.toolSetup();
+        CliUtil.toolSetup();
         CommandLine cl = parseArgs(args);
 
         if (cl.hasOption("h")) {

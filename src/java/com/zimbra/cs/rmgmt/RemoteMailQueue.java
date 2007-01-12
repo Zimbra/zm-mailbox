@@ -57,8 +57,8 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.service.admin.GetMailQueue;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.CliUtil;
 import com.zimbra.soap.Element;
 
 public class RemoteMailQueue {
@@ -588,7 +588,7 @@ public class RemoteMailQueue {
     }
 
     public static void main(String[] args) throws ServiceException, DocumentException {
-        Zimbra.toolSetup("DEBUG");
+        CliUtil.toolSetup("DEBUG");
         Provisioning prov = Provisioning.getInstance();
 
         if (args.length < 3) {

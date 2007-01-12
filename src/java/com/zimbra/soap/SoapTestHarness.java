@@ -49,7 +49,7 @@ import org.dom4j.Namespace;
 import org.dom4j.QName;
 
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.cs.util.Zimbra;
+import com.zimbra.common.util.CliUtil;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
 
@@ -209,7 +209,7 @@ public class SoapTestHarness {
 	public void runTests(String args[]) 
 	throws HarnessException, SoapFaultException, IOException, DocumentException {
 
-        Zimbra.toolSetup();
+        CliUtil.toolSetup();
 		
         CommandLineParser parser = new GnuParser();
         Options options = new Options();

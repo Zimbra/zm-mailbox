@@ -36,20 +36,20 @@ import com.zimbra.cs.ozserver.OzConnectionHandlerFactory;
 import com.zimbra.cs.ozserver.OzServer;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.NetUtil;
-import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.CliUtil;
 
 public class OzImapServer {
     private static OzServer mServer;
-    
+
     public static void main(String[] args) throws ServiceException, IOException {
-        Zimbra.toolSetup("DEBUG", null, true);
+        CliUtil.toolSetup("DEBUG", null, true);
         startup();
     }
 
     private static final int IMAP_READ_BUFFER_SIZE = 1024;
-    
+
     public synchronized static void startup() throws ServiceException, IOException {
         if (mServer != null)
             return;
@@ -70,14 +70,14 @@ public class OzImapServer {
         boolean debugLogging = LC.nio_imap_debug_logging.booleanValue();
         mServer = new OzServer("IMAP", IMAP_READ_BUFFER_SIZE, serverSocket, imapHandlerFactory, debugLogging, ZimbraLog.imap);
         mServer.start();
-        
+
         String name = server.getAttr(Provisioning.A_zimbraImapAdvertisedName, null);
         if (name == null || name.trim().equals(""))
             name = server.getAttr(Provisioning.A_zimbraServiceHostname, null);
         if (name == null || name.trim().equals(""))
             name = "localhost";
     }
-    
+
     public synchronized static void shutdown() {
         if (mServer != null) {
             mServer.shutdown();

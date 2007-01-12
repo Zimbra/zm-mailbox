@@ -27,11 +27,7 @@ package com.zimbra.cs.account;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.ldap.LdapUtil;
-import com.zimbra.cs.util.Zimbra;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -39,8 +35,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.*;
 import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -598,7 +593,7 @@ public class AttributeManager {
     private enum Action { generateLdapSchema, generateGlobalConfigLdif, generateDefaultCOSLdif, dump }
     
     public static void main(String[] args) throws IOException, DocumentException, ServiceException {
-        Zimbra.toolSetup();
+        CliUtil.toolSetup();
         CommandLine cl = parseArgs(args);
 
         if (!cl.hasOption('a')) usage("no action specified");

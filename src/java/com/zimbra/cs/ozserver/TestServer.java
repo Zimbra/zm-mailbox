@@ -30,13 +30,13 @@ import java.net.ServerSocket;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.CliUtil;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.util.NetUtil;
-import com.zimbra.cs.util.Zimbra;
 
 class TestServer {
-    
+
     static Log mLog = LogFactory.getLog(TestServer.class);
 
     private static OzServer mServer;
@@ -53,15 +53,15 @@ class TestServer {
             }
         };
         ServerSocket serverSocket = NetUtil.getOzServerSocket(null, port);
-    	mServer = new OzServer("Test", 64, serverSocket, testHandlerFactory, debugLogging, mLog);
+        mServer = new OzServer("Test", 64, serverSocket, testHandlerFactory, debugLogging, mLog);
         mServer.start();
     }
-    
+
     public static void main(String[] args) throws IOException, ServiceException {
-        Zimbra.toolSetup("TRACE", null, true);
-    	new TestServer(Integer.parseInt(args[0]), Boolean.parseBoolean(args[1]), true);
+        CliUtil.toolSetup("TRACE", null, true);
+        new TestServer(Integer.parseInt(args[0]), Boolean.parseBoolean(args[1]), true);
     }
-    
+
     void shutdown() {
         mServer.shutdown();
     }

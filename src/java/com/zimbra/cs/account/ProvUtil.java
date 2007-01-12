@@ -28,6 +28,7 @@ package com.zimbra.cs.account;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.Provisioning.CosBy;
@@ -39,7 +40,6 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.MailboxInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning.QuotaUsage;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.wiki.WikiUtil;
 import com.zimbra.cs.zclient.ZClientException;
 import com.zimbra.cs.zclient.ZMailboxUtil;
@@ -1399,7 +1399,7 @@ public class ProvUtil implements DebugListener {
     }
 
     public static void main(String args[]) throws IOException, ParseException {
-        Zimbra.toolSetup();
+        CliUtil.toolSetup();
         
         ProvUtil pu = new ProvUtil();
         CommandLineParser parser = new GnuParser();

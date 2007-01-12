@@ -37,16 +37,16 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.CliUtil;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.util.Zimbra;
 
 class TestBoth {
 
     private static Log mLog = LogFactory.getLog(TestBoth.class);
 
     private static Options mOptions = new Options();
-        
+
     static {
         mOptions.addOption("a", "address",     true,  "host client should connect to (default: localhost)");
         mOptions.addOption("t", "threads",     true,  "number of client threads (default: 4)");
@@ -61,16 +61,16 @@ class TestBoth {
         mOptions.addOption("h", "help",        false, "show this help");
         mOptions.addOption("m", "mode",        true,  "run client or server only");
     }
-        
+
     private static void usage(String errmsg) {
-        if (errmsg != null) { 
+        if (errmsg != null) {
             mLog.error(errmsg);
         }
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("TestBoth [options]", mOptions);
         System.exit((errmsg == null) ? 0 : 1);
     }
-    
+
     private static CommandLine parseArgs(String args[]) {
         CommandLineParser parser = new GnuParser();
         CommandLine cl = null;
@@ -79,7 +79,7 @@ class TestBoth {
         } catch (ParseException pe) {
             usage(pe.getMessage());
         }
-        
+
         if (cl.hasOption('h')) {
             usage(null);
         }
@@ -87,13 +87,13 @@ class TestBoth {
     }
 
     static class TestClientThread extends Thread {
-        
+
         private boolean mSecure;
         private String mHost;
         private int mPort;
         private boolean mShutdownRequested;
         private int mTransactions;
-        
+
         public TestClientThread(String host, int port, boolean secure, int threadNumber, int numTransactions) {
             super("TestClientThread-" + threadNumber);
             setDaemon(true);
@@ -108,7 +108,7 @@ class TestBoth {
                 mShutdownRequested = true;
             }
         }
-        
+
         public void run() {
             for (int i = 0; i < mTransactions; i++) {
                 synchronized (this) {
@@ -123,12 +123,12 @@ class TestBoth {
                 }
             }
         }
-        
+
     }
 
     private static boolean mRunClient = true;
     private static boolean mRunServer = true;
-    
+
     public static void main(String[] args) throws IOException, ServiceException {
         CommandLine cl = parseArgs(args);
 
@@ -139,25 +139,25 @@ class TestBoth {
 
         boolean optTrace = false;
         if (cl.hasOption('T')) {
-            Zimbra.toolSetup("TRACE", logFile, true);
+            CliUtil.toolSetup("TRACE", logFile, true);
             optTrace = true;
         } else if (cl.hasOption('D')) {
-            Zimbra.toolSetup("DEBUG", logFile, true);
+            CliUtil.toolSetup("DEBUG", logFile, true);
         } else {
-            Zimbra.toolSetup("INFO", logFile, true);
+            CliUtil.toolSetup("INFO", logFile, true);
         }
-        final boolean debugLogging = optTrace; 
-            
+        final boolean debugLogging = optTrace;
+
         if (cl.hasOption('m')) {
-        	if (cl.getOptionValue('m').equalsIgnoreCase("client")) {
-        		mRunClient = true;
-        		mRunServer = false;
-        		mLog.info("test mode - client only");
-        	} else if (cl.getOptionValue('m').equalsIgnoreCase("server")) {
-        		mRunClient = false;
-        		mRunServer = true;
-        		mLog.info("test mode - server only");
-        	}
+            if (cl.getOptionValue('m').equalsIgnoreCase("client")) {
+                mRunClient = true;
+                mRunServer = false;
+                mLog.info("test mode - client only");
+            } else if (cl.getOptionValue('m').equalsIgnoreCase("server")) {
+                mRunClient = false;
+                mRunServer = true;
+                mLog.info("test mode - server only");
+            }
         }
         if (mRunClient && mRunServer) mLog.info("test mode - server and client");
 
@@ -171,7 +171,7 @@ class TestBoth {
             }
         }
         final int numThreads = optThreads;
-        
+
         String optHost = "localhost";
         if (cl.hasOption('a')) {
             optHost = cl.getOptionValue('a');
@@ -188,7 +188,7 @@ class TestBoth {
             }
         }
         final int port = optPort;
-        
+
         int optIterations = 1000;
         if (cl.hasOption('i')) {
             try {
@@ -200,7 +200,7 @@ class TestBoth {
         }
         final int iterations = optIterations;
 
-        
+
         int optTransactions = Integer.MAX_VALUE;
         if (cl.hasOption('c')) {
             try {
@@ -212,9 +212,9 @@ class TestBoth {
         }
         final int transactions = optTransactions;
 
-        
+
         final boolean secure = cl.hasOption('S');
-        
+
         if (cl.hasOption('s')) {
             int optSeconds = 0;
             try {
@@ -234,7 +234,7 @@ class TestBoth {
                         }
                     } catch (InterruptedException ie) {
                         ie.printStackTrace();
-                    } catch (IOException ioe) { 
+                    } catch (IOException ioe) {
                         ioe.printStackTrace();
                     } catch (ServiceException se) {
                         se.printStackTrace();
@@ -248,26 +248,26 @@ class TestBoth {
             endTest();
         }
     }
-        
+
     private static TestServer mTestServer;
-    
+
     private static TestClientThread[] mTestClientThreads;
-    
+
     private static void startTest(String host, int port, boolean secure, int numThreads, int numTransactions, boolean debugLogging) throws IOException, ServiceException {
-    	if (mRunServer) {
-    		mTestServer = new TestServer(port, secure, debugLogging);
-    	}
-    	
-    	if (mRunClient) {
-    		mLog.info("creating " + numThreads + " client threads");
-    		mTestClientThreads = new TestClientThread[numThreads];
-    		for (int i = 0; i < numThreads; i++) {
-    			mTestClientThreads[i] = new TestClientThread(host, port, secure, i, numTransactions);
-    			mTestClientThreads[i].start();
-    		}
-    	}
+        if (mRunServer) {
+            mTestServer = new TestServer(port, secure, debugLogging);
+        }
+
+        if (mRunClient) {
+            mLog.info("creating " + numThreads + " client threads");
+            mTestClientThreads = new TestClientThread[numThreads];
+            for (int i = 0; i < numThreads; i++) {
+                mTestClientThreads[i] = new TestClientThread(host, port, secure, i, numTransactions);
+                mTestClientThreads[i].start();
+            }
+        }
     }
-    
+
     private static void endTest() {
         if (mRunClient) {
             for (int i = 0; i < mTestClientThreads.length; i++) {
@@ -283,6 +283,6 @@ class TestBoth {
         if (mRunServer) {
             mTestServer.shutdown();
         }
-        
+
     }
 }

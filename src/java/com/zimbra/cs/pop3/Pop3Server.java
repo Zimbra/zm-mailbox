@@ -33,13 +33,13 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.stats.RealtimeStatsCallback;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.NetUtil;
-import com.zimbra.cs.util.Zimbra;
 
 public class Pop3Server extends TcpServer
 implements RealtimeStatsCallback {
@@ -50,7 +50,7 @@ implements RealtimeStatsCallback {
 
     private static Pop3Server sPopServer;
     private static Pop3Server sPopSSLServer;
-    
+
     private boolean mConnectionSSL;
 
     boolean allowCleartextLogins()
@@ -58,91 +58,91 @@ implements RealtimeStatsCallback {
         Server server = Provisioning.getInstance().getLocalServer();
         return server.getBooleanAttr(Provisioning.A_zimbraPop3CleartextLoginEnabled, false);
     }
-    
+
     boolean isConnectionSSL()       { return mConnectionSSL; }
-    
-	public Pop3Server(int numThreads, ServerSocket serverSocket, boolean ssl) {
-		super("Pop3Server", numThreads, serverSocket);
+
+    public Pop3Server(int numThreads, ServerSocket serverSocket, boolean ssl) {
+        super("Pop3Server", numThreads, serverSocket);
         mConnectionSSL = ssl;
         ZimbraPerf.addStatsCallback(this);
-	}
+    }
 
-	protected ProtocolHandler newProtocolHandler() {
-		return new Pop3Handler(this);
-	}
+    protected ProtocolHandler newProtocolHandler() {
+        return new Pop3Handler(this);
+    }
 
-	public void run() {
-		/* Check is for initial sanity - you can always shoot yourself later by setting these to null. */
-	    //if (getConfigName() == null) throw new IllegalStateException("Call LmtpServer.setConfigName() first");
-	    //if (getConfigBackend() == null) throw new IllegalStateException("Call LmtpServer.setConfigBackend() first");
-		super.run();
-	}
+    public void run() {
+        /* Check is for initial sanity - you can always shoot yourself later by setting these to null. */
+        //if (getConfigName() == null) throw new IllegalStateException("Call LmtpServer.setConfigName() first");
+        //if (getConfigBackend() == null) throw new IllegalStateException("Call LmtpServer.setConfigBackend() first");
+        super.run();
+    }
 
-	// TODO actually get it from configuration!
+    // TODO actually get it from configuration!
 
-	/*
-	 * Config idle. should be at least 10 minutes, per POP3 RFC 1939.
-	 */
-	public static final int DEFAULT_MAX_IDLE_SECONDS = 600;
-	
-	private int mConfigMaxIdleMilliSeconds = DEFAULT_MAX_IDLE_SECONDS * 1000;
+    /*
+      * Config idle. should be at least 10 minutes, per POP3 RFC 1939.
+      */
+    public static final int DEFAULT_MAX_IDLE_SECONDS = 600;
 
-	public void setConfigMaxIdleSeconds(int configMaxIdleSeconds) {
-		mConfigMaxIdleMilliSeconds = configMaxIdleSeconds * 1000;
-	}
+    private int mConfigMaxIdleMilliSeconds = DEFAULT_MAX_IDLE_SECONDS * 1000;
 
-	public int getConfigMaxIdleSeconds() {
-		return mConfigMaxIdleMilliSeconds / 1000;
-	}
+    public void setConfigMaxIdleSeconds(int configMaxIdleSeconds) {
+        mConfigMaxIdleMilliSeconds = configMaxIdleSeconds * 1000;
+    }
 
-	public int getConfigMaxIdleMilliSeconds() {
-		return mConfigMaxIdleMilliSeconds;
-	}
+    public int getConfigMaxIdleSeconds() {
+        return mConfigMaxIdleMilliSeconds / 1000;
+    }
 
-	/*
-	 * Config name.
-	 */
-	private String mConfigName;
+    public int getConfigMaxIdleMilliSeconds() {
+        return mConfigMaxIdleMilliSeconds;
+    }
 
-	public void setConfigNameFromHostname() {
-		setConfigName(LC.zimbra_server_hostname.value());
-	}
-	
-	public void setConfigName(String name) {
-		mConfigName = name;
-		mBanner = new String(name + " Zimbra POP3 server ready");
-		mGoodbye = new String(name + " closing connection");
-	}
+    /*
+      * Config name.
+      */
+    private String mConfigName;
 
-	public String getConfigName() {
-		return mConfigName;
-	}
-	
-	/*
-	 * This falls out of the configuration, so stick it here.
-	 */
-	private String mBanner;
+    public void setConfigNameFromHostname() {
+        setConfigName(LC.zimbra_server_hostname.value());
+    }
 
-	public String getBanner() {
-		return mBanner;
-	}
-	
-	private String mGoodbye;
-	
-	public String getGoodbye() {
-		return mGoodbye;
-	}
+    public void setConfigName(String name) {
+        mConfigName = name;
+        mBanner = new String(name + " Zimbra POP3 server ready");
+        mGoodbye = new String(name + " closing connection");
+    }
 
-	public synchronized static void startupPop3Server() throws ServiceException {
-		if (sPopServer != null)
-			return;
-        
+    public String getConfigName() {
+        return mConfigName;
+    }
+
+    /*
+      * This falls out of the configuration, so stick it here.
+      */
+    private String mBanner;
+
+    public String getBanner() {
+        return mBanner;
+    }
+
+    private String mGoodbye;
+
+    public String getGoodbye() {
+        return mGoodbye;
+    }
+
+    public synchronized static void startupPop3Server() throws ServiceException {
+        if (sPopServer != null)
+            return;
+
         Server server = Provisioning.getInstance().getLocalServer();
         String address = server.getAttr(Provisioning.A_zimbraPop3BindAddress, D_POP3_BIND_ADDRESS);
         int port = server.getIntAttr(Provisioning.A_zimbraPop3BindPort, Config.D_POP3_BIND_PORT);
         int numThreads = server.getIntAttr(Provisioning.A_zimbraPop3NumThreads, D_POP3_THREADS);
 
-        ServerSocket serverSocket = NetUtil.getTcpServerSocket(address, port); 
+        ServerSocket serverSocket = NetUtil.getTcpServerSocket(address, port);
 
         sPopServer = new Pop3Server(numThreads, serverSocket, false);
 
@@ -152,16 +152,16 @@ implements RealtimeStatsCallback {
         } else {
             sPopServer.setConfigName(advName);
         }
-        
+
         Thread pop3Thread = new Thread(sPopServer);
         pop3Thread.setName("Pop3Server");
         pop3Thread.start();
-	}
-    
+    }
+
     public synchronized static void startupPop3SSLServer() throws ServiceException {
         if (sPopSSLServer != null)
             return;
-        
+
         Server server = Provisioning.getInstance().getLocalServer();
         String address = server.getAttr(Provisioning.A_zimbraPop3SSLBindAddress, D_POP3_BIND_ADDRESS);
         int port = server.getIntAttr(Provisioning.A_zimbraPop3SSLBindPort, Config.D_POP3_SSL_BIND_PORT);
@@ -172,28 +172,28 @@ implements RealtimeStatsCallback {
         sPopSSLServer = new Pop3Server(numThreads, serverSocket, true);
 
         sPopSSLServer.setSSL(true);
-        
+
         String advName = server.getAttr(Provisioning.A_zimbraPop3AdvertisedName, D_POP3_ANNOUNCE_NAME);
         if (advName == null) {
             sPopSSLServer.setConfigNameFromHostname();
         } else {
             sPopSSLServer.setConfigName(advName);
         }
-        
+
         Thread pop3Thread = new Thread(sPopSSLServer);
         pop3Thread.setName("Pop3SSLServer");
         pop3Thread.start();
     }
 
-	public synchronized static void shutdownPop3Servers() {
-	    if (sPopServer != null)
+    public synchronized static void shutdownPop3Servers() {
+        if (sPopServer != null)
             sPopServer.shutdown(10); // TODO shutdown grace period from config
         sPopServer = null;
-        
+
         if (sPopSSLServer != null)
             sPopSSLServer.shutdown(10); // TODO shutdown grace period from config
         sPopSSLServer = null;
-	}
+    }
 
     /**
      * Implementation of <code>RealtimeStatsCallback</code> that returns the number
@@ -205,9 +205,9 @@ implements RealtimeStatsCallback {
         data.put(statName, numActiveHandlers());
         return data;
     }
-    
+
     public static void main(String args[]) throws ServiceException {
-        Zimbra.toolSetup();
+        CliUtil.toolSetup();
         startupPop3Server();
     }
 }

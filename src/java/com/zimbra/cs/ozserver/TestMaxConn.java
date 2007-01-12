@@ -29,8 +29,7 @@ import java.io.IOException;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-
-import com.zimbra.cs.util.Zimbra;
+import com.zimbra.common.util.CliUtil;
 
 public class TestMaxConn {
     private static TestClient[] mClients;
@@ -38,7 +37,7 @@ public class TestMaxConn {
     static Log mLog = LogFactory.getLog(TestMaxConn.class);
 
     public static void main(String[] args) {
-        Zimbra.toolSetup("TRACE", null, true);
+        CliUtil.toolSetup("TRACE", null, true);
 
         String host = args[0];
         int port = Integer.parseInt(args[1]);

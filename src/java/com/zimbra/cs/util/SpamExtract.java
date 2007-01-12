@@ -58,6 +58,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.protocol.Protocol;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.CliUtil;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
@@ -72,7 +73,6 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.service.mail.ItemAction;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
@@ -135,9 +135,9 @@ public class SpamExtract {
         CommandLine cl = parseArgs(args);
 
         if (cl.hasOption('D')) {
-            Zimbra.toolSetup("DEBUG");
+            CliUtil.toolSetup("DEBUG");
         } else {
-            Zimbra.toolSetup("INFO");
+            CliUtil.toolSetup("INFO");
         }
         if (cl.hasOption('v')) {
             mVerbose = true;

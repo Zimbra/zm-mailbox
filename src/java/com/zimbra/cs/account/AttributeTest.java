@@ -28,11 +28,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.util.Zimbra;
+import com.zimbra.common.util.CliUtil;
 
 public class AttributeTest {
     public static void main(String args[]) throws ServiceException {
-        Zimbra.toolSetup("INFO");
+        CliUtil.toolSetup("INFO");
         AttributeManager mgr = AttributeManager.getInstance();
         HashMap<String, String> attrs = new HashMap<String, String>();
         attrs.put(Provisioning.A_zimbraAccountStatus, Provisioning.ACCOUNT_STATUS_ACTIVE);

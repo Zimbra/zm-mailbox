@@ -31,12 +31,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Metadata;
-import com.zimbra.cs.util.Zimbra;
 
 public class MetadataDump {
 
@@ -68,7 +68,7 @@ public class MetadataDump {
     }
 
     private static String getSQL(int mboxId, int groupId, int itemId) {
-        StringBuilder sql = new StringBuilder("SELECT metadata FROM "); 
+        StringBuilder sql = new StringBuilder("SELECT metadata FROM ");
         sql.append(DbMailItem.getMailItemTableName(mboxId, groupId));
         sql.append(" WHERE ");
         if (!DebugConfig.disableMailboxGroup)
@@ -101,7 +101,7 @@ public class MetadataDump {
     }
 
     public static void main(String[] args) throws Exception {
-        Zimbra.toolSetup();
+        CliUtil.toolSetup();
         int mboxId;
         int itemId;
         if (args.length >= 2) {

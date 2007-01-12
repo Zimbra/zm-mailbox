@@ -29,34 +29,34 @@ import java.io.IOException;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
- 
+import com.zimbra.common.util.CliUtil;
+
 import EDU.oswego.cs.dl.util.concurrent.BoundedLinkedQueue;
 import EDU.oswego.cs.dl.util.concurrent.PooledExecutor;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.client.*;
 import com.zimbra.soap.SoapFaultException;
-import com.zimbra.cs.util.Zimbra;
 
 public class TestAuth implements Runnable {
 
     private static Log mLog = LogFactory.getLog(TestAuth.class);
-    
+
     private static void usage() {
         System.err.println("Usage: java " + TestAuth.class.getName() + " iterations threads loacct hiacct domain url");
         System.exit(1);
     }
 
     public static void main(String argv[]) {
-        Zimbra.toolSetup();
-        
+        CliUtil.toolSetup();
+
         if (argv.length != 6) {
             usage();
         }
-        
+
         int iterations = 0, threads = 0, loAcctNum = 0, hiAcctNum = 0;
         String domain = null, url = null;
-        
+
         try {
             iterations = Integer.valueOf(argv[0]).intValue();
             threads = Integer.valueOf(argv[1]).intValue();
@@ -84,28 +84,28 @@ public class TestAuth implements Runnable {
         }
         executor.shutdownAfterProcessingCurrentlyQueuedTasks();
     }
-    
+
     private String mUrl;
     private String mAcct;
     private String mPasswd;
     private int mIteration;
-    
+
     TestAuth(int iter, String url, String acct, String passwd) {
         mIteration = iter;
         mUrl = url;
         mAcct = acct;
         mPasswd = passwd;
     }
-    
+
     public void run() {
         long start = System.currentTimeMillis();
         String tags = doAuth(mUrl, mAcct, mPasswd);
         long elapsed = System.currentTimeMillis() - start;
-        System.err.println(mIteration + " " + Thread.currentThread().getName() + " " + mAcct + " " + 
+        System.err.println(mIteration + " " + Thread.currentThread().getName() + " " + mAcct + " " +
                 tags);
     }
-            
-    private String doAuth(String url, String account, String password) { 
+
+    private String doAuth(String url, String account, String password) {
         try {
             /* auth first */
             //System.out.println("========= AUTHENTICATE ===========");
@@ -114,13 +114,13 @@ public class TestAuth implements Runnable {
             auth.setPassword(password);
             LmcAuthResponse authResp = (LmcAuthResponse) auth.invoke(url);
             LmcSession session = authResp.getSession();
-            
+
             /* get the tags */
             //System.out.println("======== GET TAGS =======");
             LmcGetTagRequest gtReq = new LmcGetTagRequest();
             gtReq.setSession(session);
             LmcGetTagResponse gtResp = (LmcGetTagResponse) gtReq.invoke(url);
-            
+
             /* dump the tags */
             //System.out.println("==== DUMP TAGS ======");
             LmcTag tags[] = gtResp.getTags();

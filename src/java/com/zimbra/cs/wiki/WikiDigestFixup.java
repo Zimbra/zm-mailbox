@@ -44,7 +44,7 @@ import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.cs.util.Zimbra;
+import com.zimbra.common.util.CliUtil;
 
 /**
  * Migration utility to fix the mail_item.blob_digest database column
@@ -194,7 +194,7 @@ public class WikiDigestFixup {
     }
 
     public static void main(String args[]) {
-        Zimbra.toolSetup("WARN");
+        CliUtil.toolSetup("WARN");
         sStore = StoreManager.getInstance();
         Connection conn = null;
         try {

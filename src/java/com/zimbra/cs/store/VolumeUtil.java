@@ -38,8 +38,8 @@ import org.apache.commons.cli.ParseException;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.util.SoapCLI;
-import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 
@@ -72,7 +72,7 @@ public class VolumeUtil extends SoapCLI {
      * @param args
      */
     public static void main(String[] args) {
-        Zimbra.toolSetup();
+        CliUtil.toolSetup();
         VolumeUtil util = null;
         try {
 	        util = new VolumeUtil();

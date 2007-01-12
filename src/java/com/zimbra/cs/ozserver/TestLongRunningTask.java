@@ -36,8 +36,8 @@ import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DummySSLSocketFactory;
+import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.util.NetUtil;
-import com.zimbra.cs.util.Zimbra;
 
 /**
  * If there is no read interest enabled on a channel, and the channel is
@@ -71,7 +71,7 @@ class TestLongRunningTask {
                 return;
             }
             try { Thread.sleep(Integer.MAX_VALUE); } catch (InterruptedException ie) { }
-        }     
+        }
 
         public void handleAlarm() throws IOException {
             mLog.info("connection was idle, terminating");
@@ -103,7 +103,7 @@ class TestLongRunningTask {
         DummySSLSocketFactory socketFactory = new DummySSLSocketFactory();
         Socket socket;
         if (ssl) {
-            socket = socketFactory.createSocket("localhost", port); 
+            socket = socketFactory.createSocket("localhost", port);
         } else {
             socket = new Socket("localhost", port);
         }
@@ -126,7 +126,7 @@ class TestLongRunningTask {
     private static OzServer mServer;
 
     public static void main(String[] args) throws IOException, ServiceException {
-        Zimbra.toolSetup("TRACE", null, true);
+        CliUtil.toolSetup("TRACE", null, true);
         int port = Integer.parseInt(args[0]);
         boolean secure = Boolean.parseBoolean(args[1]);
         boolean debug = Boolean.parseBoolean(args[2]);

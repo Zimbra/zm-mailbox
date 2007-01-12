@@ -38,8 +38,8 @@ import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DummySSLSocketFactory;
+import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.util.NetUtil;
-import com.zimbra.cs.util.Zimbra;
 
 class TestIDLE {
 
@@ -89,7 +89,7 @@ class TestIDLE {
             mCommandMatcher.reset();
             mConnection.setMatcher(mCommandMatcher);
             mConnection.enableReadInterest();
-        }	  
+        }
 
         public void handleAlarm() throws IOException {
             mLog.info("connection was idle, terminating");
@@ -116,24 +116,24 @@ class TestIDLE {
         mServer = new OzServer("IDLE", 64, serverSocket, testHandlerFactory, debugLogging, mLog);
         mServer.start();
     }
-    
+
     public static void startClient(int port, boolean ssl) throws IOException {
         DummySSLSocketFactory socketFactory = new DummySSLSocketFactory();
         Socket socket;
         if (ssl) {
-            socket = socketFactory.createSocket("localhost", port); 
+            socket = socketFactory.createSocket("localhost", port);
         } else {
             socket = new Socket("localhost", port);
         }
         if (!socket.isConnected()) {
             throw new IOException("not connected");
         }
-        
+
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         BufferedOutputStream out = new BufferedOutputStream(socket.getOutputStream());
         int notifications = 0;
         int responses = 0;
-        
+
         try { Thread.sleep(2000); } catch (InterruptedException ie) { }
 
         while (true) {
@@ -167,7 +167,7 @@ class TestIDLE {
     private static OzServer mServer;
 
     public static void main(String[] args) throws IOException, ServiceException {
-        Zimbra.toolSetup("INFO", null, true);
+        CliUtil.toolSetup("INFO", null, true);
         int port = Integer.parseInt(args[0]);
         boolean secure = Boolean.parseBoolean(args[1]);
         boolean debug = Boolean.parseBoolean(args[2]);
