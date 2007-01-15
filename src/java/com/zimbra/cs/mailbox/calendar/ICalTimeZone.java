@@ -62,8 +62,10 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
  * RRULE, RDATE, or not specify the rule at all.  But this full capability
  * should not be necessary to support most time zones in actual use.
  */
-public class ICalTimeZone extends SimpleTimeZone
-{
+public class ICalTimeZone extends SimpleTimeZone {
+
+    private static final long serialVersionUID = 1L;
+
     public static class SimpleOnset {
         private int mWeek       = 0;
         private int mDayOfWeek  = 0;
@@ -90,6 +92,8 @@ public class ICalTimeZone extends SimpleTimeZone
             mHour = hour;
             mMinute = minute;
             mSecond = second;
+
+            toDayOfWeekStyle();
         }
 
         public String toString() {
@@ -102,6 +106,38 @@ public class ICalTimeZone extends SimpleTimeZone
             sb.append(", minute=").append(mMinute);
             sb.append(", second=").append(mSecond);
             return sb.toString();
+        }
+
+        /**
+         * If rule is specified as a day of month rather than the combination
+         * of week number and weekday, convert to week number/day style.
+         * The year of current system time is used in the conversion.
+         *
+         */
+        private void toDayOfWeekStyle() {
+            // already using week number/day style
+            if (mWeek != 0 && mDayOfWeek != 0)
+                return;
+
+            if (mDayOfMonth != 0) {
+                Calendar cal = new GregorianCalendar();
+                int currentYear = cal.get(Calendar.YEAR);
+                int month = mMonth - 1;
+                cal.clear();
+                cal.set(currentYear, month, mDayOfMonth);
+                int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
+
+                int week = ((mDayOfMonth - 1) / 7) + 1;
+                // This was the last week if adding 7 days pus us in the next
+                // month.
+                cal.add(Calendar.DAY_OF_MONTH, 7);
+                if (cal.get(Calendar.MONTH) > month)
+                    week = -1;
+
+                mWeek = week;
+                mDayOfWeek = dayOfWeek;
+                mDayOfMonth = 0;
+            }
         }
     }
     
