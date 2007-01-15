@@ -30,8 +30,8 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Config;
-import com.zimbra.soap.Element;
-import com.zimbra.soap.Element.XMLElement;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.XMLElement;
 
 class SoapConfig extends Config implements SoapEntry {
     

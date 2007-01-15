@@ -29,10 +29,10 @@ import org.dom4j.Element;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.DomUtil;
 
 import org.dom4j.DocumentHelper;
 
-import com.zimbra.soap.DomUtil;
 import com.zimbra.cs.client.*;
 
 

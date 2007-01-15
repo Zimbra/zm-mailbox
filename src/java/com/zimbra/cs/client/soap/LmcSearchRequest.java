@@ -32,7 +32,7 @@ import org.dom4j.Element;
 import org.dom4j.DocumentHelper;
 import org.dom4j.QName;
 
-import com.zimbra.soap.DomUtil;
+import com.zimbra.common.soap.DomUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 

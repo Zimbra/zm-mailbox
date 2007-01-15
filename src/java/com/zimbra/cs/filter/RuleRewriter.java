@@ -51,7 +51,7 @@ import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 
 /**
  * @author kchen

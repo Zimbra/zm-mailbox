@@ -30,13 +30,13 @@ import org.apache.lucene.search.Query;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.rmgmt.RemoteMailQueue;
 import com.zimbra.cs.rmgmt.RemoteMailQueue.QueueAction;
 import com.zimbra.cs.rmgmt.RemoteMailQueue.QueueAttr;
-import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class MailQueueAction extends AdminDocumentHandler {

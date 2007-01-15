@@ -31,7 +31,7 @@ import org.xmpp.packet.Roster;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.IMConstants;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 
 class IMSubscribedNotification implements IMNotification {
     IMAddr mAddr;

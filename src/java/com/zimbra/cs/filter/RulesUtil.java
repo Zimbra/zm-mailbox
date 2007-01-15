@@ -39,13 +39,10 @@ import org.dom4j.DocumentException;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
-import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.common.soap.HeaderConstants;
-import com.zimbra.soap.Element;
-import com.zimbra.soap.SoapHttpTransport;
-import com.zimbra.soap.SoapTransport;
+import com.zimbra.common.soap.*;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.soap.SoapTransport;
 
 /**
  * Saves filter rules for an account.
@@ -99,7 +96,7 @@ public class RulesUtil {
     private void saveRules(String acctEmail, String pwd, String path, String mailHost, int port) throws Exception {
         // construct URL to source host
         URL src = new URL("http", mailHost, port, ZimbraServlet.USER_SERVICE_URI);
-        SoapTransport trans = new SoapHttpTransport(src.toExternalForm()); 
+        SoapTransport trans = new SoapHttpTransport(src.toExternalForm());
         
         // authenticate 
         Element authReq = createAuthRequest(acctEmail, pwd);

@@ -28,7 +28,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 
 /**
  * 

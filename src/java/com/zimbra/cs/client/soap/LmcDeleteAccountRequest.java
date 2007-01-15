@@ -28,7 +28,7 @@ package com.zimbra.cs.client.soap;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
-import com.zimbra.soap.DomUtil;
+import com.zimbra.common.soap.DomUtil;
 import com.zimbra.common.soap.AdminConstants;
 
 public class LmcDeleteAccountRequest extends LmcSoapRequest {

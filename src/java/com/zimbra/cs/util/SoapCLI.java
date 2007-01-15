@@ -42,13 +42,12 @@ import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.client.LmcSession;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.soap.Element;
-import com.zimbra.soap.SoapFaultException;
-import com.zimbra.soap.SoapHttpTransport;
-import com.zimbra.soap.SoapTransport;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.*;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.soap.SoapTransport;
 
 /**
  * For command line interface utilities that are SOAP clients and need to authenticate with
@@ -150,7 +149,7 @@ public abstract class SoapCLI {
     /**
      * Authenticates using the username and password from the local config.
      * @throws IOException
-     * @throws SoapFaultException
+     * @throws com.zimbra.common.soap.SoapFaultException
      * @throws ServiceException
      */
     protected LmcSession auth() throws SoapFaultException, IOException, ServiceException {

@@ -39,6 +39,7 @@ import javax.mail.internet.MimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -57,7 +58,6 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.L10nUtil;
 import com.zimbra.cs.util.L10nUtil.MsgKey;
-import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 

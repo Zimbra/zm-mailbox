@@ -27,8 +27,8 @@ package com.zimbra.cs.account.soap;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Identity;
-import com.zimbra.soap.Element;
 
 import java.util.Map;
 

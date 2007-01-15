@@ -37,7 +37,7 @@ import com.zimbra.cs.client.LmcSession;
 import com.zimbra.cs.client.soap.LmcSearchRequest;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.soap.SoapFaultException;
+import com.zimbra.common.soap.SoapFaultException;
 
 
 /**

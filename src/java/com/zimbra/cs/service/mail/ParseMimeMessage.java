@@ -53,7 +53,7 @@ import com.zimbra.cs.util.JMSession;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ExceptionToString;
 import com.zimbra.soap.DocumentHandler;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 import java.io.ByteArrayInputStream;

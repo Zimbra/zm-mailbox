@@ -26,11 +26,11 @@ package com.zimbra.cs.mailbox.calendar;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
-import com.zimbra.soap.Element;
 
 /**
  * iCalendar ATTACH property

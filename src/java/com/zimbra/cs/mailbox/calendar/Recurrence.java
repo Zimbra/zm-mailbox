@@ -33,11 +33,10 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
-import com.zimbra.soap.Element;
-
 
 
 /**

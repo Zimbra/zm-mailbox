@@ -29,11 +29,10 @@ import junit.framework.TestCase;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.filter.RuleRewriter;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.soap.Element;
-import com.zimbra.soap.SoapProtocol;
-
+import com.zimbra.common.soap.SoapProtocol;
 
 
 public class TestFilter

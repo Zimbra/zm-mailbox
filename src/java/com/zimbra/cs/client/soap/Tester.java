@@ -31,8 +31,8 @@ import java.util.*;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.cs.client.*;
-import com.zimbra.soap.SoapFaultException;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.service.mail.ItemAction;
 
@@ -253,8 +253,7 @@ public class Tester {
     private static void doBrowse(LmcSession session,
                                  String serverURL)
         throws IOException, LmcSoapClientException, ServiceException,
-            SoapFaultException
-    {
+            SoapFaultException {
         System.out.println("======= BROWSE BY DOMAIN ======");
         LmcBrowseRequest bReq = new LmcBrowseRequest();
         bReq.setBrowseBy("domains");

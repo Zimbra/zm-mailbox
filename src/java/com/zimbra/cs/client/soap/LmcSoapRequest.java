@@ -36,10 +36,10 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import org.dom4j.Element;
 
-import com.zimbra.soap.DomUtil;
-import com.zimbra.soap.SoapFaultException;
-import com.zimbra.soap.SoapHttpTransport;
-import com.zimbra.soap.SoapParseException;
+import com.zimbra.common.soap.DomUtil;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.soap.SoapParseException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.soap.MailConstants;
@@ -141,7 +141,7 @@ public abstract class LmcSoapRequest {
             if (sDumpXML) {
                 sLog.info("Request:" + DomUtil.toString(requestXML, true));
             }
-            com.zimbra.soap.Element requestElt = com.zimbra.soap.Element.convertDOM(requestXML);
+            com.zimbra.common.soap.Element requestElt = com.zimbra.common.soap.Element.convertDOM(requestXML);
             //System.out.println("Sending over request " + DomUtil.toString(requestXML, true));
             Element responseXML;
             if (mRequestedAccountId == null)

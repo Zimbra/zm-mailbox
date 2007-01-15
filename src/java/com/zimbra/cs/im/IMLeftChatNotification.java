@@ -25,7 +25,7 @@
 package com.zimbra.cs.im;
 
 import java.util.Formatter;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.IMConstants;
 
 public class IMLeftChatNotification implements IMNotification {
@@ -44,7 +44,7 @@ public class IMLeftChatNotification implements IMNotification {
     }
 
     /* (non-Javadoc)
-    * @see com.zimbra.cs.im.IMNotification#toXml(com.zimbra.soap.Element)
+    * @see com.zimbra.cs.im.IMNotification#toXml(com.zimbra.common.soap.Element)
     */
     public Element toXml(Element parent) {
         Element toRet = parent.addElement(IMConstants.E_LEFTCHAT);

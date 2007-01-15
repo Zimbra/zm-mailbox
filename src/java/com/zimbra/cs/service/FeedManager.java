@@ -71,9 +71,9 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.FileUtil;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.NetUtil;
-import com.zimbra.soap.Element;
 
 /**
  * @author dkarp

@@ -53,6 +53,7 @@ import javax.mail.internet.MimeMultipart;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
@@ -61,7 +62,6 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.im.IMGetChat;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.soap.Element;
 
 /**
  * @author tim

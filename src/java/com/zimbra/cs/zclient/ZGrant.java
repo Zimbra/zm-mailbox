@@ -29,7 +29,7 @@ import java.util.Arrays;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 
 public class ZGrant {
 

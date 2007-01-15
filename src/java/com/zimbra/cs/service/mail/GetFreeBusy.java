@@ -36,6 +36,7 @@ import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -43,8 +44,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.calendar.FreeBusy;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.service.util.ParseMailboxID;
-import com.zimbra.soap.Element;
-import com.zimbra.soap.SoapFaultException;
+import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetFreeBusy extends MailDocumentHandler {

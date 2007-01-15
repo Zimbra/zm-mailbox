@@ -25,7 +25,7 @@
 package com.zimbra.cs.im;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 
 public interface IMNotification {
     public Element toXml(Element parent) throws ServiceException;

@@ -28,7 +28,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZModifyTagEvent;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 
 import java.util.Arrays;
 

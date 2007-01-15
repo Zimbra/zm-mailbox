@@ -30,7 +30,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
 import com.zimbra.cs.zclient.event.ZModifySearchFolderEvent;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 
 public class ZSearchFolder extends ZFolder {
 

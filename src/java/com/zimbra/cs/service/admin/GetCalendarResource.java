@@ -29,12 +29,12 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
-import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**

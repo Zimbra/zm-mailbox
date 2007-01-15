@@ -32,9 +32,9 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.filter.RuleManager;
-import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**

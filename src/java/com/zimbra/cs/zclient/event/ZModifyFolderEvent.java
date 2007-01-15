@@ -27,12 +27,12 @@ package com.zimbra.cs.zclient.event;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.zclient.ZFolder.Color;
 import com.zimbra.cs.zclient.ZFolder.View;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZGrant;
 import com.zimbra.cs.zclient.ZSoapSB;
-import com.zimbra.soap.Element;
 
 import java.util.List;
 import java.util.ArrayList;

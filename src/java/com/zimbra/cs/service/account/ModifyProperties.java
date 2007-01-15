@@ -28,8 +28,8 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
-import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.cs.zimlet.ZimletUserProperties;
 

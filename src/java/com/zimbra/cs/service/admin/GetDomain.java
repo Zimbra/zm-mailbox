@@ -30,11 +30,11 @@ package com.zimbra.cs.service.admin;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 import java.util.Iterator;

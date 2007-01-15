@@ -37,6 +37,7 @@ import java.util.Map.Entry;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.AttributeManager;
@@ -47,7 +48,6 @@ import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.zimlet.ZimletProperty;
 import com.zimbra.cs.zimlet.ZimletUserProperties;
 import com.zimbra.cs.zimlet.ZimletUtil;
-import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**

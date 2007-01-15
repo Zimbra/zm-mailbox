@@ -27,7 +27,7 @@ package com.zimbra.cs.service.admin;
 
 import java.util.Map;
 
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 import com.zimbra.cs.util.BuildInfo;

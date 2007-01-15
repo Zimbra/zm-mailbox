@@ -35,6 +35,7 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.MailboxIndex;
@@ -46,7 +47,6 @@ import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetContacts extends MailDocumentHandler  {

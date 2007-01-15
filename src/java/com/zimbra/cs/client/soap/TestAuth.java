@@ -36,7 +36,7 @@ import EDU.oswego.cs.dl.util.concurrent.PooledExecutor;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.client.*;
-import com.zimbra.soap.SoapFaultException;
+import com.zimbra.common.soap.SoapFaultException;
 
 public class TestAuth implements Runnable {
 

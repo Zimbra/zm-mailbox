@@ -38,6 +38,7 @@ import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailSender;
@@ -52,7 +53,6 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.L10nUtil;
 import com.zimbra.cs.util.L10nUtil.MsgKey;
-import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class CancelCalendarItem extends CalendarRequest {

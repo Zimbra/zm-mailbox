@@ -28,8 +28,8 @@ package com.zimbra.cs.zclient;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.soap.Element;
 
 import java.util.ArrayList;
 import java.util.HashMap;

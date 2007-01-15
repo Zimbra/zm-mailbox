@@ -69,13 +69,11 @@ import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.client.LmcSession;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.service.mail.ItemAction;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.soap.Element;
-import com.zimbra.soap.SoapFaultException;
-import com.zimbra.soap.SoapHttpTransport;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.soap.*;
 
 public class SpamExtract {
 

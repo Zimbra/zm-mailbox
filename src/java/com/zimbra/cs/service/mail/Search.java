@@ -43,6 +43,7 @@ import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.*;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
@@ -63,7 +64,6 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
-import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 

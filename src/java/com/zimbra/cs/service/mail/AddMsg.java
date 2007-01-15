@@ -38,6 +38,7 @@ import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
@@ -47,7 +48,6 @@ import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
-import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class AddMsg extends MailDocumentHandler {

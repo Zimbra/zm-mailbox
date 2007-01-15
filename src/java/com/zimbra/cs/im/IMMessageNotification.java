@@ -28,7 +28,7 @@ import java.util.Formatter;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.IMConstants;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 
 public class IMMessageNotification implements IMNotification {
     

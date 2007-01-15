@@ -36,7 +36,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**

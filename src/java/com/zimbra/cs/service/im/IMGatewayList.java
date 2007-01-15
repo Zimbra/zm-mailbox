@@ -6,7 +6,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.IMConstants;
 import com.zimbra.cs.im.IMGatewayType;
 import com.zimbra.cs.im.IMPersona;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class IMGatewayList extends IMDocumentHandler {

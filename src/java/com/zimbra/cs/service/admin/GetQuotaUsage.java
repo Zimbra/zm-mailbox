@@ -32,6 +32,7 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
@@ -41,7 +42,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.SessionCache;
 
-import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetQuotaUsage extends AdminDocumentHandler {

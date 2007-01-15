@@ -41,7 +41,7 @@ import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.soap.DocumentHandler;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 

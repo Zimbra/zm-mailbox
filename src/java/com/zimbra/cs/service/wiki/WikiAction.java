@@ -29,13 +29,13 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.mail.ItemAction;
 import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
-import com.zimbra.soap.Element;
-import com.zimbra.soap.SoapFaultException;
+import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class WikiAction extends ItemAction {

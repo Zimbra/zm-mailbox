@@ -34,7 +34,7 @@ import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class ModifyDistributionList extends AdminDocumentHandler {

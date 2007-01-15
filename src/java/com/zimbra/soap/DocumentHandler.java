@@ -28,28 +28,24 @@
  */
 package com.zimbra.soap;
 
-import java.util.HashMap;
-import java.util.Map;
-import javax.servlet.http.HttpServletRequest;
-
-import org.dom4j.QName;
-
-import com.zimbra.cs.account.AccessManager;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.util.EmailUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.EmailUtil;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.common.util.ZimbraLog;
+import org.dom4j.QName;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author schemers

@@ -45,6 +45,7 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -102,7 +103,6 @@ import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMailbox.Options;
-import com.zimbra.soap.SoapProtocol;
 
 
 /**

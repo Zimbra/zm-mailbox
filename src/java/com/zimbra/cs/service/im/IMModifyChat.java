@@ -28,8 +28,8 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.IMConstants;
-import com.zimbra.soap.Element;
-import com.zimbra.soap.SoapFaultException;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.soap.Element;
 
 import com.zimbra.cs.im.IMAddr;
 import com.zimbra.cs.im.IMChat;
@@ -42,8 +42,7 @@ public class IMModifyChat extends IMDocumentHandler
         CLOSE, ADDUSER;
     }
 
-    public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException 
-    {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
         Element response = lc.createElement(IMConstants.IM_MODIFY_CHAT_RESPONSE);

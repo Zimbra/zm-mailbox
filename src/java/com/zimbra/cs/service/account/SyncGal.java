@@ -38,7 +38,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**

@@ -30,7 +30,7 @@ package com.zimbra.cs.service.mail;
 
 import java.util.HashMap;
 
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 
 /**

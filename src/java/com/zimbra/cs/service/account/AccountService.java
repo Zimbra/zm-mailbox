@@ -37,7 +37,7 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.DocumentDispatcher;
 import com.zimbra.soap.DocumentService;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 
 /**
  * @author schemers

@@ -54,9 +54,9 @@ import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.soap.Element;
-import com.zimbra.soap.SoapProtocol;
+import com.zimbra.common.soap.Element;
 
 /**
  * @author jhahm

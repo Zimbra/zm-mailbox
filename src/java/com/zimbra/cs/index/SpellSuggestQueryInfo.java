@@ -26,7 +26,7 @@ package com.zimbra.cs.index;
 
 import java.util.List;
 
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 
 public class SpellSuggestQueryInfo implements QueryInfo {
     

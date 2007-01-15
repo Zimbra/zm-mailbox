@@ -32,6 +32,7 @@ import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -40,7 +41,6 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 

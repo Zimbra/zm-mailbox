@@ -25,7 +25,7 @@
 
 package com.zimbra.cs.zclient.event;
 
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.Contact;

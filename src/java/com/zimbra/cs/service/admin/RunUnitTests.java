@@ -32,7 +32,7 @@ import junit.framework.TestResult;
 
 import com.zimbra.qa.unittest.ZimbraSuite;
 import com.zimbra.soap.DocumentHandler;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.common.soap.AdminConstants;
 

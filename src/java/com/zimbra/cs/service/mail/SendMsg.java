@@ -44,6 +44,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -56,7 +57,6 @@ import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.mail.ParseMimeMessage.MimeMessageData;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 

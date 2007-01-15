@@ -28,17 +28,17 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.IMConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.im.IMAddr;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.soap.Element;
-import com.zimbra.soap.SoapFaultException;
+import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class IMSubscribe extends IMDocumentHandler {
 
     @Override
-    public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException 
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException
     {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Element response = lc.createElement(IMConstants.IM_SUBSCRIBE_RESPONSE);

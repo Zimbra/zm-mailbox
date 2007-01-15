@@ -32,11 +32,11 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.ServerBy;
-import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**

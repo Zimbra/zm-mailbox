@@ -42,8 +42,8 @@ import com.zimbra.cs.ozserver.OzByteBufferGatherer;
 import com.zimbra.cs.ozserver.OzConnection;
 import com.zimbra.cs.ozserver.OzConnectionHandler;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.soap.Element;
-import com.zimbra.soap.SoapProtocol;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 

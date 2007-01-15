@@ -32,6 +32,7 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Note;
@@ -40,7 +41,6 @@ import com.zimbra.cs.operation.CreateNoteOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
-import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**

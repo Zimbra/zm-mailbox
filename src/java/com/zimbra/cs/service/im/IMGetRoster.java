@@ -35,8 +35,8 @@ import com.zimbra.cs.im.IMGroup;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.im.IMPresence;
 import com.zimbra.cs.im.IMChat.Participant;
-import com.zimbra.soap.Element;
-import com.zimbra.soap.SoapFaultException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class IMGetRoster extends IMDocumentHandler {

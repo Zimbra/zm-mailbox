@@ -40,10 +40,10 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.zimlet.ZimletFile;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.cs.zimlet.ZimletUtil.DeployListener;
-import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class DeployZimlet extends AdminDocumentHandler {

@@ -28,7 +28,7 @@ import java.io.StringWriter;
 import java.util.Map;
 
 import com.zimbra.cs.session.SessionCache;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.common.soap.AdminConstants;
 

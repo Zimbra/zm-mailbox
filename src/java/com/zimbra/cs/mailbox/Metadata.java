@@ -37,7 +37,7 @@ import com.zimbra.common.util.BEncoding;
 import com.zimbra.common.util.BlobMetaData;
 import com.zimbra.common.util.BlobMetaDataEncodingException;
 import com.zimbra.common.util.BEncoding.BEncodingException;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 
 public class Metadata {
 

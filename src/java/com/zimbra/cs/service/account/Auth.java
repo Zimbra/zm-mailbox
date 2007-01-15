@@ -38,9 +38,9 @@ import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
-import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**

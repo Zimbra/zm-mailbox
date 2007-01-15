@@ -32,7 +32,7 @@ import java.util.Set;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
-import com.zimbra.soap.DomUtil;
+import com.zimbra.common.soap.DomUtil;
 import com.zimbra.common.soap.AccountConstants;
 
 

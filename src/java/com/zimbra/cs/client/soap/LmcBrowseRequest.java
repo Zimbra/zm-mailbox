@@ -31,10 +31,10 @@ import java.util.Iterator;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
-import com.zimbra.soap.DomUtil;
+import com.zimbra.common.soap.DomUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.SoapParseException;
+import com.zimbra.common.soap.SoapParseException;
 import com.zimbra.cs.client.*;
 
 public class LmcBrowseRequest extends LmcSoapRequest {

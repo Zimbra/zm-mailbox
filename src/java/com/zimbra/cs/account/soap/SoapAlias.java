@@ -29,8 +29,8 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Alias;
-import com.zimbra.soap.Element;
 
 class SoapAlias extends Alias implements SoapEntry {
 

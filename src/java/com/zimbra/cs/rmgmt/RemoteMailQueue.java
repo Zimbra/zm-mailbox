@@ -59,7 +59,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.CliUtil;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 
 public class RemoteMailQueue {
 

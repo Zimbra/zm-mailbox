@@ -47,7 +47,7 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.soap.HeaderConstants;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 

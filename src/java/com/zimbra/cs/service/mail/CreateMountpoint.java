@@ -31,6 +31,7 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
@@ -43,7 +44,6 @@ import com.zimbra.cs.operation.CreateMountpointOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
-import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**

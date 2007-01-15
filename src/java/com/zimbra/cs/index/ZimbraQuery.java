@@ -65,7 +65,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.soap.SoapProtocol;
+import com.zimbra.common.soap.SoapProtocol;
 
 /**
  * @author tim

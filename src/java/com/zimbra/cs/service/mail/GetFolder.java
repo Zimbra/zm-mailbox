@@ -40,8 +40,8 @@ import com.zimbra.cs.operation.GetFolderTreeOperation.FolderNode;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
-import com.zimbra.soap.Element;
-import com.zimbra.soap.SoapFaultException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**

@@ -30,8 +30,8 @@ import org.dom4j.Element;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.DomUtil;
 import com.zimbra.cs.client.*;
-import com.zimbra.soap.DomUtil;
 
 public class LmcGetContactsRequest extends LmcSoapRequest {
 

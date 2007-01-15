@@ -28,7 +28,7 @@ package com.zimbra.cs.zclient;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;

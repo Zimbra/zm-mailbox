@@ -43,7 +43,7 @@ import com.zimbra.cs.account.Provisioning.SearchOptions;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.SessionCache;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 import java.util.Iterator;

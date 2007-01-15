@@ -43,7 +43,7 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**

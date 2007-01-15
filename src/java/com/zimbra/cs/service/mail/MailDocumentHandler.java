@@ -36,7 +36,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.DocumentHandler;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public abstract class MailDocumentHandler extends DocumentHandler {

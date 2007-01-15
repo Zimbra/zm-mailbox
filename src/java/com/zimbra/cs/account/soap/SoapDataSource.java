@@ -30,7 +30,7 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.cs.account.DataSource;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 
 class SoapDataSource extends DataSource implements SoapEntry {
         

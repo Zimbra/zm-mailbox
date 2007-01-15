@@ -32,8 +32,8 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.DocumentHandler;
-import com.zimbra.soap.Element;
-import com.zimbra.soap.SoapFaultException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class CreateIdentity extends DocumentHandler {

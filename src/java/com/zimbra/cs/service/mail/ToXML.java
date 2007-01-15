@@ -61,7 +61,7 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.wiki.WikiPage;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 import org.apache.commons.httpclient.HttpURL;
 import org.apache.commons.httpclient.HttpsURL;

@@ -31,7 +31,7 @@ import java.util.Iterator;
 import org.dom4j.Element;
 import org.dom4j.DocumentHelper;
 
-import com.zimbra.soap.DomUtil;
+import com.zimbra.common.soap.DomUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 

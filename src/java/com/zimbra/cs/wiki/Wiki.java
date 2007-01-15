@@ -57,8 +57,8 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.Element;
-import com.zimbra.soap.SoapHttpTransport;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapHttpTransport;
 
 /**
  * This class represents a Wiki notebook.  A notebook corresponds to a folder

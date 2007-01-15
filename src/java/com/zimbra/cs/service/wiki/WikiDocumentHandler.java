@@ -26,6 +26,7 @@ package com.zimbra.cs.service.wiki;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -33,7 +34,6 @@ import com.zimbra.cs.service.mail.MailDocumentHandler;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
-import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public abstract class WikiDocumentHandler extends MailDocumentHandler {

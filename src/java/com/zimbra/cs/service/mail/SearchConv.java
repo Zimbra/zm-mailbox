@@ -37,6 +37,7 @@ import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.SearchParams;
@@ -51,7 +52,6 @@ import com.zimbra.cs.operation.SearchOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**

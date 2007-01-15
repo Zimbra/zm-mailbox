@@ -27,7 +27,7 @@ package com.zimbra.cs.zclient;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 
 public class ZDocument implements ZItem {
 

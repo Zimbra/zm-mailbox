@@ -38,7 +38,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 
 /**
  * iCalendar VALARM component

@@ -32,7 +32,7 @@ import com.zimbra.common.soap.MailConstants;
 
 import org.dom4j.DocumentHelper;
 
-import com.zimbra.soap.DomUtil;
+import com.zimbra.common.soap.DomUtil;
 import com.zimbra.cs.client.*;
 
 public class LmcCreateTagRequest extends LmcSoapRequest {

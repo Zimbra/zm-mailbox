@@ -65,7 +65,7 @@ import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.soap.SoapFaultException;
+import com.zimbra.common.soap.SoapFaultException;
 import junit.framework.Test;
 import junit.framework.TestResult;
 

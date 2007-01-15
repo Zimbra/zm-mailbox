@@ -31,7 +31,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 
 public class ZAttendee extends CalendarUser {
 

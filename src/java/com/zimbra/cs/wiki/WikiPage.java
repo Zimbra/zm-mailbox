@@ -43,8 +43,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
-import com.zimbra.soap.Element;
 
 public abstract class WikiPage {
 

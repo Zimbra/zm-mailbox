@@ -31,7 +31,7 @@ import com.zimbra.cs.account.Zimlet;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class CreateZimlet extends AdminDocumentHandler {

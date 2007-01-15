@@ -24,7 +24,6 @@
  */
 package com.zimbra.cs.index;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.zimbra.cs.account.Account;
@@ -38,7 +37,7 @@ import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.soap.SoapProtocol;
+import com.zimbra.common.soap.SoapProtocol;
 
 class RemoteQueryOperation extends QueryOperation {
     

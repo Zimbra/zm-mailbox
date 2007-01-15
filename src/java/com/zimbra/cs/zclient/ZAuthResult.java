@@ -27,7 +27,7 @@ package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.soap.Element;
+import com.zimbra.common.soap.Element;
 
 public class ZAuthResult {
     private String mAuthToken;

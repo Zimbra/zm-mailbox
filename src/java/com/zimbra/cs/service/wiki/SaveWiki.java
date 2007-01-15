@@ -29,14 +29,14 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.cs.wiki.WikiPage;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
-import com.zimbra.soap.Element;
-import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class SaveWiki extends WikiDocumentHandler {

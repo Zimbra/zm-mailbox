@@ -31,8 +31,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
-import com.zimbra.soap.Element;
-import com.zimbra.soap.Element.XMLElement;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.XMLElement;
 
 class SoapCalendarResource extends CalendarResource implements SoapEntry {
 

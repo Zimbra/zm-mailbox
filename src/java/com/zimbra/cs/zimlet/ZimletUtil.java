@@ -67,12 +67,10 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.*;
-import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.Element;
-import com.zimbra.soap.SoapHttpTransport;
-import com.zimbra.soap.Element.XMLElement;
+import com.zimbra.common.soap.*;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.soap.Element.XMLElement;
 
 /**
  * 

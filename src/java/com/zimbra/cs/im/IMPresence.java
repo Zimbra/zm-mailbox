@@ -25,8 +25,8 @@
 package com.zimbra.cs.im;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.mailbox.Metadata;
-import com.zimbra.soap.Element;
 
 public class IMPresence {
     public enum Show {
