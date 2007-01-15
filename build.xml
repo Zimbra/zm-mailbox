@@ -493,11 +493,11 @@
 
 	<target name="inject" depends="compile">
 		<echo>Inserting default contacts: user1@${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
+		<java classname="com.zimbra.common.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-f data/soap/samplecontacts.xml" />
 		</java>
 		<echo>Creating default search folders: user1@${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
+		<java classname="com.zimbra.common.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-f data/soap/samplesearchfolders.xml" />
 		</java>
 		<echo message="Wait for lmtp host=${lmtp.host} port=${lmtp.port}" />
@@ -517,7 +517,7 @@
 
 	<target name="inject-npscontacts" depends="compile">
 		<echo>Inserting NPS contacts: user4@${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
+		<java classname="com.zimbra.common.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-f data/soap/nps-contacts-orig.xml" />
 		</java>
 	</target>
