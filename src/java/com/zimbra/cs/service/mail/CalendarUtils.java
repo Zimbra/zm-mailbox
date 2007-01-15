@@ -996,10 +996,15 @@ public class CalendarUtils {
             }
         }
 
-        // DTSTART, DTEND, LOCATION (outlook seems to require these,
-        // even though it shouldn't)
-        cancel.setDtStart(inv.getStartTime());
-        cancel.setDtEnd(inv.getEffectiveEndTime());
+        // DTSTART, DTEND, and LOCATION (Outlook seems to require these, even
+        // though they are optional according to RFC2446.)
+        ParsedDateTime dtStart = recurId == null ? inv.getStartTime() : recurId.getDt();
+        if (dtStart != null) {
+            cancel.setDtStart(dtStart);
+            ParsedDuration dur = inv.getEffectiveDuration();
+            if (dur != null)
+                cancel.setDtEnd(dtStart.add(dur));
+        }
         cancel.setLocation(inv.getLocation());
 
         // SEQUENCE

@@ -600,6 +600,7 @@ OR
 // invite for the appointment.
 //
 <CancelAppointmentRequest id="ID_OF_DEFAULT_INVITE" comp="COMPONENT_NUM_DEFAULT_INVITE">
+   [<tz ...>]  // definition for TZID referenced by DATETIME in <inst>
    [<inst [range="THISANDFUTURE|THISANDPRIOR"] DATETTIME/>]?
    [ <m>
        [<e.../>*] // users to send update to

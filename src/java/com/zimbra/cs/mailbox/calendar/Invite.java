@@ -908,7 +908,7 @@ public class Invite {
         if (mDuration != null) {
             return mDuration;
         } else {
-            if (mEnd != null) {
+            if (mEnd != null && mStart != null) {
                 ParsedDuration dur = mEnd.difference(mStart); 
                 return dur;  
             } else {

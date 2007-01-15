@@ -493,6 +493,15 @@ public final class ParsedDateTime {
         }
     }
 
+    public void toTimeZone(ICalTimeZone tz) {
+        if (mHasTime) {
+            Date time = mCal.getTime();
+            mICalTimeZone = tz;
+            mCal.setTimeZone(mICalTimeZone);
+            mCal.setTime(time);
+        }
+    }
+
     /**
      * @return The name of the TimeZone
      */

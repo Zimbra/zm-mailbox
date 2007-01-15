@@ -46,8 +46,11 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.RecurId;
+import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.util.ItemId;
@@ -81,7 +84,27 @@ public class CancelCalendarItem extends CalendarRequest {
 
             Element recurElt = request.getOptionalElement(MailConstants.E_INSTANCE);
             if (recurElt != null) {
-                RecurId recurId = CalendarUtils.parseRecurId(recurElt, inv.getTimeZoneMap(), inv);
+                TimeZoneMap tzmap = inv.getTimeZoneMap();
+                Element tzElem = request.getOptionalElement(MailService.E_CAL_TZ);
+                ICalTimeZone tz = null;
+                if (tzElem != null) {
+                    tz = CalendarUtils.parseTzElement(tzElem);
+                    tzmap.add(tz);
+                }
+                RecurId recurId = CalendarUtils.parseRecurId(recurElt, tzmap, inv);
+                if (recurId != null) {
+                    ParsedDateTime instDtStart = recurId.getDt();
+                    if (instDtStart != null) {
+                        // Supplied <inst> time may be in wrong time zone.  Fix it up to use the same
+                        // time zone used in the recurrence series definition.
+                        ParsedDateTime seriesDtStart = inv.getStartTime();
+                        if (seriesDtStart != null) {
+                            ICalTimeZone seriesTz = seriesDtStart.getTimeZone();
+                            if (seriesTz != null)
+                                instDtStart.toTimeZone(seriesTz);
+                        }
+                    }
+                }
                 cancelInstance(lc, request, acct, mbox, calItem, inv, recurId);
             } else {
                 
