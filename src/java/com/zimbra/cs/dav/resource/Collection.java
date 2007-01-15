@@ -73,17 +73,19 @@ public class Collection extends MailItemResource {
 		mView = f.getDefaultView();
 		mType = f.getType();
 		addProperties(Acl.getAclProperties(this, f));
-		List<String> urlList = new java.util.ArrayList<String>();
+		boolean hasCalendar = false;
 		for (Folder sub : f.getSubfolderHierarchy())
-			if (sub.getDefaultView() == MailItem.TYPE_APPOINTMENT)
-				urlList.add(UrlNamespace.getHomeUrl(this.getOwner()) + sub.getPath() + "/");
-		if (urlList.size() > 0) {
+			if (sub.getDefaultView() == MailItem.TYPE_APPOINTMENT) {
+				hasCalendar = true;
+				break;
+			}
+		if (hasCalendar) {
 			mDavCompliance.add(Compliance.one);
 			mDavCompliance.add(Compliance.two);
 			mDavCompliance.add(Compliance.three);
 			mDavCompliance.add(Compliance.access_control);
 			mDavCompliance.add(Compliance.calendar_access);
-			this.addProperty(CalDavProperty.getCalendarHomeSet(urlList));
+			this.addProperty(CalDavProperty.getCalendarHomeSet(UrlNamespace.getHomeUrl(this.getOwner()) + f.getPath()));
 		}
 	}
 	
@@ -138,9 +140,7 @@ public class Collection extends MailItemResource {
 		
 		// XXX aggregate into single call
 		for (MailItem f : mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_FOLDER, mId)) {
-			byte view = ((Folder)f).getDefaultView();
-			if (view == MailItem.TYPE_APPOINTMENT || view == MailItem.TYPE_DOCUMENT || view == MailItem.TYPE_WIKI)
-				ret.add(f);
+			ret.add(f);
 		}
 		//ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_MOUNTPOINT, mId));
 		ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_DOCUMENT, mId));

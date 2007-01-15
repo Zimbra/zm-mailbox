@@ -189,7 +189,11 @@ public class UrlNamespace {
 			case MailItem.TYPE_MOUNTPOINT :
 				Folder f = (Folder) item;
 				byte viewType = f.getDefaultView();
-				if (viewType == MailItem.TYPE_APPOINTMENT ||
+				if (f.getId() == Mailbox.ID_FOLDER_INBOX)
+					resource = new ScheduleInbox(ctxt, f);
+				else if (f.getId() == Mailbox.ID_FOLDER_SENT)
+					resource = new ScheduleOutbox(ctxt, f);
+				else if (viewType == MailItem.TYPE_APPOINTMENT ||
                     viewType == MailItem.TYPE_TASK)
 					resource = new CalendarCollection(ctxt, f);
 				else

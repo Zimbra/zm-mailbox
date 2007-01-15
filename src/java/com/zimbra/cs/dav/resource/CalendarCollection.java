@@ -90,7 +90,10 @@ public class CalendarCollection extends Collection {
 		rtype.addChild(DavElements.E_CALENDAR);
 		rtype.addChild(DavElements.E_PRINCIPAL);
 		
-		String displayName = acct.getAttr(Provisioning.A_displayName);
+		// the display name can be a user friendly string like "John Smith's Calendar".
+		// but the problem is the name may be too long to fit into the field in UI.
+		//String displayName = acct.getAttr(Provisioning.A_displayName) + "'s" + f.getName();
+		String displayName = f.getName();
 		ResourceProperty desc = new ResourceProperty(DavElements.E_CALENDAR_DESCRIPTION);
 		Locale lc = acct.getLocale();
 		desc.setMessageLocale(lc);

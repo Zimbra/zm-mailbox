@@ -25,7 +25,6 @@
 package com.zimbra.cs.dav.property;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.dom4j.Element;
 import org.dom4j.QName;
@@ -66,8 +65,8 @@ public class CalDavProperty extends ResourceProperty {
 		return new CalendarData(obj);
 	}
 	
-	public static ResourceProperty getCalendarHomeSet(List<String> urls) {
-		return new CalendarHomeSet(urls);
+	public static ResourceProperty getCalendarHomeSet(String url) {
+		return new CalendarHomeSet(url);
 	}
 	
 	protected CalDavProperty(QName name) {
@@ -160,18 +159,17 @@ public class CalDavProperty extends ResourceProperty {
 	}
 	
 	private static class CalendarHomeSet extends CalDavProperty {
-		List<String> urls;
-		public CalendarHomeSet(List<String> u) {
+		String url;
+		public CalendarHomeSet(String u) {
 			super(DavElements.E_CALENDAR_HOME_SET);
-			urls = u;
+			url = u;
 		}
 		
 		public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
 			Element chs = super.toElement(ctxt, parent, nameOnly);
 			if (nameOnly)
 				return chs;
-			for (String url : urls)
-				chs.addElement(DavElements.E_HREF).setText(url);
+			chs.addElement(DavElements.E_HREF).setText(url);
 			return chs;
 		}
 	}

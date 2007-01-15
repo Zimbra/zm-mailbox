@@ -32,7 +32,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
-import com.zimbra.cs.dav.resource.CalendarCollection;
 import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.resource.ScheduleOutbox;
 import com.zimbra.cs.dav.resource.UrlNamespace;
@@ -55,7 +54,7 @@ public class Post extends DavMethod {
 			rs = UrlNamespace.getResource(ctxt);
 		} catch (DavException e) {
 			DavResource parent = UrlNamespace.getCollectionAtUrl(ctxt, ctxt.getPath());
-			if (parent instanceof CalendarCollection) {
+			if (parent.getUri() == "/") {
 				String item = ctxt.getItem();
 				if (item.equals("outbox"))
 					item = "sent";
