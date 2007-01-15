@@ -42,7 +42,7 @@ import com.zimbra.soap.Element;
 /**
  * @author schemers
  */
-class AccountService implements DocumentService {
+public class AccountService implements DocumentService {
 
     public void registerHandlers(DocumentDispatcher dispatcher) {
 
