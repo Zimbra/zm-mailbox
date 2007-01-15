@@ -26,6 +26,7 @@
 package com.zimbra.soap;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.ZimbraNamespace;
 
 public class SoapFaultException extends ServiceException {
 

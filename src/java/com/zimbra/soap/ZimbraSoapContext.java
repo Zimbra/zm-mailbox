@@ -49,6 +49,7 @@ import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.soap.HeaderConstants;
 
 
 /**
@@ -83,40 +84,6 @@ public class ZimbraSoapContext {
     private static Log sLog = LogFactory.getLog(ZimbraSoapContext.class);
 
     private static final int MAX_HOP_COUNT = 5;
-
-    public static final QName CONTEXT = QName.get("context", ZimbraNamespace.ZIMBRA);
-    public static final String E_NO_NOTIFY  = "nonotify";
-    public static final String E_FORMAT     = "format";
-    public static final String A_TYPE       = "type";
-    public static final String E_AUTH_TOKEN = "authToken";
-    public static final String E_ACCOUNT    = "account";   
-    public static final String A_BY         = "by";
-    public static final String A_HOPCOUNT   = "hops";
-    public static final String A_MOUNTPOINT = "link";
-    public static final String E_NO_QUALIFY = "noqualify";
-    public static final String E_NO_SESSION = "nosession";
-    public static final String E_SESSION_ID = "sessionId";
-    public static final String A_ACCOUNT_ID = "acct";
-    public static final String A_ID         = "id";
-    public static final String E_NOTIFY     = "notify";
-    public static final String A_NOTIFY     = "notify";
-    public static final String A_SEQNO      = "seq"; 
-    public static final String E_CHANGE     = "change";
-    public static final String A_CHANGE_ID  = "token";
-    public static final String E_TARGET_SERVER = "targetServer";
-    public static final String E_USER_AGENT = "userAgent";
-    public static final String A_NAME       = "name";
-    public static final String A_VERSION    = "version";
-    public static final String E_CONTEXT    = "context";
-
-    public static final String BY_NAME = "name";
-    public static final String BY_ID   = "id";
-    public static final String TYPE_XML        = "xml";
-    public static final String TYPE_JAVASCRIPT = "js";
-    public static final String CHANGE_MODIFIED = "mod";
-    public static final String CHANGE_CREATED  = "new";
-    public static final String SESSION_MAIL  = "mail";
-    public static final String SESSION_ADMIN = "admin";
 
     private String    mRawAuthToken;
     private AuthToken mAuthToken;
@@ -170,53 +137,53 @@ public class ZimbraSoapContext {
      * @throws ServiceException
      */
     public ZimbraSoapContext(Element ctxt, Map context, SoapProtocol requestProtocol) throws ServiceException {
-        if (ctxt != null && !ctxt.getQName().equals(CONTEXT)) 
+        if (ctxt != null && !ctxt.getQName().equals(HeaderConstants.CONTEXT))
             throw new IllegalArgumentException("expected ctxt, got: " + ctxt.getQualifiedName());
 
         Provisioning prov = Provisioning.getInstance();
 
         // figure out if we're explicitly asking for a return format
         mResponseProtocol = mRequestProtocol = requestProtocol;
-        Element eFormat = ctxt == null ? null : ctxt.getOptionalElement(E_FORMAT);
+        Element eFormat = ctxt == null ? null : ctxt.getOptionalElement(HeaderConstants.E_FORMAT);
         if (eFormat != null) {
-            String format = eFormat.getAttribute(A_TYPE, TYPE_XML);
-            if (format.equals(TYPE_XML) && requestProtocol == SoapProtocol.SoapJS)
+            String format = eFormat.getAttribute(HeaderConstants.A_TYPE, HeaderConstants.TYPE_XML);
+            if (format.equals(HeaderConstants.TYPE_XML) && requestProtocol == SoapProtocol.SoapJS)
                 mResponseProtocol = SoapProtocol.Soap12;
-            else if (format.equals(TYPE_JAVASCRIPT))
+            else if (format.equals(HeaderConstants.TYPE_JAVASCRIPT))
                 mResponseProtocol = SoapProtocol.SoapJS;
         }
 
         // find out if we're executing in another user's context
         Account account = null;
-        Element eAccount = ctxt == null ? null : ctxt.getOptionalElement(E_ACCOUNT);
+        Element eAccount = ctxt == null ? null : ctxt.getOptionalElement(HeaderConstants.E_ACCOUNT);
         if (eAccount != null) {
-            String key = eAccount.getAttribute(A_BY, null);
+            String key = eAccount.getAttribute(HeaderConstants.A_BY, null);
             String value = eAccount.getText();
 
             if (key == null) {
                 mRequestedAccountId = null;
-            } else if (key.equals(BY_NAME)) {
+            } else if (key.equals(HeaderConstants.BY_NAME)) {
                 account = prov.get(AccountBy.name, value);
                 if (account == null)
                     throw AccountServiceException.NO_SUCH_ACCOUNT(value);
                 mRequestedAccountId = account.getId();
-            } else if (key.equals(BY_ID)) {
+            } else if (key.equals(HeaderConstants.BY_ID)) {
                 mRequestedAccountId = value;
             } else {
                 throw ServiceException.INVALID_REQUEST("unknown value for by: " + key, null);
             }
 
             // while we're here, check the hop count to detect loops
-            mHopCount = (int) Math.max(eAccount.getAttributeLong(A_HOPCOUNT, 0), 0);
+            mHopCount = (int) Math.max(eAccount.getAttributeLong(HeaderConstants.A_HOPCOUNT, 0), 0);
             if (mHopCount > MAX_HOP_COUNT)
                 throw ServiceException.TOO_MANY_HOPS();
-            mMountpointTraversed = eAccount.getAttributeBool(A_MOUNTPOINT, false);
+            mMountpointTraversed = eAccount.getAttributeBool(HeaderConstants.A_MOUNTPOINT, false);
         } else {
             mRequestedAccountId = null;
         }
 
         // check for auth token in engine context if not in header  
-        mRawAuthToken = (ctxt == null ? null : ctxt.getAttribute(E_AUTH_TOKEN, null));
+        mRawAuthToken = (ctxt == null ? null : ctxt.getAttribute(HeaderConstants.E_AUTH_TOKEN, null));
         if (mRawAuthToken == null)
             mRawAuthToken = (String) context.get(SoapServlet.ZIMBRA_AUTH_TOKEN);
 
@@ -237,19 +204,19 @@ public class ZimbraSoapContext {
 
         // look for the notification sequence id, for notification reliability
         // <notify seq="nn">
-        Element notify = (ctxt == null ? null : ctxt.getOptionalElement(E_NOTIFY));
+        Element notify = (ctxt == null ? null : ctxt.getOptionalElement(HeaderConstants.E_NOTIFY));
         if (notify != null) 
-            mNotificationSeqNo = (int) notify.getAttributeLong(A_SEQNO, 0);
+            mNotificationSeqNo = (int) notify.getAttributeLong(HeaderConstants.A_SEQNO, 0);
 
         // constrain operations if we know the max change number the client knows about
-        Element change = (ctxt == null ? null : ctxt.getOptionalElement(E_CHANGE));
+        Element change = (ctxt == null ? null : ctxt.getOptionalElement(HeaderConstants.E_CHANGE));
         if (change != null) {
             try {
-                String token = change.getAttribute(A_CHANGE_ID, "-1");
+                String token = change.getAttribute(HeaderConstants.A_CHANGE_ID, "-1");
                 int delimiter = token.indexOf('-');
 
                 mMaximumChangeId = Integer.parseInt(delimiter < 1 ? token : token.substring(0, delimiter));
-                if (change.getAttribute(A_TYPE, CHANGE_MODIFIED).equals(CHANGE_MODIFIED))
+                if (change.getAttribute(HeaderConstants.A_TYPE, HeaderConstants.CHANGE_MODIFIED).equals(HeaderConstants.CHANGE_MODIFIED))
                     mChangeConstraintType = OperationContext.CHECK_MODIFIED;
                 else
                     mChangeConstraintType = OperationContext.CHECK_CREATED;
@@ -258,7 +225,7 @@ public class ZimbraSoapContext {
 
         // if the caller specifies an execution host or if we're on the wrong host, proxy
         mIsProxyRequest = false;
-        String targetServerId = ctxt == null ? null : ctxt.getAttribute(E_TARGET_SERVER, null);
+        String targetServerId = ctxt == null ? null : ctxt.getAttribute(HeaderConstants.E_TARGET_SERVER, null);
         if (targetServerId != null) {
             HttpServletRequest req = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
             if (req != null) {
@@ -272,23 +239,23 @@ public class ZimbraSoapContext {
         // record session-related info and validate any specified sessions
         //   (don't create new sessions yet)
         if (ctxt != null) {
-            mHaltNotifications = ctxt.getOptionalElement(E_NO_NOTIFY) != null;
-            for (Iterator it = ctxt.elementIterator(E_SESSION_ID); it.hasNext(); ) {
+            mHaltNotifications = ctxt.getOptionalElement(HeaderConstants.E_NO_NOTIFY) != null;
+            for (Iterator it = ctxt.elementIterator(HeaderConstants.E_SESSION_ID); it.hasNext(); ) {
                 // they specified it, so create a SessionInfo and thereby ping the session as a keepalive
                 parseSessionElement((Element) it.next());
             }
-            mSessionSuppressed = ctxt.getOptionalElement(E_NO_SESSION) != null;
+            mSessionSuppressed = ctxt.getOptionalElement(HeaderConstants.E_NO_SESSION) != null;
         }
 
         // temporary hack: don't qualify item ids in reponses, if so requested
-        mUnqualifiedItemIds = (ctxt != null && ctxt.getOptionalElement(E_NO_QUALIFY) != null);
+        mUnqualifiedItemIds = (ctxt != null && ctxt.getOptionalElement(HeaderConstants.E_NO_QUALIFY) != null);
 
         // Handle user agent if specified by the client.  The user agent string is formatted
         // as "name/version".
-        Element userAgent = (ctxt == null ? null : ctxt.getOptionalElement(E_USER_AGENT));
+        Element userAgent = (ctxt == null ? null : ctxt.getOptionalElement(HeaderConstants.E_USER_AGENT));
         if (userAgent != null) {
-            String name = userAgent.getAttribute(A_NAME, null);
-            String version = userAgent.getAttribute(A_VERSION, null);
+            String name = userAgent.getAttribute(HeaderConstants.A_NAME, null);
+            String version = userAgent.getAttribute(HeaderConstants.A_VERSION, null);
             if (!StringUtil.isNullOrEmpty(name)) {
                 mUserAgent = name;
                 if (!StringUtil.isNullOrEmpty(version))
@@ -312,7 +279,7 @@ public class ZimbraSoapContext {
 
         String sessionId = null;
         if ("".equals(sessionId = elt.getTextTrim()))
-            sessionId = elt.getAttribute(A_ID, null);
+            sessionId = elt.getAttribute(HeaderConstants.A_ID, null);
         if (sessionId == null)
             return;
 
@@ -325,7 +292,7 @@ public class ZimbraSoapContext {
         try {
             // turn off notifications if so directed
             if (session.getSessionType() == SessionCache.SESSION_SOAP)
-                if (mHaltNotifications || !elt.getAttributeBool(A_NOTIFY, true))
+                if (mHaltNotifications || !elt.getAttributeBool(HeaderConstants.A_NOTIFY, true))
                     ((SoapSession) session).haltNotifications();
         } catch (ServiceException e) { }
 
@@ -382,7 +349,7 @@ public class ZimbraSoapContext {
     } 
 
     /** Returns the id of the account in the auth token.  Operations should
-     *  normally use {@link #getRequestAccountId}, as that's the context
+     *  normally use {@link #getRequestedAccountId}, as that's the context
      *  that the operations is executing in. */
     public String getAuthtokenAccountId() {
         return mAuthTokenAccountId;
@@ -523,7 +490,7 @@ public class ZimbraSoapContext {
             for (SessionInfo sinfo : mSessionInfo) {
                 Session session = sinfo.session;
                 if (ctxt == null)
-                    ctxt = createElement(CONTEXT);
+                    ctxt = createElement(HeaderConstants.CONTEXT);
 
                 // session ID is valid, so ping it back to the client:
                 encodeSession(ctxt, session, false);
@@ -556,18 +523,18 @@ public class ZimbraSoapContext {
      *  response protocol, the auth token, etc. -- are carried forward.
      *  Notification is expressly declined. */
     Element toProxyCtxt(SoapProtocol proto) {
-        Element ctxt = proto.getFactory().createElement(CONTEXT);
+        Element ctxt = proto.getFactory().createElement(HeaderConstants.CONTEXT);
         if (mRawAuthToken != null)
-            ctxt.addAttribute(E_AUTH_TOKEN, mRawAuthToken, Element.DISP_CONTENT);
+            ctxt.addAttribute(HeaderConstants.E_AUTH_TOKEN, mRawAuthToken, Element.DISP_CONTENT);
         if (mResponseProtocol != mRequestProtocol)
-            ctxt.addElement(E_FORMAT).addAttribute(A_TYPE, mResponseProtocol == SoapProtocol.SoapJS ? TYPE_JAVASCRIPT : TYPE_XML);
-        Element eAcct = ctxt.addElement(E_ACCOUNT).addAttribute(A_HOPCOUNT, mHopCount).addAttribute(A_MOUNTPOINT, mMountpointTraversed);
+            ctxt.addElement(HeaderConstants.E_FORMAT).addAttribute(HeaderConstants.A_TYPE, mResponseProtocol == SoapProtocol.SoapJS ? HeaderConstants.TYPE_JAVASCRIPT : HeaderConstants.TYPE_XML);
+        Element eAcct = ctxt.addElement(HeaderConstants.E_ACCOUNT).addAttribute(HeaderConstants.A_HOPCOUNT, mHopCount).addAttribute(HeaderConstants.A_MOUNTPOINT, mMountpointTraversed);
         if (mRequestedAccountId != null && !mRequestedAccountId.equalsIgnoreCase(mAuthTokenAccountId))
-            eAcct.addAttribute(A_BY, BY_ID).setText(mRequestedAccountId);
+            eAcct.addAttribute(HeaderConstants.A_BY, HeaderConstants.BY_ID).setText(mRequestedAccountId);
         if (mSessionSuppressed)
-            ctxt.addUniqueElement(E_NO_SESSION);
+            ctxt.addUniqueElement(HeaderConstants.E_NO_SESSION);
         if (mUnqualifiedItemIds)
-            ctxt.addUniqueElement(E_NO_QUALIFY);
+            ctxt.addUniqueElement(HeaderConstants.E_NO_QUALIFY);
         return ctxt;
     }
 
@@ -583,10 +550,10 @@ public class ZimbraSoapContext {
     public static Element encodeSession(Element parent, Session session, boolean unique) {
         String sessionType = null;
         if (session.getSessionType() == SessionCache.SESSION_ADMIN)
-            sessionType = SESSION_ADMIN;
+            sessionType = HeaderConstants.SESSION_ADMIN;
 
-        Element eSession = unique ? parent.addUniqueElement(E_SESSION_ID) : parent.addElement(E_SESSION_ID);
-        eSession.addAttribute(A_TYPE, sessionType).addAttribute(A_ID, session.getSessionId())
+        Element eSession = unique ? parent.addUniqueElement(HeaderConstants.E_SESSION_ID) : parent.addElement(HeaderConstants.E_SESSION_ID);
+        eSession.addAttribute(HeaderConstants.A_TYPE, sessionType).addAttribute(HeaderConstants.A_ID, session.getSessionId())
         .setText(session.getSessionId());
         return eSession;
     }
@@ -605,8 +572,8 @@ public class ZimbraSoapContext {
         Element ctxt = toCtxt(protocol, authToken, noSession);
 
         if (targetAccountId != null || targetAccountName != null) {
-            Element acctElt = ctxt.addUniqueElement(E_ACCOUNT);
-            acctElt.addAttribute(A_BY, targetAccountId != null ? BY_ID : BY_NAME);
+            Element acctElt = ctxt.addUniqueElement(HeaderConstants.E_ACCOUNT);
+            acctElt.addAttribute(HeaderConstants.A_BY, targetAccountId != null ? HeaderConstants.BY_ID : HeaderConstants.BY_NAME);
             acctElt.setText(targetAccountId != null ? targetAccountId : targetAccountName);
         }
 
@@ -624,11 +591,11 @@ public class ZimbraSoapContext {
      * @param noSession  Whether to suppress the default new session creation.
      * @return A new <code>context</code> Element in the appropriate markup. */
     static Element toCtxt(SoapProtocol protocol, String authToken, boolean noSession) {
-        Element ctxt = protocol.getFactory().createElement(CONTEXT);
+        Element ctxt = protocol.getFactory().createElement(HeaderConstants.CONTEXT);
         if (authToken != null)
-            ctxt.addAttribute(E_AUTH_TOKEN, authToken, Element.DISP_CONTENT);
+            ctxt.addAttribute(HeaderConstants.E_AUTH_TOKEN, authToken, Element.DISP_CONTENT);
         if (noSession)
-            ctxt.addUniqueElement(E_NO_SESSION);
+            ctxt.addUniqueElement(HeaderConstants.E_NO_SESSION);
         return ctxt;
     }	
 
@@ -650,13 +617,13 @@ public class ZimbraSoapContext {
     static Element addSessionToCtxt(Element ctxt, String sessionId, boolean noNotify) {
         if (ctxt == null || sessionId == null || sessionId.trim().equals(""))
             return ctxt;
-        if (ctxt.getAttribute(E_AUTH_TOKEN, null) == null)
+        if (ctxt.getAttribute(HeaderConstants.E_AUTH_TOKEN, null) == null)
             return ctxt;
 
-        Element eSession = ctxt.addElement(E_SESSION_ID).addAttribute(A_ID, sessionId)
+        Element eSession = ctxt.addElement(HeaderConstants.E_SESSION_ID).addAttribute(HeaderConstants.A_ID, sessionId)
         .setText(sessionId);
         if (noNotify)
-            eSession.addAttribute(A_NOTIFY, false);
+            eSession.addAttribute(HeaderConstants.A_NOTIFY, false);
         return ctxt;
     }
 
@@ -674,14 +641,14 @@ public class ZimbraSoapContext {
         if (StringUtil.isNullOrEmpty(name))
             return ctxt;
         String elementName = ctxt.getName();
-        if (!elementName.equalsIgnoreCase(E_CONTEXT)) {
+        if (!elementName.equalsIgnoreCase(HeaderConstants.E_CONTEXT)) {
             throw new IllegalArgumentException("Invalid element: " + elementName);
         }
 
-        Element eUserAgent = ctxt.addElement(E_USER_AGENT);
-        eUserAgent.addAttribute(A_NAME, name).setText(name);
+        Element eUserAgent = ctxt.addElement(HeaderConstants.E_USER_AGENT);
+        eUserAgent.addAttribute(HeaderConstants.A_NAME, name).setText(name);
         if (!StringUtil.isNullOrEmpty(version)) {
-            eUserAgent.addAttribute(A_VERSION, version).setText(version);
+            eUserAgent.addAttribute(HeaderConstants.A_VERSION, version).setText(version);
         }
         return ctxt;
     }

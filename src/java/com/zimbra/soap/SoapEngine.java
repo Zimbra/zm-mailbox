@@ -43,6 +43,8 @@ import java.util.Map;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.soap.ZimbraNamespace;
+import com.zimbra.common.soap.HeaderConstants;
 import org.dom4j.DocumentException;
 
 /**
@@ -110,7 +112,7 @@ public class SoapEngine {
         // if (mLog.isDebugEnabled()) mLog.debug("dispatch: soapProto = " + soapProto.getVersion());
 
         ZimbraSoapContext zsc = null;
-        Element ectxt = soapProto.getHeader(envelope, ZimbraSoapContext.CONTEXT);
+        Element ectxt = soapProto.getHeader(envelope, HeaderConstants.CONTEXT);
         try {
             zsc = new ZimbraSoapContext(ectxt, context, soapProto);
         } catch (ServiceException e) {

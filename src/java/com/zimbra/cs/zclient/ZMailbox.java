@@ -29,6 +29,8 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.ZimbraNamespace;
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.EasySSLProtocolSocketFactory;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -66,8 +68,6 @@ import com.zimbra.soap.Element.XMLElement;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
 import com.zimbra.soap.SoapTransport;
-import com.zimbra.soap.ZimbraNamespace;
-import com.zimbra.soap.ZimbraSoapContext;
 import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
@@ -363,7 +363,7 @@ public class ZMailbox {
         for (Element notify : context.listElements(ZimbraNamespace.E_NOTIFY)) {
             mTransport.setMaxNoitfySeq(
                     Math.max(mTransport.getMaxNotifySeq(),
-                             notify.getAttributeLong(ZimbraSoapContext.A_SEQNO, 0)));
+                             notify.getAttributeLong(HeaderConstants.A_SEQNO, 0)));
             // MUST DO IN THIS ORDER!
             handleDeleted(notify.getOptionalElement(ZimbraNamespace.E_DELETED));
             handleCreated(notify.getOptionalElement(ZimbraNamespace.E_CREATED));

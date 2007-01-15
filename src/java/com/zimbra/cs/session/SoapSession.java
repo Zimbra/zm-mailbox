@@ -45,8 +45,9 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.ZimbraNamespace;
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraNamespace;
 import com.zimbra.soap.ZimbraSoapContext;
 
 
@@ -342,9 +343,9 @@ public class SoapSession extends Session {
             synchronized (this) {
                 // send the <change> block
                 // <change token="555" [acct="4f778920-1a84-11da-b804-6b188d2a20c4"]/>
-                ctxt.addUniqueElement(ZimbraSoapContext.E_CHANGE)
-                    .addAttribute(ZimbraSoapContext.A_CHANGE_ID, mMailbox.getLastChangeID())
-                    .addAttribute(ZimbraSoapContext.A_ACCOUNT_ID, explicitAcct);
+                ctxt.addUniqueElement(HeaderConstants.E_CHANGE)
+                    .addAttribute(HeaderConstants.A_CHANGE_ID, mMailbox.getLastChangeID())
+                    .addAttribute(HeaderConstants.A_ACCOUNT_ID, explicitAcct);
                 
                 if (mSentChanges.size() > 100) {
                     // cover ourselves in case a client is doing something really stupid...
@@ -404,8 +405,8 @@ public class SoapSession extends Session {
         
         // <notify [acct="4f778920-1a84-11da-b804-6b188d2a20c4"]/>
         Element eNotify = parent.addElement(ZimbraNamespace.E_NOTIFY)
-                              .addAttribute(ZimbraSoapContext.A_ACCOUNT_ID, explicitAcct)
-                              .addAttribute(ZimbraSoapContext.A_SEQNO, pms.getSequence());
+                              .addAttribute(HeaderConstants.A_ACCOUNT_ID, explicitAcct)
+                              .addAttribute(HeaderConstants.A_SEQNO, pms.getSequence());
                               
 
         if (pms.deleted != null && pms.deleted.size() > 0) {

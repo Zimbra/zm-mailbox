@@ -31,6 +31,8 @@ package com.zimbra.soap;
 
 import com.zimbra.soap.SoapProtocol;
 import com.zimbra.soap.SoapFaultException;
+import com.zimbra.common.soap.ZimbraNamespace;
+import com.zimbra.common.soap.HeaderConstants;
 
 import java.io.IOException;
 
@@ -164,10 +166,10 @@ public abstract class SoapTransport {
         }
 
         if (requestedAccountId != null) {
-            context.addElement(ZimbraSoapContext.E_ACCOUNT).addAttribute(ZimbraSoapContext.A_BY, ZimbraSoapContext.BY_ID).setText(requestedAccountId);
+            context.addElement(HeaderConstants.E_ACCOUNT).addAttribute(HeaderConstants.A_BY, HeaderConstants.BY_ID).setText(requestedAccountId);
         }
         if (mMaxNotifySeq != -1) {
-            context.addElement(ZimbraNamespace.E_NOTIFY).addAttribute(ZimbraSoapContext.A_SEQNO, mMaxNotifySeq); 
+            context.addElement(ZimbraNamespace.E_NOTIFY).addAttribute(HeaderConstants.A_SEQNO, mMaxNotifySeq);
         }
         Element envelope = mSoapProto.soapEnvelope(document, context);
         if (mDebugListener != null) mDebugListener.sendSoapMessage(envelope);
@@ -201,9 +203,9 @@ public abstract class SoapTransport {
         if (e == null)
             throw new SoapParseException("malformed soap structure in reply", env.toString());
 
-        mContext = proto.getHeader(env, ZimbraSoapContext.CONTEXT);
+        mContext = proto.getHeader(env, HeaderConstants.CONTEXT);
         if (mContext != null) {
-            String sid = mContext.getAttribute(ZimbraSoapContext.E_SESSION_ID, null);
+            String sid = mContext.getAttribute(HeaderConstants.E_SESSION_ID, null);
             if (sid != null)
                 mSessionId = sid;
         }

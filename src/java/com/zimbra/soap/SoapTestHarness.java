@@ -50,6 +50,7 @@ import org.dom4j.QName;
 
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
 
@@ -452,9 +453,9 @@ public class SoapTestHarness {
         } else {
             Element ctxt = ZimbraSoapContext.toCtxt(mSoapProto, mAuthToken, mSessionId);
             if (mTargetUser != null)
-                ctxt.addUniqueElement(ZimbraSoapContext.E_ACCOUNT).addAttribute(ZimbraSoapContext.A_BY, ZimbraSoapContext.BY_NAME).setText(mTargetUser);
+                ctxt.addUniqueElement(HeaderConstants.E_ACCOUNT).addAttribute(HeaderConstants.A_BY, HeaderConstants.BY_NAME).setText(mTargetUser);
             if (mResponseProto == SoapProtocol.SoapJS)
-                ctxt.addElement(ZimbraSoapContext.E_FORMAT).addAttribute(ZimbraSoapContext.A_TYPE, ZimbraSoapContext.TYPE_JAVASCRIPT);
+                ctxt.addElement(HeaderConstants.E_FORMAT).addAttribute(HeaderConstants.A_TYPE, HeaderConstants.TYPE_JAVASCRIPT);
             mCurrent.mSoapRequest = mSoapProto.soapEnvelope(mCurrent.mDocRequest, ctxt);
         }
 
