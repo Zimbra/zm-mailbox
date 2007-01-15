@@ -85,7 +85,7 @@ public class CancelCalendarItem extends CalendarRequest {
             Element recurElt = request.getOptionalElement(MailConstants.E_INSTANCE);
             if (recurElt != null) {
                 TimeZoneMap tzmap = inv.getTimeZoneMap();
-                Element tzElem = request.getOptionalElement(MailService.E_CAL_TZ);
+                Element tzElem = request.getOptionalElement(MailConstants.E_CAL_TZ);
                 ICalTimeZone tz = null;
                 if (tzElem != null) {
                     tz = CalendarUtils.parseTzElement(tzElem);
