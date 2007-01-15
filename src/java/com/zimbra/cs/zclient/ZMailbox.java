@@ -580,8 +580,10 @@ public class ZMailbox {
         if (parent != null)
             parent.removeChild(f);
         ZFolder newParent = getFolderById(newParentId);
-        if (newParent != null)
+        if (newParent != null) {
             newParent.addChild(f);
+            f.setParent(newParent);
+        }
     }
 
     /**

@@ -228,6 +228,10 @@ public class ZFolder implements ZItem, Comparable {
         return mParent;
     }
 
+    void setParent(ZFolder parent) {
+        mParent = parent;
+    }
+
     public String getId() {
         return mId;
     }
