@@ -67,7 +67,7 @@ installers to your local machine before installing.
    On Linux startup with:
       $ JAVA_HOME={java-home} {tomcat-install}/bin/startup.sh      
 
-6. Install MySQL 4.1.x 
+6. Install the latest version of MySQL.
 
    On Windows, install MySQL to c:\opt\zimbra\mysql
 
