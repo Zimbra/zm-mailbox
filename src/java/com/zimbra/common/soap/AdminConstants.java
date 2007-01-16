@@ -362,7 +362,6 @@ public class AdminConstants {
     public static final String A_NUM_SUCCEEDED= "numSucceeded";
     public static final String A_NUM_FAILED = "numFailed";
     public static final String A_NUM_REMAINING = "numRemaining";
-    public static final String A_OUTPUT = "output";
     public static final String A_DURATION = "duration";
 
     public static final String A_VOLUME_TYPE = "type";
