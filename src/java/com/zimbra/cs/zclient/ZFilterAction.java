@@ -25,8 +25,8 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.StringUtil;
 
 import java.util.ArrayList;
@@ -34,7 +34,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class ZFilterAction {
+public abstract class ZFilterAction {
 
     public static final String A_DISCARD = "discard";
     public static final String A_FILEINTO = "fileinto";
@@ -50,9 +50,17 @@ public class ZFilterAction {
 
         private static String[] mArgs = { "read", "flagged" };
 
+        public static FlagOp fromString(String s) throws ServiceException {
+            try {
+                return FlagOp.valueOf(s.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw ZClientException.CLIENT_ERROR("invalid op: "+s+", value values: "+Arrays.asList(FlagOp.values()), null);
+            }
+        }
+
         public String toProtoArg() { return mArgs[ordinal()]; }
 
-        public static FlagOp fromString(String s) throws ServiceException {
+        public static FlagOp fromProtoString(String s) throws ServiceException {
             s = s.trim().toLowerCase();
             for (int i=0; i < mArgs.length; i++)
                 if (mArgs[i].equals(s)) return values()[i];
@@ -75,6 +83,8 @@ public class ZFilterAction {
     public List<String> getArgs() {
         return mArgs;
     }
+
+    public abstract String toActionString();
 
     Element toElement(Element parent) {
         Element a = parent.addElement(MailConstants.E_ACTION);
@@ -110,40 +120,58 @@ public class ZFilterAction {
         else if (n.equals(A_REDIRECT))
             return new ZRedirectAction(getArg(actionElement));
         else if (n.equals(A_FLAG))
-            return new ZFlagAction(FlagOp.fromString(getArg(actionElement)));
+            return new ZFlagAction(FlagOp.fromProtoString(getArg(actionElement)));
         else
             throw ZClientException.CLIENT_ERROR("unknown filter action: "+n, null);
     }
 
     public static class ZKeepAction extends ZFilterAction {
         public ZKeepAction() { super(A_KEEP); }
+
+        public String toActionString() { return "keep"; }
     }
 
     public static class ZDiscardAction extends ZFilterAction {
         public ZDiscardAction() { super(A_DISCARD); }
+
+        public String toActionString() { return "discard"; }
     }
 
     public static class ZStopAction extends ZFilterAction {
         public ZStopAction() { super(A_STOP); }
+
+        public String toActionString() { return "stop"; }
     }
 
     public static class ZFileIntoAction extends ZFilterAction {
         public ZFileIntoAction(String folderPath) { super(A_FILEINTO, folderPath); }
+
         public String getFolderPath() { return mArgs.get(0); }
+
+        public String toActionString() { return "fileinto " + ZFilterRule.quotedString(getFolderPath()); }
     }
 
     public static class ZTagAction extends ZFilterAction {
         public ZTagAction(String tagName) { super(A_TAG, tagName); }
         public String getTagName() { return mArgs.get(0); }
+
+        public String toActionString() { return "tag " + ZFilterRule.quotedString(getTagName()); }
     }
 
     public static class ZFlagAction extends ZFilterAction {
-        public ZFlagAction(FlagOp op) { super(A_FLAG, op.toProtoArg()); }
+        private FlagOp mFlagOp;
+        public ZFlagAction(FlagOp op) {
+            super(A_FLAG, op.toProtoArg());
+            mFlagOp = op;
+        }
+
+        public String toActionString() { return "flag " + mFlagOp.name().toLowerCase(); }
     }
 
     public static class ZRedirectAction extends ZFilterAction {
         public ZRedirectAction(String address) { super(A_REDIRECT, address); }
         public String getAddress() { return mArgs.get(0); }
+        public String toActionString() { return "redirect " + ZFilterRule.quotedString(getAddress()); }
     }
 
     public String toString() {
