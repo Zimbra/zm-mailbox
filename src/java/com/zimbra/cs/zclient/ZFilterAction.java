@@ -27,6 +27,7 @@ package com.zimbra.cs.zclient;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -83,7 +84,17 @@ public class ZFilterAction {
         }
         return a;
     }
-    
+
+
+    private static String getArg(Element e) throws ServiceException {
+        String value = e.getElement(MailConstants.E_FILTER_ARG).getText();
+        List<String> slist = StringUtil.parseSieveStringList(value);
+        if (slist.size() != 1) {
+            throw ZClientException.CLIENT_ERROR(String.format("unable to parse arg value(%s)", value), null);
+        }
+        return slist.get(0);
+    }
+
     public static ZFilterAction getAction(Element actionElement) throws ServiceException {
         String n = actionElement.getAttribute(MailConstants.A_NAME);
         if (n.equals(A_KEEP))
@@ -93,13 +104,13 @@ public class ZFilterAction {
         else if (n.equals(A_STOP))
             return new ZStopAction();
         else if (n.equals(A_FILEINTO))
-            return new ZFileIntoAction(actionElement.getElement(MailConstants.E_FILTER_ARG).getText());
+            return new ZFileIntoAction(getArg(actionElement));
         else if (n.equals(A_TAG))
-            return new ZTagAction(actionElement.getElement(MailConstants.E_FILTER_ARG).getText());
+            return new ZTagAction(getArg(actionElement));
         else if (n.equals(A_REDIRECT))
-            return new ZRedirectAction(actionElement.getElement(MailConstants.E_FILTER_ARG).getText());
+            return new ZRedirectAction(getArg(actionElement));
         else if (n.equals(A_FLAG))
-            return new ZFlagAction(FlagOp.fromString(actionElement.getElement(MailConstants.E_FILTER_ARG).getText()));
+            return new ZFlagAction(FlagOp.fromString(getArg(actionElement)));
         else
             throw ZClientException.CLIENT_ERROR("unknown filter action: "+n, null);
     }
@@ -133,5 +144,14 @@ public class ZFilterAction {
     public static class ZRedirectAction extends ZFilterAction {
         public ZRedirectAction(String address) { super(A_REDIRECT, address); }
         public String getAddress() { return mArgs.get(0); }
+    }
+
+    public String toString() {
+        ZSoapSB sb = new ZSoapSB();
+        sb.beginStruct();
+        sb.add("name", mName);
+        sb.add("args", mArgs, false, false);
+        sb.endStruct();
+        return sb.toString();
     }
 }

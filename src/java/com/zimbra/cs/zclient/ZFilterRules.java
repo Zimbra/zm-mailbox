@@ -49,12 +49,20 @@ public class ZFilterRules {
             mRules.add(new ZFilterRule(ruleEl));
         }
     }
-    
+
     Element toElement(Element parent) {
         Element r = parent.addElement(MailConstants.E_RULES);
         for (ZFilterRule rule : mRules) {
             rule.toElement(r);
         }
         return r;
+    }
+
+    public String toString() {
+        ZSoapSB sb = new ZSoapSB();
+        sb.beginStruct();
+        sb.add("rules", mRules, false, true);
+        sb.endStruct();
+        return sb.toString();
     }
 }

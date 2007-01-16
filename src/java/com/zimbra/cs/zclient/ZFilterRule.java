@@ -68,7 +68,7 @@ public class ZFilterRule {
         mConditions = conditions;
         mActions = actions;
     }
-    
+
     public ZFilterRule(Element e) throws ServiceException {
         mName = e.getAttribute(MailConstants.A_NAME);
         mActive = e.getAttributeBool(MailConstants.A_ACTIVE, false);
@@ -99,4 +99,15 @@ public class ZFilterRule {
         return r;
     }
 
+    public String toString() {
+        ZSoapSB sb = new ZSoapSB();
+        sb.beginStruct();
+        sb.add("name", mName);
+        sb.add("active", mActive);
+        sb.add("allConditions", mAllConditions);
+        sb.add("conditions", mConditions, false, true);
+        sb.add("actions", mActions, false, true);
+        sb.endStruct();
+        return sb.toString();
+    }
 }

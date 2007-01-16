@@ -27,11 +27,13 @@ package com.zimbra.cs.zclient;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.StringUtil;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 public class ZFilterCondition {
 
@@ -76,7 +78,7 @@ public class ZFilterCondition {
             throw ZClientException.CLIENT_ERROR("invalid op: "+s+", valid values: "+ Arrays.asList(mOps), null);
         }
     }
-    
+
     public enum SizeOp {
         UNDER, NOT_UNDER, OVER, NOT_OVER;
 
@@ -120,33 +122,50 @@ public class ZFilterCondition {
                 if (mOps[i].equals(s)) return values()[i];
             throw ZClientException.CLIENT_ERROR("invalid op: "+s+", valid values: "+ Arrays.asList(mOps), null);
         }
-    
+
     }
-    
+
     protected String mName;
     protected String mOp;
     protected String mK0;
     protected String mK1;
 
+    private static String getAttrK(Element e, String k) throws ServiceException {
+        String value = e.getAttribute(k);
+        List<String> slist = StringUtil.parseSieveStringList(value);
+        if (slist.size() != 1) {
+            throw ZClientException.CLIENT_ERROR(String.format("unable to parse attr(%s) value(%s)", k, value), null);
+        }
+        return slist.get(0);
+    }
+
+    public static String getK0(Element e) throws ServiceException {
+        return getAttrK(e, MailConstants.A_LHS);
+    }
+
+    public static String getK1(Element e) throws ServiceException {
+        return getAttrK(e, MailConstants.A_RHS);
+    }
+
     public static ZFilterCondition getCondition(Element condEl) throws ServiceException {
         String n = condEl.getAttribute(MailConstants.A_NAME);
         if (n.equals(C_HEADER)) {
             return new ZHeaderCondition(
-                    condEl.getAttribute(MailConstants.A_LHS),
+                    getK0(condEl),
                     HeaderOp.fromString(condEl.getAttribute(MailConstants.A_OPERATION)),
-                    condEl.getAttribute(MailConstants.A_RHS));
+                    getK1(condEl));
         } else if (n.equals(C_EXISTS)) {
             return new ZHeaderExistsCondition(
-                    condEl.getAttribute(MailConstants.A_RHS),
+                    getK0(condEl),
                     true);
         } else if (n.equals(C_NOT_EXISTS)) {
             return new ZHeaderExistsCondition(
-                    condEl.getAttribute(MailConstants.A_RHS),
+                    getK0(condEl),
                     true);
         } if (n.equals(C_DATE)) {
             try {
                 return new ZDateCondition(
-                        new SimpleDateFormat("yyyyMMdd").parse(condEl.getAttribute(MailConstants.A_RHS)),
+                        new SimpleDateFormat("yyyyMMdd").parse(getK1(condEl)),
                         DateOp.fromString(condEl.getAttribute(MailConstants.A_OPERATION)));
             } catch (ParseException e) {
                 throw ZClientException.CLIENT_ERROR("unable to parse filter date: "+e, null);
@@ -155,6 +174,8 @@ public class ZFilterCondition {
             return new ZSizeCondition(
                     condEl.getAttribute(MailConstants.A_RHS),
                     SizeOp.fromString(condEl.getAttribute(MailConstants.A_OPERATION)));
+        } else if (n.equals(C_BODY)) {
+            return new ZBodyCondition(BodyOp.fromString(condEl.getAttribute(MailConstants.A_OPERATION)),getK1(condEl));
         } else if (n.equals(C_ATTACHMENT)) {
             return new ZAttachmentExistsCondition(true);
         } else if (n.equals(C_NOT_ATTACHMENT)) {
@@ -162,7 +183,7 @@ public class ZFilterCondition {
         } else if (n.equals(C_ADDRESSBOOK)) {
             return new ZAddressBookCondition(
                     AddressBookOp.fromString(condEl.getAttribute(MailConstants.A_OPERATION)),
-                    condEl.getAttribute(MailConstants.A_LHS));
+                    getK0(condEl));
         } else {
              throw ZClientException.CLIENT_ERROR("unknown filter condition: "+n, null);
         }
@@ -189,6 +210,17 @@ public class ZFilterCondition {
     public String getK0() { return mK0; }
     public String getK1() { return mK1; }
     public String getOp() { return mOp; }
+
+    public String toString() {
+        ZSoapSB sb = new ZSoapSB();
+        sb.beginStruct();
+        sb.add("name", mName);
+        sb.add("op", mOp);
+        sb.add("k0", mK0);
+        sb.add("k1", mK1);
+        sb.endStruct();
+        return sb.toString();
+    }
 
     public static class ZAddressBookCondition extends ZFilterCondition {
         public ZAddressBookCondition(AddressBookOp op, String header) {
