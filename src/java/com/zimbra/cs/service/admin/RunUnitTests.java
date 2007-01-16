@@ -50,7 +50,7 @@ public class RunUnitTests extends DocumentHandler {
         response.addAttribute(AdminConstants.A_NUM_EXECUTED, Integer.toString(result.runCount()));
         response.addAttribute(AdminConstants.A_NUM_FAILED,
             Integer.toString(result.failureCount() + result.errorCount()));
-        response.addAttribute(AdminConstants.A_OUTPUT, os.toString());
+        response.setText(os.toString());
         return response;
     }
 }

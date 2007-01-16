@@ -742,12 +742,11 @@ significantly since the last table maintenance.
 
 Runs the server-side unit test suite.
 
-<UnitTestRequest/>
+<UnitTesstRequest/>
 
-</UnitTestResponse
-    numExecuted="{number of tests that were executed}"
-    numFailed="{number of failed tests}"
-    output="{test output}"/>
+<UnitTestsResponse numExecuted="{n}" numFailed="{n}">
+    { Summary of test execution times and success/failure status }
+</UnitTestsResponse>
 
 -----------------------------
 All the Check* SOAP calls potentially return the following two things:

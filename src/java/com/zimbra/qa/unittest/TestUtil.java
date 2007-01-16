@@ -292,8 +292,8 @@ public class TestUtil {
 
         double seconds = (double) (System.currentTimeMillis() - suiteStart) / 1000;
         String msg = String.format(
-            "Unit test suite finished in %.2f seconds.  %d errors, %d failures.",
-            seconds, result.errorCount(), result.failureCount());
+            "Unit test suite finished in %.2f seconds.  %d errors, %d failures.\n%s",
+            seconds, result.errorCount(), result.failureCount(), listener.getSummary());
         ZimbraLog.test.info(msg);
 
         if (outputStream != null) {
