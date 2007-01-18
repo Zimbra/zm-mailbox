@@ -52,10 +52,11 @@ public class TZIDMapper {
                 mAliases = aliases;
         }
 
-        public String getJavaID()    { return mJavaID; }
-        public String getOlsonID()   { return mOlsonID; }
-        public String getWindowsID() { return mWindowsID; }
-        public String[] getAliases() { return mAliases; }
+        public String getCanonicalID() { return getWindowsID(); }
+        public String getJavaID()      { return mJavaID; }
+        public String getOlsonID()     { return mOlsonID; }
+        public String getWindowsID()   { return mWindowsID; }
+        public String[] getAliases()   { return mAliases; }
     }
 
     private static Map<String, TZ> sMap = new HashMap<String, TZ>();
@@ -129,12 +130,12 @@ public class TZIDMapper {
         return tz.getWindowsID();
     }
 
-    public static TimeZone getTimeZone(String tzid) {
+    public static String canonicalize(String tzid) {
         TZ tz = sMap.get(tzid);
-        if (tz == null)
-            return null;
-        TimeZone jtz = TimeZone.getTimeZone(tzid);
-        return jtz;
+        if (tz != null)
+            return tz.getCanonicalID();
+        else
+            return tzid;
     }
 
     // the time zone list
