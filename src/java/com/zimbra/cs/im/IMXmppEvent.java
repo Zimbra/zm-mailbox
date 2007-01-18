@@ -41,4 +41,8 @@ public class IMXmppEvent extends IMEvent {
         persona.process(mPacket);
     }
     
+    public String toString() { 
+        return "XMPPEvent: " + mPacket.toXML();
+    }
+    
 }

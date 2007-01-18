@@ -35,7 +35,7 @@ public abstract class IMEvent {
     protected List<IMAddr> mTargets;
     
     protected IMEvent(IMAddr target) {
-        mTargets = new ArrayList(1);
+        mTargets = new ArrayList<IMAddr>(1);
         mTargets.add(target);
     }
     
@@ -54,10 +54,15 @@ public abstract class IMEvent {
     void run() throws ServiceException {
         for (IMAddr addr : mTargets) {
             try {
-                Object lock = IMRouter.getInstance().getLock(addr);
-                synchronized (lock) {
-                    IMPersona persona = IMRouter.getInstance().findPersona(null, addr, false);
-                    handleTarget(persona);
+                if (addr.getAddr().indexOf('@') > 0) {
+                    Object lock = IMRouter.getInstance().getLock(addr);
+                    synchronized (lock) {
+                        IMPersona persona = IMRouter.getInstance().findPersona(null, addr, false);
+                        handleTarget(persona);
+                    }
+                } else {
+                    ZimbraLog.im.debug("Ignoring IMEvent for "+addr.toString()+" (addr has no domain): "+
+                                this.toString());
                 }
             } catch (Exception e) {
                 ZimbraLog.im.debug("Caught exception running event: "+this+" except="+e);

@@ -32,11 +32,11 @@ public class PacketInterceptor implements org.jivesoftware.wildfire.interceptor.
     public void interceptPacket(Packet packet, Session session, boolean incoming, boolean processed) /* throws PacketRejectedException */ {
 //        ZimbraLog.im.info("Session\n"+ session.toString() +"\nIntercepting an " + (incoming ? "INCOMING " : "OUTGOING ") + (processed ? "PROCESSED " : "NOT PROCESSED ") +" packet:\n"+packet.toString()+"\n");
         if (processed) {
-            String addr = session.getAddress().toBareJID().toString();
-            
-            IMXmppEvent imXmppEvent = new IMXmppEvent(new IMAddr(addr), packet);
-            
-            IMRouter.getInstance().postEvent(imXmppEvent);
+            if (session.getAddress().getNode() != null) {
+                String addr = session.getAddress().toBareJID().toString();
+                IMXmppEvent imXmppEvent = new IMXmppEvent(new IMAddr(addr), packet);
+                IMRouter.getInstance().postEvent(imXmppEvent);
+            } 
         }
     }
 }
