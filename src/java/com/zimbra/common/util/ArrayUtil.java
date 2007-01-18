@@ -24,12 +24,68 @@
  */
 package com.zimbra.common.util;
 
+import java.util.Collection;
+
 
 public class ArrayUtil {
 
-    /**
-     * Returns <code>true</code> if the given array is <code>null</code> or empty.
-     */
+    /** Destructively reverses an array of objects and returns the altered passed-in array. */
+    public static <A> A[] reverse(A[] array) {
+        if (array != null && array.length > 1) {
+            for (int i = 0, length = array.length; i < length / 2; i++) {
+                A temp = array[i];
+                array[i] = array[length - i - 1];
+                array[length - i - 1] = temp;
+            }
+        }
+        return array;
+    }
+
+    /** Destructively reverses an array of ints and returns the altered passed-in array. */
+    public static int[] reverse(int[] array) {
+        if (array != null && array.length > 1) {
+            for (int i = 0, length = array.length; i < length / 2; i++) {
+                int temp = array[i];
+                array[i] = array[length - i - 1];
+                array[length - i - 1] = temp;
+            }
+        }
+        return array;
+    }
+
+    /** Destructively reverses an array of bytes and returns the altered passed-in array. */
+    public static byte[] reverse(byte[] array) {
+        if (array != null && array.length > 1) {
+            for (int i = 0, length = array.length; i < length / 2; i++) {
+                byte temp = array[i];
+                array[i] = array[length - i - 1];
+                array[length - i - 1] = temp;
+            }
+        }
+        return array;
+    }
+
+    /** Destructively reverses an array of chars and returns the altered passed-in array. */
+    public static char[] reverse(char[] array) {
+        if (array != null && array.length > 1) {
+            for (int i = 0, length = array.length; i < length / 2; i++) {
+                char temp = array[i];
+                array[i] = array[length - i - 1];
+                array[length - i - 1] = temp;
+            }
+        }
+        return array;
+    }
+
+    /** Converts a {@link Collection} of Integers into an int[] array. */
+    public static int[] toIntArray(Collection<Integer> c) {
+        int intArray[] = new int[c.size()], pos = 0;
+        for (Integer id : c)
+            intArray[pos++] = id;
+        return intArray;
+    }
+
+    /** Returns <code>true</code> if the given array is <tt>null</tt> or empty. */
     public static boolean isEmpty(Object[] array) {
         return (array == null || array.length == 0);
     }

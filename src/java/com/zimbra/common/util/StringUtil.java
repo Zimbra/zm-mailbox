@@ -28,6 +28,8 @@
  */
 package com.zimbra.common.util;
 
+import com.zimbra.common.service.ServiceException;
+
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -37,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -197,6 +200,46 @@ public class StringUtil {
         }
     }
     
+    public static List<String> parseSieveStringList(String value) throws ServiceException {
+        List<String> result = new ArrayList<String>();
+        if (value == null) return result;
+        value = value.trim();
+        if (value.length() == 0) return result;
+        int i = 0;
+        boolean inStr = false;
+        boolean inList = false;
+        StringBuilder sb = null;
+        while(i < value.length()) {
+            char ch = value.charAt(i++);
+            if (inStr) {
+                if (ch == '"') {
+                    result.add(sb.toString());
+                    inStr = false;
+                } else {
+                    if (ch == '\\' && i < value.length())
+                        ch = value.charAt(i++);
+                    sb.append(ch);
+                }
+            } else {
+                if (ch == '"') {
+                    inStr = true;
+                    sb = new StringBuilder();
+                } else if (ch == '[' && !inList) {
+                    inList = true;
+                } else if (ch ==']' && inList) {
+                    inList = false;
+                } else if (!Character.isWhitespace(ch)) {
+                    throw ServiceException.INVALID_REQUEST("unable to parse string list: "+value, null);
+                }
+            }
+        }
+        if (inStr || inList) {
+            throw ServiceException.INVALID_REQUEST("unable to parse string list2: "+value, null);
+        }
+        return result;
+    }
+
+
     /**
      * split a line into array of Strings, using a shell-style syntax for tokenizing words.
      * 
@@ -402,10 +445,10 @@ public class StringUtil {
     /**
      * Returns the simple class name (the name after the last dot)
      * from a fully-qualified class name.  Behavior is the same as
-     * {@link #getExtension}. 
+     * {@link FileUtil#getExtension}. 
      */
     public static String getSimpleClassName(String className) {
-        return getExtension(className);
+        return FileUtil.getExtension(className);
     }
     
     /**
@@ -416,33 +459,7 @@ public class StringUtil {
         if (o == null) {
             return null;
         }
-        return getExtension(o.getClass().getName());
-    }
-    
-    /**
-     * Returns the extension portion of the given filename.
-     * <ul>
-     *   <li>If <code>filename</code> contains one or more dots, returns
-     *     all characters after the last dot.</li>
-     *   <li>If <code>filename</code> contains no dot, returns <code>filename</code>.</li>
-     *   <li>If <code>filename</code> is <code>null</code>, returns
-     *     <code>null</code>.</li>
-     *   <li>If <code>filename</code> ends with a dot, returns an
-     *     empty <code>String</code>.</li>
-     * </ul> 
-     */
-    public static String getExtension(String filename) {
-        if (filename == null) {
-            return null;
-        }
-        int lastDot = filename.lastIndexOf(".");
-        if (lastDot == -1) {
-            return filename;
-        }
-        if (lastDot == filename.length() - 1) {
-            return "";
-        }
-        return filename.substring(lastDot + 1, filename.length());
+        return FileUtil.getExtension(o.getClass().getName());
     }
     
     /**

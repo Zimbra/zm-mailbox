@@ -294,4 +294,30 @@ public class FileUtil {
         }
         return filename;
     }
+
+    /**
+     * Returns the extension portion of the given filename.
+     * <ul>
+     *   <li>If <code>filename</code> contains one or more dots, returns
+     *     all characters after the last dot.</li>
+     *   <li>If <code>filename</code> contains no dot, returns <code>filename</code>.</li>
+     *   <li>If <code>filename</code> is <code>null</code>, returns
+     *     <code>null</code>.</li>
+     *   <li>If <code>filename</code> ends with a dot, returns an
+     *     empty <code>String</code>.</li>
+     * </ul> 
+     */
+    public static String getExtension(String filename) {
+        if (filename == null) {
+            return null;
+        }
+        int lastDot = filename.lastIndexOf(".");
+        if (lastDot == -1) {
+            return filename;
+        }
+        if (lastDot == filename.length() - 1) {
+            return "";
+        }
+        return filename.substring(lastDot + 1, filename.length());
+    }
 }
