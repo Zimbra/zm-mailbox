@@ -215,7 +215,8 @@ public class ZMailbox {
     private ZSearchPagerCache mSearchConvPagerCache;
     private LRUMap mMessageCache;
     private LRUMap mContactCache;
-
+    private ZFilterRules mRules;
+    
     private long mSize;
 
     private List<ZEventHandler> mHandlers = new ArrayList<ZEventHandler>();
@@ -385,6 +386,7 @@ public class ZMailbox {
         ZRefreshEvent event = new ZRefreshEvent(mSize, userRoot, tagList);
         for (ZEventHandler handler : mHandlers)
         	handler.handleRefresh(event, this);
+        mRules = null;        
     }
     
     private void handleModified(Element modified) throws ServiceException {
@@ -2287,14 +2289,22 @@ public class ZMailbox {
     }
 
     public ZFilterRules getFilterRules() throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.GET_RULES_REQUEST);
-        return new ZFilterRules(invoke(req).getElement(MailConstants.E_RULES));
+        return getFilterRules(false);
     }
 
-    public void saveFilterRules(ZFilterRules rules) throws ServiceException {
+    public synchronized ZFilterRules getFilterRules(boolean refresh) throws ServiceException {
+        if (mRules == null || refresh) {
+            XMLElement req = new XMLElement(MailConstants.GET_RULES_REQUEST);
+            mRules = new ZFilterRules(invoke(req).getElement(MailConstants.E_RULES));
+        }
+        return new ZFilterRules(mRules);
+    }
+    
+    public synchronized void saveFilterRules(ZFilterRules rules) throws ServiceException {
         XMLElement req = new XMLElement(MailConstants.SAVE_RULES_REQUEST);
         rules.toElement(req);
         invoke(req);
+        mRules = new ZFilterRules(rules);
     }
 
     public void deleteDataSource(DataSourceBy by, String key) throws ServiceException {

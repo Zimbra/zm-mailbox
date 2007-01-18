@@ -1089,7 +1089,7 @@ public class ZMailboxUtil implements DebugListener {
 
     private void doModifyFilterRule(String[] args) throws ServiceException {
         ZFilterRule modifiedRule = ZFilterRule.parseFilterRule(args);
-        ZFilterRules rules = mMbox.getFilterRules();
+        ZFilterRules rules = mMbox.getFilterRules(true);
         List<ZFilterRule> list = rules.getRules();
         for (int i=0; i < list.size(); i++) {
             if (list.get(i).getName().equalsIgnoreCase(modifiedRule.getName())) {
@@ -1104,7 +1104,7 @@ public class ZMailboxUtil implements DebugListener {
     private void doDeleteFilterRule(String[] args) throws ServiceException {
         String name = args[0];
 
-        ZFilterRules rules = mMbox.getFilterRules();
+        ZFilterRules rules = mMbox.getFilterRules(true);
         List<ZFilterRule> list = rules.getRules();
         for (int i=0; i < list.size(); i++) {
             if (list.get(i).getName().equalsIgnoreCase(name)) {
@@ -1117,7 +1117,7 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private void doGetFilterRules(String[] args) throws ServiceException {
-        ZFilterRules rules = mMbox.getFilterRules();
+        ZFilterRules rules = mMbox.getFilterRules(true);
         for (ZFilterRule r : rules.getRules()) {
             System.out.println(r.generateFilterRule());
         }

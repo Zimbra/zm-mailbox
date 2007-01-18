@@ -43,6 +43,11 @@ public class ZFilterRules {
         mRules = rules;
     }
 
+    public ZFilterRules(ZFilterRules rules) {
+        mRules = new ArrayList<ZFilterRule>();
+        mRules.addAll(rules.getRules());
+    }
+
     public ZFilterRules(Element e) throws ServiceException {
         mRules = new ArrayList<ZFilterRule>();
         for (Element ruleEl : e.listElements(MailConstants.E_RULE)) {
