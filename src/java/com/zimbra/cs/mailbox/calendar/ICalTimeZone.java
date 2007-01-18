@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.SimpleTimeZone;
 import java.util.StringTokenizer;
 
+import com.zimbra.common.calendar.TZIDMapper;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
@@ -227,9 +228,19 @@ public class ICalTimeZone extends SimpleTimeZone {
 
     public static ICalTimeZone decodeFromMetadata(Metadata m) throws ServiceException {
         String tzId;
-        if (m.containsKey(FN_TZ_NAME))
+        if (m.containsKey(FN_TZ_NAME)) {
             tzId = m.get(FN_TZ_NAME);
-        else
+            // If TZID is a well-known one, look up the definition from the
+            // system's up-to-date timezone cache.  This is done to pick up any
+            // changes in timezone definition for existing appointments.
+            // For example, recurring appointment created in US Pacific timezone
+            // in 2006 should use the new daylight savings rules that went into
+            // effect in 2007.
+            String canonicalize = TZIDMapper.canonicalize(tzId);
+            ICalTimeZone tz = WellKnownTimeZones.getTimeZoneById(canonicalize);
+            if (tz != null)
+                return tz.cloneWithNewTZID(tzId);
+        } else
             tzId = "unknown time zone";
         return new ICalTimeZone(tzId, m);
     }
