@@ -165,6 +165,7 @@ public abstract class ZFilterAction {
             mFlagOp = op;
         }
 
+        public String getFlagOp() { return mFlagOp.name(); }
         public String toActionString() { return "flag " + mFlagOp.name().toLowerCase(); }
     }
 
