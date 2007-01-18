@@ -284,6 +284,11 @@ public final class ParsedDateTime {
         return new ParsedDateTime(cal, mICalTimeZone, mHasTime);
     }
 
+    public Object clone() {
+        GregorianCalendar cal = (GregorianCalendar) mCal.clone();
+        return new ParsedDateTime(cal, mICalTimeZone, mHasTime);
+    }
+
     public int compareTo(Date other) {
         return getDate().compareTo(other);
     }

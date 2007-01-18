@@ -711,8 +711,19 @@ public abstract class CalendarItem extends MailItem {
 //              break; // don't stop here!  new Invite *could* obscelete multiple existing ones! 
             } else if (needRecurrenceIdUpdate) {
                 RecurId rid = cur.getRecurId();
-                if (rid != null && rid.getDt().sameTime(oldDtStart))
-                    toUpdate.add(cur);
+                // Translate the date/time in RECURRENCE-ID to the timezone in
+                // original recurrence DTSTART.  If they have the same HHMMSS
+                // part, the RECURRENCE-ID need to be adjusted by the diff of
+                // old and new recurrence DTSTART.
+                if (rid != null && rid.getDt() != null) {
+                    ParsedDateTime ridDt = (ParsedDateTime) rid.getDt().clone();
+                    ICalTimeZone oldTz = oldDtStart.getTimeZone();
+                    if (oldTz != null) {
+                        ridDt.toTimeZone(oldTz);
+                        if (ridDt.sameTime(oldDtStart))
+                            toUpdate.add(cur);
+                    }
+                }
             }
         }
 
