@@ -2185,13 +2185,15 @@ public class ZMailbox {
         return new ZSendMessageResponse(id);       
     }
  
-    public ZMessage saveDraft(ZOutgoingMessage message, String existingDraftId, String folderId) throws ServiceException {
+    public synchronized ZMessage saveDraft(ZOutgoingMessage message, String existingDraftId, String folderId) throws ServiceException {
         XMLElement req = new XMLElement(MailService.SAVE_DRAFT_REQUEST);
         
         Element m = getMessageElement(req, message);
 
-        if (existingDraftId != null && existingDraftId.length() > 0)
+        if (existingDraftId != null && existingDraftId.length() > 0) {
+            mMessageCache.remove(existingDraftId);
             m.addAttribute(MailService.A_ID, existingDraftId);
+        }
 
         if (folderId != null)
             m.addAttribute(MailService.A_FOLDER, folderId);
