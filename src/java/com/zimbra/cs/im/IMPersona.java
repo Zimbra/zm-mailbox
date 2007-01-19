@@ -191,7 +191,7 @@ public class IMPersona {
      * @param packet
      */
     synchronized void process(String text) {
-        ZimbraLog.im.info("IMPersona("+getAddr()+") processing text packet: "+text);
+        ZimbraLog.im.debug("IMPersona("+getAddr()+") processing text packet: "+text);
     }
     
     /**
@@ -199,7 +199,7 @@ public class IMPersona {
      * @param packet
      */
     synchronized void process(Packet packet) {
-        ZimbraLog.im.info("IMPersona("+getAddr()+") processing packet: "+packet.toXML());
+        ZimbraLog.im.debug("IMPersona("+getAddr()+") processing packet: "+packet.toXML());
 
         boolean toMe = true;
         
@@ -285,7 +285,7 @@ public class IMPersona {
                         break;
                     case subscribed:
                     {
-                        ZimbraLog.im.info("Presence.subscribed: " +pres.toString());
+                        ZimbraLog.im.debug("Presence.subscribed: " +pres.toString());
                         
                         IMAddr address = IMAddr.fromJID(pres.getFrom());
                         
@@ -306,7 +306,7 @@ public class IMPersona {
                     }
                     break;
                     case unsubscribe: // remote user is unsubscribing from us
-                        ZimbraLog.im.info("Presence.unsubscribe: " +pres.toString());
+                        ZimbraLog.im.debug("Presence.unsubscribe: " +pres.toString());
                         // auto-accept for now
                         reply = new Presence();
                         reply.setTo(pres.getFrom());
@@ -316,7 +316,7 @@ public class IMPersona {
                         break;
                     case unsubscribed: // you've unsubscribed 
                     {
-                        ZimbraLog.im.info("Presence.unsubscribed: " +pres.toString());
+                        ZimbraLog.im.debug("Presence.unsubscribed: " +pres.toString());
 
                         IMAddr address = IMAddr.fromJID(pres.getFrom());
                         try {
@@ -327,20 +327,20 @@ public class IMPersona {
                     }
                     break;
                     case probe:
-                        ZimbraLog.im.info("Presence.probe: " +pres.toString());
+                        ZimbraLog.im.debug("Presence.probe: " +pres.toString());
                         try {
                             pushMyPresence(pres.getFrom());
                         } catch(ServiceException ex) {}
                         break;
                     case error:
-                        ZimbraLog.im.info("Presence.error: " +pres.toString());
+                        ZimbraLog.im.debug("Presence.error: " +pres.toString());
                         break;
                 }
             }
         } else if (packet instanceof Roster) {
             Roster roster = (Roster)packet;
 
-            ZimbraLog.im.info("Got a roster: "+roster.toXML());
+            ZimbraLog.im.debug("Got a roster: "+roster.toXML());
             if (roster.getType() == Type.result) {
                 mBuddyList.clear();
                 
@@ -521,7 +521,7 @@ public class IMPersona {
             newBuddy.setPresence(new IMPresence(Show.OFFLINE, (byte) 0, "offline"));
             
             if (mBuddyList.containsKey(buddyAddr)) {
-                ZimbraLog.im.info("Key: "+buddyAddr+ " already in buddy list!\n");
+                ZimbraLog.im.debug("Key: "+buddyAddr+ " already in buddy list!\n");
             }
             
             mBuddyList.put(buddyAddr, newBuddy);
@@ -601,7 +601,7 @@ public class IMPersona {
                 ZimbraLog.im.warn("Caught ServiceException: " + ex.toString(), ex);
             }
         } else {
-            ZimbraLog.im.warn("Got presence update for buddy: "+fromAddr+" but wasn't in buddy list!");
+            ZimbraLog.im.debug("Got presence update for buddy: "+fromAddr+" but wasn't in buddy list!");
         }
         
     }
@@ -799,7 +799,7 @@ public class IMPersona {
     
     private void xmppRoute(Packet packet) {
         if (mXMPPSession != null) {
-            ZimbraLog.im.info("SENDING XMPP PACKET: "+packet.toXML());
+            ZimbraLog.im.debug("SENDING XMPP PACKET: "+packet.toXML());
             packet.setFrom(mXMPPSession.getAddress());
             
             XMPPServer.getInstance().getPacketRouter().route(packet);
