@@ -184,7 +184,7 @@ public abstract class ZFilterCondition {
         if (n.equals(C_HEADER)) {
             return new ZHeaderCondition(
                     getK0(condEl),
-                    HeaderOp.fromProtoString(condEl.getAttribute(MailConstants.A_OPERATION)),
+                    HeaderOp.fromProtoString(condEl.getAttribute(MailConstants.A_OPERATION, ":is")),
                     getK1(condEl));
         } else if (n.equals(C_EXISTS)) {
             return new ZHeaderExistsCondition(
@@ -260,13 +260,13 @@ public abstract class ZFilterCondition {
         private AddressBookOp mAddressBookOp;
 
         public ZAddressBookCondition(AddressBookOp op, String header) {
-            super(C_ADDRESSBOOK, op.toProtoOp(), "contacts", header);
+            super(C_ADDRESSBOOK, op.toProtoOp(), header, "contacts");
             mAddressBookOp = op;
         }
 
         public AddressBookOp getAddressBookOp() { return mAddressBookOp; }
-        public String getFolder() { return mK0; }
-        public String getHeader() { return mK1; }
+        public String getFolder() { return mK1; }
+        public String getHeader() { return mK0; }
 
         public String toConditionString() {
             return (mAddressBookOp == AddressBookOp.IN ? "addressbook in " : "addressbook not_in ") + ZFilterRule.quotedString(getHeader());
