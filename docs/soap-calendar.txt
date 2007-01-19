@@ -800,6 +800,7 @@ OR
 //
 <SendInviteReplyRequest id="mail_item_id" compNum="comp_num"
   verb="VERB" [updateOrganizer="1|0"]>
+  [<tz ...>]  // definition for TZID referenced by DATETIME in <exceptId>
   [<exceptId DATETIME>]? // reply to just one instance of the specified Invite (default is all instances)
   [<m>...</m>]
 </SendInviteReplyRequest>  

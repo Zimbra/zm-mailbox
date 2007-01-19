@@ -50,10 +50,12 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.RecurId;
+import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender.Verb;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
@@ -136,9 +138,14 @@ public class SendInviteReply extends CalendarRequest {
             Element exc = request.getOptionalElement(MailConstants.E_CAL_EXCEPTION_ID);
             ParsedDateTime exceptDt = null;
             if (exc != null) {
-                exceptDt = CalendarUtils.parseDateTime(exc,
-                                                       oldInv.getTimeZoneMap(),
-                                                       oldInv);
+                TimeZoneMap tzmap = oldInv.getTimeZoneMap();
+                Element tzElem = request.getOptionalElement(MailConstants.E_CAL_TZ);
+                ICalTimeZone tz = null;
+                if (tzElem != null) {
+                    tz = CalendarUtils.parseTzElement(tzElem);
+                    tzmap.add(tz);
+                }
+                exceptDt = CalendarUtils.parseDateTime(exc, tzmap, oldInv);
             } else if (oldInv.hasRecurId()) {
                 exceptDt = oldInv.getRecurId().getDt();
             }
