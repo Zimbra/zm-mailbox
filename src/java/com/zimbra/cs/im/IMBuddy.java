@@ -57,7 +57,8 @@ public class IMBuddy {
     public enum SubType {
         TO /*OUTGOING SUBSCRIPTION: i receive your data */ , 
         FROM /*INCOMING SUBSCRIPTION: I send */, 
-        BOTH, NONE;
+        BOTH, NONE,
+        UNSET; // null
         
         /**
          * @return TRUE if I receive your data 
@@ -78,8 +79,8 @@ public class IMBuddy {
          */
         SubType setOutgoing() {
             switch (this) {
-            case NONE: case TO: return TO;
-            case FROM: case BOTH: return BOTH;
+                case UNSET: case NONE: case TO: return TO;
+                case FROM: case BOTH: return BOTH;
             }
             assert(false);
             return null;
@@ -90,8 +91,8 @@ public class IMBuddy {
          */
         SubType setIncoming() {
             switch (this) {
-            case NONE: case FROM: return FROM;
-            case TO: case BOTH: return BOTH;
+                case UNSET: case NONE: case FROM: return FROM;
+                case TO: case BOTH: return BOTH;
             }
             assert(false);
             return null;
@@ -102,8 +103,9 @@ public class IMBuddy {
          */
         SubType clearOutgoing() {
             switch(this) {
-            case FROM: case BOTH: return FROM;
-            case NONE: case TO: return NONE;
+                case FROM: case BOTH: return FROM;
+                case NONE: case TO: return NONE;
+                case UNSET: return UNSET;
             }
             assert(false); 
             return null;
@@ -114,8 +116,9 @@ public class IMBuddy {
          */
         SubType clearIncoming() {
             switch(this) {
-            case NONE: case FROM: return NONE;
-            case TO: case BOTH: return TO;
+                case NONE: case FROM: return NONE;
+                case TO: case BOTH: return TO;
+                case UNSET: return UNSET;
             }
             assert(false); 
             return null;
@@ -127,7 +130,7 @@ public class IMBuddy {
         mAddress = address;
         mName = name;
         mPresence = null;
-        mSubType = SubType.NONE;
+        mSubType = SubType.UNSET;
     }
     
     public String toString() {
@@ -182,6 +185,16 @@ public class IMBuddy {
         return mPresence;
     }
     
+    public Roster.Subscription getSubscription() {
+        switch (mSubType) {
+            case UNSET: return null;
+            case TO: return Roster.Subscription.to;
+            case FROM: return Roster.Subscription.from;
+            case BOTH: return Roster.Subscription.both;
+            case NONE: return Roster.Subscription.none;
+        }
+        return null;
+    }
     public SubType getSubType() { return mSubType; }
     public Roster.Ask getAsk() { return mAsk; }
     

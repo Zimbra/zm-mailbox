@@ -50,11 +50,16 @@ IMSubscribe -- subscribe to someone's presence / modify subscription
 
 <IMSubscribeResponse/>
 
-IMSubscribeReply -- jabber "subscribed" message: subscription response
-----------------
-<IMSubscribeReplyRequest addr="foo@bar.com" type="from|to|both|none">
 
-</IMSubscribeReplyResponse>
+
+IMAuthorizeSubscribe -- used to OK another user adding you to their buddy list
+--------------------    send this in response to a <subscribe> notification
+                        Optionally, add this user to my buddy list as well
+
+<IMAuthorizeSubscribeRequest addr="foo@bar.com" authorized="true|false" [add="true|false" groups="group,group..."]/>
+<IMAuthorizeSubscribeResponse/>
+
+
 
 
 IMSetPresence -- modify your presence state
@@ -169,7 +174,7 @@ IM NOTIFICATIONS
                    <presence from="FROMADDR" [lang="en"] [show="away|chat|dnd|xa"] [priority="0-255"] [status="STATUS"]/>
                 ]*
                 [
-                   <subscribe from="FROMADDR"/> // they added you to their buddy list
+                   <subscribe from="FROMADDR"/> // they want to add you to their buddy list (see <AuthorizeSubscribe> above)
                 ]*
                 [
                    <subscribed to="TOADDR" name="NAME" groups="GROUPS" [ask="subscribe|unsubscribe"]/> // you added them to your buddy list

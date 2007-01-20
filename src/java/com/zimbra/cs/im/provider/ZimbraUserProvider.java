@@ -22,7 +22,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.im;
+package com.zimbra.cs.im.provider;
 
 import java.util.Collection;
 import java.util.Date;

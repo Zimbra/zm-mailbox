@@ -55,10 +55,14 @@ public abstract class IMEvent {
         for (IMAddr addr : mTargets) {
             try {
                 if (addr.getAddr().indexOf('@') > 0) {
-                    Object lock = IMRouter.getInstance().getLock(addr);
-                    synchronized (lock) {
-                        IMPersona persona = IMRouter.getInstance().findPersona(null, addr, false);
-                        handleTarget(persona);
+                    IMPersona persona  = IMRouter.getInstance().findPersona(null, addr);
+                    if (persona != null) {
+                        synchronized (persona.getLock()) {
+                            handleTarget(persona);
+                        }
+                    } else {
+                        ZimbraLog.im.debug("Ignoring IMEvent for "+addr.toString()+" (could not find Mailbox): "+
+                                    this.toString());
                     }
                 } else {
                     ZimbraLog.im.debug("Ignoring IMEvent for "+addr.toString()+" (addr has no domain): "+
@@ -70,6 +74,6 @@ public abstract class IMEvent {
             }
         }
     }
-    
+        
     protected void handleTarget(IMPersona persona) throws ServiceException {}
 }

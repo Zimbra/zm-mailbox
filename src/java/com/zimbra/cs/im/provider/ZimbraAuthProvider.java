@@ -22,7 +22,7 @@
  * ***** END LICENSE BLOCK *****
  */
  
-package com.zimbra.cs.im;
+package com.zimbra.cs.im.provider;
 
 import org.jivesoftware.wildfire.auth.AuthProvider;
 import org.jivesoftware.wildfire.auth.UnauthorizedException;

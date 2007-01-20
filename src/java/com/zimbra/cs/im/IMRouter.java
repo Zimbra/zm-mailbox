@@ -24,104 +24,85 @@
  */
 package com.zimbra.cs.im;
 
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Timer;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 public class IMRouter implements Runnable {
-    
     private static final IMRouter sRouter = new IMRouter();
-    public static IMRouter getInstance() { return sRouter; }
-    
-    private Map<IMAddr, IMPersona> mBuddyListMap = new HashMap<IMAddr, IMPersona>();
+    private Map<IMAddr, IMPersona> mBuddyListMap = new ConcurrentHashMap<IMAddr, IMPersona>();
     private LinkedBlockingQueue<IMEvent> mQueue = new LinkedBlockingQueue<IMEvent>();
     private boolean mShutdown = false;
-    private Timer mTimer;
+    private IMRouter() { new Thread(this).start(); }
     
-    private IMRouter() {
-        new Thread(this).start();
-        mTimer = new Timer();
-    }
+    public static IMRouter getInstance() { return sRouter; }
     
-    public Object getLock(IMAddr addr) throws ServiceException {
-        Account acct = Provisioning.getInstance().get(AccountBy.name, addr.getAddr());
-        if (acct != null) 
-            return MailboxManager.getInstance().getMailboxByAccount(acct);
-        else {
-            ZimbraLog.im.warn("Couldn't find Mailbox for "+addr.toString());
-            throw MailServiceException.NO_SUCH_MBOX(addr.getAddr());
-        }
-    }
-    
-    public synchronized IMPersona findPersona(OperationContext octxt, IMAddr addr, boolean loadSubs) throws ServiceException 
+    /**
+     * @param octxt
+     * @param addr
+     * @return
+     * @throws ServiceException
+     */
+    public IMPersona findPersona(OperationContext octxt, IMAddr addr) throws ServiceException 
     {
         // first, just check the map
         IMPersona toRet = mBuddyListMap.get(addr);
         
-        // okay, maybe it's an alias -- get the account and resolve it to the cannonical name
         if (toRet == null) {
-            Account acct = Provisioning.getInstance().get(AccountBy.name, addr.getAddr());            
-            String canonName = acct.getName();
-            addr = new IMAddr(canonName);
-            toRet = mBuddyListMap.get(addr);
-        }
-        
-        // okay, we might have to create the persona
-        if (toRet == null) {
-            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(Provisioning.getInstance().get(AccountBy.name, addr.getAddr()));
-            Metadata md = mbox.getConfig(octxt, "im");
-            if (md != null)
-                toRet = IMPersona.decodeFromMetadata(addr, md);
-            else
-                toRet = new IMPersona(addr);
-            
-            toRet.init();
-            
-            mBuddyListMap.put(addr, toRet);
-        }
-        
-        if (loadSubs) {
-            toRet.loadSubs();
+            // okay, maybe it's an alias -- get the account and resolve it to the cannonical name
+            if (toRet == null) {
+                Account acct = Provisioning.getInstance().get(AccountBy.name, addr.getAddr());            
+                String canonName = acct.getName();
+                addr = new IMAddr(canonName);
+                toRet = mBuddyListMap.get(addr);
+            }
+            if (toRet == null) {
+                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(Provisioning.getInstance().get(AccountBy.name, addr.getAddr()));
+                toRet = loadPersona(octxt, mbox, addr);
+            }
         }
         return toRet;
     }
     
-    public synchronized IMPersona findPersona(OperationContext octxt, Mailbox mbox, boolean loadSubs) throws ServiceException 
+    /**
+     * @param octxt
+     * @param mbox
+     * @return
+     * @throws ServiceException
+     */
+    public IMPersona findPersona(OperationContext octxt, Mailbox mbox) throws ServiceException 
     {
         IMAddr addr = new IMAddr(mbox.getAccount().getName());
-        IMPersona toRet = mBuddyListMap.get(addr);
-        if (toRet == null) {
-            Metadata md = mbox.getConfig(octxt, "im");
-            if (md != null)
-                toRet = IMPersona.decodeFromMetadata(addr, md);
-            else 
-                toRet = new IMPersona(addr);
-
-            toRet.init();
-            
-            mBuddyListMap.put(addr, toRet);
-        }
         
-        if (loadSubs) {
-            toRet.loadSubs();
+        // first, just check the map
+        IMPersona toRet = mBuddyListMap.get(addr);
+        
+        if (toRet == null) {
+            toRet = loadPersona(octxt, mbox, addr); 
         }
         return toRet;
     }
     
     
-    Timer getTimer() { return mTimer; }
+    private synchronized IMPersona loadPersona(OperationContext octxt, Mailbox mbox, IMAddr addr) throws ServiceException 
+    {
+        IMPersona toRet = mBuddyListMap.get(addr);
+        if (toRet == null) {
+            toRet = IMPersona.loadPersona(octxt, mbox, addr);
+            mBuddyListMap.put(addr, toRet);
+        }
+        return toRet;
+    }
+    
     
     /**
      * Post an event to the router's asynchronous execution queue.  The event
@@ -161,17 +142,14 @@ public class IMRouter implements Runnable {
         }
     }
     
+    /**
+     * 
+     */
     public synchronized void shutdown() {
         mShutdown = true;
 
         // force the queue to wakeup...
         mQueue.add(new IMNullEvent());
         
-        mTimer.cancel();
     }
-    
-//    Mailbox getMailboxFromAddr(IMAddr addr) throws ServiceException {
-//        return Mailbox.getMailboxByAccount(Provisioning.getInstance().getAccountByName(addr.getAddr()));
-//    }
-    
 }

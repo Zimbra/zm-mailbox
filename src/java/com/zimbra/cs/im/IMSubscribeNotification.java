@@ -22,22 +22,32 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.service.im;
+package com.zimbra.cs.im;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.im.IMPersona;
-import com.zimbra.cs.im.IMRouter;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.soap.DocumentHandler;
-import com.zimbra.soap.ZimbraSoapContext;
+import java.util.Formatter;
 
-public abstract class IMDocumentHandler extends DocumentHandler {
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.IMConstants;
+import com.zimbra.common.soap.Element;
 
-    Object getLock(ZimbraSoapContext zc) throws ServiceException {
-        return super.getRequestedMailbox(zc);
+/**
+ * Someone is trying to add us to their buddy list
+ */
+public class IMSubscribeNotification implements IMNotification {
+    IMAddr mFromAddr;
+    
+    IMSubscribeNotification(IMAddr fromAddr) {
+        mFromAddr = fromAddr;
     }
     
-    IMPersona getRequestedPersona(ZimbraSoapContext zc, Object lock) throws ServiceException {
-        return IMRouter.getInstance().findPersona(zc.getOperationContext(), (Mailbox)lock);
+    public String toString() {
+        return new Formatter().format("IMSubscribeNotification: From: %s", mFromAddr).toString();
+    }
+
+    public Element toXml(Element parent) {
+        ZimbraLog.im.debug(this.toString());
+        Element toRet = parent.addElement(IMConstants.E_SUBSCRIBE);
+        toRet.addAttribute(IMConstants.A_FROM, mFromAddr.getAddr());
+        return toRet;
     }
 }

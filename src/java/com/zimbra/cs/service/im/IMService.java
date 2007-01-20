@@ -34,6 +34,7 @@ public class IMService implements DocumentService {
         dispatcher.registerHandler(IMConstants.IM_GET_ROSTER_REQUEST, new IMGetRoster());
         dispatcher.registerHandler(IMConstants.IM_SET_PRESENCE_REQUEST, new IMSetPresence());
         dispatcher.registerHandler(IMConstants.IM_SUBSCRIBE_REQUEST, new IMSubscribe());
+        dispatcher.registerHandler(IMConstants.IM_AUTHORIZE_SUBSCRIBE_REQUEST, new IMAuthorizeSubscribe());
         dispatcher.registerHandler(IMConstants.IM_SEND_MESSAGE_REQUEST, new IMSendMessage());
         dispatcher.registerHandler(IMConstants.IM_GET_CHAT_REQUEST, new IMGetChat());
         dispatcher.registerHandler(IMConstants.IM_MODIFY_CHAT_REQUEST, new IMModifyChat());

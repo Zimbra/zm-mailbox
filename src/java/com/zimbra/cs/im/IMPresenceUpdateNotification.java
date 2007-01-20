@@ -42,12 +42,12 @@ public class IMPresenceUpdateNotification implements IMNotification {
     }
     
     public String toString() {
-        return new Formatter().format("IMPresenceUpdateEvent: From: %s  Presence: %s", 
+        return new Formatter().format("IMPresenceUpdateNotification: From: %s  Presence: %s", 
                 mFromAddr, mPresence.toString()).toString();
     }
     
     public Element toXml(Element parent) {
-        ZimbraLog.im.info(this.toString());
+        ZimbraLog.im.debug(this.toString());
         Element toRet = parent.addElement(IMConstants.E_PRESENCE);
         mPresence.toXml(toRet);
         toRet.addAttribute(IMConstants.A_FROM, mFromAddr.getAddr());

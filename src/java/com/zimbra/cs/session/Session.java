@@ -74,8 +74,8 @@ public abstract class Session {
 
             // add this Session to the IM Persona, or die trying
             if (this.shouldRegisterWithIM()) {
-                synchronized(mMailbox) {
-                    mPersona = IMRouter.getInstance().findPersona(null, mMailbox, false);
+                mPersona = IMRouter.getInstance().findPersona(null, mMailbox);
+                synchronized(mPersona.getLock()) {
                     mPersona.addListener(this);
                 }
             } else {
@@ -169,7 +169,7 @@ public abstract class Session {
             if (mMailbox != null)
                 mMailbox.removeListener(this);
             if (mPersona != null) {
-                synchronized (mMailbox) {
+                synchronized (mPersona.getLock()) {
                     mPersona.removeListener(this);
                 }
             }

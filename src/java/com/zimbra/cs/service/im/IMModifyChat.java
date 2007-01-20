@@ -54,7 +54,7 @@ public class IMModifyChat extends IMDocumentHandler
         synchronized(lock) {
             IMPersona persona = super.getRequestedPersona(lc, lock);
             
-            IMChat chat = persona.lookupChatOrNull(threadId);
+            IMChat chat = persona.getChat(threadId);
             
             if (chat == null) {
                 throw ServiceException.FAILURE("Unknown thread: "+threadId, null);

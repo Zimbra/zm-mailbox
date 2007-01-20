@@ -38,23 +38,37 @@ public class FakeClientConnection extends VirtualConnection {
         mAddr = persona.getAddr();
     }
 
+    /* (non-Javadoc)
+     * @see org.jivesoftware.wildfire.net.VirtualConnection#closeVirtualConnection()
+     */
     public void closeVirtualConnection() {
     }
 
+    /* (non-Javadoc)
+     * @see org.jivesoftware.wildfire.Connection#deliver(org.xmpp.packet.Packet)
+     */
     public void deliver(Packet packet) throws UnauthorizedException {
         IMXmppEvent imXmppEvent = new IMXmppEvent(mAddr, packet);
         IMRouter.getInstance().postEvent(imXmppEvent);
     }
 
+    /* (non-Javadoc)
+     * @see org.jivesoftware.wildfire.Connection#deliverRawText(java.lang.String)
+     */
     public void deliverRawText(String text) {
-        IMXmppTextEvent imXmppEvent = new IMXmppTextEvent(mAddr, text);
-        IMRouter.getInstance().postEvent(imXmppEvent);
+        // ignored for now
     }
 
+    /* (non-Javadoc)
+     * @see org.jivesoftware.wildfire.Connection#getInetAddress()
+     */
     public InetAddress getInetAddress() {
         return null;
     }
 
+    /* (non-Javadoc)
+     * @see org.jivesoftware.wildfire.Connection#systemShutdown()
+     */
     public void systemShutdown() {
     }
 }

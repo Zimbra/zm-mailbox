@@ -134,8 +134,8 @@ public class IMChat {
     
     private TIMER_STATE mTimerState = TIMER_STATE.NONE;
     private FlushTask mTimer = null;
-    static final int sSaveTimerMs =  5  * 1000; // 5 sec
-    static final int sCloseTimerMs = 30 * 1000; // 30 sec
+    static final int sSaveTimerMs =  10 * 60 * 1000; // 1 min
+    static final int sCloseTimerMs = 10 * 60 * 1000; // 10 min
     
 
     IMChat(Mailbox mbox, IMPersona persona, String threadId, Participant initialPart)
@@ -155,7 +155,7 @@ public class IMChat {
     }
     
     private void enableTimer(TIMER_STATE requestedState) {
-        ZimbraLog.im.info("Chat + " +this.getThreadId() + " setting timer to " +requestedState);
+        ZimbraLog.im.debug("Chat + " +this.getThreadId() + " setting timer to " +requestedState);
         //                   requested
         // current:                        CLOSE           SAVE          NONE 
         //                     CLOSE         nop              nop           start-close
@@ -206,7 +206,7 @@ public class IMChat {
     private void timerExecute() {
         synchronized(mMailbox ) {
             
-            ZimbraLog.im.info("ImChat.TimerExecute "+mTimerState);
+            ZimbraLog.im.debug("ImChat.TimerExecute "+mTimerState);
             mTimer = null; // it is firing!  don't cancel it!
             switch (mTimerState) {
                 case WAITING_TO_CLOSE:
@@ -339,6 +339,8 @@ public class IMChat {
     private void flush() {
         if (mLastFlushSeqNo >= getHighestSeqNo())
             return;
+        
+        ZimbraLog.im.info("Flushing chat: "+toString());
         
         try {
             
