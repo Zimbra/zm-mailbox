@@ -36,6 +36,8 @@ public class IMConstants {
     public static final QName IM_GET_ROSTER_RESPONSE   = QName.get("IMGetRosterResponse", NAMESPACE);
     public static final QName IM_SUBSCRIBE_REQUEST     = QName.get("IMSubscribeRequest", NAMESPACE);
     public static final QName IM_SUBSCRIBE_RESPONSE    = QName.get("IMSubscribeResponse", NAMESPACE);
+    public static final QName IM_AUTHORIZE_SUBSCRIBE_REQUEST     = QName.get("IMAuthorizeSubscribeRequest", NAMESPACE);
+    public static final QName IM_AUTHORIZE_SUBSCRIBE_RESPONSE    = QName.get("IMAuthorizeSubscribeResponse", NAMESPACE);
     public static final QName IM_SET_PRESENCE_REQUEST  = QName.get("IMSetPresenceRequest", NAMESPACE);
     public static final QName IM_SET_PRESENCE_RESPONSE = QName.get("IMSetPresenceResponse", NAMESPACE);
     public static final QName IM_GET_CHAT_REQUEST      = QName.get("IMGetChatRequest", NAMESPACE);
@@ -50,8 +52,10 @@ public class IMConstants {
     public static final QName IM_GATEWAY_REGISTER_REQUEST = QName.get("IMGatewayRegisterRequest", NAMESPACE);
     public static final QName IM_GATEWAY_REGISTER_RESPONSE = QName.get("IMGatewayRegisterResponse", NAMESPACE);
 
+    public static final String A_AUTHORIZED = "authorized";
     public static final String A_THREAD_ID      = "thread";
     public static final String A_ADDRESS        = "addr";
+    public static final String A_ADD = "addr";
     public static final String A_SEQ            = "seq";
     public static final String A_NAME           = "name";
     public static final String A_SUBSCRIPTION   = "subscription";
