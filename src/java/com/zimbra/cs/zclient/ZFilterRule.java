@@ -39,9 +39,9 @@ import com.zimbra.cs.zclient.ZFilterCondition.SizeOp;
 import com.zimbra.cs.zclient.ZFilterCondition.ZSizeCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.DateOp;
 import com.zimbra.cs.zclient.ZFilterCondition.ZDateCondition;
-import com.zimbra.cs.zclient.ZFilterAction.FlagOp;
+import com.zimbra.cs.zclient.ZFilterAction.MarkOp;
 import com.zimbra.cs.zclient.ZFilterAction.ZFileIntoAction;
-import com.zimbra.cs.zclient.ZFilterAction.ZFlagAction;
+import com.zimbra.cs.zclient.ZFilterAction.ZMarkAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZKeepAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZRedirectAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZDiscardAction;
@@ -180,7 +180,7 @@ public class ZFilterRule {
   discard
   fileinto "/path"
   tag "/tag"
-  flag read|flagged
+  mark read|flagged
   redirect "address"
   stop
 </pre>
@@ -245,9 +245,9 @@ public class ZFilterRule {
             } else if (a.equals("tag")) {
                 if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
                 actions.add(new ZTagAction(args[i++]));
-            } else if (a.equals("flag")) {
+            } else if (a.equals("mark")) {
                 if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
-                actions.add(new ZFlagAction(FlagOp.fromString(args[i++])));
+                actions.add(new ZMarkAction(MarkOp.fromString(args[i++])));
             } else if (a.equals("redirect")) {
                 if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
                 actions.add(new ZRedirectAction(args[i++]));

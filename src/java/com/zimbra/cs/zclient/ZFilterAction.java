@@ -44,23 +44,23 @@ public abstract class ZFilterAction {
     public static final String A_STOP = "stop";
     public static final String A_TAG = "tag";
 
-    public enum FlagOp {
+    public enum MarkOp {
 
         READ, FLAGGED;
 
         private static String[] mArgs = { "read", "flagged" };
 
-        public static FlagOp fromString(String s) throws ServiceException {
+        public static MarkOp fromString(String s) throws ServiceException {
             try {
-                return FlagOp.valueOf(s.toUpperCase());
+                return valueOf(s.toUpperCase());
             } catch (IllegalArgumentException e) {
-                throw ZClientException.CLIENT_ERROR("invalid op: "+s+", value values: "+Arrays.asList(FlagOp.values()), null);
+                throw ZClientException.CLIENT_ERROR("invalid op: "+s+", value values: "+Arrays.asList(values()), null);
             }
         }
 
         public String toProtoArg() { return mArgs[ordinal()]; }
 
-        public static FlagOp fromProtoString(String s) throws ServiceException {
+        public static MarkOp fromProtoString(String s) throws ServiceException {
             s = s.trim().toLowerCase();
             for (int i=0; i < mArgs.length; i++)
                 if (mArgs[i].equals(s)) return values()[i];
@@ -120,7 +120,7 @@ public abstract class ZFilterAction {
         else if (n.equals(A_REDIRECT))
             return new ZRedirectAction(getArg(actionElement));
         else if (n.equals(A_FLAG))
-            return new ZFlagAction(FlagOp.fromProtoString(getArg(actionElement)));
+            return new ZMarkAction(MarkOp.fromProtoString(getArg(actionElement)));
         else
             throw ZClientException.CLIENT_ERROR("unknown filter action: "+n, null);
     }
@@ -158,15 +158,15 @@ public abstract class ZFilterAction {
         public String toActionString() { return "tag " + ZFilterRule.quotedString(getTagName()); }
     }
 
-    public static class ZFlagAction extends ZFilterAction {
-        private FlagOp mFlagOp;
-        public ZFlagAction(FlagOp op) {
+    public static class ZMarkAction extends ZFilterAction {
+        private MarkOp mMarkOp;
+        public ZMarkAction(MarkOp op) {
             super(A_FLAG, op.toProtoArg());
-            mFlagOp = op;
+            mMarkOp = op;
         }
 
-        public String getFlagOp() { return mFlagOp.name(); }
-        public String toActionString() { return "flag " + mFlagOp.name().toLowerCase(); }
+        public String getMarkOp() { return mMarkOp.name(); }
+        public String toActionString() { return "mark " + mMarkOp.name().toLowerCase(); }
     }
 
     public static class ZRedirectAction extends ZFilterAction {

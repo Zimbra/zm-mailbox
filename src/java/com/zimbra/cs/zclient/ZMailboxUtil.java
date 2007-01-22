@@ -213,7 +213,7 @@ public class ZMailboxUtil implements DebugListener {
                         "    discard\n" +
                         "    fileinto \"/path\"\n" +
                         "    tag \"/tag\"\n" +
-                        "    flag read|flagged\n" +
+                        "    mark read|flagged\n" +
                         "    redirect \"address\"\n" +
                         "    stop\n"),
         FOLDER("help on folder-related commands"),
