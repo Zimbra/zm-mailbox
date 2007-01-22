@@ -371,7 +371,8 @@ public class MailService implements DocumentService {
     public static final String E_CAL_ICAL = "ical";
     public static final String E_CAL_ATTENDEE = "at";
     public static final String E_CAL_RECUR = "recur";
-    public static final String E_CAL_DATE = "date";
+    public static final String E_CAL_DATES = "dates";
+    public static final String E_CAL_DATE_VAL = "dtval";
     public static final String E_CAL_ADD = "add";
     public static final String E_CAL_EXCLUDE = "exclude";
     public static final String E_CAL_EXCEPT = "except";
