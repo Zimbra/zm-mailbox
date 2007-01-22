@@ -187,7 +187,7 @@ public class IMBuddy {
     
     public Roster.Subscription getSubscription() {
         switch (mSubType) {
-            case UNSET: return null;
+            case UNSET: return Roster.Subscription.none;
             case TO: return Roster.Subscription.to;
             case FROM: return Roster.Subscription.from;
             case BOTH: return Roster.Subscription.both;
