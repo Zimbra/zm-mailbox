@@ -3596,6 +3596,8 @@ public class LdapProvisioning extends Provisioning {
             ctxt = LdapUtil.getDirContext(true);
             String newDn = getIdentityDn(entry, newIdentityName);            
             ctxt.rename(identity.getDN(), newDn);
+        } catch (InvalidNameException e) {
+            throw ServiceException.INVALID_REQUEST("invalid identity name: "+newIdentityName, e);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to rename identity: "+newIdentityName, e);
         } finally {
