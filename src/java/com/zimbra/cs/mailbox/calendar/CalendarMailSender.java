@@ -357,7 +357,8 @@ public class CalendarMailSender {
 
             // ///////
             // MESSAGE HEADERS
-            mm.setSubject(subject, Mime.P_CHARSET_UTF8);
+            if (subject != null)
+                mm.setSubject(subject, Mime.P_CHARSET_UTF8);
 
             if (toAddrs != null) {
                 Address[] addrs = new Address[toAddrs.size()];
