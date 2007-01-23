@@ -124,7 +124,7 @@ public class IMRouter implements Runnable {
         while (!mShutdown) {
             try {
                 IMEvent event = mQueue.take();
-                ZimbraLog.im.debug("Executing IMEvent: "+ event);
+//                ZimbraLog.im.debug("Executing IMEvent: "+ event);
                 event.run();
             } catch (InterruptedException ex) {
                 

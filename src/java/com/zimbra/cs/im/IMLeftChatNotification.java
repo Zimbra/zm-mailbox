@@ -28,7 +28,7 @@ import java.util.Formatter;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.IMConstants;
 
-public class IMLeftChatNotification implements IMNotification {
+public class IMLeftChatNotification extends IMNotification {
 
     IMAddr mFromAddr;
     String mThreadId;
@@ -47,7 +47,7 @@ public class IMLeftChatNotification implements IMNotification {
     * @see com.zimbra.cs.im.IMNotification#toXml(com.zimbra.common.soap.Element)
     */
     public Element toXml(Element parent) {
-        Element toRet = parent.addElement(IMConstants.E_LEFTCHAT);
+        Element toRet = create(parent, IMConstants.E_LEFTCHAT);
         toRet.addAttribute(IMConstants.A_THREAD_ID, mThreadId);
         toRet.addAttribute(IMConstants.A_ADDRESS, mFromAddr.getAddr());
         return toRet;

@@ -71,45 +71,47 @@ public class IMGetRoster extends IMDocumentHandler {
                 }
             }
             
-            // items (buddies)
-            {
-                Element items = response.addUniqueElement(IMConstants.E_ITEMS);
-                for (IMBuddy buddy : persona.buddies()) {
-                    Element e = items.addElement(IMConstants.E_ITEM);
-                    e.addAttribute(IMConstants.A_ADDRESS, buddy.getAddress().getAddr());
-                    
-                    String buddyName = buddy.getName();
-                    if (buddyName != null && buddyName.length()>0) 
-                        e.addAttribute(IMConstants.A_NAME, buddy.getName());
-                    
-                    e.addAttribute(IMConstants.A_SUBSCRIPTION, buddy.getSubType().toString());
-                    
-                    if (buddy.getAsk() != null) {
-                        e.addAttribute("ask", buddy.getAsk().name());
-                    }
-                    
-                    // presence
-                    IMPresence presence = buddy.getPresence();
-                    if (presence == null) 
-                        e.addUniqueElement(IMConstants.E_PRESENCE);
-                    else {
-                        Element pe = e.addUniqueElement(IMConstants.E_PRESENCE);
-                        presence.toXml(pe);
-                    }
-                    
-                    StringBuffer groupStr = null;
-                    // groups
-                    for (IMGroup grp : buddy.groups()) {
-                        if (groupStr == null)
-                            groupStr = new StringBuffer(grp.getName());
-                        else 
-                            groupStr.append(',').append(grp.getName());
-                    }
-                    if (groupStr != null) 
-                        e.addAttribute(IMConstants.A_GROUPS, groupStr.toString());
-                    
-                }
-            }
+            persona.getRoster(lc.getOperationContext());
+            
+//            // items (buddies)
+//            {
+//                Element items = response.addUniqueElement(IMConstants.E_ITEMS);
+//                for (IMBuddy buddy : persona.buddies()) {
+//                    Element e = items.addElement(IMConstants.E_ITEM);
+//                    e.addAttribute(IMConstants.A_ADDRESS, buddy.getAddress().getAddr());
+//                    
+//                    String buddyName = buddy.getName();
+//                    if (buddyName != null && buddyName.length()>0) 
+//                        e.addAttribute(IMConstants.A_NAME, buddy.getName());
+//                    
+//                    e.addAttribute(IMConstants.A_SUBSCRIPTION, buddy.getSubType().toString());
+//                    
+//                    if (buddy.getAsk() != null) {
+//                        e.addAttribute("ask", buddy.getAsk().name());
+//                    }
+//                    
+//                    // presence
+//                    IMPresence presence = buddy.getPresence();
+//                    if (presence == null) 
+//                        e.addUniqueElement(IMConstants.E_PRESENCE);
+//                    else {
+//                        Element pe = e.addUniqueElement(IMConstants.E_PRESENCE);
+//                        presence.toXml(pe);
+//                    }
+//                    
+//                    StringBuffer groupStr = null;
+//                    // groups
+//                    for (IMGroup grp : buddy.groups()) {
+//                        if (groupStr == null)
+//                            groupStr = new StringBuffer(grp.getName());
+//                        else 
+//                            groupStr.append(',').append(grp.getName());
+//                    }
+//                    if (groupStr != null) 
+//                        e.addAttribute(IMConstants.A_GROUPS, groupStr.toString());
+//                    
+//                }
+//            }
         }
 
         

@@ -86,7 +86,7 @@ public class ZimbraGroupProvider implements GroupProvider {
                 return toRet;
             }
         } catch (ServiceException ex) {
-            ZimbraLog.im.debug("Caught ServiceException "+ex, ex);
+//            ZimbraLog.im.debug("Caught ServiceException "+ex, ex);
         }
         
         throw new GroupNotFoundException();

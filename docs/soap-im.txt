@@ -154,9 +154,7 @@ IM NOTIFICATIONS
 //
   [<soap:Header>
      <context xmlns="urn:zimbra">
-
        ...
-       
        <notify>
           [<deleted.../>]
           [<created.../>]
@@ -164,26 +162,36 @@ IM NOTIFICATIONS
           [
              <im>
                 [
+                //  Asynchronous Roster Response                
+                    <n type="roster">     
+                       <n type="subscribed"...>
+                       <n type="unsubscribed"...>
+                    </n>
+                ]?
+             
+                [
                 // NEW MESSAGE RECEIVED:
-                   <message from="address" thread="UID" ts="TIMESTAMP>
+                   <n type="message" from="address" thread="UID" ts="TIMESTAMP>
                       [<subject [lang="LANG"]>SUBJECT</subject>]
                       [<body [lang="LANG"]>BODY</body>]
-                   </message>
+                   </n>
                 ]*
                 [
-                   <presence from="FROMADDR" [lang="en"] [show="away|chat|dnd|xa"] [priority="0-255"] [status="STATUS"]/>
+                // Presence update for a specific user
+                   <n type="presence" from="FROMADDR" [lang="en"] [show="away|chat|dnd|xa"] [priority="0-255"] [status="STATUS"]/>
                 ]*
                 [
-                   <subscribe from="FROMADDR"/> // they want to add you to their buddy list (see <AuthorizeSubscribe> above)
+                // User wants to add you to their buddy list (see <AuthorizeSubscribe> above)
+                   <n type="subscribe" from="FROMADDR"/> 
                 ]*
                 [
-                   <subscribed to="TOADDR" name="NAME" groups="GROUPS" [ask="subscribe|unsubscribe"]/> // you added them to your buddy list
+                   <n type="subscribed" to="TOADDR" name="NAME" groups="GROUPS" [ask="subscribe|unsubscribe"]/> // you added them to your buddy list
                 ]*
                 [
-                   <unsubscribed to="TOADDR" groups="GROUPS" [ask="subscribe|unsubscribe"]/> // you removed them from your buddy list
+                   <n type="unsubscribed" to="TOADDR" groups="GROUPS" [ask="subscribe|unsubscribe"]/> // you removed them from your buddy list
                 ]*
                 [
-                   <leftchat thread="UID" addr="ADDRESS"> // specified user left the chat
+                   <n type="leftchat" thread="UID" addr="ADDRESS"> // specified user left the chat
                 ]*
                 
              </im>]

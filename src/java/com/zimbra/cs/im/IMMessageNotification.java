@@ -30,7 +30,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.IMConstants;
 import com.zimbra.common.soap.Element;
 
-public class IMMessageNotification implements IMNotification {
+public class IMMessageNotification extends IMNotification {
     
     IMAddr mFromAddr;
     String mThreadId;
@@ -44,7 +44,7 @@ public class IMMessageNotification implements IMNotification {
     }
     
     public Element toXml(Element parent) throws ServiceException {
-        Element e = parent.addElement(IMConstants.E_MESSAGE);
+        Element e = create(parent, IMConstants.E_MESSAGE);
         e.addAttribute(IMConstants.A_FROM, mFromAddr.toString());
         e.addAttribute(IMConstants.A_THREAD_ID, mThreadId);
         e.addAttribute(IMConstants.A_TIMESTAMP, mMessage.getTimestamp());

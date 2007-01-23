@@ -33,7 +33,7 @@ import com.zimbra.common.soap.Element;
 /**
  * Someone is trying to add us to their buddy list
  */
-public class IMSubscribeNotification implements IMNotification {
+public class IMSubscribeNotification extends IMNotification {
     IMAddr mFromAddr;
     
     IMSubscribeNotification(IMAddr fromAddr) {
@@ -46,7 +46,7 @@ public class IMSubscribeNotification implements IMNotification {
 
     public Element toXml(Element parent) {
         ZimbraLog.im.debug(this.toString());
-        Element toRet = parent.addElement(IMConstants.E_SUBSCRIBE);
+        Element toRet = create(parent, IMConstants.E_SUBSCRIBE);
         toRet.addAttribute(IMConstants.A_FROM, mFromAddr.getAddr());
         return toRet;
     }

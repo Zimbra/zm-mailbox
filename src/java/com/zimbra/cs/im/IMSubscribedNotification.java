@@ -24,6 +24,7 @@
  */
 package com.zimbra.cs.im;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.xmpp.packet.Roster;
@@ -33,7 +34,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.IMConstants;
 import com.zimbra.common.soap.Element;
 
-class IMSubscribedNotification implements IMNotification {
+class IMSubscribedNotification extends IMNotification {
     IMAddr mAddr;
     String mName;
     String[] mGroups;
@@ -45,6 +46,15 @@ class IMSubscribedNotification implements IMNotification {
         int i = 0;
         for (IMGroup grp : groups) 
             str[i++] = grp.getName();
+
+        return new IMSubscribedNotification(address, name, str, subscribed, ask);
+    }
+    
+    static IMSubscribedNotification create(IMAddr address, String name, Collection<String> groups, boolean subscribed, Roster.Ask ask) {
+        String[] str = new String[groups.size()];
+        int i = 0;
+        for (String s : groups) 
+            str[i++] = s;
 
         return new IMSubscribedNotification(address, name, str, subscribed, ask);
     }
@@ -71,10 +81,10 @@ class IMSubscribedNotification implements IMNotification {
         
         Element e;
         if (mSubscribed) { 
-            e = parent.addElement(IMConstants.E_SUBSCRIBED);
+            e = create(parent, IMConstants.E_SUBSCRIBED);
             e.addAttribute(IMConstants.A_NAME, mName);
         } else {
-            e = parent.addElement(IMConstants.E_UNSUBSCRIBED);
+            e = create(parent, IMConstants.E_UNSUBSCRIBED);
         }
         
         if (mAsk != null) {

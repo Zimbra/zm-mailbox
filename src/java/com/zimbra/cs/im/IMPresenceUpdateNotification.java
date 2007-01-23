@@ -30,7 +30,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.IMConstants;
 import com.zimbra.common.soap.Element;
 
-public class IMPresenceUpdateNotification implements IMNotification {
+public class IMPresenceUpdateNotification extends IMNotification {
 
     IMAddr mFromAddr;
     IMPresence mPresence;
@@ -48,7 +48,7 @@ public class IMPresenceUpdateNotification implements IMNotification {
     
     public Element toXml(Element parent) {
         ZimbraLog.im.debug(this.toString());
-        Element toRet = parent.addElement(IMConstants.E_PRESENCE);
+        Element toRet = create(parent, IMConstants.E_PRESENCE);
         mPresence.toXml(toRet);
         toRet.addAttribute(IMConstants.A_FROM, mFromAddr.getAddr());
         return toRet;
