@@ -170,8 +170,8 @@ public abstract class ZFilterCondition {
     protected String mK0;
     protected String mK1;
 
-    private static String getAttrK(Element e, String k) throws ServiceException {
-        String value = e.getAttribute(k);
+    private static String getAttrK(Element e, String k, boolean defaultValue) throws ServiceException {
+        String value = defaultValue  ? e.getAttribute(k, "[\"\"]") : e.getAttribute(k);
         List<String> slist = StringUtil.parseSieveStringList(value);
         if (slist.size() != 1) {
             throw ZClientException.CLIENT_ERROR(String.format("unable to parse attr(%s) value(%s)", k, value), null);
@@ -179,28 +179,36 @@ public abstract class ZFilterCondition {
         return slist.get(0);
     }
 
-    public static String getK0(Element e) throws ServiceException {
-        return getAttrK(e, MailConstants.A_LHS);
+    private static String getK0(Element e) throws ServiceException {
+        return getAttrK(e, MailConstants.A_LHS, false);
     }
 
-    public static String getK1(Element e) throws ServiceException {
-        return getAttrK(e, MailConstants.A_RHS);
+    private static String getK1(Element e) throws ServiceException {
+        return getAttrK(e, MailConstants.A_RHS, false);
+    }
+
+    private static String getK0(Element e, boolean defaultValue) throws ServiceException {
+        return getAttrK(e, MailConstants.A_LHS, defaultValue);
+    }
+
+    private static String getK1(Element e, boolean defaultValue) throws ServiceException {
+        return getAttrK(e, MailConstants.A_RHS, defaultValue);
     }
 
     public static ZFilterCondition getCondition(Element condEl) throws ServiceException {
         String n = condEl.getAttribute(MailConstants.A_NAME);
         if (n.equals(C_HEADER)) {
             return new ZHeaderCondition(
-                    getK0(condEl),
+                    getK0(condEl, true),
                     HeaderOp.fromProtoString(condEl.getAttribute(MailConstants.A_OPERATION, ":is")),
-                    getK1(condEl));
+                    getK1(condEl, true));
         } else if (n.equals(C_EXISTS)) {
             return new ZHeaderExistsCondition(
-                    getK0(condEl),
+                    getK0(condEl, true),
                     true);
         } else if (n.equals(C_NOT_EXISTS)) {
             return new ZHeaderExistsCondition(
-                    getK0(condEl),
+                    getK0(condEl, true),
                     true);
         } if (n.equals(C_DATE)) {
             try {
@@ -213,9 +221,9 @@ public abstract class ZFilterCondition {
         } else if (n.equals(C_SIZE)) {
             return new ZSizeCondition(
                     SizeOp.fromProtoString(condEl.getAttribute(MailConstants.A_OPERATION)),
-                    condEl.getAttribute(MailConstants.A_RHS));
+                    condEl.getAttribute(MailConstants.A_RHS, ""));
         } else if (n.equals(C_BODY)) {
-            return new ZBodyCondition(BodyOp.fromProtoString(condEl.getAttribute(MailConstants.A_OPERATION)),getK1(condEl));
+            return new ZBodyCondition(BodyOp.fromProtoString(condEl.getAttribute(MailConstants.A_OPERATION)),getK1(condEl, true));
         } else if (n.equals(C_ATTACHMENT)) {
             return new ZAttachmentExistsCondition(true);
         } else if (n.equals(C_NOT_ATTACHMENT)) {
@@ -223,7 +231,7 @@ public abstract class ZFilterCondition {
         } else if (n.equals(C_ADDRESSBOOK)) {
             return new ZAddressBookCondition(
                     AddressBookOp.fromProtoString(condEl.getAttribute(MailConstants.A_OPERATION)),
-                    getK0(condEl));
+                    getK0(condEl, true));
         } else {
              throw ZClientException.CLIENT_ERROR("unknown filter condition: "+n, null);
         }
