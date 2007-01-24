@@ -377,7 +377,7 @@
       <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
            classpathref="class.path" onerror="abort" src="${im.dir}/src/db/wildfireInit.sql" />
       <copy overwrite="true" file="${im.dir}/conf/wildfire.xml" todir="${zimbra.home.dir}/conf"/>
-      <chmod file="${im.dir}/conf/wildfire.xml" perm="u+w"/>
+      <chmod file="${zimbra.home.dir}/conf/wildfire.xml" perm="u+w"/>
       <copy overwrite="true" todir="${zimbra.home.dir}/conf/msgs">
         <fileset dir="${im.dir}/src/i18n"/>
       </copy>
