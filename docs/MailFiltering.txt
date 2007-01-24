@@ -341,6 +341,55 @@ SOAP API
 * {rhs} is the key
 * {action name} is "fileinto", "keep", "tag", etc.
 
+CONDITIONS
+
+  header
+   <c name="header" k0="subject" op=":is" k1="foo"/>
+   <c name="header" k0="subject" op="not :is" k1="foo"/>
+   <c name="header" k0="subject" op=":contains" k1="foo"/>
+   <c name="header" k0="subject" op="not :contains" k1="foo"/>
+   <c name="header" k0="subject" op=":matches" k1="foo"/>
+   <c name="header" k0="subject" op="not :matches" k1="foo"/>
+
+  header exists
+   <c name="exists" k1="subject"/>
+   <c name="not exists" k1="subject"/>
+
+  date
+   <c name="date" op=":before" k1="20070112"/>
+   <c name="date" op="not :before" k1="20070112"/>
+   <c name="date" op=":after" k1="20070112"/>
+   <c name="date" op="not :after" k1="20070112"/>
+
+  size
+   <c name="size" op=":under" k1="23K"/>          // k1 = size; bytes by default, K/M for kilo/mega
+   <c name="size" op="not :under" k1="23M"/>
+   <c name="size" op=":over" k1="23"/>
+   <c name="size" op="not :over" k1="23"/>
+
+  body
+   <c name="body" op=":contains" k1="foo"/>
+   <c name="body" op="not :contains" k1="foo"/>
+
+  attachment
+   <c name="attachment"/>
+   <c name="not attachment"/>
+
+  addressbook
+   <c name="addressbook" k0="from" op=":in" k1="contacts"/>      // k0 = header name
+   <c name="addressbook" k0="to" op="not :in" k1="contacts"/>
+   
+ACTIONS
+
+   <action name="keep"/>
+   <action name="discard"/>
+   <action name="fileinto"><arg>/Inbox</arg></action>
+   <action name="tag"><arg>sdf</arg></action>
+   <action name="flag"><arg>read</arg></action>
+   <action name="flag"><arg>flagged</arg></action>
+   <action name="redirect"><arg>sdsddfs@sdfsdf.com</arg></action>
+   <action name="stop"/>
+
 2. Saving rules for a mailbox
 
 <SaveRulesRequest>
