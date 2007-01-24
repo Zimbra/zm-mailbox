@@ -28,6 +28,8 @@
  */
 package com.zimbra.common.util;
 
+import com.zimbra.common.service.ServiceException;
+
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -37,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -197,6 +200,46 @@ public class StringUtil {
         }
     }
     
+    public static List<String> parseSieveStringList(String value) throws ServiceException {
+        List<String> result = new ArrayList<String>();
+        if (value == null) return result;
+        value = value.trim();
+        if (value.length() == 0) return result;
+        int i = 0;
+        boolean inStr = false;
+        boolean inList = false;
+        StringBuilder sb = null;
+        while(i < value.length()) {
+            char ch = value.charAt(i++);
+            if (inStr) {
+                if (ch == '"') {
+                    result.add(sb.toString());
+                    inStr = false;
+                } else {
+                    if (ch == '\\' && i < value.length())
+                        ch = value.charAt(i++);
+                    sb.append(ch);
+                }
+            } else {
+                if (ch == '"') {
+                    inStr = true;
+                    sb = new StringBuilder();
+                } else if (ch == '[' && !inList) {
+                    inList = true;
+                } else if (ch ==']' && inList) {
+                    inList = false;
+                } else if (!Character.isWhitespace(ch)) {
+                    throw ServiceException.INVALID_REQUEST("unable to parse string list: "+value, null);
+                }
+            }
+        }
+        if (inStr || inList) {
+            throw ServiceException.INVALID_REQUEST("unable to parse string list2: "+value, null);
+        }
+        return result;
+    }
+
+
     /**
      * split a line into array of Strings, using a shell-style syntax for tokenizing words.
      * 
