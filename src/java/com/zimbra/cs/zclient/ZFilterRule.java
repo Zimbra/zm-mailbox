@@ -25,8 +25,8 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.Element;
+import com.zimbra.cs.service.mail.MailService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,28 +68,28 @@ public class ZFilterRule {
         mConditions = conditions;
         mActions = actions;
     }
-    
+
     public ZFilterRule(Element e) throws ServiceException {
-        mName = e.getAttribute(MailConstants.A_NAME);
-        mActive = e.getAttributeBool(MailConstants.A_ACTIVE, false);
-        Element groupEl = e.getElement(MailConstants.E_CONDITION_GROUP);
+        mName = e.getAttribute(MailService.A_NAME);
+        mActive = e.getAttributeBool(MailService.A_ACTIVE, false);
+        Element groupEl = e.getElement(MailService.E_CONDITION_GROUP);
         mConditions = new ArrayList<ZFilterCondition>();
-        mAllConditions = groupEl.getAttribute(MailConstants.A_OPERATION, "allof").equals("allof");
-        for (Element condEl : groupEl.listElements(MailConstants.E_CONDITION)) {
+        mAllConditions = groupEl.getAttribute(MailService.A_OPERATION, "allof").equals("allof");
+        for (Element condEl : groupEl.listElements(MailService.E_CONDITION)) {
             mConditions.add(ZFilterCondition.getCondition(condEl));
         }
         mActions = new ArrayList<ZFilterAction>();
-        for (Element actionEl : e.listElements(MailConstants.E_ACTION)) {
+        for (Element actionEl : e.listElements(MailService.E_ACTION)) {
             mActions.add(ZFilterAction.getAction(actionEl));
         }
     }
 
     Element toElement(Element parent) {
-        Element r = parent.addElement(MailConstants.E_RULE);
-        r.addAttribute(MailConstants.A_NAME, mName);
-        r.addAttribute(MailConstants.A_ACTIVE, mActive);
-        Element g = r.addElement(MailConstants.E_CONDITION_GROUP);
-        g.addAttribute(MailConstants.A_OPERATION, mAllConditions ? "allof" : "anyof");
+        Element r = parent.addElement(MailService.E_RULE);
+        r.addAttribute(MailService.A_NAME, mName);
+        r.addAttribute(MailService.A_ACTIVE, mActive);
+        Element g = r.addElement(MailService.E_CONDITION_GROUP);
+        g.addAttribute(MailService.A_OPERATION, mAllConditions ? "allof" : "anyof");
         for (ZFilterCondition condition : mConditions) {
             condition.toElement(g);
         }
@@ -99,4 +99,15 @@ public class ZFilterRule {
         return r;
     }
 
+    public String toString() {
+        ZSoapSB sb = new ZSoapSB();
+        sb.beginStruct();
+        sb.add("name", mName);
+        sb.add("active", mActive);
+        sb.add("allConditions", mAllConditions);
+        sb.add("conditions", mConditions, false, true);
+        sb.add("actions", mActions, false, true);
+        sb.endStruct();
+        return sb.toString();
+    }
 }
