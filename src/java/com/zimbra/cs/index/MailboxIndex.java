@@ -625,8 +625,8 @@ public final class MailboxIndex
     // List of MailboxIndex objects that are waiting for room to free up in
     // sOpenIndexWriters map before opening index writer.  See openIndexWriter()
     // method.
-    private static LinkedList /*MailboxIndex*/ sOpenWaitList = new LinkedList();
-
+    static final Object sOpenWaiters = new Object();
+    
     private final static class IndexWritersSweeperThread extends Thread {
         private boolean mShutdown = false;
         private long mSweepIntervalMS;
@@ -960,15 +960,14 @@ public final class MailboxIndex
                 }
                 // Map is full.  Add self to waiter list and wait until notified when
                 // there's room in the map.
-                synchronized (sOpenWaitList) {
-                    sOpenWaitList.add(this);
+                synchronized (sOpenWaiters) {
+                    sIndexWritersSweeper.wakeup();
+                    try {
+                        // object.wait() must be synchronized() on -- so use getLock() which is
+                        // synchronized above
+                        sOpenWaiters.wait(5000);
+                    } catch (InterruptedException e) {}
                 }
-                sIndexWritersSweeper.wakeup();
-                try {
-                    // object.wait() must be synchronized() on -- so use getLock() which is
-                    // synchronized above
-                    getLock().wait(5000);
-                } catch (InterruptedException e) {}
             }
             if (mLog.isDebugEnabled())
                 mLog.debug("openIndexWriter: map size after open = " + sizeAfter);
@@ -1062,16 +1061,9 @@ public final class MailboxIndex
         }
     }
 
-    private static void notifyFirstIndexWriterWaiter() {
-        MailboxIndex waiter = null;
-        synchronized (sOpenWaitList) {
-            if (sOpenWaitList.size() > 0)
-                waiter = (MailboxIndex) sOpenWaitList.removeFirst();
-        }
-        if (waiter != null) {
-            synchronized (waiter.getLock()) {
-                waiter.getLock().notifyAll();
-            }
+    private static final void notifyFirstIndexWriterWaiter() {
+        synchronized(sOpenWaiters) {
+            sOpenWaiters.notify();
         }
     }
 
