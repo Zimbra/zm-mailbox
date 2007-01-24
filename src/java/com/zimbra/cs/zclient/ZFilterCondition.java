@@ -155,6 +155,14 @@ public abstract class ZFilterCondition {
             throw ZClientException.CLIENT_ERROR("invalid op: "+s+", valid values: "+ Arrays.asList(mOps), null);
         }
 
+        public static AddressBookOp fromString(String s) throws ServiceException {
+            try {
+                return AddressBookOp.valueOf(s.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw ZClientException.CLIENT_ERROR("invalid op: "+s+", value values: "+Arrays.asList(AddressBookOp.values()), null);
+            }
+        }
+
     }
 
     protected String mName;
