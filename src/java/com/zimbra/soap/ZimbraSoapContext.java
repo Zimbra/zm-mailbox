@@ -430,7 +430,9 @@ public class ZimbraSoapContext {
     }
 
     private class SoapPushChannel implements SoapSession.PushChannel {
-        public void close() { }
+        public void close() {  
+            signalNotification(); // don't allow there to be more than one NoOp hanging on a particular account
+        }
         public int getLastKnownSeqNo() { return mNotificationSeqNo; }
         public ZimbraSoapContext getSoapContext() { return ZimbraSoapContext.this; }
         public void notificationsReady(SoapSession session) throws ServiceException {

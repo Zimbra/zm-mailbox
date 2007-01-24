@@ -39,6 +39,8 @@ import com.zimbra.soap.ZimbraSoapContext;
  * @author schemers
  */
 public class NoOp extends MailDocumentHandler  {
+    
+    private static final long NOP_TIMEOUT = 10 * 60 * 1000; // 10 minutes
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -47,9 +49,11 @@ public class NoOp extends MailDocumentHandler  {
         if (wait) {
             synchronized(zsc) {
                 if (zsc.beginWaitForNotifications()) {
-                    while (zsc.waitingForNotifications()) {
+                    long endWaitingTime = System.currentTimeMillis() + NOP_TIMEOUT; 
+                    while (zsc.waitingForNotifications() 
+                                && (System.currentTimeMillis() < endWaitingTime)) {
                         try {
-                            zsc.wait();
+                            zsc.wait(NOP_TIMEOUT);
                         } catch (InterruptedException e) { }
                     }
                 }
