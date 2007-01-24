@@ -198,6 +198,24 @@ public class ZMailboxUtil implements DebugListener {
         COMMANDS("help on all commands"),
         CONTACT("help on contact-related commands"),
         CONVERSATION("help on conversation-related commands"),
+        FILTER("help on filter-realted commnds",
+                        "  {conditions}:\n" +
+                        "    header \"name\" is|not_is|contains|not_contains|matches|not_matches \"value\"\n" +
+                        "    header \"name\" exists|not_exists\n" +
+                        "    date before|not_before|after|not_after \"YYYYMMDD\"\n" +
+                        "    size under|not_under|over|not_over \"1|1K|1M\"\n" +
+                        "    body contains|not_contains \"text\"\n" +
+                        "    addressbook in|not_in \"header-name\"\n" +
+                        "    attachment exists|not_exists\n" +
+                        "\n" +
+                        "  {actions}:\n" +
+                        "    keep\n" +
+                        "    discard\n" +
+                        "    fileinto \"/path\"\n" +
+                        "    tag \"/tag\"\n" +
+                        "    flag read|flagged\n" +
+                        "    redirect \"address\"\n" +
+                        "    stop\n"),
         FOLDER("help on folder-related commands"),
         ITEM("help on item-related commands"),
         MESSAGE("help on message-related commands"),
@@ -206,11 +224,18 @@ public class ZMailboxUtil implements DebugListener {
         TAG("help on tag-related commands");
 
         String mDesc;
+        String mCatagoryHelp;
 
         public String getDescription() { return mDesc; }
+        public String getCatagoryHelp() { return mCatagoryHelp; }
 
         Category(String desc) {
             mDesc = desc;
+        }
+
+        Category(String desc, String help) {
+            mDesc = desc;
+            mCatagoryHelp = help;
         }
     }
 
@@ -218,15 +243,19 @@ public class ZMailboxUtil implements DebugListener {
         return new Option(shortName, longName, hasArgs, help);
     }
 
+    private static Option O_AFTER = new Option("a", "after", true, "add after filter-name");
+    private static Option O_BEFORE = new Option("b", "before", true, "add before filter-name");
     private static Option O_COLOR = new Option("c", "color", true, "color");
     private static Option O_CONTENT_TYPE = new Option("c", "contentType", true, "content-type");
     private static Option O_CURRENT = new Option("c", "current", false, "current page of search results");
     private static Option O_DATE = new Option("d", "date", true,  "received date (msecs since epoch)");
+    private static Option O_FIRST = new Option("f", "first", false, "add as first filter rule");
     private static Option O_FLAGS = new Option("F", "flags", true, "flags");
     private static Option O_OUTPUT_FILE = new Option("o", "output", true, "output filename");
     private static Option O_FOLDER = new Option("f", "folder", true, "folder-path-or-id");
     private static Option O_IGNORE = new Option("i", "ignore", false, "ignore unknown contact attrs");
     private static Option O_INHERIT = new Option("i", "inherit", false, "whether rights granted on this folder are also granted on all subfolders");
+    private static Option O_LAST = new Option("l", "last", false, "add as last filter rule");    
     private static Option O_LIMIT = new Option("l", "limit", true, "max number of results to return");
     private static Option O_NEXT = new Option("n", "next", false, "next page of search results");
     private static Option O_PREVIOUS = new Option("p", "previous", false,  "previous page of search results");
@@ -240,6 +269,7 @@ public class ZMailboxUtil implements DebugListener {
 
     enum Command {
         AUTHENTICATE("authenticate", "a", "{name} {password}", "authenticate as account and open mailbox", Category.MISC, 2, 2, O_URL),
+        ADD_FILTER_RULE("addFilterRule", "afrl", "{name}  [*active|inactive] [any|*all] {conditions}+ {actions}+", "add filter rule", Category.FILTER,  2, Integer.MAX_VALUE, O_AFTER, O_BEFORE, O_FIRST, O_LAST),
         ADD_MESSAGE("addMessage", "am", "{dest-folder-path} {filename-or-dir} [{filename-or-dir} ...]", "add a message to a folder", Category.MESSAGE, 2, Integer.MAX_VALUE, O_TAGS, O_DATE),
         ADMIN_AUTHENTICATE("adminAuthenticate", "aa", "{admin-name} {admin-password}", "authenticate as an admin. can only be used by an admin", Category.ADMIN, 2, 2, O_URL),
         CREATE_CONTACT("createContact", "cct", "[attr1 value1 [attr2 value2...]]", "create contact", Category.CONTACT, 2, Integer.MAX_VALUE, O_FOLDER, O_IGNORE, O_TAGS),
@@ -252,6 +282,7 @@ public class ZMailboxUtil implements DebugListener {
         DELETE_CONVERSATION("deleteConversation", "dc", "{conv-ids}", "hard delete conversastion(s)", Category.CONVERSATION, 1, 1),
         DELETE_ITEM("deleteItem", "di", "{item-ids}", "hard delete item(s)", Category.ITEM, 1, 1),
         DELETE_IDENTITY("deleteIdentity", "did", "{identity-name}", "delete an identity", Category.ACCOUNT, 1, 1),
+        DELETE_FILTER_RULE("deleteFilterRule", "dfrl", "{name}", "add filter rule", Category.FILTER,  1, 1),        
         DELETE_FOLDER("deleteFolder", "df", "{folder-path}", "hard delete a folder (and subfolders)", Category.FOLDER, 1, 1),
         DELETE_MESSAGE("deleteMessage", "dm", "{msg-ids}", "hard delete message(s)", Category.MESSAGE, 1, 1),
         DELETE_TAG("deleteTag", "dt", "{tag-name}", "delete a tag", Category.TAG, 1, 1),
@@ -267,7 +298,7 @@ public class ZMailboxUtil implements DebugListener {
         GET_CONTACTS("getContacts", "gct", "{contact-ids} [attr1 [attr2...]]", "get contact(s)", Category.CONTACT, 1, Integer.MAX_VALUE, O_VERBOSE),
         GET_CONVERSATION("getConversation", "gc", "{conv-id}", "get a converation", Category.CONVERSATION, 1, 1, O_VERBOSE),
         GET_IDENTITIES("getIdentities", "gid", "", "get all identites", Category.ACCOUNT, 0, 0, O_VERBOSE),
-        GET_FILTER_RULES("getFilterRules", "gfr", "", "get filter reults", Category.ACCOUNT,  0, 0, O_VERBOSE),
+        GET_FILTER_RULES("getFilterRules", "gfrl", "", "get filter rules", Category.FILTER,  0, 0),
         GET_FOLDER("getFolder", "gf", "{folder-path}", "get folder", Category.FOLDER, 1, 1, O_VERBOSE),
         GET_FOLDER_GRANT("getFolderGrant", "gfg", "{folder-path}", "get folder grants", Category.FOLDER, 1, 1, O_VERBOSE),
         GET_MESSAGE("getMessage", "gm", "{msg-id}", "get a message", Category.MESSAGE, 1, 1, O_VERBOSE),
@@ -283,6 +314,7 @@ public class ZMailboxUtil implements DebugListener {
         MARK_MESSAGE_SPAM("markMessageSpam", "mms", "{msg} [0|1*] [{dest-folder-path}]", "mark a message as spam/not-spam, and optionally move", Category.MESSAGE, 1, 3),
         MARK_TAG_READ("markTagRead", "mtr", "{tag-name}", "mark all items with this tag as read", Category.TAG, 1, 1),
         MODIFY_CONTACT("modifyContactAttrs", "mcta", "{contact-id} [attr1 value1 [attr2 value2...]]", "modify a contact", Category.CONTACT, 3, Integer.MAX_VALUE, O_REPLACE, O_IGNORE),
+        MODIFY_FILTER_RULE("modifyFilterRule", "mfrl", "{name}  [*active|inactive] [any|*all] {conditions}+ {actions}+", "add filter rule", Category.FILTER,  2, Integer.MAX_VALUE),        
         MODIFY_FOLDER_CHECKED("modifyFolderChecked", "mfch", "{folder-path} [0|1*]", "modify whether a folder is checked in the UI", Category.FOLDER, 1, 2),
         MODIFY_FOLDER_COLOR("modifyFolderColor", "mfc", "{folder-path} {new-color}", "modify a folder's color", Category.FOLDER, 2, 2),
         MODIFY_FOLDER_EXCLUDE_FREE_BUSY("modifyFolderExcludeFreeBusy", "mfefb", "{folder-path} [0|1*]", "change whether folder is excluded from free-busy", Category.FOLDER, 1, 2),
@@ -691,6 +723,15 @@ public class ZMailboxUtil implements DebugListener {
 
     private boolean previousOpt() { return mCommandLine.hasOption(O_PREVIOUS.getOpt()); }
 
+    private boolean firstOpt() { return mCommandLine.hasOption(O_FIRST.getOpt()); }
+
+    private boolean lastOpt() { return mCommandLine.hasOption(O_LAST.getOpt()); }
+
+    private String  beforeOpt() { return mCommandLine.getOptionValue(O_BEFORE.getOpt()); }
+
+    private String  afterOpt() { return mCommandLine.getOptionValue(O_AFTER.getOpt()); }    
+
+
     private SearchSortBy searchSortByOpt() throws ServiceException {
         String sort = mCommandLine.getOptionValue(O_SORT.getOpt());
         return (sort == null ? null : SearchSortBy.fromString(sort));
@@ -738,6 +779,9 @@ public class ZMailboxUtil implements DebugListener {
         case AUTHENTICATE:
             doAuth(args);
             break;
+        case ADD_FILTER_RULE:
+            doAddFilterRule(args);
+            break;
         case ADD_MESSAGE:
             doAddMessage(args);
             break;
@@ -769,6 +813,9 @@ public class ZMailboxUtil implements DebugListener {
             break;
         case DELETE_CONVERSATION:
             mMbox.deleteConversation(id(args[0]), param(args, 1));
+            break;
+        case DELETE_FILTER_RULE:
+            doDeleteFilterRule(args);
             break;
         case DELETE_FOLDER:
             mMbox.deleteFolder(lookupFolderId(args[0]));
@@ -869,6 +916,9 @@ public class ZMailboxUtil implements DebugListener {
             break;
         case MODIFY_CONTACT:
             doModifyContact(args);
+            break;
+        case MODIFY_FILTER_RULE:
+            doModifyFilterRule(args);
             break;
         case MODIFY_FOLDER_CHECKED:
             mMbox.modifyFolderChecked(lookupFolderId(args[0]), paramb(args, 1, true));
@@ -988,18 +1038,88 @@ public class ZMailboxUtil implements DebugListener {
     	}
     }
 
+    /*
+    addFilterRule(afrl)
+  --before {existing-rule-name}
+  --after {existing-rule-name}
+  --first
+  --last
+
+  {name}  [*active|inactive] [any|*all] {conditions}+ {actions}+
+    */
+
+    private void doAddFilterRule(String[] args) throws ServiceException {
+        ZFilterRule newRule = ZFilterRule.parseFilterRule(args);
+        ZFilterRules rules = mMbox.getFilterRules();
+        List<ZFilterRule> list = rules.getRules();
+        if (firstOpt()) {
+            list.add(0, newRule);
+        } else if (afterOpt() != null) {
+            boolean found = false;
+            String name = afterOpt();
+            for (int i=0; i < list.size(); i++) {
+                found = list.get(i).getName().equalsIgnoreCase(name);
+                if (found) {
+                    if (i+1 >= list.size())
+                        list.add(newRule);
+                    else
+                        list.add(i+1, newRule);
+                    break;
+                }
+            }
+            if (!found) throw ZClientException.CLIENT_ERROR("can't find rule: "+name, null);
+        } else if (beforeOpt() != null) {
+            String name = beforeOpt();
+            boolean found = false;
+            for (int i=0; i < list.size(); i++) {
+                found = list.get(i).getName().equalsIgnoreCase(name);
+                if (found) {
+                    list.add(i, newRule);
+                    break;
+                }
+            }
+            if (!found) throw ZClientException.CLIENT_ERROR("can't find rule: "+name, null);
+        } else {
+            // add to end
+            list.add(newRule);
+        }
+
+        mMbox.saveFilterRules(rules);
+    }
+
+    private void doModifyFilterRule(String[] args) throws ServiceException {
+        ZFilterRule modifiedRule = ZFilterRule.parseFilterRule(args);
+        ZFilterRules rules = mMbox.getFilterRules();
+        List<ZFilterRule> list = rules.getRules();
+        for (int i=0; i < list.size(); i++) {
+            if (list.get(i).getName().equalsIgnoreCase(modifiedRule.getName())) {
+                list.set(i, modifiedRule);
+                mMbox.saveFilterRules(rules);
+                return;
+            }
+        }
+        throw ZClientException.CLIENT_ERROR("can't find rule: " + args[0], null);
+    }
+    
+    private void doDeleteFilterRule(String[] args) throws ServiceException {
+        String name = args[0];
+
+        ZFilterRules rules = mMbox.getFilterRules();
+        List<ZFilterRule> list = rules.getRules();
+        for (int i=0; i < list.size(); i++) {
+            if (list.get(i).getName().equalsIgnoreCase(name)) {
+                list.remove(i);
+                mMbox.saveFilterRules(rules);
+                return;
+            }
+        }
+        throw ZClientException.CLIENT_ERROR("can't find rule: " + args[0], null);
+    }
+
     private void doGetFilterRules(String[] args) throws ServiceException {
         ZFilterRules rules = mMbox.getFilterRules();
-        if (verboseOpt()) {
-            System.out.format("%s%n", rules);
-        } else {
-            String format = "%10.10s  %s%n";
-            System.out.format(format,  "Active", "Name");
-            System.out.format(format,  "------", "----");
-
-            for (ZFilterRule r : rules.getRules()) {
-                System.out.format(format, r.isActive(), r.getName());
-            }
+        for (ZFilterRule r : rules.getRules()) {
+            System.out.println(r.generateFilterRule());
         }
     }
 
@@ -1889,7 +2009,8 @@ public class ZMailboxUtil implements DebugListener {
                     System.out.println();
                 }
             }
-        
+            if (cat.getCatagoryHelp() != null)
+            System.out.println(cat.getCatagoryHelp());
         }
         System.out.println();
     }
