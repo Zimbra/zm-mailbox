@@ -376,16 +376,16 @@
     <target name="enable-im">
       <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
            classpathref="class.path" onerror="abort" src="${im.dir}/src/db/wildfireInit.sql" />
-      <copy file="${im.dir}/conf/wildfire.xml" todir="${zimbra.home.dir}/conf"/>
+      <copy overwrite="true" file="${im.dir}/conf/wildfire.xml" todir="${zimbra.home.dir}/conf"/>
       <chmod file="${im.dir}/conf/wildfire.xml" perm="u+w"/>
-      <copy todir="${zimbra.home.dir}/conf/msgs">
+      <copy overwrite="true" todir="${zimbra.home.dir}/conf/msgs">
         <fileset dir="${im.dir}/src/i18n"/>
       </copy>
       <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
         <arg line="-l -v mcf zimbraXMPPEnabled TRUE" />
       </java>
       <mkdir dir="${zimbra.home.dir}/im/plugins"/>
-      <copy file="${im.dir}/plugins/gateway.jar" todir="${zimbra.home.dir}/im/plugins"/>
+      <copy overwrite="true" file="${im.dir}/plugins/gateway.jar" todir="${zimbra.home.dir}/im/plugins"/>
       <antcall target="restart-tomcat"/>
     </target>
 
