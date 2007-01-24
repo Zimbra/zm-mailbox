@@ -316,6 +316,26 @@ public abstract class ZFilterCondition {
         public SizeOp getSizeOp() { return mSizeOp; }
         public String getSize() { return mK1; }
 
+        public String getUnits() {
+            String val = getSize();
+            if (val != null) {
+                if (val.endsWith("M")) return "M";
+                else if (val.endsWith("K")) return "K";
+                else if (val.endsWith("G")) return "G";
+            }
+            return "B";
+        }
+
+        public String getSizeNoUnits() {
+            String val = getSize();
+            if (val != null) {
+                if (val.endsWith("M")) return val.substring(0, val.length()-1);
+                else if (val.endsWith("K")) return val.substring(0, val.length()-1);
+                else if (val.endsWith("G")) return val.substring(0, val.length()-1);
+            }
+            return val;
+        }
+
         public String toConditionString() {
             return "size " + mSizeOp.name().toLowerCase() + " " + ZFilterRule.quotedString(getSize());
         }
