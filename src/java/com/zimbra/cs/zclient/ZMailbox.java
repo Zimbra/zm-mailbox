@@ -31,10 +31,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.account.Provisioning.IdentityBy;
-import com.zimbra.cs.httpclient.EasySSLProtocolSocketFactory;
 import com.zimbra.cs.index.SearchParams;
-import com.zimbra.cs.service.account.AccountService;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.zclient.ZGrant.GranteeType;
@@ -61,13 +58,16 @@ import com.zimbra.cs.zclient.event.ZModifyMountpointEvent;
 import com.zimbra.cs.zclient.event.ZModifySearchFolderEvent;
 import com.zimbra.cs.zclient.event.ZModifyTagEvent;
 import com.zimbra.cs.zclient.event.ZRefreshEvent;
-import com.zimbra.soap.Element;
-import com.zimbra.soap.Element.XMLElement;
-import com.zimbra.soap.SoapFaultException;
-import com.zimbra.soap.SoapHttpTransport;
+import com.zimbra.cs.httpclient.EasySSLProtocolSocketFactory;
+import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.soap.SoapTransport;
+import com.zimbra.soap.SoapHttpTransport;
+import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraNamespace;
+import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.Element.XMLElement;
 import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
@@ -218,7 +218,8 @@ public class ZMailbox {
     private ZSearchPagerCache mSearchConvPagerCache;
     private LRUMap mMessageCache;
     private LRUMap mContactCache;
-
+    private ZFilterRules mRules;
+    
     private long mSize;
 
     private List<ZEventHandler> mHandlers = new ArrayList<ZEventHandler>();
@@ -388,6 +389,7 @@ public class ZMailbox {
         ZRefreshEvent event = new ZRefreshEvent(mSize, userRoot, tagList);
         for (ZEventHandler handler : mHandlers)
         	handler.handleRefresh(event, this);
+        mRules = null;        
     }
     
     private void handleModified(Element modified) throws ServiceException {
@@ -742,7 +744,7 @@ public class ZMailbox {
      * @throws com.zimbra.common.service.ServiceException on error
      */
     public ZActionResult modifyTagColor(String id, ZTag.Color color) throws ServiceException {
-        return doAction(tagAction("color", id).addAttribute(MailService.A_COLOR, color.getValue()));        
+        return doAction(tagAction("color", id).addAttribute(MailService.A_COLOR, color.getValue()));
     }
 
     /** mark all items with tag as read
@@ -886,7 +888,7 @@ public class ZMailbox {
         if (sortBy != null) 
             req.addAttribute(MailService.A_SORTBY, sortBy.name());
         if (sync)
-            req.addAttribute(MailService.A_SYNC, sync);        
+            req.addAttribute(MailService.A_SYNC, sync);
         req.addElement(MailService.E_CONTACT).addAttribute(MailService.A_ID, ids);
         if (attrs != null) {
             for (String name : attrs)
@@ -926,7 +928,7 @@ public class ZMailbox {
     }
     
     public ZActionResult moveContact(String ids, String destFolderId) throws ServiceException {
-        return doAction(contactAction("move", ids).addAttribute(MailService.A_FOLDER, destFolderId));        
+        return doAction(contactAction("move", ids).addAttribute(MailService.A_FOLDER, destFolderId));
     }
     
     public ZActionResult deleteContact(String ids) throws ServiceException {
@@ -1055,7 +1057,7 @@ public class ZMailbox {
      * @throws ServiceException on error
      */
     public ZActionResult tagConversation(String ids, String tagId, boolean tag, String targetConstraints) throws ServiceException {
-        return doAction(convAction(tag ? "tag" : "!tag", ids, targetConstraints).addAttribute(MailService.A_TAG, tagId));        
+        return doAction(convAction(tag ? "tag" : "!tag", ids, targetConstraints).addAttribute(MailService.A_TAG, tagId));
     }
 
     /**
@@ -1308,7 +1310,7 @@ public class ZMailbox {
      */
     public String addMessage(String folderId, String flags, String tags, long receivedDate, String content, boolean noICal) throws ServiceException {
         XMLElement req = new XMLElement(MailService.ADD_MSG_REQUEST);
-        Element m = req.addElement(MailService.E_MSG);        
+        Element m = req.addElement(MailService.E_MSG);
         m.addAttribute(MailService.A_FOLDER, folderId);
         if (flags != null && flags.length() > 0) 
             m.addAttribute(MailService.A_FLAGS, flags);
@@ -1336,7 +1338,7 @@ public class ZMailbox {
 
         // now, use the returned upload ID to do the message send
         XMLElement req = new XMLElement(MailService.ADD_MSG_REQUEST);
-        Element m = req.addElement(MailService.E_MSG);        
+        Element m = req.addElement(MailService.E_MSG);
         m.addAttribute(MailService.A_FOLDER, folderId);
         if (flags != null && flags.length() > 0) 
             m.addAttribute(MailService.A_FLAGS, flags);
@@ -2013,7 +2015,7 @@ public class ZMailbox {
      */
     public void iCalReply(String ical) throws ServiceException {
         XMLElement req = new XMLElement(MailService.ICAL_REPLY_REQUEST);
-        Element icalElem = req.addElement(MailService.E_CAL_ICAL);        
+        Element icalElem = req.addElement(MailService.E_CAL_ICAL);
         icalElem.setText(ical);
         invoke(req);
     }
@@ -2161,7 +2163,7 @@ public class ZMailbox {
         if (message.getMessagePartsToAttach() != null) {
             if (attach == null) attach = m.addElement(MailService.E_ATTACH);
             for (AttachedMessagePart part: message.getMessagePartsToAttach()) {
-                attach.addElement(MailService.E_MIMEPART).addAttribute(MailService.A_MESSAGE_ID, part.getMessageId()).addAttribute(MailService.A_PART, part.getPartName());    
+                attach.addElement(MailService.E_MIMEPART).addAttribute(MailService.A_MESSAGE_ID, part.getMessageId()).addAttribute(MailService.A_PART, part.getPartName());
             }            
         }
         return m;
@@ -2185,15 +2187,13 @@ public class ZMailbox {
         return new ZSendMessageResponse(id);       
     }
  
-    public synchronized ZMessage saveDraft(ZOutgoingMessage message, String existingDraftId, String folderId) throws ServiceException {
+    public ZMessage saveDraft(ZOutgoingMessage message, String existingDraftId, String folderId) throws ServiceException {
         XMLElement req = new XMLElement(MailService.SAVE_DRAFT_REQUEST);
         
         Element m = getMessageElement(req, message);
 
-        if (existingDraftId != null && existingDraftId.length() > 0) {
-            mMessageCache.remove(existingDraftId);
+        if (existingDraftId != null && existingDraftId.length() > 0)
             m.addAttribute(MailService.A_ID, existingDraftId);
-        }
 
         if (folderId != null)
             m.addAttribute(MailService.A_FOLDER, folderId);
@@ -2292,14 +2292,22 @@ public class ZMailbox {
     }
 
     public ZFilterRules getFilterRules() throws ServiceException {
-        XMLElement req = new XMLElement(MailService.GET_RULES_REQUEST);
-        return new ZFilterRules(invoke(req).getElement(MailService.E_RULES));
+        return getFilterRules(false);
     }
 
-    public void saveFilterRules(ZFilterRules rules) throws ServiceException {
+    public synchronized ZFilterRules getFilterRules(boolean refresh) throws ServiceException {
+        if (mRules == null || refresh) {
+            XMLElement req = new XMLElement(MailService.GET_RULES_REQUEST);
+            mRules = new ZFilterRules(invoke(req).getElement(MailService.E_RULES));
+        }
+        return new ZFilterRules(mRules);
+    }
+    
+    public synchronized void saveFilterRules(ZFilterRules rules) throws ServiceException {
         XMLElement req = new XMLElement(MailService.SAVE_RULES_REQUEST);
         rules.toElement(req);
         invoke(req);
+        mRules = new ZFilterRules(rules);
     }
 
     public void deleteDataSource(DataSourceBy by, String key) throws ServiceException {

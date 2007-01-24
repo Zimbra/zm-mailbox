@@ -37,7 +37,6 @@ import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zclient.ZConversation.ZMessageSummary;
 import com.zimbra.cs.zclient.ZGrant.GranteeType;
 import com.zimbra.cs.zclient.ZMailbox.Fetch;
@@ -51,10 +50,11 @@ import com.zimbra.cs.zclient.event.ZDeleteEvent;
 import com.zimbra.cs.zclient.event.ZEventHandler;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZRefreshEvent;
-import com.zimbra.soap.Element;
-import com.zimbra.soap.SoapFaultException;
-import com.zimbra.soap.SoapTransport;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.SoapTransport.DebugListener;
+import com.zimbra.soap.SoapTransport;
+import com.zimbra.soap.SoapFaultException;
+import com.zimbra.soap.Element;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -1089,7 +1089,7 @@ public class ZMailboxUtil implements DebugListener {
 
     private void doModifyFilterRule(String[] args) throws ServiceException {
         ZFilterRule modifiedRule = ZFilterRule.parseFilterRule(args);
-        ZFilterRules rules = mMbox.getFilterRules();
+        ZFilterRules rules = mMbox.getFilterRules(true);
         List<ZFilterRule> list = rules.getRules();
         for (int i=0; i < list.size(); i++) {
             if (list.get(i).getName().equalsIgnoreCase(modifiedRule.getName())) {
@@ -1104,7 +1104,7 @@ public class ZMailboxUtil implements DebugListener {
     private void doDeleteFilterRule(String[] args) throws ServiceException {
         String name = args[0];
 
-        ZFilterRules rules = mMbox.getFilterRules();
+        ZFilterRules rules = mMbox.getFilterRules(true);
         List<ZFilterRule> list = rules.getRules();
         for (int i=0; i < list.size(); i++) {
             if (list.get(i).getName().equalsIgnoreCase(name)) {
@@ -1117,7 +1117,7 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private void doGetFilterRules(String[] args) throws ServiceException {
-        ZFilterRules rules = mMbox.getFilterRules();
+        ZFilterRules rules = mMbox.getFilterRules(true);
         for (ZFilterRule r : rules.getRules()) {
             System.out.println(r.generateFilterRule());
         }
