@@ -1115,9 +1115,11 @@ public class ToXML {
                     if (tzName != null)
                         endElt.addAttribute(MailConstants.A_CAL_TIMEZONE, tzName);
                 } else {
-                    // See CalendarUtils.parseInviteElementCommon, where we parse DTEND
-                    // for a description of why we add -1d when sending to the client
-                    dtEnd = dtEnd.add(ParsedDuration.NEGATIVE_ONE_DAY);
+                    if (!invite.isTodo()) {
+                        // See CalendarUtils.parseInviteElementCommon, where we parse DTEND
+                        // for a description of why we add -1d when sending to the client
+                        dtEnd = dtEnd.add(ParsedDuration.NEGATIVE_ONE_DAY);
+                    }
                 }
                 endElt.addAttribute(MailConstants.A_CAL_DATETIME, dtEnd.getDateTimePartString(false));
             }

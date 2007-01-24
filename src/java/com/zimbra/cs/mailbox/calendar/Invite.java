@@ -1266,6 +1266,10 @@ public class Invite {
     public byte getItemType() { return mItemType; }
     public void setItemType(byte t) {
         mItemType = t;
+        // If mStatus is set to default appointment status but we have a task
+        // invite, change to default task status.
+        if (mItemType == MailItem.TYPE_TASK && IcalXmlStrMap.STATUS_CONFIRMED.equals(mStatus))
+            mStatus = IcalXmlStrMap.STATUS_NEEDS_ACTION;
     }
 
     TimeZoneMap mTzMap;
@@ -1575,8 +1579,13 @@ public class Invite {
     
     public ZComponent newToVComponent(boolean useOutlookCompatMode)
     throws ServiceException {
-        ICalTok compTok =
-            mItemType == MailItem.TYPE_TASK ? ICalTok.VTODO : ICalTok.VEVENT;
+        ICalTok compTok;
+        if (mItemType == MailItem.TYPE_TASK) {
+            compTok = ICalTok.VTODO;
+            useOutlookCompatMode = false;
+        } else {
+            compTok = ICalTok.VEVENT;
+        }
         ZComponent component = new ZComponent(compTok);
 
         component.addProperty(new ZProperty(ICalTok.UID, getUid()));
@@ -1752,13 +1761,15 @@ public class Invite {
     public void validateDuration() throws ServiceException {
         if (mStart == null)
             return;
-        ParsedDuration dur =
-            mStart.hasTime() ? ParsedDuration.parse(false, 0, 0, 0, 0, 1)
-                             : ParsedDuration.parse(false, 0, 1, 0, 0, 0);
-        if (mEnd != null && mEnd.compareTo(mStart) <= 0) {
-            mEnd = mStart.add(dur);
-        } else if (mDuration != null && mDuration.getDurationAsMsecs(mStart.getDate()) <= 0) {
-            mDuration = dur;
+        if (!isTodo()) {
+            ParsedDuration dur =
+                mStart.hasTime() ? ParsedDuration.parse(false, 0, 0, 0, 0, 1)
+                                 : ParsedDuration.parse(false, 0, 1, 0, 0, 0);
+            if (mEnd != null && mEnd.compareTo(mStart) <= 0) {
+                mEnd = mStart.add(dur);
+            } else if (mDuration != null && mDuration.getDurationAsMsecs(mStart.getDate()) <= 0) {
+                mDuration = dur;
+            }
         }
     }
 }

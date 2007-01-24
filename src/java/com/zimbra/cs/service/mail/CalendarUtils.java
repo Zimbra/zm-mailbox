@@ -716,7 +716,7 @@ public class CalendarUtils {
                 }
                 ParsedDateTime dt = parseDtElement(e, tzMap, newInv);
 
-                if (allDay) {
+                if (allDay && !newInv.isTodo()) {
                     // HACK ALERT: okay, campers, here's the deal.
                     // By definition, our end dates are EXCLUSIVE: DTEND is not
                     // included.. eg a meeting 7-8pm actually stops at 7:59
@@ -764,7 +764,7 @@ public class CalendarUtils {
 
         // STATUS
         String status = element.getAttribute(MailConstants.A_CAL_STATUS,
-                IcalXmlStrMap.STATUS_CONFIRMED);
+                newInv.isEvent() ? IcalXmlStrMap.STATUS_CONFIRMED : IcalXmlStrMap.STATUS_NEEDS_ACTION);
         validateAttr(IcalXmlStrMap.sStatusMap, MailConstants.A_CAL_STATUS,
                 status);
         newInv.setStatus(status);
