@@ -92,7 +92,7 @@
        ]*  // always present in responses; optional in requests if all TZs used
            // in <inv> are defined in LDAP
        [
-       <comp type="event|todo"
+       <comp
             [status="TENT|CONF|CANC|NEED|COMP|INPR|WAITING|DEFERRED"]
                             // TENTative, CONFirmed, CANCelled, COMPleted,
                             // INPRogress, WAITING, DEFERRED
@@ -469,7 +469,7 @@ OR
 
         <inv>
 		  [<tz>...</tz>]*
-          <comp type="event"
+          <comp
                 uid="{UID}"
                 seq="{sequence}"  // must be incremented from original sequence
                 [name="{name}]
@@ -504,7 +504,7 @@ OR
   -- folder-id: optional folder to constrain requests to; otherwise, searches all folders but trash and spam
 
 <GetApptSummariesResponse>
- ( <appt id="appointment_mail_item_id" type="event|todo"
+ ( <appt id="appointment_mail_item_id"
       [fba="F|B|T|U"]
       [transp="O|T"]
       status="TENT|CONF|CANC"
@@ -624,9 +624,9 @@ OR
      <su>{subject}</su>
      <f>{fragment}</f>
 
-     <inv>
+     <inv type="appt|task">
        [
-       <comp type="event|todo" status="TENT|CONF|CANC"
+       <comp status="TENT|CONF|CANC"
        		fb="F|B|T|U"
        		fba="F|B|T|U" // Your current status -- what is returned in FreeBusy for you TODO
        		transp="O|T"
