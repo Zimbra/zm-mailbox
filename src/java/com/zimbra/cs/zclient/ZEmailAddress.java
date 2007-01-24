@@ -153,6 +153,7 @@ public class ZEmailAddress {
     */
     public static List<ZEmailAddress> parseAddresses(String line, String type) throws ServiceException {
         try {
+            line = line.replace(";", ",");
             InternetAddress[] inetAddrs = InternetAddress.parseHeader(line, false);
             List<ZEmailAddress> result = new ArrayList<ZEmailAddress>(inetAddrs.length);
             for (InternetAddress ia : inetAddrs) {
