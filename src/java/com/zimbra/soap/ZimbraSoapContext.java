@@ -440,9 +440,10 @@ public class ZimbraSoapContext {
         }
     }
 
-    synchronized public boolean beginWaitForNotifications() throws ServiceException {
+    public boolean beginWaitForNotifications() throws ServiceException {
         boolean someBlocked = false;
         boolean someReady = false;
+        mWaitForNotifications = true;
         
         // synchronized against 
         for (SessionInfo sinfo : mSessionInfo) {
@@ -458,12 +459,10 @@ public class ZimbraSoapContext {
         }
         
         if (someBlocked && !someReady) {
-            mWaitForNotifications = true;
+            return true;
         } else { 
-            mWaitForNotifications = false;
+            return false;
         }
-        
-        return mWaitForNotifications;
     }
 
     /**

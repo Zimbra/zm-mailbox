@@ -47,9 +47,9 @@ public class NoOp extends MailDocumentHandler  {
         
         boolean wait = request.getAttributeBool("wait", false);
         if (wait) {
-            synchronized(zsc) {
-                if (zsc.beginWaitForNotifications()) {
-                    long endWaitingTime = System.currentTimeMillis() + NOP_TIMEOUT; 
+            if (zsc.beginWaitForNotifications()) {
+                long endWaitingTime = System.currentTimeMillis() + NOP_TIMEOUT; 
+                synchronized(zsc) {
                     while (zsc.waitingForNotifications() 
                                 && (System.currentTimeMillis() < endWaitingTime)) {
                         try {
