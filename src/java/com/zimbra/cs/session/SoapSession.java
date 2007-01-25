@@ -140,21 +140,21 @@ public class SoapSession extends Session {
      * @param push channel 
      * @throws ServiceException 
      */
-    public synchronized RegisterNotificationResult registerNotificationConnection(PushChannel sc) throws ServiceException {
-        if (mPushChannel != null) {
-            mPushChannel.close();
-            mPushChannel = null;
-        }
-        
-        if (!mNotify || mMailbox == null) {
-            sc.close();
-            return RegisterNotificationResult.NO_NOTIFY;
-        }
-
+    public RegisterNotificationResult registerNotificationConnection(PushChannel sc) throws ServiceException {
         // must lock the Mailbox before locking the Session to avoid deadlock
         //   because ToXML functions can now call back into the Mailbox
         synchronized (mMailbox) {
             synchronized (this) {
+                if (mPushChannel != null) {
+                    mPushChannel.close();
+                    mPushChannel = null;
+                }
+                
+                if (!mNotify || mMailbox == null) {
+                    sc.close();
+                    return RegisterNotificationResult.NO_NOTIFY;
+                }
+
                 // are there any notifications already pending given the passed-in seqno?
                 boolean notifying = mChanges.hasNotifications();
                 int lastSeqNo = sc.getLastKnownSeqNo();
