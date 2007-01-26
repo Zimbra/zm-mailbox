@@ -30,7 +30,7 @@ import java.util.Map;
 
 public class KnownKey {
 
-    private static final Map<String, KnownKey> mKnownKeys = new HashMap<String, KnownKey>();
+    private static final Map mKnownKeys = new HashMap();
 
     static {
         // Since all the known keys are actually defined
@@ -42,13 +42,13 @@ public class KnownKey {
     static String[] getAll() {
         return (String[])mKnownKeys.keySet().toArray(new String[0]);
     }
-    
+
     static boolean isKnown(String key) {
         return mKnownKeys.containsKey(key);
     }
     
     static String getDoc(String key) {
-        KnownKey kk = mKnownKeys.get(key);
+        KnownKey kk = (KnownKey)mKnownKeys.get(key);
         if (kk == null) {
             return null;
         }
@@ -56,34 +56,15 @@ public class KnownKey {
     }
     
     static String getDefaultValue(String key) {
-        KnownKey kk = mKnownKeys.get(key);
+        KnownKey kk = (KnownKey)mKnownKeys.get(key);
         if (kk == null) {
             return null;
         }
         return kk.mDefaultValue;
     }
     
-    static void expandAll(LocalConfig lc) throws ConfigException {
-        String[] keys = KnownKey.getAll();
-        for (String key : keys) {
-        	KnownKey kk = mKnownKeys.get(key);
-        	kk.expand(lc);
-        }
-    }
-    
-    static String getValue(String key) throws ConfigException {
-        KnownKey kk = mKnownKeys.get(key);
-        if (kk == null) {
-            return null;
-        }
-        if (kk.mValue == null) {
-        	kk.expand(LocalConfig.getInstance());
-        }
-        return kk.mValue;
-    }
-    
     static boolean needForceToEdit(String key) {
-        KnownKey kk = mKnownKeys.get(key);
+        KnownKey kk = (KnownKey)mKnownKeys.get(key);
         if (kk == null) {
             return false;
         }
@@ -97,7 +78,6 @@ public class KnownKey {
     private final String mKey;
     private String mDoc;
     private String mDefaultValue;
-    private String mValue; //cached value after expansion
     private boolean mForceToEdit;
     
     /**
@@ -143,9 +123,9 @@ public class KnownKey {
         if (mKnownKeys.containsKey(key)) {
             Logging.warn("programming error - known key added more than once: " + key);
         }
-        setDefault(defaultValue);
-        mDoc = doc;
         mKnownKeys.put(key, this);
+        mDefaultValue = defaultValue;
+        mDoc = doc;
     }
 
     public KnownKey(String key) 
@@ -163,19 +143,9 @@ public class KnownKey {
     
     public void setDefault(String defaultValue) {
         mDefaultValue = defaultValue;
-        mValue = null;
     }
     
     public void setForceToEdit(boolean value) {
         mForceToEdit = value;
-    }
-    
-    private void expand(LocalConfig lc) throws ConfigException {
-    	try {
-    		mValue = lc.expand(mKey, mDefaultValue);
-    	} catch (ConfigException x) {
-    		Logging.error("Can't expand config key " + mKey + "=" + mDefaultValue, x);
-    		throw x;
-    	}
     }
 }
