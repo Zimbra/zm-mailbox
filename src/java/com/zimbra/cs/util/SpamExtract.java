@@ -65,7 +65,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
-import com.zimbra.cs.client.LmcSession;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
@@ -196,10 +195,8 @@ public class SpamExtract {
             optAdminURL = getSoapURL(server, true);
         }
         String adminAuthToken = getAdminAuthToken(optAdminURL, optAdminUser, optAdminPassword);
-
-        LmcSession session = new LmcSession(adminAuthToken, null);
-
-        extract(adminAuthToken, account, server, optQuery, outputDirectory, optDelete, optRaw);
+        String authToken = getDelegateAuthToken(optAdminURL, account, adminAuthToken);
+        extract(authToken, account, server, optQuery, outputDirectory, optDelete, optRaw);
     }
 
     public static final String TYPE_MESSAGE = "message";
@@ -436,6 +433,28 @@ public class SpamExtract {
             return authToken;
         } catch (Exception e) {
             throw ServiceException.FAILURE("admin auth failed url=" + adminURL, e);
+        }
+    }
+
+    public static String getDelegateAuthToken(String adminURL, Account account, String adminAuthToken) throws ServiceException {
+        SoapHttpTransport transport = new SoapHttpTransport(adminURL);
+        transport.setRetryCount(1);
+        transport.setTimeout(0);
+        transport.setAuthToken(adminAuthToken);
+
+        Element daReq = new Element.XMLElement(AdminService.DELEGATE_AUTH_REQUEST);
+        Element acctElem = daReq.addElement(AdminService.E_ACCOUNT);
+        acctElem.addAttribute(AdminService.A_BY, AdminService.BY_ID);
+        acctElem.setText(account.getId());
+        try {
+            if (mVerbose) mLog.info("Delegate auth request to: " + adminURL);
+            if (mLog.isDebugEnabled()) mLog.debug(daReq.prettyPrint());
+            Element daResp = transport.invokeWithoutSession(daReq);
+            if (mLog.isDebugEnabled()) mLog.debug(daResp.prettyPrint());
+            String authToken = daResp.getAttribute(AdminService.E_AUTH_TOKEN);
+            return authToken;
+        } catch (Exception e) {
+            throw ServiceException.FAILURE("Delegate auth failed url=" + adminURL, e);
         }
     }
 
