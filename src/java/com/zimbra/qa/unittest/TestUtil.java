@@ -36,6 +36,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.client.LmcSession;
 import com.zimbra.cs.client.soap.LmcAdminAuthRequest;
 import com.zimbra.cs.client.soap.LmcAdminAuthResponse;
@@ -315,5 +316,13 @@ public class TestUtil {
         options.setPassword("test123");
         options.setUri(getSoapUrl());
         return ZMailbox.getMailbox(options);
+    }
+    
+    public static SoapProvisioning getSoapProvisioning()
+    throws Exception {
+        SoapProvisioning sp = new SoapProvisioning();
+        sp.soapSetURI("https://localhost:7071" + ZimbraServlet.ADMIN_SERVICE_URI);
+        sp.soapZimbraAdminAuthenticate();
+        return sp;
     }
 }

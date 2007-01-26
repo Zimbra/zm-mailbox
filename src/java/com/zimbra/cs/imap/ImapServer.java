@@ -75,7 +75,7 @@ implements RealtimeStatsCallback {
         return new ImapHandler(this);
     }
 
-    boolean allowCleartextLogins() {
+    static boolean allowCleartextLogins() {
         try {
             Server server = Provisioning.getInstance().getLocalServer();
             return server.getBooleanAttr(Provisioning.A_zimbraImapCleartextLoginEnabled, false);
@@ -112,7 +112,6 @@ implements RealtimeStatsCallback {
 
         Server server = Provisioning.getInstance().getLocalServer();
         int threads = server.getIntAttr(Provisioning.A_zimbraImapNumThreads, 10);
-        boolean loginOK = server.getBooleanAttr(Provisioning.A_zimbraImapCleartextLoginEnabled, false);
         String address = server.getAttr(Provisioning.A_zimbraImapBindAddress, null);
         int port = server.getIntAttr(Provisioning.A_zimbraImapBindPort, Config.D_IMAP_BIND_PORT);
 
@@ -129,7 +128,6 @@ implements RealtimeStatsCallback {
             boolean debugLog = LC.nio_imap_debug_logging.booleanValue();
             try {
                 OzServer ozserver = new OzServer("IMAP", IMAP_READ_SIZE_HINT, serverSocket, imapHandlerFactory, debugLog, ZimbraLog.imap);
-                ozserver.setProperty(OzImapConnectionHandler.PROPERTY_ALLOW_CLEARTEXT_LOGINS, Boolean.toString(loginOK));
                 ozserver.start();
                 sImapServer = ozserver;
             } catch (IOException ioe) {

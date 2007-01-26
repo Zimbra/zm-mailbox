@@ -637,7 +637,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         // [X-DRAFT-I04-SEARCHRES]  draft-melnikov-imap-search-res-04: IMAP extension for referencing the last SEARCH result
 
         boolean authenticated = mSession != null;
-        String nologin = mServer.allowCleartextLogins() || mStartedTLS || authenticated ? "" : "LOGINDISABLED ";
+        String nologin = ImapServer.allowCleartextLogins() || mStartedTLS || authenticated ? "" : "LOGINDISABLED ";
         String starttls = mStartedTLS || authenticated ? "" : "STARTTLS ";
         String plain = !mStartedTLS || authenticated ? "" : "AUTH=PLAIN ";
         sendUntagged("CAPABILITY IMAP4rev1 " + nologin + starttls + plain + "BINARY CATENATE CHILDREN ESEARCH ID IDLE LITERAL+ " +
@@ -732,7 +732,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
     boolean doLOGIN(String tag, String username, String password) throws IOException {
         if (!checkState(tag, ImapSession.STATE_NOT_AUTHENTICATED))
             return CONTINUE_PROCESSING;
-        else if (!mStartedTLS && !mServer.allowCleartextLogins()) {
+        else if (!mStartedTLS && !ImapServer.allowCleartextLogins()) {
             sendNO(tag, "cleartext logins disabled");
             return CONTINUE_PROCESSING;
         }

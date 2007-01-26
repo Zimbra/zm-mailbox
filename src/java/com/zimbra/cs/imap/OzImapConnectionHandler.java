@@ -571,10 +571,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         return CONTINUE_PROCESSING;
     }
 
-    private boolean allowCleartextLogin() {
-        return Boolean.valueOf(mConnection.getProperty(PROPERTY_ALLOW_CLEARTEXT_LOGINS, Boolean.FALSE.toString())).booleanValue();
-    }
-    
     private void sendCapability() throws IOException {
         // [IMAP4rev1]        RFC 3501: Internet Message Access Protocol - Version 4rev1
         // [LOGINDISABLED]    RFC 3501: Internet Message Access Protocol - Version 4rev1
@@ -597,7 +593,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         // [X-DRAFT-I04-SEARCHRES]  draft-melnikov-imap-search-res-04: IMAP extension for referencing the last SEARCH result
 
         boolean authenticated = mSession != null;
-        String nologin = allowCleartextLogin() || mStartedTLS || authenticated ? "" : "LOGINDISABLED ";
+        String nologin = ImapServer.allowCleartextLogins() || mStartedTLS || authenticated ? "" : "LOGINDISABLED ";
         String starttls = mStartedTLS || authenticated ? "" : "STARTTLS ";
         String plain = !mStartedTLS || authenticated ? "" : "AUTH=PLAIN ";
         sendUntagged("CAPABILITY IMAP4rev1 " + nologin + starttls + plain + "BINARY CATENATE CHILDREN ESEARCH ID IDLE LITERAL+ " +
@@ -688,7 +684,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     boolean doLOGIN(String tag, String username, String password) throws IOException {
         if (!checkState(tag, ImapSession.STATE_NOT_AUTHENTICATED))
             return CONTINUE_PROCESSING;
-        else if (!mStartedTLS && !allowCleartextLogin()) {
+        else if (!mStartedTLS && !ImapServer.allowCleartextLogins()) {
             sendNO(tag, "cleartext logins disabled");
             return CONTINUE_PROCESSING;
         }
