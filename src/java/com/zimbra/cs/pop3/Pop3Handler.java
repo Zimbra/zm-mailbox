@@ -460,8 +460,7 @@ public class Pop3Handler extends ProtocolHandler {
     }    
     
     private void doUSER(String user) throws Pop3CmdException, IOException, ServiceException {
-        if ((mTlsConnection == null) && !mServer.allowCleartextLogins())
-            throw new Pop3CmdException("only valid after entering TLS mode");
+        checkIfLoginPermitted();
         
         if (mState != STATE_AUTHORIZATION)
             throw new Pop3CmdException("this command is only valid in authorization state");
@@ -489,8 +488,7 @@ public class Pop3Handler extends ProtocolHandler {
     }
     
     private void doPASS(String password) throws Pop3CmdException, IOException, ServiceException {
-        if ((mTlsConnection == null) && !mServer.allowCleartextLogins())
-            throw new Pop3CmdException("only valid after entering TLS mode");        
+        checkIfLoginPermitted();
         
         if (mState != STATE_AUTHORIZATION)
             throw new Pop3CmdException("this command is only valid in authorization state");
@@ -533,6 +531,15 @@ public class Pop3Handler extends ProtocolHandler {
                 throw new Pop3CmdException(e.getMessage());
             }
         }
+    }
+    
+    private void checkIfLoginPermitted()
+    throws Pop3CmdException, ServiceException {
+        if (mServer.isConnectionSSL()) {
+            return;
+        }
+        if ((mTlsConnection == null) && !mServer.allowCleartextLogins())
+            throw new Pop3CmdException("only valid after entering TLS mode");        
     }
     
     private void doSTAT() throws Pop3CmdException, IOException {
