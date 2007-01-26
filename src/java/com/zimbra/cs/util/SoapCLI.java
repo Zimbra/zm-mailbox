@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.Collection;
+import java.util.Iterator;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -81,6 +83,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 public abstract class SoapCLI {
     
     protected static final String O_H = "h";
+    protected static final String O_HIDDEN = "hidden";
     protected static final String O_S = "s";
 
     private String mUser;
@@ -89,6 +92,7 @@ public abstract class SoapCLI {
     private int mPort;
     private boolean mAuth;
     private Options mOptions;
+    private Options mHiddenOptions;
     
     private SoapTransport mTrans = null;
     private String mServerUrl;
@@ -112,6 +116,7 @@ public abstract class SoapCLI {
         if (mPort == 0)
             throw ServiceException.FAILURE("Unable to get admin port number from provisioning", null);
         mOptions = new Options();
+        mHiddenOptions = new Options();
     }
 
     /**
@@ -123,8 +128,10 @@ public abstract class SoapCLI {
     protected CommandLine getCommandLine(String[] args) throws ParseException {
         CommandLineParser clParser = new GnuParser();
         CommandLine cl = null;
+
+        Options opts = getAllOptions();
         try {
-            cl = clParser.parse(mOptions, args);
+            cl = clParser.parse(opts, args);
         } catch (ParseException e) {
             if (helpOptionSpecified(args)) {
                 usage();
@@ -133,12 +140,27 @@ public abstract class SoapCLI {
                 throw e;
         }
         if (cl.hasOption(O_H)) {
-            usage();
+            boolean showHiddenOptions = cl.hasOption(O_HIDDEN);
+            usage(null, showHiddenOptions);
             return null;
         }
         if (cl.hasOption(O_S))
             mHost = cl.getOptionValue(O_S);
         return cl;
+    }
+
+    // Combine normal and hidden options.
+    private Options getAllOptions() {
+        Options options = new Options();
+        Collection[] optsCols =
+            new Collection[] { mOptions.getOptions(), mHiddenOptions.getOptions() };
+        for (Collection opts : optsCols) {
+            for (Iterator iter = opts.iterator(); iter.hasNext(); ) {
+                Option opt = (Option) iter.next();
+                options.addOption(opt);
+            }
+        }
+        return options;
     }
 
     private boolean helpOptionSpecified(String[] args) {
@@ -189,8 +211,9 @@ public abstract class SoapCLI {
         Option s = new Option(O_S, "server", true, "Mail server hostname. Default is localhost.");
         mOptions.addOption(s);
         mOptions.addOption(O_H, "help", false, "Displays this help message.");
+        mHiddenOptions.addOption(null, O_HIDDEN, false, "Include hidden options in help output");
     }
-    
+
     /**
      * Displays usage to stdout.
      *
@@ -204,16 +227,20 @@ public abstract class SoapCLI {
      * @param e parse error 
      */
     protected void usage(ParseException e) {
+        usage(e, false);
+    }
+
+    protected void usage(ParseException e, boolean showHiddenOptions) {
         if (e != null) {
             System.err.println("Error parsing command line arguments: " + e.getMessage());
         }
 
+        Options opts = showHiddenOptions ? getAllOptions() : mOptions;
         PrintWriter pw = new PrintWriter(System.err, true);
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp(pw, formatter.getWidth(), getCommandUsage(),
-                null, mOptions, formatter.getLeftPadding(), formatter.getDescPadding(),
+                null, opts, formatter.getLeftPadding(), formatter.getDescPadding(),
                 "\n" + getTrailer());
-        
     }
 
     /**
@@ -281,5 +308,9 @@ public abstract class SoapCLI {
      */
     protected Options getOptions() {
         return mOptions;
+    }
+
+    protected Options getHiddenOptions() {
+        return mHiddenOptions;
     }
 }
