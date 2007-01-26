@@ -687,7 +687,7 @@ public class LC {
                     " maximum Java heap size (-Xmx) of the JVM running Tomcat.");
 
         tomcat_java_options = new KnownKey("tomcat_java_options");
-        tomcat_java_options.setDefault("-client -XX:NewRatio=2");
+        tomcat_java_options.setDefault("-client -XX:NewRatio=2 -Djava.awt.headless=true");
         tomcat_java_options.setDoc("JVM options to use when launching Tomcat.");
 
         tomcat_java_home = new KnownKey("tomcat_java_home");
