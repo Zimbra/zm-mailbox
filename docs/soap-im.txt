@@ -10,8 +10,8 @@ IMGetRoster -- get buddy list
            <chat thread="threadID">
               <pcps> // participants
                  [<p addr="foo@bar.com"/>]* // participants (NOT including yourself) in this chat
-              </pcps>   
-           </chat>   
+              </pcps>
+           </chat>
         ]*
      </chats>   
      
@@ -84,8 +84,8 @@ IMGetChat -- return the chat history (param = num messages)
       </pcps>
       <messages>
          <message seq="sequence-number" ts="timestamp" from="id">
-            [<subject [lang="LANGUAGE"]>SUBJECT</subject>]*   // Zimbra-HTML-Special encoding
-            [<body [lang="LANGUAGE">BODY</body>]              // Zimbra-HTML-Special encoding
+            [<subject [lang="LANGUAGE"]>SUBJECT</subject>]*   // HTML
+            [<body [lang="LANGUAGE">BODY</body>]              // HTML
          </message>
       </messages>   
    </chat>
@@ -97,16 +97,16 @@ IMSendMessage -- send a new message, optional chat parameter
 To an existing chat:
 <IMSendMessageRequest>
    <message thread="threadID">
-      [<subject [lang="LANGUAGE"]>SUBJECT</subject>]*   // Zimbra-HTML-Special encoding
-      [<body [lang="LANGUAGE">BODY</body>]              // Zimbra-HTML-Special encoding
+      [<subject [lang="LANGUAGE"]>SUBJECT</subject>]*   // HTML
+      [<body [lang="LANGUAGE">BODY</body>]              // HTML
    </message>
 </IMSendMessageRequest>
    
 ...OR create a new chat:
 <IMSendMessageRequest>
    <message addr="foo@bar.com">
-      [<subject [lang="LANGUAGE"]>SUBJECT</subject>]*   // Zimbra-HTML-Special encoding
-      [<body [lang="LANGUAGE">BODY</body>]              // Zimbra-HTML-Special encoding
+      [<subject [lang="LANGUAGE"]>SUBJECT</subject>]*   // HTML
+      [<body [lang="LANGUAGE">BODY</body>]              // HTML
    </message>
 </IMSendMessageRequest>
 
@@ -117,9 +117,16 @@ To an existing chat:
 IMModifyChat -- add/remove users from multi-user chat, adjust save preferences, etc
 ------------
 <IMModifyChatRequest thread="threadId" op="close"/>
+<IMModifyChatRequest thread="threadId" op="adduser" addr="address>INVITATION_MESSAGE</IMModifyChatRequest>
 
-<IMModifyChatResponse/>
-   
+
+IMJoinChat -- join a multi-user chat you have been invited to
+----------
+<IMJoinChatRequest thread="threadId"/>
+</IMJoinChatResponse>
+// **look for notification: <n type="enteredchat" thread="threadId"/>**
+
+
 
 IMModifyWhitelist -- block/allow
 -----------------
@@ -171,7 +178,7 @@ IM NOTIFICATIONS
              
                 [
                 // NEW MESSAGE RECEIVED:
-                   <n type="message" from="address" thread="UID" ts="TIMESTAMP>
+                   <n type="message" from="address" thread="chat-id" ts="TIMESTAMP>
                       [<subject [lang="LANG"]>SUBJECT</subject>]
                       [<body [lang="LANG"]>BODY</body>]
                    </n>
@@ -191,8 +198,16 @@ IM NOTIFICATIONS
                    <n type="unsubscribed" to="TOADDR" groups="GROUPS" [ask="subscribe|unsubscribe"]/> // you removed them from your buddy list
                 ]*
                 [
-                   <n type="leftchat" thread="UID" addr="ADDRESS"> // specified user left the chat
+                   <n type="enteredchat" thread="chat-id" addr="ADDRESS"/> // specified user entered the chat
                 ]*
+                [
+                   <n type="leftchat" thread="chat-id" addr="ADDRESS"/> // specified user left the chat
+                ]*
+                [
+                 // An invitation to join a group chat:
+                   <n type="invited" thread="chat-id" addr="ADDRESS">INVITATION_MESSAGE</n>
+                ]*
+                
                 
              </im>]
           ]?     

@@ -30,8 +30,16 @@ public class IMAddr {
     private String mAddr;
     
     public IMAddr(String addr) {
+        assert(addr != null);
+        assert(addr.indexOf('/') < 0);
         mAddr = addr;
     }
+
+    public IMAddr(JID jid) {
+        mAddr = jid.toBareJID();
+    }
+    
+    public String getNode() { return makeJID().getNode(); } 
     
     public String getAddr() { return mAddr; }
     
@@ -44,6 +52,18 @@ public class IMAddr {
             String namePart = mAddr.substring(0, domainSplit);
             String domainPart = mAddr.substring(domainSplit+1);
             return new JID(namePart, domainPart, "");
+        } else {
+            return new JID(mAddr);
+        }            
+    }
+    
+    public JID makeFullJID() {
+        int domainSplit = mAddr.indexOf('@');
+        
+        if (domainSplit > 0) {
+            String namePart = mAddr.substring(0, domainSplit);
+            String domainPart = mAddr.substring(domainSplit+1);
+            return new JID(namePart, domainPart, "zcs");
         } else {
             return new JID(mAddr);
         }            

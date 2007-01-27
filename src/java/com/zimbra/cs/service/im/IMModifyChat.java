@@ -67,13 +67,17 @@ public class IMModifyChat extends IMDocumentHandler
                         persona.closeChat(lc.getOperationContext(), chat);
                         break;
                     case ADDUSER:
+                    {
                         String newUser = request.getAttribute(IMConstants.A_ADDRESS);
-                        persona.addUserToChat(chat, new IMAddr(newUser));
-                        break;
+                        String inviteMessage = request.getText();
+                        if (inviteMessage == null || inviteMessage.length() == 0)
+                            inviteMessage = "Please join my chat";
+                        persona.addUserToChat(lc.getOperationContext(), chat, new IMAddr(newUser), inviteMessage);
+                    }
+                    break;
                 }
             }
         }
-        
         return response;        
     }
 

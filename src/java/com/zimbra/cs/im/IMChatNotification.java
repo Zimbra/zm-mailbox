@@ -28,22 +28,28 @@ import java.util.Formatter;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.IMConstants;
 
-public class IMLeftChatNotification extends IMChatNotification {
-
-    IMLeftChatNotification(IMAddr from, String threadId) {
-        super(from, threadId);
+public abstract class IMChatNotification extends IMNotification {
+    
+    IMAddr mFromAddr;
+    String mThreadId;
+    
+    IMChatNotification(IMAddr from, String threadId) {
+        mFromAddr = from;
+        mThreadId = threadId;
     }
+    
 
     public String toString() {
-        return new Formatter().format("IMLeftChatNotification: %s", super.toString()).toString();
+        return new Formatter().format("Addr: %s  Thread: %s",
+                mFromAddr, mThreadId).toString();
     }
 
     /* (non-Javadoc)
     * @see com.zimbra.cs.im.IMNotification#toXml(com.zimbra.common.soap.Element)
     */
     public Element toXml(Element parent) {
-        Element toRet = create(parent, IMConstants.E_LEFTCHAT);
-        super.toXml(toRet);
-        return toRet;
+        parent.addAttribute(IMConstants.A_THREAD_ID, mThreadId);
+        parent.addAttribute(IMConstants.A_ADDRESS, mFromAddr.getAddr());
+        return parent;
     }
 }

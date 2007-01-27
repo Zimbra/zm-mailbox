@@ -18,32 +18,36 @@
  * Portions created by Zimbra are Copyright (C) 2005, 2006 Zimbra, Inc.
  * All Rights Reserved.
  * 
- * Contributor(s):
+ * Contributor(s): 
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.im;
+package com.zimbra.cs.service.im;
 
-import java.util.Formatter;
+import java.util.Map;
+
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.IMConstants;
+import com.zimbra.cs.im.IMPersona;
+import com.zimbra.cs.service.im.IMDocumentHandler;
+import com.zimbra.soap.ZimbraSoapContext;
 
-public class IMLeftChatNotification extends IMChatNotification {
+public class IMJoinChatRequest extends IMDocumentHandler {
 
-    IMLeftChatNotification(IMAddr from, String threadId) {
-        super(from, threadId);
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        Element response = lc.createElement(IMConstants.IM_JOIN_CHAT_RESPONSE);
+        
+        String threadId = request.getAttribute(IMConstants.A_THREAD_ID);
+        
+        Object lock = super.getLock(lc);
+        
+        synchronized(lock) {
+            IMPersona persona = super.getRequestedPersona(lc, lock);
+            persona.joinChat(threadId);
+        }
+        return response;
     }
 
-    public String toString() {
-        return new Formatter().format("IMLeftChatNotification: %s", super.toString()).toString();
-    }
-
-    /* (non-Javadoc)
-    * @see com.zimbra.cs.im.IMNotification#toXml(com.zimbra.common.soap.Element)
-    */
-    public Element toXml(Element parent) {
-        Element toRet = create(parent, IMConstants.E_LEFTCHAT);
-        super.toXml(toRet);
-        return toRet;
-    }
 }
