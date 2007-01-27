@@ -46,6 +46,8 @@ public class IMConstants {
     public static final QName IM_MODIFY_CHAT_RESPONSE  = QName.get("IMModifyChatResponse", NAMESPACE);
     public static final QName IM_SEND_MESSAGE_REQUEST  = QName.get("IMSendMessageRequest", NAMESPACE);
     public static final QName IM_SEND_MESSAGE_RESPONSE = QName.get("IMSendMessageResponse", NAMESPACE);
+    public static final QName IM_JOIN_CHAT_REQUEST = QName.get("IMJoinChatRequest", NAMESPACE);
+    public static final QName IM_JOIN_CHAT_RESPONSE = QName.get("IMJoinChatResponse", NAMESPACE);
 
     public static final QName IM_GATEWAY_LIST_REQUEST = QName.get("IMGatewayListRequest", NAMESPACE);
     public static final QName IM_GATEWAY_LIST_RESPONSE = QName.get("IMGatewayListResponse", NAMESPACE);
@@ -79,7 +81,8 @@ public class IMConstants {
     public static final String E_PRESENCE       = "presence";
     public static final String E_STATUS         = "status";
     public static final String E_LEFTCHAT       = "leftchat";
-    public static final String E_ENTEREDCHAT    = "leftchat";
+    public static final String E_ENTEREDCHAT    = "enteredchat";
+    public static final String E_INVITED        = "invited";
     public static final String E_SUBSCRIBE      = "subscribe";
     public static final String E_SUBSCRIBED     = "subscribed";
     public static final String E_UNSUBSCRIBED   = "unsubscribed";
