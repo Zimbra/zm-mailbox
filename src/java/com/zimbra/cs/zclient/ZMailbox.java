@@ -2468,4 +2468,26 @@ public class ZMailbox {
         }
         return new ZSearchGalResult(contacts, resp.getAttributeBool(AccountConstants.A_MORE, false), query, type);
     }
+
+    /**
+     *
+     * @param startMsec starting time of range, in msecs
+     * @param endMsec ending time of range, in msecs
+     * @param folderId optional folder id (default is Calendar folder)
+     * @return list of appts within the specified range
+     * @throws ServiceException on error
+     */
+    public List<ZApptSummary> getApptSummaries(long startMsec, long endMsec, String folderId) throws ServiceException {
+        XMLElement req = new XMLElement(MailConstants.GET_APPT_SUMMARIES_REQUEST);
+        req.addAttribute(MailConstants.A_CAL_START_TIME, startMsec);
+        req.addAttribute(MailConstants.A_CAL_END_TIME, endMsec);
+        if (folderId != null)
+            req.addAttribute(MailConstants.A_FOLDER, folderId);
+        Element resp = invoke(req);
+        List<ZApptSummary> appts = new ArrayList<ZApptSummary>();
+        for (Element appt : resp.listElements(MailConstants.E_APPOINTMENT)) {
+            ZApptSummary.addInstances(appt, appts);
+        }
+        return appts;
+    }
 }

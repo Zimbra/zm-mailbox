@@ -195,6 +195,39 @@ public class ZMailboxUtil implements DebugListener {
 
         ADMIN("help on admin-related commands"),
         ACCOUNT("help on account-related commands"),
+        APPOINTMENT("help on appoint-related commands",
+                " absolute date-specs:\n" +
+                        "\n" +
+                        "  mm/dd/yyyy (i.e., 12/25/1998)\n" +
+                        "  yyyy/dd/mm (i.e., 1989/12/25)\n" +
+                        "  \\d+       (num milliseconds, i.e., 1132276598000)\n" +
+                        "\n"+
+                        "  relative date-specs:\n"+
+                        "\n"+
+                        "  [mp+-]?([0-9]+)([mhdwy][a-z]*)?g\n"+
+                        " \n"+
+                        "   +/{not-specified}   current time plus an offset\n"+
+                        "   -                   current time minus an offset\n"+
+                        "  \n"+
+                        "   (0-9)+    value\n"+
+                        "\n"+
+                        "   ([mhdwy][a-z]*)  units, everything after the first character is ignored (except for \"mi\" case):\n"+
+                        "   m(onths)\n"+
+                        "   mi(nutes)\n"+
+                        "   d(ays)\n"+
+                        "   w(eeks)\n"+
+                        "   h(ours)\n"+
+                        "   y(ears)\n"+
+                        "   \n"+
+                        "  examples:\n"+
+                        "     1day     1 day from now\n"+
+                        "    +1day     1 day from now \n"+
+                        "    p1day     1 day from now\n"+
+                        "    +60mi     60 minutes from now\n"+
+                        "    +1week    1 week from now\n"+
+                        "    +6mon     6 months from now \n"+
+                        "    1year     1 year from now\n"+
+                        "\n"),
         COMMANDS("help on all commands"),
         CONTACT("help on contact-related commands"),
         CONVERSATION("help on conversation-related commands"),
@@ -295,6 +328,7 @@ public class ZMailboxUtil implements DebugListener {
         GET_ALL_CONTACTS("getAllContacts", "gact", "[attr1 [attr2...]]", "get all contacts", Category.CONTACT, 0, Integer.MAX_VALUE, O_VERBOSE, O_FOLDER),
         GET_ALL_FOLDERS("getAllFolders", "gaf", "", "get all folders", Category.FOLDER, 0, 0, O_VERBOSE),
         GET_ALL_TAGS("getAllTags", "gat", "", "get all tags", Category.TAG, 0, 0, O_VERBOSE),
+        GET_APPOINTMENT_SUMMARIES("getAppointmentSummaries", "gaps", "{start-date-spec} {end-date-spec} {folder-path}", "get appointment summaries", Category.APPOINTMENT, 2, 3, O_VERBOSE),
         GET_CONTACTS("getContacts", "gct", "{contact-ids} [attr1 [attr2...]]", "get contact(s)", Category.CONTACT, 1, Integer.MAX_VALUE, O_VERBOSE),
         GET_CONVERSATION("getConversation", "gc", "{conv-id}", "get a converation", Category.CONVERSATION, 1, 1, O_VERBOSE),
         GET_IDENTITIES("getIdentities", "gid", "", "get all identites", Category.ACCOUNT, 0, 0, O_VERBOSE),
@@ -865,6 +899,9 @@ public class ZMailboxUtil implements DebugListener {
         case GET_ALL_TAGS:
             doGetAllTags(args);
             break;
+        case GET_APPOINTMENT_SUMMARIES:
+            doGetAppointmentSummaries(args);
+            break;
         case GET_CONVERSATION:
             doGetConversation(args);
             break;
@@ -1038,6 +1075,21 @@ public class ZMailboxUtil implements DebugListener {
     	}
     }
 
+    private void doGetAppointmentSummaries(String args[]) throws ServiceException {
+        long startTime = DateUtil.parseDateSpecifier(args[0], new Date().getTime());
+        long endTime = DateUtil.parseDateSpecifier(args[1], (new Date().getTime()) + 1000*60*60*24*7);
+        String folderId = args.length == 3 ? lookupFolderId(args[2]) : null;
+        List<ZApptSummary> appts = mMbox.getApptSummaries(startTime, endTime, folderId);
+        System.out.print("[");
+        boolean first = true;
+        for (ZApptSummary appt : appts) {
+            if (!first) System.out.println(",");
+            System.out.print(appt);
+            if (first) first = false;
+        }
+        System.out.println("]");
+    }
+    
     /*
     addFilterRule(afrl)
   --before {existing-rule-name}
