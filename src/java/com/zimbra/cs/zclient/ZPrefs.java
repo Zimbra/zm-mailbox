@@ -116,5 +116,7 @@ public class ZPrefs {
 
     public long getContactsPerPage() { return getLong(Provisioning.A_zimbraPrefContactsPerPage); }
 
+    public long getCalendarFirstDayOfWeek() { return getLong(Provisioning.A_zimbraPrefCalendarFirstDayOfWeek); }
+
 }
 
