@@ -25,20 +25,10 @@
 
 package com.zimbra.cs.lmtpserver;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.mail.MessagingException;
-
-import org.apache.commons.collections.map.LRUMap;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -55,8 +45,16 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ThreadLocalData;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
+import org.apache.commons.collections.map.LRUMap;
+
+import javax.mail.MessagingException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class ZimbraLmtpBackend implements LmtpBackend {
 	private static Log mLog = LogFactory.getLog(ZimbraLmtpBackend.class);
@@ -99,6 +97,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             }
             
 		    if (acctStatus.equals(Provisioning.ACCOUNT_STATUS_ACTIVE) ||
+                acctStatus.equals(Provisioning.ACCOUNT_STATUS_LOCKOUT) ||
                 acctStatus.equals(Provisioning.ACCOUNT_STATUS_LOCKED)) 
             {
 		        return LmtpStatus.ACCEPT;
