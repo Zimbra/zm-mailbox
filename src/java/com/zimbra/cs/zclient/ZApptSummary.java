@@ -30,6 +30,8 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 
 import java.util.List;
+import java.util.Comparator;
+import java.util.Date;
 
 public class ZApptSummary implements ZItem {
 
@@ -279,6 +281,10 @@ public class ZApptSummary implements ZItem {
     /* computed from start+duration */
     public long getEndTime() { return mEndTime; }
 
+    public Date getStartDate() { return new Date(mStartTime); }
+
+    public Date getEndDate() { return new Date(mEndTime); }
+
     public long getTimeZoneOffset() { return mTimeZoneOffset; }
 
     public boolean isException() { return mIsException; }
@@ -297,5 +303,29 @@ public class ZApptSummary implements ZItem {
 
     public boolean isInRange(long start, long end) {
         return mStartTime < end && mEndTime > start;
+    }
+
+    /**
+     * sort two appt summaries by all day, start time, duration, folder id.
+     */
+    public static class SortByTimeDurationFolder implements Comparator {
+        public int compare(Object obja, Object objb) {
+            if (!(obja instanceof ZApptSummary && objb instanceof ZApptSummary) )
+                return 0;
+            ZApptSummary a = (ZApptSummary) obja;
+            ZApptSummary b = (ZApptSummary) objb;
+            if (!a.isAllDay() && b.isAllDay()) return 1;
+            if (a.isAllDay() && !b.isAllDay()) return -1;
+            if (a.getStartTime() > b.getStartTime()) return 1;
+            if (a.getStartTime() < b.getStartTime()) return -1;
+            if (a.getDuration() < b.getDuration()) return 1;
+            if (a.getDuration() > b.getDuration()) return 1;
+            return a.getFolderId().compareTo(b.getFolderId());
+            /*
+            String na = a.getName() != null ? a.getName() : "";
+            String nb = b.getName() != null ? b.getName() : "";
+            return na.compareToIgnoreCase(nb);
+            */
+        }
     }
 }
