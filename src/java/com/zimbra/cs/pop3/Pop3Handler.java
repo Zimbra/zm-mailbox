@@ -38,6 +38,8 @@ import java.net.Socket;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
@@ -49,8 +51,6 @@ import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServerInputStream;
 import com.zimbra.cs.util.Config;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 
 /**
  * @author schemers
@@ -82,7 +82,6 @@ public class Pop3Handler extends ProtocolHandler {
 
     private boolean dropConnection;
     
-    private static final int STATE_INIT = 0;
     private static final int STATE_AUTHORIZATION = 1;
     private static final int STATE_TRANSACTION = 2;    
     private static final int STATE_UPDATE = 3;
@@ -101,7 +100,7 @@ public class Pop3Handler extends ProtocolHandler {
     protected boolean setupConnection(Socket connection) throws IOException {
         // TODO Auto-generated method stub
         mRemoteAddress = connection.getInetAddress().getHostAddress();
-        INFO("connected");
+        ZimbraLog.pop.info("connected");
 
         mInputStream = new TcpServerInputStream(connection.getInputStream());
         
@@ -143,11 +142,11 @@ public class Pop3Handler extends ProtocolHandler {
             return result;
         } catch (Pop3CmdException e) {
             sendERR(e.getResponse());
-            DEBUG(e.getMessage(), e);
+            ZimbraLog.pop.debug(e.getMessage(), e);
             return dropConnection == false;
         } catch (ServiceException e) {
             sendERR(Pop3CmdException.getResponse(e.getMessage()));
-            DEBUG(e.getMessage(), e);
+            ZimbraLog.pop.debug(e.getMessage(), e);
             return dropConnection == false;
         } finally {
             if (dropConnection)
@@ -158,13 +157,13 @@ public class Pop3Handler extends ProtocolHandler {
     
     protected boolean processCommandInternal() throws Pop3CmdException, IOException, ServiceException {
         mCurrentCommandLine = mInputStream.readLine();
-        //INFO("command("+mCurrentCommandLine+")");
+        //ZimbraLog.pop.info("command("+mCurrentCommandLine+")");
         String cmd = mCurrentCommandLine;
         String arg = null;
 
         if (cmd == null) {
             dropConnection = true;
-            INFO("disconnected without quit");
+            ZimbraLog.pop.info("disconnected without quit");
             //dropConnection();
             return false;
         }
@@ -186,7 +185,7 @@ public class Pop3Handler extends ProtocolHandler {
         
         if (ZimbraLog.pop.isDebugEnabled()) {
             String darg = "PASS".equals(cmd) ? "<BLOCKED>" : arg;
-            DEBUG("command=" + cmd + " arg=" + darg);
+            ZimbraLog.pop.debug("command=%s arg=%s", cmd, darg);
         }
                 
         if (cmd.length() < 1)
@@ -309,7 +308,7 @@ public class Pop3Handler extends ProtocolHandler {
                 mOutputStream = null;
             }
         } catch (IOException e) {
-            INFO("exception while closing connection", e);
+            ZimbraLog.pop.info("exception while closing connection", e);
         }
     }
 
@@ -318,32 +317,8 @@ public class Pop3Handler extends ProtocolHandler {
      */
     protected void notifyIdleConnection() {
         // according to RFC 1939 we aren't supposed to snd a response on idle timeout
-        DEBUG("idle connection");
+        ZimbraLog.pop.debug("idle connection");
 
-    }
-
-    private void INFO(String message, Throwable e) {
-        if (ZimbraLog.pop.isInfoEnabled()) ZimbraLog.pop.info(message, e); 
-    }
-    
-    private void INFO(String message) {
-        if (ZimbraLog.pop.isInfoEnabled()) ZimbraLog.pop.info(message);
-    }
-
-    private void DEBUG(String message, Throwable e) {
-        if (ZimbraLog.pop.isDebugEnabled()) ZimbraLog.pop.debug(message, e);
-    }
-
-    private void DEBUG(String message) {
-        if (ZimbraLog.pop.isDebugEnabled()) ZimbraLog.pop.debug(message);
-    }
-
-    private void WARN(String message, Throwable e) {
-        if (ZimbraLog.pop.isWarnEnabled()) ZimbraLog.pop.warn(message, e);
-    }
-
-    private void WARN(String message) {
-        if (ZimbraLog.pop.isWarnEnabled()) ZimbraLog.pop.warn(message);
     }
 
     private void sendERR(String response) throws IOException {
@@ -362,11 +337,15 @@ public class Pop3Handler extends ProtocolHandler {
         String cl = mCurrentCommandLine != null ? mCurrentCommandLine : "<none>";
         String response = (msg == null || msg.length() == 0) ? status : status+" "+msg;
         if (ZimbraLog.pop.isDebugEnabled()) {
-            DEBUG(response + " (" + cl + ")");
+            ZimbraLog.pop.debug("%s (%s)", response, cl);
         } else {
             // only log errors if not debugging...
-            if (status.charAt(0) == '-')
-                INFO(response + " (" + cl + ")");
+            if (status.charAt(0) == '-') {
+                if (cl.toUpperCase().startsWith("PASS")) {
+                    cl = "PASS ****";
+                }
+                ZimbraLog.pop.info("%s (%s)", response, cl);
+            }
         }        
         sendLine(response, flush);
     }
@@ -380,10 +359,6 @@ public class Pop3Handler extends ProtocolHandler {
         mOutputStream.write(LINE_SEPARATOR);
         if (flush)
             mOutputStream.flush();
-    }
-
-    private void flush() throws IOException {
-        mOutputStream.flush();
     }
 
     /*
@@ -444,7 +419,7 @@ public class Pop3Handler extends ProtocolHandler {
         } else {
             sendOK(mServer.getGoodbye());
         }
-        INFO("quit from client");
+        ZimbraLog.pop.info("quit from client");
         //dropConnection();
     }
     
