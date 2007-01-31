@@ -37,7 +37,6 @@ import java.util.TimeZone;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
-import com.zimbra.cs.index.queryparser.ZimbraQueryParser;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.mail.ToXML.OutputParticipants;
@@ -63,7 +62,7 @@ public final class SearchParams {
     public enum ExpandResults {
         NONE, FIRST, HITS, ALL;
 
-        public static ExpandResults get(String value) {
+        public static ExpandResults get(String value) throws ServiceException {
             if (value == null)
                 return NONE;
             value = value.toUpperCase();
@@ -72,7 +71,7 @@ public final class SearchParams {
             } catch (IllegalArgumentException iae) {
                 if (value.equals("1") || value.equals("TRUE"))
                     return FIRST;
-                return NONE;
+                throw ServiceException.INVALID_REQUEST("unknown 'fetch' value: " + value, null);
             }
         }
     };
