@@ -291,6 +291,9 @@ public class Mailbox {
         public OperationContext setChangeConstraint(boolean checkCreated, int changeId) {
             changetype = checkCreated;  change = changeId;  return this;
         }
+        public OperationContext unsetChangeConstraint() {
+            changetype = CHECK_CREATED;  change = -1;  return this;
+        }
 
         public RedoableOp getPlayer() {
             return player;
@@ -4388,24 +4391,29 @@ public class Mailbox {
         if (subscription && sdata.items.get(0) instanceof Invite)
             emptyFolder(octxt, folderId, false);
 
+        // disable modification conflict checks, as we've already wiped the folder and we may hit an appoinment >1 times
+        OperationContext octxtNoConflicts = new OperationContext(octxt).unsetChangeConstraint();
+
         // add the newly-fetched items to the folder
-        for (Object obj : sdata.items)
+        for (Object obj : sdata.items) {
             try {
                 if (obj instanceof Invite)
-                    addInvite(octxt, (Invite) obj, folderId, true, null);
+                    addInvite(octxtNoConflicts, (Invite) obj, folderId, true, null);
                 else if (obj instanceof ParsedMessage)
-                    addMessage(octxt, (ParsedMessage) obj, folderId, true, Flag.BITMASK_UNREAD, null);
+                    addMessage(octxtNoConflicts, (ParsedMessage) obj, folderId, true, Flag.BITMASK_UNREAD, null);
             } catch (IOException e) {
                 throw ServiceException.FAILURE("IOException", e);
             }
+        }
 
         // update the subscription to avoid downloading items twice
-        if (subscription && sdata.lastDate > 0)
+        if (subscription && sdata.lastDate > 0) {
             try {
                 setSubscriptionData(octxt, folderId, sdata.lastDate, sdata.lastGuid);
             } catch (Exception e) {
                 ZimbraLog.mailbox.warn("could not update feed metadata", e);
             }
+        }
     }
 
     public synchronized void setSubscriptionData(OperationContext octxt, int folderId, long date, String guid) throws ServiceException {
