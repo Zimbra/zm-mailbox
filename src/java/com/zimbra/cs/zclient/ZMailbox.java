@@ -2486,7 +2486,7 @@ public class ZMailbox {
         Element resp = invoke(req);
         List<ZApptSummary> appts = new ArrayList<ZApptSummary>();
         for (Element appt : resp.listElements(MailConstants.E_APPOINTMENT)) {
-            ZApptSummary.addInstances(appt, appts);
+            ZApptSummary.addInstances(appt, appts, folderId);
         }
         return appts;
     }

@@ -104,14 +104,17 @@ public class ZApptSummary implements ZItem {
     private String mFragment;
     
     private long mStartTime;
+    private long mEndTime;
     private long mTimeZoneOffset;
     private boolean mIsException;
+
+    private String mFolderId;
 
     private ZApptSummary() {
 
     }
     
-    public static void addInstances(Element e, List<ZApptSummary> appts) throws ServiceException {
+    public static void addInstances(Element e, List<ZApptSummary> appts, String folderId) throws ServiceException {
         String id = e.getAttribute(MailConstants.A_ID);
         String freeBusyActual = e.getAttribute(MailConstants.A_APPT_FREEBUSY_ACTUAL, null);
         String transparency = e.getAttribute(MailConstants.A_APPT_TRANSPARENCY, null);
@@ -137,6 +140,7 @@ public class ZApptSummary implements ZItem {
 
         for (Element inst : e.listElements(MailConstants.E_INSTANCE)) {
             ZApptSummary appt = new ZApptSummary();
+            appt.mFolderId = folderId;
             appt.mId = id;
 
             appt.mStartTime = inst.getAttributeLong(MailConstants.A_CAL_START_TIME, 0);
@@ -167,6 +171,8 @@ public class ZApptSummary implements ZItem {
             appt.mPercentComplete = inst.getAttribute(MailConstants.A_TASK_PERCENT_COMPLETE, percentComplete);
             appt.mDuration = inst.getAttributeLong(MailConstants.A_CAL_DURATION, duration);
 
+            appt.mEndTime = appt.mStartTime + appt.mDuration;
+
             Element instFragmentEl = inst.getOptionalElement(MailConstants.E_FRAG);
             appt.mFragment = (instFragmentEl != null) ? instFragmentEl.getText() : fragment;
             appts.add(appt);
@@ -181,10 +187,15 @@ public class ZApptSummary implements ZItem {
         return mId;
     }
 
+    public String getFolderId() {
+        return mFolderId;
+    }
+
     public String toString() {
         ZSoapSB sb = new ZSoapSB();
         sb.beginStruct();
         sb.add("id", mId);
+        sb.add("folderId", mFolderId);
         sb.add("tags", mTags);
         sb.add("flags", mFlags);
         sb.add("name", mName);
@@ -265,6 +276,9 @@ public class ZApptSummary implements ZItem {
 
     public long getStartTime() { return mStartTime; }
 
+    /* computed from start+duration */
+    public long getEndTime() { return mEndTime; }
+
     public long getTimeZoneOffset() { return mTimeZoneOffset; }
 
     public boolean isException() { return mIsException; }
@@ -281,5 +295,7 @@ public class ZApptSummary implements ZItem {
 
     public boolean hasAttachment() { return hasFlags() && mFlags.indexOf(ZApptSummary.Flag.attachment.getFlagChar()) != -1; }
 
-
+    public boolean isInRange(long start, long end) {
+        return mStartTime < end && mEndTime > start;
+    }
 }
