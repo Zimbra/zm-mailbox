@@ -26,9 +26,11 @@ package com.zimbra.cs.im;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jivesoftware.util.JiveGlobals;
 import org.jivesoftware.wildfire.XMPPServer;
 import org.jivesoftware.wildfire.interceptor.InterceptorManager;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Domain;
@@ -42,7 +44,7 @@ public class ZimbraIM {
     
     public synchronized static void startup() throws ServiceException {
         try {
-            System.setProperty("wildfireHome", "/opt/zimbra");
+            JiveGlobals.setHomeDirectory(LC.zimbra_home.value());
             
             ArrayList<String> domainStrs = new ArrayList<String>();
             
