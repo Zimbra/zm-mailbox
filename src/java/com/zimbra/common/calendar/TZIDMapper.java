@@ -145,7 +145,7 @@ public class TZIDMapper {
         map("US/Alaska", "America/Anchorage", "(GMT-09.00) Alaska");
         map("US/Pacific", "America/Los_Angeles", "(GMT-08.00) Pacific Time (US & Canada)",
             "(GMT-08.00) Pacific Time (US & Canada) / Tijuana");
-        map("America/Tijuana", "America/Tinuaja", "(GMT-08.00) Tijuana / Baja California");
+        map("America/Tijuana", "America/Tijuana", "(GMT-08.00) Tijuana / Baja California");
         map("US/Arizona", "America/Phoenix", "(GMT-07.00) Arizona");
         map("America/Chihuahua", "America/Chihuahua", "(GMT-07.00) Chihuahua / La Paz / Mazatlan - New",
             "(GMT-07.00) Chihuahua / La Paz / Mazatlan - Old",
