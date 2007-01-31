@@ -416,13 +416,13 @@ class OzImapRequest {
     }
 
     private Date readDate() throws ImapParseException {
-        return readDate(mSession == null ? new SimpleDateFormat("dd-MMM-yyyy", Locale.US) : mSession.getDateFormat());
+        return readDate(mSession == null ? new SimpleDateFormat("dd-MMM-yyyy", Locale.US) : mSession.getDateFormat(), false);
     }
-    Date readDate(DateFormat format) throws ImapParseException {
+    Date readDate(DateFormat format, boolean checkRange) throws ImapParseException {
         String dateStr = (peekChar() == '"' ? readQuoted() : readAtom());
         try {
             Date date = format.parse(dateStr);
-            if (date.getTime() < 0)
+            if (checkRange && date.getTime() < 0)
                 throw new ImapParseException(mTag, "date out of range");
             return date;
         } catch (java.text.ParseException e) {

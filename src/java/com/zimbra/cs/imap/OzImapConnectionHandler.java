@@ -300,7 +300,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                             flags = req.readFlags();  req.skipSpace();
                         }
                         if (req.peekChar() == '"') {
-                            date = req.readDate(mTimeFormat);  req.skipSpace();
+                            date = req.readDate(mTimeFormat, true);  req.skipSpace();
                         }
                         if (req.peekChar() == 'c' || req.peekChar() == 'C') {
                             List<Object> parts = new LinkedList<Object>();
