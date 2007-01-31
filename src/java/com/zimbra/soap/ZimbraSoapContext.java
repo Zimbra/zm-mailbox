@@ -659,6 +659,8 @@ public class ZimbraSoapContext {
      * @param iid  The item's account, item, and subpart IDs.
      * @see ItemId */
     public String formatItemId(ItemId iid) {
+        if (iid == null)
+            return null;
         return mUnqualifiedItemIds ? formatItemId(iid.getId(), iid.getSubpartId()) : iid.toString(this);
     }
 }
