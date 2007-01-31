@@ -57,7 +57,14 @@
 	<property name="deploy.war" value="${warfile}" />
 	<property name="deploy.host" value="localhost" />
 	<property name="deploy.port" value="7070" />
-		
+
+    <condition property="remote.deploy.host" value="${env.ZIMBRA_REMOTE_DEPLOY_HOST}">
+      <isset property="env.ZIMBRA_REMOTE_DEPLOY_HOST"/>
+    </condition>
+    <condition property="remote.deploy.port" value="${env.ZIMBRA_REMOTE_DEPLOY_PORT}">
+      <isset property="env.ZIMBRA_REMOTE_DEPLOY_PORT"/>
+    </condition>
+    
 	<property name="lmtp.host" value="localhost" />
 	<property name="lmtp.port" value="7025" />
 	<property name="lmtpinject.numthreads" value="2" />
@@ -347,8 +354,21 @@
 		<copy file="${warfile}" todir="${webserver.root.dir}/webapps"/>
 		<antcall target="start-jetty"/>
 	</target>
+
+    <target name="remote-deploy" if="remote.deploy.host" depends="war">
+		<echo message="Wait for remote tomcat to start at http://${remote.deploy.host}:${remote.deploy.port}/" />
+        <waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
+			<http url="http://${remote.deploy.host}:${remote.deploy.port}/" />
+		</waitfor>
+		<echo message="Remote server found -- trying manager port at http://${remote.deploy.host}:${remote.deploy.port}/manager/" />
+        <deploy url="http://${remote.deploy.host}:${remote.deploy.port}/manager/" username="zimbra" password="zimbra" path="/service" war="${warfile}" update="true" />
+    </target>
 	
 	<target name="deploy-war-tomcat" depends="war" if="use-tomcat">
+        <if><isset property="remote.deploy.host"/><then>
+            <antcall target="remote-deploy"/>
+        </then></if>
+      
 		<echo message="Wait for tomcat to start at http://${deploy.host}:${deploy.port}/" />
 		<waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
 			<http url="http://${deploy.host}:${deploy.port}/" />
