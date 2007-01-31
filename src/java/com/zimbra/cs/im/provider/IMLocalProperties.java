@@ -34,10 +34,11 @@ public class IMLocalProperties implements PropertyProvider {
     private HashMap<String, String> sPropertyMap = new HashMap<String, String>();
     
     public IMLocalProperties() {
-        sPropertyMap.put("provider.user.className", "com.zimbra.cs.im.provider.ZimbraUserProvider");
-        sPropertyMap.put("provider.auth.className", "com.zimbra.cs.im.provider.ZimbraAuthProvider");
-        sPropertyMap.put("provider.group.className", "com.zimbra.cs.im.provider.ZimbraGroupProvider");
-        sPropertyMap.put("connectionProvider.className", "com.zimbra.cs.im.provider.ZimbraConnectionProvider");
+        sPropertyMap.put("provider.user.className", ZimbraUserProvider.class.getName());
+        sPropertyMap.put("provider.auth.className", ZimbraAuthProvider.class.getName());
+        sPropertyMap.put("provider.group.className", ZimbraGroupProvider.class.getName());
+        sPropertyMap.put("connectionProvider.className", ZimbraConnectionProvider.class.getName());
+        sPropertyMap.put("routingTableImpl.className", ZimbraRoutingTableImpl.class.getName());
     }        
 
     public String get(String key) {
