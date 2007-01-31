@@ -32,7 +32,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.db.Versions;
 import com.zimbra.cs.extension.ExtensionUtil;
-import com.zimbra.common.util.EasySSLProtocolSocketFactory;
 import com.zimbra.cs.im.IMRouter;
 import com.zimbra.cs.im.ZimbraIM;
 import com.zimbra.cs.imap.ImapServer;
@@ -46,7 +45,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.pop3.Pop3Server;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.servlet.PrivilegedServlet;
-import com.zimbra.cs.session.OzNotificationServer;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.StoreManager;
@@ -118,8 +116,6 @@ public class Zimbra {
         System.setProperty("ical4j.unfolding.relaxed", "true");
 
         if (!redoLog.isSlave()) {
-            OzNotificationServer.startup();
-
             Server server = Provisioning.getInstance().getLocalServer();
             
             if (server.getBooleanAttr(Provisioning.A_zimbraXMPPEnabled, false)) {
@@ -152,7 +148,6 @@ public class Zimbra {
             LmtpServer.shutdownLmtpServer();
             Pop3Server.shutdownPop3Servers();
             ImapServer.shutdownImapServers();
-            OzNotificationServer.shutdown();
         }
         
         ZimbraIM.shutdown();
