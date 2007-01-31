@@ -79,12 +79,12 @@ public class ZimbraMailAdapter implements MailAdapter
     /**
      * List of Actions to perform.
      */ 
-    private List fieldActions;
+    private List<Action> mActions;
 
     /**
      * List of processed messages that have been filed into appropriate folders.
      */
-    protected List /*<Message>*/ mMessages;
+    protected List<Message> mMessages;
 
     /**
      * true if the system spam detector finds this mail to be spam
@@ -112,7 +112,7 @@ public class ZimbraMailAdapter implements MailAdapter
     private ZimbraMailAdapter()
     {
         super();
-        mMessages = new ArrayList(5);
+        mMessages = new ArrayList<Message>(5);
     }
     
     /**
@@ -162,9 +162,9 @@ public class ZimbraMailAdapter implements MailAdapter
      * Returns the List of actions.
      * @return List
      */
-    public List getActions()
+    public List<Action> getActions()
     {
-        List actions = null;
+        List<Action> actions = null;
         if (null == (actions = getActionsBasic()))
         {
             updateActions();
@@ -177,18 +177,18 @@ public class ZimbraMailAdapter implements MailAdapter
      * Returns a new List of actions.
      * @return List
      */
-    protected List computeActions()
+    protected List<Action> computeActions()
     {
-        return new ArrayList();
+        return new ArrayList<Action>();
     }    
     
     /**
      * Returns the List of actions.
      * @return List
      */
-    private List getActionsBasic()
+    private List<Action> getActionsBasic()
     {
-        return fieldActions;
+        return mActions;
     }    
 
     /**
@@ -200,15 +200,12 @@ public class ZimbraMailAdapter implements MailAdapter
         getActions().add(action);
     }
     
-    /**
-     * @see org.apache.jsieve.mail.MailAdapter#executeActions()
-     */
     public void executeActions() throws SieveException
     {
         try {
             ListIterator actionsIter = getActionsIterator();
             boolean dup = false;
-            List nontermActions = new ArrayList(5);
+            List<Action> nontermActions = new ArrayList<Action>(5);
             
             Message lastMsgByTermAction = null;
             while (actionsIter.hasNext()) {
@@ -316,7 +313,7 @@ public class ZimbraMailAdapter implements MailAdapter
 
     }
 
-    Message doDefaultFiling() throws MessagingException, IOException, ServiceException {
+    Message doDefaultFiling() throws IOException, ServiceException {
         int folderId = mSpam ? Mailbox.ID_FOLDER_SPAM : Mailbox.ID_FOLDER_INBOX;
         Message msg = addMessage(folderId, Collections.EMPTY_LIST);
         return msg;
@@ -334,7 +331,7 @@ public class ZimbraMailAdapter implements MailAdapter
         return msg;
     }
     
-    private void alterMessage(Message msg, List nontermActions) throws IOException, ServiceException {
+    private void alterMessage(Message msg, List nontermActions) throws ServiceException {
         long oldTags  = msg.getTagBitmask();
         int  oldFlags = msg.getFlagBitmask();
         TagAndFlag tf = getTagAndFlag(nontermActions);
@@ -399,9 +396,9 @@ public class ZimbraMailAdapter implements MailAdapter
      * Sets the actions.
      * @param actions The actions to set
      */
-    protected void setActions(List actions)
+    protected void setActions(List<Action> actions)
     {
-        fieldActions = actions;
+        mActions = actions;
     }
     
     /**
@@ -412,36 +409,24 @@ public class ZimbraMailAdapter implements MailAdapter
         setActions(computeActions());
     }    
 
-    /**
-     * @see org.apache.jsieve.mail.MailAdapter#getActionsIterator()
-     */
     public ListIterator getActionsIterator()
     {
         return getActions().listIterator();
     }
 
-    /**
-     * @see org.apache.jsieve.mail.MailAdapter#getHeader(String)
-     */
-    public List getHeader(String name) throws SieveMailException
+    public List<String> getHeader(String name)
     {
-        try
-        {
-            String[] headers = mParsedMessage.getMimeMessage().getHeader(name);            
-            return (headers == null ? new ArrayList(0) : Arrays.asList(headers));
+        String header = mParsedMessage.getHeader(name);
+        List<String> headerList = new ArrayList<String>();
+        if (header != null) {
+            headerList.add(header);
         }
-        catch (MessagingException ex)
-        {
-            throw new SieveMailException(ex);
-        }
+        return headerList;
     }
 
-    /**
-     * @see org.apache.jsieve.mail.MailAdapter#getHeaderNames()
-     */
-    public List getHeaderNames() throws SieveMailException
+    public List<String> getHeaderNames() throws SieveMailException
     {
-        Set headerNames = new HashSet();
+        Set<String> headerNames = new HashSet<String>();
         try
         {
             Enumeration allHeaders = mParsedMessage.getMimeMessage().getAllHeaders();
@@ -449,7 +434,7 @@ public class ZimbraMailAdapter implements MailAdapter
             {
                 headerNames.add(((Header) allHeaders.nextElement()).getName());
             }
-            return new ArrayList(headerNames);
+            return new ArrayList<String>(headerNames);
         }
         catch (MessagingException ex)
         {
@@ -457,9 +442,6 @@ public class ZimbraMailAdapter implements MailAdapter
         }
     }
 
-    /**
-     * @see org.apache.jsieve.mail.MailAdapter#getMatchingHeader(String)
-     */
     public List getMatchingHeader(String name)
         throws SieveMailException
     {
@@ -467,9 +449,6 @@ public class ZimbraMailAdapter implements MailAdapter
         return result;
     }
 
-    /**
-     * @see org.apache.jsieve.mail.MailAdapter#getSize()
-     */
     public int getSize() throws SieveMailException
     {
         int size;
@@ -490,7 +469,7 @@ public class ZimbraMailAdapter implements MailAdapter
      * @return
      */
     public Message[] getProcessedMessages() {
-        return (Message[]) mMessages.toArray(new Message[0]);
+        return mMessages.toArray(new Message[0]);
     }
     
     public Mailbox getMailbox() {
