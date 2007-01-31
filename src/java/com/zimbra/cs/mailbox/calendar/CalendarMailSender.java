@@ -63,6 +63,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.L10nUtil;
@@ -494,14 +495,9 @@ public class CalendarMailSender {
         }
     }
 
-    public static int sendReply(OperationContext octxt,
-                                Mailbox mbox,
-                                boolean saveToSent,
-                                Verb verb,
-                                String additionalMsgBody,
-                                CalendarItem calItem,
-                                Invite inv,
-                                MimeMessage mmInv)
+    public static ItemId sendReply(OperationContext octxt, Mailbox mbox, boolean saveToSent,
+                                   Verb verb, String additionalMsgBody, CalendarItem calItem,
+                                   Invite inv, MimeMessage mmInv)
     throws ServiceException {
         boolean onBehalfOf = false;
         Account acct = mbox.getAccount();
@@ -528,7 +524,7 @@ public class CalendarMailSender {
         MimeMessage mm = createDefaultReply(acct, authAcct, onBehalfOf, calItem, inv, mmInv,
                                             replySubject, verb, additionalMsgBody, iCal);
 
-        int replyMsgId = mbox.getMailSender().sendMimeMessage(octxt, mbox, saveToSent, mm, null, null,
+        ItemId replyMsgId = mbox.getMailSender().sendMimeMessage(octxt, mbox, saveToSent, mm, null, null,
                                                               inv.getMailItemId(), replyType, null, false, true);
         return replyMsgId;
     }

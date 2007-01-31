@@ -51,6 +51,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 
 public class SendMsgOperation extends Operation {
@@ -72,7 +73,7 @@ public class SendMsgOperation extends Operation {
     private boolean mIgnoreFailedAddresses;
     private boolean mNeedCalendarSentByFixup;
 
-    private int mMsgId;
+    private ItemId mMsgId;
 
     public SendMsgOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
             MimeMessage mm, List<InternetAddress> newContacts, List<Upload> uploads,
@@ -116,7 +117,7 @@ public class SendMsgOperation extends Operation {
                     mIgnoreFailedAddresses, false);
     }
 
-    public int getMsgId() { return mMsgId; }
+    public ItemId getMsgId() { return mMsgId; }
 
     private void fixupICalendarFromOutlook(Mailbox ownerMbox)
     throws ServiceException {

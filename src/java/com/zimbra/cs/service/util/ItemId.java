@@ -63,18 +63,11 @@ public class ItemId {
     public ItemId(String acctId, int id, int subId) {
         mAccountId = acctId;  mId = id;  mSubpartId = subId;
     }
-    
-    public static void main(String[] args) {
-        ItemId foo = null;
-        try {
-            foo = new ItemId("34480-508bc90b-d85e-45d6-bca2-7c34b7c407cb:34479", null);
-        } catch (ServiceException e) {
-            e.printStackTrace();
-        }
-        System.out.println(foo.toString());
-    }
 
-    public ItemId(String encoded, ZimbraSoapContext lc) throws ServiceException {
+    public ItemId(String encoded, ZimbraSoapContext zsc) throws ServiceException {
+        this(encoded, zsc.getRequestedAccountId());
+    }
+    public ItemId(String encoded, String defaultAccountId) throws ServiceException {
         if (encoded == null || encoded.equals(""))
             throw ServiceException.INVALID_REQUEST("empty/missing item ID", null);
 
@@ -84,8 +77,8 @@ public class ItemId {
             throw ServiceException.INVALID_REQUEST("malformed item ID: " + encoded, null);
         if (delimiter != -1)
             mAccountId = encoded.substring(0, delimiter);
-        else if (lc != null)
-            mAccountId = lc.getRequestedAccountId();
+        else if (defaultAccountId != null)
+            mAccountId = defaultAccountId;
         encoded = encoded.substring(delimiter + 1);
 
         // break out the appointment sub-id, if present
@@ -130,12 +123,15 @@ public class ItemId {
         return mbox == null || mAccountId == null || mAccountId.equals(mbox.getAccountId());
     }
 
-    public String toString()  { return toString((String) null); }
+    @Override
+    public String toString() {
+        return toString((String) null);
+    }
     public String toString(Account authAccount) {
         return toString(authAccount == null ? null : authAccount.getId());
     }
-    public String toString(ZimbraSoapContext lc) {
-        return toString(lc == null ? null : lc.getAuthtokenAccountId());
+    public String toString(ZimbraSoapContext zsc) {
+        return toString(zsc == null ? null : zsc.getAuthtokenAccountId());
     }
     public String toString(String authAccountId) {
         StringBuffer sb = new StringBuffer();
@@ -145,5 +141,15 @@ public class ItemId {
         if (hasSubpart())
             sb.append(PART_DELIMITER).append(mSubpartId);
         return sb.toString();
+    }
+
+    public static void main(String[] args) {
+        ItemId foo = null;
+        try {
+            foo = new ItemId("34480-508bc90b-d85e-45d6-bca2-7c34b7c407cb:34479", (String) null);
+        } catch (ServiceException e) {
+            e.printStackTrace();
+        }
+        System.out.println(foo.toString());
     }
 }

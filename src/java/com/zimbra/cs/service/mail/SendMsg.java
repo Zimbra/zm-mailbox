@@ -55,6 +55,7 @@ import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.mail.ParseMimeMessage.MimeMessageData;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -97,8 +98,8 @@ public class SendMsg extends MailDocumentHandler {
 
 
         SendState state = SendState.NEW;
-        int savedMsgId = -1;
-        Pair<String, Integer> sendRecord = null;
+        ItemId savedMsgId = null;
+        Pair<String, ItemId> sendRecord = null;
 
         // get the "send uid" and check that this isn't a retry of a pending send
         String sendUid = request.getAttribute(MailConstants.A_SEND_UID, null);
@@ -111,7 +112,7 @@ public class SendMsg extends MailDocumentHandler {
                     } catch (InterruptedException ie) { }
                 }
 
-                Pair<SendState, Pair<String, Integer>> result = findPendingSend(mbox.getId(), sendUid);
+                Pair<SendState, Pair<String, ItemId>> result = findPendingSend(mbox.getId(), sendUid);
                 state = result.getFirst();
                 sendRecord = result.getSecond();
             } while (state == SendState.PENDING && delay >= 0);
@@ -155,7 +156,7 @@ public class SendMsg extends MailDocumentHandler {
 
         Element response = zsc.createElement(MailConstants.SEND_MSG_RESPONSE);
         Element respElement = response.addElement(MailConstants.E_MSG);
-        if (savedMsgId > 0)
+        if (savedMsgId != null)
             respElement.addAttribute(MailConstants.A_ID, zsc.formatItemId(savedMsgId));
         return response;
     }
@@ -176,19 +177,19 @@ public class SendMsg extends MailDocumentHandler {
     }
 
 
-    private static final Map<Integer, List<Pair<String, Integer>>> sSentTokens = new HashMap<Integer, List<Pair<String, Integer>>>(100);
+    private static final Map<Integer, List<Pair<String, ItemId>>> sSentTokens = new HashMap<Integer, List<Pair<String, ItemId>>>(100);
     private static final int MAX_SEND_UID_CACHE = 5;
 
-    private Pair<SendState, Pair<String, Integer>> findPendingSend(Integer mailboxId, String sendUid) {
+    private Pair<SendState, Pair<String, ItemId>> findPendingSend(Integer mailboxId, String sendUid) {
         SendState state = SendState.NEW;
-        Pair<String, Integer> sendRecord = null;
+        Pair<String, ItemId> sendRecord = null;
 
         synchronized (sSentTokens) {
-            List<Pair<String, Integer>> sendData = sSentTokens.get(mailboxId);
+            List<Pair<String, ItemId>> sendData = sSentTokens.get(mailboxId);
             if (sendData == null)
-                sSentTokens.put(mailboxId, sendData = new ArrayList<Pair<String, Integer>>(MAX_SEND_UID_CACHE));
+                sSentTokens.put(mailboxId, sendData = new ArrayList<Pair<String, ItemId>>(MAX_SEND_UID_CACHE));
 
-            for (Pair<String, Integer> record : sendData) {
+            for (Pair<String, ItemId> record : sendData) {
                 if (record.getFirst().equals(sendUid)) {
                     if (record.getSecond() == null) {
                         state = SendState.PENDING;
@@ -203,15 +204,15 @@ public class SendMsg extends MailDocumentHandler {
             if (state == SendState.NEW) {
                 if (sendData.size() >= MAX_SEND_UID_CACHE)
                     sendData.remove(0);
-                sendRecord = new Pair<String, Integer>(sendUid, null);
+                sendRecord = new Pair<String, ItemId>(sendUid, null);
                 sendData.add(sendRecord);
             }
         }
 
-        return new Pair<SendState, Pair<String, Integer>>(state, sendRecord);
+        return new Pair<SendState, Pair<String, ItemId>>(state, sendRecord);
     }
 
-    private void clearPendingSend(Integer mailboxId, Pair<String, Integer> sendRecord) {
+    private void clearPendingSend(Integer mailboxId, Pair<String, ItemId> sendRecord) {
         if (sendRecord != null) {
             synchronized (sSentTokens) {
                 sSentTokens.get(mailboxId).remove(sendRecord);

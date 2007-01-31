@@ -217,8 +217,8 @@ public abstract class WikiPage {
 		
 		RemoteWikiPage(String accountId, String path, Element elem) throws ServiceException {
 			mAccountId = accountId;
-			ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_ID), null);
-			ItemId fid = new ItemId(elem.getAttribute(MailConstants.A_FOLDER), null);
+			ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_ID), (String) null);
+			ItemId fid = new ItemId(elem.getAttribute(MailConstants.A_FOLDER), (String) null);
 			mId = iid.getId();
 			mFolderId = fid.getId();
 			mWikiWord = elem.getAttribute(MailConstants.A_NAME);

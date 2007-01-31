@@ -295,7 +295,7 @@ public class ParseMimeMessage {
                         String eName = elem.getName();
                         if (eName.equals(MailConstants.E_MIMEPART)) {
 //                            int messageId = (int) elem.getAttributeLong(MailService.A_MESSAGE_ID);
-                            ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_MESSAGE_ID), null);
+                            ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_MESSAGE_ID), (String) null);
                             String part = elem.getAttribute(MailConstants.A_PART);
                             if (!iid.hasSubpart()) {
                                 attachPart(mmp, mbox.getMessageById(octxt, iid.getId()), part, use2231);

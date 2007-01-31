@@ -103,7 +103,7 @@ public class ContentServlet extends ZimbraServlet {
     throws ServletException, IOException {
         ItemId iid = null;
         try {
-            iid = new ItemId(req.getParameter(PARAM_MSGID), null);
+            iid = new ItemId(req.getParameter(PARAM_MSGID), (String) null);
         } catch (ServiceException e) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "invalid id requested");
             return;

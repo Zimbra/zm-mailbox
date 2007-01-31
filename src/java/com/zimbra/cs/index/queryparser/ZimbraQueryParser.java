@@ -12,18 +12,12 @@ import com.zimbra.cs.mailbox.MailServiceException;
 
 import org.apache.lucene.analysis.Analyzer;
 
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
-
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 
 public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
 
-    private static Log mLog = LogFactory.getLog(ZimbraQueryParser.class);
-
-    private static HashMap<String, Integer>  sFolderStrMap;
+    private static HashMap<String, Integer> sFolderStrMap;
 
     private static abstract class GetQueryCallback {
         public abstract ZimbraQuery.BaseQuery execute(Mailbox mailbox, Analyzer analyzer, int modifier) throws ServiceException;
@@ -147,12 +141,12 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
           case ITEM:
             return ZimbraQuery.ItemQuery.Create(mAnalyzer, modifier, tok);
           case INID:
-                  iid = new ItemId(tok, null);
+                  iid = new ItemId(tok, (String) null);
               folderId = iid.getId();
               // FALL THROUGH TO BELOW!
           case IN:
             if (folderId == null)
-                folderId = (Integer) sFolderStrMap.get(tok.toLowerCase());
+                folderId = sFolderStrMap.get(tok.toLowerCase());
             ZimbraQuery.BaseQuery inq;
             if (iid != null && !iid.belongsTo(mMailbox)) {
                 inq = new ZimbraQuery.InQuery(mMailbox, mAnalyzer, modifier, iid);
@@ -168,7 +162,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
           case TAG:
             return new ZimbraQuery.TagQuery(mAnalyzer, modifier, mMailbox.getTagByName(tok), true);
           case IS:
-            GetQueryCallback cback = (GetQueryCallback)sIsStrMap.get(tok.toLowerCase());
+            GetQueryCallback cback = sIsStrMap.get(tok.toLowerCase());
             if (cback != null) {
                 return cback.execute(mMailbox, mAnalyzer, modifier);
             } else {

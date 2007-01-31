@@ -25,9 +25,12 @@
 
 package com.zimbra.cs.mailbox;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.IdentityBy;
@@ -39,13 +42,10 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.Mime.FixedMimeMessage;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
 
 import javax.mail.Address;
 import javax.mail.Message.RecipientType;
@@ -109,10 +109,10 @@ public class MailSender {
         FORWARD    // Forwarding another message
     }
 
-    public int sendMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm,
-                               List<InternetAddress> newContacts, List<Upload> uploads,
-                               int origMsgId, String replyType, String identityId,
-                               boolean ignoreFailedAddresses, boolean replyToSender)
+    public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm,
+                                  List<InternetAddress> newContacts, List<Upload> uploads,
+                                  int origMsgId, String replyType, String identityId,
+                                  boolean ignoreFailedAddresses, boolean replyToSender)
     throws ServiceException {
         Account authuser = octxt == null ? null : octxt.getAuthenticatedUser();
         Identity identity = Provisioning.getInstance().get(authuser, IdentityBy.id, identityId);
@@ -128,16 +128,18 @@ public class MailSender {
     static class RollbackData {
         Mailbox mbox;
         ZMailbox zmbox;
-        int msgId;
+        ItemId msgId;
 
-        RollbackData(Mailbox m, int i)      { mbox = m;  msgId = i; }
-        RollbackData(Message msg)           { mbox = msg.getMailbox();  msgId = msg.getId(); }
-        RollbackData(ZMailbox z, String s)  { zmbox = z;  msgId = Integer.parseInt(s); }
+        RollbackData(Mailbox m, int i)  { mbox = m;  msgId = new ItemId(mbox, i); }
+        RollbackData(Message msg)       { mbox = msg.getMailbox();  msgId = new ItemId(msg); }
+        RollbackData(ZMailbox z, Account a, String s) throws ServiceException {
+            zmbox = z;  msgId = new ItemId(s, a.getId());
+        }
 
         void rollback() {
             try {
                 if (mbox != null)
-                    mbox.delete(null, msgId, MailItem.TYPE_MESSAGE);
+                    mbox.delete(null, msgId.getId(), MailItem.TYPE_MESSAGE);
                 else
                     zmbox.deleteMessage("" + msgId);
             } catch (ServiceException e) {
@@ -168,10 +170,10 @@ public class MailSender {
      * @throws ServiceException
      */
 
-    public int sendMimeMessage(OperationContext octxt, Mailbox mbox, boolean saveToSent, MimeMessage mm,
-                               List<InternetAddress> newContacts, List<Upload> uploads,
-                               int origMsgId, String replyType, Identity identity,
-                               boolean ignoreFailedAddresses, boolean replyToSender)
+    public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, boolean saveToSent, MimeMessage mm,
+                                  List<InternetAddress> newContacts, List<Upload> uploads,
+                                  int origMsgId, String replyType, Identity identity,
+                                  boolean ignoreFailedAddresses, boolean replyToSender)
     throws ServiceException {
         try {
             Account acct = mbox.getAccount();
@@ -236,7 +238,7 @@ public class MailSender {
                             mm.writeTo(baos);
 
                             String msgId = zmbox.addMessage(sentFolder, "s", null, mm.getSentDate().getTime(), baos.toByteArray(), true);
-                            rdata = new RollbackData(zmbox, msgId);
+                            rdata = new RollbackData(zmbox, authuser, msgId);
                         } catch (Exception e) {
                             ZimbraLog.misc.warn("could not save to remote sent folder (perm denied); continuing", e);
                         }
@@ -277,7 +279,7 @@ public class MailSender {
                 }
             }
 
-            return (!isDelegatedRequest && rdata != null ? rdata.msgId : 0);
+            return (rdata != null ? rdata.msgId : null);
 
         } catch (SendFailedException sfe) {
             sLog.warn("exception ocurred during SendMsg", sfe);
@@ -309,15 +311,14 @@ public class MailSender {
     }
 
     private static final String X_ORIGINATING_IP = "X-Originating-IP";
-        
-    void updateHeaders(MimeMessage mm, Account acct, Account authuser, String originIP, boolean replyToSender) throws UnsupportedEncodingException, MessagingException, ServiceException {
+
+    void updateHeaders(MimeMessage mm, Account acct, Account authuser, String originIP, boolean replyToSender)
+    throws UnsupportedEncodingException, MessagingException, ServiceException {
         if (originIP != null) {
             Provisioning prov = Provisioning.getInstance();
-            Config gcf = prov.getConfig();
-            boolean addOriginatingIP = gcf.getBooleanAttr(Provisioning.A_zimbraSmtpSendAddOriginatingIP, true);
-            if (addOriginatingIP) {
+            boolean addOriginatingIP = prov.getConfig().getBooleanAttr(Provisioning.A_zimbraSmtpSendAddOriginatingIP, true);
+            if (addOriginatingIP)
                 mm.addHeader(X_ORIGINATING_IP, "[" + originIP + "]");
-            }
         }
         
         boolean overrideFromHeader = true;

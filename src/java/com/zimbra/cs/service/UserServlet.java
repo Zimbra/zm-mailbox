@@ -621,7 +621,7 @@ public class UserServlet extends ZimbraServlet {
             this.format = this.params.get(QP_FMT);
             String id = this.params.get(QP_ID);
             try {
-                this.itemId = id == null ? null : new ItemId(id, null);
+                this.itemId = id == null ? null : new ItemId(id, (String) null);
             } catch (ServiceException e) {
                 throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "invalid id requested");
             }
