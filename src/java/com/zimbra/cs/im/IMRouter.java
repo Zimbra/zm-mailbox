@@ -26,8 +26,10 @@ package com.zimbra.cs.im;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
-
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import org.jivesoftware.wildfire.XMPPServer;
+import org.xmpp.packet.Packet;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -35,14 +37,12 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 
-public class IMRouter implements Runnable {
+public class IMRouter {
+    private ExecutorService mExecutor = Executors.newSingleThreadExecutor(); 
     private static final IMRouter sRouter = new IMRouter();
     private Map<IMAddr, IMPersona> mBuddyListMap = new ConcurrentHashMap<IMAddr, IMPersona>();
-    private LinkedBlockingQueue<IMEvent> mQueue = new LinkedBlockingQueue<IMEvent>();
-    private boolean mShutdown = false;
-    private IMRouter() { new Thread(this).start(); }
+    private IMRouter() { }
     
     public static IMRouter getInstance() { return sRouter; }
     
@@ -111,45 +111,33 @@ public class IMRouter implements Runnable {
      * 
      * @param event
      */
-    public synchronized void postEvent(IMEvent event) {
-        assert(!mShutdown);
-        mQueue.add(event);
+    public void postEvent(IMEvent event) {
+        mExecutor.execute(event);
+    }
+    
+    private static final class PostPacket implements Runnable {
+        Packet mPacket = null;
+        PostPacket(Packet packet) { mPacket = packet; }
+        public void run() { 
+            XMPPServer.getInstance().getPacketRouter().route(mPacket);
+        }
     }
     
     /**
-     * Scrub the asynchronous execution queue.  
-     * @see java.lang.Runnable#run()
+     * Post an event to the router's asynchronous execution queue.  The event
+     * will happen at a later time and will be run without any locks held, to
+     * avoid deadlock issues.
+     * 
+     * @param event
      */
-    public void run() {
-        while (!mShutdown) {
-            try {
-                IMEvent event = mQueue.take();
-//                ZimbraLog.im.debug("Executing IMEvent: "+ event);
-                event.run();
-            } catch (InterruptedException ex) {
-                
-            } catch (Throwable e) {
-                e.printStackTrace();
-            } 
-        }
-        
-        for (IMEvent event = mQueue.poll(); event != null; event = mQueue.poll()) {
-            try {
-                event.run();
-            } catch(ServiceException ex) {
-                ex.printStackTrace();
-            }
-        }
+    public void postEvent(Packet packet) {
+        mExecutor.execute(new PostPacket(packet)); 
     }
     
     /**
      * 
      */
-    public synchronized void shutdown() {
-        mShutdown = true;
-
-        // force the queue to wakeup...
-        mQueue.add(new IMNullEvent());
-        
+    public void shutdown() {
+        mExecutor.shutdownNow();
     }
 }

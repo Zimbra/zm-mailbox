@@ -30,17 +30,13 @@ import java.util.List;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
-public abstract class IMEvent {
+public abstract class IMEvent implements Runnable {
     
     protected List<IMAddr> mTargets;
     
     protected IMEvent(IMAddr target) {
         mTargets = new ArrayList<IMAddr>(1);
         mTargets.add(target);
-    }
-    
-    protected IMEvent(List<IMAddr> target) {
-        mTargets = target;
     }
     
     /**
@@ -51,7 +47,7 @@ public abstract class IMEvent {
      * 
      * @throws ServiceException
      */
-    void run() throws ServiceException {
+    public void run() {
         for (IMAddr addr : mTargets) {
             try {
                 if (addr.getAddr().indexOf('@') > 0) {

@@ -36,6 +36,9 @@ import java.util.Set;
 import org.jivesoftware.wildfire.ClientSession;
 import org.jivesoftware.wildfire.XMPPServer;
 import org.jivesoftware.wildfire.auth.AuthToken;
+import org.jivesoftware.wildfire.group.Group;
+import org.jivesoftware.wildfire.group.GroupManager;
+import org.jivesoftware.wildfire.group.GroupNotFoundException;
 import org.jivesoftware.wildfire.user.UserNotFoundException;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
@@ -667,6 +670,39 @@ public class IMPersona {
         mbox.setConfig(octxt, "im", meta);
     }
     
+    
+    private HashSet<String> mSharedGroups = new HashSet<String>();
+    
+    public boolean inSharedGroup(String name) {
+        return mSharedGroups.contains(name);
+    }
+    
+    public void joinSharedGroup(String name) throws ServiceException {
+        try {
+            Group group = GroupManager.getInstance().getGroup(name);
+            group.getAdmins().add(mAddr.makeJID());
+        } catch (GroupNotFoundException ex) {
+            
+        }
+        
+    }
+    public void providerGroupAdd(String name) throws ServiceException {
+        if (mSharedGroups.add(name))
+            flush(null);
+    }
+    public void leaveSharedGroup(String name) throws ServiceException {
+        try {
+            Group group = GroupManager.getInstance().getGroup(name);
+            group.getAdmins().remove(mAddr.makeJID());
+        } catch (GroupNotFoundException ex) {
+            
+        }
+    }
+    public void providerGroupRemove(String name) throws ServiceException {
+        if (mSharedGroups.remove(name))
+            flush(null);
+    }
+    
     /**
      * @return An unmodifiable collection of your IM Groups
      */
@@ -771,8 +807,7 @@ public class IMPersona {
         if (mXMPPSession != null) {
             ZimbraLog.im.debug("SENDING XMPP PACKET: "+packet.toXML());
             packet.setFrom(mXMPPSession.getAddress());
-            
-            XMPPServer.getInstance().getPacketRouter().route(packet);
+            IMRouter.getInstance().postEvent(packet);
         }
     }
     
@@ -841,7 +876,17 @@ public class IMPersona {
                 IMMessageNotification notification = new IMMessageNotification(new IMAddr("SYSTEM"), chat.getThreadId(), message, 0);
                 postIMNotification(notification);
                 return;
-            } 
+            } else if (msg.startsWith("/join_group")) {
+                String[] words = msg.split("\\s+");
+                debug("Trying to join shared group: %s", words[1]);
+                joinSharedGroup(words[1]);
+                return;
+            } else if (msg.startsWith("/leave_group")) {
+                String[] words = msg.split("\\s+");
+                debug("Trying to leave shared group: %s", words[1]);
+                leaveSharedGroup(words[1]);
+                return;
+            }
         } 
         
         chat.sendMessage(octxt, toAddr, threadId, message);
