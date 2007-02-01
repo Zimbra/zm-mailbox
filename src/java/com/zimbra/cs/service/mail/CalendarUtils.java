@@ -115,7 +115,7 @@ public class CalendarUtils {
             boolean recurrenceIdAllowed, boolean recurAllowed)
             throws ServiceException {
         if (tzMap == null) {
-            tzMap = new TimeZoneMap(Provisioning.getInstance().getTimeZone(account));
+            tzMap = new TimeZoneMap(ICalTimeZone.getAccountTimeZone(account));
         }
         Invite create = new Invite(ICalTok.PUBLISH.toString(), tzMap);
 
@@ -200,7 +200,7 @@ public class CalendarUtils {
             boolean recurrenceIdAllowed, boolean recurAllowed)
             throws ServiceException {
         if (tzMap == null) {
-            tzMap = new TimeZoneMap(Provisioning.getInstance().getTimeZone(account));
+            tzMap = new TimeZoneMap(ICalTimeZone.getAccountTimeZone(account));
         }
         Invite cancel = new Invite(ICalTok.CANCEL.toString(), tzMap);
 

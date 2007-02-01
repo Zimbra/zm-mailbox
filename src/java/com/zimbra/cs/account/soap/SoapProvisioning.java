@@ -25,10 +25,29 @@
 
 package com.zimbra.cs.account.soap;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Map.Entry;
+
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.soap.*;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Config;
@@ -40,31 +59,13 @@ import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.NamedEntry;
-import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.zclient.ZClientException;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.Element.XMLElement;
-import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.common.soap.SoapHttpTransport;
-import com.zimbra.common.soap.SoapTransport.DebugListener;
-
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
 public class SoapProvisioning extends Provisioning {
 
@@ -831,14 +832,6 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public boolean inDistributionList(Account acct, String zimbraId) throws ServiceException {
         return getDistributionLists(acct).contains(zimbraId);  
-    }
-
-    /**
-     * unsuported
-     */
-    @Override
-    public ICalTimeZone getTimeZone(Account acct) throws ServiceException {
-        throw new UnsupportedOperationException();
     }
 
     @Override

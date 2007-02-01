@@ -29,22 +29,22 @@
  */
 package com.zimbra.cs.account;
 
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
-import com.zimbra.cs.mime.MimeTypeInfo;
-import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.util.L10nUtil;
-
-import javax.mail.internet.InternetAddress;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
+import javax.mail.internet.InternetAddress;
+
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
+import com.zimbra.cs.mime.MimeTypeInfo;
+import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.L10nUtil;
 
 /**
  * @author schemers
@@ -1259,13 +1259,6 @@ public abstract class Provisioning {
         return cos;
     }
     
-    /**
-     * Returns account's time zone
-     * @return
-     * @throws ServiceException
-     */
-    public abstract ICalTimeZone getTimeZone(Account acct) throws ServiceException;
-
     /**
      * @param zimbraId the zimbraId of the dl we are checking for
      * @return true if this account (or one of the dl it belongs to) is a member of the specified dl.

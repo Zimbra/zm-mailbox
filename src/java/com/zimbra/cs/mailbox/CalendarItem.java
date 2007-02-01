@@ -289,7 +289,7 @@ public abstract class CalendarItem extends MailItem {
         mUid = meta.get(Metadata.FN_UID, null);
         mInvites = new ArrayList<Invite>();
         
-        ICalTimeZone accountTZ = Provisioning.getInstance().getTimeZone(getMailbox().getAccount()); 
+        ICalTimeZone accountTZ = ICalTimeZone.getAccountTimeZone(getMailbox().getAccount()); 
         if (mdVersion < 6) {
             mStartTime = 0;
             mEndTime = 0;

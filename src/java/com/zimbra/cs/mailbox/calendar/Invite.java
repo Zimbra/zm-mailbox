@@ -1312,7 +1312,7 @@ public class Invite {
     throws ServiceException {
         List<Invite> toRet = new ArrayList<Invite>();
         
-        TimeZoneMap tzmap = new TimeZoneMap(Provisioning.getInstance().getTimeZone(account));
+        TimeZoneMap tzmap = new TimeZoneMap(ICalTimeZone.getAccountTimeZone(account));
         
         String methodStr = cal.getPropVal(ICalTok.METHOD, ICalTok.PUBLISH.toString());
         

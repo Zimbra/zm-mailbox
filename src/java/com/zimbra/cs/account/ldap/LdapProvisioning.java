@@ -30,42 +30,21 @@
  */
 package com.zimbra.cs.account.ldap;
 
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.DateUtil;
-import com.zimbra.common.util.EmailUtil;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Account.CalendarUserType;
-import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.AttributeClass;
-import com.zimbra.cs.account.AttributeManager;
-import com.zimbra.cs.account.CalendarResource;
-import com.zimbra.cs.account.Config;
-import com.zimbra.cs.account.Cos;
-import com.zimbra.cs.account.DataSource;
-import com.zimbra.cs.account.DistributionList;
-import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.DomainCache;
-import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.EntrySearchFilter;
-import com.zimbra.cs.account.GalContact;
-import com.zimbra.cs.account.Identity;
-import com.zimbra.cs.account.NamedEntry;
-import com.zimbra.cs.account.NamedEntryCache;
-import com.zimbra.cs.account.PreAuthKey;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Zimlet;
-import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
-import com.zimbra.cs.mime.MimeTypeInfo;
-import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.zimlet.ZimletException;
-import com.zimbra.cs.zimlet.ZimletUtil;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.Stack;
+import java.util.regex.Pattern;
 
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
@@ -94,21 +73,42 @@ import javax.naming.ldap.Control;
 import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.PagedResultsControl;
 import javax.naming.ldap.PagedResultsResponseControl;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.Stack;
-import java.util.regex.Pattern;
+
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.EmailUtil;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AttributeClass;
+import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.CalendarResource;
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Cos;
+import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.DomainCache;
+import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.EntrySearchFilter;
+import com.zimbra.cs.account.GalContact;
+import com.zimbra.cs.account.Identity;
+import com.zimbra.cs.account.NamedEntry;
+import com.zimbra.cs.account.NamedEntryCache;
+import com.zimbra.cs.account.PreAuthKey;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.Account.CalendarUserType;
+import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.mime.MimeTypeInfo;
+import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.zimlet.ZimletException;
+import com.zimbra.cs.zimlet.ZimletUtil;
 
 /**
  * @author schemers
@@ -3132,11 +3132,6 @@ public class LdapProvisioning extends Provisioning {
         return LdapProvisioning.getDistributionLists(addrs, directOnly, via, minimal);
     }
     
-    public synchronized ICalTimeZone getTimeZone(Account acct) throws ServiceException {
-        return acct.getTimeZone();
-    }
-    
-
     private static final int DEFAULT_GAL_MAX_RESULTS = 100;
 
     private static final String DATA_GAL_ATTR_MAP = "GAL_ATTRS_MAP";

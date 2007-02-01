@@ -36,6 +36,8 @@ import java.util.StringTokenizer;
 
 import com.zimbra.common.calendar.TZIDMapper;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
@@ -201,6 +203,18 @@ public class ICalTimeZone extends SimpleTimeZone {
 
 //    private String mTzId = null;
 
+    /**
+     * Returns the time zone for the given account.
+     */
+    public static ICalTimeZone getAccountTimeZone(Account account) {
+        String tzId = account.getAttr(Provisioning.A_zimbraPrefTimeZoneId);
+        ICalTimeZone timeZone = WellKnownTimeZones.getTimeZoneById(tzId);
+        if (timeZone == null) {
+            return sUTC;
+        }
+        return timeZone;
+    }
+    
     public static ICalTimeZone getUTC() { return sUTC; }
 
     public Metadata encodeAsMetadata() {
@@ -366,7 +380,7 @@ public class ICalTimeZone extends SimpleTimeZone {
                     }
                     week = negative ? -1 * weekNum : weekNum;
 
-                    Integer day = (Integer) sDayOfWeekMap.get(value);
+                    Integer day = sDayOfWeekMap.get(value);
                     if (day == null)
                         throw new IllegalArgumentException("Invalid day of week value: " + value);
                     dayOfWeek = day.intValue();
