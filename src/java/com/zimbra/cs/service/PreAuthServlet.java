@@ -29,15 +29,8 @@
  * */
 package com.zimbra.cs.service;
 
-import java.io.IOException;
-import java.util.Enumeration;
-import java.util.HashSet;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
@@ -47,8 +40,14 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Enumeration;
+import java.util.HashSet;
 
 public class PreAuthServlet extends ZimbraServlet {
 
@@ -69,7 +68,6 @@ public class PreAuthServlet extends ZimbraServlet {
         sPreAuthParams.add(PARAM_ACCOUNT);
         sPreAuthParams.add(PARAM_ISREDIRECT);
         sPreAuthParams.add(PARAM_BY);
-        sPreAuthParams.add(PARAM_REDIRECT_URL);
         sPreAuthParams.add(PARAM_TIMESTAMP);
         sPreAuthParams.add(PARAM_EXPIRES);
     }
