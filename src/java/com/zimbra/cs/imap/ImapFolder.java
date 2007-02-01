@@ -53,6 +53,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.service.mail.Search;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -97,6 +98,8 @@ class ImapFolder implements Iterable<ImapMessage> {
         mFolderId = folder.getId();
         if (folder instanceof SearchFolder) {
             String types = ((SearchFolder) folder).getReturnTypes().toLowerCase();
+            if (types.equals(""))
+                types = Search.DEFAULT_SEARCH_TYPES;
             if (types.indexOf("conversation") != -1 || types.indexOf("message") != -1)
                 mQuery = ((SearchFolder) folder).getQuery();
             else

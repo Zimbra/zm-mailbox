@@ -70,6 +70,8 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class Search extends MailDocumentHandler  {
     protected static Log mLog = LogFactory.getLog(Search.class);
 
+    public static final String DEFAULT_SEARCH_TYPES = MailboxIndex.GROUP_BY_CONVERSATION;
+
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         SoapSession session = (SoapSession) zsc.getSession(SessionCache.SESSION_SOAP);
@@ -210,7 +212,7 @@ public class Search extends MailDocumentHandler  {
         params.setQueryStr(query);
         String groupByStr = request.getAttribute(MailConstants.A_SEARCH_TYPES, null);
         if (groupByStr == null)
-            groupByStr = request.getAttribute(MailConstants.A_GROUPBY, MailboxIndex.GROUP_BY_CONVERSATION);
+            groupByStr = request.getAttribute(MailConstants.A_GROUPBY, DEFAULT_SEARCH_TYPES);
         params.setTypesStr(groupByStr);
         params.setSortByStr(request.getAttribute(MailConstants.A_SORTBY, MailboxIndex.SortBy.DATE_DESCENDING.toString()));
         params.setFetchFirst(ExpandResults.get(request.getAttribute(MailConstants.A_FETCH, null)));
