@@ -319,33 +319,39 @@ public class DbPool {
     }
 
     /**
-     * closes the specified connection (if not null), and catches any
-     * exceptions on close, and logs them.
-     * @param conn
+     * Closes the specified connection (if not <code>null</code>), catches any
+     * exceptions, and logs them.
      */
     public static void quietClose(Connection conn) {
         if (conn != null) {
             try {
-                conn.close();
-            } catch (ServiceException e) {
-                if (ZimbraLog.sqltrace.isWarnEnabled())
-                    ZimbraLog.sqltrace.warn("quietClose caught exception", e);
+                if (conn.getConnection() != null && !conn.getConnection().isClosed()) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                ZimbraLog.sqltrace.warn("quietClose caught exception", e);
+            }
+            catch (ServiceException e) {
+                ZimbraLog.sqltrace.warn("quietClose caught exception", e);
             }
         }
     }
     
     /**
-     * Does a rollback the specified connection (if not null), and catches any
-     * exceptions and logs them.
-     * @param conn
+     * Does a rollback on the specified connection (if not <code>null</code>),
+     * catches any exceptions, and logs them.
      */
     public static void quietRollback(Connection conn) {
         if (conn != null) {
             try {
-                conn.rollback();
-            } catch (ServiceException e) {
-                if (ZimbraLog.sqltrace.isWarnEnabled())
-                    ZimbraLog.sqltrace.warn("quietRollback caught exception", e);
+                if (conn.getConnection() != null && !conn.getConnection().isClosed()) {
+                    conn.rollback();
+                }
+            } catch (SQLException e) {
+                ZimbraLog.sqltrace.warn("quietRollback caught exception", e);
+            }
+            catch (ServiceException e) {
+                ZimbraLog.sqltrace.warn("quietRollback caught exception", e);
             }
         }
     }
