@@ -984,6 +984,13 @@ public class Mailbox {
         return mCurrentChange.itemCache;
     }
 
+    private void clearItemCache() {
+        if (mCurrentChange.isActive())
+            mCurrentChange.itemCache.clear();
+        else
+            mItemCache.clear();
+    }
+
     void cache(MailItem item) throws ServiceException {
         if (item == null)
             return;
@@ -1046,15 +1053,15 @@ public class Mailbox {
      *  non-folder types will drop the entire item cache.
      * 
      * @param type  The type of item to completely uncache. */
-    void purge(byte type) throws ServiceException {
+    void purge(byte type) {
         switch (type) {
             case MailItem.TYPE_FOLDER:
             case MailItem.TYPE_MOUNTPOINT:
-            case MailItem.TYPE_SEARCHFOLDER:  mFolderCache = null;     break;
+            case MailItem.TYPE_SEARCHFOLDER:  mFolderCache = null;  break;
             case MailItem.TYPE_FLAG:
-            case MailItem.TYPE_TAG:           mTagCache = null;        break;
-            default:                          getItemCache().clear();  break;
-            case MailItem.TYPE_UNKNOWN:       mFolderCache = null;  mTagCache = null;  getItemCache().clear();  break;
+            case MailItem.TYPE_TAG:           mTagCache = null;     break;
+            default:                          clearItemCache();     break;
+            case MailItem.TYPE_UNKNOWN:       mFolderCache = null;  mTagCache = null;  clearItemCache();  break;
         }
 
         if (ZimbraLog.cache.isDebugEnabled())
@@ -5178,12 +5185,13 @@ public class Mailbox {
             // delete any blobs associated with items deleted from db/index
             StoreManager sm = StoreManager.getInstance();
             if (deleted != null && deleted.blobs != null) {
-                for (MailboxBlob blob : deleted.blobs)
+                for (MailboxBlob blob : deleted.blobs) {
                     try {
                         sm.delete(blob);
                     } catch (IOException e) {
                         ZimbraLog.mailbox.warn("could not delete blob " + blob.getPath() + " during commit");
                     }
+                }
             }
         } catch (RuntimeException e) {
             ZimbraLog.mailbox.error("ignoring error during cache commit", e);
@@ -5196,12 +5204,13 @@ public class Mailbox {
 
         // committed changes, so notify any listeners
         if (!mListeners.isEmpty() && dirty != null && dirty.hasNotifications()) {
-            for (Session session : new ArrayList<Session>(mListeners))
+            for (Session session : new ArrayList<Session>(mListeners)) {
                 try {
                     session.notifyPendingChanges(dirty);
                 } catch (RuntimeException e) {
                     ZimbraLog.mailbox.error("ignoring error during notification", e);
                 }
+            }
         }
     }
 
@@ -5212,25 +5221,23 @@ public class Mailbox {
         try {
             // rolling back changes, so purge dirty items from the various caches
             Map cache = change.itemCache;
-            for (Map map : new Map[] {change.mDirty.created, change.mDirty.deleted, change.mDirty.modified})
-                if (map != null)
+            for (Map map : new Map[] {change.mDirty.created, change.mDirty.deleted, change.mDirty.modified}) {
+                if (map != null) {
                     for (Object obj : map.values()) {
                         if (obj instanceof Change)
                             obj = ((Change) obj).what;
 
-                        try {
-                            if (obj instanceof Tag)
-                                purge(MailItem.TYPE_TAG);
-                            else if (obj instanceof Folder)
-                                purge(MailItem.TYPE_FOLDER);
-                            else if (obj instanceof MailItem && cache != null)
-                                cache.remove(new Integer(((MailItem) obj).getId()));
-                            else if (obj instanceof Integer && cache != null)
-                                cache.remove(obj);
-                        } catch (ServiceException e) {
-                            // should never be thrown, as purge() doesn't throw on tags/folders
-                        }
+                        if (obj instanceof Tag)
+                            purge(MailItem.TYPE_TAG);
+                        else if (obj instanceof Folder)
+                            purge(MailItem.TYPE_FOLDER);
+                        else if (obj instanceof MailItem && cache != null)
+                            cache.remove(new Integer(((MailItem) obj).getId()));
+                        else if (obj instanceof Integer && cache != null)
+                            cache.remove(obj);
                     }
+                }
+            }
 
             // roll back any changes to external items
             // FIXME: handle mOtherDirtyStuff:
