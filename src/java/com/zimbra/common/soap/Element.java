@@ -137,20 +137,59 @@ public abstract class Element {
 
     public Element getParent()        { return mParent; }
 
-    /** Fetch a REQUIRED sub-element.  If none is found, throw an exception.
-     * @return The first sub-element with a matching name */
+    /**
+     * Returns a required sub-element.
+     * @return the first sub-element with a matching name
+     * @exception ServiceException if no element is found
+     */
     public Element getElement(String name) throws ServiceException  { return checkNull(name, getOptionalElement(name)); }
+
+    /**
+     * Returns a required sub-element.
+     * @return the first sub-element with a matching name
+     * @exception ServiceException if no element is found
+     */
     public Element getElement(QName qname) throws ServiceException  { return checkNull(qname.getName(), getOptionalElement(qname)); }
 
+    /**
+     * Returns an optional sub-element.
+     * @return the first sub-element with a matching name, or <code>null</code>
+     * if the sub-element doesn't exist.
+     */
     public abstract Element getOptionalElement(String name);
+
+    /**
+     * Returns an optional sub-element.
+     * @return the first sub-element with a matching name, or <code>null</code>
+     * if the sub-element doesn't exist.
+     */
     public Element getOptionalElement(QName qname)                  { return getOptionalElement(qname.getName()); }
 
     public abstract Set<Attribute> listAttributes();
+    
+    /**
+     * Returns all sub-elements.
+     */
     public List<Element>   listElements()                    { return listElements(null); }
+    
+    /**
+     * Returns all sub-elements matching the given name.
+     */
     public abstract List<Element> listElements(String name);
 
+    /**
+     * Returns all attributes as an <code>Iterator</code>.
+     */
     public Iterator<Attribute> attributeIterator()           { return listAttributes().iterator(); }
+    
+    /**
+     * Returns all sub-elements as an <code>Iterator</code>.
+     */
     public Iterator<Element>   elementIterator()             { return listElements().iterator(); }
+    
+    /**
+     * Returns all sub-elements matching the given name as an <code>Iterator</code>.
+     */
     public Iterator<Element>   elementIterator(String name)  { return listElements(name).iterator(); }
 
     public abstract String getText();
