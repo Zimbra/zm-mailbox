@@ -96,17 +96,18 @@ public class Tag extends MailItem {
         return bitmask;
     }
 
-    static String bitmaskToTags(long bitmask) {
+    public static String bitmaskToTags(long bitmask) {
         if (bitmask == 0)
             return "";
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; bitmask != 0 && i < MAX_TAG_COUNT - 1; i++)
+        for (int i = 0; bitmask != 0 && i < MAX_TAG_COUNT - 1; i++) {
             if ((bitmask & (1L << i)) != 0) {
                 if (sb.length() > 0)
                     sb.append(',');
                 sb.append(i + TAG_ID_OFFSET);
                 bitmask &= ~(1L << i);
             }
+        }
         return sb.toString();
     }
 
@@ -114,11 +115,12 @@ public class Tag extends MailItem {
         if (bitmask == 0)
             return Collections.emptyList();
         ArrayList<Tag> tags = new ArrayList<Tag>();
-        for (int i = 0; bitmask != 0 && i < MAX_TAG_COUNT - 1; i++)
+        for (int i = 0; bitmask != 0 && i < MAX_TAG_COUNT - 1; i++) {
             if ((bitmask & (1L << i)) != 0) {
                 tags.add(mbox.getTagById(i + TAG_ID_OFFSET));
                 bitmask &= ~(1L << i);
             }
+        }
         return tags;
     }
 

@@ -736,6 +736,18 @@ public abstract class MailItem implements Comparable<MailItem> {
         return mId - that.getId();
     }
 
+    public static final class SortIdAscending implements Comparator<MailItem> {
+        public int compare(MailItem m1, MailItem m2) {
+            return m1.getId() - m2.getId();
+        }
+    }
+
+    public static final class SortIdDescending implements Comparator<MailItem> {
+        public int compare(MailItem m1, MailItem m2) {
+            return m2.getId() - m1.getId();
+        }
+    }
+
     public static final class SortModifiedSequenceAscending implements Comparator<MailItem> {
         public int compare(MailItem m1, MailItem m2) {
             return m1.getModifiedSequence() - m2.getModifiedSequence();
@@ -761,15 +773,10 @@ public abstract class MailItem implements Comparable<MailItem> {
             else                return -1;
         }
     }
-    
+
     public static final class SortImapUid implements Comparator<MailItem> {
         public int compare(MailItem m1, MailItem m2) {
-            long t1 = m1.getImapUid();
-            long t2 = m2.getImapUid();
-
-            if (t1 < t2)        return -1;
-            else if (t1 == t2)  return 0;
-            else                return 1;
+            return m1.getImapUid() - m2.getImapUid();
         }
     }
 
@@ -788,6 +795,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     static Comparator<MailItem> getComparator(byte sort) {
         boolean ascending = (sort & DbMailItem.SORT_DIRECTION_MASK) == DbMailItem.SORT_ASCENDING;
         switch (sort & DbMailItem.SORT_FIELD_MASK) {
+            case DbMailItem.SORT_BY_ID:       return ascending ? new SortIdAscending() : new SortIdDescending();
             case DbMailItem.SORT_BY_DATE:     return ascending ? new SortDateAscending() : new SortDateDescending();
             case DbMailItem.SORT_BY_SUBJECT:  return ascending ? new SortSubjectAscending() : new SortSubjectDescending();
         }

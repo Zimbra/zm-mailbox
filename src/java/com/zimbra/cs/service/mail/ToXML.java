@@ -456,26 +456,35 @@ public class ToXML {
     }
 
 
-    public static Element encodeConversation(Element parent, ZimbraSoapContext lc, Conversation conv, SearchParams params) throws ServiceException {
-        int fields = NOTIFY_FIELDS;
+    public static Element encodeConversation(Element parent, ZimbraSoapContext zsc, Conversation conv, SearchParams params) throws ServiceException {
         Mailbox mbox = conv.getMailbox();
-        Element c = encodeConversationCommon(parent, lc, conv, fields);
+        List<Message> msgs = mbox.getMessagesByConversation(zsc.getOperationContext(), conv.getId(), Conversation.SORT_DATE_ASCENDING);
+        return encodeConversation(parent, zsc, conv, msgs, params);
+    }
 
+    public static Element encodeConversation(Element parent, ZimbraSoapContext zsc, Conversation conv, List<Message> msgs, SearchParams params) throws ServiceException {
+        int fields = NOTIFY_FIELDS;
+        Element c = encodeConversationCommon(parent, zsc, conv, msgs, fields);
+        if (msgs.isEmpty())
+            return c;
+
+        c.addAttribute(MailConstants.E_SUBJECT, msgs.get(0).getSubject(), Element.DISP_CONTENT);
+
+        Mailbox mbox = conv.getMailbox();
         ExpandResults expand = params.getFetchFirst();
-        List<Message> messages = mbox.getMessagesByConversation(lc.getOperationContext(), conv.getId());
-        for (Message msg : messages) {
+        for (Message msg : msgs) {
             if (msg.isTagged(mbox.mDeletedFlag))
                 continue;
             if (expand == ExpandResults.FIRST || expand == ExpandResults.ALL) {
-                encodeMessageAsMP(c, lc, msg, null, params.getWantHtml(), params.getNeuterImages());
+                encodeMessageAsMP(c, zsc, msg, null, params.getWantHtml(), params.getNeuterImages());
                 if (expand == ExpandResults.FIRST)
                     expand = ExpandResults.NONE;
             } else {
                 Element m = c.addElement(MailConstants.E_MSG);
-                m.addAttribute(MailConstants.A_ID, lc.formatItemId(msg));
+                m.addAttribute(MailConstants.A_ID, zsc.formatItemId(msg));
                 m.addAttribute(MailConstants.A_DATE, msg.getDate());
                 m.addAttribute(MailConstants.A_SIZE, msg.getSize());
-                m.addAttribute(MailConstants.A_FOLDER, lc.formatItemId(msg.getFolderId()));
+                m.addAttribute(MailConstants.A_FOLDER, zsc.formatItemId(msg.getFolderId()));
                 recordItemTags(m, msg, fields);
                 m.addAttribute(MailConstants.E_FRAG, msg.getFragment(), Element.DISP_CONTENT);
                 encodeEmail(m, msg.getSender(), EmailType.FROM);
@@ -485,33 +494,41 @@ public class ToXML {
     }
 
     /**
-     * 
      * This version lets you specify the Date and Fragment -- we use this when sending Query Results back to the client, 
      * the conversation date returned and fragment correspond to those of the matched message.
-     * @param lc TODO
+     * @param zsc TODO
      * @param conv
      * @param msgHit TODO
      * @param eecache
+     * @throws ServiceException 
      */
-    public static Element encodeConversationSummary(Element parent, ZimbraSoapContext lc, Conversation conv, int fields) {
-        return encodeConversationSummary(parent, lc, conv, null, OutputParticipants.PUT_SENDERS, fields);
+    public static Element encodeConversationSummary(Element parent, ZimbraSoapContext zsc, Conversation conv, int fields) throws ServiceException {
+        return encodeConversationSummary(parent, zsc, conv, null, OutputParticipants.PUT_SENDERS, fields);
     }
 
-    public static Element encodeConversationSummary(Element parent, ZimbraSoapContext lc, Conversation conv, Message msgHit, OutputParticipants output) {
-        return encodeConversationSummary(parent, lc, conv, msgHit, output, NOTIFY_FIELDS);
+    public static Element encodeConversationSummary(Element parent, ZimbraSoapContext zsc, Conversation conv, Message msgHit, OutputParticipants output) throws ServiceException {
+        return encodeConversationSummary(parent, zsc, conv, msgHit, output, NOTIFY_FIELDS);
     }
 
-    private static Element encodeConversationSummary(Element parent, ZimbraSoapContext lc, Conversation conv, Message msgHit, OutputParticipants output, int fields) {
-        Element c = encodeConversationCommon(parent, lc, conv, fields);
+    private static Element encodeConversationSummary(Element parent, ZimbraSoapContext zsc, Conversation conv, Message msgHit, OutputParticipants output, int fields) throws ServiceException {
+        boolean addRecips  = msgHit != null && msgHit.isFromMe() && (output == OutputParticipants.PUT_RECIPIENTS || output == OutputParticipants.PUT_BOTH);
+        boolean addSenders = (output == OutputParticipants.PUT_BOTH || !addRecips) && needToOutput(fields, Change.MODIFIED_SENDERS);
+
+        Mailbox mbox = conv.getMailbox();
+        List<Message> msgs = null;
+        if (zsc.isDelegatedRequest() || (addSenders && conv.isTagged(mbox.mDeletedFlag)))
+            msgs = mbox.getMessagesByConversation(zsc.getOperationContext(), conv.getId(), Conversation.SORT_DATE_ASCENDING);
+
+        Element c = encodeConversationCommon(parent, zsc, conv, msgs, fields);
+        if (msgs != null && msgs.isEmpty())
+            return c;
+
         if (needToOutput(fields, Change.MODIFIED_DATE))
             c.addAttribute(MailConstants.A_DATE, msgHit != null ? msgHit.getDate() : conv.getDate());
         if (needToOutput(fields, Change.MODIFIED_SUBJECT))
             c.addAttribute(MailConstants.E_SUBJECT, conv.getSubject());
         if (fields == NOTIFY_FIELDS && msgHit != null)
             c.addAttribute(MailConstants.E_FRAG, msgHit.getFragment(), Element.DISP_CONTENT);
-
-        boolean addRecips  = msgHit != null && msgHit.isFromMe() && (output == OutputParticipants.PUT_RECIPIENTS || output == OutputParticipants.PUT_BOTH);
-        boolean addSenders = output == OutputParticipants.PUT_BOTH || !addRecips;
 
         if (addRecips) {
             try {
@@ -520,14 +537,12 @@ public class ToXML {
             } catch (AddressException e1) { }
         }
 
-        if (addSenders && needToOutput(fields, Change.MODIFIED_SENDERS)) {
-            Mailbox mbox = conv.getMailbox();
-
+        if (addSenders) {
             SenderList sl;
             try {
-                if (conv.isTagged(mbox.mDeletedFlag)) {
+                if (msgs != null) {
                     sl = new SenderList();
-                    for (Message msg : mbox.getMessagesByConversation(lc.getOperationContext(), conv.getId(), Conversation.SORT_DATE_ASCENDING)) {
+                    for (Message msg : msgs) {
                         if (!msg.isTagged(mbox.mDeletedFlag))
                             sl.add(msg);
                     }
@@ -556,18 +571,47 @@ public class ToXML {
         return c;
     }
 
-    private static Element encodeConversationCommon(Element parent, ZimbraSoapContext lc, Conversation conv, int fields) {
+    private static Element encodeConversationCommon(Element parent, ZimbraSoapContext lc, Conversation conv, List<Message> msgs, int fields) {
         Element c = parent.addElement(MailConstants.E_CONV);
         c.addAttribute(MailConstants.A_ID, lc.formatItemId(conv));
+
+        Mailbox mbox = conv.getMailbox();
         if (needToOutput(fields, Change.MODIFIED_CHILDREN | Change.MODIFIED_SIZE)) {
-            int count = conv.getMessageCount(), nondeleted = conv.getNondeletedCount();
+            int count = 0, nondeleted = 0;
+            if (msgs == null) {
+                count = conv.getMessageCount();
+                nondeleted = conv.getNondeletedCount();
+            } else {
+                count = nondeleted = msgs.size();
+                for (Message msg : msgs)
+                    if (msg.isTagged(mbox.mDeletedFlag))
+                        nondeleted--;
+            }
+
             c.addAttribute(MailConstants.A_NUM, nondeleted);
             if (count != nondeleted)
                 c.addAttribute(MailConstants.A_TOTAL_SIZE, count);
         }
-        recordItemTags(c, conv, fields);
-        if (fields == NOTIFY_FIELDS)
-            c.addAttribute(MailConstants.E_SUBJECT, conv.getSubject(), Element.DISP_CONTENT);
+
+        if (msgs == null) {
+            recordItemTags(c, conv, fields);
+        } else if (needToOutput(fields, Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD | Change.MODIFIED_TAGS)) {
+            int flags = 0;  long tags = 0;
+            for (Message msg : msgs) {
+                if (msg.isTagged(mbox.mDeletedFlag)) {
+                    flags |= msg.getFlagBitmask();  tags |= msg.getTagBitmask();
+                }
+            }
+            if (needToOutput(fields, Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD)) {
+                if (fields != NOTIFY_FIELDS || flags != 0)
+                    c.addAttribute(MailConstants.A_FLAGS, Flag.bitmaskToFlags(flags));
+            }
+            if (needToOutput(fields, Change.MODIFIED_TAGS)) {
+                if (fields != NOTIFY_FIELDS || tags != 0)
+                    c.addAttribute(MailConstants.A_TAGS, Tag.bitmaskToTags(tags));
+            }
+        }
+
         return c;
     }
 

@@ -1784,11 +1784,7 @@ public class Mailbox {
         if (item == null)
             item = getItemCache().get(key);
 
-        byte type = MailItem.TYPE_UNKNOWN;
-        if (item != null) {
-            type = item.getType();
-        }
-        logCacheActivity(key, type, item);
+        logCacheActivity(key, item == null ? MailItem.TYPE_UNKNOWN : item.getType(), item);
         return item;
     }
 
@@ -1813,9 +1809,11 @@ public class Mailbox {
             break;
         }
 
-        MailItem retVal = (item == null || MailItem.isAcceptableType(type, item.mData.type) ? item : null);
-        logCacheActivity(key, type, retVal);
-        return retVal;
+        if (item != null && !MailItem.isAcceptableType(type, item.mData.type))
+            item = null;
+
+        logCacheActivity(key, type, item);
+        return item;
     }
 
     public synchronized MailItem getItemFromUnderlyingData(MailItem.UnderlyingData data) throws ServiceException {
@@ -2476,6 +2474,13 @@ public class Mailbox {
         try {
             beginTransaction("getMessagesByConversation", octxt);
             List<Message> msgs = getConversationById(convId).getMessages(sort);
+            if (!hasFullAccess()) {
+                List<Message> visible = new ArrayList<Message>(msgs.size());
+                for (Message msg : msgs)
+                    if (msg.canAccess(ACL.RIGHT_READ))
+                        visible.add(msg);
+                msgs = visible;
+            }
             success = true;
             return msgs;
         } finally {

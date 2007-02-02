@@ -31,12 +31,14 @@ package com.zimbra.cs.mailbox;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailItem.LocationCount;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -288,22 +290,22 @@ public class Conversation extends MailItem {
      *              <code>SORT_XXX</code> constants from {@link DbMailItem}. */
     List<Message> getMessages(byte sort) throws ServiceException {
         List<Message> msgs = new ArrayList<Message>(getMessageCount());
-        if (mData.children != null && (sort & DbMailItem.SORT_FIELD_MASK) == DbMailItem.SORT_BY_ID) {
+        Comparator<MailItem> cmp = getComparator(sort); 
+        if (mData.children != null && (cmp != null || (sort & DbMailItem.SORT_FIELD_MASK) == DbMailItem.SORT_NONE)) {
             // try to get all our info from the cache to avoid a database trip
-            Collections.sort(mData.children);
-            if ((sort & DbMailItem.SORT_DIRECTION_MASK) == DbMailItem.SORT_DESCENDING)
-                Collections.reverse(mData.children);
-            int found = 0;
             for (int childId : mData.children) {
                 Message msg = mMailbox.getCachedMessage(childId);
                 if (msg == null)
                     break;
                 msgs.add(msg);
-                found++;
             }
 
-            if (found == mData.children.size())
+            if (msgs.size() == mData.children.size()) {
+                if (cmp != null)
+                    Collections.sort(msgs, cmp);
                 return msgs;
+            }
+            // cache miss, so start over and fall through...
             msgs.clear();
         }
 
@@ -311,6 +313,16 @@ public class Conversation extends MailItem {
         for (UnderlyingData data : listData)
             msgs.add(mMailbox.getMessage(data));
         return msgs;
+    }
+
+    @Override
+    boolean canAccess(short rightsNeeded) {
+        return true;
+    }
+
+    @Override
+    boolean canAccess(short rightsNeeded, Account authuser, boolean asAdmin) {
+        return true;
     }
 
 
@@ -522,14 +534,18 @@ public class Conversation extends MailItem {
         // if mData.unread is wrong, what to do?  right now, always use the calculated value
         mData.unreadCount = oldUnread;
 
+        // only close the conversation if it's being moved to spam and there are no permissions issues
+        boolean excludeAccess = false;
+
         List<Integer> markedRead = new ArrayList<Integer>(), moved = new ArrayList<Integer>();
         for (Message msg : msgs) {
             Folder source = msg.getFolder();
 
             // skip messages that the client doesn't know about, can't modify, or has explicitly excluded
+            if (!source.canAccess(ACL.RIGHT_DELETE) || !target.canAccess(ACL.RIGHT_INSERT)) {
+                excludeAccess = true;  continue;
+            }
             if (!msg.checkChangeID() || !TargetConstraint.checkItem(tcon, msg))
-                continue;
-            if (!source.canAccess(ACL.RIGHT_DELETE) || !target.canAccess(ACL.RIGHT_INSERT))
                 continue;
 
             if (msg.isUnread()) {
@@ -552,17 +568,20 @@ public class Conversation extends MailItem {
             moved.add(msg.getId());
             msg.folderChanged(target, 0);
         }
+
         // mark unread messages moved from Mailbox to Trash/Spam as read in the DB
         if (!markedRead.isEmpty())
             DbMailItem.alterUnread(target.getMailbox(), markedRead, false);
 
-        // moving a conversation to spam closes it
-        //   XXX: what if only certain messages got moved?
-        if (target.inSpam())
-            detach();
-
-        if (!moved.isEmpty())
+        if (moved.isEmpty()) {
+            if (excludeAccess)
+                throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+        } else {
+            // moving a conversation to spam closes it
+            if (target.inSpam())
+                detach();
             DbMailItem.setFolder(moved, target);
+        }
     }
 
     /** please call this *after* adding the child row to the DB */

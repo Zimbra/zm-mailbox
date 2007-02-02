@@ -1365,16 +1365,17 @@ public class DbMailItem {
     private static final String FOLDER_TYPES         = "(" + MailItem.TYPE_FOLDER + ',' + MailItem.TYPE_SEARCHFOLDER + ',' + MailItem.TYPE_MOUNTPOINT + ')';
     private static final String FOLDER_AND_TAG_TYPES = "(" + MailItem.TYPE_FOLDER + ',' + MailItem.TYPE_SEARCHFOLDER + ',' + MailItem.TYPE_MOUNTPOINT + ',' + MailItem.TYPE_TAG + ')';
     private static final String NON_SEARCHABLE_TYPES = "(" + MailItem.TYPE_FOLDER + ',' + MailItem.TYPE_SEARCHFOLDER + ',' + MailItem.TYPE_MOUNTPOINT + ',' + MailItem.TYPE_TAG + ',' + MailItem.TYPE_CONVERSATION + ')';
+    private static final String MESSAGE_TYPES        = "(" + MailItem.TYPE_MESSAGE + ',' + MailItem.TYPE_CHAT + ')';
     private static final String DOCUMENT_TYPES       = "(" + MailItem.TYPE_DOCUMENT + ',' + MailItem.TYPE_WIKI + ')';
-    private static final String CALENDAR_TYPES       =  "(" + MailItem.TYPE_APPOINTMENT + ", " + MailItem.TYPE_TASK + ")";
+    private static final String CALENDAR_TYPES       = "(" + MailItem.TYPE_APPOINTMENT + ',' + MailItem.TYPE_TASK + ')';
 
     private static String typeConstraint(byte type) {
         if (type == MailItem.TYPE_FOLDER)
             return FOLDER_TYPES;
+        else if (type == MailItem.TYPE_MESSAGE)
+            return MESSAGE_TYPES;
         else if (type == MailItem.TYPE_DOCUMENT)
             return DOCUMENT_TYPES;
-        else if (type == MailItem.TYPE_MESSAGE)
-            return "(" + MailItem.TYPE_MESSAGE + ',' + MailItem.TYPE_CHAT + ')';
         else
             return "(" + type + ')';
     }

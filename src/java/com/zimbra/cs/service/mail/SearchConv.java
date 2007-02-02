@@ -50,6 +50,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.operation.SearchOperation;
 import com.zimbra.cs.operation.Operation.Requester;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -59,6 +60,9 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class SearchConv extends Search {
     private static Log sLog = LogFactory.getLog(Search.class);
+
+    private static final String[] TARGET_CONV_PATH = new String[] { MailConstants.A_CONV_ID };
+    protected String[] getProxiedIdPath(Element request)  { return TARGET_CONV_PATH; }
 
     private static final int CONVERSATION_FIELD_MASK = Change.MODIFIED_SIZE | Change.MODIFIED_TAGS | Change.MODIFIED_FLAGS;
 
@@ -74,19 +78,17 @@ public class SearchConv extends Search {
         boolean nest = request.getAttributeBool(MailConstants.A_NEST_MESSAGES, false);
 
         // FIXME: should proxy if conversation is a qualified ID in another mailbox
-        int cid = (int) request.getAttributeLong(MailConstants.A_CONV_ID);
+        ItemId cid = new ItemId(request.getAttribute(MailConstants.A_CONV_ID), zsc);
         SearchParams params = parseCommonParameters(request, zsc);
 
-        //
         // append (conv:(convid)) onto the beginning of the queryStr
         StringBuffer queryBuffer = new StringBuffer("conv:\"");
-        queryBuffer.append(cid);
+        queryBuffer.append(cid.getId());
         queryBuffer.append("\" (");
         queryBuffer.append(params.getQueryStr());
         queryBuffer.append(")");
         params.setQueryStr(queryBuffer.toString());
 
-        // 
         // force to group-by-message
         params.setTypesStr(MailboxIndex.GROUP_BY_MESSAGE);
 
@@ -102,10 +104,12 @@ public class SearchConv extends Search {
             SortBy sb = results.getSortBy();
             response.addAttribute(MailConstants.A_SORTBY, sb.toString());
 
-            List<Message> msgs = mbox.getMessagesByConversation(octxt, cid, sb.getDbMailItemSortByte());
+            List<Message> msgs = mbox.getMessagesByConversation(octxt, cid.getId(), sb.getDbMailItemSortByte());
+            if (msgs.isEmpty() && zsc.isDelegatedRequest())
+                throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
 
             // filter out IMAP \Deleted messages from the message lists
-            Conversation conv = mbox.getConversationById(octxt, cid);
+            Conversation conv = mbox.getConversationById(octxt, cid.getId());
             if (conv.isTagged(mbox.mDeletedFlag)) {
                 List<Message> raw = msgs;
                 msgs = new ArrayList<Message>();
