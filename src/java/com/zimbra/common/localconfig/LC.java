@@ -102,6 +102,10 @@ public class LC {
 
     public static final KnownKey zimbra_store_sweeper_max_age;
 
+    public static final KnownKey zimbra_mailbox_purgeable;
+    public static final KnownKey zimbra_mailbox_active_cache;
+    public static final KnownKey zimbra_mailbox_inactive_cache;
+
     public static final KnownKey zimbra_index_max_uncommitted_operations;
     public static final KnownKey zimbra_index_lru_size;
     public static final KnownKey zimbra_index_idle_flush_time;
@@ -353,6 +357,18 @@ public class LC {
         zimbra_store_sweeper_max_age = new KnownKey("zimbra_store_sweeper_max_age");
         zimbra_store_sweeper_max_age.setDefault("480");  // 480 mins = 8 hours
         zimbra_store_sweeper_max_age.setDoc("Files older than this many minutes are auto-deleted from store incoming directory.");
+
+        zimbra_mailbox_purgeable = new KnownKey("zimbra_mailbox_purgeable");
+        zimbra_mailbox_purgeable.setDefault("false");
+        zimbra_mailbox_purgeable.setDoc("Whether the mailbox manager should permit inactive mailboxes to be purged from its cache.");
+
+        zimbra_mailbox_active_cache = new KnownKey("zimbra_mailbox_active_cache");
+        zimbra_mailbox_active_cache.setDefault("500");
+        zimbra_mailbox_active_cache.setDoc("The maximum size of a mailbox's internal LRU item cache when there are sessions active.");
+
+        zimbra_mailbox_inactive_cache = new KnownKey("zimbra_mailbox_inactive_cache");
+        zimbra_mailbox_inactive_cache.setDefault("30");
+        zimbra_mailbox_inactive_cache.setDoc("The maximum size of a mailbox's internal LRU item cache when it has no active sessions.");
 
         zimbra_index_max_uncommitted_operations = new KnownKey("zimbra_index_max_uncommitted_operations");
         zimbra_index_max_uncommitted_operations.setDefault("200");
