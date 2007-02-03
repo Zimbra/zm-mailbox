@@ -24,6 +24,7 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -96,11 +97,14 @@ public class MailboxManager {
      *  server appears in this mapping. */
     private Map<String, Integer> mMailboxIds;
 
-    /** Maps mailbox IDs (<code>Integer</code>s) to loaded
-     *  <code>Mailbox</code>es.  Mailboxes are faulted into memory as needed,
-     *  but are then cached for the life of the server or until explicitly
-     *  unloaded.  Only one <code>Mailbox</code> per user is cached, and only
-     *  that <code>Mailbox</code> can process user requests. */
+    /** Maps mailbox IDs (<code>Integer</code>s) to either <ul>
+     *     <li>a {@link SoftReference} to a loaded <code>Mailbox</code>, or
+     *     <li>a {@link MailboxLock} for the mailbox.</ul><p>
+     *  Mailboxes are faulted into memory as needed, but may drop from memory
+     *  when the SoftReference expires due to memory pressure combined with a
+     *  lack of outstanding references to the <code>Mailbox</code>.  Only one
+     *  <code>Mailbox</code> per user is cached, and only that
+     *  <code>Mailbox</code> can process user requests. */
     private Map<Integer, Object> mMailboxCache;
 
     public MailboxManager() throws ServiceException {
@@ -262,12 +266,15 @@ public class MailboxManager {
 
         // only used if we instantiate a new mailbox (existing mailboxes
         // RETURN immediately
-        Mailbox toRet = null;
+        Mailbox mailbox = null;
         
         synchronized (this) {
             Object obj = mMailboxCache.get(mailboxId);
-            if (obj instanceof Mailbox) {
-                return (Mailbox) obj;
+            if (obj instanceof SoftReference) {
+                mailbox = (Mailbox) ((SoftReference) obj).get();
+                if (mailbox != null)
+                    return mailbox;
+                ZimbraLog.mailbox.debug("mailbox " + mailboxId + " has been GCed; reloading");
             } else if (obj instanceof MailboxLock) {
                 MailboxLock lock = (MailboxLock) obj;
                 if (!lock.canAccess())
@@ -284,7 +291,7 @@ public class MailboxManager {
                 MailboxData data = DbMailbox.getMailboxStats(conn, mailboxId);
                 if (data == null)
                     throw MailServiceException.NO_SUCH_MBOX(mailboxId);
-                Mailbox mailbox = instantiateMailbox(data);
+                mailbox = instantiateMailbox(data);
 
                 if (!skipMailHostCheck) {
                     // The host check here makes sure that sessions that were
@@ -301,9 +308,7 @@ public class MailboxManager {
                 if (obj instanceof MailboxLock)
                     ((MailboxLock) obj).cacheMailbox(mailbox);
                 else
-                    mMailboxCache.put(mailboxId, mailbox);
-                
-                toRet = mailbox;
+                    cacheMailbox(mailbox);
             } finally {
                 if (conn != null)
                     DbPool.quietClose(conn);
@@ -311,13 +316,18 @@ public class MailboxManager {
         }
 
         // this is only reached if the mailbox is being initialized for the first time
-        toRet.checkUpgrade();
+        mailbox.checkUpgrade();
         
-        return toRet;
+        return mailbox;
     }
 
     Mailbox instantiateMailbox(MailboxData data) throws ServiceException {
         return new Mailbox(data);
+    }
+
+    private Mailbox cacheMailbox(Mailbox mailbox) {
+        mMailboxCache.put(mailbox.getId(), new SoftReference<Mailbox>(mailbox));
+        return mailbox;
     }
 
 
@@ -377,7 +387,7 @@ public class MailboxManager {
                         // Note: mbox is left in maintenance mode.
                     } else {
                         mbox.endMaintenance(success);
-                        mMailboxCache.put(lock.getMailboxId(), lock.getMailbox());
+                        cacheMailbox(lock.getMailbox());
                     }
                 }
             } else {
@@ -506,7 +516,7 @@ public class MailboxManager {
 
                 // cache the accountID-to-mailboxID and mailboxID-to-Mailbox relationships
                 mMailboxIds.put(data.accountId.toLowerCase(), new Integer(data.id));
-                mMailboxCache.put(new Integer(data.id), mailbox);
+                cacheMailbox(mailbox);
                 redoRecorder.setMailboxId(mailbox.getId());
 
                 success = true;
@@ -537,10 +547,10 @@ public class MailboxManager {
         return mailbox;
     }
 
-    void markMailboxDeleted(Mailbox mbox) {
+    void markMailboxDeleted(Mailbox mailbox) {
         synchronized (this) {
-            mMailboxIds.remove(mbox.getAccountId().toLowerCase());
-            mMailboxCache.remove(mbox.getId());
+            mMailboxIds.remove(mailbox.getAccountId().toLowerCase());
+            mMailboxCache.remove(mailbox.getId());
         }
     }
 
