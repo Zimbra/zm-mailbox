@@ -38,9 +38,11 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.collections.map.LRUMap;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
@@ -135,11 +137,8 @@ public class Mailbox {
     public static final int HIGHEST_SYSTEM_ID = 15;
     public static final int FIRST_USER_ID     = 256;
 
-    static final int  ONE_MONTH_SECS   = 60 * 60 * 24 * 31;
-    static final long ONE_MONTH_MILLIS = ONE_MONTH_SECS * 1000L;
-    
     static final String MD_CONFIG_VERSION = "ver";
-    
+
 
     public static final class MailboxData {
         public int     id;
@@ -320,8 +319,8 @@ public class Mailbox {
     }
 
     // TODO: figure out correct caching strategy
-    private static final int MAX_ITEM_CACHE_WITH_LISTENERS    = 500;
-    private static final int MAX_ITEM_CACHE_WITHOUT_LISTENERS = 30;
+    private static final int MAX_ITEM_CACHE_WITH_LISTENERS    = LC.zimbra_mailbox_active_cache.intValue();
+    private static final int MAX_ITEM_CACHE_WITHOUT_LISTENERS = LC.zimbra_mailbox_inactive_cache.intValue();
     private static final int MAX_MSGID_CACHE = 10;
 
     private int           mId;
@@ -3355,7 +3354,7 @@ public class Mailbox {
                     conv = getConversationByHash(hash = getHash(subject));
                     if (debug)  ZimbraLog.mailbox.debug("  found conversation " + (conv == null ? -1 : conv.getId()) + " for hash: " + hash);
                     // the caller can specify the received date via ParsedMessge constructor or X-Zimbra-Received header
-                    if (conv != null && pm.getReceivedDate() > conv.getDate() + ONE_MONTH_MILLIS) {
+                    if (conv != null && pm.getReceivedDate() > conv.getDate() + Constants.MILLIS_PER_MONTH) {
                         // if the last message in the conv was more than 1 month ago, it's probably not related...
                         conv = null;
                         if (debug)  ZimbraLog.mailbox.debug("  but rejected it because it's too old");
@@ -4531,10 +4530,10 @@ public class Mailbox {
             return;
 
         // sanity-check the really dangerous value...
-        if (globalTimeout > 0 && globalTimeout < ONE_MONTH_SECS) {
+        if (globalTimeout > 0 && globalTimeout < Constants.SECONDS_PER_MONTH) {
             // this min is also used by POP3 EXPIRE command. update Pop3Handler.MIN_EPXIRE_DAYS if it changes.
             ZimbraLog.mailbox.warn("global message timeout < 1 month; defaulting to 31 days");
-            globalTimeout = ONE_MONTH_SECS;
+            globalTimeout = Constants.SECONDS_PER_MONTH;
         }
 
         PurgeOldMessages redoRecorder = new PurgeOldMessages(mId);
