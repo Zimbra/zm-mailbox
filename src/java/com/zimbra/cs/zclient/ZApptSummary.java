@@ -305,6 +305,10 @@ public class ZApptSummary implements ZItem {
         return mStartTime < end && mEndTime > start;
     }
 
+    public boolean isOverLapping(ZApptSummary that) {
+        return this.mStartTime < that.mEndTime && this.mEndTime > that.mStartTime;
+    }
+
     /**
      * sort two appt summaries by all day, start time, duration, folder id.
      */
@@ -319,7 +323,7 @@ public class ZApptSummary implements ZItem {
             if (a.getStartTime() > b.getStartTime()) return 1;
             if (a.getStartTime() < b.getStartTime()) return -1;
             if (a.getDuration() < b.getDuration()) return 1;
-            if (a.getDuration() > b.getDuration()) return 1;
+            if (a.getDuration() > b.getDuration()) return -1;
             return a.getFolderId().compareTo(b.getFolderId());
             /*
             String na = a.getName() != null ? a.getName() : "";
