@@ -141,6 +141,7 @@ public class MailConstants {
     public static final QName CREATE_TASK_EXCEPTION_REQUEST = QName.get("CreateTaskExceptionRequest", NAMESPACE);
     public static final QName MODIFY_TASK_REQUEST = QName.get("ModifyTaskRequest", NAMESPACE);
     public static final QName CANCEL_TASK_REQUEST = QName.get("CancelTaskRequest", NAMESPACE);
+    public static final QName COMPLETE_TASK_INSTANCE_REQUEST = QName.get("CompleteTaskInstanceRequest", NAMESPACE);
 
     public static final QName GET_CALITEM_SUMMARIES_REQUEST = QName.get("GetCalendarItemSummariesRequest", NAMESPACE);
 //    public static final QName GET_CALITEM_REQUEST = QName.get("GetCalendarItemRequest", NAMESPACE);
