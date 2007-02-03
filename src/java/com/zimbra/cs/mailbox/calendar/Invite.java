@@ -787,6 +787,7 @@ public class Invite {
     void setMailboxId(int id) { mMailboxId = id; }
     public void setMailItemId(int id) { mMailItemId = id; }
     public int getFlags() { return mFlags; }
+    public void setFlags(int flags) { mFlags = flags; }
     public String getPartStat() { return mPartStat; }
     public boolean getRsvp() { return mRsvp; }
     public void setRsvp(boolean rsvp) { mRsvp = rsvp; }
@@ -1771,5 +1772,26 @@ public class Invite {
                 mDuration = dur;
             }
         }
+    }
+
+    public Invite newCopy() {
+        Invite inv = new Invite(
+                mItemType, mMethod != null ? mMethod.toString() : null,
+                mTzMap,
+                mCalItem, mUid,
+                mStatus, mPriority,
+                mPercentComplete, mCompleted,
+                mFreeBusy, mTransparency,
+                mStart, mEnd, mDuration,
+                mRecurrence,
+                mOrganizer, mAttendees,
+                mName, mComment, mLocation,
+                mFlags, mPartStat, mRsvp, mRecurrenceId, mDTStamp, mSeqNo,
+                0, // mMailboxId
+                0, // mMailItemId
+                0, // mComponentNum
+                mSentByMe,
+                mDescription, mFragment);
+        return inv;
     }
 }

@@ -542,6 +542,10 @@ public final class ParsedDateTime {
         return mHasTime;
     }
 
+    public void setHasTime(boolean hasTime) {
+        mHasTime = hasTime;
+    }
+
     public String toString() {
         if (mHasTime)
             return getTZParamString() + getDateTimePartString();
