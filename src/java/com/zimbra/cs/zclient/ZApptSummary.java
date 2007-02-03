@@ -309,6 +309,10 @@ public class ZApptSummary implements ZItem {
         return this.mStartTime < that.mEndTime && this.mEndTime > that.mStartTime;
     }
 
+    public static boolean isOverLapping(long start1, long end1, long start2, long end2) {
+        return start1 < end2 && end1 > start2;
+    }
+
     /**
      * sort two appt summaries by all day, start time, duration, folder id.
      */
