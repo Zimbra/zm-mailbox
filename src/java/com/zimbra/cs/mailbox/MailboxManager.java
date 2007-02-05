@@ -272,7 +272,9 @@ public class MailboxManager {
         
         synchronized (this) {
             Object obj = mMailboxCache.get(mailboxId);
-            if (obj instanceof SoftReference) {
+            if (obj instanceof Mailbox) {
+                return (Mailbox) obj;
+            } else if (obj instanceof SoftReference) {
                 mailbox = (Mailbox) ((SoftReference) obj).get();
                 if (mailbox != null)
                     return mailbox;
@@ -328,7 +330,10 @@ public class MailboxManager {
     }
 
     private Mailbox cacheMailbox(Mailbox mailbox) {
-        mMailboxCache.put(mailbox.getId(), new SoftReference<Mailbox>(mailbox));
+        if (LC.zimbra_mailbox_purgeable.booleanValue())
+            mMailboxCache.put(mailbox.getId(), new SoftReference<Mailbox>(mailbox));
+        else
+            mMailboxCache.put(mailbox.getId(), mailbox);
         return mailbox;
     }
 
