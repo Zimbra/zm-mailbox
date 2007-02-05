@@ -62,6 +62,8 @@ public class AdminConstants {
     public static final QName DELETE_ACCOUNT_RESPONSE = QName.get("DeleteAccountResponse", NAMESPACE);
     public static final QName SET_PASSWORD_REQUEST = QName.get("SetPasswordRequest", NAMESPACE);
     public static final QName SET_PASSWORD_RESPONSE = QName.get("SetPasswordResponse", NAMESPACE);
+    public static final QName CHECK_PASSWORD_STRENGTH_REQUEST = QName.get("CheckPasswordStrengthRequest", NAMESPACE);
+    public static final QName CHECK_PASSWORD_STRENGTH_RESPONSE = QName.get("CheckPasswordStrengthResponse", NAMESPACE);
     public static final QName ADD_ACCOUNT_ALIAS_REQUEST = QName.get("AddAccountAliasRequest", NAMESPACE);
     public static final QName ADD_ACCOUNT_ALIAS_RESPONSE = QName.get("AddAccountAliasResponse", NAMESPACE);
     public static final QName REMOVE_ACCOUNT_ALIAS_REQUEST = QName.get("RemoveAccountAliasRequest", NAMESPACE);
