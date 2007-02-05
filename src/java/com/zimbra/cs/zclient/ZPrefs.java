@@ -118,5 +118,17 @@ public class ZPrefs {
 
     public long getCalendarFirstDayOfWeek() { return getLong(Provisioning.A_zimbraPrefCalendarFirstDayOfWeek); }
 
+    public long getCalendarDayHourStart() {
+        long hour = getLong(Provisioning.A_zimbraPrefCalendarDayHourStart);
+        return hour == -1 ? 8 : hour;
+    }
+
+    public long getCalendarDayHourEnd() {
+         long hour = getLong(Provisioning.A_zimbraPrefCalendarDayHourEnd);
+        return hour == -1 ? 18 : hour;
+    }
+
+    public String getCalendarInitialView() { return get(Provisioning.A_zimbraPrefCalendarInitialView); }
+
 }
 

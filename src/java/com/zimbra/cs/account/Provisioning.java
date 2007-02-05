@@ -563,8 +563,14 @@ public abstract class Provisioning {
     public static final String A_zimbraPrefCalendarFirstDayOfWeek = "zimbraPrefCalendarFirstDayOfWeek";
 
     public static final String A_zimbraPrefCalendarUseQuickAdd = "zimbraPrefCalendarUseQuickAdd";
-    
+
     public static final String A_zimbraPrefCalendarInitialCheckedCalendars = "zimbraPrefCalendarInitialCheckedCalendars";
+
+    public static final String A_zimbraPrefCalendarDayHourStart = "zimbraPrefCalendarDayHourStart";
+
+    public static final String A_zimbraPrefCalendarDayHourEnd = "zimbraPrefCalendarDayHourEnd";
+
+    public static final String A_zimbraPrefCalendarInitialView = "zimbraPrefCalendarInitialView";
 
     public static final String A_zimbraPrefShowSearchString = "zimbraPrefShowSearchString";
 

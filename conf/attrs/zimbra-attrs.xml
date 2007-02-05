@@ -1985,4 +1985,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
+<attr id="439" name="zimbraPrefCalendarDayHourStart" type="integer" min="0" max="23" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>8</defaultCOSValue>
+  <desc>hour of day that the day view should start at (1=1 AM, 8=8 AM, etc)</desc>
+</attr>
+
+<attr id="440" name="zimbraPrefCalendarDayHourEnd" type="integer" min="0" max="24" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>18</defaultCOSValue>
+  <desc>hour of day that the day view should end at, non-inclusive (16=4pm, 24 = midnight, etc)</desc>
+</attr>
+
 </attrs>
