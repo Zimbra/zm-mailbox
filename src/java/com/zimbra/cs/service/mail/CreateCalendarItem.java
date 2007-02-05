@@ -65,22 +65,22 @@ public class CreateCalendarItem extends CalendarRequest {
     };
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Account acct = getRequestedAccount(lc);
-        Mailbox mbox = getRequestedMailbox(lc);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Account acct = getRequestedAccount(zsc);
+        Mailbox mbox = getRequestedMailbox(zsc);
         
         // <M>
         Element msgElem = request.getElement(MailConstants.E_MSG);
         
         // no existing calendar item referenced -- this is a new create!
         String folderIdStr = msgElem.getAttribute(MailConstants.A_FOLDER, DEFAULT_FOLDER);
-        ItemId iidFolder = new ItemId(folderIdStr, lc);
-        sLog.info("<CreateCalendarItem folder=" + iidFolder.getId() + "> " + lc.toString());
+        ItemId iidFolder = new ItemId(folderIdStr, zsc);
+        sLog.info("<CreateCalendarItem folder=" + iidFolder.getId() + "> " + zsc.toString());
         
         CreateCalendarItemInviteParser parser = new CreateCalendarItemInviteParser();
-        CalSendData dat = handleMsgElement(lc, msgElem, acct, mbox, parser);
+        CalSendData dat = handleMsgElement(zsc, msgElem, acct, mbox, parser);
         
-        Element response = getResponseElement(lc);
-        return sendCalendarMessage(lc, iidFolder.getId(), acct, mbox, dat, response, false);
+        Element response = getResponseElement(zsc);
+        return sendCalendarMessage(zsc, zsc.getOperationContext(), iidFolder.getId(), acct, mbox, dat, response, false);
     }
 }

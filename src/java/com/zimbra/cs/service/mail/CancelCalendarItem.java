@@ -65,12 +65,12 @@ public class CancelCalendarItem extends CalendarRequest {
     protected boolean checkMountpointProxy(Element request)  { return false; }
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Account acct = getRequestedAccount(lc);
-        Mailbox mbox = getRequestedMailbox(lc);
-        OperationContext octxt = lc.getOperationContext();
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Account acct = getRequestedAccount(zsc);
+        Mailbox mbox = getRequestedMailbox(zsc);
+        OperationContext octxt = zsc.getOperationContext();
         
-        ItemId iid = new ItemId(request.getAttribute(MailConstants.A_ID), lc);
+        ItemId iid = new ItemId(request.getAttribute(MailConstants.A_ID), zsc);
         int compNum = (int) request.getAttributeLong(MailConstants.E_INVITE_COMPONENT);
         
         sLog.info("<CancelCalendarItem id=" + iid + " comp=" + compNum + ">");
@@ -91,9 +91,8 @@ public class CancelCalendarItem extends CalendarRequest {
                     tzmap.add(tz);
                 }
                 RecurId recurId = CalendarUtils.parseRecurId(recurElt, tzmap, inv);
-                cancelInstance(lc, request, acct, mbox, calItem, inv, recurId);
+                cancelInstance(zsc, octxt, request, acct, mbox, calItem, inv, recurId);
             } else {
-                
                 // if recur is not set, then we're cancelling the entire calendar item...
                 
                 // first, pull a list of all the invites and THEN start cancelling them: since cancelling them
@@ -101,29 +100,29 @@ public class CancelCalendarItem extends CalendarRequest {
                 // iterate through the list...
                 
                 Invite invites[] = new Invite[calItem.numInvites()];
-                for (int i = calItem.numInvites()-1; i >= 0; i--) {
+                for (int i = calItem.numInvites() - 1; i >= 0; i--) {
                     invites[i] = calItem.getInvite(i);
                 }
                 
-                for (int i = invites.length-1; i >= 0; i--) {
-                    if (invites[i] != null && 
-                        (invites[i].getMethod().equals(ICalTok.REQUEST.toString()) ||
-                            invites[i].getMethod().equals(ICalTok.PUBLISH.toString()))
-                    ) {
-                        cancelInvite(lc, request, acct, mbox, calItem, invites[i]);
-                    }
+                for (int i = invites.length - 1; i >= 0; i--) {
+                    if (invites[i] == null)
+                        continue;
+                    if (invites[i].getMethod().equals(ICalTok.REQUEST.toString()) || invites[i].getMethod().equals(ICalTok.PUBLISH.toString()))
+                        cancelInvite(zsc, octxt, request, acct, mbox, calItem, invites[i]);
+                    // disable change constraint checking since we've just successfully done a modify
+                    octxt = new OperationContext(octxt).unsetChangeConstraint();
                 }
             }
         } // synchronized on mailbox
         
-        Element response = getResponseElement(lc);
+        Element response = getResponseElement(zsc);
         return response;
     }        
     
-    void cancelInstance(ZimbraSoapContext lc, Element request, Account acct, Mailbox mbox, CalendarItem calItem, Invite defaultInv, RecurId recurId) 
+    void cancelInstance(ZimbraSoapContext zsc, OperationContext octxt, Element request, Account acct, Mailbox mbox, CalendarItem calItem, Invite defaultInv, RecurId recurId) 
     throws ServiceException {
-        boolean onBehalfOf = lc.isDelegatedRequest();
-        Account authAcct = lc.getAuthtokenAccount();
+        boolean onBehalfOf = zsc.isDelegatedRequest();
+        Account authAcct = zsc.getAuthtokenAccount();
         Locale locale = !onBehalfOf ? acct.getLocale() : authAcct.getLocale();
         String text = L10nUtil.getMessage(MsgKey.calendarCancelAppointmentInstance, locale);
 
@@ -152,12 +151,11 @@ public class CancelCalendarItem extends CalendarRequest {
             // the <inv> element is *NOT* allowed -- we always build it manually
             // based on the params to the <CancelCalendarItem> and stick it in the 
             // mbps (additionalParts) parameter...
-            dat.mMm = ParseMimeMessage.parseMimeMsgSoap(lc, mbox, msgElem, mbps, 
+            dat.mMm = ParseMimeMessage.parseMimeMsgSoap(zsc, mbox, msgElem, mbps, 
                     ParseMimeMessage.NO_INV_ALLOWED_PARSER, dat);
             
         } else {
-            List<Address> rcpts =
-                CalendarMailSender.toListFromAttendees(defaultInv.getAttendees());
+            List<Address> rcpts = CalendarMailSender.toListFromAttendees(defaultInv.getAttendees());
             dat.mMm = CalendarMailSender.createCancelMessage(
                     acct, rcpts, onBehalfOf, authAcct,
                     calItem, cancelInvite, text, iCal);
@@ -174,14 +172,13 @@ public class CancelCalendarItem extends CalendarRequest {
             }
         }
         
-        sendCalendarCancelMessage(lc, calItem.getFolderId(),
-                                  acct, mbox, dat, true);
+        sendCalendarCancelMessage(zsc, octxt, calItem.getFolderId(), acct, mbox, dat, true);
     }
 
-    protected void cancelInvite(ZimbraSoapContext lc, Element request, Account acct, Mailbox mbox, CalendarItem calItem, Invite inv)
+    protected void cancelInvite(ZimbraSoapContext zsc, OperationContext octxt, Element request, Account acct, Mailbox mbox, CalendarItem calItem, Invite inv)
     throws ServiceException {
-        boolean onBehalfOf = lc.isDelegatedRequest();
-        Account authAcct = lc.getAuthtokenAccount();
+        boolean onBehalfOf = zsc.isDelegatedRequest();
+        Account authAcct = zsc.getAuthtokenAccount();
         Locale locale = !onBehalfOf ? acct.getLocale() : authAcct.getLocale();
         String text = L10nUtil.getMessage(MsgKey.calendarCancelAppointment, locale);
 
@@ -194,8 +191,7 @@ public class CancelCalendarItem extends CalendarRequest {
         csd.mInvite = CalendarUtils.buildCancelInviteCalendar(acct, authAcct.getName(), onBehalfOf, inv, text);
         
         ZVCalendar iCal = csd.mInvite.newToICalendar();
-        
-        
+
         // did they specify a custom <m> message?  If so, then we don't have to build one...
         Element msgElem = request.getOptionalElement(MailConstants.E_MSG);
         
@@ -209,15 +205,11 @@ public class CancelCalendarItem extends CalendarRequest {
             // the <inv> element is *NOT* allowed -- we always build it manually
             // based on the params to the <CancelCalendarItem> and stick it in the 
             // mbps (additionalParts) parameter...
-            csd.mMm = ParseMimeMessage.parseMimeMsgSoap(lc, mbox, msgElem, mbps, 
-                    ParseMimeMessage.NO_INV_ALLOWED_PARSER, csd);
+            csd.mMm = ParseMimeMessage.parseMimeMsgSoap(zsc, mbox, msgElem, mbps, ParseMimeMessage.NO_INV_ALLOWED_PARSER, csd);
             
         } else {
-            List<Address> rcpts =
-                CalendarMailSender.toListFromAttendees(inv.getAttendees());
-            csd.mMm = CalendarMailSender.createCancelMessage(
-                    acct, rcpts, onBehalfOf, authAcct,
-                    calItem, inv, text, iCal);
+            List<Address> rcpts = CalendarMailSender.toListFromAttendees(inv.getAttendees());
+            csd.mMm = CalendarMailSender.createCancelMessage(acct, rcpts, onBehalfOf, authAcct, calItem, inv, text, iCal);
         }
         
         if (!inv.thisAcctIsOrganizer(acct)) {
@@ -231,7 +223,6 @@ public class CancelCalendarItem extends CalendarRequest {
             }
         }
         
-        sendCalendarCancelMessage(lc, calItem.getFolderId(),
-                                  acct, mbox, csd, true);
+        sendCalendarCancelMessage(zsc, octxt, calItem.getFolderId(), acct, mbox, csd, true);
     }
 }
