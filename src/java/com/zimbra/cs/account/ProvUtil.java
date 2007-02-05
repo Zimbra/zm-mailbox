@@ -158,6 +158,7 @@ public class ProvUtil implements DebugListener {
         ADD_DISTRIBUTION_LIST_ALIAS("addDistributionListAlias", "adla", "{list@domain|id} {alias@domain}", Category.LIST, 2, 2),
         ADD_DISTRIBUTION_LIST_MEMBER("addDistributionListMember", "adlm", "{list@domain|id} {member@domain}+", Category.LIST, 2, Integer.MAX_VALUE),
         AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{domain} {name}", Category.SEARCH, 2, 2),
+        CHECK_PASSWORD_STRENGTH("checkPasswordStrength", "cps", "{name@domain|id} {password}", Category.ACCOUNT, 2, 2),
         CREATE_ACCOUNT("createAccount", "ca", "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),        
         CREATE_BULK_ACCOUNTS("createBulkAccounts", "cabulk"),  //("  CreateBulkAccounts(cabulk) {domain} {namemask} {number of accounts to create} ");
         CREATE_CALENDAR_RESOURCE("createCalendarResource",  "ccr", "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.CALENDAR, 2, Integer.MAX_VALUE),
@@ -470,6 +471,9 @@ public class ProvUtil implements DebugListener {
             break;
         case SET_PASSWORD:
             mProv.setPassword(lookupAccount(args[1]), args[2]);
+            break;
+        case CHECK_PASSWORD_STRENGTH:
+            mProv.checkPasswordStrength(lookupAccount(args[1]), args[2]);
             break;
         case CREATE_DISTRIBUTION_LIST:
             System.out.println(mProv.createDistributionList(args[1], getMap(args, 2)).getId());

@@ -198,6 +198,17 @@ Access: domain admin sufficient
 
 -----------------------------
 
+<CheckPasswordStrengthRequest>
+  <id>{value-of-zimbraId}</id>
+  <password>...</password>
+</CheckPasswordStrengthRequest>
+
+<CheckPasswordStrengthResponse/>
+
+Access: domain admin sufficient
+
+-----------------------------
+
 <AddAccountAliasRequest>
   <id>{value-of-zimbraId}</id>
   <alias>...</alias>

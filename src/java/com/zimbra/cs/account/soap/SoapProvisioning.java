@@ -756,11 +756,18 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public void setPassword(Account acct, String newPassword)
-            throws ServiceException {
+    public void setPassword(Account acct, String newPassword) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.SET_PASSWORD_REQUEST);
         req.addElement(AdminConstants.E_ID).setText(acct.getId());
         req.addElement(AdminConstants.E_NEW_PASSWORD).setText(newPassword);
+        invoke(req);
+    }
+    
+    @Override
+    public void checkPasswordStrength(Account acct, String password) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.CHECK_PASSWORD_STRENGTH_REQUEST);
+        req.addElement(AdminConstants.E_ID).setText(acct.getId());
+        req.addElement(AdminConstants.E_PASSWORD).setText(password);
         invoke(req);
     }
 

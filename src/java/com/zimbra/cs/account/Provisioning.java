@@ -1444,7 +1444,9 @@ public abstract class Provisioning {
     public abstract void changePassword(Account acct, String currentPassword, String newPassword) throws ServiceException;
     
     public abstract void setPassword(Account acct, String newPassword) throws ServiceException;
-    
+
+    public abstract void checkPasswordStrength(Account acct, String password) throws ServiceException;
+
     public abstract void addAlias(Account acct, String alias) throws ServiceException;
     
     public abstract void removeAlias(Account acct, String alias) throws ServiceException;

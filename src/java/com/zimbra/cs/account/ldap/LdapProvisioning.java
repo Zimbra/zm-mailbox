@@ -2609,6 +2609,13 @@ public class LdapProvisioning extends Provisioning {
     public void setPassword(Account acct, String newPassword) throws ServiceException {
         setPassword(acct, newPassword, false);
     }
+    
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.account.Account#checkPasswordStrength(java.lang.String)
+     */
+    public void checkPasswordStrength(Account acct, String password) throws ServiceException {
+        checkPasswordStrength(password, acct, null, null);
+    }
 
     private int getInt(Account acct, Cos cos, Attributes attrs, String name, int defaultValue) throws NamingException {
         if (acct != null)
