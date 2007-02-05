@@ -3070,11 +3070,18 @@ public class LdapProvisioning extends Provisioning {
      */
     void removeAddressFromAllDistributionLists(String address) {
         String addrs[] = new String[] { address } ;
+        removeAddressesFromAllDistributionLists(addrs);
+    }
+    
+    /**
+     *  called when an account is being deleted or status being set to closed. swallows all exceptions (logs warnings).
+     */
+    public void removeAddressesFromAllDistributionLists(String[] addrs) {
         List<DistributionList> lists = null; 
         try {
             lists = getAllDistributionListsForAddresses(addrs, false);
         } catch (ServiceException se) {
-            ZimbraLog.account.warn("unable to remove "+address+" from all DLs ", se);
+            ZimbraLog.account.warn("unable to remove "+addrs.toString()+" from all DLs ", se);
             return;
         }
 
@@ -3083,7 +3090,7 @@ public class LdapProvisioning extends Provisioning {
                 removeMembers(list, addrs);                
             } catch (ServiceException se) {
                 // log warning and continue
-                ZimbraLog.account.warn("unable to remove "+address+" from DL "+list.getName(), se);
+                ZimbraLog.account.warn("unable to remove "+addrs.toString()+" from DL "+list.getName(), se);
             }
         }
     }
