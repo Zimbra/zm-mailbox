@@ -152,7 +152,22 @@ public abstract class Provisioning {
      * individually listed aliases exist.
      */
     public static final String DOMAIN_TYPE_LOCAL = "local";
+    
+    /**
+     * Compose mail in text format
+     */
+    public static final String MAIL_FORMAT_TEXT = "text";
 
+    /**
+     * Compose mail in html format
+     */
+    public static final String MAIL_FORMAT_HTML = "html";
+    
+    /**
+     * Forward/reply mail in the same format of message we are replying to
+     */
+    public static final String MAIL_FORWARDREPLY_FORMAT_SAME = "same";
+    
     /**
      * Possible values for zimbraMailMode. "mixed" means web server should
      * authenticate in HTTPS and redirect to HTTP (useful if all clients are on
@@ -829,8 +844,10 @@ public abstract class Provisioning {
     public static final String A_zimbraPrefSentMailFolder = "zimbraPrefSentMailFolder";
 
     public static final String A_zimbraPrefBccAddress = "zimbraPrefBccAddress";
+    public static final String A_zimbraPrefComposeFormat = "zimbraPrefComposeFormat";
     public static final String A_zimbraPrefForwardIncludeOriginalText = "zimbraPrefForwardIncludeOriginalText";
     public static final String A_zimbraPrefForwardReplyFormat = "zimbraPrefForwardReplyFormat";
+    public static final String A_zimbraPrefForwardReplyInOriginalFormat = "zimbraPrefForwardReplyInOriginalFormat";
     public static final String A_zimbraPrefForwardReplyPrefixChar = "zimbraPrefForwardReplyPrefixChar";
     public static final String A_zimbraPrefFromAddress = "zimbraPrefFromAddress";
     public static final String A_zimbraPrefFromDisplay = "zimbraPrefFromDisplay";
@@ -1868,6 +1885,26 @@ public abstract class Provisioning {
             }
         }
         attrs.put(A_zimbraPrefIdentityId, account.getId());
+        
+        /*
+         *   In 4.0 we had a boolean setting zimbraPrefForwardReplyInOriginalFormat, In 4.5,
+         *   that has been obsoleted in favor of zimbraPrefForwardReplyFormat which is an
+         *   enum whose values are text/html/same. The default identity needs to correctly
+         *   initialize the new value, and it should probably take into account the value of
+         *   zimbraPrefComposeFormat.
+         */
+        if (attrs.get(A_zimbraPrefForwardReplyFormat) == null) {
+            boolean forwardReplyInOriginalFormat = account.getBooleanAttr(Provisioning.A_zimbraPrefForwardReplyInOriginalFormat, false);
+            if (forwardReplyInOriginalFormat) {     
+                attrs.put(A_zimbraPrefForwardReplyFormat, MAIL_FORWARDREPLY_FORMAT_SAME);
+            } else {  
+                String composeFormat = account.getAttr(Provisioning.A_zimbraPrefComposeFormat, null);
+                if (composeFormat == null)
+                    attrs.put(A_zimbraPrefForwardReplyFormat, MAIL_FORMAT_TEXT);
+                else
+                    attrs.put(A_zimbraPrefForwardReplyFormat, composeFormat);
+            }
+        }
         return new Identity(DEFAULT_IDENTITY_NAME, account.getId(), attrs);        
     }
     
