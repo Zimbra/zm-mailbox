@@ -25,15 +25,19 @@
 
 package com.zimbra.cs.account.ldap;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
@@ -83,19 +87,43 @@ class LdapDistributionList extends DistributionList implements LdapEntry {
     	Set<String> mods = new HashSet<String>();
     	HashSet<String> failed = new HashSet<String>();
     	
-    	for (int i = 0; i < members.length; i++) { 
-        	members[i] = members[i].toLowerCase();
-        	if (members[i].length() == 0) {
-        		throw ServiceException.INVALID_REQUEST("invalid member email address: " + members[i], null);
-        	}
-        	// We do not do any further validation of the remove address for
-			// syntax - removes should be liberal so any bad entries added by
-			// some other means can be removed
-        	if (existing.contains(members[i])) {
-            	mods.add(members[i]);
-        	} else {
-        		failed.add(members[i]);
-        	}
+        for (int i = 0; i < members.length; i++) { 
+            members[i] = members[i].toLowerCase();
+            if (members[i].length() == 0) {
+                throw ServiceException.INVALID_REQUEST("invalid member email address: " + members[i], null);
+            }
+            // We do not do any further validation of the remove address for
+            // syntax - removes should be liberal so any bad entries added by
+            // some other means can be removed
+            //
+            // members[] can contain:
+            //   - the primary address of an account or another DL
+            //   - an alias of an account or another DL
+            //   - junk (allAddrs will be returned as null)
+            List<String> allAddrs = getAllAddressesOfEntry(prov, members[i]);
+            
+            if (mods.contains(members[i])) {
+                // already been added in mods (is the primary or alias of previous entries in members[])
+            } else if (existing.contains(members[i])) {
+                if (allAddrs != null)
+                    mods.addAll(allAddrs);
+                else
+                    mods.add(members[i]);  // just get rid of it regardless what it is
+            } else {
+                boolean inList = false;
+                if (allAddrs != null) {
+                    // go through all addresses of the entry see if any is on the DL
+                    for (Iterator it = allAddrs.iterator(); it.hasNext() && !inList; ) {
+                        String addr = (String)it.next();
+                        if (existing.contains(addr)) {
+                            mods.addAll(allAddrs);
+                            inList = true;
+                        }
+                    }
+                }
+                if (!inList)
+                    failed.add(members[i]);
+            }
         }
 
     	if (!failed.isEmpty()) {
@@ -122,6 +150,41 @@ class LdapDistributionList extends DistributionList implements LdapEntry {
     public String getDN() {
         return mDn;
     }
-
+    
+    //
+    // returns the primary address and all aliases of the named account or DL 
+    //
+    private List<String> getAllAddressesOfEntry(LdapProvisioning prov, String name) {
+        
+        List<String> addrs = new ArrayList<String>();
+        String primary = null;
+        String aliases[] = null;
+        
+        try {
+            Account acct = prov.get(Provisioning.AccountBy.name, name);
+            if (acct != null) {
+                primary = acct.getName();
+                aliases = acct.getAliases();
+            } else {
+                DistributionList dl = prov.get(Provisioning.DistributionListBy.name, name);
+                if (dl != null) {
+                    primary = dl.getName();
+                    aliases = dl.getAliases();
+                }
+            }
+        } catch (ServiceException se) {
+            // swallow any exception and go on
+        }
+        
+        if (primary != null)
+            addrs.add(primary);
+        if (aliases != null)
+            addrs.addAll(Arrays.asList(aliases));
+        
+        if (addrs.size() > 0)
+            return addrs;
+        else
+            return null;
+    }
 
 }
