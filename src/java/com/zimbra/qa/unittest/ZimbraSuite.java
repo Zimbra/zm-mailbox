@@ -65,10 +65,7 @@ public class ZimbraSuite extends TestSuite
         suite.addTest(new TestSuite(TestEmailUtil.class));
         suite.addTest(new TestSuite(TestOutOfOffice.class));
         suite.addTest(new TestSuite(TestDbUtil.class));
-        
-        // TODO: bburtin - reenable this test case when bug 13805 is fixed
-        // suite.addTest(new TestSuite(TestTableMaintenance.class));
-        
+        suite.addTest(new TestSuite(TestTableMaintenance.class));
         suite.addTest(new TestSuite(TestUnread.class));
         suite.addTest(new TestSuite(TestTags.class));
         suite.addTest(new TestSuite(TestItemCache.class));
