@@ -1845,28 +1845,32 @@ public class Mailbox {
         return MailItem.constructItem(this, data);
     }
 
-    /** mechanism for getting an item via IMAP id */
-    public synchronized MailItem getItemByImapId(OperationContext octxt, int id, int folderId) throws ServiceException {
+    /**
+     * Fetches a <code>MailItem</code> by its IMAP id.
+     * @throws MailServiceException if there is no <code>MailItem</code> with the given id.
+     * @see MailServiceException#NO_SUCH_ITEM
+     */
+    public synchronized MailItem getItemByImapId(OperationContext octxt, int imapId, int folderId) throws ServiceException {
         boolean success = false;
         try {
             // tag/folder caches are populated in beginTransaction...
             beginTransaction("getItemByImapId", octxt);
 
-            MailItem item = checkAccess(getCachedItem(id));
+            MailItem item = checkAccess(getCachedItem(imapId));
             // in general, the item will not have been moved and its id will be the same as its IMAP id.
             if (item == null) {
                 try {
-                    item = checkAccess(MailItem.getById(this, id));
-                    if (item.getImapUid() != id)
+                    item = checkAccess(MailItem.getById(this, imapId));
+                    if (item.getImapUid() != imapId)
                         item = null;
                 } catch (NoSuchItemException nsie) { }
             }
             // if it's not found, we have to search on the non-indexed IMAP_ID column...
             if (item == null)
-                item = checkAccess(MailItem.getByImapId(this, id, folderId));
+                item = checkAccess(MailItem.getByImapId(this, imapId, folderId));
 
-            if (isCachedType(item.getType()) || item.getImapUid() != id || item.getFolderId() != folderId)
-                throw MailServiceException.NO_SUCH_ITEM(id);
+            if (isCachedType(item.getType()) || item.getImapUid() != imapId || item.getFolderId() != folderId)
+                throw MailServiceException.NO_SUCH_ITEM(imapId);
             success = true;
             return item;
         } finally {
