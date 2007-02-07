@@ -186,14 +186,11 @@ public class ParseMimeMessage {
             elem = elem.getOptionalElement(MailConstants.E_MIMEPART);
             if (elem == null) return null;
         }
-        String type =
-            elem.getAttribute(MailConstants.A_CONTENT_TYPE, Mime.CT_DEFAULT).trim().toLowerCase();
+        String type = elem.getAttribute(MailConstants.A_CONTENT_TYPE, Mime.CT_DEFAULT).trim().toLowerCase();
         if (type.equals(Mime.CT_DEFAULT)) {
-            Element contentElem = elem.getOptionalElement(MailConstants.E_CONTENT);
-            return contentElem != null ? contentElem.getText() : null;
+            return elem.getAttribute(MailConstants.E_CONTENT, null);
         } else if (type.startsWith(Mime.CT_MULTIPART_PREFIX)) {
-            for (Iterator<Element> it = elem.elementIterator(MailConstants.E_MIMEPART); it.hasNext(); ) {
-                Element childElem = it.next();
+            for (Element childElem : elem.listElements(MailConstants.E_MIMEPART)) {
                 String text = getTextPlainContent(childElem);
                 if (text != null)
                     return text;
@@ -468,8 +465,7 @@ public class ParseMimeMessage {
             // the client's nice and simple body right here
             ct.setParameter(Mime.P_CHARSET, Mime.P_CHARSET_UTF8);
 
-            Element contentElem = elem.getOptionalElement(MailConstants.E_CONTENT);
-            String data = (contentElem == null ? "" : contentElem.getText());
+            String data = elem.getAttribute(MailConstants.E_CONTENT, "");
             if (mmp != null) {
                 MimeBodyPart mbp = new MimeBodyPart();
                 mbp.setText(data, Mime.P_CHARSET_UTF8);
