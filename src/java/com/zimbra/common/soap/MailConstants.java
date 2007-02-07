@@ -504,6 +504,7 @@ public class MailConstants {
     // data sources
     public static final String E_DS = "dsrc";
     public static final String E_DS_POP3 = "pop3";
+    public static final String E_DS_IMAP = "imap";
     public static final String A_DS_IS_ENABLED = "isEnabled";
     public static final String A_DS_HOST = "host";
     public static final String A_DS_PORT = "port";
