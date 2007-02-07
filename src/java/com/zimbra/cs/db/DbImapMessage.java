@@ -41,20 +41,16 @@ import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Mailbox;
 
 
-public class DbPop3Message {
+public class DbImapMessage {
 
-    public static final String TABLE_POP3_MESSAGE = "pop3_message";
+    public static final String TABLE_IMAP_MESSAGE = "imap_message";
     
     /**
      * Persists <code>uid</code> so we remember not to import the message again.
      */
-    public static void storeUid(Mailbox mbox, String dataSourceId, String uid, int itemId)
+    public static void storeUid(Mailbox mbox, String dataSourceId, long uid, int itemId)
     throws ServiceException
     {
-        if (StringUtil.isNullOrEmpty(uid)) {
-            return;
-        }
-        
         Connection conn = null;
         PreparedStatement stmt = null;
 
@@ -66,7 +62,7 @@ public class DbPop3Message {
                 "VALUES (?, ?, ?, ?)");
             stmt.setInt(1, mbox.getId());
             stmt.setString(2, dataSourceId);
-            stmt.setString(3, uid);
+            stmt.setLong(3, uid);
             stmt.setInt(4, itemId);
             stmt.executeUpdate();
             conn.commit();
@@ -87,6 +83,10 @@ public class DbPop3Message {
         PreparedStatement stmt = null;
 
         ZimbraLog.mailbox.debug("Deleting UID's for " + dataSourceId);
+        
+        if (StringUtil.isNullOrEmpty(dataSourceId)) {
+            return;
+        }
         
         try {
             conn = DbPool.getConnection();
@@ -110,20 +110,20 @@ public class DbPop3Message {
      * Returns the set of persisted UID's that are also in the <code>uids</code>
      * collection.
      */
-    public static Set<String> getMatchingUids(Mailbox mbox, DataSource ds,
-                                              Collection<String> uids)
+    public static Set<Long> getMatchingUids(Mailbox mbox, DataSource ds,
+                                            Collection<Long> uids)
     throws ServiceException {
         ZimbraLog.mailbox.debug(ds + ": looking for uids that match a set of size " + uids.size());
         
-        List<List<String>> splitIds = ListUtil.split(uids, DbUtil.IN_CLAUSE_BATCH_SIZE);
+        List<List<Long>> splitIds = ListUtil.split(uids, DbUtil.IN_CLAUSE_BATCH_SIZE);
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        Set<String> matchingUids = new HashSet<String>();
+        Set<Long> matchingUids = new HashSet<Long>();
 
         try {
             conn = DbPool.getConnection();
-            for (List<String> curIds : splitIds) {
+            for (List<Long> curIds : splitIds) {
                 stmt = conn.prepareStatement(
                     "SELECT uid " +
                     "FROM " + getTableName(mbox) +
@@ -133,12 +133,12 @@ public class DbPop3Message {
                 int i = 1;
                 stmt.setInt(i++, mbox.getId());
                 stmt.setString(i++, ds.getId());
-                for (String uid : curIds) {
-                    stmt.setString(i++, uid);
+                for (Long uid : curIds) {
+                    stmt.setLong(i++, uid);
                 }
                 rs = stmt.executeQuery();
                 while (rs.next()) {
-                    matchingUids.add(rs.getString(1));
+                    matchingUids.add(rs.getLong(1));
                 }
                 rs.close();
                 stmt.close();
@@ -156,10 +156,10 @@ public class DbPop3Message {
     }
 
     public static String getTableName(int mailboxId, int groupId) {
-        return String.format("%s.%s", DbMailbox.getDatabaseName(mailboxId, groupId), TABLE_POP3_MESSAGE);
+        return String.format("%s.%s", DbMailbox.getDatabaseName(mailboxId, groupId), TABLE_IMAP_MESSAGE);
     }
 
     public static String getTableName(Mailbox mbox) {
-        return DbMailbox.getDatabaseName(mbox) + "." + TABLE_POP3_MESSAGE;
+        return DbMailbox.getDatabaseName(mbox) + "." + TABLE_IMAP_MESSAGE;
     }
 }

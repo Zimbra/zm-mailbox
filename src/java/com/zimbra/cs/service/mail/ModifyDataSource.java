@@ -51,48 +51,58 @@ public class ModifyDataSource extends MailDocumentHandler {
         Account account = getRequestedAccount(zsc);
         boolean wipeOutOldData = false;
         
-        Element ePop3 = request.getElement(MailConstants.E_DS_POP3);
-        String id = ePop3.getAttribute(MailConstants.A_ID);
+        Element eDataSource = CreateDataSource.getDataSourceElement(request);
+        DataSource.Type type = DataSource.Type.fromString(eDataSource.getName());
+        
+        String id = eDataSource.getAttribute(MailConstants.A_ID);
         DataSource ds = prov.get(account, DataSourceBy.id, id);
 
         Map<String, Object> dsAttrs = new HashMap<String, Object>();
-        String value = ePop3.getAttribute(MailConstants.A_NAME, null);
+        String value = eDataSource.getAttribute(MailConstants.A_NAME, null);
         if (value != null)
             dsAttrs.put(Provisioning.A_zimbraDataSourceName, value);
-        value = ePop3.getAttribute(MailConstants.A_DS_IS_ENABLED, null);
+        value = eDataSource.getAttribute(MailConstants.A_DS_IS_ENABLED, null);
         if (value != null)
             dsAttrs.put(Provisioning.A_zimbraDataSourceEnabled,
-                LdapUtil.getBooleanString(ePop3.getAttributeBool(MailConstants.A_DS_IS_ENABLED)));
-        value = ePop3.getAttribute(MailConstants.A_FOLDER, null);
-        if (value != null)
+                LdapUtil.getBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_IS_ENABLED)));
+        value = eDataSource.getAttribute(MailConstants.A_FOLDER, null);
+        if (value != null) {
+            Mailbox mbox = getRequestedMailbox(zsc);
+            CreateDataSource.validateFolderId(mbox, eDataSource);
         	dsAttrs.put(Provisioning.A_zimbraDataSourceFolderId, value);
+        }
         
-        value = ePop3.getAttribute(MailConstants.A_DS_HOST, null);
+        value = eDataSource.getAttribute(MailConstants.A_DS_HOST, null);
         if (value != null && !value.equals(ds.getHost())) {
             dsAttrs.put(Provisioning.A_zimbraDataSourceHost, value);
             wipeOutOldData = true;
         }
         
-        value = ePop3.getAttribute(MailConstants.A_DS_PORT, null);
+        value = eDataSource.getAttribute(MailConstants.A_DS_PORT, null);
         if (value != null)
         	dsAttrs.put(Provisioning.A_zimbraDataSourcePort, value);
-        value = ePop3.getAttribute(MailConstants.A_DS_CONNECTION_TYPE, null);
+        value = eDataSource.getAttribute(MailConstants.A_DS_CONNECTION_TYPE, null);
         if (value != null)
             dsAttrs.put(Provisioning.A_zimbraDataSourceConnectionType, value);
         
-        value = ePop3.getAttribute(MailConstants.A_DS_USERNAME, null);
+        value = eDataSource.getAttribute(MailConstants.A_DS_USERNAME, null);
         if (value != null && !value.equals(ds.getUsername())) {
         	dsAttrs.put(Provisioning.A_zimbraDataSourceUsername, value);
         	wipeOutOldData = true;
         }
     
-        value = ePop3.getAttribute(MailConstants.A_DS_PASSWORD, null);
+        value = eDataSource.getAttribute(MailConstants.A_DS_PASSWORD, null);
         if (value != null)
         	dsAttrs.put(Provisioning.A_zimbraDataSourcePassword, value);
 
-        value = ePop3.getAttribute(MailConstants.A_DS_LEAVE_ON_SERVER, null);
+        value = eDataSource.getAttribute(MailConstants.A_DS_LEAVE_ON_SERVER, null);
         if (value != null) {
-            boolean newValue = ePop3.getAttributeBool(MailConstants.A_DS_LEAVE_ON_SERVER);
+            if (type != DataSource.Type.pop3) {
+                String msg = String.format("%s only allowed for %s data sources",
+                    MailConstants.A_DS_LEAVE_ON_SERVER, MailConstants.E_DS_POP3);
+                throw ServiceException.INVALID_REQUEST(msg, null);
+            }
+            boolean newValue = eDataSource.getAttributeBool(MailConstants.A_DS_LEAVE_ON_SERVER);
             if (newValue != ds.leaveOnServer()) {
                 dsAttrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer,
                     LdapUtil.getBooleanString(newValue));

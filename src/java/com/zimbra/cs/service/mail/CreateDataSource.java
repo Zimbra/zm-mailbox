@@ -25,6 +25,7 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -33,6 +34,9 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -46,30 +50,65 @@ public class CreateDataSource extends MailDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         Account account = getRequestedAccount(zsc);
+        Mailbox mbox = getRequestedMailbox(zsc);
         
-        // Create the data source.  Currently only POP3 is supported.
-        Element ePop3 = request.getElement(MailConstants.E_DS_POP3);
+        // Create the data source
+        Element eDataSource = getDataSourceElement(request);
+        DataSource.Type type = DataSource.Type.fromString(eDataSource.getName());
         Map<String, Object> dsAttrs = new HashMap<String, Object>();
-        
-        String name = ePop3.getAttribute(MailConstants.A_NAME);
-        dsAttrs.put(Provisioning.A_zimbraDataSourceFolderId, ePop3.getAttribute(MailConstants.A_FOLDER));
+
+        // Common attributes
+        validateFolderId(mbox, eDataSource);
+        String name = eDataSource.getAttribute(MailConstants.A_NAME);
+        dsAttrs.put(Provisioning.A_zimbraDataSourceFolderId, eDataSource.getAttribute(MailConstants.A_FOLDER));
         dsAttrs.put(Provisioning.A_zimbraDataSourceEnabled,
-            LdapUtil.getBooleanString(ePop3.getAttributeBool(MailConstants.A_DS_IS_ENABLED)));
-        dsAttrs.put(Provisioning.A_zimbraDataSourceHost, ePop3.getAttribute(MailConstants.A_DS_HOST));
-        dsAttrs.put(Provisioning.A_zimbraDataSourcePort, ePop3.getAttribute(MailConstants.A_DS_PORT));
-        dsAttrs.put(Provisioning.A_zimbraDataSourceConnectionType, ePop3.getAttribute(MailConstants.A_DS_CONNECTION_TYPE));
-        dsAttrs.put(Provisioning.A_zimbraDataSourceUsername, ePop3.getAttribute(MailConstants.A_DS_USERNAME));
-        dsAttrs.put(Provisioning.A_zimbraDataSourcePassword, ePop3.getAttribute(MailConstants.A_DS_PASSWORD));
-        dsAttrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer,
-            LdapUtil.getBooleanString(ePop3.getAttributeBool(MailConstants.A_DS_LEAVE_ON_SERVER, true)));
+            LdapUtil.getBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_IS_ENABLED)));
+        dsAttrs.put(Provisioning.A_zimbraDataSourceHost, eDataSource.getAttribute(MailConstants.A_DS_HOST));
+        dsAttrs.put(Provisioning.A_zimbraDataSourcePort, eDataSource.getAttribute(MailConstants.A_DS_PORT));
+        dsAttrs.put(Provisioning.A_zimbraDataSourceConnectionType, eDataSource.getAttribute(MailConstants.A_DS_CONNECTION_TYPE));
+        dsAttrs.put(Provisioning.A_zimbraDataSourceUsername, eDataSource.getAttribute(MailConstants.A_DS_USERNAME));
+        dsAttrs.put(Provisioning.A_zimbraDataSourcePassword, eDataSource.getAttribute(MailConstants.A_DS_PASSWORD));
         
-        DataSource ds = prov.createDataSource(account, DataSource.Type.pop3, name, dsAttrs);
+        // POP3-specific attributes
+        if (type == DataSource.Type.pop3) {
+            dsAttrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer,
+                LdapUtil.getBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_LEAVE_ON_SERVER, true)));
+        }
+        
+        DataSource ds = prov.createDataSource(account, type, name, dsAttrs);
         
         // Assemble response
         Element response = zsc.createElement(MailConstants.CREATE_DATA_SOURCE_RESPONSE);
-        ePop3 = response.addElement(MailConstants.E_DS_POP3);
-        ePop3.addAttribute(MailConstants.A_ID, ds.getId());
+        eDataSource = response.addElement(type.toString());
+        eDataSource.addAttribute(MailConstants.A_ID, ds.getId());
         
         return response;
+    }
+    
+    /**
+     * Gets the data source element from the given request.
+     */
+    static Element getDataSourceElement(Element request)
+    throws ServiceException {
+        List<Element> subElements = request.listElements();
+        if (subElements.size() != 1) {
+            String msg = String.format("Only 1 data source allowed per request.  Found " + subElements.size());
+            throw ServiceException.INVALID_REQUEST(msg, null);
+        }
+        
+        return subElements.get(0);
+    }
+
+    /**
+     * Confirms that the folder attribute specifies a valid folder id.
+     */
+    static void validateFolderId(Mailbox mbox, Element eDataSource)
+    throws ServiceException {
+        int folderId = (int) eDataSource.getAttributeLong(MailConstants.A_FOLDER);
+        try {
+            mbox.getFolderById(null, folderId);
+        } catch (NoSuchItemException e) {
+            throw ServiceException.INVALID_REQUEST("Invalid folder id: " + folderId, null);
+        }
     }
 }

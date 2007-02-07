@@ -85,7 +85,7 @@ public class ZPop3DataSource implements ZDataSource {
         mUsername = dsrc.getUsername();
         mPassword = dsrc.getDecryptedPassword();
         mFolderId = "" + dsrc.getFolderId();
-        mConnectionType = dsrc.getConnectionType();
+        mConnectionType = dsrc.getConnectionType().name();
         mLeaveOnServer = dsrc.leaveOnServer();
     }
 

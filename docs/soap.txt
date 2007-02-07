@@ -1846,12 +1846,22 @@ java.util.Locale.getAvailableLocales(), sorted by display name (name attribute).
 <TestDataSourceRequest>
   <pop3 host="pop.myisp.com" port="110" connectionType="cleartext|ssl"
     username="mylogin" password="mypassword"/>
+    
+  or
+  
+  <imap host="imap.myisp.com" port="143" connectionType="cleartext|ssl"
+    username="mylogin" password="mypassword"/>
 </TestDataSourceRequest>
 
 or
 
 <TestDataSourceRequest>
   <pop3 id="{id}" [host="pop.myisp.com"] [port="110"] [connectionType="cleartext|ssl"]
+    [username="mylogin"] [password="mypassword"]/>
+
+  or
+  
+  <imap id="{id}" [host="imap.myisp.com"] [port="143"] [connectionType="cleartext|ssl"]
     [username="mylogin"] [password="mypassword"]/>
 </TestDataSourceRequest>
 
@@ -1868,22 +1878,29 @@ instead of the saved values.
   <pop3 name="My POP3 Account" isEnabled="0|1" host="pop.myisp.com" port="110"
     connectionType="cleartext|ssl" username="mylogin" password="mypassword" l="{folder-id}"
     leaveOnServer="0|1"/>
+    
+  or
+  
+  <imap name="My IMAP Account" isEnabled="0|1" host="imap.myisp.com" port="143"
+    connectionType="cleartext|ssl" username="mylogin" password="mypassword" l="{folder-id}"/>
 </CreateDataSourceRequest>
 
 <CreateDataSourceResponse>
   <pop3 id="{id}"/>
 </CreateDataSourceResponse>
 
-Creates a data source that imports mail items into the specified folder.  Currently
-the only protocol supported is POP3.
+Creates a data source that imports mail items into the specified folder via
+the POP3 or IMAP protocol.  Only one data source is allowed per request.
 
 ---------------------------
 
 <GetDataSourcesRequest/>
 
 <GetDataSourcesResponse>
-  <pop3 id="{id}" name="My POP3 Account" isEnabled="0|1" host="pop3.myisp.com" port="110"
-    username="mylogin" l="{folder-id}" leaveOnServer="0|1"/>
+  *[<pop3 id="{id}" name="My POP3 Account" isEnabled="0|1" host="pop3.myisp.com" port="110"
+    username="mylogin" l="{folder-id}" leaveOnServer="0|1"/>]
+  *[<imap name="My IMAP Account" isEnabled="0|1" host="imap.myisp.com" port="143"
+    connectionType="cleartext|ssl" username="mylogin" l="{folder-id}"/>]
   ...
 </GetDataSourcesResponse>
 
@@ -1893,32 +1910,39 @@ every attribute value is returned except password.
 ---------------------------
 
 <ModifyDataSourceRequest>
-  <pop3 id="{id}" [name="My POP3 Account"] [isEnabled="0|1"] [host="pop3.myisp.com"]
+  *[<pop3 id="{id}" [name="My POP3 Account"] [isEnabled="0|1"] [host="pop3.myisp.com"]
     [port="110"] [connectionType="cleartext|ssl"] [username="mylogin"]
-    [password="mypassword"] [l="{folder-id}"] [leaveOnServer="0|1"]/>
+    [password="mypassword"] [l="{folder-id}"] [leaveOnServer="0|1"]/>]
+  *[<imap name="My IMAP Account" isEnabled="0|1" host="imap.myisp.com" port="143"
+    connectionType="cleartext|ssl" username="mylogin" password="mypassword" l="{folder-id}"/>]
 </ModifyDataSourceRequest>
 
 <ModifyDataSourceResponse/>
 
 Changes attributes of the given data source.  Only the attributes specified in the request
-are modified.
+are modified.  If the username, host or leaveOnServer settings are modified, the server
+wipes out saved state for this data source.  As a result, any previously downloaded
+messages that are still stored on the remote server will be downloaded again.
 
 ---------------------------
 
 <DeleteDataSourceRequest>
   *[<dsrc [id="{data-source-id}" | name="{data-source-name}"]/>]
   *[<pop3 [id="{data-source-id}" | name="{data-source-name}"]/>]
+  *[<imap [id="{data-source-id}" | name="{data-source-name}"]/>]
+  ...
 </DeleteDataSourceRequest>
 
 <DeleteDataSourceResponse/>
 
-<-- must specify eith -->
-<-- must specify either 'name' or 'id' -->
+Deletes the given data source.  The name or id of the data source must
+be specified.
 
 ---------------------------
 
 <ImportDataRequest>
-  <pop3 id="{id}"/>
+  *[<pop3 id="{id}"/>]
+  *[<imap id="{id}"/>]
   ...
 </ImportDataRequest>
 
@@ -1935,7 +1959,8 @@ the second request is ignored.
 <GetImportStatusRequest/>
 
 <GetImportStatusResponse>
-  <pop3 id="{id}" isRunning="0|1" [success="0|1"] [error="Error message"]/>
+  *[<pop3 id="{id}" isRunning="0|1" [success="0|1"] [error="Error message"]/>]
+  *[<imap id="{id}" isRunning="0|1" [success="0|1"] [error="Error message"]/>]
   ...
 </GetImportStatusResponse>
 

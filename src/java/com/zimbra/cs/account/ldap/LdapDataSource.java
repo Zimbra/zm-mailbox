@@ -41,6 +41,7 @@ import javax.naming.directory.Attributes;
      static String getObjectClass(Type type) {
         switch (type) {
             case pop3: return "zimbraPop3DataSource";
+            case imap: return "zimbraImapDataSource";
             default: return null;
         }
      }
@@ -49,6 +50,8 @@ import javax.naming.directory.Attributes;
          Attribute attr = attrs.get("objectclass");
          if (attr.contains("zimbraPop3DataSource")) 
              return Type.pop3;
+         else if (attr.contains("zimbraImapDataSource"))
+             return Type.imap;
          else
              throw ServiceException.FAILURE("unable to determine data source type from object class", null);
                 

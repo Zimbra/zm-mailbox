@@ -1558,12 +1558,20 @@ public class ToXML {
     }
 
     public static Element encodeDataSource(Element parent, DataSource ds) {
-        Element m = parent.addElement(MailConstants.E_DS_POP3);
+        Element m;
+        if (ds.getType() == DataSource.Type.imap) {
+            m = parent.addElement(MailConstants.E_DS_IMAP);
+        } else {
+            m = parent.addElement(MailConstants.E_DS_POP3);
+        }
         m.addAttribute(MailConstants.A_ID, ds.getId());
         m.addAttribute(MailConstants.A_NAME, ds.getName());
         m.addAttribute(MailConstants.A_FOLDER, ds.getFolderId());
         m.addAttribute(MailConstants.A_DS_IS_ENABLED, ds.isEnabled());
-        m.addAttribute(MailConstants.A_DS_LEAVE_ON_SERVER, ds.leaveOnServer());
+        
+        if (ds.getType() == DataSource.Type.pop3) {
+            m.addAttribute(MailConstants.A_DS_LEAVE_ON_SERVER, ds.leaveOnServer());
+        }
         
         if (ds.getHost() != null) { 
             m.addAttribute(MailConstants.A_DS_HOST, ds.getHost());
@@ -1572,7 +1580,7 @@ public class ToXML {
             m.addAttribute(MailConstants.A_DS_PORT, ds.getPort());
         }
         if (ds.getConnectionType() != null) {
-            m.addAttribute(MailConstants.A_DS_CONNECTION_TYPE, ds.getConnectionType());
+            m.addAttribute(MailConstants.A_DS_CONNECTION_TYPE, ds.getConnectionType().name());
         }
         if (ds.getUsername() != null) {
             m.addAttribute(MailConstants.A_DS_USERNAME, ds.getUsername());

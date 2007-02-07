@@ -28,11 +28,8 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.mail.FetchProfile;
-import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -41,42 +38,37 @@ import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.UIDFolder;
 
-import com.sun.mail.pop3.POP3Folder;
-import com.sun.mail.pop3.POP3Message;
+import com.sun.mail.imap.IMAPFolder;
+import com.sun.mail.imap.IMAPMessage;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
-import com.zimbra.cs.db.DbPop3Message;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.db.DbImapMessage;
 import com.zimbra.cs.mime.ParsedMessage;
 
 
-public class Pop3Import
+public class ImapImport
 implements MailItemImport {
 
     private static final long TIMEOUT = 20 * Constants.MILLIS_PER_SECOND;
     
-    // (item id).(blob digest)
-    private static final Pattern PAT_ZIMBRA_UIDL = Pattern.compile("(\\d+)\\.([^\\.]+)");
-    
     private static Session sSession;
     private static Session sSelfSignedCertSession;
-    private static Log sLog = LogFactory.getLog(Pop3Import.class);
+    private static Log sLog = LogFactory.getLog(ImapImport.class);
     private static FetchProfile UID_PROFILE;
     
     static {
         Properties props = new Properties();
-        props.setProperty("mail.pop3.connectiontimeout", Long.toString(TIMEOUT));
-        props.setProperty("mail.pop3.timeout", Long.toString(TIMEOUT));
+        props.setProperty("mail.imap.connectiontimeout", Long.toString(TIMEOUT));
+        props.setProperty("mail.imap.timeout", Long.toString(TIMEOUT));
         sSession = Session.getInstance(props);
         
-        props.put("mail.pop3.socketFactory.class", com.zimbra.common.util.DummySSLSocketFactory.class.getName());
+        props.put("mail.imap.socketFactory.class", com.zimbra.common.util.DummySSLSocketFactory.class.getName());
         sSelfSignedCertSession = Session.getInstance(props);
         
         UID_PROFILE = new FetchProfile();
@@ -130,29 +122,29 @@ implements MailItemImport {
     private Store getStore(DataSource.ConnectionType connectionType)
     throws NoSuchProviderException, ServiceException {
         if (connectionType == DataSource.ConnectionType.cleartext) {
-            return sSession.getStore("pop3");
+            return sSession.getStore("imap");
         } else if (connectionType == DataSource.ConnectionType.ssl) {
             if (LC.data_source_trust_self_signed_certs.booleanValue()) {
-                return sSelfSignedCertSession.getStore("pop3s");
+                return sSelfSignedCertSession.getStore("imaps");
             } else {
-                return sSession.getStore("pop3s");
+                return sSession.getStore("imaps");
             }
         } else {
             throw ServiceException.FAILURE("Invalid connectionType: " + connectionType, null);
         }
     }
-    
+
     private void fetchMessages(Account account, DataSource ds)
     throws MessagingException, IOException, ServiceException {
-        ZimbraLog.mailbox.info("Importing POP3 messages from " + ds);
+        ZimbraLog.mailbox.info("Importing IMAP messages from " + ds);
         
         validateDataSource(ds);
         
         // Connect (USER, PASS, STAT)
         Store store = getStore(ds.getConnectionType());
         store.connect(ds.getHost(), ds.getPort(), ds.getUsername(), ds.getDecryptedPassword());
-        POP3Folder folder = (POP3Folder) store.getFolder("INBOX");
-        folder.open(Folder.READ_WRITE);
+        IMAPFolder folder = (IMAPFolder) store.getFolder("INBOX");
+        folder.open(Folder.READ_ONLY);
 
         Message[] msgs = folder.getMessages();
 
@@ -168,104 +160,62 @@ implements MailItemImport {
         // Fetch message UID's for reconciliation (UIDL)
         folder.fetch(msgs, UID_PROFILE);
         
-        // Check the UID of the first message to make sure the account isn't trying
-        // to POP itself
-        String uid = folder.getUID(msgs[0]);
-        if (poppingSelf(mbox, uid)) {
+        // Check the UID of the first message to make sure the user isn't
+        // importing his own mailbox.
+        /*
+        long uid = folder.getUID(msgs[0]);
+        if (isOwnUid(mbox, uid)) {
             folder.close(false);
             store.close();
             throw ServiceException.INVALID_REQUEST(
                 "User attempted to import messages from his own mailbox", null);
         }
+        */
         
         sLog.debug("Retrieving " + msgs.length + " messages");
 
-        Set<String> uidsToFetch = null;
-        if (ds.leaveOnServer()) {
-            uidsToFetch = getUidsToFetch(mbox, ds, folder);
-        }
+        Set<Long> uidsToFetch = getUidsToFetch(mbox, ds, folder);
 
         // Fetch message bodies (RETR)
         for (int i = 0; i < msgs.length; i++) {
-            POP3Message pop3Msg = (POP3Message) msgs[i];
-            if (ds.leaveOnServer()) {
-                // Skip this message if we've already downloaded it
-                uid = folder.getUID(pop3Msg);
-                if (!uidsToFetch.contains(uid)) {
-                    continue;
-                }
+            IMAPMessage imapMsg = (IMAPMessage) msgs[i];
+            // Skip this message if we've already downloaded it
+            long uid = folder.getUID(imapMsg);
+            if (!uidsToFetch.contains(uid)) {
+                continue;
             }
 
             // Add message to mailbox
             ParsedMessage pm = null;
-            if (pop3Msg.getSentDate() != null) {
+            if (imapMsg.getSentDate() != null) {
                 // Set received date to the original message's date
-                pm = new ParsedMessage(pop3Msg, pop3Msg.getSentDate().getTime(),
+                pm = new ParsedMessage(imapMsg, imapMsg.getSentDate().getTime(),
                     mbox.attachmentsIndexingEnabled());
             } else {
-                pm = new ParsedMessage(pop3Msg, mbox.attachmentsIndexingEnabled());
+                pm = new ParsedMessage(imapMsg, mbox.attachmentsIndexingEnabled());
             }
             com.zimbra.cs.mailbox.Message zimbraMsg =
                 mbox.addMessage(null, pm, ds.getFolderId(), false, Flag.BITMASK_UNREAD, null);
 
-            if (ds.leaveOnServer()) {
-                DbPop3Message.storeUid(mbox, ds.getId(), folder.getUID(pop3Msg), zimbraMsg.getId());
-            }
-        }
-
-        if (!ds.leaveOnServer()) {
-            // Mark all messages for deletion (DELE)
-            for (Message msg : msgs) {
-                msg.setFlag(Flags.Flag.DELETED, true);
-            }
+            DbImapMessage.storeUid(mbox, ds.getId(), folder.getUID(imapMsg), zimbraMsg.getId());
         }
         
         // Expunge if necessary and disconnect (QUIT)
-        folder.close(!ds.leaveOnServer());
+        folder.close(false);
         store.close();
     }
     
-    private Set<String> getUidsToFetch(Mailbox mbox, DataSource ds, POP3Folder folder)
+    private Set<Long> getUidsToFetch(Mailbox mbox, DataSource ds, IMAPFolder folder)
     throws MessagingException, ServiceException {
-        Set<String> uidsToFetch = new HashSet<String>();
+        Set<Long> uidsToFetch = new HashSet<Long>();
         for (Message msg : folder.getMessages()) {
-            String uid = folder.getUID(msg);
-            if (uid != null) {
-                uidsToFetch.add(uid);
-            }
+            uidsToFetch.add(folder.getUID(msg));
         }
         
         // Remove UID's of messages that we already downloaded
-        Set<String> existingUids =
-            DbPop3Message.getMatchingUids(mbox, ds, uidsToFetch);
+        Set<Long> existingUids =
+            DbImapMessage.getMatchingUids(mbox, ds, uidsToFetch);
         uidsToFetch.removeAll(existingUids);
         return uidsToFetch;
-    }
-
-    private boolean poppingSelf(Mailbox mbox, String uid)
-    throws ServiceException {
-        Matcher matcher = PAT_ZIMBRA_UIDL.matcher(uid);
-        if (!matcher.matches()) {
-            // Not our UID
-            return false;
-        }
-        
-        // See if this UID comes from the current mailbox.  Popping from
-        // another Zimbra mailbox is ok.
-        int itemId = Integer.parseInt(matcher.group(1));
-        String digest = matcher.group(2);
-        com.zimbra.cs.mailbox.Message msg = null;
-        
-        try {
-            msg = mbox.getMessageById(null, itemId);
-        } catch (NoSuchItemException e) {
-            return false;
-        }
-        
-        if (!StringUtil.equal(digest, msg.getDigest())) {
-            return false;
-        }
-        
-        return true;
     }
 }

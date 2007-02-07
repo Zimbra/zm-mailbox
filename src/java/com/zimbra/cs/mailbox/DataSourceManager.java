@@ -54,6 +54,7 @@ public class DataSourceManager {
     
     static {
         registerImport(DataSource.Type.pop3, new Pop3Import());
+        registerImport(DataSource.Type.imap, new ImapImport());
     }
 
     /**

@@ -27,15 +27,14 @@ package com.zimbra.cs.service.mail;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.mailbox.DataSourceManager;
-import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
 
 
@@ -49,32 +48,39 @@ public class ImportData extends MailDocumentHandler {
         Account account = getRequestedAccount(zsc);
 
         for (Element elem : request.listElements()) {
-        	if (elem.getName().equals(MailConstants.E_DS_POP3)) {
-        		try {
-        			String id = elem.getAttribute(MailConstants.A_ID);
-                    DataSource ds = prov.get(account, DataSourceBy.id, id);
-        			new Thread(new Pop3Client(account, ds)).start();
-        		} catch (Exception e) {
-        			ZimbraLog.account.error("error handling ImportData", e);
-        			// then continue onto the next pop3 element.
-        			// we may need to propogate the error back to the client
-        			// for reporting.
-        		}
-        	}
+            DataSource ds = null;
+            DataSource.Type type = DataSource.Type.fromString(elem.getName());
+            
+            String id = elem.getAttribute(MailConstants.A_ID);
+            ds = prov.get(account, DataSourceBy.id, id);
+            if (ds.getType() != type) {
+                String msg = String.format(
+                    "Incorrect type specified for Data Source %s (%s).  Expected '%s', got '%s'.",
+                    ds.getId(), ds.getName(), ds.getType(), type);
+                throw ServiceException.INVALID_REQUEST(msg, null);
+            }
+            if (ds == null) {
+                throw ServiceException.INVALID_REQUEST("Could not find Data Source with id " + id, null);
+            }
+
+            Thread thread = new Thread(new ImportDataThread(account, ds));
+            thread.setName("ImportDataThread-" + account.getName());
+            thread.start();
         }
         
         Element response = zsc.createElement(MailConstants.IMPORT_DATA_RESPONSE);
         return response;
     }
     
-    private static class Pop3Client implements Runnable {
+    private static class ImportDataThread implements Runnable {
         Account mAccount;
     	DataSource mDataSource;
         
-    	public Pop3Client(Account account, DataSource ds) {
+    	public ImportDataThread(Account account, DataSource ds) {
             mAccount = account;
     		mDataSource = ds;
     	}
+        
     	public void run() {
     	    DataSourceManager.importData(mAccount, mDataSource);
     	}
