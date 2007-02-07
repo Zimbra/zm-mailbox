@@ -1505,7 +1505,8 @@ public class DbMailItem {
                     data.size = data.unreadCount = 0;
 
             Mailbox.MailboxData mbd = new Mailbox.MailboxData();
-            stmt = conn.prepareStatement("SELECT folder_id, type, tags, COUNT(*), SUM(unread), SUM(size)" +
+            String totalSize = (Db.supports(Db.Capability.CAST_AS_BIGINT) ? "SUM(CAST(size AS BIGINT))" : "SUM(size)");
+            stmt = conn.prepareStatement("SELECT folder_id, type, tags, COUNT(*), SUM(unread), " + totalSize +
                         " FROM " + table + " WHERE " + IN_THIS_MAILBOX_AND + "type NOT IN " + NON_SEARCHABLE_TYPES +
                         " GROUP BY folder_id, type, tags");
             if (!DebugConfig.disableMailboxGroup)

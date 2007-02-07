@@ -52,6 +52,7 @@ public class MySQL extends Db {
             case BITWISE_OPERATIONS:         return true;
             case BOOLEAN_DATATYPE:           return true;
             case CASE_SENSITIVE_COMPARISON:  return false;
+            case CAST_AS_BIGINT:             return false;
             case DISABLE_CONSTRAINT_CHECK:   return true;
             case LIMIT_CLAUSE:               return true;
             case MULTITABLE_UPDATE:          return true;
