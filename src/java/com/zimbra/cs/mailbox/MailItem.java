@@ -1557,6 +1557,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             markItemModified(Change.MODIFIED_NAME);
             mData.name = name;
             mData.date = mMailbox.getOperationTimestamp();
+            mData.contentChanged(mMailbox);
             saveName(target.getId());
         }
 
