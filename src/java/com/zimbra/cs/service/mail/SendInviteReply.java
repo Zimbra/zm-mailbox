@@ -74,15 +74,15 @@ public class SendInviteReply extends CalendarRequest {
 
     public Element handle(Element request, Map<String, Object> context)
     throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
-        Account acct = getRequestedAccount(lc);
-        Account authAcct = lc.getAuthtokenAccount();
-        OperationContext octxt = lc.getOperationContext();
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zsc);
+        Account acct = getRequestedAccount(zsc);
+        Account authAcct = zsc.getAuthtokenAccount();
+        OperationContext octxt = zsc.getOperationContext();
 
-        boolean onBehalfOf = lc.isDelegatedRequest();
+        boolean onBehalfOf = zsc.isDelegatedRequest();
 
-        ItemId iid = new ItemId(request.getAttribute(MailService.A_ID), lc);
+        ItemId iid = new ItemId(request.getAttribute(MailService.A_ID), zsc);
         int compNum = (int) request.getAttributeLong(MailService.A_CAL_COMPONENT_NUM);
         
         String verbStr = request.getAttribute(MailService.A_VERB);
@@ -91,10 +91,10 @@ public class SendInviteReply extends CalendarRequest {
         boolean updateOrg = request.getAttributeBool(MailService.A_CAL_UPDATE_ORGANIZER, true);
         
         if (sLog.isInfoEnabled()) {
-            sLog.info("<SendInviteReply id=" + lc.formatItemId(iid) + " verb=" + verb + " updateOrg=" + updateOrg + "> " + lc.toString());
+            sLog.info("<SendInviteReply id=" + zsc.formatItemId(iid) + " verb=" + verb + " updateOrg=" + updateOrg + "> " + zsc.toString());
         }
         
-        Element response = getResponseElement(lc);
+        Element response = getResponseElement(zsc);
         
         synchronized (mbox) {
             
@@ -180,7 +180,7 @@ public class SendInviteReply extends CalendarRequest {
                     // the <inv> element is *NOT* allowed -- we always build it manually
                     // based on the params to the <SendInviteReply> and stick it in the 
                     // mbps (additionalParts) parameter...
-                    csd.mMm = ParseMimeMessage.parseMimeMsgSoap(lc, mbox, msgElem, mbps, 
+                    csd.mMm = ParseMimeMessage.parseMimeMsgSoap(zsc, mbox, msgElem, mbps, 
                         ParseMimeMessage.NO_INV_ALLOWED_PARSER, parsedMessageData);
                 } else {
                     // build a default "Accepted" response
@@ -189,7 +189,7 @@ public class SendInviteReply extends CalendarRequest {
                             verb, null, iCal);
                 }
 
-                sendCalendarMessage(lc, calItem.getFolderId(), acct, mbox, csd, response, false);
+                sendCalendarMessage(zsc, octxt, calItem.getFolderId(), acct, mbox, csd, response, false);
             }
 
             RecurId recurId = null;
