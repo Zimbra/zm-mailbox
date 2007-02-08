@@ -402,8 +402,6 @@
       <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
         <arg line="-l -v mcf zimbraXMPPEnabled TRUE" />
       </java>
-      <mkdir dir="${zimbra.home.dir}/im/plugins"/>
-      <copy overwrite="true" file="${im.dir}/plugins/gateway.jar" todir="${zimbra.home.dir}/im/plugins"/>
       <antcall target="restart-tomcat"/>
     </target>
 

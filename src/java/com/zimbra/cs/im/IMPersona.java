@@ -30,6 +30,7 @@ import java.util.Formatter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -52,11 +53,13 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.im.IMChat.Participant;
 import com.zimbra.cs.im.IMMessage.Lang;
 import com.zimbra.cs.im.IMPresence.Show;
+import com.zimbra.cs.im.interop.Interop;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.session.Session;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ClassLogger;
 import com.zimbra.common.util.ZimbraLog;
 
 /**
@@ -64,8 +67,19 @@ import com.zimbra.common.util.ZimbraLog;
  *
  * A single "persona" in the IM world
  */
-public class IMPersona {
+public class IMPersona extends ClassLogger {
 
+    @Override
+    protected String getInstanceInfo() { return toString(); }
+    
+    protected Object formatObject(Object o) {
+        if (o instanceof org.xmpp.packet.Packet)
+            return ((Packet)o).toXML();
+        else
+            return super.formatObject(o);
+    }
+    
+    
     private Mailbox mMailbox; // object used to lock the persona
     private IMAddr mAddr;
 //    private Map<IMAddr, IMBuddy> mBuddyList = new HashMap<IMAddr, IMBuddy>();
@@ -92,100 +106,71 @@ public class IMPersona {
     /**
      * @return The set of gateways this user has access to
      */
-    public IMGatewayType[] getAvailableGateways() {
-        if ( XMPPServer.getInstance().getPluginManager().getPlugin("gateway") != null) {
-            return new IMGatewayType[] { IMGatewayType.aol, IMGatewayType.msn, IMGatewayType.yahoo };
-        } else {
-            return new IMGatewayType[] {};
-        }
+    public List<Interop.ServiceName> getAvailableGateways() {
+        return Interop.getAvailableServices();
     }
     
-    private JID getJIDForGateway(IMGatewayType type) {
+    private JID getJIDForGateway(Interop.ServiceName type) {
         String host = mAddr.getAddr().substring(mAddr.getAddr().indexOf('@')+1);
-        return new JID(type.getShortName()+"."+host);
+        return new JID(type.name()+"."+host);
     }
     
-    public boolean gatewayRegister(IMGatewayType type, String username, String password) throws ServiceException {
-        IQ iq = new IQ();
-        { // <iq>
-            iq.setFrom(mAddr.makeJID());
-            iq.setTo(getJIDForGateway(type));
-            iq.setType(Type.set);
+    public void gatewayRegister(Interop.ServiceName type, String username, String password) throws ServiceException {
+        try {
+            Interop.connectUser(type, mAddr.makeFullJID(), username, password);
+        } catch (Exception e) {
+            throw ServiceException.FAILURE("Exception calling Interop.connectUser("+username+","+password, e);
+        }
         
-            org.dom4j.Element queryElt = iq.setChildElement("query", "jabber:iq:register");
-            { // <query>
-                org.dom4j.Element usernameElt = queryElt.addElement("username");
-                usernameElt.setText(username);
-                org.dom4j.Element passwordElt = queryElt.addElement("password");
-                passwordElt.setText(password);
-            } // </query>
-        } // </iq>
+//        IQ iq = new IQ();
+//        { // <iq>
+//            iq.setFrom(mAddr.makeJID());
+//            iq.setTo(getJIDForGateway(type));
+//            iq.setType(Type.set);
+//        
+//            org.dom4j.Element queryElt = iq.setChildElement("query", "jabber:iq:register");
+//            { // <query>
+//                org.dom4j.Element usernameElt = queryElt.addElement("username");
+//                usernameElt.setText(username);
+//                org.dom4j.Element passwordElt = queryElt.addElement("password");
+//                passwordElt.setText(password);
+//            } // </query>
+//        } // </iq>
+//        
+//        xmppRoute(iq);
+//        pushMyPresence();
+//        return true;
         
-        xmppRoute(iq);
-        pushMyPresence();
-        return true;
     }
     
-    public boolean gatewayUnRegister(IMGatewayType type) {
-        IQ iq = new IQ();
-        { // <iq>
-            iq.setFrom(mAddr.makeJID());
-            iq.setTo(getJIDForGateway(type));
-            iq.setType(Type.set);
+    public void gatewayUnRegister(Interop.ServiceName type) throws ServiceException {
+        try {
+            Interop.disconnectUser(Interop.ServiceName.msn, mAddr.makeFullJID());
+        } catch (Exception e) {
+            throw ServiceException.FAILURE("Exception calling Interop.disconnectUser()", null);
+        }
         
-            org.dom4j.Element queryElt = iq.setChildElement("query", "jabber:iq:register");
-            { // <query>
-                queryElt.addElement("remove");
-            } // </query>
-        } // </iq>
-        
-        xmppRoute(iq);
-        
-        return true;
+//        IQ iq = new IQ();
+//        { // <iq>
+//            iq.setFrom(mAddr.makeJID());
+//            iq.setTo(getJIDForGateway(type));
+//            iq.setType(Type.set);
+//        
+//            org.dom4j.Element queryElt = iq.setChildElement("query", "jabber:iq:register");
+//            { // <query>
+//                queryElt.addElement("remove");
+//            } // </query>
+//        } // </iq>
+//        
+//        xmppRoute(iq);
+//        
+//        return true;
     }
     
     public IMAddr getAddr() { return mAddr; }
     public String getFullJidAsString() { return mAddr + "/zcs"; }
     public String getResource() { return "zcs"; }
 
-    private void debug(String str, Throwable t) {
-        ZimbraLog.im.debug(str, t);
-    }
-    private void info(String str, Throwable t) {
-        ZimbraLog.im.info(str, t);
-    }
-    private void warn(String str, Throwable t) {
-        ZimbraLog.im.warn(str, t);
-    }
-    
-    private void debug(String format, Object ... objects) {
-        if (ZimbraLog.im.isDebugEnabled()) {
-            if (objects != null) 
-                for (int i = 0; i < objects.length; i++)
-                    if (objects[i] instanceof org.xmpp.packet.Packet)
-                        objects[i] = ((Packet)objects[i]).toXML();
-            ZimbraLog.im.debug(toString()+" "+format, objects);
-        }
-    }
-    private void info(String format, Object ... objects) {
-        if (ZimbraLog.im.isInfoEnabled()) {
-            if (objects != null) 
-                for (int i = 0; i < objects.length; i++)
-                    if (objects[i] instanceof org.xmpp.packet.Packet)
-                        objects[i] = ((Packet)objects[i]).toXML();
-            ZimbraLog.im.info(toString()+" "+format, objects);
-        }
-    }
-    private void warn(String format, Object ... objects) {
-        if (ZimbraLog.im.isWarnEnabled()) {
-            if (objects != null) 
-                for (int i = 0; i < objects.length; i++)
-                    if (objects[i] instanceof org.xmpp.packet.Packet)
-                        objects[i] = ((Packet)objects[i]).toXML();
-            ZimbraLog.im.warn(toString()+" "+format, objects);
-        }
-    }
-              
     /**
      * callback from the Router thread
      */
@@ -233,7 +218,6 @@ public class IMPersona {
     private void handleMessagePacket(boolean toMe, Message msg) {
         // either TO or FROM, depending which one isn't "me"        
         JID remoteJID = (toMe ? msg.getFrom() : msg.getTo());
-        
 
         // Step 1: find the appropriate chat
         IMChat chat = findTargetMUC(msg);
@@ -367,7 +351,6 @@ public class IMPersona {
     private void handleRosterPacket(boolean toMe, Roster roster) {
         IMRosterNotification rosterNot = null;
         
-//        ZimbraLog.im.debug(this.toString()+" -- Got a roster: "+roster.toXML());
         switch (roster.getType()) {
             case result:
                 rosterNot = new IMRosterNotification();
@@ -376,12 +359,11 @@ public class IMPersona {
             case set:
                 for (Roster.Item item : roster.getItems()) {
                     IMAddr buddyAddr = IMAddr.fromJID(item.getJID());
-//                    IMBuddy buddy = getBuddy(true, buddyAddr, item.getName()); 
                     
                     Roster.Subscription subscript = item.getSubscription();
                     
                     IMSubscribedNotification not = 
-                        IMSubscribedNotification.create(buddyAddr, buddyAddr.toString(), item.getGroups(), 
+                        IMSubscribedNotification.create(buddyAddr, item.getName(), item.getGroups(), 
                                     (subscript == Roster.Subscription.both || subscript == Roster.Subscription.to), item.getAsk());
                     
                     if (rosterNot != null) {
@@ -389,66 +371,10 @@ public class IMPersona {
                     } else {
                         postIMNotification(not);
                     }
-//                 
-//                    boolean doRemove = false;
-//                    if (subscript == null) {
-////                        buddy.setSubType(SubType.NONE);
-//                    } else {
-//                        switch (subscript) {
-//                            case none:
-////                                buddy.setSubType(SubType.NONE);
-//                                break;
-//                            case to:
-////                                buddy.setSubType(SubType.TO);
-//                                break;
-//                            case from:
-////                                buddy.setSubType(SubType.FROM);
-//                                break;
-//                            case both:
-////                                buddy.setSubType(SubType.BOTH);
-//                                break;
-//                            case remove:
-//                                doRemove = true;
-////                                buddy.setSubType(SubType.NONE);
-//                                break;
-//                        }
-//                    }
-//                    
-//                    if (!doRemove) {
-//                        buddy.setPresence(new IMPresence(Show.OFFLINE, (byte) 0, "offline"));
-//                        if (mBuddyList.containsKey(buddyAddr)) {
-//                            ZimbraLog.im.debug("Key: "+buddyAddr+ " already in buddy list!\n");
-//                        }
-//                        mBuddyList.put(buddyAddr, buddy);
-//                        for (String group : item.getGroups()) {
-//                            if (!mGroups.containsKey(group))
-//                                mGroups.put(group, new IMGroup(group));
-//                            buddy.addGroup(mGroups.get(group));
-//                        }
-//                        buddy.setAsk(item.getAsk());
-//                        if (roster.getType() == IQ.Type.set) {
-//                            try {
-//                                postIMNotification(IMSubscribedNotification.create(buddyAddr, buddy.getName(), buddy.groups(), buddy.getSubType().isOutgoing(), item.getAsk()));
-//                            } catch(ServiceException ex) {
-//                                ZimbraLog.im.warn("Caught Exception: " + ex.toString(), ex);
-//                            }
-//                        } else {
-//                            ZimbraLog.im.debug("Skipping notifications for Roster update b/c it is Type=result");
-//                        }
-//                     else {
-//                        mBuddyList.remove(buddyAddr);
-//                        
-//                        try {
-//                            postIMNotification(IMSubscribedNotification.create(buddyAddr, buddy.getName(), buddy.groups(), false, null));
-//                        } catch(ServiceException ex) {
-//                            ZimbraLog.im.warn("Caught Exception: " + ex.toString(), ex);
-//                        }
-//                    }
                 }
                 if (rosterNot != null) {
                     postIMNotification(rosterNot);
                 }                    
-                    
                 break;
             default:
                 debug("Ignoring Roster packet of type %s", roster.getType());
@@ -767,7 +693,6 @@ public class IMPersona {
         updateXMPPPresence(sendTo, presence);
     }
     
-    
     private void updateXMPPPresence(JID sendTo, IMPresence pres) {
         if (mXMPPSession != null) {
             Presence xmppPresence;
@@ -799,7 +724,6 @@ public class IMPersona {
             }
                 
             xmppRoute(xmppPresence);
-            
         }
     }
     
@@ -946,6 +870,7 @@ public class IMPersona {
     
     
     private IMPersona(IMAddr addr, Mailbox lock) {
+        super(ZimbraLog.im);
         assert(addr != null);
         mAddr = addr;
         mMailbox = lock;

@@ -4,8 +4,8 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.IMConstants;
-import com.zimbra.cs.im.IMGatewayType;
 import com.zimbra.cs.im.IMPersona;
+import com.zimbra.cs.im.interop.Interop;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -25,15 +25,15 @@ public class IMGatewayRegister extends IMDocumentHandler {
             
             if (op.equals("unreg")) {
                 String serviceStr = request.getAttribute("service");
-                retVal = persona.gatewayUnRegister(IMGatewayType.valueOf(serviceStr));
+                persona.gatewayUnRegister(Interop.ServiceName.valueOf(serviceStr));
             } else {
                 String serviceStr = request.getAttribute("service");
                 String nameStr = request.getAttribute("name");
                 String pwStr = request.getAttribute("password");
                 
-                retVal = persona.gatewayRegister(IMGatewayType.valueOf(serviceStr), nameStr, pwStr);
+                persona.gatewayRegister(Interop.ServiceName.valueOf(serviceStr), nameStr, pwStr);
             }
-            response.addAttribute("result", retVal);
+            response.addAttribute("result", true);
         }
         
         return response;

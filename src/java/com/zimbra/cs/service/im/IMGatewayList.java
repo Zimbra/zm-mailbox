@@ -1,11 +1,12 @@
 package com.zimbra.cs.service.im;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.IMConstants;
-import com.zimbra.cs.im.IMGatewayType;
 import com.zimbra.cs.im.IMPersona;
+import com.zimbra.cs.im.interop.Interop;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -21,13 +22,11 @@ public class IMGatewayList extends IMDocumentHandler {
         synchronized (lock) {
             IMPersona persona = getRequestedPersona(lc, lock);
             
-            IMGatewayType[] types = persona.getAvailableGateways();
+            List<Interop.ServiceName> types = persona.getAvailableGateways();
             
-            if (types != null && types.length > 0) {
-                for (IMGatewayType t : types) {
-                    Element typeElt = response.addElement("service");
-                    typeElt.addAttribute("type", t.getShortName());
-                }
+            for (Interop.ServiceName t : types) {
+                Element typeElt = response.addElement("service");
+                typeElt.addAttribute("type", t.name());
             }
         }
         return response;
