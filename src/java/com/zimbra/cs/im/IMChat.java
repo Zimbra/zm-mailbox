@@ -42,6 +42,7 @@ import org.xmpp.packet.JID;
 import org.xmpp.packet.Presence;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ClassLogger;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.im.IMMessage.Lang;
 import com.zimbra.cs.im.IMMessage.TextPart;
@@ -55,7 +56,7 @@ import com.zimbra.cs.util.Zimbra;
 /**
  *
  */
-public class IMChat {
+public class IMChat extends ClassLogger {
 
     public static class Participant {
         private IMAddr mAddress;
@@ -128,46 +129,23 @@ public class IMChat {
     static final int sCloseTimerMs = 10 * 60 * 1000; // 10 min
     
     boolean isMUC() { return mIsMUC; }
-
-    private void debug(String str, Throwable t) {
-        ZimbraLog.im.debug(str, t);
+    
+    @Override
+    protected Object formatObject(Object o) {
+        if (o instanceof org.xmpp.packet.Packet)
+            return ((org.xmpp.packet.Packet) o).toXML();
+        else
+            return super.formatObject(o);
     }
-    private void info(String str, Throwable t) {
-        ZimbraLog.im.info(str, t);
-    }
-    private void warn(String str, Throwable t) {
-        ZimbraLog.im.warn(str, t);
-    }
-    private void debug(String format, Object ... objects) {
-        if (ZimbraLog.im.isDebugEnabled()) {
-            if (objects != null) 
-                for (int i = 0; i < objects.length; i++)
-                    if (objects[i] instanceof org.xmpp.packet.Packet)
-                        objects[i] = ((org.xmpp.packet.Packet)objects[i]).toXML();
-            ZimbraLog.im.debug(toString()+" "+format, objects);
-        }
-    }
-    private void info(String format, Object ... objects) {
-        if (ZimbraLog.im.isInfoEnabled()) {
-            if (objects != null) 
-                for (int i = 0; i < objects.length; i++)
-                    if (objects[i] instanceof org.xmpp.packet.Packet)
-                        objects[i] = ((org.xmpp.packet.Packet)objects[i]).toXML();
-            ZimbraLog.im.info(toString()+" "+format, objects);
-        }
-    }
-    private void warn(String format, Object ... objects) {
-        if (ZimbraLog.im.isWarnEnabled()) {
-            if (objects != null) 
-                for (int i = 0; i < objects.length; i++)
-                    if (objects[i] instanceof org.xmpp.packet.Packet)
-                        objects[i] = ((org.xmpp.packet.Packet)objects[i]).toXML();
-            ZimbraLog.im.warn(toString()+" "+format, objects);
-        }
+    @Override
+    protected String getInstanceInfo() {
+        return toString();
     }
 
     IMChat(Mailbox mbox, IMPersona persona, String threadId, Participant initialPart)
     {
+        super(ZimbraLog.im);
+        
         mMailbox = mbox;
         mPersona = persona;
         mThreadId = threadId;
@@ -522,6 +500,7 @@ public class IMChat {
         mPersona.xmppRoute(invite);
     }
     
+    @Override
     public String toString() {
         StringBuilder partsStr = new StringBuilder();
         boolean atStart = true;
@@ -703,6 +682,7 @@ public class IMChat {
 
 
     private class FlushTask extends TimerTask {
+        @Override
         public void run() {
             timerExecute();
         }
