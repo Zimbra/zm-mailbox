@@ -4058,19 +4058,25 @@ public class Mailbox {
             }
 
             // collect all the tombstones and write once
-            if (isTrackingSync()) {
-                MailItem.TypedIdList tombstones = new MailItem.TypedIdList();
-                for (Object obj : mCurrentChange.mOtherDirtyStuff)
-                    if (obj instanceof MailItem.PendingDelete)
-                        tombstones.add(((MailItem.PendingDelete) obj).itemIds);
-                if (!tombstones.isEmpty())
-                    DbMailItem.writeTombstones(this, tombstones);
-            }
+            MailItem.TypedIdList tombstones = collectPendingTombstones();
+            if (tombstones != null && !tombstones.isEmpty())
+                DbMailItem.writeTombstones(this, tombstones);
 
             success = true;
         } finally {
             endTransaction(success);
         }
+    }
+
+    MailItem.TypedIdList collectPendingTombstones() {
+        if (!isTrackingSync())
+            return null;
+
+        MailItem.TypedIdList tombstones = new MailItem.TypedIdList();
+        for (Object obj : mCurrentChange.mOtherDirtyStuff)
+            if (obj instanceof MailItem.PendingDelete)
+                tombstones.add(((MailItem.PendingDelete) obj).itemIds);
+        return tombstones;
     }
 
     public synchronized Tag createTag(OperationContext octxt, String name, byte color) throws ServiceException {
