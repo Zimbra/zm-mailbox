@@ -2490,4 +2490,75 @@ public class ZMailbox {
         }
         return appts;
     }
+
+    public static class ZApptSummaryResult {
+        private String mFolderId;
+        private ServiceException mException;
+        private List<ZApptSummary> mAppointments;
+
+        ZApptSummaryResult(String folderId, List<ZApptSummary> appointments) {
+            mFolderId = folderId;
+            mAppointments = appointments;
+        }
+
+        ZApptSummaryResult(String folderId, ServiceException exception) {
+            mFolderId = folderId;
+            mException = exception;
+        }
+
+        public String getFolderId() {
+            return mFolderId;
+        }
+
+        public boolean isFault() { return mException != null; }
+        
+        public ServiceException getServiceException() {
+            return mException;
+        }
+
+        public List<ZApptSummary> getAppointments() {
+            return mAppointments;
+        }
+    }
+
+    /**
+     *
+     * @param startMsec starting time of range, in msecs
+     * @param endMsec ending time of range, in msecs
+     * @param folderIds list of folder ids
+     * @return list of appts within the specified range
+     * @throws ServiceException on error
+     */
+    public List<ZApptSummaryResult> getApptSummaries(long startMsec, long endMsec, String folderIds[]) throws ServiceException {
+        XMLElement req = new XMLElement(ZimbraNamespace.E_BATCH_REQUEST);
+        for (String folderId : folderIds) {
+            Element gas = req.addElement(MailConstants.GET_APPT_SUMMARIES_REQUEST);
+            gas.addAttribute(ZimbraNamespace.A_REQUEST_ID, folderId);
+            gas.addAttribute(MailConstants.A_CAL_START_TIME, startMsec);
+            gas.addAttribute(MailConstants.A_CAL_END_TIME, endMsec);
+            gas.addAttribute(MailConstants.A_FOLDER, folderId);
+        }
+
+        Element resp = invoke(req);
+
+        List<ZApptSummaryResult> result = new ArrayList<ZApptSummaryResult>();
+
+        int index = 0;
+        for (Element e : resp.listElements()) {
+            String folderId = e.getAttribute(ZimbraNamespace.A_REQUEST_ID, null);
+            if (folderId == null)
+               folderId = folderIds[index];
+            index++;
+            if (mTransport.getSoapProtocol().isFault(e)) {
+                result.add(new ZApptSummaryResult(folderId, mTransport.getSoapProtocol().soapFault(e)));
+            } else {
+                List<ZApptSummary> appts = new ArrayList<ZApptSummary>();
+                for (Element appt : e.listElements(MailConstants.E_APPOINTMENT)) {
+                    ZApptSummary.addInstances(appt, appts, folderId);
+                }
+                result.add(new ZApptSummaryResult(folderId, appts));
+            }
+        }
+        return result;
+    }
 }
