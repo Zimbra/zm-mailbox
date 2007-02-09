@@ -2708,19 +2708,24 @@ public class LdapProvisioning extends Provisioning {
      */
     void setPassword(Account acct, String newPassword, boolean enforcePolicy) throws ServiceException {
 
+        boolean mustChange = acct.getBooleanAttr(Provisioning.A_zimbraPasswordMustChange, false);
+
         if (enforcePolicy) {
             checkPasswordStrength(newPassword, acct, null, null);
-            int minAge = acct.getIntAttr(Provisioning.A_zimbraPasswordMinAge, 0);
-            if (minAge > 0) {
-                Date lastChange = acct.getGeneralizedTimeAttr(Provisioning.A_zimbraPasswordModifiedTime, null);
-                if (lastChange != null) {
-                    long last = lastChange.getTime();
-                    long curr = System.currentTimeMillis();
-                    if ((last+(ONE_DAY_IN_MILLIS * minAge)) > curr)
-                        throw AccountServiceException.PASSWORD_CHANGE_TOO_SOON();
+            
+            // skip min age checking if mustChange is set
+            if (!mustChange) {
+                int minAge = acct.getIntAttr(Provisioning.A_zimbraPasswordMinAge, 0);
+                if (minAge > 0) {
+                    Date lastChange = acct.getGeneralizedTimeAttr(Provisioning.A_zimbraPasswordModifiedTime, null);
+                    if (lastChange != null) {
+                        long last = lastChange.getTime();
+                        long curr = System.currentTimeMillis();
+                        if ((last+(ONE_DAY_IN_MILLIS * minAge)) > curr)
+                            throw AccountServiceException.PASSWORD_CHANGE_TOO_SOON();
+                    }
                 }
             }
-            
         }            
 
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -2737,7 +2742,6 @@ public class LdapProvisioning extends Provisioning {
 
         String encodedPassword = LdapUtil.generateSSHA(newPassword, null);
 
-        boolean mustChange = acct.getBooleanAttr(Provisioning.A_zimbraPasswordMustChange, false);
         // unset it so it doesn't take up space...
         if (mustChange)
             attrs.put(Provisioning.A_zimbraPasswordMustChange, "");
