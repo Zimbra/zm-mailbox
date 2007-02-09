@@ -230,7 +230,7 @@ public class IMPersona extends ClassLogger {
     public void gatewayRegister(Interop.ServiceName type, String username, String password)
                 throws ServiceException {
         try {
-            Interop.connectUser(type, mAddr.makeFullJID(), username, password);
+            Interop.getInstance().connectUser(type, mAddr.makeFullJID(), username, password);
         } catch (Exception e) {
             throw ServiceException.FAILURE("Exception calling Interop.connectUser("
                         + username + "," + password, e);
@@ -258,7 +258,7 @@ public class IMPersona extends ClassLogger {
 
     public void gatewayUnRegister(Interop.ServiceName type) throws ServiceException {
         try {
-            Interop.disconnectUser(Interop.ServiceName.msn, mAddr.makeFullJID());
+            Interop.getInstance().disconnectUser(type, mAddr.makeFullJID());
         } catch (Exception e) {
             throw ServiceException.FAILURE("Exception calling Interop.disconnectUser()",
                         null);
@@ -289,7 +289,7 @@ public class IMPersona extends ClassLogger {
      * @return The set of gateways this user has access to
      */
     public List<Interop.ServiceName> getAvailableGateways() {
-        return Interop.getAvailableServices();
+        return Interop.getInstance().getAvailableServices();
     }
 
     /**
@@ -562,7 +562,7 @@ public class IMPersona extends ClassLogger {
                     }
                     if (doProbe) {
                         if (item.getJID().getNode() != null) {
-                            if (!Interop.isInteropJid(item.getJID())) {
+                            if (!Interop.getInstance().isInteropJid(item.getJID())) {
                                 Presence probe = new Presence(Presence.Type.probe);
                                 probe.setTo(item.getJID());
                                 xmppRoute(probe);
@@ -571,7 +571,7 @@ public class IMPersona extends ClassLogger {
                     }
                 }
                 if (doProbe)
-                    Interop.refreshPresence(mAddr.makeFullJID());
+                    Interop.getInstance().refreshAllPresence(mAddr.makeFullJID());
                 if (rosterNot != null) {
                     postIMNotification(rosterNot);
                 }
