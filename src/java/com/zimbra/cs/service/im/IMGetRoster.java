@@ -29,94 +29,46 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.IMConstants;
-import com.zimbra.cs.im.IMBuddy;
 import com.zimbra.cs.im.IMChat;
-import com.zimbra.cs.im.IMGroup;
 import com.zimbra.cs.im.IMPersona;
-import com.zimbra.cs.im.IMPresence;
 import com.zimbra.cs.im.IMChat.Participant;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class IMGetRoster extends IMDocumentHandler {
-    
-    public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
+
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException,
+                SoapFaultException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
         Element response = lc.createElement(IMConstants.IM_GET_ROSTER_RESPONSE);
 
         Object lock = super.getLock(lc);
-        synchronized (lock) { 
+        synchronized (lock) {
             IMPersona persona = super.getRequestedPersona(lc, lock);
-            
-            {
-                Element pe = response.addUniqueElement(IMConstants.E_PRESENCE);
-                persona.getEffectivePresence().toXml(pe);
-            }
+
+            Element pres = response.addUniqueElement(IMConstants.E_PRESENCE);
+            persona.getEffectivePresence().toXml(pres);
 
             // chats
-            {
-                Element chats = response.addUniqueElement(IMConstants.E_CHATS);
-                for (IMChat chat : persona.chats()) {
-                    Element e = chats.addElement(IMConstants.E_CHATS);
-                    e.addAttribute(IMConstants.A_THREAD_ID, chat.getThreadId());
-                    
-                    Element participantsElt = e.addElement(IMConstants.E_PARTICIPANTS);
-                    for (Participant part : chat.participants()) {
-                        Element pe = participantsElt.addElement(IMConstants.E_PARTICIPANT);
-                        pe.addAttribute(IMConstants.A_ADDRESS, part.getAddress().getAddr());
-                    }
-                    
+            Element chats = response.addUniqueElement(IMConstants.E_CHATS);
+            for (IMChat chat : persona.chats()) {
+                Element e = chats.addElement(IMConstants.E_CHATS);
+                e.addAttribute(IMConstants.A_THREAD_ID, chat.getThreadId());
+                
+                Element participantsElt = e.addElement(IMConstants.E_PARTICIPANTS);
+                for (Participant part : chat.participants()) {
+                    Element pe = participantsElt.addElement(IMConstants.E_PARTICIPANT);
+                    pe.addAttribute(IMConstants.A_ADDRESS, part.getAddress().getAddr());
                 }
             }
-            
+
             persona.getRoster(lc.getOperationContext());
-            
-//            // items (buddies)
-//            {
-//                Element items = response.addUniqueElement(IMConstants.E_ITEMS);
-//                for (IMBuddy buddy : persona.buddies()) {
-//                    Element e = items.addElement(IMConstants.E_ITEM);
-//                    e.addAttribute(IMConstants.A_ADDRESS, buddy.getAddress().getAddr());
-//                    
-//                    String buddyName = buddy.getName();
-//                    if (buddyName != null && buddyName.length()>0) 
-//                        e.addAttribute(IMConstants.A_NAME, buddy.getName());
-//                    
-//                    e.addAttribute(IMConstants.A_SUBSCRIPTION, buddy.getSubType().toString());
-//                    
-//                    if (buddy.getAsk() != null) {
-//                        e.addAttribute("ask", buddy.getAsk().name());
-//                    }
-//                    
-//                    // presence
-//                    IMPresence presence = buddy.getPresence();
-//                    if (presence == null) 
-//                        e.addUniqueElement(IMConstants.E_PRESENCE);
-//                    else {
-//                        Element pe = e.addUniqueElement(IMConstants.E_PRESENCE);
-//                        presence.toXml(pe);
-//                    }
-//                    
-//                    StringBuffer groupStr = null;
-//                    // groups
-//                    for (IMGroup grp : buddy.groups()) {
-//                        if (groupStr == null)
-//                            groupStr = new StringBuffer(grp.getName());
-//                        else 
-//                            groupStr.append(',').append(grp.getName());
-//                    }
-//                    if (groupStr != null) 
-//                        e.addAttribute(IMConstants.A_GROUPS, groupStr.toString());
-//                    
-//                }
-//            }
         }
 
-        
-        ZimbraLog.im.debug("GET ROSTER RESPONSE:\n"+response.toXML().asXML());
-        
-        return response;        
+        ZimbraLog.im.debug("GET ROSTER RESPONSE:\n" + response.toXML().asXML());
+
+        return response;
     }
 }
