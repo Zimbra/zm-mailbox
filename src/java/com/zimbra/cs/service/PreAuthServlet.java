@@ -46,8 +46,10 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.net.URLEncoder;
 
 public class PreAuthServlet extends ZimbraServlet {
 
@@ -156,13 +158,18 @@ public class PreAuthServlet extends ZimbraServlet {
             if (sPreAuthParams.contains(name)) continue;
             String values[] = req.getParameterValues(name);
             if (values != null) {
-                for (int i=0; i < values.length; i++) {
+                for (String value : values) {
                     if (first) {
                         first = false;
                     } else {
                         sb.append('&');
                     }
-                    sb.append(name).append("=").append(values[i]);
+                    try {
+                        sb.append(name).append("=").append(URLEncoder.encode(value, "utf-8"));
+                    } catch (UnsupportedEncodingException e) {
+                        // this should never happen...
+                        sb.append(name).append("=").append(URLEncoder.encode(value));
+                    }
                 }
             }
         }
