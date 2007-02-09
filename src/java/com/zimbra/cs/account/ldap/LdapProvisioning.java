@@ -3328,6 +3328,23 @@ public class LdapProvisioning extends Provisioning {
                 results.token = LdapUtil.getLaterTimestamp(results.token, resourceResults.token);
             }
         }
+        
+        /*
+         *  LDAP doesn't have a > query, just a >= query.  
+         *  This causes SyncGal returns extra entries that were updated/created on the same second 
+         *  as the prev sync token.  To work around it, we add one second to the result token if the 
+         *  token has changed in this sync.        
+         */
+        boolean gotNewToken = true;
+        if ((token != null && token.equals(results.token)) || results.token.equals(LdapUtil.EARLIEST_SYNC_TOKEN))
+            gotNewToken = false;
+        
+        if (gotNewToken) {
+            long ts = DateUtil.parseGeneralizedTime(results.token).getTime();
+            ts += 1000;
+            results.token = DateUtil.toGeneralizedTime(new Date(ts));
+        }
+        
         return results;
     }
     
