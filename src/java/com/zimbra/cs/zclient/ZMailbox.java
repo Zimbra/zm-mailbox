@@ -2192,8 +2192,10 @@ public class ZMailbox {
         
         Element m = getMessageElement(req, message);
 
-        if (existingDraftId != null && existingDraftId.length() > 0)
+        if (existingDraftId != null && existingDraftId.length() > 0) {
             m.addAttribute(MailService.A_ID, existingDraftId);
+            mMessageCache.remove(existingDraftId);
+        }
 
         if (folderId != null)
             m.addAttribute(MailService.A_FOLDER, folderId);
