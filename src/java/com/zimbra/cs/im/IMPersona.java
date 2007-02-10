@@ -260,8 +260,7 @@ public class IMPersona extends ClassLogger {
         try {
             Interop.getInstance().disconnectUser(type, mAddr.makeFullJID());
         } catch (Exception e) {
-            throw ServiceException.FAILURE("Exception calling Interop.disconnectUser()",
-                        null);
+            throw ServiceException.FAILURE("Exception calling Interop.disconnectUser()", e);
         }
         // IQ iq = new IQ();
         // { // <iq>
