@@ -290,6 +290,8 @@ public class SyncOperation extends Operation {
             case MailItem.TYPE_FOLDER:       return MailService.E_FOLDER;
             case MailItem.TYPE_SEARCHFOLDER: return MailService.E_SEARCH;
             case MailItem.TYPE_MOUNTPOINT:   return MailService.E_MOUNT;
+            case MailItem.TYPE_FLAG:
+            case MailItem.TYPE_TAG:          return MailService.E_TAG;
             case MailItem.TYPE_VIRTUAL_CONVERSATION:
             case MailItem.TYPE_CONVERSATION: return MailService.E_CONV;
             case MailItem.TYPE_MESSAGE:      return MailService.E_MSG;
@@ -307,6 +309,7 @@ public class SyncOperation extends Operation {
         if (name.equals(MailService.E_FOLDER))            return MailItem.TYPE_FOLDER;
         else if (name.equals(MailService.E_SEARCH))       return MailItem.TYPE_SEARCHFOLDER;
         else if (name.equals(MailService.E_MOUNT))        return MailItem.TYPE_MOUNTPOINT;
+        else if (name.equals(MailService.E_TAG))          return MailItem.TYPE_TAG;
         else if (name.equals(MailService.E_CONV))         return MailItem.TYPE_CONVERSATION;
         else if (name.equals(MailService.E_MSG))          return MailItem.TYPE_MESSAGE;
         else if (name.equals(MailService.E_CONTACT))      return MailItem.TYPE_CONTACT;
