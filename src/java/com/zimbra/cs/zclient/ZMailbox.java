@@ -1284,7 +1284,7 @@ public class ZMailbox {
     }
 
     HttpClient getHttpClient(URI uri) {
-        boolean isAdmin = uri.getPort() == 7071; // TODO???
+        boolean isAdmin = uri.getPort() == LC.zimbra_admin_service_port.intValue();
         HttpState initialState = new HttpState();        
         if (isAdmin) 
             addAuthCookoie(ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN, uri, initialState);

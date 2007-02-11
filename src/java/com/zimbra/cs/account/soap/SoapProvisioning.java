@@ -865,9 +865,11 @@ public class SoapProvisioning extends Provisioning {
     public List getAllAccounts(Domain d) throws ServiceException {
         ArrayList<Account> result = new ArrayList<Account>();
         XMLElement req = new XMLElement(AdminConstants.GET_ALL_ACCOUNTS_REQUEST);
-        Element domainEl = req.addElement(AdminConstants.E_DOMAIN);
-        domainEl.addAttribute(AdminConstants.A_BY, AccountBy.id.name());
-        domainEl.setText(d.getId());
+        if (d != null && d.getId() != null) {
+        	Element domainEl = req.addElement(AdminConstants.E_DOMAIN);
+        	domainEl.addAttribute(AdminConstants.A_BY, AccountBy.id.name());
+        	domainEl.setText(d.getId());
+        }
         Element resp = invoke(req);
         for (Element a: resp.listElements(AdminConstants.E_ACCOUNT)) {
             result.add(new SoapAccount(a));
@@ -1227,5 +1229,11 @@ public class SoapProvisioning extends Provisioning {
             return null;
             
         }
+    }
+    
+    public void deleteMailbox(String accountId) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.DELETE_MAILBOX_REQUEST);
+        req.addElement(AdminConstants.E_MAILBOX).addAttribute(AdminConstants.A_ACCOUNTID, accountId);
+        Element resp = invoke(req);
     }
 }

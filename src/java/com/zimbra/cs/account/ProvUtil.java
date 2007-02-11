@@ -573,7 +573,7 @@ public class ProvUtil implements DebugListener {
         case SOAP:
             // HACK FOR NOW
             SoapProvisioning sp = new SoapProvisioning();
-            sp.soapSetURI("https://localhost:7071"+ZimbraServlet.ADMIN_SERVICE_URI);
+            sp.soapSetURI("https://localhost:" + mPort + ZimbraServlet.ADMIN_SERVICE_URI);
             sp.soapZimbraAdminAuthenticate();
             mProv = sp;
             break;

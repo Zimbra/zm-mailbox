@@ -96,9 +96,13 @@ public class GetAllAccounts extends AdminDocumentHandler {
         } else {
             response = lc.createElement(getResponseQName());
             List domains = prov.getAllDomains();
-            for (Iterator dit=domains.iterator(); dit.hasNext(); ) {
-                Domain domain = (Domain) dit.next();
-                doDomain(response, domain);                
+            if (domains != null) {
+	            for (Iterator dit=domains.iterator(); dit.hasNext(); ) {
+	                Domain domain = (Domain) dit.next();
+	                doDomain(response, domain);                
+	            }
+            } else { //domains not supported, for now only offline
+            	doDomain(response, null);
             }
         }
         return response;        
