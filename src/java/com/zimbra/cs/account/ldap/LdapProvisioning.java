@@ -196,19 +196,19 @@ public class LdapProvisioning extends Provisioning {
     private static final Random sPoolRandom = new Random();
     
     private static String cosNametoDN(String name) {
-        return "cn="+name+","+COS_BASE;
+        return "cn=" + LdapUtil.escapeRDNValue(name) + ","+COS_BASE;
     }
     
     private static String serverNametoDN(String name) {
-        return "cn="+name+","+SERVER_BASE;
+        return "cn=" + LdapUtil.escapeRDNValue(name) + ","+SERVER_BASE;
     }
 
     static String adminNameToDN(String name) {
-        return "uid="+name+","+ADMIN_BASE;
+        return "uid=" + LdapUtil.escapeRDNValue(name) + ","+ADMIN_BASE;
     }
     
     static String emailToDN(String localPart, String domain) {
-        return "uid="+localPart+","+domainToAccountBaseDN(domain);
+        return "uid=" + LdapUtil.escapeRDNValue(localPart) + "," + domainToAccountBaseDN(domain);
     }
     
     static String domainToAccountBaseDN(String domain) {
@@ -216,7 +216,7 @@ public class LdapProvisioning extends Provisioning {
     }
     
     static String zimletNameToDN(String name) {
-    	return "cn="+name+","+ZIMLET_BASE;
+    	return "cn=" + LdapUtil.escapeRDNValue(name) + ","+ZIMLET_BASE;
     }
     	
 
@@ -224,7 +224,7 @@ public class LdapProvisioning extends Provisioning {
     
     static String mimeConfigToDN(String name) {
         name = sNamePattern.matcher(name).replaceAll("\\\\$1");
-        return "cn=" + name + ",cn=mime," + CONFIG_BASE;
+        return "cn=" + LdapUtil.escapeRDNValue(name) + ",cn=mime," + CONFIG_BASE;
     }
 
     public static interface ProvisioningValidator {
@@ -1188,6 +1188,9 @@ public class LdapProvisioning extends Provisioning {
      */
     public Domain createDomain(String name, Map<String, Object> domainAttrs) throws ServiceException {
         name = name.toLowerCase().trim();
+        
+        if (!EmailUtil.validDomain(name))
+            throw ServiceException.INVALID_REQUEST("invalid domain name: " + name, null);
         
         DirContext ctxt = null;
         try {
@@ -3487,7 +3490,7 @@ public class LdapProvisioning extends Provisioning {
     }
 
     private String getIdentityDn(LdapEntry entry, String name) {
-        return A_zimbraPrefIdentityName + "=" + name + "," + entry.getDN();    
+        return A_zimbraPrefIdentityName + "=" + LdapUtil.escapeRDNValue(name) + "," + entry.getDN();    
     }
 
     private void validateIdentityAttrs(Map<String, Object> attrs) throws ServiceException {
@@ -3728,7 +3731,7 @@ public class LdapProvisioning extends Provisioning {
     }    
 
     private String getDataSourceDn(LdapEntry entry, String name) {
-        return A_zimbraDataSourceName + "=" + name + "," + entry.getDN();    
+        return A_zimbraDataSourceName + "=" + LdapUtil.escapeRDNValue(name) + "," + entry.getDN();    
     }
 
     @Override

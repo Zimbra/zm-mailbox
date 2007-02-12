@@ -52,6 +52,7 @@ import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
+import javax.naming.ldap.Rdn;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -611,7 +612,7 @@ public class LdapUtil {
         StringBuffer sb = new StringBuffer(128);
         for (int i=offset; i < parts.length; i++) {
             if (i-offset > 0) sb.append(",");
-            sb.append("dc=").append(parts[i]);
+            sb.append("dc=").append(escapeRDNValue(parts[i]));
         }
         return sb.toString();
     }
@@ -653,7 +654,7 @@ public class LdapUtil {
         	    if (parts[i].startsWith("dc=")) {
         	        if (sb.length() > 0)
         	            sb.append(".");
-        	        sb.append(parts[i].substring(3));
+        	        sb.append(unescapeRDNValue(parts[i].substring(3)));
         	    }
         	}
         return sb.toString();
@@ -673,9 +674,9 @@ public class LdapUtil {
             if (parts[i].startsWith("dc=")) {
                 if (domain.length() > 0)
                     domain.append(".");
-                domain.append(parts[i].substring(3));
+                domain.append(unescapeRDNValue(parts[i].substring(3)));
             } else if (parts[i].startsWith("uid=")) {
-                uid = parts[i].substring(4);
+                uid = unescapeRDNValue(parts[i].substring(4));
             }
         }
         if (uid == null)
@@ -695,7 +696,7 @@ public class LdapUtil {
         String uid = null;
         for (int i = 0; i < parts.length; i++) {
             if (parts[i].startsWith("uid=")) {
-                uid = parts[i].substring(4);
+                uid = unescapeRDNValue(parts[i].substring(4));
                 break;
             }
         }
@@ -989,4 +990,18 @@ public class LdapUtil {
             closeEnumContext(ne);            
         }
     }
-}
+    
+ 
+    //
+    // Escape rdn value defined in:
+    // http://www.ietf.org/rfc/rfc2253.txt?number=2253
+    //
+    public static String escapeRDNValue(String rdn) {
+        return (String)Rdn.escapeValue(rdn);
+    }
+    
+    public static String unescapeRDNValue(String rdn) {
+        return (String)Rdn.unescapeValue(rdn);
+    }
+
+ }
