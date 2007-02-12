@@ -4015,6 +4015,10 @@ public class Mailbox {
         }
     }
 
+    /**
+     * Deletes the <tt>MailItem</tt> with the given id.  Does nothing
+     * if there is the <tt>MailItem</tt> doesn't exist.
+     */
     public synchronized void delete(OperationContext octxt, int itemId, byte type) throws ServiceException {
         delete(octxt, new int[] { itemId }, type, null);
     }
@@ -4023,10 +4027,18 @@ public class Mailbox {
         delete(octxt, new int[] { item.getId() }, item.getType(), tcon);
     }
 
+    /**
+     * Deletes the <tt>MailItem</tt> with the given id.  Does nothing
+     * if there is the <tt>MailItem</tt> doesn't exist.
+     */
     public synchronized void delete(OperationContext octxt, int itemId, byte type, TargetConstraint tcon) throws ServiceException {
         delete(octxt, new int[] { itemId }, type, tcon);
     }
 
+    /**
+     * Deletes <tt>MailItem</tt>s with the given id's.  If a <tt>MailItem</code>
+     * cannot be found for a given id, that id is ignored.
+     */
     public synchronized void delete(OperationContext octxt, int[] itemIds, byte type, TargetConstraint tcon) throws ServiceException {
         DeleteItem redoRecorder = new DeleteItem(mId, itemIds, type, tcon);
 
