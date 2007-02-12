@@ -240,8 +240,9 @@ public class LdapProvisioning extends Provisioning {
     private static Pattern sNamePattern = Pattern.compile("([/+])"); 
     
     static String mimeConfigToDN(String name) {
-        name = sNamePattern.matcher(name).replaceAll("\\\\$1");
-        return "cn=" + LdapUtil.escapeRDNValue(name) + ",cn=mime," + CONFIG_BASE;
+        name = LdapUtil.escapeRDNValue(name);                   // do LDAP escape first
+        name = sNamePattern.matcher(name).replaceAll("\\\\$1"); // then do JNDI escape
+        return "cn=" + name + ",cn=mime," + CONFIG_BASE;
     }
 
     public static interface ProvisioningValidator {
