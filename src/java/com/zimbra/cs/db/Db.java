@@ -55,6 +55,7 @@ public abstract class Db {
         BOOLEAN_DATATYPE,
         CASE_SENSITIVE_COMPARISON,
         CAST_AS_BIGINT,
+        CLOB_COMPARISON,
         DISABLE_CONSTRAINT_CHECK,
         LIMIT_CLAUSE,
         MULTITABLE_UPDATE,
