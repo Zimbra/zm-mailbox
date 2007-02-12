@@ -1941,6 +1941,7 @@ be specified.
 ---------------------------
 
 <ImportDataRequest>
+  *[<dsrc id="{id}"/>]
   *[<pop3 id="{id}"/>]
   *[<imap id="{id}"/>]
   ...

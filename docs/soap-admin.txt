@@ -183,6 +183,10 @@ Access: domain admin sufficient
 
 <DeleteAccountResponse/>
 
+Deletes the account with the given id.  If the request is sent
+to the server on which the mailbox resides, the mailbox is
+deleted as well.
+
 Access: domain admin sufficient
 
 -----------------------------
