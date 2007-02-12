@@ -1939,21 +1939,6 @@ public class Mailbox {
         }
     }
 
-//    public synchronized MailItem getItemByPath(OperationContext octxt, String path) throws ServiceException {
-//        while (path.startsWith("/"))
-//            path = path.substring(1);
-//        while (path.endsWith("/"))
-//            path = path.substring(0, path.length() - 1);
-//
-//        if (path.equals(""))
-//            return getFolderById(octxt, ID_FOLDER_USER_ROOT);
-//        int slash = path.lastIndexOf('/');
-//        if (slash == -1)
-//            return getItemByName(octxt, ID_FOLDER_USER_ROOT, path);
-//        int folderId = getFolderByPath(null, path.substring(0, slash-1)).getId();
-//        return getItemByName(octxt, folderId, path.substring(slash + 1));
-//    }
-//
     /** Returns all the MailItems of a given type, optionally in a specified folder */
     public synchronized List<MailItem> getItemList(OperationContext octxt, byte type) throws ServiceException {
         return getItemList(octxt, type, -1);
