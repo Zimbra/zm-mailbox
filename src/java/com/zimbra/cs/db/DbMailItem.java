@@ -2466,7 +2466,7 @@ public class DbMailItem {
 
         // if there are no possible matches, short-circuit here...
         if (c.automaticEmptySet()) {
-            statement.append("FALSE");
+            statement.append(Db.supports(Db.Capability.BOOLEAN_DATATYPE) ? " FALSE" : " 0=1");
             return;
         }
 
@@ -2488,7 +2488,7 @@ public class DbMailItem {
         // Determine the set of matching tags
         TagConstraints tc = TagConstraints.getTagContraints(mbox, c, conn);
         if (tc.noMatches)
-            statement.append(" AND FALSE");
+            statement.append(Db.supports(Db.Capability.BOOLEAN_DATATYPE) ? " AND FALSE" : " AND 0=1");
 
         if (c.hasTags != null)
             statement.append(" AND tags ").append(c.hasTags.booleanValue() ? "!= 0" : "= 0");
