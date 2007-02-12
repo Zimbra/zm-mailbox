@@ -27,13 +27,12 @@ package com.zimbra.cs.db;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collection;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
@@ -82,7 +81,7 @@ public class DbImapMessage {
         Connection conn = null;
         PreparedStatement stmt = null;
 
-        ZimbraLog.mailbox.debug("Deleting UID's for " + dataSourceId);
+        ZimbraLog.mailbox.debug("Deleting UID's for %s", dataSourceId);
         
         if (StringUtil.isNullOrEmpty(dataSourceId)) {
             return;
@@ -97,7 +96,7 @@ public class DbImapMessage {
             stmt.setString(2, dataSourceId);
             int numRows = stmt.executeUpdate();
             conn.commit();
-            ZimbraLog.mailbox.debug("Deleted " + numRows + " UID's");
+            ZimbraLog.mailbox.debug("Deleted %d UID's", numRows);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("Unable to delete UID's", e);
         } finally {
@@ -107,42 +106,33 @@ public class DbImapMessage {
     }
 
     /**
-     * Returns the set of persisted UID's that are also in the <code>uids</code>
-     * collection.
+     * Returns the set of persisted UID's for the given data source.  The key
+     * to the <tt>Map</tt> is the message's UID.
      */
-    public static Set<Long> getMatchingUids(Mailbox mbox, DataSource ds,
-                                            Collection<Long> uids)
+    public static Map<Long, ImapMessage> getImapMessages(Mailbox mbox, DataSource ds)
     throws ServiceException {
-        ZimbraLog.mailbox.debug(ds + ": looking for uids that match a set of size " + uids.size());
-        
-        List<List<Long>> splitIds = ListUtil.split(uids, DbUtil.IN_CLAUSE_BATCH_SIZE);
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        Set<Long> matchingUids = new HashSet<Long>();
+        Map<Long, ImapMessage> imapMessages = new HashMap<Long, ImapMessage>();
 
         try {
             conn = DbPool.getConnection();
-            for (List<Long> curIds : splitIds) {
-                stmt = conn.prepareStatement(
-                    "SELECT uid " +
-                    "FROM " + getTableName(mbox) +
-                    " WHERE mailbox_id = ? AND data_source_id = ? AND uid IN " +
-                    DbUtil.suitableNumberOfVariables(uids));
+            stmt = conn.prepareStatement(
+                "SELECT uid, item_id " +
+                "FROM " + getTableName(mbox) +
+                " WHERE mailbox_id = ? AND data_source_id = ?");
 
-                int i = 1;
-                stmt.setInt(i++, mbox.getId());
-                stmt.setString(i++, ds.getId());
-                for (Long uid : curIds) {
-                    stmt.setLong(i++, uid);
-                }
-                rs = stmt.executeQuery();
-                while (rs.next()) {
-                    matchingUids.add(rs.getLong(1));
-                }
-                rs.close();
-                stmt.close();
+            int i = 1;
+            stmt.setInt(i++, mbox.getId());
+            stmt.setString(i++, ds.getId());
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                long uid = rs.getLong("uid");
+                imapMessages.put(uid, new ImapMessage(uid, rs.getInt("item_id")));
             }
+            rs.close();
+            stmt.close();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("Unable to get UID's", e);
         } finally {
@@ -151,8 +141,8 @@ public class DbImapMessage {
             DbPool.quietClose(conn);
         }
 
-        ZimbraLog.mailbox.debug(ds + ": found " + matchingUids.size() + " matching UID's");
-        return matchingUids;
+        ZimbraLog.mailbox.debug("Found %d UID's for %s", imapMessages.size(), ds);
+        return imapMessages;
     }
 
     public static String getTableName(int mailboxId, int groupId) {

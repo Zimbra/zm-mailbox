@@ -86,7 +86,7 @@ public class DbPop3Message {
         Connection conn = null;
         PreparedStatement stmt = null;
 
-        ZimbraLog.mailbox.debug("Deleting UID's for " + dataSourceId);
+        ZimbraLog.mailbox.debug("Deleting UID's for %s", dataSourceId);
         
         try {
             conn = DbPool.getConnection();
@@ -97,7 +97,7 @@ public class DbPop3Message {
             stmt.setString(2, dataSourceId);
             int numRows = stmt.executeUpdate();
             conn.commit();
-            ZimbraLog.mailbox.debug("Deleted " + numRows + " UID's");
+            ZimbraLog.mailbox.debug("Deleted %d UID's", numRows);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("Unable to delete UID's", e);
         } finally {
@@ -113,7 +113,7 @@ public class DbPop3Message {
     public static Set<String> getMatchingUids(Mailbox mbox, DataSource ds,
                                               Collection<String> uids)
     throws ServiceException {
-        ZimbraLog.mailbox.debug(ds + ": looking for uids that match a set of size " + uids.size());
+        ZimbraLog.mailbox.debug("%s: looking for uids that match a set of size %d", ds, uids.size());
         
         List<List<String>> splitIds = ListUtil.split(uids, DbUtil.IN_CLAUSE_BATCH_SIZE);
         Connection conn = null;
@@ -128,7 +128,7 @@ public class DbPop3Message {
                     "SELECT uid " +
                     "FROM " + getTableName(mbox) +
                     " WHERE mailbox_id = ? AND data_source_id = ? AND uid IN " +
-                    DbUtil.suitableNumberOfVariables(uids));
+                    DbUtil.suitableNumberOfVariables(curIds));
 
                 int i = 1;
                 stmt.setInt(i++, mbox.getId());
@@ -151,7 +151,7 @@ public class DbPop3Message {
             DbPool.quietClose(conn);
         }
 
-        ZimbraLog.mailbox.debug(ds + ": found " + matchingUids.size() + " matching UID's");
+        ZimbraLog.mailbox.debug("Found %d matching UID's", matchingUids.size());
         return matchingUids;
     }
 

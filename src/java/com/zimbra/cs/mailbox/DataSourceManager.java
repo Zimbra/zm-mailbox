@@ -38,8 +38,8 @@ import com.zimbra.cs.account.Provisioning;
 
 
 /**
- * Represents an external data source, such as a POP3 mail server, from which ZCS
- * can import <code>MailItem</code>s.
+ * Represents an external data source, such as a POP3 or IMAP mail server,
+ * from which ZCS can import <code>MailItem</code>s.
  * 
  * @author bburtin
  */
@@ -138,21 +138,47 @@ public class DataSourceManager {
             importStatus.mError = null;
         }
         
-        boolean success = false;
-        String error = null;
+        Thread thread = new Thread(new ImportDataThread(account, ds));
+        thread.setName("ImportDataThread-" + account.getName());
+        thread.start();
+        
+    }
 
-        try {
-            MailItemImport mii = sImports.get(ds.getType());
-            mii.importData(account, ds);
-            success = true;
-        } catch (ServiceException e) {
-            ZimbraLog.mailbox.warn("Import from " + ds + " failed", e);
-            error = e.getMessage();
-        } finally {
-            synchronized (importStatus) {
-                importStatus.mSuccess = success;
-                importStatus.mError = error;
-                importStatus.mIsRunning = false;
+    private static class ImportDataThread implements Runnable {
+        Account mAccount;
+        DataSource mDataSource;
+        
+        public ImportDataThread(Account account, DataSource ds) {
+            if (account == null) {
+                throw new IllegalArgumentException("account cannot be null");
+            }
+            if (ds == null) {
+                throw new IllegalArgumentException("DataSource cannot be null");
+            }
+            mAccount = account;
+            mDataSource = ds;
+        }
+        
+        public void run() {
+            MailItemImport mii = sImports.get(mDataSource.getType());
+            boolean success = false;
+            String error = null;
+
+            try {
+                ZimbraLog.mailbox.info("Importing data from %s", mDataSource);
+                mii.importData(mAccount, mDataSource);
+                ZimbraLog.mailbox.info("Import completed");
+                success = true;
+            } catch (ServiceException e) {
+                ZimbraLog.mailbox.warn("Import from " + mDataSource + " failed", e);
+                error = e.getMessage();
+            } finally {
+                ImportStatus importStatus = getImportStatus(mAccount, mDataSource);
+                synchronized (importStatus) {
+                    importStatus.mSuccess = success;
+                    importStatus.mError = error;
+                    importStatus.mIsRunning = false;
+                }
             }
         }
     }

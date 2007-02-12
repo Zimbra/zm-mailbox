@@ -1,41 +1,39 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1
- *
+ * 
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.1 ("License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
  * http://www.zimbra.com/license
- *
+ * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
  * the License for the specific language governing rights and limitations
  * under the License.
- *
+ * 
  * The Original Code is: Zimbra Collaboration Suite Server.
- *
+ * 
  * The Initial Developer of the Original Code is Zimbra, Inc.
  * Portions created by Zimbra are Copyright (C) 2006 Zimbra, Inc.
  * All Rights Reserved.
- *
- * Contributor(s):
- *
+ * 
+ * Contributor(s): 
+ * 
  * ***** END LICENSE BLOCK *****
  */
-
 package com.zimbra.cs.zclient;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapUtil;
 
-public class ZPop3DataSource implements ZDataSource {
+public class ZImapDataSource implements ZDataSource {
 
     private String mId;
     private String mName;
@@ -46,9 +44,8 @@ public class ZPop3DataSource implements ZDataSource {
     private String mPassword;
     private String mFolderId;
     private DataSource.ConnectionType mConnectionType;
-    private boolean mLeaveOnServer;
     
-    public ZPop3DataSource(Element e) throws ServiceException {
+    public ZImapDataSource(Element e) throws ServiceException {
         mId = e.getAttribute(MailConstants.A_ID);
         mName = e.getAttribute(MailConstants.A_NAME);
         mEnabled = e.getAttributeBool(MailConstants.A_DS_IS_ENABLED);
@@ -58,12 +55,11 @@ public class ZPop3DataSource implements ZDataSource {
         mFolderId = e.getAttribute(MailConstants.A_FOLDER);
         mConnectionType = DataSource.ConnectionType.fromString(
             e.getAttribute(MailConstants.A_DS_CONNECTION_TYPE));
-        mLeaveOnServer = e.getAttributeBool(MailConstants.A_DS_LEAVE_ON_SERVER);
     }
 
-    public ZPop3DataSource(String name, boolean enabled, String host, int port,
+    public ZImapDataSource(String name, boolean enabled, String host, int port,
                            String username, String password, String folderid,
-                           DataSource.ConnectionType connectionType, boolean leaveOnServer) {
+                           DataSource.ConnectionType connectionType) {
         mName = name;
         mEnabled = enabled;
         mHost = host;
@@ -72,12 +68,11 @@ public class ZPop3DataSource implements ZDataSource {
         mPassword = password;
         mFolderId = folderid;
         mConnectionType = connectionType;
-        mLeaveOnServer = leaveOnServer;
     }
 
-    public ZPop3DataSource(DataSource dsrc) throws ServiceException {
-        if (dsrc.getType() != DataSource.Type.pop3)
-            throw ServiceException.INVALID_REQUEST("can't instantiate ZPop3DataSource for " + dsrc.getType(), null);
+    public ZImapDataSource(DataSource dsrc) throws ServiceException {
+        if (dsrc.getType() != DataSource.Type.imap)
+            throw ServiceException.INVALID_REQUEST("can't instantiate ZImapDataSource for " + dsrc.getType(), null);
 
         mName = dsrc.getName();
         mEnabled = dsrc.isEnabled();
@@ -87,11 +82,10 @@ public class ZPop3DataSource implements ZDataSource {
         mPassword = dsrc.getDecryptedPassword();
         mFolderId = "" + dsrc.getFolderId();
         mConnectionType = dsrc.getConnectionType();
-        mLeaveOnServer = dsrc.leaveOnServer();
     }
 
     public Element toElement(Element parent) {
-        Element src = parent.addElement(MailConstants.E_DS_POP3);
+        Element src = parent.addElement(MailConstants.E_DS_IMAP);
         if (mId != null) src.addAttribute(MailConstants.A_ID, mId);
         src.addAttribute(MailConstants.A_NAME, mName);
         src.addAttribute(MailConstants.A_DS_IS_ENABLED, mEnabled);
@@ -101,17 +95,16 @@ public class ZPop3DataSource implements ZDataSource {
         if (mPassword != null) src.addAttribute(MailConstants.A_DS_PASSWORD, mPassword);
         src.addAttribute(MailConstants.A_FOLDER, mFolderId);
         src.addAttribute(MailConstants.A_DS_CONNECTION_TYPE, mConnectionType.name());
-        src.addAttribute(MailConstants.A_DS_LEAVE_ON_SERVER, mLeaveOnServer);
         return src;
     }
 
     public Element toIdElement(Element parent) {
-        Element src = parent.addElement(MailConstants.E_DS_POP3);
+        Element src = parent.addElement(MailConstants.E_DS_IMAP);
         src.addAttribute(MailConstants.A_ID, mId);
         return src;
     }
 
-    public DataSource.Type getType() { return DataSource.Type.pop3; }
+    public DataSource.Type getType() { return DataSource.Type.imap; }
 
     public String getId() { return mId; }
 
@@ -136,9 +129,6 @@ public class ZPop3DataSource implements ZDataSource {
     public DataSource.ConnectionType getConnectionType() { return mConnectionType; }
     public void setConnectionType(DataSource.ConnectionType connectionType) { mConnectionType = connectionType; }
     
-    public boolean leaveOnServer() { return mLeaveOnServer; }
-    public void setLeaveOnServer(boolean leaveOnServer) { mLeaveOnServer = leaveOnServer; }
-    
     public Map<String, Object> getAttrs() {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraDataSourceId, mId);
@@ -151,7 +141,6 @@ public class ZPop3DataSource implements ZDataSource {
             attrs.put(Provisioning.A_zimbraDataSourcePort, "" + mPort);
         if (mFolderId != null)
             attrs.put(Provisioning.A_zimbraDataSourceFolderId, mFolderId);
-        attrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer, LdapUtil.getBooleanString(mLeaveOnServer));
         return attrs;
     }
 
@@ -166,7 +155,6 @@ public class ZPop3DataSource implements ZDataSource {
         sb.add("username", mUsername);
         sb.add("folderId", mFolderId);
         sb.add("connectionType", mConnectionType.name());
-        sb.add("leaveOnServer", mLeaveOnServer);
         sb.endStruct();
         return sb.toString();
     }

@@ -25,9 +25,8 @@
 package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
-import java.util.HashSet;
+import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 
 import javax.mail.FetchProfile;
 import javax.mail.Folder;
@@ -45,10 +44,10 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.db.DbImapMessage;
+import com.zimbra.cs.db.ImapMessage;
 import com.zimbra.cs.mime.ParsedMessage;
 
 
@@ -95,7 +94,7 @@ implements MailItemImport {
     public void importData(Account account, DataSource dataSource)
     throws ServiceException {
         try {
-            fetchMessages(account, dataSource);
+            importDataInternal(account, dataSource);
         } catch (MessagingException e) {
             throw ServiceException.FAILURE(e.getMessage(), e);
         } catch (IOException e) {
@@ -134,10 +133,8 @@ implements MailItemImport {
         }
     }
 
-    private void fetchMessages(Account account, DataSource ds)
+    private void importDataInternal(Account account, DataSource ds)
     throws MessagingException, IOException, ServiceException {
-        ZimbraLog.mailbox.info("Importing IMAP messages from " + ds);
-        
         validateDataSource(ds);
         
         // Connect (USER, PASS, STAT)
@@ -147,20 +144,14 @@ implements MailItemImport {
         folder.open(Folder.READ_ONLY);
 
         Message[] msgs = folder.getMessages();
+        sLog.debug("Found %d messages on remote server", msgs.length);
 
-        // Bail out if there are no messages
-        if (msgs.length == 0) {
-            folder.close(false);
-            store.close();
-            return;
+        if (msgs.length > 0) {
+            // Fetch message UID's for reconciliation (UIDL)
+            folder.fetch(msgs, UID_PROFILE);
         }
         
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-        
-        // Fetch message UID's for reconciliation (UIDL)
-        folder.fetch(msgs, UID_PROFILE);
-        
-        // Check the UID of the first message to make sure the user isn't
+        // TODO: Check the UID of the first message to make sure the user isn't
         // importing his own mailbox.
         /*
         long uid = folder.getUID(msgs[0]);
@@ -171,51 +162,45 @@ implements MailItemImport {
                 "User attempted to import messages from his own mailbox", null);
         }
         */
+
+        // Insert new messages
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        Map<Long, ImapMessage> storedMsgs = DbImapMessage.getImapMessages(mbox, ds);
         
-        sLog.debug("Retrieving " + msgs.length + " messages");
-
-        Set<Long> uidsToFetch = getUidsToFetch(mbox, ds, folder);
-
-        // Fetch message bodies (RETR)
         for (int i = 0; i < msgs.length; i++) {
             IMAPMessage imapMsg = (IMAPMessage) msgs[i];
-            // Skip this message if we've already downloaded it
             long uid = folder.getUID(imapMsg);
-            if (!uidsToFetch.contains(uid)) {
-                continue;
-            }
-
-            // Add message to mailbox
-            ParsedMessage pm = null;
-            if (imapMsg.getSentDate() != null) {
-                // Set received date to the original message's date
-                pm = new ParsedMessage(imapMsg, imapMsg.getSentDate().getTime(),
-                    mbox.attachmentsIndexingEnabled());
+            if (storedMsgs.containsKey(uid)) {
+                storedMsgs.remove(uid);
             } else {
-                pm = new ParsedMessage(imapMsg, mbox.attachmentsIndexingEnabled());
-            }
-            com.zimbra.cs.mailbox.Message zimbraMsg =
-                mbox.addMessage(null, pm, ds.getFolderId(), false, Flag.BITMASK_UNREAD, null);
+                // Add message to mailbox
+                ParsedMessage pm = null;
+                if (imapMsg.getSentDate() != null) {
+                    // Set received date to the original message's date
+                    pm = new ParsedMessage(imapMsg, imapMsg.getSentDate().getTime(),
+                        mbox.attachmentsIndexingEnabled());
+                } else {
+                    pm = new ParsedMessage(imapMsg, mbox.attachmentsIndexingEnabled());
+                }
+                com.zimbra.cs.mailbox.Message zimbraMsg =
+                    mbox.addMessage(null, pm, ds.getFolderId(), false, Flag.BITMASK_UNREAD, null);
 
-            DbImapMessage.storeUid(mbox, ds.getId(), folder.getUID(imapMsg), zimbraMsg.getId());
+                DbImapMessage.storeUid(mbox, ds.getId(), folder.getUID(imapMsg), zimbraMsg.getId());
+            }
+        }
+        
+        // Remaining UID's are not on the remote server.  Delete local copies.
+        if (storedMsgs.size() > 0) {
+            int[] idArray = new int[storedMsgs.size()];
+            int i = 0;
+            for (ImapMessage imapMsg: storedMsgs.values()) {
+                idArray[i++] = imapMsg.getItemId();
+            }
+            mbox.delete(null, idArray, MailItem.TYPE_MESSAGE, null);
         }
         
         // Expunge if necessary and disconnect (QUIT)
         folder.close(false);
         store.close();
-    }
-    
-    private Set<Long> getUidsToFetch(Mailbox mbox, DataSource ds, IMAPFolder folder)
-    throws MessagingException, ServiceException {
-        Set<Long> uidsToFetch = new HashSet<Long>();
-        for (Message msg : folder.getMessages()) {
-            uidsToFetch.add(folder.getUID(msg));
-        }
-        
-        // Remove UID's of messages that we already downloaded
-        Set<Long> existingUids =
-            DbImapMessage.getMatchingUids(mbox, ds, uidsToFetch);
-        uidsToFetch.removeAll(existingUids);
-        return uidsToFetch;
     }
 }

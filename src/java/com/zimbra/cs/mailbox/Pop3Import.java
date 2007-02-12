@@ -49,7 +49,6 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.db.DbPop3Message;
@@ -144,8 +143,6 @@ implements MailItemImport {
     
     private void fetchMessages(Account account, DataSource ds)
     throws MessagingException, IOException, ServiceException {
-        ZimbraLog.mailbox.info("Importing POP3 messages from " + ds);
-        
         validateDataSource(ds);
         
         // Connect (USER, PASS, STAT)
@@ -178,7 +175,7 @@ implements MailItemImport {
                 "User attempted to import messages from his own mailbox", null);
         }
         
-        sLog.debug("Retrieving " + msgs.length + " messages");
+        sLog.debug("Found %d messages on remote server", msgs.length);
 
         Set<String> uidsToFetch = null;
         if (ds.leaveOnServer()) {

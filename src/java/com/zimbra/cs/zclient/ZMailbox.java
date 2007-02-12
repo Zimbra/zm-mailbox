@@ -1297,9 +1297,11 @@ public class ZMailbox {
     
     /**
      * @param folderId (required) folderId of folder to add message to
-     * @param flags non-comma-separated list of flags, e.g. "sf" for "sent by me and flagged"
-     * @param tags coma-spearated list of tags, or null for no tags
-     * @param receivedDate (optional) time the message was originally received, in MILLISECONDS since the epoch 
+     * @param flags non-comma-separated list of flags, e.g. "sf" for "sent by me and flagged",
+     *        or <tt>null</tt>
+     * @param tags coma-spearated list of tags, or null for no tags, or <tt>null</tt>
+     * @param receivedDate time the message was originally received, in MILLISECONDS since the epoch,
+     *        or <tt>0</tt> for the current time 
      * @param content message content
      * @param noICal if TRUE, then don't process iCal attachments.
      * @return ID of newly created message
@@ -1321,9 +1323,11 @@ public class ZMailbox {
 
     /**
      * @param folderId (required) folderId of folder to add message to
-     * @param flags non-comma-separated list of flags, e.g. "sf" for "sent by me and flagged"
-     * @param tags coma-spearated list of tags, or null for no tags
-     * @param receivedDate (optional) time the message was originally received, in MILLISECONDS since the epoch 
+     * @param flags non-comma-separated list of flags, e.g. "sf" for "sent by me and flagged",
+     *        or <tt>null</tt>
+     * @param tags coma-spearated list of tags, or null for no tags, or <tt>null</tt>
+     * @param receivedDate time the message was originally received, in MILLISECONDS since the epoch,
+     *        or <tt>0</tt> for the current time 
      * @param content message content
      * @param noICal if TRUE, then don't process iCal attachments.
      * @return ID of newly created message
@@ -1497,6 +1501,24 @@ public class ZMailbox {
         else return null;
     }
 
+    /**
+     * Returns all folders and subfolders in this mailbox.
+     * @throws ServiceException on error
+     */
+    public List<ZFolder> getAllFolders() throws ServiceException {
+        if (mNeedsRefresh) noOp();
+        List<ZFolder> allFolders = new ArrayList<ZFolder>();
+        addSubFolders(getUserRoot(), allFolders);
+        return allFolders;
+    }
+    
+    private void addSubFolders(ZFolder folder, List<ZFolder> folderList) throws ServiceException {
+        folderList.add(folder);
+        for (ZFolder subFolder : folder.getSubFolders()) {
+            addSubFolders(subFolder, folderList);
+        }
+    }
+    
     /**
      * returns a rest URL relative to this mailbox. 
      * @param relativePath a relative path (i.e., "/Calendar", "Inbox?fmt=rss", etc).
@@ -2273,6 +2295,8 @@ public class ZMailbox {
         for (Element ds : response.listElements()) {
             if (ds.getName().equals(MailConstants.E_DS_POP3)) {
                 result.add(new ZPop3DataSource(ds));
+            } else if (ds.getName().equals(MailConstants.E_DS_IMAP)) {
+                result.add(new ZImapDataSource(ds));
             }
         }
         return result;

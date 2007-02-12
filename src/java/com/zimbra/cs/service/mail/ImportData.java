@@ -62,27 +62,12 @@ public class ImportData extends MailDocumentHandler {
             if (ds == null) {
                 throw ServiceException.INVALID_REQUEST("Could not find Data Source with id " + id, null);
             }
-
-            Thread thread = new Thread(new ImportDataThread(account, ds));
-            thread.setName("ImportDataThread-" + account.getName());
-            thread.start();
+            
+            DataSourceManager.importData(account, ds);
         }
         
         Element response = zsc.createElement(MailConstants.IMPORT_DATA_RESPONSE);
         return response;
     }
     
-    private static class ImportDataThread implements Runnable {
-        Account mAccount;
-    	DataSource mDataSource;
-        
-    	public ImportDataThread(Account account, DataSource ds) {
-            mAccount = account;
-    		mDataSource = ds;
-    	}
-        
-    	public void run() {
-    	    DataSourceManager.importData(mAccount, mDataSource);
-    	}
-    }
 }

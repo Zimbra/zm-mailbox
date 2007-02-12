@@ -32,9 +32,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import junit.framework.Test;
+import junit.framework.TestResult;
+
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.client.LmcSession;
@@ -43,38 +52,40 @@ import com.zimbra.cs.client.soap.LmcAdminAuthResponse;
 import com.zimbra.cs.client.soap.LmcAuthRequest;
 import com.zimbra.cs.client.soap.LmcAuthResponse;
 import com.zimbra.cs.client.soap.LmcSoapClientException;
-import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.db.DbResults;
-import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.lmtpserver.utils.LmtpClient;
-import com.zimbra.cs.localconfig.DebugConfig;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZGetMessageParams;
 import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.soap.SoapFaultException;
-import junit.framework.Test;
-import junit.framework.TestResult;
+import com.zimbra.cs.zclient.ZMessage;
+import com.zimbra.cs.zclient.ZSearchHit;
+import com.zimbra.cs.zclient.ZSearchParams;
+import com.zimbra.cs.zclient.ZTag;
 
 /**
  * @author bburtin
  */
 public class TestUtil {
 
+    public static final String DEFAULT_PASSWORD = "test123";
+
+    public static boolean accountExists(String userName)
+    throws ServiceException {
+        String address = getAddress(userName);
+        Account account = Provisioning.getInstance().get(AccountBy.name, address);
+        return account != null;
+    }
+    
     public static Account getAccount(String userName)
     throws ServiceException {
         String address = getAddress(userName);
@@ -139,7 +150,7 @@ public class TestUtil {
     {
         LmcAuthRequest auth = new LmcAuthRequest();
         auth.setUsername(getAddress(userName));
-        auth.setPassword("test123");
+        auth.setPassword(DEFAULT_PASSWORD);
         LmcAuthResponse authResp = (LmcAuthResponse) auth.invoke(getSoapUrl());
         return authResp.getSession();
     }
@@ -150,7 +161,7 @@ public class TestUtil {
         // Authenticate
         LmcAdminAuthRequest auth = new LmcAdminAuthRequest();
         auth.setUsername(getAddress("admin"));
-        auth.setPassword("test123");
+        auth.setPassword(DEFAULT_PASSWORD);
         LmcAdminAuthResponse authResp = (LmcAdminAuthResponse) auth.invoke(getAdminSoapUrl());
         return authResp.getSession();
     }
@@ -183,7 +194,7 @@ public class TestUtil {
     }
 
     private static String getTestMessage(int messageNum, String subject)
-    throws Exception {
+    throws ServiceException {
         Map<String, Object> vars = new HashMap<String, Object>();
         vars.put("MESSAGE_NUM", new Integer(messageNum));
         vars.put("SUBJECT", subject);
@@ -199,6 +210,13 @@ public class TestUtil {
         recipients.add(recipient);
         lmtp.sendMessage(message.getBytes(), recipients, sender, "TestUtil");
         lmtp.close();
+    }
+    
+    public static String insertMessage(ZMailbox mbox, int messageNum, String subject)
+    throws ServiceException {
+        String message = getTestMessage(messageNum, subject);
+        String folderId = Integer.toString(Mailbox.ID_FOLDER_INBOX);
+        return mbox.addMessage(folderId, null, null, 0, message, true);
     }
 
     /**
@@ -218,6 +236,20 @@ public class TestUtil {
         }
         return ids;
 
+    }
+    
+    public static List<ZMessage> search(ZMailbox mbox, String query)
+    throws Exception {
+        List<ZMessage> msgs = new ArrayList<ZMessage>();
+        ZSearchParams params = new ZSearchParams(query);
+        params.setTypes(ZSearchParams.TYPE_MESSAGE);
+
+        for (ZSearchHit hit : mbox.search(params).getHits()) {
+            ZGetMessageParams msgParams = new ZGetMessageParams();
+            msgParams.setId(hit.getId());
+            msgs.add(mbox.getMessage(msgParams));
+        }
+        return msgs;
     }
 
     /**
@@ -239,37 +271,41 @@ public class TestUtil {
 
     /**
      * Delete all messages, tags and folders in the user's mailbox
-     * whose subjects contain the given substring. 
+     * whose subjects contain the given substring.  For messages, the
+     * subject must contain subjectString as a separate word.  Tags
+     * and folders can have the string anywhere in the name. 
      */
     public static void deleteTestData(String userName, String subjectSubstring)
-    throws Exception {
-        deleteTestData(userName, subjectSubstring, MailItem.TYPE_MESSAGE);
-        deleteTestData(userName, subjectSubstring, MailItem.TYPE_TAG);
-        deleteTestData(userName, subjectSubstring, MailItem.TYPE_FOLDER);
-    }
-
-    private static void deleteTestData(String userName, String subjectSubstring, byte type)
-    throws Exception {
-        Mailbox mbox = TestUtil.getMailbox(userName);
-        String nameColumn = type == MailItem.TYPE_MESSAGE ? "subject" : "name";
-        String sql =
-            "SELECT id " +
-            "FROM " + DbMailItem.getMailItemTableName(mbox) +
-            " WHERE " +
-            (!DebugConfig.disableMailboxGroup ? "mailbox_id = " + mbox.getId() + " AND " : "") +
-            "type = " + type + " AND " + nameColumn + " LIKE '%" + subjectSubstring + "%' ";
-        DbResults results = DbUtil.executeQuery(sql);
-        while (results.next()) {
-            int id = results.getInt(1);
-            try {
-                mbox.getItemById(null, id, type);
-                mbox.delete(null, id, type);
-                ZimbraLog.test.debug("Deleted item " + id + ", type " + type);
-            } catch (NoSuchItemException e) {
-                ZimbraLog.test.debug("Unable to delete item " + id + ".  Must have been deleted by parent.");
+    throws ServiceException {
+        ZMailbox mbox = TestUtil.getZMailbox(userName);
+        
+        // Delete messages
+        ZSearchParams params = new ZSearchParams("in:inbox " + subjectSubstring);
+        params.setTypes(ZSearchParams.TYPE_MESSAGE);
+        List<ZSearchHit> hits = mbox.search(params).getHits();
+        if (hits.size() > 0) {
+            List<String> ids = new ArrayList<String>();
+            for (ZSearchHit hit : hits) {
+                ids.add(hit.getId());
+            }
+            mbox.deleteMessage(StringUtil.join(",", ids));
+        }
+        
+        // Delete tags
+        for (ZTag tag : mbox.getAllTags()) {
+            if (tag.getName().contains(subjectSubstring)) {
+                mbox.deleteTag(tag.getId());
+            }
+        }
+        
+        // Delete folders
+        for (ZFolder folder : mbox.getAllFolders()) {
+            if (folder.getName().contains(subjectSubstring)) {
+                mbox.deleteFolder(folder.getId());
             }
         }
     }
+    
 
     /**
      * Runs a test and writes the output to the logfile.
@@ -309,20 +345,59 @@ public class TestUtil {
     }
     
     public static ZMailbox getZMailbox(String username)
-    throws Exception {
+    throws ServiceException {
         ZMailbox.Options options = new ZMailbox.Options();
         options.setAccount(getAddress(username));
         options.setAccountBy(AccountBy.name);
-        options.setPassword("test123");
+        options.setPassword(DEFAULT_PASSWORD);
         options.setUri(getSoapUrl());
         return ZMailbox.getMailbox(options);
     }
     
     public static SoapProvisioning getSoapProvisioning()
-    throws Exception {
+    throws ServiceException {
         SoapProvisioning sp = new SoapProvisioning();
         sp.soapSetURI("https://localhost:7071" + ZimbraServlet.ADMIN_SERVICE_URI);
         sp.soapZimbraAdminAuthenticate();
         return sp;
+    }
+
+    /**
+     * Creates an account for the given username, with
+     * password set to {@link #DEFAULT_PASSWORD}.
+     */
+    public static Account createAccount(String username)
+    throws ServiceException {
+        Provisioning prov = getSoapProvisioning();
+        String address = getAddress(username);
+        return prov.createAccount(address, DEFAULT_PASSWORD, null);
+    }
+    
+    /**
+     * Deletes the account for the given username.
+     */
+    public static void deleteAccount(String username)
+    throws ServiceException {
+        Provisioning prov = getSoapProvisioning();
+        Account account = getAccount(username);
+        if (account != null) {
+            prov.deleteAccount(account.getId());
+        }
+    }
+    
+    public static String getServerAttr(String attrName)
+    throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        Server server = prov.getLocalServer();
+        return server.getAttr(attrName, null);
+    }
+    
+    public static void setServerAttr(String attrName, String attrValue)
+    throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        Server server = prov.getLocalServer();
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(attrName, attrValue);
+        prov.modifyAttrs(server, attrs);
     }
 }
