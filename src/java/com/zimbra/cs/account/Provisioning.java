@@ -371,7 +371,9 @@ public abstract class Provisioning {
 
     
     public static final String A_zimbraLocale = "zimbraLocale";
-
+    
+    public static final String A_zimbraPrefLocale = "zimbraPrefLocale";
+    
     /**
      * compat mode for calendar
      */
@@ -1648,14 +1650,18 @@ public abstract class Provisioning {
      */
     public abstract List<NamedEntry> searchCalendarResources(EntrySearchFilter filter, String returnAttrs[], String sortAttr, boolean sortAscending) throws ServiceException;
 
-    private static Locale getEntryLocale(Entry entry) {
+    private static Locale getEntryLocale(Entry entry, String attr) {
         Locale lc = null;
         if (entry != null) {
-            String lcName = entry.getAttr(A_zimbraLocale);
+            String lcName = entry.getAttr(attr);
             if (lcName != null)
                 lc = L10nUtil.lookupLocale(lcName);
         }
         return lc;
+    }
+    
+    private static Locale getEntryLocale(Entry entry) {
+        return getEntryLocale(entry, A_zimbraLocale);
     }
 
     public Locale getLocale(Entry entry) throws ServiceException {
@@ -1663,16 +1669,23 @@ public abstract class Provisioning {
             // Order of precedence for Account's locale: (including
             // CalendarResource which extends Account)
             //
-            // 1. locale set at Account level
-            // 2. locale set at Account's COS level
-            // 3. locale set at Account's domain level
-            // 4. locale set at Account's Server level
-            // 5. locale set at global Config level
-            // 6. Locale.getDefault() of current JVM
+            // 1. zimbraPrefLocale set at Account level
+            // 2. zimbraPrefLocale set at COS level
+            // 3. locale set at Account level
+            // 4. locale set at Account's COS level
+            // 5. locale set at Account's domain level
+            // 6. locale set at Account's Server level
+            // 7. locale set at global Config level
+            // 8. Locale.getDefault() of current JVM
             Account account = (Account) entry;
-            Locale lc = getEntryLocale(account);
+            Locale lc = getEntryLocale(account, A_zimbraPrefLocale);
             if (lc != null) return lc;
-            lc = getEntryLocale(getCOS(account));
+            Cos cos = getCOS(account);
+            lc = getEntryLocale(cos, A_zimbraPrefLocale);
+            if (lc != null) return lc;
+            lc = getEntryLocale(account);
+            if (lc != null) return lc;
+            lc = getEntryLocale(cos);
             if (lc != null) return lc;
             lc = getEntryLocale(getDomain(account));
             if (lc != null) return lc;

@@ -30,6 +30,7 @@ package com.zimbra.cs.service.account;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
@@ -71,10 +72,13 @@ public class GetInfo extends AccountDocumentHandler  {
         Map attrMap = acct.getAttrs();
         // take this out when client is updated
         //doPrefs(response, attrMap);
+        
+        Locale locale = Provisioning.getInstance().getLocale(acct);
+        
         Element prefs = response.addUniqueElement(AccountConstants.E_PREFS);
-        doPrefs(prefs, attrMap);
+        GetPrefs.doPrefs(acct, locale.toString(), prefs, attrMap, null);
         Element attrs = response.addUniqueElement(AccountConstants.E_ATTRS);
-        doAttrs(attrs, attrMap);
+        doAttrs(acct, locale.toString(), attrs, attrMap);
         Element zimlets = response.addUniqueElement(AccountConstants.E_ZIMLETS);
         doZimlets(zimlets, acct);
         Element props = response.addUniqueElement(AccountConstants.E_PROPERTIES);
@@ -88,35 +92,18 @@ public class GetInfo extends AccountDocumentHandler  {
         return response;
     }
 
-    private static void doPrefs(Element prefs, Map attrsMap) {
-        for (Iterator mi = attrsMap.entrySet().iterator(); mi.hasNext(); ) {
-            Map.Entry entry = (Entry) mi.next();
-            String key = (String) entry.getKey();
-            if (!key.startsWith("zimbraPref"))
-                continue;
-            Object value = entry.getValue();
-            if (value instanceof String[]) {
-                String sa[] = (String[]) value;
-                for (int i = 0; i < sa.length; i++) {
-                    Element pref = prefs.addElement(AccountConstants.E_PREF);
-                    pref.addAttribute(AccountConstants.A_NAME, key);
-                    pref.setText(sa[i]);
-                }
-            } else {
-                Element pref = prefs.addElement(AccountConstants.E_PREF);
-                pref.addAttribute(AccountConstants.A_NAME, key);
-                pref.setText((String) value);
-            }
-        }
-    }
-
-    static void doAttrs(Element response, Map attrsMap) throws ServiceException {
-        Set<String> attrList = AttributeManager.getInstance().getAttrsWithFlag(AttributeFlag.accountInfo);
-        for (String key : attrList) {
-            Object value = attrsMap.get(key);
-            doAttr(response, key, value);
-        }
-    }
+    static void doAttrs(Account acct, String locale, Element response, Map attrsMap) throws ServiceException {
+		Set<String> attrList = AttributeManager.getInstance().getAttrsWithFlag(AttributeFlag.accountInfo);
+        
+		if (attrList.contains(Provisioning.A_zimbraLocale)) {
+			doAttr(response, Provisioning.A_zimbraLocale, locale);
+		}
+		for (String key : attrList) {
+			Object value = attrsMap.get(key);
+			if (!key.equals(Provisioning.A_zimbraLocale))
+				doAttr(response, key, value);
+		}
+	}
     
     static void doAttr(Element response, String key, Object value) {
         if (value instanceof String[]) {

@@ -30,6 +30,7 @@ package com.zimbra.cs.service.account;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -37,6 +38,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -76,28 +78,46 @@ public class GetPrefs extends AccountDocumentHandler  {
 		Map map = null; 
 		map = acct.getAttrs();
 		
-	    if (map != null) {
-    	    for (Iterator mi = map.entrySet().iterator(); mi.hasNext(); ) {
-    	        Map.Entry entry = (Entry) mi.next();
-    	        String key = (String) entry.getKey();
-    	        if (specificPrefs != null && !specificPrefs.contains(key))
-    	            continue;
-    	        if (!key.startsWith("zimbraPref"))
-    	            continue;
-    	        Object value = entry.getValue();
-    	        if (value instanceof String[]) {
-    	            String sa[] = (String[]) value;
-    	            for (int i = 0; i < sa.length; i++) {
-	    	            Element pref = response.addElement(AccountConstants.E_PREF);
-                        pref.addAttribute(AccountConstants.A_NAME, key);
-                        pref.setText(sa[i]);
-    	            }
-    	        } else {
-    	            Element pref = response.addElement(AccountConstants.E_PREF);
-                    pref.addAttribute(AccountConstants.A_NAME, key);
-                    pref.setText((String) value);
-    	        }
-    	    }
-	    }
+		if (map != null) {
+			Locale lc = Provisioning.getInstance().getLocale(acct);
+			doPrefs(acct, lc.toString(), response, map, specificPrefs);
+		}
 	}
+    
+	public static void doPrefs(Account acct, String locale, Element prefs, Map attrsMap, HashSet<String> specificPrefs) throws ServiceException {
+        
+		boolean needLocale = ((specificPrefs == null ) || specificPrefs.contains(Provisioning.A_zimbraPrefLocale));
+		if (needLocale) {
+			Element pref = prefs.addElement(AccountConstants.E_PREF);
+			pref.addAttribute(AccountConstants.A_NAME, Provisioning.A_zimbraPrefLocale);
+			pref.setText(locale);            
+		}
+
+		for (Iterator mi = attrsMap.entrySet().iterator(); mi.hasNext(); ) {
+			Map.Entry entry = (Entry) mi.next();
+			String key = (String) entry.getKey();
+            
+			if (specificPrefs != null && !specificPrefs.contains(key))
+				continue;
+         
+			if (!key.startsWith("zimbraPref") || key.equals(Provisioning.A_zimbraPrefLocale))
+				continue;
+            
+			Object value = entry.getValue();
+            
+			if (value instanceof String[]) {
+				String sa[] = (String[]) value;
+				for (int i = 0; i < sa.length; i++) {
+					Element pref = prefs.addElement(AccountConstants.E_PREF);
+					pref.addAttribute(AccountConstants.A_NAME, key);
+					pref.setText(sa[i]);
+				}
+			} else {
+				Element pref = prefs.addElement(AccountConstants.E_PREF);
+				pref.addAttribute(AccountConstants.A_NAME, key);
+				pref.setText((String) value);
+			}
+		}
+	}   
+
 }

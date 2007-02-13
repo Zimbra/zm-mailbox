@@ -2000,4 +2000,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether user is allowed to set mail polling interval</desc>
 </attr>
 
+<attr id="442" name="zimbraPrefLocale" type="string" max="64" cardinality="single" optionalIn="account,cos," flags="accountInherited,domainAdminModifiable">
+  <desc>
+    user locale preference, e.g. en_US
+    Whenever the server looks for the user locale, it will first look for zimbraPrefLocale, if it 
+    is not set then it will fallback to the current mechanism of looking for zimbraLocale in the various 
+    places for a user.  zimbraLocale is the non end-user attribute that specifies which locale an object defaults to, 
+    it is not an end-user setting.
+  </desc>
+</attr>
+
 </attrs>
