@@ -267,6 +267,10 @@ public class AdminConstants {
     public static final QName DELETE_DATA_SOURCE_REQUEST = QName.get("DeleteDataSourceRequest", NAMESPACE);
     public static final QName DELETE_DATA_SOURCE_RESPONSE = QName.get("DeleteDataSourceResponse", NAMESPACE);
 
+    // calendar time zone fixup
+    public static final QName FIX_CALENDAR_TIME_ZONE_REQUEST = QName.get("FixCalendarTimeZoneRequest", NAMESPACE);
+    public static final QName FIX_CALENDAR_TIME_ZONE_RESPONSE = QName.get("FixCalendarTimeZoneResponse", NAMESPACE);
+
     public static final String E_ACCOUNT = "account";
     public static final String E_CALENDAR_RESOURCE = "calresource";
     public static final String E_AUTH_TOKEN = "authToken";
@@ -405,4 +409,8 @@ public class AdminConstants {
 
     public static final String A_DEPLOYALL = "deployall";
     public static final String A_DEPLOYLOCAL = "deploylocal";
+
+    public static final String A_COUNTRY = "country";
+    public static final String A_TZFIXUP_AFTER = "after";
+    public static final String A_TZFIXUP_SYNC = "sync";
 }
