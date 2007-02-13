@@ -1567,7 +1567,9 @@ public abstract class MailItem implements Comparable<MailItem> {
 
     /** The regexp defining printable characters not permitted in item
      *  names.  These are: ':', '/', '"', '\t', '\r', and '\n'. */
-    private static final String INVALID_NAME_CHARACTERS = ".*[:/\"\t\r\n].*";
+    private static final String INVALID_NAME_CHARACTERS = "[:/\"\t\r\n]";
+
+    private static final String INVALID_NAME_PATTERN = ".*" + INVALID_NAME_CHARACTERS + ".*";
 
     /** The maximum length for an item name.  This is not the maximum length
      *  of a <u>path</u>, just the maximum length of a single item or folder's
@@ -1588,9 +1590,26 @@ public abstract class MailItem implements Comparable<MailItem> {
     static String validateItemName(String name) throws ServiceException {
         if (name == null || name != StringUtil.stripControlCharacters(name))
             throw MailServiceException.INVALID_NAME(name);
-        if (name.trim().equals("") || name.length() > MAX_NAME_LENGTH || name.matches(INVALID_NAME_CHARACTERS))
+        if (name.trim().equals("") || name.length() > MAX_NAME_LENGTH || name.matches(INVALID_NAME_PATTERN))
             throw MailServiceException.INVALID_NAME(name);
         return name;
+    }
+
+    public static String normalizeItemName(String name) {
+        try {
+            return validateItemName(name);
+        } catch (ServiceException e) {
+            name = StringUtil.stripControlCharacters(name);
+            if (name == null)
+                name = "";
+            if (name.length() > MailItem.MAX_NAME_LENGTH)
+                name = name.substring(0, MailItem.MAX_NAME_LENGTH);
+            if (name.matches(INVALID_NAME_PATTERN))
+                name = name.replaceAll(INVALID_NAME_CHARACTERS, "");
+            if (name.trim().equals(""))
+                name = "item" + System.currentTimeMillis();
+            return name;
+        }
     }
 
     /** Moves an item to a different {@link Folder}.  Persists the change
