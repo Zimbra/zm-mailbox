@@ -25,10 +25,14 @@
 package com.zimbra.cs.util;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.text.ParsePosition;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 
 import org.apache.commons.cli.CommandLine;
@@ -311,5 +315,49 @@ public abstract class SoapCLI {
 
     protected Options getHiddenOptions() {
         return mHiddenOptions;
+    }
+
+    // helper for options that specify date/time
+
+    private static final String[] DATETIME_FORMATS = {
+        "yyyy/MM/dd HH:mm:ss SSS",
+        "yyyy/MM/dd HH:mm:ss",
+        "yyyy/MM/dd-HH:mm:ss-SSS",
+        "yyyy/MM/dd-HH:mm:ss",
+        "yyyyMMdd.HHmmss.SSS",
+        "yyyyMMdd.HHmmss",
+        "yyyyMMddHHmmssSSS",
+        "yyyyMMddHHmmss"
+    };
+    protected static final String CANONICAL_DATETIME_FORMAT = DATETIME_FORMATS[0];
+
+    protected static Date parseDatetime(String str) {
+        for (String formatStr: DATETIME_FORMATS) {
+            SimpleDateFormat fmt = new SimpleDateFormat(formatStr);
+            fmt.setLenient(false);
+            ParsePosition pp = new ParsePosition(0);
+            Date d = fmt.parse(str, pp);
+            if (d != null && pp.getIndex() == str.length())
+                return d;
+        }
+        return null;
+    }
+
+    protected static void printAllowedDatetimeFormats(PrintStream out) {
+        out.println("Specify date/time in one of these formats:");
+        out.println();
+        Date d = new Date();
+        for (String formatStr: DATETIME_FORMATS) {
+            SimpleDateFormat fmt = new SimpleDateFormat(formatStr);
+            String s = fmt.format(d);
+            out.println("    " + s);
+        }
+        out.println();
+        out.println(
+            "Specify year, month, date, hour, minute, second, and optionally millisecond.");
+        out.println(
+            "Month/date/hour/minute/second are 0-padded to 2 digits, millisecond to 3 digits.");
+        out.println(
+            "Hour must be specified in 24-hour format, and time is in local time zone.");
     }
 }
