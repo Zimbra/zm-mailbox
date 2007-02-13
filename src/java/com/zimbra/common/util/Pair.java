@@ -29,7 +29,7 @@ public class Pair<F,S> {
 	private S mSecond;
 
     public Pair(F first, S second) {
-        assert(first != null && second != null);
+//        assert(first != null && second != null);
         mFirst = first;
         mSecond = second;
     }
