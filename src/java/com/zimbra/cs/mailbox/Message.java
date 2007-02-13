@@ -31,6 +31,7 @@ package com.zimbra.cs.mailbox;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -287,14 +288,14 @@ public class Message extends MailItem {
         return MessageCache.getMimeMessage(this);
     }
 
-    boolean isTaggable()      { return true; }
-    boolean isCopyable()      { return true; }
-    boolean isMovable()       { return true; }
-    boolean isMutable()       { return isTagged(mMailbox.mDraftFlag); }
-    boolean isIndexed()       { return true; }
-    boolean canHaveChildren() { return false; }
+    @Override boolean isTaggable()      { return true; }
+    @Override boolean isCopyable()      { return true; }
+    @Override boolean isMovable()       { return true; }
+    @Override boolean isMutable()       { return isTagged(mMailbox.mDraftFlag); }
+    @Override boolean isIndexed()       { return true; }
+    @Override boolean canHaveChildren() { return false; }
 
-    boolean canParent(MailItem item)  { return false; }
+    @Override boolean canParent(MailItem item)  { return false; }
 
     static class MessageCreateFactory {
         Message create(Mailbox mbox, UnderlyingData data) throws ServiceException {
@@ -423,7 +424,7 @@ public class Message extends MailItem {
                 updatedMetadata = true;
             }
         }
-        
+
         if (updatedMetadata)
             saveMetadata();
     }
@@ -513,23 +514,34 @@ public class Message extends MailItem {
             throw MailServiceException.MESSAGE_PARSE_ERROR(e);
         }
 
-        // make sure the "attachments" FLAG is correct
-        mData.flags &= ~Flag.BITMASK_ATTACHED;
-        if (pm.hasAttachments())
-            mData.flags |= Flag.BITMASK_ATTACHED;
-
         // make sure the SUBJECT is correct
-        boolean subjectChanged = !getSubject().equals(pm.getSubject());
+        if (!getSubject().equals(pm.getSubject()))
+            markItemModified(Change.MODIFIED_SUBJECT);
+        boolean subjectChanged = !getNormalizedSubject().equals(pm.getNormalizedSubject());
         mRawSubject = pm.getSubject();
         mData.subject = pm.getNormalizedSubject();
 
         // handle the message's PARENT
+        boolean parentChanged = false;
         MailItem parent = getParent();
-        if (subjectChanged)
+        if (subjectChanged && mData.parentId != -mId) {
             mData.parentId = -mId;
+            parentChanged = true;
+        }
 
-        // update the METADATA and SIZE
+        // make sure the "attachments" FLAG is correct
+        boolean hadAttachment = (mData.flags & Flag.BITMASK_ATTACHED) != 0;
+        mData.flags &= ~Flag.BITMASK_ATTACHED;
+        if (pm.hasAttachments())
+            mData.flags |= Flag.BITMASK_ATTACHED;
+        if (hadAttachment != pm.hasAttachments()) {
+            markItemModified(Change.MODIFIED_FLAGS);
+            parent.tagChanged(mMailbox.mAttachFlag, pm.hasAttachments());
+        }
+
+        // update the SIZE and METADATA
         if (mData.size != size) {
+            markItemModified(Change.MODIFIED_SIZE);
             mMailbox.updateSize(size - mData.size, false);
             mData.size = size;
         }
@@ -538,13 +550,11 @@ public class Message extends MailItem {
         // rewrite the DB row to reflect our new view
         saveData(pm.getParsedSender().getSortString(), metadata);
 
-        // and, finally, uncache this item since it may be dirty
-        mMailbox.uncache(this);
-
         // if the message is part of a real conversation, need to break it out
-        if (subjectChanged)
+        if (parentChanged)
             parent.removeChild(this);
-        mMailbox.uncache(parent);
+        else if (parent instanceof VirtualConversation)
+            ((VirtualConversation) parent).recalculateMetadata(Arrays.asList(new Message[] { this } ));
     }
 
     @Override
@@ -552,9 +562,9 @@ public class Message extends MailItem {
         MailItem parent = getParent();
         if (!(parent instanceof Conversation))
             return;
-        if (parent.getSize() <= 1)
+        if (parent.getSize() <= 1) {
             mMailbox.closeConversation((Conversation) parent, null);
-        else {
+        } else {
             // remove this message from its (real) conversation
             markItemModified(Change.MODIFIED_PARENT);
             parent.removeChild(this);
@@ -606,14 +616,17 @@ public class Message extends MailItem {
             mRawSubject = rawSubject;
     }
 
+    @Override
     Metadata encodeMetadata(Metadata meta) {
         return encodeMetadata(meta, mColor, mSender, mRecipients, mFragment, mData.subject, mRawSubject, mDraftInfo, mCalendarItemInfos);
     }
+
     private static String encodeMetadata(byte color, ParsedMessage pm, int flags, DraftInfo dinfo, List<CalendarItemInfo> calItemInfos) {
         // cache the "To" header only for messages sent by the user
         String recipients = ((flags & Flag.BITMASK_FROM_ME) == 0 ? null : pm.getRecipients());
         return encodeMetadata(new Metadata(), color, pm.getSender(), recipients, pm.getFragment(), pm.getNormalizedSubject(), pm.getSubject(), dinfo, calItemInfos).toString();
     }
+
     static Metadata encodeMetadata(Metadata meta, byte color, String sender, String recipients, String fragment, String subject, String rawSubject, DraftInfo dinfo, List<CalendarItemInfo> calItemInfos) {
         // try to figure out a simple way to make the raw subject from the normalized one
         String prefix = null;
@@ -653,6 +666,7 @@ public class Message extends MailItem {
     private static final String CN_RECIPIENTS = "to";
     private static final String CN_FRAGMENT   = "fragment";
 
+    @Override
     public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("message: {");
