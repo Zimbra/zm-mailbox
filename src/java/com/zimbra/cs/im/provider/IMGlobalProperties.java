@@ -39,6 +39,8 @@ public class IMGlobalProperties implements PropertyProvider {
         mProvMap.put("xmpp.socket.ssl.truststore", "tomcat/conf/keystore");
         mProvMap.put("xmpp.socket.ssl.trustpass", "zimbra");
         mProvMap.put("xmpp.socket.blocking", "false");
+        mProvMap.put("xmpp.server.certificate.verify", "false");
+//        mProvMap.put("xmpp.server.read.timeout", Integer.toString(60 * 60 * 1000));        
 //        provMap.put("", "");
     }
     
