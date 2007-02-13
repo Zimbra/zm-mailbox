@@ -148,13 +148,16 @@ public abstract class RedoableOp {
 
     public static final int OP_CREATE_FOLDER            = 58;
     public static final int OP_RENAME_FOLDER            = 59;
-    public static final int OP_RENAME_ITEM              = 60;
-    public static final int OP_RENAME_ITEM_PATH        = 61;
 
-    public static final int OP_CREATE_CHAT             = 62;
-    public static final int OP_SAVE_CHAT               = 63;
+    public static final int OP_FIX_CALENDAR_ITEM_TZ     = 60;
 
-    public static final int OP_LAST				        = 64;
+    public static final int OP_RENAME_ITEM              = 61;
+    public static final int OP_RENAME_ITEM_PATH        = 62;
+
+    public static final int OP_CREATE_CHAT             = 63;
+    public static final int OP_SAVE_CHAT               = 64;
+
+    public static final int OP_LAST				        = 65;
 
 	// Element index is same as Redoable.OP_* constants.
 	// The strings must match the class names.
@@ -219,6 +222,7 @@ public abstract class RedoableOp {
         "ICalReply",
         "CreateFolder",
         "RenameFolder",
+        "FixCalendarItemTimeZone",      // 60
         "RenameItem",
         "RenameItemPath",
         "CreateChat",
