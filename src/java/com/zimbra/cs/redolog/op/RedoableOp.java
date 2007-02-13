@@ -149,7 +149,9 @@ public abstract class RedoableOp {
     public static final int OP_CREATE_FOLDER            = 58;
     public static final int OP_RENAME_FOLDER            = 59;
 
-    public static final int OP_LAST				        = 60;
+    public static final int OP_FIX_CALENDAR_ITEM_TZ     = 60;
+
+    public static final int OP_LAST				        = 61;
 
 	// Element index is same as Redoable.OP_* constants.
 	// The strings must match the class names.
@@ -213,7 +215,8 @@ public abstract class RedoableOp {
         "ImapCopyItem",
         "ICalReply",
         "CreateFolder",
-        "RenameFolder"
+        "RenameFolder",
+        "FixCalendarItemTimeZone",      // 60
 	};
 
 	public static String getOpClassName(int opcode) {

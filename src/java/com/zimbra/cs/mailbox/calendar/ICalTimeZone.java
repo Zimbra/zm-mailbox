@@ -85,7 +85,13 @@ public class ICalTimeZone extends SimpleTimeZone {
         public int getSecond()     { return mSecond; }     // 0..59
 
         public SimpleOnset(int week, int dayOfWeek, int month, int dayOfMonth,
-                           int hour, int minute, int second) {
+                int hour, int minute, int second) {
+            this(week, dayOfWeek, month, dayOfMonth, hour, minute, second, false);
+        }
+
+        public SimpleOnset(int week, int dayOfWeek, int month, int dayOfMonth,
+                           int hour, int minute, int second,
+                           boolean skipBYMONTHDAYFixup) {
             mWeek = week;
             mDayOfWeek = dayOfWeek;
             mMonth = month;
@@ -94,7 +100,8 @@ public class ICalTimeZone extends SimpleTimeZone {
             mMinute = minute;
             mSecond = second;
 
-            toDayOfWeekStyle();
+            if (!skipBYMONTHDAYFixup)
+                applyBYMONTHDAYFixup();
         }
 
         public String toString() {
@@ -115,7 +122,7 @@ public class ICalTimeZone extends SimpleTimeZone {
          * The year of current system time is used in the conversion.
          *
          */
-        private void toDayOfWeekStyle() {
+        private void applyBYMONTHDAYFixup() {
             // already using week number/day style
             if (mWeek != 0 && mDayOfWeek != 0)
                 return;
@@ -258,10 +265,10 @@ public class ICalTimeZone extends SimpleTimeZone {
         mStdToDayDtStart = meta.get(FN_STDTODAY_DTSTART, mDayToStdDtStart);
         mStdToDayRule = meta.get(FN_STDTODAY_RULE, null);
 
-        initFromICalData();
+        initFromICalData(true);
     }
     
-    private void initFromICalData() {
+    private void initFromICalData(boolean fromMetadata) {
         if (mDaylightOffset - mStandardOffset < 0) {
             // Must be an error in the TZ definition.  Swap the offsets.
             // (Saw this with Windows TZ for Windhoek, Namibia)
@@ -271,8 +278,8 @@ public class ICalTimeZone extends SimpleTimeZone {
         }
         setRawOffset(mStandardOffset);
         if (mHasDaylight) {
-            mStandardOnset = parseOnset(mDayToStdRule, mDayToStdDtStart);
-            mDaylightOnset = parseOnset(mStdToDayRule, mStdToDayDtStart);
+            mStandardOnset = parseOnset(mDayToStdRule, mDayToStdDtStart, fromMetadata);
+            mDaylightOnset = parseOnset(mStdToDayRule, mStdToDayDtStart, fromMetadata);
 
             SimpleTimeZoneRule stzDaylight =
                 new SimpleTimeZoneRule(mDaylightOnset);
@@ -330,7 +337,7 @@ public class ICalTimeZone extends SimpleTimeZone {
         }
     }
 
-    private static SimpleOnset parseOnset(String rrule, String dtstart) {
+    public static SimpleOnset parseOnset(String rrule, String dtstart, boolean fromMetadata) {
         int week = 0;
         int dayOfWeek = 0;
         int month = 0;
@@ -406,7 +413,7 @@ public class ICalTimeZone extends SimpleTimeZone {
         }
 
         return new SimpleOnset(week, dayOfWeek, month, dayOfMonth,
-                               hour, minute, second);
+                               hour, minute, second, fromMetadata);
     }
 
     // maps Java weekday number to iCalendar weekday name
@@ -502,7 +509,7 @@ public class ICalTimeZone extends SimpleTimeZone {
         else
             mStdToDayDtStart = mDayToStdDtStart;
         mStdToDayRule = dayRRule;
-        initFromICalData();
+        initFromICalData(false);
     }
 
     public ICalTimeZone(String tzId,

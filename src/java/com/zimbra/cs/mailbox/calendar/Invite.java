@@ -1234,7 +1234,7 @@ public class Invite {
             mStatus = IcalXmlStrMap.STATUS_NEEDS_ACTION;
     }
 
-    TimeZoneMap mTzMap;
+    private TimeZoneMap mTzMap;
     
     public TimeZoneMap getTimeZoneMap() { return mTzMap; }
 

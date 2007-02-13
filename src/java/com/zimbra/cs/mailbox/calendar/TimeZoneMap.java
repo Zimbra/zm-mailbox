@@ -96,8 +96,12 @@ public class TimeZoneMap {
     public ICalTimeZone getLocalTimeZone() {
     	return mLocalTZ;
     }
-    
-    public Iterator tzIterator() {
+
+    public void setLocalTimeZone(ICalTimeZone tz) {
+        mLocalTZ = tz;
+    }
+
+    public Iterator<ICalTimeZone> tzIterator() {
         return mTzMap.values().iterator();
     }
     
