@@ -48,6 +48,7 @@ import com.zimbra.cs.zclient.ZMailbox.Fetch;
 import com.zimbra.cs.zclient.ZMailbox.OwnerBy;
 import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
 import com.zimbra.cs.zclient.ZMailbox.SharedItemBy;
+import com.zimbra.cs.zclient.ZMailbox.ZApptSummaryResult;
 import com.zimbra.cs.zclient.ZMessage.ZMimePart;
 import com.zimbra.cs.zclient.ZTag.Color;
 import com.zimbra.cs.zclient.event.ZCreateEvent;
@@ -1079,10 +1080,15 @@ public class ZMailboxUtil implements DebugListener {
         long startTime = DateUtil.parseDateSpecifier(args[0], new Date().getTime());
         long endTime = DateUtil.parseDateSpecifier(args[1], (new Date().getTime()) + 1000*60*60*24*7);
         String folderId = args.length == 3 ? lookupFolderId(args[2]) : null;
-        List<ZApptSummary> appts = mMbox.getApptSummaries(startTime, endTime, folderId);
+        List<ZApptSummaryResult> results = mMbox.getApptSummaries(startTime, endTime, new String[] {folderId});
+        if (results.size() != 1) return;
+        ZApptSummaryResult result = results.get(0);
+        if (result.isFault())
+            throw result.getServiceException();
+
         System.out.print("[");
         boolean first = true;
-        for (ZApptSummary appt : appts) {
+        for (ZApptSummary appt : result.getAppointments()) {
             if (!first) System.out.println(",");
             System.out.print(appt);
             if (first) first = false;
