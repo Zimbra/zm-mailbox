@@ -285,7 +285,26 @@ public class Message extends MailItem {
      * @see TnefConverter
      * @see UUEncodeConverter */
     public MimeMessage getMimeMessage() throws ServiceException {
-        return MessageCache.getMimeMessage(this);
+        return getMimeMessage(true);
+    }
+
+    /** Returns a JavaMail {@link javax.mail.internet.MimeMessage}
+     *  encapsulating the message content.  If <tt>runConverters</tt> is
+     *  <tt>true</tt>, TNEF and uuencoded attachments are expanded and their
+     *  components are presented as standard MIME attachments.  If
+     *  <tt>runConverters</tt> is <tt>false</tt> or if TNEF or uuencode
+     *  decoding fails, the MimeMessage wraps the raw message content.
+     * 
+     * @return A MimeMessage wrapping the RFC822 content of the Message.
+     * @throws ServiceException when errors occur opening, reading,
+     *                          uncompressing, or parsing the message file,
+     *                          or when the file does not exist.
+     * @see #getRawMessage()
+     * @see #getMessageContent()
+     * @see TnefConverter
+     * @see UUEncodeConverter */
+    public MimeMessage getMimeMessage(boolean runConverters) throws ServiceException {
+        return MessageCache.getMimeMessage(this, runConverters);
     }
 
     @Override boolean isTaggable()      { return true; }

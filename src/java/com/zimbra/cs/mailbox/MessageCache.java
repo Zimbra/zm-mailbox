@@ -1,4 +1,3 @@
-//depot/main/ZimbraServer/src/java/com/zimbra/cs/mailbox/MessageCache.java#9 - edit change 25131 (text)
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1
@@ -53,13 +52,16 @@ import com.zimbra.common.util.ZimbraLog;
  */
 public class MessageCache {
 
+    private static enum ConvertedState { RAW, EXPANDED, BOTH };
+
     private static final class CacheNode {
         int mSize;
         byte[] mContent;
         MimeMessage mMessage;
+        ConvertedState mConvertersRun;
 
-        CacheNode(int size, byte[] content)  { mSize = size;  mContent = content; }
-        CacheNode(int size, MimeMessage mm)  { mSize = size;  mMessage = mm; }
+        CacheNode(int size, byte[] content)                            { mSize = size;  mContent = content; }
+        CacheNode(int size, MimeMessage mm, ConvertedState converted)  { mSize = size;  mMessage = mm;  mConvertersRun = converted; }
     }
 
     private static final int DEFAULT_CACHE_SIZE = 16 * 1000 * 1000;
@@ -158,13 +160,14 @@ public class MessageCache {
      * @see #getItemContent()
      * @see com.zimbra.cs.mime.TnefConverter
      * @see com.zimbra.cs.mime.UUEncodeConverter */
-    static MimeMessage getMimeMessage(Message msg) throws ServiceException {
+    static MimeMessage getMimeMessage(Message msg, boolean expand) throws ServiceException {
         String key = msg.getDigest();
         boolean cacheHit = false;
         CacheNode cnode = null, cnOrig = null;
         synchronized (mCache) {
             cnode = cnOrig = mCache.get(key);
-            cacheHit = cnode != null && cnode.mMessage != null;
+            if (cnode != null && cnode.mMessage != null)
+                cacheHit = cnode.mConvertersRun == ConvertedState.BOTH || cnode.mConvertersRun == (expand ? ConvertedState.EXPANDED : ConvertedState.RAW);
 
             if (!cacheHit && cnode != null) {
                 // replacing the cached byte array with a MimeMessage
@@ -176,20 +179,30 @@ public class MessageCache {
             try {
                 // wasn't cached; fetch the content and create the MimeMessage
                 int size = msg.getSize();
-                InputStream is = (cnOrig == null ? fetchFromStore(msg) : new ByteArrayInputStream(cnOrig.mContent));
-                cnode = new CacheNode(size, new Mime.FixedMimeMessage(JMSession.getSession(), is));
-                is.close();
-
-                try {
-                    // handle UUENCODE and TNEF conversion here...
-                    for (Class visitor : MimeVisitor.getConverters())
-                        ((MimeVisitor) visitor.newInstance()).accept(cnode.mMessage);
-                } catch (Exception e) {
-                    // if the conversion bombs for any reason, revert to the original
-                    ZimbraLog.mailbox.warn("MIME converter failed for message " + msg.getId(), e);
-                    is = (cnOrig == null ? fetchFromStore(msg) : new ByteArrayInputStream(cnOrig.mContent));
-                    cnode = new CacheNode(size, new MimeMessage(JMSession.getSession(), is));
+                if (expand && cnOrig != null && cnOrig.mMessage != null && cnOrig.mConvertersRun == ConvertedState.RAW) {
+                    // switching from RAW to EXPANDED -- can reuse an existing raw MimeMessage
+                    cnode = new CacheNode(size, cnOrig.mMessage, ConvertedState.BOTH);
+                } else {
+                    // use the raw byte array to construct the MimeMessage if possible, else read from disk
+                    InputStream is = (cnOrig == null || cnOrig.mContent == null ? fetchFromStore(msg) : new ByteArrayInputStream(cnOrig.mContent));
+                    cnode = new CacheNode(size, new Mime.FixedMimeMessage(JMSession.getSession(), is), expand ? ConvertedState.BOTH : ConvertedState.RAW);
                     is.close();
+                }
+
+                if (expand) {
+                    try {
+                        // handle UUENCODE and TNEF conversion here...
+                        for (Class visitor : MimeVisitor.getConverters())
+                            if (((MimeVisitor) visitor.newInstance()).accept(cnode.mMessage))
+                                cnode.mConvertersRun = ConvertedState.EXPANDED;
+                    } catch (Exception e) {
+                        // if the conversion bombs for any reason, revert to the original
+                        ZimbraLog.mailbox.warn("MIME converter failed for message " + msg.getId(), e);
+
+                        InputStream is = (cnOrig == null || cnOrig.mContent == null ? fetchFromStore(msg) : new ByteArrayInputStream(cnOrig.mContent));
+                        cnode = new CacheNode(size, new MimeMessage(JMSession.getSession(), is), ConvertedState.BOTH);
+                        is.close();
+                    }
                 }
 
                 // cache the MimeMessage (if it'll fit)
@@ -227,12 +240,13 @@ public class MessageCache {
             mTotalSize += cnode.mSize;
 
             // trim the cache if needed
-            if (mTotalSize > mMaxCacheSize)
+            if (mTotalSize > mMaxCacheSize) {
                 for (Iterator it = mCache.values().iterator(); mTotalSize > DEFAULT_CACHE_SIZE && it.hasNext(); ) {
                     CacheNode cnPurge = (CacheNode) it.next();
                     it.remove();
                     mTotalSize -= cnPurge.mSize;
                 }
+            }
         }
     }
 }

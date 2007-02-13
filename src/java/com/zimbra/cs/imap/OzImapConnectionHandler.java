@@ -25,10 +25,8 @@
 package com.zimbra.cs.imap;
 
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.Writer;
@@ -50,6 +48,11 @@ import java.util.Set;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -63,7 +66,6 @@ import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.queryparser.ParseException;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -72,7 +74,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.operation.AlterTagOperation;
 import com.zimbra.cs.operation.CreateFolderOperation;
 import com.zimbra.cs.operation.CreateTagOperation;
@@ -93,12 +94,7 @@ import com.zimbra.cs.ozserver.OzTLSFilter;
 import com.zimbra.cs.ozserver.OzUtil;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.util.BuildInfo;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.util.Config;
-import com.zimbra.common.util.Constants;
-import com.zimbra.cs.util.JMSession;
-import com.zimbra.common.util.ZimbraLog;
 
 /**
  * NB: Copied from ImapHandler.java on October 20, 2005 - while there
@@ -162,7 +158,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     private boolean       mGoodbyeSent;
     private Authenticator mAuthenticator;
 
-    private final OzConnection mConnection;
+    final OzConnection mConnection;
 
     public OzImapConnectionHandler(OzConnection connection) {
         mConnection = connection;
@@ -1547,7 +1543,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     static final int FETCH_UID           = 0x0080;
     static final int FETCH_MARK_READ     = 0x1000;
     private static final int FETCH_FROM_CACHE = FETCH_FLAGS | FETCH_UID;
-    private static final int FETCH_FROM_MIME  = FETCH_FLAGS | FETCH_INTERNALDATE | FETCH_RFC822_SIZE | FETCH_BINARY_SIZE | FETCH_UID;
+    private static final int FETCH_FROM_MIME  = FETCH_BODY | FETCH_BODYSTRUCTURE | FETCH_ENVELOPE;
 
     static final int FETCH_FAST = FETCH_FLAGS | FETCH_INTERNALDATE | FETCH_RFC822_SIZE;
     static final int FETCH_ALL  = FETCH_FAST  | FETCH_ENVELOPE;
@@ -1556,15 +1552,12 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     private class ConnectionOutputStream extends OutputStream {
         @Override
         public void write(int b) throws IOException {
-            byte[] ba = new byte[1];
-            ba[0] = (byte)b;
-            write(ba, 0, ba.length);
+            write(new byte[] { (byte) b }, 0, 1);
         }
 
         @Override
         public void write(byte[] ba, int off, int len) throws IOException {
-            ByteBuffer bb = ByteBuffer.wrap(ba, off, len);
-            mConnection.write(bb);
+            mConnection.write(ByteBuffer.wrap(ba, off, len));
         }
 
         @Override
@@ -1586,13 +1579,14 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         boolean markRead = mSession.getFolder().isWritable() && (attributes & FETCH_MARK_READ) != 0;
 
         List<ImapPartSpecifier> fullMessage = new ArrayList<ImapPartSpecifier>();
-        if (parts != null && !parts.isEmpty())
+        if (parts != null && !parts.isEmpty()) {
             for (Iterator<ImapPartSpecifier> it = parts.iterator(); it.hasNext(); ) {
                 ImapPartSpecifier pspec = it.next();
                 if (pspec.isEntireMessage()) {
                     it.remove();  fullMessage.add(pspec);
                 }
             }
+        }
 
         Set<ImapMessage> i4set;
         synchronized (mMailbox) {
@@ -1630,47 +1624,40 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                 if ((attributes & FETCH_BINARY_SIZE) != 0) {
                     result.print((empty ? "" : " ") + "BINARY.SIZE[] " + i4msg.getSize(item));  empty = false;
                 }
+
                 if (!fullMessage.isEmpty()) {
                     raw = ImapMessage.getContent(item);
                     for (ImapPartSpecifier pspec : fullMessage) {
-                        ZimbraLog.imap.info("before pspec.write");
                         result.print(empty ? "" : " ");  pspec.write(result, baos, raw);  empty = false;
-                        ZimbraLog.imap.info("after pspec.write");
                     }
                 }
-                if (!parts.isEmpty() || (attributes & ~FETCH_FROM_MIME) != 0) {
-                    try {
-                        // don't use msg.getMimeMessage() because it implicitly expands TNEF attachments
-                        InputStream is = raw != null ? new ByteArrayInputStream(raw) : ImapMessage.getContentStream(item);
-                        mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
-                        is.close();
-                    } catch (IOException e) {
-                        throw ServiceException.FAILURE("error closing stream for message " + i4msg.msgId, e);
+
+                if (!parts.isEmpty() || (attributes & FETCH_FROM_MIME) != 0) {
+                    mm = ImapMessage.getMimeMessage(item, raw);
+                    if ((attributes & FETCH_BODY) != 0) {
+                        result.print(empty ? "" : " ");  result.print("BODY ");
+                        i4msg.serializeStructure(result, mm, false);  empty = false;
+                    }
+                    if ((attributes & FETCH_BODYSTRUCTURE) != 0) {
+                        result.print(empty ? "" : " ");  result.print("BODYSTRUCTURE ");
+                        i4msg.serializeStructure(result, mm, true);  empty = false;
+                    }
+                    if ((attributes & FETCH_ENVELOPE) != 0) {
+                        result.print(empty ? "" : " ");  result.print("ENVELOPE ");
+                        i4msg.serializeEnvelope(result, mm);  empty = false;
+                    }
+                    for (ImapPartSpecifier pspec : parts) {
+                        result.print(empty ? "" : " ");  pspec.write(result, baos, mm);  empty = false;
                     }
                 }
-                if ((attributes & FETCH_BODY) != 0) {
-                    result.print((empty ? "" : " ") + "BODY ");
-                    i4msg.serializeStructure(result, mm, false);  empty = false;
-                }
-                if ((attributes & FETCH_BODYSTRUCTURE) != 0) {
-                    result.print((empty ? "" : " ") + "BODYSTRUCTURE ");
-                    i4msg.serializeStructure(result, mm, true);  empty = false;
-                }
-                if ((attributes & FETCH_ENVELOPE) != 0) {
-                    result.print((empty ? "" : " ") + "ENVELOPE ");
-                    i4msg.serializeEnvelope(result, mm);  empty = false;
-                }
-                for (ImapPartSpecifier pspec: parts) {
-                    result.print(empty ? "" : " ");  pspec.write(result, mm);  empty = false;
-                }
+                
+                // 6.4.5: "The \Seen flag is implicitly set; if this causes the flags to
+                //         change, they SHOULD be included as part of the FETCH responses."
                 // FIXME: optimize by doing a single mark-read op on multiple messages
                 if (markMessage) {
                     AlterTagOperation op = new AlterTagOperation(mSession, getContext(), mMailbox, Requester.IMAP, i4msg.msgId, i4msg.getType(), Flag.ID_FLAG_UNREAD, false);
                     op.schedule();
                 }
-                
-                // 6.4.5: "The \Seen flag is implicitly set; if this causes the flags to
-                //         change, they SHOULD be included as part of the FETCH responses."
                 if ((attributes & FETCH_FLAGS) != 0 || markMessage) {
                     mSession.getFolder().undirtyMessage(i4msg);
                     result.print((empty ? "" : " ") + i4msg.getFlags(mSession));  empty = false;
