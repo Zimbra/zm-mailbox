@@ -27,7 +27,15 @@ package com.zimbra.cs.zclient;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.*;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.HeaderConstants;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.soap.SoapTransport;
+import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.EasySSLProtocolSocketFactory;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -60,11 +68,8 @@ import com.zimbra.cs.zclient.event.ZModifyMountpointEvent;
 import com.zimbra.cs.zclient.event.ZModifySearchFolderEvent;
 import com.zimbra.cs.zclient.event.ZModifyTagEvent;
 import com.zimbra.cs.zclient.event.ZRefreshEvent;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.Element.XMLElement;
-import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.common.soap.SoapHttpTransport;
-import com.zimbra.common.soap.SoapTransport;
+import com.zimbra.cs.zclient.event.ZCreateAppointmentEvent;
+import com.zimbra.cs.zclient.event.ZModifyAppointmentEvent;
 import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
@@ -107,10 +112,10 @@ public class ZMailbox {
     public final static int MAX_NUM_CACHED_SEARCH_PAGERS = 5;
     public final static int MAX_NUM_CACHED_SEARCH_CONV_PAGERS = 5;
     public final static int MAX_NUM_CACHED_MESSAGES = 5;
-    public final static int MAX_NUM_CACHED_CONTACTS = 25;    
-    
+    public final static int MAX_NUM_CACHED_CONTACTS = 25;
+
     public final static String PATH_SEPARATOR = "/";
-    
+
     public final static char PATH_SEPARATOR_CHAR = '/';
 
     public enum SearchSortBy {
@@ -120,10 +125,10 @@ public class ZMailbox {
             try {
                 return SearchSortBy.valueOf(s);
             } catch (IllegalArgumentException e) {
-                throw ZClientException.CLIENT_ERROR("invalid sortBy: "+s+", valid values: "+Arrays.asList(SearchSortBy.values()), e); 
+                throw ZClientException.CLIENT_ERROR("invalid sortBy: "+s+", valid values: "+Arrays.asList(SearchSortBy.values()), e);
             }
         }
-    } 
+    }
 
     public enum Fetch {
         none, first, hits, all;
@@ -132,11 +137,11 @@ public class ZMailbox {
             try {
                 return Fetch.valueOf(s);
             } catch (IllegalArgumentException e) {
-                throw ZClientException.CLIENT_ERROR("invalid fetch: "+s+", valid values: "+Arrays.asList(Fetch.values()), e); 
+                throw ZClientException.CLIENT_ERROR("invalid fetch: "+s+", valid values: "+Arrays.asList(Fetch.values()), e);
             }
         }
     }
-    
+
     public static class Options {
         private String mAccount;
         private AccountBy mAccountBy = AccountBy.name;
@@ -153,7 +158,7 @@ public class ZMailbox {
 
         public Options() {
         }
-        
+
         public Options(String account, AccountBy accountBy, String password, String uri) {
             mAccount = account;
             mAccountBy = accountBy;
@@ -198,7 +203,7 @@ public class ZMailbox {
 
         public boolean getNoNotify() { return mNoNotify; }
         public void setNoNotify(boolean noNotify) { mNoNotify = noNotify; }
-        
+
         public ZEventHandler getEventHandler() { return mHandler; }
         public void setEventHandler(ZEventHandler handler) { mHandler = handler; }
 
@@ -213,10 +218,11 @@ public class ZMailbox {
     private boolean mNeedsRefresh = true;
     private ZSearchPagerCache mSearchPagerCache;
     private ZSearchPagerCache mSearchConvPagerCache;
+    private ZApptSummaryCache mApptSummaryCache;
     private LRUMap mMessageCache;
     private LRUMap mContactCache;
     private ZFilterRules mRules;
-    
+
     private long mSize;
 
     private List<ZEventHandler> mHandlers = new ArrayList<ZEventHandler>();
@@ -240,7 +246,7 @@ public class ZMailbox {
         mailbox.initPreAuth(options.getUri(), options.getDebugListener());
         mailbox.changePassword(options.getAccount(), options.getAccountBy(), options.getPassword(), options.getNewPassword());
     }
-    
+
     public ZMailbox(Options options) throws ServiceException {
     	mHandlers.add(new InternalEventHandler());
     	mSearchPagerCache = new ZSearchPagerCache(MAX_NUM_CACHED_SEARCH_PAGERS, true);
@@ -248,8 +254,10 @@ public class ZMailbox {
         mSearchConvPagerCache = new ZSearchPagerCache(MAX_NUM_CACHED_SEARCH_CONV_PAGERS, false);
         mHandlers.add(mSearchConvPagerCache);
         mMessageCache = new LRUMap(MAX_NUM_CACHED_MESSAGES);
-        mContactCache = new LRUMap(MAX_NUM_CACHED_CONTACTS);        
-        
+        mContactCache = new LRUMap(MAX_NUM_CACHED_CONTACTS);
+        mApptSummaryCache = new ZApptSummaryCache();
+        mHandlers.add(mApptSummaryCache);
+
         if (options.getEventHandler() != null)
     		mHandlers.add(options.getEventHandler());
         initPreAuth(options.getUri(), options.getDebugListener());
@@ -290,7 +298,7 @@ public class ZMailbox {
 
     public void initPreAuth(String uri, SoapTransport.DebugListener listener) {
         mNameToTag = new HashMap<String, ZTag>();
-        mIdToItem = new HashMap<String, ZItem>();                
+        mIdToItem = new HashMap<String, ZItem>();
         setSoapURI(uri);
         if (listener != null) mTransport.setDebugListener(listener);
     }
@@ -337,7 +345,7 @@ public class ZMailbox {
         mTransport.setMaxNoitfySeq(0);
         if (mAuthToken != null)
             mTransport.setAuthToken(mAuthToken);
-    }    
+    }
 
     synchronized Element invoke(Element request) throws ServiceException {
         try {
@@ -355,7 +363,7 @@ public class ZMailbox {
         if (context == null) return;
         // handle refresh blocks
         Element refresh = context.getOptionalElement(ZimbraNamespace.E_REFRESH);
-        if (refresh != null) 
+        if (refresh != null)
         	handleRefresh(refresh);
 
         for (Element notify : context.listElements(ZimbraNamespace.E_NOTIFY)) {
@@ -368,11 +376,11 @@ public class ZMailbox {
             handleModified(notify.getOptionalElement(ZimbraNamespace.E_MODIFIED));
         }
     }
-    
+
     private void handleRefresh(Element refresh) throws ServiceException {
         Element mbx = refresh.getOptionalElement(MailConstants.E_MAILBOX);
         if (mbx != null) mSize = mbx.getAttributeLong(MailConstants.A_SIZE);
-        
+
         Element tags = refresh.getOptionalElement(ZimbraNamespace.E_TAGS);
         List<ZTag> tagList = new ArrayList<ZTag>();
         if (tags != null) {
@@ -386,9 +394,9 @@ public class ZMailbox {
         ZRefreshEvent event = new ZRefreshEvent(mSize, userRoot, tagList);
         for (ZEventHandler handler : mHandlers)
         	handler.handleRefresh(event, this);
-        mRules = null;        
+        mRules = null;
     }
-    
+
     private void handleModified(Element modified) throws ServiceException {
         if (modified == null) return;
         for (Element e : modified.listElements()) {
@@ -409,6 +417,8 @@ public class ZMailbox {
             	event = new ZModifyMountpointEvent(e);
             } else if (e.getName().equals(MailConstants.E_MAILBOX)) {
                 event = new ZModifyMailboxEvent(e);
+            } else if (e.getName().equals(MailConstants.E_APPOINTMENT)) {
+                event = new ZModifyAppointmentEvent(e);
             }
             if (event != null)
             	for (ZEventHandler handler : mHandlers)
@@ -426,6 +436,8 @@ public class ZMailbox {
                 event = new ZCreateMessageEvent(e);
             } else if (e.getName().equals(MailConstants.E_CONTACT)) {
                 event = new ZCreateContactEvent(e);
+            } else if (e.getName().equals(MailConstants.E_APPOINTMENT)) {
+                event = new ZCreateAppointmentEvent(e);
             } else if (e.getName().equals(MailConstants.E_FOLDER)) {
                 String parentId = e.getAttribute(MailConstants.A_FOLDER);
                 ZFolder parent = getFolderById(parentId);
@@ -443,13 +455,13 @@ public class ZMailbox {
                 ZFolder parent = getFolderById(parentId);
                 ZSearchFolder child = new ZSearchFolder(e, parent);
                 event = new ZCreateSearchFolderEvent(child);
-                parent.addChild(child);                
+                parent.addChild(child);
             } else if (e.getName().equals(MailConstants.E_TAG)) {
                 event = new ZCreateTagEvent(new ZTag(e));
             }
             if (event != null)
             	for (ZEventHandler handler : mHandlers)
-            		handler.handleCreate(event, this);            
+            		handler.handleCreate(event, this);
         }
     }
 
@@ -461,12 +473,12 @@ public class ZMailbox {
         for (ZEventHandler handler : mHandlers)
         	handler.handleDelete(de, this);
     }
-    
+
     private void addIdMappings(ZFolder folder) {
     	addItemIdMapping(folder);
     	if (folder instanceof ZMountpoint) {
         	ZMountpoint mp =  (ZMountpoint) folder;
-        	addRemoteItemIdMapping(mp.getCanonicalRemoteId(), mp);    		
+        	addRemoteItemIdMapping(mp.getCanonicalRemoteId(), mp);
     	}
     	for (ZFolder child: folder.getSubFolders()) {
     		addIdMappings(child);
@@ -497,7 +509,7 @@ public class ZMailbox {
             	ZMountpoint mp =  ((ZCreateMountpointEvent)event).getMountpoint();
             	mailbox.addItemIdMapping(mp);
             	mailbox.addRemoteItemIdMapping(mp.getCanonicalRemoteId(), mp);
-            } else if (event instanceof ZCreateFolderEvent) {            	
+            } else if (event instanceof ZCreateFolderEvent) {
             	mailbox.addItemIdMapping(((ZCreateFolderEvent)event).getFolder());
             }
         }
@@ -537,11 +549,11 @@ public class ZMailbox {
                     contact.modifyNotification(mce);
             }
         }
-        
+
         public synchronized void handleDelete(ZDeleteEvent event, ZMailbox mailbox) throws ServiceException {
             for (String id : event.toList()) {
                 mMessageCache.remove(id);
-                mContactCache.remove(id);                
+                mContactCache.remove(id);
                 ZItem item = mIdToItem.get(id);
                 if (item instanceof ZMountpoint) {
                     ZMountpoint sl = (ZMountpoint) item;
@@ -550,7 +562,7 @@ public class ZMailbox {
                     mIdToItem.remove(sl.getCanonicalRemoteId());
                 } else if (item instanceof ZFolder) {
                     ZFolder sf = (ZFolder) item;
-                    if (sf.getParent() != null) 
+                    if (sf.getParent() != null)
                         sf.getParent().removeChild(sf);
 
                 } else if (item instanceof ZTag) {
@@ -594,7 +606,7 @@ public class ZMailbox {
      */
     public static String getParentPath(String path) throws ServiceException {
         if (path.equals(PATH_SEPARATOR)) return PATH_SEPARATOR;
-        if (path.charAt(0) != PATH_SEPARATOR_CHAR) 
+        if (path.charAt(0) != PATH_SEPARATOR_CHAR)
             throw ServiceException.INVALID_REQUEST("path must be absoliute: "+path, null);
         if (path.charAt(path.length()-1) == PATH_SEPARATOR_CHAR)
             path = path.substring(0, path.length()-1);
@@ -613,14 +625,14 @@ public class ZMailbox {
      */
     public static String getBasePath(String path) throws ServiceException {
         if (path.equals(PATH_SEPARATOR)) return PATH_SEPARATOR;
-        if (path.charAt(0) != PATH_SEPARATOR_CHAR) 
+        if (path.charAt(0) != PATH_SEPARATOR_CHAR)
             throw ServiceException.INVALID_REQUEST("path must be absoliute: "+path, null);
         if (path.charAt(path.length()-1) == PATH_SEPARATOR_CHAR)
             path = path.substring(0, path.length()-1);
         int index = path.lastIndexOf(PATH_SEPARATOR_CHAR);
         return path.substring(index+1);
     }
-    
+
     /**
      * @return current size of mailbox in bytes
      * @throws com.zimbra.common.service.ServiceException on error
@@ -646,7 +658,7 @@ public class ZMailbox {
     public ZPrefs getPrefs(boolean refresh) throws ServiceException {
         return getAccountInfo(refresh).getPrefs();
     }
-    
+
     public ZFeatures getFeatures() throws ServiceException {
         return getFeatures(false);
     }
@@ -654,29 +666,29 @@ public class ZMailbox {
     public ZFeatures getFeatures(boolean refresh) throws ServiceException {
         return getAccountInfo(refresh).getFeatures();
     }
-    
+
     public ZGetInfoResult getAccountInfo(boolean refresh) throws ServiceException {
         if (mGetInfoResult == null || refresh) {
             XMLElement req = new XMLElement(AccountConstants.GET_INFO_REQUEST);
-            mGetInfoResult = new ZGetInfoResult(invoke(req));            
+            mGetInfoResult = new ZGetInfoResult(invoke(req));
         }
-        return mGetInfoResult;       
+        return mGetInfoResult;
     }
-    
+
     //  ------------------------
-    
+
     /**
      * @return current List of all tags in the mailbox
      * @throws com.zimbra.common.service.ServiceException on error
      */
-    @SuppressWarnings("unchecked")    
+    @SuppressWarnings("unchecked")
     public List<ZTag> getAllTags() throws ServiceException {
-        if (mNeedsRefresh) noOp(); 
+        if (mNeedsRefresh) noOp();
         List result = new ArrayList<ZTag>(mNameToTag.values());
         Collections.sort(result);
-        return result;      
+        return result;
     }
-    
+
     /**
      * @return current list of all tags names in the mailbox, sorted
      * @throws com.zimbra.common.service.ServiceException on error
@@ -685,12 +697,12 @@ public class ZMailbox {
         if (mNeedsRefresh) noOp();
         ArrayList<String> names = new ArrayList<String>(mNameToTag.keySet());
         Collections.sort(names);
-        return names;   
+        return names;
     }
 
     /**
      * returns the tag the specified name, or null if no such tag exists.
-     * 
+     *
      * @param name tag name
      * @return the tag, or null if tag not found
      * @throws com.zimbra.common.service.ServiceException on error
@@ -702,21 +714,21 @@ public class ZMailbox {
 
     /**
      * returns the tag with the specified id, or null if no such tag exists.
-     * 
+     *
      * @param id the tag id
      * @return tag with given id, or null
      * @throws com.zimbra.common.service.ServiceException on error
      */
     public ZTag getTagById(String id) throws ServiceException {
-        if (mNeedsRefresh) noOp();         
+        if (mNeedsRefresh) noOp();
         ZItem item = mIdToItem.get(id);
         if (item instanceof ZTag) return (ZTag) item;
-        else return null;       
+        else return null;
     }
 
     /**
      * create a new tag with the specified color.
-     * 
+     *
      * @return newly created tag
      * @param name name of the tag
      * @param color color of the tag
@@ -745,19 +757,19 @@ public class ZMailbox {
     }
 
     /** mark all items with tag as read
-     * @param id id of tag to mark read 
+     * @param id id of tag to mark read
      * @return action reslult
      * @throws ServiceException on error
      */
     public ZActionResult markTagRead(String id) throws ServiceException {
-        return doAction(tagAction("read", id));    
+        return doAction(tagAction("read", id));
     }
 
     /**
      * delete tag
      * @param id id of tag to delete
      * @return action result
-     * @throws ServiceException on error 
+     * @throws ServiceException on error
      */
     public ZActionResult deleteTag(String id) throws ServiceException {
         return doAction(tagAction("delete", id));
@@ -781,7 +793,7 @@ public class ZMailbox {
         actionEl.addAttribute(MailConstants.A_OPERATION, op);
         return actionEl;
     }
-    
+
     private ZActionResult doAction(Element actionEl) throws ServiceException {
         Element response = invoke(actionEl.getParent());
         return new ZActionResult(response.getElement(MailConstants.E_ACTION).getAttribute(MailConstants.A_ID));
@@ -790,20 +802,20 @@ public class ZMailbox {
     // ------------------------
 
     public enum ContactSortBy {
-         
+
         nameDesc, nameAsc;
 
          public static ContactSortBy fromString(String s) throws ServiceException {
              try {
                  return ContactSortBy.valueOf(s);
              } catch (IllegalArgumentException e) {
-                 throw ZClientException.CLIENT_ERROR("invalid sortBy: "+s+", valid values: "+Arrays.asList(ContactSortBy.values()), e);                  
+                 throw ZClientException.CLIENT_ERROR("invalid sortBy: "+s+", valid values: "+Arrays.asList(ContactSortBy.values()), e);
              }
          }
     }
 
     /**
-     * 
+     *
      * @param optFolderId return contacts only in specified folder (null for all folders)
      * @param sortBy sort results (null for no sorting)
      * @param sync if true, return modified date on contacts
@@ -813,9 +825,9 @@ public class ZMailbox {
      */
     public List<ZContact> getAllContacts(String optFolderId, ContactSortBy sortBy, boolean sync, List<String> attrs) throws ServiceException {
         XMLElement req = new XMLElement(MailConstants.GET_CONTACTS_REQUEST);
-        if (optFolderId != null) 
+        if (optFolderId != null)
             req.addAttribute(MailConstants.A_FOLDER, optFolderId);
-        if (sortBy != null) 
+        if (sortBy != null)
             req.addAttribute(MailConstants.A_SORTBY, sortBy.name());
         if (sync)
             req.addAttribute(MailConstants.A_SYNC, sync);
@@ -824,7 +836,7 @@ public class ZMailbox {
             for (String name : attrs)
                 req.addElement(MailConstants.E_ATTRIBUTE).addAttribute(MailConstants.A_ATTRIBUTE_NAME, name);
         }
-        
+
         Element response = invoke(req);
         List<ZContact> result = new ArrayList<ZContact>();
         for (Element cn : response.listElements(MailConstants.E_CONTACT)) {
@@ -832,13 +844,13 @@ public class ZMailbox {
         }
         return result;
     }
-    
+
     public String createContact(String folderId, String tags, Map<String, String> attrs) throws ServiceException {
         XMLElement req = new XMLElement(MailConstants.CREATE_CONTACT_REQUEST);
         Element cn = req.addElement(MailConstants.E_CONTACT);
-        if (folderId != null) 
+        if (folderId != null)
             cn.addAttribute(MailConstants.A_FOLDER, folderId);
-        if (tags != null) 
+        if (tags != null)
             cn.addAttribute(MailConstants.A_TAGS, tags);
         for (Map.Entry<String, String> entry : attrs.entrySet()) {
             Element a = cn.addElement(MailConstants.E_ATTRIBUTE);
@@ -847,9 +859,9 @@ public class ZMailbox {
         }
         return invoke(req).getElement(MailConstants.E_CONTACT).getAttribute(MailConstants.A_ID);
     }
- 
+
     /**
-     * 
+     *
      * @param id of contact
      * @param replace if true, replace all attrs with specified attrs, otherwise merge with existing
      * @param attrs modified attrs
@@ -858,7 +870,7 @@ public class ZMailbox {
      */
     public String modifyContact(String id, boolean replace, Map<String, String> attrs) throws ServiceException {
         XMLElement req = new XMLElement(MailConstants.MODIFY_CONTACT_REQUEST);
-        if (replace) 
+        if (replace)
             req.addAttribute(MailConstants.A_REPLACE, replace);
         Element cn = req.addElement(MailConstants.E_CONTACT);
         cn.addAttribute(MailConstants.A_ID, id);
@@ -868,10 +880,10 @@ public class ZMailbox {
             a.setText(entry.getValue());
         }
         return invoke(req).getElement(MailConstants.E_CONTACT).getAttribute(MailConstants.A_ID);
-    }  
-    
+    }
+
     /**
-     * 
+     *
      * @param ids comma-separated list of contact ids
      * @param attrs limit attrs returns to given list
      * @param sortBy sort results (null for no sorting)
@@ -882,7 +894,7 @@ public class ZMailbox {
     public List<ZContact> getContacts(String ids, ContactSortBy sortBy, boolean sync, List<String> attrs) throws ServiceException {
         XMLElement req = new XMLElement(MailConstants.GET_CONTACTS_REQUEST);
 
-        if (sortBy != null) 
+        if (sortBy != null)
             req.addAttribute(MailConstants.A_SORTBY, sortBy.name());
         if (sync)
             req.addAttribute(MailConstants.A_SYNC, sync);
@@ -896,7 +908,7 @@ public class ZMailbox {
             result.add(new ZContact(cn));
         }
         return result;
-    }   
+    }
 
     /**
      *
@@ -923,19 +935,19 @@ public class ZMailbox {
         actionEl.addAttribute(MailConstants.A_OPERATION, op);
         return actionEl;
     }
-    
+
     public ZActionResult moveContact(String ids, String destFolderId) throws ServiceException {
         return doAction(contactAction("move", ids).addAttribute(MailConstants.A_FOLDER, destFolderId));
     }
-    
+
     public ZActionResult deleteContact(String ids) throws ServiceException {
-        return doAction(contactAction("delete", ids));        
+        return doAction(contactAction("delete", ids));
     }
-    
+
     public ZActionResult flagContact(String ids, boolean flag) throws ServiceException {
         return doAction(contactAction(flag ? "flag" : "!flag", ids));
     }
-    
+
     public ZActionResult tagContact(String ids, String tagId, boolean tag) throws ServiceException {
         return doAction(contactAction(tag ? "tag" : "!tag", ids).addAttribute(MailConstants.A_TAG, tagId));
     }
@@ -954,13 +966,13 @@ public class ZMailbox {
         if (destFolderId != null && destFolderId.length() > 0) actionEl.addAttribute(MailConstants.A_FOLDER, destFolderId);
         if (tagList != null) actionEl.addAttribute(MailConstants.A_TAGS, tagList);
         if (flags != null) actionEl.addAttribute(MailConstants.A_FLAGS, flags);
-        return doAction(actionEl);        
+        return doAction(actionEl);
     }
-   
+
 
     /**
-     * 
-     * @param id conversation id 
+     *
+     * @param id conversation id
      * @param fetch Whether or not fetch none/first/all messages in conv.
      * @return conversation
      * @throws ServiceException on error
@@ -972,19 +984,19 @@ public class ZMailbox {
         if (fetch != null && fetch != Fetch.none && fetch != Fetch.hits) {
             // use "1" for "first" for backward compat until DF is updated
             convEl.addAttribute(MailConstants.A_FETCH, fetch == Fetch.first ? "1" : fetch.name());
-        }        
+        }
         return new ZConversation(invoke(req).getElement(MailConstants.E_CONV));
     }
-    
+
     /** include items in the Trash folder */
     public static final String TC_INCLUDE_TRASH = "t";
-    
+
     /** include items in the Spam/Junk folder */
     public static final String TC_INCLUDE_JUNK = "j";
-    
+
     /** include items in the Sent folder */
     public static final String TC_INCLUDE_SENT = "s";
-    
+
     /** include items in any other folder */
     public static final String TC_INCLUDE_OTHER = "o";
 
@@ -999,11 +1011,11 @@ public class ZMailbox {
 
     /**
      * hard delete conversation(s).
-     * 
+     *
      * @param ids list of conversation ids to act on
      * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
      *         affected items in a conversation. A leading '-' means to negate the constraint(s). Use null for
-     *         no constraints.  
+     *         no constraints.
      * @return action result
      * @throws ServiceException on error
      */
@@ -1013,12 +1025,12 @@ public class ZMailbox {
 
     /**
      * mark conversation as read/unread
-     * 
+     *
      * @param ids list of conversation ids to act on
      * @param read mark read (TRUE) or unread (FALSE)
      * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
      *         affected items in a conversation. A leading '-' means to negate the constraint(s). Use null for
-     *         no constraints.  
+     *         no constraints.
      * @return action result
      * @throws ServiceException on error
      */
@@ -1028,12 +1040,12 @@ public class ZMailbox {
 
     /**
      * flag/unflag conversations
-     * 
+     *
      * @param ids list of conversation ids to act on
      * @param flag flag (TRUE) or unflag (FALSE)
      * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
      *         affected items in a conversation. A leading '-' means to negate the constraint(s). Use null for
-     *         no constraints.  
+     *         no constraints.
      * @return action result
      * @throws ServiceException on error
      */
@@ -1043,13 +1055,13 @@ public class ZMailbox {
 
     /**
      * tag/untag conversations
-     * 
+     *
      * @param ids list of conversation ids to act on
      * @param tagId id of tag to tag/untag with
      * @param tag tag (TRUE) or untag (FALSE)
      * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
      *         affected items in a conversation. A leading '-' means to negate the constraint(s). Use null for
-     *         no constraints.  
+     *         no constraints.
      * @return action result
      * @throws ServiceException on error
      */
@@ -1059,12 +1071,12 @@ public class ZMailbox {
 
     /**
      * move conversations
-     * 
+     *
      * @param ids list of conversation ids to act on
      * @param destFolderId id of destination folder
      * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
      *         affected items in a conversation. A leading '-' means to negate the constraint(s). Use null for
-     *         no constraints.  
+     *         no constraints.
      * @return action result
      * @throws ServiceException on error
      */
@@ -1074,13 +1086,13 @@ public class ZMailbox {
 
     /**
      * spam/unspam a single conversation
-     * 
+     *
      * @param id conversation id to act on
      * @param spam spam (TRUE) or not spam (FALSE)
      * @param destFolderId optional id of destination folder, only used with "not spam".
      * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
      *         affected items in a conversation. A leading '-' means to negate the constraint(s). Use null for
-     *         no constraints.  
+     *         no constraints.
      * @return action result
      * @throws ServiceException on error
      */
@@ -1108,14 +1120,14 @@ public class ZMailbox {
         if (constraints != null) actionEl.addAttribute(MailConstants.A_TARGET_CONSTRAINT, constraints);
         return actionEl;
     }
-    
+
     /**
      * hard delete item(s).
-     * 
+     *
      * @param ids list of item ids to act on
      * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
      *         affected items. A leading '-' means to negate the constraint(s). Use null for
-     *         no constraints.  
+     *         no constraints.
      * @return action result
      * @throws ServiceException on error
      */
@@ -1125,12 +1137,12 @@ public class ZMailbox {
 
     /**
      * mark item as read/unread
-     * 
+     *
      * @param ids list of ids to act on
      * @param read mark read (TRUE) or unread (FALSE)
      * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
      *         affected items. A leading '-' means to negate the constraint(s). Use null for
-     *         no constraints.  
+     *         no constraints.
      * @return action result
      * @throws ServiceException on error
      */
@@ -1140,28 +1152,28 @@ public class ZMailbox {
 
     /**
      * flag/unflag items
-     * 
+     *
      * @param ids list of ids to act on
      * @param flag flag (TRUE) or unflag (FALSE)
      * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
      *         affected items. A leading '-' means to negate the constraint(s). Use null for
-     *         no constraints.  
+     *         no constraints.
      * @return action result
      * @throws ServiceException on error
      */
     public ZActionResult flagItem(String ids, boolean flag, String targetConstraints) throws ServiceException {
-        return doAction(itemAction(flag ? "flag" : "!flag", ids, targetConstraints));        
+        return doAction(itemAction(flag ? "flag" : "!flag", ids, targetConstraints));
     }
 
     /**
      * tag/untag items
-     * 
+     *
      * @param ids list of ids to act on
      * @param tagId id of tag to tag/untag with
      * @param tag tag (TRUE) or untag (FALSE)
      * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
      *         affected items. A leading '-' means to negate the constraint(s). Use null for
-     *         no constraints.  
+     *         no constraints.
      * @return action result
      * @throws ServiceException on error
      */
@@ -1171,12 +1183,12 @@ public class ZMailbox {
 
     /**
      * move conversations
-     * 
+     *
      * @param ids list of item ids to act on
      * @param destFolderId id of destination folder
      * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
      *         affected items A leading '-' means to negate the constraint(s). Use null for
-     *         no constraints.  
+     *         no constraints.
      * @return action result
      * @throws ServiceException on error
      */
@@ -1192,7 +1204,7 @@ public class ZMailbox {
      * @param flags optional new value for flags
      * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
      *         affected items A leading '-' means to negate the constraint(s). Use null for
-     *         no constraints.  
+     *         no constraints.
      * @return action result
      * @throws ServiceException on error
      */
@@ -1230,10 +1242,10 @@ public class ZMailbox {
 
     public String uploadAttachments(Part[] parts, int msTimeout) throws ServiceException {
         String aid = null;
-        
+
         URI uri = getUploadURI();
         HttpClient client = getHttpClient(uri);
-        
+
         // make the post
         PostMethod post = new PostMethod(uri.toString());
         client.getHttpConnectionManager().getParams().setConnectionTimeout(msTimeout);
@@ -1265,7 +1277,7 @@ public class ZMailbox {
             throw ZClientException.CLIENT_ERROR("unable to parse URI: "+mTransport.getURI(), e);
         }
     }
-     
+
     Pattern sAttachmentId = Pattern.compile("\\d+,'.*','(.*)'");
 
     private String getAttachmentId(String result) throws ZClientException {
@@ -1279,29 +1291,29 @@ public class ZMailbox {
     }
 
     private void addAuthCookoie(String name, URI uri, HttpState state) {
-        Cookie cookie = new Cookie(uri.getHost(), name, getAuthToken(), "/", -1, false);    
+        Cookie cookie = new Cookie(uri.getHost(), name, getAuthToken(), "/", -1, false);
         state.addCookie(cookie);
     }
 
     HttpClient getHttpClient(URI uri) {
         boolean isAdmin = uri.getPort() == LC.zimbra_admin_service_port.intValue();
-        HttpState initialState = new HttpState();        
-        if (isAdmin) 
+        HttpState initialState = new HttpState();
+        if (isAdmin)
             addAuthCookoie(ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN, uri, initialState);
-        addAuthCookoie(ZimbraServlet.COOKIE_ZM_AUTH_TOKEN, uri, initialState); 
+        addAuthCookoie(ZimbraServlet.COOKIE_ZM_AUTH_TOKEN, uri, initialState);
         HttpClient client = new HttpClient();
         client.setState(initialState);
         client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
         return client;
     }
-    
+
     /**
      * @param folderId (required) folderId of folder to add message to
      * @param flags non-comma-separated list of flags, e.g. "sf" for "sent by me and flagged",
      *        or <tt>null</tt>
      * @param tags coma-spearated list of tags, or null for no tags, or <tt>null</tt>
      * @param receivedDate time the message was originally received, in MILLISECONDS since the epoch,
-     *        or <tt>0</tt> for the current time 
+     *        or <tt>0</tt> for the current time
      * @param content message content
      * @param noICal if TRUE, then don't process iCal attachments.
      * @return ID of newly created message
@@ -1311,9 +1323,9 @@ public class ZMailbox {
         XMLElement req = new XMLElement(MailConstants.ADD_MSG_REQUEST);
         Element m = req.addElement(MailConstants.E_MSG);
         m.addAttribute(MailConstants.A_FOLDER, folderId);
-        if (flags != null && flags.length() > 0) 
+        if (flags != null && flags.length() > 0)
             m.addAttribute(MailConstants.A_FLAGS, flags);
-        if (tags != null && tags.length() > 0) 
+        if (tags != null && tags.length() > 0)
             m.addAttribute(MailConstants.A_TAGS, tags);
         if (receivedDate != 0)
             m.addAttribute(MailConstants.A_DATE, receivedDate);
@@ -1327,7 +1339,7 @@ public class ZMailbox {
      *        or <tt>null</tt>
      * @param tags coma-spearated list of tags, or null for no tags, or <tt>null</tt>
      * @param receivedDate time the message was originally received, in MILLISECONDS since the epoch,
-     *        or <tt>0</tt> for the current time 
+     *        or <tt>0</tt> for the current time
      * @param content message content
      * @param noICal if TRUE, then don't process iCal attachments.
      * @return ID of newly created message
@@ -1341,9 +1353,9 @@ public class ZMailbox {
         XMLElement req = new XMLElement(MailConstants.ADD_MSG_REQUEST);
         Element m = req.addElement(MailConstants.E_MSG);
         m.addAttribute(MailConstants.A_FOLDER, folderId);
-        if (flags != null && flags.length() > 0) 
+        if (flags != null && flags.length() > 0)
             m.addAttribute(MailConstants.A_FLAGS, flags);
-        if (tags != null && tags.length() > 0) 
+        if (tags != null && tags.length() > 0)
             m.addAttribute(MailConstants.A_TAGS, tags);
         if (receivedDate > 0)
             m.addAttribute(MailConstants.A_DATE, receivedDate);
@@ -1386,7 +1398,7 @@ public class ZMailbox {
      * @throws ServiceException on error
      */
     public ZActionResult deleteMessage(String ids) throws ServiceException {
-        return doAction(messageAction("delete", ids));        
+        return doAction(messageAction("delete", ids));
     }
 
     /**
@@ -1399,9 +1411,9 @@ public class ZMailbox {
     public ZActionResult markMessageRead(String ids, boolean read) throws ServiceException {
         return doAction(messageAction(read ? "read" : "!read", ids));
     }
-    
+
     /**
-     *  mark message as spam/not spam 
+     *  mark message as spam/not spam
      * @param spam spam (TRUE) or not spam (FALSE)
      * @param id id of message
      * @param destFolderId optional id of destination folder, only used with "not spam".
@@ -1411,9 +1423,9 @@ public class ZMailbox {
     public ZActionResult markMessageSpam(String id, boolean spam, String destFolderId) throws ServiceException {
         Element actionEl = messageAction(spam ? "spam" : "!spam", id);
         if (destFolderId != null && destFolderId.length() > 0) actionEl.addAttribute(MailConstants.A_FOLDER, destFolderId);
-        return doAction(actionEl);        
+        return doAction(actionEl);
     }
-    
+
     /** flag/unflag message(s)
      *
      * @return action result
@@ -1424,7 +1436,7 @@ public class ZMailbox {
     public ZActionResult flagMessage(String ids, boolean flag) throws ServiceException {
         return doAction(messageAction(flag ? "flag" : "!flag", ids));
     }
-    
+
     /** tag/untag message(s)
      * @param ids ids of messages to tag
      * @param tagId tag id to tag with
@@ -1435,16 +1447,16 @@ public class ZMailbox {
     public ZActionResult tagMessage(String ids, String tagId, boolean tag) throws ServiceException {
         return doAction(messageAction(tag ? "tag" : "!tag", ids).addAttribute(MailConstants.A_TAG, tagId));
     }
-    
+
     /** move message(s)
      * @param ids list of ids to move
      * @param destFolderId destination folder id
      * @return action result
-     * @throws ServiceException on error 
+     * @throws ServiceException on error
      */
     public ZActionResult moveMessage(String ids, String destFolderId) throws ServiceException {
         return doAction(messageAction("move", ids).addAttribute(MailConstants.A_FOLDER, destFolderId));
-    }    
+    }
 
     /**
      * update message(s)
@@ -1460,11 +1472,11 @@ public class ZMailbox {
         if (destFolderId != null && destFolderId.length() > 0) actionEl.addAttribute(MailConstants.A_FOLDER, destFolderId);
         if (tagList != null) actionEl.addAttribute(MailConstants.A_TAGS, tagList);
         if (flags != null) actionEl.addAttribute(MailConstants.A_FLAGS, flags);
-        return doAction(actionEl);        
+        return doAction(actionEl);
     }
 
     // ------------------------
-    
+
     /**
      * return the root user folder
      * @return user root folder
@@ -1472,7 +1484,7 @@ public class ZMailbox {
      */
     public ZFolder getUserRoot() throws ServiceException {
         if (mNeedsRefresh) noOp();
-        return mUserRoot; 
+        return mUserRoot;
     }
 
     /**
@@ -1483,11 +1495,11 @@ public class ZMailbox {
      */
     public ZFolder getFolderByPath(String path) throws ServiceException {
         if (mNeedsRefresh) noOp();
-        if (!path.startsWith(ZMailbox.PATH_SEPARATOR)) 
+        if (!path.startsWith(ZMailbox.PATH_SEPARATOR))
             path = ZMailbox.PATH_SEPARATOR + path;
         return getUserRoot().getSubFolderByPath(path.substring(1));
     }
-    
+
     /**
      * find the folder with the specified id.
      * @param id id of  folder
@@ -1504,6 +1516,7 @@ public class ZMailbox {
     /**
      * Returns all folders and subfolders in this mailbox.
      * @throws ServiceException on error
+     * @return all folders and subfolders in this mailbox
      */
     public List<ZFolder> getAllFolders() throws ServiceException {
         if (mNeedsRefresh) noOp();
@@ -1511,16 +1524,16 @@ public class ZMailbox {
         addSubFolders(getUserRoot(), allFolders);
         return allFolders;
     }
-    
+
     private void addSubFolders(ZFolder folder, List<ZFolder> folderList) throws ServiceException {
         folderList.add(folder);
         for (ZFolder subFolder : folder.getSubFolders()) {
             addSubFolders(subFolder, folderList);
         }
     }
-    
+
     /**
-     * returns a rest URL relative to this mailbox. 
+     * returns a rest URL relative to this mailbox.
      * @param relativePath a relative path (i.e., "/Calendar", "Inbox?fmt=rss", etc).
      * @return URI of path
      * @throws ServiceException on error
@@ -1533,9 +1546,9 @@ public class ZMailbox {
             throw ZClientException.CLIENT_ERROR("unable to parse URI: "+mTransport.getURI(), e);
         }
     }
-    
+
     /**
-     * 
+     *
      * @param relativePath a relative path (i.e., "/Calendar", "Inbox?fmt=rss", etc).
      * @param os the stream to send the output to
      * @param closeOs whether or not to close the output stream when done
@@ -1546,17 +1559,17 @@ public class ZMailbox {
     public void getRESTResource(String relativePath, OutputStream os, boolean closeOs, int msecTimeout) throws ServiceException {
         GetMethod get = null;
         InputStream is = null;
-        
+
         int statusCode;
         try {
             URI uri = getRestURI(relativePath);
             HttpClient client = getHttpClient(uri);
-            
+
             if (msecTimeout > 0)
                 client.getHttpConnectionManager().getParams().setConnectionTimeout(msecTimeout);
 
             get = new GetMethod(uri.toString());
-            
+
             statusCode = client.executeMethod(get);
             // parse the response
             if (statusCode == 200) {
@@ -1576,9 +1589,9 @@ public class ZMailbox {
                 get.releaseConnection();
         }
     }
-        
+
     /**
-     * 
+     *
      * @param relativePath a relative path (i.e., "/Calendar", "Inbox?fmt=rss", etc).
      * @param is the input stream to post
      * @param closeIs whether to close the input stream when done
@@ -1590,7 +1603,7 @@ public class ZMailbox {
     @SuppressWarnings({"EmptyCatchBlock"})
     public void postRESTResource(String relativePath, InputStream is, boolean closeIs, long length, String contentType, int msecTimeout) throws ServiceException {
         PostMethod post = null;
-        
+
         try {
             URI uri = getRestURI(relativePath);
             HttpClient client = getHttpClient(uri);
@@ -1598,8 +1611,8 @@ public class ZMailbox {
             if (msecTimeout > 0)
                 client.getHttpConnectionManager().getParams().setConnectionTimeout(msecTimeout);
 
-            post = new PostMethod(uri.toString());            
-            RequestEntity entity = (length > 0) ? 
+            post = new PostMethod(uri.toString());
+            RequestEntity entity = (length > 0) ?
                     new InputStreamRequestEntity(is, length, contentType != null ? contentType:  "application/octet-stream") :
                     new InputStreamRequestEntity(is, contentType);
             post.setRequestEntity(entity);
@@ -1618,7 +1631,7 @@ public class ZMailbox {
         }
     }
 
-    
+
     /**
      * find the search folder with the specified id.
      * @param id id of  folder
@@ -1639,21 +1652,21 @@ public class ZMailbox {
      * @throws com.zimbra.common.service.ServiceException on error
      */
     public ZMountpoint getMountpointById(String id) throws ServiceException {
-        if (mNeedsRefresh) noOp();        
+        if (mNeedsRefresh) noOp();
         ZItem item = mIdToItem.get(id);
         if (item instanceof ZMountpoint) return (ZMountpoint) item;
         else return null;
     }
-    
+
     /**
      * create a new sub folder of the specified parent folder.
-     * 
+     *
      * @param parentId parent folder id
      * @param name name of new folder
      * @param defaultView default view of new folder or null.
      * @param color color of folder, or null to use default
      * @param flags flags for folder, or null
-     *                
+     *
      * @return newly created folder
      * @throws ServiceException on error
      * @param url remote url for rss/atom/ics feeds
@@ -1669,12 +1682,12 @@ public class ZMailbox {
         if (url != null && url.length() > 0) folderEl.addAttribute(MailConstants.A_URL, url);
         Element newFolderEl = invoke(req).getElement(MailConstants.E_FOLDER);
         ZFolder newFolder = getFolderById(newFolderEl.getAttribute(MailConstants.A_ID));
-        return newFolder != null ? newFolder : new ZFolder(newFolderEl, null); 
+        return newFolder != null ? newFolder : new ZFolder(newFolderEl, null);
     }
 
     /**
      * create a new sub folder of the specified parent folder.
-     * 
+     *
      * @param parentId parent folder id
      * @param name name of new folder
      * @param query search query (required)
@@ -1685,7 +1698,7 @@ public class ZMailbox {
      * @throws ServiceException on error
      * @param color color of folder
      */
-    public ZSearchFolder createSearchFolder(String parentId, String name, 
+    public ZSearchFolder createSearchFolder(String parentId, String name,
                 String query, String types, SearchSortBy sortBy, ZFolder.Color color) throws ServiceException {
         XMLElement req = new XMLElement(MailConstants.CREATE_SEARCH_FOLDER_REQUEST);
         Element folderEl = req.addElement(MailConstants.E_SEARCH);
@@ -1702,7 +1715,7 @@ public class ZMailbox {
 
     /**
      * modify a search folder.
-     * 
+     *
      * @param id id of search folder
      * @param query search query or null to leave unchanged.
      * @param types new types or null to leave unchanged.
@@ -1721,23 +1734,23 @@ public class ZMailbox {
         // this assumes notifications will modify the search folder
         return getSearchFolderById(id);
     }
- 
+
     public static class ZActionResult {
         private String mIds;
-        
+
         public ZActionResult(String ids) {
             if (ids == null) ids = "";
             mIds = ids;
         }
-        
+
         public String getIds() {
             return mIds;
         }
-        
+
         public String[] getIdsAsArray() {
             return mIds.split(",");
         }
-        
+
         public String toString() {
             return String.format("actionResult: { ids: %s }", mIds);
         }
@@ -1750,7 +1763,7 @@ public class ZMailbox {
         actionEl.addAttribute(MailConstants.A_OPERATION, op);
         return actionEl;
     }
-    
+
     /** sets or unsets the folder's checked state in the UI
      * @param ids ids of folder to check
      * @param checked checked/unchecked
@@ -1786,7 +1799,7 @@ public class ZMailbox {
      * @throws ServiceException on error
      */
     public ZActionResult emptyFolder(String ids) throws ServiceException {
-        return doAction(folderAction("empty", ids));        
+        return doAction(folderAction("empty", ids));
     }
 
     /** mark all items in folder as read
@@ -1795,7 +1808,7 @@ public class ZMailbox {
      * @throws ServiceException on error
      */
     public ZActionResult markFolderRead(String ids) throws ServiceException {
-        return doAction(folderAction("read", ids));                
+        return doAction(folderAction("read", ids));
     }
 
     /** add the contents of the remote feed at target-url to the folder (one time action)
@@ -1807,7 +1820,7 @@ public class ZMailbox {
     public ZActionResult importURLIntoFolder(String id, String url) throws ServiceException {
         return doAction(folderAction("import", id).addAttribute(MailConstants.A_URL, url));
     }
-    
+
     /** move the folder to be a child of {target-folder}
      * @param id folder id to move
      * @param targetFolderId id of target folder
@@ -1817,7 +1830,7 @@ public class ZMailbox {
     public ZActionResult moveFolder(String id, String targetFolderId) throws ServiceException {
         return doAction(folderAction("move", id).addAttribute(MailConstants.A_FOLDER, targetFolderId));
     }
-    
+
     /** change the folder's name; if new name  begins with '/', the folder is moved to the new path and any missing path elements are created
      * @param id id of folder to rename
      * @param name new name
@@ -1839,7 +1852,7 @@ public class ZMailbox {
     }
 
     /**
-     * 
+     *
      * @param folderId to modify
      * @param granteeType type of grantee
      * @param grantreeId id of grantree
@@ -1847,10 +1860,10 @@ public class ZMailbox {
      * @param args extra args
      * @param inherit inherited bit
      * @return action result
-     * @throws ServiceException on error 
+     * @throws ServiceException on error
      */
     public ZActionResult modifyFolderGrant(
-            String folderId, GranteeType granteeType, String grantreeId, 
+            String folderId, GranteeType granteeType, String grantreeId,
             String perms, String args, boolean inherit) throws ServiceException {
         Element action = folderAction("grant", folderId);
         Element grant = action.addElement(MailConstants.E_GRANT);
@@ -1860,24 +1873,24 @@ public class ZMailbox {
         grant.addAttribute(MailConstants.A_GRANT_TYPE, granteeType.name());
         if (args != null) grant.addAttribute(MailConstants.A_ARGS, args);
         return doAction(action);
-    }  
+    }
 
     /**
      * revoke a grant
      * @param folderId folder id to modify
-     * @param grantreeId zimbra ID 
+     * @param grantreeId zimbra ID
      * @return action result
-     * @throws ServiceException on error 
+     * @throws ServiceException on error
      */
     public ZActionResult modifyFolderRevokeGrant(String folderId, String grantreeId) throws ServiceException
     {
         Element action = folderAction("!grant", folderId);
         action.addAttribute(MailConstants.A_ZIMBRA_ID, grantreeId);
         return doAction(action);
-    }    
-    
-    /** 
-     * set the synchronization url on the folder to {target-url}, empty the folder, and 
+    }
+
+    /**
+     * set the synchronization url on the folder to {target-url}, empty the folder, and
      * synchronize the folder's contents to the remote feed, also sets {exclude-free-busy-boolean}
      * @param id id of folder
      * @param url new URL
@@ -1898,7 +1911,7 @@ public class ZMailbox {
     }
 
     // ------------------------
-    
+
     private ZSearchResult internalSearch(String convId, ZSearchParams params, boolean nest) throws ServiceException {
         XMLElement req = new XMLElement(convId == null ? MailConstants.SEARCH_REQUEST : MailConstants.SEARCH_CONV_REQUEST);
 
@@ -1916,21 +1929,21 @@ public class ZMailbox {
         if (params.isMarkAsRead()) req.addAttribute(MailConstants.A_MARK_READ, params.isMarkAsRead());
         if (params.isRecipientMode()) req.addAttribute(MailConstants.A_RECIPIENTS, params.isRecipientMode());
         if (params.getField() != null) req.addAttribute(MailConstants.A_FIELD, params.getField());
-        
+
         req.addElement(MailConstants.E_QUERY).setText(params.getQuery());
-        
+
         if (params.getCursor() != null) {
             Cursor cursor = params.getCursor();
             Element cursorEl = req.addElement(MailConstants.E_CURSOR);
             if (cursor.getPreviousId() != null) cursorEl.addAttribute(MailConstants.A_ID, cursor.getPreviousId());
             if (cursor.getPreviousSortValue() != null) cursorEl.addAttribute(MailConstants.A_SORTVAL, cursor.getPreviousSortValue());
         }
-        
+
         return new ZSearchResult(invoke(req), nest);
     }
- 
+
     /**
-     * do a search 
+     * do a search
      * @param params search prams
      * @return search result
      * @throws ServiceException on error
@@ -1961,13 +1974,13 @@ public class ZMailbox {
     public void clearSearchCache(String type) {
         mSearchPagerCache.clear(type);
     }
- 
+
     /**
      *  do a search conv
-     * @param convId id of conversation to search 
+     * @param convId id of conversation to search
      * @param params convId onversation id
      * @return search result
-     * @throws ServiceException on error  
+     * @throws ServiceException on error
      */
     public ZSearchResult searchConversation(String convId, ZSearchParams params) throws ServiceException {
         if (convId == null) throw ZClientException.CLIENT_ERROR("conversation id must not be null", null);
@@ -1988,30 +2001,30 @@ public class ZMailbox {
      */
     public void noOp() throws ServiceException {
         invoke(new XMLElement(MailConstants.NO_OP_REQUEST));
-    }    
+    }
 
     public enum OwnerBy { BY_ID, BY_NAME }
-    
+
     public enum SharedItemBy { BY_ID, BY_PATH }
-    
+
     /**
      * create a new mointpoint in the specified parent folder.
-     * 
+     *
      * @param parentId parent folder id
      * @param name name of new folder
      * @param defaultView default view of new folder.
-     * @param ownerBy used to specify whether owner is an id or account name (email address) 
+     * @param ownerBy used to specify whether owner is an id or account name (email address)
      * @param owner either the id or name of the owner
      * @param itemBy used to specify whether sharedItem is an id or path to the shared item
      * @param sharedItem either the id or path of the item
-     *                
+     *
      * @return newly created folder
      * @throws ServiceException on error
      * @param color initial color
      * @param flags initial flags
      */
-    public ZMountpoint createMountpoint(String parentId, String name, 
-            ZFolder.View defaultView, ZFolder.Color color, String flags, 
+    public ZMountpoint createMountpoint(String parentId, String name,
+            ZFolder.View defaultView, ZFolder.Color color, String flags,
             OwnerBy ownerBy, String owner, SharedItemBy itemBy, String sharedItem) throws ServiceException {
         XMLElement req = new XMLElement(MailConstants.CREATE_MOUNTPOINT_REQUEST);
         Element linkEl = req.addElement(MailConstants.E_MOUNT);
@@ -2026,7 +2039,7 @@ public class ZMailbox {
         ZMountpoint newMount = getMountpointById(newMountEl.getAttribute(MailConstants.A_ID));
         return newMount != null ? newMount : new ZMountpoint(newMountEl, null);
     }
-    
+
     /**
      * Sends an iCalendar REPLY object
      * @param ical iCalendar data
@@ -2057,7 +2070,7 @@ public class ZMailbox {
     }
 
     public static class ZOutgoingMessage {
-  
+
         public static class AttachedMessagePart {
             private String mMessageId;
             private String mPartName;
@@ -2073,7 +2086,7 @@ public class ZMailbox {
             public String getPartName() { return mPartName; }
             public void setPartName(String partName) { mPartName = partName; }
         }
-        
+
         public static class MessagePart {
             private String mContentType;
             private String mContent;
@@ -2090,7 +2103,7 @@ public class ZMailbox {
 
             public void setContent(String content) { mContentType = content; }
         }
-        
+
         private List<ZEmailAddress> mAddresses;
         private String mSubject;
         private String mInReplyTo;
@@ -2101,13 +2114,13 @@ public class ZMailbox {
         private List<String> mMessageIdsToAttach;
         private String mOriginalMessageId;
         private String mReplyType;
-        
+
         public List<ZEmailAddress> getAddresses() { return mAddresses; }
         public void setAddresses(List<ZEmailAddress> addresses) { mAddresses = addresses; }
 
         public String getAttachmentUploadId() { return mAttachmentUploadId; }
         public void setAttachmentUploadId(String attachmentUploadId) { mAttachmentUploadId = attachmentUploadId; }
-        
+
         public List<String> getContactIdsToAttach() { return mContactIdsToAttach; }
         public void setContactIdsToAttach(List<String> contactIdsToAttach) { mContactIdsToAttach = contactIdsToAttach; }
 
@@ -2116,16 +2129,16 @@ public class ZMailbox {
 
         public List<AttachedMessagePart> getMessagePartsToAttach() { return mMessagePartsToAttach; }
         public void setMessagePartsToAttach(List<AttachedMessagePart> messagePartsToAttach) { mMessagePartsToAttach = messagePartsToAttach; }
-        
+
         public String getOriginalMessageId() { return mOriginalMessageId; }
         public void setOriginalMessageId(String originalMessageId) { mOriginalMessageId = originalMessageId; }
-        
+
         public String getInReplyTo() { return mInReplyTo; }
         public void setInReplyTo(String inReplyTo) { mInReplyTo = inReplyTo; }
 
         public String getReplyType() { return mReplyType; }
         public void setReplyType(String replyType) { mReplyType = replyType; }
-        
+
         public String getSubject() { return mSubject; }
         public void setSubject(String subject) { mSubject = subject; }
 
@@ -2136,7 +2149,7 @@ public class ZMailbox {
     public Element getMessageElement(Element req, ZOutgoingMessage message) {
         Element m = req.addElement(MailConstants.E_MSG);
 
-        if (message.getOriginalMessageId() != null) 
+        if (message.getOriginalMessageId() != null)
             m.addAttribute(MailConstants.A_ORIG_ID, message.getOriginalMessageId());
 
         if (message.getReplyType() != null)
@@ -2151,10 +2164,10 @@ public class ZMailbox {
             }
         }
 
-        if (message.getSubject() != null) 
+        if (message.getSubject() != null)
             m.addElement(MailConstants.E_SUBJECT).setText(message.getSubject());
-        
-        if (message.getInReplyTo() != null) 
+
+        if (message.getInReplyTo() != null)
             m.addElement(MailConstants.E_IN_REPLY_TO).setText(message.getInReplyTo());
 
         if (message.getMessageParts() != null) {
@@ -2164,37 +2177,37 @@ public class ZMailbox {
                 mp.addElement(MailConstants.E_CONTENT).setText(part.getContent());
             }
         }
-        
+
         Element attach = null;
-        
+
         if (message.getAttachmentUploadId() != null) {
             attach = m.addElement(MailConstants.E_ATTACH);
             attach.addAttribute(MailConstants.A_ATTACHMENT_ID, message.getAttachmentUploadId());
         }
-        
+
         if (message.getMessageIdsToAttach() != null) {
             if (attach == null) attach = m.addElement(MailConstants.E_ATTACH);
             for (String mid: message.getMessageIdsToAttach()) {
                 attach.addElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ID, mid);
-            }            
+            }
         }
-        
+
         if (message.getMessagePartsToAttach() != null) {
             if (attach == null) attach = m.addElement(MailConstants.E_ATTACH);
             for (AttachedMessagePart part: message.getMessagePartsToAttach()) {
                 attach.addElement(MailConstants.E_MIMEPART).addAttribute(MailConstants.A_MESSAGE_ID, part.getMessageId()).addAttribute(MailConstants.A_PART, part.getPartName());
-            }            
+            }
         }
         return m;
     }
-    
+
     public ZSendMessageResponse sendMessage(ZOutgoingMessage message, String sendUid, boolean needCalendarSentByFixup) throws ServiceException {
         XMLElement req = new XMLElement(MailConstants.SEND_MSG_REQUEST);
-        
+
         if (sendUid != null)
             req.addAttribute(MailConstants.A_SEND_UID, sendUid);
-        
-        if (needCalendarSentByFixup) 
+
+        if (needCalendarSentByFixup)
             req.addAttribute(MailConstants.A_NEED_CALENDAR_SENTBY_FIXUP, needCalendarSentByFixup);
 
         //noinspection UnusedDeclaration
@@ -2203,12 +2216,12 @@ public class ZMailbox {
         Element resp = invoke(req);
         Element msg = resp.getOptionalElement(MailConstants.E_MSG);
         String id = msg == null ? null : msg.getAttribute(MailConstants.A_ID, null);
-        return new ZSendMessageResponse(id);       
+        return new ZSendMessageResponse(id);
     }
- 
+
     public synchronized ZMessage saveDraft(ZOutgoingMessage message, String existingDraftId, String folderId) throws ServiceException {
         XMLElement req = new XMLElement(MailConstants.SAVE_DRAFT_REQUEST);
-        
+
         Element m = getMessageElement(req, message);
 
         if (existingDraftId != null && existingDraftId.length() > 0) {
@@ -2221,7 +2234,7 @@ public class ZMailbox {
 
         return new ZMessage(invoke(req).getElement(MailConstants.E_MSG));
     }
-    
+
     public void createIdentity(ZIdentity identity) throws ServiceException {
         XMLElement req = new XMLElement(AccountConstants.CREATE_IDENTITY_REQUEST);
         identity.toElement(req);
@@ -2325,7 +2338,7 @@ public class ZMailbox {
         }
         return new ZFilterRules(mRules);
     }
-    
+
     public synchronized void saveFilterRules(ZFilterRules rules) throws ServiceException {
         XMLElement req = new XMLElement(MailConstants.SAVE_RULES_REQUEST);
         rules.toElement(req);
@@ -2493,40 +2506,24 @@ public class ZMailbox {
         return new ZSearchGalResult(contacts, resp.getAttributeBool(AccountConstants.A_MORE, false), query, type);
     }
 
-    /**
-     *
-     * @param startMsec starting time of range, in msecs
-     * @param endMsec ending time of range, in msecs
-     * @param folderId optional folder id (default is Calendar folder)
-     * @return list of appts within the specified range
-     * @throws ServiceException on error
-     */
-    public List<ZApptSummary> getApptSummaries(long startMsec, long endMsec, String folderId) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.GET_APPT_SUMMARIES_REQUEST);
-        req.addAttribute(MailConstants.A_CAL_START_TIME, startMsec);
-        req.addAttribute(MailConstants.A_CAL_END_TIME, endMsec);
-        if (folderId != null)
-            req.addAttribute(MailConstants.A_FOLDER, folderId);
-        Element resp = invoke(req);
-        List<ZApptSummary> appts = new ArrayList<ZApptSummary>();
-        for (Element appt : resp.listElements(MailConstants.E_APPOINTMENT)) {
-            ZApptSummary.addInstances(appt, appts, folderId);
-        }
-        return appts;
-    }
-
     public static class ZApptSummaryResult {
         private String mFolderId;
         private ServiceException mException;
         private List<ZApptSummary> mAppointments;
+        private long mStart;
+        private long mEnd;
 
-        ZApptSummaryResult(String folderId, List<ZApptSummary> appointments) {
+        ZApptSummaryResult(long start, long end, String folderId, List<ZApptSummary> appointments) {
             mFolderId = folderId;
             mAppointments = appointments;
+            mStart = start;
+            mEnd = end;
         }
 
-        ZApptSummaryResult(String folderId, ServiceException exception) {
+        ZApptSummaryResult(long start, long end, String folderId, ServiceException exception) {
             mFolderId = folderId;
+            mStart = start;
+            mEnd = end;
             mException = exception;
         }
 
@@ -2534,8 +2531,11 @@ public class ZMailbox {
             return mFolderId;
         }
 
+        public long getStart() { return mStart; }
+        public long getEnd() { return mEnd; }
+
         public boolean isFault() { return mException != null; }
-        
+
         public ServiceException getServiceException() {
             return mException;
         }
@@ -2543,6 +2543,14 @@ public class ZMailbox {
         public List<ZApptSummary> getAppointments() {
             return mAppointments;
         }
+    }
+
+    /**
+     * clear all entries in the appointment summary cache. This is normally handled automatically
+     * via notifications, except in the case of shared calendars.
+     */
+    public void clearApptSummaryCache() {
+        mApptSummaryCache.clear();
     }
 
     /**
@@ -2554,35 +2562,52 @@ public class ZMailbox {
      * @throws ServiceException on error
      */
     public List<ZApptSummaryResult> getApptSummaries(long startMsec, long endMsec, String folderIds[]) throws ServiceException {
-        XMLElement req = new XMLElement(ZimbraNamespace.E_BATCH_REQUEST);
+        List<ZApptSummaryResult> summaries = new ArrayList<ZApptSummaryResult>();
+        List<String> idsToFetch = new ArrayList<String>(folderIds.length);
+
         for (String folderId : folderIds) {
-            Element gas = req.addElement(MailConstants.GET_APPT_SUMMARIES_REQUEST);
-            gas.addAttribute(ZimbraNamespace.A_REQUEST_ID, folderId);
-            gas.addAttribute(MailConstants.A_CAL_START_TIME, startMsec);
-            gas.addAttribute(MailConstants.A_CAL_END_TIME, endMsec);
-            gas.addAttribute(MailConstants.A_FOLDER, folderId);
-        }
-
-        Element resp = invoke(req);
-
-        List<ZApptSummaryResult> result = new ArrayList<ZApptSummaryResult>();
-
-        int index = 0;
-        for (Element e : resp.listElements()) {
-            String folderId = e.getAttribute(ZimbraNamespace.A_REQUEST_ID, null);
-            if (folderId == null)
-               folderId = folderIds[index];
-            index++;
-            if (mTransport.getSoapProtocol().isFault(e)) {
-                result.add(new ZApptSummaryResult(folderId, mTransport.getSoapProtocol().soapFault(e)));
+            ZApptSummaryResult cached = mApptSummaryCache.get(startMsec, endMsec, folderId);
+            if (cached == null) {
+                idsToFetch.add(folderId);
             } else {
-                List<ZApptSummary> appts = new ArrayList<ZApptSummary>();
-                for (Element appt : e.listElements(MailConstants.E_APPOINTMENT)) {
-                    ZApptSummary.addInstances(appt, appts, folderId);
-                }
-                result.add(new ZApptSummaryResult(folderId, appts));
+                summaries.add(cached);
             }
         }
-        return result;
+
+        if (!idsToFetch.isEmpty()) {
+
+            XMLElement req = new XMLElement(ZimbraNamespace.E_BATCH_REQUEST);
+            for (String folderId : idsToFetch) {
+                Element gas = req.addElement(MailConstants.GET_APPT_SUMMARIES_REQUEST);
+                gas.addAttribute(ZimbraNamespace.A_REQUEST_ID, folderId);
+                gas.addAttribute(MailConstants.A_CAL_START_TIME, startMsec);
+                gas.addAttribute(MailConstants.A_CAL_END_TIME, endMsec);
+                gas.addAttribute(MailConstants.A_FOLDER, folderId);
+            }
+
+            Element resp = invoke(req);
+
+            int index = 0;
+            for (Element e : resp.listElements()) {
+                String folderId = e.getAttribute(ZimbraNamespace.A_REQUEST_ID, null);
+                if (folderId == null)
+                    folderId = idsToFetch.get(index);
+                index++;
+                if (mTransport.getSoapProtocol().isFault(e)) {
+                    // TODO: cache this if it permission denied or some other perm error?
+                    summaries.add(new ZApptSummaryResult(startMsec, endMsec, folderId, mTransport.getSoapProtocol().soapFault(e)));
+                } else {
+                    List<ZApptSummary> appts = new ArrayList<ZApptSummary>();
+                    for (Element appt : e.listElements(MailConstants.E_APPOINTMENT)) {
+                        ZApptSummary.addInstances(appt, appts, folderId);
+                    }
+                    ZApptSummaryResult summary = new ZApptSummaryResult(startMsec, endMsec, folderId, appts);
+                    mApptSummaryCache.add(summary);
+                    summaries.add(summary);
+                }
+            }
+
+        }
+        return summaries;
     }
 }
