@@ -2922,6 +2922,8 @@ public class Mailbox {
             }
 
             redoRecorder.setData(defaultInv, exceptions);
+            
+            boolean calItemIsNew = false;
 
             // handle the DEFAULT calendar item
             short volumeId =
@@ -2933,6 +2935,7 @@ public class Mailbox {
                     if (defaultInv.mInv.getMethod().equals("REQUEST") || defaultInv.mInv.getMethod().equals("PUBLISH")) {
                         calItem = createCalendarItem(folderId, volumeId, "",
                                     defaultInv.mInv.getUid(), defaultInv.mPm, defaultInv.mInv);
+                        calItemIsNew = true;
                     } else {
 //                      mLog.info("Mailbox " + getId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c not a REQUEST and no CalendarItem could be found");
                         return 0; // for now, just ignore this Invitation
@@ -2954,6 +2957,9 @@ public class Mailbox {
                         calItem.processNewInvite(sad.mPm, sad.mInv, sad.mForce, folderId, volumeId);
                     }
                 }
+                
+                if (calItem != null)
+                    queueForIndexing(calItem, !calItemIsNew, null);
 
                 calItem.setTags(flags, tags);
                 success = true;
@@ -3095,11 +3101,13 @@ public class Mailbox {
                 // id already set before we stored the invite in the redoRecorder!!!
             }
 
+            boolean calItemIsNew = false;
             CalendarItem calItem = getCalendarItemByUid(inv.getUid());
             if (calItem == null) { 
                 // ONLY create an calendar item if this is a REQUEST method...otherwise don't.
                 if (inv.getMethod().equals("REQUEST") || inv.getMethod().equals("PUBLISH")) {
                     calItem = createCalendarItem(folderId, volumeId, "", inv.getUid(), pm, inv);
+                    calItemIsNew = true;
                 } else {
 //                  mLog.info("Mailbox " + getId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c not a REQUEST and no CalendarItem could be found");
                     return null; // for now, just ignore this Invitation
@@ -3109,6 +3117,8 @@ public class Mailbox {
                     throw MailServiceException.MODIFY_CONFLICT();
                 calItem.processNewInvite(pm, inv, force, folderId, volumeId);
             }
+            if (calItem != null)
+                queueForIndexing(calItem, !calItemIsNew, null);
             redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId(), volumeId);
 
             success = true;
@@ -3190,7 +3200,9 @@ public class Mailbox {
                         "Unknown calendar item UID " + uid + " in mailbox " + getId());
                 return;
             }
-            calItem.processNewInviteReply(inv, false);
+            if (calItem.processNewInviteReply(inv, false)) {
+                queueForIndexing(calItem, false, null);
+            }
             success = true;
         } finally {
             endTransaction(success);

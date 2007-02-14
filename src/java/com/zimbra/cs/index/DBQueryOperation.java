@@ -525,7 +525,7 @@ class DBQueryOperation extends QueryOperation
                     }
                 }
 
-                if (docs == null) {
+                if (docs == null || !ZimbraQueryResultsImpl.shouldAddDuplicateHits(sr.type)) {
                     ZimbraHit toAdd = getResultsSet().getZimbraHit(getMailbox(), score, sr, null);
                     mNextHits.add(toAdd);
                 } else {

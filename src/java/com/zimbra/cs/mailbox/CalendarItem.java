@@ -43,10 +43,15 @@ import javax.mail.internet.ContentType;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.MimeMessage.RecipientType;
+
+import org.apache.lucene.document.Field;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
@@ -64,6 +69,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.AccountUtil;
@@ -143,8 +149,94 @@ public abstract class CalendarItem extends MailItem {
     public boolean isMutable() { return true; }
     boolean isIndexed()        { return true; }
     boolean canHaveChildren()  { return false; }
+    
+    @Override
+    public void reindex(IndexItem redo, boolean deleteFirst, Object indexData) throws ServiceException {
+        if (DebugConfig.disableIndexing)
+            return;
+        
+        List<org.apache.lucene.document.Document> docs = getLuceneDocuments();
+        
+        mMailbox.getMailboxIndex().indexCalendarItem(mMailbox, redo, deleteFirst, this, 
+            docs, this.getDate());
+    }
+    
+    List<org.apache.lucene.document.Document> getLuceneDocuments() throws ServiceException {
+        List<org.apache.lucene.document.Document> toRet = 
+            new ArrayList<org.apache.lucene.document.Document>();
+        
+        Invite defaultInvite = this.getDefaultInviteOrNull();
+        
+        String defaultSubject = null;
+        if (defaultInvite != null && defaultInvite.getName() != null)
+            defaultSubject = defaultInvite.getName();
+        
+        String defaultLocation = "";
+        if (defaultInvite != null && defaultInvite.getLocation() != null)
+            defaultLocation = defaultInvite.getLocation();
+        
+        ZOrganizer org = null;
+        if (defaultInvite != null && defaultInvite.getOrganizer() != null)
+            org = defaultInvite.getOrganizer();
+        
+        for (Invite inv : this.getInvites()) {
+            MimeMessage mm = inv.getMimeMessage();
+            
+            try {
+                StringBuilder s = new StringBuilder();
 
-
+                // must override the document sort-subject below to keep
+                // sort orders in line!!!
+                if (inv.getName() != null) {
+                    mm.setSubject(defaultSubject);
+                    s.append(inv.getName()).append(' ');
+                } else {
+                    mm.setSubject(defaultSubject);
+                    s.append(defaultSubject).append(' ');
+                }
+                
+                // must override the document's sort-name below to keep 
+                // sort orders in line!
+                if (inv.hasOrganizer()) {
+                    mm.setFrom(inv.getOrganizer().getFriendlyAddress());
+                    s.append(inv.getOrganizer().getIndexString()).append(' ');
+                } else if (org != null) {
+                    mm.setFrom(org.getFriendlyAddress());
+                    s.append(org.getFriendlyAddress()).append(' ');
+                }
+                
+                for (ZAttendee at : inv.getAttendees()) {
+                    mm.addRecipient(RecipientType.TO, at.getFriendlyAddress());
+                    s.append(at.getIndexString()).append(' ');
+                }
+                
+                if (inv.getLocation() != null) {
+                    s.append(inv.getLocation()).append(' ');
+                }  else {
+                    s.append(defaultLocation).append(' ');
+                }
+                
+                mm.saveChanges();
+                
+                ParsedMessage pm = new ParsedMessage(mm, mMailbox.attachmentsIndexingEnabled());
+                List<org.apache.lucene.document.Document> docs = pm.getLuceneDocuments();
+                for (org.apache.lucene.document.Document doc : docs) {
+                    doc.removeField(LuceneFields.L_SORT_SUBJECT);
+                    doc.removeField(LuceneFields.L_SORT_NAME);
+                    //                                                                                                                    store, index, tokenize
+                    doc.add(new Field(LuceneFields.L_SORT_SUBJECT, this.getSubject().toUpperCase(), false, true, false));
+                    doc.add(new Field(LuceneFields.L_SORT_NAME, this.getSender(),                            false, true, false));
+                    doc.add(Field.UnStored(LuceneFields.L_CONTENT, s.toString()));
+                    toRet.add(doc);
+                }
+            } catch(MessagingException e) {
+                throw ServiceException.FAILURE("Failure Indexing: "+this.toString(), e);
+            }
+        }
+        
+        return toRet;
+    }
+    
     static CalendarItem create(int id, Folder folder, short volumeId, String tags,
                                String uid, ParsedMessage pm, Invite firstInvite)
     throws ServiceException {
@@ -567,11 +659,22 @@ public abstract class CalendarItem extends MailItem {
         return first;
     }
 
-    void processNewInvite(ParsedMessage pm,
+    /**
+     * @param pm
+     * @param invite
+     * @param force
+     * @param folderId
+     * @param volumeId
+     * @return 
+     *            TRUE if an update calendar was written, FALSE if the CalendarItem is 
+     *            unchanged or deleted 
+     * @throws ServiceException
+     */
+    boolean processNewInvite(ParsedMessage pm,
                           Invite invite,
                           boolean force, int folderId, short volumeId)
     throws ServiceException {
-        processNewInvite(pm, invite, force, folderId, volumeId, false);
+        return processNewInvite(pm, invite, force, folderId, volumeId, false);
     }
 
     /**
@@ -582,8 +685,11 @@ public abstract class CalendarItem extends MailItem {
      * @param invite
      * @param force if true, then force update to this appointment/task,
      *              otherwise use RFC2446 sequencing rules
+     * @return 
+     *            TRUE if an update calendar was written, FALSE if the CalendarItem is 
+     *            unchanged or deleted 
      */
-    void processNewInvite(ParsedMessage pm,
+    boolean processNewInvite(ParsedMessage pm,
                           Invite invite,
                           boolean force, int folderId, short volumeId,
                           boolean replaceExistingInvites)
@@ -598,13 +704,14 @@ public abstract class CalendarItem extends MailItem {
         }
         String method = invite.getMethod();
         if (method.equals(ICalTok.REQUEST.toString()) || method.equals(ICalTok.CANCEL.toString()) || method.equals(ICalTok.PUBLISH.toString())) {
-            processNewInviteRequestOrCancel(originalOrganizer, pm, invite, force, folderId, volumeId);
+            return processNewInviteRequestOrCancel(originalOrganizer, pm, invite, force, folderId, volumeId);
         } else if (method.equals("REPLY")) {
-            processNewInviteReply(invite, force);
+            return processNewInviteReply(invite, force);
         }
+        return false;
     }
     
-    private void processNewInviteRequestOrCancel(ZOrganizer originalOrganizer,
+    private boolean processNewInviteRequestOrCancel(ZOrganizer originalOrganizer,
                                                  ParsedMessage pm,
                                                  Invite newInvite,
                                                  boolean force,
@@ -804,11 +911,13 @@ public abstract class CalendarItem extends MailItem {
         if (!hasRequests) {
             this.delete(); // delete this appointment/task from the table, it
                             // doesn't have anymore REQUESTs!
+            return false;
         } else {
             if (modifiedCalItem) {
                 if (!updateRecurrence()) {
                     // no default invite!  This appointment/task no longer valid
                     this.delete();
+                    return false;
                 } else {
                     if (callProcessPartStat) {
                         // processPartStat() must be called after
@@ -819,13 +928,19 @@ public abstract class CalendarItem extends MailItem {
                                         newInvite.getPartStat());
                     }
                     this.saveMetadata();
+                    return true;
                 }
+            } else {
+                return false;
             }
         }
     }
     
+    /**
+     * ParsedMessage DataSource -- for writing a ParsedMessage (new invite)
+     * into our combined multipart/alternative Appointment store
+     */
     private static class PMDataSource implements DataSource {
-        
         private ParsedMessage mPm;
         
         public PMDataSource(ParsedMessage pm) {
@@ -869,7 +984,7 @@ public abstract class CalendarItem extends MailItem {
     
     private void storeUpdatedBlob(MimeMessage mm, short volumeId)
     throws ServiceException, IOException {
-        ParsedMessage pm = new ParsedMessage(mm, true);
+        ParsedMessage pm = new ParsedMessage(mm, mMailbox.attachmentsIndexingEnabled());
         try {
             setContent(pm.getRawData(), pm.getRawDigest(), volumeId, pm);
         } catch (MessagingException me) {
@@ -947,7 +1062,7 @@ public abstract class CalendarItem extends MailItem {
             MimeMessage mm;
             
             try {
-                mm = new MimeMessage(getMimeMessage());
+                mm = getMimeMessage();
             } catch (ServiceException e) {
                 if (newInv != null) {
                     // if the blob isn't already there, and we're going to add one, then
@@ -1442,7 +1557,7 @@ public abstract class CalendarItem extends MailItem {
         mReplyList.modifyPartStat(acctOrNull, recurId, cnStr, addressStr, cutypeStr, roleStr, partStatStr, needsReply, seqNo, dtStamp);
     }
     
-    void processNewInviteReply(Invite reply, boolean force)
+    public boolean processNewInviteReply(Invite reply, boolean force)
     throws ServiceException {
         if (!canAccess(ACL.RIGHT_ACTION))
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions to change this appointment/task's state");
@@ -1476,7 +1591,7 @@ public abstract class CalendarItem extends MailItem {
                     
                     sLog.info("Invite-Reply "+reply.toString()+" is outdated, ignoring!");
                     // this reply is OLD, ignore it
-                    return;
+                    return false;
                 }
                 
                 // update the ATTENDEE record in the invite
@@ -1501,75 +1616,24 @@ public abstract class CalendarItem extends MailItem {
         if (dirty) {
             saveMetadata();
             getMailbox().markItemModified(this, Change.MODIFIED_INVITE);
+            return true;
+        } else {
+            return false;
         }
     }
     
     public InputStream getRawMessage() throws ServiceException {
         return MessageCache.getRawContent(this);
     }
-    
-//    void appendRawCalendarData(Calendar cal) throws ServiceException {
-//        for (Iterator invIter = mInvites.iterator(); invIter.hasNext();) {
-//            Invite inv = (Invite)invIter.next();
-//            
-////            Calendar invCal = getCalendar(inv.getMailItemId());
-////            Calendar invCal = inv.toICalendar();
-//            
-////            for (Iterator compIter = invCal.getComponents().iterator(); compIter.hasNext();) {
-////                Component comp = (Component)compIter.next();
-////                cal.getComponents().add(comp);
-////            }
-//            Component comp = inv.toVEvent();
-//            cal.getComponents().add(comp);
-//        }
-//    }
-    
 
     void appendRawCalendarData(ZVCalendar cal, boolean useOutlookCompatMode)
     throws ServiceException {
         for (Iterator invIter = mInvites.iterator(); invIter.hasNext();) {
             Invite inv = (Invite)invIter.next();
-            
-//            Calendar invCal = getCalendar(inv.getMailItemId());
-//            Calendar invCal = inv.toICalendar();
-            
-//            for (Iterator compIter = invCal.getComponents().iterator(); compIter.hasNext();) {
-//                Component comp = (Component)compIter.next();
-//                cal.getComponents().add(comp);
-//            }
-//            Component comp = inv.toVEvent();
-//            cal.getComponents().add(comp);
             cal.addComponent(inv.newToVComponent(useOutlookCompatMode));
         }
     }
     
-    
-//    Calendar getCalendar(int invId) throws ServiceException {
-//        try {
-//            MimeMessage mm = getMimeMessage(invId);
-//            
-//            List parts = Mime.getParts(mm);
-//            for (int i=0; i<parts.size(); i++) {
-//                MPartInfo partInfo = (MPartInfo) parts.get(i);
-//                if (partInfo.getContentType().match(Mime.CT_TEXT_CALENDAR)) {
-//                    java.io.InputStream is = partInfo.getMimePart().getInputStream();
-//                    CalendarBuilder builder = new CalendarBuilder();
-//                    Calendar iCal = builder.build(is);
-//                    return iCal;
-//                }
-//            }
-//            throw ServiceException.FAILURE("Could not parse detailed iCalendar data for mailbox "+
-//                    getMailboxId()+" calItem "+getId(), null);
-//        } catch (IOException e) {
-//            throw ServiceException.FAILURE("reading mime message", e);
-//        } catch (ParserException e) {
-//            throw ServiceException.FAILURE("parsing iCalendar", e);
-//        } catch (MessagingException e) {
-//            throw ServiceException.FAILURE("reading mime message", e);
-//        }
-//    }
-    
-
     public MimeMessage getMimeMessage() throws ServiceException {
         InputStream is = null;
         MimeMessage mm = null;

@@ -556,7 +556,11 @@ public abstract class MailItem implements Comparable<MailItem> {
     public String getSubject() {
         return (mData.subject == null ? "" : mData.subject);
     }
-
+    
+    public String getSender() {
+        return (mData.sender == null ? "" : mData.sender);
+    }
+    
     public int getUnreadCount() {
         return mData.unreadCount;
     }

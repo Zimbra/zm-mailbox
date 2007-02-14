@@ -37,18 +37,9 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 
 /**
- * @author tim
  * 
  * Base class for a search "hit".  Generally one iterates over a 
  * ZimbraQueryResults to get the hits for a given query.
- *
- */
-/**
- * @author tim
- *
- */
-/**
- * @author tim
  *
  */
 public abstract class ZimbraHit 

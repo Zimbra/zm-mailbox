@@ -184,7 +184,18 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
         }
         return hit;
     }
-
+    
+    /**
+     * @param type
+     * @return
+     *          TRUE if this type of SearchResult should be added multiple times if there are multiple 
+     *          hits (e.g. if multiple document parts match) -- currently only true for MessageParts,
+     *          false for all other kinds of result
+     */
+    static final boolean shouldAddDuplicateHits(byte type) {
+        return (type == MailItem.TYPE_CHAT || type == MailItem.TYPE_MESSAGE);
+    }
+    
     /**
      * We've got a mailbox, a score a DBMailItem.SearchResult and (optionally) a Lucene Doc...
      * that's everything we need to build a real ZimbraHit.

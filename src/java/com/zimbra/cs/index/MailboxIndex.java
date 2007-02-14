@@ -55,6 +55,7 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbSearchConstraints;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -1867,7 +1868,26 @@ public final class MailboxIndex
             throw ServiceException.FAILURE("Invalid item type for indexing: type=" + itemType, null);
         }
     }
-
+    
+    public void indexCalendarItem(Mailbox mbox, IndexItem redo, boolean deleteFirst, 
+        CalendarItem item, List<Document> docList, long date) throws ServiceException {
+        
+        initAnalyzer(mbox);
+        synchronized(getLock()) {
+            int indexId = item.getIndexId();
+            
+            try {
+                if (docList != null) {
+                    Document[] docs = new Document[docList.size()];
+                    docs = docList.toArray(docs);
+                    addDocument(redo, docs, indexId, date, deleteFirst);
+                }
+            } catch (IOException e) {
+                throw ServiceException.FAILURE("indexMessage caught IOException", e);
+            }
+        }
+    }
+    
     /**
      * Index a message in the specified mailbox.
      * @param mailboxId

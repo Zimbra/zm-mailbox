@@ -72,6 +72,19 @@ public abstract class CalendarUser {
     public boolean hasLanguage() { return !StringUtil.isNullOrEmpty(mLanguage); }
     public String getLanguage() { return mLanguage; }
     public void setLanguage(String lang) { mLanguage = lang; }
+    
+    /**
+     * @return all the data in this concatenated, for easy indexing
+     */
+    public String getIndexString() {
+        StringBuilder s = new StringBuilder();
+        s.append(getAddress()).append(' ');
+        s.append(getCn()).append(' ');
+        s.append(getSentBy()).append(' ');
+        s.append(getDir()).append(' ');
+        
+        return s.toString();
+    }
 
     
     public CalendarUser(String address,
