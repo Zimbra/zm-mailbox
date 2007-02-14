@@ -39,6 +39,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.service.admin.AdminDocumentHandler;
 import com.zimbra.cs.util.Config;
@@ -73,6 +74,11 @@ public class SoapEngine {
     }
 
     public Element dispatch(String path, byte[] soapMessage, Map<String, Object> context) {
+        if (soapMessage == null || soapMessage.length == 0) {
+            SoapProtocol soapProto = SoapProtocol.Soap12;
+            return soapProto.soapEnvelope(soapProto.soapFault(ServiceException.PARSE_ERROR("empty request payload", null)));
+        }
+
         InputStream in = new ByteArrayInputStream(soapMessage);
         Element document = null;
         try {
@@ -242,15 +248,17 @@ public class SoapEngine {
                     return soapProto.soapFault(ServiceException.PERM_DENIED("need admin token"));
             }
 
-            // Make sure that the account is active and has not been deleted
-            // since the last request
             try {
-                Account account = DocumentHandler.getRequestedAccount(zsc);
-                if (!account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE)) {
-                    if (zsc.isDelegatedRequest())
-                        return soapProto.soapFault(AccountServiceException.ACCOUNT_INACTIVE(account.getName()));
-                    else
-                        return soapProto.soapFault(ServiceException.AUTH_EXPIRED());
+                // make sure that the authenticated account is active and has not been deleted/disabled since the last request
+                Account account = Provisioning.getInstance().get(AccountBy.id, at.getAccountId());
+                if (!account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+                    return soapProto.soapFault(ServiceException.AUTH_EXPIRED());
+
+                // also, make sure that the target account (if any) is active
+                if (zsc.isDelegatedRequest() && !handler.isAdminCommand()) {
+                    Account target = DocumentHandler.getRequestedAccount(zsc);
+                    if (!target.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+                        return soapProto.soapFault(AccountServiceException.ACCOUNT_INACTIVE(target.getName()));
                 }
             } catch (ServiceException ex) {
                 return soapProto.soapFault(ex);
