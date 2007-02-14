@@ -71,6 +71,8 @@ public final class SearchParams {
             } catch (IllegalArgumentException iae) {
                 if (value.equals("1") || value.equals("TRUE"))
                     return FIRST;
+                if (value.equals("0") || value.equals("FALSE"))
+                    return NONE;
                 throw ServiceException.INVALID_REQUEST("unknown 'fetch' value: " + value, null);
             }
         }
