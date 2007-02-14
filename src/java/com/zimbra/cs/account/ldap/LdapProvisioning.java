@@ -1959,6 +1959,49 @@ public class LdapProvisioning extends Provisioning {
         return result;
     }
 
+    private List<Cos> searchCOS(String query, DirContext initCtxt) throws ServiceException {
+        List<Cos> result = new ArrayList<Cos>();
+        DirContext ctxt = initCtxt;
+        try {
+            if (ctxt == null)
+                ctxt = LdapUtil.getDirContext();
+            NamingEnumeration ne = ctxt.search(COS_BASE, "(&(objectclass=zimbraCOS)" + query + ")", sSubtreeSC);
+            while (ne.hasMore()) {
+                SearchResult sr = (SearchResult) ne.next();
+                result.add(new LdapCos(sr.getNameInNamespace(), sr.getAttributes()));
+            }
+            ne.close();
+        } catch (NameNotFoundException e) {
+            return null;
+        } catch (InvalidNameException e) {
+            return null;                        
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to lookup cos via query: "+query+ " message: "+e.getMessage(), e);
+        } finally {
+            if (initCtxt == null)
+                LdapUtil.closeContext(ctxt);
+        }
+        return result;
+    }
+
+    private void removeServerFromAllCOSes(String server, DirContext initCtxt) {
+        List<Cos> coses = null;
+        try {
+            coses = searchCOS("(" + Provisioning.A_zimbraMailHostPool + "=" + server +")", initCtxt);
+            for (Cos cos: coses) {
+                Map<String, String> attrs = new HashMap<String, String>();
+                attrs.put("-"+Provisioning.A_zimbraMailHostPool, server);
+                modifyAttrs(cos, attrs);
+                // invalidate cached cos 
+                sCosCache.remove((LdapCos)cos);
+            }
+        } catch (ServiceException se) {
+            ZimbraLog.account.warn("unable to remove "+server+" from all COSes ", se);
+            return;
+        }
+
+     }
+    
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#purgeServer(java.lang.String)
      */
@@ -1971,6 +2014,7 @@ public class LdapProvisioning extends Provisioning {
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(true);
+            removeServerFromAllCOSes(zimbraId, ctxt);
             ctxt.unbind(s.getDN());
             sServerCache.remove(s);
         } catch (NamingException e) {
