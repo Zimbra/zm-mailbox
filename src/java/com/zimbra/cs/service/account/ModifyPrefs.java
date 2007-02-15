@@ -43,30 +43,31 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class ModifyPrefs extends AccountDocumentHandler {
 
+    public static final String PREF_PREFIX = "zimbraPref";
+
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-		ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Account acct = getRequestedAccount(lc);
+		ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Account acct = getRequestedAccount(zsc);
 
         HashMap<String, String> prefs = new HashMap<String, String>();
-//        HashMap specialPrefs = new HashMap();
-
         for (Element e : request.listElements(AccountConstants.E_PREF)) {
             String name = e.getAttribute(AccountConstants.A_NAME);
             String value = e.getText();
-		    if (!name.startsWith("zimbraPref")) {
-		        throw ServiceException.INVALID_REQUEST("pref name must start with zimbraPref", null);
-		    }
+		    if (!name.startsWith(PREF_PREFIX))
+		        throw ServiceException.INVALID_REQUEST("pref name must start with " + PREF_PREFIX, null);
 		    prefs.put(name, value);
         }
+
         if (prefs.containsKey(Provisioning.A_zimbraPrefMailForwardingAddress)) {
             if (!acct.getBooleanAttr(Provisioning.A_zimbraFeatureMailForwardingEnabled, false)) {
                 throw ServiceException.PERM_DENIED("forwarding not enabled");
             }
         }
+
         // call modifyAttrs and pass true to checkImmutable
-        
         Provisioning.getInstance().modifyAttrs(acct, prefs, true);
-        Element response = lc.createElement(AccountConstants.MODIFY_PREFS_RESPONSE);
+
+        Element response = zsc.createElement(AccountConstants.MODIFY_PREFS_RESPONSE);
         return response;
 	}
 }
