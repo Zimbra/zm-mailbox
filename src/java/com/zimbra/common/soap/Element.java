@@ -781,7 +781,7 @@ public abstract class Element {
                 }
                 if (needNamespace) {
                     indent(sb, indent, true);
-                    sb.append(A_NAMESPACE).append(indent >= 0 ? ": \"" : ":\"").append(StringUtil.jsEncode(mNamespaces.get(""))).append('"');
+                    sb.append('"').append(A_NAMESPACE).append(indent >= 0 ? "\": \"" : "\":\"").append(StringUtil.jsEncode(mNamespaces.get(""))).append('"');
                 }
                 indent(sb, indent - 2, true);
             }
