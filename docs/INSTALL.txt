@@ -1,12 +1,13 @@
   This install doc is aimed at developers internal to Zimbra.
 You'll see paths to internal shares and the like.  It's also 
-useful to setting up a development build with CVS, but that's 
-not the main focus.
+useful to setting up a development build with SVN, but that's 
+not the main focus. See the INSTALL-SVN*.txt docs for that.
 
 NOTE: Most or all binaries needed for installation are available
 on the \\kenny share. For example, Windows installers are located
 at: \\kenny\Public\software\windows. It might be best to copy the
-installers to your local machine before installing.
+installers to your local machine before installing. If inside the
+Zimbra network you can get to this with http://kenny/public
 
 1. Install Perforce (P4) (www.perforce.com)
    Configure server port to "eric:1666".
@@ -16,11 +17,14 @@ installers to your local machine before installing.
 
 2. Checkout the following from Perforce:
 
-   ZimbraServer - the backend system
-
-   ZimbraWebClient - the dhtml interface
-
-   Ajax - DTML/Ajax toolkit
+        //depot/main/Ajax/...
+        //depot/main/Zimlet/...
+        //depot/main/ZimbraIM/...
+        //depot/main/ZimbraServer/...
+        //depot/main/ZimbraCommon/...
+        //depot/main/ZimbraLicenses/...
+        //depot/main/ZimbraWebClient/...
+        //depot/main/ZimbraTagLib/...
   
    Optional: ThirdParty - not needed to run, but has javadocs and
    source for the various 3rd party jars/servers. It's very very large
@@ -56,7 +60,7 @@ installers to your local machine before installing.
     and ZimbraWebClient.
    
 
-5. Install Tomcat 5.5.x
+5. Install the latest Tomcat 5.5.x
 
    On Windows, install Tomcat to c:\opt\zimbra\tomcat
   
@@ -73,7 +77,7 @@ installers to your local machine before installing.
    On Linux startup with:
       $ JAVA_HOME={java-home} {tomcat-install}/bin/startup.sh      
 
-6. Install the latest version of MySQL.
+6. Install the latest version of MySQL 5.x
 
    On Windows, install MySQL to c:\opt\zimbra\mysql
 
@@ -170,10 +174,4 @@ installers to your local machine before installing.
 		ppm> install Net-DNS
 	
 	set the ZIMBRA_HOSTNAME environment variable to be the name of your computer.
-	
 	run ZimbraServer\src\perl\zMTAHack.pl
-	
-	
-
-	
-	
