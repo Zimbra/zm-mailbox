@@ -724,6 +724,7 @@
 			zimbraMailQuota 62914560 \
 			zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
 			zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
+            zimbraPrefMailPollingInterval 12h \
 			telephoneNumber '+1 650 555 1111'
 		ca user2@${zimbra.server.hostname} test123 \
 			zimbraMailHost ${zimbra.server.hostname} \
@@ -731,6 +732,7 @@
 			displayName 'Demo User Two' \
 			zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
 			zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
+            zimbraPrefMailPollingInterval 12h \
 			telephoneNumber '+1 650 555 2222'
 		ca user3@${zimbra.server.hostname} test123 \
 			zimbraMailHost ${zimbra.server.hostname} \
