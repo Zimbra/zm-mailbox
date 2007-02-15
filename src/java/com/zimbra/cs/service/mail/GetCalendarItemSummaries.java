@@ -249,6 +249,12 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                             if (defaultInvite.isRecurrence() != inv.isRecurrence()) {
                                 instElt.addAttribute(MailConstants.A_CAL_RECUR, inv.isRecurrence());
                             }
+                        } else {
+                            // A non-exception instance can have duration that is different from
+                            // the default duration due to daylight savings time transitions.
+                            if (!inst.isTimeless() && defDurationMsecs != inst.getEnd()-inst.getStart()) {
+                                instElt.addAttribute(MailConstants.A_CAL_DURATION, inst.getEnd()-inst.getStart());
+                            }
                         }
                     } catch (MailServiceException.NoSuchItemException e) {
                         mLog.info("Error could not get instance "+inst.getMailItemId()+"-"+inst.getComponentNum()+

@@ -353,26 +353,35 @@ public final class ParsedDateTime {
             diff *= -1;
         }
 
-        // RFC2445 4.3.6 durations allow Weeks OR DATE'T'TIME -- but weeks must be alone
-        // I don't understand quite why, but that's what the spec says...
-        
         int weeks = 0, days = 0, hours = 0, mins = 0, secs = 0;
-        
-        if ((diff >= MSECS_PER_WEEK) && (diff % MSECS_PER_WEEK == 0)) {
-            weeks = (int) (diff / MSECS_PER_WEEK);
-        } else {
-            long dleft = diff;
+        if (mHasTime || other.mHasTime) {
+            // RFC2445 4.3.6 durations allow Weeks OR DATE'T'TIME -- but weeks must be alone
+            // I don't understand quite why, but that's what the spec says...
 
+            if ((diff >= MSECS_PER_WEEK) && (diff % MSECS_PER_WEEK == 0)) {
+                weeks = (int) (diff / MSECS_PER_WEEK);
+            } else {
+                long dleft = diff;
+    
+                days = (int) (dleft / MSECS_PER_DAY);
+                dleft = dleft % MSECS_PER_DAY;
+                
+                hours = (int) (dleft/ MSECS_PER_HOUR);
+                dleft = dleft % MSECS_PER_HOUR;
+                
+                mins = (int) (dleft/ MSECS_PER_MIN);
+                dleft = dleft % MSECS_PER_MIN;
+                
+                secs = (int) (dleft/ MSECS_PER_SEC);
+            }
+        } else {
+            // All-day values.  Round to the nearest day boundary to deal with
+            // daylight savings time transition dates.
+            long dleft = diff;
             days = (int) (dleft / MSECS_PER_DAY);
             dleft = dleft % MSECS_PER_DAY;
-            
-            hours = (int) (dleft/ MSECS_PER_HOUR);
-            dleft = dleft % MSECS_PER_HOUR;
-            
-            mins = (int) (dleft/ MSECS_PER_MIN);
-            dleft = dleft % MSECS_PER_MIN;
-            
-            secs = (int) (dleft/ MSECS_PER_SEC);
+            if (dleft >= MSECS_PER_DAY / 2)
+                days++;
         }
 
         return ParsedDuration.parse(negative, weeks, days, hours, mins, secs);
