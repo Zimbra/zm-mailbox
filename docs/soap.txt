@@ -1935,7 +1935,7 @@ messages that are still stored on the remote server will be downloaded again.
 
 <DeleteDataSourceResponse/>
 
-Deletes the given data source.  The name or id of the data source must
+Deletes the given data sources.  The name or id of each data source must
 be specified.
 
 ---------------------------
