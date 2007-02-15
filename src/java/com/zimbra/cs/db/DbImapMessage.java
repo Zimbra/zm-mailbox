@@ -27,9 +27,7 @@ package com.zimbra.cs.db;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -45,9 +43,9 @@ public class DbImapMessage {
     public static final String TABLE_IMAP_MESSAGE = "imap_message";
     
     /**
-     * Persists <code>uid</code> so we remember not to import the message again.
+     * Stores IMAP message data.
      */
-    public static void storeUid(Mailbox mbox, String dataSourceId, long uid, int itemId)
+    public static void storeImapMessage(Mailbox mbox, String dataSourceId, long uid, int itemId)
     throws ServiceException
     {
         Connection conn = null;
@@ -66,7 +64,7 @@ public class DbImapMessage {
             stmt.executeUpdate();
             conn.commit();
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("Unable to store UID", e);
+            throw ServiceException.FAILURE("Unable to store IMAP message data", e);
         } finally {
             DbPool.closeStatement(stmt);
             DbPool.quietClose(conn);
@@ -74,9 +72,9 @@ public class DbImapMessage {
     }
 
     /**
-     * Deletes all persisted UID's for the given mailbox/data source.
+     * Deletes all IMAP message data for the given mailbox/data source.
      */
-    public static void deleteUids(Mailbox mbox, String dataSourceId)
+    public static void deleteImapMessages(Mailbox mbox, String dataSourceId)
     throws ServiceException {
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -98,7 +96,7 @@ public class DbImapMessage {
             conn.commit();
             ZimbraLog.mailbox.debug("Deleted %d UID's", numRows);
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("Unable to delete UID's", e);
+            throw ServiceException.FAILURE("Unable to delete IMAP message data", e);
         } finally {
             DbPool.closeStatement(stmt);
             DbPool.quietClose(conn);
@@ -106,8 +104,8 @@ public class DbImapMessage {
     }
 
     /**
-     * Returns the set of persisted UID's for the given data source.  The key
-     * to the <tt>Map</tt> is the message's UID.
+     * Returns IMAP message data for the given data source.  The key
+     * in the <tt>Map</tt> is the message's UID.
      */
     public static Map<Long, ImapMessage> getImapMessages(Mailbox mbox, DataSource ds)
     throws ServiceException {
@@ -119,22 +117,26 @@ public class DbImapMessage {
         try {
             conn = DbPool.getConnection();
             stmt = conn.prepareStatement(
-                "SELECT uid, item_id " +
-                "FROM " + getTableName(mbox) +
-                " WHERE mailbox_id = ? AND data_source_id = ?");
+                "SELECT imap.uid, imap.item_id, mi.flags " +
+                "FROM " + getTableName(mbox) + " imap " +
+                "  JOIN " + DbMailItem.getMailItemTableName(mbox) + " mi " +
+                "  ON imap.mailbox_id = mi.mailbox_id AND imap.item_id = mi.id " + 
+                "WHERE imap.mailbox_id = ? AND imap.data_source_id = ?");
 
             int i = 1;
             stmt.setInt(i++, mbox.getId());
             stmt.setString(i++, ds.getId());
             rs = stmt.executeQuery();
             while (rs.next()) {
-                long uid = rs.getLong("uid");
-                imapMessages.put(uid, new ImapMessage(uid, rs.getInt("item_id")));
+                long uid = rs.getLong("imap.uid");
+                int itemId = rs.getInt("imap.item_id");
+                int flags = rs.getInt("mi.flags");
+                imapMessages.put(uid, new ImapMessage(uid, itemId, flags));
             }
             rs.close();
             stmt.close();
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("Unable to get UID's", e);
+            throw ServiceException.FAILURE("Unable to get IMAP message data", e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);

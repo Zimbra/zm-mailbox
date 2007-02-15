@@ -28,12 +28,15 @@ public class ImapMessage {
 
     private long mUid;
     private int mItemId;
+    private int mFlags;
     
-    public ImapMessage(long uid, int itemId) {
+    public ImapMessage(long uid, int itemId, int flags) {
         mUid = uid;
         mItemId = itemId;
+        mFlags = flags;
     }
     
     public long getUid() { return mUid; }
     public int getItemId() { return mItemId; }
+    public int getFlags() { return mFlags; }
 }

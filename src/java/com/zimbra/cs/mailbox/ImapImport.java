@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import javax.mail.FetchProfile;
+import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -59,7 +60,7 @@ implements MailItemImport {
     private static Session sSession;
     private static Session sSelfSignedCertSession;
     private static Log sLog = LogFactory.getLog(ImapImport.class);
-    private static FetchProfile UID_PROFILE;
+    private static FetchProfile FETCH_PROFILE;
     
     static {
         Properties props = new Properties();
@@ -70,8 +71,9 @@ implements MailItemImport {
         props.put("mail.imap.socketFactory.class", com.zimbra.common.util.DummySSLSocketFactory.class.getName());
         sSelfSignedCertSession = Session.getInstance(props);
         
-        UID_PROFILE = new FetchProfile();
-        UID_PROFILE.add(UIDFolder.FetchProfileItem.UID);
+        FETCH_PROFILE = new FetchProfile();
+        FETCH_PROFILE.add(UIDFolder.FetchProfileItem.UID);
+        FETCH_PROFILE.add(UIDFolder.FetchProfileItem.FLAGS);
     }
 
     public String test(DataSource ds)
@@ -148,7 +150,7 @@ implements MailItemImport {
 
         if (msgs.length > 0) {
             // Fetch message UID's for reconciliation (UIDL)
-            folder.fetch(msgs, UID_PROFILE);
+            folder.fetch(msgs, FETCH_PROFILE);
         }
         
         // TODO: Check the UID of the first message to make sure the user isn't
@@ -170,8 +172,15 @@ implements MailItemImport {
         for (int i = 0; i < msgs.length; i++) {
             IMAPMessage imapMsg = (IMAPMessage) msgs[i];
             long uid = folder.getUID(imapMsg);
+            
             if (storedMsgs.containsKey(uid)) {
-                storedMsgs.remove(uid);
+                // We already know about this message.
+                ImapMessage storedMsg = storedMsgs.remove(uid);
+                int appliedFlags = applyFlags(imapMsg, storedMsg.getFlags());
+                if (appliedFlags != storedMsg.getFlags()) {
+                    // Flags changed
+                    mbox.setTags(null, storedMsg.getItemId(), MailItem.TYPE_MESSAGE, appliedFlags, MailItem.TAG_UNCHANGED);
+                }
             } else {
                 // Add message to mailbox
                 ParsedMessage pm = null;
@@ -182,10 +191,12 @@ implements MailItemImport {
                 } else {
                     pm = new ParsedMessage(imapMsg, mbox.attachmentsIndexingEnabled());
                 }
+                int flags = applyFlags(imapMsg, 0);
                 com.zimbra.cs.mailbox.Message zimbraMsg =
-                    mbox.addMessage(null, pm, ds.getFolderId(), false, Flag.BITMASK_UNREAD, null);
+                    mbox.addMessage(null, pm, ds.getFolderId(), false, flags, null);
 
-                DbImapMessage.storeUid(mbox, ds.getId(), folder.getUID(imapMsg), zimbraMsg.getId());
+                DbImapMessage.storeImapMessage(
+                    mbox, ds.getId(), folder.getUID(imapMsg), zimbraMsg.getId());
             }
         }
         
@@ -202,5 +213,43 @@ implements MailItemImport {
         // Expunge if necessary and disconnect (QUIT)
         folder.close(false);
         store.close();
+    }
+    
+    private static final Flags.Flag[] IMAP_FLAGS = {
+        Flags.Flag.ANSWERED,
+        Flags.Flag.DELETED,
+        Flags.Flag.DRAFT,
+        Flags.Flag.FLAGGED,
+        Flags.Flag.SEEN
+    };
+    
+    private static final int[] ZIMBRA_FLAG_BITMASKS = {
+        Flag.BITMASK_REPLIED,
+        Flag.BITMASK_DELETED,
+        Flag.BITMASK_DRAFT,
+        Flag.BITMASK_FLAGGED,
+        Flag.BITMASK_UNREAD
+    };
+    
+    /**
+     * Applies the flags from a JavaMail message to the given flag bitmask. 
+     */
+    private int applyFlags(Message remoteMsg, int flags)
+    throws MessagingException {
+        for (int i = 0; i < IMAP_FLAGS.length; i++) {
+            Flags.Flag imapFlag = IMAP_FLAGS[i];
+            boolean isSet = remoteMsg.isSet(imapFlag);
+            if (imapFlag == Flags.Flag.SEEN) {
+                // IMAP uses "seen", we use "unread"
+                isSet = !isSet;
+            }
+            if (isSet) {
+                flags |= ZIMBRA_FLAG_BITMASKS[i];
+            } else {
+                flags &= ~ZIMBRA_FLAG_BITMASKS[i];
+            }
+        }
+        
+        return flags;
     }
 }

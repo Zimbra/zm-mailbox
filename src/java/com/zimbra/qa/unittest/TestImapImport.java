@@ -116,6 +116,13 @@ extends TestCase {
         assertEquals("msgs2.size()", 1, msgs2.size());
         compareMessages(msgs1, msgs2);
         
+        // Flag
+        assertFalse("msg2 is flagged", msgs2.get(0).isFlagged());
+        mMbox1.flagMessage(msgs1.get(0).getId(), true);
+        importImap();
+        msgs2 = TestUtil.search(mMbox2, "in:" + FOLDER_PATH);
+        assertTrue("msg2 is not flagged", msgs2.get(0).isFlagged());
+        
         // Move to trash
         mMbox1.moveMessage(msgs1.get(0).getId(), Integer.toString(Mailbox.ID_FOLDER_TRASH));
         msgs1 = TestUtil.search(mMbox1, "in:inbox");
@@ -160,6 +167,7 @@ extends TestCase {
             ZMessage msg1 = msgMap.remove(id);
             assertNotNull("Found message '" + msg2.getSubject() + "' in mbox2 but not in mbox1", msg1);
             assertEquals("Message content", msg1.getContent(), msg2.getContent());
+            assertEquals("Flags don't match", msg1.getFlags(), msg2.getFlags());
         }
         
         // Handle any remaining messages
