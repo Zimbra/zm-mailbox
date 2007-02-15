@@ -11,6 +11,9 @@ installers to your local machine before installing.
 1. Install Perforce (P4) (www.perforce.com)
    Configure server port to "eric:1666".
 
+  (PS: After successfully installing Perforce, create a new workspace 
+  which would help you to track the checked out code from "eric" server. )
+
 2. Checkout the following from Perforce:
 
    ZimbraServer - the backend system
@@ -45,10 +48,13 @@ installers to your local machine before installing.
   
    NOTE: You will need to configure the plugin with your Perforce
    information before using the Perforce Perspective.
-  
-   Once you get the Perforce Perspective open right click on
-   ZimbraServer and select "Import as project". Do the same for Ajax
-   and ZimbraWebClient.
+
+	1. To Open Perforce Perspective select  Windows | Open Perspective | Perforce
+	2. Add New Server from context menu in the Depots Explorer  (fill port as eric:1666)
+	3. Once you get the Perforce Perspective open right click on 
+	ZimbraServer and select "Import as project". Do the same for Ajax
+    and ZimbraWebClient.
+   
 
 5. Install Tomcat 5.5.x
 
@@ -87,7 +93,7 @@ installers to your local machine before installing.
   connections to mysql which you can do by running the mqsql command
   line:
 
-    $ mysql -u root -p
+    $ mysql -u root -P 7306 -p
     Password: zimbra     
     
     mysql> grant all on *.* to "root"@"localhost.localdomain" identified by 'zimbra' with grant option;
