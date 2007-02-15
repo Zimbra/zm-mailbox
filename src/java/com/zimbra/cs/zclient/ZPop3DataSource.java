@@ -56,8 +56,7 @@ public class ZPop3DataSource implements ZDataSource {
         mPort = (int) e.getAttributeLong(MailConstants.A_DS_PORT, 110);
         mUsername = e.getAttribute(MailConstants.A_DS_USERNAME);
         mFolderId = e.getAttribute(MailConstants.A_FOLDER);
-        mConnectionType = DataSource.ConnectionType.fromString(
-            e.getAttribute(MailConstants.A_DS_CONNECTION_TYPE));
+        mConnectionType = DataSource.ConnectionType.fromString(e.getAttribute(MailConstants.A_DS_CONNECTION_TYPE));
         mLeaveOnServer = e.getAttributeBool(MailConstants.A_DS_LEAVE_ON_SERVER);
     }
 
@@ -146,7 +145,7 @@ public class ZPop3DataSource implements ZDataSource {
         attrs.put(Provisioning.A_zimbraDataSourceEnabled, mEnabled ? "TRUE" : "FALSE");
         attrs.put(Provisioning.A_zimbraDataSourceUsername, mUsername);
         attrs.put(Provisioning.A_zimbraDataSourceHost, mHost);
-        attrs.put(Provisioning.A_zimbraDataSourceConnectionType, mConnectionType);
+        attrs.put(Provisioning.A_zimbraDataSourceConnectionType, mConnectionType.toString());
         if (mPort > 0)
             attrs.put(Provisioning.A_zimbraDataSourcePort, "" + mPort);
         if (mFolderId != null)
