@@ -1,0 +1,105 @@
+0. Before starting please make sure that you have a valid environment setup. JAVA_HOME should
+   be defined in your environment variables. To do this:
+   1) Right click on My Computer and go to Properties
+   2) Click on the Advanced Tab and then click Envirnment Variables
+   3) Click New under User variables for ...
+   4) Add JAVA_HOME and the path above the bin directory of your JDK
+
+1. Install the IDE of choice, but this documentation used Eclipse
+
+2. Checkout the following from Subversion at https://zimbra.svn.sourceforge.net/svnroot/zimbra:
+
+   ZimbraCommon - holds the jars for the projects
+
+   ZimbraIM - required for ZimbraServer
+
+   ZimbraServer - the backend system
+
+   ZimbraWebClient - the dhtml interface
+
+   Ajax - DTML/Ajax toolkit
+
+   Optional: ThirdParty - not needed to run, but has javadocs and
+   source for the various 3rd party jars/servers. It's very very large
+   since all the built servers and 3rd Party code (multiple versions)
+   are in there.
+
+3. Install Tomcat 5.5.x
+
+   On Windows, install Tomcat to c:\opt\zimbra\tomcat after downloading the 5.5.x version
+   from http://tomcat.apache.org/download-55.cgi. This documentation used 5.5.20
+
+   copy ZimbraServer/conf/tomcat-5.5/server.xml to c:\opt\zimbra\tomcat\conf\
+   copy ZimbraServer/conf/tomcat-5.5/tomcat-users.xml c:\opt\zimbra\tomcat\conf\
+
+   The server.xml file is configured to use port 7070 by
+   default. Production would of course use 80, and we'll also need to
+   configure SSL
+
+   The ZimbraServer/build.xml relies on a zimbra/zimbra user in the
+   tomcat-users.xml file to deploy
+
+   Now start the Tomcat Server
+
+6. Install the latest version of MySQL.
+
+   On Windows, install MySQL to c:\opt\zimbra\mysql
+
+   Install it to run on port 7306
+
+   We expect for now an admin account of "root" with password
+   "zimbra".  The ZimbraServer/build.xml file relies on the root account
+   to create the zimbra database and user/pass.
+
+7. Install OpenLDAP
+
+   Download http://download.bergmans.us/openldap/
+
+   This documentation used version 2.2.29
+
+   On Windows, install to c:\opt\zimbra\openldap. During the install
+   make sure to check "install OpenLDAP-slapd as NT Service"
+
+   The location of the schema files changed in OpenLDAP 2.2.29.
+   If you're using 2.2.29 or later, you'll have to manually edit
+   slapd.win.conf in the ZimbraServer/conf/ldap folder and change
+   the paths to the schema files from /opt/zimbra/openldap/etc/schema
+   to /opt/zimbra/openldap/schema except for the amavisd.schema file
+   and the zimbra.schema lines.
+
+9. Initialize system
+
+	From inside Eclipse on the Java Perspective select:
+
+  	Window -> Show View -> Ant
+
+  	Add: ZimbraServer/build.xml
+  		Run the "reset-the-world" target.
+  	This will wipe out parts of /opt/zimbra, reload the database,
+  	and inject the sample messages.
+
+  	Add: ZimbraWebClient/build.xml
+    	Run "deploy" and "admin-deploy"
+
+    This will compile/deploy the DHTML interface and the Admin Console.
+
+    If you install ant standalone, you can also run "ant
+    reset-the-world" from within the ZimbraServer root directory.
+
+10. Test deployment
+
+    You should now be able to go to:
+
+        http://localhost:7070/zimbra/
+
+    and login as "user1[@{hostname}]" (the domain is optional), with
+    password "test123", where {hostname} is the name of your local
+    machine.
+
+    You can log into the Admin Console by going to:
+
+        https://localhost:7071/zimbraAdmin
+
+    and login as "admin@{hostname}" (the domain is mandatory), with
+    the password "test123", where {hostname} is the name of your local
+    machine.	
