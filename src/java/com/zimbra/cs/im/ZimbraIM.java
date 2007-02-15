@@ -73,7 +73,9 @@ public class ZimbraIM {
     }
     
     public synchronized static void shutdown() {
-        XMPPServer.getInstance().stop();
+        XMPPServer instance = XMPPServer.getInstance();
+        if (instance != null)
+            instance.stop();
         if (sRunning) {
             sRunning = false;
         }
