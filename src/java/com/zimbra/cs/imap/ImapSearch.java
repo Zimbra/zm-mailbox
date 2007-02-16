@@ -273,10 +273,12 @@ abstract class ImapSearch {
         private String mValue;
         ContentSearch(Relation relation, String value) {
             mValue = value;  mRelation = relation;
-            if (mRelation == Relation.msgid) {
-                if (mValue.startsWith("<"))  mValue = mValue.substring(1);
-                if (mValue.endsWith(">"))    mValue = mValue.substring(0, mValue.length());
+            if (mRelation != Relation.body) {
+                while (mValue.startsWith("<") || mValue.startsWith(">") || mValue.startsWith("="))
+                    mValue = mValue.substring(1);
             }
+            if (mRelation == Relation.msgid && mValue.endsWith(">"))
+                mValue = mValue.substring(0, mValue.length());
         }
 
         boolean canBeRunLocally()                   { return false; }
