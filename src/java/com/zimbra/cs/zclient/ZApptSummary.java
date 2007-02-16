@@ -31,6 +31,7 @@ import com.zimbra.cs.zclient.event.ZModifyEvent;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Date;
 
 public class ZApptSummary implements ZItem {
 
@@ -279,6 +280,10 @@ public class ZApptSummary implements ZItem {
 
     /* computed from start+duration */
     public long getEndTime() { return mEndTime; }
+
+    public Date getStartDate() { return new Date(mStartTime); }
+
+    public Date getEndDate() { return new Date(mEndTime); }
 
     public long getTimeZoneOffset() { return mTimeZoneOffset; }
 
