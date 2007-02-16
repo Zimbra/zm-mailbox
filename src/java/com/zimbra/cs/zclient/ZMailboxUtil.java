@@ -86,6 +86,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -1080,7 +1081,7 @@ public class ZMailboxUtil implements DebugListener {
         long startTime = DateUtil.parseDateSpecifier(args[0], new Date().getTime());
         long endTime = DateUtil.parseDateSpecifier(args[1], (new Date().getTime()) + 1000*60*60*24*7);
         String folderId = args.length == 3 ? lookupFolderId(args[2]) : null;
-        List<ZApptSummaryResult> results = mMbox.getApptSummaries(startTime, endTime, new String[] {folderId});
+        List<ZApptSummaryResult> results = mMbox.getApptSummaries(startTime, endTime, new String[] {folderId}, TimeZone.getDefault());
         if (results.size() != 1) return;
         ZApptSummaryResult result = results.get(0);
         if (result.isFault())

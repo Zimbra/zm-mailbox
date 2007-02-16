@@ -99,6 +99,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -2561,7 +2562,7 @@ public class ZMailbox {
      * @return list of appts within the specified range
      * @throws ServiceException on error
      */
-    public List<ZApptSummaryResult> getApptSummaries(long startMsec, long endMsec, String folderIds[]) throws ServiceException {
+    public List<ZApptSummaryResult> getApptSummaries(long startMsec, long endMsec, String folderIds[], TimeZone timeZone) throws ServiceException {
         List<ZApptSummaryResult> summaries = new ArrayList<ZApptSummaryResult>();
         List<String> idsToFetch = new ArrayList<String>(folderIds.length);
 
@@ -2599,7 +2600,7 @@ public class ZMailbox {
                 } else {
                     List<ZApptSummary> appts = new ArrayList<ZApptSummary>();
                     for (Element appt : e.listElements(MailConstants.E_APPOINTMENT)) {
-                        ZApptSummary.addInstances(appt, appts, folderId);
+                        ZApptSummary.addInstances(appt, appts, folderId, timeZone);
                     }
                     ZApptSummaryResult summary = new ZApptSummaryResult(startMsec, endMsec, folderId, appts);
                     mApptSummaryCache.add(summary);

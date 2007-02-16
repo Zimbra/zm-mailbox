@@ -30,8 +30,9 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 
 import java.util.Comparator;
-import java.util.List;
 import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
 
 public class ZApptSummary implements ZItem {
 
@@ -116,7 +117,7 @@ public class ZApptSummary implements ZItem {
 
     }
     
-    public static void addInstances(Element e, List<ZApptSummary> appts, String folderId) throws ServiceException {
+    public static void addInstances(Element e, List<ZApptSummary> appts, String folderId, TimeZone timeZone) throws ServiceException {
         String id = e.getAttribute(MailConstants.A_ID);
         String freeBusyActual = e.getAttribute(MailConstants.A_APPT_FREEBUSY_ACTUAL, null);
         String transparency = e.getAttribute(MailConstants.A_APPT_TRANSPARENCY, null);
@@ -145,15 +146,24 @@ public class ZApptSummary implements ZItem {
             appt.mFolderId = folderId;
             appt.mId = id;
 
-            appt.mStartTime = inst.getAttributeLong(MailConstants.A_CAL_START_TIME, 0);
+            appt.mIsAllDay = inst.getAttributeBool(MailConstants.A_CAL_ALLDAY, isAllDay);
             appt.mTimeZoneOffset = inst.getAttributeLong(MailConstants.A_CAL_TZ_OFFSET, 0);
+
+            appt.mStartTime = inst.getAttributeLong(MailConstants.A_CAL_START_TIME, 0);
+
+            if (appt.mIsAllDay) {
+                long adjustMsecs = appt.mTimeZoneOffset - timeZone.getOffset(appt.mStartTime);
+                appt.mStartTime += adjustMsecs;
+                System.err.printf("ZAPPTSUMMARY ----- adjust(%d) timezone(%s)\n", adjustMsecs, timeZone.toString());
+            }
+
             appt.mIsException = inst.getAttributeBool(MailConstants.A_CAL_IS_EXCEPTION, false);
 
             appt.mFreeBusyActual = inst.getAttribute(MailConstants.A_APPT_FREEBUSY_ACTUAL, freeBusyActual);
             appt.mTransparency = inst.getAttribute(MailConstants.A_APPT_TRANSPARENCY, transparency);
             appt.mStatus = inst.getAttribute(MailConstants.A_CAL_STATUS, status);
             appt.mPartStatus = inst.getAttribute(MailConstants.A_CAL_PARTSTAT, pstatus);
-            appt.mIsAllDay = inst.getAttributeBool(MailConstants.A_CAL_ALLDAY, isAllDay);
+
             appt.mIsOtherAttendees = inst.getAttributeBool(MailConstants.A_CAL_OTHER_ATTENDEES, otherAtt);
             appt.mIsAlarm = inst.getAttributeBool(MailConstants.A_CAL_ALARM, isAlarm);
             appt.mIsRecurring = inst.getAttributeBool(MailConstants.A_CAL_RECUR, isRecurring);
