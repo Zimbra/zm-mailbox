@@ -253,19 +253,31 @@ abstract class ImapSearch {
 
     static class ContentSearch extends ImapSearch {
         enum Relation {
-            cc, from, subject, to, body;
+            cc, from, subject, to, body, msgid;
 
             static Relation parse(String tag, String header) throws ImapParseException {
+                header = header.toLowerCase();
                 try {
-                    return Relation.valueOf(header.toLowerCase());
+                    if (header.equals("message-id"))
+                        return msgid;
+                    else if (header.equals("body") || header.equals("msgid"))
+                        throw new ImapParseException(tag, "unindexed header: " + header.toUpperCase(), true);
+                    else
+                        return Relation.valueOf(header);
                 } catch (IllegalArgumentException iae) {
-                    throw new ImapParseException(tag, "unindexed header: " + header, true);
+                    throw new ImapParseException(tag, "unindexed header: " + header.toUpperCase(), true);
                 }
             }
         };
         private Relation mRelation;
         private String mValue;
-        ContentSearch(Relation relation, String value)  { mValue = value;  mRelation = relation; }
+        ContentSearch(Relation relation, String value) {
+            mValue = value;  mRelation = relation;
+            if (mRelation == Relation.msgid) {
+                if (mValue.startsWith("<"))  mValue = mValue.substring(1);
+                if (mValue.endsWith(">"))    mValue = mValue.substring(0, mValue.length());
+            }
+        }
 
         boolean canBeRunLocally()                   { return false; }
         String toZimbraSearch(ImapFolder i4folder)  { return (mRelation == Relation.body ? "" : mRelation + ":") + stringAsSearchTerm(mValue); }
