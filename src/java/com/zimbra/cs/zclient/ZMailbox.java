@@ -2513,23 +2513,30 @@ public class ZMailbox {
         private List<ZApptSummary> mAppointments;
         private long mStart;
         private long mEnd;
+        private TimeZone mTimeZone;
 
-        ZApptSummaryResult(long start, long end, String folderId, List<ZApptSummary> appointments) {
+        ZApptSummaryResult(long start, long end, String folderId, TimeZone timeZone, List<ZApptSummary> appointments) {
             mFolderId = folderId;
             mAppointments = appointments;
             mStart = start;
             mEnd = end;
+            mTimeZone = timeZone;
         }
 
-        ZApptSummaryResult(long start, long end, String folderId, ServiceException exception) {
+        ZApptSummaryResult(long start, long end, String folderId, TimeZone timeZone, ServiceException exception) {
             mFolderId = folderId;
             mStart = start;
             mEnd = end;
             mException = exception;
+            mTimeZone = timeZone;
         }
 
         public String getFolderId() {
             return mFolderId;
+        }
+
+        public TimeZone getTimeZone() {
+            return mTimeZone;
         }
 
         public long getStart() { return mStart; }
@@ -2596,13 +2603,13 @@ public class ZMailbox {
                 index++;
                 if (mTransport.getSoapProtocol().isFault(e)) {
                     // TODO: cache this if it permission denied or some other perm error?
-                    summaries.add(new ZApptSummaryResult(startMsec, endMsec, folderId, mTransport.getSoapProtocol().soapFault(e)));
+                    summaries.add(new ZApptSummaryResult(startMsec, endMsec, folderId, timeZone, mTransport.getSoapProtocol().soapFault(e)));
                 } else {
                     List<ZApptSummary> appts = new ArrayList<ZApptSummary>();
                     for (Element appt : e.listElements(MailConstants.E_APPOINTMENT)) {
                         ZApptSummary.addInstances(appt, appts, folderId, timeZone);
                     }
-                    ZApptSummaryResult summary = new ZApptSummaryResult(startMsec, endMsec, folderId, appts);
+                    ZApptSummaryResult summary = new ZApptSummaryResult(startMsec, endMsec, folderId, timeZone, appts);
                     mApptSummaryCache.add(summary, timeZone);
                     summaries.add(summary);
                 }

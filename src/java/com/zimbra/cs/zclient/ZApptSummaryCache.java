@@ -76,13 +76,13 @@ public class ZApptSummaryCache extends ZEventHandler {
         if (result == null && (end-start) < MSECS_PER_MONTH_GRID) {
             // let's see if results might potentially be contained within another result
             for (ZApptSummaryResult cached : mResults.values()) {
-                if (cached.getFolderId().equals(folderId) && (cached.getStart() <= start && end <= cached.getEnd())) {
+                if (cached.getTimeZone().getID().equals(timezone.getID()) && cached.getFolderId().equals(folderId) && (cached.getStart() <= start && end <= cached.getEnd())) {
                     List<ZApptSummary> appts = new ArrayList<ZApptSummary>();
                     for (ZApptSummary appt : cached.getAppointments()) {
                         if (appt.isInRange(start, end))
                             appts.add(appt);
                     }
-                    return new ZApptSummaryResult(start, end, folderId, appts);
+                    return new ZApptSummaryResult(start, end, folderId, timezone, appts);
                 }
             }
         }
