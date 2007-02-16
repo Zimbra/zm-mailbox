@@ -25,10 +25,12 @@
 
 package com.zimbra.cs.zclient;
 
+import com.zimbra.common.calendar.TZIDMapper;
 import com.zimbra.cs.account.Provisioning;
 
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 public class ZPrefs {
 
@@ -130,5 +132,21 @@ public class ZPrefs {
 
     public String getCalendarInitialView() { return get(Provisioning.A_zimbraPrefCalendarInitialView); }
 
-}
+    public String getTimeZoneId() { return get(Provisioning.A_zimbraPrefTimeZoneId); }
 
+    public String getTimeZoneWindowsId() { return TZIDMapper.toWindows(get(Provisioning.A_zimbraPrefTimeZoneId)); }
+
+    private TimeZone mCachedTimeZone;
+    private String mCachedTimeZoneId;
+
+    public synchronized TimeZone getTimeZone() {
+        if (mCachedTimeZone == null || (mCachedTimeZoneId != null && !mCachedTimeZoneId.equals(getTimeZoneId()))) {
+            mCachedTimeZoneId = getTimeZoneId();
+            mCachedTimeZone  = (mCachedTimeZoneId == null) ? null :
+                    TimeZone.getTimeZone(TZIDMapper.toJava(mCachedTimeZoneId));
+            if (mCachedTimeZone == null)
+                mCachedTimeZone = TimeZone.getDefault();
+        }
+        return mCachedTimeZone;
+    }
+}
