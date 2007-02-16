@@ -36,8 +36,11 @@ import com.zimbra.cs.stats.ZimbraPerf;
 import org.apache.commons.codec.binary.Base64;
 
 import javax.naming.AuthenticationException;
+import javax.naming.CompositeName;
 import javax.naming.Context;
+import javax.naming.InvalidNameException;
 import javax.naming.Name;
+import javax.naming.NameAlreadyBoundException;
 import javax.naming.NameParser;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
@@ -47,7 +50,11 @@ import javax.naming.directory.Attributes;
 import javax.naming.directory.BasicAttribute;
 import javax.naming.directory.BasicAttributes;
 import javax.naming.directory.DirContext;
+import javax.naming.directory.InvalidAttributeIdentifierException;
+import javax.naming.directory.InvalidAttributeValueException;
+import javax.naming.directory.InvalidAttributesException;
 import javax.naming.directory.ModificationItem;
+import javax.naming.directory.SchemaViolationException;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.InitialLdapContext;
@@ -262,7 +269,7 @@ public class LdapUtil {
         NamingEnumeration ne = null;
         try {
             ctxt = getDirContext(url, searchDn, searchPassword);
-            ne = ctxt.search(searchBase, searchFilter, sSubtreeSC);
+            ne = searchDir(ctxt, searchBase, searchFilter, sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 if (resultDn == null) {
@@ -429,7 +436,8 @@ public class LdapUtil {
         }
         for (int i=0; i < attrs.length; i += 2)
             battrs.put(attrs[i], attrs[i+1]);
-        Context newCtxt = ctxt.createSubcontext(dn, battrs);
+        Name cpName = new CompositeName().add(dn);
+        Context newCtxt = ctxt.createSubcontext(cpName, battrs);
         newCtxt.close();
     }
 
@@ -584,7 +592,7 @@ public class LdapUtil {
         }
         ModificationItem[] mods = new ModificationItem[modlist.size()];
         modlist.toArray(mods);
-        ctxt.modifyAttributes(dn, mods);
+        modifyAttributes(ctxt, dn, mods);
     }
 
     /**
@@ -835,7 +843,7 @@ public class LdapUtil {
         NamingEnumeration ne = null;
         try {
             ctxt = getDirContext(url, bindDn, bindPassword);
-            ne = ctxt.search(base, query, sc);
+            ne = searchDir(ctxt, base, query, sc);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 String dn = sr.getNameInNamespace();
@@ -901,7 +909,7 @@ public class LdapUtil {
             String query = "(userPrincipalName="+LdapUtil.escapeSearchFilterArg(email)+")";
             String base = emailToDomainDN(email);
             String dn = null;
-            ne = ctxt.search(base, query, sc);
+            ne = searchDir(ctxt, base, query, sc);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 dn = sr.getNameInNamespace();
@@ -928,7 +936,7 @@ public class LdapUtil {
             mods[1] = new ModificationItem(DirContext.ADD_ATTRIBUTE, new BasicAttribute("unicodePwd", newUnicodePassword));
 
             // Perform the update
-            ctxt.modifyAttributes(dn, mods);
+            modifyAttributes(ctxt, dn, mods);
         } catch (UnsupportedEncodingException e) {
             throw ServiceException.FAILURE("encoding exception", e);
         } finally {
@@ -956,7 +964,7 @@ public class LdapUtil {
             // find children under old DN and move them
             SearchControls sc = new SearchControls(SearchControls.ONELEVEL_SCOPE, 0, 0, null, false, false);
             String query = "(objectclass=*)";
-            ne = ctxt.search(oldDn, query, sc);
+            ne = searchDir(ctxt, oldDn, query, sc);
             NameParser ldapParser = ctxt.getNameParser("");            
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
@@ -978,11 +986,10 @@ public class LdapUtil {
             // find children under old DN and remove them
             SearchControls sc = new SearchControls(SearchControls.ONELEVEL_SCOPE, 0, 0, null, false, false);
             String query = "(objectclass=*)";
-            ne = ctxt.search(dn, query, sc);
-            NameParser ldapParser = ctxt.getNameParser("");            
+            ne = searchDir(ctxt, dn, query, sc);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                ctxt.unbind(sr.getNameInNamespace());
+                LdapUtil.unbindEntry(ctxt, sr.getNameInNamespace());
             }
         } catch (NamingException e) {
             ZimbraLog.account.warn("unable to remove children", e);            
@@ -990,8 +997,67 @@ public class LdapUtil {
             closeEnumContext(ne);            
         }
     }
-    
  
+    public static NamingEnumeration<SearchResult> searchDir(DirContext ctxt, String base, String filter, SearchControls cons) throws NamingException {
+    	if (base.length() == 0) {
+    		return ctxt.search(base, filter, cons);
+    	} else {
+    	    Name cpName = new CompositeName().add(base);
+    	    return ctxt.search(cpName, filter, cons);
+    	}
+    }
+    
+    public static void createEntry(DirContext ctxt, String dn, Attributes attrs, String method)
+    throws NameAlreadyBoundException, ServiceException {
+        Context newCtxt = null;
+        try {
+        	Name cpName = new CompositeName().add(dn);
+            newCtxt = ctxt.createSubcontext(cpName, attrs);
+        } catch (NameAlreadyBoundException e) {            
+            throw e;
+        } catch (InvalidAttributeIdentifierException e) {
+            throw AccountServiceException.INVALID_ATTR_NAME(method+" invalid attr name: "+e.getMessage(), e);
+        } catch (InvalidAttributeValueException e) {
+            throw AccountServiceException.INVALID_ATTR_VALUE(method+" invalid attr value: "+e.getMessage(), e);
+        } catch (InvalidAttributesException e) {
+            throw ServiceException.INVALID_REQUEST(method+" invalid set of attributes: "+e.getMessage(), e);
+        } catch (InvalidNameException e) {
+            throw ServiceException.INVALID_REQUEST(method+" invalid name: "+e.getMessage(), e);
+        } catch (SchemaViolationException e) {
+            throw ServiceException.INVALID_REQUEST(method+" invalid schema change: "+e.getMessage(), e);            
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE(method, e);
+        } finally {
+            LdapUtil.closeContext(newCtxt);
+        }
+    }
+    
+    public static void renameEntry(DirContext ctxt, String oldDn, String newDn) throws NamingException {
+    	Name oldCpName = new CompositeName().add(oldDn);
+    	Name newCpName = new CompositeName().add(newDn);
+     	ctxt.rename(oldCpName, newCpName);
+    }
+    
+    public static void unbindEntry(DirContext ctxt, String dn) throws NamingException {
+    	Name cpName = new CompositeName().add(dn);
+     	ctxt.unbind(cpName);
+    }
+    
+    public static Attributes getAttributes(DirContext ctxt, String dn) throws NamingException {
+    	Name cpName = new CompositeName().add(dn);
+    	return ctxt.getAttributes(cpName);
+    }
+    
+    public static void modifyAttributes(DirContext ctxt, String dn, ModificationItem[] mods) throws NamingException {
+    	Name cpName = new CompositeName().add(dn);
+        ctxt.modifyAttributes(cpName, mods);
+    }
+    
+    public static void modifyAttributes(DirContext ctxt, String dn, int mod_op, Attributes attrs) throws NamingException {
+       	Name cpName = new CompositeName().add(dn);
+        ctxt.modifyAttributes(cpName, mod_op, attrs);
+    }
+    
     //
     // Escape rdn value defined in:
     // http://www.ietf.org/rfc/rfc2253.txt?number=2253

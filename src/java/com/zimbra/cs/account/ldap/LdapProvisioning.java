@@ -50,9 +50,11 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.naming.AuthenticationException;
 import javax.naming.AuthenticationNotSupportedException;
+import javax.naming.CompositeName;
 import javax.naming.Context;
 import javax.naming.ContextNotEmptyException;
 import javax.naming.InvalidNameException;
+import javax.naming.Name;
 import javax.naming.NameAlreadyBoundException;
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingEnumeration;
@@ -241,7 +243,7 @@ public class LdapProvisioning extends Provisioning {
     
     static String mimeConfigToDN(String name) {
         name = LdapUtil.escapeRDNValue(name);                   // do LDAP escape first
-        name = sNamePattern.matcher(name).replaceAll("\\\\$1"); // then do JNDI escape
+        // name = sNamePattern.matcher(name).replaceAll("\\\\$1"); // then do JNDI escape
         return "cn=" + name + ",cn=mime," + CONFIG_BASE;
     }
 
@@ -358,9 +360,9 @@ public class LdapProvisioning extends Provisioning {
                 ctxt = LdapUtil.getDirContext();
             String dn = ((LdapEntry)entry).getDN();
             if (defaults == null)
-                entry.setAttrs(LdapUtil.getAttrs(ctxt.getAttributes(dn)));
+                entry.setAttrs(LdapUtil.getAttrs(LdapUtil.getAttributes(ctxt, dn)));
             else 
-                entry.setAttrs(LdapUtil.getAttrs(ctxt.getAttributes(dn)), defaults);                
+                entry.setAttrs(LdapUtil.getAttrs(LdapUtil.getAttributes(ctxt, dn)), defaults);                
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to refresh entry", e);
         } finally {
@@ -377,7 +379,7 @@ public class LdapProvisioning extends Provisioning {
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
-            Attributes attrs = ctxt.getAttributes(CONFIG_BASE);
+            Attributes attrs = LdapUtil.getAttributes(ctxt, CONFIG_BASE);
             result = attrs != null;
         } catch (NamingException e) {
             mLog.warn("LDAP health check error", e);
@@ -398,7 +400,7 @@ public class LdapProvisioning extends Provisioning {
                     DirContext ctxt = null;
                     try {
                         ctxt = LdapUtil.getDirContext();
-                        Attributes attrs = ctxt.getAttributes(CONFIG_BASE);
+                        Attributes attrs = LdapUtil.getAttributes(ctxt, CONFIG_BASE);
                         sConfig = new LdapConfig(CONFIG_BASE, attrs);
                     } catch (NamingException e) {
                         throw ServiceException.FAILURE("unable to get config", e);
@@ -419,7 +421,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             ctxt = LdapUtil.getDirContext();
             String dn = mimeConfigToDN(name);
-            Attributes attrs = ctxt.getAttributes(dn);
+            Attributes attrs = LdapUtil.getAttributes(ctxt, dn);
             return new LdapMimeType(dn, attrs);
         } catch (NamingException e) {
             return null;
@@ -433,7 +435,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             ctxt = LdapUtil.getDirContext();
             ext = LdapUtil.escapeSearchFilterArg(ext);
-            NamingEnumeration ne = ctxt.search("cn=mime," + CONFIG_BASE, "(" + Provisioning.A_zimbraMimeFileExtension + "=" + ext + ")", sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, "cn=mime," + CONFIG_BASE, "(" + Provisioning.A_zimbraMimeFileExtension + "=" + ext + ")", sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 ne.close();
@@ -464,7 +466,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             if (ctxt == null)
                 ctxt = LdapUtil.getDirContext();
-            NamingEnumeration ne = ctxt.search(base, query, sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, base, query, sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 if (ne.hasMore())
@@ -735,7 +737,7 @@ public class LdapProvisioning extends Provisioning {
             setInitialPassword(cos, attrs, password);
             
             String dn = emailToDN(uid, domain);
-            createSubcontext(ctxt, dn, attrs, "createAccount");
+            LdapUtil.createEntry(ctxt, dn, attrs, "createAccount");
             Account acct = getAccountById(zimbraIdStr, ctxt);
             AttributeManager.getInstance().postModify(acctAttrs, acct, attrManagerContext, true);
 
@@ -953,7 +955,7 @@ public class LdapProvisioning extends Provisioning {
                 do {
                     lctxt.setRequestControls(new Control[]{new PagedResultsControl(pageSize, cookie, Control.CRITICAL)});
                     
-                    ne = ctxt.search(base, query, searchControls);
+                    ne = LdapUtil.searchDir(ctxt, base, query, searchControls);
                     while (ne != null && ne.hasMore()) {
                         SearchResult sr = (SearchResult) ne.nextElement();
                         String dn = sr.getNameInNamespace();
@@ -1178,11 +1180,11 @@ public class LdapProvisioning extends Provisioning {
             removeAddressFromAllDistributionLists(alias);
 
             try {
-                Attributes aliasAttrs = ctxt.getAttributes(aliasDn);
+                Attributes aliasAttrs = LdapUtil.getAttributes(ctxt, aliasDn);
                 // make sure aliasedObjectName points to this account
                 Attribute a = aliasAttrs.get(Provisioning.A_zimbraAliasTargetId);
                 if ( a != null && ( (String)a.get()).equals(entry.getId())) {
-                    ctxt.unbind(aliasDn);
+                	LdapUtil.unbindEntry(ctxt, aliasDn);
                     removeAddressFromAllDistributionLists(alias); // doesn't throw exception
                 } else {
                     ZimbraLog.account.warn("unable to remove alias object: "+alias);
@@ -1260,9 +1262,9 @@ public class LdapProvisioning extends Provisioning {
             String dn = dns[0];
             //NOTE: all four of these should be in a transaction...
             try {
-                createSubcontext(ctxt, dn, attrs, "createDomain");
+                LdapUtil.createEntry(ctxt, dn, attrs, "createDomain");
             } catch (NameAlreadyBoundException e) {
-                ctxt.modifyAttributes(dn, DirContext.REPLACE_ATTRIBUTE, attrs);
+                LdapUtil.modifyAttributes(ctxt, dn, DirContext.REPLACE_ATTRIBUTE, attrs);
             }
             
             LdapUtil.simpleCreate(ctxt, "ou=people,"+dn, "organizationalRole",
@@ -1288,7 +1290,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             if (ctxt == null)
                 ctxt = LdapUtil.getDirContext();
-            NamingEnumeration ne = ctxt.search("", query, sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, "", query, sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 ne.close();
@@ -1376,7 +1378,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             ctxt = LdapUtil.getDirContext();
 
-            NamingEnumeration ne = ctxt.search("", "(objectclass=zimbraDomain)", sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, "", "(objectclass=zimbraDomain)", sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 result.add(new LdapDomain(sr.getNameInNamespace(), sr.getAttributes(), getConfig().getDomainDefaults()));
@@ -1393,7 +1395,7 @@ public class LdapProvisioning extends Provisioning {
 
     private static boolean domainDnExists(DirContext ctxt, String dn) throws NamingException {
         try {
-            NamingEnumeration ne = ctxt.search(dn,"objectclass=dcObject", sObjectSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, dn,"objectclass=dcObject", sObjectSC);
             boolean result = ne.hasMore();
             ne.close();
             return result;
@@ -1440,7 +1442,7 @@ public class LdapProvisioning extends Provisioning {
             attrs.put(A_zimbraId, zimbraIdStr);
             attrs.put(A_cn, name);
             String dn = cosNametoDN(name);
-            createSubcontext(ctxt, dn, attrs, "createCos");
+            LdapUtil.createEntry(ctxt, dn, attrs, "createCos");
 
             Cos cos = getCosById(zimbraIdStr, ctxt);
             AttributeManager.getInstance().postModify(cosAttrs, cos, attrManagerContext, true);
@@ -1471,7 +1473,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             ctxt = LdapUtil.getDirContext(true);
             String newDn = cosNametoDN(newName);
-            ctxt.rename(cos.getDN(), newDn);
+            LdapUtil.renameEntry(ctxt, cos.getDN(), newDn);
             // remove old account from cache
             sCosCache.remove(cos);
         } catch (NameAlreadyBoundException nabe) {
@@ -1488,7 +1490,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             if (ctxt == null)
                 ctxt = LdapUtil.getDirContext();
-            NamingEnumeration ne = ctxt.search(COS_BASE, query, sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, COS_BASE, query, sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 ne.close();
@@ -1548,7 +1550,7 @@ public class LdapProvisioning extends Provisioning {
             if (ctxt == null)
                 ctxt = LdapUtil.getDirContext();
             String dn = cosNametoDN(name);            
-            Attributes attrs = ctxt.getAttributes(dn);
+            Attributes attrs = LdapUtil.getAttributes(ctxt, dn);
             cos  = new LdapCos(dn, attrs);
             sCosCache.put(cos);            
             return cos;
@@ -1572,7 +1574,7 @@ public class LdapProvisioning extends Provisioning {
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
-            NamingEnumeration ne = ctxt.search(COS_BASE, "(objectclass=zimbraCOS)", sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, COS_BASE, "(objectclass=zimbraCOS)", sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 result.add(new LdapCos(sr.getNameInNamespace(), sr.getAttributes()));
@@ -1609,7 +1611,7 @@ public class LdapProvisioning extends Provisioning {
             ctxt = LdapUtil.getDirContext(true);
             
             LdapUtil.deleteChildren(ctxt, entry.getDN());
-            ctxt.unbind(entry.getDN());
+            LdapUtil.unbindEntry(ctxt, entry.getDN());
             sAccountCache.remove(acc.getName(), acc.getId());
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to purge account: "+zimbraId, e);
@@ -1678,7 +1680,7 @@ public class LdapProvisioning extends Provisioning {
             Attributes attributes = new BasicAttributes(true);
             LdapUtil.mapToAttrs(newAttrs, attributes);
 
-            createSubcontext(ctxt, newDn, attributes, "createAccount");         
+            LdapUtil.createEntry(ctxt, newDn, attributes, "createAccount");         
 
             // MOVE OVER the account and all identities/sources/etc. doesn't throw an exception, just logs
             LdapUtil.moveChildren(ctxt, oldDn, newDn);
@@ -1693,7 +1695,7 @@ public class LdapProvisioning extends Provisioning {
                 moveAliases(ctxt, replacedAliases, newDomain, null);
             
             // unbind old dn
-            ctxt.unbind(oldDn);
+            LdapUtil.unbindEntry(ctxt, oldDn);
 
             // prune cache
             sAccountCache.remove(oldEmail, acc.getId());
@@ -1721,10 +1723,10 @@ public class LdapProvisioning extends Provisioning {
 
             String name = d.getName();
 
-            ctxt.unbind("ou=people,"+d.getDN());
+            LdapUtil.unbindEntry(ctxt, "ou=people,"+d.getDN());
             
             try {
-                ctxt.unbind(d.getDN());
+            	LdapUtil.unbindEntry(ctxt, d.getDN());
                 sDomainCache.remove(d);                
             } catch (ContextNotEmptyException e) {
                 // remove from cache before nuking all attrs
@@ -1771,7 +1773,7 @@ public class LdapProvisioning extends Provisioning {
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(true);
-            ctxt.unbind(c.getDN());
+            LdapUtil.unbindEntry(ctxt, c.getDN());
             sCosCache.remove(c);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to purge cos: "+zimbraId, e);
@@ -1817,7 +1819,7 @@ public class LdapProvisioning extends Provisioning {
                 zimbraServerHostname = (String) zimbraServiceHostnameAttr.get();
             }
             
-            createSubcontext(ctxt, dn, attrs, "createServer");
+            LdapUtil.createEntry(ctxt, dn, attrs, "createServer");
 
             Server server = getServerById(zimbraIdStr, ctxt, true);
             AttributeManager.getInstance().postModify(serverAttrs, server, attrManagerContext, true);
@@ -1838,7 +1840,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             if (ctxt == null)
                 ctxt = LdapUtil.getDirContext();
-            NamingEnumeration ne = ctxt.search(SERVER_BASE, query, sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, SERVER_BASE, query, sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 ne.close();
@@ -1911,7 +1913,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             ctxt = LdapUtil.getDirContext();
             String dn = serverNametoDN(name);            
-            Attributes attrs = ctxt.getAttributes(dn);
+            Attributes attrs = LdapUtil.getAttributes(ctxt, dn);
             LdapServer s = new LdapServer(dn, attrs, getConfig().getServerDefaults());
             sServerCache.put(s);            
             return s;
@@ -1941,7 +1943,7 @@ public class LdapProvisioning extends Provisioning {
             } else {
                 filter = "(objectclass=zimbraServer)";
             }
-            NamingEnumeration ne = ctxt.search(SERVER_BASE, filter, sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, SERVER_BASE, filter, sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 LdapServer s = new LdapServer(sr.getNameInNamespace(), sr.getAttributes(), getConfig().getServerDefaults());
@@ -1965,7 +1967,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             if (ctxt == null)
                 ctxt = LdapUtil.getDirContext();
-            NamingEnumeration ne = ctxt.search(COS_BASE, "(&(objectclass=zimbraCOS)" + query + ")", sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, COS_BASE, "(&(objectclass=zimbraCOS)" + query + ")", sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 result.add(new LdapCos(sr.getNameInNamespace(), sr.getAttributes()));
@@ -2015,7 +2017,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             ctxt = LdapUtil.getDirContext(true);
             removeServerFromAllCOSes(zimbraId, ctxt);
-            ctxt.unbind(s.getDN());
+            LdapUtil.unbindEntry(ctxt, s.getDN());
             sServerCache.remove(s);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to purge server: "+zimbraId, e);
@@ -2074,7 +2076,7 @@ public class LdapProvisioning extends Provisioning {
             }
             
             String dn = emailToDN(list, domain);
-            createSubcontext(ctxt, dn, attrs, "createDistributionList");
+            LdapUtil.createEntry(ctxt, dn, attrs, "createDistributionList");
 
             DistributionList dlist = getDistributionListById(zimbraIdStr, ctxt);
             AttributeManager.getInstance().postModify(listAttrs, dlist, attrManagerContext, true);
@@ -2099,7 +2101,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             if (ctxt == null)
                 ctxt = LdapUtil.getDirContext();
-            NamingEnumeration ne = ctxt.search(base, query, sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, base, query, sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 ne.close();
@@ -2166,7 +2168,7 @@ public class LdapProvisioning extends Provisioning {
  
             // move over the distribution list entry
             String newDn = emailToDN(newLocal, domain.getName());
-            ctxt.rename(dl.getDN(), newDn);
+            LdapUtil.renameEntry(ctxt, dl.getDN(), newDn);
             dl = (LdapDistributionList) getDistributionListById(zimbraId,ctxt);
             
             // rename the distribution list and all it's renamed aliases to the new name in all distribution lists
@@ -2229,7 +2231,7 @@ public class LdapProvisioning extends Provisioning {
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(true);
-            ctxt.unbind(dl.getDN());
+            LdapUtil.unbindEntry(ctxt, dl.getDN());
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to purge distribution list: "+zimbraId, e);
         } finally {
@@ -2797,30 +2799,6 @@ public class LdapProvisioning extends Provisioning {
         modifyAttrs(acct, attrs);
     }
     
-    private void createSubcontext(DirContext ctxt, String dn, Attributes attrs, String method)
-    throws NameAlreadyBoundException, ServiceException {
-        Context newCtxt = null;
-        try {
-            newCtxt = ctxt.createSubcontext(dn, attrs);
-        } catch (NameAlreadyBoundException e) {            
-            throw e;
-        } catch (InvalidAttributeIdentifierException e) {
-            throw AccountServiceException.INVALID_ATTR_NAME(method+" invalid attr name: "+e.getMessage(), e);
-        } catch (InvalidAttributeValueException e) {
-            throw AccountServiceException.INVALID_ATTR_VALUE(method+" invalid attr value: "+e.getMessage(), e);
-        } catch (InvalidAttributesException e) {
-            throw ServiceException.INVALID_REQUEST(method+" invalid set of attributes: "+e.getMessage(), e);
-        } catch (InvalidNameException e) {
-            throw ServiceException.INVALID_REQUEST(method+" invalid name: "+e.getMessage(), e);
-        } catch (SchemaViolationException e) {
-            throw ServiceException.INVALID_REQUEST(method+" invalid schema change: "+e.getMessage(), e);            
-        } catch (NamingException e) {
-            throw ServiceException.FAILURE(method, e);
-        } finally {
-            LdapUtil.closeContext(newCtxt);
-        }
-    }
-
     public Zimlet getZimlet(String name) throws ServiceException {
     	return getZimlet(name, null, true);
     }
@@ -2838,7 +2816,7 @@ public class LdapProvisioning extends Provisioning {
         		    ctxt = LdapUtil.getDirContext();
         		}
         		String dn = zimletNameToDN(name);            
-        		Attributes attrs = ctxt.getAttributes(dn);
+        		Attributes attrs = LdapUtil.getAttributes(ctxt, dn);
         		zimlet = new LdapZimlet(dn, attrs);
         		if (useCache) {
         			ZimletUtil.reloadZimlet(name);
@@ -2864,7 +2842,7 @@ public class LdapProvisioning extends Provisioning {
     	DirContext ctxt = null;
     	try {
     		ctxt = LdapUtil.getDirContext();
-    		NamingEnumeration ne = ctxt.search("", "(objectclass=zimbraZimletEntry)", sSubtreeSC);
+    		NamingEnumeration ne = LdapUtil.searchDir(ctxt, "", "(objectclass=zimbraZimletEntry)", sSubtreeSC);
     		while (ne.hasMore()) {
     			SearchResult sr = (SearchResult) ne.next();
              result.add(new LdapZimlet(sr.getNameInNamespace(), sr.getAttributes()));
@@ -2900,7 +2878,7 @@ public class LdapProvisioning extends Provisioning {
     		LdapUtil.addAttr(attrs, A_zimbraZimletIndexingEnabled, hasKeyword);
     		
     		String dn = zimletNameToDN(name);
-    		createSubcontext(ctxt, dn, attrs, "createZimlet");
+    		LdapUtil.createEntry(ctxt, dn, attrs, "createZimlet");
     		
     		Zimlet zimlet = lookupZimlet(name, ctxt);
     		AttributeManager.getInstance().postModify(zimletAttrs, zimlet, attrManagerContext, true);
@@ -2921,7 +2899,7 @@ public class LdapProvisioning extends Provisioning {
     		LdapZimlet zimlet = (LdapZimlet)getZimlet(name, ctxt, true);
     		if (zimlet != null) {
     			sZimletCache.remove(zimlet);
-    			ctxt.unbind(zimlet.getDN());
+    			LdapUtil.unbindEntry(ctxt, zimlet.getDN());
     		}
     	} catch (NamingException e) {
     		throw ServiceException.FAILURE("unable to delete zimlet: "+name, e);
@@ -3537,7 +3515,7 @@ public class LdapProvisioning extends Provisioning {
             else if (searchBase.equalsIgnoreCase("ROOT"))
                 searchBase = "";
 
-            ne = ctxt.search(searchBase, query, sc);
+            ne = LdapUtil.searchDir(ctxt, searchBase, query, sc);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 String dn = sr.getNameInNamespace();
@@ -3600,7 +3578,7 @@ public class LdapProvisioning extends Provisioning {
             if (ctxt == null)
                 ctxt = LdapUtil.getDirContext();
             String base = entry.getDN();
-            NamingEnumeration ne = ctxt.search(base, query, sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, base, query, sSubtreeSC);
             while(ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 result.add(new LdapIdentity(sr.getNameInNamespace(), sr.getAttributes()));
@@ -3678,7 +3656,7 @@ public class LdapProvisioning extends Provisioning {
                 attrs.put(A_zimbraPrefIdentityId, identityId);
             }
             
-            createSubcontext(ctxt, dn, attrs, "createIdentity");
+            LdapUtil.createEntry(ctxt, dn, attrs, "createIdentity");
 
             Identity identity = getIdentityByName(ldapEntry, identityName, ctxt);
             AttributeManager.getInstance().postModify(identityAttrs, identity, attrManagerContext, true);
@@ -3734,7 +3712,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             ctxt = LdapUtil.getDirContext(true);
             String newDn = getIdentityDn(entry, newIdentityName);            
-            ctxt.rename(identity.getDN(), newDn);
+            LdapUtil.renameEntry(ctxt, identity.getDN(), newDn);
         } catch (InvalidNameException e) {
             throw ServiceException.INVALID_REQUEST("invalid identity name: "+newIdentityName, e);
         } catch (NamingException e) {
@@ -3762,7 +3740,7 @@ public class LdapProvisioning extends Provisioning {
             if (identity == null)
                 throw AccountServiceException.NO_SUCH_IDENTITY(identityName);
             String dn = getIdentityDn(ldapEntry, identityName);            
-            ctxt.unbind(dn);
+            LdapUtil.unbindEntry(ctxt, dn);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to delete identity: "+identityName, e);
         } finally {
@@ -3835,7 +3813,7 @@ public class LdapProvisioning extends Provisioning {
             if (ctxt == null)
                 ctxt = LdapUtil.getDirContext();
             String base = entry.getDN();
-            NamingEnumeration ne = ctxt.search(base, query, sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, base, query, sSubtreeSC);
             while(ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 result.add(new LdapDataSource(sr.getNameInNamespace(), sr.getAttributes()));
@@ -3918,7 +3896,7 @@ public class LdapProvisioning extends Provisioning {
         query.append(")");
         
         try {
-            NamingEnumeration ne = ctxt.search(baseDN, query.toString(), sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, baseDN, query.toString(), sSubtreeSC);
             if (ne.hasMore()) 
                 return true;
             else
@@ -3954,7 +3932,7 @@ public class LdapProvisioning extends Provisioning {
                 String newAliasLocal = newAliasParts[0];
                 if (!(primaryUid != null && newAliasLocal.equals(primaryUid))) {
                 	try {
-                        ctxt.rename(oldAliasDN, newAliasDN);
+                		LdapUtil.renameEntry(ctxt, oldAliasDN, newAliasDN);
                 	} catch (NameAlreadyBoundException nabe) {
                 		ZimbraLog.account.warn("unable to move alias from " + oldAliasDN + " to " + newAliasDN, nabe);
                 	} catch (NamingException ne) {
@@ -4014,7 +3992,7 @@ public class LdapProvisioning extends Provisioning {
                 attrs.put(A_zimbraDataSourcePassword, encrypted);
             }
 
-            createSubcontext(ctxt, dn, attrs, "createDataSource");
+            LdapUtil.createEntry(ctxt, dn, attrs, "createDataSource");
 
             DataSource ds = getDataSourceById(ldapEntry, dsId, ctxt);
             AttributeManager.getInstance().postModify(dataSourceAttrs, ds, attrManagerContext, true);
@@ -4043,7 +4021,7 @@ public class LdapProvisioning extends Provisioning {
             if (dataSource == null)
                 throw AccountServiceException.NO_SUCH_DATA_SOURCE(dataSourceId);
             String dn = getDataSourceDn(ldapEntry, dataSource.getName());
-            ctxt.unbind(dn);
+            LdapUtil.unbindEntry(ctxt, dn);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to delete data source: "+dataSourceId, e);
         } finally {
@@ -4110,7 +4088,7 @@ public class LdapProvisioning extends Provisioning {
             try {
                 ctxt = LdapUtil.getDirContext(true);
                 String newDn = getDataSourceDn(ldapEntry, name);            
-                ctxt.rename(ds.getDN(), newDn);
+                LdapUtil.renameEntry(ctxt, ds.getDN(), newDn);
             } catch (NamingException e) {
                 throw ServiceException.FAILURE("unable to rename datasource: "+newName, e);
             } finally {
