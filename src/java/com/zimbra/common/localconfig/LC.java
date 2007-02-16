@@ -460,7 +460,7 @@ public class LC {
                     " from the pool.");
 
         ldap_cache_account_maxsize = 
-            new KnownKey("ldap_cache_account_maxsize", "5000", "Maximum number of account objects to cache.");
+            new KnownKey("ldap_cache_account_maxsize", "20000", "Maximum number of account objects to cache.");
 
         ldap_cache_account_maxage =
             new KnownKey("ldap_cache_account_maxage", "15", "Maximum age (in minutes) of account objects in cache.");
