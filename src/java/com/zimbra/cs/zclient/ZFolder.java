@@ -111,7 +111,7 @@ public class ZFolder implements ZItem, Comparable {
 
     public enum Color {
         
-        orange(0),
+        defaultColor(0),
         blue(1),
         cyan(2), 
         green(3),
@@ -119,7 +119,8 @@ public class ZFolder implements ZItem, Comparable {
         red(5),
         yellow(6),
         pink(7),
-        gray(8);
+        gray(8),
+        orange(9);
         
         private int mValue;
 
