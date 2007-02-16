@@ -2567,7 +2567,7 @@ public class ZMailbox {
         List<String> idsToFetch = new ArrayList<String>(folderIds.length);
 
         for (String folderId : folderIds) {
-            ZApptSummaryResult cached = mApptSummaryCache.get(startMsec, endMsec, folderId);
+            ZApptSummaryResult cached = mApptSummaryCache.get(startMsec, endMsec, folderId, timeZone);
             if (cached == null) {
                 idsToFetch.add(folderId);
             } else {
@@ -2603,7 +2603,7 @@ public class ZMailbox {
                         ZApptSummary.addInstances(appt, appts, folderId, timeZone);
                     }
                     ZApptSummaryResult summary = new ZApptSummaryResult(startMsec, endMsec, folderId, appts);
-                    mApptSummaryCache.add(summary);
+                    mApptSummaryCache.add(summary, timeZone);
                     summaries.add(summary);
                 }
             }

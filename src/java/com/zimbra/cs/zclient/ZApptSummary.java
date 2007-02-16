@@ -154,7 +154,6 @@ public class ZApptSummary implements ZItem {
             if (appt.mIsAllDay) {
                 long adjustMsecs = appt.mTimeZoneOffset - timeZone.getOffset(appt.mStartTime);
                 appt.mStartTime += adjustMsecs;
-                System.err.printf("ZAPPTSUMMARY ----- adjust(%d) timezone(%s)\n", adjustMsecs, timeZone.toString());
             }
 
             appt.mIsException = inst.getAttributeBool(MailConstants.A_CAL_IS_EXCEPTION, false);

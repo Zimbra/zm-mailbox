@@ -40,6 +40,7 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.TimeZone;
 
 public class ZApptSummaryCache extends ZEventHandler {
 
@@ -59,19 +60,19 @@ public class ZApptSummaryCache extends ZEventHandler {
         mIds = new HashSet<String>();
     }
 
-    private String makeKey(long start, long end, String folderId) {
-        return start+":"+end+":"+folderId;
+    private String makeKey(long start, long end, String folderId, TimeZone timezone) {
+        return start+":"+end+":"+folderId+":"+timezone.getID();
     }
 
-    public synchronized void add(ZApptSummaryResult result) {
+    public synchronized void add(ZApptSummaryResult result, TimeZone timezone) {
         for (ZApptSummary appt : result.getAppointments()) {
             mIds.add(appt.getId());
         }
-        mResults.put(makeKey(result.getStart(), result.getEnd(), result.getFolderId()), result);
+        mResults.put(makeKey(result.getStart(), result.getEnd(), result.getFolderId(), timezone), result);
     }
 
-    public synchronized ZApptSummaryResult get(long start, long end, String folderId) {
-        ZApptSummaryResult result = mResults.get(makeKey(start, end, folderId));
+    public synchronized ZApptSummaryResult get(long start, long end, String folderId, TimeZone timezone) {
+        ZApptSummaryResult result = mResults.get(makeKey(start, end, folderId, timezone));
         if (result == null && (end-start) < MSECS_PER_MONTH_GRID) {
             // let's see if results might potentially be contained within another result
             for (ZApptSummaryResult cached : mResults.values()) {
