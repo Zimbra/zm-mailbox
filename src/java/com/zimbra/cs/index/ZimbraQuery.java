@@ -1574,15 +1574,8 @@ public final class ZimbraQuery {
     private AbstractList mClauses;
     private ParseTree.Node mParseTree = null;
     private QueryOperation mOp;
-    //private byte[] mTypes;
-//    private SortBy mSearchOrder;
-//    private int mChunkSize;
     private Mailbox mMbox;
     private ZimbraQueryResults mResults;
-//    private boolean mPrefetch;
-//    private Mailbox.SearchResultMode mMode;
-//    private java.util.TimeZone mTimeZone;
-//    private Locale mLocale;
     private SearchParams mParams;
     private int mChunkSize;
 
@@ -1665,7 +1658,7 @@ public final class ZimbraQuery {
         private static final int STATE_AND    = 1; 
         private static final int STATE_OR     = 2;
 
-        private static final boolean SPEW = false;
+        private static final boolean SPEW = true;
 
         public static abstract class Node {
             boolean mTruthFlag = true;
@@ -1985,11 +1978,6 @@ public final class ZimbraQuery {
         else 
             mChunkSize = (int)chunkSize;
         
-//        mPrefetch = prefetch;
-//        mMode = mode;
-//        mTimeZone = tz;
-//        mLocale = locale;
-
         //
         // Step 1: parse the text using the JavaCC parser
         ZimbraQueryParser parser = new ZimbraQueryParser(new StringReader(mParams.getQueryStr()));
@@ -2017,9 +2005,6 @@ public final class ZimbraQuery {
         // 
         // Store some variables that we'll need later
         mParseTree = pt;
-//        mSearchOrder = searchOrder;
-//        mTypes = types;
-//        mChunkSize = chunkSize;
         mOp = null;
 
         //

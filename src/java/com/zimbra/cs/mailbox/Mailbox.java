@@ -2751,7 +2751,6 @@ public class Mailbox {
         boolean includeTrash = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeTrashInSearch, false);
         boolean includeSpam = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
 
-        //queryString, tz, locale, this, types, sortBy, includeTrash, includeSpam, chunkSize, prefetch, mode);
         ZimbraQuery zq = new ZimbraQuery(this, params, includeTrash, includeSpam);
         try {
             zq.executeRemoteOps(proto, octxt);

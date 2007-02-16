@@ -27,6 +27,13 @@ package com.zimbra.cs.db;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A single superclass for both AND and OR nodes in a tree of search constraints
+ * 
+ * This class is only used for testing and can probably go away: it has been
+ * subsumed by cs.index.DbAndNode and cs.index.DbOrNode
+ * 
+ */
 public class DbSearchConstraintsInnerNode implements DbSearchConstraintsNode {
 	
 	private NodeType mNodeType;

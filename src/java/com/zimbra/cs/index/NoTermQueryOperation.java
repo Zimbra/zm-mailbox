@@ -55,10 +55,6 @@ public class NoTermQueryOperation extends QueryOperation {
         super();
     }
     
-    int getOpType() {
-        return OP_TYPE_NO_TERM;
-    }
-
     protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res,
             MailboxIndex mbidx, SearchParams params, int chunkSize) throws IOException, ServiceException {
         mParams = params;

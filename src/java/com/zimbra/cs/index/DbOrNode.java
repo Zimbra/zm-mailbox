@@ -74,10 +74,11 @@ class DbOrNode implements IConstraints {
 
    public IConstraints orIConstraints(IConstraints other) {
 	   if (other.getNodeType() == NodeType.OR) {
-		   for (IConstraints n : ((DbOrNode)other).mSubNodes) 
-			   mSubNodes.add(n);
+	       // add all of the other node's subnodes to our list of subnodes
+	       for (IConstraints n : ((DbOrNode)other).mSubNodes) 
+	           mSubNodes.add(n);
 	   } else {
-		   mSubNodes.add(other);
+	       mSubNodes.add(other);
 	   }
 	   return this;
    }

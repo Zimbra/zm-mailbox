@@ -36,7 +36,20 @@ import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.util.ItemId;
 
 class DbLeafNode extends DbSearchConstraints implements IConstraints {
+    
+    /**
+     * Set by the forceHasSpamTrashSetting() API
+     * 
+     * True if we have a SETTING pertaining to Spam/Trash.  This doesn't 
+     * necessarily mean we actually have "in trash" or something, it just 
+     * means that we've got something set which means we shouldn't add 
+     * the default "not in:trash and not in:junk" thing.
+     */
+    protected boolean mHasSpamTrashSetting = false;
 
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.db.DbSearchConstraints#clone()
+     */
     public Object clone() throws CloneNotSupportedException {
         DbLeafNode toRet = (DbLeafNode)super.clone();
 
@@ -46,6 +59,9 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         return toRet;
     }
 
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.index.IConstraints#ensureSpamTrashSetting(com.zimbra.cs.mailbox.Mailbox, java.util.List)
+     */
     public void ensureSpamTrashSetting(Mailbox mbox, List<Folder> trashSpamFolders) throws ServiceException
     {
         if (!mHasSpamTrashSetting) {
@@ -56,6 +72,9 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         }
     }
 
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.index.IConstraints#andIConstraints(com.zimbra.cs.index.IConstraints)
+     */
     public IConstraints andIConstraints(IConstraints other) 
     {
         switch(other.getNodeType()) {
@@ -77,6 +96,9 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         return null;
     }
 
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.index.IConstraints#orIConstraints(com.zimbra.cs.index.IConstraints)
+     */
     public IConstraints orIConstraints(IConstraints other)
     {
         if (other.getNodeType() == NodeType.OR) {
@@ -89,23 +111,64 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         }
     }
 
-
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.index.IConstraints#hasSpamTrashSetting()
+     */
     public boolean hasSpamTrashSetting() {
         return mHasSpamTrashSetting;
     }
+    
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.index.IConstraints#forceHasSpamTrashSetting()
+     */
     public void forceHasSpamTrashSetting() {
         mHasSpamTrashSetting = true;
     }
 
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.index.IConstraints#hasNoResults()
+     */
     public boolean hasNoResults() {
         return noResults;
     }
 
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.index.IConstraints#tryDbFirst(com.zimbra.cs.mailbox.Mailbox)
+     */
     public boolean tryDbFirst(Mailbox mbox) {
         return (convId != 0 || (tags != null && tags.contains(mbox.mUnreadFlag))); 
     }
+    
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.index.IConstraints#setTypes(java.util.Set)
+     */
+    public void setTypes(Set<Byte> _types) {
+        this.types = _types;
+    }
+
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.index.IConstraints#toQueryString()
+     */
+    public String toQueryString() {
+        if (noResults)
+            return "-is:anywhere";
+
+        return toString();
+    }
+
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.db.DbSearchConstraints#toString()
+     */
+    public String toString()
+    {
+        return super.toString();
+    }
 
 
+    /**
+     * @param itemId
+     * @param truth
+     */
     void addItemIdClause(Integer itemId, boolean truth) {
         if (truth) {
             if (!itemIds.contains(itemId)) {
@@ -339,31 +402,4 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
             excludeTags.add(tag);
         }
     }
-
-
-    public void setTypes(Set<Byte> _types) {
-        this.types = _types;
-    }
-
-    public String toQueryString() {
-        if (noResults)
-            return "-is:anywhere";
-
-        return toString();
-    }
-
-
-    public String toString()
-    {
-        return super.toString();
-    }
-
-    /**
-     * true if we have a SETTING pertaining to Spam/Trash.  This doesn't 
-     * necessarily mean we actually have "in trash" or something, it just 
-     * means that we've got something set which means we shouldn't add 
-     * the default "not in:trash and not in:junk" thing.
-     */
-    protected boolean mHasSpamTrashSetting = false;
-
 }

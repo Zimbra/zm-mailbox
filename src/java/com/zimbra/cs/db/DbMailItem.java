@@ -49,8 +49,9 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbSearchConstraints.NumericRange;
+import com.zimbra.cs.db.DbSearchConstraints.StringRange;
 import com.zimbra.cs.imap.ImapMessage;
-import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
@@ -91,8 +92,14 @@ public class DbMailItem {
     public static final int MAX_SENDER_LENGTH = 128;
     public static final int MAX_TEXT_LENGTH   = 65534;
 
-    public static final String IN_THIS_MAILBOX_AND = (!DebugConfig.disableMailboxGroup ? "mailbox_id = ? AND " : "");
-
+    public static final String IN_THIS_MAILBOX_AND = "mailbox_id = ? AND ";
+    
+    public static final String getInThisMailboxAnd(int mboxId, String miAlias, String apAlias) {
+        StringBuilder sb = new StringBuilder(miAlias).append(".mailbox_id = ").append(mboxId).append(" AND ");
+        if (apAlias != null) 
+            sb.append(apAlias).append(".mailbox_id = ").append(mboxId).append(" AND ");
+        return sb.toString();
+    }
 
     public static void create(Mailbox mbox, UnderlyingData data) throws ServiceException {
         if (data == null || data.id <= 0 || data.folderId <= 0 || data.parentId == 0 || data.indexId == 0)
@@ -104,14 +111,13 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("INSERT INTO " + getMailItemTableName(mbox) +
-                        "(" + (!DebugConfig.disableMailboxGroup ? "mailbox_id, " : "") +
+                        "(" + "mailbox_id, " +
                         " id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest," +
                         " unread, flags, tags, sender, subject, name, metadata, mod_metadata, change_date, mod_content) " +
-                        "VALUES (" + (!DebugConfig.disableMailboxGroup ? "?," : "") +
+                        "VALUES (" + "?," +
                         " ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, data.id);
             stmt.setByte(pos++, data.type);
             if (data.parentId <= 0)
@@ -185,8 +191,7 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT COUNT(*) FROM " + getMailItemTableName(mbox) +
                     " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND id <> ? AND " + Db.equalsSTRING("name"));
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, folderId);
             stmt.setInt(pos++, modifiedItemId);
             stmt.setString(pos++, name.toUpperCase());
@@ -214,17 +219,16 @@ public class DbMailItem {
         try {
             String table = getMailItemTableName(mbox);
             stmt = conn.prepareStatement("INSERT INTO " + table +
-                        "(" + (!DebugConfig.disableMailboxGroup ? "mailbox_id, " : "") +
+                        "(" + "mailbox_id, " +
                         " id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest," +
                         " unread, flags, tags, sender, subject, name, metadata, mod_metadata, change_date, mod_content) " +
-                        "(SELECT " + (!DebugConfig.disableMailboxGroup ? "?, " : "") +
+                        "(SELECT " + "?, " +
                         " ?, type, ?, ?, ?, ?, date, size, ?, blob_digest, unread," +
                         " flags, tags, sender, subject, name, ?, ?, ?, ? FROM " + table +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?)");
             int mboxId = mbox.getId();
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mboxId);
+            stmt.setInt(pos++, mboxId);
             stmt.setInt(pos++, id);                            // ID
             if (parentId <= 0)
                 stmt.setNull(pos++, Types.INTEGER);            // PARENT_ID null for messages in virtual convs
@@ -241,8 +245,7 @@ public class DbMailItem {
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_METADATA
             stmt.setInt(pos++, mbox.getOperationTimestamp());  // CHANGE_DATE
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_CONTENT
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mboxId);
+            stmt.setInt(pos++, mboxId);
             stmt.setInt(pos++, item.getId());
             int num = stmt.executeUpdate();
             if (num != 1)
@@ -271,16 +274,15 @@ public class DbMailItem {
             String table = getMailItemTableName(mbox);
             String flags = shared ? "flags | " + Flag.BITMASK_COPIED : "flags";
             stmt = conn.prepareStatement("INSERT INTO " + table +
-                        "(" + (!DebugConfig.disableMailboxGroup ? "mailbox_id, " : "") +
+                        "(" + "mailbox_id, " +
                         " id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest," +
                         " unread, flags, tags, sender, subject, name, metadata, mod_metadata, change_date, mod_content) " +
-                        "(SELECT " + (!DebugConfig.disableMailboxGroup ? "?, " : "") +
+                        "(SELECT " + "?, " +
                         " ?, type, parent_id, ?, ?, ?, date, size, ?, blob_digest," +
                         " unread, " + flags + ", tags, sender, subject, name, metadata, ?, ?, ? FROM " + table +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?)");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, data.id);                       // ID
             stmt.setInt(pos++, data.folderId);                 // FOLDER_ID
             stmt.setInt(pos++, data.indexId);                  // INDEX_ID
@@ -292,8 +294,7 @@ public class DbMailItem {
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_METADATA
             stmt.setInt(pos++, mbox.getOperationTimestamp());  // CHANGE_DATE
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_CONTENT
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, source.getId());
             int num = stmt.executeUpdate();
             if (num != 1)
@@ -312,8 +313,7 @@ public class DbMailItem {
                 pos = 1;
                 stmt.setInt(pos++, mbox.getOperationChangeID());
                 stmt.setInt(pos++, mbox.getOperationTimestamp());
-                if (!DebugConfig.disableMailboxGroup)
-                    stmt.setInt(pos++, mbox.getId());
+                stmt.setInt(pos++, mbox.getId());
                 stmt.setInt(pos++, source.getId());
                 stmt.executeUpdate();
                 stmt.close();
@@ -340,8 +340,7 @@ public class DbMailItem {
                         " SET type = ? WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setInt(pos++, type);
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, item.getMailboxId());
+            stmt.setInt(pos++, item.getMailboxId());
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -380,8 +379,7 @@ public class DbMailItem {
             stmt.setInt(attr++, folder.getId());
             stmt.setInt(attr++, mbox.getOperationChangeID());
             stmt.setInt(attr++, mbox.getOperationTimestamp());
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(attr++, mbox.getId());
+            stmt.setInt(attr++, mbox.getId());
             stmt.setInt(attr++, item instanceof VirtualConversation ? ((VirtualConversation) item).getMessageId() : item.getId());
             stmt.setInt(attr++, folder.getId());
             stmt.executeUpdate();
@@ -411,13 +409,12 @@ public class DbMailItem {
                         " WHERE mi.id IN " + DbUtil.suitableNumberOfVariables(itemIDs) +
                         " AND m2.folder_id = ? AND mi.id <> m2.id" +
                         " AND " + (Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON) ? "UPPER(mi.name) = UPPER(m2.name)" : "mi.name = m2.name") +
-                        (!DebugConfig.disableMailboxGroup ? " AND mi.mailbox_id = ? AND m2.mailbox_id = mi.mailbox_id" : ""));
+                        " AND mi.mailbox_id = ? AND m2.mailbox_id = mi.mailbox_id");
                 int pos = 1;
                 for (int id : itemIDs)
                     stmt.setInt(pos++, id);
                 stmt.setInt(pos++, folder.getId());
-                if (!DebugConfig.disableMailboxGroup)
-                    stmt.setInt(pos++, mbox.getId());
+                stmt.setInt(pos++, mbox.getId());
                 rs = stmt.executeQuery();
                 if (rs.next())
                     throw MailServiceException.ALREADY_EXISTS(rs.getString(1));
@@ -433,8 +430,7 @@ public class DbMailItem {
             stmt.setInt(pos++, folder.getId());
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             for (int id : itemIDs)
                 stmt.setInt(pos++, id);
             stmt.executeUpdate();
@@ -472,8 +468,7 @@ public class DbMailItem {
                 stmt.setInt(arg++, parent.getId());
             stmt.setInt(arg++, mbox.getOperationChangeID());
             stmt.setInt(arg++, mbox.getOperationTimestamp());
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(arg++, mbox.getId());
+            stmt.setInt(arg++, mbox.getId());
             for (int i = 0; i < children.length; i++)
                 stmt.setInt(arg++, children[i].getId());
             stmt.executeUpdate();
@@ -506,8 +501,7 @@ public class DbMailItem {
                 stmt.setInt(pos++, newParent.getId());
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, oldParent instanceof VirtualConversation ? ((VirtualConversation) oldParent).getMessageId() : oldParent.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -533,8 +527,7 @@ public class DbMailItem {
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             stmt.setInt(pos++, item.getSavedSequence());
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -560,7 +553,6 @@ public class DbMailItem {
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             stmt.setInt(pos++, item.getSavedSequence());
-            if (!DebugConfig.disableMailboxGroup)
                 stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
@@ -588,8 +580,7 @@ public class DbMailItem {
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             stmt.setInt(pos++, mbox.getOperationChangeID());
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, note.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -620,8 +611,7 @@ public class DbMailItem {
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             stmt.setInt(pos++, mbox.getOperationChangeID());
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -680,8 +670,7 @@ public class DbMailItem {
                 stmt.setShort(pos++, item.getVolumeId());
             else
                 stmt.setNull(pos++, Types.TINYINT);
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
 
@@ -707,12 +696,11 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("INSERT INTO " + getConversationTableName(item) +
-                        "(" + (!DebugConfig.disableMailboxGroup ? "mailbox_id, " : "") + "hash, conv_id)" +
-                        " VALUES (" + (!DebugConfig.disableMailboxGroup ? "?, " : "") + "?, ?)" +
+                        "(" + ("mailbox_id, ") + "hash, conv_id)" +
+                        " VALUES (" + ("?, ") + "?, ?)" +
                         (Db.supports(Db.Capability.ON_DUPLICATE_KEY) ? " ON DUPLICATE KEY UPDATE conv_id = ?" : ""));
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, item.getMailboxId());
+            stmt.setInt(pos++, item.getMailboxId());
             stmt.setString(pos++, hash);
             stmt.setInt(pos++, item.getId());
             if (Db.supports(Db.Capability.ON_DUPLICATE_KEY))
@@ -727,8 +715,7 @@ public class DbMailItem {
                             " SET conv_id = ? WHERE " + IN_THIS_MAILBOX_AND + "hash = ?");
                     int pos = 1;
                     stmt.setInt(pos++, item.getId());
-                    if (!DebugConfig.disableMailboxGroup)
-                        stmt.setInt(pos++, item.getMailboxId());
+                    stmt.setInt(pos++, item.getMailboxId());
                     stmt.setString(pos++, hash);
                     stmt.executeUpdate();
                 } catch (SQLException nested) {
@@ -749,8 +736,7 @@ public class DbMailItem {
             stmt = conn.prepareStatement("DELETE FROM " + getConversationTableName(item) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "hash = ? AND conv_id = ?");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, item.getMailboxId());
+            stmt.setInt(pos++, item.getMailboxId());
             stmt.setString(pos++, hash);
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
@@ -769,8 +755,7 @@ public class DbMailItem {
                         " SET conv_id = ? WHERE " + IN_THIS_MAILBOX_AND + "hash = ? AND conv_id = ?");
             int pos = 1;
             stmt.setInt(pos++, newTargetId);
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, oldTarget.getMailboxId());
+            stmt.setInt(pos++, oldTarget.getMailboxId());
             stmt.setString(pos++, hash);
             stmt.setInt(pos++, oldTarget.getId());
             stmt.executeUpdate();
@@ -791,8 +776,7 @@ public class DbMailItem {
                         " SET imap_id = ? WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setInt(pos++, item.getImapUid());
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -831,8 +815,7 @@ public class DbMailItem {
             stmt.setLong(pos++, tag.getBitmask());
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setLong(pos++, tag.getBitmask());
             if (item instanceof Tag)
                 stmt.setLong(pos++, ((Tag) item).getBitmask());
@@ -878,8 +861,7 @@ public class DbMailItem {
             stmt.setLong(pos++, tag.getBitmask());
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setLong(pos++, tag.getBitmask());
             for (int id : itemIDs)
                 stmt.setInt(pos++, id);
@@ -914,8 +896,7 @@ public class DbMailItem {
             stmt.setLong(pos++, tag.getBitmask());
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setLong(pos++, tag.getBitmask());
             stmt.executeUpdate();
 
@@ -957,8 +938,7 @@ public class DbMailItem {
             stmt.setInt(pos++, unread ? 1 : 0);
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, unread ? 0 : 1);
             if (item instanceof Tag)
                 stmt.setLong(pos++, ((Tag) item).getBitmask());
@@ -989,8 +969,7 @@ public class DbMailItem {
             stmt.setInt(pos++, unread ? 1 : 0);
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, unread ? 0 : 1);
             for (int id : itemIDs)
                 stmt.setInt(pos++, id);
@@ -1025,13 +1004,11 @@ public class DbMailItem {
                             " SET size = size - count, metadata = NULL, mod_metadata = ?, change_date = ?" +
                             " WHERE " + IN_THIS_MAILBOX_AND + "id = pid AND type = " + MailItem.TYPE_CONVERSATION);
                 int pos = 1;
-                if (!DebugConfig.disableMailboxGroup)
-                    stmt.setInt(pos++, mbox.getId());
+                stmt.setInt(pos++, mbox.getId());
                 stmt.setInt(pos++, folder.getId());
                 stmt.setInt(pos++, mbox.getOperationChangeID());
                 stmt.setInt(pos++, mbox.getOperationTimestamp());
-                if (!DebugConfig.disableMailboxGroup)
-                    stmt.setInt(pos++, mbox.getId());
+                stmt.setInt(pos++, mbox.getId());
                 stmt.executeUpdate();
                 stmt.close();
             } else {
@@ -1039,8 +1016,7 @@ public class DbMailItem {
                         " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND parent_id IS NOT NULL" +
                         " GROUP BY parent_id");
                 int pos = 1;
-                if (!DebugConfig.disableMailboxGroup)
-                    stmt.setInt(pos++, mbox.getId());
+                stmt.setInt(pos++, mbox.getId());
                 stmt.setInt(pos++, folder.getId());
                 rs = stmt.executeQuery();
                 Map<Integer, List<Integer>> counts = new HashMap<Integer, List<Integer>>();
@@ -1063,8 +1039,7 @@ public class DbMailItem {
                     stmt.setInt(pos++, update.getKey());
                     stmt.setInt(pos++, mbox.getOperationChangeID());
                     stmt.setInt(pos++, mbox.getOperationTimestamp());
-                    if (!DebugConfig.disableMailboxGroup)
-                        stmt.setInt(pos++, mbox.getId());
+                    stmt.setInt(pos++, mbox.getId());
                     for (int convId : update.getValue())
                         stmt.setInt(pos++, convId);
                     stmt.executeUpdate();
@@ -1109,14 +1084,12 @@ public class DbMailItem {
                                 " SET size = size - count, metadata = NULL, mod_metadata = ?, change_date = ?" +
                                 " WHERE " + IN_THIS_MAILBOX_AND + "id = pid AND type = " + MailItem.TYPE_CONVERSATION);
                     int attr = 1;
-                    if (!DebugConfig.disableMailboxGroup)
-                        stmt.setInt(attr++, mbox.getId());
+                    stmt.setInt(attr++, mbox.getId());
                     for (int index = i; index < i + count; index++)
                         stmt.setInt(attr++, ids.get(index));
                     stmt.setInt(attr++, mbox.getOperationChangeID());
                     stmt.setInt(attr++, mbox.getOperationTimestamp());
-                    if (!DebugConfig.disableMailboxGroup)
-                        stmt.setInt(attr++, mbox.getId());
+                    stmt.setInt(attr++, mbox.getId());
                     stmt.executeUpdate();
                     stmt.close();
                 }
@@ -1125,8 +1098,7 @@ public class DbMailItem {
                         " WHERE " + IN_THIS_MAILBOX_AND + "id IN" + DbUtil.suitableNumberOfVariables(ids) + "AND parent_id IS NOT NULL" +
                         " GROUP BY parent_id");
                 int pos = 1;
-                if (!DebugConfig.disableMailboxGroup)
-                    stmt.setInt(pos++, mbox.getId());
+                stmt.setInt(pos++, mbox.getId());
                 for (int id : ids)
                     stmt.setInt(pos++, id);
                 rs = stmt.executeQuery();
@@ -1150,8 +1122,7 @@ public class DbMailItem {
                     stmt.setInt(pos++, update.getKey());
                     stmt.setInt(pos++, mbox.getOperationChangeID());
                     stmt.setInt(pos++, mbox.getOperationTimestamp());
-                    if (!DebugConfig.disableMailboxGroup)
-                        stmt.setInt(pos++, mbox.getId());
+                    stmt.setInt(pos++, mbox.getId());
                     for (int convId : update.getValue())
                         stmt.setInt(pos++, convId);
                     stmt.executeUpdate();
@@ -1181,8 +1152,7 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT id FROM " + getMailItemTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id IN" + DbUtil.suitableNumberOfVariables(candidates) + "AND size <= 0");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             for (int candidate : candidates)
                 stmt.setInt(pos++, candidate);
             rs = stmt.executeQuery();
@@ -1236,8 +1206,7 @@ public class DbMailItem {
                 stmt = conn.prepareStatement("DELETE FROM " + getMailItemTableName(mbox) +
                             " WHERE " + IN_THIS_MAILBOX_AND + "id IN" + DbUtil.suitableNumberOfVariables(count));
                 int pos = 1;
-                if (!DebugConfig.disableMailboxGroup)
-                    stmt.setInt(pos++, mbox.getId());
+                stmt.setInt(pos++, mbox.getId());
                 for (int index = i; index < i + count; index++)
                     stmt.setInt(pos++, targets.get(index));
                 stmt.executeUpdate();
@@ -1264,8 +1233,7 @@ public class DbMailItem {
             stmt = conn.prepareStatement("DELETE FROM " + getMailItemTableName(item) +
                         " WHERE " + IN_THIS_MAILBOX_AND + target + " AND type NOT IN " + FOLDER_TYPES);
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, item instanceof VirtualConversation ? ((VirtualConversation) item).getMessageId() : item.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -1306,11 +1274,10 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("INSERT INTO " + getTombstoneTableName(mbox) +
-                        "(" + (!DebugConfig.disableMailboxGroup ? "mailbox_id, " : "") + "sequence, date, type, ids)" +
-                        " VALUES (" + (!DebugConfig.disableMailboxGroup ? "?, " : "") + "?, ?, ?, ?)");
+                        "(" + ("mailbox_id, ") + "sequence, date, type, ids)" +
+                        " VALUES (" + ("?, ") + "?, ?, ?, ?)");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             stmt.setByte(pos++, type);
@@ -1335,8 +1302,7 @@ public class DbMailItem {
                         " WHERE " + IN_THIS_MAILBOX_AND + "sequence > ? AND ids IS NOT NULL" +
                         " ORDER BY sequence");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setLong(pos++, lastSync);
             rs = stmt.executeQuery();
             while (rs.next()) {
@@ -1477,8 +1443,7 @@ public class DbMailItem {
 
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS + " FROM " + table +
                         " WHERE " + IN_THIS_MAILBOX_AND + "type IN " + FOLDER_AND_TAG_TYPES);
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(1, mbox.getId());
+            stmt.setInt(1, mbox.getId());
             rs = stmt.executeQuery();
             while (rs.next()) {
                 UnderlyingData data = constructItem(rs);
@@ -1509,8 +1474,7 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT folder_id, type, tags, COUNT(*), SUM(unread), " + totalSize +
                         " FROM " + table + " WHERE " + IN_THIS_MAILBOX_AND + "type NOT IN " + NON_SEARCHABLE_TYPES +
                         " GROUP BY folder_id, type, tags");
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(1, mbox.getId());
+            stmt.setInt(1, mbox.getId());
             rs = stmt.executeQuery();
             while (rs.next()) {
                 byte type  = rs.getByte(2);
@@ -1562,8 +1526,7 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                     " FROM " + getMailItemTableName(mbox, " mi") +
                     " WHERE " + IN_THIS_MAILBOX_AND + "type IN " + typeConstraint(type) + sortQuery(sort));
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(1, mbox.getId());
+            stmt.setInt(1, mbox.getId());
             rs = stmt.executeQuery();
             while (rs.next())
                 result.add(constructItem(rs));
@@ -1595,8 +1558,7 @@ public class DbMailItem {
                     " FROM " + getMailItemTableName(parent.getMailbox(), " mi") +
                     " WHERE " + IN_THIS_MAILBOX_AND + "parent_id = ? " + sortQuery(sort));
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, parent.getId());
             rs = stmt.executeQuery();
 
@@ -1635,8 +1597,7 @@ public class DbMailItem {
                         " FROM " + getMailItemTableName(relativeTo.getMailbox(), " mi") +
                         " WHERE " + IN_THIS_MAILBOX_AND + "unread > 0 AND " + relation + " AND type NOT IN " + NON_SEARCHABLE_TYPES);
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             if (relativeTo instanceof Tag)
                 stmt.setLong(pos++, ((Tag) relativeTo).getBitmask());
             else if (relativeTo instanceof VirtualConversation)
@@ -1675,8 +1636,7 @@ public class DbMailItem {
                         " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type IN " + typeConstraint(type) +
                         sortQuery(sort));
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, folder.getId());
             rs = stmt.executeQuery();
 
@@ -1703,8 +1663,7 @@ public class DbMailItem {
                         " FROM " + getMailItemTableName(mbox, "mi") +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, id);
             rs = stmt.executeQuery();
 
@@ -1733,8 +1692,7 @@ public class DbMailItem {
                         " FROM " + getMailItemTableName(mbox, "mi") +
                         " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND imap_id = ?");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, folderId);
             stmt.setInt(pos++, imapId);
             rs = stmt.executeQuery();
@@ -1773,8 +1731,7 @@ public class DbMailItem {
                             " FROM " + getMailItemTableName(mbox, "mi") +
                             " WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(count));
                 int pos = 1;
-                if (!DebugConfig.disableMailboxGroup)
-                    stmt.setInt(pos++, mbox.getId());
+                stmt.setInt(pos++, mbox.getId());
                 for (int index = i; index < i + count; index++)
                     stmt.setInt(pos++, it.next());
 
@@ -1815,8 +1772,7 @@ public class DbMailItem {
                         " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type IN " + typeConstraint(type) +
                         " AND " + Db.equalsSTRING("name"));
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, folderId);
             stmt.setString(pos++, name.toUpperCase());
             rs = stmt.executeQuery();
@@ -1845,11 +1801,10 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                         " FROM " + getMailItemTableName(mbox, "mi") + ", " + getConversationTableName(mbox, "oc") +
                         " WHERE oc.hash = ? AND mi.id = oc.conv_id" +
-                        (!DebugConfig.disableMailboxGroup ? " AND oc.mailbox_id = ? AND mi.mailbox_id = oc.mailbox_id" : ""));
+                        (" AND oc.mailbox_id = ? AND mi.mailbox_id = oc.mailbox_id"));
             int pos = 1;
             stmt.setString(pos++, hash);
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             rs = stmt.executeQuery();
 
             if (!rs.next())
@@ -1891,8 +1846,7 @@ public class DbMailItem {
                         " WHERE " + IN_THIS_MAILBOX_AND + "mod_metadata > ? AND " + typeConstraint +
                         " ORDER BY mod_metadata, id");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setLong(pos++, lastSync);
             rs = stmt.executeQuery();
 
@@ -1935,8 +1889,7 @@ public class DbMailItem {
                         " WHERE " + IN_THIS_MAILBOX_AND + "parent_id IN " + DbUtil.suitableNumberOfVariables(count) +
                         " ORDER BY parent_id");
                 int pos = 1;
-                if (!DebugConfig.disableMailboxGroup)
-                    stmt.setInt(pos++, mbox.getId());
+                stmt.setInt(pos++, mbox.getId());
                 for (int index = i; index < i + count; index++) {
                     UnderlyingData data = convData.get(index);
                     assert(data.type == MailItem.TYPE_CONVERSATION);
@@ -2029,8 +1982,7 @@ public class DbMailItem {
                         " FROM " + getMailItemTableName(folder) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type NOT IN " + FOLDER_TYPES);
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, folderId);
             rs = stmt.executeQuery();
 
@@ -2067,8 +2019,7 @@ public class DbMailItem {
                         " FROM " + getMailItemTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + constraint);
             int attr = 1;
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(attr++, mbox.getId());
+            stmt.setInt(attr++, mbox.getId());
             stmt.setInt(attr++, before);
             if (!globalMessages)
                 for (Folder folder : folders)
@@ -2175,8 +2126,7 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT index_id FROM " + getMailItemTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "index_id IN " + DbUtil.suitableNumberOfVariables(info.sharedIndex));
             int attr = 1;
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(attr++, mbox.getId());
+            stmt.setInt(attr++, mbox.getId());
             for (int id : info.sharedIndex)
                 stmt.setInt(attr++, id);
             rs = stmt.executeQuery();
@@ -2209,8 +2159,7 @@ public class DbMailItem {
                         " FROM " + getMailItemTableName(folder.getMailbox(), " mi") +
                         " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type IN " + IMAP_TYPES);
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, folder.getId());
             rs = stmt.executeQuery();
 
@@ -2243,8 +2192,7 @@ public class DbMailItem {
                         " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type IN " + POP3_TYPES +
                         " AND NOT " + Db.bitmaskAND("flags", Flag.BITMASK_DELETED));
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, folder.getId());
             rs = stmt.executeQuery();
 
@@ -2335,32 +2283,27 @@ public class DbMailItem {
         int mailboxId = mbox.getId();
         // Assemble the search query
         StringBuilder statement = new StringBuilder("SELECT count(*) ");
-        statement.append(" FROM " + getMailItemTableName(mbox, "mi"));
+        statement.append(" FROM " + getMailItemTableName(mbox, "AS mi"));
         statement.append(" WHERE ");
-        if (!DebugConfig.disableMailboxGroup)
-            statement.append("mailbox_id = ? AND ");
+        statement.append("mailbox_id = ? AND ");
+        int num = 1;
         
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            /*
-             * SELECT id,date FROM mail_item mi WHERE mi.acccount_id = ? AND type = ? AND tags & ? = ? AND flags & ? = ?
-             *    (AND folder_id [NOT] IN (?,?,?)) (AND date > ?) (AND date < ?) (AND mod_metadata > ?) (AND mod_metadata < ?)
-             *    ORDER BY date|subject|sender|name (DESC)? LIMIT ?, ?
-             */
-            encodeConstraint(mbox, node, statement, conn);
+            num += encodeConstraint(mbox, node, null, false, statement, conn);
 
             stmt = conn.prepareStatement(statement.toString());
             int param = 1;
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(param++, mailboxId);
-            param = setSearchVars(stmt, node, param++);
+            stmt.setInt(param++, mailboxId);
+            param = setSearchVars(stmt, node, param, null, false);
 
             // FIXME: include COLLATION for sender/subject sort
 
             if (sLog.isDebugEnabled())
                 sLog.debug("SQL: " + statement);
 
+            assert(param == num+1); 
             rs = stmt.executeQuery();
             rs.next();
             return rs.getInt(1);
@@ -2371,57 +2314,230 @@ public class DbMailItem {
             DbPool.closeStatement(stmt);
         }
     }
-
-    public static Collection<SearchResult> search(
-            Collection<SearchResult> result, Connection conn,
-            DbSearchConstraintsNode node, 
-            Mailbox mbox, byte sort, int offset, int limit,
-            SearchResult.ExtraData extra)
+    
+    private static final String encodeSelect(Mailbox mbox,
+        byte sort, SearchResult.ExtraData extra, boolean includeCalTable) {
+        /*
+         * "SELECT mi.id,mi.date, [extrafields] FROM mail_item AS mi [, appointment AS ap] 
+         */
+        StringBuilder select = new StringBuilder("SELECT mi.id, mi.index_id, mi.type, mi." + sortField(sort));
+        if (extra == SearchResult.ExtraData.MAIL_ITEM)
+            select.append(", " + DB_FIELDS);
+        else if (extra == SearchResult.ExtraData.IMAP_MSG)
+            select.append(", mi.imap_id, mi.unread, mi.flags, mi.tags");
+        
+        select.append(" FROM " + getMailItemTableName(mbox, "mi"));
+        if (includeCalTable) 
+            select.append(", ").append(getCalendarItemTableName(mbox, "ap"));
+        
+        return select.toString();
+    }
+    
+    /**
+     * @param where
+     * @param mbox
+     * @param includeCalTable
+     */
+    private static final void encodeWhere(StringBuilder where, Mailbox mbox, boolean includeCalTable) {
+        /*
+         *     WHERE mi.mailboxId=? [AND ap.mailboxId=? AND mi.id = ap.id ] AND "
+         */
+        where.append(" WHERE ");
+        where.append(getInThisMailboxAnd(mbox.getId(), "mi", includeCalTable ? "ap" : null));
+        if (includeCalTable)
+            where.append(" mi.id = ap.item_id AND ");
+    }
+    
+    /**
+     * @param mbox
+     * @param node
+     * @param calTypes
+     * @param inCalTable
+     * @param statement
+     * @param conn
+     * @return Number of constraints encoded 
+     * @throws ServiceException
+     */
+    private static final int encodeConstraint(Mailbox mbox, DbSearchConstraintsNode node,
+        byte[] calTypes, boolean inCalTable, StringBuilder statement, Connection conn) 
     throws ServiceException {
-        int mailboxId = mbox.getId();
-        boolean validLIMIT = offset >= 0 && limit >= 0;
+        /*
+         *( SUB-NODE AND/OR (SUB-NODE...) ) AND/OR ( SUB-NODE ) AND
+         *    ( 
+         *       one of: [type NOT IN (...)]  || [type = ?] || [type IN ( ...)]
+         *       [ AND tags != 0]
+         *       [ AND tags IN ( ... ) ]
+         *       [ AND flags IN (...) ] 
+         *       ..etc
+         *    )   
+         */
+        int num = 0;
+        DbSearchConstraintsNode.NodeType ntype = node.getNodeType();
+        if (ntype == DbSearchConstraintsNode.NodeType.AND || ntype == DbSearchConstraintsNode.NodeType.OR) {
+            boolean first = true;
+            boolean and = ntype == DbSearchConstraintsNode.NodeType.AND;
+            statement.append('(');
+            for (DbSearchConstraintsNode subnode : node.getSubNodes()) {
+                if (!first)
+                    statement.append(and ? " AND " : " OR ");
+                num += encodeConstraint(mbox, subnode, calTypes, inCalTable, statement, conn);
+                first = false;
+            }
+            statement.append(") ");
+            return num;
+        }
+        
+        // we're here, so we must be in a DbSearchConstraints leaf node
+        DbSearchConstraints c = node.getSearchConstraints();
+        assert(ntype == DbSearchConstraintsNode.NodeType.LEAF && c != null);
+        c.checkDates();
+        
+        // if there are no possible matches, short-circuit here...
+        if (c.automaticEmptySet()) {
+            encodeBooleanValue(statement, false); 
+            return num;
+        }
+        
+        statement.append('(');
 
+        // special-case this one, since there can't be a leading AND here...
+        if (ListUtil.isEmpty(c.types)) {
+            statement.append("type NOT IN " + NON_SEARCHABLE_TYPES);
+        } else {
+            statement.append("type IN ").append(DbUtil.suitableNumberOfVariables(c.types));
+            num += c.types.size();
+        }
+        
+        num += encode(statement, "mi.type", false, c.excludeTypes);
+        num += encode(statement, "mi.type", inCalTable, calTypes);
+
+        // Determine the set of matching tags
+        TagConstraints tc = TagConstraints.getTagContraints(mbox, c, conn);
+        if (tc.noMatches)
+            encodeBooleanValue(statement, false);
+
+        // if hasTags is NULL then nothing
+        // if hasTags is TRUE then !=0
+        // if hasTags is FALSE then = 0
+        if (c.hasTags != null) {
+            if (c.hasTags.booleanValue())
+                statement.append(" AND mi.tags != 0");
+            else
+                statement.append(" AND mi.tags = 0");
+        }
+        
+        num += encode(statement, "mi.tags", true, tc.searchTagsets);
+        num += encode(statement, "mi.flags", true, tc.searchFlagsets);
+        num += encode(statement, "unread", true, tc.unread);
+        num += encode(statement, "mi.folder_id", true, c.folders);
+        num += encode(statement, "mi.folder_id", false, c.excludeFolders);
+        if (c.convId > 0)
+            num += encode(statement, "mi.parent_id", true);
+        else
+            num += encode(statement, "mi.parent_id", false, c.prohibitedConvIds);
+        num += encode(statement, "mi.id", true, c.itemIds);
+        num += encode(statement, "mi.id", false, c.prohibitedItemIds);
+        num += encode(statement, "mi.index_id", true, c.indexIds);
+        num += encodeRangeWithMinimum(statement, "mi.date", c.dates, 1);
+        num += encodeRangeWithMinimum(statement, "mi.mod_metadata", c.modified, 1);
+        num += encodeRangeWithMinimum(statement, "mi.size", c.sizes, 0);
+        num += encodeRange(statement, "mi.subject", c.subjectRanges);
+        num += encodeRange(statement, "mi.sender", c.senderRanges);
+        
+        if (inCalTable) {
+            num += encodeRangeWithMinimum(statement, "ap.start_time", c.calStartDates, 1);
+            num += encodeRangeWithMinimum(statement, "ap.end_time", c.calEndDates, 1);
+        }
+
+        statement.append(')');
+        
+        return num;
+    }
+    
+    public static Collection<SearchResult> search(Collection<SearchResult> result, 
+        Connection conn, DbSearchConstraintsNode node, Mailbox mbox, 
+        byte sort, int offset, int limit, SearchResult.ExtraData extra) throws ServiceException {
+        
+        boolean validLIMIT = offset >= 0 && limit >= 0;
         PreparedStatement stmt = null;
         ResultSet rs = null;
+        StringBuilder statement = new StringBuilder();
+        int num = 0;
+        
+        /*
+         * SELECT id,date FROM mail_item mi WHERE mi.acccount_id = ? AND type = ? AND tags & ? = ? AND flags & ? = ?
+         *    (AND folder_id [NOT] IN (?,?,?)) (AND date > ?) (AND date < ?) (AND mod_metadata > ?) (AND mod_metadata < ?)
+         *    ORDER BY date|subject|sender|name (DESC)? LIMIT ?, ?
+         */
         try {
-            //          Assemble the search query
             /*
-             * SELECT id,date FROM mail_item mi WHERE mi.acccount_id = ? AND type = ? AND tags & ? = ? AND flags & ? = ?
-             *    (AND folder_id [NOT] IN (?,?,?)) (AND date > ?) (AND date < ?) (AND mod_metadata > ?) (AND mod_metadata < ?)
-             *    ORDER BY date|subject|sender|name (DESC)? LIMIT ?, ?
+             * "SELECT mi.id,mi.date, [extrafields] FROM mail_item AS mi [, appointment AS ap] 
              */
-            StringBuilder select = new StringBuilder("SELECT id, index_id, type, " + sortField(sort));
-            if (extra == SearchResult.ExtraData.MAIL_ITEM)
-                select.append(", " + DB_FIELDS);
-            else if (extra == SearchResult.ExtraData.IMAP_MSG)
-                select.append(", mi.imap_id, mi.unread, mi.flags, mi.tags");
+            statement.append(encodeSelect(mbox, sort, extra, false));
 
-            select.append(" FROM " + getMailItemTableName(mbox, "mi"));
-
-            StringBuilder where = new StringBuilder(" WHERE " + IN_THIS_MAILBOX_AND);
-
-            encodeConstraint(mbox, node, where, conn);
-            where.append(sortQuery(sort));
-            if (validLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE))
-                where.append(" LIMIT ?, ?");
-
-            String forceIndex = getForceIndexClause(node, sort, validLIMIT);
-            select.append(forceIndex).append(where);
-            stmt = conn.prepareStatement(select.toString());
+            /*
+             * FORCE INDEX
+             */
+            statement.append(getForceIndexClause(node, sort, validLIMIT));
+            
+            /*
+             *  WHERE mi.mailboxId=? [AND ap.mailboxId=? AND mi.id = ap.id ] AND "
+             */
+            encodeWhere(statement, mbox, false);
+            
+            /*
+             * Rest of constraints
+             */
+            num += encodeConstraint(mbox, node, null, false, statement, conn);
+            
+            //
+            // TODO FIXME: include COLLATION for sender/subject sort
+            //
+            
+            /*
+             * ORDER BY
+             */
+            statement.append(sortQuery(sort, "mi."));
+            
+            /*
+             * LIMIT 
+             */
+            if (validLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
+                statement.append(" LIMIT ?, ?");
+                num+=2; // two constraints added
+            }
+            
+            if (sLog.isDebugEnabled())
+                sLog.debug("SQL: ("+num+" parameters): "+statement.toString());
+            stmt = conn.prepareStatement(statement.toString());
             int param = 1;
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(param++, mailboxId);
-            param = setSearchVars(stmt, node, param++);
-//          FIXME: include COLLATION for sender/subject sort
+            
+            /*
+             * from encodeConstraints
+             */
+            param = setSearchVars(stmt, node, param, null, false);
+            
+            //
+            // TODO FIXME: include COLLATION for sender/subject sort
+            //
+            
+            /*
+             * LIMIT
+             */
             if (validLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
                 stmt.setInt(param++, offset);
                 stmt.setInt(param++, limit);
             }
 
-            if (sLog.isDebugEnabled())
-                sLog.debug("SQL: " + select);
-
+            /*
+             * EXECUTE!
+             */
+            assert(param == num+1);
             rs = stmt.executeQuery();
+            
+            /*
+             * Return results
+             */
             while (rs.next()) {
                 if (validLIMIT && !Db.supports(Db.Capability.LIMIT_CLAUSE)) {
                     if (offset-- > 0)
@@ -2440,168 +2556,260 @@ public class DbMailItem {
         }
     }
 
-
-    private static void encodeConstraint(
-            Mailbox mbox, DbSearchConstraintsNode node,
-            StringBuilder statement, Connection conn)
-    throws ServiceException {
-        DbSearchConstraintsNode.NodeType ntype = node.getNodeType();
-        if (ntype == DbSearchConstraintsNode.NodeType.AND || ntype == DbSearchConstraintsNode.NodeType.OR) {
-            boolean first = true, and = ntype == DbSearchConstraintsNode.NodeType.AND;
-            statement.append('(');
-            for (DbSearchConstraintsNode subnode : node.getSubNodes()) {
-                if (!first)
-                    statement.append(and ? " AND " : " OR ");
-                encodeConstraint(mbox, subnode, statement, conn);
-                first = false;
+    private static final int setBytes(PreparedStatement stmt, int param, byte[] c) throws SQLException {
+        if (c != null && c.length > 0) {
+            for (byte b: c)
+                stmt.setByte(param++, b);
+        }
+        return param;
+    }
+    private static final int setBytes(PreparedStatement stmt, int param, Collection<Byte> c) throws SQLException {
+        if (!ListUtil.isEmpty(c)) {
+            for (byte b: c)
+                stmt.setByte(param++, b);
+        }
+        return param;
+    }
+    private static final int setIntegers(PreparedStatement stmt, int param, Collection<Integer> c) throws SQLException {
+        if (!ListUtil.isEmpty(c)) {
+            for (int i: c)
+                stmt.setInt(param++, i);
+        }
+        return param;
+    }
+    private static final int setDateRange(PreparedStatement stmt, int param, Collection<NumericRange> c) throws SQLException {
+        if (!ListUtil.isEmpty(c)) {
+            for (NumericRange date : c) { 
+                if (date.lowest > 0)
+                    stmt.setInt(param++, (int) Math.min(date.lowest / 1000, Integer.MAX_VALUE)); 
+                if (date.highest > 0)
+                    stmt.setInt(param++, (int) Math.min(date.highest / 1000, Integer.MAX_VALUE));
             }
-            statement.append(')');
-            return;
         }
-
-        // we're here, so we must be in a DbSearchConstraints leaf node
-        DbSearchConstraints c = node.getSearchConstraints();
-        assert(ntype == DbSearchConstraintsNode.NodeType.LEAF && c != null);
-        c.checkDates();
-
-        // if there are no possible matches, short-circuit here...
-        if (c.automaticEmptySet()) {
-            statement.append(Db.supports(Db.Capability.BOOLEAN_DATATYPE) ? " FALSE" : " 0=1");
-            return;
+        return param;
+    }
+    private static final int setTimestampRange(PreparedStatement stmt, int param, Collection<NumericRange> c) throws SQLException {
+        if (!ListUtil.isEmpty(c)) {
+            for (NumericRange date : c) { 
+                if (date.lowest > 0)
+                    stmt.setTimestamp(param++, new Timestamp(date.lowest));
+                if (date.highest > 0)
+                    stmt.setTimestamp(param++, new Timestamp(date.highest));
+            }
         }
-
-        statement.append('(');
-
-        if (ListUtil.isEmpty(c.types)) {
-            statement.append("type NOT IN " + NON_SEARCHABLE_TYPES);
+        return param;
+    }
+    private static final int setLongRangeWithMinimum(PreparedStatement stmt, int param, Collection<NumericRange> c, int minimum) throws SQLException {
+        if (!ListUtil.isEmpty(c)) {
+            for (NumericRange r: c) { 
+                if (r.lowest > minimum)
+                    stmt.setLong(param++, r.lowest);
+                if (r.highest > minimum)
+                    stmt.setLong(param++, r.highest);
+            }
+        }
+        return param;
+    }
+    private static final int setIntRangeWithMinimum(PreparedStatement stmt, int param, Collection<NumericRange> c, int minimum) throws SQLException {
+        if (!ListUtil.isEmpty(c)) {
+            for (NumericRange r: c) { 
+                if (r.lowest > minimum)
+                    stmt.setInt(param++, (int)r.lowest);
+                if (r.highest > minimum)
+                    stmt.setInt(param++, (int)r.highest);
+            }
+        }
+        return param;
+    }
+    private static final int setStringRange(PreparedStatement stmt, int param, Collection<StringRange> c) throws SQLException {
+        if (!ListUtil.isEmpty(c)) {
+            for (StringRange r: c) { 
+                if (r.lowest != null) 
+                    stmt.setString(param++, r.lowest);
+                if (r.highest != null)
+                    stmt.setString(param++, r.highest);
+            }
+        }
+        return param;
+    }
+    private static final int setLongs(PreparedStatement stmt, int param, Collection<Long> c) throws SQLException {
+        if (!ListUtil.isEmpty(c)) {
+            for (long l: c)
+                stmt.setLong(param++, l);
+        }
+        return param;
+    }
+    private static final int setFolders(PreparedStatement stmt, int param, Collection<Folder> c) throws SQLException {
+        if (!ListUtil.isEmpty(c)) {
+            for (Folder f : c) 
+                stmt.setInt(param++, f.getId());
+        }
+        return param;
+    }
+    private static final int setBooleanAsInt(PreparedStatement stmt, int param, Boolean b) throws SQLException {
+        if (b != null) {
+            stmt.setInt(param++, b.booleanValue() ? 1 : 0);
+        }
+        return param;
+    }
+    
+    /**
+     * @param statement
+     * @param truthiness
+     */
+    private static final void encodeBooleanValue(StringBuilder statement, boolean truthiness) {
+        if (truthiness) {
+            if (Db.supports(Db.Capability.BOOLEAN_DATATYPE)) {
+                statement.append(" AND FALSE");
+            } else {
+                statement.append(" AND 0=1");
+            }
         } else {
-            int size = c.types.size();
-            if (size == 1)
-                statement.append("type = ?");
-            else
-                statement.append("type IN").append(DbUtil.suitableNumberOfVariables(c.types));
-        }
-
-        if (!ListUtil.isEmpty(c.excludeTypes))
-            statement.append(" AND type NOT IN").append(DbUtil.suitableNumberOfVariables(c.excludeTypes));
-
-        // Determine the set of matching tags
-        TagConstraints tc = TagConstraints.getTagContraints(mbox, c, conn);
-        if (tc.noMatches)
-            statement.append(Db.supports(Db.Capability.BOOLEAN_DATATYPE) ? " AND FALSE" : " AND 0=1");
-
-        if (c.hasTags != null)
-            statement.append(" AND tags ").append(c.hasTags.booleanValue() ? "!= 0" : "= 0");
-        if (tc.searchTagsets != null) {
-            int size = tc.searchTagsets.size();
-            if (size == 1)
-                statement.append(" AND tags = ?");
-            else
-                statement.append(" AND tags IN").append(DbUtil.suitableNumberOfVariables(size));
-        }
-        if (tc.searchFlagsets != null) {
-            int size = tc.searchFlagsets.size();
-            if (size == 1)
-                statement.append(" AND flags = ?");
-            else
-                statement.append(" AND flags IN").append(DbUtil.suitableNumberOfVariables(size));
-        }
-        if (tc.unread != null)
-            statement.append(" AND unread = ?");
-
-        Collection<Folder> targetFolders = (!ListUtil.isEmpty(c.folders)) ? c.folders : c.excludeFolders;
-        if (!ListUtil.isEmpty(targetFolders)) {
-            int size = targetFolders.size();
-            if (size == 1) {
-                if (targetFolders == c.folders)
-                    statement.append(" AND folder_id = ?");
-                else
-                    statement.append(" AND folder_id != ?");
-            } else
-                statement.append(" AND folder_id").
-                          append(targetFolders == c.folders ? "" : " NOT").append(" IN").
-                          append(DbUtil.suitableNumberOfVariables(size));
-        }
-
-        if (c.convId > 0)
-            statement.append(" AND parent_id = ?");
-        else if (!ListUtil.isEmpty(c.prohibitedConvIds))
-            statement.append(" AND parent_id NOT IN").append(DbUtil.suitableNumberOfVariables(c.prohibitedConvIds));
-
-        if (!ListUtil.isEmpty(c.itemIds)) {
-            int size= c.itemIds.size();
-            if (size == 1)
-                statement.append(" AND id = ?");
-            else
-                statement.append(" AND id IN").append(DbUtil.suitableNumberOfVariables(c.itemIds));
-        }
-        if (!ListUtil.isEmpty(c.prohibitedItemIds))
-            statement.append(" AND id NOT IN").append(DbUtil.suitableNumberOfVariables(c.prohibitedItemIds));
-
-        if (!ListUtil.isEmpty(c.indexIds)) {
-            int size = c.indexIds.size();
-            if (size == 1)
-                statement.append(" AND index_id = ?");
-            else
-                statement.append(" AND index_id IN").append(DbUtil.suitableNumberOfVariables(size));
-        }
-
-        if (!ListUtil.isEmpty(c.dates))
-            encodeRanges(c.dates, "date", 1, statement);
-
-        if (!ListUtil.isEmpty(c.modified))
-            encodeRanges(c.modified, "mod_metadata", 1, statement);
-
-        if (!ListUtil.isEmpty(c.sizes))
-            encodeRanges(c.sizes, "size", 0, statement);
-
-        if (!ListUtil.isEmpty(c.subjectRanges))
-            encodeStrRanges(c.subjectRanges, "subject", statement);
-
-        if (!ListUtil.isEmpty(c.senderRanges))
-            encodeStrRanges(c.senderRanges, "sender", statement);
-
-        statement.append(')');
-    }
-
-    private static void encodeRanges(Collection<? extends DbSearchConstraints.NumericRange> ranges, String column, long lowestValue, StringBuilder statement) {
-        for (DbSearchConstraints.NumericRange r : ranges) {
-            statement.append(r.negated ? " AND NOT (" : " AND (");
-            if (r.lowest >= lowestValue)
-                if (r.lowestEqual)
-                    statement.append(" " + column + " >= ?");
-                else
-                    statement.append(" " + column + " > ?");
-            if (r.highest >= lowestValue) {
-                if (r.lowest >= lowestValue)
-                    statement.append(" AND");
-                if (r.highestEqual)
-                    statement.append(" " + column + " <= ?");
-                else
-                    statement.append(" " + column + " < ?");
+            if (Db.supports(Db.Capability.BOOLEAN_DATATYPE)) {
+                statement.append(" AND TRUE");
+            } else {
+                statement.append(" AND 1=1");
             }
-            statement.append(')');
         }
     }
+    
+    /**
+     * @param statement
+     * @param column
+     * @param truthiness
+     *           if FALSE then sense is reversed (!=) 
+     * @return number of parameters bound (always 0 in this case)
+     */
+    private static final int encode(StringBuilder statement, String column, boolean truthiness) {
+        statement.append(" AND ").append(column).append(truthiness ? " = ?" : " != ?");
+        return 1;
+    }
 
-    private static void encodeStrRanges(Collection<? extends DbSearchConstraints.StringRange> ranges, String column, StringBuilder statement) {
-        for (DbSearchConstraints.StringRange r : ranges) {
-            statement.append(r.negated ? " AND NOT (" : " AND (");
-            if (r.lowest != null)
-                if (r.lowestEqual)
-                    statement.append(" " + column + " >= ?");
-                else
-                    statement.append(" " + column + " > ?");
-            if (r.highest != null) {
-                if (r.lowest != null)
-                    statement.append(" AND");
-                if (r.highestEqual)
-                    statement.append(" " + column + " <= ?");
-                else
-                    statement.append(" " + column + " < ?");
-            }
-            statement.append(')');
+    /**
+     * @param statement
+     * @param column
+     * @param truthiness
+     *           if FALSE then sense is reversed (!=) 
+     * @param o
+     *            if NULL, this function is a NoOp, otherwise puts ? to bind one value
+     * @return number of parameters bound
+     */
+    private static final int encode(StringBuilder statement, String column, boolean truthiness, Object o) {
+        if (o != null) {
+            statement.append(" AND ").append(column).append(truthiness ? " = ?" : " != ?");
+            return 1;
         }
+        return 0;
+    }
+
+    /**
+     * @param statement
+     * @param column
+     * @param truthiness
+     *           if FALSE then sense is reversed (!=) 
+     * @param c
+     * @return number of parameters bound
+     */
+    private static final int encode(StringBuilder statement, String column, boolean truthiness, Collection<?> c) {
+        if (!ListUtil.isEmpty(c)) {
+            statement.append(" AND ").append(column);
+            if (truthiness)
+                statement.append(" IN");
+            else
+                statement.append(" NOT IN");
+            statement.append(DbUtil.suitableNumberOfVariables(c));
+            return c.size();
+        }
+        return 0;
+    }
+    
+    /**
+     * @param statement
+     * @param column
+     * @param truthiness
+     *           if FALSE then sense is reversed (!=) 
+     * @param c
+     * @return number of parameters bound
+     */
+    private static final int encode(StringBuilder statement, String column, boolean truthiness, byte[] c) {
+        if (c != null && c.length > 0) {
+            statement.append(" AND ").append(column);
+            if (truthiness)
+                statement.append(" IN");
+            else
+                statement.append(" NOT IN");
+            statement.append(DbUtil.suitableNumberOfVariables(c));
+            return c.length;
+        }
+        return 0;
+    }
+    
+
+    /**
+     * @param statement
+     * @param column
+     * @param ranges
+     * @param lowestValue
+     * @return number of parameters bound
+     */
+    private static final int encodeRangeWithMinimum(StringBuilder statement, String column, Collection<? extends DbSearchConstraints.NumericRange> ranges, long lowestValue) {
+        int retVal = 0;
+        if (!ListUtil.isEmpty(ranges)) {
+            for (DbSearchConstraints.NumericRange r : ranges) {
+                statement.append(r.negated ? " AND NOT (" : " AND (");
+                if (r.lowest >= lowestValue) {
+                    if (r.lowestEqual)
+                        statement.append(" " + column + " >= ?");
+                    else
+                        statement.append(" " + column + " > ?");
+                    retVal++;
+                }
+                if (r.highest >= lowestValue) {
+                    if (r.lowest >= lowestValue)
+                        statement.append(" AND");
+                    if (r.highestEqual)
+                        statement.append(" " + column + " <= ?");
+                    else
+                        statement.append(" " + column + " < ?");
+                    retVal++;
+                }
+                statement.append(')');
+            }
+        }
+        return retVal;
+    }
+
+    /**
+     * @param statement
+     * @param column
+     * @param ranges
+     * @return number of parameters bound
+     */
+    private static final int encodeRange(StringBuilder statement, String column, Collection<? extends DbSearchConstraints.StringRange> ranges) {
+        int retVal = 0;
+        if (!ListUtil.isEmpty(ranges)) {
+            for (DbSearchConstraints.StringRange r : ranges) {
+                statement.append(r.negated ? " AND NOT (" : " AND (");
+                if (r.lowest != null) {
+                    retVal++;
+                    if (r.lowestEqual)
+                        statement.append(" " + column + " >= ?");
+                    else
+                        statement.append(" " + column + " > ?");
+                }
+                if (r.highest != null) {
+                    if (r.lowest != null)
+                        statement.append(" AND");
+                    retVal++;
+                    if (r.highestEqual)
+                        statement.append(" " + column + " <= ?");
+                    else
+                        statement.append(" " + column + " < ?");
+                }
+                statement.append(')');
+            }
+        }
+        return retVal;
     }
 
 
@@ -2671,118 +2879,66 @@ public class DbMailItem {
             return tc;
         }
     }
-
-    private static int setSearchVars(PreparedStatement stmt, DbSearchConstraintsNode node, int param) throws SQLException {
+    
+    private static int setSearchVars(PreparedStatement stmt, 
+        DbSearchConstraintsNode node, int param, 
+        byte[] calTypes, boolean inCalTable) throws SQLException {
+        /*
+         *( SUB-NODE AND/OR (SUB-NODE...) ) AND/OR ( SUB-NODE ) AND
+         *    ( 
+         *       one of: [type NOT IN (...)]  || [type = ?] || [type IN ( ...)]
+         *       [ AND tags != 0]
+         *       [ AND tags IN ( ... ) ]
+         *       [ AND flags IN (...) ] 
+         *       ..etc
+         *    )   
+         */
+        
         DbSearchConstraintsNode.NodeType ntype = node.getNodeType();
         if (ntype == DbSearchConstraintsNode.NodeType.AND || ntype == DbSearchConstraintsNode.NodeType.OR) {
             for (DbSearchConstraintsNode subnode : node.getSubNodes())
-                param = setSearchVars(stmt, subnode, param);
+                param = setSearchVars(stmt, subnode, param, calTypes, inCalTable);
             return param;
         }
 
         // we're here, so we must be in a DbSearchConstraints leaf node
         DbSearchConstraints c = node.getSearchConstraints();
         assert(ntype == DbSearchConstraintsNode.NodeType.LEAF && c != null);
-
+        
         // if there are no possible matches, short-circuit here...
         if (c.automaticEmptySet())
             return param;
 
-        if (!ListUtil.isEmpty(c.types)) {
-            for (byte type : c.types)
-                stmt.setByte(param++, type);
-        }
-        if (!ListUtil.isEmpty(c.excludeTypes)) {
-            for (byte type : c.excludeTypes)
-                stmt.setByte(param++, type); 
-        }
-
-        if (c.tagConstraints.searchTagsets != null) {
-            for (long tagset : c.tagConstraints.searchTagsets)
-                stmt.setLong(param++, tagset);
-        }
-        if (c.tagConstraints.searchFlagsets != null) {
-            for (long flagset : c.tagConstraints.searchFlagsets)
-                stmt.setLong(param++, flagset);
-        }
-        if (c.tagConstraints.unread != null)
-            stmt.setInt(param++, c.tagConstraints.unread ? 1 : 0);
-
-        Collection<Folder> targetFolders = (!ListUtil.isEmpty(c.folders)) ? c.folders : c.excludeFolders;
-        if (targetFolders != null) {
-            for (Folder folder : targetFolders)
-                stmt.setInt(param++, folder.getId());
-        }
-
-        if (c.convId > 0) {
+        param = setBytes(stmt, param, c.types);
+        param = setBytes(stmt, param, c.excludeTypes);
+        param = setBytes(stmt, param, calTypes);
+        
+        param = setLongs(stmt, param, c.tagConstraints.searchTagsets);
+        param = setLongs(stmt, param, c.tagConstraints.searchFlagsets);
+        param = setBooleanAsInt(stmt, param, c.tagConstraints.unread);
+        param = setFolders(stmt, param, c.folders);
+        param = setFolders(stmt, param, c.excludeFolders);
+        if (c.convId > 0)
             stmt.setInt(param++, c.convId);
-        } else if (!ListUtil.isEmpty(c.prohibitedConvIds)) {
-            for (int id : c.prohibitedConvIds)
-                stmt.setInt(param++, id);
+        else
+            param = setIntegers(stmt, param, c.prohibitedConvIds);
+        param = setIntegers(stmt, param, c.itemIds);
+        param = setIntegers(stmt, param, c.prohibitedItemIds);
+        param = setIntegers(stmt, param, c.indexIds);
+        param = setDateRange(stmt, param, c.dates);
+        param = setLongRangeWithMinimum(stmt, param, c.modified, 1);
+        param = setIntRangeWithMinimum(stmt, param, c.sizes, 0);
+        param = setStringRange(stmt, param, c.subjectRanges);
+        param = setStringRange(stmt, param, c.senderRanges);
+        
+        if (inCalTable) {
+            param = setTimestampRange(stmt, param, c.calStartDates);
+            param = setTimestampRange(stmt, param, c.calEndDates);
         }
-
-        if (!ListUtil.isEmpty(c.itemIds)) {
-            for (int id : c.itemIds)
-                stmt.setInt(param++, id);
-        }
-        if (!ListUtil.isEmpty(c.prohibitedItemIds)) {
-            for (int id : c.prohibitedItemIds)
-                stmt.setInt(param++, id);
-        }
-
-        if (!ListUtil.isEmpty(c.indexIds)) {
-            for (int id : c.indexIds)
-                stmt.setInt(param++, id);
-        }
-
-        if (!ListUtil.isEmpty(c.dates)) {
-            for (DbSearchConstraints.NumericRange date : c.dates) {
-                if (date.lowest > 0)
-                    stmt.setInt(param++, (int) Math.min(date.lowest / 1000, Integer.MAX_VALUE));
-                if (date.highest > 0)
-                    stmt.setInt(param++, (int) Math.min(date.highest / 1000, Integer.MAX_VALUE));
-            }
-        }
-
-        if (!ListUtil.isEmpty(c.modified)) {
-            for (DbSearchConstraints.NumericRange modified : c.modified) {
-                if (modified.lowest > 0)
-                    stmt.setLong(param++, modified.lowest);
-                if (modified.highest > 0)
-                    stmt.setLong(param++, modified.highest);
-            }
-        }
-
-        if (!ListUtil.isEmpty(c.sizes)) {
-            for (DbSearchConstraints.NumericRange size : c.sizes) {
-                if (size.lowest >= 0)
-                    stmt.setInt(param++, (int) size.lowest);
-                if (size.highest >= 0)
-                    stmt.setInt(param++, (int) size.highest);
-            }
-        }
-
-        if (!ListUtil.isEmpty(c.subjectRanges)) {
-            for (DbSearchConstraints.StringRange cur: c.subjectRanges) {
-                if (cur.lowest != null) 
-                    stmt.setString(param++, cur.lowest);
-                if (cur.highest != null) 
-                    stmt.setString(param++, cur.highest);
-            }
-        }
-
-        if (!ListUtil.isEmpty(c.senderRanges)) {
-            for (DbSearchConstraints.StringRange cur: c.senderRanges) {
-                if (cur.lowest != null) 
-                    stmt.setString(param++, cur.lowest);
-                if (cur.highest != null) 
-                    stmt.setString(param++, cur.highest);
-            }
-        }
-
+        
         return param;
     }
-
+    
     public static List<SearchResult> listByFolder(Folder folder, byte type) throws ServiceException {
         return listByFolder(folder, type, true);
     }
@@ -2798,8 +2954,7 @@ public class DbMailItem {
                         " WHERE " + IN_THIS_MAILBOX_AND + "type = ? AND folder_id = ?" +
                         " ORDER BY date" + (descending ? " DESC" : ""));
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setByte(pos++, type);
             stmt.setInt(pos++, folder.getId());
             rs = stmt.executeQuery();
@@ -2840,6 +2995,7 @@ public class DbMailItem {
                                             "mi.imap_id, mi.date, mi.size, mi.volume_id, mi.blob_digest, " +
                                             "mi.unread, mi.flags, mi.tags, mi.subject, mi.name, " +
                                             "mi.metadata, mi.mod_metadata, mi.change_date, mi.mod_content";
+    
 
     private static UnderlyingData constructItem(ResultSet rs) throws SQLException {
         return constructItem(rs, 0);
@@ -2893,12 +3049,11 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                     " FROM " + getCalendarItemTableName(mbox, "ci") + ", " + getMailItemTableName(mbox, "mi") +
                     " WHERE ci.uid = ? AND mi.id = ci.item_id AND mi.type IN " + CALENDAR_TYPES +
-                    (!DebugConfig.disableMailboxGroup ? " AND ci.mailbox_id = ? AND mi.mailbox_id = ci.mailbox_id" : ""));
+                    (" AND ci.mailbox_id = ? AND mi.mailbox_id = ci.mailbox_id"));
 
             int pos = 1;
             stmt.setString(pos++, uid);
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             rs = stmt.executeQuery();
 
             if (rs.next())
@@ -2943,14 +3098,13 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                         " FROM " + getCalendarItemTableName(mbox, "ci") + ", " + getMailItemTableName(mbox, "mi") +
                         " WHERE ci.start_time < ? AND ci.end_time > ? AND mi.id = ci.item_id AND mi.type IN " + typeList +
-                        (!DebugConfig.disableMailboxGroup ? " AND ci.mailbox_id = ? AND mi.mailbox_id = ci.mailbox_id" : "") +
+                        (" AND ci.mailbox_id = ? AND mi.mailbox_id = ci.mailbox_id") +
                         (folderSpecified ? " AND folder_id = ?" : "") + excludeFolderPart);
 
             int param = 1;
             stmt.setTimestamp(param++, new Timestamp(end));
             stmt.setTimestamp(param++, new Timestamp(start));
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(param++, mbox.getId());
+            stmt.setInt(param++, mbox.getId());
             if (folderSpecified)
                 stmt.setInt(param++, folderId);
             if (excludeFolderIds != null) {
@@ -2983,11 +3137,10 @@ public class DbMailItem {
             Timestamp endTs = new Timestamp(end <= 0 ? MAX_DATE : end);
 
             stmt = conn.prepareStatement("INSERT INTO " + getCalendarItemTableName(mbox) +
-                        " (" + (!DebugConfig.disableMailboxGroup ? "mailbox_id, " : "") + "uid, item_id, start_time, end_time)" +
-                        " VALUES (" + (!DebugConfig.disableMailboxGroup ? "?, " : "") + "?, ?, ?, ?)");
+                        " (" + ("mailbox_id, ") + "uid, item_id, start_time, end_time)" +
+                        " VALUES (" + ("?, ") + "?, ?, ?, ?)");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setString(pos++, calItem.getUid());
             stmt.setInt(pos++, calItem.getId());
             stmt.setTimestamp(pos++, startTs);
@@ -3012,12 +3165,11 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("INSERT INTO " + getCalendarItemTableName(mbox) +
-                        " (" + (!DebugConfig.disableMailboxGroup ? "mailbox_id, " : "") + "uid, item_id, start_time, end_time)" +
-                        " VALUES (" + (!DebugConfig.disableMailboxGroup ? "?, " : "") + "?, ?, ?, ?)" +
+                        " (" + ("mailbox_id, ") + "uid, item_id, start_time, end_time)" +
+                        " VALUES (" + ("?, ") + "?, ?, ?, ?)" +
                         (Db.supports(Db.Capability.ON_DUPLICATE_KEY) ? " ON DUPLICATE KEY UPDATE uid = ?, item_id = ?, start_time = ?, end_time = ?" : ""));
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setString(pos++, calItem.getUid());
             stmt.setInt(pos++, calItem.getId());
             stmt.setTimestamp(pos++, startTs);
@@ -3041,8 +3193,7 @@ public class DbMailItem {
                     stmt.setInt(pos++, calItem.getId());
                     stmt.setTimestamp(pos++, startTs);
                     stmt.setTimestamp(pos++, endTs);
-                    if (!DebugConfig.disableMailboxGroup)
-                        stmt.setInt(pos++, mbox.getId());
+                    stmt.setInt(pos++, mbox.getId());
                     stmt.setString(pos++, calItem.getUid());
                     stmt.executeUpdate();
                 } catch (SQLException nested) {

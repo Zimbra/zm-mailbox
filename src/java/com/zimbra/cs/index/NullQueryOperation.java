@@ -50,10 +50,6 @@ class NullQueryOperation extends QueryOperation {
         
     }
     
-    int getOpType() {
-        return OP_TYPE_NULL;
-    }
-    
     public QueryOperation ensureSpamTrashSetting(Mailbox mbox, boolean includeTrash, boolean includeSpam) throws ServiceException
     {
         return this;

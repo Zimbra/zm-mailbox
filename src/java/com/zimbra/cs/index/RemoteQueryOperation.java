@@ -47,10 +47,6 @@ class RemoteQueryOperation extends QueryOperation {
     private ProxiedQueryResults mResults = null;
     private QueryTarget mTarget = null;
 
-    int getOpType() {
-        return OP_TYPE_REMOTE;
-    }
-
     boolean tryAddOredOperation(QueryOperation op) {
         QueryTargetSet targets = op.getQueryTargets();
         assert(targets.countExplicitTargets() == 1);

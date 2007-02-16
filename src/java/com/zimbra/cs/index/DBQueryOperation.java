@@ -41,6 +41,8 @@ import java.util.Set;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
+
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanQuery;
@@ -61,17 +63,15 @@ import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.util.ItemId;
 
-
-/************************************************************************
- * 
- * DBQueryOperation
- * 
- ***********************************************************************/
+/**
+ * Query Operation which goes to the SQL DB.  It might have a "child" Lucene operation
+ * attached to it. 
+ */
 class DBQueryOperation extends QueryOperation
 {
     protected static Log mLog = LogFactory.getLog(DBQueryOperation.class);
     
-    private int mSizeEstimate = -1;
+    protected int mSizeEstimate = -1; // will only be set if the search parameters call for it
 
     protected IConstraints mConstraints = new DbLeafNode();
     protected int mCurHitsOffset = 0; // this is the logical offset of the end of the mDBHits buffer 
@@ -176,12 +176,21 @@ class DBQueryOperation extends QueryOperation
         return this;
     }
 
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.index.QueryOperation#hasSpamTrashSetting()
+     */
     boolean hasSpamTrashSetting() {
         return mConstraints.hasSpamTrashSetting();
     }
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.index.QueryOperation#forceHasSpamTrashSetting()
+     */
     void forceHasSpamTrashSetting() {
         mConstraints.forceHasSpamTrashSetting();
     }
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.index.QueryOperation#hasNoResults()
+     */
     boolean hasNoResults() {
         return mConstraints.hasNoResults();
     }
@@ -193,6 +202,9 @@ class DBQueryOperation extends QueryOperation
         return mAllResultsQuery;
     }
 
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.index.QueryOperation#getQueryTargets()
+     */
     QueryTargetSet getQueryTargets() {
         QueryTargetSet toRet = new QueryTargetSet(1);
         toRet.add(mQueryTarget);
@@ -284,8 +296,6 @@ class DBQueryOperation extends QueryOperation
         topLevelAndedConstraint().addSenderRelClause(lowestSubj, lowerEqual, highestSubj, higherEqual, truth);
     }
     
-    
-
     /**
      * @param convId
      * @param prohibited
@@ -363,6 +373,10 @@ class DBQueryOperation extends QueryOperation
         topLevelAndedConstraint().addTagClause(tag, truth);
     }
 
+    /**
+     * @param type
+     * @param truth
+     */
     void addTypeClause(byte type, boolean truth) {
         mAllResultsQuery = false;
         if (truth) {
@@ -419,6 +433,9 @@ class DBQueryOperation extends QueryOperation
         }
     }
 
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.index.ZimbraQueryResults#resetIterator()
+     */
     public void resetIterator() {
         if (mLuceneOp != null) {
             mLuceneOp.resetDocNum();
@@ -541,6 +558,9 @@ class DBQueryOperation extends QueryOperation
         return toRet;
     }
 
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.index.ZimbraQueryResults#getNext()
+     */
     public ZimbraHit getNext() throws ServiceException {
         atStart = false;
         if (mNextHits.size() == 0) {
@@ -753,7 +773,7 @@ class DBQueryOperation extends QueryOperation
                     }
                 } finally {
                     // restore the query
-                    mLuceneOp.setCurrentQuery(originalQuery);
+                    mLuceneOp.resetQuery(originalQuery);
                 }
             }
                 
@@ -775,9 +795,12 @@ class DBQueryOperation extends QueryOperation
             
             if (mParams.getEstimateSize() && mSizeEstimate==-1) {
                 // FIXME TODO should probably be a %age, this is worst-case
-                sc.indexIds = new HashSet<Integer>(); 
-                System.out.println("LUCENE="+mLuceneOp.countHits()+"  DB="+DbMailItem.countResults(conn, mConstraints, mbox));
-                mSizeEstimate = Math.min(DbMailItem.countResults(conn, mConstraints, mbox), mLuceneOp.countHits());
+                sc.indexIds = new HashSet<Integer>();
+                int dbResultCount = DbMailItem.countResults(conn, mConstraints, mbox);
+                
+                if (ZimbraLog.index.isDebugEnabled()) 
+                    ZimbraLog.index.debug("LUCENE="+mLuceneOp.countHits()+"  DB="+dbResultCount);
+                mSizeEstimate = Math.min(dbResultCount, mLuceneOp.countHits());
             }
             
             sc.indexIds = mLuceneChunk.getIndexIds();
@@ -908,11 +931,6 @@ class DBQueryOperation extends QueryOperation
         }
     }
 
-    int getOpType() {
-        return OP_TYPE_DB;
-    }
-
-
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.QueryOperation#optimize(com.zimbra.cs.mailbox.Mailbox)
      */
@@ -920,6 +938,9 @@ class DBQueryOperation extends QueryOperation
         return this;
     }
 
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.index.QueryOperation#toQueryString()
+     */
     String toQueryString() {
         StringBuilder ret = new StringBuilder("(");
         if (mLuceneOp != null)
@@ -978,6 +999,9 @@ class DBQueryOperation extends QueryOperation
         }
     }
 
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.index.QueryOperation#clone()
+     */
     public Object clone() {
         try {
             DBQueryOperation toRet = cloneInternal();
@@ -990,7 +1014,12 @@ class DBQueryOperation extends QueryOperation
         }
     }
 
-    public Object clone(LuceneQueryOperation caller) {
+    /**
+     * helper for cloning when there is a joined DBQueryOp--LuceneQueryOp
+     * @param caller
+     * @return
+     */
+    protected Object clone(LuceneQueryOperation caller) {
         DBQueryOperation toRet = cloneInternal();
         toRet.mLuceneOp = caller;
         return toRet;

@@ -29,9 +29,6 @@
 package com.zimbra.cs.index;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
@@ -57,48 +54,15 @@ import com.zimbra.cs.mailbox.Mailbox;
 
 abstract class QueryOperation implements Cloneable, ZimbraQueryResults
 {
-    // order does matter somewhat -- order is used to sort execution order when
-    // there are multiple operations to choose from (e.g. an OR of two operations, etc)
-    public static final int OP_TYPE_REMOTE      = 1;
-    public static final int OP_TYPE_NULL        = 2; // no results at all
-    public static final int OP_TYPE_LUCENE      = 3;
-    public static final int OP_TYPE_DB          = 4;
-    public static final int OP_TYPE_SUBTRACT    = 5;
-    public static final int OP_TYPE_INTERSECT   = 6; // AND
-    public static final int OP_TYPE_UNION       = 7; // OR
-    public static final int OP_TYPE_NO_TERM     = 8; // pseudo-op, always optimized away
-
     private static final int MIN_CHUNK_SIZE = 26;
     private static final int MAX_CHUNK_SIZE = 5000;
     
     private static final boolean USE_PRELOADING_GROUPER = true;
 
-    abstract int getOpType(); 
-
-    /**
-     * @author tim
-     *
-     */
-//    protected static class QueryOpSortComparator implements Comparator {
-//        public int compare(Object o1, Object o2) {
-//            QueryOperation lhs = (QueryOperation)o1;
-//            QueryOperation rhs = (QueryOperation)o2;
-//
-//            return lhs.getOpType() - rhs.getOpType();
-//        }
-//        public boolean equals(Object obj) {
-//            if (obj instanceof QueryOpSortComparator) return true;
-//            return false;
-//        }
-//    }
-
     /**
      * @return A representation of this operation as a parsable query string
      */
     abstract String toQueryString(); 
-
-//    final static QueryOpSortComparator sQueryOpSortComparator = new QueryOpSortComparator();
-//  private SortBy mSortOrder = null;
 
     protected SearchParams mParams;
     public SortBy getSortBy() { return mParams.getSortBy(); }
@@ -229,7 +193,6 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
      * Internals
      *
      *******************/
-
 
     abstract QueryTargetSet getQueryTargets();
 

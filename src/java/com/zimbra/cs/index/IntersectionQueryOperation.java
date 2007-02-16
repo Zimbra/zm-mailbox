@@ -57,10 +57,6 @@ class IntersectionQueryOperation extends QueryOperation {
     boolean noHits = false;
     private static Log mLog = LogFactory.getLog(IntersectionQueryOperation.class);
 
-    int getOpType() {
-        return OP_TYPE_INTERSECT;
-    }
-
     /***************************************************************************
      * 
      * Hits iteration
@@ -537,9 +533,10 @@ class IntersectionQueryOperation extends QueryOperation {
             // hmmm....perhaps we should only be pushing it down to one operation here?  That could
             // very well be a bit faster....
             if (!addedOne) {
-                List newList = new ArrayList();
-                for (Iterator iter = mQueryOperations.iterator(); iter.hasNext();) {
-                    QueryOperation op = (QueryOperation) iter.next();
+                // ensureSpamTrashSetting might very well return a new root node...so we need
+                // to build a new mQueryOperations list using the result of ensureSpamTrashSetting
+                List<QueryOperation> newList = new ArrayList<QueryOperation>();
+                for (QueryOperation op : mQueryOperations) {
                     newList.add(op.ensureSpamTrashSetting(mbox, includeTrash, includeSpam));
                 }
                 mQueryOperations = newList;

@@ -156,8 +156,8 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
     public int limit = -1;                  /* optional */
 
     //
-    // When we COMBINE the operations, we'll need to track some state values
-    // for example "no results" 
+    // When we COMBINE the operations during query optimization, we'll need 
+    // to track some state values for example "no results" 
     //
     public boolean noResults = false;
 
@@ -172,11 +172,11 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
     public Set<Folder> folders = new HashSet<Folder>();        /* optional - ANY of these folders are OK */
     public Set<Folder> excludeFolders = new HashSet<Folder>(); /* optional - ALL listed folders not allowed */
 
-    public Set<ItemId> remoteFolders = new HashSet<ItemId>();         /* optional */
-    public Set<ItemId> excludeRemoteFolders = new HashSet<ItemId>();  /* optional */
+    public Set<ItemId> remoteFolders = new HashSet<ItemId>();         /* optional - ANY of these folders are OK */
+    public Set<ItemId> excludeRemoteFolders = new HashSet<ItemId>();  /* optional - ALL listed folders are not OK */
     
-    public int convId = 0;                          /* optional */
-    public Set<Integer> prohibitedConvIds = new HashSet<Integer>();          /* optional */
+    public int convId = 0;                          /* optional - must match this convId  */
+    public Set<Integer> prohibitedConvIds = new HashSet<Integer>();          /* optional - ALL listed folders not allowed*/
 
     public Set<Integer> itemIds = new HashSet<Integer>();                             /* optional - ANY of these itemIDs are OK.*/
     public Set<Integer> prohibitedItemIds = new HashSet<Integer>(); /* optional - ALL of these itemIDs are excluded*/
@@ -186,12 +186,18 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
     public Set<Byte> types = new HashSet<Byte>();                         /* optional - ANY of these types are OK.  */
     public Set<Byte> excludeTypes = new HashSet<Byte>();                  /* optional - ALL of these types are excluded */
 
+    //
+    // A possible result must match *ALL* the range constraints below.  It might seem strange that we don't 
+    // just combine the ranges -- yes this would be easy for positive ranges (foo>5 AND foo >7 and foo<10) 
+    // but it quickly gets very complicated with negative ranges such as (3<foo<100 AND NOT 7<foo<20)
+    //
     public Collection<NumericRange> dates = new ArrayList<NumericRange>();    /* optional */
+    public Collection<NumericRange> calStartDates = new ArrayList<NumericRange>();    /* optional */
+    public Collection<NumericRange> calEndDates = new ArrayList<NumericRange>();    /* optional */
     public Collection<NumericRange> modified = new ArrayList<NumericRange>(); /* optional */
     public Collection<NumericRange> sizes = new ArrayList<NumericRange>();    /* optional */
     public Collection<StringRange> subjectRanges = new ArrayList<StringRange>(); /* optional */
     public Collection<StringRange> senderRanges = new ArrayList<StringRange>(); /* optional */
-    
 
     /**
      * Returns true if query is for a single folder, item type list
@@ -228,6 +234,8 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
             itemIds.isEmpty() && prohibitedItemIds.isEmpty() &&
             indexIds.isEmpty() &&
             dates.isEmpty() &&
+            calStartDates.isEmpty() &&
+            calEndDates.isEmpty() &&
             modified.isEmpty() &&
             sizes.isEmpty() &&
             subjectRanges.isEmpty() &&
@@ -263,6 +271,9 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         toRet.excludeTypes = new HashSet<Byte>(); toRet.excludeTypes.addAll(excludeTypes);
 
         toRet.dates = new HashSet<NumericRange>(); toRet.dates.addAll(dates);
+        toRet.calStartDates = new HashSet<NumericRange>(); toRet.calStartDates.addAll(calStartDates);
+        toRet.calEndDates = new HashSet<NumericRange>(); toRet.calEndDates.addAll(calEndDates);
+        
         toRet.modified = new HashSet<NumericRange>(); toRet.modified.addAll(modified);
         toRet.sizes = new HashSet<NumericRange>(); toRet.sizes.addAll(sizes);
         toRet.subjectRanges = new HashSet<StringRange>(); toRet.subjectRanges.addAll(subjectRanges);
@@ -271,9 +282,12 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         return toRet;
     }
 
-
+    /**
+     * Hackhackhack -- the TagConstraints are generated during the query generating process during
+     * DbMailItem.encodeConstraint, and then they are cached in this object.  This is pretty ugly
+     * but works for now.  TODO cleanup.
+     */
     DbMailItem.TagConstraints tagConstraints;
-
 
     private static abstract class Printer<T> {
         void run(StringBuilder str, Collection<T> collect, String intro) {
@@ -399,7 +413,12 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         bp.run(retVal, excludeTypes, "-TYPE"); 
 
         if (!dates.isEmpty())
-            new ObjectPrinter<NumericRange>().run(retVal, dates, "DATE"); 
+            new ObjectPrinter<NumericRange>().run(retVal, dates, "DATE");
+        
+        if (!calStartDates.isEmpty())
+            new ObjectPrinter<NumericRange>().run(retVal, calStartDates, "CALSTART"); 
+        if (!calEndDates.isEmpty())
+            new ObjectPrinter<NumericRange>().run(retVal, calEndDates, "CALEND"); 
 
         if (!modified.isEmpty())
             new ObjectPrinter<NumericRange>().run(retVal, modified, "MOD") ;
@@ -597,6 +616,21 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
                 dates = new ArrayList<NumericRange>();
             dates.addAll(other.dates);
         }
+        
+        // calStartDates
+        if (other.calStartDates != null) {
+            if (calStartDates == null) 
+                calStartDates = new ArrayList<NumericRange>();
+            calStartDates.addAll(other.calStartDates);
+        }
+        
+        // calEndDates
+        if (other.calEndDates != null) {
+            if (calEndDates == null) 
+                calEndDates = new ArrayList<NumericRange>();
+            calEndDates.addAll(other.calEndDates);
+        }
+        
 
         // modified
         if (other.modified != null) {
@@ -662,6 +696,8 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
 
     void checkDates() {
         checkIntervals(dates);
+        checkIntervals(calStartDates);
+        checkIntervals(calEndDates);
         checkIntervals(modified);
     }
     

@@ -64,10 +64,6 @@ class UnionQueryOperation extends QueryOperation
 
     private boolean atStart = true; // don't re-fill buffer twice if they call hasNext() then reset() w/o actually getting next
 
-    int getOpType() {
-        return OP_TYPE_UNION;
-    }
-
     QueryTargetSet getQueryTargets() {
         QueryTargetSet toRet = new QueryTargetSet();
 
