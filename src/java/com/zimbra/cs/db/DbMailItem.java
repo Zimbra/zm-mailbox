@@ -1360,29 +1360,39 @@ public class DbMailItem {
 
     public static final byte SORT_DIRECTION_MASK = 0x01;
     public static final byte SORT_FIELD_MASK     = 0x4E;
-
+    
+    // alias the sort column b/c of ambiguity problems (the sort column is included twice in the 
+    // result set, and MySQL chokes on the ORDER BY when we do a UNION query (doesn't know
+    // which 2 of the 4 sort columns are the "right" ones to use)
+    public static final String SORT_COLUMN_ALIAS = "_sortcol";
+    
     private static String sortField(byte sort) {
+        String str = "date";
+        
+        boolean stringVal = false;
+        
         switch (sort & SORT_FIELD_MASK) {
-            case SORT_BY_SENDER:   return Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON) ? "UPPER(sender)" : "sender";
-            case SORT_BY_SUBJECT:  return Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON) ? "UPPER(subject)" : "subject";
-            case SORT_BY_NAME:     return Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON) ? "UPPER(name)" : "name";
-            case SORT_BY_ID:       return "id";
-            case SORT_NONE:        return "NULL";
+            case SORT_BY_SENDER:    stringVal = true; str = "mi.sender"; break;
+            case SORT_BY_SUBJECT:   stringVal = true; str = "mi.subject"; break;
+            case SORT_BY_NAME:       stringVal= true; str = "mi.name"; break;
+            case SORT_BY_ID:       str = "id"; break;
+            case SORT_NONE:        str = "NULL"; break;
             case SORT_BY_DATE:
-            default:               return "date";
+            default:               
         }
+        
+        if (stringVal && Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON)) 
+            str = " UPPER("+str+")";
+        
+        return str + " as " + SORT_COLUMN_ALIAS;
     }
 
     private static String sortQuery(byte sort) {
-        return sortQuery(sort, "");
-    }
-
-    private static String sortQuery(byte sort, String prefix) {
-        String field = sortField(sort);
-        if ("NULL".equalsIgnoreCase(field))
+        if (sort == SORT_NONE)
             return "";
+        
         StringBuilder statement = new StringBuilder(" ORDER BY ");
-        statement.append(prefix).append(field);
+        statement.append(SORT_COLUMN_ALIAS);
         if ((sort & SORT_DIRECTION_MASK) == SORT_DESCENDING)
             statement.append(" DESC");
         return statement.toString();
@@ -2207,7 +2217,6 @@ public class DbMailItem {
         }
     }
 
-
     public static final class SearchResult {
         public int    id;
         public int    indexId;
@@ -2232,16 +2241,22 @@ public class DbMailItem {
             int sortField = (sort & SORT_FIELD_MASK);
 
             SearchResult result = new SearchResult();
-            result.id      = rs.getInt(1);
-            result.indexId = rs.getInt(2);
-            result.type    = rs.getByte(3);
-            if (sortField == SORT_BY_SUBJECT || sortField == SORT_BY_SENDER || sortField == SORT_BY_NAME)
-                result.sortkey = rs.getString(4);
-            else
-                result.sortkey = new Long(rs.getInt(4) * 1000L);
-
+            result.id      = rs.getInt(COLUMN_ID);
+            result.indexId = rs.getInt(COLUMN_INDEXID);
+            result.type    = rs.getByte(COLUMN_TYPE);
+            switch (sortField) {
+                case SORT_BY_SUBJECT:
+                case SORT_BY_SENDER:
+                case SORT_BY_NAME:
+                    result.sortkey = rs.getString(COLUMN_SORTKEY);
+                    break;
+                default:
+                    result.sortkey = new Long(rs.getInt(COLUMN_SORTKEY) * 1000L);
+                    break;
+            }
+                        
             if (extra == ExtraData.MAIL_ITEM) {
-                result.data = constructItem(rs, 4);
+                result.data = constructItem(rs, COLUMN_SORTKEY);
             } else if (extra == ExtraData.IMAP_MSG) {
                 int flags = rs.getBoolean(6) ? Flag.BITMASK_UNREAD | rs.getInt(7) : rs.getInt(7);
                 result.i4msg = new ImapMessage(result.id, result.type, rs.getInt(5), flags, rs.getLong(8));
@@ -2315,10 +2330,21 @@ public class DbMailItem {
         }
     }
     
+    // put these into constants so that people can easily tell what is dependent on the positons
+    private static final int COLUMN_ID          = 1;
+    private static final int COLUMN_INDEXID  = 2;
+    private static final int COLUMN_TYPE       = 3;
+    private static final int COLUMN_SORTKEY  = 4;
+
     private static final String encodeSelect(Mailbox mbox,
-        byte sort, SearchResult.ExtraData extra, boolean includeCalTable) {
+        byte sort, SearchResult.ExtraData extra, boolean includeCalTable,
+        DbSearchConstraintsNode node, boolean validLIMIT) {
         /*
-         * "SELECT mi.id,mi.date, [extrafields] FROM mail_item AS mi [, appointment AS ap] 
+         * "SELECT mi.id,mi.date, [extrafields] FROM mail_item AS mi [, appointment AS ap]
+         *    [FORCE INDEX (...)]
+         *    WHERE mi.mailboxid=? [AND ap.mailboxId=? AND mi.id = ap.id ] AND
+         * 
+         *  If you change the first for parameters, you must change the COLUMN_* values above!
          */
         StringBuilder select = new StringBuilder("SELECT mi.id, mi.index_id, mi.type, mi." + sortField(sort));
         if (extra == SearchResult.ExtraData.MAIL_ITEM)
@@ -2330,22 +2356,20 @@ public class DbMailItem {
         if (includeCalTable) 
             select.append(", ").append(getCalendarItemTableName(mbox, "ap"));
         
-        return select.toString();
-    }
-    
-    /**
-     * @param where
-     * @param mbox
-     * @param includeCalTable
-     */
-    private static final void encodeWhere(StringBuilder where, Mailbox mbox, boolean includeCalTable) {
         /*
-         *     WHERE mi.mailboxId=? [AND ap.mailboxId=? AND mi.id = ap.id ] AND "
+         * FORCE INDEX (...)
          */
-        where.append(" WHERE ");
-        where.append(getInThisMailboxAnd(mbox.getId(), "mi", includeCalTable ? "ap" : null));
+        select.append(getForceIndexClause(node, sort, validLIMIT));
+        
+        /*
+         *  WHERE mi.mailboxId=? [AND ap.mailboxId=? AND mi.id = ap.id ] AND "
+         */
+        select.append(" WHERE ");
+        select.append(getInThisMailboxAnd(mbox.getId(), "mi", includeCalTable ? "ap" : null));
         if (includeCalTable)
-            where.append(" mi.id = ap.item_id AND ");
+            select.append(" mi.id = ap.item_id AND ");
+        
+        return select.toString();
     }
     
     /**
@@ -2454,6 +2478,20 @@ public class DbMailItem {
         return num;
     }
     
+    private static final boolean requiresAppointmentUnion(DbSearchConstraintsNode node) {
+        DbSearchConstraintsNode.NodeType ntype = node.getNodeType();
+        if (ntype == DbSearchConstraintsNode.NodeType.AND || ntype == DbSearchConstraintsNode.NodeType.OR) {
+            for (DbSearchConstraintsNode subnode : node.getSubNodes()) {
+                if (requiresAppointmentUnion(subnode))
+                    return true;
+            }
+            return false;
+        }
+        return node.getSearchConstraints().requiresAppointmentUnion();
+    }
+    
+    static final byte[] APPOINTMENT_TABLE_TYPES = new byte[] { MailItem.TYPE_APPOINTMENT, MailItem.TYPE_TASK };
+    
     public static Collection<SearchResult> search(Collection<SearchResult> result, 
         Connection conn, DbSearchConstraintsNode node, Mailbox mbox, 
         byte sort, int offset, int limit, SearchResult.ExtraData extra) throws ServiceException {
@@ -2462,60 +2500,72 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         StringBuilder statement = new StringBuilder();
-        int num = 0;
+        int numParams = 0;
+        boolean requiresAppointmentUnion = requiresAppointmentUnion(node);
         
-        /*
-         * SELECT id,date FROM mail_item mi WHERE mi.acccount_id = ? AND type = ? AND tags & ? = ? AND flags & ? = ?
-         *    (AND folder_id [NOT] IN (?,?,?)) (AND date > ?) (AND date < ?) (AND mod_metadata > ?) (AND mod_metadata < ?)
-         *    ORDER BY date|subject|sender|name (DESC)? LIMIT ?, ?
-         */
         try {
             /*
-             * "SELECT mi.id,mi.date, [extrafields] FROM mail_item AS mi [, appointment AS ap] 
+             * "SELECT mi.id,mi.date, [extrafields] FROM mail_item AS mi 
+             *    [FORCE INDEX (...)]
+             *    WHERE mi.mailboxid=? AND
              */
-            statement.append(encodeSelect(mbox, sort, extra, false));
-
-            /*
-             * FORCE INDEX
-             */
-            statement.append(getForceIndexClause(node, sort, validLIMIT));
+            statement.append(encodeSelect(mbox, sort, extra, false, node, validLIMIT));
             
             /*
-             *  WHERE mi.mailboxId=? [AND ap.mailboxId=? AND mi.id = ap.id ] AND "
+             *( SUB-NODE AND/OR (SUB-NODE...) ) AND/OR ( SUB-NODE ) AND
+             *    ( 
+             *       one of: [type NOT IN (...)]  || [type = ?] || [type IN ( ...)]
+             *       [ AND tags != 0]
+             *       [ AND tags IN ( ... ) ]
+             *       [ AND flags IN (...) ] 
+             *       ..etc
+             *    )   
              */
-            encodeWhere(statement, mbox, false);
+            numParams += encodeConstraint(mbox, node, 
+                (requiresAppointmentUnion ? APPOINTMENT_TABLE_TYPES : null), 
+                false, statement, conn);
             
-            /*
-             * Rest of constraints
-             */
-            num += encodeConstraint(mbox, node, null, false, statement, conn);
+            if (requiresAppointmentUnion) {
+                /*
+                 * UNION
+                 */
+                statement.append(" UNION ");
+                /*
+                 * SELECT...again...(this time with "appointment as ap")...WHERE...
+                 */
+                statement.append(encodeSelect(mbox, sort, extra, true, node, validLIMIT));
+                numParams += encodeConstraint(mbox, node, APPOINTMENT_TABLE_TYPES, true, statement, conn);
+            }
             
             //
             // TODO FIXME: include COLLATION for sender/subject sort
             //
             
             /*
-             * ORDER BY
+             * ORDER BY (sortField) 
              */
-            statement.append(sortQuery(sort, "mi."));
+            statement.append(sortQuery(sort));
             
             /*
-             * LIMIT 
+             * LIMIT ?, ? 
              */
             if (validLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
                 statement.append(" LIMIT ?, ?");
-                num+=2; // two constraints added
+                numParams+=2; // two constraints added
             }
             
+            /*
+             * Create the statement and bind all our parameters!
+             */
             if (sLog.isDebugEnabled())
-                sLog.debug("SQL: ("+num+" parameters): "+statement.toString());
+                sLog.debug("SQL: ("+numParams+" parameters): "+statement.toString());
             stmt = conn.prepareStatement(statement.toString());
             int param = 1;
+            param = setSearchVars(stmt, node, param, (requiresAppointmentUnion ? APPOINTMENT_TABLE_TYPES : null), false);
             
-            /*
-             * from encodeConstraints
-             */
-            param = setSearchVars(stmt, node, param, null, false);
+            if (requiresAppointmentUnion) {
+                param = setSearchVars(stmt, node, param, APPOINTMENT_TABLE_TYPES, true);
+            }
             
             //
             // TODO FIXME: include COLLATION for sender/subject sort
@@ -2532,7 +2582,7 @@ public class DbMailItem {
             /*
              * EXECUTE!
              */
-            assert(param == num+1);
+            assert(param == numParams+1);
             rs = stmt.executeQuery();
             
             /*
@@ -2653,10 +2703,6 @@ public class DbMailItem {
         return param;
     }
     
-    /**
-     * @param statement
-     * @param truthiness
-     */
     private static final void encodeBooleanValue(StringBuilder statement, boolean truthiness) {
         if (truthiness) {
             if (Db.supports(Db.Capability.BOOLEAN_DATATYPE)) {
@@ -2744,7 +2790,6 @@ public class DbMailItem {
         return 0;
     }
     
-
     /**
      * @param statement
      * @param column

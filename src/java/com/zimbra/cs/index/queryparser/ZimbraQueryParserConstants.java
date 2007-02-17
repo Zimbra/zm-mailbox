@@ -46,23 +46,25 @@ public interface ZimbraQueryParserConstants {
   int CONV_MAXM = 44;
   int CONV_START = 45;
   int CONV_END = 46;
-  int AUTHOR = 47;
-  int TITLE = 48;
-  int KEYWORDS = 49;
-  int COMPANY = 50;
-  int METADATA = 51;
-  int ITEM = 52;
-  int SORTBY = 53;
-  int SORT = 54;
-  int PLUS = 55;
-  int MINUS = 56;
-  int TEXT_TOK = 57;
-  int INITIAL_TERM_CHAR = 58;
-  int SUBSEQUENT_TERM_CHAR = 59;
-  int ERROR_BRACES_WITH_NEWLINE = 61;
-  int BRACES_TOK = 62;
-  int ERROR_QUOTE_WITH_NEWLINE = 64;
-  int QUOTED_TOK = 65;
+  int APPT_START = 47;
+  int APPT_END = 48;
+  int AUTHOR = 49;
+  int TITLE = 50;
+  int KEYWORDS = 51;
+  int COMPANY = 52;
+  int METADATA = 53;
+  int ITEM = 54;
+  int SORTBY = 55;
+  int SORT = 56;
+  int PLUS = 57;
+  int MINUS = 58;
+  int TEXT_TOK = 59;
+  int INITIAL_TERM_CHAR = 60;
+  int SUBSEQUENT_TERM_CHAR = 61;
+  int ERROR_BRACES_WITH_NEWLINE = 63;
+  int BRACES_TOK = 64;
+  int ERROR_QUOTE_WITH_NEWLINE = 66;
+  int QUOTED_TOK = 67;
 
   int DEFAULT = 0;
   int BRACES_STATE = 1;
@@ -116,6 +118,8 @@ public interface ZimbraQueryParserConstants {
     "\"conv-maxm:\"",
     "\"conv-start:\"",
     "\"conv-end:\"",
+    "\"appt-start:\"",
+    "\"appt-end:\"",
     "\"author:\"",
     "\"title:\"",
     "\"keywords:\"",

@@ -262,6 +262,28 @@ class DBQueryOperation extends QueryOperation
         mAllResultsQuery = false;
         topLevelAndedConstraint().addDateClause(lowestDate, lowestEq, highestDate, highestEq, truth);
     }
+    
+    /**
+     * @param lowest
+     * @param highest
+     * @param truth
+     * @throws ServiceException
+     */
+    void addCalStartDateClause(long lowestDate, boolean lowestEq, long highestDate, boolean highestEq, boolean truth)  {
+        mAllResultsQuery = false;
+        topLevelAndedConstraint().addCalStartDateClause(lowestDate, lowestEq, highestDate, highestEq, truth);
+    }
+
+    /**
+     * @param lowest
+     * @param highest
+     * @param truth
+     * @throws ServiceException
+     */
+    void addCalEndDateClause(long lowestDate, boolean lowestEq, long highestDate, boolean highestEq, boolean truth)  {
+        mAllResultsQuery = false;
+        topLevelAndedConstraint().addCalEndDateClause(lowestDate, lowestEq, highestDate, highestEq, truth);
+    }
 
     /**
      * @param lowest

@@ -208,6 +208,41 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
 
         dates.add(intv);
     }
+    
+    /**
+     * @param lowest
+     * @param highest
+     * @param truth
+     * @throws ServiceException
+     */
+    void addCalStartDateClause(long lowest, boolean lowestEqual, long highest, boolean highestEqual, boolean truth)  {
+        DbSearchConstraints.NumericRange intv = new DbSearchConstraints.NumericRange();
+        intv.lowest = lowest;
+        intv.lowestEqual = lowestEqual;
+        intv.highest = highest;
+        intv.highestEqual = highestEqual;
+        intv.negated = !truth;
+
+        calStartDates.add(intv);
+    }
+
+    /**
+     * @param lowest
+     * @param highest
+     * @param truth
+     * @throws ServiceException
+     */
+    void addCalEndDateClause(long lowest, boolean lowestEqual, long highest, boolean highestEqual, boolean truth)  {
+        DbSearchConstraints.NumericRange intv = new DbSearchConstraints.NumericRange();
+        intv.lowest = lowest;
+        intv.lowestEqual = lowestEqual;
+        intv.highest = highest;
+        intv.highestEqual = highestEqual;
+        intv.negated = !truth;
+
+        calEndDates.add(intv);
+    }
+    
 
     /**
      * @param lowest

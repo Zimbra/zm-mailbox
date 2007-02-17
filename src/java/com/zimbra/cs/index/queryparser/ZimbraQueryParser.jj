@@ -49,16 +49,11 @@ import com.zimbra.cs.mailbox.MailServiceException;
 
 import org.apache.lucene.analysis.Analyzer;
 
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
  
 public final class ZimbraQueryParser {
-
-    private static Log mLog = LogFactory.getLog(ZimbraQueryParser.class);
 
     private static HashMap<String, Integer>  sFolderStrMap;
     
@@ -184,12 +179,12 @@ public final class ZimbraQueryParser {
           case ITEM:
             return ZimbraQuery.ItemQuery.Create(mAnalyzer, modifier, tok);
           case INID:
-        	  iid = new ItemId(tok, null);
+        	  iid = new ItemId(tok, (String)null);
               folderId = iid.getId();
               // FALL THROUGH TO BELOW!
           case IN:
             if (folderId == null)
-                folderId = (Integer) sFolderStrMap.get(tok.toLowerCase());
+                folderId =  sFolderStrMap.get(tok.toLowerCase());
             ZimbraQuery.BaseQuery inq;
             if (iid != null && !iid.belongsTo(mMailbox)) {
             	inq = new ZimbraQuery.InQuery(mMailbox, mAnalyzer, modifier, iid);
@@ -205,7 +200,7 @@ public final class ZimbraQueryParser {
           case TAG:
             return new ZimbraQuery.TagQuery(mAnalyzer, modifier, mMailbox.getTagByName(tok), true);
           case IS:
-            GetQueryCallback cback = (GetQueryCallback)sIsStrMap.get(tok.toLowerCase());
+            GetQueryCallback cback = sIsStrMap.get(tok.toLowerCase());
             if (cback != null) {
                 return cback.execute(mMailbox, mAnalyzer, modifier);
             } else {
@@ -227,6 +222,8 @@ public final class ZimbraQueryParser {
           case BEFORE:
           case CONV_START:
           case CONV_END:
+          case APPT_START:
+          case APPT_END:
           {
               ZimbraQuery.DateQuery q = new ZimbraQuery.DateQuery(mAnalyzer, target);
               q.parseDate(modifier, tok, mTimeZone, mLocale);
@@ -369,7 +366,9 @@ PARSER_END(ZimbraQueryParser)
 |  <CONV_MINM:  "conv-minm:">
 |  <CONV_MAXM:  "conv-maxm:">
 |  <CONV_START: "conv-start:"> 
-|  <CONV_END:   "conv-end:">   
+|  <CONV_END:   "conv-end:">  
+|  <APPT_START:   "appt-start:">  
+|  <APPT_END:   "appt-end:">  
 |  <AUTHOR:     "author:">
 |  <TITLE:      "title:">
 |  <KEYWORDS:   "keywords:">
@@ -571,7 +570,7 @@ ZimbraQuery.BaseQuery Clause() throws ServiceException :
       
       
         | (t=<ITEM>) q = Rhs_Item(t.kind)
-        | (t=<DATE>|t=<DAY>|t=<MONTH>|t=<WEEK>|t=<YEAR>|t=<AFTER>|t=<BEFORE>|t=<CONV_START>|t=<CONV_END>) q = Rhs_Date(t.kind)
+        | (t=<DATE>|t=<DAY>|t=<MONTH>|t=<WEEK>|t=<YEAR>|t=<AFTER>|t=<BEFORE>|t=<CONV_START>|t=<CONV_END>|t=<APPT_START>|t=<APPT_END>) q = Rhs_Date(t.kind)
         | (t=<TEXT_TOK>|t=<QUOTED_TOK>) { return GetQuery(0,mDefaultField,t.image); }
      )
      { return q; }

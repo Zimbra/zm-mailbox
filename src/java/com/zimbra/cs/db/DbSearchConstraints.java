@@ -198,6 +198,39 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
     public Collection<NumericRange> sizes = new ArrayList<NumericRange>();    /* optional */
     public Collection<StringRange> subjectRanges = new ArrayList<StringRange>(); /* optional */
     public Collection<StringRange> senderRanges = new ArrayList<StringRange>(); /* optional */
+    
+    private Set<Byte>calcTypes() {
+        if (excludeTypes.size() == 0)
+            return types;
+        
+        if (types.size() == 0)
+            for (byte i = 1; i < MailItem.TYPE_MAX; i++)
+                types.add(i);
+        
+        for (Byte t : excludeTypes) {
+            types.remove(t);
+        }
+        excludeTypes = new HashSet<Byte>();
+        return types;
+    }
+    
+    /**
+     * @return TRUE if these constraints have a constraint that requires a join with the Appointment table
+     */
+    boolean requiresAppointmentUnion() {
+        Set<Byte> fullTypes = calcTypes();
+        
+// testing hack:        
+//        if (fullTypes.contains(MailItem.TYPE_APPOINTMENT)) {
+//            NumericRange range = new NumericRange();
+//            range.lowest = 110;
+//            range.highest = Integer.MAX_VALUE;
+//            calStartDates.add(range);
+//        }
+        
+        return ((calStartDates.size() > 0 || calEndDates.size() > 0) &&
+                    (fullTypes.contains(MailItem.TYPE_APPOINTMENT) || fullTypes.contains(MailItem.TYPE_TASK)));
+    }
 
     /**
      * Returns true if query is for a single folder, item type list
@@ -205,7 +238,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
      * are specified.
      * @return
      */
-    public boolean isSimpleSingleFolderMessageQuery() {
+    boolean isSimpleSingleFolderMessageQuery() {
         boolean typeListIncludesMessage = false;
         if (types.size() > 0) {
             for (Byte type : types) {

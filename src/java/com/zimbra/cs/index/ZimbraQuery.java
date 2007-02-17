@@ -295,8 +295,14 @@ public final class ZimbraQuery {
             DBQueryOperation op = DBQueryOperation.Create();
 
             truth = calcTruth(truth);
-
-            op.addDateClause(mLowestTime, mLowerEq, mHighestTime, mHigherEq, truth);
+            
+            if (this.getQueryType() == ZimbraQueryParser.APPT_START)
+                op.addCalStartDateClause(mLowestTime, mLowerEq, mHighestTime, mHigherEq, truth);
+            else if (this.getQueryType() == ZimbraQueryParser.APPT_END)
+                op.addCalEndDateClause(mLowestTime, mLowerEq, mHighestTime, mHigherEq, truth);
+            else
+                op.addDateClause(mLowestTime, mLowerEq, mHighestTime, mHigherEq, truth);
+            
             return op;
         }
 
@@ -364,6 +370,8 @@ public final class ZimbraQuery {
 
             int field = 0;
             switch (origType) {
+                case ZimbraQueryParser.APPT_START:
+                case ZimbraQueryParser.APPT_END:
                 case ZimbraQueryParser.BEFORE:
                 case ZimbraQueryParser.AFTER:
                 case ZimbraQueryParser.DATE:
@@ -541,6 +549,8 @@ public final class ZimbraQuery {
                     case ZimbraQueryParser.YEAR:
                     case ZimbraQueryParser.MONTH:
                     case ZimbraQueryParser.DATE:
+                    case ZimbraQueryParser.APPT_START:
+                    case ZimbraQueryParser.APPT_END:
                         explicitEq = true;
                         break;
                 }
@@ -614,6 +624,12 @@ public final class ZimbraQuery {
                     break;
                 case ZimbraQueryParser.DATE:
                     str = "DATE";
+                    break;
+                case ZimbraQueryParser.APPT_START:
+                    str = "APPT-START";
+                    break;
+                case ZimbraQueryParser.APPT_END:
+                    str = "APPT-END";
                     break;
                 default:
                     str = "ERROR";
@@ -1620,6 +1636,8 @@ public final class ZimbraQuery {
             case ZimbraQueryParser.DATE:       return LuceneFields.L_DATE;
             case ZimbraQueryParser.AFTER:      return "after";
             case ZimbraQueryParser.BEFORE:     return "before";
+            case ZimbraQueryParser.APPT_START: return "APPT-START";
+            case ZimbraQueryParser.APPT_END: return "APPT-END";
             case ZimbraQueryParser.SIZE:       return "SIZE";
             case ZimbraQueryParser.BIGGER:     return "BIGGER";
             case ZimbraQueryParser.SMALLER:    return "SMALLER";

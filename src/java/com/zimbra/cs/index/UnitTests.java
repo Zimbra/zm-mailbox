@@ -32,11 +32,14 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-//import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
+import junit.framework.Assert;
 import junit.framework.TestCase;
 import junit.framework.TestFailure;
 import junit.framework.TestResult;
@@ -70,6 +73,72 @@ public class UnitTests extends TestCase {
         CliUtil.toolSetup();
 
     }
+    
+    static abstract class ExpectedHit {
+        public abstract boolean check(ZimbraHit hit) throws ServiceException;
+        
+    }
+    
+    static class ExpectedCalendarItemHit extends ExpectedHit {
+        String mUid;
+        public ExpectedCalendarItemHit(String uid) {
+            mUid = uid;
+        }
+        public boolean check(ZimbraHit hit) throws ServiceException {
+            if (!(hit instanceof CalendarItemHit))
+                return false;
+            return true;
+        }
+        
+        public String toString() {
+            return "CalendarItem uid="+mUid;
+        }
+        
+    }
+    
+    static class ExpectedMessageHit extends ExpectedHit {
+        String mSubject;
+        public ExpectedMessageHit(String subject) {
+            mSubject = subject;
+        }
+        public boolean check(ZimbraHit hit) throws ServiceException {
+            if (!(hit instanceof MessageHit))
+                return false;
+            
+            return checkSubject(hit.getSubject(), mSubject);
+        }
+        
+        public String toString() {
+            return "Message subject="+mSubject;
+        }
+    }
+    
+    
+    public static class NewValidator extends ResultValidator {
+        List<ExpectedHit> mExpected = new ArrayList<ExpectedHit>();
+        int curHit = 0;
+        
+        NewValidator(ExpectedHit... hits) {
+            super(hits.length);
+            
+            for (ExpectedHit e : hits)
+                mExpected.add(e);
+        }
+        
+        public void validate(ZimbraHit hit) throws ServiceException {
+            ExpectedHit expected = mExpected.get(curHit);
+            
+            if (!expected.check(hit)) {
+                StringBuilder sb = new StringBuilder("  Expected: \n");
+                for (ExpectedHit e : mExpected) 
+                    sb.append("\t").append(e.toString()).append("\n");
+                
+                throw ServiceException.FAILURE("Invalid hit, got: "+hit.toString()+sb.toString(), null);
+            }
+            
+            curHit++;
+        }
+    }
 
     public void testSearch() throws ServiceException
     {
@@ -79,8 +148,38 @@ public class UnitTests extends TestCase {
         }
 
         runTestQuery(mMailboxId, "in:inbox", false, NO_EXPECTED_CHECK);
+        
+        assertTrue(runTestQuery(mMailboxId, "appt-start:<1/1/2006 recurring", false, 
+            getTypes(MailItem.TYPE_APPOINTMENT, MailItem.TYPE_MESSAGE),NO_EXPECTED_CHECK,
+            new NewValidator(
+                new ExpectedMessageHit("Recurring Meeting Test"), 
+                new ExpectedCalendarItemHit("040000008200E00074C5B7101A82E00800000000F0BC424F5761C5010000000000000000100000002C10E79C9140CF41B7E18816DF121033")
+                )));
+        
+        assertTrue(runTestQuery(mMailboxId, "appt-start:>1/1/2006 recurring", false, 
+            getTypes(MailItem.TYPE_APPOINTMENT, MailItem.TYPE_MESSAGE),NO_EXPECTED_CHECK,
+            new NewValidator(
+                new ExpectedMessageHit("Recurring Meeting Test")
+            )
+        )); 
+        
+        
+        assertTrue(runTestQuery(mMailboxId, "(linux or has:ssn) and before:1/1/2009 and -subject:\"zipped document\"", false, new QueryResult[]
+                                                                                                                                              {
+                                                                                           new QueryResult("Frequent system freezes after kernel bug"),
+                                                                                           new QueryResult("Linux Desktop Info")
+                                                                                                                                              }
+                                                                                   ));
+     
 
-
+        assertTrue(runTestQuery(mMailboxId, "(linux or has:ssn) and before:1/1/2009 and -subject:\"zipped document\"", false, new QueryResult[]
+                                                                                                                                              {
+                                                                                           new QueryResult("Frequent system freezes after kernel bug"),
+                                                                                           new QueryResult("Linux Desktop Info")
+//                                                                                           ,new QueryResult(0, "numbers")
+                                                                                                                                              }
+                                                                                   ));
+        
         assertTrue(runTestQuery(mMailboxId, "(linux or has:ssn) and before:1/1/2009 and -subject:\"zipped document\"", false, new QueryResult[]
                                                                                                                                      {
                                                                                   new QueryResult("Frequent system freezes after kernel bug"),
@@ -284,7 +383,7 @@ public class UnitTests extends TestCase {
                             cmpId == msgFolderId);
                 }
             };
-            runTestQuery(mMailboxId, "in:inbox", false, NO_EXPECTED_CHECK, val);
+            runTestQuery(mMailboxId, "in:inbox", false, getMessageTypes(false), NO_EXPECTED_CHECK, val);
         }
         {
             final Date compDate = (new GregorianCalendar(2004, 1, 1)).getTime();
@@ -299,7 +398,7 @@ public class UnitTests extends TestCase {
                 }
             };
 
-            runTestQuery(mMailboxId, "before:1/1/2004", false, NO_EXPECTED_CHECK, val);
+            runTestQuery(mMailboxId, "before:1/1/2004", false, getMessageTypes(false), NO_EXPECTED_CHECK, val);
         }
 
         assertTrue(runTestQuery(mMailboxId, "metadata:foo metadata:(\"foo\" \"foo bar\" gub)", false, NO_EXPECTED_CHECK));
@@ -323,7 +422,7 @@ public class UnitTests extends TestCase {
     public static void MakeTestQuery(int mailboxId, String qstr, boolean conv)
     {
         try {
-            QueryResult[] ret = RunQuery(mailboxId, qstr, conv, null);
+            QueryResult[] ret = RunQuery(mailboxId, qstr, conv, getMessageTypes(conv), null);
 
             String qstr2 = qstr.replaceAll("\"", "\\\\\"");
             System.out.println("assertTrue(runTestQuery(mM, \""+
@@ -370,36 +469,80 @@ public class UnitTests extends TestCase {
                     System.out.println(e.toString());
                     e.printStackTrace();
                 }
-                assertTrue("Tag-Checking "+mhStr+" for "+compTagStr,
-                        mh.isTagged(compTag));
+                Assert.assertTrue("Tag-Checking "+mhStr+" for "+compTagStr, mh.isTagged(compTag));
             }
         };
-        runTestQuery(mMailboxId, "tag:"+tagName, false, NO_EXPECTED_CHECK, val);
+        runTestQuery(mMailboxId, "tag:"+tagName, false, getMessageTypes(false), NO_EXPECTED_CHECK, val);
     }
 
     public static abstract class ResultValidator {
+        protected int mNumExpected = -1;
+
+        ResultValidator() {}
+        
+        ResultValidator(int numExpected) {
+            mNumExpected = numExpected;
+        }
+        
+        int numExpected() { return mNumExpected; }
+        
+        boolean numReceived(int num) {
+            return (mNumExpected == num || mNumExpected == -1); 
+        }
+        
+        public Object getExpected(int num) {
+            return "";
+        }
+        
         public abstract void validate(ZimbraHit hit) throws ServiceException;
     }
-
+    
     public static final QueryResult[] NO_EXPECTED_CHECK = {};
 
     public int mMailboxId = 2;
+    
+    static final byte[] getTypes(Byte... in) {
+        Set<Byte> types = new HashSet<Byte>();
+        for (Byte b : in) {
+            types.add(b);
+        }
+        byte[] toRet = new byte[types.size()];
+        int i = 0;
+        for (Byte b : types) 
+            toRet[i++] = b;
+        return toRet;
+    }
+    
+    static final byte[] getMessageTypes(boolean conv) {
+        byte types[] = new byte[1];
+        if (conv) 
+            types[0] = MailItem.TYPE_CONVERSATION;
+        else
+            types[0] = MailItem.TYPE_MESSAGE;
+        return types;
+    }
 
     public boolean runTestQuery(int mailboxId, String qstr, boolean conv,
                                 QueryResult[] expected)
     {
-        return runTestQuery(mailboxId, qstr, conv, expected, null);
+        byte[] types = getMessageTypes(conv);
+        return runTestQuery(mailboxId, qstr, conv, types, expected, null);
     }
-
-
-    public boolean runTestQuery(int mailboxId, String qstr, boolean conv,
+    
+    public boolean runTestQuery(int mailboxId, String qstr, boolean conv, byte[] types,
+        QueryResult[] expected)
+    {
+        return runTestQuery(mailboxId, qstr, conv, types, expected, null);
+    }
+    
+    public boolean runTestQuery(int mailboxId, String qstr, boolean conv, byte[] types,
                                 QueryResult[] expected, ResultValidator validator)
     {
 //        System.out.println("\n\nrunTestQuery("+mailboxId+","+qstr+")");
 //        Zimbra.toolSetup("DEBUG");
 
         try {
-            QueryResult[] ret = RunQuery(mailboxId, qstr, conv, validator);
+            QueryResult[] ret = RunQuery(mailboxId, qstr, conv, types, validator);
 
 //            for (int i = 0; i < ret.length; i++) {
 //                System.out.println(ret[i].toString());
@@ -411,23 +554,25 @@ public class UnitTests extends TestCase {
                 if (ret.length == expected.length) {
                     error = false;
                     for (int i = 0; i < ret.length; i++) {
-                        String upperSub = ret[i].mSubject.toUpperCase();
-                        if (upperSub.startsWith("RE:  ")) {
-                            upperSub = upperSub.substring(5);
-                        } else if (upperSub.startsWith("RE: ")) {
-                                upperSub = upperSub.substring(4);
-                        } else if (upperSub.startsWith("RE:")) {
-                            upperSub = upperSub.substring(3);
-                        } else if (upperSub.startsWith("FW:  ")) {
-                            upperSub = upperSub.substring(5);
-                        } else if (upperSub.startsWith("FW: ")) {
-                            upperSub = upperSub.substring(4);
-                        } else if (upperSub.startsWith("FW:")) {
-                            upperSub = upperSub.substring(3);
-                        }
-
-                        if (!upperSub.equals(expected[i].mSubject.toUpperCase())) {
-                            System.out.println("UpperSub = "+upperSub+" sub="+ret[i].mSubject+" expected="+expected[i].mSubject.toUpperCase());
+//                        String upperSub = ret[i].mSubject.toUpperCase();
+//                        if (upperSub.startsWith("RE:  ")) {
+//                            upperSub = upperSub.substring(5);
+//                        } else if (upperSub.startsWith("RE: ")) {
+//                                upperSub = upperSub.substring(4);
+//                        } else if (upperSub.startsWith("RE:")) {
+//                            upperSub = upperSub.substring(3);
+//                        } else if (upperSub.startsWith("FW:  ")) {
+//                            upperSub = upperSub.substring(5);
+//                      } else if (upperSub.startsWith("FW: ")) {
+//                            upperSub = upperSub.substring(4);
+//                        } else if (upperSub.startsWith("FW:")) {
+//                            upperSub = upperSub.substring(3);
+//                        }
+//
+//                        if (!upperSub.equals(expected[i].mSubject.toUpperCase())) {
+                        if (!checkSubject(ret[i].mSubject, expected[i].mSubject)) {
+                            System.out.println("UpperSub = "+ret[i].mSubject.toUpperCase()+
+                                " sub="+ret[i].mSubject+" expected="+expected[i].mSubject.toUpperCase());
                             error = true;
                             errStr =
                                 "Expected return value doesn't match returned value at row " +
@@ -458,13 +603,13 @@ public class UnitTests extends TestCase {
                         }
                     }
 
-                    fail("\n\tQuery=\""+qstr+"\" -- "+errStr);
+                    Assert.fail("\n\tQuery=\""+qstr+"\" -- "+errStr);
                 }
             }
 
         } catch (IOException e) {
             e.printStackTrace();
-            fail("Caught an IOException running test query "+qstr+" for mailbox "+mailboxId);
+            Assert.fail("Caught an IOException running test query "+qstr+" for mailbox "+mailboxId);
         } catch (ServiceException e) {
             e.printStackTrace();
             fail("Caught a service exception running test query "+qstr);
@@ -477,9 +622,28 @@ public class UnitTests extends TestCase {
 
         return true;
     }
+    
+    static boolean checkSubject(String received, String expected) {
+        String upperSub = received.toUpperCase();
+        if (upperSub.startsWith("RE:  ")) {
+            upperSub = upperSub.substring(5);
+        } else if (upperSub.startsWith("RE: ")) {
+                upperSub = upperSub.substring(4);
+        } else if (upperSub.startsWith("RE:")) {
+            upperSub = upperSub.substring(3);
+        } else if (upperSub.startsWith("FW:  ")) {
+            upperSub = upperSub.substring(5);
+        } else if (upperSub.startsWith("FW: ")) {
+            upperSub = upperSub.substring(4);
+        } else if (upperSub.startsWith("FW:")) {
+            upperSub = upperSub.substring(3);
+        }
 
-    public static QueryResult[] RunQuery(int mailboxId, String qstr,
-                                         boolean conv, ResultValidator validator) throws IOException, MailServiceException, ParseException, ServiceException {
+        return upperSub.equals(expected.toUpperCase());
+    }
+
+    public static QueryResult[] RunQuery(int mailboxId, String qstr, 
+        boolean conv, byte[] types, ResultValidator validator) throws IOException, MailServiceException, ParseException, ServiceException {
         ArrayList<QueryResult> ret = new ArrayList<QueryResult>();
 
         MailboxIndex searcher = MailboxManager.getInstance().getMailboxById(mailboxId).getMailboxIndex();
@@ -487,19 +651,6 @@ public class UnitTests extends TestCase {
         int groupBy = MailboxIndex.SEARCH_RETURN_MESSAGES;
         if (conv) {
             groupBy = MailboxIndex.SEARCH_RETURN_CONVERSATIONS;
-        }
-
-        byte types[] = new byte[1];
-        switch(groupBy) {
-        case MailboxIndex.SEARCH_RETURN_CONVERSATIONS:
-            types[0] = MailItem.TYPE_CONVERSATION;
-            break;
-        case MailboxIndex.SEARCH_RETURN_MESSAGES:
-            types[0] = MailItem.TYPE_MESSAGE;
-            break;
-        default:
-            types[0] = 0;
-        break;
         }
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
@@ -578,12 +729,36 @@ public class UnitTests extends TestCase {
                             if (null != validator) {
                                 validator.validate(hit);
                             }
+                        } else {
+                            totalShown++;
+                            ret.add(new QueryResult(hit.getClass().getName()));
                         }
                     }
                     hit = res.getNext();
                 }
             }
-//  		System.out.println(numMessages + " total matching documents in " + (endTime-startTime) + " ms");
+            
+            if (validator != null && !validator.numReceived(ret.size())) {
+                String errStr = "Unexpected number of return values (expected "+validator.numExpected()+", returned "+ret.size()+")";
+                int ilen = Math.max(ret.size(), validator.numExpected());
+                for (int i = 0; i < ilen; i++) {
+                    if (i < ret.size()) {
+                        errStr+="\n\t\t"+i+") ret=" + ret.get(i).toString();
+                    } else {
+                        errStr+="\n\t\t"+i+") ret=NO_MORE";
+                    }
+                    
+                    if (i < validator.numExpected()) {
+                        errStr+="\n\t\t"+i+") exp=" + validator.getExpected(i).toString()+"\n";
+                    } else {
+                        errStr+="\n\t\t"+i+") exp=NO_MORE\n";
+                    }
+                }
+                
+                fail("\n\tQuery=\""+qstr+"\" -- "+errStr);
+            }
+            
+//          System.out.println(numMessages + " total matching documents in " + (endTime-startTime) + " ms");
 //  		System.out.println("Showed a total of " + totalShown + (conv ? " Conversations" : " Messages"));
         } finally {
             res.doneWithSearchResults();

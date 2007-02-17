@@ -17,7 +17,9 @@ Tim's short-short summary of the query grammar as of now (updated)
          |"{[0-9]+(,\s?[0-9]+)*}" -- ie {1,2,3} or {1} --> set of item_id's
    is:{"anywhere"|"unread"|"read"|"flagged"|"unflagged"|"sent"|"received"|"replied"|
        "unreplied"|"forwarded"|"unforwarded"|"invite"}
-   date:[>,<,>=,<={DATE} 
+   date:[>,<,>=,<={DATE}
+   appt-start:[>,<,>=,<={DATE} 
+   appt-end:[>,<,>=,<={DATE} 
    after:{DATE}
    before:{DATE}
    size:{SIZE}
@@ -166,6 +168,18 @@ date-related fields
   this year:      after:0year
   last year:      (after:-2year AND before:0year)
   last year and older:  before:0year
+
+appointment search operators
+----------------------------
+  appt-start:  appt-end:
+     Search based on the start and end times of the appointment.
+     For non-recurring appointments, this is basically what you
+     expect.  For recurring appointments, the start and end times are
+     the *earliest possible* time (start of the first instance in the
+     recurrence) and *latest possible* time, or sometime in 2099 if
+     the recurrence has no end.
+     
+  
 
 size-releted fields
 

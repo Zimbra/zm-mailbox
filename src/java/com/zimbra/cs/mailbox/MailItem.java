@@ -81,7 +81,8 @@ public abstract class MailItem implements Comparable<MailItem> {
     /** Item is a {@link Chat} */
     public static final byte TYPE_CHAT         = 16;
 
-    static final byte TYPE_MAX = TYPE_CHAT;
+    public static final byte TYPE_MAX = TYPE_CHAT;
+    
     public static final byte TYPE_UNKNOWN = -1;
 
     private static String[] TYPE_NAMES = {
