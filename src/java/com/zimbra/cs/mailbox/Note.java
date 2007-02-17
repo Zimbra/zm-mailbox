@@ -75,6 +75,11 @@ public class Note extends MailItem {
             throw new IllegalArgumentException();
     }
 
+    @Override
+    public String getSender() {
+        return "";
+    }
+
     /** Returns the <code>Note</code>'s content. */
     public String getContent() {
         return getSubject();

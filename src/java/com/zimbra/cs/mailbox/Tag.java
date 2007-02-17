@@ -47,6 +47,11 @@ public class Tag extends MailItem {
             throw new IllegalArgumentException();
     }
 
+    @Override
+    public String getSender() {
+        return "";
+    }
+
     public byte getIndex() {
         return getIndex(mId);
     }

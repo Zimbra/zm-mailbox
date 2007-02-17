@@ -88,6 +88,15 @@ public class Document extends MailItem {
         super(mbox, data);
     }
 
+    @Override
+    public String getSender() {
+        try {
+            return getCreator();
+        } catch (ServiceException e) {
+            return "";
+        }
+    }
+
     public String getFragment() {
     	if (mFragment == null && mRevisionList.size() > 0)
     		try {

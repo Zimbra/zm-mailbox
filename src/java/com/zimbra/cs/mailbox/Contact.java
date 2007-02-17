@@ -71,7 +71,6 @@ public class Contact extends MailItem {
     private static final int FA_MAXIMUM = FA_EXPLICIT;
 
     // these are the "well known attrs". keep in sync with Attr enum below
-    
     public static final String A_birthday = "birthday";
     public static final String A_callbackPhone = "callbackPhone";
     public static final String A_carPhone = "carPhone";
@@ -128,7 +127,6 @@ public class Contact extends MailItem {
  
     // these are the "well known attrs". keep in sync with A_* above.
     public enum Attr {
-
         assistantPhone,
         birthday,
         callbackPhone,
@@ -203,12 +201,16 @@ public class Contact extends MailItem {
         if (mData.type != TYPE_CONTACT)
             throw new IllegalArgumentException();
     }
-    
-    /**
-     * Returns a single field from the contact's field/value pairs
-     * @param fieldName
-     * @return 
-     */
+
+    public String getSender() {
+        try {
+            return getFileAsString();
+        } catch (ServiceException e) {
+            return "";
+        }
+    }
+
+    /** Returns a single field from the contact's field/value pairs. */
     public String get(String fieldName) {
         return mFields.get(fieldName);
     }
@@ -227,7 +229,7 @@ public class Contact extends MailItem {
         String fileAs = fields.get(A_fileAs);
         String[] fileParts = (fileAs == null ? null : fileAs.split(":", 2));
         int fileAsInt = FA_DEFAULT;
-        if (fileParts != null)
+        if (fileParts != null) {
             try {
                 fileAsInt = Integer.parseInt(fileParts[0]);
                 if (fileAsInt < 0 || fileAsInt > FA_MAXIMUM)
@@ -235,7 +237,8 @@ public class Contact extends MailItem {
             } catch (NumberFormatException e) {
                 throw ServiceException.INVALID_REQUEST("invalid fileAs value: " + fileAs, null);
             }
-        
+        }
+
         String company = fields.get(A_company);
         if (company == null)
             company = "";

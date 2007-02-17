@@ -557,33 +557,27 @@ public abstract class MailItem implements Comparable<MailItem> {
     public String getSubject() {
         return (mData.subject == null ? "" : mData.subject);
     }
-    
-    public String getSender() {
-        return (mData.sender == null ? "" : mData.sender);
-    }
-    
-    /**
-     * @return the SORT-FORM (UPPERCASED, maybe truncated, etc) of the subject of 
-     * this mail item
-     */
+
+    public abstract String getSender();
+
+    /** Returns the SORT-FORM (UPPERCASED, maybe truncated, etc) of the subject
+     *  of this mail item. */
     public String getSortSubject() {
-        String toRet = getSubject();
-        return toRet.toUpperCase().substring(0, Math.min(DbMailItem.MAX_SUBJECT_LENGTH, toRet.length()));
+        String subject = getSubject();
+        return subject.toUpperCase().substring(0, Math.min(DbMailItem.MAX_SUBJECT_LENGTH, subject.length()));
     }
-    
-    /**
-     * @return the SORT-FORM (UPPERCASED, maybe truncated, etc) of the sender of 
-     * this mail item
-     */
+
+    /** Returns the SORT-FORM (UPPERCASED, maybe truncated, etc) of the sender
+     *  of this mail item. */
     public String getSortSender() {
-        String toRet = getSender();
-        return toRet.toUpperCase().substring(0, Math.min(DbMailItem.MAX_SENDER_LENGTH, toRet.length()));
+        String sender = getSender();
+        return sender.toUpperCase().substring(0, Math.min(DbMailItem.MAX_SENDER_LENGTH, sender.length()));
     }
-    
+
     public int getUnreadCount() {
         return mData.unreadCount;
     }
-    
+
     /** Returns the "external" flag bitmask, which includes
      *  {@link Flag#BITMASK_UNREAD} when the item is unread. */
     public int getFlagBitmask() {

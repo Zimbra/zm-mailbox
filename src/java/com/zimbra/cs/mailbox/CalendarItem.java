@@ -38,17 +38,16 @@ import java.util.List;
 
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
+import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
 import javax.mail.internet.ContentType;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
-import javax.mail.internet.MimeMessage.RecipientType;
 
 import org.apache.lucene.document.Field;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.localconfig.DebugConfig;
@@ -126,6 +125,11 @@ public abstract class CalendarItem extends MailItem {
         return (mRecurrence != null);
     }
 
+    @Override
+    public String getSender() {
+        return mUid;
+    }
+
     public long getStartTime() {
         return mStartTime;
     }
@@ -137,11 +141,11 @@ public abstract class CalendarItem extends MailItem {
     public void saveMetadata() throws ServiceException {
         super.saveMetadata();
     }
-    
+
     public void markItemModified(int reason) {
         mMailbox.markItemModified(this, reason);
     }
-    
+
 
     boolean isTaggable()       { return true; }
     boolean isCopyable()       { return false; }
@@ -1264,7 +1268,7 @@ public abstract class CalendarItem extends MailItem {
             for (int i = 0; i < mReplies.size(); i++) {
                 String fn = FN_REPLY_INFO + i;
                 
-                meta.put(fn, ((ReplyInfo)(mReplies.get(i))).encodeAsMetadata());
+                meta.put(fn, mReplies.get(i).encodeAsMetadata());
             }
             return meta;
         }
@@ -1503,7 +1507,7 @@ public abstract class CalendarItem extends MailItem {
      * @return
      * @throws ServiceException
      */
-    public List /*ReplyInfo*/ getReplyInfo(Invite inv) {
+    public List<ReplyInfo> getReplyInfo(Invite inv) {
         return mReplyList.getReplyInfo(inv);
     }
     

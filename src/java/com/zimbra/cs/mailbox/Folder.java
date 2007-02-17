@@ -41,7 +41,6 @@ import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 /**
@@ -79,6 +78,10 @@ public class Folder extends MailItem {
             throw new IllegalArgumentException();
     }
 
+    @Override
+    public String getSender() {
+        return "";
+    }
 
     /** Returns the folder's absolute path.  Paths are UNIX-style with 
      *  <code>'/'</code> as the path delimiter.  Paths are relative to

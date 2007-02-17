@@ -156,7 +156,6 @@ public class Conversation extends MailItem {
         mData.inheritedTags = null;
     }
 
-
     /** Returns the normalized subject of the conversation.  This is done by
      *  taking the <tt>Subject:</tt> header of the first message and removing
      *  prefixes (e.g. <tt>"Re:"</tt>) and suffixes (e.g. <tt>"(fwd)"</tt>)
@@ -173,6 +172,11 @@ public class Conversation extends MailItem {
     @Override
     public String getSubject() {
         return (mRawSubject == null ? "" : mRawSubject);
+    }
+
+    @Override
+    public String getSender() {
+        return "";
     }
 
     /** Returns the number of messages in the conversation, as calculated from
