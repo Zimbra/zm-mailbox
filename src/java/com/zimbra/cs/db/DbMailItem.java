@@ -89,8 +89,9 @@ public class DbMailItem {
     private static final Map<Integer, TagsetCache> sFlagsetCache =
         new TimeoutMap<Integer, TagsetCache>(120 * Constants.MILLIS_PER_MINUTE);
 
-    public static final int MAX_SENDER_LENGTH = 128;
-    public static final int MAX_TEXT_LENGTH   = 65534;
+    public static final int MAX_SENDER_LENGTH  = 128;
+    public static final int MAX_SUBJECT_LENGTH = 1024;
+    public static final int MAX_TEXT_LENGTH    = 65534;
 
     public static final String IN_THIS_MAILBOX_AND = "mailbox_id = ? AND ";
     
@@ -148,7 +149,7 @@ public class DbMailItem {
             stmt.setInt(pos++, data.flags);
             stmt.setLong(pos++, data.tags);
             stmt.setString(pos++, checkSenderLength(data.sender));
-            stmt.setString(pos++, data.subject);
+            stmt.setString(pos++, checkSubjectLength(data.subject));
             stmt.setString(pos++, data.name);
             stmt.setString(pos++, checkTextLength(data.metadata));
             stmt.setInt(pos++, data.modMetadata);
@@ -576,7 +577,7 @@ public class DbMailItem {
             int pos = 1;
             stmt.setInt(pos++, (int) (note.getDate() / 1000));
             stmt.setInt(pos++, note.getSize());
-            stmt.setString(pos++, note.getSubject());
+            stmt.setString(pos++, checkSubjectLength(note.getSubject()));
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             stmt.setInt(pos++, mbox.getOperationChangeID());
@@ -659,7 +660,7 @@ public class DbMailItem {
             stmt.setString(pos++, item.getDigest(true));
             stmt.setInt(pos++, item.getInternalFlagBitmask());
             stmt.setString(pos++, checkSenderLength(sender));
-            stmt.setString(pos++, subject);
+            stmt.setString(pos++, checkSubjectLength(subject));
             stmt.setString(pos++, name);
             stmt.setString(pos++, checkTextLength(metadata));
             stmt.setInt(pos++, mbox.getOperationChangeID());
@@ -3267,13 +3268,26 @@ public class DbMailItem {
         return sender.substring(0, MAX_SENDER_LENGTH);
     }
 
+
+    /** Makes sure that the argument won't overflow the maximum length of a
+     *  MySQL VARCHAR(1024) column (1024 characters) by truncating the string
+     *  if necessary.
+     * 
+     * @param subject  The string to check (can be null).
+     * @return The passed-in String, truncated to 1024 chars. */
+    static String checkSubjectLength(String subject) throws ServiceException {
+        if (subject == null || subject.length() <= MAX_SENDER_LENGTH)
+            return subject;
+        throw ServiceException.FAILURE("subject too long", null);
+    }
+
     /** Makes sure that the argument won't overflow the maximum length of a
      *  MySQL TEXT column (65536 bytes) after conversion to UTF-8.
      * 
      * @param metadata  The string to check (can be null).
      * @return The passed-in String.
-     * @throws ServiceException <code>service.FAILURE</code> is thrown if
-     *         the parameter would be silently truncated when inserted. */
+     * @throws ServiceException <code>service.FAILURE</code> if the
+     *         parameter would be silently truncated when inserted. */
     static String checkTextLength(String metadata) throws ServiceException {
         if (metadata == null)
             return null;
