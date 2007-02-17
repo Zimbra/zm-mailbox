@@ -1364,35 +1364,37 @@ public class DbMailItem {
     // alias the sort column b/c of ambiguity problems (the sort column is included twice in the 
     // result set, and MySQL chokes on the ORDER BY when we do a UNION query (doesn't know
     // which 2 of the 4 sort columns are the "right" ones to use)
-    public static final String SORT_COLUMN_ALIAS = "_sortcol";
-    
-    private static String sortField(byte sort) {
-        String str = "date";
-        
+    public static final String SORT_COLUMN_ALIAS = "sortcol";
+
+    private static String sortField(byte sort, boolean useAlias) {
+        String str;
         boolean stringVal = false;
-        
         switch (sort & SORT_FIELD_MASK) {
-            case SORT_BY_SENDER:    stringVal = true; str = "mi.sender"; break;
-            case SORT_BY_SUBJECT:   stringVal = true; str = "mi.subject"; break;
-            case SORT_BY_NAME:       stringVal= true; str = "mi.name"; break;
-            case SORT_BY_ID:       str = "id"; break;
-            case SORT_NONE:        str = "NULL"; break;
+            case SORT_BY_SENDER:   str = "mi.sender";   stringVal = true;  break;
+            case SORT_BY_SUBJECT:  str = "mi.subject";  stringVal = true;  break;
+            case SORT_BY_NAME:     str = "mi.name";     stringVal = true;  break;
+            case SORT_BY_ID:       str = "mi.id";    break;
+            case SORT_NONE:        str = "NULL";     break;
             case SORT_BY_DATE:
-            default:               
+            default:               str = "mi.date";  break; 
         }
-        
+
         if (stringVal && Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON)) 
-            str = " UPPER("+str+")";
-        
-        return str + " as " + SORT_COLUMN_ALIAS;
+            str = "UPPER(" + str + ")";
+
+        return useAlias ? str + " AS " + SORT_COLUMN_ALIAS : str;
     }
 
     private static String sortQuery(byte sort) {
+        return sortQuery(sort, false);
+    }
+
+    private static String sortQuery(byte sort, boolean useAlias) {
         if (sort == SORT_NONE)
             return "";
-        
+
         StringBuilder statement = new StringBuilder(" ORDER BY ");
-        statement.append(SORT_COLUMN_ALIAS);
+        statement.append(useAlias ? SORT_COLUMN_ALIAS : sortField(sort, useAlias));
         if ((sort & SORT_DIRECTION_MASK) == SORT_DESCENDING)
             statement.append(" DESC");
         return statement.toString();
@@ -2346,7 +2348,7 @@ public class DbMailItem {
          * 
          *  If you change the first for parameters, you must change the COLUMN_* values above!
          */
-        StringBuilder select = new StringBuilder("SELECT mi.id, mi.index_id, mi.type, mi." + sortField(sort));
+        StringBuilder select = new StringBuilder("SELECT mi.id, mi.index_id, mi.type, " + sortField(sort, true));
         if (extra == SearchResult.ExtraData.MAIL_ITEM)
             select.append(", " + DB_FIELDS);
         else if (extra == SearchResult.ExtraData.IMAP_MSG)
@@ -2544,16 +2546,16 @@ public class DbMailItem {
             /*
              * ORDER BY (sortField) 
              */
-            statement.append(sortQuery(sort));
+            statement.append(sortQuery(sort, true));
             
             /*
              * LIMIT ?, ? 
              */
             if (validLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
                 statement.append(" LIMIT ?, ?");
-                numParams+=2; // two constraints added
+                numParams += 2; // two constraints added
             }
-            
+
             /*
              * Create the statement and bind all our parameters!
              */
