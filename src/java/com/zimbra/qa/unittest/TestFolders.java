@@ -32,7 +32,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbUtil;
-import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -90,9 +89,7 @@ public class TestFolders extends TestCase
         String sql =
             "SELECT id " +
             "FROM " + DbMailItem.getMailItemTableName(mMbox) +
-            " WHERE " +
-            (!DebugConfig.disableMailboxGroup ? "mailbox_id = " + mMbox.getId() + " AND " : "") +
-            "id = " + parentId;
+            " WHERE mailbox_id = " + mMbox.getId() + " AND id = " + parentId;
         DbResults results = DbUtil.executeQuery(sql);
         assertEquals("Parent folder query returned data.  id=" + parentId, 0, results.size());
         
@@ -107,9 +104,7 @@ public class TestFolders extends TestCase
         sql =
             "SELECT id " +
             "FROM " + DbMailItem.getMailItemTableName(mMbox) +
-            " WHERE " +
-            (!DebugConfig.disableMailboxGroup ? "mailbox_id = " + mMbox.getId() + " AND " : "") +
-            "id = " + childId;
+            " WHERE mailbox_id = " + mMbox.getId() + " AND id = " + childId;
         results = DbUtil.executeQuery(sql);
         assertEquals("Child folder query returned data.  id=" + childId, 0, results.size());
     }
@@ -133,9 +128,7 @@ public class TestFolders extends TestCase
         String sql =
             "SELECT id " +
             "FROM " + DbMailItem.getMailItemTableName(mMbox) +
-            " WHERE " +
-            (!DebugConfig.disableMailboxGroup ? "mailbox_id = " + mMbox.getId() + " AND " : "") +
-            "id = " + parentId;
+            " WHERE mailbox_id = " + mMbox.getId() + " AND id = " + parentId;
         DbResults results = DbUtil.executeQuery(sql);
         assertEquals("Parent folder query returned no data.  id=" + parentId, 1, results.size());
         
@@ -146,9 +139,7 @@ public class TestFolders extends TestCase
         sql =
             "SELECT id " +
             "FROM " + DbMailItem.getMailItemTableName(mMbox) +
-            " WHERE " +
-            (!DebugConfig.disableMailboxGroup ? "mailbox_id = " + mMbox.getId() + " AND " : "") +
-            "id = " + childId;
+            " WHERE mailbox_id = " + mMbox.getId() + " AND id = " + childId;
         results = DbUtil.executeQuery(sql);
         assertEquals("Child folder query returned no data.  id=" + childId, 1, results.size());
     }
@@ -172,9 +163,7 @@ public class TestFolders extends TestCase
         String sql =
             "SELECT id " +
             "FROM " + DbMailItem.getMailItemTableName(mMbox) +
-            " WHERE " +
-            (!DebugConfig.disableMailboxGroup ? "mailbox_id = " + mMbox.getId() + " AND " : "") +
-            "id = " + parentId;
+            " WHERE mailbox_id = " + mMbox.getId() + " AND id = " + parentId;
         DbResults results = DbUtil.executeQuery(sql);
         assertEquals("Parent folder query returned no data.  id=" + parentId, 1, results.size());
         
@@ -189,9 +178,7 @@ public class TestFolders extends TestCase
         sql =
             "SELECT id " +
             "FROM " + DbMailItem.getMailItemTableName(mMbox) +
-            " WHERE " +
-            (!DebugConfig.disableMailboxGroup ? "mailbox_id = " + mMbox.getId() + " AND " : "") +
-            "id = " + childId;
+            " WHERE mailbox_id = " + mMbox.getId() + " AND id = " + childId;
         results = DbUtil.executeQuery(sql);
         assertEquals("Child folder query returned data.  id=" + childId, 0, results.size());
     }

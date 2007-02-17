@@ -34,7 +34,6 @@ import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
@@ -453,9 +452,8 @@ public class TestUnread extends TestCase
         DbResults results = DbUtil.executeQuery(
             "SELECT COUNT(*) " +
             "FROM " + DbMailItem.getMailItemTableName(mMbox) +
-            " WHERE " +
-            (!DebugConfig.disableMailboxGroup ? "mailbox_id = " + mMbox.getId() + " AND " : "") +
-            "flags & " + Flag.BITMASK_UNREAD + " > 0");
+            " WHERE mailbox_id = " + mMbox.getId() +
+            " AND flags & " + Flag.BITMASK_UNREAD + " > 0");
         int numRows = results.getInt(1);
         assertEquals("Found " + numRows + " items with old unread flag set", 0, numRows);
     }
@@ -476,9 +474,8 @@ public class TestUnread extends TestCase
             DbResults results = DbUtil.executeQuery(
                 "SELECT unread " +
                 "FROM " + DbMailItem.getMailItemTableName(item) +
-                " WHERE " +
-                (!DebugConfig.disableMailboxGroup ? "mailbox_id = " + item.getMailboxId() + " AND " : "") +
-                "id = " + item.getId());
+                " WHERE mailbox_id = " + item.getMailboxId() +
+                " AND id = " + item.getId());
             assertEquals("Verify unread flag in the database", item.isUnread(), results.getBoolean(1));
         }
     }

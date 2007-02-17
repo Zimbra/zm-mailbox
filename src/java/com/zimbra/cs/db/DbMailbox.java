@@ -72,10 +72,7 @@ public class DbMailbox {
         // Order must match the order of column definition in zimbra.mailbox
         // table in db.sql script.
         CI_ID = pos++;
-        if (!DebugConfig.disableMailboxGroup)
-            CI_GROUP_ID = pos++;
-        else
-            CI_GROUP_ID = -1;
+        CI_GROUP_ID = pos++;
         CI_ACCOUNT_ID = pos++;
         CI_INDEX_VOLUME_ID = pos++;
         CI_ITEM_ID_CHECKPOINT = pos++;
@@ -91,7 +88,6 @@ public class DbMailbox {
     public static final int CI_METADATA_SECTION    = 2;
     public static final int CI_METADATA_METADATA    = 3;
 
-    private static String DB_PREFIX_DB_PER_MAILBOX = "mailbox";
     private static String DB_PREFIX_MAILBOX_GROUP = "mboxgroup";
 
     public static class NewMboxId {
@@ -108,8 +104,8 @@ public class DbMailbox {
             String idSource = (explicitId ? "?" : "next_mailbox_id");
             String limitClause = Db.supports(Db.Capability.LIMIT_CLAUSE) ? " ORDER BY index_volume_id LIMIT 1" : "";
             stmt = conn.prepareStatement("INSERT INTO mailbox" +
-                    "(account_id, id, " + (!DebugConfig.disableMailboxGroup ? "group_id, " : "") + "index_volume_id, item_id_checkpoint, comment)" +
-                    " SELECT ?, " + idSource + (!DebugConfig.disableMailboxGroup ? ", 0" : "") + ", index_volume_id, " + (Mailbox.FIRST_USER_ID - 1) + ", ?" +
+                    "(account_id, id, group_id, index_volume_id, item_id_checkpoint, comment)" +
+                    " SELECT ?, " + idSource + ", 0, index_volume_id, " + (Mailbox.FIRST_USER_ID - 1) + ", ?" +
                     " FROM current_volumes" + limitClause);
             int attr = 1;
             stmt.setString(attr++, accountId);
@@ -146,15 +142,13 @@ public class DbMailbox {
             stmt.close();
             stmt = null;
 
-            if (!DebugConfig.disableMailboxGroup) {
-                ret.groupId = getMailboxGroupId(ret.id);
-                stmt = conn.prepareStatement("UPDATE mailbox SET group_id = ? WHERE id = ?");
-                stmt.setInt(1, ret.groupId);
-                stmt.setInt(2, ret.id);
-                stmt.executeUpdate();
-                stmt.close();
-                stmt = null;
-            }
+            ret.groupId = getMailboxGroupId(ret.id);
+            stmt = conn.prepareStatement("UPDATE mailbox SET group_id = ? WHERE id = ?");
+            stmt.setInt(1, ret.groupId);
+            stmt.setInt(2, ret.id);
+            stmt.executeUpdate();
+            stmt.close();
+            stmt = null;
 
             return ret;
         } catch (SQLException e) {
@@ -178,7 +172,7 @@ public class DbMailbox {
 
         PreparedStatement stmt = null;
         try {
-            if (!DebugConfig.disableMailboxGroup && databaseExists(conn, mailboxId, groupId))
+            if (databaseExists(conn, mailboxId, groupId))
                 return;
 
             // Create the new database
@@ -236,43 +230,6 @@ public class DbMailbox {
         return true;
     }
 
-    /**
-     * Drop the database for the specified mailbox.  The DDL runs on its own connection
-     * so that it doesn't interfere with transactions on the main connection.
-     * 
-     * @throws ServiceException if the database creation fails
-     */
-    private static void dropMailboxDatabase(int mailboxId, int groupId)
-    throws ServiceException {
-        ZimbraLog.mailbox.debug("dropMailboxDatabase(" + mailboxId + ")");
-
-        String dbName = getDatabaseName(mailboxId, groupId);
-        if (!dbName.startsWith(DB_PREFIX_DB_PER_MAILBOX)) {
-            // Additional safeguard to make sure we don't drop the wrong database
-            throw ServiceException.FAILURE("Attempted to drop database " + dbName, null);
-        }
-
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        try {
-            conn = DbPool.getConnection();
-
-            // Create the new database
-            ZimbraLog.mailbox.info("Dropping database " + dbName);
-
-            stmt = conn.prepareStatement("DROP DATABASE IF EXISTS " + dbName);
-            stmt.execute(); 
-            stmt.close();
-
-            conn.commit();
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("dropMailboxDatabase(" + mailboxId + ")", e);
-        } finally {
-            DbPool.closeStatement(stmt);
-            DbPool.quietClose(conn);
-        }
-    }
-
     private static void dropMailboxFromGroup(Connection conn, Mailbox mbox)
     throws ServiceException {
         int mailboxId = mbox.getId();
@@ -316,10 +273,7 @@ public class DbMailbox {
     }
 
     public static void clearMailboxContent(Connection conn, Mailbox mbox) throws ServiceException {
-        if (!DebugConfig.disableMailboxGroup)
-            dropMailboxFromGroup(conn, mbox);
-        else
-            dropMailboxDatabase(mbox.getId(), mbox.getSchemaGroupId());
+        dropMailboxFromGroup(conn, mbox);
     }
 
     public static void updateMailboxStats(Mailbox mbox) throws ServiceException {
@@ -488,7 +442,7 @@ public class DbMailbox {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement(
-                    "SELECT account_id," + (!DebugConfig.disableMailboxGroup ? " group_id," : "") +
+                    "SELECT account_id, group_id," +
                     " size_checkpoint, contact_count, item_id_checkpoint, change_checkpoint, tracking_sync," +
                     " tracking_imap, index_volume_id " +
                     "FROM mailbox WHERE id = ?");
@@ -501,8 +455,7 @@ public class DbMailbox {
             Mailbox.MailboxData mbd = new Mailbox.MailboxData();
             mbd.id            = mailboxId;
             mbd.accountId     = rs.getString(pos++);
-            if (!DebugConfig.disableMailboxGroup)
-                mbd.schemaGroupId = rs.getInt(pos++);
+            mbd.schemaGroupId = rs.getInt(pos++);
             mbd.size          = rs.getLong(pos++);
             if (rs.wasNull())
                 mbd.size = -1;
@@ -578,10 +531,7 @@ public class DbMailbox {
 
     /** @return the name of the database that contains tables for the specified <code>mailboxId</code>. */
     public static String getDatabaseName(int mailboxId, int groupId) {
-        if (!DebugConfig.disableMailboxGroup)
-            return DB_PREFIX_MAILBOX_GROUP + groupId;
-        else
-            return DB_PREFIX_DB_PER_MAILBOX + mailboxId;
+        return DB_PREFIX_MAILBOX_GROUP + groupId;
     }
     public static String getDatabaseName(Mailbox mbox) {
         int id = mbox.getId();
@@ -616,12 +566,9 @@ public class DbMailbox {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement(
-                    "SELECT " +
-                    (!DebugConfig.disableMailboxGroup ? "" : "DISTINCT ") + "tags " +
-                    "FROM " + DbMailItem.getMailItemTableName(mbox) +
-                    (!DebugConfig.disableMailboxGroup ? " WHERE mailbox_id = ? GROUP BY mailbox_id, tags" : ""));
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(1, mbox.getId());
+                    "SELECT tags FROM " + DbMailItem.getMailItemTableName(mbox) +
+                    " WHERE mailbox_id = ? GROUP BY mailbox_id, tags");
+            stmt.setInt(1, mbox.getId());
             rs = stmt.executeQuery();
             while (rs.next())
                 tagsets.add(rs.getLong(1));
@@ -642,12 +589,9 @@ public class DbMailbox {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement(
-                    "SELECT " +
-                    (!DebugConfig.disableMailboxGroup ? "" : "DISTINCT ") + "flags " +
-                    "FROM " + DbMailItem.getMailItemTableName(mbox) +
-                    (!DebugConfig.disableMailboxGroup ? " WHERE mailbox_id = ? GROUP BY mailbox_id, flags" : ""));
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(1, mbox.getId());
+                    "SELECT flags FROM " + DbMailItem.getMailItemTableName(mbox) +
+                    " WHERE mailbox_id = ? GROUP BY mailbox_id, flags");
+            stmt.setInt(1, mbox.getId());
             rs = stmt.executeQuery();
             while (rs.next())
                 flagsets.add(rs.getLong(1));

@@ -1236,14 +1236,8 @@ public class Mailbox {
             try {
                 // remove all the relevant entries from the database
                 Connection conn = getOperationConnection();
-                if (!DebugConfig.disableMailboxGroup) {
-                    DbMailbox.clearMailboxContent(this);
-                    DbMailbox.deleteMailbox(conn, this);
-                } else {
-                    // Preserve original order of code with old schema.
-                    DbMailbox.deleteMailbox(conn, this);
-                    DbMailbox.clearMailboxContent(this);
-                }
+                DbMailbox.clearMailboxContent(this);
+                DbMailbox.deleteMailbox(conn, this);
 
                 success = true;
             } finally {

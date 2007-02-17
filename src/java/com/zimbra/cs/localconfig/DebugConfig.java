@@ -93,7 +93,6 @@ public class DebugConfig {
     // unaffected by this switch.
     public static boolean calendarForceUTC;
 
-    public static final boolean disableMailboxGroup;
     public static final int numMailboxGroups;
 
     static {
@@ -118,11 +117,7 @@ public class DebugConfig {
         disableIndexingAttachmentsSeparately = booleanValue("debug_disable_indexing_attachments_separately", false);
         disableIndexingAttachmentsTogether = booleanValue("debug_disable_indexing_attachments_together", false);
 
-        disableMailboxGroup = booleanValue("debug_disable_mailbox_group", false);
-        if (!disableMailboxGroup)
-            numMailboxGroups = Math.max(LC.zimbra_mailbox_groups.intValue(), 1);
-        else
-            numMailboxGroups = 32000;
+        numMailboxGroups = Math.max(LC.zimbra_mailbox_groups.intValue(), 1);
     }
 
     private static boolean booleanValue(String key, boolean defaultValue) {
