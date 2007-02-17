@@ -79,11 +79,7 @@ public final class MessagePartHit extends ZimbraHit {
 
     public String getSubject() throws ServiceException {
     	if (mCachedSubj == null) {
-    		if (mDoc != null) {
-    			mCachedSubj = mDoc.get(LuceneFields.L_SORT_SUBJECT);
-    		} else {
-    			mCachedSubj = getMessageResult().getSubject();
-    		}
+    	    mCachedSubj = getMessageResult().getSubject();
     	}
         return mCachedSubj; 
     }

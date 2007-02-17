@@ -337,11 +337,13 @@ public final class MailboxIndex
         }
     }
 
-    private void addDocument(IndexItem redoOp, Document doc, int indexId, long receivedDate, boolean deleteFirst) throws IOException {
-        addDocument(redoOp, new Document[] { doc }, indexId, receivedDate, deleteFirst);
+    private void addDocument(IndexItem redoOp, Document doc, int indexId, long receivedDate, 
+        MailItem mi, boolean deleteFirst) throws IOException {
+        addDocument(redoOp, new Document[] { doc }, indexId, receivedDate, mi, deleteFirst);
     }
 
-    private void addDocument(IndexItem redoOp, Document[] docs, int indexId, long receivedDate, boolean deleteFirst) throws IOException {
+    private void addDocument(IndexItem redoOp, Document[] docs, int indexId, long receivedDate, 
+        MailItem mi, boolean deleteFirst) throws IOException {
         synchronized(getLock()) {        
             long start = 0;
             if (mLog.isDebugEnabled())
@@ -362,14 +364,20 @@ public final class MailboxIndex
                 // doc can be shared by multiple threads if multiple mailboxes
                 // are referenced in a single email
                 synchronized (doc) {
+                    doc.removeFields(LuceneFields.L_SORT_SUBJECT);
+                    doc.removeFields(LuceneFields.L_SORT_NAME);
+                    //                                                                                                  store, index, tokenize
+                    doc.add(new Field(LuceneFields.L_SORT_SUBJECT, mi.getSortSubject(),  false, true, false));
+                    doc.add(new Field(LuceneFields.L_SORT_NAME,    mi.getSortSender(),     false, true, false));
+                    
                     doc.removeFields(LuceneFields.L_MAILBOX_BLOB_ID);
                     doc.add(new Field(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(indexId),      true/*store*/,  true/*index*/, false/*token*/));
 
                     // If this doc is shared by mult threads, then the date might just be wrong,
                     // so remove and re-add the date here to make sure the right one gets written!
-                    doc.removeFields(LuceneFields.L_DATE);
+                    doc.removeFields(LuceneFields.L_SORT_DATE);
                     String dateString = DateField.timeToString(receivedDate);
-                    doc.add(Field.Text(LuceneFields.L_DATE, dateString));
+                    doc.add(Field.Text(LuceneFields.L_SORT_DATE, dateString));
 
                     if (null == doc.get(LuceneFields.L_ALL)) {
                         doc.add(Field.UnStored(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE));
@@ -471,21 +479,15 @@ public final class MailboxIndex
     }
 
     Sort getSort(SortBy searchOrder) {
-//      mLuceneSortDateDesc = new Sort(new SortField(LuceneFields.L_DATE, SortField.STRING, true));
-//      mLuceneSortDateAsc = new Sort(new SortField(LuceneFields.L_DATE, SortField.STRING, false));
-//      mLuceneSortSubjectDesc = new Sort(new SortField(LuceneFields.L_SORT_SUBJECT, SortField.STRING, true));
-//      mLuceneSortSubjectAsc = new Sort(new SortField(LuceneFields.L_SORT_SUBJECT, SortField.STRING, false));
-//      mLuceneSortNameDesc = new Sort(new SortField(LuceneFields.L_SORT_NAME, SortField.STRING, true));
-//      mLuceneSortNameAsc = new Sort(new SortField(LuceneFields.L_SORT_NAME, SortField.STRING, false));
         synchronized(getLock()) {
             if (searchOrder != mLatestSortBy) { 
                 switch (searchOrder) {
                     case DATE_DESCENDING:
-                        mLatestSort = new Sort(new SortField(LuceneFields.L_DATE, SortField.STRING, true));
+                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.STRING, true));
                         mLatestSortBy = searchOrder;
                         break;
                     case DATE_ASCENDING:
-                        mLatestSort = new Sort(new SortField(LuceneFields.L_DATE, SortField.STRING, false));
+                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.STRING, false));
                         mLatestSortBy = searchOrder;
                         break;
                     case SUBJ_DESCENDING:
@@ -507,7 +509,7 @@ public final class MailboxIndex
                     case SCORE_DESCENDING:
                         return null;
                     default:
-                        mLatestSort = new Sort(new SortField(LuceneFields.L_DATE, SortField.STRING, true));
+                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.STRING, true));
                        mLatestSortBy = SortBy.DATE_ASCENDING;
                 }
             }
@@ -569,12 +571,7 @@ public final class MailboxIndex
                 if (segments_new.exists()) 
                     segments_new.renameTo(segments);
             }
-//          } catch(IOException e) {
-//          throw ServiceException.FAILURE("Error validating index path (mailbox="+mailbox.getId()+ " root="+root+")", e);
         }
-        
-        mLatestSort = new Sort(new SortField(LuceneFields.L_DATE, SortField.STRING, true));
-        mLatestSortBy = SortBy.DATE_DESCENDING;
         
         String analyzerName = mbox.getAccount().getAttr(Provisioning.A_zimbraTextAnalyzer, null);
 
@@ -598,7 +595,7 @@ public final class MailboxIndex
     private int mMailboxId;
     private Mailbox mMailbox;
     private static Log mLog = LogFactory.getLog(MailboxIndex.class);
-    private ArrayList /*IndexItem*/ mUncommittedRedoOps = new ArrayList();
+    private ArrayList<IndexItem>mUncommittedRedoOps = new ArrayList<IndexItem>();
 
     private static boolean sNewLockModel;
     static {
@@ -620,7 +617,7 @@ public final class MailboxIndex
     // access-order LinkedHashMap
     // Key is MailboxIndex and value is always null.  LinkedHashMap class is
     // used for its access-order feature.
-    private static LinkedHashMap /*MailboxIndex, null*/ sOpenIndexWriters =
+    private static LinkedHashMap/*<MailboxIndex, Object>*/ sOpenIndexWriters =
         new LinkedHashMap(200, 0.75f, true);
 
     // List of MailboxIndex objects that are waiting for room to free up in
@@ -656,7 +653,7 @@ public final class MailboxIndex
             boolean full = false;
             boolean shutdown = false;
             long startTime = System.currentTimeMillis();
-            ArrayList /*MailboxIndex*/ toRemove = new ArrayList(100);
+            ArrayList toRemove = new ArrayList(100);
 
             while (!shutdown) {
                 // Sleep until next scheduled wake-up time, or until notified.
@@ -1420,7 +1417,7 @@ public final class MailboxIndex
 
             String sortField = doc.get(mSortField);
             String partName = doc.get(LuceneFields.L_PARTNAME);
-            String dateStr = doc.get(LuceneFields.L_DATE);
+            String dateStr = doc.get(LuceneFields.L_SORT_DATE);
             long docDate = DateField.stringToTime(dateStr);
             // fix for Bug 311 -- SQL truncates dates when it stores them
             long truncDocDate = (docDate /1000) * 1000;
@@ -1585,7 +1582,7 @@ public final class MailboxIndex
                 c.types.add(MailItem.TYPE_MESSAGE);
                 c.types.add(MailItem.TYPE_NOTE);
 
-                String lucSortField = LuceneFields.L_DATE;
+                String lucSortField = LuceneFields.L_SORT_DATE;
 
                 ChkIndexStage2Callback callback = new ChkIndexStage2Callback(this, lucSortField, false);
 
@@ -1632,7 +1629,7 @@ public final class MailboxIndex
                 c.types.add(MailItem.TYPE_NOTE);
 
 
-                String lucSortField = LuceneFields.L_DATE;
+                String lucSortField = LuceneFields.L_SORT_DATE;
 
                 ChkIndexStage2Callback callback = new ChkIndexStage2Callback(this, lucSortField, true);
 
@@ -1754,9 +1751,9 @@ public final class MailboxIndex
         }
 
         private static class TermEnumCallback implements MailboxIndex.TermEnumInterface {
-            private Collection mCollection;
-
-            TermEnumCallback(Collection collection) {
+            private Collection<TermInfo> mCollection;
+            
+            TermEnumCallback(Collection<TermInfo> collection) {
                 mCollection = collection;
             }
             public void onTerm(Term term, int docFreq) {
@@ -1769,7 +1766,7 @@ public final class MailboxIndex
             }
         }
 
-        public void enumerateTerms(Collection /*TermEnumCallback.TermInfo*/ collection, String field) throws IOException {
+        public void enumerateTerms(Collection<TermInfo>collection, String field) throws IOException {
             TermEnumCallback cb = new TermEnumCallback(collection);
             mIdx.enumerateTermsForField(new Term(field,""), cb);
         }
@@ -1880,7 +1877,7 @@ public final class MailboxIndex
                 if (docList != null) {
                     Document[] docs = new Document[docList.size()];
                     docs = docList.toArray(docs);
-                    addDocument(redo, docs, indexId, date, deleteFirst);
+                    addDocument(redo, docs, indexId, date, item, deleteFirst);
                 }
             } catch (IOException e) {
                 throw ServiceException.FAILURE("indexMessage caught IOException", e);
@@ -1906,7 +1903,7 @@ public final class MailboxIndex
                 if (docList != null) {
                     Document[] docs = new Document[docList.size()];
                     docs = docList.toArray(docs);
-                    addDocument(redo, docs, indexId, pm.getReceivedDate(), deleteFirst);
+                    addDocument(redo, docs, indexId, pm.getReceivedDate(), msg, deleteFirst);
                 }
             } catch (IOException e) {
                 throw ServiceException.FAILURE("indexMessage caught IOException", e);
@@ -1948,8 +1945,6 @@ public final class MailboxIndex
                 }
 
                 Document doc = new Document();
-                String subj = contact.getFileAsString().toLowerCase();
-                String name = (subj.length() > DbMailItem.MAX_SENDER_LENGTH ? subj.substring(0, DbMailItem.MAX_SENDER_LENGTH) : subj);
 
                 StringBuilder searchText = new StringBuilder();
                 appendContactField(searchText, contact, Contact.A_company);
@@ -1969,21 +1964,16 @@ public final class MailboxIndex
                 searchText.append(ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, emailStr));
                 
                 /* put the email addresses in the "To" field so they can be more easily searched */
-                doc.add(new Field(LuceneFields.L_H_TO, emailStr,                                               false/*store*/, true/*index*/, true/*token*/));
-
+                doc.add(new Field(LuceneFields.L_H_TO, emailStr,  false/*store*/, true/*index*/, true/*token*/));
                 /* put the name in the "From" field since the MailItem table uses 'Sender'*/
-                doc.add(new Field(LuceneFields.L_H_FROM, name,                                                  false/*store*/, true/*index*/, true/*token*/ ));
-
+                doc.add(new Field(LuceneFields.L_H_FROM, contact.getSender(),  false/*store*/, true/*index*/, true/*token*/ ));
                 /* bug 11831 - put contact searchable data in its own field so wildcard search works better  */
-                doc.add(new Field(LuceneFields.L_CONTACT_DATA, searchText.toString(),                false/*store*/, true/*index*/, true/*token*/));
-
-                doc.add(new Field(LuceneFields.L_CONTENT, contentText.toString(),                      false/*store*/, true/*index*/, true/*token*/));
-                doc.add(new Field(LuceneFields.L_H_SUBJECT, subj,                                              false/*store*/, true/*index*/, true/*token*/));
-                doc.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_CONTACT,       true/*store*/,  true/*index*/, true/*token*/));
-                doc.add(new Field(LuceneFields.L_SORT_SUBJECT, subj.toUpperCase(),                     true/*store*/,  true/*index*/, false /*token*/));
-                doc.add(new Field(LuceneFields.L_SORT_NAME, name.toUpperCase(),                         false/*store*/, true/*index*/, false /*token*/));
-
-                addDocument(redo, doc, indexId, contact.getDate(), deleteFirst);
+                doc.add(new Field(LuceneFields.L_CONTACT_DATA, searchText.toString(), false/*store*/, true/*index*/, true/*token*/));
+                doc.add(new Field(LuceneFields.L_CONTENT, contentText.toString(), false/*store*/, true/*index*/, true/*token*/));
+                doc.add(new Field(LuceneFields.L_H_SUBJECT, contact.getSubject(), false/*store*/, true/*index*/, true/*token*/));
+                doc.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_CONTACT, true/*store*/,  true/*index*/, true/*token*/));
+                
+                addDocument(redo, doc, indexId, contact.getDate(), contact, deleteFirst);
 
             } catch (IOException ioe) {
                 throw ServiceException.FAILURE("indexContact caught IOException", ioe);
@@ -2014,21 +2004,10 @@ public final class MailboxIndex
 
                 Document doc = new Document();
                 doc.add(Field.UnStored(LuceneFields.L_CONTENT, toIndex));
-
-                String subj = toIndex.toLowerCase();
-                String name = (subj != null && subj.length() > DbMailItem.MAX_SENDER_LENGTH ? subj.substring(0, DbMailItem.MAX_SENDER_LENGTH) : subj);
-
-                doc.add(new Field(LuceneFields.L_H_SUBJECT, subj,                                              false/*store*/, true/*index*/, true/*token*/));
+                doc.add(new Field(LuceneFields.L_H_SUBJECT, toIndex,                                              false/*store*/, true/*index*/, true/*token*/));
                 doc.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_NOTE,            true/*store*/, true/*index*/, false/*tokenize*/));
-
-                doc.add(new Field(LuceneFields.L_SORT_SUBJECT, subj.toUpperCase(), false/*store*/, true/*index*/, false /*token*/));
-                doc.add(new Field(LuceneFields.L_SORT_NAME, name.toUpperCase(), false/*store*/, true/*index*/, false /*token*/));
-
-//              String dateString = DateField.timeToString(note.getDate());
-//              mLog.debug("Note date is: "+dateString);
-//              doc.add(Field.Text(LuceneFields.L_DATE, dateString));
-
-                addDocument(redo, doc, indexId, note.getDate(), deleteFirst);
+                
+                addDocument(redo, doc, indexId, note.getDate(), note, deleteFirst);
 
             } catch (IOException e) {
                 throw ServiceException.FAILURE("indexNote caught IOException", e);
@@ -2037,12 +2016,12 @@ public final class MailboxIndex
     }    
 
     public void indexDocument(Mailbox mbox, IndexItem redo, boolean deleteFirst, 
-                ParsedDocument pd, com.zimbra.cs.mailbox.Document doc)  throws ServiceException {
+        ParsedDocument pd, com.zimbra.cs.mailbox.Document doc)  throws ServiceException {
         initAnalyzer(mbox);
         synchronized(getLock()) {        
             try {
                 int indexId = doc.getIndexId();
-                addDocument(redo, pd.getDocument(), indexId, pd.getCreatedDate(), deleteFirst);
+                addDocument(redo, pd.getDocument(), indexId, pd.getCreatedDate(), doc, deleteFirst);
             } catch (IOException e) {
                 throw ServiceException.FAILURE("indexDocument caught Exception", e);
             }

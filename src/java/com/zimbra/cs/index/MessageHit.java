@@ -100,7 +100,7 @@ public class MessageHit extends ZimbraHit {
     public long getDate() throws ServiceException {
         if (mCachedDate == -1) {
             if (mMessage == null && mDoc != null) {
-                String dateStr = mDoc.get(LuceneFields.L_DATE);
+                String dateStr = mDoc.get(LuceneFields.L_SORT_DATE);
                 if (dateStr != null) {
                     mCachedDate = DateField.stringToTime(dateStr);
                     
@@ -194,11 +194,7 @@ public class MessageHit extends ZimbraHit {
             if (mConversationHit != null) { 
                 mCachedSubj = getConversationResult().getSubject();
             } else {
-                if (mDoc != null) {
-                    mCachedSubj = mDoc.get(LuceneFields.L_SORT_SUBJECT);
-                } else {
-                    mCachedSubj = getMessage().getNormalizedSubject();
-                }
+                mCachedSubj = getMessage().getNormalizedSubject();
             }
         }
         return mCachedSubj;
@@ -213,7 +209,7 @@ public class MessageHit extends ZimbraHit {
 
     public long getDateHeader() throws ServiceException {
         if (mMessage == null && mDoc != null) {
-            String dateStr = mDoc.get(LuceneFields.L_DATE);
+            String dateStr = mDoc.get(LuceneFields.L_SORT_DATE);
             if (dateStr != null) {
                 return DateField.stringToTime(dateStr);
             } else {

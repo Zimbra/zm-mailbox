@@ -221,11 +221,6 @@ public abstract class CalendarItem extends MailItem {
                 ParsedMessage pm = new ParsedMessage(mm, mMailbox.attachmentsIndexingEnabled());
                 List<org.apache.lucene.document.Document> docs = pm.getLuceneDocuments();
                 for (org.apache.lucene.document.Document doc : docs) {
-                    doc.removeField(LuceneFields.L_SORT_SUBJECT);
-                    doc.removeField(LuceneFields.L_SORT_NAME);
-                    //                                                                                                                    store, index, tokenize
-                    doc.add(new Field(LuceneFields.L_SORT_SUBJECT, this.getSubject().toUpperCase(), false, true, false));
-                    doc.add(new Field(LuceneFields.L_SORT_NAME, this.getSender(),                            false, true, false));
                     doc.add(Field.UnStored(LuceneFields.L_CONTENT, s.toString()));
                     toRet.add(doc);
                 }

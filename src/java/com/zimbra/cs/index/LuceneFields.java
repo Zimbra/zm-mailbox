@@ -58,7 +58,10 @@ public class LuceneFields {
      * date for sorting purposes
      * ALSO searchable date-  "date:"  "after:" and "before:"
      **/ 
-    public static final String L_DATE = "l.date";
+    public static final String L_SORT_DATE = "l.date";
+
+    @Deprecated
+    public static final String L_DATE = L_SORT_DATE;
 
     
     /*********************************

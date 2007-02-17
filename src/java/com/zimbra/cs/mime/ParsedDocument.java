@@ -40,7 +40,6 @@ import javax.activation.DataSource;
 import javax.activation.FileDataSource;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.lucene.document.DateField;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
@@ -180,21 +179,12 @@ public class ParsedDocument {
             mDocument.add(Field.Text(LuceneFields.L_SIZE, Integer.toString(mSize = ds.getSize())));
             mDocument.add(new Field(LuceneFields.L_H_SUBJECT, filename, false/*store*/, true/*index*/, true/*tokenize*/));
             mDocument.add(new Field(LuceneFields.L_CONTENT, filename,  false/*store*/, true/*index*/, true/*tokenize*/));
-            mDocument.add(new Field(LuceneFields.L_SORT_SUBJECT, filename.toUpperCase(), false/*store*/, true/*index*/, false/*tokenize*/));
-            mDocument.add(new Field(LuceneFields.L_SORT_NAME, creator.toUpperCase(), false/*store*/, true/*index*/, false/*tokenize*/));
             mDocument.add(new Field(LuceneFields.L_H_FROM, creator, false/*store*/, true/*index*/, true/*tokenize*/));
             mDocument.add(Field.Text(LuceneFields.L_FILENAME, filename));
-            String dateString = DateField.timeToString(createdDate);
-            if (dateString == null)
-            	throw ServiceException.FAILURE("cannot get a valid date", null);
-            try {
-            	mDocument.add(Field.Text(LuceneFields.L_DATE, dateString));
-            } catch (Exception e) {
-            }
         } catch (MimeHandlerException mhe) {
-        	throw ServiceException.FAILURE("cannot create ParsedDocument", mhe);
+            throw ServiceException.FAILURE("cannot create ParsedDocument", mhe);
         } catch (ObjectHandlerException ohe) {
-        	throw ServiceException.FAILURE("cannot create ParsedDocument", ohe);
+            throw ServiceException.FAILURE("cannot create ParsedDocument", ohe);
         }
     }
 

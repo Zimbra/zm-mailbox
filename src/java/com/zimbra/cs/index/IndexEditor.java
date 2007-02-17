@@ -476,7 +476,7 @@ public class IndexEditor {
         } else {
             blobId = "MISSING";
         }
-        String dateStr = d.get(LuceneFields.L_DATE);
+        String dateStr = d.get(LuceneFields.L_SORT_DATE);
         if (dateStr == null) {
             dateStr = "";
         } else {
@@ -532,7 +532,7 @@ public class IndexEditor {
                 part = "NULL_PART";
             }
 
-            String dateStr = d.get(LuceneFields.L_DATE);
+            String dateStr = d.get(LuceneFields.L_SORT_DATE);
             if (dateStr == null) {
                 dateStr = "";
             } else {

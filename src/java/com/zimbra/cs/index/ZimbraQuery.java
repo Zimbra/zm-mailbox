@@ -1627,15 +1627,15 @@ public final class ZimbraQuery {
             case ZimbraQueryParser.TO:         return LuceneFields.L_H_TO;
             case ZimbraQueryParser.CC:         return LuceneFields.L_H_CC;
             case ZimbraQueryParser.SUBJECT:    return LuceneFields.L_H_SUBJECT;
-            case ZimbraQueryParser.IN:         return "in";
-            case ZimbraQueryParser.HAS:        return "has";
+            case ZimbraQueryParser.IN:         return "IN";
+            case ZimbraQueryParser.HAS:        return "HAS";
             case ZimbraQueryParser.FILENAME:   return LuceneFields.L_FILENAME;
             case ZimbraQueryParser.TYPE:       return LuceneFields.L_MIMETYPE;
             case ZimbraQueryParser.ATTACHMENT: return LuceneFields.L_ATTACHMENTS;
             case ZimbraQueryParser.IS:         return "IS";
-            case ZimbraQueryParser.DATE:       return LuceneFields.L_DATE;
-            case ZimbraQueryParser.AFTER:      return "after";
-            case ZimbraQueryParser.BEFORE:     return "before";
+            case ZimbraQueryParser.DATE:       return "DATE";
+            case ZimbraQueryParser.AFTER:      return "AFTER";
+            case ZimbraQueryParser.BEFORE:     return "BEFORE";
             case ZimbraQueryParser.APPT_START: return "APPT-START";
             case ZimbraQueryParser.APPT_END: return "APPT-END";
             case ZimbraQueryParser.SIZE:       return "SIZE";
@@ -1648,14 +1648,14 @@ public final class ZimbraQuery {
             case ZimbraQueryParser.CONV_COUNT: return "CONV-COUNT";
             case ZimbraQueryParser.CONV_MINM:  return "CONV_MINM";
             case ZimbraQueryParser.CONV_MAXM:  return "CONV_MAXM";
-            case ZimbraQueryParser.CONV_START: return "conv-start";
-            case ZimbraQueryParser.CONV_END:   return "conv-end";
-            case ZimbraQueryParser.AUTHOR:     return "author";
-            case ZimbraQueryParser.TITLE:      return "title";
-            case ZimbraQueryParser.KEYWORDS:   return "keywords";
-            case ZimbraQueryParser.COMPANY:    return "company";
-            case ZimbraQueryParser.METADATA:   return "metadata";
-            case ZimbraQueryParser.ITEM:       return "itemId";
+            case ZimbraQueryParser.CONV_START: return "CONV-START";
+            case ZimbraQueryParser.CONV_END:   return "CONV-END";
+            case ZimbraQueryParser.AUTHOR:     return "AUTHOR";
+            case ZimbraQueryParser.TITLE:      return "TITLE";
+            case ZimbraQueryParser.KEYWORDS:   return "KEYWORDS";
+            case ZimbraQueryParser.COMPANY:    return "COMPANY";
+            case ZimbraQueryParser.METADATA:   return "METADATA";
+            case ZimbraQueryParser.ITEM:       return "ITEMID";
         }
         return "UNKNOWN:(" + qType + ")";
     }

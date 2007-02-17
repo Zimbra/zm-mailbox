@@ -37,7 +37,6 @@ import javax.mail.internet.MimeUtility;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import org.apache.lucene.document.DateField;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
@@ -68,7 +67,6 @@ public final class TopLevelMessageHandler {
     private static final int DONT_INDEX = 40;
 
     private static final int TOKENIZE = 50;
-    private static final int DONT_TOKENIZE = 60;
     
     private List<MPartInfo> mMessageParts;
     private Document     mDocument;
@@ -126,11 +124,8 @@ public final class TopLevelMessageHandler {
         setHeaderAsField("x-envelope-from", pm, LuceneFields.L_H_X_ENV_FROM, DONT_STORE, INDEX, TOKENIZE);
         setHeaderAsField("x-envelope-to", pm, LuceneFields.L_H_X_ENV_TO, DONT_STORE, INDEX, TOKENIZE);
 
-//        String msgId = setHeaderAsField("message-id", pm, LuceneFields.L_H_MESSAGE_ID, DONT_STORE, INDEX, DONT_TOKENIZE);
-
         String msgId = pm.getHeader("message-id");
         if (msgId.length() > 0) {
-            
             if (msgId.charAt(0) == '<')
                 msgId = msgId.substring(1);
             
@@ -138,7 +133,7 @@ public final class TopLevelMessageHandler {
                 msgId = msgId.substring(0, msgId.length()-1);
             
             if (msgId.length() > 0) {
-                //                                                         store, index, tokenize
+                //                                                                                    store, index, tokenize
                 mDocument.add(new Field(LuceneFields.L_H_MESSAGE_ID, msgId, false, true, false));
             }
         }
@@ -154,8 +149,6 @@ public final class TopLevelMessageHandler {
         //                                                                           store, index, tokenize
         mDocument.add(new Field(LuceneFields.L_H_FROM,       from,                   false, true, true));
         mDocument.add(new Field(LuceneFields.L_H_SUBJECT,    subject,                false, true, true));
-        mDocument.add(new Field(LuceneFields.L_SORT_SUBJECT, subject.toUpperCase(),  false, true, false));
-        mDocument.add(new Field(LuceneFields.L_SORT_NAME,    sortFrom.toUpperCase(), false, true, false));
 
         // calculate the fragment *before* we add non-content data
         mFragment = getFragment();
@@ -202,20 +195,6 @@ public final class TopLevelMessageHandler {
         else
             attachments = attachments + "," + LuceneFields.L_ATTACHMENT_ANY;
         mDocument.add(Field.UnStored(LuceneFields.L_ATTACHMENTS, attachments));
-        
-        long date = pm.getReceivedDate();
-        
-        String dateString = DateField.timeToString(date);
-        if (dateString != null) {
-            try {
-                mDocument.add(Field.Text(LuceneFields.L_DATE, dateString));
-            } catch(Exception e) {
-                // parse error on date or 
-                // date before/after lucene's valid date range.  ignore it.
-            }
-        } else {
-            throw new MessagingException("Couldn't get valid date for message");
-        }
         
         return mDocument;
     }
@@ -265,17 +244,6 @@ public final class TopLevelMessageHandler {
             d.add(new Field(LuceneFields.L_H_FROM, from, false, true, true));
         if (subject != null) {
             d.add(new Field(LuceneFields.L_H_SUBJECT, subject, false, true, true));
-            d.add(new Field(LuceneFields.L_SORT_SUBJECT, subject.toUpperCase(), true, true, false));
         }
-        if (sortFrom != null)
-            d.add(new Field(LuceneFields.L_SORT_NAME, sortFrom.toUpperCase(), false, true, false));
-        
-		/* If the document already has a date set (e.g. the word doc we parsed had a modified date or something) 
-		 * then we'll just use that date -- otherwise, we'll use the date from our container's document
-		 */
-		if (null == d.getField(LuceneFields.L_DATE)) {
-		    String containerDate = mDocument.get(LuceneFields.L_DATE);
-		    d.add(Field.Text(LuceneFields.L_DATE, containerDate));
-		}
 	}
 }
