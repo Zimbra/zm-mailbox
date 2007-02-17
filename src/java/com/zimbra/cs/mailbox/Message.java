@@ -45,6 +45,7 @@ import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.calendar.*;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.TnefConverter;
 import com.zimbra.cs.redolog.op.IndexItem;
@@ -140,15 +141,6 @@ public class Message extends MailItem {
         return isTagged(mMailbox.mDraftFlag);
     }
 
-    /**
-     * Returns <code>From:</code> address if available; if not, returns
-     * <code>Sender:</code> address.
-     * @return
-     */
-    public String getSender() {
-        return (mSender == null ? "" : mSender);
-    }
-
     /** Returns the <code>To:</code> header of the message, if the message
      *  was sent by the user.  Retuns <code>""</code> otherwise. */
     public String getRecipients() {
@@ -175,10 +167,29 @@ public class Message extends MailItem {
     }
 
     /** Returns the raw subject of the message.  This is taken directly from
-     *  the <code>Subject:</code> header with no processing. */
+     *  the <tt>Subject:</tt> header with no processing. */
     @Override
     public String getSubject() {
         return (mRawSubject == null ? "" : mRawSubject);
+    }
+
+    /** Returns the <tt>From:</tt> header of the message if available;
+     *  if not, returns the <tt>Sender:</tt> header. */
+    @Override
+    public String getSender() {
+        return (mSender == null ? "" : mSender);
+    }
+
+    @Override
+    public String getSortSubject() {
+        String subject = getNormalizedSubject();
+        return subject.toUpperCase().substring(0, Math.min(DbMailItem.MAX_SUBJECT_LENGTH, subject.length()));
+    }
+
+    @Override
+    public String getSortSender() {
+        String sender = new ParsedAddress(getSender()).getSortString();
+        return sender.toUpperCase().substring(0, Math.min(DbMailItem.MAX_SENDER_LENGTH, sender.length()));
     }
 
     /** Returns whether the Message was sent by the owner of this mailbox.
