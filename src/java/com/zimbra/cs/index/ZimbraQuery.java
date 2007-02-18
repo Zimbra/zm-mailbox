@@ -478,15 +478,11 @@ public final class ZimbraQuery {
                             num = num * -1;
                         }
 
-                        System.out.println("Before the add: "+cal.getTime().toString());
                         cal.add(field,num);
-                        System.out.println("After the add: "+cal.getTime().toString());
                         mDate = cal.getTime();
 
                         cal.add(field,1);
                         mEndDate = cal.getTime();
-                        System.out.println("After the 2nd add: "+cal.getTime().toString());
-                                                
                     } else {
                         //
                         // ABSOLUTE dates:
