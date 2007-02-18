@@ -127,7 +127,16 @@ public abstract class CalendarItem extends MailItem {
 
     @Override
     public String getSender() {
-        return mUid;
+        String sender = null;
+        Invite firstInvite = this.getDefaultInviteOrNull();
+        if (firstInvite != null) {
+            ZOrganizer org = firstInvite.getOrganizer();
+            if (org != null) 
+                sender = org.getIndexString();
+        }
+        if (sender == null)
+            sender = "";
+        return sender;
     }
 
     public long getStartTime() {
@@ -139,7 +148,8 @@ public abstract class CalendarItem extends MailItem {
     }
     
     public void saveMetadata() throws ServiceException {
-        super.saveMetadata();
+//        super.saveMetadata();
+        reanalyze(null);
     }
 
     public void markItemModified(int reason) {
@@ -171,44 +181,15 @@ public abstract class CalendarItem extends MailItem {
         
         Invite defaultInvite = this.getDefaultInviteOrNull();
         
-        String defaultSubject = null;
-        if (defaultInvite != null && defaultInvite.getName() != null)
-            defaultSubject = defaultInvite.getName();
-        
         String defaultLocation = "";
         if (defaultInvite != null && defaultInvite.getLocation() != null)
             defaultLocation = defaultInvite.getLocation();
-        
-        ZOrganizer org = null;
-        if (defaultInvite != null && defaultInvite.getOrganizer() != null)
-            org = defaultInvite.getOrganizer();
         
         for (Invite inv : this.getInvites()) {
             MimeMessage mm = inv.getMimeMessage();
             
             try {
                 StringBuilder s = new StringBuilder();
-
-                // must override the document sort-subject below to keep
-                // sort orders in line!!!
-                if (inv.getName() != null) {
-                    mm.setSubject(defaultSubject);
-                    s.append(inv.getName()).append(' ');
-                } else {
-                    mm.setSubject(defaultSubject);
-                    s.append(defaultSubject).append(' ');
-                }
-                
-                // must override the document's sort-name below to keep 
-                // sort orders in line!
-                if (inv.hasOrganizer()) {
-                    mm.setFrom(inv.getOrganizer().getFriendlyAddress());
-                    s.append(inv.getOrganizer().getIndexString()).append(' ');
-                } else if (org != null) {
-                    mm.setFrom(org.getFriendlyAddress());
-                    s.append(org.getFriendlyAddress()).append(' ');
-                }
-                
                 for (ZAttendee at : inv.getAttendees()) {
                     mm.addRecipient(RecipientType.TO, at.getFriendlyAddress());
                     s.append(at.getIndexString()).append(' ');
@@ -244,6 +225,17 @@ public abstract class CalendarItem extends MailItem {
         Mailbox mbox = folder.getMailbox();
 
         byte type = firstInvite.isEvent() ? TYPE_APPOINTMENT : TYPE_TASK;
+        
+        String sender = null;
+        ZOrganizer org = firstInvite.getOrganizer();
+        if (org != null) 
+            sender = org.getIndexString();
+        if (sender == null)
+            sender = "";
+        
+        String subject = firstInvite.getName();
+        if (subject == null)
+            subject= "";
 
         List<Invite> invites = new ArrayList<Invite>();
         invites.add(firstInvite);
@@ -278,7 +270,8 @@ public abstract class CalendarItem extends MailItem {
         data.volumeId = volumeId;
         data.date     = mbox.getOperationTimestamp();
         data.tags     = Tag.tagsToBitmask(tags);
-        data.sender   = uid;
+        data.sender   = sender;
+        data.subject = subject;
         data.metadata = encodeMetadata(DEFAULT_COLOR, uid, startTime, endTime, recur, invites, firstInvite.getTimeZoneMap(), new ReplyList());
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
@@ -992,10 +985,16 @@ public abstract class CalendarItem extends MailItem {
     }
     
     void reanalyze(Object data) throws ServiceException {
-        if (!(data instanceof ParsedMessage))
-            throw ServiceException.FAILURE("cannot reanalyze non-ParsedMessage object", null);
-        ParsedMessage pm = (ParsedMessage) data;
-        saveData(pm.getParsedSender().getSortString());
+        String subject = null;
+        Invite firstInvite = this.getDefaultInviteOrNull();
+        if (firstInvite != null) {
+            subject = firstInvite.getName();
+        }
+        if (subject == null)
+            subject= "";
+        
+        mData.subject = subject;
+        saveData(getSender());
     }
 
     /**

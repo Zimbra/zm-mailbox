@@ -73,19 +73,24 @@ public abstract class CalendarUser {
     public String getLanguage() { return mLanguage; }
     public void setLanguage(String lang) { mLanguage = lang; }
     
+    private final String blankIfNullSpaceAfterIfNot(String str) {
+        if (str == null)
+            return "";
+        else
+            return str+" ";
+    }
+    
     /**
      * @return all the data in this concatenated, for easy indexing
      */
     public String getIndexString() {
         StringBuilder s = new StringBuilder();
-        s.append(getAddress()).append(' ');
-        s.append(getCn()).append(' ');
-        s.append(getSentBy()).append(' ');
-        s.append(getDir()).append(' ');
-        
-        return s.toString();
+        s.append(blankIfNullSpaceAfterIfNot(getCn()));
+        s.append(blankIfNullSpaceAfterIfNot(getAddress()));
+        s.append(blankIfNullSpaceAfterIfNot(getSentBy()));
+        s.append(blankIfNullSpaceAfterIfNot(getDir()));
+        return s.toString().trim();
     }
-
     
     public CalendarUser(String address,
                            String cn,
