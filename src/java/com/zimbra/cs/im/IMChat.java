@@ -416,6 +416,7 @@ public class IMChat extends ClassLogger {
     {
         IMAddr fromAddr = mPersona.getAddr();
         message.setFrom(fromAddr);
+	message.setTo(toAddr);
         addMessage(true, message);
 
         org.xmpp.packet.Message xmppMsg = new org.xmpp.packet.Message();

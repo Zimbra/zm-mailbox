@@ -70,7 +70,11 @@ public class IMMessage {
         return "MESSAGE("+mDate+"): "+mSubject+" "+mBody;
     }
     
-    public void setFrom(IMAddr from) { mFrom = from; } 
+    public void setFrom(IMAddr from) { mFrom = from; }
+
+    public void setTo(IMAddr to) {
+	mTo = to;
+    }
     
     
     public IMMessage(TextPart subject, TextPart body) {
@@ -117,6 +121,7 @@ public class IMMessage {
     Map<Lang, TextPart> mLangBodies;
     Date mDate;
     IMAddr mFrom;
+    IMAddr mTo;
     
     public Element toXml(Element parent) {
         {
@@ -135,6 +140,7 @@ public class IMMessage {
     }
 
     public IMAddr getFrom() { return mFrom; }
+    public IMAddr getTo() { return mTo; }
     public long getTimestamp() { return mDate.getTime(); }
     public Date getDate() { return mDate; }
     

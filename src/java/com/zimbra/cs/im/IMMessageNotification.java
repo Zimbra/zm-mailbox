@@ -46,6 +46,9 @@ public class IMMessageNotification extends IMNotification {
     public Element toXml(Element parent) throws ServiceException {
         Element e = create(parent, IMConstants.E_MESSAGE);
         e.addAttribute(IMConstants.A_FROM, mFromAddr.toString());
+	try {
+		e.addAttribute(IMConstants.A_TO, mMessage.getTo().toString());
+	} catch(Exception ex) {};
         e.addAttribute(IMConstants.A_THREAD_ID, mThreadId);
         e.addAttribute(IMConstants.A_TIMESTAMP, mMessage.getTimestamp());
         
