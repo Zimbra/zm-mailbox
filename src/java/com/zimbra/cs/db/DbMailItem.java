@@ -3276,7 +3276,7 @@ public class DbMailItem {
      * @param subject  The string to check (can be null).
      * @return The passed-in String, truncated to 1024 chars. */
     static String checkSubjectLength(String subject) throws ServiceException {
-        if (subject == null || subject.length() <= MAX_SENDER_LENGTH)
+        if (subject == null || subject.length() <= MAX_SUBJECT_LENGTH)
             return subject;
         throw ServiceException.FAILURE("subject too long", null);
     }
