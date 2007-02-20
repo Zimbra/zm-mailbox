@@ -1797,6 +1797,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                         sendIdleUntagged();  checkpoint = now;
                     }
                 }
+
+                i4list.clear();  idlist.clear();
             }
         } catch (ServiceException e) {
             deleteTags(newTags);

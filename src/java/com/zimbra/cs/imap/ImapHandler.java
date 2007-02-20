@@ -1824,6 +1824,8 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                         sendIdleUntagged();  checkpoint = now;
                     }
                 }
+
+                i4list.clear();  idlist.clear();
             }
         } catch (ServiceException e) {
             deleteTags(newTags);
