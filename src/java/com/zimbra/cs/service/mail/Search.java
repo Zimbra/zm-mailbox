@@ -418,13 +418,11 @@ public class Search extends MailDocumentHandler  {
         }
         
         Element m;
-        if (inline) {
+        if (inline)
             m = ToXML.encodeMessageAsMP(response, zsc, msg, null, params.getWantHtml(), params.getNeuterImages());
-            if (!msg.getFragment().equals(""))
-                m.addAttribute(MailConstants.E_FRAG, msg.getFragment(), Element.DISP_CONTENT);
-        } else {
+        else
             m = ToXML.encodeMessageSummary(response, zsc, msg, params.getWantRecipients());
-        }
+
         if (mh.getScore() != 0)
             m.addAttribute(MailConstants.A_SCORE, mh.getScore());
 
@@ -434,11 +432,8 @@ public class Search extends MailDocumentHandler  {
         if (parts != null) {
             for (MessagePartHit mph : parts) {
                 String partNameStr = mph.getPartName();
-
-                if (partNameStr.length() > 0) {
-                    Element mp = m.addElement(MailConstants.E_HIT_MIMEPART);
-                    mp.addAttribute(MailConstants.A_PART, partNameStr);
-                }
+                if (partNameStr.length() > 0)
+                    m.addElement(MailConstants.E_HIT_MIMEPART).addAttribute(MailConstants.A_PART, partNameStr);
             }
         }
         
