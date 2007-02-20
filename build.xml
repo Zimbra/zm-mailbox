@@ -599,6 +599,7 @@
 		<delete dir="${zimbra.home.dir}/redolog" />
 		<delete dir="${zimbra.home.dir}/backup" />
 		<delete dir="${zimbra.home.dir}/lib/ext" />
+		<delete dir="${zimbra.home.dir}/conf/attrs" />
 		<delete dir="${zimbra.home.dir}/conf/msgs" />
 		<delete failonerror="no">
 			<fileset dir="${zimbra.home.dir}/log" includes="*.log" />
