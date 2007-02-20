@@ -2004,9 +2004,29 @@ public class ZMailbox {
         invoke(new XMLElement(MailConstants.NO_OP_REQUEST));
     }
 
-    public enum OwnerBy { BY_ID, BY_NAME }
+    public enum OwnerBy {
+        BY_ID, BY_NAME;
 
-    public enum SharedItemBy { BY_ID, BY_PATH }
+        public static OwnerBy fromString(String s) throws ServiceException {
+            try {
+                return OwnerBy.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ZClientException.CLIENT_ERROR("invalid ownerBy: "+s+", valid values: "+Arrays.asList(OwnerBy.values()), e);
+            }
+        }
+    }
+
+    public enum SharedItemBy {
+        BY_ID, BY_PATH;
+
+        public static SharedItemBy fromString(String s) throws ServiceException {
+            try {
+                return SharedItemBy.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ZClientException.CLIENT_ERROR("invalid sharedItemBy: "+s+", valid values: "+Arrays.asList(SharedItemBy.values()), e);
+            }
+        }
+    }
 
     /**
      * create a new mointpoint in the specified parent folder.
