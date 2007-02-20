@@ -38,6 +38,7 @@ import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.EasySSLProtocolSocketFactory;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.account.Provisioning.IdentityBy;
@@ -726,13 +727,36 @@ public class ZMailbox {
         if (item instanceof ZTag) return (ZTag) item;
         else return null;
     }
+    
+    private static final Pattern sCOMMA = Pattern.compile(",");
 
+    /**
+     * returns the tags for the specified ids.  Ignores id's that don't
+     * reference existing tags.
+     *
+     * @param ids the tag ids
+     * @return the tag list, or an empty list if no ids match
+     * @throws com.zimbra.common.service.ServiceException on error
+     */
+    public List<ZTag> getTags(String ids) throws ServiceException {
+        List<ZTag> tags = new ArrayList<ZTag>();
+        if (!StringUtil.isNullOrEmpty(ids)) {
+            for (String id : sCOMMA.split(ids)) {
+                ZTag tag = getTagById(id);
+                if (tag != null) {
+                    tags.add(tag);
+                }
+            }
+        }
+        return tags;
+    }
+    
     /**
      * create a new tag with the specified color.
      *
      * @return newly created tag
      * @param name name of the tag
-     * @param color color of the tag
+     * @param color optional color of the tag
      * @throws com.zimbra.common.service.ServiceException if an error occurs
      *
      */

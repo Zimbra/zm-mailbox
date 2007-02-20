@@ -26,7 +26,12 @@
 package com.zimbra.cs.filter;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,18 +49,22 @@ import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.ActionFileInto;
 import org.apache.jsieve.mail.ActionKeep;
 import org.apache.jsieve.mail.ActionRedirect;
-//import org.apache.jsieve.mail.ActionReject;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.mail.MailUtils;
 import org.apache.jsieve.mail.SieveMailException;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.filter.jsieve.ActionTag;
-import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.SharedDeliveryContext;
+import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 
 /**
  * Sieve evaluation engine adds a list of {@link org.apache.jsieve.mail.Action}s 
@@ -200,20 +209,31 @@ public class ZimbraMailAdapter implements MailAdapter
         getActions().add(action);
     }
     
-    public void executeActions() throws SieveException
-    {
+    public void executeActions() throws SieveException {
         try {
-            ListIterator actionsIter = getActionsIterator();
             boolean dup = false;
-            List<Action> nontermActions = new ArrayList<Action>(5);
             
-            Message lastMsgByTermAction = null;
-            while (actionsIter.hasNext()) {
-                Action action = (Action) actionsIter.next();
-                
-                Class actionClass = action.getClass();
-                if (actionClass == ActionKeep.class) {
-                    
+            // If the Sieve script has no actions, JSieve generates an implicit keep.  If
+            // the script contains a single discard action, JSieve returns an empty list.
+            if (getActions().size() == 0) {
+                ZimbraLog.filter.info("Discarding message with Message-ID %s from %s",
+                    mParsedMessage.getMessageID(), mParsedMessage.getSender());
+                return;
+            }
+            
+            // If only tag/flag actions are specified, JSieve does not generate an
+            // implicit keep.
+            List<Action> deliveryActions = getDeliveryActions();
+            if (deliveryActions.size() == 0) {
+                Message msg = doDefaultFiling();
+                if (msg == null) {
+                    dup = true;
+                }
+            }
+
+            // Handle explicit and implicit delivery actions
+            for (Action action : deliveryActions) {
+                if (action instanceof ActionKeep) {
                     ActionKeep keep = (ActionKeep) action;
                     Message msg = null;
                     if (keep.isImplicit()) {
@@ -223,17 +243,13 @@ public class ZimbraMailAdapter implements MailAdapter
                     } else {
                         // if explicit keep is specified, keep in INBOX regardless of spam
                         // save the message to INBOX by explicit user request in the filter
-                        msg = addMessage(Mailbox.ID_FOLDER_INBOX, nontermActions);
+                        msg = addMessage(Mailbox.ID_FOLDER_INBOX);
                     }
                     if (msg == null) {
                         dup = true;
                         break;
-                    } else {
-                        lastMsgByTermAction = msg;
                     }
-                    
-                } else if (actionClass == ActionFileInto.class) {
-                    
+                } else if (action instanceof ActionFileInto) {
                     ActionFileInto fileinto = (ActionFileInto) action;
                     String folderName = fileinto.getDestination();
                     int folderId = Mailbox.ID_FOLDER_INBOX;
@@ -246,25 +262,16 @@ public class ZimbraMailAdapter implements MailAdapter
                     // The message will not be filed into the same folder multiple times because of
                     // jsieve FileInto validation ensures it; it is allowed to be filed into
                     // multiple different folders, however
-                    Message msg = addMessage(folderId, nontermActions);
+                    Message msg = addMessage(folderId);
                     if (msg == null) {
                         dup = true;
                         break;
-                    } else {
-                        lastMsgByTermAction = msg;
                     }
-                    
-                } else if (actionClass == ActionTag.class ||
-                        actionClass == ActionFlag.class) {
-                    
-                    nontermActions.add(action);
-                    
-                }  else if (actionClass == ActionRedirect.class) {
-
+                } else if (action instanceof ActionRedirect) {
                     // redirect mail to another address
                     ActionRedirect redirect = (ActionRedirect) action;
                     String addr = redirect.getAddress();
-                    ZimbraLog.filter.info("redirecting to " + addr);
+                    ZimbraLog.filter.info("Redirecting message to " + addr);
                     MimeMessage mm = mParsedMessage.getMimeMessage();
                     try {
                         InternetAddress iaddr = new InternetAddress(addr);
@@ -272,36 +279,17 @@ public class ZimbraMailAdapter implements MailAdapter
                         raddr[0] = iaddr;
                         Transport.send(mm, raddr);
                     } catch (AddressException e) {
-                        throw MailServiceException.PARSE_ERROR("wrongly formatted address: " + addr, e);
+                        throw MailServiceException.PARSE_ERROR("malformed address: " + addr, e);
                     } catch (SendFailedException e) {
                         throw MailServiceException.SEND_FAILURE("redirect to " + addr + " failed", e, e.getInvalidAddresses(), e.getValidUnsentAddresses());
                     }
                     
-                } 
-                /* else if (actionClass == ActionReject.class) {
-
-                    // reject mail back to sender
-                    ActionReject reject = (ActionReject) action;
-                    
-                } */ 
-                else {
+                } else {
                     throw new SieveException("unknown action " + action);
                 }
             }
             if (dup) {
                 ZimbraLog.filter.debug("filter actions ignored for duplicate messages that are not delivered");
-            } else {
-                // there may be non-terminal actions left; 
-                // apply to the message by the last terminal action
-                // or if no execution of terminal action is found, 
-                // file a message to INBOX and apply the non-terminal actions on that message
-                if (!nontermActions.isEmpty()) {
-                    if (lastMsgByTermAction != null) {
-                        alterMessage(lastMsgByTermAction, nontermActions);
-                    } else {
-                        addMessage(Mailbox.ID_FOLDER_INBOX, nontermActions);
-                    }
-                }
             }
         } catch (ServiceException e) {
             throw new ZimbraSieveException(e);
@@ -313,43 +301,49 @@ public class ZimbraMailAdapter implements MailAdapter
 
     }
 
-    Message doDefaultFiling() throws IOException, ServiceException {
-        int folderId = mSpam ? Mailbox.ID_FOLDER_SPAM : Mailbox.ID_FOLDER_INBOX;
-        Message msg = addMessage(folderId, Collections.EMPTY_LIST);
-        return msg;
+    private List<Action> getDeliveryActions() {
+        List<Action> actions = new ArrayList<Action>();
+        for (Action action : getActions()) {
+            if (action instanceof ActionKeep ||
+                action instanceof ActionFileInto ||
+                action instanceof ActionRedirect) {
+                actions.add(action);
+            }
+        }
+        return actions;
     }
     
-    private Message addMessage(int folderId, List nontermActions) throws IOException, ServiceException {
-        TagAndFlag tf = getTagAndFlag(nontermActions);
-        Message msg = mMailbox.addMessage(null, mParsedMessage, folderId, false, tf.flagBits, tf.tags, mRecipient, mSharedDeliveryCtxt);
+    private List<Action> getTagFlagActions() {
+        List<Action> actions = new ArrayList<Action>();
+        for (Action action : getActions()) {
+            if (action instanceof ActionTag ||
+                action instanceof ActionFlag) {
+                actions.add(action);
+            }
+        }
+        return actions;
+    }
+
+    Message doDefaultFiling() throws IOException, ServiceException {
+        int folderId = mSpam ? Mailbox.ID_FOLDER_SPAM : Mailbox.ID_FOLDER_INBOX;
+        return addMessage(folderId);
+    }
+
+    private Message addMessage(int folderId) throws IOException, ServiceException {
+        int flags = getFlagBitmask();
+        String tags = getTags();
+        Message msg = mMailbox.addMessage(null, mParsedMessage, folderId,
+            false, flags, tags, mRecipient, mSharedDeliveryCtxt);
         if (msg != null) {
             mMessages.add(msg);
-            if (ZimbraLog.filter.isDebugEnabled())
-                ZimbraLog.filter.debug("Saved message " + msg.getId() + " to mailbox: " + msg.getMailboxId() + " folder: " + folderId + 
-                    " tags: " + tf.tags + " flags: 0x" + Integer.toHexString(tf.flagBits));
         }
         return msg;
     }
-    
-    private void alterMessage(Message msg, List nontermActions) throws ServiceException {
-        long oldTags  = msg.getTagBitmask();
-        int  oldFlags = msg.getFlagBitmask();
-        TagAndFlag tf = getTagAndFlag(nontermActions);
-        long tags = (tf.tags == null ? MailItem.TAG_UNCHANGED : Tag.tagsToBitmask(tf.tags));
-        tags |= oldTags;
-        int flags = tf.flagBits | oldFlags;
-        mMailbox.setTags(null, msg.getId(), MailItem.TYPE_MESSAGE, flags, tags, null);
-    }
-    
-    private TagAndFlag getTagAndFlag(List nontermActions) throws ServiceException {
-        StringBuilder tagsBuf = null;
-        int flagBits = Flag.BITMASK_UNREAD;
-        for (Iterator it = nontermActions.listIterator(); it.hasNext(); ) {
-            Action action = (Action) it.next();
-            
-            if (action.getClass() == ActionTag.class) {
 
-                // tag mail
+    private String getTags() {
+        StringBuilder tagsBuf = null;
+        for (Action action : getTagFlagActions()) {
+            if (action instanceof ActionTag) {
                 String tagName = ((ActionTag) action).getTagName();
                 try {
                     Tag tag = mMailbox.getTagByName(tagName);
@@ -361,10 +355,18 @@ public class ZimbraMailAdapter implements MailAdapter
                 } catch (MailServiceException.NoSuchItemException nsie) {
                     ZimbraLog.filter.warn("Tag " + tagName + " does not exist; cannot tag message " +
                             " for " + mRecipient);
-                }                
-            } else if (action.getClass() == ActionFlag.class) {
-                
-                // flag mail
+                } catch (ServiceException e) {
+                    ZimbraLog.filter.warn("Unable to determine tags");
+                }
+            }            
+        }
+        return tagsBuf == null ? "" : tagsBuf.toString();
+    }
+    
+    private int getFlagBitmask() {
+        int flagBits = Flag.BITMASK_UNREAD;
+        for (Action action : getTagFlagActions()) {
+            if (action instanceof ActionFlag) {
                 ActionFlag flagAction = (ActionFlag) action;
                 int flagId = flagAction.getFlagId();
                 try {
@@ -378,18 +380,7 @@ public class ZimbraMailAdapter implements MailAdapter
                 }
             }
         }
-        nontermActions.clear();
-        String tags = null;
-        if (tagsBuf != null)
-            tags = tagsBuf.toString();
-        return new TagAndFlag(tags, flagBits);
-    }
-    
-    private static class TagAndFlag {
-        private TagAndFlag(String t, int f) { tags = t; flagBits = f; }
-        
-        private String tags;
-        private int flagBits;
+        return flagBits;
     }
     
     /**

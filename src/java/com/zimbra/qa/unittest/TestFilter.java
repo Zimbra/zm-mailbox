@@ -24,23 +24,29 @@
  */
 package com.zimbra.qa.unittest;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.SoapProtocol;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.filter.RuleManager;
-import com.zimbra.cs.filter.RuleRewriter;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.util.CliUtil;
+import com.zimbra.cs.zclient.ZFilterAction;
+import com.zimbra.cs.zclient.ZFilterCondition;
+import com.zimbra.cs.zclient.ZFilterRule;
+import com.zimbra.cs.zclient.ZFilterRules;
+import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.cs.zclient.ZMessage;
+import com.zimbra.cs.zclient.ZTag;
+import com.zimbra.cs.zclient.ZFilterAction.MarkOp;
+import com.zimbra.cs.zclient.ZFilterAction.ZFileIntoAction;
+import com.zimbra.cs.zclient.ZFilterAction.ZKeepAction;
+import com.zimbra.cs.zclient.ZFilterAction.ZMarkAction;
+import com.zimbra.cs.zclient.ZFilterAction.ZTagAction;
+import com.zimbra.cs.zclient.ZFilterCondition.HeaderOp;
+import com.zimbra.cs.zclient.ZFilterCondition.ZHeaderCondition;
+import com.zimbra.cs.zclient.ZMessage.Flag;
 
 
 public class TestFilter
@@ -48,91 +54,56 @@ extends TestCase {
 
     private static String USER_NAME = "user1";
     private static String NAME_PREFIX = "TestFilter";
-    private static String TAG_NAME = NAME_PREFIX + "-testBase64Subject";
+    private static String TAG_TEST_BASE64_SUBJECT = NAME_PREFIX + "-testBase64Subject";
+    private static String FOLDER1_NAME = NAME_PREFIX + "-folder1";
+    private static String FOLDER2_NAME = NAME_PREFIX + "-folder2";
+    private static String FOLDER1_PATH = "/" + FOLDER1_NAME;
+    private static String FOLDER2_PATH = "/" + FOLDER2_NAME;
+    private static String TAG1_NAME = NAME_PREFIX + "-tag1";
+    private static String TAG2_NAME = NAME_PREFIX + "-tag2";
+    
+    private ZMailbox mMbox;
+    private ZFilterRules mOriginalRules;
 
-    private static final String FILTER_RULES = StringUtil.join("\n", new String[] {
-        "require [\"fileinto\", \"reject\", \"tag\", \"flag\"];",
-        "",
-        "# testBase64Subject",
-        "if anyof (header :contains \"subject\" \"villanueva\" )",
-        "{",
-        "    tag \"" + TAG_NAME + "\";",
-        "    stop;",
-        "}"
-    });
-    
-    private String mOriginalRules;
-    
     public void setUp()
     throws Exception {
-        super.setUp();
+        mMbox = TestUtil.getZMailbox(USER_NAME);
         cleanUp();
-
-        // Remember original rules and set rules for this test
-        RuleManager rm = RuleManager.getInstance();
-        Account account = TestUtil.getAccount(USER_NAME);
-        mOriginalRules = rm.getRules(account);
-        rm.setRules(account, FILTER_RULES);
+        mOriginalRules = mMbox.getFilterRules();
+        mMbox.saveFilterRules(getRules());
     }
     
     public void testQuoteValidation()
     throws Exception {
-        /*
-          <rules>
-            <r name="quote test" active="1">
-              <g op="anyof">
-                <c name="header" k0="subject" op=":is" k1="a &quot; b"/>
-              </g>
-              <action name="keep"/>
-              <action name="stop"/>
-            </r>
-          </rules>
-         */
-        Element rules = Element.create(SoapProtocol.Soap12, MailConstants.E_RULES);
+        List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
+        List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
+        List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
 
-        Element rule = rules.addElement(MailConstants.E_RULE);
-        rule.addAttribute(MailConstants.A_NAME, "testQuoteValidation");
-        rule.addAttribute(MailConstants.A_ACTIVE, true);
+        // if subject contains "a " b", keep
+        ZFilterCondition condition = new ZHeaderCondition("subject", HeaderOp.CONTAINS, "a \" b");
+        ZFilterAction action = new ZKeepAction();
+        conditions.add(condition);
+        actions.add(action);
+        rules.add(new ZFilterRule("test quotes", true, false, conditions, actions));
         
-        Element group =
-            rule.addElement(MailConstants.E_CONDITION_GROUP).addAttribute(MailConstants.A_OPERATION, "anyof");
-        
-        Element condition = group.addElement(MailConstants.E_CONDITION);
-        condition.addAttribute(MailConstants.A_NAME, "header");
-        condition.addAttribute("k0", "subject");
-        condition.addAttribute("op", ":is");
-        condition.addAttribute("k1", "a \" b");
-        
-        rule.addElement(MailConstants.E_ACTION).addAttribute(MailConstants.A_NAME, "keep");
-        rule.addElement(MailConstants.E_ACTION).addAttribute(MailConstants.A_NAME, "stop");
-        
-        Mailbox mbox = TestUtil.getMailbox("user1");
-        
-        // Test quotes
-        RuleRewriter rr = new RuleRewriter(rules, mbox);
+        ZFilterRules zRules = new ZFilterRules(rules);
         try {
-            ZimbraLog.test.debug("Generated Sieve script:\n" + rr.getScript());
-            fail("XML-to-script conversion should not have succeeded");
-        } catch (ServiceException e) {
-            boolean foundError = e.getMessage().contains("Doublequote not allowed");
-            if (!foundError) {
-                ZimbraLog.test.error("Unexpected exception", e);
-                fail("Unexpected error message: " + e.getMessage());
-            }
+            mMbox.saveFilterRules(zRules);
+            fail("Saving filter rules with quotes should not have succeeded");
+        } catch (SoapFaultException e) {
+            assertTrue("Unexpected exception: " + e, e.getMessage().contains("Doublequote not allowed"));
         }
         
-        // Test backslash
-        condition.addAttribute("k1", "a \\ b");
-        rr = new RuleRewriter(rules, mbox);
+        // if subject contains "a \ b", keep
+        conditions.clear();
+        conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "a \\ b"));
+        rules.clear();
+        rules.add(new ZFilterRule("test backslash", true, false, conditions, actions));
         try {
-            ZimbraLog.test.debug("Generated Sieve script:\n" + rr.getScript());
-            fail("XML-to-script conversion should not have succeeded");
-        } catch (ServiceException e) {
-            boolean foundError = e.getMessage().contains("Backslash not allowed");
-            if (!foundError) {
-                ZimbraLog.test.error("Unexpected exception", e);
-                fail("Unexpected error message: " + e.getMessage());
-            }
+            mMbox.saveFilterRules(zRules);
+            fail("Saving filter rules with backslash should not have succeeded");
+        } catch (SoapFaultException e) {
+            assertTrue("Unexpected exception: " + e, e.getMessage().contains("Backslash not allowed"));
         }
     }
     
@@ -142,39 +113,117 @@ extends TestCase {
      */
     public void testBase64Subject()
     throws Exception {
-        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
-        Tag tag = mbox.createTag(null, TAG_NAME, Tag.DEFAULT_COLOR);
+        // Note: tag gets created implicitly when filter rules are saved
         String address = TestUtil.getAddress(USER_NAME);
         TestUtil.insertMessageLmtp(1,
             "=?UTF-8?B?W2l0dnNmLUluY2lkZW5jaWFzXVs0OTc3Ml0gW2luY2lkZW5jaWFzLXZpbGxhbnVldmFdIENvcnRlcyBkZSBsdXosIGTDrWEgMjUvMDkvMjAwNi4=?=",
             address, address);
-        List<Integer> ids = TestUtil.search(mbox, "villanueva", MailItem.TYPE_MESSAGE);
-        assertEquals("Unexpected number of messages", 1, ids.size());
-        Message msg = mbox.getMessageById(null, ids.get(0));
-        List<Tag> tagList = msg.getTagList();
-        assertEquals("Unexpected number of tags", 1, tagList.size());
-        assertEquals("Tag didn't match", tag.getId(), tagList.get(0).getId());
+        List<ZMessage> messages = TestUtil.search(mMbox, "villanueva");
+        assertEquals("Unexpected number of messages", 1, messages.size());
+        List<ZTag> tags = mMbox.getTags(messages.get(0).getTagIds());
+        assertEquals("Unexpected number of tags", 1, tags.size());
+        assertEquals("Tag didn't match", TAG_TEST_BASE64_SUBJECT, tags.get(0).getName());
     }
 
-    protected void tearDown() throws Exception {
-        // Restore original rules
-        RuleManager rm = RuleManager.getInstance();
-        Account account = TestUtil.getAccount(USER_NAME);
-        rm.setRules(account, mOriginalRules);
+    /**
+     * Confirms that all actions are performed when a message matches multiple
+     * filter rules.
+     */
+    public void testMatchMultipleFilters()
+    throws Exception {
+        String sender = TestUtil.getAddress("multiplefilters");
+        String recipient = TestUtil.getAddress(USER_NAME);
+        String subject = "This goes into folder1 and folder2";
+        TestUtil.insertMessageLmtp(1, subject, recipient, sender);
         
+        ZMessage msg = TestUtil.getMessage(mMbox, "in:" + FOLDER1_PATH + " " + subject);
+        TestUtil.verifyTag(mMbox, msg, TAG1_NAME);
+        TestUtil.verifyTag(mMbox, msg, TAG2_NAME);
+        TestUtil.verifyFlag(mMbox, msg, Flag.flagged);
+        
+        msg = TestUtil.getMessage(mMbox, "in:" + FOLDER2_PATH + " " + subject);
+        TestUtil.verifyTag(mMbox, msg, TAG1_NAME);
+        TestUtil.verifyTag(mMbox, msg, TAG2_NAME);
+        TestUtil.verifyFlag(mMbox, msg, Flag.flagged);
+    }
+    
+    /**
+     * Verifies the fix to bug 5455.
+     */
+    public void testBug5455()
+    throws Exception {
+        String recipient = TestUtil.getAddress(USER_NAME);
+        String subject = "Testing bug5455";
+        TestUtil.insertMessageLmtp(1, subject, recipient, recipient);
+        
+        ZMessage msg = TestUtil.getMessage(mMbox, "in:" + FOLDER1_PATH + " " + subject);
+        TestUtil.verifyFlag(mMbox, msg, Flag.flagged);
+        TestUtil.verifyTag(mMbox, msg, TAG1_NAME);
+        
+        msg = TestUtil.getMessage(mMbox, "in:" + FOLDER2_PATH + " " + subject);
+        TestUtil.verifyFlag(mMbox, msg, Flag.flagged);
+        TestUtil.verifyTag(mMbox, msg, TAG1_NAME);
+    }
+    
+    protected void tearDown() throws Exception {
+        mMbox.saveFilterRules(mOriginalRules);
         cleanUp();
-        super.tearDown();
     }
 
     private void cleanUp()
     throws Exception {
         TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
         
-        // Clean up messages created byt testBase64Subject() 
-        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
-        List<Integer> ids = TestUtil.search(mbox, "villanueva", MailItem.TYPE_MESSAGE);
-        for (int id : ids) {
-            mbox.delete(null, id, MailItem.TYPE_MESSAGE);
+        // Clean up messages created by testBase64Subject()
+        for (ZMessage msg : TestUtil.search(mMbox, "villanueva")) {
+            mMbox.deleteMessage(msg.getId());
         }
+    }
+    
+    private ZFilterRules getRules()
+    throws Exception {
+        List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
+
+        // if subject contains "villanueva", tag with testBase64Subject and stop
+        List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
+        List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
+        conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "villanueva"));
+        actions.add(new ZTagAction(TAG_TEST_BASE64_SUBJECT));
+        rules.add(new ZFilterRule("testBase64Subject", true, false, conditions, actions));
+
+        // if subject contains "folder1", file into folder1 and tag with tag1
+        conditions = new ArrayList<ZFilterCondition>();
+        actions = new ArrayList<ZFilterAction>();
+        conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "folder1"));
+        actions.add(new ZFileIntoAction(FOLDER1_PATH));
+        actions.add(new ZTagAction(TAG1_NAME));
+        rules.add(new ZFilterRule("testMatchMultipleFilters1", true, false, conditions, actions));
+
+        // if from contains "multiplefilters", file into folder 2, tag with tag2 and flag
+        conditions = new ArrayList<ZFilterCondition>();
+        actions = new ArrayList<ZFilterAction>();
+        conditions.add(new ZHeaderCondition("from", HeaderOp.CONTAINS, "multiplefilters"));
+        actions.add(new ZFileIntoAction(FOLDER2_PATH));
+        actions.add(new ZTagAction(TAG2_NAME));
+        actions.add(new ZMarkAction(MarkOp.FLAGGED));
+        rules.add(new ZFilterRule("testMatchMultipleFilters2", true, false, conditions, actions));
+        
+        // if subject contains bug5455, flag, file into folder1, tag with tag1, file into folder2
+        conditions = new ArrayList<ZFilterCondition>();
+        actions = new ArrayList<ZFilterAction>();
+        conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "bug5455"));
+        actions.add(new ZMarkAction(MarkOp.FLAGGED));
+        actions.add(new ZFileIntoAction(FOLDER1_PATH));
+        actions.add(new ZTagAction(TAG1_NAME));
+        actions.add(new ZFileIntoAction(FOLDER2_PATH));
+        rules.add(new ZFilterRule("testBug5455", true, false, conditions, actions));
+        
+        return new ZFilterRules(rules);
+    }
+
+    public static void main(String[] args)
+    throws Exception {
+        CliUtil.toolSetup();
+        TestUtil.runTest(new TestSuite(TestFilter.class), null);
     }
 }
