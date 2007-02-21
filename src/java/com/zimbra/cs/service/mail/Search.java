@@ -231,7 +231,7 @@ public class Search extends MailDocumentHandler  {
         if (params.getCalItemExpandStart() > 0 && params.getCalItemExpandEnd() > 0) {
             Account acct = getRequestedAccount(zsc);
             EncodeCalendarItemResult encoded = 
-                GetCalendarItemSummaries.encodeCalendarItemInstances(zsc, calItem, acct, params.getCalItemExpandStart(), params.getCalItemExpandEnd());
+                GetCalendarItemSummaries.encodeCalendarItemInstances(zsc, calItem, acct, params.getCalItemExpandStart(), params.getCalItemExpandEnd(), true);
             
             assert(encoded.element == null || encoded.numInstancesExpanded>0);
             if (encoded.element != null) {

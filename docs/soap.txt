@@ -997,7 +997,7 @@ appointment result:
 Fields prefaced with '*' are only included if instances are being
 expanded.  See calExpandInstStart and calExpandInstEnd above. 
 
- <appt id="appointment_mail_item_id"
+<appt id="appointment_mail_item_id"
        t="{tags}" f="{flags}" s="{size}" d="{date}" cid="{conv-id}" // standard hit data
        l="{location}" score="..." [mbx="UID"] sf="SORT-FIELD-VALUE" // standard hit data    
 *      [fba="F|B|T|U"]
@@ -1012,14 +1012,21 @@ expanded.  See calExpandInstStart and calExpandInstEnd above.
 *      isOrg="default_am_i_organizer_flag"
 *      [priority="num"]
 *      [percentComplete="num"]
-*      [d="duration"]  // default duration
-*      [f="flags"]
-*      [t="tags"]
+*      [dur="duration"]  // default duration
    >
     
-*     [<fr>FRAGMENT</fr>]
+*     [<fr>DEFAULT FRAGMENT</fr>]
 
-*     ( <inst
+[ invite data -- see <CreateAppointment> 
+     <inv compNum="" id="" type="appt|task" [recurId="RECURRENCE-ID"]...>
+          [<tz>...</tz>]
+          <comp../>                       
+     </inv>
+]+
+
+*[  expanded instance data
+     <inst
+          [recurId="recurId"]
           [s="START_SECS_GMT"]
           [tzo="ms"]  // offset from GMT in milliseconds for start time in the
                     // time zone of the instance; this is useful because the
@@ -1031,15 +1038,15 @@ expanded.  See calExpandInstStart and calExpandInstEnd above.
                     // the all-day block
           [ex="1"]
           [ANY CHANGED PARAMETERS]
-        >
+      >
           [<f>FRAGMENT IF DIFFERENT FROM DEFAULT</f>]
           [<dur DURATION>] // duration this instance if not same as default
           [<isOrg>] // isOrg flag if not same as default
           [<otherAtt>] // otherAtt flag if not same as default
-        </inst>
-      )+
+    </inst>
+]+      
         
-   </apt> 
+</apt> 
 
    -- fba: actual free-busy status: Free, Busy, busy-Tentative, busy-Unavailable (a.k.a. OutOfOffice)
            While free-busy status is simply a property of an event that
