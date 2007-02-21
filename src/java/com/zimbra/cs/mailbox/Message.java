@@ -40,7 +40,7 @@ import javax.mail.internet.MimeMessage;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.calendar.*;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
@@ -457,7 +457,8 @@ public class Message extends MailItem {
 
     @Override
     public void reindex(IndexItem redo, boolean deleteFirst, Object indexData) throws ServiceException {
-        if (DebugConfig.disableIndexing)
+        MailboxIndex mi = mMailbox.getMailboxIndex();
+        if (mi == null)
             return;
         
         ParsedMessage pm = (ParsedMessage) indexData;
@@ -474,7 +475,7 @@ public class Message extends MailItem {
             pm = new ParsedMessage(getMimeMessage(), getDate(), getMailbox().attachmentsIndexingEnabled());
         }
 
-        mMailbox.getMailboxIndex().indexMessage(mMailbox, redo, deleteFirst, pm, this);
+        mi.indexMessage(mMailbox, redo, deleteFirst, pm, this);
     }
 
 

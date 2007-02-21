@@ -380,7 +380,8 @@ public class Mailbox {
         mData = data;
         mData.lastChangeDate = System.currentTimeMillis();
         initFlags();
-        mMailboxIndex = new MailboxIndex(this, null);
+        if (!DebugConfig.disableIndexing)
+            mMailboxIndex = new MailboxIndex(this, null);
 
         Metadata md = getConfig(null, MD_CONFIG_VERSION);
         mVersion = MailboxVersion.fromMetadata(md);
@@ -1251,7 +1252,8 @@ public class Mailbox {
                 // attempt to nuke the store and index
                 // FIXME: we're assuming a lot about the store and index here; should use their functions
                 try {
-                    getMailboxIndex().deleteIndex();
+                    if (mMailboxIndex != null)
+                        mMailboxIndex.deleteIndex();
                 } catch (IOException iox) { }
                 try {
                     StoreManager sm = StoreManager.getInstance();
@@ -1439,12 +1441,13 @@ public class Mailbox {
                         for (SearchResult s : msgs)
                             itemIds[i++] = s.indexId;
                         
-                        mMailboxIndex.deleteDocuments(itemIds);
+                        if (mMailboxIndex != null)
+                            mMailboxIndex.deleteDocuments(itemIds);
                         indexDeleted = true;
                     } else {
                         // reindexing everything, just delete the index
-                        MailboxIndex idx = getMailboxIndex();
-                        idx.deleteIndex();
+                        if (mMailboxIndex != null)
+                            mMailboxIndex.deleteIndex();
                         indexDeleted = true;
                     }
 
@@ -1510,7 +1513,8 @@ public class Mailbox {
         } finally {
             mReIndexStatus = null;
 
-            getMailboxIndex().flush();
+            if (mMailboxIndex != null)
+                mMailboxIndex.flush();
             if (redoInitted) {
                 if (indexDeleted) {
                     // there's no meaningful way to roll this transaction back once data is deleted.
@@ -2829,30 +2833,31 @@ public class Mailbox {
             BrowseResult browseResult = new BrowseResult();
 
             MailboxIndex idx = getMailboxIndex();
-
-            if (browseBy == BROWSE_BY_ATTACHMENTS) {
-                idx.getAttachments(browseResult.getResult());
-            } else if (browseBy == BROWSE_BY_DOMAINS) {
-                HashMap<String, DomainItem> domainItems = new HashMap<String, DomainItem>();
-                HashSet<String> set = new HashSet<String>();
-
-                idx.getDomainsForField(LuceneFields.L_H_CC, set);
-                addDomains(domainItems, set, DomainItem.F_CC);
-
-                set.clear();
-                idx.getDomainsForField(LuceneFields.L_H_FROM, set);
-                addDomains(domainItems, set, DomainItem.F_FROM);
-
-                set.clear();             
-                idx.getDomainsForField(LuceneFields.L_H_TO, set);
-                addDomains(domainItems, set, DomainItem.F_TO);
-
-                browseResult.getResult().addAll(domainItems.values());
-
-            } else if (browseBy == BROWSE_BY_OBJECTS) {
-                idx.getObjects(browseResult.getResult());
-            } else { 
-                // throw exception?
+            if (idx != null) {
+                if (browseBy == BROWSE_BY_ATTACHMENTS) {
+                    idx.getAttachments(browseResult.getResult());
+                } else if (browseBy == BROWSE_BY_DOMAINS) {
+                    HashMap<String, DomainItem> domainItems = new HashMap<String, DomainItem>();
+                    HashSet<String> set = new HashSet<String>();
+    
+                    idx.getDomainsForField(LuceneFields.L_H_CC, set);
+                    addDomains(domainItems, set, DomainItem.F_CC);
+    
+                    set.clear();
+                    idx.getDomainsForField(LuceneFields.L_H_FROM, set);
+                    addDomains(domainItems, set, DomainItem.F_FROM);
+    
+                    set.clear();             
+                    idx.getDomainsForField(LuceneFields.L_H_TO, set);
+                    addDomains(domainItems, set, DomainItem.F_TO);
+    
+                    browseResult.getResult().addAll(domainItems.values());
+    
+                } else if (browseBy == BROWSE_BY_OBJECTS) {
+                    idx.getObjects(browseResult.getResult());
+                } else { 
+                    // throw exception?
+                }
             }
             success = true;
             return browseResult;
@@ -5159,12 +5164,12 @@ public class Mailbox {
                     deleted = ((MailItem.PendingDelete) obj).add(deleted);
 
             // delete any index entries associated with items deleted from db
-            if (deleted != null && deleted.indexIds != null && deleted.indexIds.size() > 0) {
+            if (deleted != null && deleted.indexIds != null && deleted.indexIds.size() > 0 && mMailboxIndex != null) {
                 try {
                     int[] indexIds = new int[deleted.indexIds.size()];
                     for (int i = 0; i < deleted.indexIds.size(); i++)
                         indexIds[i] = deleted.indexIds.get(i);
-                    int[] deletedIds = getMailboxIndex().deleteDocuments(indexIds);
+                    int[] deletedIds = mMailboxIndex.deleteDocuments(indexIds);
                     if (deletedIds != indexIds)
                         ZimbraLog.mailbox.warn("could not delete all index entries for items: " + deleted.itemIds.getAll());
                 } catch (IOException e) {

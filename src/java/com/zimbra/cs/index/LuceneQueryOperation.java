@@ -98,6 +98,9 @@ class LuceneQueryOperation extends QueryOperation
     }
     
     boolean shouldExecuteDbFirst() {
+        if (mSearcher == null)
+            return true;
+
         BooleanClause[] clauses = mQuery.getClauses();
         if (clauses.length > 1)
             return false;
@@ -265,8 +268,10 @@ class LuceneQueryOperation extends QueryOperation
             this.setupResults(mbx, res);
 
             try {
-                mSearcher = mbidx.getCountedIndexSearcher();
-                mSort = mbidx.getSort(res.getSortBy());
+                if (mbidx != null) {
+                    mSearcher = mbidx.getCountedIndexSearcher();
+                    mSort = mbidx.getSort(res.getSortBy());
+                }
 //              runSearch();
             } catch (IOException e) {
                 e.printStackTrace();
