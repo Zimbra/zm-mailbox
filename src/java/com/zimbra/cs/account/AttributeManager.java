@@ -463,6 +463,15 @@ public class AttributeManager {
         return mClassToLowerCaseAttrsMap.get(klass);
     }
 
+    public Set<String> getImmutableAttrs() {
+        Set<String> immutable = new HashSet<String>();
+        for (AttributeInfo info : mAttrs.values()) {
+            if (info != null && info.isImmutable())
+                immutable.add(info.getName());
+        }
+        return immutable;
+    }
+
     public Set<String> getImmutableAttrsInClass(AttributeClass klass) {
         Set<String> immutable = new HashSet<String>();
         for (String attr : mClassToAttrsMap.get(klass)) {
@@ -473,7 +482,6 @@ public class AttributeManager {
             } else {
                 ZimbraLog.misc.warn("getImmutableAttrsInClass: no attribute info for: " + attr);
             }
-
         }
         return immutable;
     }
