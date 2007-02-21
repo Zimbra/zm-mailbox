@@ -30,9 +30,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.dom4j.Element;
 import org.dom4j.QName;
@@ -71,13 +71,13 @@ public abstract class DavResource {
 		mOwner = owner;
 		mProps = new HashMap<QName,ResourceProperty>();
 		mUri = uri;
-		mDavCompliance = new HashSet<Compliance>();
+		mDavCompliance = new TreeSet<Compliance>();
 		mDavCompliance.add(Compliance.one);
 		mDavCompliance.add(Compliance.two);
-		//mDavCompliance.add(Compliance.three);
-		//mDavCompliance.add(Compliance.access_control);
-		//mDavCompliance.add(Compliance.update);
-		//mDavCompliance.add(Compliance.binding);
+		mDavCompliance.add(Compliance.three);
+		mDavCompliance.add(Compliance.access_control);
+		mDavCompliance.add(Compliance.calendar_access);
+		mDavCompliance.add(Compliance.calendar_schedule);
 		
 		ResourceProperty rs = new ResourceProperty(DavElements.E_RESOURCETYPE);
 		if (isCollection())
@@ -126,7 +126,7 @@ public abstract class DavResource {
 	}
 
 	public Set<QName> getAllPropertyNames() {
-		HashSet<QName> ret = new HashSet<QName>();
+		TreeSet<QName> ret = new TreeSet<QName>();
 		for (QName key : mProps.keySet())
 			if (!mProps.get(key).isProtected())
 				ret.add(key);

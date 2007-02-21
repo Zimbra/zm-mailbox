@@ -31,7 +31,8 @@ import java.util.HashMap;
 public class DavProtocol {
 	public enum Compliance {
 		one, two, three, 
-		update, bind, access_control, calendar_access,
+		update, bind, access_control, 
+		calendar_access, calendar_schedule,
 		version_control
 	}
 	
@@ -44,6 +45,7 @@ public class DavProtocol {
 	// class 2* : RFC 2518 - locking
 	// class 3 : draft-ietf-webdav-rfc2518bis
 	// calendar-access* : draft-dusseault-caldav
+	// calendar-schedule* : draft-desruisseux-caldav-sched
 	// version-control* : RFC 3253 - section 3.6 (partial requirement from access-control and caldav)
 	// checkout-in-place, version-history, 
 	//   workspace, update, label, working-resource,
@@ -62,6 +64,7 @@ public class DavProtocol {
 		sComplianceStrMap.put(Compliance.bind, "bind");
 		sComplianceStrMap.put(Compliance.access_control, "access-control");
 		sComplianceStrMap.put(Compliance.calendar_access, "calendar-access");
+		sComplianceStrMap.put(Compliance.calendar_schedule, "calendar-schedule");
 		sComplianceStrMap.put(Compliance.version_control, "version-control");
 	}
 	

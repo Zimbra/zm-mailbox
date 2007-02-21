@@ -85,6 +85,7 @@ public class CalendarCollection extends Collection {
 		mDavCompliance.add(Compliance.three);
 		mDavCompliance.add(Compliance.access_control);
 		mDavCompliance.add(Compliance.calendar_access);
+		mDavCompliance.add(Compliance.calendar_schedule);
 
 		ResourceProperty rtype = getProperty(DavElements.E_RESOURCETYPE);
 		rtype.addChild(DavElements.E_CALENDAR);

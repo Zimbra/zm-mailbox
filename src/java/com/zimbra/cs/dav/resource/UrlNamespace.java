@@ -193,8 +193,7 @@ public class UrlNamespace {
 					resource = new ScheduleInbox(ctxt, f);
 				else if (f.getId() == Mailbox.ID_FOLDER_SENT)
 					resource = new ScheduleOutbox(ctxt, f);
-				else if (viewType == MailItem.TYPE_APPOINTMENT ||
-                    viewType == MailItem.TYPE_TASK)
+				else if (viewType == MailItem.TYPE_APPOINTMENT)
 					resource = new CalendarCollection(ctxt, f);
 				else
 					resource = new Collection(ctxt, f);
