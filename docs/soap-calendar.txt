@@ -498,74 +498,80 @@ OR
 //
 // GetApptSummaries
 //
+// DEPRECATED -- this API is deprectated.  Use <SearchRequest> with
+// the calExpandInstStart and calExpandInstEnd parameters
 // 
-<GetApptSummariesRequest s="RANGE_START_MSECS_GMT" e="RANGE_END_MSECS_GMT" [l="{folder-id}"]/>
+//<GetApptSummariesRequest s="RANGE_START_MSECS_GMT" e="RANGE_END_MSECS_GMT" [l="{folder-id}"]/>
+//
+//  -- folder-id: optional folder to constrain requests to; otherwise, searches all folders but trash and spam
+//
+//<GetApptSummariesResponse>
+// ( <appt id="appointment_mail_item_id"
+//      [fba="F|B|T|U"]
+//      [transp="O|T"]
+//      status="TENT|CONF|CANC"
+//      ptst="NE|TE|AC|DE|DG"
+//      [allDay="1"]             // if set, this is an "all day" appointment
+//      [otherAtt="1"]           // if set, this appointment has other attendees
+//      [alarm="1"] [recur="1"]
+//      [name="NAME"] [loc="LOCATION"] 
+//      invId="default_invite_mail_item_id" compNum="default_invite_component_number"
+//      isOrg="default_am_i_organizer_flag"
+//      [priority="num"]
+//      [percentComplete="num"]
+//      [d="duration"]  // default duration
+//      [f="flags"]
+//      [t="tags"]
+//   >
+//   <fr>FRAGMENT</fr>
+//      
+//      ( <inst
+//          [s="START_SECS_GMT"]
+//          [tzo="ms"]  // offset from GMT in milliseconds for start time in the
+//                    // time zone of the instance; this is useful because the
+//                    // instance time zone may not be the same as the time zone
+//                    // of the requesting client; when rendering an all-day
+//                    // appointment, the client must shift the appointment by
+//                    // the difference between the instance time zone and its
+//                    // local time zone to determine the correct date to render
+//                    // the all-day block
+//          [ex="1"]
+//          [ANY CHANGED PARAMETERS]
+//        >
+//          [<f>FRAGMENT IF DIFFERENT FROM DEFAULT</f>]
+//          [<dur DURATION>] // duration this instance if not same as default
+//          [<isOrg>] // isOrg flag if not same as default
+//          [<otherAtt>] // otherAtt flag if not same as default
+//        </inst>
+//      )+
+//        
+//   </apt> )*
+//</GetApptSummariesResponse>
+//
+//   -- fba: actual free-busy status: Free, Busy, busy-Tentative, busy-Unavailable (a.k.a. OutOfOffice)
+//           While free-busy status is simply a property of an event that
+//           is set during creation/update, "actual" free-busy status is the true
+//           free-busy state that depends on appt/invite free-busy, event scheduling
+//           status (confirmed vs. tentative vs. cancel), and more importantly, the
+//           attendee's participation status.  For example, actual free-busy is
+//           busy-Tentative for an event with Busy free-busy value until the attendee
+//           has acted on the invite.
+//   -- transp: transparency: Opaque, Transparent
+//   -- status: status of event: TENTative, CONFirmed or CANCelled
+//   -- ptst: **your** participation status: NEeds-action, TEntative, ACcept, DEclined, DG (delegated)
+//   -- get the summary of appointments for a specified time period...
+//   -- otherAtt: 1 if there are other attendees to the meeting
+//   -- alarm: 1 if there are some alarms
+//   -- recur: 1 if this is a recurring appointment
+//   -- id is mail_item id of APPOINTMENT object
+//   -- invId is mail_item id of invite message with detailed information
+//   -- comp is component number (invite # within the message)
+//   -- parameters in the apptSum are "defaults" -- are same in instance unless specified
+//
+// END DEPRECATED BLOCK
+//
+//////////////////////////////////////////////////////////////////////
 
-  -- folder-id: optional folder to constrain requests to; otherwise, searches all folders but trash and spam
-
-<GetApptSummariesResponse>
- ( <appt id="appointment_mail_item_id"
-      [fba="F|B|T|U"]
-      [transp="O|T"]
-      status="TENT|CONF|CANC"
-      ptst="NE|TE|AC|DE|DG"
-      [allDay="1"]             // if set, this is an "all day" appointment
-      [otherAtt="1"]           // if set, this appointment has other attendees
-      [alarm="1"] [recur="1"]
-      [name="NAME"] [loc="LOCATION"] 
-      invId="default_invite_mail_item_id" compNum="default_invite_component_number"
-      isOrg="default_am_i_organizer_flag"
-      [priority="num"]
-      [percentComplete="num"]
-      [d="duration"]  // default duration
-      [f="flags"]
-      [t="tags"]
-   >
-   <fr>FRAGMENT</fr>
-      
-      ( <inst
-          [s="START_SECS_GMT"]
-          [tzo="ms"]  // offset from GMT in milliseconds for start time in the
-                    // time zone of the instance; this is useful because the
-                    // instance time zone may not be the same as the time zone
-                    // of the requesting client; when rendering an all-day
-                    // appointment, the client must shift the appointment by
-                    // the difference between the instance time zone and its
-                    // local time zone to determine the correct date to render
-                    // the all-day block
-          [ex="1"]
-          [ANY CHANGED PARAMETERS]
-        >
-          [<f>FRAGMENT IF DIFFERENT FROM DEFAULT</f>]
-          [<dur DURATION>] // duration this instance if not same as default
-          [<isOrg>] // isOrg flag if not same as default
-          [<otherAtt>] // otherAtt flag if not same as default
-        </inst>
-      )+
-        
-   </apt> )*
-</GetApptSummariesResponse>
-
-   -- fba: actual free-busy status: Free, Busy, busy-Tentative, busy-Unavailable (a.k.a. OutOfOffice)
-           While free-busy status is simply a property of an event that
-           is set during creation/update, "actual" free-busy status is the true
-           free-busy state that depends on appt/invite free-busy, event scheduling
-           status (confirmed vs. tentative vs. cancel), and more importantly, the
-           attendee's participation status.  For example, actual free-busy is
-           busy-Tentative for an event with Busy free-busy value until the attendee
-           has acted on the invite.
-   -- transp: transparency: Opaque, Transparent
-   -- status: status of event: TENTative, CONFirmed or CANCelled
-   -- ptst: **your** participation status: NEeds-action, TEntative, ACcept, DEclined, DG (delegated)
-   -- get the summary of appointments for a specified time period...
-   -- otherAtt: 1 if there are other attendees to the meeting
-   -- alarm: 1 if there are some alarms
-   -- recur: 1 if this is a recurring appointment
-   -- id is mail_item id of APPOINTMENT object
-   -- invId is mail_item id of invite message with detailed information
-   -- comp is component number (invite # within the message)
-   -- parameters in the apptSum are "defaults" -- are same in instance unless specified
-   
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -583,9 +589,6 @@ OR
     <n s="START_MSECS_GMT" e="END_MSECS_GMT"/>* // could not retreive data for that user
   </usr>  
 <GetFreeBusyResponse>
-
-      
-
 
 
 //////////////////////////////////////////////////////////////////////

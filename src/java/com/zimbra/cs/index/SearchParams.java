@@ -234,8 +234,8 @@ public final class SearchParams {
      *            This object's parameters are added as attributes (or sub-elements) of this parameter
      */
     public void encodeParams(Element searchElt) {
-        searchElt.addAttribute(MailConstants.A_CAL_INSTANCE_START, getCalItemExpandStart());
-        searchElt.addAttribute(MailConstants.A_CAL_INSTANCE_END, getCalItemExpandEnd());
+        searchElt.addAttribute(MailConstants.A_CAL_EXPAND_INST_START, getCalItemExpandStart());
+        searchElt.addAttribute(MailConstants.A_CAL_EXPAND_INST_END, getCalItemExpandEnd());
         searchElt.addAttribute(MailConstants.E_QUERY, getQueryStr(), Element.DISP_CONTENT);
         searchElt.addAttribute(MailConstants.A_SEARCH_TYPES, getTypesStr());
         searchElt.addAttribute(MailConstants.A_SORTBY, getSortByStr());
@@ -274,8 +274,8 @@ public final class SearchParams {
     public static SearchParams parse(Element request, ZimbraSoapContext zsc, String defaultQueryStr) throws ServiceException {
         SearchParams params = new SearchParams();
         
-        params.setCalItemExpandStart(request.getAttributeLong(MailConstants.A_CAL_INSTANCE_START, -1));
-        params.setCalItemExpandEnd(request.getAttributeLong(MailConstants.A_CAL_INSTANCE_END, -1));
+        params.setCalItemExpandStart(request.getAttributeLong(MailConstants.A_CAL_EXPAND_INST_START, -1));
+        params.setCalItemExpandEnd(request.getAttributeLong(MailConstants.A_CAL_EXPAND_INST_END, -1));
         String query = request.getAttribute(MailConstants.E_QUERY, defaultQueryStr);
         if (query == null)
             throw ServiceException.INVALID_REQUEST("no query submitted and no default query found", null);
