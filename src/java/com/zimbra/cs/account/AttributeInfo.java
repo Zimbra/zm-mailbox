@@ -167,178 +167,181 @@ public class AttributeInfo {
         }
     }
 
-   private void checkValue(String value, boolean checkImmutable) throws ServiceException
-   {
-       if (checkImmutable && mImmutable)
-           throw ServiceException.INVALID_REQUEST(mName+" is immutable", null);
+    private void checkValue(String value, boolean checkImmutable) throws ServiceException {
+        if (checkImmutable && mImmutable)
+            throw ServiceException.INVALID_REQUEST(mName+" is immutable", null);
 
-       // means to delete/unset the attribute
-       if (value == null || value.equals(""))
-           return;
+        // means to delete/unset the attribute
+        if (value == null || value.equals(""))
+            return;
 
-       switch (mType) {
-       case TYPE_BOOLEAN:
-           if ("TRUE".equals(value) || "FALSE".equals(value))
-               return;
-           else
-               throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be TRUE or FALSE", null);
-       case TYPE_DURATION:
-           if (DURATION_PATTERN.matcher(value).matches())
-               return;
-           else
-               throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be a valid duration: nnnn[hsmd]", null);
-       case TYPE_EMAIL:
-           if (value.length() > mMax)
-               throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value length("+value.length()+") larger then max allowed: "+mMax, null);              
-           validEmailAddress(value, false);
-           return;           
-       case TYPE_EMAILP:
-           if (value.length() > mMax)
-               throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value length("+value.length()+") larger then max allowed: "+mMax, null);              
-           validEmailAddress(value, true);
-           return;
-       case TYPE_ENUM:
-           if (mEnumSet.contains(value))
-               return;
-           else
-               throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be one of: "+mValue, null);
-       case TYPE_GENTIME:
-           if (GENTIME_PATTERN.matcher(value).matches())
-               return;
-           else
-               throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be a valid generalized time: yyyyMMddHHmmssZ", null);
-       case TYPE_ID:
-           if (ID_PATTERN.matcher(value).matches())
-               return;
-           else
-               throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be a valid id", null);           
-       case TYPE_INTEGER:
-           try {
-               int v = Integer.parseInt(value);
-               if (v < mMin)
-                   throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value("+v+") smaller then minimum allowed: "+mMin, null);
-               if (v > mMax)
-                   throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value("+v+") larger then max allowed: "+mMax, null);
-               return;
-           } catch (NumberFormatException e) {
-               throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be a valid integer: "+value, e);
-           }
-       case TYPE_LONG:
-           try {
-               long v = Long.parseLong(value);
-               if (v < mMin)
-                   throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value("+v+") smaller then minimum allowed: "+mMin, null);
-               if (v > mMax)
-                   throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value("+v+") larger then max allowed: "+mMax, null);
-               return;
-           } catch (NumberFormatException e) {
-               throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be a valid long: "+value, e);
-           }
-       case TYPE_PORT:
-           try {
-               int v = Integer.parseInt(value);
-               if (v >= 0 && v <= 65535)
-                   return;
-               throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be a valid port: "+value, null);               
-           } catch (NumberFormatException e) {
-               throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be a valid port: "+value, null);
-           }
-       case TYPE_STRING:
-       case TYPE_ASTRING:
-       case TYPE_OSTRING:
-       case TYPE_CSTRING:
-       case TYPE_PHONE:
-           if (value.length() > mMax)
-               throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value length("+value.length()+") larger then max allowed: "+mMax, null);   
-           // TODO
-           return;
-       case TYPE_REGEX:
-           if (mRegex.matcher(value).matches())
-               return;
-           else
-               throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must match the regex: "+mValue, null);
-       default:
-           ZimbraLog.misc.warn("unknown type("+mType+") for attribute: "+value);
-           return;
-       }
-   }
+        switch (mType) {
+        case TYPE_BOOLEAN:
+            if ("TRUE".equals(value) || "FALSE".equals(value))
+                return;
+            else
+                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be TRUE or FALSE", null);
+        case TYPE_DURATION:
+            if (DURATION_PATTERN.matcher(value).matches())
+                return;
+            else
+                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be a valid duration: nnnn[hsmd]", null);
+        case TYPE_EMAIL:
+            if (value.length() > mMax)
+                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value length("+value.length()+") larger then max allowed: "+mMax, null);              
+            validEmailAddress(value, false);
+            return;           
+        case TYPE_EMAILP:
+            if (value.length() > mMax)
+                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value length("+value.length()+") larger then max allowed: "+mMax, null);              
+            validEmailAddress(value, true);
+            return;
+        case TYPE_ENUM:
+            if (mEnumSet.contains(value))
+                return;
+            else
+                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be one of: "+mValue, null);
+        case TYPE_GENTIME:
+            if (GENTIME_PATTERN.matcher(value).matches())
+                return;
+            else
+                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be a valid generalized time: yyyyMMddHHmmssZ", null);
+        case TYPE_ID:
+            if (ID_PATTERN.matcher(value).matches())
+                return;
+            else
+                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be a valid id", null);           
+        case TYPE_INTEGER:
+            try {
+                int v = Integer.parseInt(value);
+                if (v < mMin)
+                    throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value("+v+") smaller then minimum allowed: "+mMin, null);
+                if (v > mMax)
+                    throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value("+v+") larger then max allowed: "+mMax, null);
+                return;
+            } catch (NumberFormatException e) {
+                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be a valid integer: "+value, e);
+            }
+        case TYPE_LONG:
+            try {
+                long v = Long.parseLong(value);
+                if (v < mMin)
+                    throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value("+v+") smaller then minimum allowed: "+mMin, null);
+                if (v > mMax)
+                    throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value("+v+") larger then max allowed: "+mMax, null);
+                return;
+            } catch (NumberFormatException e) {
+                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be a valid long: "+value, e);
+            }
+        case TYPE_PORT:
+            try {
+                int v = Integer.parseInt(value);
+                if (v >= 0 && v <= 65535)
+                    return;
+                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be a valid port: "+value, null);               
+            } catch (NumberFormatException e) {
+                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be a valid port: "+value, null);
+            }
+        case TYPE_STRING:
+        case TYPE_ASTRING:
+        case TYPE_OSTRING:
+        case TYPE_CSTRING:
+        case TYPE_PHONE:
+            if (value.length() > mMax)
+                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value length("+value.length()+") larger then max allowed: "+mMax, null);   
+            // TODO
+            return;
+        case TYPE_REGEX:
+            if (mRegex.matcher(value).matches())
+                return;
+            else
+                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must match the regex: "+mValue, null);
+        default:
+            ZimbraLog.misc.warn("unknown type("+mType+") for attribute: "+value);
+            return;
+        }
+    }
    
-   private static void validEmailAddress(String addr, boolean personal) throws ServiceException {
-       if (addr.indexOf('@') == -1)
-           throw AccountServiceException.INVALID_ATTR_VALUE("must include domain", null);
+    private static void validEmailAddress(String addr, boolean personal) throws ServiceException {
+        if (addr.indexOf('@') == -1)
+            throw AccountServiceException.INVALID_ATTR_VALUE("must include domain", null);
 
-       try {
-           InternetAddress ia = new InternetAddress(addr, true);
-           // is this even needed?
-           ia.validate();
-           if (!personal && ia.getPersonal() != null && !ia.getPersonal().equals(""))
-               throw AccountServiceException.INVALID_ATTR_VALUE("invalid email address", null);
-       } catch (AddressException e) {
-           throw AccountServiceException.INVALID_ATTR_VALUE("invalid email address", e);
-       }
-   }
+        try {
+            InternetAddress ia = new InternetAddress(addr, true);
+            // is this even needed?
+            ia.validate();
+            if (!personal && ia.getPersonal() != null && !ia.getPersonal().equals(""))
+                throw AccountServiceException.INVALID_ATTR_VALUE("invalid email address", null);
+        } catch (AddressException e) {
+            throw AccountServiceException.INVALID_ATTR_VALUE("invalid email address", e);
+        }
+    }
 
-   AttributeCallback getCallback() {
-       return mCallback;
-   }
+    AttributeCallback getCallback() {
+        return mCallback;
+    }
    
-   String getName() {
-       return mName;
-   }
+    String getName() {
+        return mName;
+    }
    
-   boolean hasFlag(AttributeFlag flag) {
-       if (mFlags == null) {
-           return false;
-       }
-       boolean result = mFlags.contains(flag);
-       return result;
-   }
+    boolean hasFlag(AttributeFlag flag) {
+        if (mFlags == null) {
+            return false;
+        }
+        boolean result = mFlags.contains(flag);
+        return result;
+    }
    
-   int getId() {
-       return mId;
-   }
+    int getId() {
+        return mId;
+    }
    
-   String getParentOid() {
-       return mParentOid;
-   }
+    String getParentOid() {
+        return mParentOid;
+    }
    
-   int getGroupId() {
-       return mGroupId;
-   }
+    int getGroupId() {
+        return mGroupId;
+    }
    
-   AttributeType getType() {
-       return mType;
-   }
+    AttributeType getType() {
+        return mType;
+    }
 
-   AttributeOrder getOrder() {
-	   return mOrder;
-   }
+    AttributeOrder getOrder() {
+ 	   return mOrder;
+    }
    
-   String getDescription() {
-       return mDescription;
-   }
+    String getDescription() {
+        return mDescription;
+    }
 
-   long getMax() {
-       return mMax;
-   }
+    long getMax() {
+        return mMax;
+    }
    
-   boolean requiredInClass(AttributeClass cls) {
-       return mRequiredInClasses != null && mRequiredInClasses.contains(cls);
-   }
+    boolean requiredInClass(AttributeClass cls) {
+        return mRequiredInClasses != null && mRequiredInClasses.contains(cls);
+    }
 
-   boolean optionalInClass(AttributeClass cls) {
-       return mOptionalInClasses != null && mOptionalInClasses.contains(cls);
-   }
+    boolean optionalInClass(AttributeClass cls) {
+        return mOptionalInClasses != null && mOptionalInClasses.contains(cls);
+    }
 
-   AttributeCardinality getCardinality() {
-       return mCardinality;
-   }
+    AttributeCardinality getCardinality() {
+        return mCardinality;
+    }
    
-   List<String> getGlobalConfigValues() {
-       return mGlobalConfigValues;
-   }
+    List<String> getGlobalConfigValues() {
+        return mGlobalConfigValues;
+    }
    
-   List<String> getDefaultCosValues() {
-       return mDefaultCOSValues;
-   }
+    List<String> getDefaultCosValues() {
+        return mDefaultCOSValues;
+    }
+
+    boolean isImmutable() {
+        return mImmutable;
+    }
 }

@@ -418,23 +418,23 @@ public class AttributeManager {
     private Map<AttributeClass, Set<String>> mClassToLowerCaseAttrsMap = new HashMap<AttributeClass, Set<String>>();
 
     private void initClassToAttrsMap() {
-       for (AttributeClass klass : AttributeClass.values()) {
-           mClassToAttrsMap.put(klass, new HashSet<String>());
-           mClassToLowerCaseAttrsMap.put(klass, new HashSet<String>());
-       }
-     }
-    
+        for (AttributeClass klass : AttributeClass.values()) {
+            mClassToAttrsMap.put(klass, new HashSet<String>());
+            mClassToLowerCaseAttrsMap.put(klass, new HashSet<String>());
+        }
+    }
+
     /*
      * Support for lookup by flag
      */
     private Map<AttributeFlag, Set<String>> mFlagToAttrsMap = new HashMap<AttributeFlag, Set<String>>();
-    
+
     private void initFlagsToAttrsMap() {
-       for (AttributeFlag flag : AttributeFlag.values()) {
-           mFlagToAttrsMap.put(flag, new HashSet<String>());
-       }
-     }
-    
+        for (AttributeFlag flag : AttributeFlag.values()) {
+            mFlagToAttrsMap.put(flag, new HashSet<String>());
+        }
+    }
+
     public boolean isAccountInherited(String attr) {
  	   return mFlagToAttrsMap.get(AttributeFlag.accountInherited).contains(attr);
     }
@@ -442,11 +442,11 @@ public class AttributeManager {
     public boolean isDomainInherited(String attr) {
  	   return mFlagToAttrsMap.get(AttributeFlag.domainInherited).contains(attr);
     }
-    
+
     public boolean isServerInherited(String attr) {
  	   return mFlagToAttrsMap.get(AttributeFlag.serverInherited).contains(attr);
     }
-    
+
     public boolean isDomainAdminModifiable(String attr) {
  	   return mFlagToAttrsMap.get(AttributeFlag.domainAdminModifiable).contains(attr);
     }
@@ -457,11 +457,26 @@ public class AttributeManager {
     
     public Set<String> getAttrsInClass(AttributeClass klass) {
         return mClassToAttrsMap.get(klass);
-     }
+    }
     
     public Set<String> getLowerCaseAttrsInClass(AttributeClass klass) {
         return mClassToLowerCaseAttrsMap.get(klass);
-     }
+    }
+
+    public Set<String> getImmutableAttrsInClass(AttributeClass klass) {
+        Set<String> immutable = new HashSet<String>();
+        for (String attr : mClassToAttrsMap.get(klass)) {
+            AttributeInfo info = mAttrs.get(attr.toLowerCase());
+            if (info != null) {
+                if (info.isImmutable())
+                    immutable.add(attr);
+            } else {
+                ZimbraLog.misc.warn("getImmutableAttrsInClass: no attribute info for: " + attr);
+            }
+
+        }
+        return immutable;
+    }
 
     /**
      * @param type
@@ -592,7 +607,7 @@ public class AttributeManager {
 
     private enum Action { generateLdapSchema, generateGlobalConfigLdif, generateDefaultCOSLdif, dump }
     
-    public static void main(String[] args) throws IOException, DocumentException, ServiceException {
+    public static void main(String[] args) throws IOException, ServiceException {
         CliUtil.toolSetup();
         CommandLine cl = parseArgs(args);
 
@@ -651,8 +666,6 @@ public class AttributeManager {
         pw.println("objectclass: organizationalRole");
         pw.println("cn: config");
         pw.println("objectclass: zimbraGlobalConfig");
-        
-        String[] attrs;
         
         List<String> out = new LinkedList<String>();
         for (AttributeInfo attr : mAttrs.values()) {
