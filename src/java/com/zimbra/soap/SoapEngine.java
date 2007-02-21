@@ -251,13 +251,13 @@ public class SoapEngine {
             try {
                 // make sure that the authenticated account is active and has not been deleted/disabled since the last request
                 Account account = Provisioning.getInstance().get(AccountBy.id, at.getAccountId());
-                if (!account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+                if (account == null || !account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
                     return soapProto.soapFault(ServiceException.AUTH_EXPIRED());
 
                 // also, make sure that the target account (if any) is active
                 if (zsc.isDelegatedRequest() && !handler.isAdminCommand()) {
-                    Account target = DocumentHandler.getRequestedAccount(zsc);
-                    if (!target.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+                    Account target = Provisioning.getInstance().get(AccountBy.id, zsc.getRequestedAccountId());
+                    if (target == null || !target.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
                         return soapProto.soapFault(AccountServiceException.ACCOUNT_INACTIVE(target.getName()));
                 }
             } catch (ServiceException ex) {
