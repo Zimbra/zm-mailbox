@@ -228,6 +228,14 @@ public class ProxyServlet extends ZimbraServlet {
 				// workaround for Alexa Thumbnails paid web service, which doesn't bother to return a content-type line.
 				resp.setContentType("text/xml");
 			}
+
+			try {
+				resp.setStatus(method.getStatusCode());
+			} catch (Exception ex) {
+				
+				ZimbraLog.zimlet.info("exception while proxying in getting status code "+target, ex);				
+			}
+
 			ByteUtil.copy(method.getResponseBodyAsStream(), false, resp.getOutputStream(), false);
 		} finally {
 			if (method != null)
