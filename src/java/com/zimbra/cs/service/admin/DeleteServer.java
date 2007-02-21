@@ -45,6 +45,9 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class DeleteServer extends AdminDocumentHandler {
 
+    private static final String[] TARGET_SERVER_PATH = new String[] { AdminConstants.E_ID };
+    protected String[] getProxiedServerPath()  { return TARGET_SERVER_PATH; }
+
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
         ZimbraSoapContext lc = getZimbraSoapContext(context);
