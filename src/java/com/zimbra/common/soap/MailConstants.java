@@ -262,6 +262,7 @@ public class MailConstants {
     public static final String A_RAW = "raw";
     public static final String A_MARK_READ = "read";
     public static final String A_NEUTER = "neuter";
+    public static final String A_ESTIMATE_SIZE = "estimateSize";
     public static final String A_URL = "url";
     public static final String A_NUM = "n";
     public static final String A_TOTAL_SIZE = "total";
@@ -287,7 +288,11 @@ public class MailConstants {
     public static final String A_FILE_AS_STR = "fileAsStr";
     public static final String A_CONTACT_TYPE = "type";
     public static final String A_ELIDED = "elided";
-
+    public static final String A_CAL_INSTANCE_START = "calInstanceStart";
+    public static final String A_CAL_INSTANCE_END = "calInstanceEnd";
+    public static final String A_RESULT_MODE = "resultMode";
+    public static final String A_PREFETCH = "prefetch";
+    
     // send/save draft
     public static final String E_ATTACH = "attach";
     public static final String A_ATTACHMENT_ID = "aid";

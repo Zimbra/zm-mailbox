@@ -48,6 +48,18 @@ public abstract class Element {
     protected Map<String, Object> mAttributes;
     protected Map<String, String> mNamespaces;
 
+    /**
+     *
+     * These three attributes can be used to control the way things render into XML/JSon
+     * 
+     * Specifically, in our model, the following two pieces of XML are *equivalend*:
+     *    1) <a><b>something</b></a>
+     *    2) <a b="something"/>
+     *    
+     *  By setting the dispositon of an attribute to DISP_CONTENT, you can force the
+     *  attribute to be rendered in form (1)      
+     * 
+     */
     public static final byte DISP_ATTRIBUTE = 0;
     public static final byte DISP_CONTENT   = 1;
     public static final byte DISP_ELEMENT   = 2;
