@@ -288,8 +288,8 @@ public class MailConstants {
     public static final String A_FILE_AS_STR = "fileAsStr";
     public static final String A_CONTACT_TYPE = "type";
     public static final String A_ELIDED = "elided";
-    public static final String A_CAL_INSTANCE_START = "calInstanceStart";
-    public static final String A_CAL_INSTANCE_END = "calInstanceEnd";
+    public static final String A_CAL_EXPAND_INST_START = "calExpandInstStart";
+    public static final String A_CAL_EXPAND_INST_END = "calExpandInstEnd";
     public static final String A_RESULT_MODE = "resultMode";
     public static final String A_PREFETCH = "prefetch";
     
