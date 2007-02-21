@@ -642,6 +642,8 @@ public abstract class Provisioning {
 
     public static final String A_zimbraFeatureCalendarEnabled = "zimbraFeatureCalendarEnabled";
 
+    public static final String A_zimbraFeatureTasksEnabled = "zimbraFeatureTasksEnabled";
+
     public static final String A_zimbraFeatureTaggingEnabled = "zimbraFeatureTaggingEnabled";
 
     public static final String A_zimbraFeatureAdvancedSearchEnabled = "zimbraFeatureAdvancedSearchEnabled";
