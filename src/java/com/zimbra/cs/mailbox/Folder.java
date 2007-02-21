@@ -498,7 +498,7 @@ public class Folder extends MailItem {
     }
 
     /** Sets the remote URL for the folder.  This can point to a remote
-     *  calendar (<code>.ics</code> file), an RSS feed, etc.  Note that you
+     *  calendar (<tt>.ics</tt> file), an RSS feed, etc.  Note that you
      *  cannot add a remote data source to an existing folder, as refreshing
      *  the linked content empties the folder.<p>
      * 
@@ -521,7 +521,7 @@ public class Folder extends MailItem {
             url = "";
         if (getUrl().equals(url))
             return;
-        if (!getUrl().equals(""))
+        if (getUrl().equals("") && !url.equals(""))
             throw MailServiceException.CANNOT_SUBSCRIBE(mId);
         if (!isMutable())
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
