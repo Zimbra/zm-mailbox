@@ -101,33 +101,28 @@ public class ToXML {
     // no construction
     private ToXML()  {}
 
-    public static Element encodeItem(Element parent, ZimbraSoapContext lc, MailItem item)
-    throws ServiceException {
-        return encodeItem(parent, lc, item, NOTIFY_FIELDS);
-    }
-    public static Element encodeItem(Element parent, ZimbraSoapContext lc, MailItem item, int fields)
+    public static void encodeItem(Element parent, ZimbraSoapContext lc, MailItem item, int fields)
     throws ServiceException {
         if (item instanceof Folder)
-            return encodeFolder(parent, lc, (Folder) item, fields);
+            encodeFolder(parent, lc, (Folder) item, fields);
         else if (item instanceof Tag)
-            return encodeTag(parent, lc, (Tag) item, fields);
+            encodeTag(parent, lc, (Tag) item, fields);
         else if (item instanceof Note)
-            return encodeNote(parent, lc, (Note) item, fields);
+            encodeNote(parent, lc, (Note) item, fields);
         else if (item instanceof Contact)
-            return encodeContact(parent, lc, (Contact) item, null, false, null, fields);
+            encodeContact(parent, lc, (Contact) item, null, false, null, fields);
         else if (item instanceof CalendarItem) 
-            return encodeCalendarItemSummary(parent, lc, (CalendarItem) item, fields);
+            encodeCalendarItemSummary(parent, lc, (CalendarItem) item, fields);
         else if (item instanceof Conversation)
-            return encodeConversationSummary(parent, lc, (Conversation) item, fields);
+            encodeConversationSummary(parent, lc, (Conversation) item, fields);
         else if (item instanceof WikiItem)
-            return encodeWiki(parent, lc, (WikiItem) item, fields, -1);
+            encodeWiki(parent, lc, (WikiItem) item, fields, -1);
         else if (item instanceof Document)
-            return encodeDocument(parent, lc, (Document) item, fields, -1);
+            encodeDocument(parent, lc, (Document) item, fields, -1);
         else if (item instanceof Message) {
             OutputParticipants output = (fields == NOTIFY_FIELDS ? OutputParticipants.PUT_BOTH : OutputParticipants.PUT_SENDERS);
-            return encodeMessageSummary(parent, lc, (Message) item, output, fields);
+            encodeMessageSummary(parent, lc, (Message) item, output, fields);
         }
-        return null;
     }
 
     private static boolean needToOutput(int fields, int fieldMask) {
@@ -708,36 +703,19 @@ public class ToXML {
         }
         return m;
     }
-
+    
     /**
-     * Encode the metadata for a calendar item.
+     * Encodes the basic search / sync fields onto an existing calendar item element 
      * 
-     * The content for the calendar item is a big multipart/digest containing each
-     * invite in the calendar item as a sub-mimepart -- it can be retreived from the content 
-     * servlet: 
-     *    http://servername/service/content/get?id=<calItemId>
-     * 
-     * The client can ALSO request just the content for each individual invite using a
-     * compound item-id request:
-     *    http://servername/service/content/get?id=<calItemId>-<invite-mail-item-id>
-     *    
-     * DO NOT use the raw invite-mail-item-id to fetch the content: since the invite is a 
-     * standard mail-message it can be deleted by the user at any time!
-     * @param parent
-     * @param lc TODO
+     * @param calItemElem
+     * @param lc
      * @param calItem
      * @param fields
-     * 
-     * @return
+     * @throws ServiceException
      */
-    public static Element encodeCalendarItemSummary(Element parent, ZimbraSoapContext lc,
-                CalendarItem calItem, int fields)
-    throws ServiceException {
-        Element calItemElem;
-        if (calItem instanceof Appointment)
-            calItemElem = parent.addElement(MailConstants.E_APPOINTMENT);
-        else
-            calItemElem = parent.addElement(MailConstants.E_TASK);
+    public static void setCalendarItemFields(Element calItemElem, ZimbraSoapContext lc,
+        CalendarItem calItem, int fields) throws ServiceException {
+        
         recordItemTags(calItemElem, calItem, fields);
 
         calItemElem.addAttribute(MailConstants.A_UID, calItem.getUid());
@@ -775,7 +753,40 @@ public class ToXML {
 
             encodeInvite(ie, lc, calItem, inv, NOTIFY_FIELDS, false);
         }
+    }
 
+    /**
+     * Encode the metadata for a calendar item.
+     * 
+     * The content for the calendar item is a big multipart/digest containing each
+     * invite in the calendar item as a sub-mimepart -- it can be retreived from the content 
+     * servlet: 
+     *    http://servername/service/content/get?id=<calItemId>
+     * 
+     * The client can ALSO request just the content for each individual invite using a
+     * compound item-id request:
+     *    http://servername/service/content/get?id=<calItemId>-<invite-mail-item-id>
+     *    
+     * DO NOT use the raw invite-mail-item-id to fetch the content: since the invite is a 
+     * standard mail-message it can be deleted by the user at any time!
+     * @param parent
+     * @param lc TODO
+     * @param calItem
+     * @param fields
+     * 
+     * @return
+     */
+    public static Element encodeCalendarItemSummary(Element parent, ZimbraSoapContext lc,
+                CalendarItem calItem, int fields)
+    throws ServiceException {
+        Element calItemElem;
+        if (calItem instanceof Appointment)
+            calItemElem = parent.addElement(MailConstants.E_APPOINTMENT);
+        else
+            calItemElem = parent.addElement(MailConstants.E_TASK);
+        
+        setCalendarItemFields(calItemElem, lc, calItem, fields);
+        
         return calItemElem;
     }
 

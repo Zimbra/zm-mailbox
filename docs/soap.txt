@@ -763,7 +763,7 @@ Folders:
   {unread}       = number of unread messages in folder
   {msg-count}    = number of messages/invites in folder
   {default-type} = (optional) default type for the folder; used by web client to decide which view to use;
-                   possible values are the same as <SearchRequest>'s {types}: conversation|message|contact|appointment|note
+                   possible values are the same as <SearchRequest>'s {types}: conversation|message|contact|etc
   {remote-url}   = url (RSS, iCal, etc.) this folder syncs its contents to
   {rest-url}     = url to the folder on rest interface for rest-enabled apps (such as wiki and notebook)
   {effective-perms} = for remote folders, the access rights the authenticated user has on the folder
@@ -796,7 +796,8 @@ Mountpoints:
   {id-of-shared-item} = item id of the linked-to resource in the remote mailbox
   {color}        = numeric; range 0-127; defaults to 0 if not present; client can display only 0-7
   {default-type} = (optional) default type for the folder; used by web client to decide which view to use;
-                   possible values are the same as <SearchRequest>'s {types}: conversation|message|contact|appointment|note
+                   possible values are the same as <SearchRequest>'s {types}:
+                   conversation|message|contact|appointment|note|task|etc
 
 Tags:
 
@@ -810,8 +811,11 @@ Tags:
  
 ----------
 
-<SearchRequest [limit="..."] [offset="..."] [sortBy="{sort-by}"] [groupBy="{group-by}"] [types="{types}"] [recip="*0|1"]
-			   [fetch="1|all"] [html="*0|1"] [read="*0|1"] [neuter="0|*1"] [field={default_field}]>
+<SearchRequest [limit="..."] [offset="..."] [sortBy="{sort-by}"] [groupBy="{group-by}"]
+               [types="{types}"] [recip="*0|1"] [fetch="1|all"] [html="*0|1"]
+               [read="*0|1"] [neuter="0|*1"] [field={default_field}]
+               [calInstanceStart=TIME_IN_MSEC] [calInstanceEnd=TIME_IN_MSEC]
+               >
   [<cursor id="prevId" sortVal="prevSortValue" endSortVal="endSortValue"/> ] // end val is NON-INCLUSIVE
   
   [   // OPTIONAL: client timezone identification (necessary to time-correct a user-specified date/time query)
@@ -907,6 +911,19 @@ if recip="1" is specified
             available in query.txt, e.g. 'content:' [the default] or 'subject:', etc.  The date operators
             (date, after, before) and the "item:" operator should not be specified as default fields
             because of quirks in the search grammar.
+
+calInstanceStart and calInstanceEnd:
+   If these are specified, and the search types include calendar item
+   types (e.g. appointment), then the search results include the
+   instances for calendar items within that range in the form
+   described in <GetApptSummariesResponse> (see soap-calendar.txt)
+
+   ***IMPORTANT NOTE: Calendar Items that have no instances within
+   that range are COMPLETELY EXCLUDED from the results (e.g. not even
+   an <appt> element>.  Calendar Items with no data (such as Tasks
+   with no date specified) are included, but with no instance
+   information***
+   
             
   
 For the optional <cursor> element:

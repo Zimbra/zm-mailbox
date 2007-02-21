@@ -38,6 +38,8 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.SearchParams;
@@ -79,7 +81,9 @@ public class SearchConv extends Search {
 
         // FIXME: should proxy if conversation is a qualified ID in another mailbox
         ItemId cid = new ItemId(request.getAttribute(MailConstants.A_CONV_ID), zsc);
-        SearchParams params = parseCommonParameters(request, zsc);
+        
+        Account acct = getRequestedAccount(zsc);
+        SearchParams params = SearchParams.parse(request, zsc, acct.getAttr(Provisioning.A_zimbraPrefMailInitialSearch));
 
         // append (conv:(convid)) onto the beginning of the queryStr
         StringBuffer queryBuffer = new StringBuffer("conv:\"");

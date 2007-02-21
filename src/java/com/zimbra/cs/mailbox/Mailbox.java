@@ -2685,16 +2685,6 @@ public class Mailbox {
                 MailItem.TYPE_UNKNOWN, octxt, start, end, folderId, excludeFolders);
     }
 
-    //
-    // Search return types:
-    //   - Full rows
-    //   - Imap Messages
-    //   - Just ID's
-    //  -  ID & mod_metadata (future)
-    //
-    // Prefetch?
-    //
-    
     /**
      * Specifies the type of result we want from the call to search()
      */
@@ -2702,6 +2692,16 @@ public class Mailbox {
         NORMAL,        // everything
         IMAP,          // only IMAP data
         IDS;           // only IDs
+        
+        public static SearchResultMode get(String value) throws ServiceException {
+            if (value == null)
+                return NORMAL;
+            try {
+                return valueOf(value.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("Unknown resultMode value: "  +value, null);
+            }
+        }
     }
     
     /**

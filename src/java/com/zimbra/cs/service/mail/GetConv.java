@@ -59,7 +59,7 @@ public class GetConv extends MailDocumentHandler  {
         Mailbox mbox = getRequestedMailbox(zsc);
         Mailbox.OperationContext octxt = zsc.getOperationContext();
         Session session = getSession(context);
-        
+
         Element econv = request.getElement(MailConstants.E_CONV);
         ItemId iid = new ItemId(econv.getAttribute(MailConstants.A_ID), zsc);
 
@@ -67,7 +67,7 @@ public class GetConv extends MailDocumentHandler  {
         params.setFetchFirst(ExpandResults.get(econv.getAttribute(MailConstants.A_FETCH, null)));
         if (params.getFetchFirst() != ExpandResults.NONE) {
             params.setWantHtml(econv.getAttributeBool(MailConstants.A_WANT_HTML, false));
-//            params.setMarkRead(econv.getAttributeBool(MailConstants.A_MARK_READ, false));
+//          params.setMarkRead(econv.getAttributeBool(MailConstants.A_MARK_READ, false));
         }
 
         GetConversationByIdOperation op = new GetConversationByIdOperation(session, octxt, mbox, Requester.SOAP, iid.getId());
@@ -82,7 +82,7 @@ public class GetConv extends MailDocumentHandler  {
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
 
         Element response = zsc.createElement(MailConstants.GET_CONV_RESPONSE);
-    	ToXML.encodeConversation(response, zsc, conv, msgs, params);
+        ToXML.encodeConversation(response, zsc, conv, msgs, params);
         return response;
     }
 }

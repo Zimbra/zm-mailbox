@@ -81,7 +81,7 @@ public class GetItem extends MailDocumentHandler {
         MailItem item = op.getItem();
 
         Element response = zsc.createElement(MailConstants.GET_ITEM_RESPONSE);
-        ToXML.encodeItem(response, zsc, item);
+        ToXML.encodeItem(response, zsc, item, ToXML.NOTIFY_FIELDS);
         return response;
     }
 }

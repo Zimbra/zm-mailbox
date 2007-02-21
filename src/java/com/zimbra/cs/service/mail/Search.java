@@ -32,11 +32,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.TimeZone;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -44,6 +40,7 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.*;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
@@ -54,11 +51,10 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.WikiItem;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
-import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
 import com.zimbra.cs.operation.ItemActionOperation;
 import com.zimbra.cs.operation.SearchOperation;
 import com.zimbra.cs.operation.Operation.Requester;
+import com.zimbra.cs.service.mail.GetCalendarItemSummaries.EncodeCalendarItemResult;
 import com.zimbra.cs.service.mail.ToXML.EmailType;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications;
@@ -76,7 +72,8 @@ public class Search extends MailDocumentHandler  {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         SoapSession session = (SoapSession) zsc.getSession(SessionCache.SESSION_SOAP);
         Mailbox mbox = getRequestedMailbox(zsc);
-        SearchParams params = parseCommonParameters(request, zsc);
+        Account acct = getRequestedAccount(zsc);
+        SearchParams params = SearchParams.parse(request, zsc, acct.getAttr(Provisioning.A_zimbraPrefMailInitialSearch));
 
         SearchOperation op = new SearchOperation(session, zsc, zsc.getOperationContext(), mbox, Requester.SOAP,  params);
         op.schedule();
@@ -118,171 +115,6 @@ public class Search extends MailDocumentHandler  {
                 inf.toXml(qinfoElt);
             }
         }
-    }
-    
-    protected static final String LOCALE_PATTERN = "([a-zA-Z]{2})[-_]([a-zA-Z]{2})([-_](.+))?";
-    protected final static Pattern sLocalePattern = Pattern.compile(LOCALE_PATTERN);
-    
-    protected Locale parseLocale(Element localeElt, ZimbraSoapContext zsc) {
-        String locStr = localeElt.getText();
-        
-        if (locStr != null && locStr.length() > 0) {
-            Matcher m = sLocalePattern.matcher(locStr);
-            if (m.lookingAt()) {
-                String lang=null, country=null, variant=null;
-                
-                if (m.start(1) != -1)
-                    lang = locStr.substring(m.start(1), m.end(1));
-                
-                if (lang == null || lang.length()<=0)
-                    return null;
-                
-                if (m.start(2) != -1)
-                    country = locStr.substring(m.start(2), m.end(2));
-                
-                if (m.start(4) != -1)
-                    variant = locStr.substring(m.start(4), m.end(4));
-                
-                if (variant != null && country != null && variant.length() > 0 && country.length() > 0)
-                    return new Locale(lang, country, variant);
-                
-                if (country != null && country.length() > 0)
-                    return new Locale(lang, country);
-                
-                return new Locale(lang);
-            }
-        }
-        
-        
-        return null;
-    }
-    
-    protected java.util.TimeZone parseTimeZonePart(Element tzElt, ZimbraSoapContext zsc) throws ServiceException {
-        String id = tzElt.getAttribute(MailConstants.A_ID);
-
-        // is it a well-known timezone?  if so then we're done here
-        ICalTimeZone knownTZ = WellKnownTimeZones.getTimeZoneById(id);
-        if (knownTZ != null)
-            return knownTZ;
-
-        // custom timezone!
-        
-        String test = tzElt.getAttribute(MailConstants.A_CAL_TZ_STDOFFSET, null);
-        if (test == null)
-            throw ServiceException.INVALID_REQUEST("Unknown TZ: \""+id+"\" and no "+MailConstants.A_CAL_TZ_STDOFFSET+" specified", null);
-        
-        return CalendarUtils.parseTzElement(tzElt);
-    }
-
-    protected SearchParams parseCommonParameters(Element request, ZimbraSoapContext zsc) throws ServiceException {
-        String query = request.getAttribute(MailConstants.E_QUERY, null);
-        if (query == null)
-            query = getRequestedAccount(zsc).getAttr(Provisioning.A_zimbraPrefMailInitialSearch);
-
-        if (query == null)
-            throw ServiceException.INVALID_REQUEST("no query submitted and no default query found", null);
-
-        SearchParams params = new SearchParams();
-        
-        
-        // field
-        String field = request.getAttribute(MailConstants.A_FIELD, null);
-        if (field != null) {
-            params.setDefaultField(field);
-        }
-        
-        //
-        // <loc>
-        Element locElt = request.getOptionalElement(MailConstants.E_LOCALE);
-        if (locElt != null) {
-            Locale loc = parseLocale(locElt, zsc);
-            params.setLocale(loc);
-        }
-
-        //
-        // <tz>
-        Element tzElt = request.getOptionalElement(MailConstants.E_CAL_TZ);
-        if (tzElt != null) {
-            TimeZone tz = parseTimeZonePart(tzElt, zsc);
-            params.setTimeZone(tz);
-        }
-        
-        params.setOffset(getOffset(request));
-        params.setLimit(getLimit(request));
-        params.setQueryStr(query);
-        String groupByStr = request.getAttribute(MailConstants.A_SEARCH_TYPES, null);
-        if (groupByStr == null)
-            groupByStr = request.getAttribute(MailConstants.A_GROUPBY, DEFAULT_SEARCH_TYPES);
-        params.setTypesStr(groupByStr);
-        params.setSortByStr(request.getAttribute(MailConstants.A_SORTBY, MailboxIndex.SortBy.DATE_DESCENDING.toString()));
-        params.setFetchFirst(ExpandResults.get(request.getAttribute(MailConstants.A_FETCH, null)));
-        if (params.getFetchFirst() != ExpandResults.NONE) {
-            params.setWantHtml(request.getAttributeBool(MailConstants.A_WANT_HTML, false));
-            params.setMarkRead(request.getAttributeBool(MailConstants.A_MARK_READ, false));
-            params.setNeuterImages(request.getAttributeBool(MailConstants.A_NEUTER, true));
-        }
-        params.setWantRecipients(request.getAttributeBool(MailConstants.A_RECIPIENTS, false));
-
-        Element cursor = request.getOptionalElement(MailConstants.E_CURSOR);
-        if (cursor != null) {
-//            int prevMailItemId = (int)cursor.getAttributeLong(MailService.A_ID);
-//          int prevOffset = (int)cursor.getAttributeLong(MailService.A_QUERY_OFFSET);
-            
-            String cursorStr = cursor.getAttribute(MailConstants.A_ID);
-            ItemId prevMailItemId = null;
-            if (cursorStr != null)
-                prevMailItemId = new ItemId(cursorStr, zsc);
-            
-            int prevOffset = 0;
-            String sortVal = cursor.getAttribute(MailConstants.A_SORTVAL);
-            
-            String endSortVal = cursor.getAttribute(MailConstants.A_ENDSORTVAL, null);
-            params.setCursor(prevMailItemId, sortVal, prevOffset, endSortVal);
-            
-            String addedPart = null;
-            
-            switch (params.getSortBy()) {
-                case DATE_ASCENDING:
-                    addedPart = "date:"+quote(">=", sortVal)+(endSortVal!=null ? " date:"+quote("<", endSortVal) : "");
-                    break;
-                case DATE_DESCENDING:
-                    addedPart = "date:"+quote("<=",sortVal)+(endSortVal!=null ? " date:"+quote(">", endSortVal) : "");
-                    break;
-                case SUBJ_ASCENDING:
-                    addedPart = "subject:"+quote(">=", sortVal)+(endSortVal!=null ? " subject:"+quote("<", endSortVal) : "");
-                    break;
-                case SUBJ_DESCENDING:
-                    addedPart = "subject:"+quote("<=", sortVal)+(endSortVal!=null ? " subject:"+quote(">", endSortVal) : "");
-                    break;
-                case NAME_ASCENDING:
-                    addedPart = "from:"+quote(">=", sortVal)+(endSortVal!=null ? " from:"+quote("<", endSortVal) : "");
-                    break;
-                case NAME_DESCENDING:
-                    addedPart = "from:"+quote("<=", sortVal)+(endSortVal!=null ? " from:"+quote(">", endSortVal) : "");
-                    break;
-            }
-            
-            if (addedPart != null)
-                params.setQueryStr("(" + params.getQueryStr() + ")" + addedPart);
-        }
-
-        return params;
-    }
-    
-    private final String quote(String s1, String s2) {
-        return "\""+s1+s2+"\"";
-    }
-
-    protected int getLimit(Element request) throws ServiceException {
-        int limit = (int) request.getAttributeLong(MailConstants.A_QUERY_LIMIT, -1);
-        if (limit <= 0 || limit > 1000)
-            limit = 30; // default limit of...say..30...
-        return limit;
-    }
-
-    protected int getOffset(Element request) throws ServiceException {
-        // Lookup the offset= and limit= parameters in the soap request
-        return (int) request.getAttributeLong(MailConstants.A_QUERY_OFFSET, 0);
     }
 
     // just to make the argument lists a bit more readable:
@@ -379,25 +211,47 @@ public class Search extends MailDocumentHandler  {
         return c;
     }
 
+    /**
+     * @param zsc
+     * @param response
+     * @param ah
+     * @param inline
+     * @param params
+     * @return
+     *           The encoded element OR NULL if the search params contained a calItemExpand range AND the 
+     *           calendar item did not have any instances in the specified range
+     * @throws ServiceException
+     */
     protected Element addCalendarItemHit(ZimbraSoapContext zsc, Element response, CalendarItemHit ah, boolean inline, SearchParams params)
     throws ServiceException {
         CalendarItem calItem = ah.getCalendarItem();
-        Element m;
-        if (inline) {
-            m = ToXML.encodeCalendarItemSummary(response, zsc, calItem, PendingModifications.Change.ALL_FIELDS);
-//          if (!msg.getFragment().equals(""))
-//          m.addAttribute(MailService.E_FRAG, msg.getFragment(), Element.DISP_CONTENT);
+        Element calElement = null;;
+        int fields = PendingModifications.Change.ALL_FIELDS;
+        
+        if (params.getCalItemExpandStart() > 0 && params.getCalItemExpandEnd() > 0) {
+            Account acct = getRequestedAccount(zsc);
+            EncodeCalendarItemResult encoded = 
+                GetCalendarItemSummaries.encodeCalendarItemInstances(zsc, calItem, acct, params.getCalItemExpandStart(), params.getCalItemExpandEnd());
+            
+            assert(encoded.element == null || encoded.numInstancesExpanded>0);
+            if (encoded.element != null) {
+                response.addElement(encoded.element);
+                ToXML.setCalendarItemFields(encoded.element, zsc, calItem, fields);
+            }
+            return calElement;
         } else {
-            m = ToXML.encodeCalendarItemSummary(response, zsc, calItem, PendingModifications.Change.ALL_FIELDS);
+            calElement = ToXML.encodeCalendarItemSummary(response, zsc, calItem, fields);
         }
 
-        if (ah.getScore() != 0) {
-            m.addAttribute(MailConstants.A_SCORE, ah.getScore());
+        if (calElement != null) {
+            if (ah.getScore() != 0) {
+                calElement.addAttribute(MailConstants.A_SCORE, ah.getScore());
+            }
+            
+            calElement.addAttribute(MailConstants.A_CONTENTMATCHED, true);
         }
-
-        m.addAttribute(MailConstants.A_CONTENTMATCHED, true);
-
-        return m;
+        
+        return calElement;
     }
 
 
