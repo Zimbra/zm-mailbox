@@ -229,28 +229,15 @@ public class Search extends MailDocumentHandler  {
         Element calElement = null;;
         int fields = PendingModifications.Change.ALL_FIELDS;
         
-//        if (params.getCalItemExpandStart() > 0 && params.getCalItemExpandEnd() > 0) {
-            Account acct = getRequestedAccount(zsc);
-            EncodeCalendarItemResult encoded = 
-                GetCalendarItemSummaries.encodeCalendarItemInstances(zsc, calItem, acct, params.getCalItemExpandStart(), params.getCalItemExpandEnd(), true);
-            
-//            assert(encoded.element == null || encoded.numInstancesExpanded>0);
-            if (encoded.element != null) {
-                response.addElement(encoded.element);
-                ToXML.setCalendarItemFields(encoded.element, zsc, calItem, fields, false);
-            }
-//            return calElement;
-//        } else {
-//            calElement = ToXML.encodeCalendarItemSummary(response, zsc, calItem, fields, false);
-//            Invite defaultInv = calItem.getDefaultInviteOrNull();
-//            if (defaultInv != null) {
-//                String frag = defaultInv.getFragment();
-//                if (!frag.equals("")) {
-//                    calElement.addAttribute(MailConstants.E_FRAG, frag, Element.DISP_CONTENT);
-//                }
-//            }
-//        }
-
+        Account acct = getRequestedAccount(zsc);
+        EncodeCalendarItemResult encoded = 
+            GetCalendarItemSummaries.encodeCalendarItemInstances(zsc, calItem, acct, params.getCalItemExpandStart(), params.getCalItemExpandEnd(), true);
+        
+        if (encoded.element != null) {
+            response.addElement(encoded.element);
+            ToXML.setCalendarItemFields(encoded.element, zsc, calItem, fields, false);
+        }
+        
         if (calElement != null) {
             if (ah.getScore() != 0) {
                 calElement.addAttribute(MailConstants.A_SCORE, ah.getScore());
