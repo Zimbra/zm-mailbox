@@ -25,11 +25,11 @@
 
 package com.zimbra.cs.zclient;
 
-import java.util.Arrays;
-
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+
+import java.util.Arrays;
 
 public class ZGrant {
 
@@ -117,6 +117,25 @@ public class ZGrant {
         mGranteeId = e.getAttribute(MailConstants.A_ZIMBRA_ID, null);
         mGranteeType = GranteeType.fromString(e.getAttribute(MailConstants.A_GRANT_TYPE));
         mInherit = e.getAttributeBool(MailConstants.A_INHERIT);
+    }
+
+    public void toElement(Element parent) {
+        Element grant = parent.addElement(MailConstants.E_GRANT);
+        if (mPermissions != null)
+            grant.addAttribute(MailConstants.A_RIGHTS, mPermissions);
+        
+        grant.addAttribute(MailConstants.A_GRANT_TYPE, mGranteeType.name());
+
+        if (mGranteeId != null)
+            grant.addAttribute(MailConstants.A_ZIMBRA_ID, mGranteeId);
+
+        if (mGranteeName != null)
+            grant.addAttribute(MailConstants.A_DISPLAY, mGranteeName);
+
+        grant.addAttribute(MailConstants.A_INHERIT, mInherit);
+
+        if (mArgs != null && mArgs.length() > 0)
+            grant.addAttribute(MailConstants.A_ARGS, mArgs);
     }
     
     /**

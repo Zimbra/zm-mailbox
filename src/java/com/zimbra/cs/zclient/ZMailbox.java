@@ -71,6 +71,7 @@ import com.zimbra.cs.zclient.event.ZModifyTagEvent;
 import com.zimbra.cs.zclient.event.ZRefreshEvent;
 import com.zimbra.cs.zclient.event.ZCreateAppointmentEvent;
 import com.zimbra.cs.zclient.event.ZModifyAppointmentEvent;
+import com.zimbra.cs.zclient.ZFolder.Color;
 import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
@@ -1925,6 +1926,27 @@ public class ZMailbox {
     public ZActionResult modifyFolderURL(String id, String url) throws ServiceException {
         return doAction(folderAction("url", id).addAttribute(MailConstants.A_URL, url));
     }
+
+    public ZActionResult updateFolder(String id, String name, String parentId, Color newColor, String flags, List<ZGrant> acl) throws ServiceException {
+        XMLElement req = new XMLElement(MailConstants.FOLDER_ACTION_REQUEST);
+        Element action = folderAction("update", id);
+        if (name != null && name.length() > 0)
+            action.addAttribute(MailConstants.A_NAME, name);
+        if (parentId != null && parentId.length() > 0)
+            action.addAttribute(MailConstants.A_FOLDER, parentId);
+        if (newColor != null)
+            action.addAttribute(MailConstants.A_COLOR, newColor.getValue());
+        if (flags != null)
+            action.addAttribute(MailConstants.A_FLAGS, flags);
+        if (acl != null && !acl.isEmpty()) {
+            Element aclEl = action.addElement(MailConstants.E_ACL);
+            for (ZGrant grant : acl) {
+                grant.toElement(aclEl);
+            }
+        }
+        return doAction(action);
+    }
+
     /**
      * sync the folder's contents to the remote feed specified by the folders URL
      * @param ids folder id
