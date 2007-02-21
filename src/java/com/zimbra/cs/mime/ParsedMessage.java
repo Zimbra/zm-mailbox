@@ -623,7 +623,7 @@ public class ParsedMessage {
                 Document doc = handler.getDocument();
                 if (doc != null) {
                     int partSize = mpi.getMimePart().getSize();
-                    doc.add(Field.Text(LuceneFields.L_SIZE, Integer.toString(partSize)));
+                    doc.add(new Field(LuceneFields.L_SIZE, Integer.toString(partSize), Field.Store.YES, Field.Index.NO));
                     mLuceneDocuments.add(doc);
                 }
             }

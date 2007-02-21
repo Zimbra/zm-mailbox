@@ -47,6 +47,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.BooleanClause.Occur;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbMailItem;
@@ -769,7 +770,7 @@ class DBQueryOperation extends QueryOperation
                         }
                         l.add(res);
                         
-                        idsQuery.add(new TermQuery(new Term(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(res.indexId))), false, false);
+                        idsQuery.add(new TermQuery(new Term(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(res.indexId))), Occur.SHOULD);
                     }
                     
                     // add the new query to the mLuceneOp's query

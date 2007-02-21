@@ -48,6 +48,7 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.BooleanClause.Occur;
 
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.queryparser.Token;
@@ -1427,8 +1428,9 @@ public final class ZimbraQuery {
                 if (mOredTokens.size() > 0) {
                     // probably don't need to do this here...can probably just call addClause
                     BooleanQuery orQuery = new BooleanQuery();
-                    for (String token : mOredTokens)
-                        orQuery.add(new TermQuery(new Term(fieldName, token)), false, false);
+                    for (String token : mOredTokens) {
+                        orQuery.add(new TermQuery(new Term(fieldName, token)), Occur.SHOULD);
+                    }
 
                     lop.addClause("", orQuery, calcTruth(truth));
                 }

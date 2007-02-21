@@ -176,11 +176,11 @@ public class ParsedDocument {
             mFragment = Fragment.getFragment(handler.getContent(), false);
             handler.setMessageDigest(mDigest = ds.getDigest());
             mDocument = handler.getDocument();
-            mDocument.add(Field.Text(LuceneFields.L_SIZE, Integer.toString(mSize = ds.getSize())));
-            mDocument.add(new Field(LuceneFields.L_H_SUBJECT, filename, false/*store*/, true/*index*/, true/*tokenize*/));
-            mDocument.add(new Field(LuceneFields.L_CONTENT, filename,  false/*store*/, true/*index*/, true/*tokenize*/));
-            mDocument.add(new Field(LuceneFields.L_H_FROM, creator, false/*store*/, true/*index*/, true/*tokenize*/));
-            mDocument.add(Field.Text(LuceneFields.L_FILENAME, filename));
+            mDocument.add(new Field(LuceneFields.L_SIZE, Integer.toString(mSize = ds.getSize()), Field.Store.YES, Field.Index.NO));
+            mDocument.add(new Field(LuceneFields.L_H_SUBJECT, filename, Field.Store.NO, Field.Index.TOKENIZED));
+            mDocument.add(new Field(LuceneFields.L_CONTENT, filename,  Field.Store.NO, Field.Index.TOKENIZED));
+            mDocument.add(new Field(LuceneFields.L_H_FROM, creator, Field.Store.NO, Field.Index.TOKENIZED));
+            mDocument.add(new Field(LuceneFields.L_FILENAME, filename, Field.Store.YES, Field.Index.TOKENIZED));
         } catch (MimeHandlerException mhe) {
             throw ServiceException.FAILURE("cannot create ParsedDocument", mhe);
         } catch (ObjectHandlerException ohe) {
@@ -189,20 +189,21 @@ public class ParsedDocument {
     }
 
     public void setVersion(int v) {
-    	mDocument.add(Field.UnIndexed(LuceneFields.L_VERSION, Integer.toString(v)));
+        // should be indexed so we can add search constraints on the index version
+        mDocument.add(new Field(LuceneFields.L_VERSION, Integer.toString(v), Field.Store.YES, Field.Index.UN_TOKENIZED));
     }
-    
+
     public String getFilename()     { return mFilename; }
     public String getContentType()  { return mContentType; }
     public int getSize()            { return mSize; }
     public String getDigest()       { return mDigest; }
     public String getCreator()      { return mCreator; }
-    
+
     public Document getDocument()   {
         return mDocument; 
     }
-    
-    
+
+
     public String getFragment()     { return mFragment; }
     public long getCreatedDate()    { return mCreatedDate; }
 

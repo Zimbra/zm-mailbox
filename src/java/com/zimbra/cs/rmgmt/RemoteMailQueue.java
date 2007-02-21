@@ -129,12 +129,12 @@ public class RemoteMailQueue {
             if (id == null) {
                 throw new IOException("no ID defined near line=" + lineNo);
             }
-            doc.add(new Field(QueueAttr.id.toString(), id.toLowerCase(), true, true, false, false));
+            doc.add(new Field(QueueAttr.id.toString(), id.toLowerCase(), Field.Store.YES, Field.Index.UN_TOKENIZED, Field.TermVector.NO));
 
             String time = map.get(QueueAttr.time.toString());
             if (time != null && time.length() > 0) {
                 long timeMillis = Long.parseLong(time) * 1000;
-                doc.add(new Field(QueueAttr.time.toString(), Long.toString(timeMillis), true, true, false, false));
+                doc.add(new Field(QueueAttr.time.toString(), Long.toString(timeMillis), Field.Store.YES, Field.Index.UN_TOKENIZED, Field.TermVector.NO));
             }
 
             addSimpleField(doc, map, QueueAttr.size);
@@ -164,16 +164,16 @@ public class RemoteMailQueue {
     void addSimpleField(Document doc, Map<String,String> map, QueueAttr attr) {
         String value = map.get(attr.toString());
         if (value != null && value.length() > 0) {
-            doc.add(new Field(attr.toString(), value.toLowerCase(), true, true, false, false));
+            doc.add(new Field(attr.toString(), value.toLowerCase(), Field.Store.YES, Field.Index.UN_TOKENIZED, Field.TermVector.NO));
         }
     }
         
     void addEmailAddress(Document doc, String id, String address, QueueAttr addressAttr, QueueAttr domainAttr) {
         address = address.toLowerCase();
-        doc.add(new Field(addressAttr.toString(), address, true, true, false, false));
+        doc.add(new Field(addressAttr.toString(), address, Field.Store.YES, Field.Index.UN_TOKENIZED, Field.TermVector.NO));
         String[] parts = address.split("@");
         if (parts != null && parts.length > 1) {
-            doc.add(new Field(domainAttr.toString(), parts[1], true, true, false, false));
+            doc.add(new Field(domainAttr.toString(), parts[1], Field.Store.YES, Field.Index.UN_TOKENIZED, Field.TermVector.NO));
         }
     }
     
@@ -554,7 +554,7 @@ public class RemoteMailQueue {
                     }
                     if (!all) {
                         Term toDelete = new Term(QueueAttr.id.toString(), ids[i].toLowerCase());
-                        int numDeleted = indexReader.delete(toDelete);
+                        int numDeleted = indexReader.deleteDocuments(toDelete);
                         mNumMessages.getAndAdd(-numDeleted);
                         if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("deleting term:" + toDelete + ", docs deleted=" + numDeleted);
                     }

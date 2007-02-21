@@ -34,7 +34,6 @@ import java.io.Reader;
 import javax.activation.DataSource;
 
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
 
 import com.zimbra.cs.convert.AttachmentInfo;
 import com.zimbra.cs.mime.Mime;
@@ -144,12 +143,6 @@ public class TextHtmlHandler extends MimeHandler {
     public void addFields(Document doc) throws MimeHandlerException {
         // make sure we've parsed the document
         getContentImpl();
-        // Add the summary as an UnIndexed field, so that it is stored and returned
-        // with hit documents for display.
-        doc.add(Field.UnIndexed("summary", mHandler.getSummary()));
-        // Add the title as a separate Text field, so that it can be searched
-        // separately.
-        doc.add(Field.Text("title", mHandler.getTitle()));
     }
 
     protected String getContentImpl() throws MimeHandlerException {

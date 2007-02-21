@@ -45,6 +45,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
+import org.apache.lucene.index.IndexReader.FieldOption;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.spans.SpanQuery;
 import org.apache.lucene.search.spans.Spans;
@@ -315,7 +316,7 @@ public final class MailboxIndex
                     try {
                         String itemIdStr = Integer.toString(itemIds[i]);
                         Term toDelete = new Term(LuceneFields.L_MAILBOX_BLOB_ID, itemIdStr);
-                        int numDeleted = reader.getReader().delete(toDelete);
+                        int numDeleted = reader.getReader().deleteDocuments(toDelete);
                         // NOTE!  The numDeleted may be < you expect here, the document may
                         // already be deleted and just not be optimized out yet -- some lucene
                         // APIs (e.g. docFreq) will still return the old count until the indexes 
@@ -367,20 +368,20 @@ public final class MailboxIndex
                     doc.removeFields(LuceneFields.L_SORT_SUBJECT);
                     doc.removeFields(LuceneFields.L_SORT_NAME);
                     //                                                                                                  store, index, tokenize
-                    doc.add(new Field(LuceneFields.L_SORT_SUBJECT, mi.getSortSubject(),  false, true, false));
-                    doc.add(new Field(LuceneFields.L_SORT_NAME,    mi.getSortSender(),     false, true, false));
+                    doc.add(new Field(LuceneFields.L_SORT_SUBJECT, mi.getSortSubject(), Field.Store.NO, Field.Index.UN_TOKENIZED));
+                    doc.add(new Field(LuceneFields.L_SORT_NAME,    mi.getSortSender(), Field.Store.NO, Field.Index.UN_TOKENIZED));
                     
                     doc.removeFields(LuceneFields.L_MAILBOX_BLOB_ID);
-                    doc.add(new Field(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(indexId),      true/*store*/,  true/*index*/, false/*token*/));
+                    doc.add(new Field(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(indexId), Field.Store.YES, Field.Index.UN_TOKENIZED));
 
                     // If this doc is shared by mult threads, then the date might just be wrong,
                     // so remove and re-add the date here to make sure the right one gets written!
                     doc.removeFields(LuceneFields.L_SORT_DATE);
                     String dateString = DateField.timeToString(receivedDate);
-                    doc.add(Field.Text(LuceneFields.L_SORT_DATE, dateString));
+                    doc.add(new Field(LuceneFields.L_SORT_DATE, dateString, Field.Store.YES, Field.Index.UN_TOKENIZED));
 
                     if (null == doc.get(LuceneFields.L_ALL)) {
-                        doc.add(Field.UnStored(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE));
+                        doc.add(new Field(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE, Field.Store.NO, Field.Index.NO_NORMS, Field.TermVector.NO));
                     }
                     mIndexWriter.addDocument(doc);
 
@@ -471,9 +472,9 @@ public final class MailboxIndex
             CountedIndexReader reader = this.getCountedIndexReader();
             try {
                 IndexReader iReader = reader.getReader();
-                return iReader.getFieldNames();
+                return iReader.getFieldNames(FieldOption.ALL);
             } finally {
-                reader.release();
+                reader.release(); 
             }
         }
     }
@@ -1043,10 +1044,10 @@ public final class MailboxIndex
             // 11 fragment files are OK.  25k msgs with these settings (mf=3, mmd=33) means that
             // each message gets written 9 times to disk...as opposed to 12.5 times with the default
             // lucene settings of 10 and 100....
-            writer.mergeFactor = 3;    // should be > 1, otherwise segment sizes are effectively limited to 
+            writer.setMergeFactor(3);// should be > 1, otherwise segment sizes are effectively limited to
             // minMergeDocs documents: and this is probably bad (too many files!)
 
-            writer.minMergeDocs = 33; // we expect 11 index fragment files
+            writer.setMaxBufferedDocs(33); // we expect 11 index fragment files
 
             mIndexWriter = writer;
 
@@ -1964,14 +1965,15 @@ public final class MailboxIndex
                 searchText.append(ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, emailStr));
                 
                 /* put the email addresses in the "To" field so they can be more easily searched */
-                doc.add(new Field(LuceneFields.L_H_TO, emailStr,  false/*store*/, true/*index*/, true/*token*/));
+                doc.add(new Field(LuceneFields.L_H_TO, emailStr,  Field.Store.NO, Field.Index.TOKENIZED));
+                
                 /* put the name in the "From" field since the MailItem table uses 'Sender'*/
-                doc.add(new Field(LuceneFields.L_H_FROM, contact.getSender(),  false/*store*/, true/*index*/, true/*token*/ ));
+                doc.add(new Field(LuceneFields.L_H_FROM, contact.getSender(),  Field.Store.NO, Field.Index.TOKENIZED));
                 /* bug 11831 - put contact searchable data in its own field so wildcard search works better  */
-                doc.add(new Field(LuceneFields.L_CONTACT_DATA, searchText.toString(), false/*store*/, true/*index*/, true/*token*/));
-                doc.add(new Field(LuceneFields.L_CONTENT, contentText.toString(), false/*store*/, true/*index*/, true/*token*/));
-                doc.add(new Field(LuceneFields.L_H_SUBJECT, contact.getSubject(), false/*store*/, true/*index*/, true/*token*/));
-                doc.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_CONTACT, true/*store*/,  true/*index*/, true/*token*/));
+                doc.add(new Field(LuceneFields.L_CONTACT_DATA, searchText.toString(), Field.Store.NO, Field.Index.TOKENIZED));
+                doc.add(new Field(LuceneFields.L_CONTENT, contentText.toString(), Field.Store.NO, Field.Index.TOKENIZED));
+                doc.add(new Field(LuceneFields.L_H_SUBJECT, contact.getSubject(), Field.Store.NO, Field.Index.TOKENIZED));
+                doc.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_CONTACT, Field.Store.YES, Field.Index.UN_TOKENIZED));
                 
                 addDocument(redo, doc, indexId, contact.getDate(), contact, deleteFirst);
 
@@ -2003,10 +2005,9 @@ public final class MailboxIndex
                 }
 
                 Document doc = new Document();
-                doc.add(Field.UnStored(LuceneFields.L_CONTENT, toIndex));
-                doc.add(new Field(LuceneFields.L_H_SUBJECT, toIndex,                                              false/*store*/, true/*index*/, true/*token*/));
-                doc.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_NOTE,            true/*store*/, true/*index*/, false/*tokenize*/));
-                
+                doc.add(new Field(LuceneFields.L_CONTENT, toIndex, Field.Store.NO, Field.Index.TOKENIZED));
+                doc.add(new Field(LuceneFields.L_H_SUBJECT, toIndex, Field.Store.NO, Field.Index.TOKENIZED));
+                doc.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_NOTE, Field.Store.YES, Field.Index.UN_TOKENIZED));
                 addDocument(redo, doc, indexId, note.getDate(), note, deleteFirst);
 
             } catch (IOException e) {

@@ -33,6 +33,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.BooleanClause.Occur;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -50,44 +51,44 @@ public class GetMailQueue extends AdminDocumentHandler {
     public static final int MAIL_QUEUE_QUERY_DEFAULT_LIMIT = 30;
     public static final int MAIL_QUEUE_SCAN_DEFUALT_WAIT_SECONDS = 3;
     public static final int MAIL_QUEUE_SUMMARY_CUTOFF = 100;
-    
-	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-        
+
         Element serverElem = request.getElement(AdminConstants.E_SERVER);
         String serverName = serverElem.getAttribute(AdminConstants.A_NAME);
-        
+
         Server server = prov.get(ServerBy.name, serverName);
         if (server == null) {
             throw ServiceException.INVALID_REQUEST("server with name " + serverName + " could not be found", null);
         }
-        
+
         Element queueElem = serverElem.getElement(AdminConstants.E_QUEUE);
         String queueName = queueElem.getAttribute(AdminConstants.A_NAME);
         boolean scan = queueElem.getAttributeBool(AdminConstants.A_SCAN, false);
         long waitMillis = (queueElem.getAttributeLong(AdminConstants.A_WAIT, MAIL_QUEUE_SCAN_DEFUALT_WAIT_SECONDS)) * 1000;
-        
+
         Element queryElem = queueElem.getElement(AdminConstants.E_QUERY);
         int offset = (int)queryElem.getAttributeLong(AdminConstants.A_OFFSET, 0);
         int limit = (int)queryElem.getAttributeLong(AdminConstants.A_LIMIT, MAIL_QUEUE_QUERY_DEFAULT_LIMIT);
         Query query = buildLuceneQuery(queryElem);
-        
+
         RemoteMailQueue rmq = RemoteMailQueue.getRemoteMailQueue(server, queueName, scan);
         boolean stillScanning = rmq.waitForScan(waitMillis);
         RemoteMailQueue.SearchResult sr = rmq.search(query, offset, limit);
-        
+
         Element response = lc.createElement(AdminConstants.GET_MAIL_QUEUE_RESPONSE);
         serverElem = response.addElement(AdminConstants.E_SERVER);
         serverElem.addAttribute(AdminConstants.A_NAME, serverName);
-     
+
         queueElem = serverElem.addElement(AdminConstants.E_QUEUE);
         queueElem.addAttribute(AdminConstants.A_NAME, queueName);
         queueElem.addAttribute(AdminConstants.A_TIME, rmq.getScanTime());
         queueElem.addAttribute(AdminConstants.A_SCAN, stillScanning);
         queueElem.addAttribute(AdminConstants.A_TOTAL, rmq.getNumMessages());
         queueElem.addAttribute(AdminConstants.A_MORE, ((offset + limit) < sr.hits));
-        
+
         for (QueueAttr attr : sr.sitems.keySet()) {
             List<SummaryItem> slist = sr.sitems.get(attr);
             Collections.sort(slist);
@@ -111,31 +112,30 @@ public class GetMailQueue extends AdminDocumentHandler {
                 qiElem.addAttribute(attr.toString(), qitem.get(attr));
             }
         }
-	    return response;
-	}
+        return response;
+    }
 
-	public static Query buildLuceneQuery(Element queryElem) throws ServiceException {
-		BooleanQuery fq = new BooleanQuery();
-		boolean emptyQuery = true;
+    public static Query buildLuceneQuery(Element queryElem) throws ServiceException {
+        BooleanQuery fq = new BooleanQuery();
+        boolean emptyQuery = true;
         for (Iterator fieldIter = queryElem.elementIterator(AdminConstants.E_FIELD); fieldIter.hasNext();) {
-        	emptyQuery = false;
-        	Element fieldElement = (Element)fieldIter.next();
-        	String fieldName = fieldElement.getAttribute(AdminConstants.A_NAME);
-        	BooleanQuery mq = new BooleanQuery();
-        	for (Iterator matchIter = fieldElement.elementIterator(AdminConstants.E_MATCH); matchIter.hasNext();) {
-        		Element matchElement = (Element)matchIter.next();
-        		String matchValue = matchElement.getAttribute(AdminConstants.A_VALUE);
-        		Term term = new Term(fieldName, matchValue);
-        		TermQuery termQuery = new TermQuery(term);
-                mq.add(new TermQuery(term), false, false); // OR all the matches
-        	}
-        	fq.add(mq, true, false); // AND all the fields
+            emptyQuery = false;
+            Element fieldElement = (Element)fieldIter.next();
+            String fieldName = fieldElement.getAttribute(AdminConstants.A_NAME);
+            BooleanQuery mq = new BooleanQuery();
+            for (Iterator matchIter = fieldElement.elementIterator(AdminConstants.E_MATCH); matchIter.hasNext();) {
+                Element matchElement = (Element)matchIter.next();
+                String matchValue = matchElement.getAttribute(AdminConstants.A_VALUE);
+                Term term = new Term(fieldName, matchValue);
+                mq.add(new TermQuery(term), Occur.SHOULD);
+            }
+            fq.add(mq, Occur.MUST);
         }
         if (emptyQuery) {
-        	return null;
+            return null;
         } else {
-        	return fq;
+            return fq;
         }
-	}
+    }
 
 }

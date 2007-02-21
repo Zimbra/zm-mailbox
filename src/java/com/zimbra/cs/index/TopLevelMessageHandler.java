@@ -59,14 +59,6 @@ import com.zimbra.cs.object.ObjectHandlerException;
 public final class TopLevelMessageHandler {
 
     private static Log mLog = LogFactory.getLog(TopLevelMessageHandler.class);
-	
-	private static final int STORE = 10;
-	private static final int DONT_STORE = 20;
-
-    private static final int INDEX = 30;
-    private static final int DONT_INDEX = 40;
-
-    private static final int TOKENIZE = 50;
     
     private List<MPartInfo> mMessageParts;
     private Document     mDocument;
@@ -74,29 +66,28 @@ public final class TopLevelMessageHandler {
     private String       mBodyContent;
     private String       mFragment;
     private boolean      mHasCalendar;
-//    private String mDomains;
 
     public TopLevelMessageHandler(List<MPartInfo> parts) {
-    	mMessageParts = parts;
-    	mDocument = new Document();
-    	mContent = new StringBuilder();
+        mMessageParts = parts;
+        mDocument = new Document();
+        mContent = new StringBuilder();
     }
 
     public void addContent(String text) {
-    	addContent(text, false);
+        addContent(text, false);
     }
 
     public void addContent(String text, boolean isMainBody) {
-    	if (mContent.length() > 0)
-    		mContent.append(' ');
-    	mContent.append(text);
+        if (mContent.length() > 0)
+            mContent.append(' ');
+        mContent.append(text);
 
-    	if (isMainBody)
-    		mBodyContent = (mBodyContent == null ? text : mBodyContent + ' ' + text);
+        if (isMainBody)
+            mBodyContent = (mBodyContent == null ? text : mBodyContent + ' ' + text);
     }
 
     public List<MPartInfo> getMessageParts() {
-    	return mMessageParts;
+        return mMessageParts;
     }
 
     public void hasCalendarPart(boolean hasCal) {
@@ -114,28 +105,25 @@ public final class TopLevelMessageHandler {
     public Document getDocument(ParsedMessage pm)
     throws MessagingException, ServiceException {
 
-        mDocument.add(Field.Text(LuceneFields.L_MIMETYPE, "message/rfc822"));
-        mDocument.add(Field.Keyword(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP));
-        mDocument.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP,   true/*store*/, true/*index*/, false/*tokenize*/));
+        mDocument.add(new Field(LuceneFields.L_MIMETYPE, "message/rfc822", Field.Store.YES, Field.Index.TOKENIZED));
+        mDocument.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP, Field.Store.YES, Field.Index.UN_TOKENIZED));
 
-        String toValue = setHeaderAsField("to", pm, LuceneFields.L_H_TO, DONT_STORE, INDEX, TOKENIZE);
-        String ccValue = setHeaderAsField("cc", pm, LuceneFields.L_H_CC, DONT_STORE, INDEX, TOKENIZE);
+        String toValue = setHeaderAsField("to", pm, LuceneFields.L_H_TO, Field.Store.NO, Field.Index.TOKENIZED);
+        String ccValue = setHeaderAsField("cc", pm, LuceneFields.L_H_CC, Field.Store.NO, Field.Index.TOKENIZED);
 
-        setHeaderAsField("x-envelope-from", pm, LuceneFields.L_H_X_ENV_FROM, DONT_STORE, INDEX, TOKENIZE);
-        setHeaderAsField("x-envelope-to", pm, LuceneFields.L_H_X_ENV_TO, DONT_STORE, INDEX, TOKENIZE);
+        setHeaderAsField("x-envelope-from", pm, LuceneFields.L_H_X_ENV_FROM, Field.Store.NO, Field.Index.TOKENIZED);
+        setHeaderAsField("x-envelope-to", pm, LuceneFields.L_H_X_ENV_TO, Field.Store.NO, Field.Index.TOKENIZED);
 
         String msgId = pm.getHeader("message-id");
         if (msgId.length() > 0) {
             if (msgId.charAt(0) == '<')
                 msgId = msgId.substring(1);
-            
+
             if (msgId.charAt(msgId.length()-1) == '>')
                 msgId = msgId.substring(0, msgId.length()-1);
-            
-            if (msgId.length() > 0) {
-                //                                                                                    store, index, tokenize
-                mDocument.add(new Field(LuceneFields.L_H_MESSAGE_ID, msgId, false, true, false));
-            }
+
+            if (msgId.length() > 0)
+                mDocument.add(new Field(LuceneFields.L_H_MESSAGE_ID, msgId, Field.Store.NO, Field.Index.UN_TOKENIZED));
         }
 
         String from = pm.getSender();
@@ -146,9 +134,8 @@ public final class TopLevelMessageHandler {
         else if (sortFrom.length() > DbMailItem.MAX_SENDER_LENGTH)
             sortFrom = sortFrom.substring(0, DbMailItem.MAX_SENDER_LENGTH);
 
-        //                                                                           store, index, tokenize
-        mDocument.add(new Field(LuceneFields.L_H_FROM,       from,                   false, true, true));
-        mDocument.add(new Field(LuceneFields.L_H_SUBJECT,    subject,                false, true, true));
+        mDocument.add(new Field(LuceneFields.L_H_FROM, from, Field.Store.NO, Field.Index.TOKENIZED));
+        mDocument.add(new Field(LuceneFields.L_H_SUBJECT, subject, Field.Store.NO, Field.Index.TOKENIZED));
 
         // calculate the fragment *before* we add non-content data
         mFragment = getFragment();
@@ -162,12 +149,12 @@ public final class TopLevelMessageHandler {
         addContent(ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_CC, ccValue));
 
         String text = mContent.toString();
-        
-        mDocument.add(Field.UnStored(LuceneFields.L_CONTENT, text));
+
+        mDocument.add(new Field(LuceneFields.L_CONTENT, text, Field.Store.NO, Field.Index.TOKENIZED));
 
         String sizeStr = Integer.toString(pm.getMimeMessage().getSize());
-        mDocument.add(Field.Text(LuceneFields.L_SIZE, sizeStr));
-        
+        mDocument.add(new Field(LuceneFields.L_SIZE, sizeStr, Field.Store.YES, Field.Index.NO));
+
         try {
             MimeHandler.getObjects(text, mDocument);
         } catch (ObjectHandlerException e) {
@@ -176,11 +163,11 @@ public final class TopLevelMessageHandler {
             mLog.warn("Unable to recognize searchable objects in message (Message-ID: " +
                 msgid + ", Subject: " + sbj + ")", e);
         }
-        
+
         // Get the list of attachment content types from this message and any
         // TNEF attachments
         Set<String> contentTypes = Mime.getAttachmentList(mMessageParts);
-        
+
         // Assemble a comma-separated list of attachment content types
         StringBuilder buf = new StringBuilder();
         for (String contentType : contentTypes) {
@@ -188,52 +175,48 @@ public final class TopLevelMessageHandler {
                 buf.append(',');
             buf.append(contentType);
         }
-        
+
         String attachments = buf.toString();
         if (attachments.equals(""))
             attachments = LuceneFields.L_ATTACHMENT_NONE;
         else
             attachments = attachments + "," + LuceneFields.L_ATTACHMENT_ANY;
-        mDocument.add(Field.UnStored(LuceneFields.L_ATTACHMENTS, attachments));
-        
+        mDocument.add(new Field(LuceneFields.L_ATTACHMENTS, attachments, Field.Store.NO, Field.Index.TOKENIZED));
+
         return mDocument;
     }
-    
-	private String setHeaderAsField(String headerName, ParsedMessage pm, String fieldName,
-			                        int stored, int indexed, int tokenized)
-	throws MessagingException  {
-		return setHeaderAsField(mDocument, pm, headerName, fieldName, stored, indexed, tokenized);
-	}	
-	
-	private String setHeaderAsField(Document d, ParsedMessage pm, String headerName,
-			String fieldName, int stored, int indexed, int tokenized)
-	throws MessagingException  {
-	    assert((stored == STORE) || (stored == DONT_STORE));
-	    assert((indexed == INDEX) || (stored == DONT_INDEX));
 
-		String value = pm.getMimeMessage().getHeader(headerName, null);
+    private String setHeaderAsField(String headerName, ParsedMessage pm, String fieldName,   
+        Field.Store stored, Field.Index indexed)  throws MessagingException  {
+        return setHeaderAsField(mDocument, pm, headerName, fieldName, stored, indexed);
+    }	
 
-		if (value == null || value.length() == 0)
-			return "";
-		try {
-			value = MimeUtility.decodeText(value);
-		} catch (UnsupportedEncodingException e) { }
-        d.add(new Field(fieldName, value, stored == STORE, indexed == INDEX, tokenized == TOKENIZE));
-		return value;
-	}
-	
-	/**
-	 * For every attachment, many of the lucene indexed fields from the top level
-	 * message are also indexed as part of the attachment: this is done so that the
-	 * attachment will show up if you do things like "type:pdf and from:foo"
-	 * 
-	 * "this" --> top level doc
-	 * @param d subdocument of top level 
-	 */
-	public void setLuceneHeadersFromContainer(Document d, ParsedMessage pm) throws MessagingException {
-	    setHeaderAsField(d, pm, "to", LuceneFields.L_H_TO, DONT_STORE, INDEX, TOKENIZE);
-		setHeaderAsField(d, pm, "cc", LuceneFields.L_H_CC, DONT_STORE, INDEX, TOKENIZE);
-        
+    private String setHeaderAsField(Document d, ParsedMessage pm, String headerName,
+        String fieldName, Field.Store stored, Field.Index indexed) throws MessagingException  {
+        String value = pm.getMimeMessage().getHeader(headerName, null);
+
+        if (value == null || value.length() == 0)
+            return "";
+        try {
+            value = MimeUtility.decodeText(value);
+        } catch (UnsupportedEncodingException e) { }
+        d.add(new Field(fieldName, value, stored, indexed));
+        d.add(new Field(fieldName, value, stored, indexed));
+        return value;
+    }
+
+    /**
+     * For every attachment, many of the lucene indexed fields from the top level
+     * message are also indexed as part of the attachment: this is done so that the
+     * attachment will show up if you do things like "type:pdf and from:foo"
+     * 
+     * "this" --> top level doc
+     * @param d subdocument of top level 
+     */
+    public void setLuceneHeadersFromContainer(Document d, ParsedMessage pm) throws MessagingException {
+        setHeaderAsField(d, pm, "to", LuceneFields.L_H_TO, Field.Store.NO, Field.Index.TOKENIZED);
+        setHeaderAsField(d, pm, "cc", LuceneFields.L_H_CC, Field.Store.NO, Field.Index.TOKENIZED);
+
         String subject = pm.getNormalizedSubject();
         String sortFrom = pm.getParsedSender().getSortString();
         if (sortFrom != null && sortFrom.length() > DbMailItem.MAX_SENDER_LENGTH)
@@ -241,9 +224,9 @@ public final class TopLevelMessageHandler {
         String from = pm.getSender();
 
         if (from != null)
-            d.add(new Field(LuceneFields.L_H_FROM, from, false, true, true));
-        if (subject != null) {
-            d.add(new Field(LuceneFields.L_H_SUBJECT, subject, false, true, true));
-        }
-	}
+            d.add(new Field(LuceneFields.L_H_FROM, from, Field.Store.NO, Field.Index.TOKENIZED));
+        
+        if (subject != null) 
+            d.add(new Field(LuceneFields.L_H_SUBJECT, subject, Field.Store.NO, Field.Index.TOKENIZED));
+    }
 }

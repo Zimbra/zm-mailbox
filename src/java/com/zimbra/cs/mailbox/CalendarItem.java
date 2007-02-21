@@ -175,7 +175,7 @@ public abstract class CalendarItem extends MailItem {
             docs, this.getDate());
     }
     
-    List<org.apache.lucene.document.Document> getLuceneDocuments() throws ServiceException {
+    protected List<org.apache.lucene.document.Document> getLuceneDocuments() throws ServiceException {
         List<org.apache.lucene.document.Document> toRet = 
             new ArrayList<org.apache.lucene.document.Document>();
         
@@ -206,7 +206,7 @@ public abstract class CalendarItem extends MailItem {
                 ParsedMessage pm = new ParsedMessage(mm, mMailbox.attachmentsIndexingEnabled());
                 List<org.apache.lucene.document.Document> docs = pm.getLuceneDocuments();
                 for (org.apache.lucene.document.Document doc : docs) {
-                    doc.add(Field.UnStored(LuceneFields.L_CONTENT, s.toString()));
+                    doc.add(new Field(LuceneFields.L_CONTENT, s.toString(), Field.Store.NO, Field.Index.TOKENIZED));
                     toRet.add(doc);
                 }
             } catch(MessagingException e) {

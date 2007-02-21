@@ -41,6 +41,7 @@ import java.util.Set;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.*;
+import org.apache.lucene.search.BooleanClause.Occur;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -111,7 +112,7 @@ class LuceneQueryOperation extends QueryOperation
         if (clauses.length > 1)
             return false;
         
-        Query q = clauses[0].query;
+        Query q = clauses[0].getQuery();
         
         if (q instanceof TermQuery) {
             TermQuery tq = (TermQuery)q;
@@ -321,8 +322,8 @@ class LuceneQueryOperation extends QueryOperation
             if (mQuery != null) {
                 if (mSearcher != null) { // this can happen if the Searcher couldn't be opened, e.g. index does not exist
                     BooleanQuery outerQuery = new BooleanQuery();
-                    outerQuery.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE)), true, false));
-                    outerQuery.add(new BooleanClause(mQuery, true, false));
+                    outerQuery.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE)), Occur.MUST));
+                    outerQuery.add(new BooleanClause(mQuery, Occur.MUST));
                     mLuceneHits = mSearcher.getSearcher().search(outerQuery, mSort);
                 } else {
                     mLuceneHits = null; 
@@ -436,8 +437,8 @@ class LuceneQueryOperation extends QueryOperation
             }
 
             BooleanQuery top = new BooleanQuery();
-            BooleanClause lhs = new BooleanClause(mQuery, !union, false);
-            BooleanClause rhs = new BooleanClause(otherLuc.mQuery, !union, false);
+            BooleanClause lhs = new BooleanClause(mQuery, union ? Occur.SHOULD : Occur.MUST);
+            BooleanClause rhs = new BooleanClause(otherLuc.mQuery, union ? Occur.SHOULD : Occur.MUST);
             top.add(lhs);
             top.add(rhs);
             mQuery = top;
@@ -498,8 +499,8 @@ class LuceneQueryOperation extends QueryOperation
         assert(!mHaveRunSearch);
 
         BooleanQuery top = new BooleanQuery();
-        BooleanClause lhs = new BooleanClause(mQuery, true, false);
-        BooleanClause rhs = new BooleanClause(q, truth, !truth);
+        BooleanClause lhs = new BooleanClause(mQuery, Occur.MUST);
+        BooleanClause rhs = new BooleanClause(q, truth ? Occur.MUST : Occur.MUST_NOT);
         top.add(lhs);
         top.add(rhs);
         mQuery = top;
@@ -525,7 +526,7 @@ class LuceneQueryOperation extends QueryOperation
         assert(!mHaveRunSearch);
 
         if (truth) {
-            mQuery.add(new BooleanClause(q, true, false));
+            mQuery.add(new BooleanClause(q, Occur.MUST));
         } else {
             // Why do we add this here?  Because lucene won't allow naked "NOT" queries.
             // Why do we check against Partname=TOP instead of against "All"?  Well, it is a simple case
@@ -542,9 +543,9 @@ class LuceneQueryOperation extends QueryOperation
             // Anyway....that's the problem, and for right now we just fix it by constraining the NOT to the 
             // TOPLEVEL of the message....98% of the time that's going to be good enough.
             //
-            mQuery.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP)),true,false));
+            mQuery.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP)),Occur.MUST));
 //          mQuery.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE)), true, false));
-            mQuery.add(new BooleanClause(q, false, true));
+            mQuery.add(new BooleanClause(q, Occur.MUST_NOT));
         }
     }
     
