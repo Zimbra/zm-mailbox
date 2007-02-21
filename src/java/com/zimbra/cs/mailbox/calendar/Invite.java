@@ -1055,6 +1055,8 @@ public class Invite {
     public Invite(String method, TimeZoneMap tzMap) {
         setItemType(MailItem.TYPE_APPOINTMENT);
         mMethod = lookupMethod(method);
+        if (ICalTok.CANCEL.equals(mMethod))
+            mStatus = IcalXmlStrMap.STATUS_CANCELLED;
         mTzMap = tzMap;
         mFragment = "";
     }
@@ -1062,6 +1064,8 @@ public class Invite {
     public Invite(byte itemType, String method, TimeZoneMap tzMap) {
         setItemType(itemType);
         mMethod = lookupMethod(method);
+        if (ICalTok.CANCEL.equals(mMethod))
+            mStatus = IcalXmlStrMap.STATUS_CANCELLED;
         mTzMap = tzMap;
         mFragment = "";
     }
