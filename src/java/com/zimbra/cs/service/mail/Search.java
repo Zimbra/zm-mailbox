@@ -51,6 +51,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.WikiItem;
+import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.operation.ItemActionOperation;
 import com.zimbra.cs.operation.SearchOperation;
 import com.zimbra.cs.operation.Operation.Requester;
@@ -228,20 +229,27 @@ public class Search extends MailDocumentHandler  {
         Element calElement = null;;
         int fields = PendingModifications.Change.ALL_FIELDS;
         
-        if (params.getCalItemExpandStart() > 0 && params.getCalItemExpandEnd() > 0) {
+//        if (params.getCalItemExpandStart() > 0 && params.getCalItemExpandEnd() > 0) {
             Account acct = getRequestedAccount(zsc);
             EncodeCalendarItemResult encoded = 
                 GetCalendarItemSummaries.encodeCalendarItemInstances(zsc, calItem, acct, params.getCalItemExpandStart(), params.getCalItemExpandEnd(), true);
             
-            assert(encoded.element == null || encoded.numInstancesExpanded>0);
+//            assert(encoded.element == null || encoded.numInstancesExpanded>0);
             if (encoded.element != null) {
                 response.addElement(encoded.element);
-                ToXML.setCalendarItemFields(encoded.element, zsc, calItem, fields);
+                ToXML.setCalendarItemFields(encoded.element, zsc, calItem, fields, false);
             }
-            return calElement;
-        } else {
-            calElement = ToXML.encodeCalendarItemSummary(response, zsc, calItem, fields);
-        }
+//            return calElement;
+//        } else {
+//            calElement = ToXML.encodeCalendarItemSummary(response, zsc, calItem, fields, false);
+//            Invite defaultInv = calItem.getDefaultInviteOrNull();
+//            if (defaultInv != null) {
+//                String frag = defaultInv.getFragment();
+//                if (!frag.equals("")) {
+//                    calElement.addAttribute(MailConstants.E_FRAG, frag, Element.DISP_CONTENT);
+//                }
+//            }
+//        }
 
         if (calElement != null) {
             if (ah.getScore() != 0) {

@@ -69,7 +69,7 @@ public class GetCalendarItem extends CalendarRequest {
         Element response = getResponseElement(lc);
         synchronized(mbox) {
             CalendarItem appointment = mbox.getCalendarItemById(octxt, iid.getId());
-            ToXML.encodeCalendarItemSummary(response, lc, appointment, fields);
+            ToXML.encodeCalendarItemSummary(response, lc, appointment, fields, true);
         }
 
         return response;

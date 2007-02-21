@@ -112,7 +112,7 @@ public class ToXML {
         else if (item instanceof Contact)
             encodeContact(parent, lc, (Contact) item, null, false, null, fields);
         else if (item instanceof CalendarItem) 
-            encodeCalendarItemSummary(parent, lc, (CalendarItem) item, fields);
+            encodeCalendarItemSummary(parent, lc, (CalendarItem) item, fields, true);
         else if (item instanceof Conversation)
             encodeConversationSummary(parent, lc, (Conversation) item, fields);
         else if (item instanceof WikiItem)
@@ -714,7 +714,7 @@ public class ToXML {
      * @throws ServiceException
      */
     public static void setCalendarItemFields(Element calItemElem, ZimbraSoapContext lc,
-        CalendarItem calItem, int fields) throws ServiceException {
+        CalendarItem calItem, int fields, boolean encodeInvites) throws ServiceException {
         
         recordItemTags(calItemElem, calItem, fields);
 
@@ -736,22 +736,24 @@ public class ToXML {
             calItemElem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, calItem.getModifiedSequence());
         }
 
-        for (int i = 0; i < calItem.numInvites(); i++) {
-            Invite inv = calItem.getInvite(i);
-
-            Element ie = calItemElem.addElement(MailConstants.E_INVITE);
-            setCalendarItemType(ie, calItem);
-            encodeTimeZoneMap(ie, calItem.getTimeZoneMap());
-
-            ie.addAttribute(MailConstants.A_CAL_SEQUENCE, inv.getSeqNo());
-            encodeReplies(ie, calItem, inv);
-
-            ie.addAttribute(MailConstants.A_ID, lc.formatItemId(inv.getMailItemId()));
-            ie.addAttribute(MailConstants.A_CAL_COMPONENT_NUM, inv.getComponentNum());
-            if (inv.hasRecurId())
-                ie.addAttribute(MailConstants.A_CAL_RECURRENCE_ID, inv.getRecurId().toString());
-
-            encodeInvite(ie, lc, calItem, inv, NOTIFY_FIELDS, false);
+        if (encodeInvites) {
+            for (int i = 0; i < calItem.numInvites(); i++) {
+                Invite inv = calItem.getInvite(i);
+                
+                Element ie = calItemElem.addElement(MailConstants.E_INVITE);
+                setCalendarItemType(ie, calItem);
+                encodeTimeZoneMap(ie, calItem.getTimeZoneMap());
+                
+                ie.addAttribute(MailConstants.A_CAL_SEQUENCE, inv.getSeqNo());
+                encodeReplies(ie, calItem, inv);
+                
+                ie.addAttribute(MailConstants.A_ID, lc.formatItemId(inv.getMailItemId()));
+                ie.addAttribute(MailConstants.A_CAL_COMPONENT_NUM, inv.getComponentNum());
+                if (inv.hasRecurId())
+                    ie.addAttribute(MailConstants.A_CAL_RECURRENCE_ID, inv.getRecurId().toString());
+                
+                encodeInvite(ie, lc, calItem, inv, NOTIFY_FIELDS, false);
+            }
         }
     }
 
@@ -777,7 +779,7 @@ public class ToXML {
      * @return
      */
     public static Element encodeCalendarItemSummary(Element parent, ZimbraSoapContext lc,
-                CalendarItem calItem, int fields)
+                CalendarItem calItem, int fields, boolean includeInvites)
     throws ServiceException {
         Element calItemElem;
         if (calItem instanceof Appointment)
@@ -785,7 +787,7 @@ public class ToXML {
         else
             calItemElem = parent.addElement(MailConstants.E_TASK);
         
-        setCalendarItemFields(calItemElem, lc, calItem, fields);
+        setCalendarItemFields(calItemElem, lc, calItem, fields, includeInvites);
         
         return calItemElem;
     }
@@ -1089,7 +1091,7 @@ public class ToXML {
         e.addAttribute(MailConstants.A_CAL_COMPONENT_NUM, invite.getComponentNum());
 
         e.addAttribute(MailConstants.A_CAL_RSVP, invite.getRsvp());
-
+        
         Account acct = calItem.getMailbox().getAccount();
         if (allFields) {
             boolean isRecurring = false;

@@ -994,38 +994,30 @@ DOCUMENT ME
 appointment result:
 -------------------
 
-Fields prefaced with '*' are only included if instances are being
-expanded.  See calExpandInstStart and calExpandInstEnd above. 
-
 <appt id="appointment_mail_item_id"
        t="{tags}" f="{flags}" s="{size}" d="{date}" cid="{conv-id}" // standard hit data
        l="{location}" score="..." [mbx="UID"] sf="SORT-FIELD-VALUE" // standard hit data    
-*      [fba="F|B|T|U"]
-*      [transp="O|T"]
-*      status="TENT|CONF|CANC"
-*      ptst="NE|TE|AC|DE|DG"
-*      [allDay="1"]             // if set, this is an "all day" appointment
-*      [otherAtt="1"]           // if set, this appointment has other attendees
-*      [alarm="1"] [recur="1"]
-*      [name="NAME"] [loc="LOCATION"] 
-*      invId="default_invite_mail_item_id" compNum="default_invite_component_number"
-*      isOrg="default_am_i_organizer_flag"
-*      [priority="num"]
-*      [percentComplete="num"]
-*      [dur="duration"]  // default duration
+       [fba="F|B|T|U"]
+       [transp="O|T"]
+       status="TENT|CONF|CANC"
+       ptst="NE|TE|AC|DE|DG"
+       [allDay="1"]             // if set, this is an "all day" appointment
+       [otherAtt="1"]           // if set, this appointment has other attendees
+       [alarm="1"] [recur="1"]
+       [name="NAME"] [loc="LOCATION"] 
+       invId="default_invite_mail_item_id" compNum="default_invite_component_number"
+       isOrg="default_am_i_organizer_flag"
+       [priority="num"]
+       [percentComplete="num"]
+       [dur="duration"]  // default duration
    >
     
-*     [<fr>DEFAULT FRAGMENT</fr>]
+     [<fr>DEFAULT FRAGMENT</fr>]
 
-[ invite data -- see <CreateAppointment> 
-     <inv compNum="" id="" type="appt|task" [recurId="RECURRENCE-ID"]...>
-          [<tz>...</tz>]
-          <comp../>                       
-     </inv>
-]+
+Expanded instance data -- only if calExpandInstStart and
+    calExpandInstEnd are requested in the SearchRequest:
 
-*[  expanded instance data
-     <inst
+[    <inst
           [recurId="recurId"]
           [s="START_SECS_GMT"]
           [tzo="ms"]  // offset from GMT in milliseconds for start time in the
@@ -1044,7 +1036,7 @@ expanded.  See calExpandInstStart and calExpandInstEnd above.
           [<isOrg>] // isOrg flag if not same as default
           [<otherAtt>] // otherAtt flag if not same as default
     </inst>
-]+      
+]+
         
 </apt> 
 
