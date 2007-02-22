@@ -31,7 +31,7 @@ package com.zimbra.cs.mailbox;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.session.PendingModifications.Change;
 
@@ -501,8 +501,9 @@ public class Contact extends MailItem {
     @Override
     public void reindex(IndexItem redo, boolean deleteFirst, Object indexData) throws ServiceException {
         // FIXME: need to note this as dirty so we can reindex if things fail
-        if (!DebugConfig.disableIndexing)
-            mMailbox.getMailboxIndex().indexContact(mMailbox, redo, deleteFirst, this);
+        MailboxIndex mi = mMailbox.getMailboxIndex();
+        if (mi != null)
+            mi.indexContact(mMailbox, redo, deleteFirst, this);
     }
 
     @Override

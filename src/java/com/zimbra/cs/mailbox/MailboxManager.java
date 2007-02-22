@@ -40,6 +40,7 @@ import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbMailbox.NewMboxId;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 import com.zimbra.cs.redolog.op.CreateMailbox;
 import com.zimbra.common.localconfig.LC;
@@ -387,8 +388,9 @@ public class MailboxManager {
                         // We're going to let the Mailbox drop out of the
                         // cache and eventually get GC'd.  Some immediate
                         // cleanup is necessary though.
-                        if (mbox.getMailboxIndex() != null)
-                            mbox.getMailboxIndex().flush();
+                        MailboxIndex mi = mbox.getMailboxIndex();
+                        if (mi != null)
+                            mi.flush();
                         // Note: mbox is left in maintenance mode.
                     } else {
                         mbox.endMaintenance(success);

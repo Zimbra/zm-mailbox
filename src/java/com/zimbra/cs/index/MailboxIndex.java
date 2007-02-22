@@ -56,6 +56,7 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbSearchConstraints;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailItem;
@@ -747,6 +748,9 @@ public final class MailboxIndex
     }
 
     public static void startup() {
+        if (DebugConfig.disableIndexing)
+            return;
+
         // In case startup is called twice in a row without shutdown in between
         if (sIndexWritersSweeper != null && sIndexWritersSweeper.isAlive()) {
             shutdown();
@@ -788,6 +792,9 @@ public final class MailboxIndex
     }
 
     public static void shutdown() {
+        if (DebugConfig.disableIndexing)
+            return;
+
         sIndexWritersSweeper.signalShutdown();
         try {
             sIndexWritersSweeper.join();
@@ -797,6 +804,9 @@ public final class MailboxIndex
     }
 
     public static void flushAllWriters() {
+        if (DebugConfig.disableIndexing)
+            return;
+
         mLog.info("Flushing all open index writers");
         ArrayList<MailboxIndex> toRemove = new ArrayList<MailboxIndex>();
 

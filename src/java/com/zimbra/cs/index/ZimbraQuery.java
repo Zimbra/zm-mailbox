@@ -1358,7 +1358,9 @@ public final class ZimbraQuery {
                     mWildcardTerm = wcToken;
                     MailboxIndex mbidx = mbox.getMailboxIndex();
                     List<String> expandedTokens = new ArrayList<String>(100);
-                    boolean expandedAllTokens = mbidx.expandWildcardToken(expandedTokens, QueryTypeString(qType), wcToken, MAX_WILDCARD_TERMS);
+                    boolean expandedAllTokens = false;
+                    if (mbidx != null)
+                        expandedAllTokens = mbidx.expandWildcardToken(expandedTokens, QueryTypeString(qType), wcToken, MAX_WILDCARD_TERMS);
 
 //                  if (!expandedAllTokens) {
 //                  throw MailServiceException.TOO_MANY_QUERY_TERMS_EXPANDED("Wildcard text: \""+wcToken
@@ -1383,10 +1385,12 @@ public final class ZimbraQuery {
             }
 
             MailboxIndex mbidx = mbox.getMailboxIndex();
-            for (String token : mTokens) {
-                List<SpellSuggestQueryInfo.Suggestion> suggestions = mbidx.suggestSpelling(QueryTypeString(qType), token);
-                if (suggestions != null) 
-                    mQueryInfo.add(new SpellSuggestQueryInfo(token, suggestions));
+            if (mbidx != null) {
+                for (String token : mTokens) {
+                    List<SpellSuggestQueryInfo.Suggestion> suggestions = mbidx.suggestSpelling(QueryTypeString(qType), token);
+                    if (suggestions != null) 
+                        mQueryInfo.add(new SpellSuggestQueryInfo(token, suggestions));
+                }
             }
         }
 
@@ -1979,9 +1983,16 @@ public final class ZimbraQuery {
     }
     
     private static AbstractList<BaseQuery>  unitTestParse(Mailbox mbox, String qs) throws ServiceException, ParseException {
+        Analyzer analyzer = null;
+        MailboxIndex mi = mbox.getMailboxIndex();
+        if (mi != null) {
+            mi.initAnalyzer(mbox);
+            analyzer = mi.getAnalyzer();
+        } else {
+            analyzer = ZimbraAnalyzer.getDefaultAnalyzer();
+        }
         ZimbraQueryParser parser = new ZimbraQueryParser(new StringReader(qs));
-        mbox.getMailboxIndex().initAnalyzer(mbox);
-        parser.init(mbox.getMailboxIndex().getAnalyzer(), mbox, null, null, lookupQueryTypeFromString("content:"));
+        parser.init(analyzer, mbox, null, null, lookupQueryTypeFromString("content:"));
         return parser.Parse();
     }
     
@@ -1997,8 +2008,15 @@ public final class ZimbraQuery {
         //
         // Step 1: parse the text using the JavaCC parser
         ZimbraQueryParser parser = new ZimbraQueryParser(new StringReader(mParams.getQueryStr()));
-        mbox.getMailboxIndex().initAnalyzer(mbox);
-        parser.init(mbox.getMailboxIndex().getAnalyzer(), mMbox, params.getTimeZone(), params.getLocale(), lookupQueryTypeFromString(params.getDefaultField()));
+        Analyzer analyzer = null;
+        MailboxIndex mi = mbox.getMailboxIndex();
+        if (mi != null) {
+            mi.initAnalyzer(mbox);
+            analyzer = mi.getAnalyzer();
+        } else {
+            analyzer = ZimbraAnalyzer.getDefaultAnalyzer();
+        }
+        parser.init(analyzer, mMbox, params.getTimeZone(), params.getLocale(), lookupQueryTypeFromString(params.getDefaultField()));
         mClauses = parser.Parse();
 
         String sortByStr = parser.getSortByStr();

@@ -92,8 +92,10 @@ public class IndexEditor {
         MailboxIndex.AdminInterface admin = null;
         try {
             Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
-            admin = mbox.getMailboxIndex().getAdminInterface();
-            admin.deleteIndex();
+            MailboxIndex mi = mbox.getMailboxIndex();
+            admin = mi != null ? mi.getAdminInterface() : null;
+            if (admin != null)
+                admin.deleteIndex();
         } finally {
             if (admin != null) {
                 admin.close();
@@ -139,7 +141,8 @@ public class IndexEditor {
         MailboxIndex midx = null;
         try {
             midx = MailboxManager.getInstance().getMailboxById(mailboxId).getMailboxIndex();
-            midx.chkIndex(repair);
+            if (midx != null)
+                midx.chkIndex(repair);
         } catch(Exception e) {
             outputStream.println("Index Check FAILED with " + ExceptionToString.ToString(e));
         } finally {
@@ -408,20 +411,21 @@ public class IndexEditor {
 //      MailboxIndex searcher = Indexer.GetInstance().getMailboxIndex(mailboxId);
         MailboxIndex searcher = MailboxManager.getInstance().getMailboxById(mailboxId).getMailboxIndex();
 
-
-//      try {
-        outputStream.println("\nFields\n------");
-        Collection c = searcher.getFieldNames();
-        Iterator iterator = c.iterator();
-        while (iterator.hasNext()) {
-            String str = iterator.next().toString();
-            if (str.length() > 0 && !str.equals("")) {
-                outputStream.println(str);
+        if (searcher != null) {
+    //      try {
+            outputStream.println("\nFields\n------");
+            Collection c = searcher.getFieldNames();
+            Iterator iterator = c.iterator();
+            while (iterator.hasNext()) {
+                String str = iterator.next().toString();
+                if (str.length() > 0 && !str.equals("")) {
+                    outputStream.println(str);
+                }
             }
+    //      } finally {
+    //      searcher.close();
+    //      }
         }
-//      } finally {
-//      searcher.close();
-//      }
     }
 
     public boolean confirm(String confirmString) {
@@ -554,14 +558,15 @@ public class IndexEditor {
     {
 //      MailboxIndex searcher = Indexer.GetInstance().getMailboxIndex(mailboxId);
         MailboxIndex searcher = MailboxManager.getInstance().getMailboxById(mailboxId).getMailboxIndex();
-
-//      try {
-//      int maxDoc = reader.maxDoc();
-//      outputStream.println("There are "+maxDoc+" documents in this index.");
-        searcher.enumerateDocuments(new DocCallback());
-//      } finally {
-//      searcher.close();
-//      }
+        if (searcher != null) {
+    //      try {
+    //      int maxDoc = reader.maxDoc();
+    //      outputStream.println("There are "+maxDoc+" documents in this index.");
+            searcher.enumerateDocuments(new DocCallback());
+    //      } finally {
+    //      searcher.close();
+    //      }
+        }
     }
 
     public void dumpDocumentByMailItemId(int mailboxId, int mailItemId) throws ServiceException, IOException
@@ -570,23 +575,24 @@ public class IndexEditor {
         MailboxIndex idx = MailboxManager.getInstance().getMailboxById(mailboxId).getMailboxIndex();
         MailboxIndex.CountedIndexSearcher searcher = null;
 
-        try {
-            // Digression here -- find ALL documents for this blob, make sure
-            // that they all have the same sort field value
-            TermQuery q = new TermQuery(term);
-            searcher = idx.getCountedIndexSearcher();
-            Hits luceneHits = searcher.getSearcher().search(q);
-
-            for (int i = 0; i < luceneHits.length(); i++) {
-                Document curDoc = luceneHits.doc(i);
-                dumpDocument(curDoc, false);
-            }
-        } finally {
-            if (searcher != null) {
-                searcher.release();
+        if (idx != null) {
+            try {
+                // Digression here -- find ALL documents for this blob, make sure
+                // that they all have the same sort field value
+                TermQuery q = new TermQuery(term);
+                searcher = idx.getCountedIndexSearcher();
+                Hits luceneHits = searcher.getSearcher().search(q);
+    
+                for (int i = 0; i < luceneHits.length(); i++) {
+                    Document curDoc = luceneHits.doc(i);
+                    dumpDocument(curDoc, false);
+                }
+            } finally {
+                if (searcher != null) {
+                    searcher.release();
+                }
             }
         }
-
     }
 
     private static int NumDigits(String s)
@@ -639,9 +645,10 @@ public class IndexEditor {
             Collection c = new TreeSet(new MailboxIndex.AdminInterface.TermInfo.FreqComparator());
 
             Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
-            admin = mbox.getMailboxIndex().getAdminInterface();
-
-            admin.enumerateTerms(c, field);
+            MailboxIndex mi = mbox.getMailboxIndex();
+            admin = mi != null ? mi.getAdminInterface() : null;
+            if (admin != null)
+                admin.enumerateTerms(c, field);
 
             int numDocs = admin.numDocs();
 
@@ -675,7 +682,7 @@ public class IndexEditor {
 
                         //				if ((info.mFreq >= scaledMin) && (info.mFreq<=scaledMax)) {
                         if (info.mFreq >= minNum) {
-                            if (tot < maxNum) {
+                            if (tot < maxNum && admin != null) {
                                 tot++;
 //                              TermEnum e = reader.terms(new Term(LuceneFields.L_CONTENT, termText));
 //                              int occurences = e.docFreq() - info.mFreq;
@@ -723,9 +730,10 @@ public class IndexEditor {
             Collection c = new TreeSet(new MailboxIndex.AdminInterface.TermInfo.FreqComparator());
 
             Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
-            admin = mbox.getMailboxIndex().getAdminInterface();
-
-            admin.enumerateTerms(c, field);
+            MailboxIndex mi = mbox.getMailboxIndex();
+            admin = mi != null ? mi.getAdminInterface() : null;
+            if (admin != null)
+                admin.enumerateTerms(c, field);
 
 //          int numDocs = admin.numDocs();
 
@@ -884,7 +892,8 @@ public class IndexEditor {
         MailboxIndex.AdminInterface admin = null;
         try {
             Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
-            admin = mbox.getMailboxIndex().getAdminInterface();
+            MailboxIndex mi = mbox.getMailboxIndex();
+            admin = mi != null ? mi.getAdminInterface() : null;
 //          IndexReader reader = admin.getIndexReader();
             int printNum = 1; //c.size() / 10;
             if (printNum < 1) {
@@ -893,29 +902,31 @@ public class IndexEditor {
 
             Collection matches = new TreeSet();
 
-            for (int i = 0; i < (c.size()-1); i++) {
-                if (i % printNum == 0) {
-                    outputStream.println("Iter "+i+" out of "+c.size());
-                }
-                String s1 = (String)c.get(i);
-                if (s1.length()>2) {
-                    for (int j = 0; j < c.size(); j++){
-                        String s2 = (String)c.get(j);
-                        //					String s1 = "my";
-                        //					String s2 = "birthday";
-                        if (s2.length() > 2) {
-
-                            Term t1 = new Term(field, s1);
-                            Term t2 = new Term(field, s2);
-                            int near = CountNear(admin, new Term[] {t1, t2}, slopNum, true);
-                            TwoTerms tt = new TwoTerms();
-                            tt.mCount = near;
-                            tt.s1 = s1;
-                            tt.s2 = s2;
-                            matches.add(tt);
-//                          if (tt.mCount > 10) {
-//                          outputStream.println(""+tt.mCount+" - "+tt.s1+","+tt.s2);
-//                          }
+            if (admin != null) {
+                for (int i = 0; i < (c.size()-1); i++) {
+                    if (i % printNum == 0) {
+                        outputStream.println("Iter "+i+" out of "+c.size());
+                    }
+                    String s1 = (String)c.get(i);
+                    if (s1.length()>2) {
+                        for (int j = 0; j < c.size(); j++){
+                            String s2 = (String)c.get(j);
+                            //					String s1 = "my";
+                            //					String s2 = "birthday";
+                            if (s2.length() > 2) {
+    
+                                Term t1 = new Term(field, s1);
+                                Term t2 = new Term(field, s2);
+                                int near = CountNear(admin, new Term[] {t1, t2}, slopNum, true);
+                                TwoTerms tt = new TwoTerms();
+                                tt.mCount = near;
+                                tt.s1 = s1;
+                                tt.s2 = s2;
+                                matches.add(tt);
+    //                          if (tt.mCount > 10) {
+    //                          outputStream.println(""+tt.mCount+" - "+tt.s1+","+tt.s2);
+    //                          }
+                            }
                         }
                     }
                 }
@@ -971,8 +982,10 @@ public class IndexEditor {
         MailboxIndex.AdminInterface admin = null;
         try {
             Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
-            admin = mbox.getMailboxIndex().getAdminInterface();
-            admin.hackIndex();
+            MailboxIndex mi = mbox.getMailboxIndex();
+            admin = mi != null ? mi.getAdminInterface() : null;
+            if (admin != null)
+                admin.hackIndex();
         } finally {
             if (admin!=null) {
                 admin.close();

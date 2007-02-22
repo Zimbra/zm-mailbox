@@ -30,6 +30,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
+import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -97,7 +98,9 @@ public class IndexItem extends RedoableOp {
         int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
         synchronized (mbox) { // temp fix for bug 11890
-            mbox.getMailboxIndex().redoIndexItem(mbox, mDeleteFirst, mId, mType, getTimestamp(), getUnloggedReplay());
+            MailboxIndex mi = mbox.getMailboxIndex();
+            if (mi != null)
+                mi.redoIndexItem(mbox, mDeleteFirst, mId, mType, getTimestamp(), getUnloggedReplay());
         }
     }
 

@@ -33,7 +33,7 @@ import java.io.InputStream;
 import java.util.List;
 
 import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.redolog.op.IndexItem;
@@ -131,7 +131,8 @@ public class Document extends MailItem {
 
     @Override
     public void reindex(IndexItem redo, boolean deleteFirst, Object indexData) throws ServiceException {
-        if (DebugConfig.disableIndexing)
+        MailboxIndex mi = mMailbox.getMailboxIndex();
+        if (mi == null)
             return;
 
         ParsedDocument pd = (ParsedDocument) indexData;
@@ -145,7 +146,7 @@ public class Document extends MailItem {
         }
 
         if (indexData != null && indexData instanceof ParsedDocument)
-            mMailbox.getMailboxIndex().indexDocument(mMailbox, redo, deleteFirst,  pd, this);
+            mi.indexDocument(mMailbox, redo, deleteFirst,  pd, this);
     }
 
     public DocumentRevision getRevision(int rev) throws ServiceException {
