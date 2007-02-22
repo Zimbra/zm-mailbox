@@ -49,6 +49,9 @@ import org.apache.lucene.index.IndexReader.FieldOption;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.spans.SpanQuery;
 import org.apache.lucene.search.spans.Spans;
+import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.LockFactory;
+import org.apache.lucene.store.SingleInstanceLockFactory;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
@@ -73,11 +76,8 @@ import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.Volume;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.util.Zimbra;
 
 /**
- * @author tim
- *
  * Encapsulates the Index for one particular mailbox
  */
 public final class MailboxIndex 
@@ -210,8 +210,6 @@ public final class MailboxIndex
 
                     float frequency = ((float)freq)/((float)numDocs);
 
-//                    System.out.println("Term: "+token+" appears in "+frequency*100+"% of documents");
-
                     int suggestionDistance = Integer.MAX_VALUE;
 
                     FuzzyTermEnum fuzzyEnum = new FuzzyTermEnum(iReader, term, 0.5f, 1);
@@ -221,7 +219,6 @@ public final class MailboxIndex
                             if (cur != null) {
                                 String curText = cur.text();
                                 int curDiff = editDistance(curText, token, curText.length(), token.length());
-//                                System.out.println("\tSUGGEST: "+curText+" ["+fuzzyEnum.docFreq()+" docs] dist="+curDiff);
                                 
                                 SpellSuggestQueryInfo.Suggestion sug = new SpellSuggestQueryInfo.Suggestion();
                                 sug.mStr = curText;
@@ -310,7 +307,7 @@ public final class MailboxIndex
      */
     public int[] deleteDocuments(int itemIds[]) throws IOException {
         synchronized(getLock()) {
-
+            
             CountedIndexReader reader = getCountedIndexReader(); 
             try {
                 for (int i = 0; i < itemIds.length; i++) {
@@ -343,21 +340,13 @@ public final class MailboxIndex
         MailItem mi, boolean deleteFirst) throws IOException {
         addDocument(redoOp, new Document[] { doc }, indexId, receivedDate, mi, deleteFirst);
     }
-
+    
     private void addDocument(IndexItem redoOp, Document[] docs, int indexId, long receivedDate, 
         MailItem mi, boolean deleteFirst) throws IOException {
         synchronized(getLock()) {        
             long start = 0;
             if (mLog.isDebugEnabled())
                 start = System.currentTimeMillis();
-            
-            if (deleteFirst) {
-                try {
-                    deleteDocuments(new int[] { indexId });
-                } catch(IOException e) {
-                    mLog.debug("MailboxIndex.addDocument ignored IOException deleting documents (index does not exist yet?)", e);
-                }
-            }
             
             openIndexWriter();
             assert(mIndexWriter != null);
@@ -384,7 +373,14 @@ public final class MailboxIndex
                     if (null == doc.get(LuceneFields.L_ALL)) {
                         doc.add(new Field(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE, Field.Store.NO, Field.Index.NO_NORMS, Field.TermVector.NO));
                     }
-                    mIndexWriter.addDocument(doc);
+                    
+                    if (deleteFirst) {
+                        String itemIdStr = Integer.toString(indexId);
+                        Term toDelete = new Term(LuceneFields.L_MAILBOX_BLOB_ID, itemIdStr);
+                        mIndexWriter.updateDocument(toDelete, doc);
+                    } else {
+                        mIndexWriter.addDocument(doc);
+                    }
 
                     if (redoOp != null)
                         mUncommittedRedoOps.add(redoOp);
@@ -526,7 +522,7 @@ public final class MailboxIndex
         ret.append(")");
         return ret.toString();
     }
-
+    
     public MailboxIndex(Mailbox mbox, String root) throws ServiceException {
         int mailboxId = mbox.getId();
         if (mLog.isDebugEnabled())
@@ -540,12 +536,12 @@ public final class MailboxIndex
         String idxParentDir = indexVol.getMailboxDir(mailboxId, Volume.TYPE_INDEX);
 
         // this must be different from the idxParentDir (see the IMPORTANT comment below)
-        mIdxPath = idxParentDir + File.separatorChar + '0';
+        String idxPath = idxParentDir + File.separatorChar + '0';
 
         {
             File parentDirFile = new File(idxParentDir);
 
-            // IMPORTANT!  Don't make the actual index directory (mIdxPath) yet!  
+            // IMPORTANT!  Don't make the actual index directory (mIdxDirectory) yet!  
             //
             // The runtime open-index code checks the existance of the actual index directory:  
             // if it does exist but we cannot open the index, we do *NOT* create it under the 
@@ -556,10 +552,10 @@ public final class MailboxIndex
                 parentDirFile.mkdirs();
 
             if (!parentDirFile.canRead()) {
-                throw ServiceException.FAILURE("Cannot READ index directory (mailbox="+mbox.getId()+ " idxPath="+mIdxPath+")", null);
+                throw ServiceException.FAILURE("Cannot READ index directory (mailbox="+mbox.getId()+ " idxPath="+idxPath+")", null);
             }
             if (!parentDirFile.canWrite()) {
-                throw ServiceException.FAILURE("Cannot WRITE index directory (mailbox="+mbox.getId()+ " idxPath="+mIdxPath+")", null);
+                throw ServiceException.FAILURE("Cannot WRITE index directory (mailbox="+mbox.getId()+ " idxPath="+idxPath+")", null);
             }
 
             // the Lucene code does not atomically swap the "segments" and "segments.new"
@@ -567,11 +563,17 @@ public final class MailboxIndex
             // a way that we have a "segments.new" file but not a "segments" file.  We we will check here 
             // for the special situation that we have a segments.new
             // file but not a segments file...
-            File segments = new File(mIdxPath, "segments");
+            File segments = new File(idxPath, "segments");
             if (!segments.exists()) {
-                File segments_new = new File(mIdxPath, "segments.new");
+                File segments_new = new File(idxPath, "segments.new");
                 if (segments_new.exists()) 
                     segments_new.renameTo(segments);
+            }
+            
+            try {
+                mIdxDirectory = FSDirectory.getDirectory(idxPath, sLockFactory);
+            } catch (IOException e) {
+                throw ServiceException.FAILURE("Cannot create FSDirectory at path: "+idxPath, e);
             }
         }
         
@@ -583,14 +585,8 @@ public final class MailboxIndex
             mAnalyzer = ZimbraAnalyzer.getDefaultAnalyzer();
     }
 
-    boolean checkMailItemExists(int mailItemId) {
-        synchronized(getLock()) {        
-            return false;
-        }
-    }
-
-
-    private String mIdxPath;
+    private static final LockFactory sLockFactory = new SingleInstanceLockFactory();
+    private FSDirectory mIdxDirectory = null;
     private Sort mLatestSort = null;
     private SortBy mLatestSortBy = null;
 
@@ -755,33 +751,7 @@ public final class MailboxIndex
         if (sIndexWritersSweeper != null && sIndexWritersSweeper.isAlive()) {
             shutdown();
         }
-
-        // Lucene creates lock files for index update.  When server crashes,
-        // these lock files are not deleted and their presence causes all
-        // index writes to fail for the affected mailboxes.  So delete them.
-        // ("*-write.lock" and "*-commit.lock" files)
-
-        // same lock directory search order as in org.apache.lucene.store.FSDirectory.java
-        String luceneTmpDir =
-            System.getProperty("org.apache.lucene.lockdir", System.getProperty("java.io.tmpdir"));
-
-        String lockFileSuffix = ".lock";
-        File lockFilePath = new File(luceneTmpDir);
-        File lockFiles[] = lockFilePath.listFiles();
-        if (lockFiles != null && lockFiles.length > 0) {
-            for (int i = 0; i < lockFiles.length; i++) {
-                File lock = lockFiles[i];
-                if (lock != null && lock.isFile() && lock.getName().endsWith(lockFileSuffix)) {
-                    mLog.info("Found index lock file " + lock.getName() + " from previous crash.  Deleting...");
-                    boolean deleted = lock.delete();
-                    if (!deleted) {
-                        String message = "Unable to delete index lock file " + lock.getAbsolutePath() + "; Aborting.";
-                        Zimbra.halt(message);
-                    }
-                }
-            }
-        }
-
+        
         sMaxUncommittedOps = LC.zimbra_index_max_uncommitted_operations.intValue();
         sLRUSize = LC.zimbra_index_lru_size.intValue();
         if (sLRUSize < 10) sLRUSize = 10;
@@ -983,12 +953,12 @@ public final class MailboxIndex
 
             IndexWriter writer = null;
             try {
-                writer = new IndexWriter(mIdxPath, getAnalyzer(), false);
+                writer = new IndexWriter(mIdxDirectory, getAnalyzer(), false);
                 //mLog.info("Opening IndexWriter "+ writer+" for "+this);
 
             } catch (IOException e1) {
                 //mLog.info("****Creating new index in " + mIdxPath + " for mailbox " + mMailboxId);
-                File idxFile  = new File(mIdxPath);
+                File idxFile  = mIdxDirectory.getFile();
                 if (idxFile.exists()) {
                     // Empty directory is okay, but a directory with any files
                     // implies index corruption.
@@ -1002,7 +972,7 @@ public final class MailboxIndex
                         numFiles++;
                     }
                     if (numFiles > 0) {
-                        IOException ioe = new IOException("Could not create index " + mIdxPath + " (directory already exists)");
+                        IOException ioe = new IOException("Could not create index " + mIdxDirectory.toString() + " (directory already exists)");
                         ioe.initCause(e1);
                         throw ioe;
                     }
@@ -1094,17 +1064,17 @@ public final class MailboxIndex
              (manually create a RamDirectory and index into that?) */
                 flush();
 
-                reader = IndexReader.open(mIdxPath);
+                reader = IndexReader.open(mIdxDirectory);
             } catch(IOException e) {
                 // Handle the special case of trying to open a not-yet-created
                 // index, by opening for write and immediately closing.  Index
                 // directory should get initialized as a result.
-                File indexDir = new File(mIdxPath);
+                File indexDir = mIdxDirectory.getFile();
                 if (!indexDir.exists()) {
                     openIndexWriter();
                     flush();
                     try {
-                        reader = IndexReader.open(mIdxPath);
+                        reader = IndexReader.open(mIdxDirectory);
                     } catch (IOException e1) {
                         if (reader != null)
                             reader.close();
@@ -1676,10 +1646,10 @@ public final class MailboxIndex
             try {
                 flush();
                 //assert(false);
-                // TODO - broken right now, need way to forcibly close all open indices???
+                // FIXME maybe: under Windows, this can fail.  Need way to forcibly close all open indices???
                 //				closeIndexReader();
-                mLog.info("****Deleting index " + mIdxPath);
-                File path = new File(mIdxPath);
+                mLog.info("****Deleting index " + mIdxDirectory.toString());
+                File path = new File(mIdxDirectory.toString());
 
                 // can use default analyzer here since it is easier, and since we aren't actually
                 // going to do any indexing...
