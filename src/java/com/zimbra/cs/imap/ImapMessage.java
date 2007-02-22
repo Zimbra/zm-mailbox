@@ -64,6 +64,7 @@ import com.zimbra.cs.mime.MimeCompoundHeader;
 import com.zimbra.cs.mime.MimeCompoundHeader.*;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.service.formatter.VCard;
+import com.zimbra.cs.util.JMSession;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -166,10 +167,20 @@ public class ImapMessage implements Comparable<ImapMessage> {
             return EMPTY_CONTENT;
     }
 
-    static InputStream getContentStream(MailItem item) throws ServiceException {
+    static MimeMessage getMimeMessage(MailItem item, byte[] raw) throws ServiceException {
         if (item instanceof Message)
-            return ((Message) item).getRawMessage();
-        return new ByteArrayInputStream(getContent(item));
+            return ((Message) item).getMimeMessage(false);
+
+        try {
+            InputStream is = raw != null ? new ByteArrayInputStream(raw) : new ByteArrayInputStream(getContent(item));
+            MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
+            is.close();
+            return mm;
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE("error creating MimeMessage for " + MailItem.getNameForType(item.getType()) + ' ' + item.getId(), e);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("error closing stream for " + MailItem.getNameForType(item.getType()) + ' ' + item.getId(), e);
+        }
     }
 
     private static final String NO_FLAGS = "FLAGS ()";
