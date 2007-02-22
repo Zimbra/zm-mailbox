@@ -772,6 +772,23 @@ public class ZMailbox {
     }
 
     /**
+     * update a tag
+     * @return action result
+     * @param id id of tag to update
+     * @param name new name of tag
+     * @param color color of tag to modify
+     * @throws com.zimbra.common.service.ServiceException on error
+     */
+    public ZActionResult updateTag(String id, String name, ZTag.Color color) throws ServiceException {
+        Element action = tagAction("update", id);
+        if (color != null)
+            action.addAttribute(MailConstants.A_COLOR, color.getValue());
+        if (name != null && name.length() > 0)
+            action.addAttribute(MailConstants.A_NAME, name);
+        return doAction(action);
+    }
+
+    /**
      * modifies the tag's color
      * @return action result
      * @param id id of tag to modify
