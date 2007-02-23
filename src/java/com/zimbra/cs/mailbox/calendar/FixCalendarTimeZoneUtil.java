@@ -121,7 +121,7 @@ public class FixCalendarTimeZoneUtil extends SoapCLI {
                 System.err.printf("Invalid timestamp \"%s\" specified for --%s option\n",
                                   after, O_AFTER);
                 System.err.println();
-                printAllowedDatetimeFormats(System.err);
+                System.err.print(getAllowedDatetimeFormatsHelp());
                 System.exit(1);
             }
         }

@@ -15,7 +15,7 @@
  * The Original Code is: Zimbra Collaboration Suite Server.
  * 
  * The Initial Developer of the Original Code is Zimbra, Inc.
- * Portions created by Zimbra are Copyright (C) 2005, 2006 Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * All Rights Reserved.
  * 
  * Contributor(s): 
@@ -25,7 +25,6 @@
 package com.zimbra.cs.util;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -49,11 +48,7 @@ import com.zimbra.cs.client.LmcSession;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.*;
-import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.common.soap.SoapHttpTransport;
-import com.zimbra.common.soap.SoapTransport;
 
 /**
  * For command line interface utilities that are SOAP clients and need to authenticate with
@@ -243,7 +238,14 @@ public abstract class SoapCLI {
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp(pw, formatter.getWidth(), getCommandUsage(),
                 null, opts, formatter.getLeftPadding(), formatter.getDescPadding(),
-                "\n" + getTrailer());
+                null);
+        pw.flush();
+
+        String trailer = getTrailer();
+        if (trailer != null && trailer.length() > 0) {
+            System.err.println();
+            System.err.print(trailer);
+        }
     }
 
     /**
@@ -320,8 +322,9 @@ public abstract class SoapCLI {
     // helper for options that specify date/time
 
     private static final String[] DATETIME_FORMATS = {
-        "yyyy/MM/dd HH:mm:ss SSS",
         "yyyy/MM/dd HH:mm:ss",
+        "yyyy/MM/dd HH:mm:ss SSS",
+        "yyyy/MM/dd HH:mm:ss.SSS",
         "yyyy/MM/dd-HH:mm:ss-SSS",
         "yyyy/MM/dd-HH:mm:ss",
         "yyyyMMdd.HHmmss.SSS",
@@ -343,21 +346,23 @@ public abstract class SoapCLI {
         return null;
     }
 
-    protected static void printAllowedDatetimeFormats(PrintStream out) {
-        out.println("Specify date/time in one of these formats:");
-        out.println();
+    protected static String getAllowedDatetimeFormatsHelp() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Specify date/time in one of these formats:\n\n");
         Date d = new Date();
         for (String formatStr: DATETIME_FORMATS) {
             SimpleDateFormat fmt = new SimpleDateFormat(formatStr);
             String s = fmt.format(d);
-            out.println("    " + s);
+            sb.append("    ").append(s).append("\n");
         }
-        out.println();
-        out.println(
-            "Specify year, month, date, hour, minute, second, and optionally millisecond.");
-        out.println(
-            "Month/date/hour/minute/second are 0-padded to 2 digits, millisecond to 3 digits.");
-        out.println(
-            "Hour must be specified in 24-hour format, and time is in local time zone.");
+        sb.append("\n");
+
+        sb.append(
+            "Specify year, month, date, hour, minute, second, and optionally millisecond.\n");
+        sb.append(
+            "Month/date/hour/minute/second are 0-padded to 2 digits, millisecond to 3 digits.\n");
+        sb.append(
+            "Hour must be specified in 24-hour format, and time is in local time zone.\n");
+        return sb.toString();
     }
 }
