@@ -525,12 +525,11 @@ public final class MailboxIndex
     
     public MailboxIndex(Mailbox mbox, String root) throws ServiceException {
         int mailboxId = mbox.getId();
-        if (mLog.isDebugEnabled())
-            mLog.debug("Opening Index for mailbox " + mailboxId);
-
+        
         mIndexWriter = null;
         mMailboxId = mailboxId;
         mMailbox = mbox;
+        mLockFactory = new SingleInstanceLockFactory();
 
         Volume indexVol = Volume.getById(mbox.getIndexVolume());
         String idxParentDir = indexVol.getMailboxDir(mailboxId, Volume.TYPE_INDEX);
@@ -571,21 +570,23 @@ public final class MailboxIndex
             }
             
             try {
-                mIdxDirectory = FSDirectory.getDirectory(idxPath, sLockFactory);
+                mIdxDirectory = FSDirectory.getDirectory(idxPath, mLockFactory);
             } catch (IOException e) {
                 throw ServiceException.FAILURE("Cannot create FSDirectory at path: "+idxPath, e);
             }
         }
         
         String analyzerName = mbox.getAccount().getAttr(Provisioning.A_zimbraTextAnalyzer, null);
-
+        
         if (analyzerName != null)
             mAnalyzer = ZimbraAnalyzer.getAnalyzer(analyzerName);
         else
             mAnalyzer = ZimbraAnalyzer.getDefaultAnalyzer();
+        
+        mLog.info("Initialized Index for mailbox " + mailboxId+" directory: "+mIdxDirectory.toString()+" Analyzer="+mAnalyzer.toString());
     }
 
-    private static final LockFactory sLockFactory = new SingleInstanceLockFactory();
+    private LockFactory mLockFactory = null;
     private FSDirectory mIdxDirectory = null;
     private Sort mLatestSort = null;
     private SortBy mLatestSortBy = null;
