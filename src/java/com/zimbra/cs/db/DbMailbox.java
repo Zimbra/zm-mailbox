@@ -90,12 +90,17 @@ public class DbMailbox {
 
     private static String DB_PREFIX_MAILBOX_GROUP = "mboxgroup";
 
+    private static int MAX_COMMENT_LENGTH = 255;
+
     public static class NewMboxId {
         public int id;
         public int groupId;
     }
 
     public synchronized static NewMboxId createMailbox(Connection conn, int mailboxId, String accountId, String comment) throws ServiceException {
+        if (comment != null && comment.length() > MAX_COMMENT_LENGTH)
+            comment = comment.substring(0, MAX_COMMENT_LENGTH);
+
         NewMboxId ret = new NewMboxId();
         PreparedStatement stmt = null;
         ResultSet rs = null;
