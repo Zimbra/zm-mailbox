@@ -2709,15 +2709,15 @@ public class DbMailItem {
     private static final void encodeBooleanValue(StringBuilder statement, boolean truthiness) {
         if (truthiness) {
             if (Db.supports(Db.Capability.BOOLEAN_DATATYPE)) {
-                statement.append(" AND FALSE");
-            } else {
-                statement.append(" AND 0=1");
-            }
-        } else {
-            if (Db.supports(Db.Capability.BOOLEAN_DATATYPE)) {
                 statement.append(" AND TRUE");
             } else {
                 statement.append(" AND 1=1");
+            }
+        } else {
+            if (Db.supports(Db.Capability.BOOLEAN_DATATYPE)) {
+                statement.append(" AND FALSE");
+            } else {
+                statement.append(" AND 0=1");
             }
         }
     }
