@@ -838,7 +838,7 @@ public final class ZimbraQuery {
                     if (!(f instanceof Mountpoint))
                         iter.remove();
                     else {
-                        Mountpoint mpt = (Mountpoint)f;
+//                        Mountpoint mpt = (Mountpoint)f;
 //                      if (mpt. .getAccount() == mbox.getAccount()) {
 //                      iter.remove();
 //                      }

@@ -207,9 +207,9 @@ public final class MailboxIndex
                 if (freq == 0 && numDocs > 0) {
                     toRet = new LinkedList<SpellSuggestQueryInfo.Suggestion>();
 
-                    float frequency = ((float)freq)/((float)numDocs);
-
-                    int suggestionDistance = Integer.MAX_VALUE;
+//                    float frequency = ((float)freq)/((float)numDocs);
+//
+//                    int suggestionDistance = Integer.MAX_VALUE;
 
                     FuzzyTermEnum fuzzyEnum = new FuzzyTermEnum(iReader, term, 0.5f, 1);
                     if (fuzzyEnum != null) {

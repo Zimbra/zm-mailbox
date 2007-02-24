@@ -44,13 +44,11 @@ public final class NoteHit extends ZimbraHit {
         super(results, mbx, score);
     
         mMailItemId = mailItemId;
-        mDocument = d;
         
         if (ud != null)
             mNote = (Note)mbx.getItemFromUnderlyingData(ud);
     }
     
-    private Document mDocument = null;
     private Note mNote = null;
     private int mMailItemId;
     
