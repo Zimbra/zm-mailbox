@@ -49,10 +49,17 @@ public class TextPlainHandler extends MimeHandler {
 
     private String mContent;
 
+    @Override
+    protected boolean runsExternally() {
+        return false;
+    }
+
+    @Override
     public void addFields(Document doc) {
         // we add no type-specific fields to the doc
     }
 
+    @Override
     protected String getContentImpl() throws MimeHandlerException {
         if (mContent == null) {
             DataSource source = getDataSource();
@@ -71,6 +78,7 @@ public class TextPlainHandler extends MimeHandler {
     /**
      * No need to convert plain text document ever.
      */
+    @Override
     public boolean doConversion() {
         return false;
     }
@@ -78,6 +86,7 @@ public class TextPlainHandler extends MimeHandler {
     /* (non-Javadoc)
      * @see com.zimbra.cs.mime.MimeHandler#convert(com.zimbra.cs.convert.AttachmentInfo, java.lang.String)
      */
+    @Override
     public String convert(AttachmentInfo doc, String baseURL) {
         throw new IllegalStateException("No need to convert plain text");
     }

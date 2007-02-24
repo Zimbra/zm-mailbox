@@ -50,7 +50,12 @@ import com.zimbra.cs.util.JMSession;
 public class MessageRFC822Handler extends MimeHandler {
 
     private MimeMessage mMessage;
-    
+
+    @Override
+    protected boolean runsExternally() {
+        return false;
+    }
+
     public void init(DataSource source) throws MimeHandlerException {
         super.init(source);
         try {

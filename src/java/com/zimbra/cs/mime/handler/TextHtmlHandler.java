@@ -126,6 +126,11 @@ public class TextHtmlHandler extends MimeHandler {
         }
     }
 
+    @Override
+    protected boolean runsExternally() {
+        return false;
+    }
+
     public void init(DataSource source) throws MimeHandlerException {
         super.init(source);
         try {

@@ -175,6 +175,12 @@ public abstract class MimeHandler {
         return handlerInfo;
     } 
 
+    /** Returns <tt>true</tt> if a request for the handler to perform text
+     *  extraction or HTML conversion will result in an RPC to an external
+     *  process.  <tt>false</tt> indicates what all processing is done
+     *  in-process. */
+    protected abstract boolean runsExternally();
+
     public String getContentType() {
         return mMimeTypeInfo.getType();
     }

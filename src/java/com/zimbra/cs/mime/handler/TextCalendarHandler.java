@@ -24,7 +24,6 @@
  */
 package com.zimbra.cs.mime.handler;
 
-import java.io.InputStreamReader;
 import java.io.Reader;
 
 import javax.activation.DataSource;
@@ -39,12 +38,16 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeHandler;
 import com.zimbra.cs.mime.MimeHandlerException;
-import com.zimbra.cs.mime.MimeCompoundHeader.ContentType;
 import com.zimbra.common.util.ZimbraLog;
 
 public class TextCalendarHandler extends MimeHandler {
     private String mContent;
     private ZVCalendar miCalendar;
+
+    @Override
+    protected boolean runsExternally() {
+        return false;
+    }
 
     @Override
     public void init(DataSource source) throws MimeHandlerException {

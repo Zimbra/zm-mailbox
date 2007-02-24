@@ -528,29 +528,30 @@ public class ParsedMessage {
             if (reportRoot == null && mpi.getContentType().equals(Mime.CT_MULTIPART_REPORT))
                 reportRoot = partName.endsWith("TEXT") ? partName.substring(0, partName.length() - 4) : partName + ".";
 
-                try {
-                    analyzePart(mpi, mpiBodies, allTextHandler, reportRoot != null);
-                } catch (MimeHandlerException e) {
-                    numParseErrors++;
-                    String pn = mpi.getPartName();
-                    String ctype = mpi.getContentType();
-                    String msgid = getMessageID();
-                    sLog.warn("Parse error on MIME part " + pn +
-                                " (" + ctype + ", Message-ID: " + msgid + ")", e);
-                    if (ConversionException.isTemporaryCauseOf(e) && conversionError == null) {
-                        conversionError = ServiceException.FAILURE("failed to analyze part", e.getCause());
-                    }
-                } catch (ObjectHandlerException e) {
-                    numParseErrors++;
-                    String pn = mpi.getPartName();
-                    String ct = mpi.getContentType();
-                    String msgid = getMessageID();
-                    sLog.warn("Parse error on MIME part " + pn +
-                                " (" + ct + ", Message-ID: " + msgid + ")", e);
+            try {
+                analyzePart(mpi, mpiBodies, allTextHandler, reportRoot != null);
+            } catch (MimeHandlerException e) {
+                numParseErrors++;
+                String pn = mpi.getPartName();
+                String ctype = mpi.getContentType();
+                String msgid = getMessageID();
+                sLog.warn("Parse error on MIME part " + pn +
+                            " (" + ctype + ", Message-ID: " + msgid + ")", e);
+                if (ConversionException.isTemporaryCauseOf(e) && conversionError == null) {
+                    conversionError = ServiceException.FAILURE("failed to analyze part", e.getCause());
                 }
+            } catch (ObjectHandlerException e) {
+                numParseErrors++;
+                String pn = mpi.getPartName();
+                String ct = mpi.getContentType();
+                String msgid = getMessageID();
+                sLog.warn("Parse error on MIME part " + pn +
+                            " (" + ct + ", Message-ID: " + msgid + ")", e);
+            }
         }
-        if (miCalendar != null)
+        if (miCalendar != null) {
             allTextHandler.hasCalendarPart(true);
+        }
         if (numParseErrors > 0) {
             String msgid = getMessageID();
             String sbj = getSubject();
@@ -605,7 +606,8 @@ public class ParsedMessage {
                 miCalendar = handler.getICalendar();
 
             boolean isMainBody = mpiBodies.contains(mpi);
-            if (isMainBody || (mIndexAttachments && !DebugConfig.disableIndexingAttachmentsTogether)) {
+            boolean autoInclude = isMainBody && (!handler.runsExternally() || mIndexAttachments);
+            if (autoInclude || (mIndexAttachments && !DebugConfig.disableIndexingAttachmentsTogether)) {
                 // add ALL TEXT from EVERY PART to the toplevel body content.
                 // This is necessary for queries with multiple words -- where
                 // one word is in the body and one is in a sub-attachment.
