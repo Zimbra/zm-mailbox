@@ -28,6 +28,7 @@
  */
 package com.zimbra.cs.mime;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -53,6 +54,7 @@ import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
@@ -234,20 +236,36 @@ public class Mime {
         try {
              multi.getCount();
         } catch (ParseException pe) {
-            FixedMultipartDataSource ds = new FixedMultipartDataSource(mp.getDataHandler().getDataSource());
+            FixedMultipartDataSource ds = new FixedMultipartDataSource(mp);
             multi = new MimeMultipart(ds);
         }
         return multi;
     }
 
     private static class FixedMultipartDataSource implements DataSource {
-        private DataSource mDataSource;
-        FixedMultipartDataSource(DataSource ds) { mDataSource = ds; }
+        private final MimePart mMimePart;
+        private final String mContentType;
+        FixedMultipartDataSource(MimePart mp) throws MessagingException {
+            mMimePart = mp;
+            mContentType = new MimeCompoundHeader.ContentType(mp.getContentType()).toString();
+        }
 
-        public String getContentType()                          { return new MimeCompoundHeader.ContentType(mDataSource.getContentType()).toString(); }
-        public String getName()                                 { return mDataSource.getName(); }
-        public InputStream getInputStream() throws IOException  { return mDataSource.getInputStream(); }
-        public OutputStream getOutputStream()                   { throw new UnsupportedOperationException(); }
+        public String getContentType()         { return mContentType; }
+        public String getName()                { return null; }
+        public OutputStream getOutputStream()  { throw new UnsupportedOperationException(); }
+        public InputStream getInputStream() throws IOException {
+            try {
+                if (mMimePart instanceof MimeBodyPart)
+                    return ((MimeBodyPart) mMimePart).getRawInputStream();
+                if (mMimePart instanceof MimeMessage)
+                    return ((MimeMessage) mMimePart).getRawInputStream();
+                return new ByteArrayInputStream(new byte[0]);
+            } catch (MessagingException e) {
+                IOException ioex = new IOException("failed to get raw input stream for mime part");
+                ioex.initCause(e);
+                throw ioex;
+            }
+        }
     }
 
     /** Returns the MimeMessage object encapsulating a MIME part with
