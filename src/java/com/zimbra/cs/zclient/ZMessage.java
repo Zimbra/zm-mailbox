@@ -130,7 +130,7 @@ public class ZMessage implements ZItem {
         }
         Element mp = e.getOptionalElement(MailConstants.E_MIMEPART);
         if (mp != null)
-            mMimeStructure = new ZMimePart(mp);
+            mMimeStructure = new ZMimePart(null, mp);
     }
 
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
@@ -286,8 +286,10 @@ public class ZMessage implements ZItem {
         private boolean mIsBody;
         private List<ZMimePart> mChildren;
         private long mSize;
+        private ZMimePart mParent;
         
-        public ZMimePart(Element e) throws ServiceException {
+        public ZMimePart(ZMimePart parent, Element e) throws ServiceException {
+            mParent = parent;
             mPartName = e.getAttribute(MailConstants.A_PART);
             mName = e.getAttribute(MailConstants.A_NAME, null);
             mContentType = e.getAttribute(MailConstants.A_CONTENT_TYPE, null);
@@ -305,7 +307,7 @@ public class ZMessage implements ZItem {
             
             mChildren = new ArrayList<ZMimePart>();
             for (Element mpEl: e.listElements(MailConstants.E_MIMEPART)) {
-                mChildren.add(new ZMimePart(mpEl));
+                mChildren.add(new ZMimePart(this, mpEl));
             }
         }
 
@@ -326,7 +328,11 @@ public class ZMessage implements ZItem {
             sb.endStruct();
             return sb;
         }
-     
+
+        public ZMimePart getParent() {
+            return mParent;
+        }
+        
         /** "" means top-level part, 1 first part, 1.1 first part of a multipart inside of 1. */
         public String getPartName() {
             return mPartName;
