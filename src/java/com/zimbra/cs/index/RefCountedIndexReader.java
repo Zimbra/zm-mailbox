@@ -7,17 +7,20 @@ import org.apache.lucene.index.IndexReader;
 /**
  * Ref Counting wrapper around a Lucene IndexReader
  */
-class RefCountedIndexReader {
+final class RefCountedIndexReader {
     private IndexReader mReader;
     private int mCount = 1;
+    private long mAccessTime;
 
     RefCountedIndexReader(IndexReader reader) {
         mReader= reader;
+        mAccessTime = System.currentTimeMillis();
     }
     
     public synchronized IndexReader getReader() { return mReader; }
 
     public synchronized void addRef() {
+        mAccessTime = System.currentTimeMillis();
         mCount++;
     }
 
@@ -31,6 +34,10 @@ class RefCountedIndexReader {
         if (0 == mCount) {
             closeIt();
         }
+    }
+    
+    synchronized long getAccessTime() {
+        return mAccessTime;
     }
 
     private void closeIt() {

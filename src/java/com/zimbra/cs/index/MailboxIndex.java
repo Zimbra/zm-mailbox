@@ -612,6 +612,14 @@ public final class MailboxIndex
     
     private IndexWriter mIndexWriter;
     private RefCountedIndexReader mIndexReader;
+    
+    long getIndexReaderAccessTime() { 
+        synchronized(getLock()) {
+            if (mIndexReader != null)
+                return mIndexReader.getAccessTime();
+        }
+        return -1;
+    }
 
     public static void startup() {
         if (DebugConfig.disableIndexing)
@@ -629,6 +637,11 @@ public final class MailboxIndex
         sIndexWritersCache =
             new IndexWritersCache(sSweepIntervalMS, sIdleWriterFlushTimeMS, sLRUSize);
         sIndexWritersCache.start();
+        
+        sIndexReadersCache = new IndexReadersCache(LC.zimbra_index_reader_lru_size.intValue(), 
+            LC.zimbra_index_reader_idle_flush_time.longValue() * 1000, 
+            LC.zimbra_index_reader_idle_sweep_frequency.longValue() * 1000);
+        sIndexReadersCache.start();
     }
 
     public static void shutdown() {
@@ -638,6 +651,11 @@ public final class MailboxIndex
         sIndexWritersCache.signalShutdown();
         try {
             sIndexWritersCache.join();
+        } catch (InterruptedException e) {}
+        
+        sIndexReadersCache.signalShutdown();
+        try {
+            sIndexReadersCache.join();
         } catch (InterruptedException e) {}
 
         flushAllWriters();
@@ -677,6 +695,7 @@ public final class MailboxIndex
     private static long sIdleWriterFlushTimeMS;
     private static long sSweepIntervalMS = 60 * 1000;
     private static IndexWritersCache sIndexWritersCache;
+    private static IndexReadersCache sIndexReadersCache;
 
     
     private long mLastWriteTime = 0;
@@ -798,7 +817,7 @@ public final class MailboxIndex
     {
         synchronized(getLock()) {        
             if (mIndexWriter != null) {
-                // Already open.
+                assert(mIndexReader == null);
                 return;
             }
             
@@ -824,10 +843,10 @@ public final class MailboxIndex
             }
             
             if (mIndexReader != null) {
-                mIndexReader.release();
-                mIndexReader = null;
+                sIndexReadersCache.removeIndexReader(this);
+                clearCachedIndexReader();
             }
-
+            
             ///////////////////////////////////////////////////
             //
             // mergeFactor and minMergeDocs are VERY poorly explained.  Here's the deal:
@@ -891,8 +910,10 @@ public final class MailboxIndex
         BooleanQuery.setMaxClauseCount(10000); 
 
         synchronized(getLock()) {
-            if (mIndexReader != null)
+            if (mIndexReader != null) {
+                mIndexReader.addRef();
                 return mIndexReader;
+            }
             
             IndexReader reader = null;
             try {
@@ -921,8 +942,19 @@ public final class MailboxIndex
                     throw e;
                 }
             }
-//          mIndexReader = new RefCountedIndexReader(reader);
-            return new RefCountedIndexReader(reader);
+            
+            RefCountedIndexReader ref = new RefCountedIndexReader(reader); 
+            ref.addRef();
+            mIndexReader = ref;
+            sIndexReadersCache.putIndexReader(this);
+            return ref;
+        }
+    }
+    
+    void clearCachedIndexReader() {
+        synchronized(getLock()) {
+            mIndexReader.release();
+            mIndexReader = null;
         }
     }
     

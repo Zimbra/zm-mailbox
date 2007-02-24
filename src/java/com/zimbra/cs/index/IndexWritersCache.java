@@ -35,7 +35,7 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.stats.ZimbraPerf;
 
 /**
- * Cache of open IndexWriters.  
+ * Self-Sweeping (using it's own thread) Cache of open IndexWriters.  
  */
 final class IndexWritersCache extends Thread {
     private static Log sLog = LogFactory.getLog(IndexWritersCache.class);
@@ -55,19 +55,19 @@ final class IndexWritersCache extends Thread {
     // used for its access-order feature.
     private LinkedHashMap<MailboxIndex, Object> mOpenIndexWriters;
     
-    public IndexWritersCache(long intervalMS, long idleMS, int maxSize) {
-        super("IndexWritersCache");
+    IndexWritersCache(long intervalMS, long idleMS, int maxSize) {
+        super("IndexWritersCache-Sweeper");
         mSweepIntervalMS = intervalMS;
         mIdleMS = idleMS;
         mMaxSize = maxSize;
-        mOpenIndexWriters = new LinkedHashMap<MailboxIndex, Object>(200, 0.75f, true); 
+        mOpenIndexWriters = new LinkedHashMap<MailboxIndex, Object>(200, 0.75f, false);
         mOpenWaiters = new Object();
     }
 
     /**
      * Shutdown the sweeper thread
      */
-    public synchronized void signalShutdown() {
+    synchronized void signalShutdown() {
         mShutdown = true;
         wakeupSweeperThread();
     }
@@ -77,26 +77,8 @@ final class IndexWritersCache extends Thread {
      * tell it to close some IndexWriters.  This is usually called when a server 
      * thread realizes the LRU is full and it wants to open an index now.
      */
-    public void wakeupSweeperThread() {
+    private void wakeupSweeperThread() {
         notify();
-    }
-    
-    /**
-     * Called by the MailboxIndex after it has woken up the sweeper thread:
-     * this call will block until the sweeper runs and opens up some space
-     * in the LRU for us.
-     */
-    public void waitForLRUSweep() {
-        // Map is full.  Add self to waiter list and wait until notified when
-        // there's room in the map.
-        synchronized (mOpenWaiters) {
-            wakeupSweeperThread();
-            try {
-                // object.wait() must be synchronized() on -- so use getLock() which is
-                // synchronized above
-                mOpenWaiters.wait(5000);
-            } catch (InterruptedException e) {}
-        }
     }
     
     /**
@@ -115,8 +97,6 @@ final class IndexWritersCache extends Thread {
                 ZimbraPerf.COUNTER_IDX_WRT.increment(numOpenWriters);
                 // Make sure there is room for it in sOpenIndexWriters map.
                 if (numOpenWriters < MailboxIndex.sLRUSize) {
-                    // Put then get.  Entry will be added to map if it's not there
-                    // already, and get will force access time to be updated.
                     mOpenIndexWriters.put(idx, idx);
                     sizeAfter = mOpenIndexWriters.size();
                     // Proceed.

@@ -73,6 +73,7 @@ public class UnitTests extends TestCase {
             Mailbox mbox = MailboxManager.getInstance().getMailboxById(mMailboxId);
             assertTrue(ZimbraQuery.unitTests(mbox));
         }
+        long startTime = System.currentTimeMillis();
 
         runTestQuery(mMailboxId, "in:inbox", false, NO_EXPECTED_CHECK, SortBy.DATE_DESCENDING);
         
@@ -333,7 +334,10 @@ public class UnitTests extends TestCase {
         assertTrue(runTestQuery(mMailboxId, "metadata:foo sort:score and not metadata:foo sort:score and metadata:(\"foo\" \"foo bar\" gub)", false, NO_EXPECTED_CHECK, SortBy.DATE_DESCENDING));
         assertTrue(runTestQuery(mMailboxId, "metadata:foo sort:score metadata:(\"foo\" \"foo bar\" gub) sort:score", false, NO_EXPECTED_CHECK, SortBy.DATE_DESCENDING));
         assertTrue(runTestQuery(mMailboxId, "item:({1,2,3} or {4,5,6})", false, NO_EXPECTED_CHECK, SortBy.DATE_DESCENDING));
-
+        
+        long endTime = System.currentTimeMillis();
+        long time = endTime - startTime;
+        System.out.println("UnitTests completed in: "+time+"ms");
     }
 
     public static void makeTestQuery(int mailboxId, String qstr, boolean conv)
@@ -628,6 +632,7 @@ public class UnitTests extends TestCase {
 
     public static void main(String[] args)
     {
+        MailboxIndex.startup();
         CliUtil.toolSetup("DEBUG");
         ZimbraLog.account.info("INFO TEST!");
         ZimbraLog.account.debug("DEBUG TEST!");
@@ -649,7 +654,7 @@ public class UnitTests extends TestCase {
         }
 
         runTests();
-
+        MailboxIndex.shutdown();
         // hack: some system thread isn't cleaned up...just exit
         System.exit(1);
     }
