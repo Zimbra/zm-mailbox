@@ -72,7 +72,6 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.op.IndexItem;
-import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.Volume;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.util.JMSession;
@@ -197,7 +196,7 @@ public final class MailboxIndex
         token = token.toLowerCase();
 
         try {
-            CountedIndexReader reader = this.getCountedIndexReader();
+            RefCountedIndexReader reader = this.getCountedIndexReader();
             try {
                 IndexReader iReader = reader.getReader();
 
@@ -248,7 +247,7 @@ public final class MailboxIndex
         token = token.toLowerCase();
 
         try {
-            CountedIndexReader reader = this.getCountedIndexReader();
+            RefCountedIndexReader reader = this.getCountedIndexReader();
             try {
                 Term firstTerm = new Term(field, token);
 
@@ -308,7 +307,7 @@ public final class MailboxIndex
     public int[] deleteDocuments(int itemIds[]) throws IOException {
         synchronized(getLock()) {
             
-            CountedIndexReader reader = getCountedIndexReader(); 
+            RefCountedIndexReader reader = getCountedIndexReader(); 
             try {
                 for (int i = 0; i < itemIds.length; i++) {
                     try {
@@ -319,11 +318,11 @@ public final class MailboxIndex
                         // already be deleted and just not be optimized out yet -- some lucene
                         // APIs (e.g. docFreq) will still return the old count until the indexes 
                         // are optimized...
-                        if (mLog.isDebugEnabled()) {
-                            mLog.debug("Deleted "+numDeleted+" index documents for itemId "+itemIdStr);
+                        if (sLog.isDebugEnabled()) {
+                            sLog.debug("Deleted "+numDeleted+" index documents for itemId "+itemIdStr);
                         }
                     } catch (IOException ioe) {
-                        mLog.debug("deleteDocuments exception on index "+i+" out of "+itemIds.length+" (id="+itemIds[i]+")");
+                        sLog.debug("deleteDocuments exception on index "+i+" out of "+itemIds.length+" (id="+itemIds[i]+")");
                         int[] toRet = new int[i];
                         System.arraycopy(itemIds,0,toRet,0,i);
                         return toRet;
@@ -345,7 +344,7 @@ public final class MailboxIndex
         MailItem mi, boolean deleteFirst) throws IOException {
         synchronized(getLock()) {        
             long start = 0;
-            if (mLog.isDebugEnabled())
+            if (sLog.isDebugEnabled())
                 start = System.currentTimeMillis();
             
             openIndexWriter();
@@ -388,16 +387,16 @@ public final class MailboxIndex
             }
             
             if (mUncommittedRedoOps.size() > sMaxUncommittedOps) {
-                if (mLog.isDebugEnabled()) {
-                    mLog.debug("Flushing " + toString() + " because of too many uncommitted redo ops");
+                if (sLog.isDebugEnabled()) {
+                    sLog.debug("Flushing " + toString() + " because of too many uncommitted redo ops");
                 }
                 flush();
             }
             
-            if (mLog.isDebugEnabled()) {
+            if (sLog.isDebugEnabled()) {
                 long end = System.currentTimeMillis();
                 long elapsed = end - start;
-                mLog.debug("MailboxIndex.addDocument took " + elapsed + " msec");
+                sLog.debug("MailboxIndex.addDocument took " + elapsed + " msec");
             }
         }
     }
@@ -405,7 +404,7 @@ public final class MailboxIndex
     int numDocs() throws IOException 
     {
         synchronized(getLock()) {        
-            CountedIndexReader reader = this.getCountedIndexReader();
+            RefCountedIndexReader reader = this.getCountedIndexReader();
             try {
                 IndexReader iReader = reader.getReader();
                 return iReader.numDocs();
@@ -418,7 +417,7 @@ public final class MailboxIndex
     void enumerateTermsForField(Term firstTerm, TermEnumInterface callback) throws IOException
     {
         synchronized(getLock()) {        
-            CountedIndexReader reader = this.getCountedIndexReader();
+            RefCountedIndexReader reader = this.getCountedIndexReader();
             try {
                 IndexReader iReader = reader.getReader();
 
@@ -448,7 +447,7 @@ public final class MailboxIndex
 
     void enumerateDocuments(DocEnumInterface c) throws IOException {
         synchronized(getLock()) {        
-            CountedIndexReader reader = this.getCountedIndexReader();
+            RefCountedIndexReader reader = this.getCountedIndexReader();
             try {
                 IndexReader iReader = reader.getReader();
                 int maxDoc = iReader.maxDoc();
@@ -466,7 +465,7 @@ public final class MailboxIndex
 
     Collection getFieldNames() throws IOException {
         synchronized(getLock()) {        
-            CountedIndexReader reader = this.getCountedIndexReader();
+            RefCountedIndexReader reader = this.getCountedIndexReader();
             try {
                 IndexReader iReader = reader.getReader();
                 return iReader.getFieldNames(FieldOption.ALL);
@@ -583,173 +582,35 @@ public final class MailboxIndex
         else
             mAnalyzer = ZimbraAnalyzer.getDefaultAnalyzer();
         
-        mLog.info("Initialized Index for mailbox " + mailboxId+" directory: "+mIdxDirectory.toString()+" Analyzer="+mAnalyzer.toString());
+        sLog.info("Initialized Index for mailbox " + mailboxId+" directory: "+mIdxDirectory.toString()+" Analyzer="+mAnalyzer.toString());
     }
 
     private LockFactory mLockFactory = null;
     private FSDirectory mIdxDirectory = null;
     private Sort mLatestSort = null;
     private SortBy mLatestSortBy = null;
-
     private int mMailboxId;
     private Mailbox mMailbox;
-    private static Log mLog = LogFactory.getLog(MailboxIndex.class);
+    private static Log sLog = LogFactory.getLog(MailboxIndex.class);
     private ArrayList<IndexItem>mUncommittedRedoOps = new ArrayList<IndexItem>();
 
-    private static boolean sNewLockModel;
+    private static final boolean sNewLockModel;
     static {
-        sNewLockModel = true;
         String value = LC.get(LC.debug_mailboxindex_use_new_locking.key());
         if (value != null && !value.equalsIgnoreCase("true"))
             sNewLockModel = false;
+        else
+            sNewLockModel = true;
     }
-
-
-
-    /******************************************************************************
-     *
-     *  Index Writer Management
-     *  
-     ********************************************************************************/
-    private IndexWriter mIndexWriter;
-
-    // access-order LinkedHashMap
-    // Key is MailboxIndex and value is always null.  LinkedHashMap class is
-    // used for its access-order feature.
-    private static LinkedHashMap/*<MailboxIndex, Object>*/ sOpenIndexWriters =
-        new LinkedHashMap(200, 0.75f, true);
-
-    // List of MailboxIndex objects that are waiting for room to free up in
-    // sOpenIndexWriters map before opening index writer.  See openIndexWriter()
-    // method.
-    static final Object sOpenWaiters = new Object();
     
-    private final static class IndexWritersSweeperThread extends Thread {
-        private boolean mShutdown = false;
-        private long mSweepIntervalMS;
-        private long mIdleMS;
-        private int mMaxSize;
-
-        public IndexWritersSweeperThread(long intervalMS, long idleMS, int maxSize) {
-            super("IndexWritersSweeper");
-            mSweepIntervalMS = intervalMS;
-            mIdleMS = idleMS;
-            mMaxSize = maxSize;
-        }
-
-        public synchronized void signalShutdown() {
-            mShutdown = true;
-            wakeup();
-        }
-
-        public synchronized void wakeup() {
-            notify();
-        }
-
-        public void run() {
-            mLog.info(getName() + " thread starting");
-
-            boolean full = false;
-            boolean shutdown = false;
-            long startTime = System.currentTimeMillis();
-            ArrayList toRemove = new ArrayList(100);
-
-            while (!shutdown) {
-                // Sleep until next scheduled wake-up time, or until notified.
-                synchronized (this) {
-                    if (!mShutdown && !full) {  // Don't go into wait() if shutting down.  (bug 1962)
-                        long now = System.currentTimeMillis();
-                        long until = startTime + mSweepIntervalMS;
-                        if (until > now) {
-                            try {
-                                wait(until - now);
-                            } catch (InterruptedException e) {}
-                        }
-                    }
-                    shutdown = mShutdown;
-                }
-
-                startTime = System.currentTimeMillis();
-
-                int sizeBefore;
-
-                // Flush out index writers that have been idle too long.
-                toRemove.clear();
-                synchronized (sOpenIndexWriters) {
-                    sizeBefore = sOpenIndexWriters.size();
-                    long cutoffTime = startTime - mIdleMS;
-                    for (Iterator it = sOpenIndexWriters.entrySet().iterator(); it.hasNext(); ) {
-                        Map.Entry entry = (Map.Entry) it.next();
-                        MailboxIndex mi = (MailboxIndex) entry.getKey();
-                        if (mi.getLastWriteTime() < cutoffTime) {
-                            toRemove.add(mi);
-                        }
-                    }
-                }
-                int removed = toRemove.size();
-                closeWriters(toRemove);
-
-                // Flush out more index writers if map is too big.
-                toRemove.clear();
-                synchronized (sOpenIndexWriters) {
-                    int excess = sOpenIndexWriters.size() - (mMaxSize - 20);
-
-                    if (excess > sOpenIndexWriters.size()) 
-                        excess = sOpenIndexWriters.size();
-
-                    if (excess > 0) {
-                        int num = 0;
-                        for (Iterator it = sOpenIndexWriters.entrySet().iterator();
-                        it.hasNext() && num < excess;
-                        num++) {
-                            Map.Entry entry = (Map.Entry) it.next();
-                            toRemove.add(entry.getKey());
-                        }
-                    }
-                }
-                removed += toRemove.size();
-                closeWriters(toRemove);
-
-                // Get final map size at the end of sweep.
-                int sizeAfter;
-                synchronized (sOpenIndexWriters) {
-                    sizeAfter = sOpenIndexWriters.size();
-                }
-                long elapsed = System.currentTimeMillis() - startTime;
-
-                if (removed > 0 || sizeAfter > 0)
-                    mLog.info("open index writers sweep: before=" + sizeBefore +
-                                ", closed=" + removed +
-                                ", after=" + sizeAfter + " (" + elapsed + "ms)");
-
-                full = sizeAfter >= mMaxSize;
-
-                // Wake up some threads that were waiting for room to insert in map.
-                if (sizeAfter < sizeBefore) {
-                    int howmany = sizeBefore - sizeAfter;
-                    for (int i = 0; i < howmany; i++)
-                        notifyFirstIndexWriterWaiter();
-                }
-            }
-
-            mLog.info(getName() + " thread exiting");
-        }
-
-        private void closeWriters(List writers) {
-            for (Iterator it = writers.iterator(); it.hasNext(); ) {
-                MailboxIndex mi = (MailboxIndex) it.next();
-                mLog.debug("Flushing index writer: " + mi);
-                mi.flush();
-            }
-        }
-    }
+    private IndexWriter mIndexWriter;
 
     public static void startup() {
         if (DebugConfig.disableIndexing)
             return;
 
         // In case startup is called twice in a row without shutdown in between
-        if (sIndexWritersSweeper != null && sIndexWritersSweeper.isAlive()) {
+        if (sIndexWritersCache != null && sIndexWritersCache.isAlive()) {
             shutdown();
         }
         
@@ -757,18 +618,18 @@ public final class MailboxIndex
         sLRUSize = LC.zimbra_index_lru_size.intValue();
         if (sLRUSize < 10) sLRUSize = 10;
         sIdleWriterFlushTimeMS = 1000 * LC.zimbra_index_idle_flush_time.intValue();
-        sIndexWritersSweeper =
-            new IndexWritersSweeperThread(sSweepIntervalMS, sIdleWriterFlushTimeMS, sLRUSize);
-        sIndexWritersSweeper.start();
+        sIndexWritersCache =
+            new IndexWritersCache(sSweepIntervalMS, sIdleWriterFlushTimeMS, sLRUSize);
+        sIndexWritersCache.start();
     }
 
     public static void shutdown() {
         if (DebugConfig.disableIndexing)
             return;
 
-        sIndexWritersSweeper.signalShutdown();
+        sIndexWritersCache.signalShutdown();
         try {
-            sIndexWritersSweeper.join();
+            sIndexWritersCache.join();
         } catch (InterruptedException e) {}
 
         flushAllWriters();
@@ -777,21 +638,8 @@ public final class MailboxIndex
     public static void flushAllWriters() {
         if (DebugConfig.disableIndexing)
             return;
-
-        mLog.info("Flushing all open index writers");
-        ArrayList<MailboxIndex> toRemove = new ArrayList<MailboxIndex>();
-
-        synchronized(sOpenIndexWriters) {
-            for (Iterator it = sOpenIndexWriters.entrySet().iterator(); it.hasNext(); ) {
-                Map.Entry entry = (Map.Entry) it.next();
-                MailboxIndex mi = (MailboxIndex) entry.getKey();
-                toRemove.add(mi);
-            }
-        }
-        for (Iterator it = toRemove.iterator(); it.hasNext(); ) {
-            MailboxIndex mi = (MailboxIndex) it.next();
-            mi.flush();
-        }
+        
+        sIndexWritersCache.flushAllIndexWriters();
     }
 
     /**
@@ -808,7 +656,7 @@ public final class MailboxIndex
      * "real" system, instead the indexes will be flushed via timeout or # ops -- but this value is here so
      * that the # open file descriptors is controlled.
      */
-    private static int sLRUSize;
+    static int sLRUSize;
 
     /**
      * After we add a document to it, how long do we hold an index open for writing before closing it 
@@ -819,17 +667,24 @@ public final class MailboxIndex
      * sLRUSize) 
      */
     private static long sIdleWriterFlushTimeMS;
-
-    // TODO: Make this configurable.
     private static long sSweepIntervalMS = 60 * 1000;
-    private static IndexWritersSweeperThread sIndexWritersSweeper;
+    private static IndexWritersCache sIndexWritersCache;
 
+    
     private long mLastWriteTime = 0;
-    private long getLastWriteTime() { return mLastWriteTime; }
+    private Analyzer mAnalyzer = null;
+    
+    long getLastWriteTime() { return mLastWriteTime; }
     private void updateLastWriteTime() { mLastWriteTime = System.currentTimeMillis(); };
 
-    private Analyzer mAnalyzer = null;
 
+    /**
+     * Load the Analyzer for this index, using the default Zimbra analyzer or a custom user-provided
+     * analyzer specified by the key Provisioning.A_zimbraTextAnalyzer
+     * 
+     * @param mbox
+     * @throws ServiceException
+     */
     public void initAnalyzer(Mailbox mbox) throws ServiceException {
         // per bug 11052, must always lock the Mailbox before the MailboxIndex, and since
         // mbox.getAccount() is synchronized, we must lock here.
@@ -858,26 +713,14 @@ public final class MailboxIndex
     private void closeIndexWriter() 
     {
         synchronized(getLock()) {        
-            // Remove from open index writers map.
-            int sizeAfter;
-            Object removed;
-            synchronized(sOpenIndexWriters) {
-                removed = sOpenIndexWriters.remove(this);
-                sizeAfter = sOpenIndexWriters.size();
-            }
-            if (removed != null) {
-                // Notify a waiter that was waiting for room to free up in map.
-                notifyFirstIndexWriterWaiter();
-                if (mLog.isDebugEnabled())
-                    mLog.debug("closeIndexWriter: map size after close = " + sizeAfter);
-            }
-
             if (mIndexWriter == null)
                 return;
 
+            sIndexWritersCache.removeIndexWriter(this);
+
             boolean success = true;
-            if (mLog.isDebugEnabled())
-                mLog.debug("Closing IndexWriter " + mIndexWriter + " for " + this);
+            if (sLog.isDebugEnabled())
+                sLog.debug("Closing IndexWriter " + mIndexWriter + " for " + this);
             IndexWriter writer = mIndexWriter;
             mIndexWriter = null;
             try {
@@ -886,7 +729,7 @@ public final class MailboxIndex
                 writer.close();
             } catch (IOException e) {
                 success = false;
-                mLog.error("Caught Exception " + e + " in MailboxIndex.closeIndexWriter", e);
+                sLog.error("Caught Exception " + e + " in MailboxIndex.closeIndexWriter", e);
                 // TODO: Is it okay to eat up the exception?
             } finally {
                 // Write commit entries to redo log for all IndexItem entries
@@ -898,8 +741,8 @@ public final class MailboxIndex
                         if (op.commitAllowed())
                             op.commit();
                         else {
-                            if (mLog.isDebugEnabled()) {
-                                mLog.debug("IndexItem (" + op +
+                            if (sLog.isDebugEnabled()) {
+                                sLog.debug("IndexItem (" + op +
                                 ") not allowed to commit yet; attaching to parent operation");
                             }
                             op.attachToParent();
@@ -920,37 +763,8 @@ public final class MailboxIndex
                 // Already open.
                 return;
             }
-
-            // Before opening index writer, make sure there is room for it in
-            // sOpenIndexWriters map.
-            int sizeAfter = 0;
-            while (true) {
-                synchronized (sOpenIndexWriters) {
-                    int numOpenWriters = sOpenIndexWriters.size();
-                    ZimbraPerf.COUNTER_IDX_WRT.increment(numOpenWriters);
-                    if (numOpenWriters < sLRUSize) {
-                        // Put then get.  Entry will be added to map if it's not there
-                        // already, and get will force access time to be updated.
-                        sOpenIndexWriters.put(this, this);
-                        sOpenIndexWriters.get(this);
-                        sizeAfter = sOpenIndexWriters.size();
-                        // Proceed.
-                        break;
-                    }
-                }
-                // Map is full.  Add self to waiter list and wait until notified when
-                // there's room in the map.
-                synchronized (sOpenWaiters) {
-                    sIndexWritersSweeper.wakeup();
-                    try {
-                        // object.wait() must be synchronized() on -- so use getLock() which is
-                        // synchronized above
-                        sOpenWaiters.wait(5000);
-                    } catch (InterruptedException e) {}
-                }
-            }
-            if (mLog.isDebugEnabled())
-                mLog.debug("openIndexWriter: map size after open = " + sizeAfter);
+            
+            sIndexWritersCache.putIndexWriter(this);
 
             IndexWriter writer = null;
             try {
@@ -1041,20 +855,14 @@ public final class MailboxIndex
         }
     }
 
-    private static final void notifyFirstIndexWriterWaiter() {
-        synchronized(sOpenWaiters) {
-            sOpenWaiters.notify();
-        }
-    }
-
-
-
-    /******************************************************************************
-     *
-     *  Index Reader Management
-     *  
-     ********************************************************************************/
-    private CountedIndexReader getCountedIndexReader() throws IOException
+    /**
+     * @return A refcounted IndexReader for this index.  Caller is responsible for 
+     *            calling IndexReader.release() on the index before allowing it to go
+     *            out of scope (otherwise a RuntimeException will occur)
+     * 
+     * @throws IOException
+     */
+    private RefCountedIndexReader getCountedIndexReader() throws IOException
     {
         BooleanQuery.setMaxClauseCount(10000); 
 
@@ -1087,89 +895,24 @@ public final class MailboxIndex
                     throw e;
                 }
             }
-            return new CountedIndexReader(reader);
+            return new RefCountedIndexReader(reader);
         }
     }
 
-    CountedIndexSearcher getCountedIndexSearcher() throws IOException
+    /**
+     * @return A refcounted RefCountedIndexSearcher for this index.  Caller is responsible for 
+     *            calling RefCountedIndexReader.release() on the index before allowing it to go
+     *            out of scope (otherwise a RuntimeException will occur)
+     * 
+     * @throws IOException
+     */
+    RefCountedIndexSearcher getCountedIndexSearcher() throws IOException
     {
         synchronized(getLock()) {        
-            CountedIndexSearcher searcher = null;
-            CountedIndexReader cReader = getCountedIndexReader();
-            searcher = new CountedIndexSearcher(cReader);
+            RefCountedIndexSearcher searcher = null;
+            RefCountedIndexReader cReader = getCountedIndexReader();
+            searcher = new RefCountedIndexSearcher(cReader);
             return searcher;
-        }
-    }
-
-
-
-    static class CountedIndexReader {
-        private IndexReader mReader;
-        private int mCount = 1;
-
-        public CountedIndexReader(IndexReader reader) {
-            mReader= reader;
-        }
-        public IndexReader getReader() { return mReader; }
-
-        public synchronized void addRef() {
-            mCount++;
-        }
-
-        public synchronized void forceClose() {
-            closeIt();
-        }
-
-        public synchronized void release() {
-            mCount--;
-            assert(mCount >= 0);
-            if (0 == mCount) {
-                closeIt();
-            }
-        }
-
-        private void closeIt() {
-            try {
-                mReader.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                mReader= null;
-            }
-        }
-
-        protected void finalize() {
-            if (mReader != null) {
-                throw new java.lang.RuntimeException("Reader isn't closed in CountedIndexReader's finalizer!");
-            }
-        }
-    }
-
-    static class CountedIndexSearcher {
-        private Searcher mSearcher;
-        private CountedIndexReader mReader;
-        private int mCount = 1;
-        public CountedIndexSearcher(CountedIndexReader reader) {
-            mReader= reader;
-            mSearcher = new IndexSearcher(mReader.getReader());
-        }
-        public synchronized Searcher getSearcher() { return mSearcher; }
-        public synchronized void forceClose() {
-            mReader.forceClose();
-            mReader = null;
-        }
-        public synchronized void release() {
-            mCount--;
-            assert(mCount >= 0);
-            if (0 == mCount) {
-                mReader.release();
-                mReader= null;
-            }
-        }
-        public synchronized CountedIndexSearcher addRef() {
-            assert(mCount > 0);
-            mCount++;
-            return this;
         }
     }
 
@@ -1276,7 +1019,7 @@ public final class MailboxIndex
 
     protected Spans getSpans(SpanQuery q) throws IOException {
         synchronized(getLock()) {        
-            CountedIndexReader reader = this.getCountedIndexReader();
+            RefCountedIndexReader reader = this.getCountedIndexReader();
             try {
                 IndexReader iReader = reader.getReader();
                 return q.getSpans(iReader);
@@ -1313,13 +1056,13 @@ public final class MailboxIndex
             try {
                 mbox = MailboxManager.getInstance().getMailboxById(idx.mMailboxId);
             } catch (ServiceException e) {
-                mLog.error("Could not get mailbox: "+idx.mMailboxId+" aborting index repair");
+                sLog.error("Could not get mailbox: "+idx.mMailboxId+" aborting index repair");
                 return;
             }
                 
             // delete first -- that way if there were any re-indexes along the way we know we're OK
             if (toDelete.size() > 0) {
-                mLog.info("There are "+toDelete.size()+" items to delete");
+                sLog.info("There are "+toDelete.size()+" items to delete");
                 int ids[] = new int[toDelete.size()];
                 for (int i = 0; i < toDelete.size(); i++) {
                     ids[i] = ((Integer)(toDelete.get(i))).intValue();
@@ -1332,7 +1075,7 @@ public final class MailboxIndex
             // we should try to reindex them
             if (msgsInMailbox.size() > 0)
             {
-                mLog.info("There are "+msgsInMailbox.size() + " msgs to be re-indexed");
+                sLog.info("There are "+msgsInMailbox.size() + " msgs to be re-indexed");
                 for (Iterator iter = msgsInMailbox.iterator(); iter.hasNext();) {
                     DbMailItem.SearchResult cur = (DbMailItem.SearchResult)iter.next();
 
@@ -1340,9 +1083,9 @@ public final class MailboxIndex
                         MailItem item = mbox.getItemById(null, cur.id, cur.type);
                         item.reindex(null, false /* already deleted above */, null);
                     } catch(ServiceException  e) {
-                        mLog.info("Couldn't index "+compareTo.id+" caught ServiceException", e);
+                        sLog.info("Couldn't index "+compareTo.id+" caught ServiceException", e);
                     } catch(java.lang.RuntimeException e) {
-                        mLog.info("Couldn't index "+compareTo.id+" caught ServiceException", e);
+                        sLog.info("Couldn't index "+compareTo.id+" caught ServiceException", e);
                     }
                 }
             }
@@ -1353,7 +1096,7 @@ public final class MailboxIndex
             compareTo.id = Integer.parseInt(term.text());
 
             if (!msgsInMailbox.contains(compareTo)) {
-                mLog.info("In index but not DB: "+compareTo.id);
+                sLog.info("In index but not DB: "+compareTo.id);
                 toDelete.add(new Integer(compareTo.id));
             } else {
                 // remove from the msgsInMailbox hash.  If there are still entries in this
@@ -1411,13 +1154,13 @@ public final class MailboxIndex
                 if (mCur.id == idxId) {
                     // next part same doc....good.  keep going..
                     if (curMsgDate != truncDocDate) {
-                        mLog.info("WARN  : DB has "+mCur.id+" (sk="+mCur.sortkey+") next and Index has "+idxId+
+                        sLog.info("WARN  : DB has "+mCur.id+" (sk="+mCur.sortkey+") next and Index has "+idxId+
                                     " "+"mbid="+idxId+" part="+partName+" date="+docDate+" truncDate="+truncDocDate+
                                     " "+mSortField+"="+sortField);
 
-                        mLog.info("\tWARNING: DB-DATE doesn't match TRUNCDATE!");
+                        sLog.info("\tWARNING: DB-DATE doesn't match TRUNCDATE!");
                     } else {
-                        mLog.debug("OK    : DB has "+mCur.id+" (sk="+mCur.sortkey+") next and Index has "+idxId+
+                        sLog.debug("OK    : DB has "+mCur.id+" (sk="+mCur.sortkey+") next and Index has "+idxId+
                                     " "+"mbid="+idxId+" part="+partName+" date="+docDate+" truncDate="+truncDocDate+
                                     " "+mSortField+"="+sortField);
                     }
@@ -1437,7 +1180,7 @@ public final class MailboxIndex
                         //    doc == cur
 //                      if (truncDocDate < curMsgDate) { // case 1
                         if (compare(truncDocDate,curMsgDate) < 0) { // case 1
-                            mLog.info("ERROR1: DB has "+mCur.id+" (sk="+mCur.sortkey+") next and Index has "+idxId+
+                            sLog.info("ERROR1: DB has "+mCur.id+" (sk="+mCur.sortkey+") next and Index has "+idxId+
                                         " "+"mbid="+idxId+" part="+partName+" date="+docDate+" truncDate="+truncDocDate+
                                         " "+mSortField+"="+sortField);
 
@@ -1450,7 +1193,7 @@ public final class MailboxIndex
 //                          " "+mSortField+"="+sortField);
 
                             if (!msgsIter.hasNext()) {
-                                mLog.info("ERROR4: DB no results INDEX has mailitem: "+idxId);
+                                sLog.info("ERROR4: DB no results INDEX has mailitem: "+idxId);
                                 return;
                             }
                             mCur = (DbMailItem.SearchResult)msgsIter.next();
@@ -1487,7 +1230,7 @@ public final class MailboxIndex
                             }
 
 
-                            mLog.info("ERROR3: DB has "+mCur.id+" (sk="+mCur.sortkey+") next and Index has "+idxId+
+                            sLog.info("ERROR3: DB has "+mCur.id+" (sk="+mCur.sortkey+") next and Index has "+idxId+
                                         " "+"mbid="+idxId+" part="+partName+" date="+docDate+" truncDate="+truncDocDate+
                                         " "+mSortField+"="+sortField);
                             return;
@@ -1526,7 +1269,7 @@ public final class MailboxIndex
                 ChkIndexStage1Callback callback = new ChkIndexStage1Callback(this);
 
                 DbMailItem.search(callback.msgsInMailbox, conn, c);
-                mLog.info("Verifying (repair="+(repair?"TRUE":"FALSE")+") Index for Mailbox "+this.mMailboxId+" with "+callback.msgsInMailbox.size()+" items.");
+                sLog.info("Verifying (repair="+(repair?"TRUE":"FALSE")+") Index for Mailbox "+this.mMailboxId+" with "+callback.msgsInMailbox.size()+" items.");
 
                 try {
                     this.enumerateTermsForField(new Term(LuceneFields.L_MAILBOX_BLOB_ID, ""), callback);
@@ -1534,11 +1277,11 @@ public final class MailboxIndex
                     throw ServiceException.FAILURE("Caught IOException while enumerating fields", e);
                 }
 
-                mLog.info("Stage 1 Verification complete for Mailbox "+this.mMailboxId);
+                sLog.info("Stage 1 Verification complete for Mailbox "+this.mMailboxId);
 
                 if (repair) {
                     try {
-                        mLog.info("Attempting Stage 1 Repair for mailbox "+this.mMailboxId);
+                        sLog.info("Attempting Stage 1 Repair for mailbox "+this.mMailboxId);
                         callback.doIndexRepair();
                     } catch (IOException e) {
                         throw ServiceException.FAILURE("Caught IOException while repairing index", e);
@@ -1552,7 +1295,7 @@ public final class MailboxIndex
             // Stage 2 -- verify SORT_BY_DATE orders match up
             //
             {
-                mLog.info("Stage 2 Verify SORT_DATE_ASCENDNIG for Mailbox "+this.mMailboxId);
+                sLog.info("Stage 2 Verify SORT_DATE_ASCENDNIG for Mailbox "+this.mMailboxId);
 
                 // SORT_BY__DATE_ASC
                 DbSearchConstraints c = new DbSearchConstraints();
@@ -1569,7 +1312,7 @@ public final class MailboxIndex
                 ChkIndexStage2Callback callback = new ChkIndexStage2Callback(this, lucSortField, false);
 
                 DbMailItem.search(callback.msgsInMailbox, conn, c);
-                MailboxIndex.CountedIndexSearcher searcher = null;
+                RefCountedIndexSearcher searcher = null;
                 try {
                     callback.beginIterating();
                     searcher = getCountedIndexSearcher();
@@ -1588,7 +1331,7 @@ public final class MailboxIndex
                     }
                 }
 
-                mLog.info("Stage 2 Verification complete for Mailbox "+this.mMailboxId);
+                sLog.info("Stage 2 Verification complete for Mailbox "+this.mMailboxId);
 
             }
 
@@ -1597,7 +1340,7 @@ public final class MailboxIndex
             // Stage 3 -- verify SORT_BY_DATE orders match up
             //
             {
-                mLog.info("Stage 3 Verify SORT_DATE_DESCENDING for Mailbox "+this.mMailboxId);
+                sLog.info("Stage 3 Verify SORT_DATE_DESCENDING for Mailbox "+this.mMailboxId);
 
                 // SORT_BY__DATE_DESC
                 DbSearchConstraints c = new DbSearchConstraints();
@@ -1616,7 +1359,7 @@ public final class MailboxIndex
                 ChkIndexStage2Callback callback = new ChkIndexStage2Callback(this, lucSortField, true);
 
                 DbMailItem.search(callback.msgsInMailbox, conn, c);
-                MailboxIndex.CountedIndexSearcher searcher = null;
+                RefCountedIndexSearcher searcher = null;
                 try {
                     callback.beginIterating();
                     searcher = getCountedIndexSearcher();
@@ -1635,7 +1378,7 @@ public final class MailboxIndex
                     }
                 }
 
-                mLog.info("Stage 3 Verification complete for Mailbox "+this.mMailboxId);
+                sLog.info("Stage 3 Verification complete for Mailbox "+this.mMailboxId);
             }
         }
     }
@@ -1649,7 +1392,7 @@ public final class MailboxIndex
                 //assert(false);
                 // FIXME maybe: under Windows, this can fail.  Need way to forcibly close all open indices???
                 //				closeIndexReader();
-                mLog.info("****Deleting index " + mIdxDirectory.toString());
+                sLog.info("****Deleting index " + mIdxDirectory.toString());
                 File path = new File(mIdxDirectory.toString());
 
                 // can use default analyzer here since it is easier, and since we aren't actually
@@ -1664,22 +1407,12 @@ public final class MailboxIndex
     }
 
     protected int countTermOccurences(String fieldName, String term) throws IOException {
-        CountedIndexReader reader = getCountedIndexReader();
+        RefCountedIndexReader reader = getCountedIndexReader();
         try {
             TermEnum e = reader.getReader().terms(new Term(fieldName, term));
             return e.docFreq();
         } finally {
             reader.release();
-        }
-    }
-
-    void hackIndex() throws IOException
-    {
-        synchronized(getLock()) {        
-            //
-            // this is the place where i put test code when i want to try something quickly 
-            // that requires an actual indexreader
-            //
         }
     }
 
@@ -1693,10 +1426,6 @@ public final class MailboxIndex
             mIdx = idx;
         }
         void close() { };
-
-        void hackIndex() throws IOException {
-            mIdx.hackIndex();
-        }
 
         public synchronized Spans getSpans(SpanQuery q) throws IOException {
             return mIdx.getSpans(q);
@@ -1820,7 +1549,7 @@ public final class MailboxIndex
                     ParsedMessage pm = new ParsedMessage(mm, timestamp, mbox.attachmentsIndexingEnabled());
                     indexMessage(mbox, redo, deleteFirst, pm, msg);
                 } catch (Throwable e) {
-                    mLog.warn("Skipping indexing; Unable to parse message " + itemId + ": " + e.toString(), e);
+                    sLog.warn("Skipping indexing; Unable to parse message " + itemId + ": " + e.toString(), e);
                     // Eat up all errors during message analysis.  Throwing
                     // anything here will force server halt during crash
                     // recovery.  Because we can't possibly predict all
@@ -1910,8 +1639,8 @@ public final class MailboxIndex
     public void indexContact(Mailbox mbox, IndexItem redo, boolean deleteFirst, Contact contact) throws ServiceException {
         initAnalyzer(mbox);
         synchronized(getLock()) {        
-            if (mLog.isDebugEnabled()) {
-                mLog.debug("indexContact("+contact+")");
+            if (sLog.isDebugEnabled()) {
+                sLog.debug("indexContact("+contact+")");
             }
             try {
                 int indexId = contact.getIndexId();
@@ -1974,15 +1703,15 @@ public final class MailboxIndex
     throws ServiceException {
         initAnalyzer(mbox);
         synchronized(getLock()) {        
-            if (mLog.isDebugEnabled()) {
-                mLog.debug("indexNote("+note+")");
+            if (sLog.isDebugEnabled()) {
+                sLog.debug("indexNote("+note+")");
             }
             try {
                 String toIndex = note.getContent();
                 int indexId = note.getIndexId(); 
 
-                if (mLog.isDebugEnabled()) {
-                    mLog.debug("Note value=\""+toIndex+"\"");
+                if (sLog.isDebugEnabled()) {
+                    sLog.debug("Note value=\""+toIndex+"\"");
                 }
 
                 Document doc = new Document();
@@ -2010,7 +1739,7 @@ public final class MailboxIndex
         }
     }
     
-    final Object getLock() {
+    private final Object getLock() {
         if (sNewLockModel)
             return mMailbox;
         else

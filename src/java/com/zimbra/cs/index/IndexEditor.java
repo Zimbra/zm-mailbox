@@ -573,7 +573,7 @@ public class IndexEditor {
     {
         Term term = new Term(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(mailItemId));
         MailboxIndex idx = MailboxManager.getInstance().getMailboxById(mailboxId).getMailboxIndex();
-        MailboxIndex.CountedIndexSearcher searcher = null;
+        RefCountedIndexSearcher searcher = null;
 
         if (idx != null) {
             try {
@@ -964,35 +964,6 @@ public class IndexEditor {
         }
     }
 
-//  public static void archive(int mailboxId) throws IOException
-//  {
-//  MailboxIndex.AdminInterface admin = null;		
-//  try {
-//  admin = Indexer.GetInstance().getAdminInterface(mailboxId);
-//  admin.archiveIndex();
-//  } finally {
-//  if (admin!=null) {
-//  admin.close();
-//  }
-//  }
-//  }
-
-    public void hack(int mailboxId) throws IOException, ServiceException
-    {
-        MailboxIndex.AdminInterface admin = null;
-        try {
-            Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
-            MailboxIndex mi = mbox.getMailboxIndex();
-            admin = mi != null ? mi.getAdminInterface() : null;
-            if (admin != null)
-                admin.hackIndex();
-        } finally {
-            if (admin!=null) {
-                admin.close();
-            }
-        }
-    }
-
 
 //  private static class MemoryThread extends Thread
 //  {
@@ -1333,8 +1304,6 @@ public class IndexEditor {
                     UnitTests.runTests();
 //                  } else if (command.equals("archive")) {
 //                  archive(mailboxId);
-                } else if (command.equals("hack")) {
-                    hack(mailboxId);
                 } else if (command.equals("verify")) {
                     checkIndex(mailboxId, false);
                 } else if (command.equals("repair")) {

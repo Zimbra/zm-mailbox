@@ -56,7 +56,7 @@ class LuceneQueryOperation extends QueryOperation
 {
     private Hits mLuceneHits = null;
     private int mCurHitNo = 0;
-    private MailboxIndex.CountedIndexSearcher mSearcher = null;
+    private RefCountedIndexSearcher mSearcher = null;
     private Sort mSort = null;
     private boolean mHaveRunSearch = false;
     private String mQueryString = "";
