@@ -149,6 +149,7 @@ public class Invite {
         mMailItemId = mailItemId;
         mComponentNum = componentNum;
         mSentByMe = sentByMe;
+        mDescription = description;
         mFragment = fragment != null ? fragment : "";
             }
     
