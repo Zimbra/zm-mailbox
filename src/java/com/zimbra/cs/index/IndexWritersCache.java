@@ -163,7 +163,6 @@ final class IndexWritersCache extends Thread {
     public void flushAllIndexWriters() {
         sLog.info("Flushing all open index writers");
         ArrayList<MailboxIndex> toRemove = new ArrayList<MailboxIndex>();
-        sLog.info("foo");
         synchronized(mOpenIndexWriters) {
             for (Iterator it = mOpenIndexWriters.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry entry = (Map.Entry) it.next();
