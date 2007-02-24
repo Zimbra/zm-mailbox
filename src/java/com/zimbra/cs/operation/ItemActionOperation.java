@@ -25,9 +25,12 @@
 package com.zimbra.cs.operation;
 
 import java.util.List;
+import java.util.UUID;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -133,6 +136,16 @@ public class ItemActionOperation extends Operation {
         ia.schedule();
         return ia;
     }
+    
+    public static ItemActionOperation TRASH(ZimbraSoapContext zc, Session session, OperationContext oc,
+                Mailbox mbox, Requester req, 
+                List<Integer> ids, byte type, 
+                TargetConstraint tcon) throws ServiceException {
+        ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
+                    LOAD, ids, Op.TRASH, type, true, tcon);
+        ia.schedule();
+        return ia;
+    }
 
     public static ItemActionOperation RENAME(ZimbraSoapContext zc, Session session, OperationContext oc,
                 Mailbox mbox, Requester req, 
@@ -171,6 +184,7 @@ public class ItemActionOperation extends Operation {
         HARD_DELETE("delete"),
         MOVE("move"),
         SPAM("spam"),
+        TRASH("trash"),
         RENAME("rename"),
         UPDATE("update")
         ;
@@ -323,6 +337,16 @@ public class ItemActionOperation extends Operation {
                 for (int id : mIds)
                     SpamHandler.getInstance().handle(getMailbox(), id, mType, mFlagValue);
                 break;
+            case TRASH:
+                try {
+                    // in general, everything will work fine, so just blindly try to move the targets to trash
+                    getMailbox().move(getOpCtxt(), mIds, mType, Mailbox.ID_FOLDER_TRASH, mTcon);
+                } catch (ServiceException e) {
+                    if (!e.getCode().equals(MailServiceException.ALREADY_EXISTS))
+                        throw e;
+                    moveWithRename(Mailbox.ID_FOLDER_TRASH);
+                }
+                break;
             case RENAME:
                 for (int id : mIds)
                     getMailbox().rename(getOpCtxt(), id, mType, mName, mIidFolder.getId());
@@ -351,6 +375,29 @@ public class ItemActionOperation extends Operation {
         mResult = successes.toString();
     }
     
+    private void moveWithRename(int targetId) throws ServiceException {
+        // naming conflict; handle on an item-by-item basis
+        for (int id : mIds) {
+            try {
+                // still more likely than not to succeed...
+                getMailbox().move(getOpCtxt(), id, mType, targetId, mTcon);
+            } catch (ServiceException e) {
+                if (!e.getCode().equals(MailServiceException.ALREADY_EXISTS))
+                    throw e;
+
+                // rename the item being moved instead of the one already there...
+                String name = getMailbox().getItemById(getOpCtxt(), id, mType).getName();
+                String uuid = '{' + UUID.randomUUID().toString() + '}', newName;
+                if (name.length() + uuid.length() > MailItem.MAX_NAME_LENGTH)
+                    newName = name.substring(0, MailItem.MAX_NAME_LENGTH - uuid.length()) + uuid;
+                else
+                    newName = name + uuid;
+                // FIXME: relying on the fact that conversations collect things that don't cause naming conflicts
+                getMailbox().rename(getOpCtxt(), id, mType, newName, targetId);
+            }
+        }
+    }
+
     public String getResult() {
         return mResult;
     }

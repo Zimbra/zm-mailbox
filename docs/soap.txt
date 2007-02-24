@@ -1300,12 +1300,12 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
 
 <ItemActionRequest>
   <!-- action can be preceeded by a "!" to negate it" -->
-  <action id="{list}" op="delete|read|flag|tag|move|rename|update" [tag="..."] [l="{folder}"] [name="{item-name}"] [color="{color}"]
+  <action id="{list}" op="delete|read|flag|tag|move|trash|rename|update" [tag="..."] [l="{folder}"] [name="{item-name}"] [color="{color}"]
                                                                    [tcon="[-]{constraint}"] [f="{flags}"] [t="{tag-list}"]/>
 </ItemActionRequest>
 
 <ItemActionResponse>
-  <action id="{list}" op="delete|read|flag|tag|move|rename|update"/>
+  <action id="{list}" op="delete|read|flag|tag|move|trash|rename|update"/>
 </ItemActionResponse>
 
   {list} = on input, list of items to act on, on output, list of
@@ -1323,11 +1323,11 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
 
 <MsgActionRequest>
   <!-- action can be preceeded by a "!" to negate it" -->
-  <action id="{list}" op="delete|read|flag|tag|move|update|spam" [tag="..."] [l="{folder}"] [f="{flags}"] [t="{tag-list}"] [color="{color}"]/>
+  <action id="{list}" op="delete|read|flag|tag|move|update|spam|trash" [tag="..."] [l="{folder}"] [f="{flags}"] [t="{tag-list}"] [color="{color}"]/>
 </MsgActionRequest>
 
 <MsgActionResponse>
-  <action id="{list}" op="delete|read|flag|tag|move|update|spam"/>
+  <action id="{list}" op="delete|read|flag|tag|move|update|spam|trash"/>
 </MsgActionResponse>
 
   {list} = on input, list of messages to act on, on output, list of
@@ -1340,11 +1340,11 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
 
 <ConvActionRequest>
   <!-- action can be preceeded by a "!" to negate it" -->
-  <action id="{list}" op="delete|read|flag|tag|move|spam" [tag="..."] [l="{folder}"] [tcon="{constraint}"] [tcon="[-]{constraint}"]/>
+  <action id="{list}" op="delete|read|flag|tag|move|spam|trash" [tag="..."] [l="{folder}"] [tcon="{constraint}"] [tcon="[-]{constraint}"]/>
 </ConvActionRequest>
 
 <ConvActionResponse>
-  <action id="{list}" op="delete|read|flag|tag|move|spam"/>
+  <action id="{list}" op="delete|read|flag|tag|move|spam|trash"/>
 </ConvActionResponse>
 
   {list} = on input, list of conversations to act on, on output, list of
@@ -1361,7 +1361,7 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
 ---------
 
 <FolderActionRequest>
-  <action id="{list}" op="read|delete|rename|move|empty|color|grant|url|import|sync|fb|[!]check|update" name="..." [l="{target-folder}"]
+  <action id="{list}" op="read|delete|rename|move|trash|empty|color|grant|url|import|sync|fb|[!]check|update" name="..." [l="{target-folder}"]
                       [name="{new-name}"] [color="{new-color}"] [zid="{grantee-zimbra-id}"] [url="{target-url}"]
                       [excludeFreeBusy="{exclude-free-busy-boolean}">
     [<grant perm="..." gt="..." d="..." [inh="0|1"] [args="..."]/>]
@@ -1369,7 +1369,7 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
 </FolderActionRequest>
 
 <FolderActionResponse>
-  <action id="{list}" op="read|delete|empty|rename|move|color|grant|url|import|sync|fb|[!]check|update" [zid="{grantee-zimbra-id}"]/>
+  <action id="{list}" op="read|delete|empty|rename|move|trash|color|grant|url|import|sync|fb|[!]check|update" [zid="{grantee-zimbra-id}"]/>
 </FolderActionResponse>
 
   Actions:
@@ -1378,6 +1378,7 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
     op="empty" - hard-delete all items in the folder and all the folder's subfolders
     op="rename" - change the folder's name (and optionally location); if {new-name} begins with '/', the folder is moved to the new path and any missing path elements are created
     op="move" - move the folder to be a child of {target-folder}
+    op="trash" - move the folder to the Trash, marking all contents as read and renaming the folder if a folder by that name is already present in the Trash
     op="color" - change the folder's color to {new-color}
     op="grant" - add the <grant> object to the folder
     op="!grant" - revoke access from {grantee-zimbra-id} 
@@ -1406,11 +1407,11 @@ note that "delete", "empty", "rename", "move", "color", "update" can be used on 
 ---------
 
 <NoteActionRequest>
-  <action id="{list}" op="delete|edit|move|repos|flag|tag|color|update" [tag="..."] [l="{target-folder}"] [color="{color}"] [pos="{x,y,width,height}"]/>
+  <action id="{list}" op="delete|edit|move|trash|repos|flag|tag|color|update" [tag="..."] [l="{target-folder}"] [color="{color}"] [pos="{x,y,width,height}"]/>
 </NoteActionRequest>
 
 <NoteActionResponse>
-  <action id="{list}" op="delete|edit|move|repos|flag|tag|color|update"/>
+  <action id="{list}" op="delete|edit|move|trash|repos|flag|tag|color|update"/>
 </NoteActionResponse>
 
   {list} = on input, list of notes to act on, on output, list of

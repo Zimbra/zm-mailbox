@@ -76,7 +76,8 @@ public class ItemAction extends MailDocumentHandler {
 	public static final String OP_COLOR       = "color";
 	public static final String OP_HARD_DELETE = "delete";
 	public static final String OP_MOVE        = "move";
-	public static final String OP_SPAM        = "spam";
+    public static final String OP_SPAM        = "spam";
+    public static final String OP_TRASH       = "trash";
     public static final String OP_RENAME      = "rename";
     public static final String OP_UPDATE      = "update";
 
@@ -107,14 +108,15 @@ public class ItemAction extends MailDocumentHandler {
         if (opAttr.length() > 1 && opAttr.startsWith("!")) {
             flagValue = false;
             opStr = opAttr.substring(1);
-        } else
+        } else {
             opStr = opAttr;
+        }
 
         // figure out which items are local and which ones are remote, and proxy accordingly
         ArrayList<Integer> local = new ArrayList<Integer>();
         HashMap<String, StringBuffer> remote = new HashMap<String, StringBuffer>();
         partitionItems(zsc, action.getAttribute(MailConstants.A_ID), local, remote);
-        
+
         // we don't yet support moving from a remote mailbox
         if (opStr.equals(OP_MOVE) && !remote.isEmpty())
             throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
@@ -154,6 +156,9 @@ public class ItemAction extends MailDocumentHandler {
         		int folderId = (int) action.getAttributeLong(MailConstants.A_FOLDER, defaultFolder);
         		localResults = ItemActionOperation.SPAM(zsc, session, octxt, mbox,
         					Requester.SOAP, local, type, flagValue, tcon, folderId).getResult();
+            } else if (opStr.equals(OP_TRASH)) {
+                localResults = ItemActionOperation.TRASH(zsc, session, octxt, mbox,
+                            Requester.SOAP, local, type, tcon).getResult();
             } else if (opStr.equals(OP_RENAME)) {
                 String name = action.getAttribute(MailConstants.A_NAME);
                 ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER, "-1"), zsc);

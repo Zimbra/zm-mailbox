@@ -53,7 +53,7 @@ public class TagAction extends ItemAction  {
 
         if (operation.equals(OP_TAG) || operation.equals(OP_FLAG) || operation.equals(OP_UNTAG) || operation.equals(OP_UNFLAG))
             throw ServiceException.INVALID_REQUEST("cannot tag/flag a tag", null);
-        if (operation.endsWith(OP_MOVE) || operation.endsWith(OP_SPAM))
+        if (operation.endsWith(OP_MOVE) || operation.endsWith(OP_SPAM) || operation.endsWith(OP_TRASH))
             throw ServiceException.INVALID_REQUEST("invalid operation on tag: " + operation, null);
         String successes = handleCommon(context, request, operation, MailItem.TYPE_TAG);
 
