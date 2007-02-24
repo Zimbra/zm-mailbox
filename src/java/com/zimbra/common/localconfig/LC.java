@@ -109,6 +109,10 @@ public class LC {
     public static final KnownKey zimbra_index_max_uncommitted_operations;
     public static final KnownKey zimbra_index_lru_size;
     public static final KnownKey zimbra_index_idle_flush_time;
+    
+    public static final KnownKey zimbra_index_reader_lru_size;
+    public static final KnownKey zimbra_index_reader_idle_flush_time;
+    public static final KnownKey zimbra_index_reader_idle_sweep_frequency;
 
     public static final KnownKey zimbra_spam_report_queue_size;
 
@@ -383,6 +387,19 @@ public class LC {
         zimbra_index_idle_flush_time.setDefault("600");
         zimbra_index_idle_flush_time.setDoc("If idle for longer than this value (in seconds), flush" +
                     " uncommitted indexing ops in mailbox.");
+        
+        zimbra_index_reader_lru_size  = new KnownKey("zimbra_index_reader_lru_size");
+        zimbra_index_reader_lru_size.setDefault("20");
+        zimbra_index_reader_lru_size.setDoc("Maximum number of IndexReaders cached open by the search subsystem");
+        
+        zimbra_index_reader_idle_flush_time = new KnownKey("zimbra_index_reader_idle_flush_time");
+        zimbra_index_reader_idle_flush_time.setDefault("300");
+        zimbra_index_reader_idle_flush_time.setDoc("If idle for longer than this value  (seconds) then close the index reader");
+        
+        zimbra_index_reader_idle_sweep_frequency = new KnownKey("zimbra_index_reader_idle_sweep_frequency");
+        zimbra_index_reader_idle_sweep_frequency.setDefault("30");
+        zimbra_index_reader_idle_sweep_frequency.setDoc("Frequency (seconds) the index reader LRU is swept for idle readers");
+        
 
         zimbra_spam_report_queue_size = new KnownKey("zimbra_spam_report_queue_size");
         zimbra_spam_report_queue_size.setDefault("100");
