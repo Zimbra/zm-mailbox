@@ -751,6 +751,47 @@
 			zimbraPrefTimeZoneId '(GMT-07.00) Arizona' \
 			zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
 			telephoneNumber '+1 650 555 4444'
+		ca user5@${zimbra.server.hostname} test123 \
+			zimbraMailHost ${zimbra.server.hostname} \
+			cn 'Demo User Five' \
+			displayName 'Demo User Five' \
+			zimbraAttachmentsIndexingEnabled FALSE \
+			zimbraPrefTimeZoneId '(GMT-05.00) Eastern Time (US &amp; Canada)' \
+			zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
+			zimbraFeatureAdvancedSearchEnabled FALSE \
+			zimbraFeatureCalendarEnabled FALSE \
+			zimbraFeatureChangePasswordEnabled FALSE \
+			zimbraFeatureContactsEnabled TRUE \
+			zimbraFeatureConversationsEnabled FALSE \
+			zimbraFeatureFiltersEnabled TRUE \
+			zimbraFeatureGalAutoCompleteEnabled FALSE \
+			zimbraFeatureGalEnabled FALSE \
+			zimbraFeatureHtmlComposeEnabled TRUE \
+			zimbraFeatureIMEnabled FALSE \
+			zimbraFeatureIdentitiesEnabled TRUE \
+			zimbraFeatureInitialSearchPreferenceEnabled FALSE \
+			zimbraFeatureMailForwardingEnabled TRUE \
+			zimbraFeatureMailPollingIntervalPreferenceEnabled FALSE \
+			zimbraFeatureMobileSyncEnabled FALSE \
+			zimbraFeatureNewMailNotificationEnabled FALSE \
+			zimbraFeatureNotebookEnabled FALSE \
+			zimbraFeatureOutOfOfficeReplyEnabled TRUE \
+			zimbraFeaturePop3DataSourceEnabled TRUE \
+			zimbraFeatureSavedSearchesEnabled FALSE \
+			zimbraFeatureSharingEnabled TRUE \
+			zimbraFeatureSkinChangeEnabled TRUE \
+			zimbraFeatureTaggingEnabled FALSE \
+			zimbraFeatureTasksEnabled FALSE \
+			zimbraFeatureViewInHtmlEnabled FALSE \
+			zimbraImapEnabled FALSE \
+			zimbraPasswordLockoutEnabled FALSE \
+			zimbraPop3Enabled TRUE \
+			zimbraPrefAutoAddAddressEnabled TRUE \
+			zimbraPrefGalAutoCompleteEnabled FALSE \
+			zimbraPrefImapSearchFoldersEnabled FALSE \
+			zimbraPrefReadingPaneEnabled TRUE \
+			zimbraPrefSkin velodrome \
+			telephoneNumber '+1 650 555 5555'
 		ca spam-sink@${zimbra.server.hostname} test123 \
 			zimbraMailHost ${zimbra.server.hostname} \
 			zimbraAttachmentsIndexingEnabled FALSE \
