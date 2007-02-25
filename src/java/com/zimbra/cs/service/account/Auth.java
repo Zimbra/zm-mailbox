@@ -28,20 +28,27 @@
  */
 package com.zimbra.cs.service.account;
 
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-
-import com.zimbra.cs.account.*;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AttributeFlag;
+import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.soap.ZimbraSoapContext;
+
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author schemers
@@ -62,46 +69,67 @@ public class Auth extends AccountDocumentHandler {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
-
-        Element acctEl = request.getElement(AccountConstants.E_ACCOUNT);
-        String value = acctEl.getText();
-        String byStr = acctEl.getAttribute(AccountConstants.A_BY, AccountBy.name.name());
-        Element preAuthEl = request.getOptionalElement(AccountConstants.E_PREAUTH);
-        String password = request.getAttribute(AccountConstants.E_PASSWORD, null);
         Provisioning prov = Provisioning.getInstance();
-        
-        Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
-        String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
-        
-        AccountBy by = AccountBy.fromString(byStr);
 
-        if (by == AccountBy.name) {
-            if (virtualHost != null && value.indexOf('@') == -1) {
-                Domain d = prov.get(DomainBy.virtualHostname, virtualHost);
-                if (d != null)
-                    value = value + "@" + d.getName();
+        Element authTokenEl = request.getOptionalElement(AccountConstants.E_AUTH_TOKEN);
+        if (authTokenEl != null) {
+            try {
+                String token = authTokenEl.getText();
+                AuthToken at = AuthToken.getAuthToken(token);
+                if (at.isExpired())
+                    throw ServiceException.AUTH_EXPIRED();
+                // make sure that the authenticated account is active and has not been deleted/disabled since the last request
+                Account acct = Provisioning.getInstance().get(AccountBy.id, at.getAccountId());
+                if (acct == null || !acct.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+                    throw ServiceException.AUTH_EXPIRED();
+                return doResponse(request, at, lc, acct);
+            } catch (AuthTokenException e) {
+                throw ServiceException.AUTH_REQUIRED();
             }
-        }
-
-        Account acct = prov.get(by, value);
-		if (acct == null)
-			throw AccountServiceException.AUTH_FAILED(value);
-
-        long expires = 0;
-
-        if (password != null) {
-            prov.authAccount(acct, password, "soap");
-        } else if (preAuthEl != null) {
-            long timestamp = preAuthEl.getAttributeLong(AccountConstants.A_TIMESTAMP);
-            expires = preAuthEl.getAttributeLong(AccountConstants.A_EXPIRES, 0);
-            String preAuth = preAuthEl.getTextTrim();
-            prov.preAuthAccount(acct, value, byStr, timestamp, expires, preAuth);
         } else {
-            throw ServiceException.INVALID_REQUEST("must specify "+AccountConstants.E_PASSWORD, null);
+
+            Element acctEl = request.getElement(AccountConstants.E_ACCOUNT);
+            String value = acctEl.getText();
+            String byStr = acctEl.getAttribute(AccountConstants.A_BY, AccountBy.name.name());
+            Element preAuthEl = request.getOptionalElement(AccountConstants.E_PREAUTH);
+            String password = request.getAttribute(AccountConstants.E_PASSWORD, null);
+
+            Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
+            String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
+
+            AccountBy by = AccountBy.fromString(byStr);
+
+            if (by == AccountBy.name) {
+                if (virtualHost != null && value.indexOf('@') == -1) {
+                    Domain d = prov.get(DomainBy.virtualHostname, virtualHost);
+                    if (d != null)
+                        value = value + "@" + d.getName();
+                }
+            }
+
+            Account acct = prov.get(by, value);
+            if (acct == null)
+                throw AccountServiceException.AUTH_FAILED(value);
+
+            long expires = 0;
+
+            if (password != null) {
+                prov.authAccount(acct, password, "soap");
+            } else if (preAuthEl != null) {
+                long timestamp = preAuthEl.getAttributeLong(AccountConstants.A_TIMESTAMP);
+                expires = preAuthEl.getAttributeLong(AccountConstants.A_EXPIRES, 0);
+                String preAuth = preAuthEl.getTextTrim();
+                prov.preAuthAccount(acct, value, byStr, timestamp, expires, preAuth);
+            } else {
+                throw ServiceException.INVALID_REQUEST("must specify "+AccountConstants.E_PASSWORD, null);
+            }
+
+            AuthToken at = expires ==  0 ? new AuthToken(acct) : new AuthToken(acct, expires);
+            return doResponse(request, at, lc, acct);
         }
+    }
 
-        AuthToken at = expires ==  0 ? new AuthToken(acct) : new AuthToken(acct, expires);
-
+    private Element doResponse(Element request, AuthToken at, ZimbraSoapContext lc, Account acct) throws ServiceException {
         String token;
         try {
             token = at.getEncoded();
@@ -140,10 +168,10 @@ public class Auth extends AccountDocumentHandler {
                 }
             }
         }
-		return response;
-	}
+        return response;
+    }
 
-	public boolean needsAuth(Map<String, Object> context) {
+    public boolean needsAuth(Map<String, Object> context) {
 		return false;
 	}
 }

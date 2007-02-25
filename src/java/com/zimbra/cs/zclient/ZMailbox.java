@@ -45,10 +45,12 @@ import com.zimbra.cs.account.Provisioning.IdentityBy;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.BuildInfo;
+import com.zimbra.cs.zclient.ZFolder.Color;
 import com.zimbra.cs.zclient.ZGrant.GranteeType;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.MessagePart;
 import com.zimbra.cs.zclient.ZSearchParams.Cursor;
+import com.zimbra.cs.zclient.event.ZCreateAppointmentEvent;
 import com.zimbra.cs.zclient.event.ZCreateContactEvent;
 import com.zimbra.cs.zclient.event.ZCreateConversationEvent;
 import com.zimbra.cs.zclient.event.ZCreateEvent;
@@ -59,6 +61,7 @@ import com.zimbra.cs.zclient.event.ZCreateSearchFolderEvent;
 import com.zimbra.cs.zclient.event.ZCreateTagEvent;
 import com.zimbra.cs.zclient.event.ZDeleteEvent;
 import com.zimbra.cs.zclient.event.ZEventHandler;
+import com.zimbra.cs.zclient.event.ZModifyAppointmentEvent;
 import com.zimbra.cs.zclient.event.ZModifyContactEvent;
 import com.zimbra.cs.zclient.event.ZModifyConversationEvent;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
@@ -69,9 +72,6 @@ import com.zimbra.cs.zclient.event.ZModifyMountpointEvent;
 import com.zimbra.cs.zclient.event.ZModifySearchFolderEvent;
 import com.zimbra.cs.zclient.event.ZModifyTagEvent;
 import com.zimbra.cs.zclient.event.ZRefreshEvent;
-import com.zimbra.cs.zclient.event.ZCreateAppointmentEvent;
-import com.zimbra.cs.zclient.event.ZModifyAppointmentEvent;
-import com.zimbra.cs.zclient.ZFolder.Color;
 import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
@@ -157,6 +157,7 @@ public class ZMailbox {
         private AccountBy mTargetAccountBy = AccountBy.name;
         private boolean mNoSession;
         private boolean mNoNotify;
+        private boolean mAuthAuthToken;
         private ZEventHandler mHandler;
 
         public Options() {
@@ -207,6 +208,13 @@ public class ZMailbox {
         public boolean getNoNotify() { return mNoNotify; }
         public void setNoNotify(boolean noNotify) { mNoNotify = noNotify; }
 
+        public boolean getAuthAuthToken() { return mAuthAuthToken; }
+
+        /**
+         *
+         * @param authAuthToken set to true if you want to send an AuthRequest to valid the auth token
+         */
+        public void setAuthAuthToken(boolean authAuthToken) { mAuthAuthToken = authAuthToken; }
         public ZEventHandler getEventHandler() { return mHandler; }
         public void setEventHandler(ZEventHandler handler) { mHandler = handler; }
 
@@ -225,6 +233,7 @@ public class ZMailbox {
     private LRUMap mMessageCache;
     private LRUMap mContactCache;
     private ZFilterRules mRules;
+    private ZAuthResult mAuthResult;
 
     private long mSize;
 
@@ -265,6 +274,8 @@ public class ZMailbox {
     		mHandlers.add(options.getEventHandler());
         initPreAuth(options.getUri(), options.getDebugListener());
         if (options.getAuthToken() != null) {
+            if (options.getAuthAuthToken())
+                mAuthResult = auth(options.getAuthToken());
             initAuthToken(options.getAuthToken());
         } else {
             String password;
@@ -274,7 +285,8 @@ public class ZMailbox {
             } else {
                 password = options.getPassword();
             }
-            initAuthToken(auth(options.getAccount(), options.getAccountBy(), password).getAuthToken());
+            mAuthResult = auth(options.getAccount(), options.getAccountBy(), password);
+            initAuthToken(mAuthResult.getAuthToken());
         }
         if (options.getTargetAccount() != null) {
             initTargetAccount(options.getTargetAccount(), options.getTargetAccountBy());
@@ -325,7 +337,7 @@ public class ZMailbox {
     }
 
     private ZAuthResult auth(String key, AccountBy by, String password) throws ServiceException {
-        if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling asuthenticate", null);
+        if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling authenticate", null);
         XMLElement req = new XMLElement(AccountConstants.AUTH_REQUEST);
         Element account = req.addElement(AccountConstants.E_ACCOUNT);
         account.addAttribute(AccountConstants.A_BY, by.name());
@@ -334,6 +346,18 @@ public class ZMailbox {
         return new ZAuthResult(invoke(req));
     }
 
+    private ZAuthResult auth(String authToken) throws ServiceException {
+        if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling authenticate", null);
+        XMLElement req = new XMLElement(AccountConstants.AUTH_REQUEST);
+        Element authTokenEl = req.addElement(AccountConstants.E_AUTH_TOKEN);
+        authTokenEl.setText(authToken);
+        return new ZAuthResult(invoke(req));
+    }
+
+    public ZAuthResult getAuthResult() {
+        return mAuthResult;
+    }
+    
     public String getAuthToken() {
         return mAuthToken;
     }
@@ -2649,6 +2673,7 @@ public class ZMailbox {
      * @param startMsec starting time of range, in msecs
      * @param endMsec ending time of range, in msecs
      * @param folderIds list of folder ids
+     * @param timeZone TimeZone used to correct allday appts
      * @return list of appts within the specified range
      * @throws ServiceException on error
      */
