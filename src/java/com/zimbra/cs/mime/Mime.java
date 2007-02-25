@@ -393,7 +393,7 @@ public class Mime {
 	    if (part.getContentType().startsWith(CT_MULTIPART_PREFIX))
 	        return false;
 	    
-	    if (part.getContentType().matches(CT_TEXT_WILD)) {
+	    if (part.getContentType().startsWith(CT_TEXT_PREFIX)) {
 	        if (parent == null || (part.getPartNum() == 1 && parent.getContentType().equals(CT_MESSAGE_RFC822))) {
 	            // ignore top-level text/* types
 	            return false;
@@ -433,21 +433,19 @@ public class Mime {
 	     return set;
 	 }
 	 
-	/**
-	 * returns true if there are any attachments in the list of parts
-	 * 
-	 * @param parts
-	 * @return
-	 */
+	/** Returns true if any of the given message parts qualify as "attachments"
+     *  for the purpose of displaying the little paperclip icon in the web UI.
+	 *  Note that Zimbra folder sharing notifications are expressly *not*
+     *  considered attachments for this purpose. */
 	public static boolean hasAttachment(List<MPartInfo> parts) {
         for (MPartInfo mpi : parts)
-	        if (mpi.isFilterableAttachment())
+	        if (mpi.isFilterableAttachment() && !mpi.getContentType().equalsIgnoreCase(CT_XML_ZIMBRA_SHARE))
 	            return true;
 	    return false;
 	}
 
     private static final InternetAddress[] NO_ADDRESSES = new InternetAddress[0];
-     
+
     public static InternetAddress[] parseAddressHeader(MimeMessage mm, String headerName) {
         String header = null;
         try {
