@@ -39,6 +39,8 @@ import com.zimbra.common.util.ZimbraLog;
 
 class DebugPreparedStatement implements PreparedStatement {
 
+    private static final int MAX_STRING_LENGTH = 1024;
+    
     private String mSql;
     private PreparedStatement mStmt;
     private long mStartTime;
@@ -46,9 +48,9 @@ class DebugPreparedStatement implements PreparedStatement {
     /**
      * A list that implicitly resizes when {@link #set} is called.
      */
-    private class AutoSizeList
-    extends ArrayList {
-        public Object set(int index, Object element) {
+    private class AutoSizeList<E>
+    extends ArrayList<E> {
+        public E set(int index, E element) {
             if (index >= size()) {
                 for (int i = size(); i <= index; i++) {
                     add(null);
@@ -57,7 +59,7 @@ class DebugPreparedStatement implements PreparedStatement {
             return super.set(index, element);
         }
     }
-    private List /* <Object> */ mParams = new AutoSizeList();
+    private List<Object> mParams = new AutoSizeList<Object>();
     
     DebugPreparedStatement(PreparedStatement stmt, String sql) {
         mStmt = stmt;
@@ -206,7 +208,11 @@ class DebugPreparedStatement implements PreparedStatement {
     }
 
     public void setString(int parameterIndex, String x) throws SQLException {
-        mParams.set(parameterIndex, x);
+        String loggedValue = x;
+        if (x != null && x.length() > MAX_STRING_LENGTH) {
+            loggedValue = loggedValue.substring(0, MAX_STRING_LENGTH) + "...";
+        }
+        mParams.set(parameterIndex, loggedValue);
         mStmt.setString(parameterIndex, x);
     }
 
