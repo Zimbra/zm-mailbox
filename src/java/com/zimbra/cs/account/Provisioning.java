@@ -923,10 +923,12 @@ public abstract class Provisioning {
     public static final String A_zimbraImapBindAddress = "zimbraImapBindAddress";
     public static final String A_zimbraImapNumThreads = "zimbraImapNumThreads";        
     public static final String A_zimbraImapServerEnabled = "zimbraImapServerEnabled";        
+    public static final String A_zimbraImapDisabledCapability = "zimbraImapDisabledCapability";        
     public static final String A_zimbraImapSSLBindPort = "zimbraImapSSLBindPort";
     public static final String A_zimbraImapSSLBindOnStartup = "zimbraImapSSLBindOnStartup";
     public static final String A_zimbraImapSSLBindAddress = "zimbraImapSSLBindAddress";
     public static final String A_zimbraImapSSLServerEnabled = "zimbraImapSSLServerEnabled";            
+    public static final String A_zimbraImapSSLDisabledCapability = "zimbraImapSSLDisabledCapability";        
     public static final String A_zimbraImapCleartextLoginEnabled = "zimbraImapCleartextLoginEnabled";    
     public static final String A_zimbraImapEnabled = "zimbraImapEnabled";
 
