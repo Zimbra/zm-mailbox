@@ -43,6 +43,8 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.HttpURL;
+import org.apache.commons.httpclient.HttpsURL;
 import org.apache.commons.httpclient.methods.GetMethod;
 
 import com.zimbra.cs.account.Account;
@@ -163,6 +165,26 @@ public class UserServlet extends ZimbraServlet {
     public static String getRestUrl(Account acct) throws ServiceException {
     	return getServiceUrl(acct, UserServlet.SERVLET_PATH);
     }
+    
+    /** Returns the REST URL for the mail item. */
+    public static String getRestUrl(MailItem mailItem) throws ServiceException, IOException {
+    		
+    	Account docAccount = mailItem.getMailbox().getAccount();
+        String url = getRestUrl(docAccount);
+        String path = url + mailItem.getPath();
+            
+        if (mailItem instanceof Folder)
+        	path = path + "/";
+    
+        if (url.startsWith("https"))
+        	url = new HttpsURL(path).toString();
+        else
+            url = new HttpURL(path).toString();    		
+     		
+    	return url;
+    }
+    	    
+    
 
     public UserServlet() {
         mFormatters = new HashMap<String, Formatter>();
