@@ -43,6 +43,7 @@ import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 import com.zimbra.cs.redolog.op.CreateMailbox;
+import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -268,13 +269,19 @@ public class MailboxManager {
         if (mailboxId <= 0)
             throw MailServiceException.NO_SUCH_MBOX(mailboxId);
 
+        long startTime = ZimbraPerf.STOPWATCH_MBOX_GET.start();
+        
         synchronized (this) {
             // check to see if the mailbox has already been cached
             Object cached = retrieveFromCache(mailboxId, true);
-            if (cached instanceof Mailbox)
+            if (cached instanceof Mailbox) {
+                ZimbraPerf.STOPWATCH_MBOX_GET.stop(startTime);
+                ZimbraPerf.COUNTER_MBOX_CACHE.increment(1);
                 return (Mailbox) cached;
+            }
         }
 
+        ZimbraPerf.COUNTER_MBOX_CACHE.increment(0);
         Connection conn = null;
         MailboxData data;
         try {
@@ -292,8 +299,10 @@ public class MailboxManager {
         synchronized (this) {
             // avoid the race condition by re-checking the cache and using that data (if any)
             Object cached = retrieveFromCache(mailboxId, false);
-            if (cached instanceof Mailbox)
+            if (cached instanceof Mailbox) {
+                ZimbraPerf.STOPWATCH_MBOX_GET.stop(startTime);
                 return (Mailbox) cached;
+            }
 
             mbox = instantiateMailbox(data);
 
@@ -319,6 +328,7 @@ public class MailboxManager {
         // this is only reached if the mailbox wasn't found in the cache
         mbox.checkUpgrade();
 
+        ZimbraPerf.STOPWATCH_MBOX_GET.stop(startTime);
         return mbox;
     }
 
