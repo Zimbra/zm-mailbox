@@ -221,7 +221,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
 
             req = mIncompleteRequest;
             if (req == null)
-                req = new ImapRequest(mInputStream, mSession);
+                req = new ImapRequest(mInputStream, this, mSession);
             req.continuation();
 
             long start = ZimbraPerf.STOPWATCH_IMAP.start();
@@ -327,7 +327,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                     if (command.equals("AUTHENTICATE")) {
                         req.skipSpace();  String mechanism = req.readATOM();
                         byte[] response = null;
-                        if (req.peekChar() == ' ') {
+                        if (req.peekChar() == ' ' && extensionEnabled("SASL-IR")) {
                             req.skipSpace();  response = req.readBase64(true);
                         }
                         checkEOF(tag, req);
@@ -342,7 +342,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                         if (req.peekChar() == '"') {
                             date = req.readDate(mTimeFormat, true);  req.skipSpace();
                         }
-                        if (req.peekChar() == 'c' || req.peekChar() == 'C') {
+                        if ((req.peekChar() == 'c' || req.peekChar() == 'C') && extensionEnabled("CATENATE")) {
                             List<Object> parts = new LinkedList<Object>();
                             req.skipAtom("CATENATE");  req.skipSpace();  req.skipChar('(');
                             while (req.peekChar() != ')') {
@@ -414,22 +414,22 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                     }
                     break;
                 case 'G':
-                    if (command.equals("GETQUOTA")) {
+                    if (command.equals("GETQUOTA") && extensionEnabled("QUOTA")) {
                         req.skipSpace();  String qroot = req.readAstring();
                         checkEOF(tag, req);
                         return doGETQUOTA(tag, qroot);
-                    } else if (command.equals("GETQUOTAROOT")) {
+                    } else if (command.equals("GETQUOTAROOT") && extensionEnabled("QUOTA")) {
                         req.skipSpace();  String path = req.readFolder();
                         checkEOF(tag, req);
                         return doGETQUOTAROOT(tag, path);
                     }
                     break;
                 case 'I':
-                    if (command.equals("ID")) {
+                    if (command.equals("ID") && extensionEnabled("ID")) {
                         req.skipSpace();  Map<String, String> params = req.readParameters(true);
                         checkEOF(tag, req);
                         return doID(tag, params);
-                    } else if (command.equals("IDLE")) {
+                    } else if (command.equals("IDLE") && extensionEnabled("IDLE")) {
                         checkEOF(tag, req);
                         return doIDLE(tag, IDLE_START, true);
                     }
@@ -459,7 +459,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                     if (command.equals("NOOP")) {
                         checkEOF(tag, req);
                         return doNOOP(tag);
-                    } else if (command.equals("NAMESPACE")) {
+                    } else if (command.equals("NAMESPACE") && extensionEnabled("NAMESPACE")) {
                         checkEOF(tag, req);
                         return doNAMESPACE(tag);
                     }
@@ -490,7 +490,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                     } else if (command.equals("SEARCH")) {
                         Integer options = null;
                         req.skipSpace();
-                        if ("RETURN".equals(req.peekATOM())) {
+                        if ("RETURN".equals(req.peekATOM()) && extensionEnabled("ESEARCH")) {
                             options = 0;
                             req.skipAtom("RETURN");  req.skipSpace();  req.skipChar('(');
                             while (req.peekChar() != ')') {
@@ -501,7 +501,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                                 else if (option.equals("MAX"))    options |= RETURN_MAX;
                                 else if (option.equals("ALL"))    options |= RETURN_ALL;
                                 else if (option.equals("COUNT"))  options |= RETURN_COUNT;
-                                else if (option.equals("SAVE"))   options |= RETURN_SAVE;
+                                else if (option.equals("SAVE") && extensionEnabled("X-DRAFT-I04-SEARCHRES"))  options |= RETURN_SAVE;
                                 else
                                     throw new ImapParseException(tag, "unknown RETURN option \"" + option + '"');
                             }
@@ -542,7 +542,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                         req.skipSpace();  String folder = req.readFolder();
                         checkEOF(tag, req);
                         return doSUBSCRIBE(tag, folder);
-                    } else if (command.equals("SETQUOTA")) {
+                    } else if (command.equals("SETQUOTA") && extensionEnabled("QUOTA")) {
                         Map<String, String> limits = new HashMap<String, String>();
                         req.skipSpace();  String qroot = req.readAstring();
                         req.skipSpace();  req.skipChar('(');
@@ -560,15 +560,16 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                 case 'U':
                     if (command.equals("UID")) {
                         req.skipSpace();  command = req.readATOM();
-                        if (!command.equals("FETCH") && !command.equals("SEARCH") && !command.equals("COPY") && !command.equals("STORE") && !command.equals("EXPUNGE"))
-                            throw new ImapParseException(tag, "command not permitted with UID");
-                        byUID = true;
-                        continue;
+                        if (command.equals("FETCH") || command.equals("SEARCH") || command.equals("COPY") || command.equals("STORE") || (command.equals("EXPUNGE") && extensionEnabled("UIDPLUS"))) {
+                            byUID = true;
+                            continue;
+                        }
+                        throw new ImapParseException(tag, "command not permitted with UID");
                     } else if (command.equals("UNSUBSCRIBE")) {
                         req.skipSpace();  String folder = req.readFolder();
                         checkEOF(tag, req);
                         return doUNSUBSCRIBE(tag, folder);
-                    } else if (command.equals("UNSELECT")) {
+                    } else if (command.equals("UNSELECT") && extensionEnabled("UNSELECT")) {
                         checkEOF(tag, req);
                         return doUNSELECT(tag);
                     }
@@ -611,6 +612,12 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         return CONTINUE_PROCESSING;
     }
 
+    private static final String[] SUPPORTED_EXTENSIONS = new String[] {
+        "BINARY", "CATENATE", "CHILDREN", "ESEARCH", "ID", "IDLE",
+        "LITERAL+", "LOGIN-REFERRALS", "NAMESPACE", "QUOTA", "SASL-IR",
+        "UIDPLUS", "UNSELECT", "WITHIN", "X-DRAFT-I04-SEARCHRES"
+    };
+
     private void sendCapability() throws IOException {
         // [IMAP4rev1]        RFC 3501: Internet Message Access Protocol - Version 4rev1
         // [LOGINDISABLED]    RFC 3501: Internet Message Access Protocol - Version 4rev1
@@ -627,17 +634,33 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         // [NAMESPACE]        RFC 2342: IMAP4 Namespace
         // [QUOTA]            RFC 2087: IMAP4 QUOTA extension
         // [SASL-IR]          draft-siemborski-imap-sasl-initial-response-06: IMAP Extension for SASL Initial Client Response
-        // [UIDPLUS]          RFC 2359: IMAP4 UIDPLUS extension
+        // [UIDPLUS]          RFC 4315: Internet Message Access Protocol (IMAP) - UIDPLUS extension
         // [UNSELECT]         RFC 3691: IMAP UNSELECT command
         // [WITHIN]           draft-ietf-lemonade-search-within-03: WITHIN Search extension to the IMAP Protocol
         // [X-DRAFT-I04-SEARCHRES]  draft-melnikov-imap-search-res-04: IMAP extension for referencing the last SEARCH result
 
         boolean authenticated = mSession != null;
-        String nologin = ImapServer.allowCleartextLogins() || mStartedTLS || authenticated ? "" : "LOGINDISABLED ";
-        String starttls = mStartedTLS || authenticated ? "" : "STARTTLS ";
-        String plain = !mStartedTLS || authenticated ? "" : "AUTH=PLAIN ";
-        sendUntagged("CAPABILITY IMAP4rev1 " + nologin + starttls + plain + "BINARY CATENATE CHILDREN ESEARCH ID IDLE LITERAL+ " +
-                                "LOGIN-REFERRALS NAMESPACE QUOTA SASL-IR UIDPLUS UNSELECT WITHIN X-DRAFT-I04-SEARCHRES");
+        String nologin  = mStartedTLS || authenticated || ImapServer.allowCleartextLogins() ? "" : " LOGINDISABLED";
+        String starttls = mStartedTLS || authenticated                                      ? "" : " STARTTLS";
+        String plain    = !mStartedTLS || authenticated || !extensionEnabled("AUTH=PLAIN")  ? "" : " AUTH=PLAIN";
+
+        StringBuilder capability = new StringBuilder("CAPABILITY IMAP4rev1" + nologin + starttls + plain);
+        for (String extension : SUPPORTED_EXTENSIONS)
+            if (extensionEnabled(extension))
+                capability.append(' ').append(extension);
+
+        sendUntagged(capability.toString());
+    }
+
+    boolean extensionEnabled(String extension) {
+        // check whether the extension is explicitly disabled on the server
+        if (ImapServer.isExtensionDisabled(mServer, extension))
+            return false;
+        // check whether one of the extension's prerequeisites is disabled on the server
+        if (extension.equalsIgnoreCase("X-DRAFT-I04-SEARCHRES"))
+            return extensionEnabled("ESEARCH");
+        // everything else is enabled
+        return true;
     }
 
     boolean doNOOP(String tag) throws IOException {
@@ -695,7 +718,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
 
         boolean finished = false;
 
-        if (mechanism.equals("PLAIN")) {
+        if (mechanism.equals("PLAIN") && extensionEnabled("AUTH=PLAIN")) {
             // RFC 2595 6: "The PLAIN SASL mechanism MUST NOT be advertised or used
             //              unless a strong encryption layer (such as the provided by TLS)
             //              is active or backwards compatibility dictates otherwise."
@@ -802,7 +825,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         } else if (!Provisioning.onLocalServer(account)) { 
             String correctHost = account.getAttr(Provisioning.A_zimbraMailHost);
             ZimbraLog.imap.info(command + " failed; should be on host " + correctHost);
-            if (correctHost == null || correctHost.trim().equals(""))
+            if (correctHost == null || correctHost.trim().equals("") || !extensionEnabled("LOGIN_REFERRALS"))
                 sendNO(tag, command + " failed [wrong host]");
             else
                 sendNO(tag, "[REFERRAL imap://" + URLEncoder.encode(account.getName(), "utf-8") + '@' + correctHost + "/] " + command + " failed");
@@ -1051,7 +1074,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             pattern = pattern.substring(1);
         List<String> matches = new ArrayList<String>();
         try {
-        	ImapListOperation op = new ImapListOperation(mSession, getContext(), mMailbox, pattern);
+        	ImapListOperation op = new ImapListOperation(mSession, getContext(), mMailbox, pattern, extensionEnabled("CHILDREN"));
         	op.schedule();
         	matches = op.getMatches();
         } catch (ServiceException e) {
@@ -1082,7 +1105,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             pattern = pattern.substring(1);
 
         try {
-        	ImapLSubOperation op = new ImapLSubOperation(mSession, getContext(), mMailbox, pattern);
+        	ImapLSubOperation op = new ImapLSubOperation(mSession, getContext(), mMailbox, pattern, extensionEnabled("CHILDREN"));
         	op.schedule();
         	Map<String, String> subs = op.getSubs();
         	
@@ -1182,7 +1205,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         }
 
         ArrayList<Tag> newTags = new ArrayList<Tag>();
-        StringBuilder appendHint = new StringBuilder();
+        StringBuilder appendHint = extensionEnabled("UIDPLUS") ? new StringBuilder() : null;
         try {
         	ImapAppendOperation op = new ImapAppendOperation(mSession, getContext(), mMailbox,
         				new FindOrCreateTags(), folderName, flagNames, date, content, newTags, appendHint);
@@ -1205,7 +1228,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         }
 
         sendNotifications(true, false);
-        sendOK(tag, appendHint.append("APPEND completed").toString());
+        sendOK(tag, (appendHint == null ? "" : appendHint.toString()) + "APPEND completed");
         return CONTINUE_PROCESSING;
     }
 
@@ -1885,7 +1908,8 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             i4set.remove(null);
 
             long checkpoint = System.currentTimeMillis();
-            List<Integer> srcUIDs = new ArrayList<Integer>(), copyUIDs = new ArrayList<Integer>();
+            List<Integer> srcUIDs = extensionEnabled("UIDPLUS") ? new ArrayList<Integer>() : null;
+            List<Integer> copyUIDs = extensionEnabled("UIDPLUS") ? new ArrayList<Integer>() : null;
 
             int i = 0;
             List<ImapMessage> i4list = new ArrayList<ImapMessage>(ImapCopyOperation.SUGGESTED_BATCH_SIZE);
@@ -1901,10 +1925,12 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                 copies.addAll(op.getMessages());
                 if (op.getMessages().size() != i4list.size())
                     throw ServiceException.FAILURE("mismatch between original and target count during IMAP COPY", null);
-                for (ImapMessage source : i4list)
-                    srcUIDs.add(source.imapUid);
-                for (MailItem target : op.getMessages())
-                    copyUIDs.add(target.getImapUid());
+                if (srcUIDs != null) {
+                    for (ImapMessage source : i4list)
+                        srcUIDs.add(source.imapUid);
+                    for (MailItem target : op.getMessages())
+                        copyUIDs.add(target.getImapUid());
+                }
 
                 // send a gratuitous untagged response to keep pissy clients from closing the socket from inactivity
                 long now = System.currentTimeMillis();
@@ -1915,7 +1941,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                 i4list.clear();
             }
 
-            if (srcUIDs.size() > 0)
+            if (srcUIDs != null && srcUIDs.size() > 0)
                 copyuid = "[COPYUID " + ImapFolder.getUIDValidity(folder) + ' ' +
                           ImapFolder.encodeSubsequence(srcUIDs) + ' ' +
                           ImapFolder.encodeSubsequence(copyUIDs) + "] ";
@@ -2154,11 +2180,11 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         List<String> flags = new ArrayList<String>();  flags.add("$MDNSENT");
         handler.doSTORE("A011", "1", flags, STORE_ADD, false, false);
 
-        ImapRequest req = new ImapRequest("X001 LOGIN user1@example.zimbra.com \"\\\\\\\"test123\\\"\\\\\"");
+        ImapRequest req = new ImapRequest("X001 LOGIN user1@example.zimbra.com \"\\\\\\\"test123\\\"\\\\\"", handler);
         pieces.clear();  pieces.add(req.readTag());  req.skipSpace();  pieces.add(req.readATOM());  req.skipSpace();  pieces.add(req.readAstring());  req.skipSpace();  pieces.add(req.readAstring());  assert(req.eof());
         System.out.println(pieces);
 
-        req = new ImapRequest("X002 CREATE ~peter/mail/&U,BTFw-/&ZeVnLIqe-");
+        req = new ImapRequest("X002 CREATE ~peter/mail/&U,BTFw-/&ZeVnLIqe-", handler);
         pieces.clear();  pieces.add(req.readTag());  req.skipSpace();  pieces.add(req.readATOM());  req.skipSpace();  pieces.add(req.readFolder());  assert(req.eof());
         System.out.println(pieces);
     }

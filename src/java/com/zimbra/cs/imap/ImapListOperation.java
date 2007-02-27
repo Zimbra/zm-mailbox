@@ -41,16 +41,18 @@ public class ImapListOperation extends Operation {
     		if (c != null)
     			LOAD = c.mLoad;
     	}
-	
-	private String mPattern;
+
+    private String mPattern;
+    private boolean mOutputChildInfo;
 	
 	private List<String> mMatches;
 
 
-    ImapListOperation(ImapSession session, OperationContext oc, Mailbox mbox, String pattern) {
+    ImapListOperation(ImapSession session, OperationContext oc, Mailbox mbox, String pattern, boolean children) {
 		super(session, oc, mbox, Requester.IMAP, Requester.IMAP.getPriority(), LOAD);
 
 		mPattern = pattern;
+        mOutputChildInfo = children;
 	}
 
 
@@ -65,22 +67,29 @@ public class ImapListOperation extends Operation {
 				String path = ImapFolder.exportPath(folder.getPath(), (ImapSession) mSession);
 				// FIXME: need to determine "name attributes" for mailbox (\Marked, \Unmarked, \Noinferiors, \Noselect)
 				if (path.toUpperCase().matches(mPattern))
-					mMatches.add("LIST (" + getFolderAttributes((ImapSession) mSession, folder) + ") \"/\" " + ImapFolder.formatPath(folder.getPath(), (ImapSession) mSession));
+					mMatches.add("LIST (" + getFolderAttributes((ImapSession) mSession, folder, mOutputChildInfo) + ") \"/\" " +
+                                       ImapFolder.formatPath(folder.getPath(), (ImapSession) mSession));
 			}
 		}
 	}
 
     private static final String[] FOLDER_ATTRIBUTES = {
-        "\\HasNoChildren",            "\\HasChildren",
-        "\\HasNoChildren \\Noselect", "\\HasChildren \\Noselect",
+        "\\HasNoChildren",              "\\HasChildren",
+        "\\HasNoChildren \\Noselect",   "\\HasChildren \\Noselect",
         "\\HasNoChildren \\Noinferiors"
     };
 
-    static String getFolderAttributes(ImapSession session, Folder folder) {
+    private static final String[] NO_CHILDREN_FOLDER_ATTRIBUTES = {
+        "",             "",
+        "\\Noselect",   "\\Noselect",
+        "\\Noinferiors"
+    };
+
+    static String getFolderAttributes(ImapSession session, Folder folder, boolean children) {
         int attributes = (folder.hasSubfolders() ? 0x01 : 0x00);
         attributes    |= (!ImapFolder.isFolderSelectable(folder, session) ? 0x02 : 0x00);
         attributes    |= (folder.getId() == Mailbox.ID_FOLDER_SPAM ? 0x04 : 0x00);
-        return FOLDER_ATTRIBUTES[attributes];
+        return children ? FOLDER_ATTRIBUTES[attributes] : NO_CHILDREN_FOLDER_ATTRIBUTES[attributes];
     }
 
 	public List<String> getMatches() { return mMatches; }

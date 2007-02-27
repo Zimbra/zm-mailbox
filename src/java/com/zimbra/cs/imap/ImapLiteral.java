@@ -28,12 +28,11 @@ import com.zimbra.common.util.ZimbraLog;
 
 final class ImapLiteral {
     private int mOctets;
-
     private int mLength;
-
+    private boolean mNonblockingPermitted;
     private boolean mBlocking;
 
-    private ImapLiteral() { }
+    private ImapLiteral(boolean allowNonblocking) { mNonblockingPermitted = allowNonblocking; }
 
     /** octets specified to be in the literal, for {12+}, this is 12. */
     public int octets() {
@@ -50,10 +49,10 @@ final class ImapLiteral {
         return mBlocking;
     }
     
-    public static ImapLiteral parse(String tag, String line) throws ImapParseException {
-        ImapLiteral result = new ImapLiteral();
+    public static ImapLiteral parse(String tag, String line, boolean allowNonblocking) throws ImapParseException {
+        ImapLiteral result = new ImapLiteral(allowNonblocking);
         int digitLimit;
-        if (line.endsWith("+}")) {
+        if (allowNonblocking && line.endsWith("+}")) {
             digitLimit = line.length() - 2;
             result.mBlocking = false;
         } else if (line.endsWith("}")) {
@@ -81,13 +80,13 @@ final class ImapLiteral {
             result.mLength = digitLimit - digitStart + (result.mBlocking ? 2 /* {} */ : 3 /* {+} */); 
         } catch (NumberFormatException nfe) {
             if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("LITERAL exception", nfe);
-            throw new ImapParseException(tag, "malformed literal octect count not a number");
+            throw new ImapParseException(tag, "malformed literal octet count not a number");
         }
         return result;
     }
     
     public static void main(String[] args) throws Exception {
-    	ImapLiteral l = parse(args[0], args[1]);
+    	ImapLiteral l = parse(args[0], args[1], true);
     	System.err.println(l.length());
     }
 }

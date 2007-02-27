@@ -31,7 +31,9 @@ package com.zimbra.cs.imap;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -56,11 +58,12 @@ import com.zimbra.common.util.CliUtil;
 /**
  * @author dkarp
  */
-public class ImapServer extends TcpServer
-implements RealtimeStatsCallback {
+public class ImapServer extends TcpServer implements RealtimeStatsCallback {
 
     private static Object sImapServer;
     private static Object sImapSSLServer;
+    private static Set<String> mDisabledExtensions = new HashSet<String>();
+    private static Set<String> mDisabledSSLExtensions = new HashSet<String>();
 
     private boolean mConnectionSSL;
 
@@ -88,7 +91,17 @@ implements RealtimeStatsCallback {
     boolean isConnectionSSL()       { return mConnectionSSL; }
 
     public int getConfigMaxIdleMilliSeconds() {
-        return (int)ImapSession.IMAP_IDLE_TIMEOUT_MSEC;
+        return (int) ImapSession.IMAP_IDLE_TIMEOUT_MSEC;
+    }
+
+    static boolean isExtensionDisabled(Object server, String name) {
+        if (server == null)
+            return false;
+        if (server == sImapServer)
+            return mDisabledExtensions.contains(name.toUpperCase());
+        if (server == sImapSSLServer)
+            return mDisabledSSLExtensions.contains(name.toUpperCase());
+        return false;
     }
 
     static String getBanner() {
@@ -114,6 +127,10 @@ implements RealtimeStatsCallback {
         int threads = server.getIntAttr(Provisioning.A_zimbraImapNumThreads, 10);
         String address = server.getAttr(Provisioning.A_zimbraImapBindAddress, null);
         int port = server.getIntAttr(Provisioning.A_zimbraImapBindPort, Config.D_IMAP_BIND_PORT);
+
+        mDisabledExtensions.clear();
+        for (String name : server.getMultiAttr(Provisioning.A_zimbraImapDisabledCapability))
+            mDisabledExtensions.add(name.toUpperCase());
 
         if (LC.nio_imap_enable.booleanValue()) {
             ServerSocket serverSocket = NetUtil.getOzServerSocket(address, port);
@@ -152,6 +169,10 @@ implements RealtimeStatsCallback {
         int threads = server.getIntAttr(Provisioning.A_zimbraImapNumThreads, 10);
         String address = server.getAttr(Provisioning.A_zimbraImapSSLBindAddress, null);
         int port = server.getIntAttr(Provisioning.A_zimbraImapSSLBindPort, Config.D_IMAP_SSL_BIND_PORT);
+
+        mDisabledSSLExtensions.clear();
+        for (String name : server.getMultiAttr(Provisioning.A_zimbraImapSSLDisabledCapability))
+            mDisabledSSLExtensions.add(name.toUpperCase());
 
         if (LC.nio_imap_enable.booleanValue()) {
             ServerSocket serverSocket = NetUtil.getOzServerSocket(address, port);

@@ -162,7 +162,7 @@ class ImapURL {
                 List<Object> list = new ArrayList<Object>();
                 list.add(section);
                 try {
-                    OzImapRequest req = new OzImapRequest(tag, list, null);
+                    OzImapRequest req = new OzImapRequest(tag, list, null, null);
                     mPart = req.readPartSpecifier(false, false);
                     if (!req.eof())
                         throw new ImapUrlException(tag, url, "extra chars at end of IMAP URL SECTION");

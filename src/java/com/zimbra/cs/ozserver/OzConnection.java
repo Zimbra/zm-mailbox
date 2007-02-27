@@ -813,6 +813,10 @@ public class OzConnection {
     public String getIdString() {
         return mIdString;
     }
+
+    public OzServer getServer() {
+        return mServer;
+    }
     
     public String getRemoteAddress() {
         return mRemoteAddress;

@@ -89,6 +89,7 @@ class ImapRequest {
         }
 
     private TcpServerInputStream mStream;
+    private ImapHandler mHandler;
     private ImapSession mSession;
     private List<Object> mParts = new ArrayList<Object>();
     private String mTag;
@@ -97,10 +98,19 @@ class ImapRequest {
     private int mSize;
     private boolean mUnlogged;
 
-    ImapRequest(String line)  { mParts.add(line); }
-    ImapRequest(TcpServerInputStream tsis, ImapSession session) {
+    ImapRequest(String line, ImapHandler handler) {
+        mParts.add(line);
+        mHandler = handler;
+    }
+
+    ImapRequest(TcpServerInputStream tsis, ImapHandler handler, ImapSession session) {
         mStream  = tsis;
+        mHandler = handler;
         mSession = session;
+    }
+
+    private boolean extensionEnabled(String extension) {
+        return mHandler == null || mHandler.extensionEnabled(extension);
     }
 
     void setTag(String tag)  { mTag = tag; }
@@ -162,9 +172,9 @@ class ImapRequest {
             ZimbraLog.imap.debug("C: " + logline);
 
         // if the line ends in a LITERAL+ non-blocking literal, keep reading
-        if (line.endsWith("+}")) {
+        if (line.endsWith("+}") && extensionEnabled("LITERAL+")) {
             int openBrace = line.lastIndexOf('{', line.length() - 3);
-            if (openBrace > 0)
+            if (openBrace > 0) {
                 try {
                     long size = Long.parseLong(line.substring(openBrace + 1, line.length() - 2));
                     incrementSize(size);
@@ -176,6 +186,7 @@ class ImapRequest {
                     }
                     throw new ImapParseException(mTag, "malformed nonblocking literal");
                 }
+            }
         }
     }
 
@@ -293,7 +304,7 @@ class ImapRequest {
 
     private String validateSequence(String value) throws ImapParseException {
         // "$" is OK per draft-melnikov-imap-search-res-03
-        if (value.equals("$"))
+        if (value.equals("$") && extensionEnabled("X-DRAFT-I04-SEARCHRES"))
             return value;
 
         int i, last = LAST_PUNCT;
@@ -356,7 +367,9 @@ class ImapRequest {
         boolean blocking = true;
         skipChar('{');
         long length = Long.parseLong(readNumber());
-        if (peekChar() == '+')  { skipChar('+');  blocking = false; }
+        if (peekChar() == '+' && extensionEnabled("LITERAL+")) {
+            skipChar('+');  blocking = false;
+        }
         skipChar('}');
 
         if (mIndex == mParts.size() - 1 || (mIndex == mParts.size() - 2 && mLiteral != -1)) {
@@ -384,7 +397,7 @@ class ImapRequest {
     }
 
     byte[] readLiteral8() throws IOException, ImapException {
-        if (peekChar() == '~')
+        if (peekChar() == '~' && extensionEnabled("BINARY"))
             skipChar('~');
         return readLiteral();
     }
@@ -543,7 +556,7 @@ class ImapRequest {
             } else if (item.equals("RFC822.TEXT")) {
                 attributes |= ImapHandler.FETCH_MARK_READ;
                 parts.add(new ImapPartSpecifier(item, "", "TEXT"));
-            } else if (item.equals("BINARY.SIZE")) {
+            } else if (item.equals("BINARY.SIZE") && extensionEnabled("BINARY")) {
                 String sectionPart = "";
                 skipChar('[');
                 while (peekChar() != ']') {
@@ -557,7 +570,7 @@ class ImapRequest {
                     attributes |= ImapHandler.FETCH_BINARY_SIZE;
                 else
                     parts.add(new ImapPartSpecifier(item, sectionPart, ""));
-            } else if (item.equals("BODY") || item.equals("BODY.PEEK") || item.equals("BINARY") || item.equals("BINARY.PEEK")) {
+            } else if (item.equals("BODY") || item.equals("BODY.PEEK") || ((item.equals("BINARY") || item.equals("BINARY.PEEK")) && extensionEnabled("BINARY"))) {
                 if (!item.endsWith(".PEEK"))
                     attributes |= ImapHandler.FETCH_MARK_READ;
                 boolean binary = item.startsWith("BINARY");
@@ -574,8 +587,9 @@ class ImapRequest {
                     }
                 }
                 parts.add(pspec);
-            } else
+            } else {
                 throw new ImapParseException(mTag, "unknown FETCH attribute \"" + item + '"');
+            }
             if (list && peekChar() != ')')  skipSpace();
         } while (list && peekChar() != ')');
         if (list)  skipChar(')');
@@ -684,7 +698,7 @@ class ImapRequest {
             else if (key.equals("KEYWORD"))     { skipSpace(); child = new FlagSearch(readAtom()); }
             else if (key.equals("LARGER"))      { skipSpace(); child = new SizeSearch(SizeSearch.Relation.larger, parseLong(readNumber())); }
             else if (key.equals("ON"))          { skipSpace(); child = new DateSearch(DateSearch.Relation.date, readDate()); }
-            else if (key.equals("OLDER"))       { skipSpace(); child = new RelativeDateSearch(DateSearch.Relation.before, parseInteger(readNumber())); }
+            else if (key.equals("OLDER") && extensionEnabled("WITHIN"))  { skipSpace(); child = new RelativeDateSearch(DateSearch.Relation.before, parseInteger(readNumber())); }
             // FIXME: SENTBEFORE, SENTON, and SENTSINCE reference INTERNALDATE, not the Date header
             else if (key.equals("SENTBEFORE"))  { skipSpace(); child = new DateSearch(DateSearch.Relation.before, readDate()); }
             else if (key.equals("SENTON"))      { skipSpace(); child = new DateSearch(DateSearch.Relation.date, readDate()); }
@@ -696,7 +710,7 @@ class ImapRequest {
             else if (key.equals("TO"))          { skipSpace(); child = new ContentSearch(ContentSearch.Relation.to, readAstring(charset)); }
             else if (key.equals("UID"))         { skipSpace(); child = new SequenceSearch(readSequence(), true); }
             else if (key.equals("UNKEYWORD"))   { skipSpace(); child = new NotOperation(new FlagSearch(readAtom())); }
-            else if (key.equals("YOUNGER"))     { skipSpace(); child = new RelativeDateSearch(DateSearch.Relation.after, parseInteger(readNumber())); }
+            else if (key.equals("YOUNGER") && extensionEnabled("WITHIN"))  { skipSpace(); child = new RelativeDateSearch(DateSearch.Relation.after, parseInteger(readNumber())); }
             else if (key.equals(SUBCLAUSE))     { skipChar('(');  child = readSearchClause(charset, MULTIPLE_CLAUSES, new AndOperation());  skipChar(')'); }
             else if (Character.isDigit(key.charAt(0)) || key.charAt(0) == '*' || key.charAt(0) == '$')
                 child = new SequenceSearch(validateSequence(key), false);

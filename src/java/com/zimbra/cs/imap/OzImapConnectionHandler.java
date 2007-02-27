@@ -90,6 +90,7 @@ import com.zimbra.cs.ozserver.OzConnection;
 import com.zimbra.cs.ozserver.OzConnectionHandler;
 import com.zimbra.cs.ozserver.OzCountingMatcher;
 import com.zimbra.cs.ozserver.OzMatcher;
+import com.zimbra.cs.ozserver.OzServer;
 import com.zimbra.cs.ozserver.OzTLSFilter;
 import com.zimbra.cs.ozserver.OzUtil;
 import com.zimbra.cs.session.SessionCache;
@@ -152,6 +153,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     private DateFormat mDateFormat   = new SimpleDateFormat("dd-MMM-yyyy", Locale.US);
     private DateFormat mZimbraFormat = DateFormat.getDateInstance(DateFormat.SHORT);
 
+    private OzServer      mServer;
     private ImapSession   mSession;
     private Mailbox       mMailbox;
     private boolean       mStartedTLS;
@@ -162,6 +164,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
 
     public OzImapConnectionHandler(OzConnection connection) {
         mConnection = connection;
+        mServer = connection.getServer();
     }
 
     public void dumpState(Writer w) {
@@ -190,7 +193,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     private static final boolean CONTINUE_PROCESSING = true;
 
     private boolean processCommand() throws IOException {
-        OzImapRequest req = new OzImapRequest(mCurrentRequestTag, mCurrentRequestData, mSession);
+        OzImapRequest req = new OzImapRequest(mCurrentRequestTag, mCurrentRequestData, this, mSession);
         boolean keepGoing = CONTINUE_PROCESSING;
         String logPushedUsername = null;
         try {
@@ -200,7 +203,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             }
             
             // check account status before executing command
-            if (mMailbox != null)
+            if (mMailbox != null) {
                 try {
                     Account account = mMailbox.getAccount();
                     if (account == null || !account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE)) {
@@ -211,6 +214,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                     ZimbraLog.imap.warn("error checking account status; dropping connection", e);
                     return STOP_PROCESSING;
                 }
+            }
 
             keepGoing = executeRequest(req, mSession);
         } catch (ImapParseException ipe) {
@@ -283,7 +287,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                     if (command.equals("AUTHENTICATE")) {
                         req.skipSpace();  String mechanism = req.readATOM();
                         byte[] response = null;
-                        if (req.peekChar() == ' ') {
+                        if (req.peekChar() == ' ' && extensionEnabled("SASL-IR")) {
                             req.skipSpace();  response = req.readBase64(true);
                         }
                         checkEOF(tag, req);
@@ -298,7 +302,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                         if (req.peekChar() == '"') {
                             date = req.readDate(mTimeFormat, true);  req.skipSpace();
                         }
-                        if (req.peekChar() == 'c' || req.peekChar() == 'C') {
+                        if ((req.peekChar() == 'c' || req.peekChar() == 'C') && extensionEnabled("CATENATE")) {
                             List<Object> parts = new LinkedList<Object>();
                             req.skipAtom("CATENATE");  req.skipSpace();  req.skipChar('(');
                             while (req.peekChar() != ')') {
@@ -370,22 +374,22 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                     }
                     break;
                 case 'G':
-                    if (command.equals("GETQUOTA")) {
+                    if (command.equals("GETQUOTA") && extensionEnabled("QUOTA")) {
                         req.skipSpace();  String qroot = req.readAstring();
                         checkEOF(tag, req);
                         return doGETQUOTA(tag, qroot);
-                    } else if (command.equals("GETQUOTAROOT")) {
+                    } else if (command.equals("GETQUOTAROOT") && extensionEnabled("QUOTA")) {
                         req.skipSpace();  String path = req.readFolder();
                         checkEOF(tag, req);
                         return doGETQUOTAROOT(tag, path);
                     }
                     break;
                 case 'I':
-                    if (command.equals("ID")) {
+                    if (command.equals("ID") && extensionEnabled("ID")) {
                         req.skipSpace();  Map<String, String> params = req.readParameters(true);
                         checkEOF(tag, req);
                         return doID(tag, params);
-                    } else if (command.equals("IDLE")) {
+                    } else if (command.equals("IDLE") && extensionEnabled("IDLE")) {
                         checkEOF(tag, req);
                         return doIDLE(tag, IDLE_START, true);
                     }
@@ -415,7 +419,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                     if (command.equals("NOOP")) {
                         checkEOF(tag, req);
                         return doNOOP(tag);
-                    } else if (command.equals("NAMESPACE")) {
+                    } else if (command.equals("NAMESPACE") && extensionEnabled("NAMESPACE")) {
                         checkEOF(tag, req);
                         return doNAMESPACE(tag);
                     }
@@ -446,7 +450,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                     } else if (command.equals("SEARCH")) {
                         Integer options = null;
                         req.skipSpace();
-                        if ("RETURN".equals(req.peekATOM())) {
+                        if ("RETURN".equals(req.peekATOM()) && extensionEnabled("ESEARCH")) {
                             options = 0;
                             req.skipAtom("RETURN");  req.skipSpace();  req.skipChar('(');
                             while (req.peekChar() != ')') {
@@ -457,7 +461,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                                 else if (option.equals("MAX"))    options |= RETURN_MAX;
                                 else if (option.equals("ALL"))    options |= RETURN_ALL;
                                 else if (option.equals("COUNT"))  options |= RETURN_COUNT;
-                                else if (option.equals("SAVE"))   options |= RETURN_SAVE;
+                                else if (option.equals("SAVE") && extensionEnabled("X-DRAFT-I04-SEARCHRES"))  options |= RETURN_SAVE;
                                 else
                                     throw new ImapParseException(tag, "unknown RETURN option \"" + option + '"');
                             }
@@ -498,7 +502,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                         req.skipSpace();  String folder = req.readFolder();
                         checkEOF(tag, req);
                         return doSUBSCRIBE(tag, folder);
-                    } else if (command.equals("SETQUOTA")) {
+                    } else if (command.equals("SETQUOTA") && extensionEnabled("QUOTA")) {
                         Map<String, String> limits = new HashMap<String, String>();
                         req.skipSpace();  String qroot = req.readAstring();
                         req.skipSpace();  req.skipChar('(');
@@ -516,15 +520,16 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                 case 'U':
                     if (command.equals("UID")) {
                         req.skipSpace();  command = req.readATOM();
-                        if (!command.equals("FETCH") && !command.equals("SEARCH") && !command.equals("COPY") && !command.equals("STORE") && !command.equals("EXPUNGE"))
-                            throw new ImapParseException(tag, "command not permitted with UID");
-                        byUID = true;
-                        continue;
+                        if (command.equals("FETCH") || command.equals("SEARCH") || command.equals("COPY") || command.equals("STORE") || (command.equals("EXPUNGE") && extensionEnabled("UIDPLUS"))) {
+                            byUID = true;
+                            continue;
+                        }
+                        throw new ImapParseException(tag, "command not permitted with UID");
                     } else if (command.equals("UNSUBSCRIBE")) {
                         req.skipSpace();  String folder = req.readFolder();
                         checkEOF(tag, req);
                         return doUNSUBSCRIBE(tag, folder);
-                    } else if (command.equals("UNSELECT")) {
+                    } else if (command.equals("UNSELECT") && extensionEnabled("UNSELECT")) {
                         checkEOF(tag, req);
                         return doUNSELECT(tag);
                     }
@@ -546,8 +551,9 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         } else if (required == ImapSession.STATE_SELECTED && state != ImapSession.STATE_SELECTED) {
             sendNO(tag, "must be in SELECTED state");
             return false;
-        } else
+        } else {
             return true;
+        }
     }
 
     boolean canContinue(ServiceException e) {
@@ -567,6 +573,12 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         return CONTINUE_PROCESSING;
     }
 
+    private static final String[] SUPPORTED_EXTENSIONS = new String[] {
+        "BINARY", "CATENATE", "CHILDREN", "ESEARCH", "ID", "IDLE",
+        "LITERAL+", "LOGIN-REFERRALS", "NAMESPACE", "QUOTA", "SASL-IR",
+        "UIDPLUS", "UNSELECT", "WITHIN", "X-DRAFT-I04-SEARCHRES"
+    };
+
     private void sendCapability() throws IOException {
         // [IMAP4rev1]        RFC 3501: Internet Message Access Protocol - Version 4rev1
         // [LOGINDISABLED]    RFC 3501: Internet Message Access Protocol - Version 4rev1
@@ -583,17 +595,33 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         // [NAMESPACE]        RFC 2342: IMAP4 Namespace
         // [QUOTA]            RFC 2087: IMAP4 QUOTA extension
         // [SASL-IR]          draft-siemborski-imap-sasl-initial-response-06: IMAP Extension for SASL Initial Client Response
-        // [UIDPLUS]          RFC 2359: IMAP4 UIDPLUS extension
+        // [UIDPLUS]          RFC 4315: Internet Message Access Protocol (IMAP) - UIDPLUS extension
         // [UNSELECT]         RFC 3691: IMAP UNSELECT command
         // [WITHIN]           draft-ietf-lemonade-search-within-03: WITHIN Search extension to the IMAP Protocol
         // [X-DRAFT-I04-SEARCHRES]  draft-melnikov-imap-search-res-04: IMAP extension for referencing the last SEARCH result
 
         boolean authenticated = mSession != null;
-        String nologin = ImapServer.allowCleartextLogins() || mStartedTLS || authenticated ? "" : "LOGINDISABLED ";
-        String starttls = mStartedTLS || authenticated ? "" : "STARTTLS ";
-        String plain = !mStartedTLS || authenticated ? "" : "AUTH=PLAIN ";
-        sendUntagged("CAPABILITY IMAP4rev1 " + nologin + starttls + plain + "BINARY CATENATE CHILDREN ESEARCH ID IDLE LITERAL+ " +
-                                "LOGIN-REFERRALS NAMESPACE QUOTA SASL-IR UIDPLUS UNSELECT WITHIN X-DRAFT-I04-SEARCHRES");
+        String nologin  = mStartedTLS || authenticated || ImapServer.allowCleartextLogins() ? "" : " LOGINDISABLED";
+        String starttls = mStartedTLS || authenticated                                      ? "" : " STARTTLS";
+        String plain    = !mStartedTLS || authenticated || !extensionEnabled("AUTH=PLAIN")  ? "" : " AUTH=PLAIN";
+
+        StringBuilder capability = new StringBuilder("CAPABILITY IMAP4rev1" + nologin + starttls + plain);
+        for (String extension : SUPPORTED_EXTENSIONS)
+            if (extensionEnabled(extension))
+                capability.append(' ').append(extension);
+
+        sendUntagged(capability.toString());
+    }
+
+    boolean extensionEnabled(String extension) {
+        // check whether the extension is explicitly disabled on the server
+        if (ImapServer.isExtensionDisabled(mServer, extension))
+            return false;
+        // check whether one of the extension's prerequeisites is disabled on the server
+        if (extension.equalsIgnoreCase("X-DRAFT-I04-SEARCHRES"))
+            return extensionEnabled("ESEARCH");
+        // everything else is enabled
+        return true;
     }
 
     boolean doNOOP(String tag) throws IOException {
@@ -647,7 +675,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
 
         boolean finished = false;
 
-        if (mechanism.equals("PLAIN")) {
+        if (mechanism.equals("PLAIN") && extensionEnabled("AUTH=PLAIN")) {
             // RFC 2595 6: "The PLAIN SASL mechanism MUST NOT be advertised or used
             //              unless a strong encryption layer (such as the provided by TLS)
             //              is active or backwards compatibility dictates otherwise."
@@ -762,7 +790,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         } else if (!Provisioning.onLocalServer(account)) { 
             String correctHost = account.getAttr(Provisioning.A_zimbraMailHost);
             ZimbraLog.imap.info(command + " failed; should be on host " + correctHost);
-            if (correctHost == null || correctHost.trim().equals(""))
+            if (correctHost == null || correctHost.trim().equals("") || !extensionEnabled("LOGIN_REFERRALS"))
                 sendNO(tag, command + " failed [wrong host]");
             else
                 sendNO(tag, "[REFERRAL imap://" + URLEncoder.encode(account.getName(), "utf-8") + '@' + correctHost + "/] " + command + " failed");
@@ -1012,7 +1040,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             pattern = pattern.substring(1);
         List<String> matches = null;
         try {
-        	ImapListOperation op = new ImapListOperation(mSession, getContext(), mMailbox, pattern);
+        	ImapListOperation op = new ImapListOperation(mSession, getContext(), mMailbox, pattern, extensionEnabled("CHILDREN"));
         	op.schedule();
         	matches = op.getMatches();
         } catch (ServiceException e) {
@@ -1042,7 +1070,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             pattern = pattern.substring(1);
 
         try {
-        	ImapLSubOperation op = new ImapLSubOperation(mSession, getContext(), mMailbox, pattern);
+        	ImapLSubOperation op = new ImapLSubOperation(mSession, getContext(), mMailbox, pattern, extensionEnabled("CHILDREN"));
         	op.schedule();
         	Map<String, String> subs = op.getSubs();
         	
@@ -1142,7 +1170,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         }
 
         ArrayList<Tag> newTags = new ArrayList<Tag>();
-        StringBuilder appendHint = new StringBuilder();
+        StringBuilder appendHint = extensionEnabled("UIDPLUS") ? new StringBuilder() : null;
         try {
         	ImapAppendOperation op = new ImapAppendOperation(mSession, getContext(), mMailbox,
         				new FindOrCreateTags(), folderName, flagNames, date, content, newTags, appendHint);
@@ -1164,7 +1192,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         }
 
         sendNotifications(true, false);
-        sendOK(tag, appendHint.append("APPEND completed").toString());
+        sendOK(tag, (appendHint == null ? "" : appendHint.toString()) + "APPEND completed");
         return CONTINUE_PROCESSING;
     }
 
@@ -1857,7 +1885,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             i4set.remove(null);
 
             long checkpoint = System.currentTimeMillis();
-            List<Integer> srcUIDs = new ArrayList<Integer>(), copyUIDs = new ArrayList<Integer>();
+            List<Integer> srcUIDs = extensionEnabled("UIDPLUS") ? new ArrayList<Integer>() : null;
+            List<Integer> copyUIDs = extensionEnabled("UIDPLUS") ? new ArrayList<Integer>() : null;
 
             int i = 0;
             List<ImapMessage> i4list = new ArrayList<ImapMessage>(ImapCopyOperation.SUGGESTED_BATCH_SIZE);
@@ -1873,10 +1902,12 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                 copies.addAll(op.getMessages());
                 if (op.getMessages().size() != i4list.size())
                     throw ServiceException.FAILURE("mismatch between original and target count during IMAP COPY", null);
-                for (ImapMessage source : i4list)
-                    srcUIDs.add(source.imapUid);
-                for (MailItem target : op.getMessages())
-                    copyUIDs.add(target.getImapUid());
+                if (srcUIDs != null) {
+                    for (ImapMessage source : i4list)
+                        srcUIDs.add(source.imapUid);
+                    for (MailItem target : op.getMessages())
+                        copyUIDs.add(target.getImapUid());
+                }
 
                 // send a gratuitous untagged response to keep pissy clients from closing the socket from inactivity
                 long now = System.currentTimeMillis();
@@ -1887,7 +1918,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                 i4list.clear();
             }
 
-            if (srcUIDs.size() > 0)
+            if (srcUIDs != null && srcUIDs.size() > 0)
                 copyuid = "[COPYUID " + ImapFolder.getUIDValidity(folder) + ' ' +
                           ImapFolder.encodeSubsequence(srcUIDs) + ' ' +
                           ImapFolder.encodeSubsequence(copyUIDs) + "] ";
@@ -1995,6 +2026,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         mConnection.writeAsciiWithCRLF(line);
     }
 
+
     private static final int MAX_COMMAND_LENGTH = 20480;
 
     private OzByteArrayMatcher mCommandMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLF, null);
@@ -2092,9 +2124,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             ZimbraLog.imap.debug("services disabled");
             return;
         }
-        if (mConnection.getProperty(PROPERTY_SECURE_SERVER, null) != null) {
+        if (mConnection.getProperty(PROPERTY_SECURE_SERVER, null) != null)
             mStartedTLS = true;
-        }
         sendUntagged(ImapServer.getBanner(), true);
         gotoReadLineState(true);
     }
@@ -2151,7 +2182,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                 }
 
                 mCurrentRequestData.add(mCurrentData.toAsciiString());
-                OzImapRequest req = new OzImapRequest(mAuthenticator.mTag, mCurrentRequestData, mSession);
+                OzImapRequest req = new OzImapRequest(mAuthenticator.mTag, mCurrentRequestData, this, mSession);
                 if (continueAuthentication(req))
                     gotoReadLineState(true);
                 else
@@ -2189,7 +2220,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             /* See if there is a literal at the end of this line. */
             ImapLiteral literal;
             try {
-                literal = ImapLiteral.parse(mCurrentRequestTag, line);
+                literal = ImapLiteral.parse(mCurrentRequestTag, line, extensionEnabled("LITERAL+"));
             } catch (ImapParseException ipe) {
                 sendBAD(mCurrentRequestTag, ipe.getMessage());
                 gotoReadLineState(true);
