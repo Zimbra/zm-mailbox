@@ -604,10 +604,24 @@ public abstract class Wiki {
 			synchronized (w) {
 				WikiPage pg = w.lookupWiki(ctxt, wikiWord);
 				if (pg != null)
+				{
+					Document docItem = pg.getWikiItem(ctxt);
+					String url = "";
+					try
+					{
+						url=UserServlet.getRestUrl(docItem);						
+					}
+					catch (ServiceException se) {
+		     			ZimbraLog.wiki.error("cannot generate REST url", se);				 			
+		     		} catch (IOException ioe) {
+		     			ZimbraLog.wiki.error("cannot generate REST url", ioe);				 			
+		     		}
 					throw MailServiceException.ALREADY_EXISTS("wiki word "+wikiWord+" in folder "+fid,
 							new Argument(MailConstants.A_NAME, wikiWord, Argument.Type.STR),
 							new Argument(MailConstants.A_ID, pg.getId(), Argument.Type.IID),
-							new Argument(MailConstants.A_VERSION, pg.getLastRevision(), Argument.Type.NUM));
+							new Argument(MailConstants.A_VERSION, pg.getLastRevision(), Argument.Type.NUM),
+							new Argument(MailConstants.A_REST_URL, url, Argument.Type.STR));
+				}
 
 				// create a new page
 				page.create(ctxt, w);
