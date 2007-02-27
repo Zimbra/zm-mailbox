@@ -128,6 +128,7 @@ public class GetFolder extends MailDocumentHandler {
         // return the children of the remote folder as children of the mountpoint
 		proxied = proxied.getOptionalElement(MailConstants.E_FOLDER);
 		if (proxied != null) {
+			eRoot.addAttribute(MailConstants.A_REST_URL, proxied.getAttribute(MailConstants.A_REST_URL, null));
 			eRoot.addAttribute(MailConstants.A_RIGHTS, proxied.getAttribute(MailConstants.A_RIGHTS, null));
 			for (Iterator it = proxied.elementIterator(); it.hasNext(); ) {
 				Element eRemote = (Element) it.next();
