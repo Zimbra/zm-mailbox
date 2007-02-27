@@ -86,6 +86,8 @@ public class ZimbraPerf {
     public static StopWatch STOPWATCH_DB_CONN = new StopWatch("db_conn");
     public static StopWatch STOPWATCH_LDAP_DC = new StopWatch("ldap_dc");
     public static StopWatch STOPWATCH_MBOX_ADD_MSG = new StopWatch("mbox_add_msg");
+    public static StopWatch STOPWATCH_MBOX_GET = new StopWatch("mbox_get");         // Mailbox accessor response time
+    public static Counter COUNTER_MBOX_CACHE = new Counter("mbox_cache");           // Mailbox cache hit rate
     public static Counter COUNTER_MBOX_MSG_CACHE = new Counter("mbox_msg_cache"); 
     public static Counter COUNTER_MBOX_ITEM_CACHE = new Counter("mbox_item_cache");
     public static StopWatch STOPWATCH_SOAP = new StopWatch("soap");
@@ -107,7 +109,8 @@ public class ZimbraPerf {
         COUNTER_LMTP_DLVD_MSGS, COUNTER_LMTP_DLVD_BYTES,
         STOPWATCH_DB_CONN,
         STOPWATCH_LDAP_DC,
-        STOPWATCH_MBOX_ADD_MSG, COUNTER_MBOX_MSG_CACHE, COUNTER_MBOX_ITEM_CACHE,
+        STOPWATCH_MBOX_ADD_MSG, STOPWATCH_MBOX_GET, COUNTER_MBOX_CACHE,
+        COUNTER_MBOX_MSG_CACHE, COUNTER_MBOX_ITEM_CACHE,
         STOPWATCH_SOAP,
         STOPWATCH_IMAP,
         STOPWATCH_POP,
@@ -502,6 +505,11 @@ public class ZimbraPerf {
         addStatsCallback(new SystemStats());
         
         // Only the average is interesting for these counters
+        COUNTER_MBOX_CACHE.setShowAverage(true);
+        COUNTER_MBOX_CACHE.setAverageName("mbox_cache");
+        COUNTER_MBOX_CACHE.setShowCount(false);
+        COUNTER_MBOX_CACHE.setShowTotal(false);
+        
         COUNTER_MBOX_MSG_CACHE.setShowAverage(true);
         COUNTER_MBOX_MSG_CACHE.setAverageName("mbox_msg_cache");
         COUNTER_MBOX_MSG_CACHE.setShowCount(false);

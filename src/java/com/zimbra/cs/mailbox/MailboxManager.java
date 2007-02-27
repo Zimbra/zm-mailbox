@@ -43,6 +43,7 @@ import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 import com.zimbra.cs.redolog.op.CreateMailbox;
+import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -270,25 +271,35 @@ public class MailboxManager {
         // only used if we instantiate a new mailbox (existing mailboxes
         // RETURN immediately
         Mailbox mailbox = null;
+        long startTime = ZimbraPerf.STOPWATCH_MBOX_GET.start();
         
         synchronized (this) {
             Object obj = mMailboxCache.get(mailboxId);
             if (obj instanceof Mailbox) {
+                ZimbraPerf.STOPWATCH_MBOX_GET.stop(startTime);
+                ZimbraPerf.COUNTER_MBOX_CACHE.increment(1);
                 return (Mailbox) obj;
             } else if (obj instanceof SoftReference) {
                 mailbox = (Mailbox) ((SoftReference) obj).get();
-                if (mailbox != null)
+                if (mailbox != null) {
+                    ZimbraPerf.STOPWATCH_MBOX_GET.stop(startTime);
+                    ZimbraPerf.COUNTER_MBOX_CACHE.increment(1);
                     return mailbox;
+                }
                 ZimbraLog.mailbox.debug("mailbox " + mailboxId + " has been GCed; reloading");
             } else if (obj instanceof MailboxLock) {
                 MailboxLock lock = (MailboxLock) obj;
                 if (!lock.canAccess())
                     throw MailServiceException.MAINTENANCE(mailboxId);
-                if (lock.getMailbox() != null)
+                if (lock.getMailbox() != null) {
+                    ZimbraPerf.STOPWATCH_MBOX_GET.stop(startTime);
+                    ZimbraPerf.COUNTER_MBOX_CACHE.increment(1);
                     return lock.getMailbox();
+                }
             }
-    
+
             // fetch the Mailbox data from the database
+            ZimbraPerf.COUNTER_MBOX_CACHE.increment(0);
             Connection conn = null;
             try {
                 conn = DbPool.getConnection();
@@ -317,6 +328,7 @@ public class MailboxManager {
             } finally {
                 if (conn != null)
                     DbPool.quietClose(conn);
+                ZimbraPerf.STOPWATCH_MBOX_GET.stop(startTime);
             }
         }
 
