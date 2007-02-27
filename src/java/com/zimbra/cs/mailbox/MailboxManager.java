@@ -268,63 +268,78 @@ public class MailboxManager {
         if (mailboxId <= 0)
             throw MailServiceException.NO_SUCH_MBOX(mailboxId);
 
-        // only used if we instantiate a new mailbox (existing mailboxes
-        // RETURN immediately
-        Mailbox mailbox = null;
-        
         synchronized (this) {
-            Object obj = mMailboxCache.get(mailboxId);
-            if (obj instanceof Mailbox) {
-                return (Mailbox) obj;
-            } else if (obj instanceof SoftReference) {
-                mailbox = (Mailbox) ((SoftReference) obj).get();
-                if (mailbox != null)
-                    return mailbox;
-                ZimbraLog.mailbox.debug("mailbox " + mailboxId + " has been GCed; reloading");
-            } else if (obj instanceof MailboxLock) {
-                MailboxLock lock = (MailboxLock) obj;
+            // check to see if the mailbox has already been cached
+            Object cached = retrieveFromCache(mailboxId, true);
+            if (cached instanceof Mailbox)
+                return (Mailbox) cached;
+        }
+
+        Connection conn = null;
+        MailboxData data;
+        try {
+            // fetch the Mailbox data from the database
+            conn = DbPool.getConnection();
+            data = DbMailbox.getMailboxStats(conn, mailboxId);
+            if (data == null)
+                throw MailServiceException.NO_SUCH_MBOX(mailboxId);
+        } finally {
+            if (conn != null)
+                DbPool.quietClose(conn);
+        }
+
+        Mailbox mbox;
+        synchronized (this) {
+            // avoid the race condition by re-checking the cache and using that data (if any)
+            Object cached = retrieveFromCache(mailboxId, false);
+            if (cached instanceof Mailbox)
+                return (Mailbox) cached;
+
+            mbox = instantiateMailbox(data);
+
+            if (!skipMailHostCheck) {
+                // The host check here makes sure that sessions that were
+                // already connected at the time of mailbox move are not
+                // allowed to continue working with this mailbox which is
+                // essentially a soft-deleted copy.  The WRONG_HOST
+                // exception forces the clients to reconnect to the new
+                // server.
+                Account account = mbox.getAccount();
+                if (!Provisioning.onLocalServer(account))
+                    throw ServiceException.WRONG_HOST(account.getAttr(Provisioning.A_zimbraMailHost), null);
+            }
+
+            // cache the newly-created Mailbox object
+            if (cached instanceof MailboxLock)
+                ((MailboxLock) cached).cacheMailbox(mbox);
+            else
+                cacheMailbox(mbox);
+        }
+
+        // this is only reached if the mailbox wasn't found in the cache
+        mbox.checkUpgrade();
+
+        return mbox;
+    }
+
+    private Object retrieveFromCache(int mailboxId, boolean trackGC) throws MailServiceException {
+        synchronized (this) {
+            Object cached = mMailboxCache.get(mailboxId);
+            if (cached instanceof SoftReference) {
+                Mailbox mbox = (Mailbox) ((SoftReference) cached).get();
+                if (mbox == null && trackGC)
+                    ZimbraLog.mailbox.debug("mailbox " + mailboxId + " has been GCed; reloading");
+                return mbox;
+            } else if (cached instanceof MailboxLock) {
+                MailboxLock lock = (MailboxLock) cached;
                 if (!lock.canAccess())
                     throw MailServiceException.MAINTENANCE(mailboxId);
                 if (lock.getMailbox() != null)
                     return lock.getMailbox();
             }
-    
-            // fetch the Mailbox data from the database
-            Connection conn = null;
-            try {
-                conn = DbPool.getConnection();
-
-                MailboxData data = DbMailbox.getMailboxStats(conn, mailboxId);
-                if (data == null)
-                    throw MailServiceException.NO_SUCH_MBOX(mailboxId);
-                mailbox = instantiateMailbox(data);
-
-                if (!skipMailHostCheck) {
-                    // The host check here makes sure that sessions that were
-                    // already connected at the time of mailbox move are not
-                    // allowed to continue working with this mailbox which is
-                    // essentially a soft-deleted copy.  The WRONG_HOST
-                    // exception forces the clients to reconnect to the new
-                    // server.
-                    Account account = mailbox.getAccount();
-                    if (!Provisioning.onLocalServer(account))
-                        throw ServiceException.WRONG_HOST(account.getAttr(Provisioning.A_zimbraMailHost), null);
-                }
-
-                if (obj instanceof MailboxLock)
-                    ((MailboxLock) obj).cacheMailbox(mailbox);
-                else
-                    cacheMailbox(mailbox);
-            } finally {
-                if (conn != null)
-                    DbPool.quietClose(conn);
-            }
+            // if we've retrieved NULL or a Mailbox or an accessible lock, return it
+            return cached;
         }
-
-        // this is only reached if the mailbox is being initialized for the first time
-        mailbox.checkUpgrade();
-        
-        return mailbox;
     }
 
     Mailbox instantiateMailbox(MailboxData data) throws ServiceException {
