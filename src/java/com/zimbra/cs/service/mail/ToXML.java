@@ -64,7 +64,6 @@ import com.zimbra.cs.wiki.WikiPage;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 import org.apache.commons.httpclient.HttpURL;
-import org.apache.commons.httpclient.HttpsURL;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.soap.MailConstants;
@@ -288,15 +287,7 @@ public class ToXML {
 
     public static Element encodeRestUrl(Element elt, MailItem item) {
         try {
-            Account account = item.getMailbox().getAccount();
-            String url = UserServlet.getRestUrl(account);
-            String path = url + item.getPath();
-            if (item instanceof Folder)
-                path = path + "/";
-            if (url.startsWith("https"))
-                url = new HttpsURL(path).toString();
-            else
-                url = new HttpURL(path).toString();
+        	String url = UserServlet.getRestUrl(item);
             return elt.addAttribute(MailConstants.A_REST_URL, url);
         } catch (ServiceException se) {
             mLog.error("cannot generate REST url", se);
