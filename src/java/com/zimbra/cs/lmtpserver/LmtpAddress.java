@@ -521,4 +521,8 @@ public class LmtpAddress {
 		if (debug) say("parameter " + key + " is not allowed");
 		return false;
 	}
+    
+    public String toString() {
+        return mEmailAddress;
+    }
 }

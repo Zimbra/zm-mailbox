@@ -116,21 +116,6 @@ public class LmtpServer extends TcpServer {
 	}
 	
 	/*
-	 * Config size.
-	 */
-	public static final int DEFAULT_MAX_MESSAGE_SIZE = Integer.MAX_VALUE;
-	
-	private int mConfigMaxMessageSize = DEFAULT_MAX_MESSAGE_SIZE;
-
-	public int getConfigMaxMessageSize() {
-		return mConfigMaxMessageSize;
-	}
-	
-	public void setConfigMaxMessageSize(int configMaxMessageSize) {
-		mConfigMaxMessageSize = configMaxMessageSize;
-	}
-
-	/*
 	 * Config backend.
 	 */
 	private LmtpBackend mConfigBackend;

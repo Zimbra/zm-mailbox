@@ -211,6 +211,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 
             for (LmtpAddress recipient : recipients) {
                 String rcptEmail = recipient.getEmailAddress();
+                ZimbraLog.addAccountNameToContext(rcptEmail);
 
                 Account account = null;
                 Mailbox mbox = null;
@@ -231,6 +232,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                         ZimbraLog.mailbox.warn("No mailbox found delivering mail to " + rcptEmail);
                         continue;
                     }
+                    ZimbraLog.addMboxToContext(mbox.getId());
                     attachmentsIndexingEnabled = mbox.attachmentsIndexingEnabled();
                 } catch (ServiceException se) {
                     if (se.isReceiversFault()) {
@@ -254,6 +256,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                         pm = pmNoAttachIndex;
                     }
                     assert(pm != null);
+                    ZimbraLog.addMsgIdToContext(pm.getMessageID());
                     
                     // For non-shared delivery (i.e. only one recipient),
                     // always deliver regardless of backup mode.
