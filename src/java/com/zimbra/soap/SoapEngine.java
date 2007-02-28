@@ -279,6 +279,14 @@ public class SoapEngine {
             response = e.getFault() != null ? e.getFault().detach() : soapProto.soapFault(ServiceException.FAILURE(e.toString(), e)); 
             if (!e.isSourceLocal())
                 mLog.debug("handler exception", e);
+        } catch (AccountServiceException e) {
+            if (e.getCode().equals(AccountServiceException.AUTH_FAILED)) {
+                // Don't log stack trace for auth failures, since they commonly happen
+                mLog.info("handler exception: %s", e.getMessage());
+            } else {
+                mLog.info("handler exception", e);
+            }
+            response = soapProto.soapFault(e);
         } catch (ServiceException e) {
             response = soapProto.soapFault(e);
             mLog.info("handler exception", e);
