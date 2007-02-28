@@ -152,6 +152,8 @@ public class ZMailbox {
         private String mNewPassword;
         private String mAuthToken;
         private String mUri;
+        private int mTimeout = -1;
+        private int mRetryCount;
         private SoapTransport.DebugListener mDebugListener;
         private String mTargetAccount;
         private AccountBy mTargetAccountBy = AccountBy.name;
@@ -199,6 +201,12 @@ public class ZMailbox {
         public String getUri() { return mUri; }
         public void setUri(String uri) { mUri = uri; }
 
+        public int getTimeout() { return mTimeout; }
+        public void setTimeout(int timeout) { mTimeout = timeout; }
+
+        public int getRetryCount() { return mRetryCount; }
+        public void setRetryCount(int retryCount) { mRetryCount = retryCount; }
+
         public SoapTransport.DebugListener getDebugListener() { return mDebugListener; }
         public void setDebugListener(SoapTransport.DebugListener liistener) { mDebugListener = liistener; }
 
@@ -208,16 +216,12 @@ public class ZMailbox {
         public boolean getNoNotify() { return mNoNotify; }
         public void setNoNotify(boolean noNotify) { mNoNotify = noNotify; }
 
+        /** @param authAuthToken set to true if you want to send an AuthRequest to valid the auth token */
         public boolean getAuthAuthToken() { return mAuthAuthToken; }
-
-        /**
-         *
-         * @param authAuthToken set to true if you want to send an AuthRequest to valid the auth token
-         */
         public void setAuthAuthToken(boolean authAuthToken) { mAuthAuthToken = authAuthToken; }
+
         public ZEventHandler getEventHandler() { return mHandler; }
         public void setEventHandler(ZEventHandler handler) { mHandler = handler; }
-
     }
 
     private String mAuthToken;
@@ -255,7 +259,7 @@ public class ZMailbox {
      */
     public static void changePassword(Options options) throws ServiceException {
         ZMailbox mailbox = new ZMailbox();
-        mailbox.initPreAuth(options.getUri(), options.getDebugListener());
+        mailbox.initPreAuth(options.getUri(), options.getDebugListener(), options.getTimeout(), options.getRetryCount());
         mailbox.changePassword(options.getAccount(), options.getAccountBy(), options.getPassword(), options.getNewPassword());
     }
 
@@ -272,7 +276,7 @@ public class ZMailbox {
 
         if (options.getEventHandler() != null)
     		mHandlers.add(options.getEventHandler());
-        initPreAuth(options.getUri(), options.getDebugListener());
+        initPreAuth(options.getUri(), options.getDebugListener(), options.getTimeout(), options.getRetryCount());
         if (options.getAuthToken() != null) {
             if (options.getAuthAuthToken())
                 mAuthResult = auth(options.getAuthToken());
@@ -311,10 +315,10 @@ public class ZMailbox {
         mTransport.setAuthToken(mAuthToken);
     }
 
-    public void initPreAuth(String uri, SoapTransport.DebugListener listener) {
+    public void initPreAuth(String uri, SoapTransport.DebugListener listener, int timeout, int retryCount) {
         mNameToTag = new HashMap<String, ZTag>();
         mIdToItem = new HashMap<String, ZItem>();
-        setSoapURI(uri);
+        setSoapURI(uri, timeout, retryCount);
         if (listener != null) mTransport.setDebugListener(listener);
     }
 
@@ -364,12 +368,18 @@ public class ZMailbox {
 
     /**
      * @param uri URI of server we want to talk to
+     * @param timeout timeout for HTTP connection or 0 for no timeout
+     * @param retryCount max number of times to retry the call on connection failure
      */
-    private void setSoapURI(String uri) {
+    private void setSoapURI(String uri, int timeout, int retryCount) {
         if (mTransport != null) mTransport.shutdown();
         mTransport = new SoapHttpTransport(uri);
         mTransport.setUserAgent("zclient", BuildInfo.VERSION);
         mTransport.setMaxNoitfySeq(0);
+        if (timeout > -1)
+            mTransport.setTimeout(timeout);
+        if (retryCount > 0)
+            mTransport.setRetryCount(retryCount);
         if (mAuthToken != null)
             mTransport.setAuthToken(mAuthToken);
     }
