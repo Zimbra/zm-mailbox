@@ -3606,8 +3606,7 @@ public class Mailbox {
             mSentMessageIDs.put(msgidHeader, new Integer(msg.getId()));
 
         if (msg != null)
-            ZimbraLog.mailbox.info("Added message id=%d digest=%s mailbox=%d rcpt=%s",
-                msg.getId(), digest, getId(), rcptEmail);
+            ZimbraLog.mailbox.info("Added message: id=%d, digest=%s", msg.getId(), digest);
         return msg;
     }
 
@@ -4347,6 +4346,9 @@ public class Mailbox {
         }
     }
 
+    /**
+     * @see #createFolder(OperationContext, String, int, byte, int, byte, String)
+     */
     public synchronized Folder createFolder(OperationContext octxt, String name, int parentId, byte defaultView, int flags, byte color, String url)
     throws ServiceException {
         CreateFolder redoRecorder = new CreateFolder(mId, name, parentId, defaultView, flags, color, url);
@@ -4366,10 +4368,30 @@ public class Mailbox {
         }
     }
 
+    /**
+     * @see #createFolder(OperationContext, String, int, byte, int, byte, String)
+     */
     public synchronized Folder createFolder(OperationContext octxt, String path, byte attrs, byte defaultView) throws ServiceException {
         return createFolder(octxt, path, attrs, defaultView, 0, MailItem.DEFAULT_COLOR, null);
     }
 
+    /**
+     * Creates a folder.  Implicitly creates any parent folders in <tt>path</tt> if necessary.
+     * 
+     * @param octxt the operation context
+     * @param path the slash-separated folder path
+     * @param attrs the folder attributes, or <tt>0</tt> for the default attributes
+     * @param defaultView the folder view, or <tt>0</tt> for the default view
+     * @param flags the folder flags, or <tt>0</tt> for no flags
+     * @param color the folder color, or {@link MailItem#DEFAULT_COLOR}
+     * @param url the folder URL, or <tt>null</tt>
+     * @return the new folder
+     * @see Folder#getAttributes()
+     * @see Folder#getDefaultView()
+     * @see MailItem#getColor()
+     * 
+     * @throws ServiceException if the folder creation fails
+     */
     public synchronized Folder createFolder(OperationContext octxt, String path, byte attrs, byte defaultView, int flags, byte color, String url)
     throws ServiceException {
         if (path == null)
