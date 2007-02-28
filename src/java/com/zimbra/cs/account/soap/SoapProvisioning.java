@@ -69,6 +69,8 @@ import com.zimbra.cs.zclient.ZClientException;
 
 public class SoapProvisioning extends Provisioning {
 
+    private int mTimeout = -1;
+    private int mRetryCount;
     private SoapHttpTransport mTransport;
     private String mAuthToken;
     private long mAuthTokenLifetime;
@@ -85,20 +87,36 @@ public class SoapProvisioning extends Provisioning {
     public void soapSetURI(String uri) {
         if (mTransport != null) mTransport.shutdown();
         mTransport = new SoapHttpTransport(uri);
+        if (mTimeout >= 0)
+            mTransport.setTimeout(mTimeout);
+        if (mRetryCount > 0)
+            mTransport.setRetryCount(mRetryCount);
         if (mAuthToken != null)
             mTransport.setAuthToken(mAuthToken);
         if (mDebugListener != null)
             mTransport.setDebugListener(mDebugListener);
+    }
+
+    public String soapGetURI() {
+        return mTransport.getURI();
+    }
+
+    public void soapSetTransportTimeout(int timeout) {
+        mTimeout = timeout;
+        if (mTransport != null && timeout >= 0)
+            mTransport.setTimeout(timeout);
+    }
+
+    public void soapSetTransportRetryCount(int retryCount) {
+        mRetryCount = retryCount;
+        if (mTransport != null && retryCount >= 0)
+            mTransport.setRetryCount(retryCount);
     }
     
     public void soapSetTransportDebugListener(DebugListener listener) {
         mDebugListener = listener;
         if (mTransport != null)
             mTransport.setDebugListener(mDebugListener);
-    }
-
-    public String soapGetURI() {
-        return mTransport.getURI();
     }
     
     public String getAuthToken() {
