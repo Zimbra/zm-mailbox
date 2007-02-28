@@ -233,12 +233,12 @@ public class Search extends MailDocumentHandler  {
         EncodeCalendarItemResult encoded = 
             GetCalendarItemSummaries.encodeCalendarItemInstances(zsc, calItem, acct, params.getCalItemExpandStart(), params.getCalItemExpandEnd(), true);
         
-        if (encoded.element != null) {
-            response.addElement(encoded.element);
-            ToXML.setCalendarItemFields(encoded.element, zsc, calItem, fields, false);
-        }
+        calElement = encoded.element;
         
         if (calElement != null) {
+            response.addElement(encoded.element);
+            ToXML.setCalendarItemFields(encoded.element, zsc, calItem, fields, false);
+            
             if (ah.getScore() != 0) {
                 calElement.addAttribute(MailConstants.A_SCORE, ah.getScore());
             }
