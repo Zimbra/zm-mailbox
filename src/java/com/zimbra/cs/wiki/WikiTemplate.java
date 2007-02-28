@@ -907,7 +907,9 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 				if (title == null)
 					title = link;
 			}
-			WikiUrl wurl = new WikiUrl(link, ctxt.item.getFolderId());
+			WikiUrl wurl = (ctxt.item instanceof Folder) ?
+					new WikiUrl(link, ctxt.item.getId()) :
+					new WikiUrl(link, ctxt.item.getFolderId());
 			try {
 				StringBuffer buf = new StringBuffer();
 				buf.append("<a href='");
