@@ -100,6 +100,6 @@ public class SetImapUid extends RedoableOp {
 
     public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-        mbox.resetImapUid(getOperationContext(), new ArrayList<Integer>(mImapUids.values()));
+        mbox.resetImapUid(getOperationContext(), new ArrayList<Integer>(mImapUids.keySet()));
     }
 }
