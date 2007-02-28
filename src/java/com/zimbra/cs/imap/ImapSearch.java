@@ -197,29 +197,35 @@ abstract class ImapSearch {
     }
 
     static class DateSearch extends ImapSearch {
-        enum Relation { before, after, date };
+        enum Relation {
+            before("before:"), after("date:>="), date("date:");
+
+            String query;
+            Relation(String rep)      { query = rep; }
+            public String toString()  { return query; }
+        };
         private Relation mRelation;
         private Date mDate;
         private long mTimestamp;
         DateSearch(Relation relation, Date date)  { mDate = date;  mTimestamp = date.getTime();  mRelation = relation; }
 
         boolean canBeRunLocally() {
-            return mTimestamp < 0 || mTimestamp > System.currentTimeMillis() + Constants.MILLIS_PER_MONTH;
+            return mTimestamp < 0 || mTimestamp > System.currentTimeMillis() + 36 * Constants.MILLIS_PER_MONTH;
         }
 
         String toZimbraSearch(ImapFolder i4folder)  {
             if (mTimestamp < 0)
                 return (mRelation == Relation.after ? "item:all" : "item:none");
-            else if (mTimestamp > System.currentTimeMillis() + Constants.MILLIS_PER_MONTH)
+            else if (mTimestamp > System.currentTimeMillis() + 36 * Constants.MILLIS_PER_MONTH)
                 return (mRelation == Relation.before ? "item:all" : "item:none");
             else
-                return mRelation + ":" + i4folder.getSession().getZimbraDateFormat().format(mDate);
+                return mRelation + i4folder.getSession().getZimbraDateFormat().format(mDate);
         }
 
         ImapMessageSet evaluate(ImapFolder i4folder) {
             if (mTimestamp < 0)
                 return (mRelation == Relation.after ? i4folder.getAllMessages() : new ImapMessageSet());
-            else if (mTimestamp > System.currentTimeMillis() + Constants.MILLIS_PER_MONTH)
+            else if (mTimestamp > System.currentTimeMillis() + 36 * Constants.MILLIS_PER_MONTH)
                 return (mRelation == Relation.before ? i4folder.getAllMessages() : new ImapMessageSet());
             else
                 throw new UnsupportedOperationException("evaluate of " + toZimbraSearch(i4folder));
@@ -232,7 +238,7 @@ abstract class ImapSearch {
         RelativeDateSearch(DateSearch.Relation relation, int offset)  { mOffset = offset;  mRelation = relation; }
 
         boolean canBeRunLocally()                   { return false; }
-        String toZimbraSearch(ImapFolder i4folder)  { return mRelation + ":" + (System.currentTimeMillis() - mOffset * Constants.MILLIS_PER_SECOND); }
+        String toZimbraSearch(ImapFolder i4folder)  { return mRelation.toString() + (System.currentTimeMillis() - mOffset * Constants.MILLIS_PER_SECOND); }
         ImapMessageSet evaluate(ImapFolder i4folder) {
             throw new UnsupportedOperationException("evaluate of " + toZimbraSearch(i4folder));
         }
