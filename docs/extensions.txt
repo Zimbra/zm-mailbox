@@ -182,3 +182,30 @@ from Zimbra server core. Instead, try the following:
     Object instance = cls.newInstance();
   
   
+Extension with SOAP services
+
+If an extension needs to support extra SOAP requests, it can do so as follows:
+    
+    public class MyExtension implements ZimbraExtension {
+        public void init() ... {
+            /* 
+             * In examples below, SoapServlet and AdminServlet are 
+             * existing servlets defined in ZimbrServer's web.xml.  
+             * web.xml should not be modified if the extension's SOAP 
+             * services are to be installed at the same URLs as those 
+             * used by the server.
+             *
+             * Service has to implement the DocumentService interface.
+             */ 
+            
+            // add FooService to servlet SoapServlet
+            SoapServlet.addService("SoapServlet", new FooService());
+            
+            // add BarService to servlet AdminServlet
+            SoapServlet.addService("AdminServlet", new BarService());
+            
+        }
+          
+        ...
+    }  
+    
