@@ -67,12 +67,12 @@ class LuceneQueryOperation extends QueryOperation
     protected static final float sDbFirstTermFreqPerc;
     
     static {
-        float f = 0.5f;
+        float f = 0.8f;
         try {
             f = Float.parseFloat(LC.search_dbfirst_term_percentage_cutoff.value());
         } catch (Exception e) {}
         if (f < 0.0 || f > 1.0)
-            f = 0.5f;
+            f = 0.8f;
         sDbFirstTermFreqPerc = f;
     }
 
