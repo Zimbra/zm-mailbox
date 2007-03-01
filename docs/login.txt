@@ -21,7 +21,7 @@ IF (no authtoken) {
   1f. if  <refer>other-server</refer> is set in AuthResponse, WRONG SERVER,
       REDIRECT to that server, pass authToken in URL.
       Also pass remember me, and any other params. Also set ZM_AUTH_TOKEN.
-      Picks up at 2a.
+      Picks up at 2a on other server.
 
    1f. goto 3a.
 
@@ -39,7 +39,7 @@ IF (no authtoken) {
 
   2d. if <refer> is set in AuthResponse, WRONG SERVER,
       REDIRECT to that server, pass authToken in URL, and any other params.
-      Picks up at 2a.
+      Picks up at 2a on other server.
 
   2e. goto 3a.
   
