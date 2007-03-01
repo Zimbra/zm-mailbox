@@ -85,12 +85,6 @@ public class ZimbraLog {
     public static final String C_USER_AGENT = "ua";
     
     /**
-     * "msgid" key for context.  The Message-ID header of the message being
-     * operated on.
-     */
-    private static final String C_MSG_ID = "msgid";
-    
-    /**
      * the "zimbra.misc" logger. For all events that don't have a specific-catagory.
      */
     public static final Log misc = LogFactory.getLog("zimbra.misc");
@@ -131,7 +125,7 @@ public class ZimbraLog {
     public static final Log calendar = LogFactory.getLog("zimbra.calendar");
     
     /**
-     * the "zimbra.im" logger. For instant messaging-related events.
+     * the "zimbra.calendar" logger. For calendar-related events.
      */
     public static final Log im = LogFactory.getLog("zimbra.im");
     
@@ -316,10 +310,6 @@ public class ZimbraLog {
     
     public static void addMboxToContext(int mboxId) {
         addToContext(C_MID, Integer.toString(mboxId));
-    }
-    
-    public static void addMsgIdToContext(String messageId) {
-        addToContext(C_MSG_ID, messageId);
     }
     
     private static boolean checkContext(String context, String key) {
