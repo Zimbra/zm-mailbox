@@ -24,6 +24,7 @@
  */
 package com.zimbra.cs.index;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.zimbra.cs.account.Account;
@@ -144,25 +145,36 @@ class RemoteQueryOperation extends QueryOperation {
     }
 
     public void resetIterator() throws ServiceException {
-        mResults.resetIterator();
+        if (mResults != null)
+            mResults.resetIterator();
     }
 
     public ZimbraHit getNext() throws ServiceException {
-        return mResults.getNext();
+        if (mResults != null)
+            return mResults.getNext();
+        else
+            return null;
     }
 
     public ZimbraHit peekNext() throws ServiceException {
-        return mResults.peekNext();
+        if (mResults != null)
+            return mResults.peekNext();
+        else
+            return null;
     }
 
     public void doneWithSearchResults() throws ServiceException {
-        mResults.doneWithSearchResults();
+        if (mResults != null)
+            mResults.doneWithSearchResults();
     }
-    public List<QueryInfo> getResultInfo() { return mResults.getResultInfo(); }
+    public List<QueryInfo> getResultInfo() {
+        if (mResults != null)
+            return mResults.getResultInfo();
+        else
+            return new ArrayList<QueryInfo>();
+    }
     
     public int estimateResultSize() throws ServiceException {
         return 0;
     }
-    
-
 }
