@@ -232,6 +232,7 @@ public class LC {
     public static final KnownKey timezone_file;
 
     public static final KnownKey search_disable_database_hints;
+    public static final KnownKey search_dbfirst_term_percentage_cutoff;
 
     static {
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
@@ -837,5 +838,9 @@ public class LC {
         search_disable_database_hints.setDefault("false");
         search_disable_database_hints.setDoc
         ("If true, do not use database hints in queries generated during search");
+        
+        search_dbfirst_term_percentage_cutoff = new KnownKey("search_dbfirst_term_percentage_cutoff");
+        search_dbfirst_term_percentage_cutoff.setDefault("0.8");
+        search_dbfirst_term_percentage_cutoff.setDoc("Internal Query Generation parameter");
     }
 }
