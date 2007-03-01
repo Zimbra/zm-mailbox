@@ -58,15 +58,17 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.activation.DataHandler;
+import javax.activation.DataSource;
 import javax.mail.Header;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -77,7 +79,6 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
-import javax.mail.internet.MimePartDataSource;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -289,8 +290,7 @@ public class ParseMimeMessage {
                     String attachIds = attachElem.getAttribute(MailService.A_ATTACHMENT_ID, null);
                     if (attachIds != null)
                         out.uploads = attachUploads(mmp, zsc, attachIds, use2231);
-                    for (Iterator it = attachElem.elementIterator(); it.hasNext(); ) {
-                        Element elem = (Element) it.next();
+                    for (Element elem : attachElem.listElements()) {
                         String eName = elem.getName();
                         if (eName.equals(MailService.E_MIMEPART)) {
 //                            int messageId = (int) elem.getAttributeLong(MailService.A_MESSAGE_ID);
@@ -542,10 +542,34 @@ public class ParseMimeMessage {
     }
 
     // subclass of MimePartDataSource that cleans up Content-Type headers before returning them so JavaMail doesn't barf
-    private static class FixedMimePartDataSource extends MimePartDataSource {
-        private FixedMimePartDataSource(MimePart mp)  { super(mp); }
+    private static class FixedMimePartDataSource implements DataSource {
+        private final MimePart mMimePart;
+
+        private FixedMimePartDataSource(MimePart mimePart) {
+            mMimePart = mimePart;
+        }
+
+        public String getName() {
+            return Mime.getFilename(mMimePart);
+        }
         public String getContentType() {
-            return new ContentType(super.getContentType()).toString();
+            try {
+                return new ContentType(mMimePart.getContentType()).toString();
+            } catch (MessagingException e) {
+                return Mime.CT_APPLICATION_OCTET_STREAM;
+            }
+        }
+        public InputStream getInputStream() throws IOException {
+            try {
+                return mMimePart.getInputStream();
+            } catch (MessagingException e) {
+                IOException ioe = new IOException(e.getMessage());
+                ioe.initCause(e);
+                throw ioe;
+            }
+        }
+        public OutputStream getOutputStream() {
+            throw new UnsupportedOperationException();
         }
     }
 
