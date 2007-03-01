@@ -364,7 +364,7 @@ public class LC {
         zimbra_store_sweeper_max_age.setDoc("Files older than this many minutes are auto-deleted from store incoming directory.");
 
         zimbra_mailbox_purgeable = new KnownKey("zimbra_mailbox_purgeable");
-        zimbra_mailbox_purgeable.setDefault("false");
+        zimbra_mailbox_purgeable.setDefault("true");
         zimbra_mailbox_purgeable.setDoc("Whether the mailbox manager should permit inactive mailboxes to be purged from its cache.");
 
         zimbra_mailbox_active_cache = new KnownKey("zimbra_mailbox_active_cache");
