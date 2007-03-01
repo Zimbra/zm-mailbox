@@ -307,19 +307,21 @@ public final class MailboxIndex
     public int[] deleteDocuments(int itemIds[]) throws IOException {
         synchronized(getLock()) {
             
-            RefCountedIndexReader reader = getCountedIndexReader(); 
+//            RefCountedIndexReader reader = getCountedIndexReader();
+            openIndexWriter();
+            
             try {
                 for (int i = 0; i < itemIds.length; i++) {
                     try {
                         String itemIdStr = Integer.toString(itemIds[i]);
                         Term toDelete = new Term(LuceneFields.L_MAILBOX_BLOB_ID, itemIdStr);
-                        int numDeleted = reader.getReader().deleteDocuments(toDelete);
+                        mIndexWriter.deleteDocuments(toDelete);
                         // NOTE!  The numDeleted may be < you expect here, the document may
                         // already be deleted and just not be optimized out yet -- some lucene
                         // APIs (e.g. docFreq) will still return the old count until the indexes 
                         // are optimized...
                         if (sLog.isDebugEnabled()) {
-                            sLog.debug("Deleted "+numDeleted+" index documents for itemId "+itemIdStr);
+                            sLog.debug("Deleted index documents for itemId "+itemIdStr);
                         }
                     } catch (IOException ioe) {
                         sLog.debug("deleteDocuments exception on index "+i+" out of "+itemIds.length+" (id="+itemIds[i]+")");
@@ -329,7 +331,7 @@ public final class MailboxIndex
                     }
                 }
             } finally {
-                reader.release();
+//                reader.release();
             }
             return itemIds; // success
         }
@@ -349,6 +351,7 @@ public final class MailboxIndex
             
             openIndexWriter();
             assert(mIndexWriter != null);
+            assert(sIndexWritersCache.contains(this));
 
             for (Document doc : docs) {
                 // doc can be shared by multiple threads if multiple mailboxes
@@ -526,6 +529,7 @@ public final class MailboxIndex
         StringBuffer ret = new StringBuffer("MailboxIndex(");
         ret.append(mMailboxId);
         ret.append(")");
+//        ret.append(super.toString());
         return ret.toString();
     }
     
@@ -533,6 +537,7 @@ public final class MailboxIndex
         int mailboxId = mbox.getId();
         
         mIndexWriter = null;
+        assert(!sIndexWritersCache.contains(this));
         mMailboxId = mailboxId;
         mMailbox = mbox;
         mLockFactory = new SingleInstanceLockFactory();
@@ -641,6 +646,7 @@ public final class MailboxIndex
         sIndexReadersCache = new IndexReadersCache(LC.zimbra_index_reader_lru_size.intValue(), 
             LC.zimbra_index_reader_idle_flush_time.longValue() * 1000, 
             LC.zimbra_index_reader_idle_sweep_frequency.longValue() * 1000);
+//        sIndexReadersCache = new IndexReadersCache(0, 0, 0);
         sIndexReadersCache.start();
     }
 
@@ -740,20 +746,27 @@ public final class MailboxIndex
     private void closeIndexWriter() 
     {
         synchronized(getLock()) {        
-            if (mIndexWriter == null)
+            if (mIndexWriter == null) {
+                assert(!sIndexWritersCache.contains(this));
                 return;
+            }
 
-            sIndexWritersCache.removeIndexWriter(this);
-
-            boolean success = true;
             if (sLog.isDebugEnabled())
                 sLog.debug("Closing IndexWriter " + mIndexWriter + " for " + this);
+            
+            assert(sIndexWritersCache.contains(this));
+            sIndexWritersCache.removeIndexWriter(this);
             IndexWriter writer = mIndexWriter;
             mIndexWriter = null;
+            assert(!sIndexWritersCache.contains(this));
+            
+            boolean success = true;
             try {
                 // Flush all changes to file system before committing redos.
                 // TODO: Are the changes fsynced to disk when close() returns?
+//                sLog.info("MI"+this.toString()+ " Start Close IndexWriter "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
                 writer.close();
+//                sLog.info("MI"+this.toString()+ " Closed IndexWriter "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
             } catch (IOException e) {
                 success = false;
                 sLog.error("Caught Exception " + e + " in MailboxIndex.closeIndexWriter", e);
@@ -817,22 +830,30 @@ public final class MailboxIndex
     {
         synchronized(getLock()) {        
             if (mIndexWriter != null) {
+                assert(sIndexWritersCache.contains(this));
                 assert(mIndexReader == null);
                 return;
             }
             
-            sIndexWritersCache.putIndexWriter(this);
-
             IndexWriter writer = null;
+            
+            if (mIndexReader != null) {
+                sIndexReadersCache.removeIndexReader(this);
+                clearCachedIndexReader();
+            }
+            
             try {
+//                sLog.info("MI"+this.toString()+" Opening IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
                 writer = new IndexWriter(mIdxDirectory, getAnalyzer(), false);
-                //mLog.info("Opening IndexWriter "+ writer+" for "+this);
+//                sLog.info("MI"+this.toString()+" Opened IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
                 
             } catch (IOException e1) {
                 //mLog.info("****Creating new index in " + mIdxPath + " for mailbox " + mMailboxId);
                 File indexDir  = mIdxDirectory.getFile();
                 if (indexDirIsEmpty(indexDir)) {
-                    writer = new IndexWriter(indexDir, getAnalyzer(), true);
+//                    sLog.info("MI"+this.toString()+" Opening IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
+                    writer = new IndexWriter(mIdxDirectory, getAnalyzer(), true);
+//                    sLog.info("MI"+this.toString()+" Opened IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
                     if (writer == null) 
                         throw new IOException("Failed to open IndexWriter in directory "+indexDir.getAbsolutePath());
                 } else {
@@ -842,10 +863,6 @@ public final class MailboxIndex
                 }
             }
             
-            if (mIndexReader != null) {
-                sIndexReadersCache.removeIndexReader(this);
-                clearCachedIndexReader();
-            }
             
             ///////////////////////////////////////////////////
             //
@@ -892,8 +909,11 @@ public final class MailboxIndex
 
             writer.setMaxBufferedDocs(33); // we expect 11 index fragment files
 
+            sIndexWritersCache.putIndexWriter(this);
             mIndexWriter = writer;
-
+            assert(mIndexWriter != null);
+            assert(sIndexWritersCache.contains(this));
+            
             updateLastWriteTime();
         }
     }
@@ -1449,14 +1469,16 @@ public final class MailboxIndex
             try {
                 flush();
                 //assert(false);
-                // FIXME maybe: under Windows, this can fail.  Need way to forcibly close all open indices???
+                // FIXME maybe: under Windows only, this can fail.  Might need way to forcibly close all open indices???
                 //				closeIndexReader();
-                sLog.info("****Deleting index " + mIdxDirectory.toString());
-                File path = new File(mIdxDirectory.toString());
+                if (sLog.isDebugEnabled())
+                    sLog.debug("****Deleting index " + mIdxDirectory.toString());
 
                 // can use default analyzer here since it is easier, and since we aren't actually
                 // going to do any indexing...
-                writer = new IndexWriter(path, ZimbraAnalyzer.getDefaultAnalyzer(), true);
+//                sLog.info("MI"+this.toString()+" Opening IndexWriter(3) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
+                writer = new IndexWriter(mIdxDirectory, ZimbraAnalyzer.getDefaultAnalyzer(), true);
+//                sLog.info("MI"+this.toString()+" Opened IndexWriter(3) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
             } finally {
                 if (writer != null) {
                     writer.close();

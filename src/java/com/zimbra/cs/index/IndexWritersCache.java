@@ -78,7 +78,9 @@ final class IndexWritersCache extends Thread {
      * thread realizes the LRU is full and it wants to open an index now.
      */
     private void wakeupSweeperThread() {
-        notify();
+        synchronized(this) {
+            notify();
+        }
     }
     
     /**
@@ -97,6 +99,7 @@ final class IndexWritersCache extends Thread {
                 ZimbraPerf.COUNTER_IDX_WRT.increment(numOpenWriters);
                 // Make sure there is room for it in sOpenIndexWriters map.
                 if (numOpenWriters < MailboxIndex.sLRUSize) {
+                    assert(!mOpenIndexWriters.containsKey(idx));
                     mOpenIndexWriters.put(idx, idx);
                     sizeAfter = mOpenIndexWriters.size();
                     // Proceed.
@@ -111,10 +114,18 @@ final class IndexWritersCache extends Thread {
                     mOpenWaiters.wait(5000);
                 } catch (InterruptedException e) {}
             }
-            
         }
+        
+        assert(this.contains(idx));
+        
         if (sLog.isDebugEnabled())
             sLog.debug("openIndexWriter: map size after open = " + sizeAfter);
+    }
+    
+    boolean contains(MailboxIndex idx) {
+        synchronized(mOpenIndexWriters) {
+            return mOpenIndexWriters.containsKey(idx);
+        }
     }
     
     /**
@@ -126,12 +137,15 @@ final class IndexWritersCache extends Thread {
         int sizeAfter;
         Object removed;
         synchronized(mOpenIndexWriters) {
-            removed = mOpenIndexWriters.remove(this);
+            removed = mOpenIndexWriters.remove(idx);
             sizeAfter = mOpenIndexWriters.size();
+            assert(!mOpenIndexWriters.containsKey(idx));
         }
         if (removed != null) {
-            // Notify a waiter that was waiting for room to free up in map.
-            mOpenWaiters.notify();
+            synchronized(mOpenWaiters) {
+                // Notify a waiter that was waiting for room to free up in map.
+                mOpenWaiters.notify();
+            }
             if (sLog.isDebugEnabled())
                 sLog.debug("closeIndexWriter: map size after close = " + sizeAfter);
         }
@@ -237,12 +251,15 @@ final class IndexWritersCache extends Thread {
                             ", after=" + sizeAfter + " (" + elapsed + "ms)");
 
             full = sizeAfter >= mMaxSize;
-
+            
             // Wake up some threads that were waiting for room to insert in map.
             if (sizeAfter < sizeBefore) {
                 int howmany = sizeBefore - sizeAfter;
-                for (int i = 0; i < howmany; i++)
-                    mOpenWaiters.notify();
+                for (int i = 0; i < howmany; i++) {
+                    synchronized(mOpenWaiters) {
+                        mOpenWaiters.notify();
+                    }
+                }
             }
         }
 
