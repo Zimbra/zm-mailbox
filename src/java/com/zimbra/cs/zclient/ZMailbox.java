@@ -146,6 +146,7 @@ public class ZMailbox {
         private String mPassword;
         private String mNewPassword;
         private String mAuthToken;
+        private String mVirtualHost;
         private String mUri;
         private SoapTransport.DebugListener mDebugListener;
         private String mTargetAccount;
@@ -187,6 +188,9 @@ public class ZMailbox {
 
         public String getNewPassword() { return mNewPassword; }
         public void setNewPassword(String newPassword) { mNewPassword = newPassword; }
+
+        public String getVirtualHost() { return mVirtualHost; }
+        public void setVirtualHost(String virtualHost) { mVirtualHost = virtualHost; }
 
         public String getAuthToken() { return mAuthToken; }
         public void setAuthToken(String authToken) { mAuthToken = authToken; }
@@ -251,7 +255,7 @@ public class ZMailbox {
     public static void changePassword(Options options) throws ServiceException {
         ZMailbox mailbox = new ZMailbox();
         mailbox.initPreAuth(options.getUri(), options.getDebugListener());
-        mailbox.changePassword(options.getAccount(), options.getAccountBy(), options.getPassword(), options.getNewPassword());
+        mailbox.changePassword(options.getAccount(), options.getAccountBy(), options.getPassword(), options.getNewPassword(), options.getVirtualHost());
     }
     
     public ZMailbox(Options options) throws ServiceException {
@@ -273,12 +277,12 @@ public class ZMailbox {
         } else {
             String password;
             if (options.getNewPassword() != null) {
-                changePassword(options.getAccount(), options.getAccountBy(), options.getPassword(), options.getNewPassword());
+                changePassword(options.getAccount(), options.getAccountBy(), options.getPassword(), options.getNewPassword(), options.getVirtualHost());
                 password = options.getNewPassword();
             } else {
                 password = options.getPassword();
             }
-            mAuthResult = auth(options.getAccount(), options.getAccountBy(), password);
+            mAuthResult = auth(options.getAccount(), options.getAccountBy(), password, options.getVirtualHost());
             initAuthToken(mAuthResult.getAuthToken());
         }
         if (options.getTargetAccount() != null) {
@@ -318,7 +322,7 @@ public class ZMailbox {
             mTransport.setTargetAcctName(key);
     }
 
-    private void changePassword(String key, AccountBy by, String oldPassword, String newPassword) throws ServiceException {
+    private void changePassword(String key, AccountBy by, String oldPassword, String newPassword, String virtualHost) throws ServiceException {
         if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling changePassword", null);
         XMLElement req = new XMLElement(AccountService.CHANGE_PASSWORD_REQUEST);
         Element account = req.addElement(AccountService.E_ACCOUNT);
@@ -326,16 +330,20 @@ public class ZMailbox {
         account.setText(key);
         req.addElement(AccountService.E_OLD_PASSWORD).setText(oldPassword);
         req.addElement(AccountService.E_PASSWORD).setText(newPassword);
+        if (virtualHost != null)
+            req.addElement(AccountService.E_VIRTUAL_HOST).setText(virtualHost);
         invoke(req);
     }
 
-    private ZAuthResult auth(String key, AccountBy by, String password) throws ServiceException {
+    private ZAuthResult auth(String key, AccountBy by, String password, String virtualHost) throws ServiceException {
         if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling authenticate", null);
         XMLElement req = new XMLElement(AccountService.AUTH_REQUEST);
         Element account = req.addElement(AccountService.E_ACCOUNT);
         account.addAttribute(AccountService.A_BY, by.name());
         account.setText(key);
         req.addElement(AccountService.E_PASSWORD).setText(password);
+        if (virtualHost != null)
+            req.addElement(AccountService.E_VIRTUAL_HOST).setText(virtualHost);
         return new ZAuthResult(invoke(req));
     }
 
