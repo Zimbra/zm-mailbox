@@ -43,7 +43,9 @@ import org.apache.lucene.index.*;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.BooleanClause.Occur;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
 
 
@@ -62,7 +64,17 @@ class LuceneQueryOperation extends QueryOperation
     private String mQueryString = "";
     private boolean mHasSpamTrashSetting = false;
     protected List<QueryInfo> mQueryInfo = new ArrayList<QueryInfo>();
-
+    protected static final float sDbFirstTermFreqPerc;
+    
+    static {
+        float f = 0.5f;
+        try {
+            f = Float.parseFloat(LC.search_dbfirst_term_percentage_cutoff.value());
+        } catch (Exception e) {}
+        if (f < 0.0 || f > 1.0)
+            f = 0.5f;
+        sDbFirstTermFreqPerc = f;
+    }
 
     /**
      * because we don't store the real mail-item-id of documents, we ALWAYS need a DBOp 
@@ -122,9 +134,11 @@ class LuceneQueryOperation extends QueryOperation
             Term term = tq.getTerm();
             try {
                 int freq = mSearcher.getSearcher().docFreq(term);
-                if (freq > 5000) // TODO fixme, this is only temporary 
+                int docsCutoff = (int)(mSearcher.getSearcher().maxDoc() * sDbFirstTermFreqPerc);
+                if (ZimbraLog.index.isDebugEnabled())
+                    ZimbraLog.index.debug("Term matches "+freq+" docs.  DB-First cutoff ("+(100*sDbFirstTermFreqPerc)+"%) is "+docsCutoff+" docs");
+                if (freq > docsCutoff) 
                     return true;
-                
             } catch (IOException e) {
                 return false;
             }
