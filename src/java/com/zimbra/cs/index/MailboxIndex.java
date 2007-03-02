@@ -704,7 +704,7 @@ public final class MailboxIndex
     private static IndexReadersCache sIndexReadersCache;
 
     
-    private long mLastWriteTime = 0;
+    private volatile long mLastWriteTime = 0;
     private Analyzer mAnalyzer = null;
     
     long getLastWriteTime() { return mLastWriteTime; }
