@@ -47,6 +47,7 @@ import com.zimbra.soap.SoapProtocol;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 
 
 
@@ -295,9 +296,6 @@ class UnionQueryOperation extends QueryOperation
                         mQueryOperations.add(i, intersect);
                     }
                 }
-                
-                
-                
             }
         }
         
@@ -306,8 +304,12 @@ class UnionQueryOperation extends QueryOperation
             // this actually runs the remote operation
             for (QueryOperation toSetup : mQueryOperations) {
                 if (toSetup instanceof RemoteQueryOperation) {
-                    RemoteQueryOperation remote = (RemoteQueryOperation) toSetup;
-                    remote.setup(proto, octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges(), types, searchOrder, offset, limit, mode);
+                    try {
+                        RemoteQueryOperation remote = (RemoteQueryOperation) toSetup;
+                        remote.setup(proto, octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges(), types, searchOrder, offset, limit, mode);
+                    } catch(Exception e) {
+                        ZimbraLog.index.info("Ignoring "+e+" during RemoteQuery generation for "+this.toString());
+                    }
                 }
             }
         }
