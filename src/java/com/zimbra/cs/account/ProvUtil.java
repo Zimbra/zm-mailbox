@@ -63,6 +63,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.HashSet;
 
 /**
  * @author schemers
@@ -180,27 +181,27 @@ public class ProvUtil implements DebugListener {
         EXIT("exit", "quit", "", Category.MISC, 0, 0),
         GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa", "{domain|id} {name} {name|id|foreignPrincipal} {timestamp|0} {expires|0}", Category.MISC, 5, 5),
         GENERATE_DOMAIN_PRE_AUTH_KEY("generateDomainPreAuthKey", "gdpak", "{domain|id}", Category.MISC, 1, 1),
-        GET_ACCOUNT("getAccount", "ga", "{name@domain|id}", Category.ACCOUNT, 1, 1),
-        GET_DATA_SOURCES("getDataSources", "gds", "{name@domain|id}", Category.ACCOUNT, 1, 1),                
-        GET_IDENTITIES("getIdentities", "gid", "{name@domain|id}", Category.ACCOUNT, 1, 1),        
+        GET_ACCOUNT("getAccount", "ga", "{name@domain|id} [attr1 [attr2...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
+        GET_DATA_SOURCES("getDataSources", "gds", "{name@domain|id} [arg1 [arg2...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),                
+        GET_IDENTITIES("getIdentities", "gid", "{name@domain|id} [arg1 [arg...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),        
         GET_ACCOUNT_MEMBERSHIP("getAccountMembership", "gam", "{name@domain|id}", Category.ACCOUNT, 1, 2),
         GET_ALL_ACCOUNTS("getAllAccounts","gaa", "[-v] [{domain}]", Category.ACCOUNT, 0, 2),
         GET_ALL_ADMIN_ACCOUNTS("getAllAdminAccounts", "gaaa", "[-v]", Category.ACCOUNT, 0, 1),
         GET_ALL_CALENDAR_RESOURCES("getAllCalendarResources", "gacr", "[-v] [{domain}]", Category.CALENDAR, 0, 2),
-        GET_ALL_CONFIG("getAllConfig", "gacf", "", Category.CONFIG, 0, 0),
+        GET_ALL_CONFIG("getAllConfig", "gacf", "[attr1 [attr2...]]", Category.CONFIG, 0, Integer.MAX_VALUE),
         GET_ALL_COS("getAllCos", "gac", "[-v]", Category.COS, 0, 1),
         GET_ALL_DISTRIBUTION_LISTS("getAllDistributionLists", "gadl", "[{domain}]", Category.LIST, 0, 1),
-        GET_ALL_DOMAINS("getAllDomains", "gad", "[-v]", Category.DOMAIN, 0, 1),
+        GET_ALL_DOMAINS("getAllDomains", "gad", "[-v] [attr1 [attr2...]]", Category.DOMAIN, 0, Integer.MAX_VALUE),
         GET_ALL_SERVERS("getAllServers", "gas", "[-v] [service]", Category.SERVER, 0, 1),
-        GET_CALENDAR_RESOURCE("getCalendarResource",     "gcr", "{name@domain|id}", Category.CALENDAR, 1, 1), 
+        GET_CALENDAR_RESOURCE("getCalendarResource",     "gcr", "{name@domain|id} [attr1 [attr2...]]", Category.CALENDAR, 1, Integer.MAX_VALUE), 
         GET_CONFIG("getConfig", "gcf", "{name}", Category.CONFIG, 1, 1),
-        GET_COS("getCos", "gc", "{name|id}", Category.COS, 1, 1),
-        GET_DISTRIBUTION_LIST("getDistributionList", "gdl", "{list@domain|id}", Category.LIST, 1, 1),
+        GET_COS("getCos", "gc", "{name|id} [attr1 [attr2...]]", Category.COS, 1, Integer.MAX_VALUE),
+        GET_DISTRIBUTION_LIST("getDistributionList", "gdl", "{list@domain|id} [attr1 [attr2...]]", Category.LIST, 1, Integer.MAX_VALUE),
         GET_DISTRIBUTION_LIST_MEMBERSHIP("getDistributionListMembership", "gdlm", "{name@domain|id}", Category.LIST, 1, 1),
-        GET_DOMAIN("getDomain", "gd", "{domain|id}", Category.DOMAIN, 1, 1), 
+        GET_DOMAIN("getDomain", "gd", "{domain|id} [attr1 [attr2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE), 
         GET_MAILBOX_INFO("getMailboxInfo", "gmi", "{account}", Category.MISC, 1, 1),
         GET_QUOTA_USAGE("getQuotaUsage", "gqu", "{server}", Category.MISC, 1, 1),        
-        GET_SERVER("getServer", "gs", "{name|id}", Category.SERVER, 1, 1), 
+        GET_SERVER("getServer", "gs", "{name|id} [attr1 [attr2...]]", Category.SERVER, 1, Integer.MAX_VALUE), 
         HELP("help", "?", "commands", Category.MISC, 0, 1),
         IMPORT_NOTEBOOK("importNotebook", "impn", "{name@domain} {password} {directory} {folder}", Category.NOTEBOOK),
         INIT_NOTEBOOK("initNotebook", "in", "{name@domain} {password} [ {directory} {folder} ]", Category.NOTEBOOK),
@@ -362,7 +363,7 @@ public class ProvUtil implements DebugListener {
             doGenerateDomainPreAuth(args);
             break;            
         case GET_ACCOUNT:
-            dumpAccount(lookupAccount(args[1]));
+            dumpAccount(lookupAccount(args[1]), getArgNameSet(args, 2));
             break;
         case GET_ACCOUNT_MEMBERSHIP:
             doGetAccountMembership(args);
@@ -380,7 +381,7 @@ public class ProvUtil implements DebugListener {
             doGetAllAdminAccounts(args);
             break;                        
         case GET_ALL_CONFIG:
-            dumpAttrs(mProv.getConfig().getAttrs());            
+            dumpAttrs(mProv.getConfig().getAttrs(), getArgNameSet(args, 1));            
             break;            
         case GET_ALL_COS:
             doGetAllCos(args); 
@@ -395,16 +396,16 @@ public class ProvUtil implements DebugListener {
             doGetConfig(args); 
             break;                        
         case GET_COS:
-            dumpCos(lookupCos(args[1]));
+            dumpCos(lookupCos(args[1]), getArgNameSet(args, 2));
             break;
         case GET_DISTRIBUTION_LIST_MEMBERSHIP:
             doGetDistributionListMembership(args);
             break;            
         case GET_DOMAIN:
-            dumpDomain(lookupDomain(args[1]));
+            dumpDomain(lookupDomain(args[1]), getArgNameSet(args, 2));
             break;                        
         case GET_SERVER:
-            dumpServer(lookupServer(args[1]));
+            dumpServer(lookupServer(args[1]), getArgNameSet(args, 2));
             break;
         case HELP:
             doHelp(args); 
@@ -485,7 +486,7 @@ public class ProvUtil implements DebugListener {
             doGetAllDistributionLists(args);
             break;
         case GET_DISTRIBUTION_LIST:
-            dumpDistributionList(lookupDistributionList(args[1]));
+            dumpDistributionList(lookupDistributionList(args[1]), getArgNameSet(args, 2));
             break;
         case MODIFY_DISTRIBUTION_LIST:
             mProv.modifyAttrs(lookupDistributionList(args[1]), getMap(args, 2), true);
@@ -528,7 +529,7 @@ public class ProvUtil implements DebugListener {
             mProv.renameCalendarResource(lookupCalendarResource(args[1]).getId(), args[2]);
             break;
         case GET_CALENDAR_RESOURCE:
-            dumpCalendarResource(lookupCalendarResource(args[1]));
+            dumpCalendarResource(lookupCalendarResource(args[1]), getArgNameSet(args, 2));
             break;
         case GET_ALL_CALENDAR_RESOURCES:
             doGetAllCalendarResources(args);
@@ -665,23 +666,25 @@ public class ProvUtil implements DebugListener {
     }
     private void doGetAccountIdentities(String[] args) throws ServiceException {
         Account account = lookupAccount(args[1]);
+        Set<String> argNameSet = getArgNameSet(args, 2);
         for (Identity identity : mProv.getAllIdentities(account)) {
-            dumpIdentity(identity);
+            dumpIdentity(identity, argNameSet);
         }    
     }
     
-    private void dumpDataSource(DataSource dataSource) throws ServiceException {
+    private void dumpDataSource(DataSource dataSource, Set<String> argNameSet) throws ServiceException {
         System.out.println("# name "+dataSource.getName());
         System.out.println("# type "+dataSource.getType());
         Map<String, Object> attrs = dataSource.getAttrs();
-        dumpAttrs(attrs);
+        dumpAttrs(attrs, argNameSet);
         System.out.println();
     }
     
     private void doGetAccountDataSources(String[] args) throws ServiceException {
         Account account = lookupAccount(args[1]);
+        Set<String> attrNameSet = getArgNameSet(args, 2);
         for (DataSource dataSource : mProv.getAllDataSources(account)) {
-            dumpDataSource(dataSource);
+            dumpDataSource(dataSource, attrNameSet);
         }    
     }
     
@@ -703,15 +706,15 @@ public class ProvUtil implements DebugListener {
         if (value != null && value.length != 0) {
             Map<String, Object> map = new HashMap<String, Object>();
             map.put(key, value);
-            dumpAttrs(map);
+            dumpAttrs(map, null);
         }
     }
 
-    private void doGetAllAccounts(Provisioning prov, Domain domain, final boolean verbose) throws ServiceException {
+    private void doGetAllAccounts(Provisioning prov, Domain domain, final boolean verbose, final Set<String> attrNames) throws ServiceException {
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
             public void visit(com.zimbra.cs.account.NamedEntry entry) throws ServiceException {
                 if (verbose)
-                    dumpAccount((Account) entry);
+                    dumpAccount((Account) entry, attrNames);
                 else 
                     System.out.println(entry.getName());                        
             }
@@ -747,11 +750,11 @@ public class ProvUtil implements DebugListener {
             List domains = prov.getAllDomains();
             for (Iterator dit=domains.iterator(); dit.hasNext(); ) {
                 Domain domain = (Domain) dit.next();
-                doGetAllAccounts(prov, domain, verbose);
+                doGetAllAccounts(prov, domain, verbose, null);
             }
         } else {
             Domain domain = lookupDomain(d, prov);
-            doGetAllAccounts(prov, domain, verbose);
+            doGetAllAccounts(prov, domain, verbose, null);
         }
     }    
 
@@ -815,13 +818,13 @@ public class ProvUtil implements DebugListener {
             NamedEntry account = (NamedEntry) accounts.get(j);
             if (verbose) {
                 if (account instanceof Account)
-                    dumpAccount((Account)account, true);
+                    dumpAccount((Account)account, true, null);
                 else if (account instanceof Alias)
                     dumpAlias((Alias)account);
                 else if (account instanceof DistributionList)
-                    dumpDistributionList((DistributionList)account);
+                    dumpDistributionList((DistributionList)account, null);
                 else if (account instanceof Domain)
-                    dumpDomain((Domain)account);
+                    dumpDomain((Domain)account, null);
             } else {
                 System.out.println(account.getName());
             }
@@ -911,10 +914,11 @@ public class ProvUtil implements DebugListener {
     private void doGetAllAdminAccounts(String[] args) throws ServiceException {
         boolean verbose = args.length > 1 && args[1].equals("-v");
         List accounts = mProv.getAllAdminAccounts();
+        Set<String> attrNames = getArgNameSet(args, verbose ? 2 : 1);
         for (Iterator it=accounts.iterator(); it.hasNext(); ) {
             Account account = (Account) it.next();
             if (verbose)
-                dumpAccount(account);
+                dumpAccount(account, attrNames);
             else 
                 System.out.println(account.getName());
         }
@@ -922,55 +926,56 @@ public class ProvUtil implements DebugListener {
     
     private void doGetAllCos(String[] args) throws ServiceException {
         boolean verbose = args.length > 1 && args[1].equals("-v");
+        Set<String> attrNames = getArgNameSet(args, verbose ? 2 : 1);
         List allcos = mProv.getAllCos();
         for (Iterator it=allcos.iterator(); it.hasNext(); ) {
             Cos cos = (Cos) it.next();
             if (verbose)
-                dumpCos(cos);
+                dumpCos(cos, attrNames);
             else 
                 System.out.println(cos.getName());
         }
     }        
 
-    private void dumpCos(Cos cos) throws ServiceException {
+    private void dumpCos(Cos cos, Set<String> attrNames) throws ServiceException {
         System.out.println("# name "+cos.getName());
         Map<String, Object> attrs = cos.getAttrs();
-        dumpAttrs(attrs);
+        dumpAttrs(attrs, attrNames);
         System.out.println();
     }
 
     private void doGetAllDomains(String[] args) throws ServiceException {
         boolean verbose = args.length > 1 && args[1].equals("-v");
-                
+        Set<String> attrNames = getArgNameSet(args, verbose ? 2 : 1);
         List domains = mProv.getAllDomains();
         for (Iterator it=domains.iterator(); it.hasNext(); ) {
             Domain domain = (Domain) it.next();
             if (verbose)
-                dumpDomain(domain);
+                dumpDomain(domain, attrNames);
             else
                 System.out.println(domain.getName());
         }
     }        
 
-    private void dumpDomain(Domain domain) throws ServiceException {
+    private void dumpDomain(Domain domain, Set<String> attrNames) throws ServiceException {
         System.out.println("# name "+domain.getName());
         Map<String, Object> attrs = domain.getAttrs();
-        dumpAttrs(attrs);
+        dumpAttrs(attrs, attrNames);
         System.out.println();
     }
 
-    private void dumpDistributionList(DistributionList dl) throws ServiceException {
+    private void dumpDistributionList(DistributionList dl, Set<String> attrNames) throws ServiceException {
         String[] members = dl.getAllMembers();
         int count = members == null ? 0 : members.length; 
         System.out.println("# distributionList " + dl.getName() + " memberCount=" + count);
         Map<String, Object> attrs = dl.getAttrs();
-        dumpAttrs(attrs);        
+        dumpAttrs(attrs, attrNames);
     }
 
     private void dumpAlias(Alias alias) throws ServiceException {
         System.out.println("# alias " + alias.getName());
         Map<String, Object> attrs = alias.getAttrs();
-        dumpAttrs(attrs);        
+        dumpAttrs(attrs, null);        
     }
 
     private void doGetAllServers(String[] args) throws ServiceException {
@@ -993,68 +998,70 @@ public class ProvUtil implements DebugListener {
         for (Iterator it=servers.iterator(); it.hasNext(); ) {
             Server server = (Server) it.next();
             if (verbose)
-                dumpServer(server);
+                dumpServer(server, null);
             else 
                 System.out.println(server.getName());
         }
     }        
 
-    private void dumpServer(Server server) throws ServiceException {
+    private void dumpServer(Server server, Set<String> attrNames) throws ServiceException {
         System.out.println("# name "+server.getName());
         Map<String, Object> attrs = server.getAttrs(true);
-        dumpAttrs(attrs);
+        dumpAttrs(attrs, attrNames);
         System.out.println();
     }
 
-    void dumpAccount(Account account) throws ServiceException {
-        dumpAccount(account, true);
+    void dumpAccount(Account account, Set<String> attrNames) throws ServiceException {
+        dumpAccount(account, true, attrNames);
     }
 
-    private void dumpAccount(Account account, boolean expandCos) throws ServiceException {
+    private void dumpAccount(Account account, boolean expandCos, Set<String> attrNames) throws ServiceException {
         System.out.println("# name "+account.getName());
         Map<String, Object> attrs = account.getAttrs(expandCos);
-        dumpAttrs(attrs);
+        dumpAttrs(attrs, attrNames);
         System.out.println();
     }
     
-    void dumpCalendarResource(CalendarResource  resource) throws ServiceException {
-        dumpCalendarResource(resource, true);
+    void dumpCalendarResource(CalendarResource  resource, Set<String> attrNames) throws ServiceException {
+        dumpCalendarResource(resource, true, attrNames);
     }
 
-    private void dumpCalendarResource(CalendarResource resource, boolean expandCos) throws ServiceException {
+    private void dumpCalendarResource(CalendarResource resource, boolean expandCos, Set<String> attrNames) throws ServiceException {
         System.out.println("# name "+resource.getName());
         Map<String, Object> attrs = resource.getAttrs(expandCos);
-        dumpAttrs(attrs);
+        dumpAttrs(attrs, attrNames);
         System.out.println();
     }
     
     private void dumpContact(GalContact contact) throws ServiceException {
         System.out.println("# name "+contact.getId());
         Map<String, Object> attrs = contact.getAttrs();
-        dumpAttrs(attrs);
+        dumpAttrs(attrs, null);
         System.out.println();
     }
  
-    private void dumpIdentity(Identity identity) throws ServiceException {
+    private void dumpIdentity(Identity identity, Set<String> attrNameSet) throws ServiceException {
         System.out.println("# name "+identity.getName());
         Map<String, Object> attrs = identity.getAttrs();
-        dumpAttrs(attrs);
+        dumpAttrs(attrs, attrNameSet);
         System.out.println();
     }
 
-    private void dumpAttrs(Map<String, Object> attrsIn) {
+    private void dumpAttrs(Map<String, Object> attrsIn, Set<String> specificAttrs) {
         TreeMap<String, Object> attrs = new TreeMap<String, Object>(attrsIn);
 
         for (Map.Entry<String, Object> entry : attrs.entrySet()) {
             String name = entry.getKey();
-            Object value = entry.getValue();
-            if (value instanceof String[]) {
-                String sv[] = (String[]) value;
-                for (int i = 0; i < sv.length; i++) {
-                    System.out.println(name+": "+sv[i]);
+            if (specificAttrs == null || specificAttrs.contains(name.toLowerCase())) {
+                Object value = entry.getValue();
+                if (value instanceof String[]) {
+                    String sv[] = (String[]) value;
+                    for (String aSv : sv) {
+                        System.out.println(name + ": " + aSv);
+                    }
+                } else if (value instanceof String){
+                    System.out.println(name+": "+value);
                 }
-            } else if (value instanceof String){
-                System.out.println(name+": "+value);
             }
         }
     }
@@ -1141,7 +1148,7 @@ public class ProvUtil implements DebugListener {
             public void visit(com.zimbra.cs.account.NamedEntry entry)
             throws ServiceException {
                 if (verbose) {
-                    dumpCalendarResource((CalendarResource) entry);
+                    dumpCalendarResource((CalendarResource) entry, null);
                 } else {
                     System.out.println(entry.getName());                        
                 }
@@ -1185,7 +1192,7 @@ public class ProvUtil implements DebugListener {
         for (Iterator iter = resources.iterator(); iter.hasNext(); ) {
             CalendarResource resource = (CalendarResource) iter.next();
             if (verbose)
-                dumpCalendarResource(resource);
+                dumpCalendarResource(resource, null);
             else
                 System.out.println(resource.getName());
         }
@@ -1371,6 +1378,16 @@ public class ProvUtil implements DebugListener {
         } catch (IllegalArgumentException iae) {
             throw new ArgException("not enough arguments");
         }
+    }
+
+    private Set<String> getArgNameSet(String[] args, int offset) {
+        if (offset >= args.length) return null;
+
+        Set<String> result = new HashSet<String>();
+        for (int i=offset; i < args.length; i++)
+            result.add(args[i].toLowerCase());
+
+        return result;
     }
 
     private void interactive(BufferedReader in) throws IOException {
