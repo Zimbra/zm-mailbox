@@ -46,9 +46,8 @@ import com.sun.mail.pop3.POP3Message;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.db.DbPop3Message;
@@ -66,7 +65,6 @@ implements MailItemImport {
     
     private static Session sSession;
     private static Session sSelfSignedCertSession;
-    private static Log sLog = LogFactory.getLog(Pop3Import.class);
     private static FetchProfile UID_PROFILE;
     
     static {
@@ -93,7 +91,7 @@ implements MailItemImport {
             store.connect(ds.getHost(), ds.getPort(), ds.getUsername(), ds.getDecryptedPassword());
             store.close();
         } catch (MessagingException e) {
-            sLog.info("Testing connection to data source", e);
+            ZimbraLog.datasource.info("Testing connection to data source", e);
             error = e.getMessage();
         }
         return error;
@@ -104,9 +102,19 @@ implements MailItemImport {
         try {
             fetchMessages(account, dataSource);
         } catch (MessagingException e) {
-            throw ServiceException.FAILURE(e.getMessage(), e);
+            // Only send the Java class name back to the client if there's no message
+            String message = e.getMessage();
+            if (message == null) {
+                message = e.toString();
+            }
+            throw ServiceException.FAILURE(message, e);
         } catch (IOException e) {
-            throw ServiceException.FAILURE(e.getMessage(), e);
+            // Only send the Java class name back to the client if there's no message
+            String message = e.getMessage();
+            if (message == null) {
+                message = e.toString();
+            }
+            throw ServiceException.FAILURE(message, e);
         }
     }
 
@@ -175,7 +183,7 @@ implements MailItemImport {
                 "User attempted to import messages from his own mailbox", null);
         }
         
-        sLog.debug("Found %d messages on remote server", msgs.length);
+        ZimbraLog.datasource.debug("Found %d messages on remote server", msgs.length);
 
         Set<String> uidsToFetch = null;
         if (ds.leaveOnServer()) {
