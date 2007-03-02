@@ -717,7 +717,6 @@ public class Mime {
             (children = new ArrayList<MPartInfo>(1)).add(base.getChildren().get(0));
 
         Set<MPartInfo> bodies = null;
-        boolean first = true;
         for (MPartInfo mpi : children) {
             String childType = mpi.getContentType();
             if (childType.startsWith(CT_MULTIPART_PREFIX)) {
@@ -726,13 +725,10 @@ public class Mime {
                     if (bodies == null)  bodies = new LinkedHashSet<MPartInfo>(found.size());
                     bodies.addAll(found);
                 }
-            } else if (first || !mpi.getDisposition().equals(Part.ATTACHMENT)) {
-                if (!childType.equals(CT_MESSAGE_RFC822)) {
-                    if (bodies == null)  bodies = new LinkedHashSet<MPartInfo>(1);
-                    bodies.add(mpi);
-                }
+            } else if (!mpi.getDisposition().equals(Part.ATTACHMENT) && !childType.equalsIgnoreCase(CT_MESSAGE_RFC822)) {
+                if (bodies == null)  bodies = new LinkedHashSet<MPartInfo>(1);
+                bodies.add(mpi);
             }
-            first = false;
         }
 
         return bodies;
