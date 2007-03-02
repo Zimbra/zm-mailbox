@@ -91,6 +91,12 @@ public class ZimbraLog {
     private static final String C_MSG_ID = "msgid";
     
     /**
+     * "ds" key for context.  The name of the Data Source being operated on.
+     */
+    private static final String C_DATA_SOURCE_NAME = "ds";
+    
+    
+    /**
      * the "zimbra.misc" logger. For all events that don't have a specific-catagory.
      */
     public static final Log misc = LogFactory.getLog("zimbra.misc");
@@ -240,6 +246,11 @@ public class ZimbraLog {
      */
     public static final Log io = LogFactory.getLog("zimbra.io");
 
+    /**
+     * the "zimbra.datasource" logger.  Logs file data source operations.
+     */
+    public static final Log datasource = LogFactory.getLog("zimbra.datasource");
+
     public static String getContext() {
         return NDC.peek();
     }
@@ -320,6 +331,10 @@ public class ZimbraLog {
     
     public static void addMsgIdToContext(String messageId) {
         addToContext(C_MSG_ID, messageId);
+    }
+    
+    public static void addDataSourceNameToContext(String dataSourceName) {
+        ZimbraLog.addToContext(C_DATA_SOURCE_NAME, dataSourceName);
     }
     
     private static boolean checkContext(String context, String key) {
