@@ -296,6 +296,7 @@ public class ImapSession extends Session {
 			} catch (IOException e) {
                 // ImapHandler.dropConnection clears our mHandler and calls SessionCache.clearSession,
                 //   which calls Session.doCleanup, which calls Mailbox.removeListener
+                ZimbraLog.imap.debug("dropping connection due to IOException during IDLE notification", e);
                 mHandler.dropConnection(false);
 			}
     }
@@ -416,7 +417,9 @@ public class ImapSession extends Session {
 
     protected void cleanup() {
         // XXX: is there a synchronization issue here?
-        if (mHandler != null)
+        if (mHandler != null) {
+            ZimbraLog.imap.debug("dropping connection because Session is closing");
             mHandler.dropConnection(true);
+        }
     }
 }

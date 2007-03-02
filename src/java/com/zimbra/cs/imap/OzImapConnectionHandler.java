@@ -2080,7 +2080,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             ZimbraLog.imap.info("exception occurred when disconnecting IMAP connection", ioe);
         }
     }
-    
+
     public void dropConnection(boolean sendBanner) {
         gotoClosedState(sendBanner);
     }
@@ -2088,8 +2088,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     public void handleConnect() throws IOException {
         assert(mState == ConnectionState.UNKNOWN);
         if (!Config.userServicesEnabled()) {
+            ZimbraLog.imap.debug("dropping connection because user services are disabled");
             gotoClosedState(true);
-            ZimbraLog.imap.debug("services disabled");
             return;
         }
         if (mConnection.getProperty(PROPERTY_SECURE_SERVER, null) != null) {
@@ -2104,7 +2104,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     private String mCurrentRequestTag;
 
     public void handleAlarm() {
-        ZimbraLog.imap.info("closing unauthenticated idle connection");
+        ZimbraLog.imap.info("dropping connection due to unauthenticated idle connection timeout");
         gotoClosedState(true);
     }
 
