@@ -27,6 +27,8 @@ package com.zimbra.cs.mailbox;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.mail.FetchProfile;
 import javax.mail.Flags;
@@ -38,17 +40,18 @@ import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.UIDFolder;
 
-import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.IMAPMessage;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.db.DbImapFolder;
 import com.zimbra.cs.db.DbImapMessage;
+import com.zimbra.cs.db.ImapFolder;
 import com.zimbra.cs.db.ImapMessage;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedMessage;
 
 
@@ -59,7 +62,6 @@ implements MailItemImport {
     
     private static Session sSession;
     private static Session sSelfSignedCertSession;
-    private static Log sLog = LogFactory.getLog(ImapImport.class);
     private static FetchProfile FETCH_PROFILE;
     
     static {
@@ -87,16 +89,41 @@ implements MailItemImport {
             store.connect(ds.getHost(), ds.getPort(), ds.getUsername(), ds.getDecryptedPassword());
             store.close();
         } catch (MessagingException e) {
-            sLog.info("Testing connection to data source", e);
+            ZimbraLog.datasource.info("Testing connection to data source", e);
             error = e.getMessage();
         }
         return error;
     }
     
-    public void importData(Account account, DataSource dataSource)
+    public void importData(Account account, DataSource ds)
     throws ServiceException {
         try {
-            importDataInternal(account, dataSource);
+            validateDataSource(ds);
+            
+            Store store = getStore(ds.getConnectionType());
+            store.connect(ds.getHost(), ds.getPort(), ds.getUsername(), ds.getDecryptedPassword());
+            Folder rootFolder = store.getDefaultFolder();
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            Map<String, ImapFolder> imapFolders = DbImapFolder.getImapFolders(mbox, ds);
+            
+            // Import messages from all current IMAP folders
+            for (Folder jmFolder : rootFolder.list("*")) {
+                com.zimbra.cs.mailbox.Folder zimbraFolder = getZimbraFolder(mbox, ds, jmFolder);
+                ZimbraLog.datasource.debug("Importing from IMAP folder %s to %s",
+                    jmFolder.getName(), zimbraFolder.getPath());
+                ImapFolder imapFolder = imapFolders.remove(zimbraFolder.getPath());
+                if (imapFolder == null) {
+                    imapFolder = DbImapFolder.createImapFolder(mbox, ds, zimbraFolder.getPath());
+                }
+                importFolder(account, ds, imapFolder, jmFolder, zimbraFolder);
+            }
+            
+            // Delete any folders that are no longer on the IMAP server
+            for (ImapFolder imapFolder : imapFolders.values()) {
+                DbImapFolder.deleteImapFolder(mbox, ds, imapFolder);
+            }
+
+            store.close();
         } catch (MessagingException e) {
             throw ServiceException.FAILURE(e.getMessage(), e);
         } catch (IOException e) {
@@ -104,6 +131,43 @@ implements MailItemImport {
         }
     }
 
+    private static final Pattern PAT_LEADING_SLASHES = Pattern.compile("^/+");
+
+    /**
+     * Returns the full path to the Zimbra folder that stores messages for the
+     * given JavaMail folder.  The Zimbra folder has the same path as the
+     * JavaMail folder, but is relative to the root folder specified by the
+     * <tt>DataSource</tt>.
+     */
+    private com.zimbra.cs.mailbox.Folder getZimbraFolder(Mailbox mbox, DataSource ds, Folder jmFolder)
+    throws ServiceException, MessagingException {
+        char separator = jmFolder.getSeparator();
+        String relativePath = jmFolder.getName();
+
+        // Change folder path to use our separator
+        if (separator != '/') {
+            // Make sure none of the elements in the path uses our path separator
+            char replaceChar = (separator == '-' ? 'x' : '-');
+            relativePath.replace('/', replaceChar);
+            relativePath.replace(separator, '/');
+        }
+        
+        // Remove leading slashes and append to root folder path
+        com.zimbra.cs.mailbox.Folder rootZimbraFolder = mbox.getFolderById(ds.getFolderId());
+        Matcher matcher = PAT_LEADING_SLASHES.matcher(relativePath);
+        relativePath = matcher.replaceFirst("");
+        String absolutePath = rootZimbraFolder.getPath() + "/" + relativePath;
+        
+        // Look up or create the Zimbra folder
+        com.zimbra.cs.mailbox.Folder zimbraFolder = null;
+        try {
+            zimbraFolder = mbox.getFolderByPath(null, absolutePath);
+        } catch (NoSuchItemException e) {
+            zimbraFolder = mbox.createFolder(null, absolutePath, (byte) 0, MailItem.TYPE_UNKNOWN);
+        }
+        return zimbraFolder;
+    }
+    
     private void validateDataSource(DataSource ds)
     throws ServiceException {
         if (ds.getHost() == null) {
@@ -135,22 +199,16 @@ implements MailItemImport {
         }
     }
 
-    private void importDataInternal(Account account, DataSource ds)
+    private void importFolder(Account account, DataSource ds, ImapFolder imapFolder,
+                              Folder jmFolder, com.zimbra.cs.mailbox.Folder zimbraFolder)
     throws MessagingException, IOException, ServiceException {
-        validateDataSource(ds);
-        
-        // Connect (USER, PASS, STAT)
-        Store store = getStore(ds.getConnectionType());
-        store.connect(ds.getHost(), ds.getPort(), ds.getUsername(), ds.getDecryptedPassword());
-        IMAPFolder folder = (IMAPFolder) store.getFolder("INBOX");
-        folder.open(Folder.READ_ONLY);
-
-        Message[] msgs = folder.getMessages();
-        sLog.debug("Found %d messages on remote server", msgs.length);
+        jmFolder.open(Folder.READ_ONLY);
+        Message[] msgs = jmFolder.getMessages();
+        ZimbraLog.datasource.debug("Found %d messages in %s", msgs.length, jmFolder.getName());
 
         if (msgs.length > 0) {
             // Fetch message UID's for reconciliation (UIDL)
-            folder.fetch(msgs, FETCH_PROFILE);
+            jmFolder.fetch(msgs, FETCH_PROFILE);
         }
         
         // TODO: Check the UID of the first message to make sure the user isn't
@@ -167,11 +225,15 @@ implements MailItemImport {
 
         // Insert new messages
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-        Map<Long, ImapMessage> storedMsgs = DbImapMessage.getImapMessages(mbox, ds);
+        Map<Long, ImapMessage> storedMsgs = DbImapMessage.getImapMessages(mbox, ds, imapFolder);
+        int numAdded = 0;
+        int numSkipped = 0;
+        int numUpdated = 0;
+        int numDeleted = 0;
         
         for (int i = 0; i < msgs.length; i++) {
             IMAPMessage imapMsg = (IMAPMessage) msgs[i];
-            long uid = folder.getUID(imapMsg);
+            long uid = ((com.sun.mail.imap.IMAPFolder) jmFolder).getUID(imapMsg);
             
             if (storedMsgs.containsKey(uid)) {
                 // We already know about this message.
@@ -180,6 +242,9 @@ implements MailItemImport {
                 if (appliedFlags != storedMsg.getFlags()) {
                     // Flags changed
                     mbox.setTags(null, storedMsg.getItemId(), MailItem.TYPE_MESSAGE, appliedFlags, MailItem.TAG_UNCHANGED);
+                    numUpdated++;
+                } else {
+                    numSkipped++;
                 }
             } else {
                 // Add message to mailbox
@@ -193,10 +258,10 @@ implements MailItemImport {
                 }
                 int flags = applyFlags(imapMsg, 0);
                 com.zimbra.cs.mailbox.Message zimbraMsg =
-                    mbox.addMessage(null, pm, ds.getFolderId(), false, flags, null);
-
+                    mbox.addMessage(null, pm, zimbraFolder.getId(), false, flags, null);
+                numAdded++;
                 DbImapMessage.storeImapMessage(
-                    mbox, ds.getId(), folder.getUID(imapMsg), zimbraMsg.getId());
+                    mbox, imapFolder.getId(), uid, zimbraMsg.getId());
             }
         }
         
@@ -208,11 +273,13 @@ implements MailItemImport {
                 idArray[i++] = imapMsg.getItemId();
             }
             mbox.delete(null, idArray, MailItem.TYPE_MESSAGE, null);
+            numDeleted++;
         }
         
+        ZimbraLog.datasource.debug("Import of %s completed.  added: %d, skipped: %d, updated: %d, deleted: %d.",
+            jmFolder.getName(), numAdded, numSkipped, numUpdated, numDeleted);
         // Expunge if necessary and disconnect (QUIT)
-        folder.close(false);
-        store.close();
+        jmFolder.close(false);
     }
     
     private static final Flags.Flag[] IMAP_FLAGS = {

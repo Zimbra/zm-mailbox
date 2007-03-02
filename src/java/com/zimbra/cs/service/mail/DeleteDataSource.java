@@ -33,7 +33,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
-import com.zimbra.cs.db.DbImapMessage;
+import com.zimbra.cs.db.DbImapFolder;
 import com.zimbra.cs.db.DbPop3Message;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.common.soap.Element;
@@ -70,7 +70,7 @@ public class DeleteDataSource extends MailDocumentHandler {
             if (dstype == DataSource.Type.pop3)
                 DbPop3Message.deleteUids(mbox, dataSourceId);
             else if (dstype == DataSource.Type.imap)
-                DbImapMessage.deleteImapMessages(mbox, dataSourceId);
+                DbImapFolder.deleteImapData(mbox, dataSourceId);
         }
         
         Element response = zsc.createElement(MailConstants.DELETE_DATA_SOURCE_RESPONSE);

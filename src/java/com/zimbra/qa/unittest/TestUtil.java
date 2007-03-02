@@ -34,7 +34,6 @@ import java.util.Map;
 
 import junit.framework.Assert;
 import junit.framework.Test;
-import junit.framework.TestCase;
 import junit.framework.TestResult;
 
 import com.zimbra.common.localconfig.LC;
@@ -229,8 +228,12 @@ public class TestUtil {
     
     public static String insertMessage(ZMailbox mbox, int messageNum, String subject)
     throws ServiceException {
+        return insertMessage(mbox, messageNum, subject, Integer.toString(Mailbox.ID_FOLDER_INBOX));
+    }
+    
+    public static String insertMessage(ZMailbox mbox, int messageNum, String subject, String folderId)
+    throws ServiceException {
         String message = getTestMessage(messageNum, subject);
-        String folderId = Integer.toString(Mailbox.ID_FOLDER_INBOX);
         return mbox.addMessage(folderId, null, null, 0, message, true);
     }
     

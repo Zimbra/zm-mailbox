@@ -31,7 +31,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.db.DbPool.Connection;
@@ -45,7 +44,7 @@ public class DbImapMessage {
     /**
      * Stores IMAP message data.
      */
-    public static void storeImapMessage(Mailbox mbox, String dataSourceId, long uid, int itemId)
+    public static void storeImapMessage(Mailbox mbox, int imapFolderId, long uid, int itemId)
     throws ServiceException
     {
         Connection conn = null;
@@ -55,10 +54,10 @@ public class DbImapMessage {
             conn = DbPool.getConnection();
             stmt = conn.prepareStatement(
                 "INSERT INTO " + getTableName(mbox) +
-                " (mailbox_id, data_source_id, uid, item_id) " +
+                " (mailbox_id, imap_folder_id, uid, item_id) " +
                 "VALUES (?, ?, ?, ?)");
             stmt.setInt(1, mbox.getId());
-            stmt.setString(2, dataSourceId);
+            stmt.setInt(2, imapFolderId);
             stmt.setLong(3, uid);
             stmt.setInt(4, itemId);
             stmt.executeUpdate();
@@ -72,42 +71,10 @@ public class DbImapMessage {
     }
 
     /**
-     * Deletes all IMAP message data for the given mailbox/data source.
-     */
-    public static void deleteImapMessages(Mailbox mbox, String dataSourceId)
-    throws ServiceException {
-        Connection conn = null;
-        PreparedStatement stmt = null;
-
-        ZimbraLog.mailbox.debug("Deleting UID's for %s", dataSourceId);
-        
-        if (StringUtil.isNullOrEmpty(dataSourceId)) {
-            return;
-        }
-        
-        try {
-            conn = DbPool.getConnection();
-            stmt = conn.prepareStatement(
-                "DELETE FROM " + getTableName(mbox) +
-                " WHERE mailbox_id = ? AND data_source_id = ?");
-            stmt.setInt(1, mbox.getId());
-            stmt.setString(2, dataSourceId);
-            int numRows = stmt.executeUpdate();
-            conn.commit();
-            ZimbraLog.mailbox.debug("Deleted %d UID's", numRows);
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("Unable to delete IMAP message data", e);
-        } finally {
-            DbPool.closeStatement(stmt);
-            DbPool.quietClose(conn);
-        }
-    }
-
-    /**
      * Returns IMAP message data for the given data source.  The key
      * in the <tt>Map</tt> is the message's UID.
      */
-    public static Map<Long, ImapMessage> getImapMessages(Mailbox mbox, DataSource ds)
+    public static Map<Long, ImapMessage> getImapMessages(Mailbox mbox, DataSource ds, ImapFolder imapFolder)
     throws ServiceException {
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -121,11 +88,11 @@ public class DbImapMessage {
                 "FROM " + getTableName(mbox) + " imap " +
                 "  JOIN " + DbMailItem.getMailItemTableName(mbox) + " mi " +
                 "  ON imap.mailbox_id = mi.mailbox_id AND imap.item_id = mi.id " + 
-                "WHERE imap.mailbox_id = ? AND imap.data_source_id = ?");
+                "WHERE imap.mailbox_id = ? AND imap.imap_folder_id = ?");
 
             int i = 1;
             stmt.setInt(i++, mbox.getId());
-            stmt.setString(i++, ds.getId());
+            stmt.setInt(i++, imapFolder.getId());
             rs = stmt.executeQuery();
             while (rs.next()) {
                 long uid = rs.getLong("imap.uid");

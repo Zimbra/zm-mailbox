@@ -50,7 +50,7 @@ extends TestCase {
     private static final String USER1_NAME = "testimapimport1";
     private static final String USER2_NAME = "testimapimport2";
     private static final String NAME_PREFIX = "TestImapImport";
-    private static final String FOLDER_PATH = "/" + NAME_PREFIX;
+    private static final String DEST_FOLDER_ROOT = "/" + NAME_PREFIX;
     
     private ZMailbox mMbox1;
     private ZMailbox mMbox2;
@@ -73,7 +73,7 @@ extends TestCase {
         mMbox2 = TestUtil.getZMailbox(USER2_NAME);
         
         // Get or create folder
-        ZFolder folder = mMbox2.getFolderByPath(FOLDER_PATH);
+        ZFolder folder = mMbox2.getFolderByPath(DEST_FOLDER_ROOT);
         if (folder == null) {
             folder = mMbox2.createFolder(
                 Integer.toString(Mailbox.ID_FOLDER_USER_ROOT), NAME_PREFIX, null, null, null, null);
@@ -100,19 +100,26 @@ extends TestCase {
     
     public void testImapImport()
     throws Exception {
-        // Compare empty mailboxes
-        List<ZMessage> msgs1 = TestUtil.search(mMbox1, "in:inbox");
-        List<ZMessage> msgs2 = TestUtil.search(mMbox2, "in:" + FOLDER_PATH);
+        String subject = NAME_PREFIX;
+        String inbox1Query = String.format("in:inbox subject:\"%s\"", subject);
+        String inbox2Query = String.format("in:%s/inbox subject:\"%s\"", DEST_FOLDER_ROOT, subject);
+        String trash2Query = String.format("in:%s/trash subject:\"%s\"", DEST_FOLDER_ROOT, subject);
+        
+        // Make sure source and destination folders are empty
+        List<ZMessage> msgs1 = TestUtil.search(mMbox1, inbox1Query);
         assertEquals("msgs1.size()", 0, msgs1.size());
+        List<ZMessage> msgs2 = TestUtil.search(mMbox2, inbox2Query);
         assertEquals("msgs2.size()", 0, msgs2.size());
         
         // Add 1 message
-        TestUtil.insertMessage(mMbox1, 1, NAME_PREFIX + " " + 1);
-        msgs1 = TestUtil.search(mMbox1, "in:inbox");
-        msgs2 = TestUtil.search(mMbox2, "in:" + FOLDER_PATH);
+        TestUtil.insertMessage(mMbox1, 1, subject);
+        msgs1 = TestUtil.search(mMbox1, inbox1Query);
         assertEquals("msgs1.size()", 1, msgs1.size());
+        
         importImap();
-        msgs2 = TestUtil.search(mMbox2, "in:" + FOLDER_PATH);
+        
+        // Confirm that the message was imported
+        msgs2 = TestUtil.search(mMbox2, inbox2Query);
         assertEquals("msgs2.size()", 1, msgs2.size());
         compareMessages(msgs1, msgs2);
         
@@ -120,16 +127,20 @@ extends TestCase {
         assertFalse("msg2 is flagged", msgs2.get(0).isFlagged());
         mMbox1.flagMessage(msgs1.get(0).getId(), true);
         importImap();
-        msgs2 = TestUtil.search(mMbox2, "in:" + FOLDER_PATH);
+        msgs2 = TestUtil.search(mMbox2, inbox2Query);
         assertTrue("msg2 is not flagged", msgs2.get(0).isFlagged());
         
         // Move to trash
         mMbox1.moveMessage(msgs1.get(0).getId(), Integer.toString(Mailbox.ID_FOLDER_TRASH));
         msgs1 = TestUtil.search(mMbox1, "in:inbox");
         assertEquals("msgs1.size()", 0, msgs1.size());
+        List<ZMessage> trash2 = TestUtil.search(mMbox2, trash2Query);
+        assertEquals("trash2.size()", 0, trash2.size());
         importImap();
-        msgs2 = TestUtil.search(mMbox2, "in:" + FOLDER_PATH);
+        msgs2 = TestUtil.search(mMbox2, inbox2Query);
         assertEquals("msgs2.size()", 0, msgs2.size());
+        trash2 = TestUtil.search(mMbox2, trash2Query);
+        assertEquals("trash2.size()", 1, trash2.size());
     }
     
     private void importImap()

@@ -66,13 +66,13 @@ public class DataSourceManager {
      */
     public static String test(DataSource ds)
     throws ServiceException {
-        ZimbraLog.mailbox.info("Testing " + ds);
+        ZimbraLog.datasource.info("Testing " + ds);
         MailItemImport mii = sImports.get(ds.getType());
         String error = mii.test(ds);
         if (error == null) {
-            ZimbraLog.mailbox.info("Test of " + ds + " succeeded");
+            ZimbraLog.datasource.info("Test of " + ds + " succeeded");
         } else {
-            ZimbraLog.mailbox.info("Test of " + ds + " failed: " + error);
+            ZimbraLog.datasource.info("Test of " + ds + " failed: " + error);
         }
         
         return error;
@@ -128,7 +128,7 @@ public class DataSourceManager {
         
         synchronized (importStatus) {
             if (importStatus.isRunning()) {
-                ZimbraLog.mailbox.info(ds + ": attempted to start import while " +
+                ZimbraLog.datasource.info(ds + ": attempted to start import while " +
                     " an import process was already running.  Ignoring the second request.");
                 return;
             }
@@ -139,7 +139,7 @@ public class DataSourceManager {
         }
         
         Thread thread = new Thread(new ImportDataThread(account, ds));
-        thread.setName("ImportDataThread-" + account.getName());
+        thread.setName("ImportDataThread");
         thread.start();
         
     }
@@ -160,17 +160,20 @@ public class DataSourceManager {
         }
         
         public void run() {
+            ZimbraLog.addAccountNameToContext(mAccount.getName());
+            ZimbraLog.addDataSourceNameToContext(mDataSource.getName());
+            
             MailItemImport mii = sImports.get(mDataSource.getType());
             boolean success = false;
             String error = null;
 
             try {
-                ZimbraLog.mailbox.info("Importing data from %s", mDataSource);
+                ZimbraLog.datasource.info("Importing data from %s", mDataSource);
                 mii.importData(mAccount, mDataSource);
-                ZimbraLog.mailbox.info("Import completed");
+                ZimbraLog.datasource.info("Import completed");
                 success = true;
             } catch (ServiceException e) {
-                ZimbraLog.mailbox.warn("Import from " + mDataSource + " failed", e);
+                ZimbraLog.datasource.warn("Import from " + mDataSource + " failed", e);
                 error = e.getMessage();
             } finally {
                 ImportStatus importStatus = getImportStatus(mAccount, mDataSource);
