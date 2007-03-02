@@ -408,13 +408,15 @@ public class DbMailItem {
                 stmt = conn.prepareStatement("SELECT mi.name" +
                         " FROM " + getMailItemTableName(mbox, "mi") + ", " + getMailItemTableName(mbox, "m2") +
                         " WHERE mi.id IN " + DbUtil.suitableNumberOfVariables(itemIDs) +
+                        " AND mi.name IS NOT NULL and m2.name IS NOT NULL" +
                         " AND m2.folder_id = ? AND mi.id <> m2.id" +
                         " AND " + (Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON) ? "UPPER(mi.name) = UPPER(m2.name)" : "mi.name = m2.name") +
-                        " AND mi.mailbox_id = ? AND m2.mailbox_id = mi.mailbox_id");
+                        " AND mi.mailbox_id = ? AND m2.mailbox_id = ?");
                 int pos = 1;
                 for (int id : itemIDs)
                     stmt.setInt(pos++, id);
                 stmt.setInt(pos++, folder.getId());
+                stmt.setInt(pos++, mbox.getId());
                 stmt.setInt(pos++, mbox.getId());
                 rs = stmt.executeQuery();
                 if (rs.next())
