@@ -179,6 +179,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         mStartedTLS = mServer.isConnectionSSL();
 
         if (!Config.userServicesEnabled()) {
+            ZimbraLog.imap.debug("dropping connection because user services are disabled");
             dropConnection();
             return false;
         }
@@ -2064,7 +2065,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
 
         // TODO in the TcpServer case, is this duplicated effort with
         // session timeout code that also drops connections?
-
+        ZimbraLog.imap.debug("dropping connection for inactivity");
         dropConnection();
     }
 
