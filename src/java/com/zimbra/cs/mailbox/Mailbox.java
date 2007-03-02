@@ -4307,15 +4307,12 @@ public class Mailbox {
             CreateContact redoPlayer = (CreateContact) mCurrentChange.getRedoPlayer();
 
             int contactId;
-            short volumeId;
             if (redoPlayer == null) {
                 contactId = getNextItemId(ID_AUTO_INCREMENT);
-                volumeId = Volume.getCurrentMessageVolume().getId();
             } else {
                 contactId = getNextItemId(redoPlayer.getContactId());
-                volumeId = redoPlayer.getVolumeId();
             }
-            Contact con = Contact.create(contactId, getFolderById(folderId), volumeId, attrs, tags);
+            Contact con = Contact.create(contactId, getFolderById(folderId), (short) -1, attrs, tags);
 
             redoRecorder.setContactId(con.getId());
             redoRecorder.setVolumeId(con.getVolumeId());
