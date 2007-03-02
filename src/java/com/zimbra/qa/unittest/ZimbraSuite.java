@@ -77,6 +77,7 @@ public class ZimbraSuite extends TestSuite
         suite.addTest(new TestSuite(TestMailItem.class));
         suite.addTest(new TestSuite(TestConcurrency.class));
         suite.addTest(new TestSuite(TestFolderFilterRules.class));
+        suite.addTest(new TestSuite(TestTagFilterRules.class));
         suite.addTest(new TestSuite(TestPop3Import.class));
         suite.addTest(new TestSuite(TestFilter.class));
         suite.addTest(new TestSuite(TestPop3ImapAuth.class));

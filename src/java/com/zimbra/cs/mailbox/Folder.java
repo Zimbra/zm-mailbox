@@ -656,26 +656,7 @@ public class Folder extends MailItem {
         String originalPath = getPath();
         super.rename(name, target);
         if (renamed && !isHidden())
-            updateRules(originalPath);
-    }
-
-    /** Updates filter rules after a folder's path changes (move or rename). */
-    private void updateRules(String originalPath) throws ServiceException {
-        Account account = getAccount();
-        RuleManager rm = RuleManager.getInstance();
-        String rules = rm.getRules(account);
-        if (rules != null) {
-            // Assume that we always put quotes around folder paths.  Replace
-            // any paths that start with this folder's original path.  This will
-            // take care of rules for children affected by a parent's move or rename.
-            String newPath = getPath();
-            String newRules = rules.replace("\"" + originalPath, "\"" + newPath);
-            if (!newRules.equals(rules)) {
-                rm.setRules(account, newRules);
-                ZimbraLog.mailbox.debug("Updated filter rules due to folder move or rename; " +
-                                        "old rules:\n" + rules + ", new rules:\n" + newRules);
-            }
-        }
+            RuleManager.getInstance().folderRenamed(getAccount(), originalPath, getPath());
     }
 
     /** Moves this folder so that it is a subfolder of <code>target</code>.
@@ -710,7 +691,7 @@ public class Folder extends MailItem {
         mData.parentId = target.getId();
         mData.metadataChanged(mMailbox);
         
-        updateRules(originalPath);
+        RuleManager.getInstance().folderRenamed(getAccount(), originalPath, getPath());
     }
 
     @Override

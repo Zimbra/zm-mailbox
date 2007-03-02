@@ -133,7 +133,7 @@ extends TestCase {
     throws Exception {
         String sender = TestUtil.getAddress("multiplefilters");
         String recipient = TestUtil.getAddress(USER_NAME);
-        String subject = "This goes into folder1 and folder2";
+        String subject = NAME_PREFIX + " This goes into folder1 and folder2";
         TestUtil.insertMessageLmtp(1, subject, recipient, sender);
         
         ZMessage msg = TestUtil.getMessage(mMbox, "in:" + FOLDER1_PATH + " " + subject);
@@ -148,12 +148,13 @@ extends TestCase {
     }
     
     /**
-     * Verifies the fix to bug 5455.
+     * Verifies the fix to bug 5455.  Tests sending a message that matches
+     * two filter rules, each of which has a tag action and a flag action.   
      */
     public void testBug5455()
     throws Exception {
         String recipient = TestUtil.getAddress(USER_NAME);
-        String subject = "Testing bug5455";
+        String subject = NAME_PREFIX + "Testing bug5455";
         TestUtil.insertMessageLmtp(1, subject, recipient, recipient);
         
         ZMessage msg = TestUtil.getMessage(mMbox, "in:" + FOLDER1_PATH + " " + subject);

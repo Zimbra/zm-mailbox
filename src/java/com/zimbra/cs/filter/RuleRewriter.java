@@ -52,6 +52,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.ElementFactory;
 
 /**
  * @author kchen
@@ -59,7 +60,7 @@ import com.zimbra.common.soap.Element;
  * Rewrites a parsed Sieve tree to XML or vice versa.
  */
 public class RuleRewriter {
-    final static Set MATCH_TYPES = new HashSet();
+    final static Set<String> MATCH_TYPES = new HashSet<String>();
     static {
         MATCH_TYPES.add(":is");
         MATCH_TYPES.add(":contains");
@@ -70,7 +71,7 @@ public class RuleRewriter {
         MATCH_TYPES.add(":before");
         MATCH_TYPES.add(":after");
     }
-    private Stack stack = new Stack();
+    private Stack<String> mStack = new Stack<String>();
 
     private Element mRoot;
     
@@ -79,11 +80,12 @@ public class RuleRewriter {
     /**
      * Initializes rewriter to convert from Sieve parse tree to an XML DOM tree.
      * 
+     * @param factory the <tt>ElementFactory</tt> used to create XML elements
      * @param node the Sieve parse tree root node
      * @see #getElement()
      */
-    RuleRewriter(Element parent, Node node) {
-        mRoot = parent.getFactory().createElement("rules");
+    RuleRewriter(ElementFactory factory, Node node) {
+        mRoot = factory.createElement("rules");
         traverse(node);
     }
 
@@ -138,11 +140,11 @@ public class RuleRewriter {
                         elem.addElement(MailConstants.E_CONDITION_GROUP).addAttribute(MailConstants.A_OPERATION, name);
                     rule(condsElem, node);
                 } else if ("not".equals(name)){ 
-                    stack.push(name);
+                    mStack.push(name);
                     rule(elem, node);
                 } else {
-                    if ("exists".equals(name) && !stack.isEmpty()) {
-                        name = stack.pop() + " " + name;
+                    if ("exists".equals(name) && !mStack.isEmpty()) {
+                        name = mStack.pop() + " " + name;
                     }
                     Element cElem = 
                         elem.addElement(MailConstants.E_CONDITION).addAttribute(MailConstants.A_NAME, name);
@@ -160,7 +162,6 @@ public class RuleRewriter {
     }
     
     private void test(Element elem, Node node) {
-        String name = ((SieveNode) node).getName();
         int numChildren = node.jjtGetNumChildren();
         for (int i = 0; i < numChildren; i++) {
             Node childNode = node.jjtGetChild(i);
@@ -168,8 +169,8 @@ public class RuleRewriter {
                 Object val = ((SieveNode) childNode).getValue();
                 if (val != null) {
                     if (MATCH_TYPES.contains(val.toString())) {
-                        if (!stack.isEmpty())
-                            val = (String) stack.pop() + " " + val;
+                        if (!mStack.isEmpty())
+                            val = mStack.pop() + " " + val;
                         elem.addAttribute(MailConstants.A_OPERATION, val.toString());
                     } else {
                         String cname = elem.getAttribute(MailConstants.A_NAME, null);
@@ -218,7 +219,7 @@ public class RuleRewriter {
     
     private List getStringList(Node node) {
         int n = node.jjtGetNumChildren();
-        List a = new ArrayList(n);
+        List<Object> a = new ArrayList<Object>(n);
         for (int i=0; i<n; i++ ) {
             Node cn = node.jjtGetChild(i);
             a.add(((SieveNode) cn).getValue());

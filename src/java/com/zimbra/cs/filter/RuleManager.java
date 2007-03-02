@@ -42,6 +42,10 @@ import org.apache.jsieve.SieveFactory;
 import org.apache.jsieve.parser.generated.Node;
 import org.apache.jsieve.parser.generated.ParseException;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.ElementFactory;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Flag;
@@ -50,9 +54,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.soap.Element;
 
 /**
  * @author kchen
@@ -117,7 +118,7 @@ public class RuleManager {
         return script;
     }
     
-    public Element getRulesAsXML(Element parent, Account account) throws ServiceException {
+    public Element getRulesAsXML(ElementFactory factory, Account account) throws ServiceException {
         try {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
             Node node = null;
@@ -133,7 +134,7 @@ public class RuleManager {
                     mScriptCache.put(accountId, node);
                 }
             }
-            RuleRewriter t = new RuleRewriter(parent, node);
+            RuleRewriter t = new RuleRewriter(factory, node);
             return t.getElement();
         } catch (ParseException e) {
             throw ServiceException.PARSE_ERROR("parsing Sieve script", e);
@@ -225,5 +226,46 @@ public class RuleManager {
                 .getBytes());
         Node node = SieveFactory.getInstance().parse(sin);
         return node;
-    }    
+    }
+
+    /**
+     * When a folder is renamed, updates any filter rules that reference
+     * that folder.
+     */
+    public void folderRenamed(Account account, String originalPath, String newPath)
+    throws ServiceException {
+        String rules = getRules(account);
+        if (rules != null) {
+            // Assume that we always put quotes around folder paths.  Replace
+            // any paths that start with this folder's original path.  This will
+            // take care of rules for children affected by a parent's move or rename.
+            String newRules = rules.replace("\"" + originalPath, "\"" + newPath);
+            if (!newRules.equals(rules)) {
+                setRules(account, newRules);
+                ZimbraLog.filter.info("Updated filter rules due to folder move or rename from %s to %s.",
+                    originalPath, newPath);
+                ZimbraLog.filter.debug("Old rules:\n%s, new rules:\n", rules, newRules);
+            }
+        }
+    }
+    
+    /**
+     * When a tag is renamed, updates any filter rules that reference
+     * that tag.
+     */
+    public void tagRenamed(Account account, String originalName, String newName)
+    throws ServiceException {
+        String rules = getRules(account);
+        if (rules != null) {
+            String newRules = rules.replace("tag \"" + originalName + "\"", "tag \"" + newName + "\"");
+            if (!newRules.equals(rules)) {
+                setRules(account, newRules);
+                ZimbraLog.filter.info("Updated filter rules due to tag rename from %s to %s.",
+                    originalName, newName);
+                ZimbraLog.filter.debug("Old rules:\n%s, new rules:\n", rules, newRules);
+            }
+        }
+    }
+    
+    
 }

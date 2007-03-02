@@ -49,7 +49,7 @@ public class GetRules extends MailDocumentHandler {
 
         Element response = lc.createElement(MailConstants.GET_RULES_RESPONSE);
         RuleManager mgr = RuleManager.getInstance();
-        Element rules = mgr.getRulesAsXML(response, account);
+        Element rules = mgr.getRulesAsXML(response.getFactory(), account);
         response.addUniqueElement(rules);
         return response;
     }

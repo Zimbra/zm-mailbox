@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -249,6 +250,16 @@ public class Tag extends MailItem {
         return MailItem.encodeMetadata(meta, color);
     }
 
+    /**
+     * Overrides {@link MailItem#rename(String, Folder) to update filter rules
+     * if necessary.
+     */
+    @Override
+    void rename(String name, Folder target) throws ServiceException {
+        String originalName = getName();
+        super.rename(name, target);
+        RuleManager.getInstance().tagRenamed(getAccount(), originalName, name);
+    }
 
     @Override
     public String toString() {
