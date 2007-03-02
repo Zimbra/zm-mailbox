@@ -2576,7 +2576,8 @@ public class Mailbox {
 
     public synchronized ZVCalendar getZCalendarForCalendarItems(
             Collection<CalendarItem> calItems,
-            boolean useOutlookCompatMode)
+            boolean useOutlookCompatMode,
+            boolean ignoreErrors)
     throws ServiceException {
         ZVCalendar cal = new ZVCalendar();
 
@@ -2601,7 +2602,7 @@ public class Mailbox {
 
         // build all the event components and add them to the Calendar
         for (CalendarItem calItem : calItems)
-            calItem.appendRawCalendarData(cal, useOutlookCompatMode);
+            calItem.appendRawCalendarData(cal, useOutlookCompatMode, ignoreErrors);
         return cal;
     }
 
@@ -2614,7 +2615,7 @@ public class Mailbox {
         try {
             beginTransaction("getCalendarForRange", octxt);
             Collection<CalendarItem> calItems = getCalendarItemsForRange(octxt, start, end, folderId, null);
-            return getZCalendarForCalendarItems(calItems, useOutlookCompatMode);
+            return getZCalendarForCalendarItems(calItems, useOutlookCompatMode, false);
         } finally {
             endTransaction(success);
         }

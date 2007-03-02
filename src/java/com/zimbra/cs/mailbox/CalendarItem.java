@@ -1624,11 +1624,22 @@ public abstract class CalendarItem extends MailItem {
         return MessageCache.getRawContent(this);
     }
 
-    void appendRawCalendarData(ZVCalendar cal, boolean useOutlookCompatMode)
+    void appendRawCalendarData(ZVCalendar cal,
+                               boolean useOutlookCompatMode,
+                               boolean ignoreErrors)
     throws ServiceException {
         for (Iterator invIter = mInvites.iterator(); invIter.hasNext();) {
             Invite inv = (Invite)invIter.next();
-            cal.addComponent(inv.newToVComponent(useOutlookCompatMode));
+            try {
+                cal.addComponent(inv.newToVComponent(useOutlookCompatMode));
+            } catch (ServiceException e) {
+                if (ignoreErrors) {
+                    ZimbraLog.calendar.warn(
+                            "Error retrieving iCalendar data for item " +
+                            inv.getMailItemId() + ": " + e.getMessage(), e);
+                } else
+                    throw e;
+            }
         }
     }
     

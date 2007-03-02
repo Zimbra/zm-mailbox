@@ -95,7 +95,8 @@ public class IcsFormatter extends Formatter {
         Browser browser = HttpUtil.guessBrowser(context.req);
         boolean useOutlookCompatMode = Browser.IE.equals(browser);
 //        try {
-            ZVCalendar cal = context.targetMailbox.getZCalendarForCalendarItems(calItems, useOutlookCompatMode);
+            ZVCalendar cal = context.targetMailbox.getZCalendarForCalendarItems(
+                    calItems, useOutlookCompatMode, true);
             ByteArrayOutputStream buf = new ByteArrayOutputStream();
             OutputStreamWriter wout = new OutputStreamWriter(buf, Mime.P_CHARSET_UTF8);
             cal.toICalendar(wout);
