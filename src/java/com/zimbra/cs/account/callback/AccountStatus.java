@@ -28,15 +28,20 @@ package com.zimbra.cs.account.callback;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
 
 public class AccountStatus implements AttributeCallback {
+	
+    private static final String KEY = AccountStatus.class.getName();
 
     /**
-     * check to make sure zimbraMailHost points to a valid server zimbraServiceHostname
+     * disable mail delivery if account status is changed to closed
+     * reset lockout attributes if account status is changed to active
      */
     @SuppressWarnings("unchecked")
     public void preModify(Map context, String attrName, Object value,
@@ -68,6 +73,39 @@ public class AccountStatus implements AttributeCallback {
      */
 
     public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
-
+        if (!isCreate) {
+            Object done = context.get(KEY);
+            if (done == null) {
+                context.put(KEY, KEY);
+                ZimbraLog.misc.info("removing closed account and all its aliases from all distribution lists");
+                if (entry instanceof Account) {
+                    try {
+                        handleAccountStatusClosed((Account)entry);
+                    } catch (ServiceException se) {
+                        // all exceptions are already swallowed by LdapProvisioning, just to be safe here.
+                        ZimbraLog.account.warn("unable to remove account address and aliases from all DLs for closed account", se);
+                        return;
+                    }
+                }    
+            }
+        }
     }
+    
+    private void handleAccountStatusClosed(Account account)  throws ServiceException {
+        String status = account.getAccountStatus();
+        
+        if (status.equals(Provisioning.ACCOUNT_STATUS_CLOSED)) {
+            LdapProvisioning prov = (LdapProvisioning) Provisioning.getInstance();
+            
+            String aliases[] = account.getAliases();
+            String addrs[] = new String[aliases.length+1];
+            addrs[0] = account.getName();
+            if (aliases.length > 0)
+                System.arraycopy(aliases, 0, addrs, 1, aliases.length);
+            
+            prov.removeAddressesFromAllDistributionLists(addrs);
+        }
+    }
+    
+
 }
