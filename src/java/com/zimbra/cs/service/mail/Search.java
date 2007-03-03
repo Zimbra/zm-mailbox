@@ -51,13 +51,13 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.WikiItem;
-import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.operation.ItemActionOperation;
 import com.zimbra.cs.operation.SearchOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.mail.GetCalendarItemSummaries.EncodeCalendarItemResult;
 import com.zimbra.cs.service.mail.ToXML.EmailType;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
@@ -130,6 +130,8 @@ public class Search extends MailDocumentHandler  {
         if (mLog.isDebugEnabled())
             mLog.debug("Search results beginning with offset " + offset);
 
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
+
         int totalNumHits = 0;
         ExpandResults expand = params.getFetchFirst();
         if (expand == ExpandResults.HITS)
@@ -151,26 +153,26 @@ public class Search extends MailDocumentHandler  {
                 e = addConversationHit(zsc, response, ch, params);
             } else if (hit instanceof MessageHit) {
                 MessageHit mh = (MessageHit) hit;
-                e = addMessageHit(zsc, response, mh, inline, params);
+                e = addMessageHit(zsc, ifmt, response, mh, inline, params);
             } else if (hit instanceof MessagePartHit) {
                 MessagePartHit mph = (MessagePartHit) hit;
                 e = addMessagePartHit(response, mph);                
             } else if (hit instanceof ContactHit) {
                 ContactHit ch = (ContactHit) hit;
-                e = ToXML.encodeContact(response, zsc, ch.getContact(), null, true, null);
+                e = ToXML.encodeContact(response, ifmt, ch.getContact(), null, true, null);
             } else if (hit instanceof NoteHit) {
                 NoteHit nh = (NoteHit) hit;
-                e = ToXML.encodeNote(response,zsc, nh.getNote());
+                e = ToXML.encodeNote(response, ifmt, nh.getNote());
             } else if (hit instanceof ProxiedHit) {
                 ProxiedHit ph = (ProxiedHit) hit;
                 response.addElement(ph.getElement().detach());
                 addSortField = false;
             } else if (hit instanceof CalendarItemHit) {
                 CalendarItemHit ah = (CalendarItemHit)hit;
-                e = addCalendarItemHit(zsc, response, ah, inline, params);
+                e = addCalendarItemHit(zsc, ifmt, response, ah, inline, params);
             } else if (hit instanceof DocumentHit) {
                 DocumentHit dh = (DocumentHit)hit;
-                e = addDocumentHit(zsc, response, dh);
+                e = addDocumentHit(ifmt, response, dh);
             } else {
                 mLog.error("Got an unknown hit type putting search hits: "+hit);
                 continue;
@@ -196,7 +198,8 @@ public class Search extends MailDocumentHandler  {
     throws ServiceException {
         Conversation conv = ch.getConversation();
         MessageHit mh = ch.getFirstMessageHit();
-        Element c = ToXML.encodeConversationSummary(response, zsc, conv, mh == null ? null : mh.getMessage(), params.getWantRecipients());
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
+        Element c = ToXML.encodeConversationSummary(response, ifmt, zsc.getOperationContext(), conv, mh == null ? null : mh.getMessage(), params.getWantRecipients());
         if (ch.getScore() != 0)
             c.addAttribute(MailConstants.A_SCORE, ch.getScore());
 
@@ -223,10 +226,10 @@ public class Search extends MailDocumentHandler  {
      *           calendar item did not have any instances in the specified range
      * @throws ServiceException
      */
-    protected Element addCalendarItemHit(ZimbraSoapContext zsc, Element response, CalendarItemHit ah, boolean inline, SearchParams params)
+    protected Element addCalendarItemHit(ZimbraSoapContext zsc, ItemIdFormatter ifmt, Element response, CalendarItemHit ah, boolean inline, SearchParams params)
     throws ServiceException {
         CalendarItem calItem = ah.getCalendarItem();
-        Element calElement = null;;
+        Element calElement = null;
         int fields = PendingModifications.Change.ALL_FIELDS;
         
         Account acct = getRequestedAccount(zsc);
@@ -237,20 +240,18 @@ public class Search extends MailDocumentHandler  {
         
         if (calElement != null) {
             response.addElement(encoded.element);
-            ToXML.setCalendarItemFields(encoded.element, zsc, calItem, fields, false);
-            
-            if (ah.getScore() != 0) {
-                calElement.addAttribute(MailConstants.A_SCORE, ah.getScore());
-            }
-            
+            ToXML.setCalendarItemFields(encoded.element, ifmt, calItem, fields, false);
+
             calElement.addAttribute(MailConstants.A_CONTENTMATCHED, true);
+            if (ah.getScore() != 0)
+                calElement.addAttribute(MailConstants.A_SCORE, ah.getScore());
         }
         
         return calElement;
     }
 
 
-    protected Element addMessageHit(ZimbraSoapContext zsc, Element response, MessageHit mh, boolean inline, SearchParams params)
+    protected Element addMessageHit(ZimbraSoapContext zsc, ItemIdFormatter ifmt, Element response, MessageHit mh, boolean inline, SearchParams params)
     throws ServiceException {
         Message msg = mh.getMessage();
 
@@ -268,9 +269,9 @@ public class Search extends MailDocumentHandler  {
         
         Element m;
         if (inline)
-            m = ToXML.encodeMessageAsMP(response, zsc, msg, null, params.getWantHtml(), params.getNeuterImages());
+            m = ToXML.encodeMessageAsMP(response, ifmt, zsc.getOperationContext(), msg, null, params.getWantHtml(), params.getNeuterImages());
         else
-            m = ToXML.encodeMessageSummary(response, zsc, msg, params.getWantRecipients());
+            m = ToXML.encodeMessageSummary(response, ifmt, zsc.getOperationContext(), msg, params.getWantRecipients());
 
         if (mh.getScore() != 0)
             m.addAttribute(MailConstants.A_SCORE, mh.getScore());
@@ -289,7 +290,7 @@ public class Search extends MailDocumentHandler  {
         return m;
     }
 
-    protected Element addMessageMiss(ZimbraSoapContext zsc, Element response, Message msg, boolean inline, SearchParams params)
+    protected Element addMessageMiss(ZimbraSoapContext zsc, ItemIdFormatter ifmt, Element response, Message msg, boolean inline, SearchParams params)
     throws ServiceException {
         // for bug 7568, mark-as-read must happen before the response is encoded.
         if (inline && msg.isUnread() && params.getMarkRead()) {
@@ -305,11 +306,11 @@ public class Search extends MailDocumentHandler  {
 
         Element m;
         if (inline) {
-            m = ToXML.encodeMessageAsMP(response, zsc, msg, null, params.getWantHtml(), params.getNeuterImages());
+            m = ToXML.encodeMessageAsMP(response, ifmt, zsc.getOperationContext(), msg, null, params.getWantHtml(), params.getNeuterImages());
             if (!msg.getFragment().equals(""))
                 m.addAttribute(MailConstants.E_FRAG, msg.getFragment(), Element.DISP_CONTENT);
         } else {
-            m = ToXML.encodeMessageSummary(response, zsc, msg, params.getWantRecipients());
+            m = ToXML.encodeMessageSummary(response, ifmt, zsc.getOperationContext(), msg, params.getWantRecipients());
         }
         return m;
     }
@@ -337,21 +338,21 @@ public class Search extends MailDocumentHandler  {
         return mp;
     }
 
-    Element addContactHit(ZimbraSoapContext zsc, Element response, ContactHit ch) throws ServiceException {
-        return ToXML.encodeContact(response, zsc, ch.getContact(), null, true, null);
+    Element addContactHit(ItemIdFormatter ifmt, Element response, ContactHit ch) throws ServiceException {
+        return ToXML.encodeContact(response, ifmt, ch.getContact(), null, true, null);
     }
 
-    Element addDocumentHit(ZimbraSoapContext zsc, Element response, DocumentHit dh) throws ServiceException {
+    Element addDocumentHit(ItemIdFormatter ifmt, Element response, DocumentHit dh) throws ServiceException {
         int ver = dh.getVersion();
         if (dh.getItemType() == MailItem.TYPE_DOCUMENT)
-            return ToXML.encodeDocument(response, zsc, dh.getDocument(), ver);
+            return ToXML.encodeDocument(response, ifmt, dh.getDocument(), ver);
         else if (dh.getItemType() == MailItem.TYPE_WIKI)
-            return ToXML.encodeWiki(response, zsc, (WikiItem)dh.getDocument(), ver);
+            return ToXML.encodeWiki(response, ifmt, (WikiItem)dh.getDocument(), ver);
         throw ServiceException.UNKNOWN_DOCUMENT("invalid document type "+dh.getItemType(), null);
     }
 
-    Element addNoteHit(ZimbraSoapContext zsc, Element response, NoteHit nh) throws ServiceException {
+    Element addNoteHit(ItemIdFormatter ifmt, Element response, NoteHit nh) throws ServiceException {
         // TODO - does this need to be a summary, instead of the whole note?
-        return ToXML.encodeNote(response, zsc, nh.getNote());
+        return ToXML.encodeNote(response, ifmt, nh.getNote());
     }
 }

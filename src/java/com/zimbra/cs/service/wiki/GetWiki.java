@@ -36,6 +36,7 @@ import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -53,17 +54,19 @@ public class GetWiki extends WikiDocumentHandler {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
 		checkEnabled(lc);
         OperationContext octxt = lc.getOperationContext();
+        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
+
         Element wElem = request.getElement(MailConstants.E_WIKIWORD);
         String word = wElem.getAttribute(MailConstants.A_NAME, null);
         String id = wElem.getAttribute(MailConstants.A_ID, null);
         int traverse = (int)wElem.getAttributeLong(MailConstants.A_TRAVERSE, 0);
-        int rev = (int)wElem.getAttributeLong(MailConstants.A_VERSION, -1);
-        int count = (int)wElem.getAttributeLong(MailConstants.A_COUNT, -1);
+        int rev = (int) wElem.getAttributeLong(MailConstants.A_VERSION, -1);
+        int count = (int) wElem.getAttributeLong(MailConstants.A_COUNT, -1);
 
         Element response = lc.createElement(MailConstants.GET_WIKI_RESPONSE);
 
         WikiItem wikiItem;
-        
+
         if (word != null) {
         	ItemId fid = getRequestedFolder(request, lc);
         	if (fid == null)
@@ -94,8 +97,8 @@ public class GetWiki extends WikiDocumentHandler {
         } else {
         	throw ServiceException.FAILURE("missing attribute w or id", null);
         }
-        
-        Element wikiElem = ToXML.encodeWiki(response, lc, wikiItem, rev);
+
+        Element wikiElem = ToXML.encodeWiki(response, ifmt, wikiItem, rev);
         
         if (count > 1) {
     		count--;  // head version was already printed
@@ -103,7 +106,7 @@ public class GetWiki extends WikiDocumentHandler {
         		rev = wikiItem.getVersion();
         	}
         	while (--rev > 0) {
-                ToXML.encodeWiki(response, lc, wikiItem, rev);
+                ToXML.encodeWiki(response, ifmt, wikiItem, rev);
         		count--;
         		if (count == 0) {
         			break;

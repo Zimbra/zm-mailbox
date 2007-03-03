@@ -40,6 +40,7 @@ import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.operation.GetItemListOperation;
 import com.zimbra.cs.operation.Operation.Requester;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -52,6 +53,7 @@ public class GetSearchFolder extends MailDocumentHandler  {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
 		Mailbox mbox = getRequestedMailbox(lc);
 		OperationContext octxt = lc.getOperationContext();
+        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
 		Session session = getSession(context);
 		
 		Element response = lc.createElement(MailConstants.GET_SEARCH_FOLDER_RESPONSE);
@@ -61,8 +63,8 @@ public class GetSearchFolder extends MailDocumentHandler  {
 		List<? extends MailItem> results = op.getResults();
 		
 		if (results != null) {
-			for (MailItem mi : results) 
-				ToXML.encodeSearchFolder(response, lc, (SearchFolder) mi);
+			for (MailItem item : results) 
+				ToXML.encodeSearchFolder(response, ifmt, (SearchFolder) item);
         }
 
         return response;

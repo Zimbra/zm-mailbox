@@ -43,6 +43,7 @@ import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.operation.CreateMountpointOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -61,6 +62,7 @@ public class CreateMountpoint extends MailDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         Mailbox.OperationContext octxt = lc.getOperationContext();
+        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
         Session session = getSession(context);
 
         Element t = request.getElement(MailConstants.E_MOUNT);
@@ -96,7 +98,7 @@ public class CreateMountpoint extends MailDocumentHandler {
 
         Element response = lc.createElement(MailConstants.CREATE_MOUNTPOINT_RESPONSE);
         if (mpt != null)
-            ToXML.encodeMountpoint(response, lc, mpt);
+            ToXML.encodeMountpoint(response, ifmt, mpt);
         return response;
     }
 

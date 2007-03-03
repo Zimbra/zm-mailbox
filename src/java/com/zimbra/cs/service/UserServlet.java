@@ -167,20 +167,18 @@ public class UserServlet extends ZimbraServlet {
     }
     
     /** Returns the REST URL for the mail item. */
-    public static String getRestUrl(MailItem mailItem) throws ServiceException, IOException {
-    		
-    	Account docAccount = mailItem.getMailbox().getAccount();
-        String url = getRestUrl(docAccount);
-        String path = url + mailItem.getPath();
-            
-        if (mailItem instanceof Folder)
-        	path = path + "/";
-    
+    public static String getRestUrl(MailItem item) throws ServiceException, IOException {
+    	Account acct = item.getMailbox().getAccount();
+        String url = getRestUrl(acct) + item.getPath();
+
+        if (item instanceof Folder)
+        	url = url + "/";
+
         if (url.startsWith("https"))
-        	url = new HttpsURL(path).toString();
+        	url = new HttpsURL(url).toString();
         else
-            url = new HttpURL(path).toString();    		
-     		
+            url = new HttpURL(url).toString();    		
+
     	return url;
     }
     	    
@@ -198,6 +196,8 @@ public class UserServlet extends ZimbraServlet {
         addFormatter(new IfbFormatter());
         addFormatter(new SyncFormatter());
         addFormatter(new WikiFormatter());
+        addFormatter(new XmlFormatter());
+        addFormatter(new JsonFormatter());
 
         mDefaultFormatters = new HashMap<String, Formatter>();
         for (Formatter fmt : mFormatters.values())

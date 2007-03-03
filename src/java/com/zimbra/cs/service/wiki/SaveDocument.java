@@ -40,6 +40,7 @@ import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.soap.MailConstants;
@@ -110,21 +111,21 @@ public class SaveDocument extends WikiDocumentHandler {
 
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
         Element docElem = request.getElement(MailConstants.E_DOC);
-        OperationContext octxt = lc.getOperationContext();
+        OperationContext octxt = zsc.getOperationContext();
 
         Doc doc;
         Element attElem = docElem.getOptionalElement(MailConstants.E_UPLOAD);
         if (attElem != null) {
             String aid = attElem.getAttribute(MailConstants.A_ID, null);
-            doc = getDocumentDataFromUpload(lc, aid);
+            doc = getDocumentDataFromUpload(zsc, aid);
         } else {
         	attElem = docElem.getElement(MailConstants.E_MSG);
             String msgid = attElem.getAttribute(MailConstants.A_ID, null);
             String part = attElem.getAttribute(MailConstants.A_PART, null);
-            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(lc.getRequestedAccountId());
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(zsc.getRequestedAccountId());
         	doc = getDocumentDataFromMimePart(octxt, mbox, msgid, part);
         }
 
@@ -137,18 +138,18 @@ public class SaveDocument extends WikiDocumentHandler {
         if (id == null) {
         	itemId = 0;
         } else {
-        	ItemId iid = new ItemId(id, lc);
+        	ItemId iid = new ItemId(id, zsc);
         	itemId = iid.getId();
         }
 
-        WikiContext ctxt = new WikiContext(octxt, lc.getRawAuthToken());
-        WikiPage page = WikiPage.create(name, getAuthor(lc), ctype, doc.contents);
-        Wiki.addPage(ctxt, page, itemId, ver, getRequestedFolder(request, lc));
+        WikiContext ctxt = new WikiContext(octxt, zsc.getRawAuthToken());
+        WikiPage page = WikiPage.create(name, getAuthor(zsc), ctype, doc.contents);
+        Wiki.addPage(ctxt, page, itemId, ver, getRequestedFolder(request, zsc));
         Document docItem = page.getWikiItem(ctxt);
 
-        Element response = lc.createElement(MailConstants.SAVE_DOCUMENT_RESPONSE);
+        Element response = zsc.createElement(MailConstants.SAVE_DOCUMENT_RESPONSE);
         Element m = response.addElement(MailConstants.E_DOC);
-        m.addAttribute(MailConstants.A_ID, lc.formatItemId(docItem));
+        m.addAttribute(MailConstants.A_ID, new ItemIdFormatter(zsc).formatItemId(docItem));
         m.addAttribute(MailConstants.A_VERSION, docItem.getVersion());
         ToXML.encodeRestUrl(m, docItem);
         doc.cleanup();

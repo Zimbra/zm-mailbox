@@ -46,6 +46,7 @@ import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.formatter.ContactCSV;
 import com.zimbra.cs.service.formatter.ContactCSV.ParseException;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -64,6 +65,7 @@ public class ImportContacts extends MailDocumentHandler  {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
+        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
         Session session = getSession(context);
 
         String folder = request.getAttribute(MailConstants.A_FOLDER, DEFAULT_FOLDER_ID);
@@ -108,7 +110,7 @@ public class ImportContacts extends MailDocumentHandler  {
         for (ItemId iid : idsList) {
             if (ids.length() > 0)
                 ids.append(",");
-            ids.append(iid.toString(lc));
+            ids.append(iid.toString(ifmt));
         }
 
         Element response = lc.createElement(MailConstants.IMPORT_CONTACTS_RESPONSE);

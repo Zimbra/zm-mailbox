@@ -35,6 +35,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -370,8 +371,9 @@ public class ItemActionOperation extends Operation {
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + mOp, null);
         }
 
+        ItemIdFormatter ifmt = new ItemIdFormatter(mZc);
         for (int id : mIds)
-            successes.append(successes.length() > 0 ? "," : "").append(mZc.formatItemId(id));
+            successes.append(successes.length() > 0 ? "," : "").append(ifmt.formatItemId(id));
         mResult = successes.toString();
     }
     

@@ -56,6 +56,7 @@ import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.mail.ParseMimeMessage.MimeMessageData;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -79,6 +80,7 @@ public class SendMsg extends MailDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = zsc.getOperationContext();
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
         Session session = getSession(context);
 
         sLog.info("<SendMsg> " + zsc.toString());
@@ -157,7 +159,7 @@ public class SendMsg extends MailDocumentHandler {
         Element response = zsc.createElement(MailConstants.SEND_MSG_RESPONSE);
         Element respElement = response.addElement(MailConstants.E_MSG);
         if (savedMsgId != null)
-            respElement.addAttribute(MailConstants.A_ID, zsc.formatItemId(savedMsgId));
+            respElement.addAttribute(MailConstants.A_ID, ifmt.formatItemId(savedMsgId));
         return response;
     }
 

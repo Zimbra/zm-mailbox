@@ -48,6 +48,7 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.ZimbraSoapContext;
 
 
@@ -92,7 +93,8 @@ public class GetCalendarItemSummaries extends CalendarRequest {
         Account acct, long rangeStart, long rangeEnd, boolean newFormat) throws ServiceException 
     {
         EncodeCalendarItemResult toRet = new EncodeCalendarItemResult();
-        
+        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
+
         try {
             boolean expandRanges = (rangeStart > 0 && rangeEnd > 0 && rangeStart < rangeEnd);
             
@@ -187,10 +189,8 @@ public class GetCalendarItemSummaries extends CalendarRequest {
 
                             instElt.addAttribute(MailConstants.A_CAL_IS_EXCEPTION, true);
 
-                            if ((defaultInvite.getMailItemId() != invId.getMsgId()) ||
-                                        (defaultInvite.getComponentNum() != invId.getComponentId())) 
-                            {
-                                instElt.addAttribute(MailConstants.A_CAL_INV_ID, lc.formatItemId(calItem, inst.getMailItemId()));
+                            if ((defaultInvite.getMailItemId() != invId.getMsgId()) || (defaultInvite.getComponentNum() != invId.getComponentId())) {
+                                instElt.addAttribute(MailConstants.A_CAL_INV_ID, ifmt.formatItemId(calItem, inst.getMailItemId()));
 
                                 instElt.addAttribute(MailConstants.A_CAL_COMPONENT_NUM, inst.getComponentNum());
 
@@ -310,10 +310,10 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                 calItemElem.addAttribute(MailConstants.A_NAME, defaultInvite.getName());
                 calItemElem.addAttribute(MailConstants.A_CAL_LOCATION, defaultInvite.getLocation());
                 
-                calItemElem.addAttribute(MailConstants.A_ID, lc.formatItemId(calItem));
-                calItemElem.addAttribute(MailConstants.A_FOLDER, lc.formatItemId(calItem.getFolderId()));
+                calItemElem.addAttribute(MailConstants.A_ID, ifmt.formatItemId(calItem));
+                calItemElem.addAttribute(MailConstants.A_FOLDER, ifmt.formatItemId(calItem.getFolderId()));
                 
-                calItemElem.addAttribute(MailConstants.A_CAL_INV_ID, lc.formatItemId(calItem, defaultInvite.getMailItemId()));
+                calItemElem.addAttribute(MailConstants.A_CAL_INV_ID, ifmt.formatItemId(calItem, defaultInvite.getMailItemId()));
                 
                 calItemElem.addAttribute(MailConstants.A_CAL_COMPONENT_NUM, defaultInvite.getComponentNum());
                 

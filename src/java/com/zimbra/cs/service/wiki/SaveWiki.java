@@ -30,10 +30,10 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.cs.wiki.WikiPage;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
@@ -47,8 +47,7 @@ public class SaveWiki extends WikiDocumentHandler {
     }
     
 	@Override
-	public Element handle(Element request, Map<String, Object> context)
-			throws ServiceException, SoapFaultException {
+	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         OperationContext octxt = lc.getOperationContext();
 
@@ -77,7 +76,7 @@ public class SaveWiki extends WikiDocumentHandler {
         
         Element response = lc.createElement(MailConstants.SAVE_WIKI_RESPONSE);
         Element m = response.addElement(MailConstants.E_WIKIWORD);
-        m.addAttribute(MailConstants.A_ID, lc.formatItemId(wikiItem));
+        m.addAttribute(MailConstants.A_ID, new ItemIdFormatter(lc).formatItemId(wikiItem));
         m.addAttribute(MailConstants.A_VERSION, wikiItem.getVersion());
         return response;
 	}

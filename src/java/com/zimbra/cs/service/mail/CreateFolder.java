@@ -37,6 +37,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.operation.CreateFolderOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.Session;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -59,6 +60,7 @@ public class CreateFolder extends MailDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         Mailbox.OperationContext octxt = lc.getOperationContext();
+        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
         Session session = getSession(context);
 
         Element t = request.getElement(MailConstants.E_FOLDER);
@@ -92,7 +94,7 @@ public class CreateFolder extends MailDocumentHandler {
 
         Element response = lc.createElement(MailConstants.CREATE_FOLDER_RESPONSE);
         if (folder != null)
-            ToXML.encodeFolder(response, lc, folder);
+            ToXML.encodeFolder(response, ifmt, octxt, folder);
         return response;
     }
 }

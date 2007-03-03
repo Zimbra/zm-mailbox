@@ -60,6 +60,7 @@ import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender.Verb;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -92,7 +93,7 @@ public class SendInviteReply extends CalendarRequest {
         boolean updateOrg = request.getAttributeBool(MailConstants.A_CAL_UPDATE_ORGANIZER, true);
         
         if (sLog.isInfoEnabled()) {
-            sLog.info("<SendInviteReply id=" + zsc.formatItemId(iid) + " verb=" + verb + " updateOrg=" + updateOrg + "> " + zsc.toString());
+            sLog.info("<SendInviteReply id=" + new ItemIdFormatter(zsc).formatItemId(iid) + " verb=" + verb + " updateOrg=" + updateOrg + "> " + zsc.toString());
         }
         
         Element response = getResponseElement(zsc);

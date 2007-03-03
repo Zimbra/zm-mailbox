@@ -35,10 +35,12 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.operation.GetFolderTreeOperation;
 import com.zimbra.cs.operation.GetFolderTreeOperation.FolderNode;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.Session;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
@@ -61,6 +63,7 @@ public class GetFolder extends MailDocumentHandler {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
 		Mailbox mbox = getRequestedMailbox(lc);
 		Mailbox.OperationContext octxt = lc.getOperationContext();
+        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
 		Session session = getSession(context);
 		
 		String parentId = DEFAULT_FOLDER_ID;
@@ -80,7 +83,7 @@ public class GetFolder extends MailDocumentHandler {
 		op.schedule();
 		FolderNode resultFolder = op.getResult();
 
-		Element folderRoot = encodeFolderNode(lc, response, resultFolder);
+		Element folderRoot = encodeFolderNode(ifmt, octxt, response, resultFolder);
 		if (resultFolder.mFolder instanceof Mountpoint) {
 			handleMountpoint(request, context, iid, (Mountpoint) resultFolder.mFolder, folderRoot);			
 		}
@@ -88,11 +91,11 @@ public class GetFolder extends MailDocumentHandler {
 		return response;
 	}
 	
-	public static Element encodeFolderNode(ZimbraSoapContext lc, Element response, FolderNode node) {
-		Element toRet = ToXML.encodeFolder(response, lc, node.mFolder);
+	public static Element encodeFolderNode(ItemIdFormatter ifmt, OperationContext octxt, Element response, FolderNode node) {
+		Element toRet = ToXML.encodeFolder(response, ifmt, octxt, node.mFolder);
 		
 		for (FolderNode subNode : node.mSubFolders)
-			encodeFolderNode(lc, toRet, subNode);
+			encodeFolderNode(ifmt, octxt, toRet, subNode);
 		
 		return toRet;
 	}

@@ -41,6 +41,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.operation.ModifyContactOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -57,6 +58,7 @@ public class ModifyContact extends MailDocumentHandler  {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
+        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
         Session session = getSession(context);
 
         boolean replace = request.getAttributeBool(MailConstants.A_REPLACE, false);
@@ -72,7 +74,7 @@ public class ModifyContact extends MailDocumentHandler  {
         Contact con = mbox.getContactById(octxt, iid.getId());
         Element response = lc.createElement(MailConstants.MODIFY_CONTACT_RESPONSE);
         if (con != null)
-            ToXML.encodeContact(response, lc, con, null, true, null);
+            ToXML.encodeContact(response, ifmt, con, null, true, null);
         return response;
     }
 

@@ -56,6 +56,7 @@ import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.L10nUtil;
 import com.zimbra.cs.util.L10nUtil.MsgKey;
@@ -375,13 +376,14 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 int[] ids = mbox.addInvite(octxt, csd.mInvite, apptFolderId, false, pm);
     
                 if (response != null && ids != null) {
-                    String id = zsc.formatItemId(ids[0]);
+                    ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
+                    String id = ifmt.formatItemId(ids[0]);
                     response.addAttribute(MailConstants.A_CAL_ID, id);
                     if (csd.mInvite.isEvent())
                         response.addAttribute(MailConstants.A_APPT_ID_DEPRECATE_ME, id);  // for backward compat
-                    response.addAttribute(MailConstants.A_CAL_INV_ID, zsc.formatItemId(ids[0], ids[1]));
+                    response.addAttribute(MailConstants.A_CAL_INV_ID, ifmt.formatItemId(ids[0], ids[1]));
                     if (msgId != null)
-                        response.addUniqueElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ID, zsc.formatItemId(msgId));
+                        response.addUniqueElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ID, ifmt.formatItemId(msgId));
                 }
             }
         }

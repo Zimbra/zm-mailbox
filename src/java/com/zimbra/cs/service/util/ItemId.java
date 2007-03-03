@@ -130,8 +130,8 @@ public class ItemId {
     public String toString(Account authAccount) {
         return toString(authAccount == null ? null : authAccount.getId());
     }
-    public String toString(ZimbraSoapContext zsc) {
-        return toString(zsc == null ? null : zsc.getAuthtokenAccountId());
+    public String toString(ItemIdFormatter ifmt) {
+        return toString(ifmt == null ? null : ifmt.getAuthenticatedId());
     }
     public String toString(String authAccountId) {
         StringBuffer sb = new StringBuffer();

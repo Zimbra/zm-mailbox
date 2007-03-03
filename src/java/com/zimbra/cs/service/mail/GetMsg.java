@@ -39,6 +39,7 @@ import com.zimbra.cs.operation.GetMsgOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -55,6 +56,7 @@ public class GetMsg extends MailDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
+        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
         Session session = getSession(context);
         
         Element eMsg = request.getElement(MailConstants.E_MSG);
@@ -69,13 +71,13 @@ public class GetMsg extends MailDocumentHandler {
         
         Element response = lc.createElement(MailConstants.GET_MSG_RESPONSE);
         if (raw) {
-            ToXML.encodeMessageAsMIME(response, lc, op.getMsg(), part);
+            ToXML.encodeMessageAsMIME(response, ifmt, op.getMsg(), part);
         } else {
             boolean wantHTML = eMsg.getAttributeBool(MailConstants.A_WANT_HTML, false);
             if (op.getMsg() != null)
-                ToXML.encodeMessageAsMP(response, lc, op.getMsg(), part, wantHTML, neuter);
+                ToXML.encodeMessageAsMP(response, ifmt, octxt, op.getMsg(), part, wantHTML, neuter);
             else if (op.getCalendarItem() != null)
-                ToXML.encodeInviteAsMP(response, lc, op.getCalendarItem(), iid, part, wantHTML, neuter);
+                ToXML.encodeInviteAsMP(response, ifmt, op.getCalendarItem(), iid, part, wantHTML, neuter);
         }
         return response;
     }

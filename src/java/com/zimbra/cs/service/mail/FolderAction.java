@@ -51,6 +51,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -121,6 +122,7 @@ public class FolderAction extends ItemAction {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = zsc.getOperationContext();
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
         ItemId iid = new ItemId(action.getAttribute(MailConstants.A_ID), zsc);
 
         if (operation.equals(OP_EMPTY)) {
@@ -217,7 +219,7 @@ public class FolderAction extends ItemAction {
             throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
         }
 
-        return zsc.formatItemId(iid);
+        return ifmt.formatItemId(iid);
     }
 
     static ACL parseACL(Element eAcl) throws ServiceException {

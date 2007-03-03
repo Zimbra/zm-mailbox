@@ -314,9 +314,16 @@ public class Mailbox {
         public boolean isUsingAdminPrivileges() {
             return isAdmin;
         }
+        public boolean isDelegatedRequest(Mailbox mbox) {
+            return authuser != null && authuser.getId().equalsIgnoreCase(mbox.getAccountId());
+        }
         
-        public void setRequestIP(String addr) { requestIP = addr; }
-        public String getRequestIP() { return requestIP; }
+        public void setRequestIP(String addr) {
+            requestIP = addr;
+        }
+        public String getRequestIP() {
+            return requestIP;
+        }
     }
 
     // TODO: figure out correct caching strategy

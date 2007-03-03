@@ -41,6 +41,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.ZimbraSoapContext;
 
 
@@ -86,10 +87,11 @@ public class CreateCalendarItemException extends CreateCalendarItem {
         Account acct = getRequestedAccount(zsc);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = zsc.getOperationContext();
-        
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
+
         ItemId iid = new ItemId(request.getAttribute(MailConstants.A_ID), zsc);
         int compNum = (int) request.getAttributeLong(MailConstants.E_INVITE_COMPONENT);
-        sLog.info("<CreateCalendarItemException id=" + zsc.formatItemId(iid) + " comp=" + compNum + "> " + zsc.toString());
+        sLog.info("<CreateCalendarItemException id=" + ifmt.formatItemId(iid) + " comp=" + compNum + "> " + zsc.toString());
         
         // <M>
         Element msgElem = request.getElement(MailConstants.E_MSG);
@@ -106,7 +108,7 @@ public class CreateCalendarItemException extends CreateCalendarItem {
 
             Invite inv = calItem.getInvite(iid.getSubpartId(), compNum);
             if (inv.hasRecurId())
-                throw MailServiceException.INVITE_OUT_OF_DATE("Invite id=" + zsc.formatItemId(iid) + " comp=" + compNum + " is not the default invite");
+                throw MailServiceException.INVITE_OUT_OF_DATE("Invite id=" + ifmt.formatItemId(iid) + " comp=" + compNum + " is not the default invite");
             if (!calItem.isRecurring())
                 throw ServiceException.INVALID_REQUEST("CalendarItem " + calItem.getId() + " is not a recurring calendar item", null);
             

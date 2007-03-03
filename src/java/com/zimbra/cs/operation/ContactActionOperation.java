@@ -32,6 +32,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -60,10 +61,10 @@ public class ContactActionOperation extends ItemActionOperation {
         mFields = (fields == null || fields.isEmpty() ? null : fields); 
     }
 
-    ContactActionOperation(ZimbraSoapContext zc, Session session, OperationContext oc, Mailbox mbox,
+    ContactActionOperation(ZimbraSoapContext zc, Session session, OperationContext octxt, Mailbox mbox,
             Requester req, int baseLoad, List<Integer> ids, Op op)
             throws ServiceException {
-        super(zc, session, oc, mbox, req, baseLoad, ids, op, MailItem.TYPE_CONTACT, true, null);
+        super(zc, session, octxt, mbox, req, baseLoad, ids, op, MailItem.TYPE_CONTACT, true, null);
     }
 
     protected void callback() throws ServiceException {
@@ -87,9 +88,10 @@ public class ContactActionOperation extends ItemActionOperation {
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + mOp, null);
         }
 
+        ItemIdFormatter ifmt = new ItemIdFormatter(mZc);
         StringBuilder successes = new StringBuilder();
         for (int id : mIds)
-            successes.append(successes.length() > 0 ? "," : "").append(mZc.formatItemId(id));
+            successes.append(successes.length() > 0 ? "," : "").append(ifmt.formatItemId(id));
         mResult = successes.toString();
     }
 

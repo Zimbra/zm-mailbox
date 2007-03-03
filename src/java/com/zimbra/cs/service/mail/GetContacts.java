@@ -45,6 +45,7 @@ import com.zimbra.cs.operation.GetContactListOperation;
 import com.zimbra.cs.operation.GetContactOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -62,6 +63,7 @@ public class GetContacts extends MailDocumentHandler  {
 		ZimbraSoapContext zsc = getZimbraSoapContext(context);
 		Mailbox mbox = getRequestedMailbox(zsc);
 		Mailbox.OperationContext octxt = zsc.getOperationContext();
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 		Session session = getSession(context);
 
 		boolean sync = request.getAttributeBool(MailConstants.A_SYNC, false);
@@ -135,7 +137,7 @@ public class GetContacts extends MailDocumentHandler  {
 				
 				for (Contact con : contacts) {
 					if (con != null && (folderId == ALL_FOLDERS || folderId == con.getFolderId()))
-						ToXML.encodeContact(response, zsc, con, cacache, false, attrs, fields);
+						ToXML.encodeContact(response, ifmt, con, cacache, false, attrs, fields);
 				}
 			}
 			
@@ -145,9 +147,10 @@ public class GetContacts extends MailDocumentHandler  {
 			op.schedule();
 			List<Contact> contacts = op.getResults();
 
-			for (Contact con : contacts)
+			for (Contact con : contacts) {
 				if (con != null)
-					ToXML.encodeContact(response, zsc, con, cacache, false, attrs, fields);
+					ToXML.encodeContact(response, ifmt, con, cacache, false, attrs, fields);
+            }
 		}
 		return response;
 	}

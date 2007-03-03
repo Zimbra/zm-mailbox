@@ -41,6 +41,7 @@ import com.zimbra.cs.operation.GetFolderTreeOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.mail.GetFolder;
 import com.zimbra.cs.service.mail.ToXML;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
@@ -261,13 +262,15 @@ public class SoapSession extends Session {
             // dump current mailbox status (currently just size)
             ToXML.encodeMailbox(eRefresh, mMailbox);
 
+            ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
+
             // dump all tags under a single <tags> parent
             List<Tag> tags = mMailbox.getTagList(octxt);
             if (tags != null && tags.size() > 0) {
                 Element eTags = eRefresh.addUniqueElement(ZimbraNamespace.E_TAGS);
                 for (Tag tag : tags)
                     if (tag != null && !(tag instanceof Flag))
-                        ToXML.encodeTag(eTags, zsc, tag);
+                        ToXML.encodeTag(eTags, ifmt, tag);
             }
 
             // dump recursive folder hierarchy starting at USER_ROOT (i.e. folders visible to the user)
@@ -278,8 +281,7 @@ public class SoapSession extends Session {
             	// use the operation here just so we can re-use the logic...
             	GetFolderTreeOperation op = new GetFolderTreeOperation(this, octxt, mMailbox, Requester.SOAP, null);
             	op.runImmediately();
-            	GetFolder.encodeFolderNode(zsc, eRefresh, op.getResult());
-                
+            	GetFolder.encodeFolderNode(ifmt, zsc.getOperationContext(), eRefresh, op.getResult());
             } catch (ServiceException e) {
                 if (e.getCode() != ServiceException.PERM_DENIED)
                     throw e;
@@ -394,27 +396,28 @@ public class SoapSession extends Session {
      * Write a single instance of the PendingModifications structure into the 
      * passed-in <notify> block 
      * 
-     * @param zc
+     * @param zsc
      * @param pms
      * @param parent
      * @param mbox
      * @param explicitAcct
      */
-    private static void putPendingModifications(ZimbraSoapContext zc, PendingModifications pms, Element parent, Mailbox mbox, String explicitAcct) {
+    private static void putPendingModifications(ZimbraSoapContext zsc, PendingModifications pms, Element parent, Mailbox mbox, String explicitAcct) {
         assert(pms.getSequence() > 0);
         
         // <notify [acct="4f778920-1a84-11da-b804-6b188d2a20c4"]/>
         Element eNotify = parent.addElement(ZimbraNamespace.E_NOTIFY)
                               .addAttribute(HeaderConstants.A_ACCOUNT_ID, explicitAcct)
                               .addAttribute(HeaderConstants.A_SEQNO, pms.getSequence());
-                              
+
+
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         if (pms.deleted != null && pms.deleted.size() > 0) {
             StringBuilder ids = new StringBuilder ();
-            for (Iterator it = pms.deleted.values().iterator(); it.hasNext(); ) {
+            for (Object obj : pms.deleted.values()) {
                 if (ids.length() != 0)
                     ids.append(',');
-                Object obj = it.next();
                 if (obj instanceof MailItem)
                     ids.append(((MailItem) obj).getId());
                 else if (obj instanceof Integer)
@@ -426,12 +429,11 @@ public class SoapSession extends Session {
 
         if (pms.created != null && pms.created.size() > 0) {
             Element eCreated = eNotify.addUniqueElement(ZimbraNamespace.E_CREATED);
-            for (Iterator it = pms.created.values().iterator(); it.hasNext(); ) {
-                MailItem mi = (MailItem) it.next();
+            for (MailItem item : pms.created.values()) {
                 try {
-                    ToXML.encodeItem(eCreated, zc, mi, ToXML.NOTIFY_FIELDS);
+                    ToXML.encodeItem(eCreated, ifmt, zsc.getOperationContext(), item, ToXML.NOTIFY_FIELDS);
                 } catch (ServiceException e) {
-                    ZimbraLog.session.warn("error encoding item " + mi.getId(), e);
+                    ZimbraLog.session.warn("error encoding item " + item.getId(), e);
                     return;
                 }
             }
@@ -439,18 +441,18 @@ public class SoapSession extends Session {
 
         if (pms.modified != null && pms.modified.size() > 0) {
             Element eModified = eNotify.addUniqueElement(ZimbraNamespace.E_MODIFIED);
-            for (Iterator it = pms.modified.values().iterator(); it.hasNext(); ) {
-                Change chg = (Change) it.next();
+            for (Change chg : pms.modified.values()) {
                 if (chg.why != 0 && chg.what instanceof MailItem) {
-                    MailItem mi = (MailItem) chg.what;
+                    MailItem item = (MailItem) chg.what;
                     try {
-                        ToXML.encodeItem(eModified, zc, mi, chg.why);
+                        ToXML.encodeItem(eModified, ifmt, zsc.getOperationContext(), item, chg.why);
                     } catch (ServiceException e) {
-                        ZimbraLog.session.warn("error encoding item " + mi.getId(), e);
+                        ZimbraLog.session.warn("error encoding item " + item.getId(), e);
                         return;
                     }
-                } else if (chg.why != 0 && chg.what instanceof Mailbox)
+                } else if (chg.why != 0 && chg.what instanceof Mailbox) {
                     ToXML.encodeMailbox(eModified, (Mailbox) chg.what, chg.why);
+                }
             }
         }
         

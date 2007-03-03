@@ -47,6 +47,7 @@ import com.zimbra.cs.operation.AddMsgOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -68,8 +69,9 @@ public class AddMsg extends MailDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = zsc.getOperationContext();
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
         Session session = getSession(context);
-        
+
         Element msgElem = request.getElement(MailConstants.E_MSG);
         
         String flagsStr = msgElem.getAttribute(MailConstants.A_FLAGS, null);
@@ -135,7 +137,7 @@ public class AddMsg extends MailDocumentHandler {
         
         Element response = zsc.createElement(MailConstants.ADD_MSG_RESPONSE);
         if (msg != null)
-            ToXML.encodeMessageSummary(response, zsc, msg, null, GetMsgMetadata.SUMMARY_FIELDS);
+            ToXML.encodeMessageSummary(response, ifmt, octxt, msg, null, GetMsgMetadata.SUMMARY_FIELDS);
         
         return response;
     }

@@ -98,13 +98,13 @@ public class WikiFormatter extends Formatter {
     private static final String TOC = "_Index";
     private static final String CHROME = "_Template";
     
-    private WikiTemplate getTemplate(Context context, WikiItem item) throws IOException, ServiceException {
+    private WikiTemplate getTemplate(Context context, WikiItem item) throws ServiceException {
     	return getTemplate(context, item.getMailbox().getAccountId(), item.getFolderId(), item.getWikiWord());
     }
-    private WikiTemplate getTemplate(Context context, Folder folder, String name) throws IOException, ServiceException {
+    private WikiTemplate getTemplate(Context context, Folder folder, String name) throws ServiceException {
     	return getTemplate(context, folder.getMailbox().getAccountId(), folder.getId(), name);
     }
-    private WikiTemplate getTemplate(Context context, String accountId, int folderId, String name) throws IOException, ServiceException {
+    private WikiTemplate getTemplate(Context context, String accountId, int folderId, String name) throws ServiceException {
     	WikiContext wctxt = createWikiContext(context);
     	Wiki wiki = Wiki.getInstance(wctxt, accountId, Integer.toString(folderId));
     	return wiki.getTemplate(wctxt, name);

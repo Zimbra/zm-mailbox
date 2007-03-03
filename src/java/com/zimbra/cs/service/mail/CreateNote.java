@@ -40,6 +40,7 @@ import com.zimbra.cs.mailbox.Note.Rectangle;
 import com.zimbra.cs.operation.CreateNoteOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -58,6 +59,7 @@ public class CreateNote extends MailDocumentHandler {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         Mailbox.OperationContext octxt = lc.getOperationContext();
+        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
         Session session = getSession(context);
 
         Element t = request.getElement(MailConstants.E_NOTE);
@@ -74,7 +76,7 @@ public class CreateNote extends MailDocumentHandler {
 
         Element response = lc.createElement(MailConstants.CREATE_NOTE_RESPONSE);
         if (note != null)
-        	ToXML.encodeNote(response, lc, note);
+        	ToXML.encodeNote(response, ifmt, note);
         return response;
 	}
 }

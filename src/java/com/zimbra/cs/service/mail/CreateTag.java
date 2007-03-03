@@ -38,6 +38,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.operation.CreateTagOperation;
 import com.zimbra.cs.operation.Operation.Requester;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -50,8 +51,8 @@ public class CreateTag extends MailDocumentHandler  {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         Mailbox.OperationContext octxt = lc.getOperationContext();
+        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
         Session session = getSession(context);
-        
 
         Element t = request.getElement(MailConstants.E_TAG);
         String name = t.getAttribute(MailConstants.A_NAME);
@@ -64,7 +65,7 @@ public class CreateTag extends MailDocumentHandler  {
         
         Element response = lc.createElement(MailConstants.CREATE_TAG_RESPONSE);
         if (tag != null)
-        	ToXML.encodeTag(response, lc, tag);
+        	ToXML.encodeTag(response, ifmt, tag);
         return response;
 	}
 }

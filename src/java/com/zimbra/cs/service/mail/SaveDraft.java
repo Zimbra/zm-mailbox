@@ -50,6 +50,7 @@ import com.zimbra.cs.operation.SaveDraftOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -73,6 +74,7 @@ public class SaveDraft extends MailDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = zsc.getOperationContext();
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
         Session session = getSession(context);
 
         Element msgElem = request.getElement(MailConstants.E_MSG);
@@ -142,7 +144,7 @@ public class SaveDraft extends MailDocumentHandler {
 
         Element response = zsc.createElement(MailConstants.SAVE_DRAFT_RESPONSE);
         // FIXME: inefficient -- this recalculates the MimeMessage (but SaveDraft is called rarely)
-        ToXML.encodeMessageAsMP(response, zsc, msg, null, false, true);
+        ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, null, false, true);
         return response;
     }
 }

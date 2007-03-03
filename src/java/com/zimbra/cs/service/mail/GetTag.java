@@ -42,6 +42,7 @@ import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.operation.GetItemListOperation;
 import com.zimbra.cs.operation.Operation.Requester;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -54,6 +55,7 @@ public class GetTag extends MailDocumentHandler  {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
 		Mailbox mbox = getRequestedMailbox(lc);
 		OperationContext octxt = lc.getOperationContext();
+        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
 		Session session = getSession(context);
         
 		GetItemListOperation op = new GetItemListOperation(session, octxt, mbox, Requester.SOAP, MailItem.TYPE_TAG);
@@ -66,7 +68,7 @@ public class GetTag extends MailDocumentHandler  {
 				Tag tag = (Tag) it.next();
 				if (tag == null || tag instanceof Flag)
 					continue;
-				ToXML.encodeTag(response, lc, tag);
+				ToXML.encodeTag(response, ifmt, tag);
 			}
 		}
 		return response;

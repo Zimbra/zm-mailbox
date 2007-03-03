@@ -35,6 +35,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.operation.GetItemOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -56,6 +57,7 @@ public class GetItem extends MailDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = zsc.getOperationContext();
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
         Session session = getSession(context);
 
         Element target = request.getElement(MailConstants.E_ITEM);
@@ -81,7 +83,7 @@ public class GetItem extends MailDocumentHandler {
         MailItem item = op.getItem();
 
         Element response = zsc.createElement(MailConstants.GET_ITEM_RESPONSE);
-        ToXML.encodeItem(response, zsc, item, ToXML.NOTIFY_FIELDS);
+        ToXML.encodeItem(response, ifmt, octxt, item, ToXML.NOTIFY_FIELDS);
         return response;
     }
 }

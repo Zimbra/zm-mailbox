@@ -38,6 +38,7 @@ import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.operation.Scheduler;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
@@ -132,12 +133,14 @@ public class SyncOperation extends Operation {
             return false;
 
         // write this folder's data to the response
+        OperationContext octxt = zsc.getOperationContext();
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
+
         boolean initial = phase == SyncPhase.INITIAL;
-        Element f = ToXML.encodeFolder(response, zsc, folder, Change.ALL_FIELDS);
+        Element f = ToXML.encodeFolder(response, ifmt, octxt, folder, Change.ALL_FIELDS);
         if (initial && isVisible) {
             // we're in the middle of an initial sync, so serialize the item ids
             boolean isSearch = folder instanceof SearchFolder;
-            Mailbox.OperationContext octxt = zsc.getOperationContext();
             if (!isSearch) {
                 if (folder.getId() == Mailbox.ID_FOLDER_TAGS) {
                     initialTagSync(zsc, f, mbox);
@@ -170,9 +173,10 @@ public class SyncOperation extends Operation {
     }
 
     private void initialTagSync(ZimbraSoapContext zsc, Element response, Mailbox mbox) throws ServiceException {
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
         for (Tag tag : mbox.getTagList(zsc.getOperationContext())) {
             if (tag != null && !(tag instanceof Flag))
-                ToXML.encodeTag(response, zsc, tag, Change.ALL_FIELDS);
+                ToXML.encodeTag(response, ifmt, tag, Change.ALL_FIELDS);
         }
     }
 
@@ -202,6 +206,7 @@ public class SyncOperation extends Operation {
             return newToken;
 
         OperationContext octxt = zsc.getOperationContext();
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         // first, fetch deleted items
         MailItem.TypedIdList tombstones = mbox.getTombstoneSet(begin);
@@ -220,12 +225,12 @@ public class SyncOperation extends Operation {
             }
         } else {
             for (Folder folder : mbox.getModifiedFolders(begin))
-                ToXML.encodeFolder(response, zsc, folder, Change.ALL_FIELDS);
+                ToXML.encodeFolder(response, ifmt, octxt, folder, Change.ALL_FIELDS);
         }
 
         // next, handle created/modified tags
         for (Tag tag : mbox.getModifiedTags(octxt, begin))
-            ToXML.encodeTag(response, zsc, tag, Change.ALL_FIELDS);
+            ToXML.encodeTag(response, ifmt, tag, Change.ALL_FIELDS);
 
         // finally, handle created/modified "other items"
         int itemCount = 0;
@@ -251,7 +256,7 @@ public class SyncOperation extends Operation {
                 //      content servlet's "include metadata in headers" hack.
                 //  If it's just the metadata that changed, send back the set of mutable attributes.
                 boolean created = item.getSavedSequence() > begin;
-                ToXML.encodeItem(response, zsc, item, created ? Change.MODIFIED_FOLDER | Change.MODIFIED_CONFLICT : MUTABLE_FIELDS);
+                ToXML.encodeItem(response, ifmt, octxt, item, created ? Change.MODIFIED_FOLDER | Change.MODIFIED_CONFLICT : MUTABLE_FIELDS);
                 itemCount++;
             }
             batch.clear();

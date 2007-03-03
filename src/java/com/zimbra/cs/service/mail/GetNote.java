@@ -38,6 +38,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.operation.GetNoteOperation;
 import com.zimbra.cs.operation.Operation.Requester;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -50,6 +51,7 @@ public class GetNote extends MailDocumentHandler {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
 		Mailbox mbox = getRequestedMailbox(lc);
 		Mailbox.OperationContext octxt = lc.getOperationContext();
+        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
 		Session session = getSession(context);
 		
 		Element enote = request.getElement(MailConstants.E_NOTE);
@@ -63,7 +65,7 @@ public class GetNote extends MailDocumentHandler {
 			throw MailServiceException.NO_SUCH_NOTE(noteId);
 		
 		Element response = lc.createElement(MailConstants.GET_NOTE_RESPONSE);
-		ToXML.encodeNote(response, lc, note);
+		ToXML.encodeNote(response, ifmt, note);
 		return response;
 	}
 }

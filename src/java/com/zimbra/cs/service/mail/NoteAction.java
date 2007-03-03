@@ -41,6 +41,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Note.Rectangle;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -101,6 +102,6 @@ public class NoteAction extends ItemAction {
         } else
             throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
 
-        return lc.formatItemId(iid);
+        return new ItemIdFormatter(lc).formatItemId(iid);
     }
 }

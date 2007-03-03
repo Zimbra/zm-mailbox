@@ -48,6 +48,7 @@ import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.cs.session.Session;
 import com.zimbra.common.service.ServiceException;
@@ -73,6 +74,7 @@ public class CreateContact extends MailDocumentHandler  {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         Mailbox.OperationContext octxt = lc.getOperationContext();
+        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
         Session session = getSession(context);
 
         Element cn = request.getElement(MailConstants.E_CONTACT);
@@ -102,7 +104,7 @@ public class CreateContact extends MailDocumentHandler  {
         
         Element response = lc.createElement(MailConstants.CREATE_CONTACT_RESPONSE);
         if (con != null)
-            ToXML.encodeContact(response, lc, con, null, true, null);
+            ToXML.encodeContact(response, ifmt, con, null, true, null);
         return response;
     }
 

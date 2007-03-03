@@ -37,6 +37,7 @@ import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -56,6 +57,7 @@ public class GetCalendarItem extends CalendarRequest {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
+        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
 
         boolean sync = request.getAttributeBool(MailConstants.A_SYNC, false);
         ItemId iid = new ItemId(request.getAttribute("id"), lc);
@@ -69,7 +71,7 @@ public class GetCalendarItem extends CalendarRequest {
         Element response = getResponseElement(lc);
         synchronized(mbox) {
             CalendarItem appointment = mbox.getCalendarItemById(octxt, iid.getId());
-            ToXML.encodeCalendarItemSummary(response, lc, appointment, fields, true);
+            ToXML.encodeCalendarItemSummary(response, ifmt, appointment, fields, true);
         }
 
         return response;

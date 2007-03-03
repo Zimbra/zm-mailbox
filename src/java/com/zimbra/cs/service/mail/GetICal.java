@@ -37,6 +37,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.HttpUtil.Browser;
@@ -57,7 +58,7 @@ public class GetICal extends MailDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbx = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
-        
+
         String iidStr = request.getAttribute(MailConstants.A_ID, null);
         long rangeStart = request.getAttributeLong(MailConstants.A_CAL_START_TIME, -1);
         long rangeEnd = request.getAttributeLong(MailConstants.A_CAL_END_TIME, -1);
@@ -96,7 +97,7 @@ public class GetICal extends MailDocumentHandler {
                     Element icalElt = response.addElement(MailConstants.E_CAL_ICAL);
 
                     if (iid != null)
-                        icalElt.addAttribute(MailConstants.A_ID, lc.formatItemId(iid));
+                        icalElt.addAttribute(MailConstants.A_ID, new ItemIdFormatter(lc).formatItemId(iid));
                     
                     icalElt.addText(buf.toString());
                     

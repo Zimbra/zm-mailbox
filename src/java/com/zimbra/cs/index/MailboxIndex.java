@@ -38,7 +38,6 @@ import javax.mail.internet.MimeMessage;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.document.DateField;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
@@ -87,8 +86,7 @@ public final class MailboxIndex
         TermEnumCallback(Collection collection) {
             mCollection = collection;
         }
-        public void onTerm(Term term, int docFreq) 
-        {
+        public void onTerm(Term term, int docFreq) {
             String text = term.text();
             if (text.length() > 1) {
                 mCollection.add(text);
@@ -1013,24 +1011,28 @@ public final class MailboxIndex
     public static final String GROUP_BY_MESSAGE      = "message";
     public static final String GROUP_BY_NONE         = "none";
 
-    public static final String SEARCH_FOR_CONVERSATIONS = "conversation";
-    public static final String SEARCH_FOR_MESSAGES = "message";
-    public static final String SEARCH_FOR_CONTACTS = "contact";
     public static final String SEARCH_FOR_APPOINTMENTS = "appointment";
-    public static final String SEARCH_FOR_TASKS = "task";
+    public static final String SEARCH_FOR_CONTACTS = "contact";
+    public static final String SEARCH_FOR_CONVERSATIONS = "conversation";
+    public static final String SEARCH_FOR_DOCUMENTS = "document";
+    public static final String SEARCH_FOR_MESSAGES = "message";
     public static final String SEARCH_FOR_NOTES = "note";
+    public static final String SEARCH_FOR_TASKS = "task";
     public static final String SEARCH_FOR_WIKI = "wiki";
 
-    public static final String SEARCH_FOR_DOCUMENT = "document";
+    public static final String SEARCH_FOR_EVERYTHING = SEARCH_FOR_APPOINTMENTS + ',' + SEARCH_FOR_CONTACTS + ',' +
+                                                       SEARCH_FOR_DOCUMENTS + ',' + SEARCH_FOR_MESSAGES + ',' +
+                                                       SEARCH_FOR_NOTES + ',' + SEARCH_FOR_TASKS + ',' +
+                                                       SEARCH_FOR_WIKI;
 
     public static enum SortBy {
-        DATE_ASCENDING  ("dateAsc",   (byte)(DbMailItem.SORT_BY_DATE | DbMailItem.SORT_ASCENDING)), 
-        DATE_DESCENDING ("dateDesc",  (byte)(DbMailItem.SORT_BY_DATE | DbMailItem.SORT_DESCENDING)),
-        SUBJ_ASCENDING  ("subjAsc",   (byte)(DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_ASCENDING)),
-        SUBJ_DESCENDING ("subjDesc",  (byte)(DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_DESCENDING)),
-        NAME_ASCENDING  ("nameAsc",   (byte)(DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_ASCENDING)),
-        NAME_DESCENDING ("nameDesc",  (byte)(DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_DESCENDING)),
-        SCORE_DESCENDING("score", (byte)0);
+        DATE_ASCENDING  ("dateAsc",  (byte) (DbMailItem.SORT_BY_DATE | DbMailItem.SORT_ASCENDING)), 
+        DATE_DESCENDING ("dateDesc", (byte) (DbMailItem.SORT_BY_DATE | DbMailItem.SORT_DESCENDING)),
+        SUBJ_ASCENDING  ("subjAsc",  (byte) (DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_ASCENDING)),
+        SUBJ_DESCENDING ("subjDesc", (byte) (DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_DESCENDING)),
+        NAME_ASCENDING  ("nameAsc",  (byte) (DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_ASCENDING)),
+        NAME_DESCENDING ("nameDesc", (byte) (DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_DESCENDING)),
+        SCORE_DESCENDING("score",    (byte) 0);
 
         static HashMap<String, SortBy> sNameMap = new HashMap<String, SortBy>();
 
@@ -1087,7 +1089,7 @@ public final class MailboxIndex
                 types[i] = MailItem.TYPE_NOTE;
             } else if (SEARCH_FOR_WIKI.equals(strs[i])) {
                 types[i] = MailItem.TYPE_WIKI;
-            } else if (SEARCH_FOR_DOCUMENT.equals(strs[i])) {
+            } else if (SEARCH_FOR_DOCUMENTS.equals(strs[i])) {
                 types[i] = MailItem.TYPE_DOCUMENT;
             } else 
                 throw ServiceException.INVALID_REQUEST("unknown groupBy: "+strs[i], null);

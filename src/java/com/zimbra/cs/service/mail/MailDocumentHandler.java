@@ -24,7 +24,6 @@
  */
 package com.zimbra.cs.service.mail;
 
-import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -35,6 +34,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -86,12 +86,13 @@ public abstract class MailDocumentHandler extends DocumentHandler {
             response = response.getOptionalElement(xpath[depth++]);
         if (response == null)
             return;
-        String local = iidLocal.toString(lc);
-        for (Iterator it = response.elementIterator(); it.hasNext(); ) {
-            Element elt = (Element) it.next();
+
+        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
+        String local = iidLocal.toString(ifmt);
+        for (Element elt : response.listElements()) {
             String folder = elt.getAttribute(MailConstants.A_FOLDER, null);
             if (local.equalsIgnoreCase(folder))
-                elt.addAttribute(MailConstants.A_FOLDER, iidMountpoint.toString(lc));
+                elt.addAttribute(MailConstants.A_FOLDER, iidMountpoint.toString(ifmt));
         }
     }
 
