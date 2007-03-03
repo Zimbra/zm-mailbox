@@ -174,7 +174,8 @@ public class ToXML {
         }
 
         Mailbox mbox = folder.getMailbox();
-        boolean remote = octxt.isDelegatedRequest(mbox), canAdminister = !remote;
+        boolean remote = octxt != null && octxt.isDelegatedRequest(mbox);
+        boolean canAdminister = !remote;
         if (remote) {
             // return only effective permissions for remote folders
             try {
@@ -511,7 +512,7 @@ public class ToXML {
 
         Mailbox mbox = conv.getMailbox();
         List<Message> msgs = null;
-        if (octxt.isDelegatedRequest(mbox) || (addSenders && conv.isTagged(mbox.mDeletedFlag)))
+        if ((octxt != null && octxt.isDelegatedRequest(mbox)) || (addSenders && conv.isTagged(mbox.mDeletedFlag)))
             msgs = mbox.getMessagesByConversation(octxt, conv.getId(), Conversation.SORT_DATE_ASCENDING);
 
         Element c = encodeConversationCommon(parent, ifmt, conv, msgs, fields);

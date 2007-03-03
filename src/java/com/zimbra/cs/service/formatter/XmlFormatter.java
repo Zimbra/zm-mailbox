@@ -34,7 +34,6 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
@@ -61,14 +60,13 @@ public class XmlFormatter extends Formatter {
     @Override
     public void formatCallback(Context context, MailItem item) throws ServiceException, IOException {
         Element elt = getFactory().createElement("items");
-        OperationContext octxt = new OperationContext(context.authAccount);
         ItemIdFormatter ifmt = new ItemIdFormatter(context.authAccount, item.getMailbox(), false);
 
         Iterator<? extends MailItem> iterator = null;
         try {
             iterator = getMailItems(context, item, getDefaultStartTime(), getDefaultEndTime(), Integer.MAX_VALUE);
             while (iterator.hasNext())
-                ToXML.encodeItem(elt, ifmt, octxt, iterator.next(), ToXML.NOTIFY_FIELDS);
+                ToXML.encodeItem(elt, ifmt, context.opContext, iterator.next(), ToXML.NOTIFY_FIELDS);
 
             context.resp.getOutputStream().write(elt.toUTF8());
         } finally {
