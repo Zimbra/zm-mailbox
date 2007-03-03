@@ -22,21 +22,29 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.db;
+package com.zimbra.cs.datasource;
 
-public class ImapMessage {
 
-    private long mUid;
-    private int mItemId;
-    private int mFlags;
+public class ImapFolder {
+    private int mMailboxId;
+    private int mId;
+    private String mDataSourceId;
+    private String mFolderPath;
     
-    public ImapMessage(long uid, int itemId, int flags) {
-        mUid = uid;
-        mItemId = itemId;
-        mFlags = flags;
+    public ImapFolder(int mailboxId, int id, String dataSourceId, String folderPath) {
+        mMailboxId = mailboxId;
+        mId = id;
+        mDataSourceId = dataSourceId;
+        mFolderPath = folderPath;
     }
     
-    public long getUid() { return mUid; }
-    public int getItemId() { return mItemId; }
-    public int getFlags() { return mFlags; }
+    public int getMailboxId() { return mMailboxId; }
+    public int getId() { return mId; }
+    public String getDataSourceId() { return mDataSourceId; }
+    public String getFolderPath() { return mFolderPath; }
+    
+    public String toString() {
+        return String.format("ImapFolder: { mailboxId=%d, id=%d, dataSourceId=%s, folderPath=%s }",
+            mMailboxId, mId, mDataSourceId, mFolderPath);
+    }
 }

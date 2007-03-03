@@ -22,29 +22,24 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.db;
+package com.zimbra.cs.datasource;
+
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.DataSource;
 
 
-public class ImapFolder {
-    private int mMailboxId;
-    private int mId;
-    private String mDataSourceId;
-    private String mFolderPath;
+public interface MailItemImport {
+
+    /**
+     * Tests connecting to the specified data source.
+     * 
+     * @return <code>null</code> or an error message if the test failed. 
+     */
+    public String test(DataSource ds) throws ServiceException;
     
-    ImapFolder(int mailboxId, int id, String dataSourceId, String folderPath) {
-        mMailboxId = mailboxId;
-        mId = id;
-        mDataSourceId = dataSourceId;
-        mFolderPath = folderPath;
-    }
-    
-    public int getMailboxId() { return mMailboxId; }
-    public int getId() { return mId; }
-    public String getDataSourceId() { return mDataSourceId; }
-    public String getFolderPath() { return mFolderPath; }
-    
-    public String toString() {
-        return String.format("ImapFolder: { mailboxId=%d, id=%d, dataSourceId=%s, folderPath=%s }",
-            mMailboxId, mId, mDataSourceId, mFolderPath);
-    }
+    /**
+     * Imports data from the specified data source.
+     */
+    public void importData(Account account, DataSource dataSource) throws ServiceException;
 }

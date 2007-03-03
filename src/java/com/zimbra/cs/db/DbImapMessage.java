@@ -35,6 +35,8 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.datasource.ImapFolder;
+import com.zimbra.cs.datasource.ImapMessage;
 
 
 public class DbImapMessage {

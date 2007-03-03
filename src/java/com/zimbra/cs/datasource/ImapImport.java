@@ -22,7 +22,7 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.mailbox;
+package com.zimbra.cs.datasource;
 
 import java.io.IOException;
 import java.util.Map;
@@ -49,9 +49,13 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.db.DbImapFolder;
 import com.zimbra.cs.db.DbImapMessage;
-import com.zimbra.cs.db.ImapFolder;
-import com.zimbra.cs.db.ImapMessage;
+import com.zimbra.cs.datasource.ImapFolder;
+import com.zimbra.cs.datasource.ImapMessage;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mime.ParsedMessage;
 
 
@@ -153,7 +157,7 @@ implements MailItemImport {
         }
         
         // Remove leading slashes and append to root folder path
-        com.zimbra.cs.mailbox.Folder rootZimbraFolder = mbox.getFolderById(ds.getFolderId());
+        com.zimbra.cs.mailbox.Folder rootZimbraFolder = mbox.getFolderById(null, ds.getFolderId());
         Matcher matcher = PAT_LEADING_SLASHES.matcher(relativePath);
         relativePath = matcher.replaceFirst("");
         String absolutePath = rootZimbraFolder.getPath() + "/" + relativePath;

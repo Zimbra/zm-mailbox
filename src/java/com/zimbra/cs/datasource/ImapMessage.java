@@ -22,24 +22,21 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.mailbox;
+package com.zimbra.cs.datasource;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.DataSource;
+public class ImapMessage {
 
-
-public interface MailItemImport {
-
-    /**
-     * Tests connecting to the specified data source.
-     * 
-     * @return <code>null</code> or an error message if the test failed. 
-     */
-    public String test(DataSource ds) throws ServiceException;
+    private long mUid;
+    private int mItemId;
+    private int mFlags;
     
-    /**
-     * Imports data from the specified data source.
-     */
-    public void importData(Account account, DataSource dataSource) throws ServiceException;
+    public ImapMessage(long uid, int itemId, int flags) {
+        mUid = uid;
+        mItemId = itemId;
+        mFlags = flags;
+    }
+    
+    public long getUid() { return mUid; }
+    public int getItemId() { return mItemId; }
+    public int getFlags() { return mFlags; }
 }

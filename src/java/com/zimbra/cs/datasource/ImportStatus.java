@@ -25,7 +25,7 @@
 /**
  * 
  */
-package com.zimbra.cs.mailbox;
+package com.zimbra.cs.datasource;
 
 import com.zimbra.cs.account.DataSource;
 

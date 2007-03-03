@@ -22,7 +22,7 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.mailbox;
+package com.zimbra.cs.datasource;
 
 import java.util.ArrayList;
 import java.util.Collections;
