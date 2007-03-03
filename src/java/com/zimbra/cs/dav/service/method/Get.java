@@ -53,8 +53,8 @@ public class Get extends DavMethod {
 		// setting content-length header on its own.
 		
 		//resp.setContentLength(resource.getContentLength());
-		if (!resource.hasContent())
+		if (!resource.hasContent(ctxt))
 			return;
-		ByteUtil.copy(resource.getContent(), true, ctxt.getResponse().getOutputStream(), false);
+		ByteUtil.copy(resource.getContent(ctxt), true, ctxt.getResponse().getOutputStream(), false);
 	}
 }

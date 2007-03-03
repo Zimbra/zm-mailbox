@@ -129,7 +129,7 @@ public class CalendarObject extends MailItemResource {
 	}
 	
 	@Override
-	public InputStream getContent() throws IOException, DavException {
+	public InputStream getContent(DavContext ctxt) throws IOException, DavException {
 		return new ByteArrayInputStream(getVcalendar(null).getBytes());
 	}
 

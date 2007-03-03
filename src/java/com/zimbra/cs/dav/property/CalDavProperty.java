@@ -25,12 +25,12 @@
 package com.zimbra.cs.dav.property;
 
 import java.io.IOException;
+import java.util.Collection;
 
 import org.dom4j.Element;
 import org.dom4j.QName;
 
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.dav.resource.CalendarObject;
@@ -69,6 +69,18 @@ public class CalDavProperty extends ResourceProperty {
 		return new CalendarHomeSet(url);
 	}
 	
+	public static ResourceProperty getScheduleInboxURL(String url) {
+		return new ScheduleInboxURL(url);
+	}
+	
+	public static ResourceProperty getScheduleOutboxURL(String url) {
+		return new ScheduleOutboxURL(url);
+	}
+	
+	public static ResourceProperty getCalendarUserAddressSet(Collection<String> addrs) {
+		return new CalendarUserAddressSet(addrs);
+	}
+	
 	protected CalDavProperty(QName name) {
 		super(name);
 		setProtected(true);
@@ -91,32 +103,21 @@ public class CalDavProperty extends ResourceProperty {
 	private static class SupportedCalendarComponentSet extends CalDavProperty {
 		public SupportedCalendarComponentSet() {
 			super(DavElements.E_SUPPORTED_CALENDAR_COMPONENT_SET);
-		}
-		
-		public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
-			Element compSet = super.toElement(ctxt, parent, true);
-			if (nameOnly)
-				return compSet;
-			for (CalComponent comp : sSUPPORTED_COMPONENTS)
-				compSet.addElement(DavElements.E_COMP).addAttribute(DavElements.P_NAME, comp.name());
-			return compSet;
+			for (CalComponent comp : sSUPPORTED_COMPONENTS) {
+				Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_COMP);
+				e.addAttribute(DavElements.P_NAME, comp.name());
+				mChildren.add(e);
+			}
 		}
 	}
 	
 	private static class SupportedCalendarData extends CalDavProperty {
 		public SupportedCalendarData() {
 			super(DavElements.E_SUPPORTED_CALENDAR_DATA);
-		}
-		
-		public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
-			Element calData = super.toElement(ctxt, parent, true);
-			if (nameOnly)
-				return calData;
-			Element e = calData.addElement(DavElements.E_CALENDAR_DATA);
+			Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_CALENDAR_DATA);
 			e.addAttribute(DavElements.P_CONTENT_TYPE, Mime.CT_TEXT_CALENDAR);
 			e.addAttribute(DavElements.P_VERSION, ZCalendar.sIcalVersion);
-			
-			return calData;
+			mChildren.add(e);
 		}
 	}
 	
@@ -126,51 +127,61 @@ public class CalDavProperty extends ResourceProperty {
 		
 		public SupportedCollationSet() {
 			super(DavElements.E_SUPPORTED_COLLATION_SET);
-		}
-		
-		public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
-			Element collation = super.toElement(ctxt, parent, true);
-			if (nameOnly)
-				return collation;
-			collation.addElement(DavElements.E_SUPPORTED_COLLATION).setText(ASCII);
-			collation.addElement(DavElements.E_SUPPORTED_COLLATION).setText(OCTET);
-			return collation;
+			Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_SUPPORTED_COLLATION);
+			e.setText(ASCII);
+			mChildren.add(e);
+			e = org.dom4j.DocumentHelper.createElement(DavElements.E_SUPPORTED_COLLATION);
+			e.setText(OCTET);
+			mChildren.add(e);
 		}
 	}
 	
 	private static class CalendarData extends CalDavProperty {
-		CalendarObject calobj;
-		public CalendarData(CalendarObject c) {
+		public CalendarData(CalendarObject calobj) {
 			super(DavElements.E_CALENDAR_DATA);
-			calobj = c;
-		}
-		
-		public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
-			Element caldata = super.toElement(ctxt, parent, true);
-			if (nameOnly)
-				return caldata;
 			try {
-				caldata.setText(calobj.getVcalendar(null));
+				setStringValue(calobj.getVcalendar(null));
 			} catch (IOException e) {
 				ZimbraLog.dav.warn("can't get appt data", e);
 			}
-			return caldata;
 		}
 	}
 	
 	private static class CalendarHomeSet extends CalDavProperty {
-		String url;
-		public CalendarHomeSet(String u) {
+		public CalendarHomeSet(String url) {
 			super(DavElements.E_CALENDAR_HOME_SET);
-			url = u;
+			Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
+			e.setText(url);
+			mChildren.add(e);
 		}
-		
-		public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
-			Element chs = super.toElement(ctxt, parent, nameOnly);
-			if (nameOnly)
-				return chs;
-			chs.addElement(DavElements.E_HREF).setText(url);
-			return chs;
+	}
+	
+	private static class ScheduleInboxURL extends CalDavProperty {
+		public ScheduleInboxURL(String url) {
+			super(DavElements.E_SCHEDULE_INBOX_URL);
+			Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
+			e.setText(url);
+			mChildren.add(e);
+		}
+	}
+	
+	private static class ScheduleOutboxURL extends CalDavProperty {
+		public ScheduleOutboxURL(String url) {
+			super(DavElements.E_SCHEDULE_OUTBOX_URL);
+			Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
+			e.setText(url);
+			mChildren.add(e);
+		}
+	}
+	
+	private static class CalendarUserAddressSet extends CalDavProperty {
+		public CalendarUserAddressSet(Collection<String> addrs) {
+			super(DavElements.E_CALENDAR_USER_ADDRESS_SET);
+			for (String addr : addrs) {
+				Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
+				e.setText("mailto:"+addr);
+				mChildren.add(e);
+			}
 		}
 	}
 }

@@ -25,7 +25,6 @@
 package com.zimbra.cs.dav.resource;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +34,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -85,7 +85,13 @@ public class Collection extends MailItemResource {
 			mDavCompliance.add(Compliance.three);
 			mDavCompliance.add(Compliance.access_control);
 			mDavCompliance.add(Compliance.calendar_access);
-			this.addProperty(CalDavProperty.getCalendarHomeSet(UrlNamespace.getHomeUrl(this.getOwner()) + f.getPath()));
+			mDavCompliance.add(Compliance.calendar_schedule);
+			addProperty(CalDavProperty.getCalendarHomeSet(UrlNamespace.getHomeUrl(this.getOwner()) + f.getPath()));
+			addProperty(CalDavProperty.getScheduleInboxURL(UrlNamespace.getHomeUrl(this.getOwner()) + "/Inbox/"));
+			addProperty(CalDavProperty.getScheduleOutboxURL(UrlNamespace.getHomeUrl(this.getOwner()) + "/Sent/"));
+			ArrayList<String> addrs = new ArrayList<String>();
+			addrs.add(f.getAccount().getAttr(Provisioning.A_zimbraMailDeliveryAddress));
+			addProperty(CalDavProperty.getCalendarUserAddressSet(addrs));
 		}
 	}
 	
@@ -102,11 +108,6 @@ public class Collection extends MailItemResource {
 		}
 	}
 	
-	@Override
-	public InputStream getContent() throws IOException, DavException {
-		return null;
-	}
-
 	@Override
 	public boolean isCollection() {
 		return true;

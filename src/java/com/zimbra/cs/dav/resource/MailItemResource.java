@@ -27,6 +27,8 @@ package com.zimbra.cs.dav.resource;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,6 +46,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.dav.DavContext;
+import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.property.ResourceProperty;
@@ -64,6 +67,10 @@ public abstract class MailItemResource extends DavResource {
 	protected int  mId;
 	protected byte mType;
 	protected String mEtag;
+	protected String mSubject;
+	protected String mPath;
+	protected long mModifiedDate;
+	protected String mOwnerId;
 	protected Map<QName,Element> mDeadProps;
 	
 	private static final String CONFIG_KEY = "caldav";
@@ -79,6 +86,10 @@ public abstract class MailItemResource extends DavResource {
 		mId = item.getId();
 		mType = item.getType();
 		mEtag = "\""+Long.toString(item.getChangeDate())+"\"";
+		mSubject = item.getSubject();
+		mPath = item.getPath();
+		mModifiedDate = item.getDate();
+		mOwnerId = item.getAccount().getId();
 		try {
 			mDeadProps = getDeadProps(ctxt, item);
 		} catch (Exception e) {
@@ -243,5 +254,58 @@ public abstract class MailItemResource extends DavResource {
 		if (e != null)
 			rp = new ResourceProperty(e);
 		return rp;
+	}
+
+	protected boolean isWebRequest(DavContext ctxt) {
+		String userAgent = ctxt.getRequest().getHeader(DavProtocol.HEADER_USER_AGENT);
+		if (userAgent == null || 
+				userAgent.indexOf("MSIE") >= 0 ||
+				userAgent.indexOf("Mozilla") >= 0) {
+			return true;
+		}
+		return false;
+	}
+	
+	public boolean hasContent(DavContext ctxt) {
+		if (isWebRequest(ctxt))
+			return true;
+		return super.hasContent(ctxt);
+	}
+	
+	@Override
+	public InputStream getContent(DavContext ctxt) throws IOException, DavException {
+		if (isWebRequest(ctxt))
+			return getTextContent(ctxt);
+		return null;
+	}
+	
+	protected InputStream getTextContent(DavContext ctxt) throws IOException, DavException {
+		StringBuilder buf = new StringBuilder();
+		buf.append("Request\n\n");
+		buf.append("\tAuthenticated user:\t").append(ctxt.getAuthAccount().getName()).append("\n");
+		buf.append("\tCurrent date:\t").append(new Date(System.currentTimeMillis())).append("\n");
+		buf.append("\nResource\n\n");
+		buf.append("\tName:\t").append(mSubject).append("\n");
+		buf.append("\tPath:\t").append(mPath).append("\n");
+		buf.append("\tDate:\t").append(new Date(mModifiedDate)).append("\n");
+		buf.append("\tOwner account Id:\t").append(mOwnerId).append("\n");
+		try {
+			Provisioning prov = Provisioning.getInstance();
+			Account account = prov.get(Provisioning.AccountBy.id, mOwnerId);
+			buf.append("\tOwner account name:\t").append(account.getName()).append("\n");
+		} catch (ServiceException se) {
+		}
+		buf.append("\nProperties\n\n");
+		Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_PROP);
+		for (ResourceProperty rp : mProps.values())
+			rp.toElement(ctxt, e, false);
+		OutputFormat format = OutputFormat.createPrettyPrint();
+		format.setTrimText(false);
+		format.setOmitEncoding(false);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		XMLWriter writer = new XMLWriter(baos, format);
+		writer.write(e);
+		buf.append(new String(baos.toByteArray()));
+		return new ByteArrayInputStream(buf.toString().getBytes("UTF-8"));
 	}
 }

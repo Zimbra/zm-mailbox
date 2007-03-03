@@ -66,6 +66,7 @@ public class DavElements {
 	public static final String P_CALENDAR_MULTIGET = "calendar-multiget";
 	public static final String P_CALENDAR_QUERY = "calendar-query";
 	public static final String P_CALENDAR_TIMEZONE = "calendar-timezone";
+	public static final String P_CALENDAR_USER_ADDRESS_SET = "calendar-user-address-set";
 	public static final String P_COLLECTION = "collection";
 	public static final String P_COMP = "comp";
 	public static final String P_COMP_FILTER = "comp-filter";
@@ -156,7 +157,9 @@ public class DavElements {
 	public static final String P_RESPONSE = "response";
 	
 	public static final String P_SCHEDULE_INBOX = "schedule-inbox";
+	public static final String P_SCHEDULE_INBOX_URL = "schedule-inbox-URL";
 	public static final String P_SCHEDULE_OUTBOX = "schedule-outbox";
+	public static final String P_SCHEDULE_OUTBOX_URL = "schedule-outbox-URL";
 	public static final String P_SCHEDULE_RESPONSE = "schedule-response";
 	public static final String P_SELF = "self";
 	public static final String P_SET = "set";
@@ -212,6 +215,7 @@ public class DavElements {
 	public static final QName E_CALENDAR_MULTIGET = QName.get(P_CALENDAR_MULTIGET, CALDAV_NS);
 	public static final QName E_CALENDAR_QUERY = QName.get(P_CALENDAR_QUERY, CALDAV_NS);
 	public static final QName E_CALENDAR_TIMEZONE = QName.get(P_CALENDAR_TIMEZONE, CALDAV_NS);
+	public static final QName E_CALENDAR_USER_ADDRESS_SET = QName.get(P_CALENDAR_USER_ADDRESS_SET, CALDAV_NS);
 	public static final QName E_COLLECTION = QName.get(P_COLLECTION, WEBDAV_NS);
 	public static final QName E_COMP = QName.get(P_COMP, CALDAV_NS);
 	public static final QName E_COMP_FILTER = QName.get(P_COMP_FILTER, CALDAV_NS);
@@ -280,7 +284,9 @@ public class DavElements {
 	public static final QName E_CALDAV_RESPONSE = QName.get(P_RESPONSE, CALDAV_NS);
 	
 	public static final QName E_SCHEDULE_INBOX = QName.get(P_SCHEDULE_INBOX, CALDAV_NS);
+	public static final QName E_SCHEDULE_INBOX_URL = QName.get(P_SCHEDULE_INBOX_URL, CALDAV_NS);
 	public static final QName E_SCHEDULE_OUTBOX = QName.get(P_SCHEDULE_OUTBOX, CALDAV_NS);
+	public static final QName E_SCHEDULE_OUTBOX_URL = QName.get(P_SCHEDULE_OUTBOX_URL, CALDAV_NS);
 	public static final QName E_SCHEDULE_RESPONSE = QName.get(P_SCHEDULE_RESPONSE, CALDAV_NS);
 	public static final QName E_SHARED = QName.get(P_SHARED, WEBDAV_NS);
 	public static final QName E_SOURCE = QName.get(P_SOURCE, WEBDAV_NS);

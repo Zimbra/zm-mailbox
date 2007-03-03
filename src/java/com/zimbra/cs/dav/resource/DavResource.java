@@ -126,7 +126,7 @@ public abstract class DavResource {
 	}
 
 	public Set<QName> getAllPropertyNames() {
-		TreeSet<QName> ret = new TreeSet<QName>();
+		Set<QName> ret = new TreeSet<QName>();
 		for (QName key : mProps.keySet())
 			if (!mProps.get(key).isProtected())
 				ret.add(key);
@@ -142,7 +142,7 @@ public abstract class DavResource {
 		return mOwner;
 	}
 	
-	public boolean hasContent() {
+	public boolean hasContent(DavContext ctxt) {
 		try {
 			return (getContentLength() > 0);
 		} catch (NumberFormatException e) {
@@ -206,7 +206,7 @@ public abstract class DavResource {
 		return true;
 	}
 	
-	public abstract InputStream getContent() throws IOException, DavException;
+	public abstract InputStream getContent(DavContext ctxt) throws IOException, DavException;
 	
 	public abstract boolean isCollection();
 	

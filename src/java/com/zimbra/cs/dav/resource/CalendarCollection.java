@@ -26,7 +26,6 @@ package com.zimbra.cs.dav.resource;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -116,16 +115,6 @@ public class CalendarCollection extends Collection {
 		//
 	}
 	
-	@Override
-	public InputStream getContent() throws IOException, DavException {
-		return null;
-	}
-
-	@Override
-	public boolean isCollection() {
-		return true;
-	}
-
 	private static TimeRange sAllCalItems;
 	
 	static {

@@ -47,7 +47,7 @@ public class ResourceProperty {
 	private QName mName;
 	private Locale mLocale;
 	private String mValue;
-	private ArrayList<Element> mChildren;
+	protected ArrayList<Element> mChildren;
 
 	public ResourceProperty(String name) {
 		this(QName.get(name, DavElements.WEBDAV_NS));
