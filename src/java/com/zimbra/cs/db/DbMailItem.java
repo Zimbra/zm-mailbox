@@ -2992,22 +2992,27 @@ public class DbMailItem {
     public static List<SearchResult> listByFolder(Folder folder, byte type) throws ServiceException {
         return listByFolder(folder, type, true);
     }
+
     public static List<SearchResult> listByFolder(Folder folder, byte type, boolean descending) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
         Connection conn = mbox.getOperationConnection();
+        boolean allTypes = type == MailItem.TYPE_UNKNOWN;
 
         ArrayList<SearchResult> result = new ArrayList<SearchResult>();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
+            String typeConstraint = allTypes ? "" : "type = ? AND ";
             stmt = conn.prepareStatement("SELECT id, index_id, type, date FROM " + getMailItemTableName(folder) +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "type = ? AND folder_id = ?" +
+                        " WHERE " + IN_THIS_MAILBOX_AND + typeConstraint + "folder_id = ?" +
                         " ORDER BY date" + (descending ? " DESC" : ""));
             int pos = 1;
             stmt.setInt(pos++, mbox.getId());
-            stmt.setByte(pos++, type);
+            if (!allTypes)
+                stmt.setByte(pos++, type);
             stmt.setInt(pos++, folder.getId());
             rs = stmt.executeQuery();
+
             while (rs.next())
                 result.add(SearchResult.createResult(rs, SORT_BY_DATE));
             return result;
