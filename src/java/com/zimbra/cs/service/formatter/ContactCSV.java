@@ -369,13 +369,19 @@ public class ContactCSV {
                     else result.add(null);
                     break;
                 case '\n':
-                    return result.size() > 0;
+                    if (result.size() > 0)
+                        return true;
+                    else
+                        break;
                 case '\r':
                     // peek for \n
                     reader.mark(1);
                     ch = reader.read();
                     if (ch != '\n') reader.reset();
-                    return result.size() > 0;
+                    if(result.size() > 0)
+                        return true;
+                    else
+                        break;
                 default: // start of field
                     result.add(parseField(reader, false, ch, parsingHeader, result.size())); // eats trailing ','
                     inField = false;
@@ -397,7 +403,6 @@ public class ContactCSV {
         StringBuffer sb = new StringBuffer();
 
         if (firstChar != -1) sb.append((char)firstChar);
-        boolean lastField = !parsingHeader && size == mFields.size()-1;
         int ch;
         reader.mark(1);        
         while ((ch = reader.read()) != -1) {
@@ -413,7 +418,7 @@ public class ContactCSV {
             } else if (ch == ',' && !doubleQuotes) {
                 //reader.reset();
                 return sb.toString();
-            } else if ((ch == '\r' || ch == '\n') && !doubleQuotes && (parsingHeader || lastField)) {
+            } else if ((ch == '\r' || ch == '\n') && !doubleQuotes) {
                 reader.reset();
                 return sb.toString();
             } else {
