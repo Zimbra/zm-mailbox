@@ -719,6 +719,7 @@ public class ToXML {
             Invite inv = calItem.getInvite(i);
 
             Element ie = calItemElem.addElement(MailService.E_INVITE);
+            setCalendarItemType(ie, calItem);
             encodeTimeZoneMap(ie, calItem.getTimeZoneMap());
 
             ie.addAttribute(MailService.A_CAL_SEQUENCE, inv.getSeqNo());
@@ -837,6 +838,7 @@ public class ToXML {
                 m.addAttribute(MailService.A_SENT_DATE, sent.getTime());
 
             Element invElt = m.addElement(MailService.E_INVITE);
+            setCalendarItemType(invElt, calItem);
             encodeTimeZoneMap(invElt, calItem.getTimeZoneMap());
             for (Invite inv : calItem.getInvites(invId))
                 encodeInvite(invElt, lc, calItem, inv, NOTIFY_FIELDS, repliesWithInvites);
@@ -1251,6 +1253,7 @@ public class ToXML {
                 calItem = mbox.getCalendarItemById(lc.getOperationContext(), info.getCalendarItemId());
             } catch (MailServiceException.NoSuchItemException e) {}
             if (calItem != null) {
+                setCalendarItemType(ie, calItem);
                 Invite inv = calItem.getInvite(msg.getId(), info.getComponentNo());
 
                 if (inv != null) {
@@ -1560,5 +1563,10 @@ public class ToXML {
             m.addAttribute(MailService.A_DS_USERNAME, ds.getUsername());
         }
         return m;
+    }
+
+    private static void setCalendarItemType(Element elem, CalendarItem calItem) {
+        elem.addAttribute(MailService.A_CAL_ITEM_TYPE,
+                calItem.getType() == MailItem.TYPE_APPOINTMENT ? "appt" : "task");
     }
 }

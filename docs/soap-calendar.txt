@@ -577,7 +577,7 @@ OR
      <su>{subject}</su>
      <f>{fragment}</f>
 
-     <inv>
+     <inv type="appt|task">
        [
        <comp status="TENT|CONF|CANC"
        		fb="F|B|T|U"
