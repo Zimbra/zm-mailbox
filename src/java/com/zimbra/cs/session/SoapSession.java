@@ -75,7 +75,7 @@ public class SoapSession extends Session {
 
 
     SoapSession(String accountId, String contextId) throws ServiceException {
-        super(accountId, contextId, SessionCache.SESSION_SOAP);
+        super(accountId, contextId, Session.Type.SOAP);
     }
 
     protected long getSessionIdleLifetime() {

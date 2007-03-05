@@ -93,6 +93,7 @@ import com.zimbra.cs.ozserver.OzMatcher;
 import com.zimbra.cs.ozserver.OzServer;
 import com.zimbra.cs.ozserver.OzTLSFilter;
 import com.zimbra.cs.ozserver.OzUtil;
+import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.Config;
@@ -797,7 +798,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             return null;
         }
 
-        ImapSession session = (ImapSession) SessionCache.getNewSession(account.getId(), SessionCache.SESSION_IMAP);
+        ImapSession session = (ImapSession) SessionCache.getNewSession(account.getId(), Session.Type.IMAP);
         if (session == null) {
             sendNO(tag, "AUTHENTICATE failed");
             return null;

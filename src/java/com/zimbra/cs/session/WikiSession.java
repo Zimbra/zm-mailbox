@@ -25,7 +25,6 @@
 package com.zimbra.cs.session;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -44,7 +43,7 @@ public class WikiSession extends Session {
 	private static WikiSession sSession;
 	
     private WikiSession(String accountId) throws ServiceException {
-    	super(accountId, "wiki-session", SessionCache.SESSION_WIKI);
+    	super(accountId, "wiki-session", Session.Type.WIKI);
     }
     
 	@Override
@@ -54,10 +53,6 @@ public class WikiSession extends Session {
 	@Override
 	protected long getSessionIdleLifetime() {
 		return 0;
-	}
-
-	@Override
-	public void notifyIM(IMNotification imn) {
 	}
 
 	@Override
@@ -74,11 +69,6 @@ public class WikiSession extends Session {
 				expireItem(value);
 			}
 		}
-	}
-
-	@Override
-	protected boolean shouldRegisterWithIM() {
-		return false;
 	}
 
 	private void expireItem(Object obj) {

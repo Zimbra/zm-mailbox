@@ -40,7 +40,7 @@ import com.zimbra.cs.mailbox.BrowseResult.DomainItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.operation.BrowseOperation;
 import com.zimbra.cs.operation.Operation.Requester;
-import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -52,7 +52,7 @@ public class Browse extends MailDocumentHandler  {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zc);
-        SoapSession session = (SoapSession) zc.getSession(SessionCache.SESSION_SOAP);
+        SoapSession session = (SoapSession) zc.getSession(Session.Type.SOAP);
         
         String browseBy = request.getAttribute("browseby", null);
         if (browseBy == null)

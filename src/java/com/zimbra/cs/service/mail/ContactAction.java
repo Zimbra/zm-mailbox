@@ -46,7 +46,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.operation.ContactActionOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -86,7 +86,7 @@ public class ContactAction extends ItemAction {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
-        SoapSession session = (SoapSession) zsc.getSession(SessionCache.SESSION_SOAP);
+        SoapSession session = (SoapSession) zsc.getSession(Session.Type.SOAP);
         OperationContext octxt = zsc.getOperationContext();
 
 

@@ -39,7 +39,6 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.session.Session;
-import com.zimbra.cs.session.SessionCache;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -115,6 +114,6 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
      *  If none already exists, one is created.
      * @return An {@link com.zimbra.cs.session.AdminSession}. */
     public Session getSession(Map<String, Object> context) {
-        return getSession(context, SessionCache.SESSION_ADMIN);
+        return getSession(context, Session.Type.ADMIN);
     }
 }

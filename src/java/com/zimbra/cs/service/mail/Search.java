@@ -59,7 +59,7 @@ import com.zimbra.cs.service.mail.ToXML.EmailType;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications;
-import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -71,7 +71,7 @@ public class Search extends MailDocumentHandler  {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        SoapSession session = (SoapSession) zsc.getSession(SessionCache.SESSION_SOAP);
+        SoapSession session = (SoapSession) zsc.getSession(Session.Type.SOAP);
         Mailbox mbox = getRequestedMailbox(zsc);
         Account acct = getRequestedAccount(zsc);
         SearchParams params = SearchParams.parse(request, zsc, acct.getAttr(Provisioning.A_zimbraPrefMailInitialSearch));

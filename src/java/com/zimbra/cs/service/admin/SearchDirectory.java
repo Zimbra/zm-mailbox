@@ -42,7 +42,7 @@ import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.SearchOptions;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.session.AdminSession;
-import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.session.Session;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -118,7 +118,7 @@ public class SearchDirectory extends AdminDocumentHandler {
         }
 
         List accounts;
-        AdminSession session = (AdminSession) lc.getSession(SessionCache.SESSION_ADMIN);
+        AdminSession session = (AdminSession) lc.getSession(Session.Type.ADMIN);
         if (session != null) {
             accounts = session.searchAccounts(d, query, attrs, sortBy, sortAscending, flags, offset, maxResults);
         } else {

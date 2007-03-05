@@ -171,7 +171,7 @@ public abstract class DocumentHandler {
      * @return A {@link com.zimbra.cs.session.SoapSession}, or
      *         <code>null</code>. */
     public Session getSession(Map<String, Object> context) {
-        return getSession(context, SessionCache.SESSION_SOAP);
+        return getSession(context, Session.Type.SOAP);
     }
 
     /** Fetches a {@link Session} object to persist and manage state between
@@ -186,7 +186,7 @@ public abstract class DocumentHandler {
      *         <code>null</code>.
      * @see SessionCache#SESSION_SOAP
      * @see SessionCache#SESSION_ADMIN */
-    protected Session getSession(Map<String, Object> context, int sessionType) {
+    protected Session getSession(Map<String, Object> context, Session.Type sessionType) {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         return (zsc == null ? null : zsc.getSession(sessionType));
     }

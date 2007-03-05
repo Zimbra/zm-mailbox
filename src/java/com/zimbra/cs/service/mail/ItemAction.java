@@ -42,7 +42,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.operation.ItemActionOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -100,7 +100,7 @@ public class ItemAction extends MailDocumentHandler {
         Element action = request.getElement(MailConstants.E_ACTION);
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
-        SoapSession session = (SoapSession) zsc.getSession(SessionCache.SESSION_SOAP);
+        SoapSession session = (SoapSession) zsc.getSession(Session.Type.SOAP);
 
         // determine the requested operation
         String opStr;

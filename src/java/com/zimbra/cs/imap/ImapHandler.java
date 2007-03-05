@@ -85,6 +85,7 @@ import com.zimbra.cs.operation.SearchOperation;
 import com.zimbra.cs.operation.SetTagsOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ThreadLocalData;
+import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.stats.StatsFile;
 import com.zimbra.cs.stats.ZimbraPerf;
@@ -833,7 +834,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             return null;
         }
 
-        ImapSession session = (ImapSession) SessionCache.getNewSession(account.getId(), SessionCache.SESSION_IMAP);
+        ImapSession session = (ImapSession) SessionCache.getNewSession(account.getId(), Session.Type.IMAP);
         if (session == null) {
             sendNO(tag, "AUTHENTICATE failed");
             return null;

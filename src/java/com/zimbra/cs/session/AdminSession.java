@@ -33,7 +33,6 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapEntrySearchFilter;
-import com.zimbra.cs.im.IMNotification;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -49,7 +48,7 @@ public class AdminSession extends Session {
     private HashMap<String,Object> mData = new HashMap<String,Object>();
 
     AdminSession(String accountId, String sessionId) throws ServiceException {
-        super(accountId, sessionId, SessionCache.SESSION_ADMIN);
+        super(accountId, sessionId, Session.Type.ADMIN);
     }
 
     protected long getSessionIdleLifetime() {
@@ -68,11 +67,7 @@ public class AdminSession extends Session {
     
     public void notifyPendingChanges(PendingModifications pns) { }
     
-    public void notifyIM(IMNotification imn) { }
-    protected boolean shouldRegisterWithIM() { return false; }
-
-    protected void cleanup() {
-    }
+    protected void cleanup() { }
 
     public List searchAccounts(Domain d, String query, String[] attrs, String sortBy,
             boolean sortAscending, int flags, int offset, int maxResults) throws ServiceException {

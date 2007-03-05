@@ -35,7 +35,7 @@ import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.cs.operation.CheckSpellingOperation;
 import com.zimbra.cs.operation.Operation.Requester;
-import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
@@ -54,7 +54,7 @@ public class CheckSpelling extends MailDocumentHandler {
     throws ServiceException {
         ZimbraSoapContext zc = getZimbraSoapContext(context);
         Element response = zc.createElement(MailConstants.CHECK_SPELLING_RESPONSE);
-        SoapSession session = (SoapSession) zc.getSession(SessionCache.SESSION_SOAP);
+        SoapSession session = (SoapSession) zc.getSession(Session.Type.SOAP);
         
         String text = request.getTextTrim();
         if (StringUtil.isNullOrEmpty(text)) {

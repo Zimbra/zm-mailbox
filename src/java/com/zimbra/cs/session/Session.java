@@ -50,18 +50,28 @@ import com.zimbra.cs.operation.Operation;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 
+/**
+ *  A {@link Session} is identified by an (accountId, sessionID) pair.  A single
+ *  account may have multiple active sessions simultaneously.<p>
+ */
 public abstract class Session {
     protected final String    mAccountId;
     private   final String    mSessionId;
-    private   final int       mSessionType;
+    private   final Type mSessionType;
     private   final IMPersona mPersona;
 
     protected Mailbox mMailbox;
     private   long    mLastAccessed;
     private   boolean mCleanedUp = false;
-
-    /** Implementation of the Session interface */
-    public Session(String accountId, String sessionId, int type) throws ServiceException {
+    
+    /**
+     * Session Type
+     */
+    public enum Type {
+        SOAP, IMAP, ADMIN, WIKI, SYNCLISTENER, WAITSET;
+    }
+    
+    public Session(String accountId, String sessionId, Type type) throws ServiceException {
         mAccountId = accountId;
         mSessionId = sessionId;
         mSessionType = type;
@@ -133,7 +143,7 @@ public abstract class Session {
      * @see SessionCache#SESSION_ADMIN
      * @see SessionCache#SESSION_SOAP
      * @see SessionCache#SESSION_IMAP */
-    public int getSessionType() {
+    public Session.Type getSessionType() {
         return mSessionType;
     }
 
@@ -152,12 +162,23 @@ public abstract class Session {
 
     public abstract void notifyPendingChanges(PendingModifications pns);
     
-    public abstract void notifyIM(IMNotification imn);
+    /**
+     * Notify this session that an IM event has occured
+     * 
+     * @param imn
+     */
+    public void notifyIM(IMNotification imn) {
+        // do nothing by default.
+    }
     
     /**
-     * @return TRUE if this session should be registered with IM
+     * @return subclasses return TRUE if this session should be registered with IM
+     *            ie, if the existence of this session should lead to an "online" presence
+     *            in the IM system for this user.
      */
-    protected abstract boolean shouldRegisterWithIM();
+    protected boolean shouldRegisterWithIM() { 
+        return false;
+    }
 
     /** Disconnects from any resources and deregisters as a {@link Mailbox} listener. */
     final void doCleanup() {

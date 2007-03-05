@@ -34,7 +34,6 @@ import java.text.DateFormat;
 import java.util.*;
 
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
 import com.zimbra.cs.mailbox.*;
@@ -78,7 +77,7 @@ public class ImapSession extends Session {
     private EnabledHack mEnabledHack;
 
     public ImapSession(String accountId, String contextId) throws ServiceException {
-        super(accountId, contextId, SessionCache.SESSION_IMAP);
+        super(accountId, contextId, Session.Type.IMAP);
         getMailbox().beginTrackingImap(getContext());
         mState = STATE_AUTHENTICATED;
         try {
@@ -222,9 +221,6 @@ public class ImapSession extends Session {
     DateFormat getZimbraDateFormat() {
         return mHandler.getZimbraFormat();
     }
-
-    public void notifyIM(IMNotification imn) { }
-    protected boolean shouldRegisterWithIM() { return false; }
 
     private static class AddedItems {
         List<ImapMessage> numbered = new ArrayList<ImapMessage>();

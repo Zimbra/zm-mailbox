@@ -45,25 +45,12 @@ import com.zimbra.common.util.ZimbraLog;
 
 
 
-/** A Simple LRU Cache with timeout intended to store arbitrary state for a "session".<p>
+/** A Simple Cache with timeout (based on last-accessed time) for a {@link Session}. objects<p>
  * 
- *  A {@link Session} is identified by an (accountId, sessionID) pair.  A single
- *  account may have multiple active sessions simultaneously.<p>
- * 
- *  Unless you really care about the internals of the LRU Session Cache,
- *  you probably just want to add fields and get/set methods to Session.
- *
- * @author tim */
+ *  Not all Session subclasses are stored in this cache -- only those Session types which want 
+ *  timeout caching arestored here.<p>
+ **/
 public final class SessionCache {
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Public APIs here...
-    ///////////////////////////////////////////////////////////////////////////
-
-    public static final int SESSION_SOAP  = 1;
-    public static final int SESSION_IMAP  = 2;
-    public static final int SESSION_ADMIN = 3;
-    public static final int SESSION_WIKI  = 4;
 
     /** Creates a new {@link Session} of the specified type and starts its
      *  expiry timeout.
@@ -72,7 +59,7 @@ public final class SessionCache {
      * @param sessionType  The type of session (SOAP, IMAP, etc.) we need.
      * @return A brand-new session for this account, or <code>null</code>
      *         if an error occurred. */
-    public static Session getNewSession(String accountId, int sessionType) {
+    public static Session getNewSession(String accountId, Session.Type sessionType) {
         if (sShutdown || accountId == null || accountId.trim().equals(""))
             return null;
 
@@ -80,10 +67,12 @@ public final class SessionCache {
         Session session = null;
         try {
             switch (sessionType) {
-                case SESSION_IMAP:   session = new ImapSession(accountId, sessionId);   break;
-                case SESSION_ADMIN:  session = new AdminSession(accountId, sessionId);  break;
+                case IMAP:   session = new ImapSession(accountId, sessionId);   break;
+                case ADMIN:  session = new AdminSession(accountId, sessionId);  break;
+                case SYNCLISTENER: throw ServiceException.FAILURE("SYNCLISTENER sessions should not be created by the session cache", null);
+                case WAITSET: throw ServiceException.FAILURE("WAITSET sessions should not be created by the session cache", null);
                 default:
-                case SESSION_SOAP:   session = new SoapSession(accountId, sessionId);   break;
+                case SOAP:   session = new SoapSession(accountId, sessionId);   break;
             }
         } catch (ServiceException e) {
             ZimbraLog.session.warn("failed to create session", e);

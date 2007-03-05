@@ -40,7 +40,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.session.AdminSession;
-import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.session.Session;
 
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -92,7 +92,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
 
         ArrayList<AccountQuota> quotas = params.doSearch();
        
-        AdminSession session = (AdminSession) lc.getSession(SessionCache.SESSION_ADMIN);
+        AdminSession session = (AdminSession) lc.getSession(Session.Type.ADMIN);
         if (session != null) {
             QuotaUsageParams cachedParams = (QuotaUsageParams) session.getData("GetQuotaUsage");
             if (cachedParams == null || !cachedParams.equals(params)) {

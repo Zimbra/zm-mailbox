@@ -290,7 +290,7 @@ public class ZimbraSoapContext {
         }
         try {
             // turn off notifications if so directed
-            if (session.getSessionType() == SessionCache.SESSION_SOAP)
+            if (session.getSessionType() == Session.Type.SOAP)
                 if (mHaltNotifications || !elt.getAttributeBool(HeaderConstants.A_NOTIFY, true))
                     ((SoapSession) session).haltNotifications();
         } catch (ServiceException e) { }
@@ -375,7 +375,7 @@ public class ZimbraSoapContext {
      * 
      * @param type  One of the types defined in the {@link SessionCache} class.
      * @return A matching SessionInfo object or <code>null</code>. */
-    private SessionInfo findSessionInfo(int type) {
+    private SessionInfo findSessionInfo(Session.Type type) {
         for (SessionInfo sinfo : mSessionInfo)
             if (sinfo.session.getSessionType() == type)
                 return sinfo;
@@ -392,7 +392,7 @@ public class ZimbraSoapContext {
      * @param accountId  The account ID to create the new session for.
      * @param type       One of the types defined in the {@link SessionCache} class.
      * @return A new Session object of the appropriate type. */
-    public Session getNewSession(String accountId, int type) {
+    public Session getNewSession(String accountId, Session.Type type) {
         if (accountId != null && !accountId.equals(mAuthTokenAccountId))
             mSessionInfo.clear();
         mAuthTokenAccountId = accountId;
@@ -410,7 +410,7 @@ public class ZimbraSoapContext {
      * @param type  One of the types defined in the {@link SessionCache} class.
      * @return A new or existing Session object, or <code>null</code> if
      *         <code>&lt;nosession></code> was specified. */
-    public Session getSession(int type) {
+    public Session getSession(Session.Type type) {
         Session s = null;
         SessionInfo sinfo = findSessionInfo(type);
         if (sinfo != null)
@@ -548,7 +548,7 @@ public class ZimbraSoapContext {
      * @return The created <code>&lt;sessionId></code> Element. */
     public static Element encodeSession(Element parent, Session session, boolean unique) {
         String sessionType = null;
-        if (session.getSessionType() == SessionCache.SESSION_ADMIN)
+        if (session.getSessionType() == Session.Type.ADMIN)
             sessionType = HeaderConstants.SESSION_ADMIN;
 
         Element eSession = unique ? parent.addUniqueElement(HeaderConstants.E_SESSION_ID) : parent.addElement(HeaderConstants.E_SESSION_ID);

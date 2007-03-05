@@ -34,7 +34,6 @@ import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.session.Session;
-import com.zimbra.cs.session.SessionCache;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AccountConstants;
@@ -120,7 +119,7 @@ public class Auth extends AdminDocumentHandler {
         response.addAttribute(AdminConstants.E_AUTH_TOKEN, token, Element.DISP_CONTENT);
         response.addAttribute(AdminConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.DISP_CONTENT);
         response.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, Provisioning.A_zimbraIsDomainAdminAccount).setText(isDomainAdmin+"");
-        Session session = lc.getNewSession(acct.getId(), SessionCache.SESSION_ADMIN);
+        Session session = lc.getNewSession(acct.getId(), Session.Type.ADMIN);
         if (session != null)
             ZimbraSoapContext.encodeSession(response, session, true);
 		return response;
