@@ -117,7 +117,7 @@ public abstract class SoapTransport {
     }
     public String getSessionId() { return mSessionId; }
 
-    public void setMaxNoitfySeq(long seq) {
+    public void setMaxNotifySeq(long seq) {
         mMaxNotifySeq = seq;
     }
     public long getMaxNotifySeq() { return mMaxNotifySeq; }
