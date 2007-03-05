@@ -383,7 +383,7 @@ public class ZMailbox {
         if (mTransport != null) mTransport.shutdown();
         mTransport = new SoapHttpTransport(uri);
         mTransport.setUserAgent("zclient", BuildInfo.VERSION);
-        mTransport.setMaxNoitfySeq(0);
+        mTransport.setMaxNotifySeq(0);
         if (timeout > -1)
             mTransport.setTimeout(timeout);
         if (retryCount > 0)
@@ -412,7 +412,7 @@ public class ZMailbox {
         	handleRefresh(refresh);
 
         for (Element notify : context.listElements(ZimbraNamespace.E_NOTIFY)) {
-            mTransport.setMaxNoitfySeq(
+            mTransport.setMaxNotifySeq(
                     Math.max(mTransport.getMaxNotifySeq(),
                              notify.getAttributeLong(HeaderConstants.A_SEQNO, 0)));
             // MUST DO IN THIS ORDER!
@@ -536,7 +536,7 @@ public class ZMailbox {
             mIdToItem.clear();
             mMessageCache.clear();
             mContactCache.clear();
-            mTransport.setMaxNoitfySeq(0);
+            mTransport.setMaxNotifySeq(0);
             mSize = event.getSize();
             mUserRoot = event.getUserRoot();
             mNeedsRefresh = false;
