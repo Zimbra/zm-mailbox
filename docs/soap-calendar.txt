@@ -159,8 +159,6 @@
              // cutype (calendar user type) = INDividual, GROup, RESource, ROOm, UNKnown
              // sentBy, member, delTo and delFrom values are email addresses
 
-           [ <alarm rel-start="RELATIVE_TIME_POSITIVE_MEANS_BEFORE"/> ]*
-
            [
              <recur>  // see below
                 [ <add|exclude>
@@ -666,7 +664,6 @@ OR
              // role = CHAir, REQuired, OPTional, NON-participant (ie informational)
              // ptst = NEeds-action, TEntative, ACcept, DEclined, DG (delegated), COmpleted (todo), IN-process (todo)
              // cutype (calendar user type) = INDividual, GROup, RESource, ROOm, UNKnown
-           <alarm rel-start="RELATIVE_MSECS_MINUS_MEANS_AFTER_START"/>*
            [
              <recur>
                 RECURRENCE PART
