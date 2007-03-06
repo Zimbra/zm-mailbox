@@ -94,6 +94,7 @@ public class ZMessage implements ZItem {
     private String mReplyType;
     private String mInReplyTo;
     private String mOrigId;
+    private ZInvite mInvite;
         
     public ZMessage(Element e) throws ServiceException {
         mId = e.getAttribute(MailConstants.A_ID);
@@ -131,6 +132,10 @@ public class ZMessage implements ZItem {
         Element mp = e.getOptionalElement(MailConstants.E_MIMEPART);
         if (mp != null)
             mMimeStructure = new ZMimePart(null, mp);
+
+        Element inviteEl = e.getOptionalElement(MailConstants.E_INVITE);
+        if (inviteEl != null)
+            mInvite = new ZInvite(inviteEl);
     }
 
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
@@ -143,6 +148,14 @@ public class ZMessage implements ZItem {
                 mConversationId = mevent.getConversationId(mConversationId);
             }
         }
+    }
+
+    /**
+     *
+     * @return invite object if this message contains an invite, null otherwise.
+     */
+    public ZInvite getInvite() {
+        return mInvite;
     }
 
     /**
@@ -203,7 +216,9 @@ public class ZMessage implements ZItem {
         sb.add("contentURL", mContentURL);
         sb.add("addresses", mAddresses, false, true);
         sb.addStruct("mimeStructure", mMimeStructure.toString());
-        sb.endStruct();        
+        if (mInvite != null)
+                sb.addStruct("invite", mInvite.toString());
+        sb.endStruct();
         return sb;
     }
 
