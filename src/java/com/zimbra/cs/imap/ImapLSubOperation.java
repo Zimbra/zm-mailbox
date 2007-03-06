@@ -34,6 +34,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.operation.Operation;
+import com.zimbra.cs.operation.Operation.Requester;
 
 public class ImapLSubOperation extends Operation {
 	private static int LOAD = 25;
@@ -44,14 +45,15 @@ public class ImapLSubOperation extends Operation {
     	}
 
 	private String mPattern;
-	
+    private boolean mOutputChildInfo;
+
 	private Map<String, String> mSubs;
 	
-	ImapLSubOperation(ImapSession session, OperationContext oc, Mailbox mbox, 
-				      String pattern) {
-		super(session, oc, mbox, Requester.IMAP, Requester.IMAP.getPriority(), LOAD);
+	ImapLSubOperation(ImapSession session, OperationContext oc, Mailbox mbox, String pattern, boolean children) {
+        super(session, oc, mbox, Requester.IMAP, Requester.IMAP.getPriority(), LOAD);
 
-		mPattern = pattern;
+        mPattern = pattern;
+        mOutputChildInfo = children;
 	}
 	
 
@@ -65,7 +67,7 @@ public class ImapLSubOperation extends Operation {
 				} catch (MailServiceException.NoSuchItemException nsie) { }
 				// FIXME: need to determine "name attributes" for mailbox (\Marked, \Unmarked, \Noinferiors, \Noselect)
 				boolean visible = hit.getValue() != null && ImapFolder.isFolderVisible(folder, (ImapSession) mSession);
-				String attributes = visible ? ImapListOperation.getFolderAttributes((ImapSession) mSession, folder) : "\\Noselect";
+				String attributes = visible ? ImapListOperation.getFolderAttributes((ImapSession) mSession, folder, mOutputChildInfo) : "\\Noselect";
 				hit.setValue("LSUB (" + attributes + ") \"/\" " + ImapFolder.formatPath(hit.getKey(), (ImapSession) mSession));
 			}
 		}

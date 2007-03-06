@@ -86,19 +86,26 @@ class OzImapRequest {
             REGEXP_ESCAPED['\\'] = true;
         }
 
+    private OzImapConnectionHandler mHandler;
     private ImapSession mSession;
     private List<Object> mParts;
     private String mTag;
     private int mIndex, mOffset;
 
-    OzImapRequest(ImapSession session) {
+    OzImapRequest(OzImapConnectionHandler handler, ImapSession session) {
+        mHandler = handler;
         mSession = session;
     }
 
-    public OzImapRequest(String tag, List<Object> currentRequestParts, ImapSession session) {
+    public OzImapRequest(String tag, List<Object> currentRequestParts, OzImapConnectionHandler handler, ImapSession session) {
+        mHandler = handler;
         mSession = session;
         mTag = tag;
         mParts = currentRequestParts;
+    }
+
+    private boolean extensionEnabled(String extension) {
+        return mHandler == null || mHandler.extensionEnabled(extension);
     }
 
     void setTag(String tag)  { mTag = tag; }
@@ -227,8 +234,8 @@ class OzImapRequest {
     private static final int LAST_PUNCT = 0, LAST_DIGIT = 1, LAST_STAR = 2;
 
     private String validateSequence(String value) throws ImapParseException {
-        // "$" is OK per draft-melnikov-imap-search-res-03
-        if (value.equals("$"))
+        // "$" is OK per draft-melnikov-imap-search-res-04
+        if (value.equals("$") && extensionEnabled("X-DRAFT-I04-SEARCHRES"))
             return value;
 
         int i, last = LAST_PUNCT;
@@ -292,7 +299,7 @@ class OzImapRequest {
     }
 
     byte[] readLiteral8() throws ImapParseException {
-        if (peekChar() == '~')
+        if (peekChar() == '~' && extensionEnabled("BINARY"))
             skipChar('~');
         return readLiteral();
     }
@@ -472,7 +479,7 @@ class OzImapRequest {
             } else if (item.equals("RFC822.TEXT")) {
                 attributes |= ImapHandler.FETCH_MARK_READ;
                 parts.add(new ImapPartSpecifier(item, "", "TEXT"));
-            } else if (item.equals("BINARY.SIZE")) {
+            } else if (item.equals("BINARY.SIZE") && extensionEnabled("BINARY")) {
                 String sectionPart = "";
                 skipChar('[');
                 while (peekChar() != ']') {
@@ -486,7 +493,7 @@ class OzImapRequest {
                     attributes |= OzImapConnectionHandler.FETCH_BINARY_SIZE;
                 else
                     parts.add(new ImapPartSpecifier(item, sectionPart, ""));
-            } else if (item.equals("BODY") || item.equals("BODY.PEEK") || item.equals("BINARY") || item.equals("BINARY.PEEK")) {
+            } else if (item.equals("BODY") || item.equals("BODY.PEEK") || ((item.equals("BINARY") || item.equals("BINARY.PEEK")) && extensionEnabled("BINARY"))) {
                 if (!item.endsWith(".PEEK"))
                     attributes |= ImapHandler.FETCH_MARK_READ;
                 boolean binary = item.startsWith("BINARY");
@@ -503,8 +510,9 @@ class OzImapRequest {
                     }
                 }
                 parts.add(pspec);
-            } else
+            } else {
                 throw new ImapParseException(mTag, "unknown FETCH attribute \"" + item + '"');
+            }
             if (list && peekChar() != ')')  skipSpace();
         } while (list && peekChar() != ')');
         if (list)  skipChar(')');
@@ -613,7 +621,7 @@ class OzImapRequest {
             else if (key.equals("KEYWORD"))     { skipSpace(); child = new FlagSearch(readAtom()); }
             else if (key.equals("LARGER"))      { skipSpace(); child = new SizeSearch(SizeSearch.Relation.larger, parseLong(readNumber())); }
             else if (key.equals("ON"))          { skipSpace(); child = new DateSearch(DateSearch.Relation.date, readDate()); }
-            else if (key.equals("OLDER"))       { skipSpace(); child = new RelativeDateSearch(DateSearch.Relation.before, parseInteger(readNumber())); }
+            else if (key.equals("OLDER") && extensionEnabled("WITHIN"))  { skipSpace(); child = new RelativeDateSearch(DateSearch.Relation.before, parseInteger(readNumber())); }
             // FIXME: SENTBEFORE, SENTON, and SENTSINCE reference INTERNALDATE, not the Date header
             else if (key.equals("SENTBEFORE"))  { skipSpace(); child = new DateSearch(DateSearch.Relation.before, readDate()); }
             else if (key.equals("SENTON"))      { skipSpace(); child = new DateSearch(DateSearch.Relation.date, readDate()); }
@@ -625,7 +633,7 @@ class OzImapRequest {
             else if (key.equals("TO"))          { skipSpace(); child = new ContentSearch(ContentSearch.Relation.to, readAstring(charset)); }
             else if (key.equals("UID"))         { skipSpace(); child = new SequenceSearch(readSequence(), true); }
             else if (key.equals("UNKEYWORD"))   { skipSpace(); child = new NotOperation(new FlagSearch(readAtom())); }
-            else if (key.equals("YOUNGER"))     { skipSpace(); child = new RelativeDateSearch(DateSearch.Relation.after, parseInteger(readNumber())); }
+            else if (key.equals("YOUNGER") && extensionEnabled("WITHIN"))  { skipSpace(); child = new RelativeDateSearch(DateSearch.Relation.after, parseInteger(readNumber())); }
             else if (key.equals(SUBCLAUSE))     { skipChar('(');  child = readSearchClause(charset, MULTIPLE_CLAUSES, new AndOperation());  skipChar(')'); }
             else if (Character.isDigit(key.charAt(0)) || key.charAt(0) == '*' || key.charAt(0) == '$')
                 child = new SequenceSearch(validateSequence(key), false);
