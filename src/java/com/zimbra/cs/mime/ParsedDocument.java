@@ -28,16 +28,10 @@
  */
 package com.zimbra.cs.mime;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
-import javax.activation.DataSource;
-import javax.activation.FileDataSource;
+import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -49,97 +43,11 @@ import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.object.ObjectHandlerException;
 
 public class ParsedDocument {
-
-    private static class DigestingInputStream extends InputStream {
-        private InputStream mStream;
-        private MessageDigest mDigester;
-        private byte[] mDigest;
-        private int mSize = 0;
-
-        private DigestingInputStream(InputStream is) {
-            mStream = is;
-            try {
-                mDigester = MessageDigest.getInstance("SHA1");
-            } catch (NoSuchAlgorithmException e) {
-                // this should never happen unless the JDK is foobar
-                throw new RuntimeException(e);
-            }
-        }
-        public int read() throws IOException {
-            int i = mStream.read();
-            if (i != -1) {
-                mDigester.update(new byte[] { (byte) i }, 0, 1);
-                mSize++;
-            } else if (mDigest == null) {
-                mDigest = mDigester.digest();
-            }
-            return i;
-        }
-        public int read(byte b[], int off, int len) throws IOException {
-            int read = mStream.read(b, off, len);
-            if (read != -1) {
-                mDigester.update(b, off, read);
-                mSize += read;
-            } else if (mDigest == null) {
-                mDigest = mDigester.digest();
-            }
-            return read;
-        }
-        private void consumeRemainder() throws IOException {
-            if (mDigest == null) {
-                byte[] buffer = new byte[8192];
-                while (read(buffer) > 0)
-                    ;
-            }
-        }
-        byte[] getDigest() throws IOException  { consumeRemainder();  return mDigest; }
-        int getTotalSize() throws IOException  { consumeRemainder();  return mSize; }
-    }
-
-    private static interface DocumentDataSource extends DataSource {
-        public String getDigest() throws IOException;
-        public int getSize() throws IOException;
-    }
-
-    private class FileDocumentDataSource extends FileDataSource implements DocumentDataSource {
-        private DigestingInputStream mStream;
-
-        private FileDocumentDataSource(File file)  { super(file); }
-
-        public String getContentType() { return mContentType; }
-        public String getName()        { return mFilename; }
-        public InputStream getInputStream() throws IOException {
-            return mStream = new DigestingInputStream(super.getInputStream());
-        }
-        public OutputStream getOutputStream() {
-            throw new UnsupportedOperationException();
-        }
-        public String getDigest() throws IOException  { checkStream();  return ByteUtil.encodeFSSafeBase64(mStream.getDigest()); }
-        public int getSize() throws IOException       { checkStream();  return mStream.getTotalSize(); }
-        private void checkStream() throws IOException  { if (mStream == null) getInputStream(); }
-    }
-
-    private class ByteArrayDataSource implements DocumentDataSource {
-        private byte[] mRawData;
-
-        private ByteArrayDataSource(byte[] rawData)  { mRawData = rawData; }
-
-        public String getContentType() { return mContentType; }
-        public String getName()        { return mFilename; }
-        public InputStream getInputStream() {
-            return new ByteArrayInputStream(mRawData);
-        }
-        public OutputStream getOutputStream() {
-            throw new UnsupportedOperationException();
-        }
-        public String getDigest() { return ByteUtil.getDigest(mRawData); }
-        public int getSize()      { return mRawData.length; }
-    }
-
-    String mContentType;
-    String mFilename;
+    private byte[] mContent;
     private int mSize;
     private String mDigest;
+    private String mContentType;
+    private String mFilename;
     private String mCreator;
     private Document mDocument = null;
     private String mFragment;
@@ -147,20 +55,21 @@ public class ParsedDocument {
 
     public ParsedDocument(File file, String filename, String ctype, long createdDate, String creator)
     throws ServiceException, IOException {
-        DocumentDataSource ds = new FileDocumentDataSource(file);
-        init(ds, filename, ctype, createdDate, creator);
+        init(ByteUtil.getContent(file), filename, ctype, createdDate, creator);
     }
 
     public ParsedDocument(byte[] rawData, String filename, String ctype, long createdDate, String creator)
-    throws ServiceException, IOException {
-        DocumentDataSource ds = new ByteArrayDataSource(rawData);
-        init(ds, filename, ctype, createdDate, creator);
+    throws ServiceException {
+        init(rawData, filename, ctype, createdDate, creator);
     }
 
-    private void init(DocumentDataSource ds, String filename, String ctype, long createdDate, String creator)
-    throws ServiceException, IOException {
-        mFilename = filename;
+    private void init(byte[] content, String filename, String ctype, long createdDate, String creator)
+    throws ServiceException {
+        mContent = content;
+        mSize = content.length;
+        mDigest = ByteUtil.getDigest(content);
         mContentType = ctype;
+        mFilename = filename;
         mCreatedDate = createdDate;
         mCreator = creator;
 
@@ -169,14 +78,14 @@ public class ParsedDocument {
             assert(handler != null);
 
             if (handler.isIndexingEnabled())
-                handler.init(ds);
+                handler.init(new ByteArrayDataSource(content, ctype));
             handler.setFilename(filename);
             handler.setPartName(LuceneFields.L_PARTNAME_TOP);
             mFragment = Fragment.getFragment(handler.getContent(), false);
-            handler.setMessageDigest(mDigest = ds.getDigest());
+            handler.setMessageDigest(mDigest);
 
             mDocument = handler.getDocument();
-            mDocument.add(new Field(LuceneFields.L_SIZE, Integer.toString(mSize = ds.getSize()), Field.Store.YES, Field.Index.NO));
+            mDocument.add(new Field(LuceneFields.L_SIZE, Integer.toString(mSize), Field.Store.YES, Field.Index.NO));
             mDocument.add(new Field(LuceneFields.L_H_SUBJECT, filename, Field.Store.NO, Field.Index.TOKENIZED));
             mDocument.add(new Field(LuceneFields.L_CONTENT, filename,  Field.Store.NO, Field.Index.TOKENIZED));
             mDocument.add(new Field(LuceneFields.L_H_FROM, creator, Field.Store.NO, Field.Index.TOKENIZED));
@@ -193,15 +102,17 @@ public class ParsedDocument {
         mDocument.add(new Field(LuceneFields.L_VERSION, Integer.toString(v), Field.Store.YES, Field.Index.UN_TOKENIZED));
     }
 
-    public String getFilename()     { return mFilename; }
-    public String getContentType()  { return mContentType; }
     public int getSize()            { return mSize; }
     public String getDigest()       { return mDigest; }
-    public String getCreator()      { return mCreator; }
+    public byte[] getContent()      { return mContent; }
+
+    public String getFilename()     { return mFilename; }
+    public String getContentType()  { return mContentType; }
 
     public Document getDocument()   { return mDocument; }
-
     public String getFragment()     { return mFragment; }
+
+    public String getCreator()      { return mCreator; }
     public long getCreatedDate()    { return mCreatedDate; }
 
 
