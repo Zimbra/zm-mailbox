@@ -2330,27 +2330,20 @@ public class Mailbox {
     }
 
 
-    /**
-     * Returns the folder with the specified id.
-     * @throws NoSuchItemException if the folder does not exist
-     */
+    /** Returns the folder with the specified id.
+     * @throws NoSuchItemException if the folder does not exist */
     public synchronized Folder getFolderById(OperationContext octxt, int id) throws ServiceException {
         return (Folder) getItemById(octxt, id, MailItem.TYPE_FOLDER);
     }
     
-    
-    /**
-     * Returns the folder with the specified id.
-     * @throws NoSuchItemException if the folder does not exist
-     */
+    /** Returns the folder with the specified id.
+     * @throws NoSuchItemException if the folder does not exist */
     Folder getFolderById(int id) throws ServiceException {
         return (Folder) getItemById(id, MailItem.TYPE_FOLDER);
     }
     
-    /**
-     * Returns the folder with the specified parent and name.
-     * @throws NoSuchItemException if the folder does not exist
-     */
+    /** Returns the folder with the specified parent and name.
+     * @throws NoSuchItemException if the folder does not exist */
     public synchronized Folder getFolderByName(OperationContext octxt, int parentId, String name) throws ServiceException {
         boolean success = false;
         try {
@@ -2367,10 +2360,8 @@ public class Mailbox {
         }
     }
 
-    /**
-     * Returns the folder with the specified path, delimited by slashes (<code>/</code>).
-     * @throws NoSuchItemException if the folder does not exist
-     */
+    /** Returns the folder with the specified path, delimited by slashes (<tt>/</tt>).
+     * @throws NoSuchItemException if the folder does not exist */
     public synchronized Folder getFolderByPath(OperationContext octxt, String name) throws ServiceException {
         if (name == null)
             throw MailServiceException.NO_SUCH_FOLDER(name);
@@ -2400,6 +2391,7 @@ public class Mailbox {
             endTransaction(success);
         }
     }
+
     public synchronized List<Folder> getFolderList(OperationContext octxt, byte sort) throws ServiceException {
         List<Folder> folders = new ArrayList<Folder>();
         for (MailItem item : getItemList(octxt, MailItem.TYPE_FOLDER, -1, sort))
@@ -2435,12 +2427,15 @@ public class Mailbox {
     public synchronized Contact getContactById(OperationContext octxt, int id) throws ServiceException {
         return (Contact) getItemById(octxt, id, MailItem.TYPE_CONTACT);
     }
+
     Contact getContactById(int id) throws ServiceException {
         return (Contact) getItemById(id, MailItem.TYPE_CONTACT);
     }
+
     public synchronized List<Contact> getContactList(OperationContext octxt, int folderId) throws ServiceException {
         return getContactList(octxt, folderId, DbMailItem.SORT_NONE);
     }
+
     public synchronized List<Contact> getContactList(OperationContext octxt, int folderId, byte sort) throws ServiceException {
         List<Contact> contacts = new ArrayList<Contact>();
         for (MailItem item : getItemList(octxt, MailItem.TYPE_CONTACT, folderId, sort))
@@ -2463,6 +2458,7 @@ public class Mailbox {
     Message getMessage(MailItem.UnderlyingData data) throws ServiceException { 
         return (Message) getItem(data);
     }
+
     Message getCachedMessage(Integer id) throws ServiceException {
         return (Message) getCachedItem(id, MailItem.TYPE_MESSAGE);
     }
@@ -2470,6 +2466,7 @@ public class Mailbox {
     public synchronized List<Message> getMessagesByConversation(OperationContext octxt, int convId) throws ServiceException {
         return getMessagesByConversation(octxt, convId, Conversation.SORT_ID_ASCENDING);
     }
+
     public synchronized List<Message> getMessagesByConversation(OperationContext octxt, int convId, byte sort) throws ServiceException {
         boolean success = false;
         try {
@@ -2489,15 +2486,19 @@ public class Mailbox {
         }
     }
 
+
     public synchronized Conversation getConversationById(OperationContext octxt, int id) throws ServiceException {
         return (Conversation) getItemById(octxt, id, MailItem.TYPE_CONVERSATION);
     }
+
     Conversation getConversationById(int id) throws ServiceException {
         return (Conversation) getItemById(id, MailItem.TYPE_CONVERSATION);
     }
+
     Conversation getConversation(MailItem.UnderlyingData data) throws ServiceException {
         return (Conversation) getItem(data);
     }
+
     Conversation getCachedConversation(Integer id) throws ServiceException {
         return (Conversation) getCachedItem(id, MailItem.TYPE_CONVERSATION);
     }
@@ -2532,6 +2533,31 @@ public class Mailbox {
     }
 
 
+    public WikiItem getWikiById(OperationContext octxt, int id) throws ServiceException {
+        return (WikiItem) getItemById(octxt, id, MailItem.TYPE_WIKI);
+    }
+
+
+    public Document getDocumentById(OperationContext octxt, int id) throws ServiceException {
+        return (Document) getItemById(octxt, id, MailItem.TYPE_DOCUMENT);
+    }
+
+    Document getDocumentById(int id) throws ServiceException {
+        return (Document) getItemById(id, MailItem.TYPE_DOCUMENT);
+    }
+
+    public synchronized List<Document> getDocumentList(OperationContext octxt, int folderId) throws ServiceException {
+        return getDocumentList(octxt, folderId, DbMailItem.SORT_NONE);
+    }
+
+    public synchronized List<Document> getDocumentList(OperationContext octxt, int folderId, byte sort) throws ServiceException {
+        List<Document> docs = new ArrayList<Document>();
+        for (MailItem item : getItemList(octxt, MailItem.TYPE_DOCUMENT, folderId, sort))
+            docs.add((Document) item);
+        return docs;
+    }
+
+
     private void checkCalendarType(MailItem item) throws ServiceException {
         byte type = item.getType();
         if (type != MailItem.TYPE_APPOINTMENT && type != MailItem.TYPE_TASK)
@@ -2543,43 +2569,47 @@ public class Mailbox {
         checkCalendarType(item);
         return (CalendarItem) item;
     }
+
     CalendarItem getCalendarItemById(int id) throws ServiceException {
         MailItem item = getItemById(id, MailItem.TYPE_UNKNOWN);
         checkCalendarType(item);
         return (CalendarItem) item;
     }
+
     CalendarItem getCalendarItem(MailItem.UnderlyingData data) throws ServiceException {
         return (CalendarItem) getItem(data);
     }
+
     public synchronized List getCalendarItemList(OperationContext octxt, int folderId) throws ServiceException {
         return getItemList(octxt, MailItem.TYPE_UNKNOWN, folderId);
     }
 
+
     public synchronized Appointment getAppointmentById(OperationContext octxt, int id) throws ServiceException {
         return (Appointment) getItemById(octxt, id, MailItem.TYPE_APPOINTMENT);
     }
+
     Appointment getAppointmentById(int id) throws ServiceException {
         return (Appointment) getItemById(id, MailItem.TYPE_APPOINTMENT);
     }
-    Appointment getAppointment(MailItem.UnderlyingData data) throws ServiceException { 
-        return (Appointment) getItem(data);
-    }
+
     public synchronized List getAppointmentList(OperationContext octxt, int folderId) throws ServiceException {
         return getItemList(octxt, MailItem.TYPE_APPOINTMENT, folderId);
     }
 
+
     public synchronized Task getTaskById(OperationContext octxt, int id) throws ServiceException {
         return (Task) getItemById(octxt, id, MailItem.TYPE_TASK);
     }
+
     Task getTaskById(int id) throws ServiceException {
         return (Task) getItemById(id, MailItem.TYPE_TASK);
     }
-    Task getTask(MailItem.UnderlyingData data) throws ServiceException { 
-        return (Task) getItem(data);
-    }
+
     public synchronized List getTaskList(OperationContext octxt, int folderId) throws ServiceException {
         return getItemList(octxt, MailItem.TYPE_TASK, folderId);
     }
+
 
     public synchronized ZVCalendar getZCalendarForCalendarItems(
             Collection<CalendarItem> calItems,
@@ -4685,77 +4715,38 @@ public class Mailbox {
         }
     }
 
-    public synchronized Document addDocumentRevision(OperationContext octxt, Document doc, byte[] rawData, String author) throws ServiceException {
-        String digest = ByteUtil.getDigest(rawData);
+    public Document addDocumentRevision(OperationContext octxt, int docId, byte type, byte[] rawData, String author) throws ServiceException {
+        Document doc = getDocumentById(octxt, docId);
+        ParsedDocument pd = new ParsedDocument(rawData, doc.getName(), doc.getContentType(), System.currentTimeMillis(), author);
+        return addDocumentRevision(octxt, docId, type, pd);
+    }
+
+    public synchronized Document addDocumentRevision(OperationContext octxt, int docId, byte type, ParsedDocument pd) throws ServiceException {
+        AddDocumentRevision redoRecorder = new AddDocumentRevision(mId, pd.getDigest(), pd.getSize(), 0);
+
         boolean success = false;
         try {
-            AddDocumentRevision redoRecorder = new AddDocumentRevision(mId, digest, rawData.length, 0);
-
             beginTransaction("addDocumentRevision", octxt, redoRecorder);
-            redoRecorder.setAuthor(author);
+
+            Document doc = getDocumentById(docId);
+
+            redoRecorder.setAuthor(pd.getCreator());
             redoRecorder.setDocument(doc);
             short volumeId = Volume.getCurrentMessageVolume().getId();
             // TODO: simplify the redoRecorder by not subclassing from CreateMessage
-            redoRecorder.setMessageBodyInfo(rawData, "", volumeId);
+            redoRecorder.setMessageBodyInfo(pd.getContent(), "", volumeId);
 
-            ParsedDocument pd = new ParsedDocument(rawData, doc.getName(), doc.getContentType(), getOperationTimestampMillis(), author);
-            doc.setContent(rawData, digest, volumeId, pd);
+            doc.setContent(pd.getContent(), pd.getDigest(), volumeId, pd);
             queueForIndexing(doc, false, pd);
 
             doc.purgeOldRevisions(1);  // purge all but 1 revisions.
             success = true;
+            return doc;
         } catch (IOException ioe) {
             throw MailServiceException.MESSAGE_PARSE_ERROR(ioe);
         } finally {
             endTransaction(success);
         }
-        return doc;
-    }
-
-    public WikiItem getWikiById(OperationContext octxt, int id) throws ServiceException {
-        return (WikiItem) getItemById(octxt, id, MailItem.TYPE_WIKI);
-    }
-
-    public synchronized List<Document> getWikiList(OperationContext octxt, int folderId) throws ServiceException {
-        return getWikiList(octxt, folderId, DbMailItem.SORT_NONE);
-    }
-
-    public synchronized List<Document> getWikiList(OperationContext octxt, int folderId, byte sort) throws ServiceException {
-        List<MailItem> docs = getItemList(octxt, MailItem.TYPE_DOCUMENT, folderId, sort);
-        List<MailItem> wikis = getItemList(octxt, MailItem.TYPE_WIKI, folderId, sort);
-        List<Document> ret = new ArrayList<Document>();
-        
-        boolean doSort = (sort & DbMailItem.SORT_FIELD_MASK) == DbMailItem.SORT_BY_SUBJECT;
-        
-        // merge sort
-        int docIndex = 0, wikiIndex = 0;
-        while (docIndex < docs.size() || wikiIndex < wikis.size()) {
-            MailItem doc = null;
-            MailItem wiki = null;
-            if (docIndex < docs.size())
-                doc = docs.get(docIndex);
-            if (wikiIndex < wikis.size())
-                wiki = wikis.get(wikiIndex);
-
-            if (doc == null) {
-                wikiIndex++;
-                if (wiki instanceof Document)
-                    ret.add((Document)wiki);
-            } else if (wiki == null) {
-                docIndex++;
-                if (doc instanceof Document)
-                    ret.add((Document)doc);
-            } else if (!doSort || doc.getName().compareToIgnoreCase(wiki.getName()) < 0) {
-                docIndex++;
-                if (doc instanceof Document)
-                    ret.add((Document)doc);
-            } else {
-                wikiIndex++;
-                if (wiki instanceof Document)
-                    ret.add((Document)wiki);
-            }
-        }
-        return ret;
     }
 
     public synchronized WikiItem createWiki(OperationContext octxt, 

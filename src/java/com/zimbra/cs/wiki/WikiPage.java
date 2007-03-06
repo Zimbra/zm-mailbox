@@ -161,7 +161,7 @@ public abstract class WikiPage {
 			Document doc = getWikiItem(ctxt);
 			if (newRev.mWikiWord != null && !newRev.mWikiWord.equals(mWikiWord))
                 mbox.rename(ctxt.octxt, doc.getId(), MailItem.TYPE_DOCUMENT, newRev.mWikiWord);
-			doc = mbox.addDocumentRevision(ctxt.octxt, doc, newRev.mData, newRev.mCreator);
+			doc = mbox.addDocumentRevision(ctxt.octxt, doc.getId(), doc.getType(), newRev.mData, newRev.mCreator);
 			addWikiItem(doc);
 			newRev.addWikiItem(doc);
 		}

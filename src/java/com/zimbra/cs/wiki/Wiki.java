@@ -332,7 +332,7 @@ public abstract class Wiki {
         		ZimbraLog.wiki.error("cannot read the item body", ioe);
         		throw WikiServiceException.CANNOT_READ(doc.getName());
         	}
-        	mbox.addDocumentRevision(ctxt.octxt, doc, contents, author);
+        	mbox.addDocumentRevision(ctxt.octxt, doc.getId(), doc.getType(), contents, author);
         	Wiki.remove(mWikiAccount, Integer.toString(mFolderId));
 		}
 		

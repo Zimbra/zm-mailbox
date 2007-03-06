@@ -495,16 +495,11 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
         		buf.append(">");
         	}
 	    	Mailbox mbox = ctxt.item.getMailbox();
-            for (Document doc : mbox.getWikiList(ctxt.wctxt.octxt, folder.getId(), (byte)(DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_ASCENDING))) {
+            for (Document doc : mbox.getDocumentList(ctxt.wctxt.octxt, folder.getId(), (byte)(DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_ASCENDING))) {
             	buf.append("<");
         		buf.append(sTAGS[sINNER][style]);
             	buf.append(" class='zmwiki-pageLink'>");
-            	String name;
-            	if (doc instanceof WikiItem)
-            		name = ((WikiItem)doc).getWikiWord();
-            	else
-            		name = doc.getName();
-            	buf.append(createLink(name));
+            	buf.append(createLink(doc.getName()));
         		buf.append("</");
         		buf.append(sTAGS[sINNER][style]);
         		buf.append(">");

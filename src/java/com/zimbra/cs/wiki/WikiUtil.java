@@ -149,7 +149,7 @@ public abstract class WikiUtil {
                 mbox.emptyFolder(octxt, where.getId(), true);
                 return;
             }
-            List<Document> items = mbox.getWikiList(octxt, where.getId());
+            List<Document> items = mbox.getDocumentList(octxt, where.getId());
             for (Document doc : items) {
                 mbox.delete(octxt, doc, null);
             }

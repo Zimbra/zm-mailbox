@@ -27,7 +27,6 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -74,14 +73,6 @@ public class AddDocumentRevision extends SaveDocument {
     	OperationContext octxt = getOperationContext();
         int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
-        MailItem doc = mbox.getItemById(octxt, mDocId, MailItem.TYPE_UNKNOWN);
-        if (doc.getType() != MailItem.TYPE_WIKI &&
-        	doc.getType() != MailItem.TYPE_DOCUMENT) {
-        	throw ServiceException.FAILURE("invalid MailItem type "+doc.getType(), null);
-        }
-        mbox.addDocumentRevision(octxt, 
-							(Document)doc, 
-							getMessageBody(),
-							getAuthor());
+        mbox.addDocumentRevision(octxt, mDocId, MailItem.TYPE_DOCUMENT, getMessageBody(), getAuthor());
     }
 }

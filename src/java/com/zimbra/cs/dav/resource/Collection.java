@@ -160,7 +160,7 @@ public class Collection extends MailItemResource {
 		} catch (ServiceException e) {
 			if (e.getCode().equals(MailServiceException.ALREADY_EXISTS))
 				throw new DavException("item already exists", HttpServletResponse.SC_CONFLICT, e);
-			else if (e.getCode().equals(MailServiceException.PERM_DENIED))
+			else if (e.getCode().equals(ServiceException.PERM_DENIED))
 				throw new DavException("permission denied", HttpServletResponse.SC_FORBIDDEN, e);
 			else
 				throw new DavException("can't create", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
@@ -188,8 +188,8 @@ public class Collection extends MailItemResource {
 			// add a revision if the resource already exists
 			MailItem item = mbox.getItemByPath(ctxt.getOperationContext(), ctxt.getPath());
 			if (item.getType() != MailItem.TYPE_DOCUMENT && item.getType() != MailItem.TYPE_WIKI)
-				throw new DavException("no DAV resource for "+MailItem.getNameForType(item.getType()), HttpServletResponse.SC_NOT_ACCEPTABLE, null);
-			Document doc = mbox.addDocumentRevision(ctxt.getOperationContext(), (Document)item, data, author);
+				throw new DavException("no DAV resource for " + MailItem.getNameForType(item.getType()), HttpServletResponse.SC_NOT_ACCEPTABLE, null);
+			Document doc = mbox.addDocumentRevision(ctxt.getOperationContext(), item.getId(), item.getType(), data, author);
 			return new Notebook(ctxt, doc);
 		} catch (ServiceException e) {
 			if (!(e instanceof NoSuchItemException))
