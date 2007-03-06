@@ -157,8 +157,9 @@ public abstract class Formatter {
                 return context.targetMailbox.getCalendarItemsForRange(context.opContext, startTime, endTime, folder.getId(), null);
             case MailItem.TYPE_CONTACT:
                 return context.targetMailbox.getContactList(context.opContext, folder.getId());
+            case MailItem.TYPE_DOCUMENT:
             case MailItem.TYPE_WIKI:
-                return context.targetMailbox.getWikiList(context.opContext, folder.getId());
+                return context.targetMailbox.getDocumentList(context.opContext, folder.getId());
             default:
                 return context.targetMailbox.getItemList(context.opContext, MailItem.TYPE_MESSAGE, folder.getId());
         }
