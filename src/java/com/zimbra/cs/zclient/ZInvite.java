@@ -116,6 +116,7 @@ public class ZInvite {
         private ZDuration mDuration;
         private ZOrganizer mOrganizer;
         private List<ZAttendee> mAttendees;
+        private ZRecurrence mRecurrence;
 
         public ZComponent(Element e) throws ServiceException {
             mStatus = ZStatus.fromString(e.getAttribute(MailConstants.A_CAL_STATUS, ZStatus.CONF.name()));
@@ -152,8 +153,20 @@ public class ZInvite {
                 mAttendees.add(new ZAttendee(attendeeEl));
             }
 
+            Element recurEl = e.getOptionalElement(MailConstants.E_CAL_RECUR);
+            if (recurEl != null)
+                mRecurrence = new ZRecurrence(recurEl);
+
         }
 
+        public ZRecurrence getRecurrence() {
+            return mRecurrence;
+        }
+
+        public void setRecurrence(ZRecurrence recurrence) {
+            mRecurrence = recurrence;
+        }
+        
         public ZStatus getStatus() {
             return mStatus;
         }
@@ -316,8 +329,9 @@ public class ZInvite {
             if (mStart != null) sb.addStruct("start", mStart.toString());
             if (mEnd != null) sb.addStruct("end", mEnd.toString());
             if (mDuration != null) sb.addStruct("duration", mDuration.toString());
-            sb.addStruct("organizer", mOrganizer.toString());
+            if (mOrganizer != null) sb.addStruct("organizer", mOrganizer.toString());
             sb.add("attendees", mAttendees, false, false);
+            if (mRecurrence != null) sb.addStruct("recurrence", mRecurrence.toString());
             sb.endStruct();
             return sb;
         }
@@ -1027,4 +1041,187 @@ public class ZInvite {
             return sb.toString();
         }
     }
+
+    public static class ZRecurrenceDate {
+        private ZDateTime mStart;
+        private ZDateTime mEnd;
+        private ZDuration mDuration;
+
+        public ZRecurrenceDate() {
+
+        }
+        
+        public ZRecurrenceDate(Element e) throws ServiceException {
+            mStart = new ZDateTime(e.getElement(MailConstants.E_CAL_START_TIME));
+            Element endEl = e.getOptionalElement(MailConstants.E_CAL_END_TIME);
+            if (endEl != null)
+                mEnd = new ZDateTime(endEl);
+            Element durEl = e.getOptionalElement(MailConstants.E_CAL_DURATION);
+            if (durEl != null)
+                mDuration = new ZDuration(durEl);
+        }
+
+       public ZDateTime getStart() {
+            return mStart;
+        }
+
+        public void setStart(ZDateTime start) {
+            mStart = start;
+        }
+
+        public ZDateTime getEnd() {
+            return mEnd;
+        }
+
+        public void setEnd(ZDateTime end) {
+            mEnd = end;
+        }
+
+        public ZDuration getDuration() {
+            return mDuration;
+        }
+
+        public void setDuration(ZDuration duration) {
+            mDuration = duration;
+        }
+
+        public String toString() {
+            ZSoapSB sb = new ZSoapSB();
+            sb.beginStruct();
+            sb.addStruct("start", mStart.toString());
+            if (mEnd != null) sb.addStruct("end", mEnd.toString());
+            if (mDuration != null) sb.addStruct("duration", mDuration.toString());
+            sb.endStruct();
+            return sb.toString();
+        }
+    }
+
+    public static class ZRecurrenceDates {
+        private String mTimeZoneId;
+        private List<ZRecurrenceDate> mDates;
+
+        public ZRecurrenceDates() {
+
+        }
+
+        public ZRecurrenceDates(Element e) throws ServiceException {
+            mDates = new ArrayList<ZRecurrenceDate>();
+            mTimeZoneId = e.getAttribute(MailConstants.A_CAL_TIMEZONE, null);
+            for (Element dtvalEl : e.listElements(MailConstants.E_CAL_DATE_VAL)) {
+                mDates.add(new ZRecurrenceDate(dtvalEl));
+            }
+        }
+
+        public String getTimeZoneId() {
+            return mTimeZoneId;
+        }
+
+        public void setTimeZoneId(String timeZoneId) {
+            mTimeZoneId = timeZoneId;
+        }
+
+        public List<ZRecurrenceDate> getDates() {
+            return mDates;
+        }
+
+        public void setDates(List<ZRecurrenceDate> dates) {
+            mDates = dates;
+        }
+
+        public String toString() {
+            ZSoapSB sb = new ZSoapSB();
+            sb.beginStruct();
+            if (mTimeZoneId != null) sb.add("timeZoneId", mTimeZoneId);
+            sb.add("dates", mDates, false, false);
+            sb.endStruct();
+            return sb.toString();
+        }
+    }
+
+    public static class ZRecurrenceRule {
+        public ZRecurrenceRule(Element e) {
+
+
+        }
+    }
+    
+    public static class ZRecurrence {
+
+        private List<ZRecurrenceRule> mRules;
+        private List<ZRecurrenceDates> mDates;
+        
+        private List<ZRecurrenceRule> mExRules;
+        private List<ZRecurrenceDates> mExDates;
+
+        public ZRecurrence() {
+
+        }
+
+        public ZRecurrence(Element e) throws ServiceException {
+            mRules = new ArrayList<ZRecurrenceRule>();
+            mExRules = new ArrayList<ZRecurrenceRule>();
+            mDates = new ArrayList<ZRecurrenceDates>();
+            mExDates = new ArrayList<ZRecurrenceDates>();
+            
+            for (Element addEl : e.listElements(MailConstants.E_CAL_ADD)) {
+                for (Element ruleEl : e.listElements(MailConstants.E_CAL_RULE))
+                    mRules.add(new ZRecurrenceRule(ruleEl));
+
+                for (Element datesEl : e.listElements(MailConstants.E_CAL_DATES))
+                    mDates.add(new ZRecurrenceDates(datesEl));
+            }
+
+            for (Element excludeEl : e.listElements(MailConstants.E_CAL_EXCLUDE)) {
+                for (Element ruleEl : e.listElements(MailConstants.E_CAL_RULE))
+                    mExRules.add(new ZRecurrenceRule(ruleEl));
+
+                for (Element datesEl : e.listElements(MailConstants.E_CAL_DATES))
+                    mExDates.add(new ZRecurrenceDates(datesEl));
+            }
+        }
+
+        public List<ZRecurrenceRule> getRules() {
+            return mRules;
+        }
+
+        public void setRules(List<ZRecurrenceRule> rules) {
+            mRules = rules;
+        }
+
+        public List<ZRecurrenceDates> getDates() {
+            return mDates;
+        }
+
+        public void setDates(List<ZRecurrenceDates> dates) {
+            mDates = dates;
+        }
+
+        public List<ZRecurrenceRule> getExRules() {
+            return mExRules;
+        }
+
+        public void setExRules(List<ZRecurrenceRule> exRules) {
+            mExRules = exRules;
+        }
+
+        public List<ZRecurrenceDates> getExDates() {
+            return mExDates;
+        }
+
+        public void setExDates(List<ZRecurrenceDates> exDates) {
+            mExDates = exDates;
+        }
+
+        public String toString() {
+            ZSoapSB sb = new ZSoapSB();
+            sb.beginStruct();
+            sb.add("rules", mRules, false, false);
+            sb.add("dates", mDates, false, false);
+            sb.add("exRules", mExRules, false, false);
+            sb.add("exDates", mExDates, false, false);
+            sb.endStruct();
+            return sb.toString();
+        }
+    }
+
 }
