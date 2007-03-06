@@ -258,7 +258,7 @@ public class ByteUtil {
 		return false;
 	}
 
-    private static String encodeFSSafeBase64(byte[] data) {
+    public static String encodeFSSafeBase64(byte[] data) {
         byte[] encoded = Base64.encodeBase64(data);
         // Replace '/' with ',' to make the digest filesystem-safe.
         for (int i = 0; i < encoded.length; i++) {
