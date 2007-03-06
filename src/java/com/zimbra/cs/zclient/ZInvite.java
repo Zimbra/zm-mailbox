@@ -37,8 +37,7 @@ public class ZInvite {
 
     private List<ZTimeZone> mTimeZones;
     private List<ZComponent> mComponents;
-    private ZType mType;
-
+    private ZInviteType mType;
 
     public ZInvite() throws ServiceException {
 
@@ -46,7 +45,7 @@ public class ZInvite {
     
     public ZInvite(Element e) throws ServiceException {
         mTimeZones = new ArrayList<ZTimeZone>();
-        mType = ZType.fromString(e.getAttribute(MailConstants.A_TYPE, ZType.appt.name()));
+        mType = ZInviteType.fromString(e.getAttribute(MailConstants.A_TYPE, ZInviteType.appt.name()));
         for (Element tzEl : e.listElements(MailConstants.E_CAL_TZ)) {
             mTimeZones.add(new ZTimeZone(tzEl));
         }
@@ -64,8 +63,29 @@ public class ZInvite {
         return mTimeZones;
     }
 
-    public ZType getType() {
+    public void setType(ZInviteType type) {
+        mType = type;
+    }
+    
+    public ZInviteType getType() {
         return mType;
+    }
+
+    public void setComponents(List<ZComponent> components) {
+        mComponents = components;
+    }
+
+    public List<ZComponent> getComponents() {
+        return mComponents;
+    }
+
+    public Element toElement(Element parent) {
+        Element invEl = parent.addElement(MailConstants.E_INVITE);
+        for (ZTimeZone tz : mTimeZones)
+            tz.toElement(invEl);
+        for (ZComponent comp : mComponents)
+            comp.toElement(invEl);
+        return invEl;
     }
 
     ZSoapSB toString(ZSoapSB sb) {
@@ -81,14 +101,14 @@ public class ZInvite {
         return toString(new ZSoapSB()).toString();
     }
 
-    public enum ZType {
+    public enum ZInviteType {
         appt, task;
 
-        public static ZType fromString(String s) throws ServiceException {
+        public static ZInviteType fromString(String s) throws ServiceException {
             try {
-                return ZType.valueOf(s);
+                return ZInviteType.valueOf(s);
             } catch (IllegalArgumentException e) {
-                throw ZClientException.CLIENT_ERROR("invalid type "+s+", valid values: "+ Arrays.asList(ZType.values()), e);
+                throw ZClientException.CLIENT_ERROR("invalid type "+s+", valid values: "+ Arrays.asList(ZInviteType.values()), e);
             }
         }
 
@@ -118,6 +138,14 @@ public class ZInvite {
         private List<ZAttendee> mAttendees;
         private ZRecurrence mRecurrence;
 
+        public ZComponent() {
+            mStatus = ZStatus.CONF;
+            mFreeBusyStatus = ZFreeBusyStatus.B;
+            mTransparency = ZTransparency.O;
+            mReplies = new ArrayList<ZReply>();
+            mAttendees = new ArrayList<ZAttendee>();
+        }
+        
         public ZComponent(Element e) throws ServiceException {
             mStatus = ZStatus.fromString(e.getAttribute(MailConstants.A_CAL_STATUS, ZStatus.CONF.name()));
             mFreeBusyStatus = ZFreeBusyStatus.fromString(e.getAttribute(MailConstants.A_APPT_FREEBUSY, ZFreeBusyStatus.B.name()));
@@ -157,6 +185,53 @@ public class ZInvite {
             if (recurEl != null)
                 mRecurrence = new ZRecurrence(recurEl);
 
+            // TODO alarms
+
+        }
+
+        public Element toElement(Element parent) {
+            Element compEl = parent.addElement(MailConstants.E_INVITE_COMPONENT);
+            if (mStatus != null) compEl.addAttribute(MailConstants.A_CAL_STATUS, mStatus.name());
+            if (mFreeBusyStatus != null) compEl.addAttribute(MailConstants.A_APPT_FREEBUSY, mFreeBusyStatus.name());
+            if (mActualFreeBusyStatus != null) compEl.addAttribute(MailConstants.A_APPT_FREEBUSY_ACTUAL, mActualFreeBusyStatus.name());
+            if (mTransparency != null) compEl.addAttribute(MailConstants.A_APPT_TRANSPARENCY, mTransparency.name());
+            if (mIsAllDay) compEl.addAttribute(MailConstants.A_CAL_ALLDAY, mIsAllDay);
+            if (mName != null) compEl.addAttribute(MailConstants.A_NAME, mName);
+            if (mLocation != null) compEl.addAttribute(MailConstants.A_CAL_LOCATION, mLocation);
+            if (mIsOrganizer) compEl.addAttribute(MailConstants.A_CAL_ISORG, mIsOrganizer);
+            if (mSequenceNumber > 0) compEl.addAttribute(MailConstants.A_CAL_SEQUENCE, mSequenceNumber);
+            if (mPriority != null) compEl.addAttribute(MailConstants.A_CAL_PRIORITY, mPriority);
+            if (mPercentCompleted != null)  compEl.addAttribute(MailConstants.A_TASK_PERCENT_COMPLETE, mPercentCompleted);
+            if (mCompleted != null)  compEl.addAttribute(MailConstants.A_TASK_COMPLETED, mCompleted);
+
+            if (mReplies != null && !mReplies.isEmpty()) {
+                Element repliesEl = compEl.addElement(MailConstants.E_CAL_REPLIES);
+                for (ZReply reply : mReplies) {
+                    reply.toElement(repliesEl);
+                }
+            }
+
+
+            mStart.toElement(MailConstants.E_CAL_START_TIME, compEl);
+            if (mEnd != null)
+                mEnd.toElement(MailConstants.E_CAL_END_TIME, compEl);
+            else if (mDuration != null)
+                mDuration.toElement(compEl);
+
+            if (mOrganizer != null)
+                    mOrganizer.toElement(compEl);
+            
+            if (mAttendees != null && !mAttendees.isEmpty()) {
+                for (ZAttendee attendee : mAttendees)
+                    attendee.toElement(compEl);
+            }
+
+            if (mRecurrence != null)
+                    mRecurrence.toElement(compEl);
+
+            // TODO alarms when alarms are parsed
+
+            return compEl;
         }
 
         public ZRecurrence getRecurrence() {
@@ -362,6 +437,17 @@ public class ZInvite {
                 mTimeZone = e.getAttribute(MailConstants.A_CAL_TIMEZONE, null);
             }
 
+            public Element toElement(Element parent) {
+                Element replyEl = parent.addElement(MailConstants.E_CAL_REPLY);
+                replyEl.addAttribute(MailConstants.A_DATE, mDate);
+                if (mAttendee != null) replyEl.addAttribute(MailConstants.A_CAL_ATTENDEE, mAttendee);
+                if (mParticipantStatus != null) replyEl.addAttribute(MailConstants.A_CAL_PARTSTAT, mParticipantStatus.name());
+                replyEl.addAttribute(MailConstants.A_CAL_RECURRENCE_RANGE_TYPE, mRangeType);
+                if (mRecurrenceId != null) replyEl.addAttribute(MailConstants.A_CAL_RECURRENCE_ID, mRecurrenceId);
+                if (mTimeZone != null) replyEl.addAttribute(MailConstants.A_CAL_TIMEZONE, mTimeZone);
+                return replyEl;
+            }
+            
             public long getDate() {
                 return mDate;
             }
@@ -436,6 +522,21 @@ public class ZInvite {
             Element daylightEl = e.getOptionalElement(MailConstants.E_CAL_TZ_DAYLIGHT);
             if (daylightEl != null)
                 mDaylight = new ZTransitionRule(daylightEl);
+        }
+
+        public Element toElement(Element parent) {
+            Element tzEl = parent.addElement(MailConstants.E_CAL_TZ);
+            tzEl.addAttribute(MailConstants.A_ID, mId);
+            tzEl.addAttribute(MailConstants.A_CAL_TZ_STDOFFSET, mStandardOffset);
+            if (mDaylightSavingsOffset != -1)
+                tzEl.addAttribute(MailConstants.A_CAL_TZ_DAYOFFSET, mDaylightSavingsOffset);
+            if (mStandard != null)
+                mStandard.toElement(MailConstants.E_CAL_TZ_STANDARD, tzEl);
+
+            if (mDaylight != null)
+                mDaylight.toElement(MailConstants.E_CAL_TZ_DAYLIGHT, tzEl);
+            
+            return tzEl;
         }
 
         /**
@@ -531,6 +632,18 @@ public class ZInvite {
                 mSecond = (int) e.getAttributeLong(MailConstants.A_CAL_TZ_SECOND,  0);
             }
 
+            public Element toElement(String name, Element parent) {
+                Element trEl = parent.addElement(name);
+                if (mWeek != 0) trEl.addAttribute(MailConstants.A_CAL_TZ_WEEK, mWeek);
+                if (mDayOfWeek != 0) trEl.addAttribute(MailConstants.A_CAL_TZ_DAYOFWEEK, mDayOfWeek);
+                if (mDayOfMonth != 0) trEl.addAttribute(MailConstants.A_CAL_TZ_DAYOFMONTH, mMonth);
+                trEl.addAttribute(MailConstants.A_CAL_TZ_MONTH, mMonth);
+                trEl.addAttribute(MailConstants.A_CAL_TZ_HOUR, mHour);
+                trEl.addAttribute(MailConstants.A_CAL_TZ_MINUTE, mMinute);
+                trEl.addAttribute(MailConstants.A_CAL_TZ_SECOND, mSecond);
+                return trEl;
+            }
+            
             public int getWeek() {
                 return mWeek;
             }
@@ -620,6 +733,14 @@ public class ZInvite {
             mTimeZoneId = e.getAttribute(MailConstants.A_CAL_TIMEZONE, null);
         }
 
+        public Element toElement(String name, Element parent) {
+            Element dtEl = parent.addElement(name);
+            dtEl.addAttribute(MailConstants.A_CAL_DATETIME, mDateTime);
+            if (mTimeZoneId != null)
+                dtEl.addAttribute(MailConstants.A_CAL_TIMEZONE, mTimeZoneId);
+            return dtEl;
+        }
+
         public String getDateTime() {
             return mDateTime;
         }
@@ -669,6 +790,20 @@ public class ZInvite {
             mHours= (int) e.getAttributeLong(MailConstants.A_CAL_DURATION_HOURS, 0);
             mMinutes = (int) e.getAttributeLong(MailConstants.A_CAL_DURATION_MINUTES, 0);
             mSeconds = (int) e.getAttributeLong(MailConstants.A_CAL_DURATION_SECONDS, 0);
+        }
+
+        public Element toElement(Element parent) {
+            Element durEl = parent.addElement(MailConstants.E_CAL_DURATION);
+            durEl.addAttribute(MailConstants.A_CAL_DURATION_NEGATIVE, mNegative);
+            if (mWeeks != 0)
+                durEl.addAttribute(MailConstants.A_CAL_DURATION_WEEKS, mWeeks);
+            else {
+                if (mDays != 0) durEl.addAttribute(MailConstants.A_CAL_DURATION_DAYS, mDays);
+                if (mHours != 0) durEl.addAttribute(MailConstants.A_CAL_DURATION_HOURS, mHours);
+                if (mMinutes != 0) durEl.addAttribute(MailConstants.A_CAL_DURATION_MINUTES, mMinutes);
+                if (mSeconds != 0) durEl.addAttribute(MailConstants.A_CAL_DURATION_SECONDS, mSeconds);
+            }
+            return durEl;
         }
 
         public boolean isNegative() {
@@ -939,6 +1074,20 @@ public class ZInvite {
         public ZOrganizer(Element e) throws ServiceException {
             super(e);
         }
+
+        public Element toElement(Element parent) {
+            Element orEl = parent.addElement(MailConstants.E_CAL_ORGANIZER);
+
+            if (getAddress() != null) orEl.addAttribute(MailConstants.A_ADDRESS, getAddress());
+            if (getUrl() != null) orEl.addAttribute(MailConstants.A_URL, getUrl());
+            if (getPersonalName() != null) orEl.addAttribute(MailConstants.A_DISPLAY, getPersonalName());
+            if (getSentBy() != null) orEl.addAttribute(MailConstants.A_CAL_SENTBY, getSentBy());
+            if (getDir() != null) orEl.addAttribute(MailConstants.A_CAL_DIR, getDir());
+            if (getLanguage() != null) orEl.addAttribute(MailConstants.A_CAL_LANGUAGE, getLanguage());
+            
+            return orEl;
+        }
+
     }
 
     public static class ZAttendee extends ZCalendarUser {
@@ -959,10 +1108,29 @@ public class ZInvite {
             mRole = ZRole.fromString(e.getAttribute(MailConstants.A_CAL_ROLE, ZRole.OPT.name()));
             mParticipantStatus = ZParticipantStatus.fromString(e.getAttribute(MailConstants.A_CAL_PARTSTAT, ZParticipantStatus.AC.name()));
             mRSVP = e.getAttributeBool(MailConstants.A_CAL_RSVP, false);
-            mCalendarUserType = ZCalendarUserType.fromString(e.getAttribute(MailConstants.A_CAL_CUTYPE, ZCalendarUserType.UNK.name()));
+            mCalendarUserType = ZCalendarUserType.fromString(e.getAttribute(MailConstants.A_CAL_CUTYPE, ZCalendarUserType.IND.name()));
             mMember = e.getAttribute(MailConstants.A_CAL_MEMBER, null);
             mDelegatedTo = e.getAttribute(MailConstants.A_CAL_DELEGATED_TO, null);
             mDelegatedFrom = e.getAttribute(MailConstants.A_CAL_DELEGATED_FROM, null);
+        }
+
+        public Element toElement(Element parent) {
+            Element attEl = parent.addElement(MailConstants.E_CAL_ORGANIZER);
+
+            if (getAddress() != null) attEl.addAttribute(MailConstants.A_ADDRESS, getAddress());
+            if (getUrl() != null) attEl.addAttribute(MailConstants.A_URL, getUrl());
+            if (getPersonalName() != null) attEl.addAttribute(MailConstants.A_DISPLAY, getPersonalName());
+            if (getSentBy() != null) attEl.addAttribute(MailConstants.A_CAL_SENTBY, getSentBy());
+            if (getDir() != null) attEl.addAttribute(MailConstants.A_CAL_DIR, getDir());
+            if (getLanguage() != null) attEl.addAttribute(MailConstants.A_CAL_LANGUAGE, getLanguage());
+            if (mRole != null) attEl.addAttribute(MailConstants.A_CAL_ROLE, mRole.name());
+            if (mParticipantStatus != null) attEl.addAttribute(MailConstants.A_CAL_PARTSTAT, mParticipantStatus.name());
+            if (mRSVP) attEl.addAttribute(MailConstants.A_CAL_RSVP, mRSVP);
+            if (mCalendarUserType != null) attEl.addAttribute(MailConstants.A_CAL_CUTYPE, mCalendarUserType.name());
+            if (mMember != null) attEl.addAttribute(MailConstants.A_CAL_MEMBER, mMember);
+            if (mDelegatedTo != null) attEl.addAttribute(MailConstants.A_CAL_DELEGATED_TO, mDelegatedTo);
+            if (mDelegatedFrom != null) attEl.addAttribute(MailConstants.A_CAL_DELEGATED_FROM, mDelegatedFrom);
+            return attEl;
         }
 
         public ZRole getRole() {
@@ -1061,6 +1229,16 @@ public class ZInvite {
                 mDuration = new ZDuration(durEl);
         }
 
+        public Element toElement(Element parent) {
+            Element dtvalEl = parent.addElement(MailConstants.E_CAL_DATE_VAL);
+            mStart.toElement(MailConstants.E_CAL_START_TIME, dtvalEl);
+            if (mEnd != null)
+                mEnd.toElement(MailConstants.E_CAL_END_TIME, dtvalEl);
+            else if (mDuration != null)
+                mDuration.toElement(dtvalEl);
+            return dtvalEl;
+        }
+
        public ZDateTime getStart() {
             return mStart;
         }
@@ -1110,6 +1288,16 @@ public class ZInvite {
             for (Element dtvalEl : e.listElements(MailConstants.E_CAL_DATE_VAL)) {
                 mDates.add(new ZRecurrenceDate(dtvalEl));
             }
+        }
+
+        public Element toElement(Element parent) {
+            Element datesEl = parent.addElement(MailConstants.E_CAL_DATES);
+            if (mTimeZoneId != null)
+                datesEl.addAttribute(MailConstants.A_CAL_TIMEZONE, mTimeZoneId);
+            for (ZRecurrenceDate rdate : mDates) {
+                rdate.toElement(datesEl);
+            }
+            return datesEl;
         }
 
         public String getTimeZoneId() {
@@ -1214,6 +1402,14 @@ public class ZInvite {
             mDay = ZWeekDay.fromString(e.getAttribute(MailConstants.A_CAL_RULE_DAY));
         }
 
+        public Element toElement(Element parent) {
+            Element wkdayEl = parent.addElement(MailConstants.E_CAL_RULE_BYDAY_WKDAY);
+            if (mWeekOrd != 0)
+                wkdayEl.addAttribute(MailConstants.A_CAL_RULE_BYDAY_WKDAY_ORDWK, mWeekOrd);
+            wkdayEl.addAttribute(MailConstants.A_CAL_RULE_DAY, mDay.name());
+            return wkdayEl;
+        }
+
         public int getWeekOrd() {
             return mWeekOrd;
         }
@@ -1305,6 +1501,61 @@ public class ZInvite {
             }
         }
 
+        public Element toElement(Element parent) {
+            String elName = null;
+            String listName = null;
+
+            switch (mType) {
+                case BY_SECOND:
+                    elName = MailConstants.E_CAL_RULE_BYSECOND;
+                    listName = MailConstants.A_CAL_RULE_BYSECOND_SECLIST;
+                    break;
+                case BY_MINUTE:
+                    elName = MailConstants.E_CAL_RULE_BYMINUTE;
+                    listName = MailConstants.A_CAL_RULE_BYMINUTE_MINLIST;
+                    break;
+                case BY_HOUR:
+                    elName = MailConstants.E_CAL_RULE_BYHOUR;
+                    listName = MailConstants.A_CAL_RULE_BYHOUR_HRLIST;
+                    break;
+                case BY_DAY:
+                    elName = MailConstants.E_CAL_RULE_BYDAY;
+                    break;
+                case BY_MONTHDAY:
+                    elName = MailConstants.E_CAL_RULE_BYMONTHDAY;
+                    listName = MailConstants.A_CAL_RULE_BYMONTHDAY_MODAYLIST;
+                    break;
+                case BY_YEARDAY:
+                    elName = MailConstants.E_CAL_RULE_BYYEARDAY;
+                    listName = MailConstants.A_CAL_RULE_BYYEARDAY_YRDAYLIST;
+                    break;
+                case BY_WEEKNO:
+                    elName = MailConstants.E_CAL_RULE_BYWEEKNO;
+                    listName = MailConstants.A_CAL_RULE_BYWEEKNO_WKLIST;
+                    break;
+                case BY_MONTH:
+                    elName = MailConstants.E_CAL_RULE_BYMONTH;
+                    listName = MailConstants.A_CAL_RULE_BYMONTH_MOLIST;
+                    break;
+               case BY_SETPOS:
+                    elName = MailConstants.E_CAL_RULE_BYSETPOS;
+                    listName = MailConstants.A_CAL_RULE_BYSETPOS_POSLIST;
+                    break;
+            }
+
+            Element byEl = parent.addElement(elName);
+            if (mList != null && listName != null) byEl.addAttribute(listName, mList);
+            if (mType == ZByType.BY_DAY) {
+                if (mWeekDays != null) {
+                    for (ZByDayWeekDay wd : mWeekDays) {
+                        wd.toElement(byEl);
+                    }
+                }
+            }
+
+            return byEl;
+        }
+
         public ZByType getType() {
             return mType;
         }
@@ -1370,6 +1621,28 @@ public class ZInvite {
             if (mWeekStart != null) sb.add("weekStart", mWeekStart.name());
             sb.endStruct();
             return sb.toString();
+        }
+
+        public Element toElement(Element parent) {
+            Element ruleEl = parent.addElement(MailConstants.E_CAL_RULE);
+            if (mFrequency != null)
+                ruleEl.addAttribute(MailConstants.A_CAL_RULE_FREQ, mFrequency.name());
+            if (mUntilDate != null)
+                mUntilDate.toElement(MailConstants.E_CAL_RULE_UNTIL, ruleEl);
+            else if (mCount != 0)
+                ruleEl.addElement(MailConstants.E_CAL_RULE_COUNT).addAttribute(MailConstants.A_CAL_RULE_COUNT_NUM, mCount);
+            if (mInterval != 0)
+                ruleEl.addElement(MailConstants.E_CAL_RULE_INTERVAL).addAttribute(MailConstants.A_CAL_RULE_INTERVAL_IVAL, mInterval);
+            if (mWeekStart != null)
+                ruleEl.addElement(MailConstants.E_CAL_RULE_WKST).addAttribute(MailConstants.A_CAL_RULE_DAY, mWeekStart.name());
+            if (mByRules != null && !mByRules.isEmpty()) {
+                for (ZByRule rule : mByRules) {
+                    rule.toElement(ruleEl);
+                }
+            }
+
+            return ruleEl;
+
         }
 
         public ZFrequency getFrequency() {
@@ -1455,6 +1728,46 @@ public class ZInvite {
                 for (Element datesEl : excludeEl.listElements(MailConstants.E_CAL_DATES))
                     mExDates.add(new ZRecurrenceDates(datesEl));
             }
+        }
+
+        public Element toElement(Element parent) {
+            Element recurEl = parent.addElement(MailConstants.E_CAL_RECUR);
+            if ((mRules != null && !mRules.isEmpty()) ||
+                    (mDates != null && !mDates.isEmpty())) {
+                Element addEl = recurEl.addElement(MailConstants.E_CAL_ADD);
+
+                if (mRules != null) {
+                    for (ZRecurrenceRule rule : mRules) {
+                        rule.toElement(addEl);
+                    }
+                }
+
+                if (mDates != null) {
+                    for (ZRecurrenceDates dates : mDates) {
+                        dates.toElement(addEl);
+                    }
+                }
+            }
+
+            if ((mExRules != null && !mExRules.isEmpty()) ||
+                    (mExDates != null && !mExDates.isEmpty())) {
+                Element exEl = recurEl.addElement(MailConstants.E_CAL_EXCLUDE);
+
+                if (mExRules != null) {
+                    for (ZRecurrenceRule rule : mExRules) {
+                        rule.toElement(exEl);
+                    }
+                }
+
+                if (mExDates != null) {
+                    for (ZRecurrenceDates dates : mExDates) {
+                        dates.toElement(exEl);
+                    }
+                }
+                
+            }
+
+            return recurEl;
         }
 
         public List<ZRecurrenceRule> getRules() {
