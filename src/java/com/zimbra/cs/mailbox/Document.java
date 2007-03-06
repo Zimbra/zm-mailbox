@@ -139,7 +139,7 @@ public class Document extends MailItem {
         if (pd == null) {
             try {
                 byte[] buf = ByteUtil.getContent(getRawDocument(), 0);
-                pd = new ParsedDocument(buf, getDigest(), getName(), getContentType(), getChangeDate(), getCreator());
+                pd = new ParsedDocument(buf, getName(), getContentType(), getChangeDate(), getCreator());
             } catch (IOException e) {
                 throw ServiceException.FAILURE("reindex caught IOException: "+e, e);
             }

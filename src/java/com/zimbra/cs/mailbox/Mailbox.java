@@ -4698,7 +4698,7 @@ public class Mailbox {
             // TODO: simplify the redoRecorder by not subclassing from CreateMessage
             redoRecorder.setMessageBodyInfo(rawData, "", volumeId);
 
-            ParsedDocument pd = new ParsedDocument(rawData, digest, doc.getName(), doc.getContentType(), getOperationTimestampMillis(), author);
+            ParsedDocument pd = new ParsedDocument(rawData, doc.getName(), doc.getContentType(), getOperationTimestampMillis(), author);
             doc.setContent(rawData, digest, volumeId, pd);
             queueForIndexing(doc, false, pd);
 
@@ -4805,7 +4805,7 @@ public class Mailbox {
 
             redoRecorder.setMessageBodyInfo(rawData, "", volumeId);
 
-            ParsedDocument pd = new ParsedDocument(rawData, digest, filename, mimeType, getOperationTimestampMillis(), author);
+            ParsedDocument pd = new ParsedDocument(rawData, filename, mimeType, getOperationTimestampMillis(), author);
 
             if (type == MailItem.TYPE_DOCUMENT)
                 doc = Document.create(
