@@ -45,8 +45,10 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.UserServletException;
@@ -70,9 +72,11 @@ public class NativeFormatter extends Formatter {
     public static final String ATTR_MIMEPART   = "mimepart";
     public static final String ATTR_MSGDIGEST  = "msgdigest";
     public static final String ATTR_CONTENTURL = "contenturl";
-    
+
+    public static final String FMT_NATIVE = "native";
+
     public String getType() {
-        return "native";
+        return FMT_NATIVE;
     }
 
     public String getDefaultSearchTypes() {
@@ -196,14 +200,29 @@ public class NativeFormatter extends Formatter {
         return true;
     }
 
-    public void saveCallback(byte[] body, Context context, Folder folder) throws IOException, ServiceException, UserServletException {
+    public void saveCallback(byte[] body, Context context, String contentType, Folder folder, String filename) throws IOException, ServiceException, UserServletException {
+        Mailbox mbox = folder.getMailbox();
+        if (filename == null) {
+            try {
+                ParsedMessage pm = new ParsedMessage(body, mbox.attachmentsIndexingEnabled());
+                mbox.addMessage(context.opContext, pm, folder.getId(), true, 0, null);
+                return;
+            } catch (MessagingException e) {
+                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "error parsing message");
+            }
+        }
+
+        String creator = (context.authAccount == null ? null : context.authAccount.getName());
+        ParsedDocument pd = new ParsedDocument(body, filename, contentType, System.currentTimeMillis(), creator);
         try {
-            Mailbox mbox = folder.getMailbox();
-            ParsedMessage pm = new ParsedMessage(body, mbox.attachmentsIndexingEnabled());
-            mbox.addMessage(context.opContext, pm, folder.getId(), true, 0, null);
-        } catch (MessagingException e) {
-            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "error parsing message");
+            MailItem item = mbox.getItemByPath(context.opContext, filename, folder.getId());
+            // XXX: should we just overwrite here instead?
+            if (!(item instanceof Document))
+                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "cannot overwrite existing object at that path");
+
+            mbox.addDocumentRevision(context.opContext, item.getId(), item.getType(), pd);
+        } catch (NoSuchItemException nsie) {
+            mbox.createDocument(context.opContext, folder.getId(), pd, MailItem.TYPE_DOCUMENT);
         }
     }
 }
-

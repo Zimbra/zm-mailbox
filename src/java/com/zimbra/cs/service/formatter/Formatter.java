@@ -97,9 +97,10 @@ public abstract class Formatter {
         }
     }
 
-    public final void save(byte[] body, UserServlet.Context context, Folder folder) throws UserServletException, IOException, ServletException, ServiceException {
+    public final void save(byte[] body, UserServlet.Context context, String contentType, Folder folder, String filename)
+    throws UserServletException, IOException, ServletException, ServiceException {
         try {
-            SaveOperation op = new SaveOperation(body, context, folder, this);
+            SaveOperation op = new SaveOperation(body, context, folder, contentType, filename, this);
             op.schedule();
         } catch (ServiceException e) {
             Throwable cause = e.getCause();
@@ -113,9 +114,11 @@ public abstract class Formatter {
         }
     }
     
-    public abstract void formatCallback(UserServlet.Context context, MailItem item) throws UserServletException, ServiceException, IOException, ServletException;
+    public abstract void formatCallback(UserServlet.Context context, MailItem item)
+    throws UserServletException, ServiceException, IOException, ServletException;
 
-    public abstract void saveCallback(byte[] body, UserServlet.Context context, Folder folder) throws UserServletException, ServiceException, IOException, ServletException;
+    public abstract void saveCallback(byte[] body, UserServlet.Context context, String contentType, Folder folder, String filename)
+    throws UserServletException, ServiceException, IOException, ServletException;
 
     public Iterator<? extends MailItem> getMailItems(Context context, MailItem item, long startTime, long endTime, long chunkSize) throws ServiceException {
         String query = context.getQueryString();
@@ -175,15 +178,13 @@ public abstract class Formatter {
     public static boolean checkGlobalOverride(String attr, Account account) throws ServletException {
         Provisioning prov = Provisioning.getInstance();
         try {
-            return prov.getConfig().getBooleanAttr(attr, false)
-                    || account.getBooleanAttr(attr, false);
+            return prov.getConfig().getBooleanAttr(attr, false) || account.getBooleanAttr(attr, false);
         } catch (ServiceException e) {
             throw new ServletException(e);
         }
     }
 
     protected static class QueryResultIterator implements Iterator<MailItem> {
-
         private ZimbraQueryResults mResults;
         
         QueryResultIterator(ZimbraQueryResults results) {
@@ -258,20 +259,24 @@ public abstract class Formatter {
     protected static class SaveOperation extends Operation {
         byte[] mBody;
         Context mContext;
+        String mContentType;
         Folder mFolder;
+        String mFilename;
         Formatter mFmt;
 
-        public SaveOperation(byte[] body, Context context, Folder folder, Formatter fmt) {
+        public SaveOperation(byte[] body, Context context, Folder folder, String contentType, String filename, Formatter fmt) {
             super(null, context.opContext, context.targetMailbox, Requester.REST, fmt.getSaveLoad());
             mBody = body;
             mContext = context;
+            mContentType = contentType;
             mFolder = folder;
+            mFilename = filename;
             mFmt = fmt;
         }
 
         public void callback() throws ServiceException {
             try {
-                mFmt.saveCallback(mBody, mContext, mFolder);
+                mFmt.saveCallback(mBody, mContext, mContentType, mFolder, mFilename);
             } catch (IOException e) {
                 throw ServiceException.FAILURE("Caught IOException", e);
             } catch (ServletException e) {

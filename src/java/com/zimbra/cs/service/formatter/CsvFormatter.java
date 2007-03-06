@@ -96,7 +96,7 @@ public class CsvFormatter extends Formatter {
         return false;
     }
 
-    public void saveCallback(byte[] body, Context context, Folder folder) throws UserServletException, ServiceException {
+    public void saveCallback(byte[] body, Context context, String contentType, Folder folder, String filename) throws UserServletException, ServiceException {
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(body), "UTF-8"));
             List<Map<String, String>> contacts = ContactCSV.getContacts(reader);

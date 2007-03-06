@@ -27,10 +27,15 @@ package com.zimbra.cs.service.formatter;
 import java.io.IOException;
 import java.io.InputStream;
 
+import javax.servlet.http.HttpServletResponse;
+
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.WikiItem;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
@@ -190,8 +195,20 @@ public class WikiFormatter extends Formatter {
 	}
 
 	@Override
-	public void saveCallback(byte[] body, Context context, Folder folder) throws UserServletException {
-        throw UserServletException.notImplemented("saving documents via POST not yet supported.");
-	}
+	public void saveCallback(byte[] body, Context context, String contentType, Folder folder, String filename) throws UserServletException, ServiceException {
+        Mailbox mbox = folder.getMailbox();
 
+        String creator = (context.authAccount == null ? null : context.authAccount.getName());
+        ParsedDocument pd = new ParsedDocument(body, filename, WikiItem.WIKI_CONTENT_TYPE, System.currentTimeMillis(), creator);
+        try {
+            MailItem item = mbox.getItemByPath(context.opContext, filename, folder.getId());
+            // XXX: should we just overwrite here instead?
+            if (!(item instanceof WikiItem))
+                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "cannot overwrite existing object at that path");
+
+            mbox.addDocumentRevision(context.opContext, item.getId(), item.getType(), pd);
+        } catch (NoSuchItemException nsie) {
+            mbox.createDocument(context.opContext, folder.getId(), pd, MailItem.TYPE_WIKI);
+        }
+	}
 }

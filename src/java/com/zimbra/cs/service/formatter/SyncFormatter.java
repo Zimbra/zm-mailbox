@@ -180,7 +180,7 @@ public class SyncFormatter extends Formatter {
     }
 
     // FIXME: need to support tags, flags, date, etc...
-    public void saveCallback(byte[] body, Context context, Folder folder) throws IOException, ServiceException, UserServletException {
+    public void saveCallback(byte[] body, Context context, String contentType, Folder folder, String filename) throws IOException, ServiceException, UserServletException {
         try {
             Mailbox mbox = folder.getMailbox();
             ParsedMessage pm = new ParsedMessage(body, mbox.attachmentsIndexingEnabled());

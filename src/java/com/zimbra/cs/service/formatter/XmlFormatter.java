@@ -80,7 +80,7 @@ public class XmlFormatter extends Formatter {
     }
 
     @Override
-    public void saveCallback(byte[] body, Context context, Folder folder) throws UserServletException {
+    public void saveCallback(byte[] body, Context context, String contentType, Folder folder, String filename) throws UserServletException {
         throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "format not supported for save");
     }
 

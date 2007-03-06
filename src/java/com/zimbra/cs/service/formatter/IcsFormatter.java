@@ -121,7 +121,7 @@ public class IcsFormatter extends Formatter {
         return false;
     }
 
-    public void saveCallback(byte[] body, Context context, Folder folder) throws ServiceException, IOException {
+    public void saveCallback(byte[] body, Context context, String contentType, Folder folder, String filename) throws ServiceException, IOException {
         // TODO: Modify Formatter.save() API to pass in charset of body, then
         // use that charset in String() constructor.
         Reader reader = new StringReader(new String(body, Mime.P_CHARSET_UTF8));

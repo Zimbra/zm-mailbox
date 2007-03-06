@@ -62,6 +62,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mime.MimeCompoundHeader;
 import com.zimbra.cs.operation.GetFolderOperation;
 import com.zimbra.cs.operation.GetItemOperation;
 import com.zimbra.cs.operation.Operation.Requester;
@@ -143,6 +144,8 @@ public class UserServlet extends ZimbraServlet {
     public static final String QP_AUTH = "auth"; // auth types
 
     public static final String QP_DISP = "disp"; // disposition (a = attachment, i = inline)
+
+    public static final String QP_NAME = "name"; // filename/path segments, added to pathInfo
 
     public static final String AUTH_COOKIE = "co"; // auth by cookie
 
@@ -372,7 +375,7 @@ public class UserServlet extends ZimbraServlet {
 
         context.opContext = new OperationContext(context.authAccount, isAdminRequest(context));
 
-        MailItem item = resolveItem(context);
+        MailItem item = resolveItem(context, true);
 
         if (item instanceof Mountpoint) {
             // if the target is a mountpoint, proxy the request on to the resolved target
@@ -426,30 +429,51 @@ public class UserServlet extends ZimbraServlet {
 
             context.opContext = new OperationContext(context.authAccount, isAdminRequest(context));
 
-            GetItemOperation op;
-            if (context.itemId != null)
-                op = new GetItemOperation(null, context.opContext, context.targetMailbox, Requester.REST, context.itemId.getId(), MailItem.TYPE_FOLDER);
-            else 
-                op = new GetItemOperation(null, context.opContext, context.targetMailbox, Requester.REST, context.itemPath, MailItem.TYPE_FOLDER);
-            op.schedule();
-            Folder folder = op.getFolder();
+            MailItem item;
+            String filename = null;
+            try {
+                item = resolveItem(context, false);
+            } catch (NoSuchItemException nsie) {
+                // perhaps it's a POST to "Notebook/new-file-name" -- find the parent folder and proceed from there
+                if (context.itemPath == null)
+                    throw nsie;
+                int separator = context.itemPath.lastIndexOf('/');
+                if (separator <= 0)
+                    throw nsie;
+                filename = context.itemPath.substring(separator + 1);
+                context.itemPath = context.itemPath.substring(0, separator);
+                item = resolveItem(context, false);
+            }
+
+            Folder folder = (item instanceof Folder ? (Folder) item : mbox.getFolderById(context.opContext, item.getFolderId()));
+
+            if (item != folder) {
+                if (filename == null)
+                    filename = item.getName();
+                else
+                    // need to fail on POST to "Notebook/existing-file/random-cruft"
+                    throw MailServiceException.NO_SUCH_FOLDER(context.itemPath);
+            }
 
             if (folder instanceof Mountpoint) {
                 // if the target is a mountpoint, proxy the request on to the resolved target
+                context.extraPath = filename;
                 proxyOnMountpoint(req, resp, context, (Mountpoint) folder);
                 return;
             }
 
+            // if they specified a filename, default to the native formatter
+            if (context.format == null && filename != null)
+                context.format = NativeFormatter.FMT_NATIVE;
+
+            String ctype = context.req.getContentType();
+
             // if no format explicitly specified, try to guess it from the Content-Type header
-            if (context.format == null) {
-                String ctype = context.req.getContentType();
-                if (ctype != null) {
-                    if (ctype.indexOf(';') != -1)
-                        ctype = ctype.substring(0, ctype.indexOf(';'));
-                    Formatter fmt = mDefaultFormatters.get(ctype.trim().toLowerCase());
-                    if (fmt != null)
-                        context.format = fmt.getType();
-                }
+            if (context.format == null && ctype != null) {
+                String normalizedType = new MimeCompoundHeader.ContentType(ctype).getValue();
+                Formatter fmt = mDefaultFormatters.get(normalizedType);
+                if (fmt != null)
+                    context.format = fmt.getType();
             }
 
             // get the POST body content
@@ -457,7 +481,7 @@ public class UserServlet extends ZimbraServlet {
             byte[] body = ByteUtil.getContent(req.getInputStream(), req.getContentLength(), sizeLimit);
 
             resolveFormatter(context, folder);
-            context.formatter.save(body, context, folder);
+            context.formatter.save(body, context, ctype, folder, filename);
         } catch (NoSuchItemException e) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND, "no such item");
         } catch (ServiceException se) {
@@ -486,7 +510,6 @@ public class UserServlet extends ZimbraServlet {
             context.formatter = mFormatters.get(context.format);
         if (context.formatter == null)
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "unsupported format");
-
     }
 
     /*
@@ -502,16 +525,12 @@ public class UserServlet extends ZimbraServlet {
      * the clients has gone through the access checks.
      * 
      */
-    private MailItem resolveItem(Context context) throws ServiceException, UserServletException {
+    private MailItem resolveItem(Context context, boolean checkExtension) throws ServiceException, UserServletException {
         if (context.formatter != null && !context.formatter.requiresAuth())
             return null;
 
-        MailItem item = null;
-        if (context.itemId != null) {
-            GetItemOperation op = new GetItemOperation(null, context.opContext, context.targetMailbox, Requester.REST, context.itemId.getId(), MailItem.TYPE_UNKNOWN);
-            op.schedule();
-            item = op.getItem();
-        } else if (context.imapId > 0) {
+        // special-case the fetch-by-IMAP-id option
+        if (context.imapId > 0) {
             // fetch the folder from the path
             GetFolderOperation gfop = new GetFolderOperation(null, context.opContext, context.targetMailbox, Requester.REST, context.itemPath);
             gfop.schedule();
@@ -519,43 +538,63 @@ public class UserServlet extends ZimbraServlet {
             // and then fetch the item from the "imap_id" query parameter
             GetItemOperation op = new GetItemOperation(null, context.opContext, context.targetMailbox, Requester.REST, context.imapId, folder.getId());
             op.schedule();
-            item = op.getItem();
-        } else {
-            try {
-                // first, try the full path
-                GetItemOperation op = new GetItemOperation(null, context.opContext, context.targetMailbox, Requester.REST, context.itemPath, MailItem.TYPE_UNKNOWN);
-                op.schedule();
-                item = op.getItem();
-            } catch (ServiceException e) {
-                if (!(e instanceof NoSuchItemException) && e.getCode() != ServiceException.PERM_DENIED)
-                    throw e;
-
-                // no joy.  Perhaps they asked for something like "calendar.csv" -- where calendar was the folder name
-                // Try again, minus the extension
-
-                /*
-                 * if path == /foo/bar/baz.html, then
-                 * format   -> html
-                 * and
-                 * path ends up as /foo/bar/baz
-                 */
-                int dot = context.itemPath.lastIndexOf('.');
-                if (dot != -1) {
-                    if (context.format == null)
-                        context.format = context.itemPath.substring(dot + 1);
-                    context.itemPath = context.itemPath.substring(0, dot);
-                }
-
-                // try again, w/ the extension removed...
-                GetItemOperation op = new GetItemOperation(null, context.opContext, context.targetMailbox, Requester.REST, context.itemPath, MailItem.TYPE_UNKNOWN);
-                op.schedule();
-                item = op.getItem();
-            }
+            return op.getItem();
         }
-        
+
+        MailItem item = null;
+        if (context.itemId != null) {
+            GetItemOperation op = new GetItemOperation(null, context.opContext, context.targetMailbox, Requester.REST, context.itemId.getId(), MailItem.TYPE_UNKNOWN);
+            op.schedule();
+            item = op.getItem();
+
+            context.itemPath = item.getPath();
+            if (item instanceof Mountpoint || context.extraPath == null || context.extraPath.equals(""))
+                return item;
+            if (context.itemPath == null)
+                throw MailServiceException.NO_SUCH_ITEM("?id=" + context.itemId + "&name=" + context.extraPath);
+            context.itemId = null;
+        }
+
+        if (context.extraPath != null && !context.extraPath.equals("")) {
+            context.itemPath = (context.itemPath + '/' + context.extraPath).replaceAll("//+", "/");
+            context.extraPath = null;
+        }
+
+        try {
+            // first, try the full path
+            GetItemOperation op = new GetItemOperation(null, context.opContext, context.targetMailbox, Requester.REST, context.itemPath, MailItem.TYPE_UNKNOWN);
+            op.schedule();
+            item = op.getItem();
+        } catch (ServiceException e) {
+            if (!(e instanceof NoSuchItemException) && e.getCode() != ServiceException.PERM_DENIED)
+                throw e;
+
+            // no joy.  if they asked for something like "calendar.csv" (where "calendar" was the folder name), try again minus the extension
+            if (!checkExtension || context.format != null)
+                throw e;
+
+            /* if path == /foo/bar/baz.html, then
+             *      format -> html
+             *      path   -> /foo/bar/baz  */
+            int dot = context.itemPath.lastIndexOf('.');
+            if (dot == -1)
+                throw e;
+
+            String unsuffixedPath = context.itemPath.substring(0, dot);
+
+            // try again, w/ the extension removed...
+            GetItemOperation op = new GetItemOperation(null, context.opContext, context.targetMailbox, Requester.REST, unsuffixedPath, MailItem.TYPE_UNKNOWN);
+            op.schedule();
+            item = op.getItem();
+
+            context.format = context.itemPath.substring(dot + 1);
+            context.itemPath = unsuffixedPath;
+        }
+
+        // don't think this code can ever get called because <tt>item</tt> can't be null at this point
         if (item == null && context.getQueryString() == null)
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "item not found");
-        
+
         return item;
     }
 
@@ -564,6 +603,8 @@ public class UserServlet extends ZimbraServlet {
         String uri = SERVLET_PATH + "/~/?" + QP_ID + '=' + mpt.getOwnerId() + "%3A" + mpt.getRemoteId();
         if (context.format != null)
             uri += '&' + QP_FMT + '=' + URLEncoder.encode(context.format, "UTF-8");
+        if (context.extraPath != null)
+            uri += '&' + QP_NAME + '=' + URLEncoder.encode(context.extraPath, "UTF-8");
         for (Map.Entry<String, String> entry : HttpUtil.getURIParams(req).entrySet()) {
             String qp = entry.getKey();
             if (!qp.equals(QP_ID) && !qp.equals(QP_FMT))
@@ -597,6 +638,7 @@ public class UserServlet extends ZimbraServlet {
         public String accountPath;
         public String authTokenCookie;
         public String itemPath;
+        public String extraPath;
         public ItemId itemId;
         public int imapId = -1;
         public boolean sync;
@@ -640,6 +682,7 @@ public class UserServlet extends ZimbraServlet {
             this.itemPath = pathInfo.substring(pos + 1);
             if (itemPath.equals(""))
             	itemPath = "/";
+            this.extraPath = this.params.get(QP_NAME);
             this.format = this.params.get(QP_FMT);
             String id = this.params.get(QP_ID);
             try {

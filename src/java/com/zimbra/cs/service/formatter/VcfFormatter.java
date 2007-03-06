@@ -95,7 +95,7 @@ public class VcfFormatter extends Formatter {
         }
     }
 
-    public void saveCallback(byte[] body, Context context, Folder folder) throws ServiceException, IOException, UserServletException {
+    public void saveCallback(byte[] body, Context context, String contentType, Folder folder, String filename) throws ServiceException, IOException, UserServletException {
         List<VCard> cards = VCard.parseVCard(new String(body, Mime.P_CHARSET_UTF8));
         if (cards == null || cards.size() == 0 || (cards.size() == 1 && cards.get(0).fields.isEmpty()))
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "no contact fields found in vcard");
