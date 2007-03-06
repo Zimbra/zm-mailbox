@@ -30,14 +30,14 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Arrays;
+import java.util.List;
 
 public class ZInvite {
 
     private List<ZTimeZone> mTimeZones;
     private List<ZComponent> mComponents;
-    private Type mType;
+    private ZType mType;
 
 
     public ZInvite() throws ServiceException {
@@ -46,7 +46,7 @@ public class ZInvite {
     
     public ZInvite(Element e) throws ServiceException {
         mTimeZones = new ArrayList<ZTimeZone>();
-        mType = Type.fromString(e.getAttribute(MailConstants.A_TYPE, Type.appt.name()));
+        mType = ZType.fromString(e.getAttribute(MailConstants.A_TYPE, ZType.appt.name()));
         for (Element tzEl : e.listElements(MailConstants.E_CAL_TZ)) {
             mTimeZones.add(new ZTimeZone(tzEl));
         }
@@ -64,7 +64,7 @@ public class ZInvite {
         return mTimeZones;
     }
 
-    public Type getType() {
+    public ZType getType() {
         return mType;
     }
 
@@ -81,14 +81,14 @@ public class ZInvite {
         return toString(new ZSoapSB()).toString();
     }
 
-    public enum Type {
+    public enum ZType {
         appt, task;
 
-        public static Type fromString(String s) throws ServiceException {
+        public static ZType fromString(String s) throws ServiceException {
             try {
-                return Type.valueOf(s);
+                return ZType.valueOf(s);
             } catch (IllegalArgumentException e) {
-                throw ZClientException.CLIENT_ERROR("invalid type "+s+", valid values: "+ Arrays.asList(Type.values()), e);
+                throw ZClientException.CLIENT_ERROR("invalid type "+s+", valid values: "+ Arrays.asList(ZType.values()), e);
             }
         }
 
@@ -433,7 +433,7 @@ public class ZInvite {
             Element standardEl = e.getOptionalElement(MailConstants.E_CAL_TZ_STANDARD);
             if (standardEl != null)
                 mStandard = new ZTransitionRule(standardEl);
-            Element daylightEl = e.getOptionalElement(MailConstants.E_CAL_TZ_STANDARD);
+            Element daylightEl = e.getOptionalElement(MailConstants.E_CAL_TZ_DAYLIGHT);
             if (daylightEl != null)
                 mDaylight = new ZTransitionRule(daylightEl);
         }
@@ -1138,11 +1138,288 @@ public class ZInvite {
         }
     }
 
-    public static class ZRecurrenceRule {
-        public ZRecurrenceRule(Element e) {
+    public enum ZFrequency {
+        SEC, MIN, HOU, DAY, WEE, MON, YEA;
 
+        public static ZFrequency fromString(String s) throws ServiceException {
+            try {
+                return ZFrequency.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ZClientException.CLIENT_ERROR("invalid frequency "+s+", valid values: "+ Arrays.asList(ZFrequency.values()), e);
+            }
+        }
+
+        public boolean isSecond() { return equals(SEC); }
+        public boolean isMinute() { return equals(MIN); }
+        public boolean isHour() { return equals(HOU); }
+        public boolean isDay() { return equals(DAY); }
+        public boolean isWeek() { return equals(WEE); }
+        public boolean isMonth() { return equals(MON); }
+        public boolean isYear() { return equals(YEA); }
+    }
+
+    public enum ZWeekDay {
+        SU, MO, TU, WE, TH, FR, SA;
+
+        public static ZWeekDay fromString(String s) throws ServiceException {
+            try {
+                return ZWeekDay.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ZClientException.CLIENT_ERROR("invalid weekday "+s+", valid values: "+ Arrays.asList(ZWeekDay.values()), e);
+            }
+        }
+
+        public boolean isSunday() { return equals(SU); }
+        public boolean isMonday() { return equals(MO); }
+        public boolean isTuesday() { return equals(TU); }
+        public boolean isWednesday() { return equals(WE); }
+        public boolean isThursday() { return equals(TH); }
+        public boolean isFriday() { return equals(FR); }
+        public boolean isSaturday() { return equals(SA); }
+    }
+
+    public enum ZByType {
+        BY_SECOND, BY_MINUTE, BY_HOUR, BY_DAY, BY_MONTHDAY, BY_YEARDAY, BY_WEEKNO, BY_MONTH, BY_SETPOS;
+
+        public static ZByType fromString(String s) throws ServiceException {
+            try {
+                return ZByType.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ZClientException.CLIENT_ERROR("invalid by type "+s+", valid values: "+ Arrays.asList(ZByType.values()), e);
+            }
+        }
+
+        public boolean isBySecond() { return equals(BY_SECOND); }
+        public boolean isByMinute() { return equals(BY_MINUTE); }
+        public boolean isByHour() { return equals(BY_HOUR); }
+        public boolean isByDay() { return equals(BY_DAY); }
+        public boolean isByMonthDay() { return equals(BY_MONTHDAY); }
+        public boolean isByYearDay() { return equals(BY_YEARDAY); }
+        public boolean isByWeekNo() { return equals(BY_WEEKNO); }
+        public boolean isByMonth() { return equals(BY_MONTH); }
+        public boolean isBySetPos() { return equals(BY_SETPOS); }
+    }
+
+    public static class ZByDayWeekDay {
+
+        private int mWeekOrd;
+        private ZWeekDay mDay;
+
+        public ZByDayWeekDay() {
 
         }
+        
+        public ZByDayWeekDay(Element e) throws ServiceException {
+            mWeekOrd = (int) e.getAttributeLong(MailConstants.A_CAL_RULE_BYDAY_WKDAY_ORDWK, 0);
+            mDay = ZWeekDay.fromString(e.getAttribute(MailConstants.A_CAL_RULE_DAY));
+        }
+
+        public int getWeekOrd() {
+            return mWeekOrd;
+        }
+
+        public void setWeekOrd(int weekOrd) {
+            mWeekOrd = weekOrd;
+        }
+
+        public ZWeekDay getDay() {
+            return mDay;
+        }
+
+        public void setDay(ZWeekDay day) {
+            mDay = day;
+        }
+
+
+        public String toString() {
+            ZSoapSB sb = new ZSoapSB();
+            sb.beginStruct();
+            sb.add("weekOrd", mWeekOrd);
+            sb.add("day", mDay.name());
+            sb.endStruct();
+            return sb.toString();
+        }
+    }
+    
+    public static class ZByRule {
+        private ZByType mType;
+        private String mList;
+        private List<ZByDayWeekDay> mWeekDays;
+
+        public ZByRule(ZByType type, String list, List<ZByDayWeekDay> weekDays) {
+            mType = type;
+            mList = list;
+            mWeekDays = weekDays;
+        }
+
+        public ZByRule(Element e) throws ServiceException {
+            String ename = e.getName();
+            if (ename.equals(MailConstants.E_CAL_RULE_BYSECOND)) {
+
+                mType = ZByType.BY_SECOND;
+                mList = e.getAttribute(MailConstants.A_CAL_RULE_BYSECOND_SECLIST, null);
+
+            } else if (ename.equals(MailConstants.E_CAL_RULE_BYMINUTE)) {
+
+                mType = ZByType.BY_MINUTE;
+                mList = e.getAttribute(MailConstants.A_CAL_RULE_BYMINUTE_MINLIST, null);
+
+            } else if (ename.equals(MailConstants.E_CAL_RULE_BYHOUR)) {
+
+                mType = ZByType.BY_HOUR;
+                mList = e.getAttribute(MailConstants.A_CAL_RULE_BYHOUR_HRLIST, null);
+
+            } else if (ename.equals(MailConstants.E_CAL_RULE_BYDAY)) {
+
+                mType = ZByType.BY_DAY;
+                mWeekDays = new ArrayList<ZByDayWeekDay>();
+                for (Element wkdayEl : e.listElements(MailConstants.E_CAL_RULE_BYDAY_WKDAY)) {
+                    mWeekDays.add(new ZByDayWeekDay(wkdayEl));
+                }
+
+            } else if (ename.equals(MailConstants.E_CAL_RULE_BYMONTHDAY)) {
+
+                mType = ZByType.BY_MONTHDAY;
+                mList = e.getAttribute(MailConstants.A_CAL_RULE_BYMONTHDAY_MODAYLIST, null);
+
+            } else if (ename.equals(MailConstants.E_CAL_RULE_BYYEARDAY)) {
+
+                mType = ZByType.BY_YEARDAY;
+                mList = e.getAttribute(MailConstants.A_CAL_RULE_BYYEARDAY_YRDAYLIST, null);
+
+            } else if (ename.equals(MailConstants.E_CAL_RULE_BYWEEKNO)) {
+
+                mType = ZByType.BY_WEEKNO;
+                mList = e.getAttribute(MailConstants.A_CAL_RULE_BYWEEKNO_WKLIST, null);
+
+            } else if (ename.equals(MailConstants.E_CAL_RULE_BYMONTH)) {
+
+                mType = ZByType.BY_MONTH;
+                mList = e.getAttribute(MailConstants.A_CAL_RULE_BYMONTH_MOLIST, null);
+
+            } else if (ename.equals(MailConstants.E_CAL_RULE_BYSETPOS)) {
+
+                mType = ZByType.BY_SETPOS;
+                mList = e.getAttribute(MailConstants.A_CAL_RULE_BYSETPOS_POSLIST, null);
+
+            }
+        }
+
+        public ZByType getType() {
+            return mType;
+        }
+        
+        public String getList() {
+            return mList;
+        }
+
+        /**
+         *
+         * @return list of week days (only valid with BY_DAY)
+         */
+        public List<ZByDayWeekDay> getByDayWeekDays() {
+            return mWeekDays;
+        }
+
+        public String toString() {
+            ZSoapSB sb = new ZSoapSB();
+            sb.beginStruct();
+            sb.add("type", mType.name());
+            if (mList != null) sb.add("list", mList);
+            if (mWeekDays != null) sb.add("weekdays", mWeekDays, false, false);
+            sb.endStruct();
+            return sb.toString();
+        }
+    }
+
+    public static class ZRecurrenceRule {
+        private ZFrequency mFrequency;
+        private ZDateTime mUntilDate;
+        private int mCount;
+        private int mInterval;
+        private List<ZByRule> mByRules;
+        private ZWeekDay mWeekStart;
+
+        public ZRecurrenceRule(Element e) throws ServiceException {
+            mFrequency = ZFrequency.fromString(e.getAttribute(MailConstants.A_CAL_RULE_FREQ));
+            mByRules = new ArrayList<ZByRule>();
+
+            for (Element childEl : e.listElements()) {
+                if (childEl.getName().equals(MailConstants.E_CAL_RULE_UNTIL)) {
+                    mUntilDate = new ZDateTime(childEl);
+                } else if (childEl.getName().equals(MailConstants.E_CAL_RULE_COUNT)) {
+                    mCount = (int) childEl.getAttributeLong(MailConstants.A_CAL_RULE_COUNT_NUM, 1);
+                } else if (childEl.getName().equals(MailConstants.E_CAL_RULE_INTERVAL)) {
+                    mInterval = (int) childEl.getAttributeLong(MailConstants.A_CAL_RULE_INTERVAL_IVAL, 1);
+                } else if (childEl.getName().equals(MailConstants.E_CAL_RULE_WKST)) {
+                    mWeekStart = ZWeekDay.fromString(childEl.getAttribute(MailConstants.A_CAL_RULE_DAY));
+                } else if (childEl.getName().startsWith("by")) {
+                    mByRules.add(new ZByRule(childEl));
+                }
+            }
+        }
+
+        public String toString() {
+            ZSoapSB sb = new ZSoapSB();
+            sb.beginStruct();
+            sb.add("frequency", mFrequency.name());
+            if (mUntilDate != null) sb.addStruct("until", mUntilDate.toString());
+            if (mCount > 0) sb.add("count", mCount);
+            if (mInterval > 0) sb.add("interval", mInterval);
+            sb.add("byRules", mByRules, false, false);
+            if (mWeekStart != null) sb.add("weekStart", mWeekStart.name());
+            sb.endStruct();
+            return sb.toString();
+        }
+
+        public ZFrequency getFrequency() {
+            return mFrequency;
+        }
+
+        public void setFrequency(ZFrequency frequency) {
+            mFrequency = frequency;
+        }
+
+        public ZDateTime getUntilDate() {
+            return mUntilDate;
+        }
+
+        public void setUntilDate(ZDateTime untilDate) {
+            mUntilDate = untilDate;
+        }
+
+        public int getCount() {
+            return mCount;
+        }
+
+        public void setCount(int count) {
+            mCount = count;
+        }
+
+        public int getInterval() {
+            return mInterval;
+        }
+
+        public void setInterval(int interval) {
+            mInterval = interval;
+        }
+
+        public List<ZByRule> getByRules() {
+            return mByRules;
+        }
+
+        public void setByRules(List<ZByRule> byRules) {
+            mByRules = byRules;
+        }
+
+        public ZWeekDay getWeekStart() {
+            return mWeekStart;
+        }
+
+        public void setWeekStart(ZWeekDay weekStart) {
+            mWeekStart = weekStart;
+        }
+
     }
     
     public static class ZRecurrence {
@@ -1164,18 +1441,18 @@ public class ZInvite {
             mExDates = new ArrayList<ZRecurrenceDates>();
             
             for (Element addEl : e.listElements(MailConstants.E_CAL_ADD)) {
-                for (Element ruleEl : e.listElements(MailConstants.E_CAL_RULE))
+                for (Element ruleEl : addEl.listElements(MailConstants.E_CAL_RULE))
                     mRules.add(new ZRecurrenceRule(ruleEl));
 
-                for (Element datesEl : e.listElements(MailConstants.E_CAL_DATES))
+                for (Element datesEl : addEl.listElements(MailConstants.E_CAL_DATES))
                     mDates.add(new ZRecurrenceDates(datesEl));
             }
 
             for (Element excludeEl : e.listElements(MailConstants.E_CAL_EXCLUDE)) {
-                for (Element ruleEl : e.listElements(MailConstants.E_CAL_RULE))
+                for (Element ruleEl : excludeEl.listElements(MailConstants.E_CAL_RULE))
                     mExRules.add(new ZRecurrenceRule(ruleEl));
 
-                for (Element datesEl : e.listElements(MailConstants.E_CAL_DATES))
+                for (Element datesEl : excludeEl.listElements(MailConstants.E_CAL_DATES))
                     mExDates.add(new ZRecurrenceDates(datesEl));
             }
         }
