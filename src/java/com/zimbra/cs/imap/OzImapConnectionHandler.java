@@ -476,7 +476,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                         req.skipSpace();  String folder = req.readFolder();
                         checkEOF(tag, req);
                         return doSELECT(tag, folder);
-                    } else if (command.equals("STARTTLS")) {
+                    } else if (command.equals("STARTTLS") && extensionEnabled("STARTTLS")) {
                         checkEOF(tag, req);
                         return doSTARTTLS(tag);
                     } else if (command.equals("STATUS")) {
@@ -602,7 +602,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
 
         boolean authenticated = mSession != null;
         String nologin  = mStartedTLS || authenticated || ImapServer.allowCleartextLogins() ? "" : " LOGINDISABLED";
-        String starttls = mStartedTLS || authenticated                                      ? "" : " STARTTLS";
+        String starttls = mStartedTLS || authenticated || !extensionEnabled("STARTTLS")     ? "" : " STARTTLS";
         String plain    = !mStartedTLS || authenticated || !extensionEnabled("AUTH=PLAIN")  ? "" : " AUTH=PLAIN";
 
         StringBuilder capability = new StringBuilder("CAPABILITY IMAP4rev1" + nologin + starttls + plain);
