@@ -223,7 +223,7 @@ public class Document extends MailItem {
         DbMailItem.saveMetadata(this, encodeMetadata(new Metadata()).toString());
     }
 
-    protected static UnderlyingData prepareCreate(byte tp, int id, Folder folder, short volumeId, String name, String creator, String type, ParsedDocument pd, Document parent, Metadata meta) 
+    protected static UnderlyingData prepareCreate(byte type, int id, Folder folder, short volumeId, String name, String creator, String mimeType, ParsedDocument pd, Metadata meta) 
     throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_DOCUMENT))
             throw MailServiceException.CANNOT_CONTAIN();
@@ -236,7 +236,7 @@ public class Document extends MailItem {
 
         UnderlyingData data = new UnderlyingData();
         data.id          = id;
-        data.type        = tp;
+        data.type        = type;
         data.folderId    = folder.getId();
         data.indexId     = id;
         data.imapId      = id;
@@ -246,23 +246,23 @@ public class Document extends MailItem {
         data.name        = name;
         data.subject     = name;
         data.blobDigest  = pd.getDigest();
-        data.metadata    = encodeMetadata(meta, DEFAULT_COLOR, type, revisions).toString();
+        data.metadata    = encodeMetadata(meta, DEFAULT_COLOR, mimeType, revisions).toString();
 
         return data;
     }
 
-    static Document create(int id, Folder folder, short volumeId, String filename, String creator, String type, ParsedDocument pd, MailItem parent)
+    static Document create(int id, Folder folder, short volumeId, String filename, String creator, String type, ParsedDocument pd)
     throws ServiceException {
         assert(id != Mailbox.ID_AUTO_INCREMENT);
 
-        UnderlyingData data = prepareCreate(TYPE_DOCUMENT, id, folder, volumeId, filename, creator, type, pd, (Document) parent, null);
+        UnderlyingData data = prepareCreate(TYPE_DOCUMENT, id, folder, volumeId, filename, creator, type, pd, null);
 
         Mailbox mbox = folder.getMailbox();
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 
         Document doc = new Document(mbox, data);
-        doc.finishCreation(parent);
+        doc.finishCreation(null);
         pd.setVersion(doc.getVersion());
         return doc;
     }

@@ -4749,79 +4749,59 @@ public class Mailbox {
         }
     }
 
-    public synchronized WikiItem createWiki(OperationContext octxt, 
-                int folderId, 
-                String wikiword, 
-                String author, 
-                byte[] rawData,
-                MailItem parent) throws ServiceException {
-        return (WikiItem)createDocument(octxt, folderId, wikiword, WikiItem.WIKI_CONTENT_TYPE, 
-                    author, rawData, parent, MailItem.TYPE_WIKI);
+    public WikiItem createWiki(OperationContext octxt, int folderId, String wikiword, String author, byte[] rawData)
+    throws ServiceException {
+        return (WikiItem) createDocument(octxt, folderId, wikiword, WikiItem.WIKI_CONTENT_TYPE, author, rawData, MailItem.TYPE_WIKI);
     }
 
-    public synchronized Document createDocument(OperationContext octxt, 
-                int folderId, 
-                String filename, 
-                String mimeType, 
-                String author,
-                byte[] rawData,
-                MailItem parent) throws ServiceException {
-        return createDocument(octxt, folderId, filename, mimeType, author, rawData, parent, MailItem.TYPE_DOCUMENT);
+    public Document createDocument(OperationContext octxt, int folderId, String filename, String mimeType, String author, byte[] rawData)
+    throws ServiceException {
+        return createDocument(octxt, folderId, filename, mimeType, author, rawData, MailItem.TYPE_DOCUMENT);
     }
 
-    public synchronized Document createDocument(OperationContext octxt, 
-                int folderId, 
-                String filename, 
-                String mimeType, 
-                String author,
-                byte[] rawData,
-                MailItem parent,
-                byte type) throws ServiceException {
-        String digest = ByteUtil.getDigest(rawData);
-        Document doc;
+    public Document createDocument(OperationContext octxt, int folderId, String filename, String mimeType, String author, byte[] rawData, byte type)
+    throws ServiceException {
+        ParsedDocument pd = new ParsedDocument(rawData, filename, mimeType, System.currentTimeMillis(), author);
+        return createDocument(octxt, folderId, pd, type);
+    }
+
+    public synchronized Document createDocument(OperationContext octxt, int folderId, ParsedDocument pd, byte type)
+    throws ServiceException {
         boolean success = false;
         try {
-            SaveDocument redoRecorder =
-                new SaveDocument(mId, digest, rawData.length, folderId);
+            SaveDocument redoRecorder = new SaveDocument(mId, pd.getDigest(), pd.getSize(), folderId);
 
             beginTransaction("createDoc", octxt, redoRecorder);
-            redoRecorder.setFilename(filename);
-            redoRecorder.setMimeType(mimeType);
-            redoRecorder.setAuthor(author);
+            redoRecorder.setFilename(pd.getFilename());
+            redoRecorder.setMimeType(pd.getContentType());
+            redoRecorder.setAuthor(pd.getCreator());
             redoRecorder.setItemType(type);
-            
+
             SaveDocument redoPlayer = (octxt == null ? null : (SaveDocument) octxt.getPlayer());
             int itemId  = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
             short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
 
-            redoRecorder.setMessageBodyInfo(rawData, "", volumeId);
+            redoRecorder.setMessageBodyInfo(pd.getContent(), "", volumeId);
 
-            ParsedDocument pd = new ParsedDocument(rawData, filename, mimeType, getOperationTimestampMillis(), author);
-
+            Document doc;
             if (type == MailItem.TYPE_DOCUMENT)
-                doc = Document.create(
-                        itemId, getFolderById(folderId),
-                        volumeId, filename,
-                        author, mimeType, pd, parent);
+                doc = Document.create(itemId, getFolderById(folderId), volumeId, pd.getFilename(), pd.getCreator(), pd.getContentType(), pd);
             else if (type == MailItem.TYPE_WIKI)
-                doc = WikiItem.create(
-                        itemId, getFolderById(folderId),
-                        volumeId, filename,
-                        author, pd, parent);
+                doc = WikiItem.create(itemId, getFolderById(folderId), volumeId, pd.getFilename(), pd.getCreator(), pd);
             else
                 throw MailServiceException.INVALID_TYPE(type);
 
-            doc.setContent(rawData, digest, volumeId, pd);
             redoRecorder.setMessageId(doc.getId());
+            doc.setContent(pd.getContent(), pd.getDigest(), volumeId, pd);
+
             queueForIndexing(doc, false, pd);
             success = true;
-
+            return doc;
         } catch (IOException ioe) {
             throw MailServiceException.MESSAGE_PARSE_ERROR(ioe);
         } finally {
             endTransaction(success);
         }
-        return doc;
     }
     
     public Message updateOrCreateChat(OperationContext octxt, ParsedMessage pm, int id) throws IOException, ServiceException {

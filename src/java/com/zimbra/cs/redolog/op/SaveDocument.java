@@ -101,13 +101,6 @@ public class SaveDocument extends CreateMessage {
     public void redo() throws Exception {
         int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
-        mbox.createDocument(getOperationContext(), 
-							getFolderId(), 
-							mFilename, 
-							mMimeType,
-							mAuthor,
-							getMessageBody(),
-							null,
-							mItemType);
+        mbox.createDocument(getOperationContext(), getFolderId(), mFilename, mMimeType, mAuthor, getMessageBody(), mItemType);
     }
 }

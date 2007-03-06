@@ -69,27 +69,26 @@ public class WikiItem extends Document {
 
     public static final String WIKI_CONTENT_TYPE = "text/html; charset=utf-8";
 	
-    static WikiItem create(int id, Folder folder, short volumeId, String wikiword, String author, ParsedDocument pd, MailItem parent)
+    static WikiItem create(int id, Folder folder, short volumeId, String wikiword, String author, ParsedDocument pd)
     throws ServiceException {
-
         Metadata meta = new Metadata();
 		meta.put(Metadata.FN_WIKI_WORD, wikiword);
-		
-        UnderlyingData data = prepareCreate(TYPE_WIKI, id, folder, volumeId, wikiword, author, WIKI_CONTENT_TYPE, pd, (Document)parent, meta);
+
+        UnderlyingData data = prepareCreate(TYPE_WIKI, id, folder, volumeId, wikiword, author, WIKI_CONTENT_TYPE, pd, meta);
 
 		Mailbox mbox = folder.getMailbox();
 		data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 
         WikiItem wiki = new WikiItem(mbox, data);
-        wiki.finishCreation(parent);
+        wiki.finishCreation(null);
         pd.setVersion(wiki.getVersion());
         return wiki;
     }
 
     private static final String CN_WIKIWORD = "wikiword";
-    private static final String CN_EDITOR    = "edited_by";
-    private static final String CN_VERSION   = "version";
+    private static final String CN_EDITOR   = "edited_by";
+    private static final String CN_VERSION  = "version";
     
     @Override 
     public String toString() {

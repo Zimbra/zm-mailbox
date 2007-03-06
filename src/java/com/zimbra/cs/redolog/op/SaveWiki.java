@@ -69,6 +69,6 @@ public class SaveWiki extends SaveDocument {
         int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
-        mbox.createWiki(getOperationContext(), getFolderId(), mWikiword, getAuthor(), getMessageBody(), null);
+        mbox.createWiki(getOperationContext(), getFolderId(), mWikiword, getAuthor(), getMessageBody());
     }
 }

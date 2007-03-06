@@ -139,7 +139,7 @@ public abstract class WikiUtil {
                     }
                     */
 
-                    mbox.createDocument(octxt, where.getId(), name, contentType, mbox.getAccount().getName(), contents, null, type);
+                    mbox.createDocument(octxt, where.getId(), name, contentType, mbox.getAccount().getName(), contents, type);
                 }
             }
         }

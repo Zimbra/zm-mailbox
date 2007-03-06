@@ -149,7 +149,7 @@ public abstract class WikiPage {
 			if (mMimeType == null || mData == null || mType == 0)
 				throw WikiServiceException.ERROR("cannot create", null);
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(where.mWikiAccount);
-			addWikiItem(mbox.createDocument(ctxt.octxt, where.getWikiFolderId(), mWikiWord, mMimeType, mCreator, mData, null, mType));
+			addWikiItem(mbox.createDocument(ctxt.octxt, where.getWikiFolderId(), mWikiWord, mMimeType, mCreator, mData, mType));
 		}
 
 		public void add(WikiContext ctxt, WikiPage p) throws ServiceException {
