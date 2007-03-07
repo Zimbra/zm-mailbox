@@ -4785,9 +4785,9 @@ public class Mailbox {
 
             Document doc;
             if (type == MailItem.TYPE_DOCUMENT)
-                doc = Document.create(itemId, getFolderById(folderId), volumeId, pd.getFilename(), pd.getCreator(), pd.getContentType(), pd);
+                doc = Document.create(itemId, getFolderById(folderId), volumeId, pd.getFilename(), pd.getContentType(), pd);
             else if (type == MailItem.TYPE_WIKI)
-                doc = WikiItem.create(itemId, getFolderById(folderId), volumeId, pd.getFilename(), pd.getCreator(), pd);
+                doc = WikiItem.create(itemId, getFolderById(folderId), volumeId, pd.getFilename(), pd);
             else
                 throw MailServiceException.INVALID_TYPE(type);
 

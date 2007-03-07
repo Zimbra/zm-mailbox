@@ -69,12 +69,12 @@ public class WikiItem extends Document {
 
     public static final String WIKI_CONTENT_TYPE = "text/html; charset=utf-8";
 	
-    static WikiItem create(int id, Folder folder, short volumeId, String wikiword, String author, ParsedDocument pd)
+    static WikiItem create(int id, Folder folder, short volumeId, String wikiword, ParsedDocument pd)
     throws ServiceException {
         Metadata meta = new Metadata();
 		meta.put(Metadata.FN_WIKI_WORD, wikiword);
 
-        UnderlyingData data = prepareCreate(TYPE_WIKI, id, folder, volumeId, wikiword, author, WIKI_CONTENT_TYPE, pd, meta);
+        UnderlyingData data = prepareCreate(TYPE_WIKI, id, folder, volumeId, wikiword, WIKI_CONTENT_TYPE, pd, meta);
 
 		Mailbox mbox = folder.getMailbox();
 		data.contentChanged(mbox);
