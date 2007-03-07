@@ -834,22 +834,24 @@ public class ZCalendar {
 
     private static class ZContentHandler implements ContentHandler
     {
-        ZVCalendar mCal = null;
-        ArrayList<ZComponent> mComponents = new ArrayList<ZComponent>();
+        List<ZVCalendar> mCals = new ArrayList<ZVCalendar>(1);
+        ZVCalendar mCurCal = null;
+        List<ZComponent> mComponents = new ArrayList<ZComponent>();
         ZProperty mCurProperty = null;
-        
+
         public void startCalendar() { 
-            mCal = new ZVCalendar(); 
+            mCurCal = new ZVCalendar();
+            mCals.add(mCurCal);
         }
-        
-        public void endCalendar() { }
+
+        public void endCalendar() { mCurCal = null; }
 
         public void startComponent(String name) {
             ZComponent newComponent = new ZComponent(name);
             if (mComponents.size() > 0) {
                 mComponents.get(mComponents.size()-1).mComponents.add(newComponent);
             } else {
-                mCal.mComponents.add(newComponent); 
+                mCurCal.mComponents.add(newComponent); 
             }
             mComponents.add(newComponent);  
         }
@@ -864,7 +866,7 @@ public class ZCalendar {
             if (mComponents.size() > 0) {
                 mComponents.get(mComponents.size()-1).mProperties.add(mCurProperty);
             } else {
-                mCal.mProperties.add(mCurProperty);
+                mCurCal.mProperties.add(mCurProperty);
             }
         }
 
@@ -886,6 +888,21 @@ public class ZCalendar {
 
     public static class ZCalendarBuilder {
         public static ZVCalendar build(Reader reader) throws ServiceException {
+            List<ZVCalendar> list = buildMulti(reader);
+            int len = list.size();
+            if (len == 1) {
+                return list.get(0);
+            } else if (len > 1) {
+                ZimbraLog.calendar.warn(
+                        "Returning only the first ZCALENDAR after parsing " +
+                        len);
+                return list.get(0);
+            } else {
+                throw ServiceException.PARSE_ERROR("No ZCALENDAR found", null);
+            }
+        }
+
+        public static List<ZVCalendar> buildMulti(Reader reader) throws ServiceException {
             BufferedReader br = new BufferedReader(reader);
             reader = br;
             try {
@@ -914,7 +931,7 @@ public class ZCalendar {
                 throw ServiceException.PARSE_ERROR(s.toString(), e);
             }
 
-            return handler.mCal;
+            return handler.mCals;
         }
     }
 
@@ -966,9 +983,9 @@ public class ZCalendar {
 
                 ZContentHandler handler = new ZContentHandler();
                 parser.parse(new UnfoldingReader(in), handler);
-                System.out.println(handler.mCal.toString());
-//              createFromCalendar(handler.mCal);
-                Invite.createFromCalendar(null, null, handler.mCal, false);
+                ZVCalendar cal = handler.mCals.get(0);
+                System.out.println(cal.toString());
+                Invite.createFromCalendar(null, null, cal, false);
             }
             
         } catch(Exception e) {
