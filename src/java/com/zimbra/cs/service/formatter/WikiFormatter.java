@@ -210,5 +210,8 @@ public class WikiFormatter extends Formatter {
         } catch (NoSuchItemException nsie) {
             mbox.createDocument(context.opContext, folder.getId(), pd, MailItem.TYPE_WIKI);
         }
+
+        // clear the wiki cache because we just went straight to the Mailbox
+        Wiki.expireNotebook(folder);
 	}
 }
