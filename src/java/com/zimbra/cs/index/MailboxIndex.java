@@ -539,7 +539,6 @@ public final class MailboxIndex
         assert(!sIndexWritersCache.contains(this));
         mMailboxId = mailboxId;
         mMailbox = mbox;
-        mLockFactory = new SingleInstanceLockFactory();
 
         Volume indexVol = Volume.getById(mbox.getIndexVolume());
         String idxParentDir = indexVol.getMailboxDir(mailboxId, Volume.TYPE_INDEX);
@@ -580,7 +579,13 @@ public final class MailboxIndex
             }
             
             try {
-                mIdxDirectory = FSDirectory.getDirectory(idxPath, mLockFactory);
+                // must call getDirectory then setLockFactory via 2 calls -- there's the possibility
+                // that the directory we're returned is actually a cached FSDirectory (e.g. if the index
+                // was deleted and re-created) in which case we should be using the existing LockFactory
+                // and not creating a new one
+                mIdxDirectory = FSDirectory.getDirectory(idxPath);
+                if (mIdxDirectory.getLockFactory() == null || !(mIdxDirectory.getLockFactory() instanceof SingleInstanceLockFactory))
+                    mIdxDirectory.setLockFactory(new SingleInstanceLockFactory());
             } catch (IOException e) {
                 throw ServiceException.FAILURE("Cannot create FSDirectory at path: "+idxPath, e);
             }
@@ -595,8 +600,17 @@ public final class MailboxIndex
         
         sLog.info("Initialized Index for mailbox " + mailboxId+" directory: "+mIdxDirectory.toString()+" Analyzer="+mAnalyzer.toString());
     }
+    
+    protected void finalize() throws Throwable {
+        try {
+            if (mIdxDirectory != null) 
+                mIdxDirectory.close();
+            mIdxDirectory = null;
+        } finally {
+            super.finalize();
+        }
+    }
 
-    private LockFactory mLockFactory = null;
     private FSDirectory mIdxDirectory = null;
     private Sort mLatestSort = null;
     private SortBy mLatestSortBy = null;
@@ -1447,7 +1461,6 @@ public final class MailboxIndex
             IndexWriter writer = null;
             try {
                 flush();
-                //assert(false);
                 // FIXME maybe: under Windows only, this can fail.  Might need way to forcibly close all open indices???
                 //				closeIndexReader();
                 if (sLog.isDebugEnabled())
