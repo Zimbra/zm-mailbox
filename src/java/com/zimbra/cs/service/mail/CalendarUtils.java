@@ -25,21 +25,14 @@
 
 package com.zimbra.cs.service.mail;
 
-import java.io.StringReader;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
-
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.calendar.Alarm;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
@@ -48,19 +41,24 @@ import com.zimbra.cs.mailbox.calendar.Period;
 import com.zimbra.cs.mailbox.calendar.RdateExdate;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
+import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
-import com.zimbra.cs.mailbox.calendar.ZRecur;
-import com.zimbra.cs.mailbox.calendar.ZOrganizer;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
-import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.mailbox.calendar.ZOrganizer;
+import com.zimbra.cs.mailbox.calendar.ZRecur;
+
+import java.io.StringReader;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 
 public class CalendarUtils {
     /**
@@ -259,7 +257,7 @@ public class CalendarUtils {
 
     static RecurId parseRecurId(Element e, TimeZoneMap invTzMap, Invite inv)
             throws ServiceException {
-        String range = e.getAttribute("range", "");
+        String range = e.getAttribute(MailConstants.A_CAL_RANGE, "");
 
         ParsedDateTime dt = parseDateTime(e, invTzMap, inv);
         return new RecurId(dt, range);
