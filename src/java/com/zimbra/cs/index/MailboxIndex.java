@@ -615,15 +615,6 @@ public final class MailboxIndex
     }
     
     private IndexWriter mIndexWriter;
-    private RefCountedIndexReader mIndexReader;
-    
-    long getIndexReaderAccessTime() { 
-        synchronized(getLock()) {
-            if (mIndexReader != null)
-                return mIndexReader.getAccessTime();
-        }
-        return -1;
-    }
 
     public static void startup() {
         if (DebugConfig.disableIndexing)
@@ -645,7 +636,6 @@ public final class MailboxIndex
         sIndexReadersCache = new IndexReadersCache(LC.zimbra_index_reader_lru_size.intValue(), 
             LC.zimbra_index_reader_idle_flush_time.longValue() * 1000, 
             LC.zimbra_index_reader_idle_sweep_frequency.longValue() * 1000);
-//        sIndexReadersCache = new IndexReadersCache(0, 0, 0);
         sIndexReadersCache.start();
     }
 
@@ -830,16 +820,14 @@ public final class MailboxIndex
         synchronized(getLock()) {        
             if (mIndexWriter != null) {
                 assert(sIndexWritersCache.contains(this));
-                assert(mIndexReader == null);
+                assert(!sIndexReadersCache.containsKey(this));
                 return;
             }
             
             IndexWriter writer = null;
-            
-            if (mIndexReader != null) {
-                sIndexReadersCache.removeIndexReader(this);
-                clearCachedIndexReader();
-            }
+
+            // uncache the IndexReader if it is cached
+            sIndexReadersCache.removeIndexReader(this);
             
             try {
 //                sLog.info("MI"+this.toString()+" Opening IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
@@ -929,15 +917,12 @@ public final class MailboxIndex
         BooleanQuery.setMaxClauseCount(10000); 
 
         synchronized(getLock()) {
-            if (mIndexReader != null) {
-                mIndexReader.addRef();
-                return mIndexReader;
-            }
+            RefCountedIndexReader toRet = sIndexReadersCache.getIndexReader(this);
+            if (toRet != null)
+                return toRet;
             
             IndexReader reader = null;
             try {
-                /* uggghhh!  nasty.  FIXME - need to coordinate with index writer better 
-             (manually create a RamDirectory and index into that?) */
                 flush();
                 reader = IndexReader.open(mIdxDirectory);
             } catch(IOException e) {
@@ -962,18 +947,9 @@ public final class MailboxIndex
                 }
             }
             
-            RefCountedIndexReader ref = new RefCountedIndexReader(reader); 
-            ref.addRef();
-            mIndexReader = ref;
-            sIndexReadersCache.putIndexReader(this);
-            return ref;
-        }
-    }
-    
-    void clearCachedIndexReader() {
-        synchronized(getLock()) {
-            mIndexReader.release();
-            mIndexReader = null;
+            toRet = new RefCountedIndexReader(reader); // refcount starts at 1 
+            sIndexReadersCache.putIndexReader(this, toRet); // addrefs if put in cache
+            return toRet; 
         }
     }
     

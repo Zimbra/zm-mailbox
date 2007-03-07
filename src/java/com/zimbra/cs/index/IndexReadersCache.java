@@ -25,7 +25,8 @@
 package com.zimbra.cs.index;
 
 import java.util.Iterator;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.LinkedHashMap;
+import java.util.Map.Entry;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -37,7 +38,7 @@ class IndexReadersCache extends Thread {
     private static Log sLog = LogFactory.getLog(IndexReadersCache.class);
 
     private final int mMaxOpenReaders;
-    private ConcurrentHashMap<MailboxIndex,MailboxIndex> mOpenIndexReaders;
+    private LinkedHashMap<MailboxIndex,RefCountedIndexReader> mOpenIndexReaders;
     private boolean mShutdown;
     private long mSweepIntervalMS;
     private long mMaxReaderOpenTimeMS;
@@ -50,38 +51,46 @@ class IndexReadersCache extends Thread {
             sweepIntervalMS = 100;
         mMaxReaderOpenTimeMS = maxReaderOpenTime;
         mMaxOpenReaders = maxOpenReaders;
-        mOpenIndexReaders = new ConcurrentHashMap<MailboxIndex,MailboxIndex>(mMaxOpenReaders);
+        mOpenIndexReaders = new LinkedHashMap<MailboxIndex,RefCountedIndexReader>(mMaxOpenReaders);
         mShutdown = false;
         mSweepIntervalMS = sweepIntervalMS;
     }
     
-    public void signalShutdown() {
-        synchronized(this) {
-            mShutdown = true;
-            notify();
-        }
+    /**
+     * Shut down the sweeper thread and clear the cached
+     */
+    synchronized void signalShutdown() {
+        mShutdown = true;
+        notify();
     }
     
-    public void putIndexReader(MailboxIndex idx) {
+    /**
+     * Put the passed-in IndexReader into the cache, if applicable.  This function
+     * will automatically AddRef the IndexReader if it stores it in it's cache
+     *  
+     * @param idx
+     * @param reader
+     */
+    synchronized void putIndexReader(MailboxIndex idx, RefCountedIndexReader reader) {
         // special case disabled index reader cache:
         if (mMaxOpenReaders <= 0) {
-            idx.clearCachedIndexReader();
             return;
         }
         // +1 b/c we haven't added the new one yet
         int toRemove = ((mOpenIndexReaders.size()+1) - mMaxOpenReaders); 
         if (toRemove > 0) {
             // remove extra (above our limit) readers
-            for (Iterator<MailboxIndex> iter = mOpenIndexReaders.keySet().iterator(); toRemove > 0; toRemove--) {
-                MailboxIndex cur = iter.next();
+            for (Iterator<Entry<MailboxIndex,RefCountedIndexReader>> iter = mOpenIndexReaders.entrySet().iterator(); toRemove > 0; toRemove--) {
+                Entry<MailboxIndex,RefCountedIndexReader> entry = iter.next();
+                entry.getValue().release();
                 if (sLog.isDebugEnabled())
-                    sLog.debug("Closing index reader for index: "+cur.toString()+" (too many open)");
-                cur.clearCachedIndexReader();
+                    sLog.debug("Releasing index reader for index: "+entry.getKey().toString()+" from cache (too many open)");
                 iter.remove();
             }
         }
         assert(toRemove <= 0);
-        mOpenIndexReaders.put(idx,idx);
+        reader.addRef();
+        mOpenIndexReaders.put(idx,reader);
     }
     
     /**
@@ -90,13 +99,36 @@ class IndexReadersCache extends Thread {
      * 
      * @param idx
      */
-    public void removeIndexReader(MailboxIndex idx) {
+    synchronized void removeIndexReader(MailboxIndex idx) {
         if (mMaxOpenReaders <= 0)
             return;
-        if (sLog.isDebugEnabled())
-            sLog.debug("Closing index reader for index: "+idx.toString()+" (removed)");
-        mOpenIndexReaders.remove(idx);
+        RefCountedIndexReader removed = mOpenIndexReaders.remove(idx);
+        if (removed != null) {
+            removed.release();
+            if (sLog.isDebugEnabled())
+                sLog.debug("Closing index reader for index: "+idx.toString()+" (removed)");
+        }
     }
+    
+    /**
+     * @param idx
+     * @return an ALREADY ADDREFED IndexReader, or NULL if there is not one cached
+     */
+    synchronized RefCountedIndexReader getIndexReader(MailboxIndex idx) {
+        RefCountedIndexReader toRet = mOpenIndexReaders.get(idx);
+        if (toRet != null)
+            toRet.addRef();
+        return toRet;
+    }
+    
+    /**
+     * @param idx
+     * @return
+     */
+    synchronized boolean containsKey(MailboxIndex idx) {
+        return mOpenIndexReaders.containsKey(idx);
+    }
+    
     
     /**
      * Sweeper thread entry point
@@ -110,10 +142,10 @@ class IndexReadersCache extends Thread {
             
             boolean shutdown = false;
             while (!shutdown) {
-                long startTime = System.currentTimeMillis();
-                
                 // Sleep until next scheduled wake-up time, or until notified.
                 synchronized (this) {
+                    long startTime = System.currentTimeMillis();
+                    
                     if (!mShutdown) {  // Don't go into wait() if shutting down.  (bug 1962)
                         long now = System.currentTimeMillis();
                         long until = startTime + mSweepIntervalMS;
@@ -124,27 +156,30 @@ class IndexReadersCache extends Thread {
                         }
                     }
                     shutdown = mShutdown;
-                }
-                
-                if (!shutdown) {
-                    long now = System.currentTimeMillis();
-                    long cutoff = now - mMaxReaderOpenTimeMS; 
                     
-                    for (Iterator<MailboxIndex> iter = mOpenIndexReaders.keySet().iterator(); iter.hasNext();) {
-                        MailboxIndex cur = iter.next();
-                        if (cur.getIndexReaderAccessTime() < cutoff) {
-                            if (sLog.isDebugEnabled())
-                                sLog.debug("Closing index reader for index: "+cur.toString()+" (timed out)");
-                            cur.clearCachedIndexReader();
-                            iter.remove();
+                    if (!shutdown) {
+                        long now = System.currentTimeMillis();
+                        long cutoff = now - mMaxReaderOpenTimeMS; 
+                        
+                        for (Iterator<Entry<MailboxIndex,RefCountedIndexReader>> iter = mOpenIndexReaders.entrySet().iterator(); iter.hasNext(); ) {
+                            Entry<MailboxIndex,RefCountedIndexReader> entry = iter.next();
+                            if (entry.getValue().getAccessTime() < cutoff) {
+                                if (sLog.isDebugEnabled())
+                                    sLog.debug("Releasing cached index reader for index: "+entry.getKey().toString()+" (timed out)");
+                                entry.getValue().release();
+                                iter.remove();
+                            }
                         }
-                    }
-                } // if (!shutdown)
+                    } // if (!shutdown)
+                } // synchronized(this)
             } // while !shutdown
             
-            // clear the cache now
-            for (MailboxIndex mbidx : mOpenIndexReaders.keySet()) {
-                mbidx.clearCachedIndexReader();
+            // Shutdown time: clear the cache now
+            synchronized(this) {
+                for (RefCountedIndexReader reader: mOpenIndexReaders.values()) {
+                    reader.release();
+                }
+                mOpenIndexReaders.clear();
             }
             sLog.info(getName() + " thread exiting");
         }
