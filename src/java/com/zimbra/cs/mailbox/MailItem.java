@@ -59,7 +59,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     public static final byte TYPE_MESSAGE      = 5;
     /** Item is a {@link Contact}. */
     public static final byte TYPE_CONTACT      = 6;
-    // /** Item is a {@link InviteMessage} with a <code>text/calendar</code> MIME part. */
+    // /** Item is a {@link InviteMessage} with a <tt>text/calendar</tt> MIME part. */
     // public static final byte TYPE_INVITE       = 7;   // SKIP 7 FOR NOW!
     /** Item is a bare {@link Document}. */
     public static final byte TYPE_DOCUMENT     = 8;
@@ -71,8 +71,8 @@ public abstract class MailItem implements Comparable<MailItem> {
     public static final byte TYPE_APPOINTMENT  = 11;
     /** Item is a memory-only, 1-message {@link VirtualConversation}. */
     public static final byte TYPE_VIRTUAL_CONVERSATION = 12;
-    /** Item is a {@link Mountpoint} pointing to a {@link Folder} or
-     *  {@link Tag}, possibly in another user's {@link Mailbox}. */
+    /** Item is a {@link Mountpoint} pointing to a {@link Folder},
+     *  possibly in another user's {@link Mailbox}. */
     public static final byte TYPE_MOUNTPOINT   = 13;
     /** Item is a {@link WikiItem} */
     public static final byte TYPE_WIKI         = 14;
@@ -105,7 +105,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         "chat",
     };
 
-    /** Throws {@link ServiceException} <code>mail.INVALID_TYPE</code> if the
+    /** Throws {@link ServiceException} <tt>mail.INVALID_TYPE</tt> if the
      *  specified internal Zimbra item type is not supported.  At present, all
      *  types from 1 to {@link #TYPE_MAX} <b>except 7</b> are supported. */
     static byte validateType(byte type) throws ServiceException {
@@ -114,20 +114,20 @@ public abstract class MailItem implements Comparable<MailItem> {
         return type;
     }
 
-    /** Returns the human-readable name (e.g. <code>"tag"</code>) for the
-     *  item's type.  Returns <code>null</code> if parameter is null. */
+    /** Returns the human-readable name (e.g. <tt>"tag"</tt>) for the
+     *  item's type.  Returns <tt>null</tt> if parameter is null. */
     public static String getNameForType(MailItem item) {
         return getNameForType(item == null ? TYPE_UNKNOWN : item.getType());
     }
 
-    /** Returns the human-readable name (e.g. <code>"tag"</code>) for the
-     *  specified item type.  Returns <code>null</code> for unknown types. */
+    /** Returns the human-readable name (e.g. <tt>"tag"</tt>) for the
+     *  specified item type.  Returns <tt>null</tt> for unknown types. */
     public static String getNameForType(byte type) {
         return (type <= 0 || type > TYPE_MAX ? null : TYPE_NAMES[type]);
     }
 
     /** Returns the internal Zimbra item type (e.g. {@link #TYPE_TAG}) for
-     *  the specified human-readable type name (e.g. <code>"tag"</code>). */
+     *  the specified human-readable type name (e.g. <tt>"tag"</tt>). */
     public static byte getTypeForName(String name) {
         if (name != null && !name.trim().equals(""))
             for (byte i = 1; i < TYPE_NAMES.length; i++)
@@ -366,7 +366,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             return false;
         }
         /** Returns whether an item is in the user's sent folder.  Returns
-         *  <code>false</code> if the user has set their sent folder to be
+         *  <tt>false</tt> if the user has set their sent folder to be
          *  any folder other than the default "/Sent" folder, folder 5.<p>
          *  
          *  The reason we don't just compare the item's folder against the
@@ -449,8 +449,8 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     /** Returns the item's name.  If the item doesn't have a name (e.g.
-     *  messages, contacts, appointments), returns <code>""</code>.
-     *  If not <code>""</code>, this name should be unique across all item
+     *  messages, contacts, appointments), returns <tt>""</tt>.
+     *  If not <tt>""</tt>, this name should be unique across all item
      *  types within the parent folder. */
     public String getName() {
         return mData.name == null ? "" : mData.name;
@@ -464,14 +464,14 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     /** Returns the ID of the {@link Folder} the item lives in.  All items
-     *  must have a non-<code>null</code> folder. */
+     *  must have a non-<tt>null</tt> folder. */
     public int getFolderId() {
         return mData.folderId;
     }
 
     /** Returns the path to the MailItem.  If the item is in a hidden folder
      *  or is of a type that does not have a name (e.g. {@link Message}s,
-     *  {@link Contact}s, etc.), this method returns <code>null</code>. */
+     *  {@link Contact}s, etc.), this method returns <tt>null</tt>. */
     public String getPath() throws ServiceException {
         String path = getFolder().getPath(), name = getName();
         if (name == null || path == null)
@@ -488,7 +488,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     /** Returns the UID the item is referenced by in the IMAP server.  Returns
-     *  <code>0</code> for items that require renumbering because of moves.
+     *  <tt>0</tt> for items that require renumbering because of moves.
      *  The "IMAP UID" will be the same as the item ID unless the item has
      *  been moved after the mailbox owner's first IMAP session. */
     public int getImapUid() {
@@ -502,7 +502,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     /** Returns the SHA-1 hash of the item's uncompressed blob.  Returns
-     *  <code>""</code> for items that have no stored blob. */
+     *  <tt>""</tt> for items that have no stored blob. */
     public String getDigest() {
         return getDigest(false);
     }
@@ -589,7 +589,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
     /** Returns the "internal" flag bitmask, which does not include
      *  {@link Flag#BITMASK_UNREAD}.  This is the same bitmask as is stored
-     *  in the database's <code>MAIL_ITEM.FLAGS</code> column. */
+     *  in the database's <tt>MAIL_ITEM.FLAGS</tt> column. */
     public int getInternalFlagBitmask() {
         return mData.flags;
     }
@@ -734,7 +734,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
     /** Returns the {@link MailboxBlob} corresponding to the item's on-disk
      *  representation.  If the item is memory- or database-only, returns
-     *  <code>null</code>.
+     *  <tt>null</tt>.
      * 
      * @throws ServiceException if the file cannot be found. */
     public synchronized MailboxBlob getBlob() throws ServiceException {
@@ -837,7 +837,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
     /** Returns the item's parent from the {@link Mailbox}'s cache.  If
      *  the item has no parent or the parent is not currently cached,
-     *  returns <code>null</code>.
+     *  returns <tt>null</tt>.
      * 
      * @throws ServiceException if there is a problem retrieving the
      *         Mailbox's item cache. */
@@ -847,7 +847,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         return mMailbox.getCachedItem(mData.parentId);
     }
 
-    /** Returns the item's parent.  Returns <code>null</code> if the item
+    /** Returns the item's parent.  Returns <tt>null</tt> if the item
      *  does not have a parent.
      * 
      * @throws ServiceException if there is an error retrieving the
@@ -902,13 +902,13 @@ public abstract class MailItem implements Comparable<MailItem> {
         return mbox.getItem(DbMailItem.getByImapId(mbox, id, folderId));
     }
 
-    /** Instantiates the appropriate subclass of <code>MailItem</code> for
+    /** Instantiates the appropriate subclass of <tt>MailItem</tt> for
      *  the item described by the {@link MailItem.UnderlyingData}.  Will
-     *  not create memory-only <code>MailItem</code>s like {@link Flag}
+     *  not create memory-only <tt>MailItem</tt>s like {@link Flag}
      *  and {@link VirtualConversation}.
      * 
      * @param mbox  The {@link Mailbox} the item is created in.
-     * @param data  The contents of a <code>MAIL_ITEM</code> database row. */
+     * @param data  The contents of a <tt>MAIL_ITEM</tt> database row. */
     static MailItem constructItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
         if (data == null)
             throw noSuchItem(-1, TYPE_UNKNOWN);
@@ -958,16 +958,16 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     /** Returns whether the an item type is a "subclass" of another item type.
-     *  For instance, returns <code>true</code> if you have an item of type
+     *  For instance, returns <tt>true</tt> if you have an item of type
      *  {@link #TYPE_FLAG} and you wanted things of type {@link #TYPE_TAG}.
      *  The exception to this rule is that a desired {@link #TYPE_UNKNOWN}
      *  matches any actual item type.
      * 
      * @param desired  The type of item that you wanted.
      * @param actual   The type of item that you've got.
-     * @return <code>true</code> if the types match, if <code>desired</code>
-     *         is {@link #TYPE_UNKNOWN}, or if the <code>actual</code> class
-     *         is a subclass of the <code>desired</code> class. */
+     * @return <tt>true</tt> if the types match, if <tt>desired</tt> is
+     *         {@link #TYPE_UNKNOWN}, or if the <tt>actual</tt> class is a
+     *         subclass of the <tt>desired</tt> class. */
     public static boolean isAcceptableType(byte desired, byte actual) {
         // standard case: exactly what we're asking for
         if (desired == actual || desired == TYPE_UNKNOWN)
@@ -1061,8 +1061,8 @@ public abstract class MailItem implements Comparable<MailItem> {
      * @param color  The item's new color.
      * @perms {@link ACL#RIGHT_WRITE} on the item
      * @throws ServiceException  The following error codes are possible:<ul>
-     *    <li><code>service.PERM_DENIED</code> - if you don't have
-     *        sufficient permissions</ul> */
+     *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
+     *        permissions</ul> */
     void setColor(byte color) throws ServiceException {
         if (!canAccess(ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have the necessary permissions on the item");
@@ -1148,15 +1148,14 @@ public abstract class MailItem implements Comparable<MailItem> {
      *  database and cache, and also updates the unread counts for the
      *  item's {@link Folder} and {@link Tag}s appropriately.
      * 
-     * @param unread  <code>true</code> to mark the item unread,
-     *                <code>false</code> to mark it as read.
+     * @param unread  <tt>true</tt> to mark the item unread,
+     *                <tt>false</tt> to mark it as read.
      * @perms {@link ACL#RIGHT_WRITE} on the item
      * @throws ServiceException  The following error codes are possible:<ul>
-     *    <li><code>mail.CANNOT_TAG</code> - if the item can't be marked
-     *        unread
-     *    <li><code>service.FAILURE</code> - if there's a database failure
-     *    <li><code>service.PERM_DENIED</code> - if you don't have
-     *        sufficient permissions</ul> */
+     *    <li><tt>mail.CANNOT_TAG</tt> - if the item can't be marked unread
+     *    <li><tt>service.FAILURE</tt> - if there's a database failure
+     *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
+     *        permissions</ul> */
     void alterUnread(boolean unread) throws ServiceException {
         // detect NOOPs and bail
         if (unread == isUnread())
@@ -1182,16 +1181,15 @@ public abstract class MailItem implements Comparable<MailItem> {
      *  You must use {@link #alterUnread} to change an item's unread state.
      * 
      * @param tag  The tag or flag to add or remove from the item.
-     * @param add  <code>true</code> to tag the item,
-     *             <code>false</code> to untag it.
+     * @param add  <tt>true</tt> to tag the item, <tt>false</tt> to untag it.
      * @perms {@link ACL#RIGHT_WRITE} on the item
      * @throws ServiceException  The following error codes are possible:<ul>
-     *    <li><code>mail.CANNOT_TAG</code> - if the item can't be tagged
-     *        with the specified tag
-     *    <li><code>service.FAILURE</code> - if there's a database
-     *        failure or if an invalid Tag is supplied
-     *    <li><code>service.PERM_DENIED</code> - if you don't have
-     *        sufficient permissions</ul>
+     *    <li><tt>mail.CANNOT_TAG</tt> - if the item can't be tagged with the
+     *        specified tag
+     *    <li><tt>service.FAILURE</tt> - if there's a database failure or if
+     *        an invalid Tag is supplied
+     *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
+     *        permissions</ul>
      * @see #alterUnread(boolean) */
     void alterTag(Tag tag, boolean add) throws ServiceException {
         if (tag == null)
@@ -1232,8 +1230,8 @@ public abstract class MailItem implements Comparable<MailItem> {
      *  Does not update the database.
      * 
      * @param tag  The tag that was added or rmeoved from this object.
-     * @param add  <code>true</code> if the item was tagged,
-     *             <code>false</code> if the item was untagged.*/
+     * @param add  <tt>true</tt> if the item was tagged,
+     *             <tt>false</tt> if the item was untagged.*/
     protected void tagChanged(Tag tag, boolean add) throws ServiceException {
         markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
         mData.metadataChanged(mMailbox);
@@ -1265,13 +1263,13 @@ public abstract class MailItem implements Comparable<MailItem> {
             throw ServiceException.FAILURE("inconsistent state: unread < 0 for item " + mId, null);
     }
 
-    /** Adds <code>delta</code> to the unread count of each {@link Tag}
-     *  assigned to this <code>MailItem</code>.
+    /** Adds <tt>delta</tt> to the unread count of each {@link Tag}
+     *  assigned to this <tt>MailItem</tt>.
      * 
      * @param delta  The (signed) change in number unread.
      * @throws ServiceException  The following error codes are possible:<ul>
-     *    <li><code>mail.NO_SUCH_FOLDER</code> - if there's an error
-     *        fetching the item's {@link Folder}</ul> */
+     *    <li><tt>mail.NO_SUCH_FOLDER</tt> - if there's an error fetching the
+     *        item's {@link Folder}</ul> */
     protected void updateTagUnread(int delta) throws ServiceException {
         if (delta == 0 || !isTaggable() || mData.tags == 0)
             return;
@@ -1302,9 +1300,9 @@ public abstract class MailItem implements Comparable<MailItem> {
      * @param tags   The bitmask of tags to apply.
      * @perms {@link ACL#RIGHT_WRITE} on the item
      * @throws ServiceException  The following error codes are possible:<ul>
-     *    <li><code>service.FAILURE</code> - if there's a database failure
-     *    <li><code>service.PERM_DENIED</code> - if you don't have
-     *        sufficient permissions</ul> */
+     *    <li><tt>service.FAILURE</tt> - if there's a database failure
+     *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
+     *        permissions</ul> */
     void setTags(int flags, long tags) throws ServiceException {
         if (!canAccess(ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
@@ -1359,12 +1357,12 @@ public abstract class MailItem implements Comparable<MailItem> {
      * @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *        {@link ACL#RIGHT_READ} on the original item
      * @throws ServiceException  The following error codes are possible:<ul>
-     *    <li><code>mail.CANNOT_COPY</code> - if the item is not copyable
-     *    <li><code>mail.CANNOT_CONTAIN</code> - if the target folder
-     *        can't hold the copy of the item
-     *    <li><code>service.FAILURE</code> - if there's a database failure
-     *    <li><code>service.PERM_DENIED</code> - if you don't have
-     *        sufficient permissions</ul>
+     *    <li><tt>mail.CANNOT_COPY</tt> - if the item is not copyable
+     *    <li><tt>mail.CANNOT_CONTAIN</tt> - if the target folder can't hold
+     *        the copy of the item
+     *    <li><tt>service.FAILURE</tt> - if there's a database failure
+     *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
+     *        permissions</ul>
      * @see com.zimbra.cs.store.Volume#getCurrentMessageVolume() */
     MailItem copy(Folder folder, int id, short destVolumeId) throws IOException, ServiceException {
         if (!isCopyable())
@@ -1425,12 +1423,12 @@ public abstract class MailItem implements Comparable<MailItem> {
      * @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *        {@link ACL#RIGHT_READ} on the original item
      * @throws ServiceException  The following error codes are possible:<ul>
-     *    <li><code>mail.CANNOT_COPY</code> - if the item is not copyable
-     *    <li><code>mail.CANNOT_CONTAIN</code> - if the target folder
-     *        can't hold the copy of the item
-     *    <li><code>service.FAILURE</code> - if there's a database failure
-     *    <li><code>service.PERM_DENIED</code> - if you don't have
-     *        sufficient permissions</ul>
+     *    <li><tt>mail.CANNOT_COPY</tt> - if the item is not copyable
+     *    <li><tt>mail.CANNOT_CONTAIN</tt> - if the target folder can't hold
+     *        the copy of the item
+     *    <li><tt>service.FAILURE</tt> - if there's a database failure
+     *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
+     *        permissions</ul>
      * @see com.zimbra.cs.store.Volume#getCurrentMessageVolume() */
     MailItem icopy(Folder target, int copyId, short destVolumeId) throws IOException, ServiceException {
         if (!isCopyable())
@@ -1501,29 +1499,27 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     /** Renames the item in place.  Altering an item's name's case (e.g.
-     *  from <code>foo</code> to <code>FOO</code>) is allowed.
+     *  from <tt>foo</tt> to <tt>FOO</tt>) is allowed.
      * 
      * @param name  The new name for this item.
      * @perms {@link ACL#RIGHT_WRITE} on the item
      * @throws ServiceException   The following error codes are possible:<ul>
-     *    <li><code>mail.IMMUTABLE_OBJECT</code> - if the item can't be
-     *        renamed
-     *    <li><code>mail.ALREADY_EXISTS</code> - if a different item by that
-     *        name already exists in the current folder
-     *    <li><code>mail.INVALID_NAME</code> - if the new item's name is
-     *        invalid
-     *    <li><code>service.FAILURE</code> - if there's a database failure
-     *    <li><code>service.PERM_DENIED</code> - if you don't have
-     *        sufficient permissions</ul>
+     *    <li><tt>mail.IMMUTABLE_OBJECT</tt> - if the item can't be renamed
+     *    <li><tt>mail.ALREADY_EXISTS</tt> - if a different item by that name
+     *        already exists in the current folder
+     *    <li><tt>mail.INVALID_NAME</tt> - if the new item's name is invalid
+     *    <li><tt>service.FAILURE</tt> - if there's a database failure
+     *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
+     *        permissions</ul>
      * @see #validateItemName(String) */
     void rename(String name) throws ServiceException {
         rename(name, getFolder());
     }
 
-    /** Renames the item and optionally moves it.  Altering an item's
-     *  case (e.g. from <code>foo</code> to <code>FOO</code>) is allowed.
-     *  If you don't want the item to be moved, you must pass 
-     *  <code>folder.getFolder()</code> as the second parameter.
+    /** Renames the item and optionally moves it.  Altering an item's case
+     *  (e.g. from <tt>foo</tt> to <tt>FOO</tt>) is allowed.  If you don't
+     *  want the item to be moved, you must pass <tt>folder.getFolder()</tt>
+     *  as the second parameter.
      * 
      * @param name    The new name for this item.
      * @param target  The new parent folder to move this item to.
@@ -1531,15 +1527,13 @@ public abstract class MailItem implements Comparable<MailItem> {
      *        {@link ACL#RIGHT_DELETE} on the parent folder and
      *        {@link ACL#RIGHT_INSERT} on the target folder to move it
      * @throws ServiceException   The following error codes are possible:<ul>
-     *    <li><code>mail.IMMUTABLE_OBJECT</code> - if the item can't be
-     *        renamed
-     *    <li><code>mail.ALREADY_EXISTS</code> - if a different item by that
-     *        name already exists in the target folder
-     *    <li><code>mail.INVALID_NAME</code> - if the new item's name is
-     *        invalid
-     *    <li><code>service.FAILURE</code> - if there's a database failure
-     *    <li><code>service.PERM_DENIED</code> - if you don't have
-     *        sufficient permissions</ul>
+     *    <li><tt>mail.IMMUTABLE_OBJECT</tt> - if the item can't be renamed
+     *    <li><tt>mail.ALREADY_EXISTS</tt> - if a different item by that name
+     *        already exists in the target folder
+     *    <li><tt>mail.INVALID_NAME</tt> - if the new item's name is invalid
+     *    <li><tt>service.FAILURE</tt> - if there's a database failure
+     *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
+     *        permissions</ul>
      * @see #validateItemName(String)
      * @see #move(Folder) */
     void rename(String name, Folder target) throws ServiceException {
@@ -1601,8 +1595,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      * 
      * @param name  The proposed item name.
      * @throws ServiceException  The following error codes are possible:<ul>
-     *    <li><code>mail.INVALID_NAME</code> - if the name is not acceptable
-     *    </ul>
+     *    <li><tt>mail.INVALID_NAME</tt> - if the name is not acceptable</ul>
      * @see StringUtil#stripControlCharacters(String) */
     static String validateItemName(String name) throws ServiceException {
         if (name == null || name != StringUtil.stripControlCharacters(name))
@@ -1642,13 +1635,12 @@ public abstract class MailItem implements Comparable<MailItem> {
      * @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *        {@link ACL#RIGHT_DELETE} on the source folder
      * @throws ServiceException  The following error codes are possible:<ul>
-     *    <li><code>mail.IMMUTABLE_OBJECT</code> - if the item is not
-     *        movable
-     *    <li><code>mail.CANNOT_CONTAIN</code> - if the target folder
-     *        can't hold the item
-     *    <li><code>service.FAILURE</code> - if there's a database failure
-     *    <li><code>service.PERM_DENIED</code> - if you don't have
-     *        sufficient permissions</ul> */
+     *    <li><tt>mail.IMMUTABLE_OBJECT</tt> - if the item is not movable
+     *    <li><tt>mail.CANNOT_CONTAIN</tt> - if the target folder can't
+     *        hold the item
+     *    <li><tt>service.FAILURE</tt> - if there's a database failure
+     *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
+     *        permissions</ul> */
     void move(Folder target) throws ServiceException {
         if (mData.folderId == target.getId())
             return;
@@ -1768,7 +1760,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         public List<Integer> indexIds = new ArrayList<Integer>();
 
         /** The ids of all items with the {@link Flag#BITMASK_COPIED} flag being
-         *  deleted.  Items in <code>sharedIndex</code> whose last copies are
+         *  deleted.  Items in <tt>sharedIndex</tt> whose last copies are
          *  being removed are added to {@link #indexIds} via a call to
          *  {@link DbMailItem#resolveSharedIndex}. */
         public Set<Integer> sharedIndex;
@@ -1785,8 +1777,8 @@ public abstract class MailItem implements Comparable<MailItem> {
         public Map<Integer, DbMailItem.LocationCount> messages = new HashMap<Integer, DbMailItem.LocationCount>();
 
 
-        /** Combines the data from another <code>PendingDelete</code> into
-         *  this object.  The other <code>PendingDelete</code> is unmodified.
+        /** Combines the data from another <tt>PendingDelete</tt> into
+         *  this object.  The other <tt>PendingDelete</tt> is unmodified.
          * 
          * @return this item */
         PendingDelete add(PendingDelete other) {
@@ -1878,7 +1870,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      *  which the (modification/content) change number is greater.
      * 
      * @perms {@link ACL#RIGHT_DELETE} on the item
-     * @return A fully-populated <code>PendingDelete</code> object. */
+     * @return A fully-populated <tt>PendingDelete</tt> object. */
     PendingDelete getDeletionInfo() throws ServiceException {
         if (!canAccess(ACL.RIGHT_DELETE))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
