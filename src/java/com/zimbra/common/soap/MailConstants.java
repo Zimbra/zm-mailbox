@@ -421,6 +421,7 @@ public class MailConstants {
     public static final String A_CAL_COMPONENT_NUM = "compNum";
     public static final String A_CAL_SEQUENCE = "seq";
     public static final String A_CAL_IS_EXCEPTION = "ex";
+    public static final String A_CAL_RANGE = "range";
     public static final String A_CAL_RECURRENCE_ID = "recurId";
     public static final String A_CAL_RECURRENCE_RANGE_TYPE = "rangeType";
     public static final String A_CAL_START_TIME = "s";
