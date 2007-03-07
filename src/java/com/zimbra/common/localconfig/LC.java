@@ -421,7 +421,7 @@ public class LC {
         ldap_host.setDoc("LDAP host to use.  Deprecated - please use ldap_url instead.");
 
         ldap_log_level = new KnownKey("ldap_log_level");
-        ldap_log_level.setDefault("0");
+        ldap_log_level.setDefault("32768");
         ldap_log_level.setDoc("LDAP logging level");
 
         ldap_port = new KnownKey("ldap_port");
