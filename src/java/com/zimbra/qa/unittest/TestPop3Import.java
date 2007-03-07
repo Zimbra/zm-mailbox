@@ -67,20 +67,31 @@ public class TestPop3Import extends TestCase {
         DataSource ds = getDataSource();
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
 
-        // Create set of id's
+        // Create set of id's.  Id's are the same characters in different
+        // case, to test case-sensitivity (bug 15090)
+        String uid1 = "myUID";
+        String uid2 = "myUid";
         Set<String> uids = new HashSet<String>();
-        uids.add("1");
-        uids.add("2");
+        uids.add(uid1);
+        uids.add(uid2);
         
         // Make sure no id's match
         Set<String> matchingUids = DbPop3Message.getMatchingUids(mbox, ds, uids);
         assertEquals("Test 1: set size", 0, matchingUids.size());
         
-        // Store UID 1 and make sure it matches
-        DbPop3Message.storeUid(mbox, ds.getId(), "1", 1);
+        // Store uid1 and make sure it matches
+        DbPop3Message.storeUid(mbox, ds.getId(), uid1, Mailbox.ID_FOLDER_INBOX);
         matchingUids = DbPop3Message.getMatchingUids(mbox, ds, uids);
         assertEquals("Test 2: set size", 1, matchingUids.size());
-        assertTrue("Test 2: did not find UID 1", matchingUids.contains("1"));
+        assertTrue("Test 2: did not find uid1", matchingUids.contains(uid1));
+        assertFalse("Test 2: found uid2", matchingUids.contains(uid2));
+        
+        // Store uid2 and make sure it matches
+        DbPop3Message.storeUid(mbox, ds.getId(), uid2, Mailbox.ID_FOLDER_TRASH);
+        matchingUids = DbPop3Message.getMatchingUids(mbox, ds, uids);
+        assertEquals("Test 3: set size", 2, matchingUids.size());
+        assertTrue("Test 3: did not find uid1", matchingUids.contains(uid1));
+        assertTrue("Test 3: did not find uid2", matchingUids.contains(uid2));
         
         // Test delete
         DbPop3Message.deleteUids(mbox, ds.getId());
@@ -111,7 +122,7 @@ public class TestPop3Import extends TestCase {
     }
     
     /**
-     * Confirms that POP3 data is deleted when the mailbox is deleted.  Any leftover POP3
+     * Confirms that POP3 data is deleted when the mailbox is deleted (bug 14574).  Any leftover POP3
      * data will cause a foreign key violation.
      */
     public void testDeleteMailbox()
@@ -134,7 +145,7 @@ public class TestPop3Import extends TestCase {
 
         // Reinitialize persisted UID's
         DbPop3Message.deleteUids(mbox, ds.getId());
-        DbPop3Message.storeUid(mbox, ds.getId(), "1", 1);
+        DbPop3Message.storeUid(mbox, ds.getId(), "1", Mailbox.ID_FOLDER_INBOX);
 
         // Modify data source and make sure the existing
         // UID's were deleted
@@ -195,6 +206,8 @@ public class TestPop3Import extends TestCase {
         DataSource ds = getDataSource();
         if (ds != null) {
             Account account = TestUtil.getAccount(USER_NAME);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            DbPop3Message.deleteUids(mbox, ds.getId());
             prov.deleteDataSource(account, ds.getId());
         }
         
