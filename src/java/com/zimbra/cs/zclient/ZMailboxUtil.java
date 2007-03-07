@@ -49,6 +49,9 @@ import com.zimbra.cs.zclient.ZMailbox.OwnerBy;
 import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
 import com.zimbra.cs.zclient.ZMailbox.SharedItemBy;
 import com.zimbra.cs.zclient.ZMailbox.ZApptSummaryResult;
+import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage;
+import com.zimbra.cs.zclient.ZMailbox.ZCreateAppointmentResponse;
+import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.MessagePart;
 import com.zimbra.cs.zclient.ZMessage.ZMimePart;
 import com.zimbra.cs.zclient.ZTag.Color;
 import com.zimbra.cs.zclient.event.ZCreateEvent;
@@ -56,6 +59,9 @@ import com.zimbra.cs.zclient.event.ZDeleteEvent;
 import com.zimbra.cs.zclient.event.ZEventHandler;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZRefreshEvent;
+import com.zimbra.cs.zclient.ZInvite.ZComponent;
+import com.zimbra.cs.zclient.ZInvite.ZDateTime;
+import com.zimbra.cs.zclient.ZInvite.ZOrganizer;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -1075,7 +1081,49 @@ public class ZMailboxUtil implements DebugListener {
 				}
     		}
     	}
+        //testCreateAppt();
+
     }
+
+    /*
+
+
+<CreateAppointmentRequest xmlns="urn:zimbraMail">
+ <m d="1173202005230" l="10">
+  <inv>
+   <comp status="CONF" fb="B" transp="O" allDay="0" name="test yearly">
+    <s tz="(GMT-08.00) Pacific Time (US &amp; Canada)" d="20070308T130000"/>
+    <e tz="(GMT-08.00) Pacific Time (US &amp; Canada)" d="20070308T150000"/>
+      <or a="user1@slapshot.liquidsys.com"/>
+       <recur>
+        <add>
+         <rule freq="YEA">
+            <interval ival="1"/>
+         </rule>
+        </add>
+      </recur>
+    </comp></inv><su>test yearly</su><mp ct="multipart/alternative"><mp ct="text/plain"><content></content></mp><mp ct="text/html"><content>&lt;html&gt;&lt;body&gt;&lt;/body&gt;&lt;/html&gt;</content></mp></mp></m></CreateAppointmentRequest>
+     */
+
+    private void testCreateAppt() throws ServiceException {
+
+        ZMailbox.ZOutgoingMessage message = new ZOutgoingMessage();
+        message.setSubject("test zclient API");
+        message.setMessageParts(new ArrayList<MessagePart>());
+        message.getMessageParts().add(new MessagePart("text/plain", "this is da body"));
+        ZInvite invite = new ZInvite();
+        ZComponent comp = new ZComponent();
+        comp.setStart(new ZDateTime("20070309T170000", mMbox.getPrefs().getTimeZoneWindowsId()));
+        comp.setEnd(new ZDateTime("20070309T210000", mMbox.getPrefs().getTimeZoneWindowsId()));
+        comp.setOrganizer(new ZOrganizer(mMbox.getName()));
+        comp.setName("test zclient API");
+        comp.setLocation("Zimbra");
+        invite.getComponents().add(comp);
+
+        ZCreateAppointmentResponse response = mMbox.createAppointment(ZFolder.ID_CALENDAR, null, message, invite, null);
+        System.out.printf("calItemId(%s) inviteId(%s)%n", response.getCalItemId(), response.getInviteId());
+    }
+
 
     private void doGetAppointmentSummaries(String args[]) throws ServiceException {
         long startTime = DateUtil.parseDateSpecifier(args[0], new Date().getTime());

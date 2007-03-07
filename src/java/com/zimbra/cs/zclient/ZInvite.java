@@ -39,8 +39,9 @@ public class ZInvite {
     private List<ZComponent> mComponents;
     private ZInviteType mType;
 
-    public ZInvite() throws ServiceException {
-
+    public ZInvite() {
+        mTimeZones = new ArrayList<ZTimeZone>();
+        mComponents = new ArrayList<ZComponent>();
     }
     
     public ZInvite(Element e) throws ServiceException {
@@ -727,6 +728,15 @@ public class ZInvite {
         public ZDateTime() {
 
         }
+
+        public ZDateTime(String dateTime) {
+            mDateTime = dateTime;
+        }
+
+        public ZDateTime(String dateTime, String timeZone) {
+            mDateTime = dateTime;
+            mTimeZoneId = timeZone;
+        }
         
         public ZDateTime(Element e) throws ServiceException {
             mDateTime = e.getAttribute(MailConstants.A_CAL_DATETIME);
@@ -1069,6 +1079,11 @@ public class ZInvite {
 
         public ZOrganizer() {
             super();
+        }
+
+        public ZOrganizer(String address) {
+            super();
+            setAddress(address);
         }
 
         public ZOrganizer(Element e) throws ServiceException {
