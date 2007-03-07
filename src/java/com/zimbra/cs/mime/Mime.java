@@ -313,7 +313,7 @@ public class Mime {
 
     public static void repairTransferEncoding(MimePart mp) throws MessagingException {
         String cte = mp.getHeader("Content-Transfer-Encoding", null);
-        if (cte != null && !TRANSFER_ENCODINGS.contains(cte.toLowerCase()))
+        if (cte != null && !TRANSFER_ENCODINGS.contains(cte.toLowerCase().trim()))
             mp.removeHeader("Content-Transfer-Encoding");
     }
 
