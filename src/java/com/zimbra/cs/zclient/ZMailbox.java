@@ -1987,7 +1987,6 @@ public class ZMailbox {
     }
 
     public ZActionResult updateFolder(String id, String name, String parentId, Color newColor, String flags, List<ZGrant> acl) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.FOLDER_ACTION_REQUEST);
         Element action = folderAction("update", id);
         if (name != null && name.length() > 0)
             action.addAttribute(MailConstants.A_NAME, name);
@@ -2743,5 +2742,43 @@ public class ZMailbox {
 
         }
         return summaries;
+    }
+
+    public static class ZCreateAppointmentResponse {
+
+        private String mCalItemId;
+        private String mInviteId;
+
+        public ZCreateAppointmentResponse(Element response) {
+            mCalItemId = response.getAttribute(MailConstants.A_CAL_ID, null);
+            mInviteId = response.getAttribute(MailConstants.A_CAL_INV_ID, null);
+        }
+
+        public String getCalItemId() {
+            return mCalItemId;
+        }
+
+        public String getInviteId() {
+            return mInviteId;
+        }
+    }
+    
+    public ZCreateAppointmentResponse createAppointment(String folderId, String flags, ZOutgoingMessage message, ZInvite invite, String optionalUid) throws ServiceException {
+        XMLElement req = new XMLElement(MailConstants.CREATE_APPOINTMENT_REQUEST);
+
+        //noinspection UnusedDeclaration
+        Element mEl = getMessageElement(req, message);
+
+        if (flags != null)
+            mEl.addAttribute(MailConstants.A_FLAGS, flags);
+
+        if (folderId != null)
+            mEl.addAttribute(MailConstants.A_FOLDER, folderId);
+
+        Element invEl = invite.toElement(mEl);
+        if (optionalUid != null)
+            invEl.addAttribute(MailConstants.A_UID, optionalUid);
+
+        return new ZCreateAppointmentResponse(invoke(req));
     }
 }

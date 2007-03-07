@@ -1126,7 +1126,7 @@ public class ZInvite {
             if (mRole != null) attEl.addAttribute(MailConstants.A_CAL_ROLE, mRole.name());
             if (mParticipantStatus != null) attEl.addAttribute(MailConstants.A_CAL_PARTSTAT, mParticipantStatus.name());
             if (mRSVP) attEl.addAttribute(MailConstants.A_CAL_RSVP, mRSVP);
-            if (mCalendarUserType != null) attEl.addAttribute(MailConstants.A_CAL_CUTYPE, mCalendarUserType.name());
+            if (mCalendarUserType != null && mCalendarUserType != ZCalendarUserType.IND) attEl.addAttribute(MailConstants.A_CAL_CUTYPE, mCalendarUserType.name());
             if (mMember != null) attEl.addAttribute(MailConstants.A_CAL_MEMBER, mMember);
             if (mDelegatedTo != null) attEl.addAttribute(MailConstants.A_CAL_DELEGATED_TO, mDelegatedTo);
             if (mDelegatedFrom != null) attEl.addAttribute(MailConstants.A_CAL_DELEGATED_FROM, mDelegatedFrom);
@@ -1587,7 +1587,7 @@ public class ZInvite {
         private ZFrequency mFrequency;
         private ZDateTime mUntilDate;
         private int mCount;
-        private int mInterval;
+        private int mInterval = 1;
         private List<ZByRule> mByRules;
         private ZWeekDay mWeekStart;
 
