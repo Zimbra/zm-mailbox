@@ -203,7 +203,7 @@ public class Document extends MailItem {
         }
     }
 
-    public synchronized void purgeOldRevisions(int revToKeep) throws ServiceException, IOException {
+    public synchronized void purgeOldRevisions(int revToKeep) throws ServiceException {
         int last = mRevisionList.size() - revToKeep;
         StoreManager sm = StoreManager.getInstance();
         while (last > 0) {
@@ -216,7 +216,7 @@ public class Document extends MailItem {
             int revid = (int)rev.getLong(Metadata.FN_REV_ID);
             if (revid == 0)
                 break;
-            sm.delete(sm.getMailboxBlob(getMailbox(), getId(), revid, getVolumeId()));
+            markBlobForDeletion(sm.getMailboxBlob(getMailbox(), getId(), revid, getVolumeId()));
             rev.put(Metadata.FN_REV_ID, 0);
             mRevisionList.mList.set(last, rev.mMap);  // rev is a copy.
         }

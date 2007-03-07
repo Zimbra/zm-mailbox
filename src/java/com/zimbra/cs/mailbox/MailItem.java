@@ -1024,6 +1024,26 @@ public abstract class MailItem implements Comparable<MailItem> {
                 mMailbox.uncacheItem(childId);
     }
 
+    /** Adds this item to the {@link Mailbox}'s list of blobs to be removed
+     *  upon <u>successful</u> completion of the current transaction. */
+    void markBlobForDeletion() {
+        try {
+            markBlobForDeletion(getBlob());
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.warn("error queuing blob for deletion for id: " + mId + ", change: " + mData.modContent, e);
+        }
+    }
+
+    /** Adds this {@link MailboxBlob} to the {@link Mailbox}'s list of blobs
+     *  to be removed upon <u>successful</u> completion of the current
+     *  transaction. */
+    void markBlobForDeletion(MailboxBlob mblob) {
+        if (mblob == null)
+            return;
+        PendingDelete info = new PendingDelete();
+        info.blobs.add(mblob);
+        mMailbox.markOtherItemDirty(info);
+    }
 
     /** Updates various lists and counts as the result of item creation.  This
      *  method should always be called immediately after a new item is created
@@ -1091,12 +1111,8 @@ public abstract class MailItem implements Comparable<MailItem> {
             return null;
 
         // delete the old blob *unless* we've already rewritten it in this transaction
-        if (getSavedSequence() != mMailbox.getOperationChangeID()) {
-            // mark the old blob as ready for deletion
-            PendingDelete info = getDeletionInfo();
-            info.itemIds.clear();  info.unreadIds.clear();  info.indexIds.clear();
-            mMailbox.markOtherItemDirty(info);
-        }
+        if (getSavedSequence() != mMailbox.getOperationChangeID())
+            markBlobForDeletion();
 
         // remove the content from the cache
         MessageCache.purge(this);
@@ -1126,8 +1142,8 @@ public abstract class MailItem implements Comparable<MailItem> {
         // write the content to the store
         StoreManager sm = StoreManager.getInstance();
         Blob blob = sm.storeIncoming(data, digest, null, volumeId);
-        MailboxBlob mb = sm.renameTo(blob, mMailbox, mId, getSavedSequence(), volumeId);
-        mMailbox.markOtherItemDirty(mb);
+        MailboxBlob mblob = sm.renameTo(blob, mMailbox, mId, getSavedSequence(), volumeId);
+        mMailbox.markOtherItemDirty(mblob);
 
         return blob;
     }

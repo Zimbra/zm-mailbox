@@ -70,7 +70,6 @@ import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.common.service.ServiceException;
@@ -1162,14 +1161,11 @@ public abstract class CalendarItem extends MailItem {
                 return;
             
             if (mmp.getCount() == 0) {
-                StoreManager sm = StoreManager.getInstance();
-                sm.delete(getBlob());
+                markBlobForDeletion();
             } else {
                 // must call this explicitly or else new part won't be added...
                 mm.setContent(mmp);
-                
                 mm.saveChanges();
-                
                 storeUpdatedBlob(mm, volumeId);
             }
         } catch (MessagingException e) {
@@ -1177,7 +1173,6 @@ public abstract class CalendarItem extends MailItem {
         } catch (IOException e) {
             throw ServiceException.FAILURE("IOException", e);
         }
-        
     }
 
     public static class ReplyInfo {
