@@ -659,8 +659,8 @@ OR
               OR
               <dur DURATION>
            )   
-           <or d="friendly name" url="address"> // organizer
-           <at d="friendly name" url="address" role="ROLE" ptst="status"" [cutype="CUTYPE"]/>* // attendee
+           <or d="friendly name" a="address"> // organizer
+           <at d="friendly name" a="address" role="ROLE" ptst="status"" [cutype="CUTYPE"]/>* // attendee
              // role = CHAir, REQuired, OPTional, NON-participant (ie informational)
              // ptst = NEeds-action, TEntative, ACcept, DEclined, DG (delegated), COmpleted (todo), IN-process (todo)
              // cutype (calendar user type) = INDividual, GROup, RESource, ROOm, UNKnown

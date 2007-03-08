@@ -250,7 +250,8 @@ public class ZAttendee extends CalendarUser {
     public Element toXml(Element parent) {
         Element atElt = parent.addElement(MailConstants.E_CAL_ATTENDEE);
         // address
-        atElt.addAttribute(MailConstants.A_URL, getAddress());
+        atElt.addAttribute(MailConstants.A_ADDRESS, getAddress());
+        atElt.addAttribute(MailConstants.A_URL, getAddress());  // for backward compatibility
         // CN
         if (hasCn())
             atElt.addAttribute(MailConstants.A_DISPLAY, getCn());

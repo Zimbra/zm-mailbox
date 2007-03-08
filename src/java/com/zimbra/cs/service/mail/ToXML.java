@@ -1204,7 +1204,8 @@ public class ToXML {
                 ZOrganizer org = invite.getOrganizer();
                 Element orgElt = e.addUniqueElement(MailConstants.E_CAL_ORGANIZER);
                 String str = org.getAddress();
-                orgElt.addAttribute(MailConstants.A_URL, str);
+                orgElt.addAttribute(MailConstants.A_ADDRESS, str);
+                orgElt.addAttribute(MailConstants.A_URL, str);  // for backward compatibility
                 if (org.hasCn())
                     orgElt.addAttribute(MailConstants.A_DISPLAY, org.getCn());
                 if (org.hasSentBy())
