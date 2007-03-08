@@ -117,6 +117,11 @@ public class ZimbraLog {
     public static final Log lmtp = LogFactory.getLog("zimbra.lmtp");
     
     /**
+     * the "zimbra.smtp" logger. For SMTP-related events.
+     */
+    public static final Log smtp = LogFactory.getLog("zimbra.smtp");
+    
+    /**
      * the "zimbra.imap" logger. For IMAP-related events.
      */
     public static final Log imap = LogFactory.getLog("zimbra.imap");
@@ -254,7 +259,7 @@ public class ZimbraLog {
     public static String getContext() {
         return NDC.peek();
     }
-
+    
     /**
      * remote management.
      */
