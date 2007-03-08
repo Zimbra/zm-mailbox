@@ -25,9 +25,24 @@
 
 package com.zimbra.cs.mailbox;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Properties;
+
+import javax.mail.Address;
+import javax.mail.MessagingException;
+import javax.mail.SendFailedException;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.Message.RecipientType;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
@@ -47,28 +62,10 @@ import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.zclient.ZMailbox;
 
-import javax.mail.Address;
-import javax.mail.Message.RecipientType;
-import javax.mail.MessagingException;
-import javax.mail.SendFailedException;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
-
 public class MailSender {
 
     public static final String MSGTYPE_REPLY = Flag.getAbbreviation(Flag.ID_FLAG_REPLIED) + "";
     public static final String MSGTYPE_FORWARD = Flag.getAbbreviation(Flag.ID_FLAG_FORWARDED) + "";
-
-    static Log sLog = LogFactory.getLog(MailSender.class);
 
     MailSender()  { }
 
@@ -143,7 +140,7 @@ public class MailSender {
                 else
                     zmbox.deleteMessage("" + msgId);
             } catch (ServiceException e) {
-                sLog.warn("ignoring error while deleting saved sent message: " + msgId, e);
+                ZimbraLog.smtp.warn("ignoring error while deleting saved sent message: " + msgId, e);
             }
         }
     }
@@ -176,6 +173,8 @@ public class MailSender {
                                   boolean ignoreFailedAddresses, boolean replyToSender)
     throws ServiceException {
         try {
+            logMessage(mm, origMsgId, uploads, replyType);
+            
             Account acct = mbox.getAccount();
             Account authuser = octxt == null ? null : octxt.getAuthenticatedUser();
             boolean isAdminRequest = octxt == null ? false : octxt.isUsingAdminPrivileges();
@@ -198,7 +197,7 @@ public class MailSender {
                 for (Class vclass : MimeVisitor.getMutators())
                     ((MimeVisitor) vclass.newInstance()).accept(mm);
             } catch (Exception e) {
-                ZimbraLog.misc.warn("failure to modify outbound message; aborting send", e);
+                ZimbraLog.smtp.warn("failure to modify outbound message; aborting send", e);
                 throw ServiceException.FAILURE("mutator error; aborting send", e);
             }
 
@@ -240,7 +239,7 @@ public class MailSender {
                             String msgId = zmbox.addMessage(sentFolder, "s", null, mm.getSentDate().getTime(), baos.toByteArray(), true);
                             rdata = new RollbackData(zmbox, authuser, msgId);
                         } catch (Exception e) {
-                            ZimbraLog.misc.warn("could not save to remote sent folder (perm denied); continuing", e);
+                            ZimbraLog.smtp.warn("could not save to remote sent folder (perm denied); continuing", e);
                         }
                     }
                 }
@@ -274,7 +273,7 @@ public class MailSender {
                     try {
                         mbox.createContact(octxt, addr.getAttributes(), Mailbox.ID_FOLDER_AUTO_CONTACTS, null);
                     } catch (ServiceException e) {
-                        sLog.warn("ignoring error while auto-adding contact", e);
+                        ZimbraLog.smtp.warn("ignoring error while auto-adding contact", e);
                     }
                 }
             }
@@ -282,7 +281,7 @@ public class MailSender {
             return (rdata != null ? rdata.msgId : null);
 
         } catch (SendFailedException sfe) {
-            sLog.warn("exception ocurred during SendMsg", sfe);
+            ZimbraLog.smtp.warn("exception ocurred during SendMsg", sfe);
             Address[] invalidAddrs = sfe.getInvalidAddresses();
             Address[] validUnsentAddrs = sfe.getValidUnsentAddresses();
             if (invalidAddrs != null && invalidAddrs.length > 0) { 
@@ -302,11 +301,33 @@ public class MailSender {
                 throw MailServiceException.SEND_FAILURE("SMTP server reported: " + sfe.getMessage().trim(), sfe, invalidAddrs, validUnsentAddrs);
             }
         } catch (IOException ioe) {
-            sLog.warn("exception occured during send msg", ioe);
+            ZimbraLog.smtp.warn("exception occured during send msg", ioe);
             throw ServiceException.FAILURE("IOException", ioe);
         } catch (MessagingException me) {
-            sLog.warn("exception occurred during SendMsg", me);
+            ZimbraLog.smtp.warn("exception occurred during SendMsg", me);
             throw ServiceException.FAILURE("MessagingException", me);
+        }
+    }
+
+    private void logMessage(MimeMessage mm, int origMsgId, List<Upload> uploads, String replyType) {
+        // Log sent message info
+        if (ZimbraLog.smtp.isInfoEnabled()) {
+            StringBuilder msg = new StringBuilder("Sending message: ");
+            try {
+                msg.append("Message-ID=" + mm.getMessageID());
+            } catch (MessagingException e) {
+                msg.append(e);
+            }
+            if (origMsgId > 0) {
+                msg.append(", origMsgId=" + origMsgId);
+            }
+            if (uploads != null && uploads.size() > 0) {
+                msg.append(", uploads=" + uploads);
+            }
+            if (replyType != null) {
+                msg.append(", replyType=" + replyType);
+            }
+            ZimbraLog.smtp.info(msg);
         }
     }
 

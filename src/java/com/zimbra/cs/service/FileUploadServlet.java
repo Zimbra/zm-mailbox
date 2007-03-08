@@ -33,6 +33,7 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -69,12 +70,14 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.FileUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.Zimbra;
 
 public class FileUploadServlet extends ZimbraServlet {
@@ -118,8 +121,8 @@ public class FileUploadServlet extends ZimbraServlet {
         void purge()  { if (file != null)  file.delete(); }
 
         public String toString() {
-            return "Upload: {accountId: " + accountId + ", time: " + time +
-                   ", uploadId: " + uuid + ", " + (file == null ? "no file" : name) + "}";
+            return "Upload: { accountId=" + accountId + ", time=" + new Date(time) +
+                   ", uploadId=" + uuid + ", " + (file == null ? "no file" : name) + "}";
         }
     }
 
@@ -297,6 +300,8 @@ public class FileUploadServlet extends ZimbraServlet {
         List<FileItem> items = null;
         String attachmentId = null;
         String reqId = null;
+        ZimbraLog.addIpToContext(req.getRemoteAddr());
+        
         do {
             // file upload requires authentication
             int adminPort = -1;
@@ -319,6 +324,7 @@ public class FileUploadServlet extends ZimbraServlet {
                     Account acct = prov.get(AccountBy.id, at.getAccountId());
                     if (acct == null)
                         throw AccountServiceException.NO_SUCH_ACCOUNT(at.getAccountId());
+                    ZimbraLog.addAccountNameToContext(acct.getName());
                     if (!Provisioning.onLocalServer(acct)) {
                         proxyServletRequest(req, resp, prov.getServer(acct), null);
                         return;
@@ -329,7 +335,10 @@ public class FileUploadServlet extends ZimbraServlet {
                     else if (!acct.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
                         throw AccountServiceException.ACCOUNT_INACTIVE(acct.getName());
                     // fetching the mailbox will except if it's in maintenance mode
-                    MailboxManager.getInstance().getMailboxByAccountId(acct.getId(), false);
+                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId(), false);
+                    if (mbox != null) {
+                        ZimbraLog.addMboxToContext(mbox.getId());
+                    }
                 } catch (ServiceException e) {
                     throw new ServletException(e);
                 }
@@ -404,7 +413,7 @@ public class FileUploadServlet extends ZimbraServlet {
                         name = fi.getName();
                     Upload up = new Upload(at.getAccountId(), fi, name);
 
-                    mLog.debug("doPost(): added " + up);
+                    ZimbraLog.mailbox.info("FileUploadServlet received %s", up);
                     synchronized (mPending) {
                     	mPending.put(up.uuid, up);
                     }
