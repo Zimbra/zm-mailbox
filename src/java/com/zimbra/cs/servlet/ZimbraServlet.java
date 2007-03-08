@@ -193,17 +193,17 @@ public class ZimbraServlet extends HttpServlet {
         return getAuthTokenFromCookieImpl(req, resp, COOKIE_ZM_AUTH_TOKEN, false);
     }
 
-    protected static AuthToken getAuthTokenFromCookie(HttpServletRequest req, HttpServletResponse resp, boolean doNotSendHttpError)
+    public static AuthToken getAuthTokenFromCookie(HttpServletRequest req, HttpServletResponse resp, boolean doNotSendHttpError)
     throws IOException {
         return getAuthTokenFromCookieImpl(req, resp, COOKIE_ZM_AUTH_TOKEN, doNotSendHttpError);
     }
 
-    protected static AuthToken getAdminAuthTokenFromCookie(HttpServletRequest req, HttpServletResponse resp)
+    public static AuthToken getAdminAuthTokenFromCookie(HttpServletRequest req, HttpServletResponse resp)
     throws IOException {
         return getAuthTokenFromCookieImpl(req, resp, COOKIE_ZM_ADMIN_AUTH_TOKEN, false);
     }
 
-    protected static AuthToken getAdminAuthTokenFromCookie(HttpServletRequest req, HttpServletResponse resp, boolean doNotSendHttpError)
+    public static AuthToken getAdminAuthTokenFromCookie(HttpServletRequest req, HttpServletResponse resp, boolean doNotSendHttpError)
     throws IOException {
         return getAuthTokenFromCookieImpl(req, resp, COOKIE_ZM_ADMIN_AUTH_TOKEN, doNotSendHttpError);
     }
@@ -353,7 +353,7 @@ public class ZimbraServlet extends HttpServlet {
     }
     
 
-    protected Account cookieAuthRequest(HttpServletRequest req, HttpServletResponse resp, boolean doNotSendHttpError) 
+    public Account cookieAuthRequest(HttpServletRequest req, HttpServletResponse resp, boolean doNotSendHttpError) 
     throws IOException, ServiceException {
         int adminPort = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, -1);
         boolean isAdminRequest = (req.getLocalPort() == adminPort);
@@ -361,7 +361,7 @@ public class ZimbraServlet extends HttpServlet {
         return at == null ? null : Provisioning.getInstance().get(AccountBy.id, at.getAccountId()); 
     }
 
-    protected Account basicAuthRequest(HttpServletRequest req, HttpServletResponse resp, boolean sendChallenge)
+    public Account basicAuthRequest(HttpServletRequest req, HttpServletResponse resp, boolean sendChallenge)
     throws IOException, ServiceException {
         String auth = req.getHeader("Authorization");
 
