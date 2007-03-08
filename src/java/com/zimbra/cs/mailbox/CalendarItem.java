@@ -794,7 +794,7 @@ public abstract class CalendarItem extends MailItem {
                     idxsToRemove.add(0, new Integer(i));
                     
                     // clean up any old REPLYs that have been made obscelete by this new invite
-                    mReplyList.removeObsceleteEntries(newInvite.getRecurId(), newInvite.getSeqNo(), newInvite.getDTStamp());
+                    mReplyList.removeObsoleteEntries(newInvite.getRecurId(), newInvite.getSeqNo(), newInvite.getDTStamp());
                     
                     prev = cur;
                     modifiedCalItem = true;
@@ -1278,7 +1278,7 @@ public abstract class CalendarItem extends MailItem {
             return toRet;
         }
         
-        void removeObsceleteEntries(RecurId recurId, int seqNo, long dtStamp) {
+        void removeObsoleteEntries(RecurId recurId, int seqNo, long dtStamp) {
             for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
                 ReplyInfo cur = (ReplyInfo)iter.next();
                 
