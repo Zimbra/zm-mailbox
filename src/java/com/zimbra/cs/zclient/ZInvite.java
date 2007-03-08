@@ -993,19 +993,19 @@ public class ZInvite {
         private String mUrl;
         private String mPersonalName;
         private String mSentBy;
-        private String mDir;
+        private String mDirectoryUrl;
         private String mLanguage;
 
         public ZCalendarUser() {
 
         }
-        
-        public ZCalendarUser(Element e) throws ServiceException {
+
+        public ZCalendarUser(Element e) {
             mAddress = e.getAttribute(MailConstants.A_ADDRESS, null);
             mUrl = e.getAttribute(MailConstants.A_URL, null);
             mPersonalName = e.getAttribute(MailConstants.A_DISPLAY, null);
             mSentBy = e.getAttribute(MailConstants.A_CAL_SENTBY, null);
-            mDir = e.getAttribute(MailConstants.A_CAL_DIR, null);
+            mDirectoryUrl = e.getAttribute(MailConstants.A_CAL_DIR, null);
             mLanguage = e.getAttribute(MailConstants.A_CAL_LANGUAGE, null);
         }
 
@@ -1041,12 +1041,12 @@ public class ZInvite {
             mSentBy = sentBy;
         }
 
-        public String getDir() {
-            return mDir;
+        public String getDirectoryUrl() {
+            return mDirectoryUrl;
         }
 
-        public void setDir(String dir) {
-            mDir = dir;
+        public void setDirectoryUrl(String dir) {
+            mDirectoryUrl = dir;
         }
 
         public String getLanguage() {
@@ -1062,7 +1062,7 @@ public class ZInvite {
             sb.add("url", mUrl);
             sb.add("personalName", mPersonalName);
             sb.add("sentBy", mSentBy);
-            sb.add("dir", mDir);
+            sb.add("dir", mDirectoryUrl);
             sb.add("language", mLanguage);
         }
 
@@ -1086,7 +1086,7 @@ public class ZInvite {
             setAddress(address);
         }
 
-        public ZOrganizer(Element e) throws ServiceException {
+        public ZOrganizer(Element e) {
             super(e);
         }
 
@@ -1097,7 +1097,7 @@ public class ZInvite {
             if (getUrl() != null) orEl.addAttribute(MailConstants.A_URL, getUrl());
             if (getPersonalName() != null) orEl.addAttribute(MailConstants.A_DISPLAY, getPersonalName());
             if (getSentBy() != null) orEl.addAttribute(MailConstants.A_CAL_SENTBY, getSentBy());
-            if (getDir() != null) orEl.addAttribute(MailConstants.A_CAL_DIR, getDir());
+            if (getDirectoryUrl() != null) orEl.addAttribute(MailConstants.A_CAL_DIR, getDirectoryUrl());
             if (getLanguage() != null) orEl.addAttribute(MailConstants.A_CAL_LANGUAGE, getLanguage());
             
             return orEl;
@@ -1136,7 +1136,7 @@ public class ZInvite {
             if (getUrl() != null) attEl.addAttribute(MailConstants.A_URL, getUrl());
             if (getPersonalName() != null) attEl.addAttribute(MailConstants.A_DISPLAY, getPersonalName());
             if (getSentBy() != null) attEl.addAttribute(MailConstants.A_CAL_SENTBY, getSentBy());
-            if (getDir() != null) attEl.addAttribute(MailConstants.A_CAL_DIR, getDir());
+            if (getDirectoryUrl() != null) attEl.addAttribute(MailConstants.A_CAL_DIR, getDirectoryUrl());
             if (getLanguage() != null) attEl.addAttribute(MailConstants.A_CAL_LANGUAGE, getLanguage());
             if (mRole != null) attEl.addAttribute(MailConstants.A_CAL_ROLE, mRole.name());
             if (mParticipantStatus != null) attEl.addAttribute(MailConstants.A_CAL_PARTSTAT, mParticipantStatus.name());
