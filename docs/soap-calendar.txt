@@ -364,8 +364,8 @@
 //       6/29 9am
 //
 //  So, if a user clicks on the 6/22 10am appointment and wants to modify it, you MUST NOT
-//  try to use <CreateAppointmentException s="6/22 10am"> to modify it!
-//  You MUST use ModifyAppointmentException instead!!!
+//  try to use <CreateAppointmentExceptionRequest> to modify it!
+//  You MUST use ModifyAppointmentRequest instead!!!
 //
 //  On the other hand, if a user clicks on the 6/15 9am appointment and wants to modify it,
 //  then this is the right API to use.
@@ -729,8 +729,8 @@ OR
 //       6/29 9am
 //
 //  So, if a user clicks on the 6/22 10am appointment and wants to modify it, you MUST NOT
-//  try to use <CreateAppointmentException s="6/22 10am"> to modify it!
-//  You MUST use ModifyAppointmentException instead!!!
+//  try to use <CreateAppointmentExceptionRequest> to modify it!
+//  You MUST use ModifyAppointmentRequest instead!!!
 //
 //  On the other hand, if a user clicks on the 6/15 9am appointment and wants to modify it,
 //  then this is the right API to use.
