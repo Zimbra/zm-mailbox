@@ -270,6 +270,14 @@ public class AdminConstants {
     // calendar time zone fixup
     public static final QName FIX_CALENDAR_TIME_ZONE_REQUEST = QName.get("FixCalendarTimeZoneRequest", NAMESPACE);
     public static final QName FIX_CALENDAR_TIME_ZONE_RESPONSE = QName.get("FixCalendarTimeZoneResponse", NAMESPACE);
+    
+    // WaitSet
+    public static final QName CREATE_WAIT_SET_REQUEST = QName.get("CreateWaitSetRequest", NAMESPACE);
+    public static final QName CREATE_WAIT_SET_RESPONSE = QName.get("CreateWaitSetResponse", NAMESPACE);
+    public static final QName WAIT_MULTIPLE_ACCOUNTS_REQUEST = QName.get("WaitMultipleAccountsRequest", NAMESPACE);
+    public static final QName WAIT_MULTIPLE_ACCOUNTS_RESPONSE = QName.get("WaitMultipleAccountsResponse", NAMESPACE);
+    public static final QName DESTROY_WAIT_SET_REQUEST = QName.get("DestroyWaitSetRequest", NAMESPACE);
+    public static final QName DESTROY_WAIT_SET_RESPONSE = QName.get("DestroyWaitSetResponse", NAMESPACE);
 
     public static final String E_ACCOUNT = "account";
     public static final String E_CALENDAR_RESOURCE = "calresource";
@@ -413,4 +421,15 @@ public class AdminConstants {
     public static final String A_COUNTRY = "country";
     public static final String A_TZFIXUP_AFTER = "after";
     public static final String A_TZFIXUP_SYNC = "sync";
+    
+    public static final String E_WAITSET_ADD = "add";
+    public static final String E_WAITSET_UPDATE = "update";
+    public static final String E_WAITSET_REMOVE = "remove";
+    public static final String E_ERROR = "error";
+    public static final String A_WAITSET_ID = "waitSet";
+    public static final String A_SEQ = "seq";
+    public static final String A_BLOCK = "block";
+    public static final String A_CANCELLED = "cancelled";
+    public static final String A_DEFTYPES = "defTypes";
+    
 }
