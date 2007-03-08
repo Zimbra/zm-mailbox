@@ -2837,6 +2837,11 @@ public class ZMailbox {
 
     public static class ZSendInviteReplyResult {
 
+        public static final String STATUS_OK = "OK";
+        public static final String STATUS_OLD = "OLD";
+        public static final String STATUS_ALREADY_REPLIED = "ALREADY-REPLIED";
+        public static final String STATUS_FAIL = "FAIL";
+
         private String mStatus;
 
         public ZSendInviteReplyResult(Element response) {
@@ -2846,6 +2851,11 @@ public class ZMailbox {
         public String getStatus() {
             return mStatus;
         }
+
+        public boolean isOk() { return mStatus.equals(STATUS_OK); }
+        public boolean isOld() { return mStatus.equals(STATUS_OLD); }
+        public boolean isAlreadyReplied() { return mStatus.equals(STATUS_ALREADY_REPLIED); }
+        public boolean isFail() { return mStatus.equals(STATUS_FAIL); }
     }
 
     public enum ReplyVerb { ACCEPT, COMPLETED, DECLINE, DELEGATED, TENTATIVE }
@@ -2861,11 +2871,11 @@ public class ZMailbox {
         if (tz != null) tz.toElement(req);
 
         if (instance != null) {
-            Element instEl = instance.toElement(MailConstants.E_CAL_EXCEPTION_ID, req);
+            instance.toElement(MailConstants.E_CAL_EXCEPTION_ID, req);
         }
 
         if (message != null) getMessageElement(req, message);
-
+        
         return new ZSendInviteReplyResult(invoke(req));
     }
 
