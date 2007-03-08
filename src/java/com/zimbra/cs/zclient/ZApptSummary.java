@@ -172,8 +172,8 @@ public class ZApptSummary implements ZItem {
             appt.mName = inst.getAttribute(MailConstants.A_NAME, name);
             appt.mLocation = inst.getAttribute(MailConstants.A_CAL_LOCATION, location);
 
-            appt.mInviteId = inviteId;
-            appt.mSeriesInviteId = inst.getAttribute(MailConstants.A_CAL_INV_ID, inviteId);
+            appt.mInviteId = inst.getAttribute(MailConstants.A_CAL_INV_ID, inviteId);
+            appt.mSeriesInviteId = inviteId;
 
             appt.mInviteComponentNumber = inst.getAttribute(MailConstants.A_CAL_COMPONENT_NUM, inviteCompNumber);
             
@@ -274,6 +274,8 @@ public class ZApptSummary implements ZItem {
     public String getLocation() { return mLocation; }
 
     public String getInviteId() { return mInviteId; }
+
+    public String getSeriesInviteId() { return mSeriesInviteId; }
 
     public String getInviteComponentNumber() { return mInviteComponentNumber; }
 

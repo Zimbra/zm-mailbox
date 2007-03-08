@@ -50,7 +50,7 @@ import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
 import com.zimbra.cs.zclient.ZMailbox.SharedItemBy;
 import com.zimbra.cs.zclient.ZMailbox.ZApptSummaryResult;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage;
-import com.zimbra.cs.zclient.ZMailbox.ZCreateAppointmentResponse;
+import com.zimbra.cs.zclient.ZMailbox.ZAppointmentResult;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.MessagePart;
 import com.zimbra.cs.zclient.ZMessage.ZMimePart;
 import com.zimbra.cs.zclient.ZTag.Color;
@@ -1120,7 +1120,7 @@ public class ZMailboxUtil implements DebugListener {
         comp.setLocation("Zimbra");
         invite.getComponents().add(comp);
 
-        ZCreateAppointmentResponse response = mMbox.createAppointment(ZFolder.ID_CALENDAR, null, message, invite, null);
+        ZAppointmentResult response = mMbox.createAppointment(ZFolder.ID_CALENDAR, null, message, invite, null);
         System.out.printf("calItemId(%s) inviteId(%s)%n", response.getCalItemId(), response.getInviteId());
     }
 

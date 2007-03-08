@@ -72,6 +72,8 @@ import com.zimbra.cs.zclient.event.ZModifyMountpointEvent;
 import com.zimbra.cs.zclient.event.ZModifySearchFolderEvent;
 import com.zimbra.cs.zclient.event.ZModifyTagEvent;
 import com.zimbra.cs.zclient.event.ZRefreshEvent;
+import com.zimbra.cs.zclient.ZInvite.ZTimeZone;
+import com.zimbra.cs.zclient.ZInvite.ZDateTime;
 import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
@@ -2744,12 +2746,12 @@ public class ZMailbox {
         return summaries;
     }
 
-    public static class ZCreateAppointmentResponse {
+    public static class ZAppointmentResult {
 
         private String mCalItemId;
         private String mInviteId;
 
-        public ZCreateAppointmentResponse(Element response) {
+        public ZAppointmentResult(Element response) {
             mCalItemId = response.getAttribute(MailConstants.A_CAL_ID, null);
             mInviteId = response.getAttribute(MailConstants.A_CAL_INV_ID, null);
         }
@@ -2763,7 +2765,7 @@ public class ZMailbox {
         }
     }
     
-    public ZCreateAppointmentResponse createAppointment(String folderId, String flags, ZOutgoingMessage message, ZInvite invite, String optionalUid) throws ServiceException {
+    public ZAppointmentResult createAppointment(String folderId, String flags, ZOutgoingMessage message, ZInvite invite, String optionalUid) throws ServiceException {
         XMLElement req = new XMLElement(MailConstants.CREATE_APPOINTMENT_REQUEST);
 
         //noinspection UnusedDeclaration
@@ -2779,6 +2781,98 @@ public class ZMailbox {
         if (optionalUid != null)
             invEl.addAttribute(MailConstants.A_UID, optionalUid);
 
-        return new ZCreateAppointmentResponse(invoke(req));
+        return new ZAppointmentResult(invoke(req));
+    }
+
+    public ZAppointmentResult createAppointmentException(String id, String component, ZInvite.ZDateTime exceptionId, ZOutgoingMessage message, ZInvite invite, String optionalUid) throws ServiceException {
+        XMLElement req = new XMLElement(MailConstants.CREATE_APPOINTMENT_EXCEPTION_REQUEST);
+
+        req.addAttribute(MailConstants.A_ID, id);
+        req.addAttribute(MailConstants.E_INVITE_COMPONENT, component);
+
+        Element mEl = getMessageElement(req, message);
+
+        Element invEl = invite.toElement(mEl);
+
+        exceptionId.toElement(MailConstants.E_CAL_EXCEPTION_ID, invEl);
+
+        if (optionalUid != null)
+            invEl.addAttribute(MailConstants.A_UID, optionalUid);
+
+        return new ZAppointmentResult(invoke(req));
+    }
+
+    public ZAppointmentResult modifyAppointment(String id, String component, ZOutgoingMessage message, ZInvite invite) throws ServiceException {
+        XMLElement req = new XMLElement(MailConstants.CREATE_APPOINTMENT_EXCEPTION_REQUEST);
+
+        req.addAttribute(MailConstants.A_ID, id);
+        req.addAttribute(MailConstants.E_INVITE_COMPONENT, component);
+
+        Element mEl = getMessageElement(req, message);
+        invite.toElement(mEl);
+
+        return new ZAppointmentResult(invoke(req));
+    }
+
+    public enum CancelRange { THISANDFUTURE, THISANDPRIOR }
+
+    public void cancelAppointment(String id, String component, ZTimeZone tz, ZDateTime instance, CancelRange range, ZOutgoingMessage message)  throws ServiceException {
+        XMLElement req = new XMLElement(MailConstants.CANCEL_APPOINTMENT_REQUEST);
+
+        req.addAttribute(MailConstants.A_ID, id);
+        req.addAttribute(MailConstants.E_INVITE_COMPONENT, component);
+
+        if (tz != null) tz.toElement(req);
+
+        if (instance != null) {
+            Element instEl = instance.toElement(MailConstants.E_INSTANCE, req);
+            if (range != null)
+                instEl.addAttribute(MailConstants.A_CAL_RANGE, range.name());
+        }
+        
+        if (message != null) getMessageElement(req, message);
+
+        invoke(req);
+    }
+
+    public static class ZSendInviteReplyResult {
+
+        private String mStatus;
+
+        public ZSendInviteReplyResult(Element response) {
+            mStatus = response.getAttribute(MailConstants.A_STATUS, "OK");
+        }
+
+        public String getStatus() {
+            return mStatus;
+        }
+    }
+
+    public enum ReplyVerb { ACCEPT, COMPLETED, DECLINE, DELEGATED, TENTATIVE }
+
+    public ZSendInviteReplyResult sendInviteReply(String id, String component, ReplyVerb verb, boolean updateOrganizer, ZTimeZone tz, ZDateTime instance, ZOutgoingMessage message)  throws ServiceException {
+        XMLElement req = new XMLElement(MailConstants.SEND_INVITE_REPLY_REQUEST);
+
+        req.addAttribute(MailConstants.A_ID, id);
+        req.addAttribute(MailConstants.A_CAL_COMPONENT_NUM, component);
+        req.addAttribute(MailConstants.A_VERB, verb.name());
+        req.addAttribute(MailConstants.A_CAL_UPDATE_ORGANIZER, updateOrganizer);
+
+        if (tz != null) tz.toElement(req);
+
+        if (instance != null) {
+            Element instEl = instance.toElement(MailConstants.E_CAL_EXCEPTION_ID, req);
+        }
+
+        if (message != null) getMessageElement(req, message);
+
+        return new ZSendInviteReplyResult(invoke(req));
+    }
+
+    public ZAppointment getAppointment(String id) throws ServiceException {
+        XMLElement req = new XMLElement(MailConstants.GET_APPOINTMENT_REQUEST);
+        req.addAttribute(MailConstants.A_ID, id);
+        req.addAttribute(MailConstants.A_SYNC, true);
+        return new ZAppointment(invoke(req));
     }
 }

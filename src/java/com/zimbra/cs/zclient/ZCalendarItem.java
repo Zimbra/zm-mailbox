@@ -31,6 +31,9 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZModifyMessageEvent;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ZCalendarItem implements ZItem {
 
     public enum Flag {
@@ -71,7 +74,7 @@ public class ZCalendarItem implements ZItem {
     private long mDate;
     private long mSize;
     private String mUID;
-    private ZInvite mInvite;
+    private List<ZInvite> mInvites;
 
     public ZCalendarItem(Element e) throws ServiceException {
         mId = e.getAttribute(MailConstants.A_ID);
@@ -81,7 +84,10 @@ public class ZCalendarItem implements ZItem {
         mDate = e.getAttributeLong(MailConstants.A_DATE, 0);
         mFolderId = e.getAttribute(MailConstants.A_FOLDER, null);
         mSize = e.getAttributeLong(MailConstants.A_SIZE);
-        mInvite = new ZInvite(e.getElement(MailConstants.E_INVITE));
+        mInvites = new ArrayList<ZInvite>();
+        for (Element inviteEl : e.listElements(MailConstants.E_INVITE)) {
+            mInvites.add(new ZInvite(inviteEl));
+        }
     }
 
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
@@ -107,8 +113,8 @@ public class ZCalendarItem implements ZItem {
         return mSize;
     }
 
-    public ZInvite getInvite() {
-        return mInvite;
+    public List<ZInvite> getInvites() {
+        return mInvites;
     }
 
     public String getId() {
@@ -132,7 +138,7 @@ public class ZCalendarItem implements ZItem {
         sb.add("folderId", mFolderId);
         sb.add("size", mSize);
         sb.add("uid", mUID);
-        sb.addStruct("invite", mInvite.toString());
+        sb.add("invites", mInvites, false, false);
         sb.endStruct();
         return sb;
     }
