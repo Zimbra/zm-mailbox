@@ -23,12 +23,6 @@
  * ***** END LICENSE BLOCK *****
  */
 
-/*
- * Created on Nov 29, 2004
- *
- * DO NOT INSTANTIATE THIS DIRECTLY -- instead call SessionCache.getNewSession() 
- * to create objects of this type.
- */
 package com.zimbra.cs.session;
 
 import java.io.IOException;
@@ -53,6 +47,11 @@ import com.zimbra.common.util.StringUtil;
 /**
  *  A {@link Session} is identified by an (accountId, sessionID) pair.  A single
  *  account may have multiple active sessions simultaneously.<p>
+ *  
+ *  In general, Sessions are created and managed by the {@link SessionCache} but
+ *  this is not always the case.  Session subclasses  which are not stored in the 
+ *  SessionCache must take special care to manage their own lifetimes (timeouts, 
+ *  etc)
  */
 public abstract class Session {
     protected final String    mAccountId;
@@ -68,7 +67,9 @@ public abstract class Session {
      * Session Type
      */
     public enum Type {
-        SOAP, IMAP, ADMIN, WIKI, SYNCLISTENER, WAITSET;
+        SOAP, IMAP, ADMIN, WIKI, 
+        SYNCLISTENER, 
+        WAITSET;
     }
     
     public Session(String accountId, String sessionId, Type type) throws ServiceException {

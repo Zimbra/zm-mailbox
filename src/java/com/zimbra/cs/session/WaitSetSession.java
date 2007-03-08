@@ -27,39 +27,30 @@ package com.zimbra.cs.session;
 import com.zimbra.common.service.ServiceException;
 
 /**
- * 
+ * A session subclass which is used when an external entity wants to listen on a 
+ * particular account for changes to the mailbox, but doesn't care what exactly
+ * those changes are: presumably because the caller is going to use some sort
+ * of other channel (e.g. IMAP) for synchronizing with the Mailbox.
  */
 public class WaitSetSession extends Session {
+    WaitSet mWs = null;
     
-    WaitSetSession(String accountId, String sessionId) throws ServiceException {
+    WaitSetSession(WaitSet ws, String accountId, String sessionId) throws ServiceException {
         super(accountId, sessionId, Session.Type.WAITSET);
+        mWs = ws;
     }
-
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.session.Session#cleanup()
-     */
+    
     @Override
-    protected void cleanup() {
-    // TODO Auto-generated method stub
+    protected void cleanup() { }
 
-    }
-
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.session.Session#getSessionIdleLifetime()
-     */
     @Override
     protected long getSessionIdleLifetime() {
         // TODO Auto-generated method stub
         return 0;
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.session.Session#notifyPendingChanges(com.zimbra.cs.session.PendingModifications)
-     */
     @Override
     public void notifyPendingChanges(PendingModifications pns) {
-    // TODO Auto-generated method stub
-
+        mWs.signalDataReady(this);
     }
-
 }
