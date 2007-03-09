@@ -44,6 +44,7 @@ import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.mail.ParseMimeMessage.InviteParserResult;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -154,24 +155,20 @@ public class SetCalendarItem extends CalendarRequest {
         } // synchronized(mbox)
     }
     
-    static private SetCalendarItemData getSetCalendarItemData(
-            ZimbraSoapContext zc, Account acct, Mailbox mbox,
-            Element e, ParseMimeMessage.InviteParser parser)
+    static private SetCalendarItemData getSetCalendarItemData(ZimbraSoapContext zc, Account acct, Mailbox mbox, Element e, ParseMimeMessage.InviteParser parser)
     throws ServiceException {
-        String partStatStr = e.getAttribute(MailConstants.A_CAL_PARTSTAT,
-                                            IcalXmlStrMap.PARTSTAT_NEEDS_ACTION);
+        String partStatStr = e.getAttribute(MailConstants.A_CAL_PARTSTAT, IcalXmlStrMap.PARTSTAT_NEEDS_ACTION);
 
         // <M>
         Element msgElem = e.getElement(MailConstants.E_MSG);
 
-
         // check to see whether the entire message has been uploaded under separate cover
         String attachmentId = msgElem.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
-        
         Element contentElement = msgElem.getOptionalElement(MailConstants.E_CONTENT);
         
+        InviteParserResult ipr = null;
+
         MimeMessage mm = null;
-        
         if (attachmentId != null) {
             ParseMimeMessage.MimeMessageData mimeData = new ParseMimeMessage.MimeMessageData();
             mm = SendMsg.parseUploadedMessage(zc, attachmentId, mimeData);
@@ -180,19 +177,23 @@ public class SetCalendarItem extends CalendarRequest {
         } else {
             CalSendData dat = handleMsgElement(zc, msgElem, acct, mbox, parser);
             mm = dat.mMm;
+            ipr = parser.getResult();
         }
-        
+
+        if (ipr == null && msgElem.getOptionalElement(MailConstants.E_INVITE) != null)
+            ipr = parser.parse(zc, mbox.getAccount(), msgElem.getElement(MailConstants.E_INVITE));
+
         ParsedMessage pm = new ParsedMessage(mm, mbox.attachmentsIndexingEnabled());
-        
         pm.analyze();
-        ZVCalendar cal = pm.getiCalendar();
-        if (cal == null)
-            throw ServiceException.FAILURE("SetCalendarItem could not build an iCalendar object", null);
 
-        boolean sentByMe = false; // not applicable in the SetCalendarItem case
-
-        Invite inv = Invite.createFromCalendar(acct, pm.getFragment(), cal, sentByMe).get(0);
-
+        Invite inv = (ipr == null ? null : ipr.mInvite);
+        if (inv == null) {
+            ZVCalendar cal = pm.getiCalendar();
+            if (cal == null)
+                throw ServiceException.FAILURE("SetCalendarItem could not build an iCalendar object", null);
+            boolean sentByMe = false; // not applicable in the SetCalendarItem case
+            inv = Invite.createFromCalendar(acct, pm.getFragment(), cal, sentByMe).get(0);
+        }
         inv.setPartStat(partStatStr);
 
         SetCalendarItemData sadata = new SetCalendarItemData();

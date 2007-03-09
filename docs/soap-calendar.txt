@@ -445,8 +445,10 @@ OR
            RAW RFC822 MESSAGE (XML-encoded)  ***MUST CONTAIN A text/calendar PART***  
          </content>
        </mp>
+       [<inv> ... </inv] -- optional, overrides the text/calendar from the inlined message body
 OR
    3) Raw MimeMessage uploaded as attachment ID (see AddMsgRequest in soap.txt)
+       [<inv> ... </inv] -- optional, overrides the text/calendar from the referenced uploaded message body
 *************
      </m>
   </default>
