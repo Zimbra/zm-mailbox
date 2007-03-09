@@ -27,6 +27,7 @@ package com.zimbra.cs.wiki;
 import java.io.File;
 import java.io.IOException;
 import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -269,6 +270,10 @@ public abstract class WikiUtil {
         private ZFolder findFolder(ZFolder root, String dir) {
             if (root == null)
                 return null;
+            if (dir.equals("/"))
+            	dir = "USER_ROOT";
+            if (root.getName().equals(dir))
+            	return root;
             List<ZFolder> list = root.getSubFolders();
             if (list == null)
                 return null;
@@ -316,7 +321,7 @@ public abstract class WikiUtil {
             if (purgeFolder(folder))
                 return;
             StringBuilder buf = new StringBuilder();
-            ZSearchParams params = new ZSearchParams("in:'"+folder.getName()+"'");
+            ZSearchParams params = new ZSearchParams("inid:"+folder.getId());
             params.setTypes("wiki,document");
             ZSearchResult result = mMbox.search(params);
             for (ZSearchHit hit: result.getHits()) {
@@ -324,10 +329,14 @@ public abstract class WikiUtil {
                     buf.append(",");
                 buf.append(hit.getId());
             }
-            mMbox.deleteItem(buf.toString(), null);
-            for (ZFolder f : folder.getSubFolders()) {
-                deleteAllItemsInFolder(f);
-                mMbox.deleteFolder(f.getId());
+            if (buf.length() > 0)
+            	mMbox.deleteItem(buf.toString(), null);
+            for (ZFolder f : new ArrayList<ZFolder>(folder.getSubFolders())) {
+            	int fid = Integer.valueOf(f.getId());
+            	if (fid == Mailbox.ID_FOLDER_NOTEBOOK || fid >= Mailbox.FIRST_USER_ID)
+            		deleteAllItemsInFolder(f);
+            	if (fid >= Mailbox.FIRST_USER_ID)
+            		mMbox.deleteFolder(f.getId());
             }
         }
 
@@ -390,6 +399,8 @@ public abstract class WikiUtil {
                 System.out.println("Initializing...");
                 auth();
 
+                if (where.startsWith("/") && where.length() > 1)
+                	where = where.substring(1);
                 if (where == null)
                     where = sDEFAULTFOLDER;
 
