@@ -30,9 +30,14 @@ package com.zimbra.cs.service.mail;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -44,11 +49,6 @@ import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SoapSession;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -58,16 +58,6 @@ public class ItemAction extends MailDocumentHandler {
 
 	protected static final String[] OPERATION_PATH = new String[] { MailConstants.E_ACTION, MailConstants.A_OPERATION };
 	protected static final String[] TARGET_ITEM_PATH = new String[] { MailConstants.E_ACTION, MailConstants.A_ID };
-	protected static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.E_ACTION, MailConstants.A_FOLDER };
-	protected String[] getProxiedIdPath(Element request) {
-		String operation = getXPath(request, OPERATION_PATH);
-		if (operation == null)
-			return null;
-		if (operation.startsWith("!"))
-			operation = operation.substring(1);
-		// move operation needs to be executed in the context of the target folder
-		return (operation.toLowerCase().equals(OP_MOVE) ? TARGET_FOLDER_PATH : null);
-	}
 	
 	
 	public static final String OP_TAG         = "tag";
@@ -117,9 +107,6 @@ public class ItemAction extends MailDocumentHandler {
         HashMap<String, StringBuffer> remote = new HashMap<String, StringBuffer>();
         partitionItems(zsc, action.getAttribute(MailConstants.A_ID), local, remote);
 
-        // we don't yet support moving from a remote mailbox
-        if (opStr.equals(OP_MOVE) && !remote.isEmpty())
-            throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
         StringBuffer successes = proxyRemoteItems(action, remote, request, context);
 
         if (!local.isEmpty()) {
@@ -143,14 +130,14 @@ public class ItemAction extends MailDocumentHandler {
         	} else if (opStr.equals(OP_COLOR)) {
         		byte color = (byte) action.getAttributeLong(MailConstants.A_COLOR);
         		localResults = ItemActionOperation.COLOR(zsc, session, octxt, mbox,
-        					Requester.SOAP, local, type, flagValue, tcon, color).getResult();
+        					Requester.SOAP, local, type, tcon, color).getResult();
         	} else if (opStr.equals(OP_HARD_DELETE)) {
         		localResults = ItemActionOperation.HARD_DELETE(zsc, session, octxt, mbox,
-        					Requester.SOAP, local, type, flagValue, tcon).getResult();
+        					Requester.SOAP, local, type, tcon).getResult();
         	} else if (opStr.equals(OP_MOVE)) {
         		ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER), zsc);
         		localResults = ItemActionOperation.MOVE(zsc, session, octxt, mbox,
-        					Requester.SOAP, local, type, flagValue, tcon, iidFolder).getResult();
+        					Requester.SOAP, local, type, tcon, iidFolder).getResult();
         	} else if (opStr.equals(OP_SPAM)) {
         		int defaultFolder = flagValue ? Mailbox.ID_FOLDER_SPAM : Mailbox.ID_FOLDER_INBOX;
         		int folderId = (int) action.getAttributeLong(MailConstants.A_FOLDER, defaultFolder);
@@ -163,7 +150,7 @@ public class ItemAction extends MailDocumentHandler {
                 String name = action.getAttribute(MailConstants.A_NAME);
                 ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER, "-1"), zsc);
                 localResults = ItemActionOperation.RENAME(zsc, session, octxt, mbox,
-                            Requester.SOAP, local, type, flagValue, tcon, name, iidFolder).getResult();
+                            Requester.SOAP, local, type, tcon, name, iidFolder).getResult();
         	} else if (opStr.equals(OP_UPDATE)) {
                 String folderId = action.getAttribute(MailConstants.A_FOLDER, null);
                 ItemId iidFolder = new ItemId(folderId == null ? "-1" : folderId, zsc);
@@ -187,7 +174,7 @@ public class ItemAction extends MailDocumentHandler {
         return successes.toString();
     }
 
-    static void partitionItems(ZimbraSoapContext zsc, String ids, ArrayList<Integer> local, HashMap<String, StringBuffer> remote) throws ServiceException {
+    static void partitionItems(ZimbraSoapContext zsc, String ids, List<Integer> local, Map<String, StringBuffer> remote) throws ServiceException {
         Account acct = getRequestedAccount(zsc);
         String targets[] = ids.split(",");
         for (int i = 0; i < targets.length; i++) {
@@ -204,13 +191,12 @@ public class ItemAction extends MailDocumentHandler {
         }
     }
 
-    protected StringBuffer proxyRemoteItems(Element action, Map remote, Element request, Map<String,Object> context)
+    protected StringBuffer proxyRemoteItems(Element action, Map<String, StringBuffer> remote, Element request, Map<String, Object> context)
     throws ServiceException, SoapFaultException {
         StringBuffer successes = new StringBuffer();
-        for (Iterator it = remote.entrySet().iterator(); it.hasNext(); ) {
-            Map.Entry entry = (Map.Entry) it.next();
+        for (Map.Entry<String, StringBuffer> entry : remote.entrySet()) {
             action.addAttribute(MailConstants.A_ID, entry.getValue().toString());
-            Element response = proxyRequest(request, context, entry.getKey().toString());
+            Element response = proxyRequest(request, context, entry.getKey());
             String completed = extractSuccesses(response);
             successes.append(completed.length() > 0 && successes.length() > 0 ? "," : "").append(completed);
         }

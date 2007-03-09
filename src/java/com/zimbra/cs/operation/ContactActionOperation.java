@@ -57,7 +57,7 @@ public class ContactActionOperation extends ItemActionOperation {
 
 
     public void setFields(Map<String, String> fields) {                        
-        assert(mOp == Op.UPDATE);
+        assert(mOperation == Op.UPDATE);
         mFields = (fields == null || fields.isEmpty() ? null : fields); 
     }
 
@@ -69,26 +69,26 @@ public class ContactActionOperation extends ItemActionOperation {
 
     protected void callback() throws ServiceException {
         // iterate over the local items and perform the requested operation
-        switch (mOp) {
+        switch (mOperation) {
             case UPDATE:
                 if (!mIidFolder.belongsTo(getMailbox()))
                     throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
                 
                 if (mIidFolder.getId() > 0)
-                    getMailbox().move(getOpCtxt(), mIds, mType, mIidFolder.getId(), mTcon);
+                    getMailbox().move(getOpCtxt(), mIds, mItemType, mIidFolder.getId(), mTargetConstraint);
                 if (mTags != null || mFlags != null)
-                    getMailbox().setTags(getOpCtxt(), mIds, mType, mFlags, mTags, mTcon);
+                    getMailbox().setTags(getOpCtxt(), mIds, mItemType, mFlags, mTags, mTargetConstraint);
                 if (mColor >= 0)
-                    getMailbox().setColor(getOpCtxt(), mIds, mType, mColor);
+                    getMailbox().setColor(getOpCtxt(), mIds, mItemType, mColor);
                 if (mFields != null)
                     for (int id : mIds)
                         getMailbox().modifyContact(getOpCtxt(), id, mFields, true);
                 break;
             default:
-                throw ServiceException.INVALID_REQUEST("unknown operation: " + mOp, null);
+                throw ServiceException.INVALID_REQUEST("unknown operation: " + mOperation, null);
         }
 
-        ItemIdFormatter ifmt = new ItemIdFormatter(mZc);
+        ItemIdFormatter ifmt = new ItemIdFormatter(mSoapContext);
         StringBuilder successes = new StringBuilder();
         for (int id : mIds)
             successes.append(successes.length() > 0 ? "," : "").append(ifmt.formatItemId(id));
@@ -97,7 +97,7 @@ public class ContactActionOperation extends ItemActionOperation {
 
     public String toString() {
         StringBuffer toRet = new StringBuffer(super.toString());
-        if (mOp == Op.UPDATE) {
+        if (mOperation == Op.UPDATE) {
             if (mFields != null)
                 toRet.append(" Fields=").append(mFields);
         }
