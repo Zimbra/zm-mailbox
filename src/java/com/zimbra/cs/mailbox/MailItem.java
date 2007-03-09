@@ -348,7 +348,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             return sb.toString();
         }
 
-        static boolean checkItem(TargetConstraint tcon, MailItem item) throws ServiceException {
+        public static boolean checkItem(TargetConstraint tcon, MailItem item) throws ServiceException {
             return (tcon == null ? true : tcon.checkItem(item));
         }
         private boolean checkItem(MailItem item) throws ServiceException {
