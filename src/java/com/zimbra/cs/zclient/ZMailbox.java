@@ -394,7 +394,7 @@ public class ZMailbox {
             mTransport.setAuthToken(mAuthToken);
     }
 
-    synchronized Element invoke(Element request) throws ServiceException {
+    public synchronized Element invoke(Element request) throws ServiceException {
         try {
             return mTransport.invoke(request);
         } catch (SoapFaultException e) {
