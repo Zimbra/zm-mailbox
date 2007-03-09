@@ -496,15 +496,15 @@ public class ItemActionOperation extends Operation {
                     Invite invDefault = cal.getDefaultInviteOrNull();
                     if (invDefault == null)
                         throw ServiceException.FAILURE("cannot copy: no default invite for " + MailItem.getNameForType(item) + " " + item.getId(), null);
-                    addCalendarPart(request.addUniqueElement(MailConstants.A_DEFAULT), cal, invDefault, zmbx);
+                    addCalendarPart(request.addUniqueElement(MailConstants.A_DEFAULT), cal, invDefault, zmbx, target);
 
                     for (Invite inv : cal.getInvites()) {
                         if (inv == null || inv == invDefault)
                             continue;
                         else if (inv.isCancel())
-                            addCalendarPart(request.addUniqueElement(MailConstants.E_CAL_CANCEL), cal, inv, zmbx);
+                            addCalendarPart(request.addUniqueElement(MailConstants.E_CAL_CANCEL), cal, inv, zmbx, target);
                         else
-                            addCalendarPart(request.addUniqueElement(MailConstants.E_CAL_EXCEPT), cal, inv, zmbx);
+                            addCalendarPart(request.addUniqueElement(MailConstants.E_CAL_EXCEPT), cal, inv, zmbx, target);
                     }
 
                     zmbx.invoke(request);
@@ -525,7 +525,7 @@ public class ItemActionOperation extends Operation {
         }
     }
 
-    private Element addCalendarPart(Element parent, CalendarItem cal, Invite inv, ZMailbox zmbx) throws ServiceException {
+    private Element addCalendarPart(Element parent, CalendarItem cal, Invite inv, ZMailbox zmbx, Account target) throws ServiceException {
         Element m = parent.addUniqueElement(MailConstants.E_MSG);
 
         Pair<MimeMessage, Integer> spinfo = cal.getSubpartMessageData(inv.getMailItemId());
@@ -542,8 +542,18 @@ public class ItemActionOperation extends Operation {
             }
         }
 
-        // if we're here, the body fetch failed so all we can do in inline the invite data
+        // explicitly add the invite metadata here
         ToXML.encodeInvite(m, new ItemIdFormatter(mSoapContext), cal, inv);
+
+        // fix up the Organizer if needed
+        for (Element comp : m.getElement(MailConstants.E_INVITE).listElements(MailConstants.E_INVITE_COMPONENT)) {
+            if (comp.getAttributeBool(MailConstants.A_CAL_ISORG, false) && comp.getOptionalElement(MailConstants.E_CAL_ORGANIZER) != null) {
+                comp.getOptionalElement(MailConstants.E_CAL_ORGANIZER).detach();
+                comp.addUniqueElement(MailConstants.E_CAL_ORGANIZER).addAttribute(MailConstants.A_ADDRESS, target.getName())
+                                                                    .addAttribute(MailConstants.A_DISPLAY, target.getAttr(Provisioning.A_displayName));
+            }
+        }
+
         return m;
     }
 }
