@@ -444,11 +444,14 @@ public class ItemActionOperation extends Operation {
         zoptions.setNoSession(true);
         ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
 
+        boolean deleteOriginal = mOperation != Op.COPY;
         String folderStr = mIidFolder.toString();
 
         for (MailItem item : mMailbox.getItemById(mOpCtxt, mIds, mItemType)) {
             if (item == null)
                 continue;
+            if (deleteOriginal && (mMailbox.getEffectivePermissions(mOpCtxt, item.getId(), item.getType()) & ACL.RIGHT_DELETE) == 0)
+                throw ServiceException.PERM_DENIED("cannot delete existing copy of " + MailItem.getNameForType(item) + " " + item.getId());
 
             // since we can't apply tags to a remote object, hardwiring "tags" to null below...
             String flags = (mOperation == Op.UPDATE && mFlags != null ? mFlags : item.getFlagString());
@@ -515,11 +518,12 @@ public class ItemActionOperation extends Operation {
             }
 
             try {
-                if (mOperation != Op.COPY)
+                if (deleteOriginal)
                     mMailbox.delete(mOpCtxt, item.getId(), item.getType());
             } catch (ServiceException e) {
                 if (e.getCode() != ServiceException.PERM_DENIED)
                     throw e;
+                // something funky happened permissions-wise between the getEffectivePermissions check and here...
                 ZimbraLog.misc.info("could not delete original item " + item.getId() + "; treating operation as a copy instead");
             }
         }
