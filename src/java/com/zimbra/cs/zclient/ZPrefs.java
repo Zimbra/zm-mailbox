@@ -65,8 +65,10 @@ public class ZPrefs {
 
     public Map<String, List<String>> getPrefs() { return mPrefs; }
 
+    public boolean getUseTimeZoneListInCalendar() { return getBool(Provisioning.A_zimbraPrefUseTimeZoneListInCalendar); }
+
     public boolean getReadingPaneEnabled() { return getBool(Provisioning.A_zimbraPrefReadingPaneEnabled); }
-    
+
     public boolean getIncludeSpamInSearch() { return getBool(Provisioning.A_zimbraPrefIncludeSpamInSearch); }
 
     public boolean getIncludeTrashInSearch() { return getBool(Provisioning.A_zimbraPrefIncludeTrashInSearch); }
