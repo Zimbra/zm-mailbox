@@ -738,24 +738,27 @@ public class ToXML {
         }
 
         if (encodeInvites) {
-            for (int i = 0; i < calItem.numInvites(); i++) {
-                Invite inv = calItem.getInvite(i);
-                
-                Element ie = calItemElem.addElement(MailConstants.E_INVITE);
-                setCalendarItemType(ie, calItem);
-                encodeTimeZoneMap(ie, calItem.getTimeZoneMap());
-                
-                ie.addAttribute(MailConstants.A_CAL_SEQUENCE, inv.getSeqNo());
-                encodeReplies(ie, calItem, inv);
-                
-                ie.addAttribute(MailConstants.A_ID, ifmt.formatItemId(inv.getMailItemId()));
-                ie.addAttribute(MailConstants.A_CAL_COMPONENT_NUM, inv.getComponentNum());
-                if (inv.hasRecurId())
-                    ie.addAttribute(MailConstants.A_CAL_RECURRENCE_ID, inv.getRecurId().toString());
-                
-                encodeInvite(ie, ifmt, calItem, inv, NOTIFY_FIELDS, false);
-            }
+            for (int i = 0; i < calItem.numInvites(); i++)
+                encodeInvite(calItemElem, ifmt, calItem, calItem.getInvite(i));
         }
+    }
+
+    public static Element encodeInvite(Element parent, ItemIdFormatter ifmt, CalendarItem cal, Invite inv) throws ServiceException {
+        Element ie = parent.addElement(MailConstants.E_INVITE);
+        setCalendarItemType(ie, cal);
+        encodeTimeZoneMap(ie, cal.getTimeZoneMap());
+
+        ie.addAttribute(MailConstants.A_CAL_SEQUENCE, inv.getSeqNo());
+        encodeReplies(ie, cal, inv);
+
+        ie.addAttribute(MailConstants.A_ID, ifmt.formatItemId(inv.getMailItemId()));
+        ie.addAttribute(MailConstants.A_CAL_COMPONENT_NUM, inv.getComponentNum());
+        if (inv.hasRecurId())
+            ie.addAttribute(MailConstants.A_CAL_RECURRENCE_ID, inv.getRecurId().toString());
+
+        encodeInviteComponent(ie, ifmt, cal, inv, NOTIFY_FIELDS, false);
+
+        return ie;
     }
 
     /**
@@ -897,7 +900,7 @@ public class ToXML {
             setCalendarItemType(invElt, calItem);
             encodeTimeZoneMap(invElt, calItem.getTimeZoneMap());
             for (Invite inv : calItem.getInvites(invId))
-                encodeInvite(invElt, ifmt, calItem, inv, NOTIFY_FIELDS, repliesWithInvites);
+                encodeInviteComponent(invElt, ifmt, calItem, inv, NOTIFY_FIELDS, repliesWithInvites);
 
             List<MPartInfo> parts = Mime.getParts(mm);
             if (parts != null && !parts.isEmpty()) {
@@ -1071,7 +1074,7 @@ public class ToXML {
         }
     }
 
-    public static Element encodeInvite(Element parent, ItemIdFormatter ifmt, CalendarItem calItem, Invite invite, int fields, boolean includeReplies)
+    public static Element encodeInviteComponent(Element parent, ItemIdFormatter ifmt, CalendarItem calItem, Invite invite, int fields, boolean includeReplies)
     throws ServiceException {
         boolean allFields = true;
 
@@ -1288,7 +1291,7 @@ public class ToXML {
                         addedMethod = true;
                     }
                     encodeTimeZoneMap(ie, calItem.getTimeZoneMap());
-                    encodeInvite(ie, ifmt, calItem, inv, fields, false);
+                    encodeInviteComponent(ie, ifmt, calItem, inv, fields, false);
                 } else {
                     // invite not in this appointment anymore
                 }
