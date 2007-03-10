@@ -952,7 +952,7 @@ public class UserServlet extends ZimbraServlet {
         } catch (HttpException e) {
             throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusText(), e);
         } catch (IOException e) {
-            throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusText(), e);
+            throw ServiceException.RESOURCE_UNREACHABLE("IOException while fetching " + url, e);
         } finally {
             get.releaseConnection();
         }
