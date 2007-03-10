@@ -138,6 +138,17 @@ public class ItemActionOperation extends Operation {
         ia.schedule();
         return ia;
     }
+    
+    public static ItemActionOperation COPY(ZimbraSoapContext zc, Session session, OperationContext oc,
+                Mailbox mbox, Requester req, List<Integer> ids, byte type, 
+                TargetConstraint tcon, ItemId iidFolder)
+    throws ServiceException {
+        ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
+                    LOAD, ids, Op.COPY, type, true, tcon);
+        ia.setIidFolder(iidFolder);
+        ia.schedule();
+        return ia;
+    }
 
     public static ItemActionOperation SPAM(ZimbraSoapContext zc, Session session, OperationContext oc,
                 Mailbox mbox, Requester req, List<Integer> ids, byte type, 
@@ -375,9 +386,9 @@ public class ItemActionOperation extends Operation {
             case MOVE:
                 getMailbox().move(getOpCtxt(), mIds, mItemType, mIidFolder.getId(), mTargetConstraint);
                 break;
-//            case COPY:
-//                getMailbox().copy(getOpCtxt(), mIds, mItemType, mIidFolder.getId());
-//                break;
+            case COPY:
+                getMailbox().copy(getOpCtxt(), mIds, mItemType, mIidFolder.getId());
+                break;
             case SPAM:
                 getMailbox().move(getOpCtxt(), mIds, mItemType, mFolderId, mTargetConstraint);
                 for (int id : mIds)

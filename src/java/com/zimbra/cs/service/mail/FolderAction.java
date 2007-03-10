@@ -102,7 +102,7 @@ public class FolderAction extends ItemAction {
 
         if (operation.equals(OP_TAG) || operation.equals(OP_FLAG) || operation.equals(OP_UNTAG) || operation.equals(OP_UNFLAG))
             throw ServiceException.INVALID_REQUEST("cannot tag/flag a folder", null);
-        if (operation.endsWith(OP_SPAM))
+        if (operation.endsWith(OP_COPY) || operation.endsWith(OP_SPAM))
             throw ServiceException.INVALID_REQUEST("invalid operation on folder: " + operation, null);
         String successes;
         if (FOLDER_OPS.contains(operation))

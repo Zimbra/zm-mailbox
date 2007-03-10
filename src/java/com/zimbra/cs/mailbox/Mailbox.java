@@ -3933,39 +3933,42 @@ public class Mailbox {
         }
     }
 
-    public synchronized MailItem copy(OperationContext octxt, int itemId, byte type, int folderId) throws IOException, ServiceException {
-        CopyItem redoRecorder = new CopyItem(mId, itemId, type, folderId);
+    public synchronized MailItem copy(OperationContext octxt, int itemId, byte type, int folderId) throws ServiceException {
+        return copy(octxt, new int[] { itemId }, type, folderId).get(0);
+    }
+    public synchronized List<MailItem> copy(OperationContext octxt, int[] itemIds, byte type, int folderId) throws ServiceException {
+        short volumeId = Volume.getCurrentMessageVolume().getId();
+        CopyItem redoRecorder = new CopyItem(mId, type, folderId, volumeId);
 
         boolean success = false;
         try {
             beginTransaction("copy", octxt, redoRecorder);
             CopyItem redoPlayer = (CopyItem) mCurrentChange.getRedoPlayer();
 
-            MailItem item = getItemById(itemId, type);
-            checkItemChangeID(item);
+            List<MailItem> result = new ArrayList<MailItem>();
 
-            int newId;
-            short destVolumeId;
-            if (redoPlayer == null) {
-                newId = getNextItemId(ID_AUTO_INCREMENT);
-                if (item.getVolumeId() != -1)
-                    destVolumeId = Volume.getCurrentMessageVolume().getId();
-                else
-                    destVolumeId = -1;
-            } else {
-                newId = getNextItemId(redoPlayer.getDestId());
-                destVolumeId = redoPlayer.getDestVolumeId();
+            MailItem[] items = getItemById(itemIds, type);
+            for (MailItem item : items)
+                checkItemChangeID(item);
+
+            for (MailItem item : items) {
+                int srcId = item.getId();
+                int newId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getDestId(srcId));
+
+                MailItem copy = item.copy(getFolderById(folderId), newId, item.getVolumeId() == -1 ? -1 : volumeId);
+                redoRecorder.setDestId(srcId, newId);
+
+                // if we're not sharing the index entry, we need to index the new item
+                if (copy.getIndexId() == copy.getId())
+                    queueForIndexing(copy, false, null);
+
+                result.add(copy);
             }
-            MailItem copy = item.copy(getFolderById(folderId), newId, destVolumeId);
-            redoRecorder.setDestId(copy.getId());
-            redoRecorder.setDestVolumeId(copy.getVolumeId());
-
-            // if we're not sharing the index entry, we need to index the new item
-            if (copy.getIndexId() == copy.getId())
-                queueForIndexing(copy, false, null);
 
             success = true;
-            return copy;
+            return result;
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("IOException while copying items", e);
         } finally {
             endTransaction(success);
         }
@@ -4002,7 +4005,7 @@ public class Mailbox {
 
                 MailItem copy = item.icopy(target, newId, item.getVolumeId() == -1 ? -1 : volumeId);
                 redoRecorder.setDestId(srcId, newId);
-    
+
                 // if we're not sharing the index entry, we need to index the new item
                 if (copy.getIndexId() == copy.getId())
                     queueForIndexing(copy, false, null);

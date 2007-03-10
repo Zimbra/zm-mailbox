@@ -65,7 +65,8 @@ public class ItemAction extends MailDocumentHandler {
 	public static final String OP_READ        = "read";
 	public static final String OP_COLOR       = "color";
 	public static final String OP_HARD_DELETE = "delete";
-	public static final String OP_MOVE        = "move";
+    public static final String OP_MOVE        = "move";
+    public static final String OP_COPY        = "copy";
     public static final String OP_SPAM        = "spam";
     public static final String OP_TRASH       = "trash";
     public static final String OP_RENAME      = "rename";
@@ -134,10 +135,14 @@ public class ItemAction extends MailDocumentHandler {
         	} else if (opStr.equals(OP_HARD_DELETE)) {
         		localResults = ItemActionOperation.HARD_DELETE(zsc, session, octxt, mbox,
         					Requester.SOAP, local, type, tcon).getResult();
-        	} else if (opStr.equals(OP_MOVE)) {
-        		ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER), zsc);
-        		localResults = ItemActionOperation.MOVE(zsc, session, octxt, mbox,
-        					Requester.SOAP, local, type, tcon, iidFolder).getResult();
+            } else if (opStr.equals(OP_MOVE)) {
+                ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER), zsc);
+                localResults = ItemActionOperation.MOVE(zsc, session, octxt, mbox,
+                            Requester.SOAP, local, type, tcon, iidFolder).getResult();
+            } else if (opStr.equals(OP_COPY)) {
+                ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER), zsc);
+                localResults = ItemActionOperation.COPY(zsc, session, octxt, mbox,
+                            Requester.SOAP, local, type, tcon, iidFolder).getResult();
         	} else if (opStr.equals(OP_SPAM)) {
         		int defaultFolder = flagValue ? Mailbox.ID_FOLDER_SPAM : Mailbox.ID_FOLDER_INBOX;
         		int folderId = (int) action.getAttributeLong(MailConstants.A_FOLDER, defaultFolder);

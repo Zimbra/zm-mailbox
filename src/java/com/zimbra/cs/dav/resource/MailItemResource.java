@@ -157,8 +157,6 @@ public abstract class MailItemResource extends DavResource {
 			Mailbox mbox = getMailbox(ctxt);
 			MailItem item = mbox.copy(ctxt.getOperationContext(), mId, mType, dest.getId());
 			return UrlNamespace.getResourceFromMailItem(ctxt, item);
-		} catch (IOException e) {
-			throw new DavException("cannot copy item", HttpServletResponse.SC_FORBIDDEN, e);
 		} catch (ServiceException se) {
 			throw new DavException("cannot copy item", HttpServletResponse.SC_FORBIDDEN, se);
 		}
@@ -279,7 +277,7 @@ public abstract class MailItemResource extends DavResource {
 		return null;
 	}
 	
-	protected InputStream getTextContent(DavContext ctxt) throws IOException, DavException {
+	protected InputStream getTextContent(DavContext ctxt) throws IOException {
 		StringBuilder buf = new StringBuilder();
 		buf.append("Request\n\n");
 		buf.append("\tAuthenticated user:\t").append(ctxt.getAuthAccount().getName()).append("\n");

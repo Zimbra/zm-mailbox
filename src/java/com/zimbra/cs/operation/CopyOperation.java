@@ -23,8 +23,6 @@
  */
 package com.zimbra.cs.operation;
 
-import java.io.IOException;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -40,11 +38,11 @@ public class CopyOperation extends Operation {
             LOAD = c.mLoad;
     }
     
-    int mItemId;
-    byte mType;
-    int mTargetId;
+    private int mItemId;
+    private byte mType;
+    private int mTargetId;
     
-    MailItem mResult;
+    private MailItem mResult;
     
     public CopyOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
                 int itemId, byte type, int targetId)
@@ -57,11 +55,7 @@ public class CopyOperation extends Operation {
     }
     
     protected void callback() throws ServiceException {
-        try {
-            mResult = getMailbox().copy(this.getOpCtxt(), mItemId, mType, mTargetId);
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("Caught IOException execiting " + this.toString(), e);
-        }
+        mResult = getMailbox().copy(this.getOpCtxt(), mItemId, mType, mTargetId);
     }
     
     public MailItem getResult() { return mResult; }

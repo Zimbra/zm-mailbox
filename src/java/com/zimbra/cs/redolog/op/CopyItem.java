@@ -29,6 +29,8 @@
 package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -43,36 +45,35 @@ import com.zimbra.cs.redolog.RedoLogOutput;
  */
 public class CopyItem extends RedoableOp {
 
-    private int mSrcId;
-    private int mDestId;
+    private Map<Integer, Integer> mDestIds = new HashMap<Integer, Integer>();
     private byte mType;
     private int mDestFolderId;
-    private short mDestVolumeId = -1;
+    private short mDestVolumeId;
 
     public CopyItem() {
-        mSrcId = UNKNOWN_ID;
-        mDestId = UNKNOWN_ID;
         mType = MailItem.TYPE_UNKNOWN;
         mDestFolderId = 0;
+        mDestVolumeId = -1;
     }
 
-    public CopyItem(int mailboxId, int msgId, byte type, int destId) {
+    public CopyItem(int mailboxId, byte type, int folderId, short volumeId) {
         setMailboxId(mailboxId);
-        mSrcId = msgId;
         mType = type;
-        mDestFolderId = destId;
+        mDestFolderId = folderId;
+        mDestVolumeId = volumeId;
     }
 
     /**
      * Sets the ID of the copied item.
      * @param destId
      */
-    public void setDestId(int destId) {
-    	mDestId = destId;
+    public void setDestId(int srcId, int destId) {
+        mDestIds.put(srcId, destId);
     }
 
-    public int getDestId() {
-    	return mDestId;
+    public int getDestId(int srcId) {
+        Integer destId = mDestIds.get(srcId);
+        return destId == null ? -1 : destId;
     }
 
     /**
@@ -80,11 +81,11 @@ public class CopyItem extends RedoableOp {
      * @param volId
      */
     public void setDestVolumeId(short volId) {
-    	mDestVolumeId = volId;
+        mDestVolumeId = volId;
     }
 
     public short getDestVolumeId() {
-    	return mDestVolumeId;
+        return mDestVolumeId;
     }
 
     public int getOpCode() {
@@ -92,42 +93,64 @@ public class CopyItem extends RedoableOp {
     }
 
     protected String getPrintableData() {
-        StringBuffer sb = new StringBuffer("srcId=");
-        sb.append(mSrcId);
-        sb.append(", destId=").append(mDestId);
-        sb.append(", type=").append(mType);
+        StringBuilder sb = new StringBuilder("type=").append(mType);
         sb.append(", destFolder=").append(mDestFolderId);
         sb.append(", destVolumeId=").append(mDestVolumeId);
+        sb.append(", [srcId, destId, srcImap]=");
+        for (Map.Entry<Integer, Integer> entry : mDestIds.entrySet())
+            sb.append('[').append(entry.getKey()).append(',').append(entry.getValue()).append(']');
         return sb.toString();
     }
 
     protected void serializeData(RedoLogOutput out) throws IOException {
-        out.writeInt(mSrcId);
-        out.writeInt(mDestId);
+        out.writeInt(-1);
+        out.writeInt(-1);
         out.writeByte(mType);
         out.writeInt(mDestFolderId);
         out.writeShort(mDestVolumeId);
+        out.writeInt(mDestIds.size());
+        for (Map.Entry<Integer, Integer> entry : mDestIds.entrySet()) {
+            out.writeInt(entry.getKey());
+            out.writeInt(entry.getValue());
+        }
     }
 
     protected void deserializeData(RedoLogInput in) throws IOException {
-        mSrcId = in.readInt();
-        mDestId = in.readInt();
+        // deal with old-style redologs
+        int srcId = in.readInt();
+        int destId = in.readInt();
+        if (srcId > 0 && destId > 0)
+            mDestIds.put(srcId, destId);
+
         mType = in.readByte();
         mDestFolderId = in.readInt();
         mDestVolumeId = in.readShort();
+        if (mDestIds.isEmpty()) {
+            int count = in.readInt();
+            for (int i = 0; i < count; i++) {
+                srcId = in.readInt();
+                mDestIds.put(srcId, in.readInt());
+            }
+        }
     }
 
     public void redo() throws Exception {
         int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
+
+        int i = 0, itemIds[] = new int[mDestIds.size()];
+        for (int id : mDestIds.keySet())
+            itemIds[i++] = id;
+
         try {
-            mbox.copy(getOperationContext(), mSrcId, mType, mDestFolderId);
+            mbox.copy(getOperationContext(), itemIds, mType, mDestFolderId);
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
-                mLog.info("Item " + mDestId + " is already in mailbox " + mboxId);
+                mLog.info("Item is already in mailbox " + mboxId);
                 return;
-            } else
+            } else {
                 throw e;
+            }
         }
     }
 }
