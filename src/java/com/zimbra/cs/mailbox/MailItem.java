@@ -104,7 +104,35 @@ public abstract class MailItem implements Comparable<MailItem> {
         "task",
         "chat",
     };
-
+    
+    /**
+     * @param mailItemType
+     * @return the mail item type mapped to a bitmask, useful in places
+     *         as a substitute for passing around a Set<Byte> for a list  
+     *         of MailItem types
+     */
+    public static final int typeToBitmask(byte mailItemType) {
+        switch (mailItemType) {
+            case MailItem.TYPE_FOLDER:               return 0x000001;
+            case MailItem.TYPE_SEARCHFOLDER:         return 0x000002;
+            case MailItem.TYPE_TAG:                  return 0x000004;
+            case MailItem.TYPE_CONVERSATION:         return 0x000008;
+            case MailItem.TYPE_MESSAGE:              return 0x000010;
+            case MailItem.TYPE_CONTACT:              return 0x000020;
+            case MailItem.TYPE_DOCUMENT:             return 0x000040;
+            case MailItem.TYPE_NOTE:                 return 0x000080;
+            case MailItem.TYPE_FLAG:                 return 0x000100;
+            case MailItem.TYPE_APPOINTMENT:          return 0x000200;
+            case MailItem.TYPE_VIRTUAL_CONVERSATION: return 0x000400;
+            case MailItem.TYPE_MOUNTPOINT:           return 0x000800;
+            case MailItem.TYPE_WIKI:                 return 0x001000;
+            case MailItem.TYPE_TASK:                 return 0x002000;
+            case MailItem.TYPE_CHAT:                 return 0x004000;
+        }
+        assert(false);
+        return 0;
+    }
+    
     /** Throws {@link ServiceException} <tt>mail.INVALID_TYPE</tt> if the
      *  specified internal Zimbra item type is not supported.  At present, all
      *  types from 1 to {@link #TYPE_MAX} <b>except 7</b> are supported. */
@@ -204,8 +232,18 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     public static final class TypedIdList implements Iterable<Map.Entry<Byte,List<Integer>>> {
+        
         private Map<Byte,List<Integer>> mIds = new HashMap<Byte,List<Integer>>();
-
+        
+        /** list of types included in this map, see @link{MailItem#typeToBitmask} */
+        public int getTypesMask() {
+            int retVal = 0;
+            for (Byte b : mIds.keySet()) {
+                retVal |= MailItem.typeToBitmask(b);
+            }
+            return retVal;
+        }
+        
         public void add(byte type, Integer id) {
             if (id == null)
                 return;
@@ -1747,6 +1785,10 @@ public abstract class MailItem implements Comparable<MailItem> {
     public static class PendingDelete {
         /** The id of the item that {@link MailItem#delete} was called on. */
         public int rootId;
+        
+        /** a bitmask of all the types of MailItems that are being deleted.
+         * see {@link MailItem#typeToBitmask} */
+        public int deletedTypes;
 
         /** Whether some of the item's children are not being deleted. */
         public boolean incomplete;
@@ -1799,6 +1841,7 @@ public abstract class MailItem implements Comparable<MailItem> {
          * @return this item */
         PendingDelete add(PendingDelete other) {
             if (other != null) {
+                deletedTypes |= other.deletedTypes;
                 size     += other.size;
                 contacts += other.contacts;
                 itemIds.add(other.itemIds);
@@ -1836,7 +1879,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (info.itemIds.isEmpty())
             return;
 
-        mMailbox.markItemDeleted(info.itemIds.getAll());
+        mMailbox.markItemDeleted(info.itemIds.getTypesMask(), info.itemIds.getAll());
         // when applicable, record the deleted MailItem (rather than just its id)
         if (scope == DeleteScope.ENTIRE_ITEM && !info.incomplete)
             markItemDeleted();
@@ -1862,7 +1905,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         // cascade any other deletes
         if (info.cascadeIds != null && !info.cascadeIds.isEmpty()) {
             DbMailItem.delete(mMailbox, info.cascadeIds);
-            mMailbox.markItemDeleted(info.cascadeIds);
+            mMailbox.markItemDeleted(MailItem.typeToBitmask(TYPE_CONVERSATION), info.cascadeIds);
             info.itemIds.add(TYPE_CONVERSATION, info.cascadeIds);
         }
 

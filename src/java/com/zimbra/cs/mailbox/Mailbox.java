@@ -757,16 +757,16 @@ public class Mailbox {
     /** Adds the item id to the current change's list of items deleted during
      *  the transaction.
      * @param itemId  The deleted item's id. */
-    void markItemDeleted(int itemId) {
-        mCurrentChange.mDirty.recordDeleted(itemId);
+    void markItemDeleted(byte type, int itemId) {
+        mCurrentChange.mDirty.recordDeleted(type, itemId);
     }
-
+    
     /** Adds the item ids to the current change's list of items deleted during
      *  the transaction.
+     * @param typesMask Mask of all MailItem types listed in itemIds.  see {@link MailItem#typeToBitmask}a
      * @param itemIds  The list of deleted items' ids. */
-    void markItemDeleted(List<Integer> itemIds) {
-        for (int id : itemIds)
-            mCurrentChange.mDirty.recordDeleted(id);
+    void markItemDeleted(int typesMask, List<Integer> itemIds) {
+        mCurrentChange.mDirty.recordDeleted(typesMask, itemIds);
     }
 
     /** Adds the item to the current change's list of items modified during
@@ -5224,6 +5224,7 @@ public class Mailbox {
     }
 
     private void commitCache(MailboxChange change) {
+        assert(Thread.holdsLock(this));
         if (change == null)
             return;
 
@@ -5305,7 +5306,7 @@ public class Mailbox {
         if (!mListeners.isEmpty() && dirty != null && dirty.hasNotifications()) {
             for (Session session : new ArrayList<Session>(mListeners)) {
                 try {
-                    session.notifyPendingChanges(dirty);
+                    session.notifyPendingChanges(mData.lastChangeId, dirty);
                 } catch (RuntimeException e) {
                     ZimbraLog.mailbox.error("ignoring error during notification", e);
                 }

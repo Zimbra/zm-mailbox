@@ -233,7 +233,7 @@ public class ImapSession extends Session {
         void sort()  { Collections.sort(numbered);  Collections.sort(unnumbered); }
     }
 
-    public void notifyPendingChanges(PendingModifications pns) {
+    public void notifyPendingChanges(int changeId, PendingModifications pns) {
         if (!pns.hasNotifications())
             return;
 

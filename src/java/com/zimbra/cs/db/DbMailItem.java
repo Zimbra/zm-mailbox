@@ -2078,6 +2078,7 @@ public class DbMailItem {
             Integer item = new Integer(id);
             info.itemIds.add(type, item);
             info.size += size;
+            
             if (rs.getBoolean(LEAF_CI_IS_UNREAD))
                 info.unreadIds.add(item);
 

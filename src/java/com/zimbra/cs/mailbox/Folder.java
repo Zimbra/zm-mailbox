@@ -834,7 +834,7 @@ public class Folder extends MailItem {
         PendingDelete info = DbMailItem.getLeafNodes(mbox, folders, beforeDate, allFolders);
         if (info.itemIds.isEmpty())
             return;
-        mbox.markItemDeleted(info.itemIds.getAll());
+        mbox.markItemDeleted(info.itemIds.getTypesMask(), info.itemIds.getAll());
 
         // update message counts
         for (Map.Entry<Integer, DbMailItem.LocationCount> entry : info.messages.entrySet()) {
@@ -868,7 +868,7 @@ public class Folder extends MailItem {
         // also delete any conversations whose messages have all been removed
         if (info.cascadeIds != null && !info.cascadeIds.isEmpty()) {
             DbMailItem.delete(mbox, info.cascadeIds);
-            mbox.markItemDeleted(info.cascadeIds);
+            mbox.markItemDeleted(MailItem.typeToBitmask(TYPE_CONVERSATION), info.cascadeIds);
             info.itemIds.add(TYPE_CONVERSATION, info.cascadeIds);
         }
 

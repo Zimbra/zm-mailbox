@@ -161,7 +161,18 @@ public abstract class Session {
         return mAccountId.equals(accountId);
     }
 
-    public abstract void notifyPendingChanges(PendingModifications pns);
+    /** Handles the set of changes from a single Mailbox transaction.
+     *  <p>
+     *  Takes a set of new mailbox changes and caches it locally.  This is
+     *  currently initiated from inside the Mailbox transaction commit, but we
+     *  still shouldn't assume that execution of this method is synchronized
+     *  on the Mailbox.
+     *  <p>
+     *  *All* changes are currently cached, regardless of the client's state/views.
+     *
+     * @param changeId The sync-token change Id of the change 
+     * @param pms   A set of new change notifications from our Mailbox  */
+    public abstract void notifyPendingChanges(int changeId, PendingModifications pns);
     
     /**
      * Notify this session that an IM event has occured

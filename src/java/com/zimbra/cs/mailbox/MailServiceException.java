@@ -54,9 +54,12 @@ public class MailServiceException extends ServiceException {
 	public static final String NO_SUCH_DOC     = "mail.NO_SUCH_DOC";
     public static final String NO_SUCH_TAG     = "mail.NO_SUCH_TAG";
     public static final String NO_SUCH_UPLOAD  = "mail.NO_SUCH_UPLOAD";
+    public static final String NO_SUCH_WAITSET = "mail.NO_SUCH_WAITSET";
+    
     public static final String ALREADY_EXISTS  = "mail.ALREADY_EXISTS";
 
     public static final String INVALID_ID      = "mail.INVALID_ID";
+    public static final String INVALID_SYNC_TOKEN = "mail.INVALID_SYNC_TOKEN";
     public static final String INVALID_NAME    = "mail.INVALID_NAME";
     public static final String INVALID_TYPE    = "mail.INVALID_TYPE";
     public static final String INVALID_CONTENT_TYPE = "mail.INVALID_CONTENT_TYPE";
@@ -89,9 +92,11 @@ public class MailServiceException extends ServiceException {
     public static final String SEND_ABORTED_ADDRESS_FAILURE = "mail.SEND_ABORTED_ADDRESS_FAILURE";
     public static final String SEND_PARTIAL_ADDRESS_FAILURE = "mail.SEND_PARTIAL_ADDRESS_FAILURE";
     public static final String SEND_FAILURE = "mail.SEND_FAILURE";
-    public static final String TOO_MANY_QUERY_TERMS_EXPANDED = "mail.TOO_MANY_QUERY_TERMS_EXPANDED"; 
+    public static final String TOO_MANY_QUERY_TERMS_EXPANDED = "mail.TOO_MANY_QUERY_TERMS_EXPANDED";
 
 
+    public static final String ID              = "id";
+    public static final String TOKEN           = "token";
     public static final String ITEM_ID         = "itemId";
     public static final String NAME            = "name"; 
     public static final String PATH            = "path"; 
@@ -233,6 +238,10 @@ public class MailServiceException extends ServiceException {
     public static MailServiceException NO_SUCH_UPLOAD(String uploadId) {
         return new MailServiceException("upload not found: " + uploadId, NO_SUCH_UPLOAD, SENDERS_FAULT, new Argument(UPLOAD_ID, uploadId, Argument.Type.STR));
     }
+    
+    public static MailServiceException NO_SUCH_WAITSET(String id) {
+        return new MailServiceException("WaitSet not found: " + id, NO_SUCH_WAITSET, SENDERS_FAULT, new Argument(ID, id, Argument.Type.STR));
+    }
 
     public static MailServiceException SCAN_ERROR(String file) {
         return new MailServiceException("upload could not be scanned: file '" + file + "'", SCAN_ERROR, RECEIVERS_FAULT, new Argument(NAME, file, Argument.Type.STR));
@@ -264,6 +273,10 @@ public class MailServiceException extends ServiceException {
 
     public static MailServiceException INVALID_ID(int id) {
         return new MailServiceException("item id out of range: " + id, INVALID_ID, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
+    }
+    
+    public static MailServiceException INVALID_SYNC_TOKEN(String s) {
+        return new MailServiceException("Invalid Sync Token: " + s, INVALID_SYNC_TOKEN, SENDERS_FAULT, new Argument(TOKEN, s, Argument.Type.STR));
     }
 
     public static MailServiceException INVALID_NAME(String name) {

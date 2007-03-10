@@ -56,7 +56,7 @@ public class WikiSession extends Session {
 	}
 
 	@Override
-	public void notifyPendingChanges(PendingModifications pns) {
+	public void notifyPendingChanges(int changeId, PendingModifications pns) {
 		
 		if (pns.modified != null && pns.modified.size() > 0) {
 			for (PendingModifications.Change value : pns.modified.values()) {

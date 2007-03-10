@@ -111,7 +111,7 @@ public class SoapSession extends Session {
 
         PendingModifications pm = new PendingModifications();
         pm.addIMNotification(imn);
-        notifyPendingChanges(pm);
+        notifyPendingChanges(-1, pm);
     }
     
     protected boolean shouldRegisterWithIM() { return true; }
@@ -180,9 +180,10 @@ public class SoapSession extends Session {
      *  on the Mailbox.
      *  <p>
      *  *All* changes are currently cached, regardless of the client's state/views.
-     * 
+     *
+     * @param changeId The sync-token change Id of the change 
      * @param pms   A set of new change notifications from our Mailbox  */
-    public void notifyPendingChanges(PendingModifications pms) {
+    public void notifyPendingChanges(int changeId, PendingModifications pms) {
         if (!pms.hasNotifications() || !mNotify || mMailbox == null)
             return;
         
@@ -191,32 +192,8 @@ public class SoapSession extends Session {
             //   because ToXML functions can now call back into the Mailbox
             synchronized (mMailbox) {
                 synchronized (this) {
-                    // XXX: should constrain to folders, tags, and stuff relevant to the current query?
-                    if (mNotify && pms.deleted != null) {
-                        for (Object obj : pms.deleted.values())
-                            if (obj instanceof MailItem)
-                                mChanges.recordDeleted((MailItem) obj);
-                            else if (obj instanceof Integer)
-                                mChanges.recordDeleted(((Integer) obj).intValue());
-                    }
-
-                    if (mNotify && pms.created != null) {
-                        for (MailItem item : pms.created.values())
-                            mChanges.recordCreated(item);
-                    }
-
-                    if (mNotify && pms.modified != null) {
-                        for (Change chg : pms.modified.values())
-                            if (chg.what instanceof MailItem)
-                                mChanges.recordModified((MailItem) chg.what, chg.why);
-                            else if (chg.what instanceof Mailbox)
-                                mChanges.recordModified((Mailbox) chg.what, chg.why);
-                    }
-
-                    if (mNotify && pms.imNotifications != null) {
-                        for (IMNotification not : pms.imNotifications) 
-                            mChanges.addIMNotification(not);
-                    }
+                    // XXX: should constrain to folders, tags, and stuff relevant to the current query??
+                    mChanges.add(pms);
                     
                     if (mPushChannel != null) {
                         mPushChannel.notificationsReady(this);

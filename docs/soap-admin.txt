@@ -1732,6 +1732,11 @@ is the first time Wait has been called with the account)
   [ <error ...something.../>]*
 </WaitMultipleAccountsResponse>
 
+NOTE: an empty response to a blocking request *is* possible: it would
+happen if the server timed-out the waiting.  The server does this
+occasionally just so that requests don't get "stuck".  The client
+should re-submit the original request if this happens.
+
 
 *************************************
 DestroyWaitSet: Use this to close out the wait set.  Note that the

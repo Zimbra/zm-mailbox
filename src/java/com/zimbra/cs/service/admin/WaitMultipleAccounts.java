@@ -32,6 +32,9 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.cs.session.WaitSet;
 import com.zimbra.cs.session.WaitSet.WaitSetAccount;
 import com.zimbra.cs.session.WaitSet.WaitSetError;
@@ -101,9 +104,9 @@ public class WaitMultipleAccounts extends AdminDocumentHandler {
         synchronized(cb) {
             errors = ws.doWait(cb, lastKnownSeqNo, block, add, update, remove);
             
-            while (!cb.completed) {
+            if (!cb.completed) { // don't wait if it completed right away
                 try {
-                    cb.wait();
+                    cb.wait(1000 * 60 * 5); // timeout after 5 minutes
                 } catch (InterruptedException ex) {} 
             }
         }
@@ -112,13 +115,16 @@ public class WaitMultipleAccounts extends AdminDocumentHandler {
         response.addAttribute(AdminConstants.A_WAITSET_ID, waitSetId);
         if (cb.cancelled) {
             response.addAttribute(AdminConstants.A_CANCELLED, true);
-        } else {
+        } else if (cb.completed) {
             response.addAttribute(AdminConstants.A_SEQ, cb.seqNo);
             
             for (String s : cb.signalledAccounts) {
                 Element saElt = response.addElement(AdminConstants.E_A);
                 saElt.addAttribute(AdminConstants.A_ID, s);
             }
+        } else {
+            // timed out....they should try again
+            response.addAttribute(AdminConstants.A_SEQ, lastKnownSeqNo);
         }
         
         encodeErrors(response, errors);
@@ -132,7 +138,8 @@ public class WaitMultipleAccounts extends AdminDocumentHandler {
             for (Iterator<Element> iter = elt.elementIterator(AdminConstants.E_A); iter.hasNext();) {
                 Element a = iter.next();
                 String id = a.getAttribute(AdminConstants.A_ID);
-                int token = (int)a.getAttributeLong(AdminConstants.A_TOKEN, -1);
+                String tokenStr = a.getAttribute(AdminConstants.A_TOKEN, null);
+                SyncToken token = tokenStr != null ? new SyncToken(tokenStr) : null;
                 int interests = parseInterestStr(a.getAttribute(AdminConstants.A_TYPES, null), defaultInterest);
                 toRet.add(new WaitSetAccount(id, token, interests));
             }
@@ -151,11 +158,11 @@ public class WaitMultipleAccounts extends AdminDocumentHandler {
         }
         return remove;
     }
-        
     
     static class Callback implements WaitSet.WaitSetCallback {
         public void dataReady(WaitSet ws, int seqNo, boolean cancelled, String[] signalledAccounts) {
             synchronized(this) {
+                ZimbraLog.session.info("Called WaitMultiplAccounts WaitSetCallback.dataReady()!");
                 this.waitSet = ws;
                 this.cancelled = cancelled;
                 this.signalledAccounts = signalledAccounts;
@@ -173,10 +180,10 @@ public class WaitMultipleAccounts extends AdminDocumentHandler {
     }
     
     static enum TypeEnum {
-        m(WaitSet.INTEREST_MESSAGES),
-        c(WaitSet.INTEREST_CONTACTS),
-        a(WaitSet.INTEREST_APPOINTMENTS),
-        all(WaitSet.INTEREST_ALL),
+        m(MailItem.typeToBitmask(MailItem.TYPE_MESSAGE)),
+        c(MailItem.typeToBitmask(MailItem.TYPE_CONTACT)),
+        a(MailItem.typeToBitmask(MailItem.TYPE_APPOINTMENT)),
+        all(0xffffff),
         ;
         
         TypeEnum(int mask) { mMask = mask; }

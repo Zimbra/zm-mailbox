@@ -819,7 +819,10 @@ Tags:
                [read="*0|1"] [neuter="0|*1"] [field={default_field}]
                [calExpandInstStart=TIME_IN_MSEC] [calExpandInstEnd=TIME_IN_MSEC]
                >
-  [<cursor id="prevId" sortVal="prevSortValue" endSortVal="endSortValue"/> ] // end val is NON-INCLUSIVE
+  [<cursor id="prevId" sortVal="prevSortValue" endSortVal="endSortValue"/> ] 
+          // sortVal should be set to the value of the 'sf' (SortField) attribute of the last
+          // hit on the previous 'page' of search results.
+          // end val is NON-INCLUSIVE
   
   [   // OPTIONAL: client timezone identification (necessary to time-correct a user-specified date/time query)
   

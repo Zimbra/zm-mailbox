@@ -46,6 +46,7 @@ import com.zimbra.cs.pop3.Pop3Server;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.servlet.PrivilegedServlet;
 import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.session.WaitSet;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.StoreManager;
 
@@ -136,6 +137,9 @@ public class Zimbra {
         }
         
         ZimbraPerf.initialize();
+        
+        WaitSet.startup();
+        
         sInited = true;
     }
 
@@ -144,6 +148,8 @@ public class Zimbra {
             return;
 
         sInited = false;
+        
+        WaitSet.shutdown();
         
         RedoLogProvider redoLog = RedoLogProvider.getInstance();
         if (!redoLog.isSlave()) {

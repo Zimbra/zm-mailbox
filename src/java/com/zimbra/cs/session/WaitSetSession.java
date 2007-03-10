@@ -25,6 +25,7 @@
 package com.zimbra.cs.session;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.service.util.SyncToken;
 
 /**
  * A session subclass which is used when an external entity wants to listen on a 
@@ -34,23 +35,34 @@ import com.zimbra.common.service.ServiceException;
  */
 public class WaitSetSession extends Session {
     WaitSet mWs = null;
+    int mInterestMask;
+    SyncToken mSyncToken;
     
-    WaitSetSession(WaitSet ws, String accountId, String sessionId) throws ServiceException {
+    WaitSetSession(WaitSet ws, String accountId, String sessionId, int interestMask, 
+        SyncToken lastKnownSyncToken) throws ServiceException {
         super(accountId, sessionId, Session.Type.WAITSET);
         mWs = ws;
+        mInterestMask = interestMask;
+        mSyncToken = lastKnownSyncToken;
+    }
+    
+    void update(int interestMask, SyncToken lastKnownSyncToken) {
+        mInterestMask = interestMask;
+        mSyncToken = lastKnownSyncToken;
     }
     
     @Override
     protected void cleanup() { }
 
     @Override
-    protected long getSessionIdleLifetime() {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
+    protected long getSessionIdleLifetime() { return 0; }
+    
     @Override
-    public void notifyPendingChanges(PendingModifications pns) {
-        mWs.signalDataReady(this);
+    public void notifyPendingChanges(int changeId, PendingModifications pns) {
+        if (mSyncToken != null && mSyncToken.after(changeId))
+            return; // don't signal, sync token stopped us
+        
+        if ((mInterestMask & pns.changedTypes) != 0)
+            mWs.signalDataReady(this);
     }
 }
