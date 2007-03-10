@@ -950,7 +950,7 @@ public class UserServlet extends ZimbraServlet {
             Header[] headers = get.getResponseHeaders();
             return new Pair<Header[], byte[]>(headers, get.getResponseBody());
         } catch (HttpException e) {
-            throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusText(), e);
+            throw ServiceException.RESOURCE_UNREACHABLE("HttpException while fetching " + url, e);
         } catch (IOException e) {
             throw ServiceException.RESOURCE_UNREACHABLE("IOException while fetching " + url, e);
         } finally {
