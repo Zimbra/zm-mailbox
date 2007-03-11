@@ -34,10 +34,14 @@ import java.io.IOException;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpConnectionManager;
 import org.apache.commons.httpclient.HttpException;
+import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.HttpMethodRetryHandler;
 import org.apache.commons.httpclient.HttpRecoverableException;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.params.HttpClientParams;
+import org.apache.commons.httpclient.params.HttpMethodParams;
 
 import com.zimbra.common.soap.SoapProtocol;
 
@@ -46,8 +50,6 @@ import com.zimbra.common.soap.SoapProtocol;
 
 public class SoapHttpTransport extends SoapTransport {
 
-//	private static Log mLog = LogFactory.getLog(SoapHttpTransport.class);
-	
     private boolean mKeepAlive;
     private int mRetryCount;
     private int mTimeout;
@@ -57,6 +59,14 @@ public class SoapHttpTransport extends SoapTransport {
     public String toString() { 
         return "SoapHTTPTransport(uri="+mUri+")";
     }
+
+    private static final HttpClientParams sDefaultParams = new HttpClientParams();
+        static {
+            // we're doing the retry logic at the SoapHttpTransport level, so don't do it at the HttpClient level as well
+            sDefaultParams.setParameter(HttpMethodParams.RETRY_HANDLER, new HttpMethodRetryHandler() {
+                public boolean retryMethod(HttpMethod method, IOException exception, int executionCount)  { return false; }
+            });
+        }
 
     /**
      * Create a new SoapHttpTransport object for the specified URI.
@@ -68,7 +78,7 @@ public class SoapHttpTransport extends SoapTransport {
      */
     public SoapHttpTransport(String uri) {
     	super();
-    	mClient = new HttpClient();
+    	mClient = new HttpClient(sDefaultParams);
     	commonInit(uri);
     }
 
@@ -82,11 +92,10 @@ public class SoapHttpTransport extends SoapTransport {
      */
     public SoapHttpTransport(String uri, int maxConnections, boolean connectionStaleCheckEnabled) {
     	super();
-    	MultiThreadedHttpConnectionManager connMgr =
-    		new MultiThreadedHttpConnectionManager();
+    	MultiThreadedHttpConnectionManager connMgr = new MultiThreadedHttpConnectionManager();
     	connMgr.setMaxConnectionsPerHost(maxConnections);
     	connMgr.setConnectionStaleCheckingEnabled(connectionStaleCheckEnabled);
-    	mClient = new HttpClient(connMgr);
+    	mClient = new HttpClient(sDefaultParams, connMgr);
     	commonInit(uri);
     }
 
@@ -96,8 +105,7 @@ public class SoapHttpTransport extends SoapTransport {
     public void shutdown() {
     	HttpConnectionManager connMgr = mClient.getHttpConnectionManager();
     	if (connMgr instanceof MultiThreadedHttpConnectionManager) {
-    		MultiThreadedHttpConnectionManager multiConnMgr =
-    			(MultiThreadedHttpConnectionManager) connMgr;
+    		MultiThreadedHttpConnectionManager multiConnMgr = (MultiThreadedHttpConnectionManager) connMgr;
     		multiConnMgr.shutdown();
     	}
     	mClient = null;
@@ -178,7 +186,7 @@ public class SoapHttpTransport extends SoapTransport {
     	// the content-type charset will determine encoding used
     	// when we set the request body
     	PostMethod method = new PostMethod(mUri);
-    	method.setRequestHeader("Content-type", getSoapProtocol().getContentType());
+    	method.setRequestHeader("Content-Type", getSoapProtocol().getContentType());
     	String soapMessage = generateSoapMessage(document, raw, noSession, noNotify, requestedAccountId);
     	method.setRequestBody(soapMessage);
     	method.setRequestContentLength(EntityEnclosingMethod.CONTENT_LENGTH_AUTO);
@@ -193,11 +201,7 @@ public class SoapHttpTransport extends SoapTransport {
     		} catch (HttpRecoverableException e) {
                 if (attempt == mRetryCount - 1)
                     throw e;
-                else {
-        			System.err.println(
-        					"A recoverable exception occurred, retrying." + 
-    						e.getMessage());
-                }
+    			System.err.println("A recoverable exception occurred, retrying." + e.getMessage());
     		}
     	}
 
