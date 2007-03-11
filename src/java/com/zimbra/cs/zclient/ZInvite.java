@@ -1130,7 +1130,7 @@ public class ZInvite {
         }
 
         public Element toElement(Element parent) {
-            Element attEl = parent.addElement(MailConstants.E_CAL_ORGANIZER);
+            Element attEl = parent.addElement(MailConstants.E_CAL_ATTENDEE);
 
             if (getAddress() != null) attEl.addAttribute(MailConstants.A_ADDRESS, getAddress());
             if (getUrl() != null) attEl.addAttribute(MailConstants.A_URL, getUrl());
