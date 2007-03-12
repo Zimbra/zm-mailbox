@@ -1958,7 +1958,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="434" name="zimbraDataSourceLeaveOnServer" type="boolean" cardinality="single"
-  requiredIn="pop3DataSource" flags="domainAdminModifiable">
+  optionalIn="pop3DataSource" flags="domainAdminModifiable">
   <desc>Specifies whether imported POP3 messages should be left on the server or deleted.</desc>
 </attr>
 
