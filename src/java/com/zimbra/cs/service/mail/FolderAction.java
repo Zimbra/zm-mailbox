@@ -126,7 +126,8 @@ public class FolderAction extends ItemAction {
         ItemId iid = new ItemId(action.getAttribute(MailConstants.A_ID), zsc);
 
         if (operation.equals(OP_EMPTY)) {
-            mbox.emptyFolder(octxt, iid.getId(), true);
+            boolean subfolders = action.getAttributeBool(MailConstants.A_RECURSIVE, true);
+            mbox.emptyFolder(octxt, iid.getId(), subfolders);
         } else if (operation.equals(OP_REFRESH)) {
             mbox.synchronizeFolder(octxt, iid.getId());
         } else if (operation.equals(OP_IMPORT)) {

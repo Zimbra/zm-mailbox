@@ -1275,19 +1275,21 @@ origid/rt/irt are present only on drafts
 ---------
 
 <CreateFolderRequest>
-  <folder name="..." l="{parent-folder}" [fie="1"] [view="{default-type}"] [color="{color}"] [f="{flags}"] [url="{url}"]>
+  <folder name="..." [l="{parent-folder}"] [fie="1"] [view="{default-type}"] [color="{color}"] [f="{flags}"] [url="{url}"]>
     [<acl> <grant perm="{rights}" gt="{grantee-type}" zid="{zimbra-id}" d="{grantee-name}" [inh="0|1"] [args="{args}"]/>* </acl>]
   </folder>
 </CreateFolderRequest>
+
+  - if l is unset, name is the full path of the new folder; otherwise, name may not contain the folder separator '/'
+  - if fie="1" is set, the server will fetch the folder if it already exists rather than throwing mail.ALREADY_EXISTS
 
 <CreateFolderResponse>
   <folder id="..." name="..." l="{parent-folder}" [u="{unread count}"] [n="{msg count}"]/>
 </CreateFolderResponse>
 
-u and/or n attributes are present iff count > 0
-name and l are omitted for root folder
+  - name and l are omitted on response for root folder
+  - u and/or n attributes are present on response iff count > 0
 
-if fie="1" is set, the server will fetch the folder if it already exists rather than throwing mail.ALREADY_EXISTS
 ---------
 
 <CreateNoteRequest>
@@ -1367,7 +1369,7 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
 ---------
 
 <FolderActionRequest>
-  <action id="{list}" op="read|delete|rename|move|trash|empty|color|grant|url|import|sync|fb|[!]check|update" name="..." [l="{target-folder}"]
+  <action id="{list}" op="read|delete|rename|move|trash|empty|color|grant|url|import|sync|fb|[!]check|update" [l="{target-folder}"]
                       [name="{new-name}"] [color="{new-color}"] [zid="{grantee-zimbra-id}"] [url="{target-url}"]
                       [excludeFreeBusy="{exclude-free-busy-boolean}">
     [<grant perm="..." gt="..." d="..." [inh="0|1"] [args="..."]/>]
@@ -1378,24 +1380,60 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
   <action id="{list}" op="read|delete|empty|rename|move|trash|color|grant|url|import|sync|fb|[!]check|update" [zid="{grantee-zimbra-id}"]/>
 </FolderActionResponse>
 
-  Actions:
-    op="read" - mark all items in the folder as read
-    op="delete" - hard-delete the folder, all items in the folder, and all the folder's subfolders
-    op="empty" - hard-delete all items in the folder and all the folder's subfolders
-    op="rename" - change the folder's name (and optionally location); if {new-name} begins with '/', the folder is moved to the new path and any missing path elements are created
-    op="move" - move the folder to be a child of {target-folder}
-    op="trash" - move the folder to the Trash, marking all contents as read and renaming the folder if a folder by that name is already present in the Trash
-    op="color" - change the folder's color to {new-color}
-    op="grant" - add the <grant> object to the folder
-    op="!grant" - revoke access from {grantee-zimbra-id} 
-                  (you can use "00000000-0000-0000-0000-000000000000" to revoke acces granted to "all"
-                   or use "99999999-9999-9999-9999-999999999999" to revoke acces granted to "pub" )
-    op="url" - set the synchronization url on the folder to {target-url}, empty the folder, and synchronize the folder's contents to the remote feed, also sets {exclude-free-busy-boolean} 
-    op="sync" - synchronize the folder's contents to the remote feed specified by the folder's {url}
-    op="import" - add the contents to the remote feed at {target-url} to the folder [1-time action]
-    op="fb" - set the excludeFreeBusy boolean for this folder (must specify {exclude-free-busy-boolean})
-    op="check" (or "!check") - set or unset the "checked" state of the folder in the UI
-    op="update" - do several operations at once:
+Actions:
+  <action op="read" id="{list}"/>
+    - mark all items in the folder as read
+
+  <action op="delete" id="{list}"/>
+    - hard-delete the folder, all items in the folder, and all the folder's subfolders
+
+  <action op="empty" id="{list}" [recusive="{delete-subfolders}"]/>
+    - hard-delete all items in the folder (and all the folder's subfolders if "recursive" is set)
+
+  <action op="rename" id="{list}" name="{new-name}" [l="{new-folder}"]/>
+    - change the folder's name (and optionally location);
+      if {new-name} begins with '/', the folder is moved to the new path and any missing path elements are created
+
+  <action op="move" id="{list}" l="{new-folder}"/>
+    - move the folder to be a child of {target-folder}
+
+  <action op="trash" id="{list}"/>
+    - move the folder to the Trash, marking all contents as read and
+      renaming the folder if a folder by that name is already present in the Trash
+
+  <action op="color" id="{list}" color="{new-color}"/>
+    - change the folder's color to {new-color}
+
+  <action op="grant" id="{list}">
+    <grant perm="..." gt="..." d="..." [inh="0|1"] [args="..."]/>
+  </action>
+    - add the <grant> object to the folder
+
+  <action op="!grant" id="{list}" zid="{grantee-zimbra-id}"/>
+    - revoke access from {grantee-zimbra-id} 
+        (you can use "00000000-0000-0000-0000-000000000000" to revoke acces granted to "all"
+        or use "99999999-9999-9999-9999-999999999999" to revoke acces granted to "pub" )
+
+  <action op="url" id="{list}" url="{target-url}" [excludeFreeBusy="{exclude-free-busy-boolean}"]/>
+    - set the synchronization url on the folder to {target-url}, empty the folder, and\
+      synchronize the folder's contents to the remote feed, also sets {exclude-free-busy-boolean} 
+
+  <action op="sync" id="{list}"/>
+    - synchronize the folder's contents to the remote feed specified by the folder's {url}
+
+  <action op="import" id="{list}" url="{target-url}"/>
+    - add the contents to the remote feed at {target-url} to the folder [1-time action]
+
+  <action op="fb" id="{list}" excludeFreeBusy="{exclude-free-busy-boolean}"/>
+    - set the excludeFreeBusy boolean for this folder (must specify {exclude-free-busy-boolean})
+
+  <action op="[!]check" id="{list}"/>
+    - set or unset the "checked" state of the folder in the UI
+
+  <action op="update" id="{list}" [f="{new-flags}"] [name="{new-name}"] [l="{target-folder}"] [color="{new-color}"]>
+    [<acl><grant .../>*</acl>]
+  </action>
+    - do several operations at once:
           name="{new-name}"        to change the folder's name
           l="{target-folder}"      to change the folder's location
           color="{new-color}"      to set the folder's color

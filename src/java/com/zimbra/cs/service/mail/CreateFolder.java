@@ -69,7 +69,8 @@ public class CreateFolder extends MailDocumentHandler {
         String flags     = t.getAttribute(MailConstants.A_FLAGS, null);
         byte color       = (byte) t.getAttributeLong(MailConstants.A_COLOR, MailItem.DEFAULT_COLOR);
         String url       = t.getAttribute(MailConstants.A_URL, null);
-        ItemId iidParent = new ItemId(t.getAttribute(MailConstants.A_FOLDER), lc);
+        String folderId  = t.getAttribute(MailConstants.A_FOLDER, null);
+        ItemId iidParent = folderId != null ? new ItemId(folderId, lc) : null;
         boolean fetchIfExists = t.getAttributeBool(MailConstants.A_FETCH_IF_EXISTS, false);
         ACL acl          = FolderAction.parseACL(t.getOptionalElement(MailConstants.E_ACL));
 
