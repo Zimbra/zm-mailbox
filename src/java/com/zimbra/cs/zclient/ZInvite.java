@@ -80,6 +80,10 @@ public class ZInvite {
         return mComponents;
     }
 
+    public ZComponent getComponent() {
+        return (mComponents == null || mComponents.isEmpty()) ? null : mComponents.get(0);
+    }
+
     public Element toElement(Element parent) {
         Element invEl = parent.addElement(MailConstants.E_INVITE);
         for (ZTimeZone tz : mTimeZones)
@@ -1011,6 +1015,14 @@ public class ZInvite {
 
         public String getAddress() {
             return mAddress;
+        }
+
+        /**
+         *
+         * @return a ZEMailAddress constructed from the personal name and address.
+         */
+        public ZEmailAddress getEmailAddress() {
+            return new ZEmailAddress(mAddress, null, mPersonalName, ZEmailAddress.EMAIL_TYPE_TO);
         }
 
         public void setAddress(String address) {

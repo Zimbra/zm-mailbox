@@ -99,6 +99,7 @@ public class ZApptSummary implements ZItem {
     private String mLocation;
     private String mInviteId;
     private String mSeriesInviteId;
+    private String mSeriesComponentNumber;
     private String mInviteComponentNumber;
     private boolean mIsOrganizer;
     private String mPriority;
@@ -152,8 +153,7 @@ public class ZApptSummary implements ZItem {
             appt.mStartTime = inst.getAttributeLong(MailConstants.A_CAL_START_TIME, 0);
 
             if (appt.mIsAllDay) {
-                long adjustMsecs = appt.mTimeZoneOffset - timeZone.getOffset(appt.mStartTime);
-                appt.mStartTime += adjustMsecs;
+                appt.mStartTime += appt.mTimeZoneOffset - timeZone.getOffset(appt.mStartTime);
             }
 
             appt.mIsException = inst.getAttributeBool(MailConstants.A_CAL_IS_EXCEPTION, false);
@@ -176,7 +176,8 @@ public class ZApptSummary implements ZItem {
             appt.mSeriesInviteId = inviteId;
 
             appt.mInviteComponentNumber = inst.getAttribute(MailConstants.A_CAL_COMPONENT_NUM, inviteCompNumber);
-            
+            appt.mSeriesComponentNumber = inviteCompNumber;
+
             appt.mIsOrganizer = inst.getAttributeBool(MailConstants.A_CAL_ISORG, isOrganizer);
             appt.mPriority = inst.getAttribute(MailConstants.A_CAL_PRIORITY, priority);
             appt.mPercentComplete = inst.getAttribute(MailConstants.A_TASK_PERCENT_COMPLETE, percentComplete);
@@ -276,6 +277,8 @@ public class ZApptSummary implements ZItem {
     public String getInviteId() { return mInviteId; }
 
     public String getSeriesInviteId() { return mSeriesInviteId; }
+
+    public String getSeriesComponentNumber() { return mSeriesComponentNumber; }
 
     public String getInviteComponentNumber() { return mInviteComponentNumber; }
 
