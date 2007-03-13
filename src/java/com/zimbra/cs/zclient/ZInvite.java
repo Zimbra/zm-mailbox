@@ -28,10 +28,17 @@ package com.zimbra.cs.zclient;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.calendar.TZIDMapper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Date;
+import java.util.TimeZone;
+import java.util.Calendar;
+import java.text.SimpleDateFormat;
+import java.text.DateFormat;
+import java.text.ParseException;
 
 public class ZInvite {
 
@@ -357,6 +364,13 @@ public class ZInvite {
 
         public void setStart(ZDateTime start) {
             mStart = start;
+        }
+
+        public Date getComputedEndDate() {
+          if (getEnd() != null)
+              return getEnd().getDate();
+            else
+              return getDuration().addToDate(getStart().getDate()); 
         }
 
         public ZDateTime getEnd() {
@@ -726,6 +740,9 @@ public class ZInvite {
 
     public static class ZDateTime {
 
+        private static final String FMT_DATE = "yyyyMMdd";
+        private static final String FMT_DATE_TIME = "yyyyMMdd'T'HHmmss";
+
         private String mDateTime;
         private String mTimeZoneId;
 
@@ -753,6 +770,54 @@ public class ZInvite {
             if (mTimeZoneId != null)
                 dtEl.addAttribute(MailConstants.A_CAL_TIMEZONE, mTimeZoneId);
             return dtEl;
+        }
+
+        public TimeZone getTimeZone() {
+            if (mTimeZoneId != null && mTimeZoneId.length() > 0) {
+                return TimeZone.getTimeZone(TZIDMapper.toJava(mTimeZoneId));
+            } else {
+                return TimeZone.getTimeZone("GMT");
+            }
+        }
+
+        public Calendar getCalendar() {
+            DateFormat df =  new SimpleDateFormat((mDateTime.indexOf('T') == -1) ? FMT_DATE : FMT_DATE_TIME);
+            df.setLenient(false);
+            TimeZone tz = null;
+            if (mTimeZoneId != null && mTimeZoneId.length() > 0) {
+                tz = TimeZone.getTimeZone(TZIDMapper.toJava(mTimeZoneId));
+                df.setTimeZone(tz);
+            }
+
+            Date date = null;
+
+            try {
+                date = df.parse(mDateTime);
+            } catch (ParseException e) {
+                date = new Date();
+            }
+            Calendar cal = tz == null ? Calendar.getInstance() : Calendar.getInstance(tz);
+            cal.setTime(date);
+            return cal;
+        }
+
+        public Date getDate() {
+            DateFormat df =  new SimpleDateFormat((mDateTime.indexOf('T') == -1) ? FMT_DATE : FMT_DATE_TIME);
+            df.setLenient(false);
+            TimeZone tz = null;
+            if (mTimeZoneId != null && mTimeZoneId.length() > 0) {
+                tz = TimeZone.getTimeZone(TZIDMapper.toJava(mTimeZoneId));
+                df.setTimeZone(tz);
+            }
+
+            Date date = null;
+
+            try {
+                date = df.parse(mDateTime);
+            } catch (ParseException e) {
+                date = new Date();
+            }
+            return date;
         }
 
         public String getDateTime() {
@@ -797,6 +862,7 @@ public class ZInvite {
         public ZDuration() {
 
         }
+
         public ZDuration(Element e) throws ServiceException {
             mNegative = e.getAttributeBool(MailConstants.A_CAL_DURATION_NEGATIVE, false);
             mWeeks = (int) e.getAttributeLong(MailConstants.A_CAL_DURATION_WEEKS, 0);
@@ -804,6 +870,22 @@ public class ZInvite {
             mHours= (int) e.getAttributeLong(MailConstants.A_CAL_DURATION_HOURS, 0);
             mMinutes = (int) e.getAttributeLong(MailConstants.A_CAL_DURATION_MINUTES, 0);
             mSeconds = (int) e.getAttributeLong(MailConstants.A_CAL_DURATION_SECONDS, 0);
+        }
+
+        Date addToDate(Date date) {
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(date);
+            int mult = mNegative ? -1 : 1;
+            cal.add(java.util.Calendar.WEEK_OF_YEAR, mult*mWeeks);
+            cal.add(java.util.Calendar.DAY_OF_YEAR, mult*mDays);
+            cal.add(java.util.Calendar.HOUR_OF_DAY, mult*mHours);
+            cal.add(java.util.Calendar.MINUTE, mult*mMinutes);
+            cal.add(java.util.Calendar.SECOND, mult*mSeconds);
+            return cal.getTime();
+        }
+
+        public long addToTime(long utcTime) {
+            return addToDate(new Date(utcTime)).getTime();
         }
 
         public Element toElement(Element parent) {
