@@ -75,7 +75,7 @@ public class ImapServer extends TcpServer implements RealtimeStatsCallback {
     }
 
     protected ProtocolHandler newProtocolHandler() {
-        return new ImapHandler(this);
+        return new TcpImapHandler(this);
     }
 
     static boolean allowCleartextLogins() {
@@ -144,7 +144,7 @@ public class ImapServer extends TcpServer implements RealtimeStatsCallback {
 
             boolean debugLog = LC.nio_imap_debug_logging.booleanValue();
             try {
-                OzServer ozserver = new OzServer("IMAP", IMAP_READ_SIZE_HINT, serverSocket, imapHandlerFactory, debugLog, ZimbraLog.imap);
+                OzServer ozserver = new OzServer("IMAP", IMAP_READ_SIZE_HINT, serverSocket, imapHandlerFactory, debugLog, ZimbraLog.nio);
                 ozserver.start();
                 sImapServer = ozserver;
             } catch (IOException ioe) {
@@ -183,12 +183,12 @@ public class ImapServer extends TcpServer implements RealtimeStatsCallback {
                 public OzConnectionHandler newConnectionHandler(OzConnection conn) {
                     conn.setAlarm(IMAP_UNAUTHED_CONNECTION_MAX_IDLE_MILLISECONDS);
                     conn.setWriteQueueMaxCapacity(IMAP_WRITE_QUEUE_MAX_SIZE_UNAUTH);
-                    conn.addFilter(new OzTLSFilter(conn, debugLogging, ZimbraLog.imap));
+                    conn.addFilter(new OzTLSFilter(conn, debugLogging, ZimbraLog.nio));
                     return new OzImapConnectionHandler(conn);
                 }
             };
             try {
-                OzServer ozserver = new OzServer("IMAPS", IMAP_READ_SIZE_HINT, serverSocket, imapHandlerFactory, debugLogging, ZimbraLog.imap);
+                OzServer ozserver = new OzServer("IMAPS", IMAP_READ_SIZE_HINT, serverSocket, imapHandlerFactory, debugLogging, ZimbraLog.nio);
                 ozserver.setProperty(OzImapConnectionHandler.PROPERTY_SECURE_SERVER, "true");
                 ozserver.start();
                 sImapSSLServer = ozserver;

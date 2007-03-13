@@ -24,13 +24,11 @@
  */
 package com.zimbra.cs.imap;
 
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.Writer;
-import java.net.Socket;
 import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -47,8 +45,6 @@ import java.util.Set;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -84,22 +80,18 @@ import com.zimbra.cs.operation.GetItemOperation;
 import com.zimbra.cs.operation.SearchOperation;
 import com.zimbra.cs.operation.SetTagsOperation;
 import com.zimbra.cs.operation.Operation.Requester;
-import com.zimbra.cs.service.util.ThreadLocalData;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.stats.StatsFile;
-import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
-import com.zimbra.cs.tcpserver.TcpServerInputStream;
 import com.zimbra.cs.util.BuildInfo;
-import com.zimbra.cs.util.Config;
 
 /**
  * @author dkarp
  */
-public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
+public abstract class ImapHandler extends ProtocolHandler {
 
-    private abstract class Authenticator {
+    abstract class Authenticator {
         String mTag;
         boolean mContinue = true;
         Authenticator(String tag)  { mTag = tag; }
@@ -139,159 +131,50 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
     static final char[] LINE_SEPARATOR       = { '\r', '\n' };
     static final byte[] LINE_SEPARATOR_BYTES = { '\r', '\n' };
 
-    private TcpServerInputStream mInputStream;
-    private OutputStream         mOutputStream;
-
     private DateFormat mTimeFormat   = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss Z", Locale.US);
     private DateFormat mDateFormat   = new SimpleDateFormat("dd-MMM-yyyy", Locale.US);
     private DateFormat mZimbraFormat = DateFormat.getDateInstance(DateFormat.SHORT);
 
-    private String        mRemoteAddress;
-    private ImapServer    mServer;
-    private Authenticator mAuthenticator;
-    private ImapSession   mSession;
-    private Mailbox       mMailbox;
-    private ImapRequest   mIncompleteRequest = null;
-    private String        mLastCommand;
-    private boolean       mStartedTLS;
-    private boolean       mGoodbyeSent;
+    Authenticator mAuthenticator;
+    ImapSession   mSession;
+    Mailbox       mMailbox;
+    String        mLastCommand;
+    boolean       mStartedTLS;
+    boolean       mGoodbyeSent;
 
-    public ImapHandler(ImapServer server) {
+    ImapHandler() {
+        super(null);
+    }
+
+    ImapHandler(ImapServer server) {
         super(server);
-        mServer = server;
     }
 
-    public void dumpState(Writer w) {
-    	try {
-    		w.write("\n\tImapHandler(Thread-Per-Connection) " + this);
-    	} catch(IOException e) {};
-    }
+    abstract void dumpState(Writer w);
+
+    abstract Object getServer();
 
     public DateFormat getTimeFormat()   { return mTimeFormat; }
     public DateFormat getDateFormat()   { return mDateFormat; }
     public DateFormat getZimbraFormat() { return mZimbraFormat; }
 
-    protected boolean setupConnection(Socket connection) throws IOException {
-        mRemoteAddress = connection.getInetAddress().getHostAddress();
-        INFO("connected");
-
-        mInputStream = new TcpServerInputStream(connection.getInputStream());
-        mOutputStream = new BufferedOutputStream(connection.getOutputStream());
-        mStartedTLS = mServer.isConnectionSSL();
-
-        if (!Config.userServicesEnabled()) {
-            ZimbraLog.imap.debug("dropping connection because user services are disabled");
-            dropConnection();
-            return false;
-        }
-
-        sendUntagged(ImapServer.getBanner(), true);
-        return true;
-    }
-
-    protected boolean authenticate() {
-        // we auth with the LOGIN command (and more to come)
-        return true;
-    }
-
-    protected void setIdle(boolean idle) {
-        super.setIdle(idle);
-        if (mSession != null)
-            mSession.updateAccessTime();
-    }
-
-    private static final boolean STOP_PROCESSING = false, CONTINUE_PROCESSING = true;
+    static final boolean STOP_PROCESSING = false, CONTINUE_PROCESSING = true;
     
-    private static StatsFile STATS_FILE =
-        new StatsFile("perf_imap", new String[] { "command" }, true);
-    
-    protected boolean processCommand() throws IOException {
-        ImapRequest req = null;
-        boolean keepGoing = CONTINUE_PROCESSING;
-        ZimbraLog.clearContext();
-        if (ZimbraPerf.isPerfEnabled())
-            ThreadLocalData.reset();
+    static StatsFile STATS_FILE = new StatsFile("perf_imap", new String[] { "command" }, true);
 
-        try {
-            // FIXME: throw an exception instead?
-            if (mInputStream == null)
-                return STOP_PROCESSING;
-
-            if (mSession != null)
-                ZimbraLog.addAccountNameToContext(mSession.getUsername());
-            ZimbraLog.addIpToContext(mRemoteAddress);
-
-            req = mIncompleteRequest;
-            if (req == null)
-                req = new ImapRequest(mInputStream, this, mSession);
-            req.continuation();
-
-            long start = ZimbraPerf.STOPWATCH_IMAP.start();
-
-            // check account status before executing command
-            if (mMailbox != null)
-                try {
-                    Account account = mMailbox.getAccount();
-                    if (account == null || !account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE)) {
-                        ZimbraLog.imap.warn("account missing or not active; dropping connection");
-                        return STOP_PROCESSING;
-                    }
-                } catch (ServiceException e) {
-                    ZimbraLog.imap.warn("error checking account status; dropping connection", e);
-                    return STOP_PROCESSING;
-                }
-
-            if (mAuthenticator != null)
-                keepGoing = continueAuthentication(req);
-            else
-                keepGoing = executeRequest(req, mSession);
-            setIdle(false);
-            mIncompleteRequest = null;
-
-            if (ZimbraPerf.isPerfEnabled())
-                ZimbraPerf.writeStats(STATS_FILE, mLastCommand);
-            ZimbraPerf.STOPWATCH_IMAP.stop(start);
-        } catch (ImapContinuationException ice) {
-            mIncompleteRequest = req.rewind();
-            if (ice.sendContinuation)
-                sendContinuation();
-        } catch (ImapParseException ipe) {
-            mIncompleteRequest = null;
-            if (ipe.mTag == null)
-                sendUntagged("BAD " + ipe.getMessage(), true);
-            else if (ipe.mCode != null)
-                sendNO(ipe.mTag, '[' + ipe.mCode + "] " + ipe.getMessage());
-            else if (ipe.mNO)
-                sendNO(ipe.mTag, ipe.getMessage());
-            else
-                sendBAD(ipe.mTag, ipe.getMessage());
-        } catch (ImapTerminatedException ite) {
-            mIncompleteRequest = null;
-            keepGoing = STOP_PROCESSING;
-        } catch (ImapException ie) {
-            ZimbraLog.imap.error("unexpected (and uncaught) IMAP exception type", ie);
-            mIncompleteRequest = null;
-            keepGoing = STOP_PROCESSING;
-        } finally {
-            ZimbraLog.clearContext();
-        }
-
-        return keepGoing;
-    }
-
-    private void checkEOF(String tag, ImapRequest req) throws ImapParseException {
+    void checkEOF(String tag, ImapRequest req) throws ImapParseException {
         if (!req.eof())
             throw new ImapParseException(tag, "excess characters at end of command");
     }
 
-    private boolean continueAuthentication(ImapRequest req) throws ImapParseException, IOException {
+    boolean continueAuthentication(ImapRequest req) throws IOException {
         String tag = mAuthenticator.mTag;
         boolean authFinished = true;
 
         try {
             // use the tag from the original AUTHENTICATE command
             req.setTag(tag);
-    
+
             // 6.2.2: "If the client wishes to cancel an authentication exchange, it issues a line
             //         consisting of a single "*".  If the server receives such a response, it MUST
             //         reject the AUTHENTICATE command by sending a tagged BAD response."
@@ -308,13 +191,16 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             checkEOF(tag, req);
             authFinished = mAuthenticator.handle(response);
             return mAuthenticator.mContinue;
+        } catch (ImapParseException ipe) {
+            sendBAD(tag, ipe.getMessage());
+            return CONTINUE_PROCESSING;
         } finally {
             if (authFinished)
                 mAuthenticator = null;
         }
     }
 
-    private boolean executeRequest(ImapRequest req, ImapSession session) throws IOException, ImapException {
+    boolean executeRequest(ImapRequest req, ImapSession session) throws IOException, ImapParseException {
         if (session != null && session.isIdle())
             return doIDLE(null, IDLE_STOP, req.readATOM().equals("DONE") && req.eof());
 
@@ -593,15 +479,16 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         } else if (required == ImapSession.STATE_SELECTED && state != ImapSession.STATE_SELECTED) {
             sendNO(tag, "must be in SELECTED state");
             return false;
-        } else
+        } else {
             return true;
+        }
     }
 
     boolean canContinue(ServiceException e) {
         return e.getCode() == MailServiceException.MAINTENANCE ? STOP_PROCESSING : CONTINUE_PROCESSING;
     }
 
-    private OperationContext getContext() throws ServiceException {
+    OperationContext getContext() throws ServiceException {
         if (mSession == null)
             throw ServiceException.AUTH_REQUIRED();
         return mSession.getContext();
@@ -656,7 +543,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
 
     boolean extensionEnabled(String extension) {
         // check whether the extension is explicitly disabled on the server
-        if (ImapServer.isExtensionDisabled(mServer, extension))
+        if (ImapServer.isExtensionDisabled(getServer(), extension))
             return false;
         // check whether one of the extension's prerequeisites is disabled on the server
         if (extension.equalsIgnoreCase("X-DRAFT-I04-SEARCHRES"))
@@ -684,26 +571,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean doSTARTTLS(String tag) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_NOT_AUTHENTICATED))
-            return CONTINUE_PROCESSING;
-        else if (mStartedTLS) {
-            sendNO(tag, "TLS already started");
-            return CONTINUE_PROCESSING;
-        }
-        sendOK(tag, "Begin TLS negotiation now");
-
-        SSLSocketFactory fac = (SSLSocketFactory) SSLSocketFactory.getDefault();
-        SSLSocket tlsconn = (SSLSocket) fac.createSocket(mConnection, mConnection.getInetAddress().getHostName(), mConnection.getPort(), true);
-        tlsconn.setUseClientMode(false);
-        tlsconn.startHandshake();
-        ZimbraLog.imap.debug("suite: " + tlsconn.getSession().getCipherSuite());
-        mInputStream = new TcpServerInputStream(tlsconn.getInputStream());
-        mOutputStream = new BufferedOutputStream(tlsconn.getOutputStream());
-        mStartedTLS = true;
-
-        return CONTINUE_PROCESSING;
-    }
+    abstract boolean doSTARTTLS(String tag) throws IOException;
 
     boolean doLOGOUT(String tag) throws IOException {
         sendUntagged(ImapServer.getGoodbye());
@@ -777,6 +645,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             ImapSession session = startSession(account, hack, command, tag);
             if (session == null)
                 return CONTINUE_PROCESSING;
+            disableUnauthConnectionAlarm();
         } catch (ServiceException e) {
             if (mSession != null)
                 mSession.clearTagCache();
@@ -794,6 +663,8 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         sendOK(tag, command + " completed");
         return CONTINUE_PROCESSING;
     }
+
+    abstract void disableUnauthConnectionAlarm() throws ServiceException;
 
     private Account authenticate(String authenticateId, String username, String password, String command, String tag) throws ServiceException, IOException {
         Provisioning prov = Provisioning.getInstance();
@@ -1010,22 +881,22 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         folderName = ImapFolder.importPath(folderName, mSession);
 
         try {
-        	ImapSubscribeOperation op = new ImapSubscribeOperation(mSession, getContext(), mMailbox, folderName);
-        	op.schedule();
+            ImapSubscribeOperation op = new ImapSubscribeOperation(mSession, getContext(), mMailbox, folderName);
+            op.schedule();
         } catch (ImapServiceException e) {
-        	if (e.getCode() == ImapServiceException.FOLDER_NOT_VISIBLE) {
-        		ZimbraLog.imap.info("SUBSCRIBE failed: "+e.toString());
-        		sendNO(tag, "SUBSCRIBE failed");
-        		return CONTINUE_PROCESSING;
-        	} else 
-        		ZimbraLog.imap.warn("SUBSCRIBE failed", e);
+            if (e.getCode() == ImapServiceException.FOLDER_NOT_VISIBLE) {
+                ZimbraLog.imap.info("SUBSCRIBE failed: "+e.toString());
+                sendNO(tag, "SUBSCRIBE failed");
+                return CONTINUE_PROCESSING;
+            } else 
+                ZimbraLog.imap.warn("SUBSCRIBE failed", e);
         } catch (ServiceException e) {
-        	if (e.getCode() == MailServiceException.NO_SUCH_FOLDER)
-        		ZimbraLog.imap.info("SUBSCRIBE failed: no such folder: " + folderName);
-        	else
-        		ZimbraLog.imap.warn("SUBSCRIBE failed", e);
-        	sendNO(tag, "SUBSCRIBE failed");
-        	return canContinue(e);
+            if (e.getCode() == MailServiceException.NO_SUCH_FOLDER)
+                ZimbraLog.imap.info("SUBSCRIBE failed: no such folder: " + folderName);
+            else
+                ZimbraLog.imap.warn("SUBSCRIBE failed", e);
+            sendNO(tag, "SUBSCRIBE failed");
+            return canContinue(e);
         }
         
         sendNotifications(true, false);
@@ -1040,8 +911,8 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         folderName = ImapFolder.importPath(folderName, mSession);
 
         try {
-        	ImapUnsubscribeOperation op = new ImapUnsubscribeOperation(mSession, getContext(), mMailbox, folderName);
-        	op.schedule();
+            ImapUnsubscribeOperation op = new ImapUnsubscribeOperation(mSession, getContext(), mMailbox, folderName);
+            op.schedule();
         } catch (MailServiceException.NoSuchItemException nsie) {
             ZimbraLog.imap.info("UNSUBSCRIBE failure skipped: no such folder: " + folderName);
         } catch (ServiceException e) {
@@ -1074,7 +945,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         }
         if (pattern.startsWith("/"))
             pattern = pattern.substring(1);
-        List<String> matches = new ArrayList<String>();
+        List<String> matches;
         try {
         	ImapListOperation op = new ImapListOperation(mSession, getContext(), mMailbox, pattern, extensionEnabled("CHILDREN"));
         	op.schedule();
@@ -1085,9 +956,10 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             return canContinue(e);
         }
 
-        if (matches != null) 
+        if (matches != null) {
         	for (String match : matches)
         		sendUntagged(match);
+        }
         
         sendNotifications(true, false);
         sendOK(tag, "LIST completed");
@@ -1124,11 +996,11 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         return CONTINUE_PROCESSING;
     }
 
-    private static final int STATUS_MESSAGES    = 0x01;
-    private static final int STATUS_RECENT      = 0x02;
-    private static final int STATUS_UIDNEXT     = 0x04;
-    private static final int STATUS_UIDVALIDITY = 0x08;
-    private static final int STATUS_UNSEEN      = 0x10;
+    static final int STATUS_MESSAGES    = 0x01;
+    static final int STATUS_RECENT      = 0x02;
+    static final int STATUS_UIDNEXT     = 0x04;
+    static final int STATUS_UIDVALIDITY = 0x08;
+    static final int STATUS_UNSEEN      = 0x10;
 
     boolean doSTATUS(String tag, String folderName, int status) throws IOException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
@@ -1210,7 +1082,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         StringBuilder appendHint = extensionEnabled("UIDPLUS") ? new StringBuilder() : null;
         try {
         	ImapAppendOperation op = new ImapAppendOperation(mSession, getContext(), mMailbox,
-        				new FindOrCreateTags(), folderName, flagNames, date, content, newTags, appendHint);
+        				this, folderName, flagNames, date, content, newTags, appendHint);
         	op.schedule();
         } catch (ServiceException e) {
             deleteTags(newTags);
@@ -1232,13 +1104,6 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         sendNotifications(true, false);
         sendOK(tag, (appendHint == null ? "" : appendHint.toString()) + "APPEND completed");
         return CONTINUE_PROCESSING;
-    }
-
-     
-    class FindOrCreateTags implements IFindOrCreateTags {
-    	public List<ImapFlag> doFindOrCreateTags(List<String> flagNames, List<Tag> newTags) throws ServiceException {
-    		return findOrCreateTags(flagNames, newTags);
-    	}
     }
 
     List<ImapFlag> findOrCreateTags(List<String> tagNames, List<Tag> newTags) throws ServiceException {
@@ -1268,17 +1133,19 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         }
         return flags;
     }
+
     private void deleteTags(List<Tag> ltags) {
-        if (mMailbox != null && ltags != null)
-            for (Tag ltag : ltags)
+        if (mMailbox != null && ltags != null) {
+            for (Tag ltag : ltags) {
                 try {
                     // notification will update mTags hash
                     DeleteOperation op = new DeleteOperation(mSession, getContext(), mMailbox, Requester.IMAP, ltag.getId(), MailItem.TYPE_TAG);
                     op.schedule();
-                    
                 } catch (ServiceException e) {
                     ZimbraLog.imap.warn("failed to delete tag: " + ltag.getName(), e);
                 }
+            }
+        }
     }
 
     static final boolean IDLE_START = true;
@@ -1616,6 +1483,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
     static final int FETCH_ALL  = FETCH_FAST  | FETCH_ENVELOPE;
     static final int FETCH_FULL = FETCH_ALL   | FETCH_BODY;
 
+    abstract OutputStream getFetchOutputStream();
 
     boolean doFETCH(String tag, String sequenceSet, int attributes, List<ImapPartSpecifier> parts, boolean byUID) throws IOException, ImapParseException {
         if (!checkState(tag, ImapSession.STATE_SELECTED))
@@ -1647,9 +1515,9 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         i4set.remove(null);
 
         for (ImapMessage i4msg : i4set) {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            OutputStream os = getFetchOutputStream();
             ByteArrayOutputStream baosDebug = ZimbraLog.imap.isDebugEnabled() ? new ByteArrayOutputStream() : null;
-	        PrintStream result = new PrintStream(new ByteUtil.TeeOutputStream(baos, baosDebug), false, "utf-8");
+	        PrintStream result = new PrintStream(new ByteUtil.TeeOutputStream(os, baosDebug), false, "utf-8");
         	try {
                 boolean markMessage = markRead && (i4msg.flags & Flag.BITMASK_UNREAD) != 0;
                 boolean empty = true;
@@ -1679,7 +1547,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                 if (!fullMessage.isEmpty()) {
                     raw = ImapMessage.getContent(item);
                     for (ImapPartSpecifier pspec : fullMessage) {
-                        result.print(empty ? "" : " ");  pspec.write(result, baos, raw);  empty = false;
+                        result.print(empty ? "" : " ");  pspec.write(result, os, raw);  empty = false;
                     }
                 }
 
@@ -1698,10 +1566,10 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                         i4msg.serializeEnvelope(result, mm);  empty = false;
                     }
                     for (ImapPartSpecifier pspec : parts) {
-                        result.print(empty ? "" : " ");  pspec.write(result, baos, mm);  empty = false;
+                        result.print(empty ? "" : " ");  pspec.write(result, os, mm);  empty = false;
                     }
                 }
-                    
+
                 // 6.4.5: "The \Seen flag is implicitly set; if this causes the flags to
                 //         change, they SHOULD be included as part of the FETCH responses."
                 // FIXME: optimize by doing a single mark-read op on multiple messages
@@ -1715,7 +1583,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                 }
             } catch (ImapPartSpecifier.BinaryDecodingException e) {
                 // don't write this response line if we're returning NO
-                baos = baosDebug = null;
+                os = baosDebug = null;
                 throw new ImapParseException(tag, "UNKNOWN-CTE", command + "failed: unknown content-type-encoding", false);
             } catch (ServiceException e) {
                 ZimbraLog.imap.warn("ignoring error during " + command + ": ", e);
@@ -1724,10 +1592,9 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                 ZimbraLog.imap.warn("ignoring error during " + command + ": ", e);
                 continue;
             } finally {
-                result.write(')');
-                if (mOutputStream != null && baos != null) {
-                    baos.write(LINE_SEPARATOR_BYTES);
-                    mOutputStream.write(baos.toByteArray());
+                if (os != null) {
+                    result.write(')');
+                    os.write(LINE_SEPARATOR_BYTES, 0, LINE_SEPARATOR_BYTES.length);
                 }
                 if (baosDebug != null)
                     ZimbraLog.imap.debug("  S: " + baosDebug);
@@ -2031,44 +1898,15 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         }
     }
 
+    @Override
     public void dropConnection() {
         dropConnection(true);
     }
     
-    public void dropConnection(boolean sendBanner) {
-        if (mSession != null) {
-            mSession.setHandler(null);
-            SessionCache.clearSession(mSession.getSessionId(), mSession.getAccountId());
-            mSession = null;
-        }
+    abstract void dropConnection(boolean sendBanner);
 
-        try {
-            if (mOutputStream != null) {
-                if (sendBanner) {
-                    if (!mGoodbyeSent)
-                         sendUntagged(ImapServer.getGoodbye(), true);
-                    mGoodbyeSent = true;
-                }
-                mOutputStream.close();
-                mOutputStream = null;
-            }
-            if (mInputStream != null) {
-                mInputStream.close();
-                mInputStream = null;
-            }
-        } catch (IOException e) {
-            INFO("exception while closing connection", e);
-        }
-    }
+    abstract void flushOutput() throws IOException;
 
-    protected void notifyIdleConnection() {
-        // we can, and do, drop idle connections after the timeout
-
-        // TODO in the TcpServer case, is this duplicated effort with
-        // session timeout code that also drops connections?
-        ZimbraLog.imap.debug("dropping connection for inactivity");
-        dropConnection();
-    }
 
     void sendIdleUntagged() throws IOException                   { sendUntagged("NOOP", true); }
 
@@ -2079,7 +1917,6 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
     void sendUntagged(String response, boolean flush) throws IOException { sendResponse("*", response, flush); }
     void sendContinuation() throws IOException                   { sendResponse("+", null, true); }
     void sendContinuation(String response) throws IOException    { sendResponse("+", response, true); }
-    void flushOutput() throws IOException                        { mOutputStream.flush(); }
     
     private void sendResponse(String status, String msg, boolean flush) throws IOException {
         String response = status + ' ' + (msg == null ? "" : msg);
@@ -2090,104 +1927,5 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         sendLine(response, flush);
     }
 
-    private void sendLine(String line, boolean flush) throws IOException {
-        // FIXME: throw an exception instead?
-        if (mOutputStream == null)
-            return;
-        mOutputStream.write(line.getBytes());
-        mOutputStream.write(LINE_SEPARATOR_BYTES);
-        if (flush)
-            mOutputStream.flush();
-    }
-
-
-    private void INFO(String message, Throwable e) {
-        if (ZimbraLog.imap.isInfoEnabled()) ZimbraLog.imap.info(withClientInfo(message), e); 
-    }
-
-    private void INFO(String message) {
-        if (ZimbraLog.imap.isInfoEnabled()) ZimbraLog.imap.info(withClientInfo(message));
-    }
-
-    private StringBuilder withClientInfo(String message) {
-        int length = 64;
-        if (message != null) length += message.length();
-        return new StringBuilder(length).append("[").append(mRemoteAddress).append("] ").append(message);
-    }
-
-
-    public static void main(String[] args) throws IOException, ImapException {
-        List<ImapPartSpecifier> parts = new ArrayList<ImapPartSpecifier>();
-        List<String> pieces = new ArrayList<String>();
-        ImapHandler handler = new ImapHandler(null);
-        handler.mOutputStream = System.out;
-
-        System.out.println("> A001 CAPABILITY");
-        handler.doCAPABILITY("A001");
-
-        System.out.println("> A002 LOGIN \"user1@example.zimbra.com\" \"test123\"");
-        handler.doLOGIN("A002", "user1@example.zimbra.com", "test123");
-
-        System.out.println("> B002 ID NIL");
-        handler.doID("B002", null);
-
-        System.out.println("> A003 LIST \"\" \"\"");
-        handler.doLIST("A003", "", "");
-
-        System.out.println("> B003 CREATE \"/test/slap\"");
-        handler.doCREATE("B003", "/test/slap");
-
-        System.out.println("> A004 LIST \"/\" \"%\"");
-        handler.doLIST("A004", "/", "[^/]*");
-
-        System.out.println("> B004 DELETE \"/test/slap\"");
-        handler.doDELETE("B004", "/test/slap");
-
-        System.out.println("> A005 LIST \"/\" \"*\"");
-        handler.doLIST("A005", "/", ".*");
-
-        System.out.println("> B005 LIST \"/\" \"inbox\"");
-        handler.doLIST("B005", "/", "INBOX");
-
-        System.out.println("> C005 LIST \"/\" \"$NBOX+?\"");
-        handler.doLIST("C005", "/", "\\$NBOX\\+\\?");
-
-        System.out.println("> D005 LIST \"/\" \"%/sub()\"");
-        handler.doLIST("D005", "/", "[^/]*/SUB\\(\\)");
-
-        System.out.println("> A006 SELECT \"/floo\"");
-        handler.doSELECT("A006", "/floo");
-
-        System.out.println("> B006 SELECT \"/INBOX\"");
-        handler.doSELECT("B006", "/INBOX");
-
-        System.out.println("> A007 STATUS \"/Sent\" (UNSEEN UIDVALIDITY MESSAGES)");
-        handler.doSTATUS("A007", "/Sent", STATUS_UNSEEN | STATUS_UIDVALIDITY | STATUS_MESSAGES);
-
-        System.out.println("> B007 STATUS \"/INBOX\" (UNSEEN UIDVALIDITY MESSAGES)");
-        handler.doSTATUS("B007", "/INBOX", STATUS_UNSEEN | STATUS_UIDVALIDITY | STATUS_MESSAGES);
-
-        System.out.println("> A008 FETCH 1:3,*:1234 FULL");
-        handler.doFETCH("A008", "1:3,*:1234", FETCH_FULL, parts, false);
-
-        System.out.println("> A009 UID FETCH 444,288,602:593 FULL");
-        handler.doFETCH("A009", "444,288,602:593", FETCH_FULL, parts, true);
-
-        System.out.println("> A010 FETCH 7 (ENVELOPE BODY.PEEK[1] BODY[HEADER.FIELDS (DATE SUBJECT)]");
-        List<String> headers = new LinkedList<String>();  headers.add("date");  headers.add("subject");
-        parts.clear();  parts.add(new ImapPartSpecifier("BODY", "1", ""));  parts.add(new ImapPartSpecifier("BODY", "", "HEADER.FIELDS").setHeaders(headers));
-        handler.doFETCH("A010", "7", FETCH_ENVELOPE, parts, false);
-
-        System.out.println("> A011 STORE 1 +FLAGS ($MDNSent)");
-        List<String> flags = new ArrayList<String>();  flags.add("$MDNSENT");
-        handler.doSTORE("A011", "1", flags, STORE_ADD, false, false);
-
-        ImapRequest req = new ImapRequest("X001 LOGIN user1@example.zimbra.com \"\\\\\\\"test123\\\"\\\\\"", handler);
-        pieces.clear();  pieces.add(req.readTag());  req.skipSpace();  pieces.add(req.readATOM());  req.skipSpace();  pieces.add(req.readAstring());  req.skipSpace();  pieces.add(req.readAstring());  assert(req.eof());
-        System.out.println(pieces);
-
-        req = new ImapRequest("X002 CREATE ~peter/mail/&U,BTFw-/&ZeVnLIqe-", handler);
-        pieces.clear();  pieces.add(req.readTag());  req.skipSpace();  pieces.add(req.readATOM());  req.skipSpace();  pieces.add(req.readFolder());  assert(req.eof());
-        System.out.println(pieces);
-    }
+    abstract void sendLine(String line, boolean flush) throws IOException;
 }

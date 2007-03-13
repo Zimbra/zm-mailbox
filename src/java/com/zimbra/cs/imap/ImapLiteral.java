@@ -29,10 +29,7 @@ import com.zimbra.common.util.ZimbraLog;
 final class ImapLiteral {
     private int mOctets;
     private int mLength;
-    private boolean mNonblockingPermitted;
     private boolean mBlocking;
-
-    private ImapLiteral(boolean allowNonblocking) { mNonblockingPermitted = allowNonblocking; }
 
     /** octets specified to be in the literal, for {12+}, this is 12. */
     public int octets() {
@@ -50,7 +47,7 @@ final class ImapLiteral {
     }
     
     public static ImapLiteral parse(String tag, String line, boolean allowNonblocking) throws ImapParseException {
-        ImapLiteral result = new ImapLiteral(allowNonblocking);
+        ImapLiteral result = new ImapLiteral();
         int digitLimit;
         if (allowNonblocking && line.endsWith("+}")) {
             digitLimit = line.length() - 2;

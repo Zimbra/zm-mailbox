@@ -25,11 +25,13 @@
 
 package com.zimbra.cs.imap;
 
-class ImapParseException extends ImapException {
+class ImapParseException extends Exception {
     private static final long serialVersionUID = 4675342317380797673L;
 
     String mTag, mCode;
     boolean mNO;
+
+    ImapParseException() { }
 
     ImapParseException(String tag, String message) { 
         super("parse error: " + message);

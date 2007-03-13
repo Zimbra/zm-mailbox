@@ -25,6 +25,7 @@
 package com.zimbra.cs.imap;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -168,6 +169,8 @@ class ImapURL {
                         throw new ImapUrlException(tag, url, "extra chars at end of IMAP URL SECTION");
                 } catch (ImapParseException ipe) {
                     throw new ImapUrlException(tag, url, ipe.getMessage());
+                } catch (IOException ioe) {
+                    throw new ImapUrlException(tag, url, ioe.getMessage());
                 }
             }
         }

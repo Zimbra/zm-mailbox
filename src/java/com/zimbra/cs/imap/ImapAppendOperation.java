@@ -56,7 +56,7 @@ public class ImapAppendOperation extends Operation  {
         }
 
     private ImapSession mImapSession;
-    private IFindOrCreateTags mIFindOrCreateTags;   
+    private ImapHandler mHandler;   
     private String mFolderName;
     private List<String> mFlagNames;
     private Date mDate;
@@ -65,11 +65,11 @@ public class ImapAppendOperation extends Operation  {
     private StringBuilder mAppendHint;
 
     public ImapAppendOperation(ImapSession session, OperationContext oc, Mailbox mbox,
-            				   IFindOrCreateTags findOrCreateTags, String folderName, List<String> flagNames,
+            				   ImapHandler handler, String folderName, List<String> flagNames,
             				   Date date, byte[] content, List<Tag> newTags, StringBuilder appendHint) {
         super(session, oc, mbox, Requester.IMAP, Requester.IMAP.getPriority(), LOAD);
         mImapSession = session;
-        mIFindOrCreateTags = findOrCreateTags;
+        mHandler = handler;
         mFolderName = folderName;
         mFlagNames = flagNames;
         mDate = date;
@@ -91,7 +91,7 @@ public class ImapAppendOperation extends Operation  {
             int flagMask = Flag.BITMASK_UNREAD;
             StringBuffer tagStr = new StringBuffer();
             if (mFlagNames != null) {
-                for (ImapFlag i4flag : mIFindOrCreateTags.doFindOrCreateTags(mFlagNames, mNewTags)) {
+                for (ImapFlag i4flag : mHandler.findOrCreateTags(mFlagNames, mNewTags)) {
                     if (!i4flag.mPermanent)
                         sflags |= i4flag.mBitmask;
                     else if (Tag.validateId(i4flag.mId))

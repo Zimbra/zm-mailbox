@@ -40,7 +40,6 @@ import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.Session;
-import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
@@ -68,7 +67,7 @@ public class ImapSession extends Session {
     private String      mUsername;
     private byte        mState;
     private String      mIdleTag;
-    private ImapSessionHandler mHandler;
+    private ImapHandler mHandler;
     private ImapFolder  mSelectedFolder;
     private ImapMessageSet mSavedSearchResults;
     private ImapFlagCache mFlags = new ImapFlagCache();
@@ -110,7 +109,7 @@ public class ImapSession extends Session {
 
     static byte getState(ImapSession s)  { return s == null ? STATE_NOT_AUTHENTICATED : s.mState; }
 
-    void setHandler(ImapSessionHandler handler)  { mHandler = handler; }
+    void setHandler(ImapHandler handler)  { mHandler = handler; }
 
     String getUsername()          { return mUsername; }
     void setUsername(String name) { mUsername = name; }
