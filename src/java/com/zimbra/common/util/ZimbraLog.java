@@ -120,7 +120,12 @@ public class ZimbraLog {
      * the "zimbra.smtp" logger. For SMTP-related events.
      */
     public static final Log smtp = LogFactory.getLog("zimbra.smtp");
-    
+
+    /**
+     * the "zimbra.nio" logger. For NIO-related events.
+     */
+    public static final Log nio = LogFactory.getLog("zimbra.nio");
+
     /**
      * the "zimbra.imap" logger. For IMAP-related events.
      */
