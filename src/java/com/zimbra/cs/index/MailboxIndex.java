@@ -942,6 +942,36 @@ public final class MailboxIndex
             }
         }        
     }
+    
+    /**
+     * Check to see if it is OK for us to create an index in the specified 
+     * directory.
+     * 
+     * @param indexDir
+     * @return TRUE if the index directory is empty or doesn't exist,
+     *             FALSE if the index directory exists and has files in it  
+     * @throws IOException
+     */
+    private boolean indexDirIsEmpty(File indexDir) {
+        if (!indexDir.exists()) {
+            // dir doesn't even exist yet.  Create the parents and return true
+            indexDir.mkdirs();
+            return true;
+        }
+        
+        // Empty directory is okay, but a directory with any files
+        // implies index corruption.
+        File[] files = indexDir.listFiles();
+        int numFiles = 0;
+        for (int i = 0; i < files.length; i++) {
+            File f = files[i];
+            String fname = f.getName();
+            if (f.isDirectory() && (fname.equals(".") || fname.equals("..")))
+                continue;
+            numFiles++;
+        }
+        return (numFiles <= 0);
+    }
 
     private void openIndexWriter() throws IOException
     {
@@ -990,29 +1020,15 @@ public final class MailboxIndex
             } catch (IOException e1) {
                 //mLog.info("****Creating new index in " + mIdxPath + " for mailbox " + mMailboxId);
                 File idxFile  = new File(mIdxPath);
-                if (idxFile.exists()) {
-                    // Empty directory is okay, but a directory with any files
-                    // implies index corruption.
-                    File[] files = idxFile.listFiles();
-                    int numFiles = 0;
-                    for (int i = 0; i < files.length; i++) {
-                        File f = files[i];
-                        String fname = f.getName();
-                        if (f.isDirectory() && (fname.equals(".") || fname.equals("..")))
-                            continue;
-                        numFiles++;
-                    }
-                    if (numFiles > 0) {
-                        IOException ioe = new IOException("Could not create index " + mIdxPath + " (directory already exists)");
-                        ioe.initCause(e1);
-                        throw ioe;
-                    }
-                } else {
-                    idxFile.mkdirs();
+                if (indexDirIsEmpty(idxFile)) {
+                    writer = new IndexWriter(idxFile, getAnalyzer(), true);
+                    if (writer == null) 
+                        throw new IOException("Failed to open IndexWriter in directory "+idxFile.getAbsolutePath());
+				}  else {
+                    IOException ioe = new IOException("Could not create index " + idxFile.toString() + " (directory already exists)");
+                    ioe.initCause(e1);
+                    throw ioe;
                 }
-                writer = new IndexWriter(idxFile, getAnalyzer(), true);
-                if (writer == null) 
-                    throw new IOException("Failed to open IndexWriter in directory "+idxFile.getAbsolutePath());
             }
 
             ///////////////////////////////////////////////////
@@ -1091,21 +1107,18 @@ public final class MailboxIndex
         synchronized(getLock()) {        
             IndexReader reader = null;
             try {
-                /* uggghhh!  nasty.  FIXME - need to coordinate with index writer better 
-             (manually create a RamDirectory and index into that?) */
                 flush();
-
                 reader = IndexReader.open(mIdxPath);
             } catch(IOException e) {
                 // Handle the special case of trying to open a not-yet-created
                 // index, by opening for write and immediately closing.  Index
                 // directory should get initialized as a result.
                 File indexDir = new File(mIdxPath);
-                if (!indexDir.exists()) {
+                if (indexDirIsEmpty(indexDir)) {
                     openIndexWriter();
                     flush();
                     try {
-                        reader = IndexReader.open(mIdxPath);
+                        reader = IndexReader.open(indexDir);
                     } catch (IOException e1) {
                         if (reader != null)
                             reader.close();
@@ -1117,6 +1130,7 @@ public final class MailboxIndex
                     throw e;
                 }
             }
+            
             return new CountedIndexReader(reader);
         }
     }
