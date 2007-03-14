@@ -340,7 +340,7 @@ public class ItemActionOperation extends Operation {
         // deal with local mountpoints pointing at local folders here
         if (movable && mIidFolder.belongsTo(mMailbox) && mIidFolder.getId() > 0) {
             Folder folder = mMailbox.getFolderById(mOpCtxt, mIidFolder.getId());
-            if (folder instanceof Mountpoint && ((Mountpoint) folder).getOwnerId().equals(mIidFolder.getAccountId()))
+            if (folder instanceof Mountpoint && !((Mountpoint) folder).getOwnerId().equals(mIidFolder.getAccountId()))
                 mIidFolder = new ItemId(((Mountpoint) folder).getOwnerId(), ((Mountpoint) folder).getRemoteId());
         }
 
