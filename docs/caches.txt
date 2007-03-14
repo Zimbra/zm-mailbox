@@ -1,0 +1,63 @@
+List of tunable caches in the ZCS server
+----------------------------------------
+
+IndexReadersCache
+=================
+
+What:
+   A cache of recently opened Lucene IndexReaders.  This short-lived
+cache keeps the per-mailbox Lucene index from being closed and
+re-opened multiple times during searches, or when multiple searches
+are issued to the same mailbox in close proximity.
+   Opening an index for reading is a fairly expensive task as it
+requires the index's word dictionary to be loaded from disk.  An open
+Reader requires a significant amount of server memory when open, so
+increasing the cache parameters will cause the server to use more
+memory.
+   Setting LC.zimbra_index_reader_lru_size to "0" disbles this cache.
+Disabling the cache will cause a significant performance impact when
+searching large indexes.
+           
+Owner:
+   tim@zimbra.com
+
+Tunable Parameters:
+   LC.zimbra_index_reader_lru_size
+      max # IndexReaders cached simultaneously in system.  
+   LC.zimbra_index_reader_idle_flush_time
+      time (seconds) to hold the IndexReader open before closing it.
+   LC.zimbra_index_reader_idle_sweep_frequency
+      frequency (seconds) to sweep the cache looking for readers to
+      close.
+
+
+      
+IndexWritersCache
+=================
+
+What:
+   When writing data to an index, Lucene performs significantly better
+in "batch mode" - if it writes multiple documents to disk at one time.
+The IndexWriters cache attempts to batch index writes by keeping the
+most recently written-to indexes open for a while before committing
+the data to disk.
+   Setting the max_uncommitted_operations to "0" effectively disables
+this cache, causing all index writes to be written through to disk
+immediately.
+
+Owner:
+   tim@zimbra.com
+
+Tunable Parameters:
+   LC.zimbra_index_max_uncommitted_operations
+      Per-Index, the maximum # uncommitted documents we store in
+      memory before flushing the index to disk.  Raising this # will
+      improve performance, but will raise memory pressure on the server.
+   LC.zimbra_index_lru_size
+      Number of index writers the server will allow to simultaneously
+      be open.  
+   LC.zimbra_index_idle_flush_time
+      Idle timeout (seconds) to wait before flushing an open index
+      writer.
+      
+
