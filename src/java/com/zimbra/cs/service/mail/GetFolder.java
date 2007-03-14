@@ -78,24 +78,24 @@ public class GetFolder extends MailDocumentHandler {
 		ItemId iid = new ItemId(parentId, lc);
 
         boolean visible = request.getAttributeBool(MailConstants.A_VISIBLE, false);
-
-		Element response = lc.createElement(MailConstants.GET_FOLDER_RESPONSE);
 		
 		GetFolderTreeOperation op = new GetFolderTreeOperation(session, octxt, mbox, Requester.SOAP, iid, visible);
 		op.schedule();
 		FolderNode rootnode = op.getResult();
 
-		Element folderRoot = encodeFolderNode(ifmt, octxt, response, rootnode);
-		if (rootnode.mVisible && rootnode.mFolder instanceof Mountpoint) {
-			handleMountpoint(request, context, iid, (Mountpoint) rootnode.mFolder, folderRoot);			
-		}
-		
+		Element response = lc.createElement(MailConstants.GET_FOLDER_RESPONSE);
+        if (rootnode != null) {
+    		Element folderRoot = encodeFolderNode(ifmt, octxt, response, rootnode);
+    		if (rootnode.mFolder != null && rootnode.mFolder instanceof Mountpoint)
+    			handleMountpoint(request, context, iid, (Mountpoint) rootnode.mFolder, folderRoot);			
+        }
+
 		return response;
 	}
 
 	public static Element encodeFolderNode(ItemIdFormatter ifmt, OperationContext octxt, Element parent, FolderNode node) {
 		Element eFolder;
-        if (node.mVisible)
+        if (node.mFolder != null)
             eFolder = ToXML.encodeFolder(parent, ifmt, octxt, node.mFolder);
         else
             eFolder = parent.addElement(MailConstants.E_FOLDER).addAttribute(MailConstants.A_ID, node.mId).addAttribute(MailConstants.A_NAME, node.mName);

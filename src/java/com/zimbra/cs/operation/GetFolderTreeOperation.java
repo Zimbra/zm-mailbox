@@ -53,7 +53,6 @@ public class GetFolderTreeOperation extends Operation {
         public int mId;
         public String mName;
         public Folder mFolder;
-        public boolean mVisible;
         public List<FolderNode> mSubfolders = new ArrayList<FolderNode>();
     }
 
@@ -94,8 +93,7 @@ public class GetFolderTreeOperation extends Operation {
         FolderNode node = new FolderNode();
         node.mId = folder.getId();
         node.mName = node.mId == Mailbox.ID_FOLDER_ROOT ? null : folder.getName();
-        node.mFolder = folder;
-        node.mVisible = isVisible;
+        node.mFolder = isVisible ? folder : null;
 
         // if this was the last visible folder overall, no need to look at children
         if (isVisible && visible != null && visible.isEmpty())
