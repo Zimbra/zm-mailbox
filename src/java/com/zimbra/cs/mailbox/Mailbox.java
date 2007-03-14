@@ -315,7 +315,7 @@ public class Mailbox {
             return isAdmin;
         }
         public boolean isDelegatedRequest(Mailbox mbox) {
-            return authuser != null && authuser.getId().equalsIgnoreCase(mbox.getAccountId());
+            return authuser != null && !authuser.getId().equalsIgnoreCase(mbox.getAccountId());
         }
         
         public void setRequestIP(String addr) {
