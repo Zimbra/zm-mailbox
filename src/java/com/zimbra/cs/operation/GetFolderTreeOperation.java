@@ -25,12 +25,11 @@
 package com.zimbra.cs.operation;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
@@ -38,65 +37,81 @@ import com.zimbra.cs.session.Session;
 
 public class GetFolderTreeOperation extends Operation {
 	
-	private static int LOAD = 1;
-	static {
-		Operation.Config c = loadConfig(GetFolderTreeOperation.class);
-		if (c != null)
-			LOAD = c.mLoad;
-	}
-	
-	private ItemId mIid;
-	
-	private FolderNode mResult;
-	
-	public static class FolderNode {
-		public Folder mFolder;
-		public List<FolderNode> mSubFolders = new ArrayList<FolderNode>();
-	}
+    private static int LOAD = 1;
+    static {
+        Operation.Config c = loadConfig(GetFolderTreeOperation.class);
+        if (c != null)
+            LOAD = c.mLoad;
+    }
 
-	public GetFolderTreeOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
-				ItemId iid) {
-		super(session, oc, mbox, req, LOAD);
-		
-		mIid = iid;
-	}
-	
-	public String toString() {
-		return "GetFolderTreeOperation("+mIid != null ? mIid.toString() : Mailbox.ID_FOLDER_USER_ROOT+")";
-	}
+    private ItemId mIid;
+    private boolean mVisibleFolders;
 
-	protected void callback() throws ServiceException {
-		Mailbox mbox = getMailbox();
-		
-		synchronized(mbox) {
-			// get the root node...
-			int folderId = mIid != null ? mIid.getId() : Mailbox.ID_FOLDER_USER_ROOT;
-			Folder folder = mbox.getFolderById(getOpCtxt(), folderId);
-			if (folder == null)
-				throw MailServiceException.NO_SUCH_FOLDER(folderId);
-			
-			mResult = new FolderNode();
-			mResult.mFolder = folder;
-			
-			// for each subNode...
-			handleFolder(mResult);
-		}
-			
-	}
-	
-	private void handleFolder(FolderNode parent) throws ServiceException {
-		List subfolders = parent.mFolder.getSubfolders(getOpCtxt());
-		if (subfolders != null)
-			for (Iterator it = subfolders.iterator(); it.hasNext(); ) {
-				Folder subfolder = (Folder) it.next();
-				if (subfolder != null) {
-					FolderNode fn = new FolderNode();
-					parent.mSubFolders.add(fn);
-					fn.mFolder = subfolder;
-					handleFolder(fn);
-				}					
-			}
-	}
+    private FolderNode mResult;
 
-	public FolderNode getResult() { return mResult; }
+    public static class FolderNode {
+        public int mId;
+        public String mName;
+        public Folder mFolder;
+        public boolean mVisible;
+        public List<FolderNode> mSubfolders = new ArrayList<FolderNode>();
+    }
+
+    public GetFolderTreeOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
+                ItemId iid, boolean visible) {
+        super(session, oc, mbox, req, LOAD);
+
+        mIid = iid;
+        mVisibleFolders = visible;
+    }
+
+    public String toString() {
+        return "GetFolderTreeOperation(" + (mIid != null ? mIid.toString() : Mailbox.ID_FOLDER_USER_ROOT + "") + ")";
+    }
+
+    protected void callback() throws ServiceException {
+        Mailbox mbox = getMailbox();
+
+        synchronized (mbox) {
+            // get the root node...
+            int folderId = mIid != null ? mIid.getId() : Mailbox.ID_FOLDER_USER_ROOT;
+            Folder folder = mbox.getFolderById(mVisibleFolders ? null : getOpCtxt(), folderId);
+
+            // for each subNode...
+            Set<Folder> visible = mbox.getVisibleFolders(getOpCtxt());
+            mResult = handleFolder(folder, visible);
+        }
+    }
+    
+    private FolderNode handleFolder(Folder folder, Set<Folder> visible) throws ServiceException {
+        boolean isVisible = visible == null || visible.remove(folder);
+
+        // short-circuit if we know that this won't be in the output
+        List<Folder> subfolders = folder.getSubfolders(null);
+        if (!isVisible && subfolders.isEmpty())
+            return null;
+
+        FolderNode node = new FolderNode();
+        node.mId = folder.getId();
+        node.mName = node.mId == Mailbox.ID_FOLDER_ROOT ? null : folder.getName();
+        node.mFolder = folder;
+        node.mVisible = isVisible;
+
+        // if this was the last visible folder overall, no need to look at children
+        if (isVisible && visible != null && visible.isEmpty())
+            return node;
+
+        // write the subfolders' data to the response
+        for (Folder subfolder : subfolders) {
+            FolderNode child = handleFolder(subfolder, visible);
+            if (child != null) {
+                node.mSubfolders.add(child);
+                isVisible = true;
+            }
+        }
+
+        return isVisible ? node : null;
+    }
+
+    public FolderNode getResult() { return mResult; }
 }

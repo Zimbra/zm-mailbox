@@ -256,7 +256,7 @@ public class SoapSession extends Session {
 //              GetFolder.handleFolder(mbox, root, eRefresh, zc, octxt);
             	
             	// use the operation here just so we can re-use the logic...
-            	GetFolderTreeOperation op = new GetFolderTreeOperation(this, octxt, mMailbox, Requester.SOAP, null);
+            	GetFolderTreeOperation op = new GetFolderTreeOperation(this, octxt, mMailbox, Requester.SOAP, null, true);
             	op.runImmediately();
             	GetFolder.encodeFolderNode(ifmt, zsc.getOperationContext(), eRefresh, op.getResult());
             } catch (ServiceException e) {

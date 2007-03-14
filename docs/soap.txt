@@ -1155,7 +1155,7 @@ if nest="1" on the request, response looks like this:
 
 <GetItemRequest>
   [<item [id="{item-id}"] [path="{fully-qualified-path}"] [l="{folder-id}" name="{item-name}]/>]
-</GetFolderRequest>
+</GetItemRequest>
 
   the caller must specify one of:
     - an {item-id},
@@ -1171,13 +1171,20 @@ if nest="1" on the request, response looks like this:
 
 ----------
 
-<GetFolderRequest>
+<GetFolderRequest [visible="0|1"]>
   [<folder [l="{base-folder-id}"] [path="{fully-qualified-path}"]/>]
 </GetFolderRequest>
 
-  either a {base-folder-id} or a {fully-qualified-path} can optionally be specified;
-  if neither is present, the descent of the folder hierarchy begins at the mailbox's
-  root folder (id 1).
+  - either a {base-folder-id} or a {fully-qualified-path} can optionally be specified;
+      if neither is present, the descent of the folder hierarchy begins at the mailbox's root folder (id 1).
+
+  - if "visible" is 1, we include all visible subfolders of the specified folder
+      when you have full rights on the mailbox, this is indistinguishable from the normal <GetFolderResponse>
+      when you don't: folders you can see appear normally,
+                      folders you can't see (and can't see any subfolders) are omitted
+                      folders you can't see (but *can* see >=1 subfolder) appear as <folder id="{id}" name="{name}"> hierarchy placeholders
+
+  - if *no* folders are visible and visible=1, the response looks like <GetFolderResponse/>
 
 <GetFolderResponse>
   <folder ...>

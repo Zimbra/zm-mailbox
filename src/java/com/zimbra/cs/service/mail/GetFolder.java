@@ -65,7 +65,7 @@ public class GetFolder extends MailDocumentHandler {
 		Mailbox.OperationContext octxt = lc.getOperationContext();
         ItemIdFormatter ifmt = new ItemIdFormatter(lc);
 		Session session = getSession(context);
-		
+
 		String parentId = DEFAULT_FOLDER_ID;
 		Element eFolder = request.getOptionalElement(MailConstants.E_FOLDER);
 		if (eFolder != null) {
@@ -77,27 +77,33 @@ public class GetFolder extends MailDocumentHandler {
         }
 		ItemId iid = new ItemId(parentId, lc);
 
+        boolean visible = request.getAttributeBool(MailConstants.A_VISIBLE, false);
+
 		Element response = lc.createElement(MailConstants.GET_FOLDER_RESPONSE);
 		
-		GetFolderTreeOperation op = new GetFolderTreeOperation(session, octxt, mbox, Requester.SOAP, iid);
+		GetFolderTreeOperation op = new GetFolderTreeOperation(session, octxt, mbox, Requester.SOAP, iid, visible);
 		op.schedule();
-		FolderNode resultFolder = op.getResult();
+		FolderNode rootnode = op.getResult();
 
-		Element folderRoot = encodeFolderNode(ifmt, octxt, response, resultFolder);
-		if (resultFolder.mFolder instanceof Mountpoint) {
-			handleMountpoint(request, context, iid, (Mountpoint) resultFolder.mFolder, folderRoot);			
+		Element folderRoot = encodeFolderNode(ifmt, octxt, response, rootnode);
+		if (rootnode.mVisible && rootnode.mFolder instanceof Mountpoint) {
+			handleMountpoint(request, context, iid, (Mountpoint) rootnode.mFolder, folderRoot);			
 		}
 		
 		return response;
 	}
-	
-	public static Element encodeFolderNode(ItemIdFormatter ifmt, OperationContext octxt, Element response, FolderNode node) {
-		Element toRet = ToXML.encodeFolder(response, ifmt, octxt, node.mFolder);
-		
-		for (FolderNode subNode : node.mSubFolders)
-			encodeFolderNode(ifmt, octxt, toRet, subNode);
-		
-		return toRet;
+
+	public static Element encodeFolderNode(ItemIdFormatter ifmt, OperationContext octxt, Element parent, FolderNode node) {
+		Element eFolder;
+        if (node.mVisible)
+            eFolder = ToXML.encodeFolder(parent, ifmt, octxt, node.mFolder);
+        else
+            eFolder = parent.addElement(MailConstants.E_FOLDER).addAttribute(MailConstants.A_ID, node.mId).addAttribute(MailConstants.A_NAME, node.mName);
+
+		for (FolderNode subNode : node.mSubfolders)
+			encodeFolderNode(ifmt, octxt, eFolder, subNode);
+
+		return eFolder;
 	}
 
 //	public static Element handleFolder(Mailbox mbox, Folder folder, Element response, ZimbraSoapContext lc, OperationContext octxt)
