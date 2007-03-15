@@ -2803,7 +2803,7 @@ public class ZMailbox {
     }
 
     public ZAppointmentResult modifyAppointment(String id, String component, ZOutgoingMessage message, ZInvite invite) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.CREATE_APPOINTMENT_EXCEPTION_REQUEST);
+        XMLElement req = new XMLElement(MailConstants.MODIFY_APPOINTMENT_REQUEST);
 
         req.addAttribute(MailConstants.A_ID, id);
         req.addAttribute(MailConstants.E_INVITE_COMPONENT, component);

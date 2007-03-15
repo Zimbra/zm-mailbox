@@ -742,12 +742,18 @@ public class ZInvite {
 
         private static final String FMT_DATE = "yyyyMMdd";
         private static final String FMT_DATE_TIME = "yyyyMMdd'T'HHmmss";
+        private static final String FMT_DATE_TIME_Z = FMT_DATE_TIME + "'Z'";
 
         private String mDateTime;
         private String mTimeZoneId;
 
         public ZDateTime() {
 
+        }
+
+        public ZDateTime(long utcMsecs, boolean dateOnly) {
+            DateFormat dateFmt = new SimpleDateFormat(dateOnly ? FMT_DATE : FMT_DATE_TIME_Z);
+            mDateTime = dateFmt.format(new Date(utcMsecs));
         }
 
         public ZDateTime(String dateTime) {
