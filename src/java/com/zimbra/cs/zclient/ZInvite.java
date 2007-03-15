@@ -286,7 +286,7 @@ public class ZInvite {
             mTransparency = transparency;
         }
 
-        public boolean isIsAllDay() {
+        public boolean isAllDay() {
             return mIsAllDay;
         }
 
