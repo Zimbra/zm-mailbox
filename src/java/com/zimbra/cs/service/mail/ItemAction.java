@@ -198,6 +198,11 @@ public class ItemAction extends MailDocumentHandler {
 
     protected StringBuffer proxyRemoteItems(Element action, Map<String, StringBuffer> remote, Element request, Map<String, Object> context)
     throws ServiceException, SoapFaultException {
+        // make sure that the folder ID is fully qualified for the proxy case
+        String folderStr = action.getAttribute(MailConstants.A_FOLDER, null);
+        if (folderStr != null)
+            action.addAttribute(MailConstants.A_FOLDER, new ItemId(folderStr, getZimbraSoapContext(context)).toString());
+
         StringBuffer successes = new StringBuffer();
         for (Map.Entry<String, StringBuffer> entry : remote.entrySet()) {
             action.addAttribute(MailConstants.A_ID, entry.getValue().toString());
