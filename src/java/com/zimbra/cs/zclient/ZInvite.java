@@ -137,6 +137,7 @@ public class ZInvite {
         private boolean mIsAllDay;
         private String mName;
         private String mLocation;
+        private boolean mIsException;
         private boolean mIsOrganizer;
         private long mSequenceNumber;
         private String mPriority;
@@ -166,6 +167,7 @@ public class ZInvite {
             mIsAllDay = e.getAttributeBool(MailConstants.A_CAL_ALLDAY, false);
             mName = e.getAttribute(MailConstants.A_NAME, null);
             mLocation = e.getAttribute(MailConstants.A_CAL_LOCATION, null);
+            mIsException = e.getAttributeBool(MailConstants.A_CAL_IS_EXCEPTION, false);
             mIsOrganizer = e.getAttributeBool(MailConstants.A_CAL_ISORG, false);
             mSequenceNumber = e.getAttributeLong(MailConstants.A_CAL_SEQUENCE, 0);
             mPriority = e.getAttribute(MailConstants.A_CAL_PRIORITY, "0");
@@ -310,7 +312,11 @@ public class ZInvite {
             mLocation = location;
         }
 
-        public boolean isIsOrganizer() {
+        public boolean isException() {
+            return mIsException;
+        }
+
+        public boolean isOrganizer() {
             return mIsOrganizer;
         }
 
@@ -742,7 +748,6 @@ public class ZInvite {
 
         private static final String FMT_DATE = "yyyyMMdd";
         private static final String FMT_DATE_TIME = "yyyyMMdd'T'HHmmss";
-        private static final String FMT_DATE_TIME_Z = FMT_DATE_TIME + "'Z'";
 
         private String mDateTime;
         private String mTimeZoneId;
@@ -751,8 +756,10 @@ public class ZInvite {
 
         }
 
-        public ZDateTime(long utcMsecs, boolean dateOnly) {
-            DateFormat dateFmt = new SimpleDateFormat(dateOnly ? FMT_DATE : FMT_DATE_TIME_Z);
+        public ZDateTime(long utcMsecs, boolean dateOnly, TimeZone tz) {
+            DateFormat dateFmt = new SimpleDateFormat(dateOnly ? FMT_DATE : FMT_DATE_TIME);
+            dateFmt.setTimeZone(tz);
+            mTimeZoneId = TZIDMapper.canonicalize(tz.getID());
             mDateTime = dateFmt.format(new Date(utcMsecs));
         }
 

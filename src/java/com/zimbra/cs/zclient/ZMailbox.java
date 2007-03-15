@@ -2794,7 +2794,6 @@ public class ZMailbox {
 
         Element invEl = invite.toElement(mEl);
         Element compEl = invEl.getElement(MailConstants.E_INVITE_COMPONENT);
-
         exceptionId.toElement(MailConstants.E_CAL_EXCEPTION_ID, compEl);
 
         if (optionalUid != null)
@@ -2803,14 +2802,20 @@ public class ZMailbox {
         return new ZAppointmentResult(invoke(req));
     }
 
-    public ZAppointmentResult modifyAppointment(String id, String component, ZOutgoingMessage message, ZInvite invite) throws ServiceException {
+    public ZAppointmentResult modifyAppointment(String id, String component, ZDateTime exceptionId, ZOutgoingMessage message, ZInvite invite) throws ServiceException {
         XMLElement req = new XMLElement(MailConstants.MODIFY_APPOINTMENT_REQUEST);
 
         req.addAttribute(MailConstants.A_ID, id);
         req.addAttribute(MailConstants.E_INVITE_COMPONENT, component);
 
         Element mEl = getMessageElement(req, message);
-        invite.toElement(mEl);
+
+        Element invEl = invite.toElement(mEl);
+
+        if (exceptionId != null) {
+            Element compEl = invEl.getElement(MailConstants.E_INVITE_COMPONENT);
+            exceptionId.toElement(MailConstants.E_CAL_EXCEPTION_ID, compEl);
+        }
 
         return new ZAppointmentResult(invoke(req));
     }
