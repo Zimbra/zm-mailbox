@@ -316,7 +316,7 @@ public class ZInvite {
             return mIsException;
         }
 
-        public boolean isOrganizer() {
+        public boolean  getIsOrganizer() {
             return mIsOrganizer;
         }
 
