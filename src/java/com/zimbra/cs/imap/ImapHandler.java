@@ -548,6 +548,9 @@ public abstract class ImapHandler extends ProtocolHandler {
         // check whether one of the extension's prerequeisites is disabled on the server
         if (extension.equalsIgnoreCase("X-DRAFT-I04-SEARCHRES"))
             return extensionEnabled("ESEARCH");
+        // see if the user's session has disabled the extension
+        if (extension.equalsIgnoreCase("IDLE") && mSession != null && mSession.isHackEnabled(EnabledHack.NO_IDLE))
+            return false;
         // everything else is enabled
         return true;
     }
@@ -630,19 +633,19 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     boolean login(String username, String authenticateId, String password, String command, String tag) throws IOException {
-        // the Windows Mobile 5 hacks are enabled by appending "/wm" to the username
-        EnabledHack hack = EnabledHack.NONE;
-        if (username.endsWith("/wm")) {
-            username = username.substring(0, username.length() - 3);
-            hack = EnabledHack.WM5;
-        } else if (username.endsWith("/tb")) {
-            username = username.substring(0, username.length() - 3);
-            hack = EnabledHack.THUNDERBIRD;
+        // the Windows Mobile 5 hacks are enabled by appending "/wm" to the username, etc.
+        EnabledHack enabledHack = EnabledHack.NONE;
+        for (EnabledHack hack : EnabledHack.values()) {
+            if (hack.toString() != null && username.endsWith(hack.toString())) {
+                enabledHack = hack;
+                username = username.substring(0, username.length() - hack.toString().length());
+                break;
+            }
         }
 
         try {
             Account account = authenticate(authenticateId, username, password, command, tag);
-            ImapSession session = startSession(account, hack, command, tag);
+            ImapSession session = startSession(account, enabledHack, command, tag);
             if (session == null)
                 return CONTINUE_PROCESSING;
             disableUnauthConnectionAlarm();
