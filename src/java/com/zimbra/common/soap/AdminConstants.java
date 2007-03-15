@@ -278,6 +278,20 @@ public class AdminConstants {
     public static final QName WAIT_MULTIPLE_ACCOUNTS_RESPONSE = QName.get("WaitMultipleAccountsResponse", NAMESPACE);
     public static final QName DESTROY_WAIT_SET_REQUEST = QName.get("DestroyWaitSetRequest", NAMESPACE);
     public static final QName DESTROY_WAIT_SET_RESPONSE = QName.get("DestroyWaitSetResponse", NAMESPACE);
+    
+    // DumpSessions
+    public static final String E_SESSION = "session";
+    public static final String A_ZIMBRA_ID = "zid";
+    public static final String A_SESSION_ID = "sid";
+    public static final String A_LIST_SESSIONS = "listSessions";
+    public static final String A_GROUP_BY_ACCOUNT = "groupByAccount";
+    public static final String A_ACTIVE_ACCOUNTS = "activeAccounts";
+    public static final String A_ACTIVE_SESSIONS = "activeSessions";
+    public static final String A_CREATED_DATE = "cd";
+    public static final String A_LAST_ACCESSED_DATE = "ld";
+    public static final String A_NOTIFY = "notify";
+    
+    
 
     public static final String E_ACCOUNT = "account";
     public static final String E_CALENDAR_RESOURCE = "calresource";

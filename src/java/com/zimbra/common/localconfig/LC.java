@@ -233,7 +233,7 @@ public class LC {
 
     public static final KnownKey search_disable_database_hints;
     public static final KnownKey search_dbfirst_term_percentage_cutoff;
-
+    
     static {
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
                 "Changing this setting does not immediately reflect in MySQL server.  " +
