@@ -42,6 +42,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.operation.Operation;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
 
 /**
@@ -61,7 +62,9 @@ public abstract class Session {
 
     protected Mailbox mMailbox;
     private   long    mLastAccessed;
+    private   long    mCreationTime;
     private   boolean mCleanedUp = false;
+    
     
     /**
      * Session Type
@@ -76,6 +79,7 @@ public abstract class Session {
         mAccountId = accountId;
         mSessionId = sessionId;
         mSessionType = type;
+        mCreationTime = System.currentTimeMillis();
 
         Account acct = Provisioning.getInstance().get(AccountBy.id, accountId);
         if (acct != null && Provisioning.onLocalServer(acct)) {
@@ -127,12 +131,12 @@ public abstract class Session {
     }
 
     synchronized public List<RecentOperation> getRecentOperations() { return mRecentOperations; }
-    
-    public void dumpState(Writer w) {
-        try {
-            w.write(this.toString());
-        } catch(IOException e) { e.printStackTrace(); };
+
+    public final void encodeState(Element parent) {
+        doEncodeState(parent);
     }
+    
+    protected void doEncodeState(Element parent) { }
 
     /** Returns the Session's identifier. */
     public String getSessionId() { 
@@ -148,7 +152,10 @@ public abstract class Session {
         return mSessionType;
     }
 
-    /** Returns the maximum idle duration (in milliseconds) for the Session. */
+    /** Returns the maximum idle duration (in milliseconds) for the Session.
+     * 
+     *  The idle lifetime must be CONSTANT 
+     */
     protected abstract long getSessionIdleLifetime();
 
     /** Returns the {@link Mailbox} (if any) this Session is listening on. */
@@ -213,6 +220,14 @@ public abstract class Session {
     }
 
     abstract protected void cleanup();
+    
+    public long getLastAccessTime() { 
+        return mLastAccessed;
+    }
+    
+    public long getCreationTime() { 
+        return mCreationTime; 
+    }
 
     public void updateAccessTime() {
         mLastAccessed = System.currentTimeMillis();

@@ -55,13 +55,6 @@ public class AdminSession extends Session {
         return ADMIN_SESSION_TIMEOUT_MSEC;
     }
     
-    public void dumpState(Writer w) {
-    	try {
-    		w.write("AdminSession - ");
-    	} catch(IOException e) { e.printStackTrace(); }
-    	super.dumpState(w);
-    }
-
     public Object getData(String key) { return mData.get(key); }
     public void setData(String key, Object data) { mData.put(key, data); }
     

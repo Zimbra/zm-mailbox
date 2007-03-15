@@ -43,8 +43,6 @@ import com.zimbra.common.util.ValueCounter;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.util.ZimbraLog;
 
-
-
 /** A Simple Cache with timeout (based on last-accessed time) for a {@link Session}. objects<p>
  * 
  *  Not all Session subclasses are stored in this cache -- only those Session types which want 
@@ -78,10 +76,11 @@ public final class SessionCache {
             ZimbraLog.session.warn("failed to create session", e);
             return null;
         }
-
+        
         if (ZimbraLog.session.isDebugEnabled())
             ZimbraLog.session.debug("Created " + session);
-        updateInCache(sessionId, session);
+        
+        sSessionMap.putAndPrune(accountId, sessionId, session, 10);
         return session;
     }
 
@@ -97,20 +96,11 @@ public final class SessionCache {
         if (sShutdown)
             return null;
 
-        synchronized(sLRUMap) {
-            Session session = sLRUMap.get(sessionId);
-            if (session != null) {
-                if (session.validateAccountId(accountId)) {
-                    updateInCache(sessionId, session);
-                    return session;
-                } else
-                    ZimbraLog.session.warn("account ID mismatch in session cache.  Requested " + accountId + ":" + sessionId +
-                              ", found " + session.getAccountId());
-            } else if (ZimbraLog.session.isDebugEnabled()) {
-                ZimbraLog.session.debug("no session with id " + sessionId + " found (accountId: " + accountId + ")");
-            }
-            return null;
+        Session s = sSessionMap.get(accountId, sessionId);
+        if (s == null && ZimbraLog.session.isDebugEnabled()) {
+            ZimbraLog.session.debug("no session with id " + sessionId + " found (accountId: " + accountId + ")");
         }
+        return s;
     }
 
     /** Immediately removes this {@link Session} from the session cache.
@@ -133,12 +123,19 @@ public final class SessionCache {
 
         if (ZimbraLog.session.isDebugEnabled())
             ZimbraLog.session.debug("Clearing session " + sessionId);
-        Session session = null;
-        synchronized (sLRUMap) {
-            session = sLRUMap.remove(sessionId);
-        }
-        if (session != null)
+        
+        Session session = sSessionMap.remove(accountId, sessionId);
+        if (session != null) {
+            assert(!Thread.holdsLock(sSessionMap));
             session.doCleanup();
+        }
+    }
+    
+    /**
+     * Inintializes the session cache, starts the sweeper timer
+     */
+    public static void startup() {
+        Zimbra.sTimer.schedule(new SweepMapTimerTask(), 30000, SESSION_SWEEP_INTERVAL_MSEC);
     }
 
     /** Empties the session cache and cleans up any existing {@link Session}s.
@@ -146,24 +143,12 @@ public final class SessionCache {
      * @see Session#doCleanup() */
     public static void shutdown() {
         sShutdown = true;
-        int size;
-        synchronized (sLRUMap) {
-            size = sLRUMap.size();
-        }
-        List<Session> list = new ArrayList<Session>(size);
-        synchronized (sLRUMap) {
-            ZimbraLog.session.info("shutdown: clearing SessionCache");
-
-            // empty the lru cache
-            Iterator iter = sLRUMap.values().iterator();
-            while (iter.hasNext()) {
-                Session session = (Session) iter.next();
-                iter.remove();
-                list.add(session);
-            }
-        }
+        
+        List<Session> list = sSessionMap.pruneSessionsByTime(Long.MAX_VALUE);
+        
         // Call deadlock-prone Session.doCleanup() after releasing lock on sLRUMap.
         for (Session s: list) {
+            assert(!Thread.holdsLock(sSessionMap));
             s.doCleanup();
         }
     }
@@ -179,7 +164,8 @@ public final class SessionCache {
 
     /** The cache of all active {@link Session}s.  The keys of the Map are session IDs
      *  and the values are the Sessions themselves. */
-    static LinkedHashMap<String, Session> sLRUMap = new LinkedHashMap<String, Session>(500);
+//    private static LinkedHashMap<String, Session> sLRUMap = new LinkedHashMap<String, Session>(500);
+    private static SessionMap sSessionMap = new SessionMap();
 
     /** Whether we've received a {@link #shutdown()} call to kill the cache. */
     private static boolean sShutdown = false;
@@ -187,137 +173,96 @@ public final class SessionCache {
     private static long sContextSeqNo = 1;
 
 
-    static {
-        Zimbra.sTimer.schedule(new SweepMapTimerTask(), 30000, SESSION_SWEEP_INTERVAL_MSEC);
-    }
-
     private synchronized static String getNextSessionId() {
         return Long.toString(sContextSeqNo++);
     }
 
-    private static void updateInCache(String sessionId, Session session) {
-        if (ZimbraLog.session.isDebugEnabled())
-            ZimbraLog.session.debug("updating session " + sessionId);
-        synchronized(sLRUMap) {
-            // Remove then re-add.  This results in access-order behavior
-            // even though sLRUMap was constructed as insertion-order linked
-            // hash map.
-            sLRUMap.remove(sessionId);
-            session.updateAccessTime();
-            sLRUMap.put(sessionId, session);
-        }
-    }
+    private static void logActiveSessions() {
+        ValueCounter sessionTypeCounter = new ValueCounter();
+        StringBuilder accountList = new StringBuilder();
+        StringBuilder manySessionsList = new StringBuilder();
+        int totalSessions = 0;
+        int totalAccounts = 0;
 
-    public static void dumpState(Writer w) {
-        // Copy map values, so we can iterate them later without sLRUMap locked.
-        // This prevents deadlock.
-        int size;
-        synchronized (sLRUMap) {
-            size = sLRUMap.size();
-        }
-        List<Session> list = new ArrayList<Session>(size);
-        synchronized (sLRUMap) {
-            for (Session s: sLRUMap.values()) {
-                list.add(s);
+        synchronized (sSessionMap) {
+            for (SessionMap.AccountSessionMap activeAcct : sSessionMap.activeAccounts()) {
+                String accountId = null;
+                totalAccounts++;
+                int count = 0;
+                for (Session session : activeAcct.values()) {
+                    accountId = session.getAccountId();
+                    totalSessions++;
+                    count++;
+                    String className = StringUtil.getSimpleClassName(session);
+                    sessionTypeCounter.increment(className);
+                }
+                assert(count>0);
+                if (count > 0) {
+                    if (accountList.length()>0)
+                        accountList.append(',');
+                    accountList.append(accountId).append('(').append(count).append(')');
+                    if (count > 9) {
+                        if (manySessionsList.length() > 0)
+                            manySessionsList.append(',');
+                        manySessionsList.append(accountId).append('(').append(count).append(')');
+                    }
+                }
             }
-        }
 
-        try { w.write("\nACTIVE SESSIONS:\n"); } catch(IOException e) {};
-        for (Session s: list) {
-            s.dumpState(w);
-            try { w.write('\n'); } catch(IOException e) {};
+            assert(totalAccounts == sSessionMap.totalActiveAccounts());
+            assert(totalSessions == sSessionMap.totalActiveSessions());
         }
-        try { w.write('\n'); } catch(IOException e) {};
+        
+        if (sLog.isDebugEnabled() && totalSessions > 0) {
+            sLog.debug("Detected " + totalSessions + " active sessions.  " +
+                sessionTypeCounter + ".  Accounts: " + accountList);
+        }
+        if (manySessionsList.length() > 0) {
+            ZimbraLog.session.info("Found accounts that have a large number of sessions: " + manySessionsList);
+        }
     }
+    
+    public static List<Session> getActiveSessions() {
+        return sSessionMap.copySessionList();
+    }
+    
+//    public static void dumpState(Writer w) {
+//        List<Session>list = sSessionMap.copySessionList();
+//        try { w.write("\nACTIVE SESSIONS:\n"); } catch(IOException e) {};
+//        for (Session s: list) {
+//            s.dumpState(w);
+//            try { w.write('\n'); } catch(IOException e) {};
+//        }
+//        try { w.write('\n'); } catch(IOException e) {};
+//    }
 
     private static final class SweepMapTimerTask extends TimerTask {
         public void run() {
             if (sLog.isDebugEnabled())
-                logActiveSessions();
+                SessionCache.logActiveSessions();
+            
+            List<Session> toReap = sSessionMap.pruneIdleSessions();
             
             // keep track of the count of each session type that's removed
             ValueCounter removedSessionTypes = new ValueCounter();
-            int numActive = 0;
-
-            List<Session> toReap = new ArrayList<Session>(100);
-
-            long now = System.currentTimeMillis();
-            synchronized (sLRUMap) {
-                Iterator iter = sLRUMap.values().iterator();
-                while (iter.hasNext()) {
-                    Session s = (Session) iter.next();
-                    if (s == null)
-                        continue;
-                    long cutoffTime = now - s.getSessionIdleLifetime();
-                    if (!s.accessedAfter(cutoffTime)) {
-                        iter.remove();
-                        toReap.add(s);
-                    } else {
-                        // mLRUMap iterates by last access order, most recently
-                        // accessed element last.  We can break here because
-                        // all later sessions are guaranteed not to be expired.
-                        break;
-                    }
-                }
-                numActive = sLRUMap.size();
-            }
-
-            // IMPORTANT: Clean up sessions *after* releasing lock on sLRUMap.
-            // If Session.doCleanup() is called with sLRUMap locked, it can lead
-            // to deadlock. (bug 7866)
+            
             for (Session s: toReap) {
                 if (ZimbraLog.session.isDebugEnabled())
                     ZimbraLog.session.debug("Removing cached session: " + s);
                 if (sLog.isInfoEnabled())
                     removedSessionTypes.increment(StringUtil.getSimpleClassName(s));
+                assert(!Thread.holdsLock(sSessionMap));
+                // IMPORTANT: Clean up sessions *after* releasing lock on sLRUMap.
+                // If Session.doCleanup() is called with sLRUMap locked, it can lead
+                // to deadlock. (bug 7866)
                 s.doCleanup();
             }
 
             if (sLog.isInfoEnabled() && removedSessionTypes.size() > 0) {
                 sLog.info("Removed " + removedSessionTypes.getTotal() + " idle sessions (" +
-                          removedSessionTypes + ").  " + numActive + " active sessions remain.");
-            }
-        }
-        
-        private void logActiveSessions() {
-            // Count distinct accountId's
-            ValueCounter accountCounter = new ValueCounter();
-            ValueCounter sessionTypeCounter = new ValueCounter();
-            synchronized (sLRUMap) {
-                Iterator i = sLRUMap.values().iterator();
-                while (i.hasNext()) {
-                    Session session = (Session) i.next();
-                    accountCounter.increment(session.getAccountId());
-                    String className = StringUtil.getSimpleClassName(session);
-                    sessionTypeCounter.increment(className);
-                }
-            }
-
-            // Format account list
-            StringBuffer accountList = new StringBuffer();
-            StringBuffer manySessionsList = new StringBuffer();
-            
-            Iterator i = accountCounter.iterator();
-            while (i.hasNext()) {
-                if (accountList.length() > 0)
-                    accountList.append(", ");
-                String accountId = (String) i.next();
-                int count = accountCounter.getCount(accountId);
-                accountList.append(accountId);
-                if (count > 1)
-                    accountList.append("(" + count + ")");
-                if (count >= 10) {
-                    if (manySessionsList.length() > 0)
-                        manySessionsList.append(", ");
-                    manySessionsList.append(accountId + "(" + count + ")");
-                }
-            }
-
-//            sLog.debug("Detected " + accountCounter.getTotal() + " active sessions.  " +
-//                       sessionTypeCounter + ".  Accounts: " + accountList);
-            if (manySessionsList.length() > 0) {
-                ZimbraLog.session.info("Found accounts that have a large number of sessions: " + manySessionsList);
+                          removedSessionTypes + ").  " + sSessionMap.totalActiveSessions() + " active sessions remain.");
             }
         }
     }
+    
 }

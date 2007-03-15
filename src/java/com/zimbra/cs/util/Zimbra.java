@@ -117,6 +117,8 @@ public class Zimbra {
         System.setProperty("ical4j.unfolding.relaxed", "true");
 
         MailboxManager.getInstance().startup();
+        
+        SessionCache.startup();
 
         if (!redoLog.isSlave()) {
             Server server = Provisioning.getInstance().getLocalServer();

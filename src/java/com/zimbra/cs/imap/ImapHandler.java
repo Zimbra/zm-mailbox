@@ -47,6 +47,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
@@ -151,6 +152,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     abstract void dumpState(Writer w);
+    abstract void encodeState(Element parent);
 
     abstract Object getServer();
 

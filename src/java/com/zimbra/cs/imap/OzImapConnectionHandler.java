@@ -35,6 +35,7 @@ import java.util.Iterator;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -89,6 +90,16 @@ public class OzImapConnectionHandler extends ImapHandler implements OzConnection
     	try {
     		w.write(s.toString());
     	} catch(IOException e) {};
+    }
+    
+    void encodeState(Element parent) {
+        Element e = parent.addElement("OZIMAP");
+        if (mConnection != null) {
+            Element ce = e.addElement("connection");
+            ce.setText(mConnection.toString());
+        }
+        e.addAttribute("startedTls", mStartedTLS);
+        e.addAttribute("goodbyeSent", mGoodbyeSent);
     }
 
     @Override

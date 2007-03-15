@@ -42,6 +42,7 @@ import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -95,20 +96,35 @@ public class ImapSession extends Session {
     }
 
     public void dumpState(Writer w) {
-    	try {
-    		StringBuilder s = new StringBuilder(this.toString());
-    		s.append("\n\t\tuser=").append(mUsername);
-    		s.append("\n\t\tstate=").append(mState);
-    		s.append("\n\t\tidleTag=").append(mIdleTag);
-    		s.append("\n\t\tselectedFolder=").append(mSelectedFolder.toString());
+        try {
+            StringBuilder s = new StringBuilder(this.toString());
+            s.append("\n\t\tuser=").append(mUsername);
+            s.append("\n\t\tstate=").append(mState);
+            s.append("\n\t\tidleTag=").append(mIdleTag);
+            s.append("\n\t\tselectedFolder=").append(mSelectedFolder.toString());
             s.append("\n\t\tcheckingSpam=").append(mCheckingSpam);
             s.append("\n\t\thacks=").append(mEnabledHack);
-    		
-    		w.write(s.toString());
-    		if (mHandler != null) 
-    			mHandler.dumpState(w);
-    	} catch(IOException e) { e.printStackTrace(); }
+            
+            w.write(s.toString());
+            if (mHandler != null) 
+                mHandler.dumpState(w);
+        } catch(IOException e) { e.printStackTrace(); }
     }
+    
+    public void doEncodeState(Element parent) {
+        Element e = parent.addElement("imap");
+        e.addAttribute("username", mUsername);
+        e.addAttribute("state", mState);
+        e.addAttribute("idleTag", mIdleTag);
+        if (mSelectedFolder != null) 
+            e.addAttribute("selectedFolder", mSelectedFolder.toString());
+        e.addAttribute("checkingSpam", mCheckingSpam);
+        if (mEnabledHack != null) 
+            e.addAttribute("hacks", mEnabledHack.toString());
+        if (mHandler != null) 
+            mHandler.encodeState(e);
+    }
+    
 
     protected long getSessionIdleLifetime() {
         return IMAP_IDLE_TIMEOUT_MSEC;

@@ -28,8 +28,6 @@
  */
 package com.zimbra.cs.session;
 
-import java.io.IOException;
-import java.io.Writer;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -82,11 +80,9 @@ public class SoapSession extends Session {
         return SOAP_SESSION_TIMEOUT_MSEC;
     }
     
-    public void dumpState(Writer w) {
-    	try {
-    		w.write("SoapSession - ");
-    	} catch(IOException e) { e.printStackTrace(); }
-    	super.dumpState(w);
+    public void doEncodeState(Element parent) {
+        Element e = parent.addElement("soap");
+        e.addAttribute("notify", mNotify);
     }
 
     /** Clears all cached notifications and stops recording future notifications

@@ -37,6 +37,7 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -67,6 +68,19 @@ public class TcpImapHandler extends ImapHandler {
             w.write("\n\tImapHandler(Thread-Per-Connection) " + this);
         } catch(IOException e) {};
     }
+    
+    void encodeState(Element parent) {
+        Element e = parent.addElement("ThreadPerConnIMAP");
+        if (mConnection != null) {
+            Element ce = e.addElement("connection");
+            ce.setText(mConnection.toString());
+        }
+        if (mRemoteAddress != null)
+            e.addAttribute("remoteAddr", mRemoteAddress);
+        e.addAttribute("startedTls", mStartedTLS);
+        e.addAttribute("goodbyeSent", mGoodbyeSent);
+    }
+    
 
     @Override
     Object getServer() {
