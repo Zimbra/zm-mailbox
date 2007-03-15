@@ -261,7 +261,7 @@ public class Search extends MailDocumentHandler  {
             try {
                 ArrayList<Integer> ids = new ArrayList<Integer>(1);
                 ids.add(msg.getId());
-                ItemActionOperation.READ(zsc, null, zsc.getOperationContext(), msg.getMailbox(), Requester.SOAP, ids, MailItem.TYPE_MESSAGE, true, null);
+                ItemActionOperation.READ(null, zsc.getOperationContext(), msg.getMailbox(), Requester.SOAP, ids, MailItem.TYPE_MESSAGE, true, null);
             } catch (ServiceException e) {
                 mLog.warn("problem marking message as read (ignored): " + msg.getId(), e);
             }
@@ -298,7 +298,7 @@ public class Search extends MailDocumentHandler  {
             try {
                 ArrayList<Integer> ids = new ArrayList<Integer>(1);
                 ids.add(msg.getId());
-                ItemActionOperation.READ(zsc, null, zsc.getOperationContext(), msg.getMailbox(), Requester.SOAP, ids, MailItem.TYPE_MESSAGE, true, null);
+                ItemActionOperation.READ(null, zsc.getOperationContext(), msg.getMailbox(), Requester.SOAP, ids, MailItem.TYPE_MESSAGE, true, null);
             } catch (ServiceException e) {
                 mLog.warn("problem marking message as read (ignored): " + msg.getId(), e);
             }

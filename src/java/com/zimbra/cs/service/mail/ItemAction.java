@@ -120,42 +120,42 @@ public class ItemAction extends MailDocumentHandler {
         	// set additional parameters (depends on op type)
         	if (opStr.equals(OP_TAG)) {
         		int tagId = (int) action.getAttributeLong(MailConstants.A_TAG);
-        		localResults = ItemActionOperation.TAG(zsc, session, octxt, mbox,
-        					Requester.SOAP, local, type, flagValue, tcon, tagId).getResult();
+        		localResults = ItemActionOperation.TAG(session, octxt, mbox, Requester.SOAP,
+        					local, type, flagValue, tcon, tagId).getResult();
         	} else if (opStr.equals(OP_FLAG)) {
-        		localResults = ItemActionOperation.FLAG(zsc, session, octxt, mbox,
-        					Requester.SOAP, local, type, flagValue, tcon).getResult();
+        		localResults = ItemActionOperation.FLAG(session, octxt, mbox, Requester.SOAP,
+        					local, type, flagValue, tcon).getResult();
         	} else if (opStr.equals(OP_READ)) {
-        		localResults = ItemActionOperation.READ(zsc, session, octxt, mbox,
-        					Requester.SOAP, local, type, flagValue, tcon).getResult();
+        		localResults = ItemActionOperation.READ(session, octxt, mbox, Requester.SOAP,
+        					local, type, flagValue, tcon).getResult();
         	} else if (opStr.equals(OP_COLOR)) {
         		byte color = (byte) action.getAttributeLong(MailConstants.A_COLOR);
-        		localResults = ItemActionOperation.COLOR(zsc, session, octxt, mbox,
-        					Requester.SOAP, local, type, tcon, color).getResult();
+        		localResults = ItemActionOperation.COLOR(session, octxt, mbox, Requester.SOAP,
+        					local, type, tcon, color).getResult();
         	} else if (opStr.equals(OP_HARD_DELETE)) {
-        		localResults = ItemActionOperation.HARD_DELETE(zsc, session, octxt, mbox,
-        					Requester.SOAP, local, type, tcon).getResult();
+        		localResults = ItemActionOperation.HARD_DELETE(session, octxt, mbox, Requester.SOAP,
+        					local, type, tcon).getResult();
             } else if (opStr.equals(OP_MOVE)) {
                 ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER), zsc);
-                localResults = ItemActionOperation.MOVE(zsc, session, octxt, mbox,
-                            Requester.SOAP, local, type, tcon, iidFolder).getResult();
+                localResults = ItemActionOperation.MOVE(session, octxt, mbox, Requester.SOAP,
+                            local, type, tcon, iidFolder).getResult();
             } else if (opStr.equals(OP_COPY)) {
                 ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER), zsc);
-                localResults = ItemActionOperation.COPY(zsc, session, octxt, mbox,
-                            Requester.SOAP, local, type, tcon, iidFolder).getResult();
+                localResults = ItemActionOperation.COPY(session, octxt, mbox, Requester.SOAP,
+                            local, type, tcon, iidFolder).getResult();
         	} else if (opStr.equals(OP_SPAM)) {
         		int defaultFolder = flagValue ? Mailbox.ID_FOLDER_SPAM : Mailbox.ID_FOLDER_INBOX;
         		int folderId = (int) action.getAttributeLong(MailConstants.A_FOLDER, defaultFolder);
-        		localResults = ItemActionOperation.SPAM(zsc, session, octxt, mbox,
-        					Requester.SOAP, local, type, flagValue, tcon, folderId).getResult();
+        		localResults = ItemActionOperation.SPAM(session, octxt, mbox, Requester.SOAP,
+        					local, type, flagValue, tcon, folderId).getResult();
             } else if (opStr.equals(OP_TRASH)) {
-                localResults = ItemActionOperation.TRASH(zsc, session, octxt, mbox,
-                            Requester.SOAP, local, type, tcon).getResult();
+                localResults = ItemActionOperation.TRASH(session, octxt, mbox, Requester.SOAP,
+                            local, type, tcon).getResult();
             } else if (opStr.equals(OP_RENAME)) {
                 String name = action.getAttribute(MailConstants.A_NAME);
                 ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER, "-1"), zsc);
-                localResults = ItemActionOperation.RENAME(zsc, session, octxt, mbox,
-                            Requester.SOAP, local, type, tcon, name, iidFolder).getResult();
+                localResults = ItemActionOperation.RENAME(session, octxt, mbox, Requester.SOAP,
+                            local, type, tcon, name, iidFolder).getResult();
         	} else if (opStr.equals(OP_UPDATE)) {
                 String folderId = action.getAttribute(MailConstants.A_FOLDER, null);
                 ItemId iidFolder = new ItemId(folderId == null ? "-1" : folderId, zsc);
@@ -167,9 +167,9 @@ public class ItemAction extends MailDocumentHandler {
         		String flags = action.getAttribute(MailConstants.A_FLAGS, null);
         		String tags  = action.getAttribute(MailConstants.A_TAGS, null);
         		byte color   = (byte) action.getAttributeLong(MailConstants.A_COLOR, -1);
-        		localResults = ItemActionOperation.UPDATE(zsc, session, octxt, mbox,
-        					Requester.SOAP, local, type, tcon, name, iidFolder, 
-        					flags, tags, color).getResult();
+        		localResults = ItemActionOperation.UPDATE(session, octxt, mbox, Requester.SOAP,
+        					local, type, tcon, name, iidFolder, flags, 
+        					tags, color).getResult();
         	} else {
         		throw ServiceException.INVALID_REQUEST("unknown operation: " + opStr, null);
         	}

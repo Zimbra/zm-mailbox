@@ -41,6 +41,8 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
@@ -54,7 +56,6 @@ import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.soap.ZimbraSoapContext;
 
 public class ItemActionOperation extends Operation {
 
@@ -76,120 +77,118 @@ public class ItemActionOperation extends Operation {
         }
     }
     
-    public static ItemActionOperation TAG(ZimbraSoapContext zc, Session session, OperationContext oc,
-                Mailbox mbox, Requester req, List<Integer> ids, byte type, 
-                boolean flagValue, TargetConstraint tcon, int tagId)
+    public static ItemActionOperation TAG(Session session, OperationContext oc, Mailbox mbox,
+                Requester req, List<Integer> ids, byte type, boolean flagValue, 
+                TargetConstraint tcon, int tagId)
     throws ServiceException {
-        ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
-                    LOAD, ids, Op.TAG, type, flagValue, tcon);
+        ItemActionOperation ia = new ItemActionOperation(session, oc, mbox, req, LOAD, 
+                    ids, Op.TAG, type, flagValue, tcon);
         ia.setTagId(tagId);
         ia.schedule();
         return ia;
     }
     
-    public static ItemActionOperation FLAG(ZimbraSoapContext zc, Session session, OperationContext oc,
-                Mailbox mbox, Requester req, List<Integer> ids, byte type, 
-                boolean flagValue, TargetConstraint tcon)
+    public static ItemActionOperation FLAG(Session session, OperationContext oc, Mailbox mbox,
+                Requester req, List<Integer> ids, byte type, boolean flagValue, 
+                TargetConstraint tcon)
     throws ServiceException {
-        ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
-                    LOAD, ids, Op.FLAG, type, flagValue, tcon);
+        ItemActionOperation ia = new ItemActionOperation(session, oc, mbox, req, LOAD, 
+                    ids, Op.FLAG, type, flagValue, tcon);
         ia.schedule();
         return ia;
     }
     
-    public static ItemActionOperation READ(ZimbraSoapContext zc, Session session, OperationContext oc,
-                Mailbox mbox, Requester req, List<Integer> ids, byte type, 
-                boolean flagValue, TargetConstraint tcon)
+    public static ItemActionOperation READ(Session session, OperationContext oc, Mailbox mbox,
+                Requester req, List<Integer> ids, byte type, boolean flagValue, 
+                TargetConstraint tcon)
     throws ServiceException {
-        ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
-                    LOAD, ids, Op.READ, type, flagValue, tcon);
+        ItemActionOperation ia = new ItemActionOperation(session, oc, mbox, req, LOAD, 
+                    ids, Op.READ, type, flagValue, tcon);
         ia.schedule();
         return ia;
     }
     
-    public static ItemActionOperation COLOR(ZimbraSoapContext zc, Session session, OperationContext oc,
-                Mailbox mbox, Requester req, List<Integer> ids, byte type, 
-                TargetConstraint tcon, byte color)
+    public static ItemActionOperation COLOR(Session session, OperationContext oc, Mailbox mbox,
+                Requester req, List<Integer> ids, byte type, TargetConstraint tcon, 
+                byte color)
     throws ServiceException {
-        ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
-                    LOAD, ids, Op.COLOR, type, true, tcon);
+        ItemActionOperation ia = new ItemActionOperation(session, oc, mbox, req, LOAD, 
+                    ids, Op.COLOR, type, true, tcon);
         ia.setColor(color);
         ia.schedule();
         return ia;
     }
 
-    public static ItemActionOperation HARD_DELETE(ZimbraSoapContext zc, Session session, OperationContext oc,
-                Mailbox mbox, Requester req, List<Integer> ids, byte type, 
-                TargetConstraint tcon)
+    public static ItemActionOperation HARD_DELETE(Session session, OperationContext oc, Mailbox mbox,
+                Requester req, List<Integer> ids, byte type, TargetConstraint tcon)
     throws ServiceException {
-        ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
-                    DELETE_MULT * LOAD, ids, Op.HARD_DELETE, type, true, tcon);
+        ItemActionOperation ia = new ItemActionOperation(session, oc, mbox, req, DELETE_MULT * LOAD, 
+                    ids, Op.HARD_DELETE, type, true, tcon);
         ia.schedule();
         return ia;
     }
     
-    public static ItemActionOperation MOVE(ZimbraSoapContext zc, Session session, OperationContext oc,
-                Mailbox mbox, Requester req, List<Integer> ids, byte type, 
-                TargetConstraint tcon, ItemId iidFolder)
+    public static ItemActionOperation MOVE(Session session, OperationContext oc, Mailbox mbox,
+                Requester req, List<Integer> ids, byte type, TargetConstraint tcon, 
+                ItemId iidFolder)
     throws ServiceException {
-        ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
-                    LOAD, ids, Op.MOVE, type, true, tcon);
+        ItemActionOperation ia = new ItemActionOperation(session, oc, mbox, req, LOAD, 
+                    ids, Op.MOVE, type, true, tcon);
         ia.setIidFolder(iidFolder);
         ia.schedule();
         return ia;
     }
     
-    public static ItemActionOperation COPY(ZimbraSoapContext zc, Session session, OperationContext oc,
-                Mailbox mbox, Requester req, List<Integer> ids, byte type, 
-                TargetConstraint tcon, ItemId iidFolder)
+    public static ItemActionOperation COPY(Session session, OperationContext oc, Mailbox mbox,
+                Requester req, List<Integer> ids, byte type, TargetConstraint tcon, 
+                ItemId iidFolder)
     throws ServiceException {
-        ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
-                    LOAD, ids, Op.COPY, type, true, tcon);
+        ItemActionOperation ia = new ItemActionOperation(session, oc, mbox, req, LOAD, 
+                    ids, Op.COPY, type, true, tcon);
         ia.setIidFolder(iidFolder);
         ia.schedule();
         return ia;
     }
 
-    public static ItemActionOperation SPAM(ZimbraSoapContext zc, Session session, OperationContext oc,
-                Mailbox mbox, Requester req, List<Integer> ids, byte type, 
-                boolean flagValue, TargetConstraint tcon, int folderId)
+    public static ItemActionOperation SPAM(Session session, OperationContext oc, Mailbox mbox,
+                Requester req, List<Integer> ids, byte type, boolean flagValue, 
+                TargetConstraint tcon, int folderId)
     throws ServiceException {
-        ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
-                    SPAM_MULT * LOAD, ids, Op.SPAM, type, flagValue, tcon);
+        ItemActionOperation ia = new ItemActionOperation(session, oc, mbox, req, SPAM_MULT * LOAD, 
+                    ids, Op.SPAM, type, flagValue, tcon);
         ia.setFolderId(folderId);
         ia.schedule();
         return ia;
     }
     
-    public static ItemActionOperation TRASH(ZimbraSoapContext zc, Session session, OperationContext oc,
-                Mailbox mbox, Requester req, 
-                List<Integer> ids, byte type, 
-                TargetConstraint tcon) throws ServiceException {
-        ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
-                    LOAD, ids, Op.TRASH, type, true, tcon);
+    public static ItemActionOperation TRASH(Session session, OperationContext oc, Mailbox mbox,
+                Requester req, List<Integer> ids, 
+                byte type, TargetConstraint tcon) throws ServiceException {
+        ItemActionOperation ia = new ItemActionOperation(session, oc, mbox, req, LOAD, 
+                    ids, Op.TRASH, type, true, tcon);
         ia.schedule();
         return ia;
     }
 
-    public static ItemActionOperation RENAME(ZimbraSoapContext zc, Session session, OperationContext oc,
-                Mailbox mbox, Requester req, List<Integer> ids, byte type, 
-                TargetConstraint tcon, String name, ItemId iidFolder)
+    public static ItemActionOperation RENAME(Session session, OperationContext oc, Mailbox mbox,
+                Requester req, List<Integer> ids, byte type, TargetConstraint tcon, 
+                String name, ItemId iidFolder)
     throws ServiceException {
-        ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
-                    LOAD, ids, Op.RENAME, type, true, tcon);
+        ItemActionOperation ia = new ItemActionOperation(session, oc, mbox, req, LOAD, 
+                    ids, Op.RENAME, type, true, tcon);
         ia.setName(name);
         ia.setIidFolder(iidFolder);
         ia.schedule();
         return ia;
     }
     
-    public static ItemActionOperation UPDATE(ZimbraSoapContext zc, Session session, OperationContext oc,
-                Mailbox mbox, Requester req, List<Integer> ids, byte type, 
-                TargetConstraint tcon, String name, ItemId iidFolder,
-                String flags, String tags, byte color)
+    public static ItemActionOperation UPDATE(Session session, OperationContext oc, Mailbox mbox,
+                Requester req, List<Integer> ids, byte type, TargetConstraint tcon, 
+                String name, ItemId iidFolder, String flags,
+                String tags, byte color)
     throws ServiceException {
-        ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
-                    LOAD, ids, Op.UPDATE, type, true, tcon);
+        ItemActionOperation ia = new ItemActionOperation(session, oc, mbox, req, LOAD, 
+                    ids, Op.UPDATE, type, true, tcon);
         ia.setName(name);
         ia.setIidFolder(iidFolder);
         ia.setFlags(flags);
@@ -249,11 +248,11 @@ public class ItemActionOperation extends Operation {
     // only when OP=UPDATE
     protected String mFlags;
     protected String mTags;
-    
-    // TEMPORARY -- just until dan implements the ItemIdFormatter
-    protected ZimbraSoapContext mSoapContext;
-    
-    
+
+    protected ItemIdFormatter mIdFormatter;
+    protected Account mAuthenticatedAccount;
+
+
     public String toString() {
         StringBuilder toRet = new StringBuilder(super.toString());
         
@@ -312,14 +311,18 @@ public class ItemActionOperation extends Operation {
         assert(mOperation == Op.UPDATE);
         mTags = tags; 
     }
-    
-    ItemActionOperation(ZimbraSoapContext zsc, Session session, OperationContext oc,
-                Mailbox mbox, Requester req, int baseLoad, 
-                List<Integer> ids, Op op, byte type, 
-                boolean flagValue, TargetConstraint tcon)
+
+    ItemActionOperation(Session session, OperationContext octxt, Mailbox mbox,
+                Requester req, int baseLoad, List<Integer> ids, 
+                Op op, byte type, boolean flagValue, 
+                TargetConstraint tcon)
     throws ServiceException {
-        super(session, oc, mbox, req, req.getPriority(), Math.min(ids.size() > 0 ? ids.size() * (baseLoad / SCALE): baseLoad, MAX));
-        mSoapContext = zsc;
+        super(session, octxt, mbox, req, req.getPriority(), Math.min(ids.size() > 0 ? ids.size() * (baseLoad / SCALE): baseLoad, MAX));
+
+        mAuthenticatedAccount = octxt == null ? null : octxt.getAuthenticatedUser();
+        if (mAuthenticatedAccount == null)
+            mAuthenticatedAccount = mbox.getAccount();
+        mIdFormatter = new ItemIdFormatter(mAuthenticatedAccount, mbox, false);
 
         int i = 0;
         mIds = new int[ids.size()];
@@ -354,9 +357,8 @@ public class ItemActionOperation extends Operation {
         }
 
         StringBuilder successes = new StringBuilder();
-        ItemIdFormatter ifmt = new ItemIdFormatter(mSoapContext);
         for (int id : mIds)
-            successes.append(successes.length() > 0 ? "," : "").append(ifmt.formatItemId(id));
+            successes.append(successes.length() > 0 ? "," : "").append(mIdFormatter.formatItemId(id));
         mResult = successes.toString();
     }
 
@@ -450,8 +452,15 @@ public class ItemActionOperation extends Operation {
 
 
     private void executeRemote() throws ServiceException, IOException {
+        String authtoken;
+        try {
+            authtoken = new AuthToken(mAuthenticatedAccount).getEncoded();
+        } catch (AuthTokenException e) {
+            throw ServiceException.FAILURE("could not get auth token", e);
+        }
+
         Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mIidFolder.getAccountId());
-        ZMailbox.Options zoptions = new ZMailbox.Options(mSoapContext.getRawAuthToken(), AccountUtil.getSoapUri(target));
+        ZMailbox.Options zoptions = new ZMailbox.Options(authtoken, AccountUtil.getSoapUri(target));
         zoptions.setNoSession(true);
         ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
 
@@ -558,7 +567,7 @@ public class ItemActionOperation extends Operation {
         }
 
         // explicitly add the invite metadata here
-        ToXML.encodeInvite(m, new ItemIdFormatter(mSoapContext), cal, inv);
+        ToXML.encodeInvite(m, mIdFormatter, cal, inv);
 
         // fix up the Organizer if needed
         for (Element comp : m.getElement(MailConstants.E_INVITE).listElements(MailConstants.E_INVITE_COMPONENT)) {

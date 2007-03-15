@@ -32,17 +32,16 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class ContactActionOperation extends ItemActionOperation {
 
-    public static ContactActionOperation UPDATE(ZimbraSoapContext zc, Session session, OperationContext oc,
+    public static ContactActionOperation UPDATE(ZimbraSoapContext zc, Session session, OperationContext octxt,
                                                 Mailbox mbox, Requester req, List<Integer> ids, ItemId iidFolder,
                                                 String flags, String tags, byte color, Map<String, String> fields)
     throws ServiceException {
-        ContactActionOperation ca = new ContactActionOperation(zc, session, oc, mbox, req, LOAD, ids, Op.UPDATE);
+        ContactActionOperation ca = new ContactActionOperation(session, octxt, mbox, req, LOAD, ids, Op.UPDATE);
         ca.setIidFolder(iidFolder);
         ca.setFlags(flags);
         ca.setTags(tags);
@@ -61,10 +60,10 @@ public class ContactActionOperation extends ItemActionOperation {
         mFields = (fields == null || fields.isEmpty() ? null : fields); 
     }
 
-    ContactActionOperation(ZimbraSoapContext zc, Session session, OperationContext octxt, Mailbox mbox,
-            Requester req, int baseLoad, List<Integer> ids, Op op)
+    ContactActionOperation(Session session, OperationContext octxt, Mailbox mbox, Requester req,
+            int baseLoad, List<Integer> ids, Op op)
             throws ServiceException {
-        super(zc, session, octxt, mbox, req, baseLoad, ids, op, MailItem.TYPE_CONTACT, true, null);
+        super(session, octxt, mbox, req, baseLoad, ids, op, MailItem.TYPE_CONTACT, true, null);
     }
 
     protected void callback() throws ServiceException {
@@ -73,7 +72,7 @@ public class ContactActionOperation extends ItemActionOperation {
             case UPDATE:
                 if (!mIidFolder.belongsTo(getMailbox()))
                     throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
-                
+
                 if (mIidFolder.getId() > 0)
                     getMailbox().move(getOpCtxt(), mIds, mItemType, mIidFolder.getId(), mTargetConstraint);
                 if (mTags != null || mFlags != null)
@@ -88,10 +87,9 @@ public class ContactActionOperation extends ItemActionOperation {
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + mOperation, null);
         }
 
-        ItemIdFormatter ifmt = new ItemIdFormatter(mSoapContext);
         StringBuilder successes = new StringBuilder();
         for (int id : mIds)
-            successes.append(successes.length() > 0 ? "," : "").append(ifmt.formatItemId(id));
+            successes.append(successes.length() > 0 ? "," : "").append(mIdFormatter.formatItemId(id));
         mResult = successes.toString();
     }
 
