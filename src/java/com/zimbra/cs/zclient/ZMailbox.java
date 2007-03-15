@@ -2793,8 +2793,9 @@ public class ZMailbox {
         Element mEl = getMessageElement(req, message);
 
         Element invEl = invite.toElement(mEl);
+        Element compEl = invEl.getElement(MailConstants.E_INVITE_COMPONENT);
 
-        exceptionId.toElement(MailConstants.E_CAL_EXCEPTION_ID, invEl);
+        exceptionId.toElement(MailConstants.E_CAL_EXCEPTION_ID, compEl);
 
         if (optionalUid != null)
             invEl.addAttribute(MailConstants.A_UID, optionalUid);

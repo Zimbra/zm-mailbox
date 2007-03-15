@@ -32,6 +32,7 @@ import com.zimbra.cs.zclient.event.ZCreateEvent;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZDeleteEvent;
 import com.zimbra.cs.zclient.event.ZCreateAppointmentEvent;
+import com.zimbra.cs.zclient.event.ZModifyAppointmentEvent;
 import com.zimbra.common.service.ServiceException;
 
 import java.util.HashMap;
@@ -119,7 +120,7 @@ public class ZApptSummaryCache extends ZEventHandler {
      * @param mailbox the mailbox that had the event
      */
     public void handleModify(ZModifyEvent event, ZMailbox mailbox) throws ServiceException {
-        if (event instanceof ZCreateAppointmentEvent) {
+        if (event instanceof ZModifyAppointmentEvent) {
             clear();
         }
     }

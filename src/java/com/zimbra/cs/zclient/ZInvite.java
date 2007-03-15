@@ -1442,7 +1442,7 @@ public class ZInvite {
     }
 
     public enum ZFrequency {
-        SEC, MIN, HOU, DAY, WEE, MON, YEA;
+        SEC, MIN, HOU, DAI, WEE, MON, YEA;
 
         public static ZFrequency fromString(String s) throws ServiceException {
             try {
@@ -1455,7 +1455,7 @@ public class ZInvite {
         public boolean isSecond() { return equals(SEC); }
         public boolean isMinute() { return equals(MIN); }
         public boolean isHour() { return equals(HOU); }
-        public boolean isDay() { return equals(DAY); }
+        public boolean isDaily() { return equals(DAI); }
         public boolean isWeek() { return equals(WEE); }
         public boolean isMonth() { return equals(MON); }
         public boolean isYear() { return equals(YEA); }
