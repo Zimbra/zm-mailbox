@@ -191,11 +191,12 @@ final class SessionMap {
         return pruneSessionsInternal(false, -1);
     }
     
-    synchronized private List<Session> pruneSessionsInternal(boolean all, long cutoff) {
+    synchronized private List<Session> pruneSessionsInternal(boolean all, long cutoffIn) {
         List<Session> toRet = new ArrayList<Session>();
         long now = System.currentTimeMillis();
         
         for (Map.Entry<Long, HashSet<Session>> entry : mSessionAccessSet.entrySet()) {
+            long cutoff = cutoffIn;
             if (all) {
                 cutoff= Long.MAX_VALUE;
             } else {
@@ -218,9 +219,9 @@ final class SessionMap {
                     }
                 } else {
                     // iter is last-access order, so we know we can quit now
+                    break;
                 }
             }
-            return toRet;
         }
         return toRet;
     }
