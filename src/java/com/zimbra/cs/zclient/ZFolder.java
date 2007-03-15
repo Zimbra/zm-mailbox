@@ -26,13 +26,11 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.cs.zclient.event.ZModifyFolderEvent;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
+import com.zimbra.cs.zclient.event.ZModifyFolderEvent;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -275,26 +273,6 @@ public class ZFolder implements ZItem, Comparable {
         } else {
             return path;
         }
-    }
-
-    /** Returns the folder's absolute path, with special chars in the names
-     * URL encoded.
-     */
-    public String getPathUrlEncoded() {
-        // TODO: CACHE? compute upfront?
-        if (mParent == null)
-            return ZMailbox.PATH_SEPARATOR;
-        else {
-            String pp = mParent.getPath();
-            String n;
-            try {
-                n = URLEncoder.encode(mName, "UTF-8");
-            } catch (UnsupportedEncodingException e) {
-                // should never happen
-                n = mName;
-            }
-            return pp.length() == 1 ? (pp + n) : (pp + ZMailbox.PATH_SEPARATOR + n);
-        }       
     }
 
     /**
