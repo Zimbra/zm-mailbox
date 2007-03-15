@@ -141,9 +141,10 @@ Some examples:
 
 The second format is used to reference something by its mail item id:
 
-/home/roland/?id=10                    // ICS view of calendar, referenced via ID
-/home/roland/?id=945&fmt=vcf           // contact formatted as a vcard
-/home/roland/?id=100&part=2.3          // message with id 100, mime part 2.3
+/home/roland/?id=10                       // ICS view of calendar, referenced via ID
+/home/roland/?id=945&fmt=vcf              // contact formatted as a vcard
+/home/roland/?id=100&part=2.3             // mime part 2.3 from message with id 100
+/home/roland/?id=100&part=1,4,5&fmt=zip   // zipfile containing mime parts 1, 4, and 5 from message with id 100
 
 When we support documents in a folder, we'd use the document's name as you'd expect:
 
