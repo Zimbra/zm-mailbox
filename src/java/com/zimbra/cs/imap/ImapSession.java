@@ -117,7 +117,7 @@ public class ImapSession extends Session {
         e.addAttribute("state", mState);
         e.addAttribute("idleTag", mIdleTag);
         if (mSelectedFolder != null) 
-            e.addAttribute("selectedFolder", mSelectedFolder.toString());
+            e.addAttribute("selectedFolder", mSelectedFolder.getPath());
         e.addAttribute("checkingSpam", mCheckingSpam);
         if (mEnabledHack != null) 
             e.addAttribute("hacks", mEnabledHack.toString());

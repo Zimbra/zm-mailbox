@@ -70,9 +70,25 @@ public abstract class Session {
      * Session Type
      */
     public enum Type {
-        SOAP, IMAP, ADMIN, WIKI, 
-        SYNCLISTENER, 
-        WAITSET;
+        NULL(0, 0), // unused dummy session type
+        SOAP(1, 5), 
+        IMAP(2, 5), 
+        ADMIN(3, 5), 
+        WIKI(4, 0), 
+        SYNCLISTENER(5, 2), 
+        WAITSET(6, 0)
+        ;
+        
+        Type(int index, int maxPerAccount) {
+            mIndex = index;
+            mMaxPerAccount = maxPerAccount;
+        }
+        
+        private final int mIndex;
+        private final int mMaxPerAccount;
+        public final int getIndex() { return mIndex; }
+        public final int getMaxPerAccount() { return mMaxPerAccount; } 
+        
     }
     
     public Session(String accountId, String sessionId, Type type) throws ServiceException {

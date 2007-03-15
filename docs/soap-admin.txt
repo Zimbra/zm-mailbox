@@ -1274,10 +1274,26 @@ Notes:
 
 -----------------------------
 
-<DumpSessionsRequest>
+<DumpSessionsRequest [listSessions="1"] [groupByAccount="1"]/>
 
-<DumpSessionsResponse>
-   Session State Dump
+<DumpSessionsResponse activeSessions="count">
+   <soap activeSessions="count" activeAccounts="count">
+   [ if listSessions set:
+      [
+        <s zid="accountId" sid="sessionId" cd="creationDate" ld="lastAccessedDate"
+           SOAP-SPECIFIC-PARAMETERS, e.g. [notify="0" if noNotify is set]...</s>
+      ]
+      OR (depends on groupByAccount setting)
+      [
+         <zid id="accountId">
+            <s sid="sessionId" cd="creationDate" ld="lastAccessedDate/>*
+         </zid>*
+      ]
+   ]
+   </soap>
+   
+   <imap>...</imap>
+   <admin>...</admin>
 </DumpSessionsResponse>
 
 -----------------------------

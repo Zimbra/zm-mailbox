@@ -48,6 +48,16 @@ import com.zimbra.common.service.ServiceException;
  * 
  */
 final class SessionMap {
+    private final Session.Type mType;
+
+    SessionMap(Session.Type type) { 
+        mType = type; 
+        mAcctSessionMap = new LinkedHashMap<String, AccountSessionMap>(100);
+        mSessionAccessSet = new HashMap<Long, HashSet<Session>>();
+    }
+    
+    public Session.Type getType() { return mType; }
+    
     /** @return the number of unique accounts with active sessions */
     public synchronized int totalActiveAccounts() { return mAcctSessionMap.size(); }
     
@@ -251,14 +261,9 @@ final class SessionMap {
         return toRet;
     }
     
-    SessionMap() {
-        mAcctSessionMap = new LinkedHashMap<String, AccountSessionMap>(100);
-        mSessionAccessSet = new HashMap<Long, HashSet<Session>>();
-    }
-    
     static boolean unitTest() {
         try {
-            SessionMap map = new SessionMap();
+            SessionMap map = new SessionMap(Session.Type.NULL);
             
             Session s1 =   new AdminSession("a1", "s1");
             Session s1_2 = new AdminSession("a1", "s2");

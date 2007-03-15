@@ -45,8 +45,8 @@ import com.zimbra.common.util.ZimbraLog;
 
 /** A Simple Cache with timeout (based on last-accessed time) for a {@link Session}. objects<p>
  * 
- *  Not all Session subclasses are stored in this cache -- only those Session types which want 
- *  timeout caching arestored here.<p>
+ *  Not all Session subclasses are stored in this cache currently, though all user-available
+ *  sessions should eventually be stored in this cache
  **/
 public final class SessionCache {
 
@@ -61,7 +61,7 @@ public final class SessionCache {
         if (sShutdown || accountId == null || accountId.trim().equals(""))
             return null;
 
-        String sessionId = getNextSessionId();
+        String sessionId = getNextSessionId(sessionType);
         Session session = null;
         try {
             switch (sessionType) {
@@ -80,7 +80,7 @@ public final class SessionCache {
         if (ZimbraLog.session.isDebugEnabled())
             ZimbraLog.session.debug("Created " + session);
         
-        sSessionMap.putAndPrune(accountId, sessionId, session, 10);
+        getSessionMap(sessionType).putAndPrune(accountId, sessionId, session, sessionType.getMaxPerAccount());
         return session;
     }
 
@@ -95,8 +95,9 @@ public final class SessionCache {
     public static Session lookup(String sessionId, String accountId) {
         if (sShutdown)
             return null;
-
-        Session s = sSessionMap.get(accountId, sessionId);
+        
+        Session.Type type = getSessionTypeFromId(sessionId);
+        Session s = getSessionMap(type).get(accountId, sessionId);
         if (s == null && ZimbraLog.session.isDebugEnabled()) {
             ZimbraLog.session.debug("no session with id " + sessionId + " found (accountId: " + accountId + ")");
         }
@@ -124,9 +125,10 @@ public final class SessionCache {
         if (ZimbraLog.session.isDebugEnabled())
             ZimbraLog.session.debug("Clearing session " + sessionId);
         
-        Session session = sSessionMap.remove(accountId, sessionId);
+        Session.Type type = getSessionTypeFromId(sessionId);
+        Session session = getSessionMap(type).remove(accountId, sessionId);
         if (session != null) {
-            assert(!Thread.holdsLock(sSessionMap));
+            assert(!Thread.holdsLock(getSessionMap(type)));
             session.doCleanup();
         }
     }
@@ -144,12 +146,14 @@ public final class SessionCache {
     public static void shutdown() {
         sShutdown = true;
         
-        List<Session> list = sSessionMap.pruneSessionsByTime(Long.MAX_VALUE);
-        
-        // Call deadlock-prone Session.doCleanup() after releasing lock on sLRUMap.
-        for (Session s: list) {
-            assert(!Thread.holdsLock(sSessionMap));
-            s.doCleanup();
+        for (SessionMap sessionMap : sSessionMaps) {
+            List<Session> list = sessionMap.pruneSessionsByTime(Long.MAX_VALUE);
+            
+            // Call deadlock-prone Session.doCleanup() after releasing lock on sLRUMap.
+            for (Session s: list) {
+                assert(!Thread.holdsLock(sessionMap));
+                s.doCleanup();
+            }
         }
     }
     
@@ -165,52 +169,68 @@ public final class SessionCache {
     /** The cache of all active {@link Session}s.  The keys of the Map are session IDs
      *  and the values are the Sessions themselves. */
 //    private static LinkedHashMap<String, Session> sLRUMap = new LinkedHashMap<String, Session>(500);
-    private static SessionMap sSessionMap = new SessionMap();
+    
+    private static final Session.Type getSessionTypeFromId(String sessionId) {
+        if (sessionId.length() < 2)
+            return Session.Type.NULL; // invalid session id
+        
+        return Session.Type.values()[Character.digit(sessionId.charAt(0),10)];
+    }
+    
+    private static final SessionMap getSessionMap(Session.Type type) {
+        return sSessionMaps[type.getIndex()];
+    }
+    private static final SessionMap[] sSessionMaps;
+    static {
+        sSessionMaps = new SessionMap[Session.Type.values().length];
+        for (Session.Type type : Session.Type.values()) {
+            sSessionMaps[type.getIndex()] = new SessionMap(type);
+        }
+    }
 
     /** Whether we've received a {@link #shutdown()} call to kill the cache. */
     private static boolean sShutdown = false;
+    
     /** The ID for the next generated {@link Session}. */
     private static long sContextSeqNo = 1;
 
-
-    private synchronized static String getNextSessionId() {
-        return Long.toString(sContextSeqNo++);
+    private synchronized static String getNextSessionId(Session.Type type) {
+        return Integer.toString(type.getIndex())+Long.toString(sContextSeqNo++);
     }
 
     private static void logActiveSessions() {
-        ValueCounter sessionTypeCounter = new ValueCounter();
         StringBuilder accountList = new StringBuilder();
         StringBuilder manySessionsList = new StringBuilder();
         int totalSessions = 0;
         int totalAccounts = 0;
-
-        synchronized (sSessionMap) {
-            for (SessionMap.AccountSessionMap activeAcct : sSessionMap.activeAccounts()) {
-                String accountId = null;
-                totalAccounts++;
-                int count = 0;
-                for (Session session : activeAcct.values()) {
-                    accountId = session.getAccountId();
-                    totalSessions++;
-                    count++;
-                    String className = StringUtil.getSimpleClassName(session);
-                    sessionTypeCounter.increment(className);
-                }
-                assert(count>0);
-                if (count > 0) {
-                    if (accountList.length()>0)
-                        accountList.append(',');
-                    accountList.append(accountId).append('(').append(count).append(')');
-                    if (count > 9) {
-                        if (manySessionsList.length() > 0)
-                            manySessionsList.append(',');
-                        manySessionsList.append(accountId).append('(').append(count).append(')');
+        
+        int sessionTypeCounter[] = new int[Session.Type.values().length];
+        
+        for (SessionMap sessionMap: sSessionMaps) {
+            synchronized(sessionMap) {
+                for (SessionMap.AccountSessionMap activeAcct : sessionMap.activeAccounts()) {
+                    String accountId = null;
+                    totalAccounts++;
+                    int count = 0;
+                    for (Session session : activeAcct.values()) {
+                        accountId = session.getAccountId();
+                        totalSessions++;
+                        count++;
+                        sessionTypeCounter[sessionMap.getType().getIndex()]++;
+                    }
+                    assert(count>0);
+                    if (count > 0) {
+                        if (accountList.length()>0)
+                            accountList.append(',');
+                        accountList.append(accountId).append('(').append(count).append(')');
+                        if (count > 9) {
+                            if (manySessionsList.length() > 0)
+                                manySessionsList.append(',');
+                            manySessionsList.append(accountId).append('(').append(count).append(')');
+                        }
                     }
                 }
             }
-
-            assert(totalAccounts == sSessionMap.totalActiveAccounts());
-            assert(totalSessions == sSessionMap.totalActiveSessions());
         }
         
         if (sLog.isDebugEnabled() && totalSessions > 0) {
@@ -222,45 +242,77 @@ public final class SessionCache {
         }
     }
     
-    public static List<Session> getActiveSessions() {
-        return sSessionMap.copySessionList();
+    /**
+     * Return a copy of the session's current list of active sessions
+     * 
+     * @param type
+     * @return
+     */
+    public static List<Session> getActiveSessions(Session.Type type) {
+        return getSessionMap(type).copySessionList();
     }
     
-//    public static void dumpState(Writer w) {
-//        List<Session>list = sSessionMap.copySessionList();
-//        try { w.write("\nACTIVE SESSIONS:\n"); } catch(IOException e) {};
-//        for (Session s: list) {
-//            s.dumpState(w);
-//            try { w.write('\n'); } catch(IOException e) {};
-//        }
-//        try { w.write('\n'); } catch(IOException e) {};
-//    }
-
+    /**
+     * Return active session counts in an array { activeAccounts, activeSessions }
+     * 
+     * @param type
+     * @return
+     */
+    public static int[] countActive(Session.Type type) {
+        int[] toRet = new int[2];
+        
+        SessionMap sessionMap = getSessionMap(type);
+        
+        synchronized(sessionMap) {
+            toRet[0] = sessionMap.totalActiveAccounts();
+            toRet[1] = sessionMap.totalActiveSessions();
+        }
+        return toRet;
+    }
+    
     private static final class SweepMapTimerTask extends TimerTask {
         public void run() {
             if (sLog.isDebugEnabled())
                 SessionCache.logActiveSessions();
-            
-            List<Session> toReap = sSessionMap.pruneIdleSessions();
-            
-            // keep track of the count of each session type that's removed
-            ValueCounter removedSessionTypes = new ValueCounter();
-            
-            for (Session s: toReap) {
-                if (ZimbraLog.session.isDebugEnabled())
-                    ZimbraLog.session.debug("Removing cached session: " + s);
-                if (sLog.isInfoEnabled())
-                    removedSessionTypes.increment(StringUtil.getSimpleClassName(s));
-                assert(!Thread.holdsLock(sSessionMap));
-                // IMPORTANT: Clean up sessions *after* releasing lock on sLRUMap.
-                // If Session.doCleanup() is called with sLRUMap locked, it can lead
-                // to deadlock. (bug 7866)
-                s.doCleanup();
-            }
 
-            if (sLog.isInfoEnabled() && removedSessionTypes.size() > 0) {
-                sLog.info("Removed " + removedSessionTypes.getTotal() + " idle sessions (" +
-                          removedSessionTypes + ").  " + sSessionMap.totalActiveSessions() + " active sessions remain.");
+            int removedByType[] = new int[Session.Type.values().length];
+            int totalActive = 0;
+            
+            for (SessionMap sessionMap : sSessionMaps) {
+                List<Session> toReap = sessionMap.pruneIdleSessions();
+                totalActive += sessionMap.totalActiveSessions();
+                
+                // keep track of the count of each session type that's removed
+                removedByType[sessionMap.getType().getIndex()]+=toReap.size();
+                
+                for (Session s: toReap) {
+                    if (ZimbraLog.session.isDebugEnabled())
+                        ZimbraLog.session.debug("Removing cached session: " + s);
+                    assert(!Thread.holdsLock(sessionMap));
+                    // IMPORTANT: Clean up sessions *after* releasing lock on sLRUMap.
+                    // If Session.doCleanup() is called with sLRUMap locked, it can lead
+                    // to deadlock. (bug 7866)
+                    s.doCleanup();
+                }
+            }
+            
+            int totalRemoved = 0;
+            for (int r : removedByType) {
+                totalRemoved+=r;
+            }
+            
+            if (sLog.isInfoEnabled() && totalRemoved>0) {
+                StringBuilder sb = new StringBuilder("Removed ").append(totalRemoved).append(" idle sessions (");
+                StringBuilder typeStr = new StringBuilder();
+                for (int i = 1; i < removedByType.length; i++) {
+                    if (removedByType[i]>0) {
+                        if (typeStr.length() > 0) {
+                            typeStr.append(", ");
+                        }
+                        typeStr.append(Session.Type.values()[i].name());
+                    }
+                }
+                sb.append(typeStr).append("). ").append(totalActive).append(" active sessions remain.");
             }
         }
     }

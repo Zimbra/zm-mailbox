@@ -44,6 +44,7 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.Element;
@@ -81,8 +82,10 @@ public class SoapSession extends Session {
     }
     
     public void doEncodeState(Element parent) {
-        Element e = parent.addElement("soap");
-        e.addAttribute("notify", mNotify);
+        parent.addAttribute(AdminConstants.A_NOTIFY, mNotify);
+        if (mPushChannel != null) {
+            parent.addAttribute("push", true);
+        }
     }
 
     /** Clears all cached notifications and stops recording future notifications
