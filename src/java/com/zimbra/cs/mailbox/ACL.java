@@ -371,13 +371,13 @@ public class ACL {
         return mGrants.iterator();
     }
 
-    private static final char ABBR_READ = 'r';
-    private static final char ABBR_WRITE = 'w';
-    private static final char ABBR_INSERT = 'i';
-    private static final char ABBR_DELETE = 'd';
-    private static final char ABBR_ACTION = 'x';
-    private static final char ABBR_ADMIN = 'a';
-    private static final char ABBR_CREATE_FOLDER = 'c';
+    public static final char ABBR_READ = 'r';
+    public static final char ABBR_WRITE = 'w';
+    public static final char ABBR_INSERT = 'i';
+    public static final char ABBR_DELETE = 'd';
+    public static final char ABBR_ACTION = 'x';
+    public static final char ABBR_ADMIN = 'a';
+    public static final char ABBR_CREATE_FOLDER = 'c';
 
     public static short stringToRights(String encoded) throws ServiceException {
         short rights = 0;
