@@ -119,7 +119,12 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
 
         sIsStrMap.put("remote",
                       new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
-                                  return ZimbraQuery.InQuery.Create(mbx, analyze, modifier, ZimbraQuery.InQuery.IN_REMOTE_FOLDER);
+                          return ZimbraQuery.InQuery.Create(mbx, analyze, modifier, ZimbraQuery.InQuery.IN_REMOTE_FOLDER);
+                      } } );
+
+        sIsStrMap.put("solo",
+                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return ZimbraQuery.ConvCountQuery.create(mbx, analyze, modifier, ZimbraQueryParser.CONV_COUNT, "1");
                       } } );
     }
 
@@ -176,6 +181,8 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
                 // virtual-conversation: search for the item-id with id = -1*X
                 return ZimbraQuery.ItemQuery.Create(mAnalyzer, modifier, tok.substring(1));
             }
+          case CONV_COUNT:
+            return ZimbraQuery.ConvCountQuery.create(mMailbox, mAnalyzer, modifier, target, tok);
           case DATE:
           case DAY:
           case WEEK:

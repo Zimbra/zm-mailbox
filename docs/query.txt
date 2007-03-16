@@ -16,7 +16,7 @@ Tim's short-short summary of the query grammar as of now (updated)
          | [0-9]+  --> item ID
          |"{[0-9]+(,\s?[0-9]+)*}" -- ie {1,2,3} or {1} --> set of item_id's
    is:{"anywhere"|"unread"|"read"|"flagged"|"unflagged"|"sent"|"received"|"replied"|
-       "unreplied"|"forwarded"|"unforwarded"|"invite"}
+       "unreplied"|"forwarded"|"unforwarded"|"invite"|"solo"}
    date:[>,<,>=,<={DATE}
    appt-start:[>,<,>=,<={DATE} 
    appt-end:[>,<,>=,<={DATE} 
@@ -139,6 +139,7 @@ flags
   is:sent
   is:received
   is:invite
+  is:solo --> true if the item has no conversation 
 
   The flag name can also be used in a search:
     tag:\{FlagName} where {FlagName} is one of the following values:

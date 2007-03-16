@@ -2474,6 +2474,15 @@ public class DbMailItem {
         num += encodeRange(statement, "mi.subject", c.subjectRanges);
         num += encodeRange(statement, "mi.sender", c.senderRanges);
         
+        Boolean isSoloPart = node.getSearchConstraints().getIsSoloPart();
+        if (isSoloPart != null) {
+            if (isSoloPart.booleanValue()) {
+                statement.append(" AND mi.parent_id is NULL ");
+            } else {
+                statement.append(" AND mi.parent_id is NOT NULL ");
+            }
+        }
+        
         if (inCalTable) {
             num += encodeRangeWithMinimum(statement, "ap.start_time", c.calStartDates, 1);
             num += encodeRangeWithMinimum(statement, "ap.end_time", c.calEndDates, 1);
@@ -2502,7 +2511,7 @@ public class DbMailItem {
         Connection conn, DbSearchConstraintsNode node, Mailbox mbox, 
         byte sort, int offset, int limit, SearchResult.ExtraData extra) throws ServiceException {
         
-        boolean validLIMIT = offset >= 0 && limit >= 0;
+        boolean hasValidLIMIT = offset >= 0 && limit >= 0;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         StringBuilder statement = new StringBuilder();
@@ -2515,7 +2524,7 @@ public class DbMailItem {
              *    [FORCE INDEX (...)]
              *    WHERE mi.mailboxid=? AND
              */
-            statement.append(encodeSelect(mbox, sort, extra, false, node, validLIMIT));
+            statement.append(encodeSelect(mbox, sort, extra, false, node, hasValidLIMIT));
             
             /*
              *( SUB-NODE AND/OR (SUB-NODE...) ) AND/OR ( SUB-NODE ) AND
@@ -2539,7 +2548,7 @@ public class DbMailItem {
                 /*
                  * SELECT...again...(this time with "appointment as ap")...WHERE...
                  */
-                statement.append(encodeSelect(mbox, sort, extra, true, node, validLIMIT));
+                statement.append(encodeSelect(mbox, sort, extra, true, node, hasValidLIMIT));
                 numParams += encodeConstraint(mbox, node, APPOINTMENT_TABLE_TYPES, true, statement, conn);
             }
             
@@ -2555,7 +2564,7 @@ public class DbMailItem {
             /*
              * LIMIT ?, ? 
              */
-            if (validLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
+            if (hasValidLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
                 statement.append(" LIMIT ?, ?");
                 numParams += 2; // two constraints added
             }
@@ -2580,7 +2589,7 @@ public class DbMailItem {
             /*
              * LIMIT
              */
-            if (validLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
+            if (hasValidLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
                 stmt.setInt(param++, offset);
                 stmt.setInt(param++, limit);
             }
@@ -2595,7 +2604,7 @@ public class DbMailItem {
              * Return results
              */
             while (rs.next()) {
-                if (validLIMIT && !Db.supports(Db.Capability.LIMIT_CLAUSE)) {
+                if (hasValidLIMIT && !Db.supports(Db.Capability.LIMIT_CLAUSE)) {
                     if (offset-- > 0)
                         continue;
                     if (limit-- <= 0)

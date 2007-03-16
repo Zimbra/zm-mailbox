@@ -196,6 +196,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
     public Collection<NumericRange> calEndDates = new ArrayList<NumericRange>();    /* optional */
     public Collection<NumericRange> modified = new ArrayList<NumericRange>(); /* optional */
     public Collection<NumericRange> sizes = new ArrayList<NumericRange>();    /* optional */
+    public Collection<NumericRange> convCounts = new ArrayList<NumericRange>(); /* optional */
     public Collection<StringRange> subjectRanges = new ArrayList<StringRange>(); /* optional */
     public Collection<StringRange> senderRanges = new ArrayList<StringRange>(); /* optional */
     
@@ -270,11 +271,50 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
             calStartDates.isEmpty() &&
             calEndDates.isEmpty() &&
             modified.isEmpty() &&
+            convCounts.isEmpty() &&
             sizes.isEmpty() &&
             subjectRanges.isEmpty() &&
             senderRanges.isEmpty() &&
             remoteFolders.isEmpty() && excludeRemoteFolders.isEmpty();
     }
+    
+    /**
+     * @return TRUE if the conv-count constraint is set, and if the constraint
+     * is exactly 1 (ie >=1 && <=1)....this is a useful special case b/c if 
+     * this is true then we can generate much simpler SQL than for the more complicated
+     * conv-count cases...
+     */
+    public Boolean getIsSoloPart() {
+        if (convCounts.size() != 1)
+            return null;
+        NumericRange r = convCounts.iterator().next();
+        
+        if (r.highest == 1 && r.highestEqual == true &&
+                    r.lowest == 1 && r.lowestEqual == true) {
+            if (r.negated) 
+                return Boolean.FALSE;
+            else
+                return Boolean.TRUE;
+        } else {
+            return null;
+        }
+    }
+    
+    /**
+     * @return TRUE if the conv-count constraint is set, and if the constraint
+     * is exactly 1 (ie >=1 && <=1)....this is a useful special case b/c if 
+     * this is true then we can generate much simpler SQL than for the more complicated
+     * conv-count cases...
+     */
+    public boolean isConvCountExactlyOne() {
+        if (convCounts.size() != 1)
+            return false;
+        NumericRange r = convCounts.iterator().next();
+        
+        return (r.highest == 1 && r.highestEqual == true &&
+                    r.lowest == 1 && r.lowestEqual == true);
+    }
+    
 
     public Object clone() throws CloneNotSupportedException {
         DbSearchConstraints toRet = (DbSearchConstraints)super.clone();
@@ -308,6 +348,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         toRet.calEndDates = new HashSet<NumericRange>(); toRet.calEndDates.addAll(calEndDates);
         
         toRet.modified = new HashSet<NumericRange>(); toRet.modified.addAll(modified);
+        toRet.convCounts = new HashSet<NumericRange>(); toRet.convCounts.addAll(convCounts);
         toRet.sizes = new HashSet<NumericRange>(); toRet.sizes.addAll(sizes);
         toRet.subjectRanges = new HashSet<StringRange>(); toRet.subjectRanges.addAll(subjectRanges);
         toRet.senderRanges = new HashSet<StringRange>(); toRet.senderRanges.addAll(senderRanges);
@@ -455,6 +496,9 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
 
         if (!modified.isEmpty())
             new ObjectPrinter<NumericRange>().run(retVal, modified, "MOD") ;
+        
+        if (!convCounts.isEmpty())
+            new ObjectPrinter<NumericRange>().run(retVal, convCounts, "CONV-COUNT");
 
         if (!sizes.isEmpty()) 
             new ObjectPrinter<NumericRange>().run(retVal, sizes, "SIZE");
@@ -664,12 +708,18 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
             calEndDates.addAll(other.calEndDates);
         }
         
-
         // modified
         if (other.modified != null) {
             if (modified == null) 
                 modified = new ArrayList<NumericRange>();
             modified.addAll(other.modified);
+        }
+        
+        // conv-counts
+        if (other.convCounts != null) {
+            if (convCounts == null)
+                convCounts = new ArrayList<NumericRange>();
+            convCounts.addAll(other.convCounts);
         }
 
         // sizes
@@ -732,6 +782,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         checkIntervals(calStartDates);
         checkIntervals(calEndDates);
         checkIntervals(modified);
+        checkIntervals(convCounts);
     }
     
     void checkIntervals(Collection<? extends DbSearchConstraints.NumericRange> intervals) {

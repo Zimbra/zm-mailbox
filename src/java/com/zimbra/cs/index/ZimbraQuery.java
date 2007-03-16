@@ -1521,7 +1521,67 @@ public final class ZimbraQuery {
                 return new TextQuery(mbox, analyzer, modifier, qType, text);
         }
     }
-
+    
+    public static class ConvCountQuery extends BaseQuery {
+        private int mLowestCount;  private boolean mLowerEq;
+        private int mHighestCount; private boolean mHigherEq;
+        
+        private ConvCountQuery(Mailbox mbox, Analyzer analyzer, int modifier, int qType,
+           int lowestCount, boolean lowerEq, int highestCount, boolean higherEq) {
+            super(modifier, qType);
+            
+            mLowestCount = lowestCount;
+            mLowerEq = lowerEq;
+            mHighestCount = highestCount;
+            mHigherEq = higherEq;
+        }
+        
+        @Override
+        public String toString(int expLevel) {
+            return super.toString(expLevel) + "ConvCount(" 
+               + (mLowerEq ? ">=" : ">") + mLowestCount + " " 
+               + (mHigherEq? "<=" : "<") + mHighestCount + ")";
+        }
+        
+        @Override
+        protected QueryOperation getQueryOperation(boolean truthiness) {
+            DBQueryOperation op = DBQueryOperation.Create();
+            truthiness = calcTruth(truthiness);
+            op.addConvCountClause(mLowestCount, mLowerEq, mHighestCount, mHigherEq, truthiness);
+            return op;
+        }
+        
+        public static BaseQuery create(Mailbox mbox, Analyzer analyzer, int modifier, int qType, String str) 
+        throws ServiceException {
+            if (str.charAt(0) == '<') {
+                boolean eq = false;
+                if (str.charAt(1) == '=') { 
+                    eq = true;
+                    str = str.substring(2);
+                } else {
+                    str = str.substring(1);
+                }
+                int num = Integer.parseInt(str);
+                return new ConvCountQuery(mbox, analyzer, modifier, qType, 
+                    -1, false, num, eq);
+            } else if (str.charAt(0) == '>') {
+                boolean eq = false;
+                if (str.charAt(1) == '=') { 
+                    eq = true;
+                    str = str.substring(2);
+                } else {
+                    str = str.substring(1);
+                }
+                int num = Integer.parseInt(str);
+                return new ConvCountQuery(mbox, analyzer, modifier, qType, 
+                    num, eq, -1, false);
+            } else {
+                int num = Integer.parseInt(str);
+                return new ConvCountQuery(mbox, analyzer, modifier, qType, 
+                    num, true, num, true);
+            }
+        }
+    }
 
     public static class SubjectQuery extends BaseQuery {
         private String mStr;

@@ -243,7 +243,18 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         calEndDates.add(intv);
     }
     
+    void addConvCountClause(long lowest, boolean lowestEqual, long highest, boolean highestEqual, boolean truth)  {
+        DbSearchConstraints.NumericRange intv = new DbSearchConstraints.NumericRange();
+        intv.lowest = lowest;
+        intv.lowestEqual = lowestEqual;
+        intv.highest = highest;
+        intv.highestEqual = highestEqual;
+        intv.negated = !truth;
+        
+        convCounts.add(intv);
+    }
 
+    
     /**
      * @param lowest
      * @param highest
@@ -292,8 +303,6 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         
         senderRanges.add(intv);
     }
-    
-    
 
     /**
      * @param convId
@@ -321,7 +330,7 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
             prohibitedConvIds.add(cid);
         }
     }
-
+    
     /**
      * For remote folder
      * 

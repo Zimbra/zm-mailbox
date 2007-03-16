@@ -285,6 +285,18 @@ class DBQueryOperation extends QueryOperation
         mAllResultsQuery = false;
         topLevelAndedConstraint().addCalEndDateClause(lowestDate, lowestEq, highestDate, highestEq, truth);
     }
+    
+    /**
+     * @param lowest
+     * @param lowestEq
+     * @param highest
+     * @param highestEq
+     * @param truth
+     */
+    void addConvCountClause(long lowest, boolean lowestEq, long highest, boolean highestEq, boolean truth)  {
+        mAllResultsQuery = false;
+        topLevelAndedConstraint().addConvCountClause(lowest, lowestEq, highest, highestEq, truth);
+    }
 
     /**
      * @param lowest
