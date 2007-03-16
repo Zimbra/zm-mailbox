@@ -231,7 +231,7 @@ abstract class ImapRequest {
 
     private String validateSequence(String value) throws ImapParseException {
         // "$" is OK per draft-melnikov-imap-search-res-03
-        if (value.equals("$") && extensionEnabled("X-DRAFT-I04-SEARCHRES"))
+        if (value.equals("$") && extensionEnabled("X-DRAFT-I05-SEARCHRES"))
             return value;
 
         int i, last = LAST_PUNCT;

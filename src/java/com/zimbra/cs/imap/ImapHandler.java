@@ -398,7 +398,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                                 else if (option.equals("MAX"))    options |= RETURN_MAX;
                                 else if (option.equals("ALL"))    options |= RETURN_ALL;
                                 else if (option.equals("COUNT"))  options |= RETURN_COUNT;
-                                else if (option.equals("SAVE") && extensionEnabled("X-DRAFT-I04-SEARCHRES"))  options |= RETURN_SAVE;
+                                else if (option.equals("SAVE") && extensionEnabled("X-DRAFT-I05-SEARCHRES"))  options |= RETURN_SAVE;
                                 else
                                     throw new ImapParseException(tag, "unknown RETURN option \"" + option + '"');
                             }
@@ -513,7 +513,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     private static final String[] SUPPORTED_EXTENSIONS = new String[] {
         "BINARY", "CATENATE", "CHILDREN", "ESEARCH", "ID", "IDLE",
         "LITERAL+", "LOGIN-REFERRALS", "NAMESPACE", "QUOTA", "SASL-IR",
-        "UIDPLUS", "UNSELECT", "WITHIN", "X-DRAFT-I04-SEARCHRES"
+        "UIDPLUS", "UNSELECT", "WITHIN", "X-DRAFT-I05-SEARCHRES"
     };
 
     private void sendCapability() throws IOException {
@@ -535,7 +535,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         // [UIDPLUS]          RFC 4315: Internet Message Access Protocol (IMAP) - UIDPLUS extension
         // [UNSELECT]         RFC 3691: IMAP UNSELECT command
         // [WITHIN]           draft-ietf-lemonade-search-within-03: WITHIN Search extension to the IMAP Protocol
-        // [X-DRAFT-I04-SEARCHRES]  draft-melnikov-imap-search-res-04: IMAP extension for referencing the last SEARCH result
+        // [X-DRAFT-I05-SEARCHRES]  draft-melnikov-imap-search-res-05: IMAP extension for referencing the last SEARCH result
 
         boolean authenticated = mSession != null;
         String nologin  = mStartedTLS || authenticated || ImapServer.allowCleartextLogins() ? "" : " LOGINDISABLED";
@@ -555,7 +555,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         if (ImapServer.isExtensionDisabled(getServer(), extension))
             return false;
         // check whether one of the extension's prerequisites is disabled on the server
-        if (extension.equalsIgnoreCase("X-DRAFT-I04-SEARCHRES"))
+        if (extension.equalsIgnoreCase("X-DRAFT-I05-SEARCHRES"))
             return extensionEnabled("ESEARCH");
         // see if the user's session has disabled the extension
         if (extension.equalsIgnoreCase("IDLE") && mSession != null && mSession.isHackEnabled(EnabledHack.NO_IDLE))
@@ -1609,20 +1609,20 @@ public abstract class ImapHandler extends ProtocolHandler {
                 result.append(" MAX ").append(byUID ? hits.last().imapUid : hits.last().sequence);
             if ((options & RETURN_COUNT) != 0)
                 result.append(" COUNT ").append(hits.size());
-            if (!saveResults && !hits.isEmpty() && (options & RETURN_ALL) != 0)
+            if (!hits.isEmpty() && (options & RETURN_ALL) != 0)
                 result.append(" ALL ").append(ImapFolder.encodeSubsequence(hits, byUID));
         }
 
         if (saveResults) {
             if (hits.isEmpty() || options == RETURN_SAVE || (options & (RETURN_COUNT | RETURN_ALL)) != 0) {
-                mSession.saveSearchResults(hits);
+                mSession.getFolder().saveSearchResults(hits);
             } else {
                 ImapMessageSet saved = new ImapMessageSet();
                 if ((options & RETURN_MIN) != 0)
                     saved.add(hits.first());
                 if ((options & RETURN_MAX) != 0)
                     saved.add(hits.last());
-                mSession.saveSearchResults(saved);
+                mSession.getFolder().saveSearchResults(saved);
             }
         }
 

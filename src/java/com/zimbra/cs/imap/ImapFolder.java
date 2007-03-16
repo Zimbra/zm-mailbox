@@ -68,7 +68,6 @@ class ImapFolder implements Iterable<ImapMessage> {
 
     private int mUIDValidityValue;
     private int mInitialUIDNEXT = -1;
-    private int mInitialMaxUID = -1;
     private int mInitialFirstUnread = -1;
     private int mLastSize = 0;
 
@@ -76,6 +75,7 @@ class ImapFolder implements Iterable<ImapMessage> {
     private ImapSession      mSession;
     private boolean          mNotificationsSuspended;
     private Set<ImapMessage> mDirtyMessages = new TreeSet<ImapMessage>();
+    private ImapMessageSet   mSavedSearchResults;
 
     /** Initializes an ImapFolder from a {@link Folder}, specified by path.
      *  Search folders are treated as folders containing all messages matching
@@ -143,7 +143,6 @@ class ImapFolder implements Iterable<ImapMessage> {
         if (debug)  ZimbraLog.imap.debug(added);
 
         mLastSize = mSequence.size();
-        mInitialMaxUID = (mLastSize == 0 ? -1 : mSequence.get(mLastSize - 1).imapUid);
         mSession = session;
     }
 
@@ -221,7 +220,7 @@ class ImapFolder implements Iterable<ImapMessage> {
         }
 
         mLastSize = mSequence.size();
-        mInitialMaxUID = (mLastSize == 0 ? -1 : mSequence.get(mLastSize - 1).imapUid);
+        mSavedSearchResults = null;
         mSession = session;
     }
 
@@ -254,12 +253,6 @@ class ImapFolder implements Iterable<ImapMessage> {
      *  immediately after the folder is initialized and is not updated
      *  as messages are marked read and unread. */
     int getFirstUnread()  { return mInitialFirstUnread; }
-
-    /** Returns the IMAP UID of the last message in the folder when the folder
-     *  was first selected, or -1 for an empty folder.  This is <b>only</b>
-     *  valid immediately after the folder is initialized and is not updated
-     *  as messages are marked read and unread. */
-    int getInitialMaxUID()  { return mInitialMaxUID; }
 
     /** Returns the active {@link ImapSession} in which this ImapFolder was
      *  created. */
@@ -393,6 +386,24 @@ class ImapFolder implements Iterable<ImapMessage> {
     }
 
 
+    void saveSearchResults(ImapMessageSet i4set) {
+        i4set.remove(null);
+        mSavedSearchResults = i4set;
+    }
+
+    ImapMessageSet getSavedSearchResults() {
+        if (mSavedSearchResults == null)
+            mSavedSearchResults = new ImapMessageSet();
+        return mSavedSearchResults;
+    }
+
+    void markMessageExpunged(ImapMessage i4msg) {
+        if (mSavedSearchResults != null)
+            mSavedSearchResults.remove(i4msg);
+        i4msg.setExpunged(true);
+    }
+
+
     ImapMessageSet getAllMessages() {
         ImapMessageSet result = new ImapMessageSet();
         if (!mSequence.isEmpty()) {
@@ -424,7 +435,7 @@ class ImapFolder implements Iterable<ImapMessage> {
         if (subseqStr == null || subseqStr.trim().equals("") || mSequence.isEmpty())
             return result;
         else if (subseqStr.equals("$"))
-            return mSession.getSavedSearchResults();
+            return getSavedSearchResults();
 
         ImapMessage i4msg = getLastMessage();
         int lastID = (i4msg == null ? (byUID ? Integer.MAX_VALUE : mSequence.size()) : (byUID ? i4msg.imapUid : i4msg.sequence));
