@@ -23,6 +23,8 @@
  */
 package com.zimbra.cs.operation;
 
+import java.util.List;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -59,6 +61,15 @@ public class GetItemOperation extends Operation {
     public GetItemOperation(Session session, OperationContext oc, Mailbox mbox, Requester req, int[] ids, byte type) {
         super(session, oc, mbox, req, LOAD);
         mIds = ids;
+        mType = type;
+        mMethod = ItemBy.ID;
+    }
+
+    public GetItemOperation(Session session, OperationContext oc, Mailbox mbox, Requester req, List<Integer> ids, byte type) {
+        super(session, oc, mbox, req, LOAD);
+        mIds = new int[ids.size()];
+        for (int i = 0; i < mIds.length; i++)
+            mIds[i] = ids.get(i);
         mType = type;
         mMethod = ItemBy.ID;
     }
