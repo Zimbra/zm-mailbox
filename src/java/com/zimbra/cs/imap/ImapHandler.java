@@ -1032,8 +1032,9 @@ public abstract class ImapHandler extends ProtocolHandler {
                 	matches = op.getMatches();
                 } else if (mboxobj instanceof ZMailbox) {
                     matches = new ArrayList<String>();
-                    for (ZFolder zfolder : ((ZMailbox) mboxobj).getAllFolders()) {
-                        ImapPath zpath = new ImapPath(patternPath.getOwner(), zfolder, mSession);
+                    ZMailbox zmbx = (ZMailbox) mboxobj;
+                    for (ZFolder zfolder : zmbx.getAllFolders()) {
+                        ImapPath zpath = new ImapPath(patternPath.getOwner(), zmbx, zfolder, mSession);
                         if (zpath.asImapPath().toUpperCase().matches(pattern) && zpath.isVisible())
                             matches.add("LIST () \"/\" " + zpath.asUtf7String());
                     }

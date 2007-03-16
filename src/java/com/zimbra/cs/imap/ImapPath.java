@@ -52,6 +52,7 @@ public class ImapPath {
     private ImapSession mSession;
     private String mOwner;
     private String mPath;
+    private Object mMailbox;
     private Object mFolder;
 
     /** Takes a user-supplied IMAP mailbox path and converts it to a Zimbra
@@ -96,11 +97,13 @@ public class ImapPath {
 
     ImapPath(String owner, Folder folder, ImapSession session) {
         this(owner, folder.getPath(), session);
+        mMailbox = folder.getMailbox();
         mFolder = folder;
     }
 
-    ImapPath(String owner, ZFolder zfolder, ImapSession session) {
+    ImapPath(String owner, ZMailbox zmbx, ZFolder zfolder, ImapSession session) {
         this(owner, zfolder.getPath(), session);
+        mMailbox = zmbx;
         mFolder = zfolder;
     }
 
@@ -160,18 +163,23 @@ public class ImapPath {
     }
 
     Object getOwnerMailbox() throws ServiceException {
-        Account target = getOwnerAccount();
-        if (target == null)
-            return null;
-        else if (Provisioning.onLocalServer(target))
-            return MailboxManager.getInstance().getMailboxByAccount(target);
-        else if (mSession == null)
-            return null;
-        else
-            return getOwnerZMailbox();
+        if (mMailbox == null) {
+            Account target = getOwnerAccount();
+            if (target == null)
+                mMailbox = null;
+            else if (Provisioning.onLocalServer(target) && mSession != null && belongsTo(mSession.getMailbox()))
+                mMailbox = MailboxManager.getInstance().getMailboxByAccount(target);
+            else if (mSession == null)
+                mMailbox = null;
+            else
+                mMailbox = getOwnerZMailbox();
+        }
+        return mMailbox;
     }
 
     ZMailbox getOwnerZMailbox() throws ServiceException {
+        if (mMailbox instanceof ZMailbox)
+            return (ZMailbox) mMailbox;
         if (mSession == null)
             return null;
 
