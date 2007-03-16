@@ -41,7 +41,7 @@ public class ZModifyFolderEvent implements ZModifyItemEvent {
 
     protected Element mFolderEl;
 
-    public ZModifyFolderEvent(Element e) throws ServiceException {
+    public ZModifyFolderEvent(Element e) {
         mFolderEl = e;
     }
 
@@ -119,6 +119,15 @@ public class ZModifyFolderEvent implements ZModifyItemEvent {
     public View getDefaultView(View defaultValue) throws ServiceException {
         String newView = mFolderEl.getAttribute(MailConstants.A_DEFAULT_VIEW, null);
         return (newView != null) ? View.fromString(newView) : defaultValue;        
+    }
+
+    /**
+     * @param defaultValue value to return if unchanged
+     * @return new content sequence or defaultValue if unchanged
+     * @throws ServiceException 
+     */
+    public int getContentSequence(int defaultValue) throws ServiceException {
+        return (int) mFolderEl.getAttributeLong(MailConstants.A_REVISION, defaultValue);
     }
 
     /**

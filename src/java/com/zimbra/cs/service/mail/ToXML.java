@@ -253,6 +253,9 @@ public class ToXML {
             if (view != MailItem.TYPE_UNKNOWN)
                 elem.addAttribute(MailConstants.A_DEFAULT_VIEW, MailItem.getNameForType(view));
         }
+        if (needToOutput(fields, Change.MODIFIED_CONTENT)) {
+            elem.addAttribute(MailConstants.A_REVISION, folder.getSavedSequence());
+        }
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
             elem.addAttribute(MailConstants.A_CHANGE_DATE, folder.getChangeDate() / 1000);
             elem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, folder.getModifiedSequence());

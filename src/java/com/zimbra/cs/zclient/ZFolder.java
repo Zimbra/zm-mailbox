@@ -61,12 +61,14 @@ public class ZFolder implements ZItem, Comparable {
     private String mFlags;
     private int mMessageCount;
     private String mParentId;
+    private int mContentSequence;
     private String mRestURL;
     private String mRemoteURL;
     private String mEffectivePerms;
     private List<ZGrant> mGrants;
     private List<ZFolder> mSubFolders;
     private ZFolder mParent;
+    private boolean mIsPlaceholder;
 
     public int compareTo(Object obj) {
         if (!(obj instanceof ZFolder))
@@ -78,6 +80,7 @@ public class ZFolder implements ZItem, Comparable {
     public enum Flag {
         checkedInUI('#'),
         excludeFreeBusyInfo('b'),
+        imapDeleted('x'),
         imapSubscribed('*');
 
         private char mFlagChar;
@@ -100,10 +103,9 @@ public class ZFolder implements ZItem, Comparable {
             }
             return sb.toString();
         }
-        
+
         Flag(char flagChar) {
             mFlagChar = flagChar;
-            
         }
     }
 
@@ -146,6 +148,7 @@ public class ZFolder implements ZItem, Comparable {
         appointment,
         contact,
         conversation,
+        document,
         message,
         wiki,
         task;
@@ -163,7 +166,8 @@ public class ZFolder implements ZItem, Comparable {
         mParent = parent;
         mId = e.getAttribute(MailConstants.A_ID);
         mName = e.getAttribute(MailConstants.A_NAME);
-        mParentId = e.getAttribute(MailConstants.A_FOLDER);
+        mParentId = e.getAttribute(MailConstants.A_FOLDER, null);
+        mIsPlaceholder = mParentId == null;
         mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
         try {
             mColor = ZFolder.Color.fromString(e.getAttribute(MailConstants.A_COLOR, "0"));
@@ -173,6 +177,7 @@ public class ZFolder implements ZItem, Comparable {
         mUnreadCount = (int) e.getAttributeLong(MailConstants.A_UNREAD, 0);
         mMessageCount = (int) e.getAttributeLong(MailConstants.A_NUM, 0);
         mDefaultView = View.fromString(e.getAttribute(MailConstants.A_DEFAULT_VIEW, View.conversation.name()));
+        mContentSequence = (int) e.getAttributeLong(MailConstants.A_REVISION, -1);
         mRestURL = e.getAttribute(MailConstants.A_REST_URL, null);
         mRemoteURL = e.getAttribute(MailConstants.A_URL, null);
         mEffectivePerms = e.getAttribute(MailConstants.A_RIGHTS, null);
@@ -216,6 +221,7 @@ public class ZFolder implements ZItem, Comparable {
                 mUnreadCount = fevent.getUnreadCount(mUnreadCount);
                 mMessageCount = fevent.getMessageCount(mMessageCount);
                 mDefaultView = fevent.getDefaultView(mDefaultView);
+                mContentSequence = fevent.getContentSequence(mContentSequence);
                 mRestURL = fevent.getRestURL(mRestURL);
                 mRemoteURL = fevent.getRemoteURL(mRemoteURL);
                 mEffectivePerms = fevent.getEffectivePerm(mEffectivePerms);
@@ -284,6 +290,14 @@ public class ZFolder implements ZItem, Comparable {
     }
 
     /**
+     * @return <tt>true</tt> if this is just a shim for setting up hierarchy namespace for subfolders,
+     * <tt>false</tt> if it's a real folder visible to the user
+     */
+    boolean isHierarchyPlaceholder() {
+        return mIsPlaceholder;
+    }
+
+    /**
      * @return number of unread items in folder
      */
     public int getUnreadCount() {
@@ -296,12 +310,18 @@ public class ZFolder implements ZItem, Comparable {
     public int getMessageCount() {
         return mMessageCount;
     }
-    
+
     /** Returns the "hint" as to which view to use to display the folder's
      *  contents.
      */
     public View getDefaultView() {
         return mDefaultView;
+    }
+
+    /** Returns the sequence number for the last change in the folder's location or name.
+     */
+    public int getContentSequence() {
+        return mContentSequence;
     }
     
     /**
@@ -325,7 +345,11 @@ public class ZFolder implements ZItem, Comparable {
 
     public boolean isIMAPSubscribed() {
         return hasFlags() && mFlags.indexOf(Flag.imapSubscribed.getFlagChar()) != -1;
-    }    
+    }
+
+    public boolean isIMAPDeleted() {
+        return hasFlags() && mFlags.indexOf(Flag.imapDeleted.getFlagChar()) != -1;
+    }
 
     /**
      * range 0-127; defaults to 0 if not present; client can display only 0-7
@@ -389,7 +413,8 @@ public class ZFolder implements ZItem, Comparable {
         String subpath = index == -1 ? null : path.substring(index+1);
         for (ZFolder f: getSubFolders()) {
             if (f.getName().equalsIgnoreCase(name)) {
-                return (subpath == null) ? f : f.getSubFolderByPath(subpath);
+                if (subpath != null) return f.getSubFolderByPath(subpath);
+                else return (f.isHierarchyPlaceholder() ? null : f);
             }
         }
         return null;
