@@ -51,6 +51,7 @@ public class ZMessageHit implements ZSearchHit {
     private List<String> mMimePartHits;
     private ZEmailAddress mSender;
     private ZMessage mMessage;
+    private boolean mIsInvite;
 
     public ZMessageHit(Element e) throws ServiceException {
         mId = e.getAttribute(MailConstants.A_ID);
@@ -78,6 +79,7 @@ public class ZMessageHit implements ZSearchHit {
         if (mp != null) {
             mMessage = new ZMessage(e);
         }
+        mIsInvite = e.getOptionalElement(MailConstants.E_INVITE) != null;
     }
 
     public String getId() {
@@ -88,12 +90,17 @@ public class ZMessageHit implements ZSearchHit {
         return mContentMatched;
     }
 
+    public boolean getIsInvite() {
+        return mIsInvite;
+    }
+
     public String toString() {
         ZSoapSB sb = new ZSoapSB();
         sb.beginStruct();
         sb.add("id", mId);
         sb.add("conversationId", mConvId);
         sb.add("flags", mFlags);
+        sb.add("isInvite", mIsInvite);
         sb.add("fragment", mFragment);
         sb.add("subject", mSubject);
         sb.addDate("date", mDate);

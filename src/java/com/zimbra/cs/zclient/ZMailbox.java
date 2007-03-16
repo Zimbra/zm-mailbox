@@ -2905,7 +2905,18 @@ public class ZMailbox {
         public boolean isFail() { return mStatus.equals(STATUS_FAIL); }
     }
 
-    public enum ReplyVerb { ACCEPT, COMPLETED, DECLINE, DELEGATED, TENTATIVE }
+    public enum ReplyVerb {
+
+        ACCEPT, COMPLETED, DECLINE, DELEGATED, TENTATIVE;
+
+        public static ReplyVerb fromString(String s) throws ServiceException {
+            try {
+                return ReplyVerb.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ZClientException.CLIENT_ERROR("invalid reply verb: "+s+", valid values: "+Arrays.asList(ReplyVerb.values()), e);
+            }
+        }
+    }
 
     public ZSendInviteReplyResult sendInviteReply(String id, String component, ReplyVerb verb, boolean updateOrganizer, ZTimeZone tz, ZDateTime instance, ZOutgoingMessage message)  throws ServiceException {
         XMLElement req = new XMLElement(MailConstants.SEND_INVITE_REPLY_REQUEST);
