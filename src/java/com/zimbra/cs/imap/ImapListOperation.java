@@ -71,9 +71,9 @@ public class ImapListOperation extends Operation {
                 folders = mMailbox.getFolderById(getOpCtxt(), Mailbox.ID_FOLDER_USER_ROOT).getSubfolderHierarchy();
 
 			for (Folder folder : folders) {
-				if (!ImapFolder.isFolderVisible(folder, (ImapSession) mSession))
+			    ImapPath path = new ImapPath(mPattern.getOwner(), folder, mPattern.getSession());
+				if (!path.isVisible())
 					continue;
-                ImapPath path = new ImapPath(mPattern.getOwner(), folder.getPath(), mPattern.getSession());
 				if (path.asImapPath().toUpperCase().matches(pattern)) {
 				    // FIXME: need to determine "name attributes" for mailbox (\Marked, \Unmarked, \Noinferiors, \Noselect)
                     String attrs = isLocal ? getFolderAttributes((ImapSession) mSession, folder, mOutputChildInfo) : "";
@@ -95,9 +95,9 @@ public class ImapListOperation extends Operation {
         "\\Noinferiors"
     };
 
-    static String getFolderAttributes(ImapSession session, Folder folder, boolean children) {
+    static String getFolderAttributes(ImapSession session, Folder folder, boolean children) throws ServiceException {
         int attributes = (folder.hasSubfolders() ? 0x01 : 0x00);
-        attributes    |= (!ImapFolder.isFolderSelectable(folder, session) ? 0x02 : 0x00);
+        attributes    |= (!new ImapPath(null, folder, session).isSelectable() ? 0x02 : 0x00);
         attributes    |= (folder.getId() == Mailbox.ID_FOLDER_SPAM ? 0x04 : 0x00);
         return children ? FOLDER_ATTRIBUTES[attributes] : NO_CHILDREN_FOLDER_ATTRIBUTES[attributes];
     }

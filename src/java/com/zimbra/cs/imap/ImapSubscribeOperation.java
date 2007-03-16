@@ -40,18 +40,18 @@ public class ImapSubscribeOperation extends Operation {
                 LOAD = c.mLoad;
         }
 
-    private String mFolderName;
+    private ImapPath mPath;
 
-    ImapSubscribeOperation(ImapSession session, OperationContext oc, Mailbox mbox, String folderName) {
+    ImapSubscribeOperation(ImapSession session, OperationContext oc, Mailbox mbox, ImapPath path) {
         super(session, oc, mbox, Requester.IMAP, Requester.IMAP.getPriority(), LOAD);
-        mFolderName = folderName;
+        mPath = path;
     }   
 
     protected void callback() throws ServiceException {
         synchronized (mMailbox) {
-            Folder folder = mMailbox.getFolderByPath(this.getOpCtxt(), mFolderName);
-            if (!ImapFolder.isFolderVisible(folder, (ImapSession) mSession))
-                throw ImapServiceException.FOLDER_NOT_VISIBLE(mFolderName);
+            Folder folder = mMailbox.getFolderByPath(this.getOpCtxt(), mPath.asZimbraPath());
+            if (!mPath.isVisible())
+                throw ImapServiceException.FOLDER_NOT_VISIBLE(mPath.asImapPath());
             if (!folder.isTagged(mMailbox.mSubscribeFlag))
                 mMailbox.alterTag(mOpCtxt, folder.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_SUBSCRIBED, true);
         }

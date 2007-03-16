@@ -28,14 +28,23 @@ import java.io.UnsupportedEncodingException;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.SearchFolder;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.cs.zclient.ZSearchFolder;
 
 public class ImapPath {
     static final String NAMESPACE_PREFIX = "/home/";
@@ -43,6 +52,7 @@ public class ImapPath {
     private ImapSession mSession;
     private String mOwner;
     private String mPath;
+    private Object mFolder;
 
     /** Takes a user-supplied IMAP mailbox path and converts it to a Zimbra
      *  folder pathname.  Applies all special, hack-specific folder mappings.
@@ -83,6 +93,17 @@ public class ImapPath {
         mOwner = owner;
         mPath = zimbraPath.substring(1);
     }
+
+    ImapPath(String owner, Folder folder, ImapSession session) {
+        this(owner, folder.getPath(), session);
+        mFolder = folder;
+    }
+
+    ImapPath(String owner, ZFolder zfolder, ImapSession session) {
+        this(owner, zfolder.getPath(), session);
+        mFolder = zfolder;
+    }
+
 
     @Override
     public boolean equals(Object obj) {
@@ -166,12 +187,93 @@ public class ImapPath {
         }
     }
 
+    Object getFolder() throws ServiceException {
+        if (mFolder == null) {
+            Object mboxobj = getOwnerMailbox();
+            if (mboxobj instanceof Mailbox) {
+                mFolder = ((Mailbox) mboxobj).getFolderByPath(mSession == null ? null : mSession.getContext(), asZimbraPath());
+            } else if (mboxobj instanceof ZMailbox) {
+                mFolder = ((ZMailbox) mboxobj).getFolderByPath(asZimbraPath());
+                if (mFolder == null)
+                    throw MailServiceException.NO_SUCH_FOLDER(asImapPath());
+            } else {
+                throw AccountServiceException.NO_SUCH_ACCOUNT(getOwner());
+            }
+        }
+        return mFolder;
+    }
+
 
     boolean isCreatable() {
         String path = mPath.toLowerCase();
         return !path.matches("\\s*notebook\\s*(/.*)?") &&
                !path.matches("\\s*contacts\\s*(/.*)?") &&
                !path.matches("\\s*calendar\\s*(/.*)?");
+    }
+
+    boolean isWritable() throws ServiceException {
+        return isWritable((short) (ACL.RIGHT_DELETE | ACL.RIGHT_INSERT | ACL.RIGHT_WRITE));
+    }
+    boolean isWritable(short rights) throws ServiceException {
+        if (!isSelectable())
+            return false;
+
+        if (getFolder() instanceof Folder) {
+            Folder folder = (Folder) mFolder;
+            if (folder instanceof SearchFolder || folder.getDefaultView() == MailItem.TYPE_CONTACT)
+                return false;
+            if (rights == 0)
+                return true;
+            short granted = folder.getMailbox().getEffectivePermissions(mSession == null ? null : mSession.getContext(), folder.getId(), folder.getType());
+            return (granted & rights) == rights;
+        } else {
+            ZFolder zfolder = (ZFolder) mFolder;
+            if (zfolder instanceof ZSearchFolder || zfolder.getDefaultView() == ZFolder.View.contact)
+                return false;
+            if (rights == 0 || zfolder.getEffectivePerm() == null)
+                return true;
+            short granted = ACL.stringToRights(zfolder.getEffectivePerm());
+            return (granted & rights) == rights;
+        }
+    }
+
+    boolean isSelectable() throws ServiceException {
+        if (!isVisible())
+            return false;
+
+        if (getFolder() instanceof Folder)
+            return !((Folder) mFolder).isTagged(((Folder) mFolder).getMailbox().mDeletedFlag);
+        else
+            return !((ZFolder) mFolder).isIMAPDeleted();
+    }
+
+    boolean isVisible() throws ServiceException {
+        if (mSession != null && mSession.isHackEnabled(ImapSession.EnabledHack.WM5)) {
+            String lcname = mPath.toLowerCase();
+            if (lcname.startsWith("sent items") && (lcname.length() == 10 || lcname.charAt(10) == '/'))
+                return false;
+        }
+
+        if (getFolder() instanceof Folder) {
+            Folder folder = (Folder) mFolder;
+            if (folder.getId() == Mailbox.ID_FOLDER_USER_ROOT)
+                return false;
+            byte view = folder.getDefaultView();
+            if (view == MailItem.TYPE_APPOINTMENT || view == MailItem.TYPE_TASK || view == MailItem.TYPE_WIKI || view == MailItem.TYPE_DOCUMENT)
+                return false;
+            if (folder instanceof SearchFolder)
+                return ((SearchFolder) folder).isImapVisible();
+        } else {
+            ZFolder zfolder = (ZFolder) mFolder;
+            if (new ItemId(zfolder.getId(), (String) null).getId() == Mailbox.ID_FOLDER_USER_ROOT)
+                return false;
+            ZFolder.View view = zfolder.getDefaultView();
+            if (view == ZFolder.View.appointment || view == ZFolder.View.task || view == ZFolder.View.wiki || view == ZFolder.View.document)
+                return false;
+            if (zfolder instanceof ZSearchFolder)
+                return false;
+        }
+        return true;
     }
 
 

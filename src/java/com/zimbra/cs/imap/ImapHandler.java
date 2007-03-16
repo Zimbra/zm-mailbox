@@ -845,7 +845,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         try {
             Object mboxobj = path.getOwnerMailbox();
             if (mboxobj instanceof Mailbox) {
-                ImapDeleteOperation op = new ImapDeleteOperation(mSession, getContext(), (Mailbox) mboxobj, path.asZimbraPath());
+                ImapDeleteOperation op = new ImapDeleteOperation(mSession, getContext(), (Mailbox) mboxobj, path);
                 op.schedule();
             } else if (mboxobj instanceof ZMailbox) {
                 ZMailbox zmbx = (ZMailbox) mboxobj;
@@ -939,7 +939,7 @@ public abstract class ImapHandler extends ProtocolHandler {
 
         try {
             if (path.belongsTo(mSession.getMailbox())) {
-                ImapSubscribeOperation op = new ImapSubscribeOperation(mSession, getContext(), mSession.getMailbox(), path.asZimbraPath());
+                ImapSubscribeOperation op = new ImapSubscribeOperation(mSession, getContext(), mSession.getMailbox(), path);
                 op.schedule();
             } else {
                 mSession.subscribe(path);
@@ -971,7 +971,7 @@ public abstract class ImapHandler extends ProtocolHandler {
 
         try {
             if (path.belongsTo(mSession.getMailbox())) {
-                ImapUnsubscribeOperation op = new ImapUnsubscribeOperation(mSession, getContext(), mSession.getMailbox(), path.asZimbraPath());
+                ImapUnsubscribeOperation op = new ImapUnsubscribeOperation(mSession, getContext(), mSession.getMailbox(), path);
                 op.schedule();
             } else {
                 mSession.unsubscribe(path);
@@ -1033,8 +1033,8 @@ public abstract class ImapHandler extends ProtocolHandler {
                 } else if (mboxobj instanceof ZMailbox) {
                     matches = new ArrayList<String>();
                     for (ZFolder zfolder : ((ZMailbox) mboxobj).getAllFolders()) {
-                        ImapPath zpath = new ImapPath(patternPath.getOwner(), zfolder.getPath(), mSession);
-                        if (zpath.asImapPath().toUpperCase().matches(pattern) && ImapFolder.isFolderVisible(zfolder, mSession))
+                        ImapPath zpath = new ImapPath(patternPath.getOwner(), zfolder, mSession);
+                        if (zpath.asImapPath().toUpperCase().matches(pattern) && zpath.isVisible())
                             matches.add("LIST () \"/\" " + zpath.asUtf7String());
                     }
                 }
@@ -1098,18 +1098,18 @@ public abstract class ImapHandler extends ProtocolHandler {
 
         StringBuilder data = new StringBuilder();
         try {
+            if (!path.isVisible()) {
+                ZimbraLog.imap.info("STATUS failed: folder not visible: " + path);
+                sendNO(tag, "STATUS failed");
+                return CONTINUE_PROCESSING;
+            }
+
             int messages, recent, uidnext, uvv, unread;
             Object mboxobj = path.getOwnerMailbox();
             if (mboxobj instanceof Mailbox) {
                 GetFolderOperation op = new GetFolderOperation(mSession, getContext(), (Mailbox) mboxobj, Requester.IMAP, path.asZimbraPath());
                 op.schedule();
                 Folder folder = op.getFolder();
-
-                if (!ImapFolder.isFolderVisible(folder, mSession)) {
-                    ZimbraLog.imap.info("STATUS failed: folder not visible: " + path);
-                    sendNO(tag, "STATUS failed");
-                    return CONTINUE_PROCESSING;
-                }
 
                 messages = folder.getSize();
                 recent = 0;
@@ -1120,12 +1120,6 @@ public abstract class ImapHandler extends ProtocolHandler {
                 ZFolder zfolder = ((ZMailbox) mboxobj).getFolderByPath(path.asZimbraPath());
                 if (zfolder == null)
                     throw MailServiceException.NO_SUCH_FOLDER(path.asImapPath());
-
-                if (!ImapFolder.isFolderVisible(zfolder, mSession)) {
-                    ZimbraLog.imap.info("STATUS failed: folder not visible: " + path);
-                    sendNO(tag, "STATUS failed");
-                    return CONTINUE_PROCESSING;
-                }
 
                 messages = zfolder.getMessageCount();
                 recent = 0;
@@ -1206,6 +1200,11 @@ public abstract class ImapHandler extends ProtocolHandler {
         ArrayList<Tag> newTags = new ArrayList<Tag>();
         StringBuilder appendHint = extensionEnabled("UIDPLUS") ? new StringBuilder() : null;
         try {
+            if (!path.isVisible())
+                throw ImapServiceException.FOLDER_NOT_VISIBLE(path.asImapPath());
+            else if (!path.isWritable(ACL.RIGHT_INSERT))
+                throw ImapServiceException.FOLDER_NOT_WRITABLE(path.asImapPath());
+
             Object mboxobj = path.getOwnerMailbox();
             if (mboxobj instanceof Mailbox) {
             	ImapAppendOperation op = new ImapAppendOperation(mSession, getContext(), (Mailbox) mboxobj,
@@ -1215,13 +1214,6 @@ public abstract class ImapHandler extends ProtocolHandler {
                 ZMailbox zmbx = (ZMailbox) mboxobj;
                 ZFolder zfolder = zmbx.getFolderByPath(path.asZimbraPath());
                 int uvv = ImapFolder.getUIDValidity(zfolder);
-
-                if (zfolder == null)
-                    throw MailServiceException.NO_SUCH_FOLDER(path.asImapPath());
-                else if (!ImapFolder.isFolderVisible(zfolder, mSession))
-                    throw ImapServiceException.FOLDER_NOT_VISIBLE(path.asImapPath());
-                else if (!ImapFolder.isFolderWritable(zfolder, mSession, ACL.ABBR_INSERT + ""))
-                    throw ImapServiceException.FOLDER_NOT_WRITABLE(path.asImapPath());
 
                 int flagMask = Flag.BITMASK_UNREAD;
                 for (ImapFlag i4flag : getSystemFlags(flagNames)) {
@@ -1391,11 +1383,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             }
 
             // make sure the folder exists and is visible
-            GetFolderOperation op = new GetFolderOperation(mSession, getContext(), mSession.getMailbox(), Requester.IMAP, qroot.asZimbraPath());
-            op.schedule();
-            Folder folder = op.getFolder();
-            
-            if (!ImapFolder.isFolderVisible(folder, mSession)) {
+            if (!qroot.isVisible()) {
                 ZimbraLog.imap.info("GETQUOTAROOT failed: folder not visible: '" + qroot + "'");
                 sendNO(tag, "GETQUOTAROOT failed");
                 return CONTINUE_PROCESSING;
@@ -1936,6 +1924,11 @@ public abstract class ImapHandler extends ProtocolHandler {
         i4set.remove(null);
 
         try {
+            if (!path.isVisible())
+                throw ImapServiceException.FOLDER_NOT_VISIBLE(path.asImapPath());
+            else if (!path.isWritable(ACL.RIGHT_INSERT))
+                throw ImapServiceException.FOLDER_NOT_WRITABLE(path.asImapPath());
+
             Object mboxobj = path.getOwnerMailbox();
             ItemId iidTarget = null;
             boolean sameMailbox = false;
@@ -1948,23 +1941,11 @@ public abstract class ImapHandler extends ProtocolHandler {
                 Folder folder = mbox.getFolderByPath(getContext(), path.asZimbraPath());
                 iidTarget = new ItemId(folder);
                 uvv = ImapFolder.getUIDValidity(folder);
-
-                if (!ImapFolder.isFolderVisible(folder, mSession))
-                    throw ImapServiceException.FOLDER_NOT_VISIBLE(path.asImapPath());
-                else if (!ImapFolder.isFolderWritable(folder, mSession, ACL.RIGHT_INSERT))
-                    throw ImapServiceException.FOLDER_NOT_WRITABLE(path.asImapPath());
             } else if (mboxobj instanceof ZMailbox) {
                 ZMailbox zmbx = (ZMailbox) mboxobj;
                 ZFolder zfolder = zmbx.getFolderByPath(path.asZimbraPath());
                 iidTarget = new ItemId(zfolder.getId(), path.getOwnerAccount().getId());
                 uvv = ImapFolder.getUIDValidity(zfolder);
-
-                if (zfolder == null)
-                    throw MailServiceException.NO_SUCH_FOLDER(path.asImapPath());
-                else if (!ImapFolder.isFolderVisible(zfolder, mSession))
-                    throw ImapServiceException.FOLDER_NOT_VISIBLE(path.asImapPath());
-                else if (!ImapFolder.isFolderWritable(zfolder, mSession, ACL.ABBR_INSERT + ""))
-                    throw ImapServiceException.FOLDER_NOT_WRITABLE(path.asImapPath());
             } else {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(path.getOwner());
             }

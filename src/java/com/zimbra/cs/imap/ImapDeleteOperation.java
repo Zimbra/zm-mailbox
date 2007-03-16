@@ -40,27 +40,27 @@ class ImapDeleteOperation extends Operation {
                 LOAD = c.mLoad;
         }
 
-    private String mFolderName;
+    private ImapPath mPath;
     private int mFolderId;
 
-    ImapDeleteOperation(Session session, OperationContext oc, Mailbox mbox, String folderName) {
+    ImapDeleteOperation(Session session, OperationContext oc, Mailbox mbox, ImapPath path) {
         super(session, oc, mbox, Requester.IMAP, Requester.IMAP.getPriority(), LOAD);
-        mFolderName = folderName;
+        mPath = path;
     }   
 
     protected void callback() throws ServiceException {
         synchronized(mMailbox) {
-            Folder folder = mMailbox.getFolderByPath(getOpCtxt(), mFolderName);
-            if (!ImapFolder.isFolderVisible(folder, (ImapSession) mSession)) {
+            Folder folder = mMailbox.getFolderByPath(getOpCtxt(), mPath.asZimbraPath());
+
+            if (!mPath.isVisible())
                 throw ImapServiceException.FOLDER_NOT_VISIBLE(folder.getPath());
-            } else if (!folder.isDeletable()) {
+            else if (!folder.isDeletable())
                 throw ImapServiceException.CANNOT_DELETE_SYSTEM_FOLDER(folder.getPath());
-            }
 
             mFolderId = folder.getId();
-            if (!folder.hasSubfolders())
+            if (!folder.hasSubfolders()) {
                 mMailbox.delete(this.getOpCtxt(), mFolderId, MailItem.TYPE_FOLDER);
-            else {
+            } else {
                 // 6.3.4: "It is permitted to delete a name that has inferior hierarchical
                 //         names and does not have the \Noselect mailbox name attribute.
                 //         In this case, all messages in that mailbox are removed, and the

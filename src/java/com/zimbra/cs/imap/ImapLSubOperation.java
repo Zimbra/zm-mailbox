@@ -119,9 +119,10 @@ public class ImapLSubOperation extends Operation {
         if (!path.belongsTo(mMailbox))
             return "";
         try {
-            Folder folder = getMailbox().getFolderByPath(getOpCtxt(), path.asZimbraPath());
-            if (ImapFolder.isFolderVisible(folder, (ImapSession) mSession))
+            if (path.isVisible()) {
+                Folder folder = getMailbox().getFolderByPath(getOpCtxt(), path.asZimbraPath());
                 return ImapListOperation.getFolderAttributes((ImapSession) mSession, folder, mOutputChildInfo);
+            }
         } catch (MailServiceException.NoSuchItemException nsie) { }
         return "\\Noselect";
     }

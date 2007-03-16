@@ -29,6 +29,7 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.operation.Operation;
 
@@ -40,18 +41,20 @@ public class ImapUnsubscribeOperation extends Operation {
                 LOAD = c.mLoad;
         }
 
-    private String mFolderName;
+    private ImapPath mPath;
 
-    ImapUnsubscribeOperation(ImapSession session, OperationContext oc, Mailbox mbox, String folderName) {
+    ImapUnsubscribeOperation(ImapSession session, OperationContext oc, Mailbox mbox, ImapPath path) {
         super(session, oc, mbox, Requester.IMAP, Requester.IMAP.getPriority(), LOAD);
-        mFolderName = folderName;
+        mPath = path;
     }   
 
     protected void callback() throws ServiceException {
         synchronized (mMailbox) {
-            Folder folder = mMailbox.getFolderByPath(mOpCtxt, mFolderName);
-            if (folder.isTagged(mMailbox.mSubscribeFlag))
-                mMailbox.alterTag(mOpCtxt, folder.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_SUBSCRIBED, false);
+            try {
+                Folder folder = mMailbox.getFolderByPath(mOpCtxt, mPath.asZimbraPath());
+                if (folder.isTagged(mMailbox.mSubscribeFlag))
+                    mMailbox.alterTag(mOpCtxt, folder.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_SUBSCRIBED, false);
+            } catch (NoSuchItemException nsie) { }
         }
     }
 }

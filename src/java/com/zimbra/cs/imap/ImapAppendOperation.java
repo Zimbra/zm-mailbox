@@ -78,9 +78,9 @@ public class ImapAppendOperation extends Operation  {
     protected void callback() throws ServiceException {
         synchronized (mMailbox) {
             Folder folder = mMailbox.getFolderByPath(this.getOpCtxt(), mTargetPath.asZimbraPath());
-            if (!ImapFolder.isFolderVisible(folder, (ImapSession) mSession))
+            if (!mTargetPath.isVisible())
                 throw ImapServiceException.FOLDER_NOT_VISIBLE(mTargetPath.asImapPath());
-            else if (!ImapFolder.isFolderWritable(folder, (ImapSession) mSession, ACL.RIGHT_INSERT))
+            else if (!mTargetPath.isWritable(ACL.RIGHT_INSERT))
                 throw ImapServiceException.FOLDER_NOT_WRITABLE(mTargetPath.asImapPath());
 
             byte sflags = 0;

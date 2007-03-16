@@ -45,7 +45,6 @@ import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
-import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -54,9 +53,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.mail.Search;
-import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZSearchFolder;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -96,7 +93,7 @@ class ImapFolder implements Iterable<ImapMessage> {
         OperationContext octxt = session.getContext();
         mMailbox = (Mailbox) path.getOwnerMailbox();
         Folder folder = mMailbox.getFolderByPath(octxt, mPath.asZimbraPath());
-        if (!isFolderSelectable(folder, session))
+        if (!mPath.isSelectable())
             throw ServiceException.PERM_DENIED("cannot select folder: " + path);
 
         mFolderId = folder.getId();
@@ -109,7 +106,7 @@ class ImapFolder implements Iterable<ImapMessage> {
             else
                 mQuery = "item:none";
         }
-        mWritable = select && isFolderWritable(folder, session);
+        mWritable = select && mPath.isWritable();
         mUIDValidityValue = getUIDValidity(folder);
         mInitialUIDNEXT = folder.getImapUIDNEXT();
 
@@ -203,12 +200,12 @@ class ImapFolder implements Iterable<ImapMessage> {
 
         OperationContext octxt = session.getContext();
         Folder folder = mMailbox.getFolderByPath(octxt, mPath.asZimbraPath());
-        if (!isFolderSelectable(folder, session))
+        if (!mPath.isSelectable())
             throw ServiceException.PERM_DENIED("cannot select folder: " + mPath);
         if (folder.getId() != mFolderId)
             throw ServiceException.INVALID_REQUEST("folder IDs do not match (was " + mFolderId + ", is " + folder.getId() + ')', null);
 
-        mWritable = select && isFolderWritable(folder, session);
+        mWritable = select && mPath.isWritable();
         mUIDValidityValue = getUIDValidity(folder);
         mInitialUIDNEXT = folder.getImapUIDNEXT();
 
@@ -278,63 +275,6 @@ class ImapFolder implements Iterable<ImapMessage> {
 
 
     public Iterator<ImapMessage> iterator()  { return mSequence.iterator(); }
-
-    static boolean isFolderWritable(Folder folder, ImapSession session) throws ServiceException {
-        return isFolderWritable(folder, session, (short) (ACL.RIGHT_DELETE | ACL.RIGHT_INSERT | ACL.RIGHT_WRITE));
-    }
-    static boolean isFolderWritable(Folder folder, ImapSession session, short rights) throws ServiceException {
-        return isFolderSelectable(folder, session) && !(folder instanceof SearchFolder) &&
-               folder.getDefaultView() != MailItem.TYPE_CONTACT &&
-               (folder.getMailbox().getEffectivePermissions(session.getContext(), folder.getId(), folder.getType()) & rights) == rights;
-    }
-    static boolean isFolderSelectable(Folder folder, ImapSession session) {
-        return isFolderVisible(folder, session) && !folder.isTagged(folder.getMailbox().mDeletedFlag);
-    }
-    static boolean isFolderVisible(Folder folder, ImapSession session) {
-        if (folder != null && session.isHackEnabled(ImapSession.EnabledHack.WM5)) {
-            String lcname = folder.getPath().substring(1).toLowerCase();
-            if (lcname.startsWith("sent items") && (lcname.length() == 10 || lcname.charAt(10) == '/'))
-                return false;
-        }
-        return folder != null &&
-               folder.getId() != Mailbox.ID_FOLDER_USER_ROOT &&
-               folder.getDefaultView() != MailItem.TYPE_APPOINTMENT &&
-               folder.getDefaultView() != MailItem.TYPE_TASK &&
-               folder.getDefaultView() != MailItem.TYPE_WIKI &&
-               folder.getDefaultView() != MailItem.TYPE_DOCUMENT &&
-               (!(folder instanceof SearchFolder) || ((SearchFolder) folder).isImapVisible());
-    }
-
-    static boolean isFolderWritable(ZFolder zfolder, ImapSession session) throws ServiceException {
-        return isFolderWritable(zfolder, session, "wdi");
-    }
-    static boolean isFolderWritable(ZFolder zfolder, ImapSession session, String perms) throws ServiceException {
-        if (!isFolderSelectable(zfolder, session) || zfolder instanceof ZSearchFolder || zfolder.getDefaultView() == ZFolder.View.contact)
-            return false;
-        if (zfolder.getEffectivePerm() == null || perms == null || perms.equals(""))
-            return true;
-        for (int i = 0; i < perms.length(); i++)
-            if (zfolder.getEffectivePerm().indexOf(perms.charAt(i)) == -1)
-                return false;
-        return true;
-    }
-    static boolean isFolderSelectable(ZFolder zfolder, ImapSession session) throws ServiceException {
-        return isFolderVisible(zfolder, session) && !zfolder.isIMAPDeleted();
-    }
-    static boolean isFolderVisible(ZFolder zfolder, ImapSession session) throws ServiceException {
-        if (zfolder != null && session.isHackEnabled(ImapSession.EnabledHack.WM5)) {
-            String lcname = zfolder.getPath().substring(1).toLowerCase();
-            if (lcname.startsWith("sent items") && (lcname.length() == 10 || lcname.charAt(10) == '/'))
-                return false;
-        }
-        return zfolder != null &&
-               new ItemId(zfolder.getId(), session.getAccountId()).getId() != Mailbox.ID_FOLDER_USER_ROOT &&
-               zfolder.getDefaultView() != ZFolder.View.appointment &&
-               zfolder.getDefaultView() != ZFolder.View.task &&
-               zfolder.getDefaultView() != ZFolder.View.wiki &&
-               zfolder.getDefaultView() != ZFolder.View.document &&
-               !(zfolder instanceof ZSearchFolder);
-    }
 
 
     ImapPath getPath()              { return mPath; }
