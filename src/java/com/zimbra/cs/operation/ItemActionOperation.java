@@ -26,6 +26,7 @@ package com.zimbra.cs.operation;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -223,7 +224,8 @@ public class ItemActionOperation extends Operation {
     }
     
     protected String mResult;
-    
+    protected List<String> mCreatedIds;
+
     protected Op mOperation;
     protected int[] mIds;
     protected byte mItemType;
@@ -366,6 +368,10 @@ public class ItemActionOperation extends Operation {
         return mResult;
     }
 
+    public List<String> getCreatedIds() {
+        return mCreatedIds;
+    }
+
 
     private void executeLocal() throws ServiceException {
         // iterate over the local items and perform the requested operation
@@ -389,7 +395,10 @@ public class ItemActionOperation extends Operation {
                 getMailbox().move(getOpCtxt(), mIds, mItemType, mIidFolder.getId(), mTargetConstraint);
                 break;
             case COPY:
-                getMailbox().copy(getOpCtxt(), mIds, mItemType, mIidFolder.getId());
+                List<MailItem> copies = getMailbox().copy(getOpCtxt(), mIds, mItemType, mIidFolder.getId());
+                mCreatedIds = new ArrayList<String>(mIds.length);
+                for (MailItem item : copies)
+                    mCreatedIds.add(mIdFormatter.formatItemId(item));
                 break;
             case SPAM:
                 getMailbox().move(getOpCtxt(), mIds, mItemType, mFolderId, mTargetConstraint);
@@ -466,6 +475,7 @@ public class ItemActionOperation extends Operation {
 
         boolean deleteOriginal = mOperation != Op.COPY;
         String folderStr = mIidFolder.toString();
+        mCreatedIds = new ArrayList<String>(mIds.length);
 
         for (MailItem item : mMailbox.getItemById(mOpCtxt, mIds, mItemType)) {
             if (item == null)
@@ -476,10 +486,12 @@ public class ItemActionOperation extends Operation {
             // since we can't apply tags to a remote object, hardwiring "tags" to null below...
             String flags = (mOperation == Op.UPDATE && mFlags != null ? mFlags : item.getFlagString());
             String name = ((mOperation == Op.RENAME || mOperation == Op.UPDATE) && mName != null ? mName : item.getName());
+            String createdId = null;
 
             switch (item.getType()) {
                 case MailItem.TYPE_CONTACT:
-                    zmbx.createContact(folderStr, null, ((Contact) item).getFields());
+                    createdId = zmbx.createContact(folderStr, null, ((Contact) item).getFields());
+                    mCreatedIds.add(createdId);
                     break;
 
                 case MailItem.TYPE_VIRTUAL_CONVERSATION:
@@ -487,7 +499,8 @@ public class ItemActionOperation extends Operation {
                     // fall through...
 
                 case MailItem.TYPE_MESSAGE:
-                    zmbx.addMessage(folderStr, flags, null, item.getDate(), ((Message) item).getMessageContent(), true);
+                    createdId = zmbx.addMessage(folderStr, flags, null, item.getDate(), ((Message) item).getMessageContent(), true);
+                    mCreatedIds.add(createdId);
                     break;
 
                 case MailItem.TYPE_CONVERSATION:
@@ -495,7 +508,8 @@ public class ItemActionOperation extends Operation {
                         if (!TargetConstraint.checkItem(mTargetConstraint, msg))
                             continue;
                         flags = (mOperation == Op.UPDATE && mFlags != null ? mFlags : msg.getFlagString());
-                        zmbx.addMessage(folderStr, flags, null, msg.getDate(), msg.getMessageContent(), true);
+                        createdId = zmbx.addMessage(folderStr, flags, null, msg.getDate(), msg.getMessageContent(), true);
+                        mCreatedIds.add(createdId);
                     }
                     break;
 
@@ -503,11 +517,13 @@ public class ItemActionOperation extends Operation {
                     Document doc = (Document) item;
                     byte[] content = ByteUtil.getContent(doc.getRawDocument(), doc.getSize());
                     String uploadId = zmbx.uploadAttachment(name, content, doc.getContentType(), 4000);
-                    zmbx.createDocument(folderStr, name, uploadId);
+                    createdId = zmbx.createDocument(folderStr, name, uploadId);
+                    mCreatedIds.add(createdId);
                     break;
 
                 case MailItem.TYPE_WIKI:
-                    zmbx.createWiki(folderStr, name, new String(((WikiItem) item).getMessageContent(), "utf-8"));
+                    createdId = zmbx.createWiki(folderStr, name, new String(((WikiItem) item).getMessageContent(), "utf-8"));
+                    mCreatedIds.add(createdId);
                     break;
 
                 case MailItem.TYPE_APPOINTMENT:
@@ -530,7 +546,8 @@ public class ItemActionOperation extends Operation {
                             addCalendarPart(request.addUniqueElement(MailConstants.E_CAL_EXCEPT), cal, inv, zmbx, target);
                     }
 
-                    zmbx.invoke(request);
+                    createdId = zmbx.invoke(request).getAttribute(MailConstants.A_CAL_ID);
+                    mCreatedIds.add(createdId);
                     break;
 
                 default:
@@ -538,7 +555,7 @@ public class ItemActionOperation extends Operation {
             }
 
             try {
-                if (deleteOriginal)
+                if (deleteOriginal && !mIdFormatter.formatItemId(item).equals(createdId))
                     mMailbox.delete(mOpCtxt, item.getId(), item.getType());
             } catch (ServiceException e) {
                 if (e.getCode() != ServiceException.PERM_DENIED)
