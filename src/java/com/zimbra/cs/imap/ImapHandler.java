@@ -24,6 +24,7 @@
  */
 package com.zimbra.cs.imap;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -64,6 +65,7 @@ import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.queryparser.ParseException;
+import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -78,14 +80,19 @@ import com.zimbra.cs.operation.CreateTagOperation;
 import com.zimbra.cs.operation.DeleteOperation;
 import com.zimbra.cs.operation.GetFolderOperation;
 import com.zimbra.cs.operation.GetItemOperation;
+import com.zimbra.cs.operation.ItemActionOperation;
 import com.zimbra.cs.operation.SearchOperation;
 import com.zimbra.cs.operation.SetTagsOperation;
 import com.zimbra.cs.operation.Operation.Requester;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.stats.StatsFile;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.util.BuildInfo;
+import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZMailbox;
 
 /**
  * @author dkarp
@@ -224,7 +231,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                         return doAUTHENTICATE(tag, mechanism, response);
                     } else if (command.equals("APPEND")) {
                         List<String> flags = null;  Date date = null;
-                        req.skipSpace();  String folder = req.readFolder();
+                        req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mSession);
                         req.skipSpace();
                         if (req.peekChar() == '(') {
                             flags = req.readFlags();  req.skipSpace();
@@ -244,11 +251,11 @@ public abstract class ImapHandler extends ProtocolHandler {
                                 else throw new ImapParseException(tag, "unknown CATENATE cat-part: " + type);
                             }
                             req.skipChar(')');  checkEOF(tag, req);
-                            return doCATENATE(tag, folder, flags, date, parts);
+                            return doCATENATE(tag, path, flags, date, parts);
                         } else {
                             byte[] content = req.readLiteral8();
                             checkEOF(tag, req);
-                            return doAPPEND(tag, folder, flags, date, content);
+                            return doAPPEND(tag, path, flags, date, content);
                         }
                     }
                     break;
@@ -258,16 +265,16 @@ public abstract class ImapHandler extends ProtocolHandler {
                         return doCAPABILITY(tag);
                     } else if (command.equals("COPY")) {
                         req.skipSpace();  String sequence = req.readSequence();
-                        req.skipSpace();  String folder = req.readFolder();
+                        req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mSession);
                         checkEOF(tag, req);
-                        return doCOPY(tag, sequence, folder, byUID);
+                        return doCOPY(tag, sequence, path, byUID);
                     } else if (command.equals("CLOSE")) {
                         checkEOF(tag, req);
                         return doCLOSE(tag);
                     } else if (command.equals("CREATE")) {
-                        req.skipSpace();  String folder = req.readFolder();
+                        req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mSession);
                         checkEOF(tag, req);
-                        return doCREATE(tag, folder);
+                        return doCREATE(tag, path);
                     } else if (command.equals("CHECK")) {
                         checkEOF(tag, req);
                         return doCHECK(tag);
@@ -275,9 +282,9 @@ public abstract class ImapHandler extends ProtocolHandler {
                     break;
                 case 'D':
                     if (command.equals("DELETE")) {
-                        req.skipSpace();  String folder = req.readFolder();
+                        req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mSession);
                         checkEOF(tag, req);
-                        return doDELETE(tag, folder);
+                        return doDELETE(tag, path);
                     }
                     break;
                 case 'E':
@@ -289,9 +296,9 @@ public abstract class ImapHandler extends ProtocolHandler {
                         checkEOF(tag, req);
                         return doEXPUNGE(tag, byUID, sequence);
                     } else if (command.equals("EXAMINE")) {
-                        req.skipSpace();  String folder = req.readFolder();
+                        req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mSession);
                         checkEOF(tag, req);
-                        return doEXAMINE(tag, folder);
+                        return doEXAMINE(tag, path);
                     }
                     break;
                 case 'F':
@@ -305,11 +312,11 @@ public abstract class ImapHandler extends ProtocolHandler {
                     break;
                 case 'G':
                     if (command.equals("GETQUOTA") && extensionEnabled("QUOTA")) {
-                        req.skipSpace();  String qroot = req.readAstring();
+                        req.skipSpace();  ImapPath qroot = new ImapPath(req.readAstring(), mSession);
                         checkEOF(tag, req);
                         return doGETQUOTA(tag, qroot);
                     } else if (command.equals("GETQUOTAROOT") && extensionEnabled("QUOTA")) {
-                        req.skipSpace();  String path = req.readFolder();
+                        req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mSession);
                         checkEOF(tag, req);
                         return doGETQUOTAROOT(tag, path);
                     }
@@ -356,20 +363,20 @@ public abstract class ImapHandler extends ProtocolHandler {
                     break;
                 case 'R':
                     if (command.equals("RENAME")) {
-                        req.skipSpace();  String folder = req.readFolder();
-                        req.skipSpace();  String name = req.readFolder();
+                        req.skipSpace();  ImapPath folder = new ImapPath(req.readFolder(), mSession);
+                        req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mSession);
                         checkEOF(tag, req);
-                        return doRENAME(tag, folder, name);
+                        return doRENAME(tag, folder, path);
                     }
                     break;
                 case 'S':
                     if (command.equals("STORE")) {
-                        byte operation = STORE_REPLACE;  boolean silent = false;
+                        StoreAction operation = StoreAction.REPLACE;  boolean silent = false;
                         req.skipSpace();  String sequence = req.readSequence();
                         req.skipSpace();
                         switch (req.peekChar()) {
-                            case '+':  req.skipChar('+');  operation = STORE_ADD;     break;
-                            case '-':  req.skipChar('-');  operation = STORE_REMOVE;  break;
+                            case '+':  req.skipChar('+');  operation = StoreAction.ADD;     break;
+                            case '-':  req.skipChar('-');  operation = StoreAction.REMOVE;  break;
                         }
                         String cmd = req.readATOM();
                         if (cmd.equals("FLAGS.SILENT"))  silent = true;
@@ -403,15 +410,15 @@ public abstract class ImapHandler extends ProtocolHandler {
                         checkEOF(tag, req);
                         return doSEARCH(tag, i4search, byUID, options);
                     } else if (command.equals("SELECT")) {
-                        req.skipSpace();  String folder = req.readFolder();
+                        req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mSession);
                         checkEOF(tag, req);
-                        return doSELECT(tag, folder);
+                        return doSELECT(tag, path);
                     } else if (command.equals("STARTTLS") && extensionEnabled("STARTTLS")) {
                         checkEOF(tag, req);
                         return doSTARTTLS(tag);
                     } else if (command.equals("STATUS")) {
                         int status = 0;
-                        req.skipSpace();  String folder = req.readFolder();
+                        req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mSession);
                         req.skipSpace();  req.skipChar('(');
                         while (req.peekChar() != ')') {
                             if (status != 0)
@@ -427,11 +434,11 @@ public abstract class ImapHandler extends ProtocolHandler {
                         }
                         req.skipChar(')');
                         checkEOF(tag, req);
-                        return doSTATUS(tag, folder, status);
+                        return doSTATUS(tag, path, status);
                     } else if (command.equals("SUBSCRIBE")) {
-                        req.skipSpace();  String folder = req.readFolder();
+                        req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mSession);
                         checkEOF(tag, req);
-                        return doSUBSCRIBE(tag, folder);
+                        return doSUBSCRIBE(tag, path);
                     } else if (command.equals("SETQUOTA") && extensionEnabled("QUOTA")) {
                         Map<String, String> limits = new HashMap<String, String>();
                         req.skipSpace();  String qroot = req.readAstring();
@@ -456,9 +463,9 @@ public abstract class ImapHandler extends ProtocolHandler {
                         }
                         throw new ImapParseException(tag, "command not permitted with UID");
                     } else if (command.equals("UNSUBSCRIBE")) {
-                        req.skipSpace();  String folder = req.readFolder();
+                        req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mSession);
                         checkEOF(tag, req);
-                        return doUNSUBSCRIBE(tag, folder);
+                        return doUNSUBSCRIBE(tag, path);
                     } else if (command.equals("UNSELECT") && extensionEnabled("UNSELECT")) {
                         checkEOF(tag, req);
                         return doUNSELECT(tag);
@@ -486,11 +493,11 @@ public abstract class ImapHandler extends ProtocolHandler {
         }
     }
 
-    boolean canContinue(ServiceException e) {
-        return e.getCode() == MailServiceException.MAINTENANCE ? STOP_PROCESSING : CONTINUE_PROCESSING;
+    private boolean canContinue(ServiceException e) {
+        return e.getCode().equals(MailServiceException.MAINTENANCE) ? STOP_PROCESSING : CONTINUE_PROCESSING;
     }
 
-    OperationContext getContext() throws ServiceException {
+    private OperationContext getContext() throws ServiceException {
         if (mSession == null)
             throw ServiceException.AUTH_REQUIRED();
         return mSession.getContext();
@@ -547,7 +554,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         // check whether the extension is explicitly disabled on the server
         if (ImapServer.isExtensionDisabled(getServer(), extension))
             return false;
-        // check whether one of the extension's prerequeisites is disabled on the server
+        // check whether one of the extension's prerequisites is disabled on the server
         if (extension.equalsIgnoreCase("X-DRAFT-I04-SEARCHRES"))
             return extensionEnabled("ESEARCH");
         // see if the user's session has disabled the extension
@@ -566,7 +573,7 @@ public abstract class ImapHandler extends ProtocolHandler {
 
     // RFC 2971 3: "The sole purpose of the ID extension is to enable clients and servers
     //              to exchange information on their implementations for the purposes of
-    //              statistical analysis and problem determination.
+    //              statistical analysis and problem determination."
     boolean doID(String tag, Map<String, String> attrs) throws IOException {
         if (attrs != null)
             ZimbraLog.imap.info("IMAP client identified as: " + attrs);
@@ -655,9 +662,9 @@ public abstract class ImapHandler extends ProtocolHandler {
             if (mSession != null)
                 mSession.clearTagCache();
             ZimbraLog.imap.warn(command + " failed", e);
-            if (e.getCode() == AccountServiceException.CHANGE_PASSWORD)
+            if (e.getCode().equals(AccountServiceException.CHANGE_PASSWORD))
                 sendNO(tag, "[ALERT] password must be changed before IMAP login permitted");
-            else if (e.getCode() == AccountServiceException.MAINTENANCE_MODE)
+            else if (e.getCode().equals(AccountServiceException.MAINTENANCE_MODE))
                 sendNO(tag, "[ALERT] account undergoing maintenance; please try again later");
             else
                 sendNO(tag, command + " failed");
@@ -720,7 +727,6 @@ public abstract class ImapHandler extends ProtocolHandler {
         Mailbox mbox = session.getMailbox();
         synchronized (mbox) {
             session.setUsername(account.getName());
-            session.cacheFlags(mbox);
             for (Tag ltag : mbox.getTagList(session.getContext()))
                 session.cacheTag(ltag);
         }
@@ -733,15 +739,15 @@ public abstract class ImapHandler extends ProtocolHandler {
         return session;
     }
 
-    boolean doSELECT(String tag, String folderName) throws IOException {
-        return selectFolder(tag, "SELECT", folderName);
+    boolean doSELECT(String tag, ImapPath path) throws IOException {
+        return selectFolder(tag, "SELECT", path);
     }
 
-    boolean doEXAMINE(String tag, String folderName) throws IOException {
-        return selectFolder(tag, "EXAMINE", folderName);
+    boolean doEXAMINE(String tag, ImapPath path) throws IOException {
+        return selectFolder(tag, "EXAMINE", path);
     }
 
-    private boolean selectFolder(String tag, String command, String folderName) throws IOException {
+    private boolean selectFolder(String tag, String command, ImapPath path) throws IOException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
@@ -754,12 +760,18 @@ public abstract class ImapHandler extends ProtocolHandler {
 
         boolean writable = command.equals("SELECT");
         try {
-        	ImapGetFolderOperation op = new ImapGetFolderOperation(mSession, getContext(), mMailbox, folderName, writable, i4folder);
+            if (!path.belongsTo(mSession.getMailbox())) {
+                ZimbraLog.imap.info("cannot select folder in other mailbox: " + path);
+                sendNO(tag, command + " failed: cannot open other user's folder");
+                return CONTINUE_PROCESSING;
+            }
+
+        	ImapGetFolderOperation op = new ImapGetFolderOperation(mSession, getContext(), mMailbox, path.asZimbraPath(), writable, i4folder);
         	op.schedule();
         	i4folder = op.getResult();
         } catch (ServiceException e) {
-            if (e.getCode() == MailServiceException.NO_SUCH_FOLDER)
-                ZimbraLog.imap.info(command + " failed: no such folder: " + folderName);
+            if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER))
+                ZimbraLog.imap.info(command + " failed: no such folder: " + path);
             else
                 ZimbraLog.imap.warn(command + " failed", e);
             sendNO(tag, command + " failed");
@@ -786,28 +798,36 @@ public abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean doCREATE(String tag, String folderName) throws IOException {
+    boolean doCREATE(String tag, ImapPath path) throws IOException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
-        folderName = ImapFolder.importPath(folderName, mSession);
-        if (!ImapFolder.isPathCreatable(folderName)) {
-            ZimbraLog.imap.info("CREATE failed: hidden folder or parent: %s", folderName);
+        if (!path.isCreatable()) {
+            ZimbraLog.imap.info("CREATE failed: hidden folder or parent: " + path);
             sendNO(tag, "CREATE failed");
             return CONTINUE_PROCESSING;
         }
 
         try {
-        	CreateFolderOperation op = new CreateFolderOperation(mSession, getContext(), mMailbox, Requester.IMAP, folderName, MailItem.TYPE_MESSAGE, false);
-        	op.schedule();
+            Object mboxobj = path.getOwnerMailbox();
+            if (mboxobj instanceof Mailbox) {
+            	CreateFolderOperation op = new CreateFolderOperation(mSession, getContext(), (Mailbox) mboxobj, Requester.IMAP, path.asZimbraPath(), MailItem.TYPE_MESSAGE, false);
+            	op.schedule();
+            } else if (mboxobj instanceof ZMailbox) {
+                ((ZMailbox) mboxobj).createFolder(null, path.asZimbraPath(), ZFolder.View.message, ZFolder.Color.defaultColor, null, null);
+            } else {
+                throw AccountServiceException.NO_SUCH_ACCOUNT(path.getOwner());
+            }
         } catch (ServiceException e) {
             String cause = "CREATE failed";
-            if (e.getCode() == MailServiceException.CANNOT_CONTAIN)
+            if (e.getCode().equals(MailServiceException.CANNOT_CONTAIN))
                 cause += ": superior mailbox has \\Noinferiors set";
-            else if (e.getCode() == MailServiceException.ALREADY_EXISTS)
+            else if (e.getCode().equals(MailServiceException.ALREADY_EXISTS))
                 cause += ": mailbox already exists";
-            else if (e.getCode() == MailServiceException.INVALID_NAME)
+            else if (e.getCode().equals(MailServiceException.INVALID_NAME))
                 cause += ": invalid mailbox name";
+            else if (e.getCode().equals(ServiceException.PERM_DENIED))
+                cause += ": permission denied";
             ZimbraLog.imap.warn(cause, e);
             sendNO(tag, cause);
             return canContinue(e);
@@ -818,31 +838,42 @@ public abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean doDELETE(String tag, String folderName) throws IOException {
+    boolean doDELETE(String tag, ImapPath path) throws IOException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
-        folderName = ImapFolder.importPath(folderName, mSession);
-
-        int folderId = 0;
         try {
-        	ImapDeleteOperation op = new ImapDeleteOperation(mSession, getContext(), mMailbox, folderName);
-        	op.schedule();
-        	folderId = op.getFolderId();
+            Object mboxobj = path.getOwnerMailbox();
+            if (mboxobj instanceof Mailbox) {
+                ImapDeleteOperation op = new ImapDeleteOperation(mSession, getContext(), (Mailbox) mboxobj, path.asZimbraPath());
+                op.schedule();
+            } else if (mboxobj instanceof ZMailbox) {
+                ZMailbox zmbx = (ZMailbox) mboxobj;
+                ZFolder zfolder = zmbx.getFolderByPath(path.asZimbraPath());
+                if (zfolder == null)
+                    throw MailServiceException.NO_SUCH_FOLDER(path.asImapPath());
+
+                if (zfolder.getSubFolders().isEmpty())
+                    zmbx.deleteFolder(zfolder.getId());
+                else
+                    zmbx.emptyFolder(zfolder.getId(), false);
+            } else {
+                throw AccountServiceException.NO_SUCH_ACCOUNT(path.getOwner());
+            }
         } catch (ImapServiceException e) {
-        	ZimbraLog.imap.info("DELETE failed: "+e.toString());
+        	ZimbraLog.imap.info("DELETE failed: " + e.toString());
         	sendNO(tag, "DELETE failed");
         	return CONTINUE_PROCESSING;
         } catch (ServiceException e) {
-            if (e.getCode() == MailServiceException.NO_SUCH_FOLDER)
-                ZimbraLog.imap.info("DELETE failed: no such folder: " + folderName);
+            if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER))
+                ZimbraLog.imap.info("DELETE failed: no such folder: " + path);
             else
                 ZimbraLog.imap.warn("DELETE failed", e);
             sendNO(tag, "DELETE failed");
             return canContinue(e);
         }
 
-        if (mSession.isSelected() && folderId == mSession.getFolder().getId())
+        if (mSession.isSelected() && path.equals(mSession.getFolder().getPath()))
             mSession.deselectFolder();
 
         sendNotifications(true, false);
@@ -850,25 +881,48 @@ public abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean doRENAME(String tag, String oldName, String newName) throws IOException {
+    boolean doRENAME(String tag, ImapPath oldPath, ImapPath newPath) throws IOException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
-        oldName = ImapFolder.importPath(oldName, mSession);
-        newName = ImapFolder.importPath(newName, mSession);
-
         try {
-        	ImapRenameOperation op = new ImapRenameOperation(mSession, getContext(), mMailbox, oldName, newName);
-        	op.schedule();
+            Account source = oldPath.getOwnerAccount(), target = newPath.getOwnerAccount();
+            if (source == null || target == null) {
+                ZimbraLog.imap.info("RENAME failed: no such account for " + oldPath + " or " + newPath);
+                sendNO(tag, "RENAME failed: no such account");
+                return CONTINUE_PROCESSING;
+            } else if (!source.getId().equalsIgnoreCase(target.getId())) {
+                ZimbraLog.imap.info("RENAME failed: cannot move folder between mailboxes");
+                sendNO(tag, "RENAME failed: cannot rename folder to other user's namespace");
+                return CONTINUE_PROCESSING;
+            }
+
+            Object mboxobj = oldPath.getOwnerMailbox();
+            if (mboxobj instanceof Mailbox) {
+                ImapRenameOperation op = new ImapRenameOperation(mSession, getContext(), (Mailbox) mboxobj, oldPath.asZimbraPath(), newPath.asZimbraPath());
+            	op.schedule();
+            } else if (mboxobj instanceof ZMailbox) {
+                ZMailbox zmbx = (ZMailbox) mboxobj;
+                ZFolder zfolder = zmbx.getFolderByPath(oldPath.asZimbraPath());
+                if (zfolder != null)
+                    zmbx.renameFolder(zfolder.getId(), newPath.asZimbraPath());
+                else
+                    throw MailServiceException.NO_SUCH_FOLDER(oldPath.asZimbraPath());
+            } else {
+                ZimbraLog.imap.info("RENAME failed: cannot get mailbox for path: " + oldPath);
+                sendNO(tag, "RENAME failed");
+                return CONTINUE_PROCESSING;
+            }
         } catch (ServiceException e) {
         	if (e instanceof ImapServiceException && e.getCode() == ImapServiceException.CANT_RENAME_INBOX) {
         		ZimbraLog.imap.info("RENAME failed: RENAME of INBOX not supported");
         		sendNO(tag, "RENAME failed: RENAME of INBOX not supported");
         		return CONTINUE_PROCESSING;
-        	} else if (e.getCode() == MailServiceException.NO_SUCH_FOLDER)
-        		ZimbraLog.imap.info("RENAME failed: no such folder: " + oldName);
-        	else
+        	} else if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER)) {
+        		ZimbraLog.imap.info("RENAME failed: no such folder: " + oldPath);
+            } else {
         		ZimbraLog.imap.warn("RENAME failed", e);
+            }
         	sendNO(tag, "RENAME failed");
         	return canContinue(e);
         }
@@ -879,15 +933,17 @@ public abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean doSUBSCRIBE(String tag, String folderName) throws IOException {
+    boolean doSUBSCRIBE(String tag, ImapPath path) throws IOException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
-        folderName = ImapFolder.importPath(folderName, mSession);
-
         try {
-            ImapSubscribeOperation op = new ImapSubscribeOperation(mSession, getContext(), mMailbox, folderName);
-            op.schedule();
+            if (path.belongsTo(mSession.getMailbox())) {
+                ImapSubscribeOperation op = new ImapSubscribeOperation(mSession, getContext(), mSession.getMailbox(), path.asZimbraPath());
+                op.schedule();
+            } else {
+                mSession.subscribe(path);
+            }
         } catch (ImapServiceException e) {
             if (e.getCode() == ImapServiceException.FOLDER_NOT_VISIBLE) {
                 ZimbraLog.imap.info("SUBSCRIBE failed: "+e.toString());
@@ -896,8 +952,8 @@ public abstract class ImapHandler extends ProtocolHandler {
             } else 
                 ZimbraLog.imap.warn("SUBSCRIBE failed", e);
         } catch (ServiceException e) {
-            if (e.getCode() == MailServiceException.NO_SUCH_FOLDER)
-                ZimbraLog.imap.info("SUBSCRIBE failed: no such folder: " + folderName);
+            if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER))
+                ZimbraLog.imap.info("SUBSCRIBE failed: no such folder: " + path);
             else
                 ZimbraLog.imap.warn("SUBSCRIBE failed", e);
             sendNO(tag, "SUBSCRIBE failed");
@@ -909,17 +965,19 @@ public abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean doUNSUBSCRIBE(String tag, String folderName) throws IOException {
+    boolean doUNSUBSCRIBE(String tag, ImapPath path) throws IOException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
-        folderName = ImapFolder.importPath(folderName, mSession);
-
         try {
-            ImapUnsubscribeOperation op = new ImapUnsubscribeOperation(mSession, getContext(), mMailbox, folderName);
-            op.schedule();
+            if (path.belongsTo(mSession.getMailbox())) {
+                ImapUnsubscribeOperation op = new ImapUnsubscribeOperation(mSession, getContext(), mSession.getMailbox(), path.asZimbraPath());
+                op.schedule();
+            } else {
+                mSession.unsubscribe(path);
+            }
         } catch (MailServiceException.NoSuchItemException nsie) {
-            ZimbraLog.imap.info("UNSUBSCRIBE failure skipped: no such folder: " + folderName);
+            ZimbraLog.imap.info("UNSUBSCRIBE failure skipped: no such folder: " + path);
         } catch (ServiceException e) {
             ZimbraLog.imap.warn("UNSUBSCRIBE failed", e);
             sendNO(tag, "UNSUBSCRIBE failed");
@@ -943,18 +1001,44 @@ public abstract class ImapHandler extends ProtocolHandler {
             return CONTINUE_PROCESSING;
         }
 
-        String pattern = mailboxName;
-        if (!mailboxName.startsWith("/")) {
-            if (referenceName.endsWith("/"))  pattern = referenceName + mailboxName;
-            else                              pattern = referenceName + '/' + mailboxName;
-        }
-        if (pattern.startsWith("/"))
-            pattern = pattern.substring(1);
-        List<String> matches;
+        List<String> matches = null;
         try {
-        	ImapListOperation op = new ImapListOperation(mSession, getContext(), mMailbox, pattern, extensionEnabled("CHILDREN"));
-        	op.schedule();
-        	matches = op.getMatches();
+            String pattern = mailboxName;
+            if (!mailboxName.startsWith("/")) {
+                if (referenceName.endsWith("/"))  pattern = referenceName + mailboxName;
+                else                              pattern = referenceName + '/' + mailboxName;
+            }
+            ImapPath patternPath = new ImapPath(pattern, mSession);
+            pattern = patternPath.asImapPath().toUpperCase();
+
+            if (patternPath.getOwner() != null && patternPath.getOwner().indexOf('*') != -1) {
+                // RFC 2342 5: "Alternatively, a server MAY return NO to such a LIST command,
+                //              requiring that a user name be included with the Other Users'
+                //              Namespace prefix before listing any other user's mailboxes."
+                ZimbraLog.imap.info("LIST failed: wildcards not permitted in username " + pattern);
+                sendNO(tag, "LIST failed: wildcards not permitted in username");
+                return CONTINUE_PROCESSING;
+            }
+
+            // make sure we can do a  LIST "" "/home/user1"
+            if (patternPath.getOwner() != null && (ImapPath.NAMESPACE_PREFIX + patternPath.getOwner()).toUpperCase().equals(pattern)) {
+                matches = new ArrayList<String>();
+                matches.add("LIST (\\Noselect) \"/\" " + patternPath.asUtf7String());
+            } else {
+                Object mboxobj = patternPath.getOwnerMailbox();
+                if (mboxobj instanceof Mailbox) {
+                	ImapListOperation op = new ImapListOperation(mSession, getContext(), (Mailbox) mboxobj, patternPath, extensionEnabled("CHILDREN"));
+                	op.schedule();
+                	matches = op.getMatches();
+                } else if (mboxobj instanceof ZMailbox) {
+                    matches = new ArrayList<String>();
+                    for (ZFolder zfolder : ((ZMailbox) mboxobj).getAllFolders()) {
+                        ImapPath zpath = new ImapPath(patternPath.getOwner(), zfolder.getPath(), mSession);
+                        if (zpath.asImapPath().toUpperCase().matches(pattern) && ImapFolder.isFolderVisible(zfolder, mSession))
+                            matches.add("LIST () \"/\" " + zpath.asUtf7String());
+                    }
+                }
+            }
         } catch (ServiceException e) {
             ZimbraLog.imap.warn("LIST failed", e);
             sendNO(tag, "LIST failed");
@@ -965,7 +1049,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         	for (String match : matches)
         		sendUntagged(match);
         }
-        
+
         sendNotifications(true, false);
         sendOK(tag, "LIST completed");
         return CONTINUE_PROCESSING;
@@ -980,16 +1064,17 @@ public abstract class ImapHandler extends ProtocolHandler {
             if (referenceName.endsWith("/"))  pattern = referenceName + mailboxName;
             else                              pattern = referenceName + '/' + mailboxName;
         }
-        if (pattern.startsWith("/"))
-            pattern = pattern.substring(1);
+        ImapPath patternPath = new ImapPath(pattern, mSession);
 
         try {
-        	ImapLSubOperation op = new ImapLSubOperation(mSession, getContext(), mMailbox, pattern, extensionEnabled("CHILDREN"));
+        	ImapLSubOperation op = new ImapLSubOperation(mSession, getContext(), mMailbox, patternPath, extensionEnabled("CHILDREN"));
         	op.schedule();
-        	Map<String, String> subs = op.getSubs();
-        	
-        	for (String sub : subs.values())
-        		sendUntagged(sub);
+        	List<String> subscriptions = op.getSubs();
+
+            if (subscriptions != null) {
+            	for (String sub : subscriptions)
+            		sendUntagged(sub);
+            }
         } catch (ServiceException e) {
             ZimbraLog.imap.warn("LSUB failed", e);
             sendNO(tag, "LSUB failed");
@@ -1007,51 +1092,78 @@ public abstract class ImapHandler extends ProtocolHandler {
     static final int STATUS_UIDVALIDITY = 0x08;
     static final int STATUS_UNSEEN      = 0x10;
 
-    boolean doSTATUS(String tag, String folderName, int status) throws IOException {
+    boolean doSTATUS(String tag, ImapPath path, int status) throws IOException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
-        folderName = ImapFolder.importPath(folderName, mSession);
-
         StringBuilder data = new StringBuilder();
         try {
-            GetFolderOperation op = new GetFolderOperation(mSession, getContext(), mMailbox, Requester.IMAP, folderName);
-            op.schedule();
-            Folder folder = op.getFolder();
+            int messages, recent, uidnext, uvv, unread;
+            Object mboxobj = path.getOwnerMailbox();
+            if (mboxobj instanceof Mailbox) {
+                GetFolderOperation op = new GetFolderOperation(mSession, getContext(), (Mailbox) mboxobj, Requester.IMAP, path.asZimbraPath());
+                op.schedule();
+                Folder folder = op.getFolder();
 
-            if (!ImapFolder.isFolderVisible(folder, mSession)) {
-                ZimbraLog.imap.info("STATUS failed: folder not visible: " + folderName);
-                sendNO(tag, "STATUS failed");
-                return CONTINUE_PROCESSING;
+                if (!ImapFolder.isFolderVisible(folder, mSession)) {
+                    ZimbraLog.imap.info("STATUS failed: folder not visible: " + path);
+                    sendNO(tag, "STATUS failed");
+                    return CONTINUE_PROCESSING;
+                }
+
+                messages = folder.getSize();
+                recent = 0;
+                uidnext = folder instanceof SearchFolder ? -1 : folder.getImapUIDNEXT();
+                uvv = ImapFolder.getUIDValidity(folder);
+                unread = folder.getUnreadCount();
+            } else if (mboxobj instanceof ZMailbox) {
+                ZFolder zfolder = ((ZMailbox) mboxobj).getFolderByPath(path.asZimbraPath());
+                if (zfolder == null)
+                    throw MailServiceException.NO_SUCH_FOLDER(path.asImapPath());
+
+                if (!ImapFolder.isFolderVisible(zfolder, mSession)) {
+                    ZimbraLog.imap.info("STATUS failed: folder not visible: " + path);
+                    sendNO(tag, "STATUS failed");
+                    return CONTINUE_PROCESSING;
+                }
+
+                messages = zfolder.getMessageCount();
+                recent = 0;
+                uidnext = -1;
+                uvv = ImapFolder.getUIDValidity(zfolder);
+                unread = zfolder.getUnreadCount();
+            } else {
+                throw AccountServiceException.NO_SUCH_ACCOUNT(path.getOwner());
             }
-            if ((status & STATUS_MESSAGES) != 0)
-                data.append(data.length() > 0 ? " " : "").append("MESSAGES ").append(folder.getSize());
+
+            if (messages >= 0 && (status & STATUS_MESSAGES) != 0)
+                data.append(data.length() > 0 ? " " : "").append("MESSAGES ").append(messages);
             // FIXME: hardcoded "RECENT 0"
-            if ((status & STATUS_RECENT) != 0)
-                data.append(data.length() > 0 ? " " : "").append("RECENT ").append(0);
+            if (recent >= 0 && (status & STATUS_RECENT) != 0)
+                data.append(data.length() > 0 ? " " : "").append("RECENT ").append(recent);
             // note: we're not supporting UIDNEXT for search folders; see the comments in selectFolder()
-            if ((status & STATUS_UIDNEXT) != 0 && !(folder instanceof SearchFolder))
-                data.append(data.length() > 0 ? " " : "").append("UIDNEXT ").append(folder.getImapUIDNEXT());
-            if ((status & STATUS_UIDVALIDITY) != 0)
-                data.append(data.length() > 0 ? " " : "").append("UIDVALIDITY ").append(ImapFolder.getUIDValidity(folder));
-            if ((status & STATUS_UNSEEN) != 0)
-                data.append(data.length() > 0 ? " " : "").append("UNSEEN ").append(folder.getUnreadCount());
+            if (uidnext > 0 && (status & STATUS_UIDNEXT) != 0)
+                data.append(data.length() > 0 ? " " : "").append("UIDNEXT ").append(uidnext);
+            if (uvv > 0 && (status & STATUS_UIDVALIDITY) != 0)
+                data.append(data.length() > 0 ? " " : "").append("UIDVALIDITY ").append(uvv);
+            if (unread >= 0 && (status & STATUS_UNSEEN) != 0)
+                data.append(data.length() > 0 ? " " : "").append("UNSEEN ").append(unread);
         } catch (ServiceException e) {
-            if (e.getCode() == MailServiceException.NO_SUCH_FOLDER)
-                ZimbraLog.imap.info("STATUS failed: no such folder: " + folderName);
+            if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER))
+                ZimbraLog.imap.info("STATUS failed: no such folder: " + path);
             else
                 ZimbraLog.imap.warn("STATUS failed", e);
             sendNO(tag, "STATUS failed");
             return canContinue(e);
         }
 
-        sendUntagged("STATUS " + ImapFolder.formatPath(folderName, mSession) + " (" + data + ')');
+        sendUntagged("STATUS " + path.asUtf7String() + " (" + data + ')');
         sendNotifications(true, false);
         sendOK(tag, "STATUS completed");
         return CONTINUE_PROCESSING;
     }
 
-    boolean doCATENATE(String tag, String folderName, List<String> flagNames, Date date, List<Object> parts) throws IOException, ImapParseException {
+    boolean doCATENATE(String tag, ImapPath path, List<String> flagNames, Date date, List<Object> parts) throws IOException, ImapParseException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
@@ -1069,12 +1181,20 @@ public abstract class ImapHandler extends ProtocolHandler {
                 throw new ImapParseException(tag, "TOOBIG", "request too long", false);
             baos.write(buffer);
         }
-        return doAPPEND(tag, folderName, flagNames, date, baos.toByteArray());
+        return doAPPEND(tag, path, flagNames, date, baos.toByteArray());
     }
 
-    boolean doAPPEND(String tag, String folderName, List<String> flagNames, Date date, byte[] content) throws IOException {
+    boolean doAPPEND(String tag, ImapPath path, List<String> flagNames, Date date, byte[] content) throws IOException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
+
+        // if we're using Thunderbird, try to set INTERNALDATE to the message's Date: header
+        if (date == null && mSession.isHackEnabled(EnabledHack.THUNDERBIRD)) {
+            try {
+                // inefficient, but must be done before creating the ParsedMessage
+                date = new MimeMessage(JMSession.getSession(), new ByteArrayInputStream(content)).getSentDate();
+            } catch (MessagingException e) { }
+        }
 
         // server uses UNIX time, so range-check specified date (is there a better place for this?)
         if (date != null && date.getTime() > Integer.MAX_VALUE * 1000L) {
@@ -1086,18 +1206,46 @@ public abstract class ImapHandler extends ProtocolHandler {
         ArrayList<Tag> newTags = new ArrayList<Tag>();
         StringBuilder appendHint = extensionEnabled("UIDPLUS") ? new StringBuilder() : null;
         try {
-        	ImapAppendOperation op = new ImapAppendOperation(mSession, getContext(), mMailbox,
-        				this, folderName, flagNames, date, content, newTags, appendHint);
-        	op.schedule();
+            Object mboxobj = path.getOwnerMailbox();
+            if (mboxobj instanceof Mailbox) {
+            	ImapAppendOperation op = new ImapAppendOperation(mSession, getContext(), (Mailbox) mboxobj,
+            				this, path, flagNames, date, content, newTags, appendHint);
+            	op.schedule();
+            } else if (mboxobj instanceof ZMailbox) {
+                ZMailbox zmbx = (ZMailbox) mboxobj;
+                ZFolder zfolder = zmbx.getFolderByPath(path.asZimbraPath());
+                int uvv = ImapFolder.getUIDValidity(zfolder);
+
+                if (zfolder == null)
+                    throw MailServiceException.NO_SUCH_FOLDER(path.asImapPath());
+                else if (!ImapFolder.isFolderVisible(zfolder, mSession))
+                    throw ImapServiceException.FOLDER_NOT_VISIBLE(path.asImapPath());
+                else if (!ImapFolder.isFolderWritable(zfolder, mSession, ACL.ABBR_INSERT + ""))
+                    throw ImapServiceException.FOLDER_NOT_WRITABLE(path.asImapPath());
+
+                int flagMask = Flag.BITMASK_UNREAD;
+                for (ImapFlag i4flag : getSystemFlags(flagNames)) {
+                    if (!i4flag.mPermanent)     continue;
+                    else if (i4flag.mPositive)  flagMask |= i4flag.mBitmask;
+                    else                        flagMask &= ~i4flag.mBitmask;
+                }
+
+                // FIXME: set APPENDUID if possible
+                String createdId = zmbx.addMessage(zfolder.getId(), Flag.bitmaskToFlags(flagMask), null, date.getTime(), content, true);
+                if (appendHint != null && uvv > 0 && createdId != null)
+                    appendHint.append("[APPENDUID ").append(uvv).append(' ').append(new ItemId(createdId, mSession.getAccountId()).getId()).append("] ");
+            } else {
+                throw AccountServiceException.NO_SUCH_ACCOUNT(path.getOwner());
+            }
         } catch (ServiceException e) {
             deleteTags(newTags);
             String msg = "APPEND failed";
-            if (e.getCode() == MailServiceException.NO_SUCH_FOLDER) {
-                ZimbraLog.imap.info("APPEND failed: no such folder: " + folderName);
+            if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER)) {
+                ZimbraLog.imap.info("APPEND failed: no such folder: " + path);
                 // 6.3.11: "Unless it is certain that the destination mailbox can not be created,
                 //          the server MUST send the response code "[TRYCREATE]" as the prefix
                 //          of the text of the tagged NO response."
-                if (ImapFolder.isPathCreatable('/' + folderName))
+                if (path.isCreatable())
                     msg = "[TRYCREATE] APPEND failed: no such mailbox";
             } else {
                 ZimbraLog.imap.warn("APPEND failed", e);
@@ -1109,6 +1257,20 @@ public abstract class ImapHandler extends ProtocolHandler {
         sendNotifications(true, false);
         sendOK(tag, (appendHint == null ? "" : appendHint.toString()) + "APPEND completed");
         return CONTINUE_PROCESSING;
+    }
+
+    List<ImapFlag> getSystemFlags(List<String> flagNames) {
+        if (flagNames == null || flagNames.isEmpty())
+            return Collections.emptyList();
+
+        ImapFlagCache i4cache = ImapFlagCache.getSystemFlags(mMailbox);
+        List<ImapFlag> i4flags = new ArrayList<ImapFlag>();
+        for (String name : flagNames) {
+            ImapFlag i4flag = i4cache.getByName(name);
+            if (i4flag != null)
+                i4flags.add(i4flag);
+        }
+        return i4flags;
     }
 
     List<ImapFlag> findOrCreateTags(List<String> tagNames, List<Tag> newTags) throws ServiceException {
@@ -1187,14 +1349,20 @@ public abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean doGETQUOTA(String tag, String qroot) throws IOException {
+    boolean doGETQUOTA(String tag, ImapPath qroot) throws IOException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
         try {
+            if (!qroot.belongsTo(mSession.getMailbox())) {
+                ZimbraLog.imap.info("GETQUOTA failed: cannot get quota for other user's mailbox: " + qroot);
+                sendNO(tag, "GETQUOTA failed: permission denied");
+                return CONTINUE_PROCESSING;
+            }
+
             long quota = mMailbox.getAccount().getIntAttr(Provisioning.A_zimbraMailQuota, 0);
             if (qroot == null || !qroot.equals("") || quota <= 0) {
-                ZimbraLog.imap.info("GETQUOTA failed: unknown quota root: %s", qroot);
+                ZimbraLog.imap.info("GETQUOTA failed: unknown quota root: '" + qroot + "'");
                 sendNO(tag, "GETQUOTA failed: unknown quota root");
                 return CONTINUE_PROCESSING;
             }
@@ -1211,32 +1379,36 @@ public abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean doGETQUOTAROOT(String tag, String path) throws IOException {
+    boolean doGETQUOTAROOT(String tag, ImapPath qroot) throws IOException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
-        path = ImapFolder.importPath(path, mSession);
-
         try {
+            if (!qroot.belongsTo(mSession.getMailbox())) {
+                ZimbraLog.imap.info("GETQUOTAROOT failed: cannot get quota root for other user's mailbox: " + qroot);
+                sendNO(tag, "GETQUOTAROOT failed: permission denied");
+                return CONTINUE_PROCESSING;
+            }
+
             // make sure the folder exists and is visible
-            GetFolderOperation op = new GetFolderOperation(mSession, getContext(), mMailbox, Requester.IMAP, path);
+            GetFolderOperation op = new GetFolderOperation(mSession, getContext(), mSession.getMailbox(), Requester.IMAP, qroot.asZimbraPath());
             op.schedule();
             Folder folder = op.getFolder();
             
             if (!ImapFolder.isFolderVisible(folder, mSession)) {
-                ZimbraLog.imap.info("GETQUOTAROOT failed: folder not visible: " + path);
+                ZimbraLog.imap.info("GETQUOTAROOT failed: folder not visible: '" + qroot + "'");
                 sendNO(tag, "GETQUOTAROOT failed");
                 return CONTINUE_PROCESSING;
             }
 
             // see if there's any quota on the account
             long quota = mMailbox.getAccount().getIntAttr(Provisioning.A_zimbraMailQuota, 0);
-            sendUntagged("QUOTAROOT " + ImapFolder.formatPath(path, mSession) + (quota > 0 ? " \"\"" : ""));
+            sendUntagged("QUOTAROOT " + qroot.asUtf7String() + (quota > 0 ? " \"\"" : ""));
             if (quota > 0)
                 sendUntagged("QUOTA \"\" (STORAGE " + (mMailbox.getSize() / 1024) + ' ' + (quota / 1024) + ')');
         } catch (ServiceException e) {
-            if (e.getCode() == MailServiceException.NO_SUCH_FOLDER)
-                ZimbraLog.imap.info("GETQUOTAROOT failed: no such folder: " + path);
+            if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER))
+                ZimbraLog.imap.info("GETQUOTAROOT failed: no such folder: " + qroot);
             else
                 ZimbraLog.imap.warn("GETQUOTAROOT failed", e);
             sendNO(tag, "GETQUOTAROOT failed");
@@ -1252,7 +1424,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
-        sendUntagged("NAMESPACE ((\"\" \"/\")) NIL NIL");
+        sendUntagged("NAMESPACE ((\"\" \"/\")) ((\"" + ImapPath.NAMESPACE_PREFIX + "\" \"/\")) NIL");
         sendNotifications(true, false);
         sendOK(tag, "NAMESPACE completed");
         return CONTINUE_PROCESSING;
@@ -1308,9 +1480,9 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     boolean doEXPUNGE(String tag, boolean byUID, String sequenceSet) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_SELECTED))
+        if (!checkState(tag, ImapSession.STATE_SELECTED)) {
             return CONTINUE_PROCESSING;
-        else if (!mSession.getFolder().isWritable()) {
+        } else if (!mSession.getFolder().isWritable()) {
             sendNO(tag, "mailbox selected READ-ONLY");
             return CONTINUE_PROCESSING;
         }
@@ -1600,6 +1772,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                 if (os != null) {
                     result.write(')');
                     os.write(LINE_SEPARATOR_BYTES, 0, LINE_SEPARATOR_BYTES.length);
+                    os.flush();
                 }
                 if (baosDebug != null)
                     ZimbraLog.imap.debug("  S: " + baosDebug);
@@ -1618,11 +1791,9 @@ public abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    static final byte STORE_REPLACE = (byte) 0x00;
-    static final byte STORE_ADD     = (byte) 0x01;
-    static final byte STORE_REMOVE  = (byte) 0x02;
+    enum StoreAction { REPLACE, ADD, REMOVE };
 
-    boolean doSTORE(String tag, String sequenceSet, List<String> flagNames, byte operation, boolean silent, boolean byUID) throws IOException {
+    boolean doSTORE(String tag, String sequenceSet, List<String> flagNames, StoreAction operation, boolean silent, boolean byUID) throws IOException {
         if (!checkState(tag, ImapSession.STATE_SELECTED))
             return CONTINUE_PROCESSING;
         else if (!mSession.getFolder().isWritable()) {
@@ -1631,7 +1802,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         }
 
         String command = (byUID ? "UID STORE" : "STORE");
-        List<Tag> newTags = (operation != STORE_REMOVE ? new ArrayList<Tag>() : null);
+        List<Tag> newTags = (operation != StoreAction.REMOVE ? new ArrayList<Tag>() : null);
 
         Set<ImapMessage> i4set;
         synchronized (mMailbox) {
@@ -1651,7 +1822,7 @@ public abstract class ImapHandler extends ProtocolHandler {
 
             // if we're doing a STORE FLAGS (i.e. replace), precompute the new set of flags for all the affected messages
             long tags = 0;  int flags = Flag.BITMASK_UNREAD;  short sflags = 0;
-            if (operation == STORE_REPLACE) {
+            if (operation == StoreAction.REPLACE) {
                 for (ImapFlag i4flag : i4flags) {
                     if (Tag.validateId(i4flag.mId))
                         tags = (i4flag.mPositive ? tags | i4flag.mBitmask : tags & ~i4flag.mBitmask);
@@ -1678,7 +1849,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                     if (silent)
                         i4folder.disableNotifications();
 
-                    if (operation == STORE_REPLACE) {
+                    if (operation == StoreAction.REPLACE) {
                         // replace real tags and flags on all messages
                         new SetTagsOperation(mSession, getContext(), mMailbox, Requester.IMAP, idlist, MailItem.TYPE_UNKNOWN, flags, tags, null).schedule();
                         // replace session tags on all messages
@@ -1686,7 +1857,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                             i4msg.setSessionFlags(sflags, i4folder);
                     } else if (!i4flags.isEmpty()) {
                         for (ImapFlag i4flag : i4flags) {
-                            boolean add = operation == STORE_ADD ^ !i4flag.mPositive;
+                            boolean add = operation == StoreAction.ADD ^ !i4flag.mPositive;
                             if (i4flag.mPermanent) {
                                 // real tag; do a batch update to the DB
                                 new AlterTagOperation(mSession, getContext(), mMailbox, Requester.IMAP, idlist, MailItem.TYPE_UNKNOWN, i4flag.mId, add, null).schedule();
@@ -1744,42 +1915,59 @@ public abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean doCOPY(String tag, String sequenceSet, String folderName, boolean byUID) throws IOException {
+    boolean doCOPY(String tag, String sequenceSet, ImapPath path, boolean byUID) throws IOException {
         if (!checkState(tag, ImapSession.STATE_SELECTED))
             return CONTINUE_PROCESSING;
-
-        folderName = ImapFolder.importPath(folderName, mSession);
 
         String command = (byUID ? "UID COPY" : "COPY");
         String copyuid = "";
         List<MailItem> copies = new ArrayList<MailItem>();
 
-        try {
-            GetFolderOperation gfOp = new GetFolderOperation(mSession, getContext(), mMailbox, Requester.IMAP, folderName);
-            gfOp.schedule();
-            Folder folder = gfOp.getFolder();
-            
-            if (!ImapFolder.isFolderVisible(folder, mSession)) {
-                ZimbraLog.imap.info(command + " failed: folder is hidden: " + folderName);
-                sendNO(tag, command + " failed");
-                return CONTINUE_PROCESSING;
-            } else if (!ImapFolder.isFolderWritable(folder, mSession)) {
-                ZimbraLog.imap.info(command + " failed: folder is READ-ONLY: " + folderName);
-                sendNO(tag, command + " failed: target mailbox is READ-ONLY");
-                return CONTINUE_PROCESSING;
-            }
+        Set<ImapMessage> i4set;
+        synchronized (mMailbox) {
+            i4set = mSession.getFolder().getSubsequence(sequenceSet, byUID);
+        }
+        // RFC 2180 4.4.1: "The server MAY disallow the COPY of messages in a multi-
+        //                  accessed mailbox that contains expunged messages."
+        if (!byUID && i4set.contains(null)) {
+            sendNO(tag, "COPY rejected because some of the requested messages were expunged");
+            return CONTINUE_PROCESSING;
+        }
+        i4set.remove(null);
 
-            Set<ImapMessage> i4set;
-            synchronized (mMailbox) {
-                i4set = mSession.getFolder().getSubsequence(sequenceSet, byUID);
+        try {
+            Object mboxobj = path.getOwnerMailbox();
+            ItemId iidTarget = null;
+            boolean sameMailbox = false;
+            int uvv = -1;
+
+            // check target folder permissions before attempting the copy
+            if (mboxobj instanceof Mailbox) {
+                Mailbox mbox = (Mailbox) mboxobj;
+                sameMailbox = mSession.getAccountId().equalsIgnoreCase(mbox.getAccountId());
+                Folder folder = mbox.getFolderByPath(getContext(), path.asZimbraPath());
+                iidTarget = new ItemId(folder);
+                uvv = ImapFolder.getUIDValidity(folder);
+
+                if (!ImapFolder.isFolderVisible(folder, mSession))
+                    throw ImapServiceException.FOLDER_NOT_VISIBLE(path.asImapPath());
+                else if (!ImapFolder.isFolderWritable(folder, mSession, ACL.RIGHT_INSERT))
+                    throw ImapServiceException.FOLDER_NOT_WRITABLE(path.asImapPath());
+            } else if (mboxobj instanceof ZMailbox) {
+                ZMailbox zmbx = (ZMailbox) mboxobj;
+                ZFolder zfolder = zmbx.getFolderByPath(path.asZimbraPath());
+                iidTarget = new ItemId(zfolder.getId(), path.getOwnerAccount().getId());
+                uvv = ImapFolder.getUIDValidity(zfolder);
+
+                if (zfolder == null)
+                    throw MailServiceException.NO_SUCH_FOLDER(path.asImapPath());
+                else if (!ImapFolder.isFolderVisible(zfolder, mSession))
+                    throw ImapServiceException.FOLDER_NOT_VISIBLE(path.asImapPath());
+                else if (!ImapFolder.isFolderWritable(zfolder, mSession, ACL.ABBR_INSERT + ""))
+                    throw ImapServiceException.FOLDER_NOT_WRITABLE(path.asImapPath());
+            } else {
+                throw AccountServiceException.NO_SUCH_ACCOUNT(path.getOwner());
             }
-            // RFC 2180 4.4.1: "The server MAY disallow the COPY of messages in a multi-
-            //                  accessed mailbox that contains expunged messages."
-            if (!byUID && i4set.contains(null)) {
-                sendNO(tag, "COPY rejected because some of the requested messages were expunged");
-                return CONTINUE_PROCESSING;
-            }
-            i4set.remove(null);
 
             long checkpoint = System.currentTimeMillis();
             List<Integer> srcUIDs = extensionEnabled("UIDPLUS") ? new ArrayList<Integer>() : null;
@@ -1787,36 +1975,47 @@ public abstract class ImapHandler extends ProtocolHandler {
 
             int i = 0;
             List<ImapMessage> i4list = new ArrayList<ImapMessage>(ImapCopyOperation.SUGGESTED_BATCH_SIZE);
+            List<Integer> idlist = new ArrayList<Integer>(ImapCopyOperation.SUGGESTED_BATCH_SIZE);
+            List<Integer> createdList = new ArrayList<Integer>(ImapCopyOperation.SUGGESTED_BATCH_SIZE);
             for (ImapMessage i4msg : i4set) {
                 // we're sending 'em off in batches of 50
-                i4list.add(i4msg);
+                i4list.add(i4msg);  idlist.add(i4msg.msgId);
                 if (++i % ImapCopyOperation.SUGGESTED_BATCH_SIZE != 0 && i != i4set.size())
                     continue;
 
-                ImapCopyOperation op = new ImapCopyOperation(mSession, getContext(), mMailbox, Requester.IMAP, i4list, folder.getId());
-                op.schedule();
+                if (sameMailbox) {
+                    ImapCopyOperation op = new ImapCopyOperation(mSession, getContext(), mMailbox, Requester.IMAP, i4list, iidTarget.getId());
+                    op.schedule();
+                    copies.addAll(op.getMessages());
+                    for (MailItem target : op.getMessages())
+                        createdList.add(target.getImapUid());
+                } else {
+                    ItemActionOperation op = ItemActionOperation.COPY(mSession, getContext(), mSession.getMailbox(), Requester.IMAP,
+                                                                      idlist, MailItem.TYPE_UNKNOWN, null, iidTarget);
+                    for (String target : op.getCreatedIds())
+                        createdList.add(new ItemId(target, mSession.getAccountId()).getId());
+                }
 
-                copies.addAll(op.getMessages());
-                if (op.getMessages().size() != i4list.size())
+                if (createdList.size() != i4list.size())
                     throw ServiceException.FAILURE("mismatch between original and target count during IMAP COPY", null);
                 if (srcUIDs != null) {
                     for (ImapMessage source : i4list)
                         srcUIDs.add(source.imapUid);
-                    for (MailItem target : op.getMessages())
-                        copyUIDs.add(target.getImapUid());
+                    for (Integer target : createdList)
+                        copyUIDs.add(target);
                 }
+
+                i4list.clear();  idlist.clear();  createdList.clear();
 
                 // send a gratuitous untagged response to keep pissy clients from closing the socket from inactivity
                 long now = System.currentTimeMillis();
                 if (now - checkpoint > MAXIMUM_IDLE_PROCESSING_MILLIS) {
                     sendIdleUntagged();  checkpoint = now;
                 }
-
-                i4list.clear();
             }
 
-            if (srcUIDs != null && srcUIDs.size() > 0)
-                copyuid = "[COPYUID " + ImapFolder.getUIDValidity(folder) + ' ' +
+            if (uvv > 0 && srcUIDs != null && srcUIDs.size() > 0)
+                copyuid = "[COPYUID " + uvv + ' ' +
                           ImapFolder.encodeSubsequence(srcUIDs) + ' ' +
                           ImapFolder.encodeSubsequence(copyUIDs) + "] ";
         } catch (IOException e) {
@@ -1833,9 +2032,9 @@ public abstract class ImapHandler extends ProtocolHandler {
 //            deleteMessages(copies);
 
             String rcode = "";
-            if (e.getCode() == MailServiceException.NO_SUCH_FOLDER) {
-                ZimbraLog.imap.info(command + " failed: no such folder: " + folderName);
-                if (ImapFolder.isPathCreatable('/' + folderName))
+            if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER)) {
+                ZimbraLog.imap.info(command + " failed: no such folder: " + path);
+                if (path.isCreatable())
                     rcode = "[TRYCREATE] ";
             } else {
                 ZimbraLog.imap.warn(command + " failed", e);

@@ -26,9 +26,12 @@ package com.zimbra.cs.imap;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -43,71 +46,85 @@ public class ImapLSubOperation extends Operation {
     			LOAD = c.mLoad;
     	}
 
-	private String mPattern;
+	private ImapPath mPattern;
     private boolean mOutputChildInfo;
 
-	private Map<String, String> mSubs;
-	
-	ImapLSubOperation(ImapSession session, OperationContext oc, Mailbox mbox, String pattern, boolean children) {
+	private List<String> mSubs = new ArrayList<String>();
+
+	ImapLSubOperation(ImapSession session, OperationContext oc, Mailbox mbox, ImapPath pattern, boolean children) {
         super(session, oc, mbox, Requester.IMAP, Requester.IMAP.getPriority(), LOAD);
 
         mPattern = pattern;
         mOutputChildInfo = children;
 	}
-	
+
 
     protected void callback() throws ServiceException {
-		synchronized (mMailbox) {
-			mSubs = getMatchingSubscriptions(getMailbox(), mPattern);
-			for (Map.Entry<String, String> hit : mSubs.entrySet()) {
-				Folder folder = null;
-				try {
-					folder = getMailbox().getFolderByPath(getOpCtxt(), hit.getKey());
-				} catch (MailServiceException.NoSuchItemException nsie) { }
-				// FIXME: need to determine "name attributes" for mailbox (\Marked, \Unmarked, \Noinferiors, \Noselect)
-				boolean visible = hit.getValue() != null && ImapFolder.isFolderVisible(folder, (ImapSession) mSession);
-				String attributes = visible ? ImapListOperation.getFolderAttributes((ImapSession) mSession, folder, mOutputChildInfo) : "\\Noselect";
-				hit.setValue("LSUB (" + attributes + ") \"/\" " + ImapFolder.formatPath(hit.getKey(), (ImapSession) mSession));
+        Account acct = mMailbox.getAccount();
+        ImapSession session = (ImapSession) mSession;
+
+        String pattern = mPattern.asImapPath().toUpperCase();
+        Map<ImapPath, Boolean> hits = new HashMap<ImapPath, Boolean>();
+
+        synchronized (mMailbox) {
+            List<Folder> folders = mMailbox.getFolderById(getOpCtxt(), Mailbox.ID_FOLDER_USER_ROOT).getSubfolderHierarchy();
+            for (Folder folder : folders) {
+                if (folder.isTagged(mMailbox.mSubscribeFlag)) {
+                    if (!checkSubscription(new ImapPath(null, folder.getPath(), session), pattern, hits))
+                        checkSubscription(new ImapPath(acct.getName(), folder.getPath(), session), pattern, hits);
+                }
+            }
+
+            Set<String> remoteSubscriptions = session.listSubscriptions();
+            if (remoteSubscriptions != null && !remoteSubscriptions.isEmpty()) {
+                for (String sub : remoteSubscriptions)
+                    checkSubscription(new ImapPath(sub, session), pattern, hits);
+            }
+
+            for (Map.Entry<ImapPath, Boolean> hit : hits.entrySet()) {
+                String attrs = getFolderAttributes(hit.getKey(), hit.getValue());
+				mSubs.add("LSUB (" + attrs + ") \"/\" " + hit.getKey().asUtf7String());
 			}
 		}
 	}
 
-    Map<String, String> getMatchingSubscriptions(Mailbox mbox, String pattern) throws ServiceException {
-        String childPattern = pattern + "/.*";
-        HashMap<String, String> hits = new HashMap<String, String>();
-        ArrayList<String> children = new ArrayList<String>();
+    private boolean checkSubscription(ImapPath path, String pattern, Map<ImapPath, Boolean> hits) {
+        if (path.asImapPath().toUpperCase().matches(pattern)) {
+            hits.put(path, Boolean.TRUE);  return true;
+        } else if (!path.asImapPath().toUpperCase().matches(pattern + "/.*")) {
+            return false;
+        }
 
         // 6.3.9: "A special situation occurs when using LSUB with the % wildcard. Consider 
         //         what happens if "foo/bar" (with a hierarchy delimiter of "/") is subscribed
         //         but "foo" is not.  A "%" wildcard to LSUB must return foo, not foo/bar, in
         //         the LSUB response, and it MUST be flagged with the \Noselect attribute."
 
-        // figure out the set of subscribed mailboxes that match the pattern
-        Folder root = mbox.getFolderById(mOpCtxt, Mailbox.ID_FOLDER_USER_ROOT);
-        for (Folder folder : root.getSubfolderHierarchy()) {
-            if (!folder.isTagged(mbox.mSubscribeFlag))
-                continue;
-            String path = ImapFolder.exportPath(folder.getPath(), (ImapSession) mSession);
-            if (path.toUpperCase().matches(pattern))
-                hits.put(path, path);
-            else if (path.toUpperCase().matches(childPattern))
-                children.add(path);
-        }
-        if (children.isEmpty())
-            return hits;
-
         // figure out the set of unsubscribed mailboxes that match the pattern and are parents of subscribed mailboxes
-        for (String partName : children) {
-            int delimiter = partName.lastIndexOf('/');
-            while (delimiter > 0) {
-                partName = partName.substring(0, delimiter);
-                if (!hits.containsKey(partName) && partName.toUpperCase().matches(pattern))
-                    hits.put(partName, null);
-                delimiter = partName.lastIndexOf('/');
+        boolean matched = false;
+        int delimiter = path.asZimbraPath().lastIndexOf('/');
+        while (delimiter > 0) {
+            path = new ImapPath(path.asZimbraPath().substring(0, delimiter), (ImapSession) mSession);
+            if (!hits.containsKey(path) && path.asImapPath().toUpperCase().matches(pattern)) {
+                hits.put(path, Boolean.FALSE);  matched = true;
             }
+            delimiter = path.asZimbraPath().lastIndexOf('/');
         }
-        return hits;
+        return matched;
     }
 
-	Map<String, String> getSubs() { return mSubs; }
+    private String getFolderAttributes(ImapPath path, boolean matched) throws ServiceException {
+        if (!matched)
+            return "\\Noselect";
+        if (!path.belongsTo(mMailbox))
+            return "";
+        try {
+            Folder folder = getMailbox().getFolderByPath(getOpCtxt(), path.asZimbraPath());
+            if (ImapFolder.isFolderVisible(folder, (ImapSession) mSession))
+                return ImapListOperation.getFolderAttributes((ImapSession) mSession, folder, mOutputChildInfo);
+        } catch (MailServiceException.NoSuchItemException nsie) { }
+        return "\\Noselect";
+    }
+
+	List<String> getSubs()  { return mSubs; }
 }

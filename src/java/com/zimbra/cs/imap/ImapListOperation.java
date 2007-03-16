@@ -25,6 +25,7 @@
 package com.zimbra.cs.imap;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
@@ -42,33 +43,42 @@ public class ImapListOperation extends Operation {
     			LOAD = c.mLoad;
     	}
 
-    private String mPattern;
+    private ImapPath mPattern;
     private boolean mOutputChildInfo;
-	
+
 	private List<String> mMatches;
 
 
-    ImapListOperation(ImapSession session, OperationContext oc, Mailbox mbox, String pattern, boolean children) {
+    ImapListOperation(ImapSession session, OperationContext oc, Mailbox mbox, ImapPath pattern, boolean children) {
 		super(session, oc, mbox, Requester.IMAP, Requester.IMAP.getPriority(), LOAD);
 
 		mPattern = pattern;
         mOutputChildInfo = children;
-	}
+    }
 
 
     protected void callback() throws ServiceException {
-		synchronized (mMailbox) {
-			mMatches = new ArrayList<String>();
-			
-			Folder root = mMailbox.getFolderById(getOpCtxt(), Mailbox.ID_FOLDER_USER_ROOT);
-			for (Folder folder : root.getSubfolderHierarchy()) {
+        mMatches = new ArrayList<String>();
+        String pattern = mPattern.asImapPath().toUpperCase();
+        if (pattern.endsWith("/"))
+            pattern = pattern.substring(0, pattern.length() - 1);
+
+        boolean isLocal = mMailbox.getAccountId().equalsIgnoreCase(mSession.getAccountId());
+
+        synchronized (mMailbox) {
+            Collection<Folder> folders = mMailbox.getVisibleFolders(getOpCtxt());
+            if (folders == null)
+                folders = mMailbox.getFolderById(getOpCtxt(), Mailbox.ID_FOLDER_USER_ROOT).getSubfolderHierarchy();
+
+			for (Folder folder : folders) {
 				if (!ImapFolder.isFolderVisible(folder, (ImapSession) mSession))
 					continue;
-				String path = ImapFolder.exportPath(folder.getPath(), (ImapSession) mSession);
-				// FIXME: need to determine "name attributes" for mailbox (\Marked, \Unmarked, \Noinferiors, \Noselect)
-				if (path.toUpperCase().matches(mPattern))
-					mMatches.add("LIST (" + getFolderAttributes((ImapSession) mSession, folder, mOutputChildInfo) + ") \"/\" " +
-                                       ImapFolder.formatPath(folder.getPath(), (ImapSession) mSession));
+                ImapPath path = new ImapPath(mPattern.getOwner(), folder.getPath(), mPattern.getSession());
+				if (path.asImapPath().toUpperCase().matches(pattern)) {
+				    // FIXME: need to determine "name attributes" for mailbox (\Marked, \Unmarked, \Noinferiors, \Noselect)
+                    String attrs = isLocal ? getFolderAttributes((ImapSession) mSession, folder, mOutputChildInfo) : "";
+					mMatches.add("LIST (" + attrs + ") \"/\" " + path.asUtf7String());
+                }
 			}
 		}
 	}

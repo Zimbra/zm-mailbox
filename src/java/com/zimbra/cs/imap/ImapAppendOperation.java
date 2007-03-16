@@ -24,18 +24,16 @@
  */
 package com.zimbra.cs.imap;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
-import com.zimbra.cs.imap.ImapSession.EnabledHack;
+import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -45,7 +43,6 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.util.JMSession;
 
 public class ImapAppendOperation extends Operation  {
     private static int LOAD = 10;
@@ -57,7 +54,7 @@ public class ImapAppendOperation extends Operation  {
 
     private ImapSession mImapSession;
     private ImapHandler mHandler;   
-    private String mFolderName;
+    private ImapPath mTargetPath;
     private List<String> mFlagNames;
     private Date mDate;
     private byte[] mContent;
@@ -65,12 +62,12 @@ public class ImapAppendOperation extends Operation  {
     private StringBuilder mAppendHint;
 
     public ImapAppendOperation(ImapSession session, OperationContext oc, Mailbox mbox,
-            				   ImapHandler handler, String folderName, List<String> flagNames,
+            				   ImapHandler handler, ImapPath path, List<String> flagNames,
             				   Date date, byte[] content, List<Tag> newTags, StringBuilder appendHint) {
         super(session, oc, mbox, Requester.IMAP, Requester.IMAP.getPriority(), LOAD);
         mImapSession = session;
         mHandler = handler;
-        mFolderName = folderName;
+        mTargetPath = path;
         mFlagNames = flagNames;
         mDate = date;
         mContent = content;
@@ -80,18 +77,23 @@ public class ImapAppendOperation extends Operation  {
 
     protected void callback() throws ServiceException {
         synchronized (mMailbox) {
-            Folder folder = mMailbox.getFolderByPath(this.getOpCtxt(), mFolderName);
-            if (!ImapFolder.isFolderVisible(folder, (ImapSession) mSession)) {
-                throw ImapServiceException.FOLDER_NOT_VISIBLE(mFolderName);
-            } else if (!ImapFolder.isFolderWritable(folder, (ImapSession) mSession)) {
-                throw ImapServiceException.FOLDER_NOT_WRITABLE(mFolderName);
-            }
+            Folder folder = mMailbox.getFolderByPath(this.getOpCtxt(), mTargetPath.asZimbraPath());
+            if (!ImapFolder.isFolderVisible(folder, (ImapSession) mSession))
+                throw ImapServiceException.FOLDER_NOT_VISIBLE(mTargetPath.asImapPath());
+            else if (!ImapFolder.isFolderWritable(folder, (ImapSession) mSession, ACL.RIGHT_INSERT))
+                throw ImapServiceException.FOLDER_NOT_WRITABLE(mTargetPath.asImapPath());
 
             byte sflags = 0;
             int flagMask = Flag.BITMASK_UNREAD;
             StringBuffer tagStr = new StringBuffer();
             if (mFlagNames != null) {
-                for (ImapFlag i4flag : mHandler.findOrCreateTags(mFlagNames, mNewTags)) {
+                List<ImapFlag> i4flags;
+                if (mTargetPath.belongsTo(mSession.getMailbox()))
+                    i4flags = mHandler.findOrCreateTags(mFlagNames, mNewTags);
+                else
+                    i4flags = mHandler.getSystemFlags(mFlagNames);
+
+                for (ImapFlag i4flag : i4flags) {
                     if (!i4flag.mPermanent)
                         sflags |= i4flag.mBitmask;
                     else if (Tag.validateId(i4flag.mId))
@@ -101,14 +103,6 @@ public class ImapAppendOperation extends Operation  {
                     else
                         flagMask &= ~i4flag.mBitmask;
                 }
-            }
-
-            // if we're using Thunderbird, try to set INTERNALDATE to the message's Date: header
-            if (mDate == null && mImapSession.isHackEnabled(EnabledHack.THUNDERBIRD)) {
-                try {
-                    // inefficient, but must be done before creating the ParsedMessage
-                    mDate = new MimeMessage(JMSession.getSession(), new ByteArrayInputStream(mContent)).getSentDate();
-                } catch (MessagingException e) { }
             }
 
             try {
@@ -141,5 +135,5 @@ public class ImapAppendOperation extends Operation  {
                 throw ServiceException.FAILURE(e.toString(), e);
             }
         }
-    }   
+    }
 }

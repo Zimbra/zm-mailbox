@@ -30,6 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
 
 public class ImapFlagCache {
@@ -80,6 +81,28 @@ public class ImapFlagCache {
     Map<String, ImapFlagCache.ImapFlag> mNames  = new LinkedHashMap<String, ImapFlagCache.ImapFlag>();
     Map<Long, ImapFlagCache.ImapFlag> mBitmasks = new HashMap<Long, ImapFlagCache.ImapFlag>();
 
+    static ImapFlagCache getSystemFlags(Mailbox mbox) {
+        ImapFlagCache i4cache = new ImapFlagCache();
+
+        i4cache.cache(new ImapFlag("\\Answered", mbox.mReplyFlag,    true));
+        i4cache.cache(new ImapFlag("\\Deleted",  mbox.mDeletedFlag,  true));
+        i4cache.cache(new ImapFlag("\\Draft",    mbox.mDraftFlag,    true));
+        i4cache.cache(new ImapFlag("\\Flagged",  mbox.mFlaggedFlag,  true));
+        i4cache.cache(new ImapFlag("\\Seen",     mbox.mUnreadFlag,   false));
+        i4cache.cache(new ImapFlag("$Forwarded", mbox.mForwardFlag,  true));
+        i4cache.cache(new ImapFlag("$MDNSent",   mbox.mNotifiedFlag, true));
+        i4cache.cache(new ImapFlag("Forwarded",  mbox.mForwardFlag,  true));
+
+        i4cache.cache(new ImapFlag("\\Recent",     ImapMessage.FLAG_RECENT,       ImapFlag.HIDDEN));
+        i4cache.cache(new ImapFlag("$Junk",        ImapMessage.FLAG_SPAM,         ImapFlag.VISIBLE));
+        i4cache.cache(new ImapFlag("$NotJunk",     ImapMessage.FLAG_NONSPAM,      ImapFlag.VISIBLE));
+        i4cache.cache(new ImapFlag("Junk",         ImapMessage.FLAG_SPAM,         ImapFlag.VISIBLE));
+        i4cache.cache(new ImapFlag("JunkRecorded", ImapMessage.FLAG_JUNKRECORDED, ImapFlag.VISIBLE));
+        i4cache.cache(new ImapFlag("NonJunk",      ImapMessage.FLAG_NONSPAM,      ImapFlag.VISIBLE));
+        i4cache.cache(new ImapFlag("NotJunk",      ImapMessage.FLAG_NONSPAM,      ImapFlag.VISIBLE));
+
+        return i4cache;
+    }
 
     ImapFlagCache.ImapFlag cache(ImapFlagCache.ImapFlag i4flag) {
         mNames.put(i4flag.mImapName.toUpperCase(), i4flag);

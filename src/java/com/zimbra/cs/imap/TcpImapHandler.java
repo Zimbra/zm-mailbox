@@ -313,13 +313,13 @@ public class TcpImapHandler extends ImapHandler {
         handler.doLIST("A003", "", "");
 
         System.out.println("> B003 CREATE \"/test/slap\"");
-        handler.doCREATE("B003", "/test/slap");
+        handler.doCREATE("B003", new ImapPath("/test/slap", null));
 
         System.out.println("> A004 LIST \"/\" \"%\"");
         handler.doLIST("A004", "/", "[^/]*");
 
         System.out.println("> B004 DELETE \"/test/slap\"");
-        handler.doDELETE("B004", "/test/slap");
+        handler.doDELETE("B004", new ImapPath("/test/slap", null));
 
         System.out.println("> A005 LIST \"/\" \"*\"");
         handler.doLIST("A005", "/", ".*");
@@ -334,16 +334,16 @@ public class TcpImapHandler extends ImapHandler {
         handler.doLIST("D005", "/", "[^/]*/SUB\\(\\)");
 
         System.out.println("> A006 SELECT \"/floo\"");
-        handler.doSELECT("A006", "/floo");
+        handler.doSELECT("A006", new ImapPath("/floo", null));
 
         System.out.println("> B006 SELECT \"/INBOX\"");
-        handler.doSELECT("B006", "/INBOX");
+        handler.doSELECT("B006", new ImapPath("/INBOX", null));
 
         System.out.println("> A007 STATUS \"/Sent\" (UNSEEN UIDVALIDITY MESSAGES)");
-        handler.doSTATUS("A007", "/Sent", STATUS_UNSEEN | STATUS_UIDVALIDITY | STATUS_MESSAGES);
+        handler.doSTATUS("A007", new ImapPath("/Sent", null), STATUS_UNSEEN | STATUS_UIDVALIDITY | STATUS_MESSAGES);
 
         System.out.println("> B007 STATUS \"/INBOX\" (UNSEEN UIDVALIDITY MESSAGES)");
-        handler.doSTATUS("B007", "/INBOX", STATUS_UNSEEN | STATUS_UIDVALIDITY | STATUS_MESSAGES);
+        handler.doSTATUS("B007", new ImapPath("/INBOX", null), STATUS_UNSEEN | STATUS_UIDVALIDITY | STATUS_MESSAGES);
 
         System.out.println("> A008 FETCH 1:3,*:1234 FULL");
         handler.doFETCH("A008", "1:3,*:1234", FETCH_FULL, parts, false);
@@ -358,7 +358,7 @@ public class TcpImapHandler extends ImapHandler {
 
         System.out.println("> A011 STORE 1 +FLAGS ($MDNSent)");
         List<String> flags = new ArrayList<String>();  flags.add("$MDNSENT");
-        handler.doSTORE("A011", "1", flags, STORE_ADD, false, false);
+        handler.doSTORE("A011", "1", flags, StoreAction.ADD, false, false);
 
         ImapRequest req = new TcpImapRequest("X001 LOGIN user1@example.zimbra.com \"\\\\\\\"test123\\\"\\\\\"", handler);
         pieces.clear();  pieces.add(req.readTag());  req.skipSpace();  pieces.add(req.readATOM());  req.skipSpace();  pieces.add(req.readAstring());  req.skipSpace();  pieces.add(req.readAstring());  assert(req.eof());

@@ -31,21 +31,33 @@ package com.zimbra.cs.imap;
 import java.io.IOException;
 import java.io.Writer;
 import java.text.DateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
-import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
-import com.zimbra.cs.mailbox.*;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.session.PendingModifications;
-import com.zimbra.cs.session.Session;
-import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
+import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
+import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.mailbox.MetadataList;
+import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.session.PendingModifications;
+import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.session.Session;
+import com.zimbra.common.soap.Element;
 
 /**
  * @author dkarp
@@ -72,6 +84,9 @@ public class ImapSession extends Session {
 
     public static final long IMAP_IDLE_TIMEOUT_MSEC = 30 * Constants.MILLIS_PER_MINUTE;
 
+    private static final String SN_IMAP = "imap";
+    private static final String FN_SUBSCRIPTIONS = "subs";
+
     private String      mUsername;
     private byte        mState;
     private String      mIdleTag;
@@ -80,19 +95,16 @@ public class ImapSession extends Session {
     private ImapMessageSet mSavedSearchResults;
     private ImapFlagCache mFlags = new ImapFlagCache();
     private ImapFlagCache mTags = new ImapFlagCache();
-    private boolean     mCheckingSpam;
     private EnabledHack mEnabledHack;
 
     public ImapSession(String accountId, String contextId) throws ServiceException {
         super(accountId, contextId, Session.Type.IMAP);
         getMailbox().beginTrackingImap(getContext());
         mState = STATE_AUTHENTICATED;
-        try {
-            Provisioning prov = Provisioning.getInstance();
-            mCheckingSpam = prov.getConfig().getBooleanAttr(Provisioning.A_zimbraSpamCheckEnabled, false);
-
-            parseConfig(getMailbox().getConfig(getContext(), "imap"));
-        } catch (ServiceException e) { }
+        mFlags = ImapFlagCache.getSystemFlags(getMailbox());
+//        try {
+//            parseConfig(getMailbox().getConfig(getContext(), SN_IMAP));
+//        } catch (ServiceException e) { }
     }
 
     public void dumpState(Writer w) {
@@ -102,7 +114,6 @@ public class ImapSession extends Session {
             s.append("\n\t\tstate=").append(mState);
             s.append("\n\t\tidleTag=").append(mIdleTag);
             s.append("\n\t\tselectedFolder=").append(mSelectedFolder.toString());
-            s.append("\n\t\tcheckingSpam=").append(mCheckingSpam);
             s.append("\n\t\thacks=").append(mEnabledHack);
             
             w.write(s.toString());
@@ -117,8 +128,7 @@ public class ImapSession extends Session {
         e.addAttribute("state", mState);
         e.addAttribute("idleTag", mIdleTag);
         if (mSelectedFolder != null) 
-            e.addAttribute("selectedFolder", mSelectedFolder.getPath());
-        e.addAttribute("checkingSpam", mCheckingSpam);
+            e.addAttribute("selectedFolder", mSelectedFolder.getPath().asImapPath());
         if (mEnabledHack != null) 
             e.addAttribute("hacks", mEnabledHack.toString());
         if (mHandler != null) 
@@ -137,6 +147,9 @@ public class ImapSession extends Session {
     String getUsername()          { return mUsername; }
     void setUsername(String name) { mUsername = name; }
 
+    void enableHack(EnabledHack hack)        { mEnabledHack = hack; }
+    boolean isHackEnabled(EnabledHack hack)  { return mEnabledHack == hack; }
+
     void saveSearchResults(ImapMessageSet i4set) {
         i4set.remove(null);
         mSavedSearchResults = i4set;
@@ -148,24 +161,77 @@ public class ImapSession extends Session {
         }
         return mSavedSearchResults;
     }
+
     void markMessageExpunged(ImapMessage i4msg) {
         if (mSavedSearchResults != null)
             mSavedSearchResults.remove(i4msg);
         i4msg.setExpunged(true);
     }
 
-    void enableHack(EnabledHack hack)        { mEnabledHack = hack; }
-    boolean isHackEnabled(EnabledHack hack)  { return mEnabledHack == hack; }
-
     OperationContext getContext() throws ServiceException {
         return new OperationContext(getAccountId());
     }
 
-    boolean isSpamCheckEnabled()  { return mCheckingSpam; }
 
-    private void parseConfig(Metadata config)  { }
+    private Set<String> parseConfig(Metadata config) throws ServiceException {
+        if (config == null || !config.containsKey(FN_SUBSCRIPTIONS))
+            return null;
+        MetadataList slist = config.getList(FN_SUBSCRIPTIONS, true);
+        if (slist == null || slist.isEmpty())
+            return null;
+        Set<String> subscriptions = new HashSet<String>(slist.size());
+        for (int i = 0; i < slist.size(); i++)
+            subscriptions.add(slist.get(i));
+        return subscriptions;
+    }
+
+    private void saveConfig(Set<String> subscriptions) throws ServiceException {
+        MetadataList slist = new MetadataList();
+        if (subscriptions != null && !subscriptions.isEmpty()) {
+            for (String sub : subscriptions)
+                slist.add(sub);
+        }
+        mMailbox.setConfig(getContext(), SN_IMAP, new Metadata().put(FN_SUBSCRIPTIONS, slist));
+    }
+
+    void subscribe(ImapPath path) throws ServiceException {
+        Set<String> subscriptions = listSubscriptions();
+        if (subscriptions != null && !subscriptions.isEmpty()) {
+            String upcase = path.asImapPath().toUpperCase();
+            for (String sub : subscriptions) {
+                if (upcase.equals(sub.toUpperCase()))
+                    return;
+            }
+        }
+        if (subscriptions == null)
+            subscriptions = new HashSet<String>();
+        subscriptions.add(path.asImapPath());
+        saveConfig(subscriptions);
+    }
+
+    void unsubscribe(ImapPath path) throws ServiceException {
+        Set<String> subscriptions = listSubscriptions();
+        if (subscriptions == null || subscriptions.isEmpty())
+            return;
+        String upcase = path.asImapPath().toUpperCase();
+        boolean found = false;
+        for (Iterator<String> it = subscriptions.iterator(); it.hasNext(); ) {
+            if (upcase.equals(it.next().toUpperCase())) {
+                it.remove();  found = true;
+            }
+        }
+        if (!found)
+            return;
+        saveConfig(subscriptions);
+    }
+
+    Set<String> listSubscriptions() throws ServiceException {
+        return parseConfig(mMailbox.getConfig(getContext(), SN_IMAP));
+    }
+
 
     boolean isSelected()  { return mState == STATE_SELECTED; }
+
     void selectFolder(ImapFolder folder) {
         if (mState != STATE_LOGOUT) {
             mSelectedFolder = folder;
@@ -173,6 +239,7 @@ public class ImapSession extends Session {
         }
         mSavedSearchResults = null;
     }
+
     ImapFolder deselectFolder() {
         ImapFolder i4folder = null;
         if (mState != STATE_LOGOUT) {
@@ -183,34 +250,18 @@ public class ImapSession extends Session {
         mSavedSearchResults = null;
         return i4folder;
     }
+
     void loggedOut()        { mState = STATE_LOGOUT; }
+
     ImapFolder getFolder()  { return mSelectedFolder; }
 
+
     void beginIdle(String tag)  { mIdleTag = tag; }
+
     String endIdle()            { String tag = mIdleTag;  mIdleTag = null;  return tag; }
+
     boolean isIdle()            { return mIdleTag != null; }
 
-
-    void cacheFlags(Mailbox mbox) {
-        mFlags.clear();
-
-        mFlags.cache(new ImapFlag("\\Answered", mbox.mReplyFlag,    true));
-        mFlags.cache(new ImapFlag("\\Deleted",  mbox.mDeletedFlag,  true));
-        mFlags.cache(new ImapFlag("\\Draft",    mbox.mDraftFlag,    true));
-        mFlags.cache(new ImapFlag("\\Flagged",  mbox.mFlaggedFlag,  true));
-        mFlags.cache(new ImapFlag("\\Seen",     mbox.mUnreadFlag,   false));
-        mFlags.cache(new ImapFlag("$Forwarded", mbox.mForwardFlag,  true));
-        mFlags.cache(new ImapFlag("$MDNSent",   mbox.mNotifiedFlag, true));
-        mFlags.cache(new ImapFlag("Forwarded",  mbox.mForwardFlag,  true));
-
-        mFlags.cache(new ImapFlag("\\Recent",     ImapMessage.FLAG_RECENT,       ImapFlag.HIDDEN));
-        mFlags.cache(new ImapFlag("$Junk",        ImapMessage.FLAG_SPAM,         ImapFlag.VISIBLE));
-        mFlags.cache(new ImapFlag("$NotJunk",     ImapMessage.FLAG_NONSPAM,      ImapFlag.VISIBLE));
-        mFlags.cache(new ImapFlag("Junk",         ImapMessage.FLAG_SPAM,         ImapFlag.VISIBLE));
-        mFlags.cache(new ImapFlag("JunkRecorded", ImapMessage.FLAG_JUNKRECORDED, ImapFlag.VISIBLE));
-        mFlags.cache(new ImapFlag("NonJunk",      ImapMessage.FLAG_NONSPAM,      ImapFlag.VISIBLE));
-        mFlags.cache(new ImapFlag("NotJunk",      ImapMessage.FLAG_NONSPAM,      ImapFlag.VISIBLE));
-    }
 
     ImapFlag cacheTag(Tag ltag) {
         return (ltag instanceof Flag ? null : mTags.cache(new ImapFlag(ltag.getName(), ltag, true)));
@@ -384,7 +435,7 @@ public class ImapSession extends Session {
                     mSelectedFolder.dirtyTag(ltag.getId());
 //            } else if (chg.what instanceof Mailbox && (chg.why & Change.MODIFIED_CONFIG) != 0) {
 //                try {
-//                    parseConfig(((Mailbox) chg.what).getConfig(getContext(), "imap"));
+//                    parseConfig(((Mailbox) chg.what).getConfig(getContext(), SN_IMAP));
 //                } catch (ServiceException e) { }
             } else if (!selected) {
                 continue;
