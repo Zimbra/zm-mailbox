@@ -31,7 +31,6 @@ import java.io.Writer;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Iterator;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -156,7 +155,7 @@ public class OzImapConnectionHandler extends ImapHandler implements OzConnection
 
     @Override
     boolean doSTARTTLS(String tag) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_NOT_AUTHENTICATED))
+        if (!checkState(tag, State.NOT_AUTHENTICATED))
             return CONTINUE_PROCESSING;
         else if (mStartedTLS) {
             sendNO(tag, "TLS already started");
@@ -206,41 +205,6 @@ public class OzImapConnectionHandler extends ImapHandler implements OzConnection
         return new BufferedOutputStream(new ConnectionOutputStream(), 4000);
     }
 
-
-    @Override
-    public void sendNotifications(boolean notifyExpunges, boolean flush) throws IOException {
-        if (mSession == null || mSession.getFolder() == null || mMailbox == null)
-            return;
-
-        // is this the right thing to synchronize on?
-        synchronized (mMailbox) {
-            // FIXME: notify untagged NO if close to quota limit
-
-            ImapFolder i4folder = mSession.getFolder();
-            boolean removed = false, received = i4folder.checkpointSize();
-            if (notifyExpunges) {
-                for (Integer index : i4folder.collapseExpunged()) {
-                    sendUntagged(index + " EXPUNGE");  removed = true;
-                }
-            }
-            i4folder.checkpointSize();
-
-            // notify of any message flag changes
-            for (Iterator<ImapMessage> it = i4folder.dirtyIterator(); it.hasNext(); ) {
-                ImapMessage i4msg = it.next();
-                if (i4msg.isAdded())
-                    i4msg.setAdded(false);
-                else
-                	sendUntagged(i4msg.sequence + " FETCH (" + i4msg.getFlags(mSession) + ')');
-            }
-            i4folder.clearDirty();
-
-            // FIXME: not handling RECENT
-
-            if (received || removed)
-                sendUntagged(i4folder.getSize() + " EXISTS");
-        }
-    }
 
     @Override void flushOutput()  { }
 

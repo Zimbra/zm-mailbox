@@ -76,21 +76,14 @@ public class ImapSession extends Session {
         public String toString()  { return extension; }
     }
 
-    static final byte STATE_NOT_AUTHENTICATED = 0;
-    static final byte STATE_AUTHENTICATED     = 1;
-    static final byte STATE_SELECTED          = 2;
-    static final byte STATE_LOGOUT            = 3;
-
     public static final long IMAP_IDLE_TIMEOUT_MSEC = 30 * Constants.MILLIS_PER_MINUTE;
 
     private static final String SN_IMAP = "imap";
     private static final String FN_SUBSCRIPTIONS = "subs";
 
     private String      mUsername;
-    private byte        mState;
     private String      mIdleTag;
     private ImapHandler mHandler;
-    private ImapFolder  mSelectedFolder;
     private ImapFlagCache mFlags = new ImapFlagCache();
     private ImapFlagCache mTags = new ImapFlagCache();
     private EnabledHack mEnabledHack;
@@ -98,7 +91,6 @@ public class ImapSession extends Session {
     public ImapSession(String accountId, String contextId) throws ServiceException {
         super(accountId, contextId, Session.Type.IMAP);
         getMailbox().beginTrackingImap(getContext());
-        mState = STATE_AUTHENTICATED;
         mFlags = ImapFlagCache.getSystemFlags(getMailbox());
 //        try {
 //            parseConfig(getMailbox().getConfig(getContext(), SN_IMAP));
@@ -109,9 +101,8 @@ public class ImapSession extends Session {
         try {
             StringBuilder s = new StringBuilder(this.toString());
             s.append("\n\t\tuser=").append(mUsername);
-            s.append("\n\t\tstate=").append(mState);
             s.append("\n\t\tidleTag=").append(mIdleTag);
-            s.append("\n\t\tselectedFolder=").append(mSelectedFolder.toString());
+//            s.append("\n\t\tselectedFolder=").append(mSelectedFolder.toString());
             s.append("\n\t\thacks=").append(mEnabledHack);
             
             w.write(s.toString());
@@ -123,22 +114,19 @@ public class ImapSession extends Session {
     public void doEncodeState(Element parent) {
         Element e = parent.addElement("imap");
         e.addAttribute("username", mUsername);
-        e.addAttribute("state", mState);
         e.addAttribute("idleTag", mIdleTag);
-        if (mSelectedFolder != null) 
-            e.addAttribute("selectedFolder", mSelectedFolder.getPath().asImapPath());
+//        if (mSelectedFolder != null) 
+//            e.addAttribute("selectedFolder", mSelectedFolder.getPath().asImapPath());
         if (mEnabledHack != null) 
             e.addAttribute("hacks", mEnabledHack.toString());
         if (mHandler != null) 
             mHandler.encodeState(e);
     }
-    
+
 
     protected long getSessionIdleLifetime() {
         return IMAP_IDLE_TIMEOUT_MSEC;
     }
-
-    static byte getState(ImapSession s)  { return s == null ? STATE_NOT_AUTHENTICATED : s.mState; }
 
     void setHandler(ImapHandler handler)  { mHandler = handler; }
 
@@ -210,30 +198,6 @@ public class ImapSession extends Session {
     }
 
 
-    boolean isSelected()  { return mState == STATE_SELECTED; }
-
-    void selectFolder(ImapFolder folder) {
-        if (mState != STATE_LOGOUT) {
-            mSelectedFolder = folder;
-            mState = STATE_SELECTED;
-        }
-    }
-
-    ImapFolder deselectFolder() {
-        ImapFolder i4folder = null;
-        if (mState != STATE_LOGOUT) {
-            mState = STATE_AUTHENTICATED;
-            i4folder = mSelectedFolder;
-            mSelectedFolder = null;
-        }
-        return i4folder;
-    }
-
-    void loggedOut()        { mState = STATE_LOGOUT; }
-
-    ImapFolder getFolder()  { return mSelectedFolder; }
-
-
     void beginIdle(String tag)  { mIdleTag = tag; }
 
     String endIdle()            { String tag = mIdleTag;  mIdleTag = null;  return tag; }
@@ -288,14 +252,13 @@ public class ImapSession extends Session {
         if (!pns.hasNotifications())
             return;
 
-        // technically, the order to proceed is deleted -> created -> modified,
-        //   but this should still work properly in the general case and do the right thing for COPY
-        AddedItems added = (mSelectedFolder == null ? null : new AddedItems());
-        if (pns.created != null)
-            if (!handleCreates(pns.created, added))
-                return;
+        ImapFolder selectedFolder = mHandler.getSelectedFolder();
+        AddedItems added = (selectedFolder == null ? null : new AddedItems());
         if (pns.deleted != null)
             if (!handleDeletes(pns.deleted))
+                return;
+        if (pns.created != null)
+            if (!handleCreates(pns.created, added))
                 return;
         if (pns.modified != null)
             if (!handleModifies(pns.modified, added))
@@ -310,10 +273,10 @@ public class ImapSession extends Session {
                 // if messages have acceptable UIDs, just add 'em
                 StringBuilder addlog = debug ? new StringBuilder("  ** adding messages (ntfn):") : null;
                 for (ImapMessage i4msg : added.numbered) {
-                    mSelectedFolder.cache(i4msg);
+                    selectedFolder.cache(i4msg);
                     if (debug)  addlog.append(' ').append(i4msg.msgId);
                     i4msg.setAdded(true);
-                    mSelectedFolder.dirtyMessage(i4msg);
+                    selectedFolder.dirtyMessage(i4msg);
                 }
                 if (debug)  ZimbraLog.imap.debug(addlog);
             }
@@ -349,27 +312,26 @@ public class ImapSession extends Session {
     }
 
     private boolean handleDeletes(Map<Integer, Object> deleted) {
-        boolean selected = mSelectedFolder != null;
+        ImapFolder selectedFolder = mHandler.getSelectedFolder();
+        boolean selected = selectedFolder != null;
         for (Object obj : deleted.values()) {
             int id = (obj instanceof MailItem ? ((MailItem) obj).getId() : ((Integer) obj).intValue());
             if (Tag.validateId(id)) {
                 mTags.uncache(1L << Tag.getIndex(id));
                 if (selected)
-                    mSelectedFolder.dirtyTag(id, true);
+                    selectedFolder.dirtyTag(id, true);
             } else if (!selected || id <= 0) {
                 continue;
-            } else if (id == mSelectedFolder.getId()) {
+            } else if (id == selectedFolder.getId()) {
                 // notify client that mailbox is deselected due to delete?
                 // RFC 2180 3.3: "The server MAY allow the DELETE/RENAME of a multi-accessed
                 //                mailbox, but disconnect all other clients who have the
                 //                mailbox accessed by sending a untagged BYE response."
-                mState = STATE_AUTHENTICATED;
-                mSelectedFolder = null;
-                selected = false;
+                mHandler.dropConnection(true);
             } else {
-                ImapMessage i4msg = mSelectedFolder.getById(id);
+                ImapMessage i4msg = selectedFolder.getById(id);
                 if (i4msg != null) {
-                    mSelectedFolder.markMessageExpunged(i4msg);
+                    selectedFolder.markMessageExpunged(i4msg);
                     ZimbraLog.imap.debug("  ** deleted (ntfn): " + i4msg.msgId);
                 }
             }
@@ -378,7 +340,8 @@ public class ImapSession extends Session {
     }
 
     private boolean handleCreates(Map<Integer, MailItem> created, AddedItems newItems) {
-        boolean selected = mSelectedFolder != null;
+        ImapFolder selectedFolder = mHandler.getSelectedFolder();
+        boolean selected = selectedFolder != null;
         for (MailItem item : created.values()) {
             if (item instanceof Tag) {
                 cacheTag((Tag) item);
@@ -386,12 +349,12 @@ public class ImapSession extends Session {
                 continue;
             } else if (!(item instanceof Message || item instanceof Contact)) {
                 continue;
-            } else if (item.getFolderId() == mSelectedFolder.getId()) {
+            } else if (item.getFolderId() == selectedFolder.getId()) {
                 int msgId = item.getId();
                 // make sure this message hasn't already been detected in the folder
-                if (mSelectedFolder.getById(msgId) != null)
+                if (selectedFolder.getById(msgId) != null)
                     continue;
-                ImapMessage i4msg = mSelectedFolder.getByImapId(item.getImapUid());
+                ImapMessage i4msg = selectedFolder.getByImapId(item.getImapUid());
                 if (i4msg == null)
                     newItems.add(item);
                 ZimbraLog.imap.debug("  ** created (ntfn): " + msgId);
@@ -401,8 +364,9 @@ public class ImapSession extends Session {
     }
 
     private boolean handleModifies(Map<Integer, Change> modified, AddedItems newItems) {
-        boolean selected = mSelectedFolder != null;
-        boolean virtual = selected && mSelectedFolder.isVirtual();
+        ImapFolder selectedFolder = mHandler.getSelectedFolder();
+        boolean selected = selectedFolder != null;
+        boolean virtual = selected && selectedFolder.isVirtual();
         boolean debug = ZimbraLog.imap.isDebugEnabled();
         for (Change chg : modified.values()) {
             if (chg.what instanceof Tag && (chg.why & Change.MODIFIED_NAME) != 0) {
@@ -410,25 +374,23 @@ public class ImapSession extends Session {
                 mTags.uncache(ltag.getBitmask());
                 cacheTag(ltag);
                 if (selected)
-                    mSelectedFolder.dirtyTag(ltag.getId());
+                    selectedFolder.dirtyTag(ltag.getId());
 //            } else if (chg.what instanceof Mailbox && (chg.why & Change.MODIFIED_CONFIG) != 0) {
 //                try {
 //                    parseConfig(((Mailbox) chg.what).getConfig(getContext(), SN_IMAP));
 //                } catch (ServiceException e) { }
             } else if (!selected) {
                 continue;
-            } else if (chg.what instanceof Folder && ((Folder) chg.what).getId() == mSelectedFolder.getId()) {
+            } else if (chg.what instanceof Folder && ((Folder) chg.what).getId() == selectedFolder.getId()) {
                 Folder folder = (Folder) chg.what;
                 if ((chg.why & Change.MODIFIED_FLAGS) != 0 && (folder.getFlagBitmask() & Flag.BITMASK_DELETED) != 0) {
                     // notify client that mailbox is deselected due to \Noselect?
                     // RFC 2180 3.3: "The server MAY allow the DELETE/RENAME of a multi-accessed
                     //                mailbox, but disconnect all other clients who have the
                     //                mailbox accessed by sending a untagged BYE response."
-                    mState = STATE_AUTHENTICATED;
-                    mSelectedFolder = null;
-                    selected = false;
+                    mHandler.dropConnection(true);
                 } else if ((chg.why & (Change.MODIFIED_FOLDER | Change.MODIFIED_NAME)) != 0) {
-                    mSelectedFolder.updatePath(folder);
+                    selectedFolder.updatePath(folder);
                     // FIXME: can we change the folder's UIDVALIDITY?
                     //        if not, how do we persist it for the session?
                     // RFC 2180 3.4: "The server MAY allow the RENAME of a multi-accessed mailbox
@@ -436,22 +398,22 @@ public class ImapSession extends Session {
                 }
             } else if (chg.what instanceof Message || chg.what instanceof Contact) {
                 MailItem item = (MailItem) chg.what;
-                boolean inFolder = virtual || (item.getFolderId() == mSelectedFolder.getId());
+                boolean inFolder = virtual || (item.getFolderId() == selectedFolder.getId());
                 if (!inFolder && (chg.why & Change.MODIFIED_FOLDER) == 0)
                     continue;
-                ImapMessage i4msg = mSelectedFolder.getById(item.getId());
+                ImapMessage i4msg = selectedFolder.getById(item.getId());
                 if (i4msg == null) {
                     if (inFolder && !virtual) {
                         newItems.add(item);
                         if (debug)  ZimbraLog.imap.debug("  ** moved (ntfn): " + item.getId());
                     }
                 } else if (!inFolder && !virtual) {
-                    mSelectedFolder.markMessageExpunged(i4msg);
+                    selectedFolder.markMessageExpunged(i4msg);
                 } else if ((chg.why & (Change.MODIFIED_TAGS | Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD)) != 0) {
-                    i4msg.setPermanentFlags(item.getFlagBitmask(), item.getTagBitmask(), mSelectedFolder);
+                    i4msg.setPermanentFlags(item.getFlagBitmask(), item.getTagBitmask(), selectedFolder);
                 } else if ((chg.why & Change.MODIFIED_IMAP_UID) != 0) {
                     // if the IMAP uid changed, need to bump it to the back of the sequence!
-                    mSelectedFolder.markMessageExpunged(i4msg);
+                    selectedFolder.markMessageExpunged(i4msg);
                     if (!virtual)
                         newItems.add(item);
                     if (debug)  ZimbraLog.imap.debug("  ** imap uid changed (ntfn): " + item.getId());

@@ -74,20 +74,20 @@ class ImapURL {
     private int mUid;
     private ImapPartSpecifier mPart;
 
-    ImapURL(String tag, ImapSession session, String url) throws ImapParseException {
+    ImapURL(String tag, ImapHandler handler, ImapSession session, String url) throws ImapParseException {
         if (url == null || url.length() == 0)
             throw new ImapUrlException(tag, url, "blank/null IMAP URL");
         parse(tag, session, url);
         mURL = url;
 
         if (mPath == null || mPath.asZimbraPath().length() == 0) {
-            if (ImapSession.getState(session) != ImapSession.STATE_SELECTED)
+            if (handler.getState() != ImapHandler.State.SELECTED)
                 throw new ImapUrlException(tag, url, "IMAP URL must specify folder if session not SELECTED");
-            mPath = session.getFolder().getPath();
+            mPath = handler.getSelectedFolder().getPath();
         }
 
         if (mUsername == null || mUsername.length() == 0) {
-            if (ImapSession.getState(session) == ImapSession.STATE_NOT_AUTHENTICATED)
+            if (handler.getState() == ImapHandler.State.NOT_AUTHENTICATED)
                 throw new ImapUrlException(tag, url, "IMAP URL must specify user if session not AUTHENTICATED");
             mUsername = session.getUsername();
             if (mPath != null && mPath.getOwner() != null) {
@@ -191,9 +191,9 @@ class ImapURL {
         }
     }
 
-    public byte[] getContent(ImapSession session, String tag) throws ImapParseException {
-        byte state = ImapSession.getState(session);
-        if (state == ImapSession.STATE_NOT_AUTHENTICATED)
+    public byte[] getContent(ImapHandler handler, ImapSession session, String tag) throws ImapParseException {
+        ImapHandler.State state = handler.getState();
+        if (state == ImapHandler.State.NOT_AUTHENTICATED)
             throw new ImapUrlException(tag, mURL, "must be in AUTHENTICATED state");
 
         try {
@@ -204,8 +204,8 @@ class ImapURL {
             OperationContext octxt = session.getContext();
             byte[] content = null;
             // special-case the situation where the relevant folder is already SELECTed
-            if (acct.getId().equals(session.getAccountId()) && state == ImapSession.STATE_SELECTED) {
-                ImapFolder i4folder = session.getFolder();
+            if (acct.getId().equals(session.getAccountId()) && state == ImapHandler.State.SELECTED) {
+                ImapFolder i4folder = handler.getSelectedFolder();
                 if (i4folder != null && mPath.equals(i4folder.getPath())) {
                     ImapMessage i4msg = i4folder.getByImapId(mUid);
                     if (i4msg == null || i4msg.isExpunged())
@@ -274,16 +274,17 @@ class ImapURL {
 
     public static void main(String[] args) throws ImapParseException, ServiceException {
         Account acct = Provisioning.getInstance().get(AccountBy.name, "user1@macbeth.liquidsys.com");
+        ImapHandler handler = new TcpImapHandler(null);
         ImapSession session = new ImapSession(acct.getId(), "test");
         session.setUsername(acct.getName());
-        session.selectFolder(new ImapFolder(new ImapPath("trash", session), true, session));
+        handler.setSelectedFolder(new ImapFolder(new ImapPath("trash", session), true, session));
 
-        System.out.println(new ImapURL("tag", session, "/Drafts;UIDVALIDITY=385759045/;UID=20/;section=HEADER"));
-        System.out.println(new ImapURL("tag", session, "/;UID=20/;section=1.mime"));
-        System.out.println(new ImapURL("tag", session, "/INBOX;UIDVALIDITY=785799047/;UID=113330/;section=1.5.9"));
-        System.out.println(new ImapURL("tag", session, "imap://minbari.org:7143/\\\"gray-council\\\";UIDVALIDITY=385759045/;UID=20"));
-        System.out.println(new ImapURL("tag", session, "imap://bester;auth=gssapi@psicorp.org/~peter/%E6%97%A5%E6%9C%AC%E8%AA%9E/%E5%8F%B0%E5%8C%97/;UID=11916"));
-        System.out.println(new ImapURL("tag", session, "imap://;AUTH=*@minbari.org/gray-council/;uid=20/;section="));
+        System.out.println(new ImapURL("tag", handler, session, "/Drafts;UIDVALIDITY=385759045/;UID=20/;section=HEADER"));
+        System.out.println(new ImapURL("tag", handler, session, "/;UID=20/;section=1.mime"));
+        System.out.println(new ImapURL("tag", handler, session, "/INBOX;UIDVALIDITY=785799047/;UID=113330/;section=1.5.9"));
+        System.out.println(new ImapURL("tag", handler, session, "imap://minbari.org:7143/\\\"gray-council\\\";UIDVALIDITY=385759045/;UID=20"));
+        System.out.println(new ImapURL("tag", handler, session, "imap://bester;auth=gssapi@psicorp.org/~peter/%E6%97%A5%E6%9C%AC%E8%AA%9E/%E5%8F%B0%E5%8C%97/;UID=11916"));
+        System.out.println(new ImapURL("tag", handler, session, "imap://;AUTH=*@minbari.org/gray-council/;uid=20/;section="));
 
         System.out.println(new ImapUrlException("tag", "\"\\\"", "msg").mCode);
     }

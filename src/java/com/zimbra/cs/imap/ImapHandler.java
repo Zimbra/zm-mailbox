@@ -134,6 +134,8 @@ public abstract class ImapHandler extends ProtocolHandler {
         }
     }
 
+    enum State { NOT_AUTHENTICATED, AUTHENTICATED, SELECTED, LOGOUT }
+
     private static final long MAXIMUM_IDLE_PROCESSING_MILLIS = 15 * Constants.MILLIS_PER_SECOND;
 
     static final char[] LINE_SEPARATOR       = { '\r', '\n' };
@@ -146,6 +148,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     Authenticator mAuthenticator;
     ImapSession   mSession;
     Mailbox       mMailbox;
+    ImapFolder    mSelectedFolder;
     String        mLastCommand;
     boolean       mStartedTLS;
     boolean       mGoodbyeSent;
@@ -247,7 +250,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                                     req.skipSpace();
                                 String type = req.readATOM();  req.skipSpace();
                                 if (type.equals("TEXT"))      parts.add(req.readLiteral());
-                                else if (type.equals("URL"))  parts.add(new ImapURL(tag, mSession, req.readAstring()));
+                                else if (type.equals("URL"))  parts.add(new ImapURL(tag, this, mSession, req.readAstring()));
                                 else throw new ImapParseException(tag, "unknown CATENATE cat-part: " + type);
                             }
                             req.skipChar(')');  checkEOF(tag, req);
@@ -477,20 +480,39 @@ public abstract class ImapHandler extends ProtocolHandler {
         throw new ImapParseException(tag, "command not implemented");
     }
 
-    boolean checkState(String tag, byte required) throws IOException {
-        byte state = ImapSession.getState(mSession);
-        if (required == ImapSession.STATE_NOT_AUTHENTICATED && state != ImapSession.STATE_NOT_AUTHENTICATED) {
+    State getState() {
+        if (mGoodbyeSent)
+            return State.LOGOUT;
+        else if (mSelectedFolder != null)
+            return State.SELECTED;
+        else if (mSession != null)
+            return State.AUTHENTICATED;
+        else
+            return State.NOT_AUTHENTICATED;
+    }
+
+    boolean checkState(String tag, State required) throws IOException {
+        State state = getState();
+        if (required == State.NOT_AUTHENTICATED && state != State.NOT_AUTHENTICATED) {
             sendNO(tag, "must be in NOT AUTHENTICATED state");
             return false;
-        } else if (required == ImapSession.STATE_AUTHENTICATED && (state == ImapSession.STATE_NOT_AUTHENTICATED || state == ImapSession.STATE_LOGOUT)) {
+        } else if (required == State.AUTHENTICATED && (state == State.NOT_AUTHENTICATED || state == State.LOGOUT)) {
             sendNO(tag, "must be in AUTHENTICATED or SELECTED state");
             return false;
-        } else if (required == ImapSession.STATE_SELECTED && state != ImapSession.STATE_SELECTED) {
+        } else if (required == State.SELECTED && state != State.SELECTED) {
             sendNO(tag, "must be in SELECTED state");
             return false;
         } else {
             return true;
         }
+    }
+
+    ImapFolder getSelectedFolder() {
+        return getState() == State.LOGOUT ? null : mSelectedFolder;
+    }
+
+    void setSelectedFolder(ImapFolder i4folder) {
+        mSelectedFolder = i4folder;
     }
 
     private boolean canContinue(ServiceException e) {
@@ -587,15 +609,13 @@ public abstract class ImapHandler extends ProtocolHandler {
 
     boolean doLOGOUT(String tag) throws IOException {
         sendUntagged(ImapServer.getGoodbye());
-        if (mSession != null)
-            mSession.loggedOut();
         mGoodbyeSent = true;
         sendOK(tag, "LOGOUT completed");
         return STOP_PROCESSING;
     }
 
     boolean doAUTHENTICATE(String tag, String mechanism, byte[] response) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_NOT_AUTHENTICATED))
+        if (!checkState(tag, State.NOT_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
         boolean finished = false;
@@ -631,7 +651,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     boolean doLOGIN(String tag, String username, String password) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_NOT_AUTHENTICATED))
+        if (!checkState(tag, State.NOT_AUTHENTICATED))
             return CONTINUE_PROCESSING;
         else if (!mStartedTLS && !ImapServer.allowCleartextLogins()) {
             sendNO(tag, "cleartext logins disabled");
@@ -748,15 +768,14 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     private boolean selectFolder(String tag, String command, ImapPath path) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
+        if (!checkState(tag, State.AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
         // 6.3.1: "The SELECT command automatically deselects any currently selected mailbox 
         //         before attempting the new selection.  Consequently, if a mailbox is selected
         //         and a SELECT command that fails is attempted, no mailbox is selected."
-        ImapFolder i4folder = null;
-        if (mSession.isSelected())
-            i4folder = mSession.deselectFolder();
+        ImapFolder i4folder = mSelectedFolder;
+        setSelectedFolder(mSelectedFolder);
 
         boolean writable = command.equals("SELECT");
         try {
@@ -779,7 +798,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         }
 
         writable = i4folder.isWritable();
-        mSession.selectFolder(i4folder);
+        setSelectedFolder(i4folder);
 
         // note: not sending back a "* OK [UIDNEXT ....]" response for search folders
         //    6.3.1: "If this is missing, the client can not make any assumptions about the
@@ -799,7 +818,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     boolean doCREATE(String tag, ImapPath path) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
+        if (!checkState(tag, State.AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
         if (!path.isCreatable()) {
@@ -839,7 +858,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     boolean doDELETE(String tag, ImapPath path) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
+        if (!checkState(tag, State.AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
         try {
@@ -873,8 +892,8 @@ public abstract class ImapHandler extends ProtocolHandler {
             return canContinue(e);
         }
 
-        if (mSession.isSelected() && path.equals(mSession.getFolder().getPath()))
-            mSession.deselectFolder();
+        if (mSelectedFolder != null && path.equals(mSelectedFolder.getPath()))
+            setSelectedFolder(null);
 
         sendNotifications(true, false);
         sendOK(tag, "DELETE completed");
@@ -882,7 +901,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     boolean doRENAME(String tag, ImapPath oldPath, ImapPath newPath) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
+        if (!checkState(tag, State.AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
         try {
@@ -934,7 +953,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     boolean doSUBSCRIBE(String tag, ImapPath path) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
+        if (!checkState(tag, State.AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
         try {
@@ -966,7 +985,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     boolean doUNSUBSCRIBE(String tag, ImapPath path) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
+        if (!checkState(tag, State.AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
         try {
@@ -990,7 +1009,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     boolean doLIST(String tag, String referenceName, String mailboxName) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
+        if (!checkState(tag, State.AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
         if (mailboxName.equals("")) {
@@ -1057,7 +1076,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     boolean doLSUB(String tag, String referenceName, String mailboxName) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
+        if (!checkState(tag, State.AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
         String pattern = mailboxName;
@@ -1094,7 +1113,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     static final int STATUS_UNSEEN      = 0x10;
 
     boolean doSTATUS(String tag, ImapPath path, int status) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
+        if (!checkState(tag, State.AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
         StringBuilder data = new StringBuilder();
@@ -1159,7 +1178,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     boolean doCATENATE(String tag, ImapPath path, List<String> flagNames, Date date, List<Object> parts) throws IOException, ImapParseException {
-        if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
+        if (!checkState(tag, State.AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -1169,7 +1188,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             if (part instanceof byte[])
                 buffer = (byte[]) part;
             else
-                buffer = ((ImapURL) part).getContent(mSession, tag);
+                buffer = ((ImapURL) part).getContent(this, mSession, tag);
 
             size += buffer.length;
             if (size > ImapRequest.getMaxRequestLength())
@@ -1180,7 +1199,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     boolean doAPPEND(String tag, ImapPath path, List<String> flagNames, Date date, byte[] content) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
+        if (!checkState(tag, State.AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
         // if we're using Thunderbird, try to set INTERNALDATE to the message's Date: header
@@ -1318,7 +1337,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     //              and as long as an IDLE command is active, the server is now free to send
     //              untagged EXISTS, EXPUNGE, and other messages at any time."
     boolean doIDLE(String tag, boolean begin, boolean success) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
+        if (!checkState(tag, State.AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
         if (begin == IDLE_START) {
@@ -1334,7 +1353,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     boolean doSETQUOTA(String tag, String qroot, Map<String, String> limits) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
+        if (!checkState(tag, State.AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
         // cannot set quota from IMAP at present
@@ -1343,7 +1362,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     boolean doGETQUOTA(String tag, ImapPath qroot) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
+        if (!checkState(tag, State.AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
         try {
@@ -1373,7 +1392,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     boolean doGETQUOTAROOT(String tag, ImapPath qroot) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
+        if (!checkState(tag, State.AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
         try {
@@ -1410,7 +1429,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     boolean doNAMESPACE(String tag) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
+        if (!checkState(tag, State.AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
         sendUntagged("NAMESPACE ((\"\" \"/\")) ((\"" + ImapPath.NAMESPACE_PREFIX + "\" \"/\")) NIL");
@@ -1420,7 +1439,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     boolean doCHECK(String tag) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_SELECTED))
+        if (!checkState(tag, State.SELECTED))
             return CONTINUE_PROCESSING;
 
         sendNotifications(true, false);
@@ -1429,7 +1448,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     boolean doCLOSE(String tag) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_SELECTED))
+        if (!checkState(tag, State.SELECTED))
             return CONTINUE_PROCESSING;
 
         try {
@@ -1439,16 +1458,15 @@ public abstract class ImapHandler extends ProtocolHandler {
             //
             //         No messages are removed, and no error is given, if the mailbox is
             //         selected by an EXAMINE command or is otherwise selected read-only."
-            ImapFolder i4folder = mSession.getFolder();
-            if (i4folder.isWritable())
-                expungeMessages(i4folder, null);
+            if (mSelectedFolder.isWritable())
+                expungeMessages(mSelectedFolder, null);
         } catch (ServiceException e) {
             ZimbraLog.imap.warn("EXPUNGE failed", e);
             sendNO(tag, "EXPUNGE failed");
             return canContinue(e);
         }
 
-        mSession.deselectFolder();
+        setSelectedFolder(null);
 
         sendOK(tag, "CLOSE completed");
         return CONTINUE_PROCESSING;
@@ -1459,26 +1477,26 @@ public abstract class ImapHandler extends ProtocolHandler {
     //              performs the same actions as CLOSE, except that no messages are permanently
     //              removed from the currently selected mailbox."
     boolean doUNSELECT(String tag) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_SELECTED))
+        if (!checkState(tag, State.SELECTED))
             return CONTINUE_PROCESSING;
 
-        mSession.deselectFolder();
+        setSelectedFolder(null);
 
         sendOK(tag, "UNSELECT completed");
         return CONTINUE_PROCESSING;
     }
 
     boolean doEXPUNGE(String tag, boolean byUID, String sequenceSet) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_SELECTED)) {
+        if (!checkState(tag, State.SELECTED)) {
             return CONTINUE_PROCESSING;
-        } else if (!mSession.getFolder().isWritable()) {
+        } else if (!mSelectedFolder.isWritable()) {
             sendNO(tag, "mailbox selected READ-ONLY");
             return CONTINUE_PROCESSING;
         }
 
         String command = (byUID ? "UID EXPUNGE" : "EXPUNGE");
         try {
-            expungeMessages(mSession.getFolder(), sequenceSet);
+            expungeMessages(mSelectedFolder, sequenceSet);
         } catch (ServiceException e) {
             ZimbraLog.imap.warn(command + " failed", e);
             sendNO(tag, command + " failed");
@@ -1542,7 +1560,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     static final byte[] ITEM_TYPES = new byte[] { MailItem.TYPE_MESSAGE, MailItem.TYPE_CONTACT };
 
     boolean doSEARCH(String tag, ImapSearch i4search, boolean byUID, Integer options) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_SELECTED))
+        if (!checkState(tag, State.SELECTED))
             return CONTINUE_PROCESSING;
 
         boolean saveResults = (options != null && (options & RETURN_SAVE) != 0);
@@ -1550,17 +1568,16 @@ public abstract class ImapHandler extends ProtocolHandler {
 
         try {
             synchronized (mMailbox) {
-                ImapFolder i4folder = mSession.getFolder();
                 if (i4search.canBeRunLocally()) {
-                    hits = i4search.evaluate(i4folder);
+                    hits = i4search.evaluate(mSelectedFolder);
                 } else {
-                    String search = i4search.toZimbraSearch(i4folder);
-                    if (!i4folder.isVirtual())
-                        search = "in:" + i4folder.getQuotedPath() + ' ' + search;
-                    else if (i4folder.getSize() <= LARGEST_FOLDER_BATCH)
-                        search = ImapSearch.sequenceAsSearchTerm(i4folder, i4folder.getSubsequence("1:*", false), false) + ' ' + search;
+                    String search = i4search.toZimbraSearch(mSelectedFolder);
+                    if (!mSelectedFolder.isVirtual())
+                        search = "in:" + mSelectedFolder.getQuotedPath() + ' ' + search;
+                    else if (mSelectedFolder.getSize() <= LARGEST_FOLDER_BATCH)
+                        search = ImapSearch.sequenceAsSearchTerm(mSelectedFolder, mSelectedFolder.getSubsequence("1:*", false), false) + ' ' + search;
                     else
-                        search = '(' + i4folder.getQuery() + ") " + search;
+                        search = '(' + mSelectedFolder.getQuery() + ") " + search;
                     ZimbraLog.imap.info("[ search is: " + search + " ]");
 
                     SearchParams params = new SearchParams();
@@ -1575,7 +1592,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                     hits = new ImapMessageSet();
                     try {
                         for (ZimbraHit hit = zqr.getFirstHit(); hit != null; hit = zqr.getNext())
-                            hits.add(mSession.getFolder().getById(hit.getItemId()));
+                            hits.add(mSelectedFolder.getById(hit.getItemId()));
                     } finally {
                         zqr.doneWithSearchResults();
                     }
@@ -1615,14 +1632,14 @@ public abstract class ImapHandler extends ProtocolHandler {
 
         if (saveResults) {
             if (hits.isEmpty() || options == RETURN_SAVE || (options & (RETURN_COUNT | RETURN_ALL)) != 0) {
-                mSession.getFolder().saveSearchResults(hits);
+                mSelectedFolder.saveSearchResults(hits);
             } else {
                 ImapMessageSet saved = new ImapMessageSet();
                 if ((options & RETURN_MIN) != 0)
                     saved.add(hits.first());
                 if ((options & RETURN_MAX) != 0)
                     saved.add(hits.last());
-                mSession.getFolder().saveSearchResults(saved);
+                mSelectedFolder.saveSearchResults(saved);
             }
         }
 
@@ -1652,7 +1669,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     abstract OutputStream getFetchOutputStream();
 
     boolean doFETCH(String tag, String sequenceSet, int attributes, List<ImapPartSpecifier> parts, boolean byUID) throws IOException, ImapParseException {
-        if (!checkState(tag, ImapSession.STATE_SELECTED))
+        if (!checkState(tag, State.SELECTED))
             return CONTINUE_PROCESSING;
 
         // 6.4.8: "However, server implementations MUST implicitly include the UID message
@@ -1661,7 +1678,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         if (byUID)
             attributes |= FETCH_UID;
         String command = (byUID ? "UID FETCH" : "FETCH");
-        boolean markRead = mSession.getFolder().isWritable() && (attributes & FETCH_MARK_READ) != 0;
+        boolean markRead = mSelectedFolder.isWritable() && (attributes & FETCH_MARK_READ) != 0;
 
         List<ImapPartSpecifier> fullMessage = new ArrayList<ImapPartSpecifier>();
         if (parts != null && !parts.isEmpty()) {
@@ -1675,7 +1692,7 @@ public abstract class ImapHandler extends ProtocolHandler {
 
         Set<ImapMessage> i4set;
         synchronized (mMailbox) {
-            i4set = mSession.getFolder().getSubsequence(sequenceSet, byUID);
+            i4set = mSelectedFolder.getSubsequence(sequenceSet, byUID);
         }
         boolean allPresent = byUID || !i4set.contains(null);
         i4set.remove(null);
@@ -1690,13 +1707,15 @@ public abstract class ImapHandler extends ProtocolHandler {
                 byte[] raw = null;
                 MailItem item = null;
                 MimeMessage mm = null;
+
+                result.print("* " + i4msg.sequence + " FETCH (");
+
                 if (!fullMessage.isEmpty() || !parts.isEmpty() || (attributes & ~FETCH_FROM_CACHE) != 0) {
                     GetItemOperation op = new GetItemOperation(mSession, getContext(), mMailbox, Requester.IMAP, i4msg.msgId, i4msg.getType());
                     op.schedule();
                     item = op.getItem();
                 }
 
-                result.print("* " + i4msg.sequence + " FETCH (");
                 if ((attributes & FETCH_UID) != 0) {
                     result.print((empty ? "" : " ") + "UID " + i4msg.imapUid);  empty = false;
                 }
@@ -1744,7 +1763,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                     op.schedule();
                 }
                 if ((attributes & FETCH_FLAGS) != 0 || markMessage) {
-                    mSession.getFolder().undirtyMessage(i4msg);
+                    mSelectedFolder.undirtyMessage(i4msg);
                     result.print(empty ? "" : " ");  result.print(i4msg.getFlags(mSession));  empty = false;
                 }
             } catch (ImapPartSpecifier.BinaryDecodingException e) {
@@ -1783,9 +1802,9 @@ public abstract class ImapHandler extends ProtocolHandler {
     enum StoreAction { REPLACE, ADD, REMOVE };
 
     boolean doSTORE(String tag, String sequenceSet, List<String> flagNames, StoreAction operation, boolean silent, boolean byUID) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_SELECTED))
+        if (!checkState(tag, State.SELECTED))
             return CONTINUE_PROCESSING;
-        else if (!mSession.getFolder().isWritable()) {
+        else if (!mSelectedFolder.isWritable()) {
             sendNO(tag, "mailbox selected READ-ONLY");
             return CONTINUE_PROCESSING;
         }
@@ -1795,12 +1814,10 @@ public abstract class ImapHandler extends ProtocolHandler {
 
         Set<ImapMessage> i4set;
         synchronized (mMailbox) {
-            i4set = mSession.getFolder().getSubsequence(sequenceSet, byUID);
+            i4set = mSelectedFolder.getSubsequence(sequenceSet, byUID);
         }
         boolean allPresent = byUID || !i4set.contains(null);
         i4set.remove(null);
-
-        ImapFolder i4folder = mSession.getFolder();
 
         try {
             // get set of relevant tags
@@ -1836,14 +1853,14 @@ public abstract class ImapHandler extends ProtocolHandler {
                 try {
                     // if it was a STORE [+-]?FLAGS.SILENT, temporarily disable notifications
                     if (silent)
-                        i4folder.disableNotifications();
+                        mSelectedFolder.disableNotifications();
 
                     if (operation == StoreAction.REPLACE) {
                         // replace real tags and flags on all messages
                         new SetTagsOperation(mSession, getContext(), mMailbox, Requester.IMAP, idlist, MailItem.TYPE_UNKNOWN, flags, tags, null).schedule();
                         // replace session tags on all messages
                         for (ImapMessage i4msg : i4list)
-                            i4msg.setSessionFlags(sflags, i4folder);
+                            i4msg.setSessionFlags(sflags, mSelectedFolder);
                     } else if (!i4flags.isEmpty()) {
                         for (ImapFlag i4flag : i4flags) {
                             boolean add = operation == StoreAction.ADD ^ !i4flag.mPositive;
@@ -1853,18 +1870,18 @@ public abstract class ImapHandler extends ProtocolHandler {
                             } else {
                                 // session tag; update one-by-one in memory only
                                 for (ImapMessage i4msg : i4list)
-                                    i4msg.setSessionFlags((short) (add ? i4msg.sflags | i4flag.mBitmask : i4msg.sflags & ~i4flag.mBitmask), i4folder);
+                                    i4msg.setSessionFlags((short) (add ? i4msg.sflags | i4flag.mBitmask : i4msg.sflags & ~i4flag.mBitmask), mSelectedFolder);
                             }
                         }
                     }
                 } finally {
                     // if it was a STORE [+-]?FLAGS.SILENT, reenable notifications
-                    i4folder.enableNotifications();
+                    mSelectedFolder.enableNotifications();
                 }
 
                 if (!silent) {
                     for (ImapMessage i4msg : i4list) {
-                        i4folder.undirtyMessage(i4msg);
+                        mSelectedFolder.undirtyMessage(i4msg);
                         StringBuilder ntfn = new StringBuilder();
                         ntfn.append(i4msg.sequence).append(" FETCH (").append(i4msg.getFlags(mSession));
                         // 6.4.8: "However, server implementations MUST implicitly include
@@ -1905,7 +1922,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     boolean doCOPY(String tag, String sequenceSet, ImapPath path, boolean byUID) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_SELECTED))
+        if (!checkState(tag, State.SELECTED))
             return CONTINUE_PROCESSING;
 
         String command = (byUID ? "UID COPY" : "COPY");
@@ -1914,7 +1931,7 @@ public abstract class ImapHandler extends ProtocolHandler {
 
         Set<ImapMessage> i4set;
         synchronized (mMailbox) {
-            i4set = mSession.getFolder().getSubsequence(sequenceSet, byUID);
+            i4set = mSelectedFolder.getSubsequence(sequenceSet, byUID);
         }
         // RFC 2180 4.4.1: "The server MAY disallow the COPY of messages in a multi-
         //                  accessed mailbox that contains expunged messages."
@@ -2048,36 +2065,35 @@ public abstract class ImapHandler extends ProtocolHandler {
 
 
     public void sendNotifications(boolean notifyExpunges, boolean flush) throws IOException {
-        if (mSession == null || mSession.getFolder() == null || mMailbox == null)
+        if (mSession == null || mSelectedFolder == null || mMailbox == null)
             return;
 
         // is this the right thing to synchronize on?
         synchronized (mMailbox) {
             // FIXME: notify untagged NO if close to quota limit
 
-            ImapFolder i4folder = mSession.getFolder();
-            boolean removed = false, received = i4folder.checkpointSize();
+            boolean removed = false, received = mSelectedFolder.checkpointSize();
             if (notifyExpunges) {
-                for (Integer index : i4folder.collapseExpunged()) {
+                for (Integer index : mSelectedFolder.collapseExpunged()) {
                     sendUntagged(index + " EXPUNGE");  removed = true;
                 }
             }
-            i4folder.checkpointSize();
+            mSelectedFolder.checkpointSize();
 
             // notify of any message flag changes
-            for (Iterator<ImapMessage> it = i4folder.dirtyIterator(); it.hasNext(); ) {
+            for (Iterator<ImapMessage> it = mSelectedFolder.dirtyIterator(); it.hasNext(); ) {
                 ImapMessage i4msg = it.next();
                 if (i4msg.isAdded())
                     i4msg.setAdded(false);
                 else
                 	sendUntagged(i4msg.sequence + " FETCH (" + i4msg.getFlags(mSession) + ')');
             }
-            i4folder.clearDirty();
+            mSelectedFolder.clearDirty();
 
             // FIXME: not handling RECENT
 
             if (received || removed)
-                sendUntagged(i4folder.getSize() + " EXISTS");
+                sendUntagged(mSelectedFolder.getSize() + " EXISTS");
 
             if (flush)
                 flushOutput();

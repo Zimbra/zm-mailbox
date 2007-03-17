@@ -52,7 +52,6 @@ public class ImapAppendOperation extends Operation  {
                 LOAD = c.mLoad;
         }
 
-    private ImapSession mImapSession;
     private ImapHandler mHandler;   
     private ImapPath mTargetPath;
     private List<String> mFlagNames;
@@ -61,11 +60,10 @@ public class ImapAppendOperation extends Operation  {
     private List<Tag> mNewTags;
     private StringBuilder mAppendHint;
 
-    public ImapAppendOperation(ImapSession session, OperationContext oc, Mailbox mbox,
+    public ImapAppendOperation(ImapSession session, OperationContext octxt, Mailbox mbox,
             				   ImapHandler handler, ImapPath path, List<String> flagNames,
             				   Date date, byte[] content, List<Tag> newTags, StringBuilder appendHint) {
-        super(session, oc, mbox, Requester.IMAP, Requester.IMAP.getPriority(), LOAD);
-        mImapSession = session;
+        super(session, octxt, mbox, Requester.IMAP, Requester.IMAP.getPriority(), LOAD);
         mHandler = handler;
         mTargetPath = path;
         mFlagNames = flagNames;
@@ -123,10 +121,10 @@ public class ImapAppendOperation extends Operation  {
                         mAppendHint.append("[APPENDUID ").append(ImapFolder.getUIDValidity(folder))
                                    .append(' ').append(msg.getImapUid()).append("] ");
                     }
-                    if (sflags != 0 && mImapSession.isSelected()) {
-                        ImapMessage i4msg = mImapSession.getFolder().getById(msg.getId());
+                    if (sflags != 0 && mHandler.getState() == ImapHandler.State.SELECTED) {
+                        ImapMessage i4msg = mHandler.getSelectedFolder().getById(msg.getId());
                         if (i4msg != null)
-                            i4msg.setSessionFlags(sflags, mImapSession.getFolder());
+                            i4msg.setSessionFlags(sflags, mHandler.getSelectedFolder());
                     }
                 }
             } catch (IOException e) {

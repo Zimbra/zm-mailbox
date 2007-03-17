@@ -145,7 +145,7 @@ public class TcpImapHandler extends ImapHandler {
             long start = ZimbraPerf.STOPWATCH_IMAP.start();
 
             // check account status before executing command
-            if (mMailbox != null)
+            if (mMailbox != null) {
                 try {
                     Account account = mMailbox.getAccount();
                     if (account == null || !account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE)) {
@@ -156,6 +156,7 @@ public class TcpImapHandler extends ImapHandler {
                     ZimbraLog.imap.warn("error checking account status; dropping connection", e);
                     return STOP_PROCESSING;
                 }
+            }
 
             if (mAuthenticator != null)
                 keepGoing = continueAuthentication(req);
@@ -193,7 +194,7 @@ public class TcpImapHandler extends ImapHandler {
 
     @Override
     boolean doSTARTTLS(String tag) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_NOT_AUTHENTICATED))
+        if (!checkState(tag, State.NOT_AUTHENTICATED))
             return CONTINUE_PROCESSING;
         else if (mStartedTLS) {
             sendNO(tag, "TLS already started");
