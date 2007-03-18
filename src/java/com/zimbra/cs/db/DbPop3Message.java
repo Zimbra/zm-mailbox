@@ -115,7 +115,7 @@ public class DbPop3Message {
     throws ServiceException {
         ZimbraLog.mailbox.debug("%s: looking for uids that match a set of size %d", ds, uids.size());
         
-        List<List<String>> splitIds = ListUtil.split(uids, DbUtil.IN_CLAUSE_BATCH_SIZE);
+        List<List<String>> splitIds = ListUtil.split(uids, Db.getInstance().getINClauseBatchSize());
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;

@@ -362,12 +362,12 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             String imapRenumber = mbox.isTrackingImap() ? ", imap_id = CASE WHEN imap_id IS NULL THEN NULL ELSE 0 END" : "";
-            int attr = 1;
+            int pos = 1;
             if (item instanceof Folder) {
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                             " SET parent_id = ?, folder_id = ?, mod_metadata = ?, change_date = ?" +
                             " WHERE " + IN_THIS_MAILBOX_AND + "id = ? AND folder_id != ?");
-                stmt.setInt(attr++, folder.getId());
+                stmt.setInt(pos++, folder.getId());
             } else if (item instanceof Conversation && !(item instanceof VirtualConversation)) {
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                             " SET folder_id = ?, mod_metadata = ?, change_date = ?" + imapRenumber +
@@ -377,12 +377,12 @@ public class DbMailItem {
                             " SET folder_id = ?, mod_metadata = ?, change_date = ? " + imapRenumber +
                             " WHERE " + IN_THIS_MAILBOX_AND + "id = ? AND folder_id != ?");
             }
-            stmt.setInt(attr++, folder.getId());
-            stmt.setInt(attr++, mbox.getOperationChangeID());
-            stmt.setInt(attr++, mbox.getOperationTimestamp());
-            stmt.setInt(attr++, mbox.getId());
-            stmt.setInt(attr++, item instanceof VirtualConversation ? ((VirtualConversation) item).getMessageId() : item.getId());
-            stmt.setInt(attr++, folder.getId());
+            stmt.setInt(pos++, folder.getId());
+            stmt.setInt(pos++, mbox.getOperationChangeID());
+            stmt.setInt(pos++, mbox.getOperationTimestamp());
+            stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, item instanceof VirtualConversation ? ((VirtualConversation) item).getMessageId() : item.getId());
+            stmt.setInt(pos++, folder.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
@@ -395,8 +395,8 @@ public class DbMailItem {
         }
     }
 
-    public static void setFolder(List<Integer> itemIDs, Folder folder) throws ServiceException {
-        if (itemIDs == null || itemIDs.isEmpty())
+    public static void setFolder(List<Message> msgs, Folder folder) throws ServiceException {
+        if (msgs == null || msgs.isEmpty())
             return;
         Mailbox mbox = folder.getMailbox();
 
@@ -404,45 +404,49 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            if (!Db.supports(Db.Capability.UNIQUE_NAME_INDEX) || Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON)) {
-                stmt = conn.prepareStatement("SELECT mi.name" +
-                        " FROM " + getMailItemTableName(mbox, "mi") + ", " + getMailItemTableName(mbox, "m2") +
-                        " WHERE mi.id IN " + DbUtil.suitableNumberOfVariables(itemIDs) +
-                        " AND mi.name IS NOT NULL and m2.name IS NOT NULL" +
-                        " AND m2.folder_id = ? AND mi.id <> m2.id" +
-                        " AND " + (Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON) ? "UPPER(mi.name) = UPPER(m2.name)" : "mi.name = m2.name") +
-                        " AND mi.mailbox_id = ? AND m2.mailbox_id = ?");
-                int pos = 1;
-                for (int id : itemIDs)
-                    stmt.setInt(pos++, id);
-                stmt.setInt(pos++, folder.getId());
-                stmt.setInt(pos++, mbox.getId());
-                stmt.setInt(pos++, mbox.getId());
-                rs = stmt.executeQuery();
-                if (rs.next())
-                    throw MailServiceException.ALREADY_EXISTS(rs.getString(1));
-                rs.close();
-                stmt.close();
-            }
+            // commented out because at present messages cannot have names (and thus can't have naming conflicts)
+//            if (!Db.supports(Db.Capability.UNIQUE_NAME_INDEX) || Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON)) {
+//                stmt = conn.prepareStatement("SELECT mi.name" +
+//                        " FROM " + getMailItemTableName(mbox, "mi") + ", " + getMailItemTableName(mbox, "m2") +
+//                        " WHERE mi.id IN " + DbUtil.suitableNumberOfVariables(itemIDs) +
+//                        " AND mi.name IS NOT NULL and m2.name IS NOT NULL" +
+//                        " AND m2.folder_id = ? AND mi.id <> m2.id" +
+//                        " AND " + (Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON) ? "UPPER(mi.name) = UPPER(m2.name)" : "mi.name = m2.name") +
+//                        " AND mi.mailbox_id = ? AND m2.mailbox_id = ?");
+//                int pos = 1;
+//                for (Message msg : msgs)
+//                    stmt.setInt(pos++, msg.getId());
+//                stmt.setInt(pos++, folder.getId());
+//                stmt.setInt(pos++, mbox.getId());
+//                stmt.setInt(pos++, mbox.getId());
+//                rs = stmt.executeQuery();
+//                if (rs.next())
+//                    throw MailServiceException.ALREADY_EXISTS(rs.getString(1));
+//                rs.close();
+//                stmt.close();
+//            }
 
             String imapRenumber = mbox.isTrackingImap() ? ", imap_id = CASE WHEN imap_id IS NULL THEN NULL ELSE 0 END" : "";
-            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(folder) +
-                        " SET folder_id = ?, mod_metadata = ?, change_date = ?" + imapRenumber +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(itemIDs));
-            int pos = 1;
-            stmt.setInt(pos++, folder.getId());
-            stmt.setInt(pos++, mbox.getOperationChangeID());
-            stmt.setInt(pos++, mbox.getOperationTimestamp());
-            stmt.setInt(pos++, mbox.getId());
-            for (int id : itemIDs)
-                stmt.setInt(pos++, id);
-            stmt.executeUpdate();
+            for (int i = 0; i < msgs.size(); i += Db.getInstance().getINClauseBatchSize()) {
+                int count = Math.min(Db.getInstance().getINClauseBatchSize(), msgs.size() - i);
+                stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(folder) +
+                            " SET folder_id = ?, mod_metadata = ?, change_date = ?" + imapRenumber +
+                            " WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(count));
+                int pos = 1;
+                stmt.setInt(pos++, folder.getId());
+                stmt.setInt(pos++, mbox.getOperationChangeID());
+                stmt.setInt(pos++, mbox.getOperationTimestamp());
+                stmt.setInt(pos++, mbox.getId());
+                for (int index = i; index < i + count; index++)
+                    stmt.setInt(pos++, msgs.get(index).getId());
+                stmt.executeUpdate();
+            }
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
-            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
-                throw MailServiceException.ALREADY_EXISTS(itemIDs.toString(), e);
-            else
-                throw ServiceException.FAILURE("writing new folder data for item [" + itemIDs + ']', e);
+//            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
+//                throw MailServiceException.ALREADY_EXISTS(msgs.toString(), e);
+//            else
+            throw ServiceException.FAILURE("writing new folder data for messages", e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
@@ -457,24 +461,29 @@ public class DbMailItem {
         if (children == null || children.length == 0)
             return;
         Mailbox mbox = children[0].getMailbox();
+        if (mbox != parent.getMailbox())
+            throw MailServiceException.WRONG_MAILBOX();
 
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
-                        " SET parent_id = ?, mod_metadata = ?, change_date = ?" +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(children));
-            int arg = 1;
-            if (parent == null || parent instanceof VirtualConversation)
-                stmt.setNull(arg++, Types.INTEGER);
-            else
-                stmt.setInt(arg++, parent.getId());
-            stmt.setInt(arg++, mbox.getOperationChangeID());
-            stmt.setInt(arg++, mbox.getOperationTimestamp());
-            stmt.setInt(arg++, mbox.getId());
-            for (int i = 0; i < children.length; i++)
-                stmt.setInt(arg++, children[i].getId());
-            stmt.executeUpdate();
+            for (int i = 0; i < children.length; i += Db.getInstance().getINClauseBatchSize()) {
+                int count = Math.min(Db.getInstance().getINClauseBatchSize(), children.length - i);
+                stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
+                            " SET parent_id = ?, mod_metadata = ?, change_date = ?" +
+                            " WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(count));
+                int pos = 1;
+                if (parent == null || parent instanceof VirtualConversation)
+                    stmt.setNull(pos++, Types.INTEGER);
+                else
+                    stmt.setInt(pos++, parent.getId());
+                stmt.setInt(pos++, mbox.getOperationChangeID());
+                stmt.setInt(pos++, mbox.getOperationTimestamp());
+                stmt.setInt(pos++, mbox.getId());
+                for (int index = i; index < i + count; index++)
+                    stmt.setInt(pos++, children[index].getId());
+                stmt.executeUpdate();
+            }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("adding children to parent " + (parent == null ? "NULL" : parent.getId() + ""), e);
         } finally {
@@ -857,18 +866,21 @@ public class DbMailItem {
             String operation = (add ? " + " : " - ");
             String precondition = (add ? "NOT " : "") + Db.bitmaskAND(column);
 
-            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(tag) +
-                        " SET " + column + " = " + column + operation + "?, mod_metadata = ?, change_date = ?" +
-                        " WHERE " + IN_THIS_MAILBOX_AND + precondition + " AND id IN " + DbUtil.suitableNumberOfVariables(itemIDs));
-            int pos = 1;
-            stmt.setLong(pos++, tag.getBitmask());
-            stmt.setInt(pos++, mbox.getOperationChangeID());
-            stmt.setInt(pos++, mbox.getOperationTimestamp());
-            stmt.setInt(pos++, mbox.getId());
-            stmt.setLong(pos++, tag.getBitmask());
-            for (int id : itemIDs)
-                stmt.setInt(pos++, id);
-            stmt.executeUpdate();
+            for (int i = 0; i < itemIDs.size(); i += Db.getInstance().getINClauseBatchSize()) {
+                int count = Math.min(Db.getInstance().getINClauseBatchSize(), itemIDs.size() - i);
+                stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(tag) +
+                            " SET " + column + " = " + column + operation + "?, mod_metadata = ?, change_date = ?" +
+                            " WHERE " + IN_THIS_MAILBOX_AND + precondition + " AND id IN " + DbUtil.suitableNumberOfVariables(count));
+                int pos = 1;
+                stmt.setLong(pos++, tag.getBitmask());
+                stmt.setInt(pos++, mbox.getOperationChangeID());
+                stmt.setInt(pos++, mbox.getOperationTimestamp());
+                stmt.setInt(pos++, mbox.getId());
+                stmt.setLong(pos++, tag.getBitmask());
+                for (int index = i; index < i + count; index++)
+                    stmt.setInt(pos++, itemIDs.get(index));
+                stmt.executeUpdate();
+            }
 
             // Update the flagset or tagset cache.  Assume that the item's in-memory
             // data has already been updated.
@@ -965,18 +977,22 @@ public class DbMailItem {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
-                        " SET unread = ?, mod_metadata = ?, change_date = ?" +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "unread = ? AND id IN " + DbUtil.suitableNumberOfVariables(itemIDs) + " AND type IN " + typeConstraint(MailItem.TYPE_MESSAGE));
-            int pos = 1;
-            stmt.setInt(pos++, unread ? 1 : 0);
-            stmt.setInt(pos++, mbox.getOperationChangeID());
-            stmt.setInt(pos++, mbox.getOperationTimestamp());
-            stmt.setInt(pos++, mbox.getId());
-            stmt.setInt(pos++, unread ? 0 : 1);
-            for (int id : itemIDs)
-                stmt.setInt(pos++, id);
-            stmt.executeUpdate();
+            for (int i = 0; i < itemIDs.size(); i += Db.getInstance().getINClauseBatchSize()) {
+                int count = Math.min(Db.getInstance().getINClauseBatchSize(), itemIDs.size() - i);
+                stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
+                            " SET unread = ?, mod_metadata = ?, change_date = ?" +
+                            " WHERE " + IN_THIS_MAILBOX_AND + "unread = ? AND id IN " + DbUtil.suitableNumberOfVariables(count) +
+                            " AND type IN " + typeConstraint(MailItem.TYPE_MESSAGE));
+                int pos = 1;
+                stmt.setInt(pos++, unread ? 1 : 0);
+                stmt.setInt(pos++, mbox.getOperationChangeID());
+                stmt.setInt(pos++, mbox.getOperationTimestamp());
+                stmt.setInt(pos++, mbox.getId());
+                stmt.setInt(pos++, unread ? 0 : 1);
+                for (int index = i; index < i + count; index++)
+                    stmt.setInt(pos++, itemIDs.get(index));
+                stmt.executeUpdate();
+            }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("updating unread state for items " + itemIDs, e);
         } finally {
@@ -1034,19 +1050,23 @@ public class DbMailItem {
                 stmt.close();
 
                 for (Map.Entry<Integer, List<Integer>> update : counts.entrySet()) {
-                    stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(folder) +
-                            " SET size = size - ?, metadata = NULL, mod_metadata = ?, change_date = ?" +
-                            " WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(update.getValue()) +
-                            " AND type = " + MailItem.TYPE_CONVERSATION);
-                    pos = 1;
-                    stmt.setInt(pos++, update.getKey());
-                    stmt.setInt(pos++, mbox.getOperationChangeID());
-                    stmt.setInt(pos++, mbox.getOperationTimestamp());
-                    stmt.setInt(pos++, mbox.getId());
-                    for (int convId : update.getValue())
-                        stmt.setInt(pos++, convId);
-                    stmt.executeUpdate();
-                    stmt.close();
+                    List<Integer> convIDs = update.getValue();
+                    for (int i = 0; i < convIDs.size(); i += Db.getInstance().getINClauseBatchSize()) {
+                        int count = Math.min(Db.getInstance().getINClauseBatchSize(), convIDs.size() - i);
+                        stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(folder) +
+                                " SET size = size - ?, metadata = NULL, mod_metadata = ?, change_date = ?" +
+                                " WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(count) +
+                                " AND type = " + MailItem.TYPE_CONVERSATION);
+                        pos = 1;
+                        stmt.setInt(pos++, update.getKey());
+                        stmt.setInt(pos++, mbox.getOperationChangeID());
+                        stmt.setInt(pos++, mbox.getOperationTimestamp());
+                        stmt.setInt(pos++, mbox.getId());
+                        for (int index = i; index < i + count; index++)
+                            stmt.setInt(pos++, convIDs.get(index));
+                        stmt.executeUpdate();
+                        stmt.close();
+                    }
                 }
             }
 
@@ -1079,8 +1099,8 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             if (Db.supports(Db.Capability.MULTITABLE_UPDATE)) {
-                for (int i = 0; i < ids.size(); i += DbUtil.IN_CLAUSE_BATCH_SIZE) {
-                    int count = Math.min(DbUtil.IN_CLAUSE_BATCH_SIZE, ids.size() - i);
+                for (int i = 0; i < ids.size(); i += Db.getInstance().getINClauseBatchSize()) {
+                    int count = Math.min(Db.getInstance().getINClauseBatchSize(), ids.size() - i);
                     stmt = conn.prepareStatement("UPDATE " + table + ", " +
                                 "(SELECT parent_id pid, COUNT(*) count FROM " + getMailItemTableName(mbox) +
                                 " WHERE " + IN_THIS_MAILBOX_AND + "id IN" + DbUtil.suitableNumberOfVariables(count) + "AND parent_id IS NOT NULL GROUP BY parent_id) AS x" +
@@ -1145,6 +1165,7 @@ public class DbMailItem {
     private static List<Integer> getPurgedConversations(Mailbox mbox, Set<Integer> candidates) throws ServiceException {
         if (candidates == null || candidates.isEmpty())
             return Collections.emptyList();
+        List<Integer> convIDs = new ArrayList<Integer>(candidates);
 
         List<Integer> purgedConvs = new ArrayList<Integer>();
 
@@ -1152,16 +1173,19 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT id FROM " + getMailItemTableName(mbox) +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "id IN" + DbUtil.suitableNumberOfVariables(candidates) + "AND size <= 0");
-            int pos = 1;
-            stmt.setInt(pos++, mbox.getId());
-            for (int candidate : candidates)
-                stmt.setInt(pos++, candidate);
-            rs = stmt.executeQuery();
+            for (int i = 0; i < convIDs.size(); i += Db.getInstance().getINClauseBatchSize()) {
+                int count = Math.min(Db.getInstance().getINClauseBatchSize(), convIDs.size() - i);
+                stmt = conn.prepareStatement("SELECT id FROM " + getMailItemTableName(mbox) +
+                            " WHERE " + IN_THIS_MAILBOX_AND + "id IN" + DbUtil.suitableNumberOfVariables(count) + "AND size <= 0");
+                int pos = 1;
+                stmt.setInt(pos++, mbox.getId());
+                for (int index = i; index < i + count; index++)
+                    stmt.setInt(pos++, convIDs.get(index));
+                rs = stmt.executeQuery();
+                while (rs.next())
+                    purgedConvs.add(rs.getInt(1));
+            }
 
-            while (rs.next())
-                purgedConvs.add(rs.getInt(1));
             return purgedConvs;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting list of purged conversations", e);
@@ -1203,9 +1227,9 @@ public class DbMailItem {
 
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
-        for (int i = 0; i < targets.size(); i += DbUtil.IN_CLAUSE_BATCH_SIZE) {
+        for (int i = 0; i < targets.size(); i += Db.getInstance().getINClauseBatchSize()) {
             try {
-                int count = Math.min(DbUtil.IN_CLAUSE_BATCH_SIZE, targets.size() - i);
+                int count = Math.min(Db.getInstance().getINClauseBatchSize(), targets.size() - i);
                 stmt = conn.prepareStatement("DELETE FROM " + getMailItemTableName(mbox) +
                             " WHERE " + IN_THIS_MAILBOX_AND + "id IN" + DbUtil.suitableNumberOfVariables(count));
                 int pos = 1;
@@ -1218,7 +1242,7 @@ public class DbMailItem {
             } finally {
                 DbPool.closeStatement(stmt);
             }
-    }
+        }
     }
 
     public static void deleteContents(MailItem item) throws ServiceException {
@@ -1406,8 +1430,8 @@ public class DbMailItem {
     // Indexes on mail_item table
     private static final String MI_I_MBOX_FOLDER_DATE = "i_folder_id_date";
 //    private static final String MI_I_MBOX_ID_PKEY     = "PRIMARY";
-//    private static final String MI_I_MBOX_PARENT      = "i_parent_id";
-//    private static final String MI_I_MBOX_INDEX       = "i_index_id";
+    private static final String MI_I_MBOX_PARENT      = "i_parent_id";
+    private static final String MI_I_MBOX_INDEX       = "i_index_id";
 //    private static final String MI_I_MBOX_DATE        = "i_date";
 //    private static final String MI_I_MBOX_TAGS_DATE   = "i_tags_date";
 //    private static final String MI_I_MBOX_FLAGS_DATE  = "i_flags_date";
@@ -1426,16 +1450,22 @@ public class DbMailItem {
         String index = null;
 
         DbSearchConstraintsNode.NodeType ntype = node.getNodeType();
-        if (sortBy == SORT_BY_DATE && hasLimit && ntype == DbSearchConstraintsNode.NodeType.LEAF) {
-            DbSearchConstraints constraints = node.getSearchConstraints();
-            // Whenever we learn a new case of mysql choosing wrong index, add a case here.
-            if (constraints.isSimpleSingleFolderMessageQuery()) {
-                // Optimization for folder query
-                //
-                // If looking at a single folder and sorting by date with a limit,
-                // force the use of i_folder_id_date index.  Typical example of
-                // such a query is the default "in:Inbox" search.
-                index = MI_I_MBOX_FOLDER_DATE;
+        DbSearchConstraints constraints = node.getSearchConstraints();
+        if (ntype == DbSearchConstraintsNode.NodeType.LEAF) {
+            if (constraints.convId > 0) {
+                index = MI_I_MBOX_PARENT;
+            } else if (!constraints.indexIds.isEmpty()) {
+                index = MI_I_MBOX_INDEX;
+            } else if (sortBy == SORT_BY_DATE && hasLimit) {
+                // Whenever we learn a new case of mysql choosing wrong index, add a case here.
+                if (constraints.isSimpleSingleFolderMessageQuery()) {
+                    // Optimization for folder query
+                    //
+                    // If looking at a single folder and sorting by date with a limit,
+                    // force the use of i_folder_id_date index.  Typical example of
+                    // such a query is the default "in:Inbox" search.
+                    index = MI_I_MBOX_FOLDER_DATE;
+                }
             }
         }
 
@@ -1739,9 +1769,9 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         Iterator<Integer> it = ids.iterator();
-        for (int i = 0; i < ids.size(); i += DbUtil.IN_CLAUSE_BATCH_SIZE) {
+        for (int i = 0; i < ids.size(); i += Db.getInstance().getINClauseBatchSize()) {
             try {
-                int count = Math.min(DbUtil.IN_CLAUSE_BATCH_SIZE, ids.size() - i);
+                int count = Math.min(Db.getInstance().getINClauseBatchSize(), ids.size() - i);
                 stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                             " FROM " + getMailItemTableName(mbox, "mi") +
                             " WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(count));
@@ -1896,9 +1926,9 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
 
-        for (int i = 0; i < convData.size(); i += DbUtil.IN_CLAUSE_BATCH_SIZE) {
+        for (int i = 0; i < convData.size(); i += Db.getInstance().getINClauseBatchSize()) {
             try {
-                int count = Math.min(DbUtil.IN_CLAUSE_BATCH_SIZE, convData.size() - i);
+                int count = Math.min(Db.getInstance().getINClauseBatchSize(), convData.size() - i);
                 stmt = conn.prepareStatement("SELECT parent_id, id, unread, flags, tags" +
                         " FROM " + getMailItemTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "parent_id IN " + DbUtil.suitableNumberOfVariables(count) +
@@ -2028,7 +2058,7 @@ public class DbMailItem {
                 constraint = "date < ? AND type IN " + typeConstraint(MailItem.TYPE_MESSAGE);
             else
                 constraint = "date < ? AND type NOT IN " + NON_SEARCHABLE_TYPES +
-                " AND folder_id IN" + DbUtil.suitableNumberOfVariables(folders);
+                             " AND folder_id IN" + DbUtil.suitableNumberOfVariables(folders);
 
             stmt = conn.prepareStatement("SELECT " + LEAF_NODE_FIELDS +
                         " FROM " + getMailItemTableName(mbox) +
@@ -2036,9 +2066,10 @@ public class DbMailItem {
             int attr = 1;
             stmt.setInt(attr++, mbox.getId());
             stmt.setInt(attr++, before);
-            if (!globalMessages)
+            if (!globalMessages) {
                 for (Folder folder : folders)
                     stmt.setInt(attr++, folder.getId());
+            }
             rs = stmt.executeQuery();
 
             info.rootId = 0;
@@ -2134,21 +2165,25 @@ public class DbMailItem {
     public static void resolveSharedIndex(Mailbox mbox, PendingDelete info) throws ServiceException {
         if (info.sharedIndex == null || info.sharedIndex.isEmpty())
             return;
+        List<Integer> indexIDs = new ArrayList<Integer>(info.sharedIndex);
 
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT index_id FROM " + getMailItemTableName(mbox) +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "index_id IN " + DbUtil.suitableNumberOfVariables(info.sharedIndex));
-            int attr = 1;
-            stmt.setInt(attr++, mbox.getId());
-            for (int id : info.sharedIndex)
-                stmt.setInt(attr++, id);
-            rs = stmt.executeQuery();
+            for (int i = 0; i < indexIDs.size(); i += Db.getInstance().getINClauseBatchSize()) {
+                int count = Math.min(Db.getInstance().getINClauseBatchSize(), indexIDs.size() - i);
+                stmt = conn.prepareStatement("SELECT index_id FROM " + getMailItemTableName(mbox) +
+                            " WHERE " + IN_THIS_MAILBOX_AND + "index_id IN " + DbUtil.suitableNumberOfVariables(count));
+                int pos = 1;
+                stmt.setInt(pos++, mbox.getId());
+                for (int index = i; index < i + count; index++)
+                    stmt.setInt(pos++, indexIDs.get(index));
+                rs = stmt.executeQuery();
+                while (rs.next())
+                    info.sharedIndex.remove(rs.getInt(1));
+            }
 
-            while (rs.next())
-                info.sharedIndex.remove(rs.getInt(1));
             info.indexIds.addAll(info.sharedIndex);
             info.sharedIndex.clear();
         } catch (SQLException e) {
@@ -2589,9 +2624,13 @@ public class DbMailItem {
             /*
              * LIMIT
              */
-            if (hasValidLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
-                stmt.setInt(param++, offset);
-                stmt.setInt(param++, limit);
+            if (hasValidLIMIT) {
+                if (Db.supports(Db.Capability.LIMIT_CLAUSE)) {
+                    stmt.setInt(param++, offset);
+                    stmt.setInt(param++, limit);
+                } else {
+                    stmt.setMaxRows(offset + limit + 1);
+                }
             }
 
             /*
@@ -3163,7 +3202,7 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                         " FROM " + getCalendarItemTableName(mbox, "ci") + ", " + getMailItemTableName(mbox, "mi") +
                         " WHERE ci.start_time < ? AND ci.end_time > ? AND mi.id = ci.item_id AND mi.type IN " + typeList +
-                        (" AND ci.mailbox_id = ? AND mi.mailbox_id = ci.mailbox_id") +
+                        " AND ci.mailbox_id = ? AND mi.mailbox_id = ci.mailbox_id" +
                         (folderSpecified ? " AND folder_id = ?" : "") + excludeFolderPart);
 
             int param = 1;

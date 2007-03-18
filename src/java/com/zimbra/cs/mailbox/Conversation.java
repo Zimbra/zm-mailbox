@@ -541,7 +541,8 @@ public class Conversation extends MailItem {
         // only close the conversation if it's being moved to spam and there are no permissions issues
         boolean excludeAccess = false;
 
-        List<Integer> markedRead = new ArrayList<Integer>(), moved = new ArrayList<Integer>();
+        List<Integer> markedRead = new ArrayList<Integer>();
+        List<Message> moved = new ArrayList<Message>();
         for (Message msg : msgs) {
             Folder source = msg.getFolder();
 
@@ -569,7 +570,7 @@ public class Conversation extends MailItem {
             source.updateSize(-1);
             target.updateSize(1);
 
-            moved.add(msg.getId());
+            moved.add(msg);
             msg.folderChanged(target, 0);
         }
 

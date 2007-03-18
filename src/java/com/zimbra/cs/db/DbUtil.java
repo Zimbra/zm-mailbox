@@ -58,10 +58,7 @@ public class DbUtil {
     public static final int INTEGER_FALSE = 0;
     
     public static final int getBooleanIntValue(boolean b) {
-        if (b) {
-            return INTEGER_TRUE;
-        }
-        return INTEGER_FALSE;
+        return b ? INTEGER_TRUE : INTEGER_FALSE;
     }
 
     private static final Pattern PAT_ESCAPED_QUOTES1 = Pattern.compile("\\\\'");
@@ -282,8 +279,6 @@ public class DbUtil {
     throws ServiceException {
         return executeUpdate(sql, null);
     }
-
-    public static final int IN_CLAUSE_BATCH_SIZE = 400;
 
     /**
      * Returns a string with the form <code>(?, ?, ?, ...)</code>, which

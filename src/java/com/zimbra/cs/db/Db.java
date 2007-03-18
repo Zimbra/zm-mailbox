@@ -84,6 +84,13 @@ public abstract class Db {
     }
 
 
+    private static final int DEFAULT_IN_CLAUSE_BATCH_SIZE = 400;
+
+    public int getINClauseBatchSize() {
+        return DEFAULT_IN_CLAUSE_BATCH_SIZE;
+    }
+
+
     /** Returns whether the currently-configured database supports the given
      *  {@link Db.Capability}. */
     public static boolean supports(Db.Capability capability) {
