@@ -54,11 +54,21 @@ public class DateUtil {
         return (fmt.format(gmtDate));        
     }
 
+    public static Date parseGeneralizedTime(String time) {
+        return parseGeneralizedTime(time, true);
+    }
+    
     /**
      * from LDAP generalized time string
      */
-    public static Date parseGeneralizedTime(String time) {
-    	if (time.length() < 14 || time.length() > 15)
+    public static Date parseGeneralizedTime(String time, boolean strict) {
+        int maxLen;
+        if (strict)
+            maxLen = 15;
+        else
+            maxLen = 17;
+        
+    	if (time.length() < 14 || time.length() > maxLen)
     		return null;
     	TimeZone tz;
     	if (time.endsWith("Z"))
@@ -306,6 +316,16 @@ public class DateUtil {
         System.out.println("date = " + new Date(parseDateSpecifier("+1year", 0)));                        
         System.out.println("date = " + new Date(parseDateSpecifier("-1day", 0)));
         System.out.println("date = " + new Date(parseDateSpecifier("1132276598000", 0)));
-        System.out.println("date = " + new Date(parseDateSpecifier("p10day", 0)));        
+        System.out.println("date = " + new Date(parseDateSpecifier("p10day", 0)));
+
+        /*
+        System.out.println("20070318050124Z" + "-default = " +  parseGeneralizedTime("20070318050124Z"));
+        System.out.println("20070318050124Z" + "-true = " +  parseGeneralizedTime("20070318050124Z", true));
+        System.out.println("20070318050124Z" + "-false = " +  parseGeneralizedTime("20070318050124Z", false));
+
+        System.out.println("20070318050124.0Z" + "-default = " +  parseGeneralizedTime("20070318050124.0Z"));
+        System.out.println("20070318050124.0Z" + "-true = " +  parseGeneralizedTime("20070318050124.0Z", true));
+        System.out.println("20070318050124.0Z" + "-false = " +  parseGeneralizedTime("20070318050124.0Z", false));
+        */
     }
 }
