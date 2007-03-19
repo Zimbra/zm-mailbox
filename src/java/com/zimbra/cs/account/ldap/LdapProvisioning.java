@@ -3367,9 +3367,17 @@ public class LdapProvisioning extends Provisioning {
             gotNewToken = false;
         
         if (gotNewToken) {
-            long ts = DateUtil.parseGeneralizedTime(results.token).getTime();
-            ts += 1000;
-            results.token = DateUtil.toGeneralizedTime(new Date(ts));
+            Date parsedToken = DateUtil.parseGeneralizedTime(results.token, false);
+            if (parsedToken != null) {
+                long ts = parsedToken.getTime();
+                ts += 1000;
+                results.token = DateUtil.toGeneralizedTime(new Date(ts));
+            }
+            /*
+             * in the rare case when an LDAP implementation does not conform to generalized time and 
+             * we cannot parser the token, just leave it alone.
+             */
+            
         }
         
         return results;
