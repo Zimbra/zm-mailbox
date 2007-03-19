@@ -36,6 +36,8 @@ import java.util.List;
 import java.util.Date;
 import java.util.TimeZone;
 import java.util.Calendar;
+import java.util.Set;
+import java.util.EnumSet;
 import java.text.SimpleDateFormat;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -1816,7 +1818,228 @@ public class ZInvite {
         }
 
     }
-    
+
+
+    public enum ZSimpleRecurrenceType {
+        NONE,
+        DAILY,
+        DAILY_WEEKDAY,
+        DAILY_INTERVAL,
+        WEEKLY,
+        WEEKLY_BY_DAY,
+        WEEKLY_CUSTOM,
+        MONTHLY,
+        MONTHLY_BY_MONTH_DAY,
+        MONTHLY_RELATIVE,
+        YEARLY,
+        YEARLY_BY_DATE,
+        YEARLY_RELATIVE,
+        COMPLEX
+    }
+
+    public static class ZSimpleRecurrence {
+        private ZSimpleRecurrenceType mType;
+
+        /* NONE: needs no state */
+        /* DAILY: need no state */
+        /* DAILY_WEEKDAY: needs no state */
+        /* DAILY_INTERVAL */
+        private int mDailyInterval;
+        /* WEEKLY: needs no state */
+        /* WEEKLY_BY_DAY */
+        private ZWeekDay mWeeklyByDay;
+        /* WEEKLY_CUSTOM */
+        private int mWeeklyInterval;
+        private List<ZWeekDay> mWeeklyIntervalDays;
+        /* MONTHLY: needs no state */
+        /* MONTHLY_{BY_MONTH_DAY, RELATIVE} */
+        private int mMonthlyInterval;
+        /* MONTHLY_BY_MONTH_DAY */
+        private int mMonthlyMonthDay;
+        /* MONTHLY_RELATIVE */
+        private ZByDayWeekDay mMonthlyRelativeDay;
+        /* YEARLY: needs no state */
+        /* YEARLY_BY_DATE */
+        private int mYearlyByDateMonthDay;
+        private int mYearlyByDateMonth;
+        /* YEARLY_RELATIVE */
+        private ZByDayWeekDay mYearlyRelativeDay;
+        private int mYearlyRelativeMonth;
+
+        private boolean empty(List<?> list) {
+            return list == null || list.size() == 0;
+        }
+
+        public ZSimpleRecurrence(ZRecurrence r) {
+
+
+            if (    (r.getRules() == null || r.getRules().size() > 1) ||
+                    !empty(r.getDates()) || !empty(r.getExRules()) || !empty(r.getExDates())) {
+                mType = ZSimpleRecurrenceType.COMPLEX;
+                return;
+            }
+            ZRecurrenceRule rr = r.getRules().get(0);
+
+            /* none of our simple rules have this set */
+            if (rr.getWeekStart() != null) {
+                mType = ZSimpleRecurrenceType.COMPLEX;
+                return;
+            }
+
+            List<ZByRule> byRules = rr.getByRules();
+
+            // TODO: SET END TYPE UP FRONT
+
+            boolean noEnd = (rr.getCount() == 0) && (rr.getUntilDate() == null);
+
+
+            switch (rr.getFrequency()) {
+                case DAI:
+                    if (empty(byRules)) {
+                        mType = (rr.getInterval() < 2) ?
+                                ZSimpleRecurrenceType.DAILY : ZSimpleRecurrenceType.DAILY_INTERVAL;
+                        return;
+                    }
+                    if (byRules != null && byRules.size() == 1 && byRules.get(0).getType() == ZByType.BY_DAY) {
+                        ZByRule br = byRules.get(0);
+                        List<ZByDayWeekDay> weekDays = br.getByDayWeekDays();
+                        if (!empty(weekDays)) {
+                            Set<ZWeekDay> days = EnumSet.noneOf(ZWeekDay.class);
+                            for (ZByDayWeekDay d : weekDays) {
+                                days.add(d.getDay());
+                            }
+                            if (days.size() == 5 && days.containsAll(EnumSet.of(ZWeekDay.MO, ZWeekDay.TU,  ZWeekDay.WE, ZWeekDay.TH, ZWeekDay.FR))) {
+                                mType = ZSimpleRecurrenceType.DAILY_WEEKDAY;
+                                return;
+                            }
+                        }
+                    }
+                    break;
+                case WEE:
+                    if (empty(byRules) && rr.getInterval() < 2) {
+                        mType = ZSimpleRecurrenceType.WEEKLY;
+                        return;
+                    }
+                    if (byRules != null && byRules.size() == 1 && byRules.get(0).getType() == ZByType.BY_DAY && rr.getInterval() < 2) {
+                        ZByRule br = byRules.get(0);
+                        List<ZByDayWeekDay> weekDays = br.getByDayWeekDays();
+                        if (weekDays != null && weekDays.size() == 1) {
+                            
+                        }
+                    }
+                    break;
+                case MON:
+
+                    break;
+                case YEA:
+
+                    break;
+            }
+            mType = ZSimpleRecurrenceType.COMPLEX;
+
+        }
+        
+        public ZSimpleRecurrenceType getType() {
+            return mType;
+        }
+
+        public void setType(ZSimpleRecurrenceType type) {
+            mType = type;
+        }
+
+        public int getDailyInterval() {
+            return mDailyInterval;
+        }
+
+        public void setDailyInterval(int dailyInterval) {
+            mDailyInterval = dailyInterval;
+        }
+
+        public ZWeekDay getWeeklyByDay() {
+            return mWeeklyByDay;
+        }
+
+        public void setWeeklyByDay(ZWeekDay weeklyByDay) {
+            mWeeklyByDay = weeklyByDay;
+        }
+
+        public int getWeeklyInterval() {
+            return mWeeklyInterval;
+        }
+
+        public void setWeeklyInterval(int weeklyInterval) {
+            mWeeklyInterval = weeklyInterval;
+        }
+
+        public List<ZWeekDay> getWeeklyIntervalDays() {
+            return mWeeklyIntervalDays;
+        }
+
+        public void setWeeklyIntervalDays(List<ZWeekDay> weeklyIntervalDays) {
+            mWeeklyIntervalDays = weeklyIntervalDays;
+        }
+
+        public int getMonthlyInterval() {
+            return mMonthlyInterval;
+        }
+
+        public void setMonthlyInterval(int monthlyInterval) {
+            mMonthlyInterval = monthlyInterval;
+        }
+
+        public int getMonthlyMonthDay() {
+            return mMonthlyMonthDay;
+        }
+
+        public void setMonthlyMonthDay(int monthlyMonthDay) {
+            mMonthlyMonthDay = monthlyMonthDay;
+        }
+
+        public ZByDayWeekDay getMonthlyRelativeDay() {
+            return mMonthlyRelativeDay;
+        }
+
+        public void setMonthlyRelativeDay(ZByDayWeekDay monthlyRelativeDay) {
+            mMonthlyRelativeDay = monthlyRelativeDay;
+        }
+
+        public int getYearlyByDateMonthDay() {
+            return mYearlyByDateMonthDay;
+        }
+
+        public void setYearlyByDateMonthDay(int yearlyByDateMonthDay) {
+            mYearlyByDateMonthDay = yearlyByDateMonthDay;
+        }
+
+        public int getYearlyByDateMonth() {
+            return mYearlyByDateMonth;
+        }
+
+        public void setYearlyByDateMonth(int yearlyByDateMonth) {
+            mYearlyByDateMonth = yearlyByDateMonth;
+        }
+
+        public ZByDayWeekDay getYearlyRelativeDay() {
+            return mYearlyRelativeDay;
+        }
+
+        public void setYearlyRelativeDay(ZByDayWeekDay yearlyRelativeDay) {
+            mYearlyRelativeDay = yearlyRelativeDay;
+        }
+
+        public int getYearlyRelativeMonth() {
+            return mYearlyRelativeMonth;
+        }
+
+        public void setYearlyRelativeMonth(int yearlyRelativeMonth) {
+            mYearlyRelativeMonth = yearlyRelativeMonth;
+        }
+
+
+        
+
+    }
+
     public static class ZRecurrence {
 
         private List<ZRecurrenceRule> mRules;
