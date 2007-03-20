@@ -324,7 +324,7 @@ public class ImapSession extends Session {
     }
 
     private boolean handleDeletes(Map<Integer, Object> deleted) {
-        ImapFolder selectedFolder = mHandler.getSelectedFolder();
+        ImapFolder selectedFolder = mHandler == null ? null : mHandler.getSelectedFolder();
         boolean selected = selectedFolder != null;
         for (Object obj : deleted.values()) {
             int id = (obj instanceof MailItem ? ((MailItem) obj).getId() : ((Integer) obj).intValue());
@@ -352,7 +352,7 @@ public class ImapSession extends Session {
     }
 
     private boolean handleCreates(Map<Integer, MailItem> created, AddedItems newItems) {
-        ImapFolder selectedFolder = mHandler.getSelectedFolder();
+        ImapFolder selectedFolder = mHandler == null ? null : mHandler.getSelectedFolder();
         boolean selected = selectedFolder != null;
         for (MailItem item : created.values()) {
             if (item instanceof Tag) {
@@ -376,7 +376,7 @@ public class ImapSession extends Session {
     }
 
     private boolean handleModifies(Map<Integer, Change> modified, AddedItems newItems) {
-        ImapFolder selectedFolder = mHandler.getSelectedFolder();
+        ImapFolder selectedFolder = mHandler == null ? null : mHandler.getSelectedFolder();
         boolean selected = selectedFolder != null;
         boolean virtual = selected && selectedFolder.isVirtual();
         boolean debug = ZimbraLog.imap.isDebugEnabled();
