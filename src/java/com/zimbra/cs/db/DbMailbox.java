@@ -571,8 +571,8 @@ public class DbMailbox {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement(
-                    "SELECT tags FROM " + DbMailItem.getMailItemTableName(mbox) +
-                    " WHERE mailbox_id = ? GROUP BY mailbox_id, tags");
+                    "SELECT DISTINCT(tags) FROM " + DbMailItem.getMailItemTableName(mbox) +
+                    " WHERE mailbox_id = ?");
             stmt.setInt(1, mbox.getId());
             rs = stmt.executeQuery();
             while (rs.next())
@@ -594,8 +594,8 @@ public class DbMailbox {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement(
-                    "SELECT flags FROM " + DbMailItem.getMailItemTableName(mbox) +
-                    " WHERE mailbox_id = ? GROUP BY mailbox_id, flags");
+                    "SELECT DISTINCT(flags) FROM " + DbMailItem.getMailItemTableName(mbox) +
+                    " WHERE mailbox_id = ?");
             stmt.setInt(1, mbox.getId());
             rs = stmt.executeQuery();
             while (rs.next())
