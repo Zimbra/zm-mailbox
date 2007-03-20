@@ -59,26 +59,17 @@ final class SessionMap {
     public Session.Type getType() { return mType; }
     
     /** @return the number of unique accounts with active sessions */
-    public synchronized int totalActiveAccounts() { return mAcctSessionMap.size(); }
-    
-    /** @return total number of sessions in the cache */
-    public synchronized int totalActiveSessions() { return mTotalActiveSessions; }
-
-    public synchronized Collection<AccountSessionMap> activeAccounts() { return Collections.unmodifiableCollection(mAcctSessionMap.values()); }
-    
-    public synchronized Session get(String accountId, String sessionId) {
-        AccountSessionMap acctMap = mAcctSessionMap.get(accountId);
-        if (acctMap != null) {
-            Session toRet = acctMap.get(sessionId);
-            if (toRet != null) {
-                updateAccessTime(toRet);
-            }
-            return toRet;
-        } else {
-            return null;
-        }
+    public synchronized int totalActiveAccounts() {
+        return mAcctSessionMap.size();
     }
     
+    /** @return total number of sessions in the cache */
+    public synchronized int totalActiveSessions() {
+        return mTotalActiveSessions;
+    }
+
+    /** Returns the number of {@link Session}s in the cache for the
+     *  given user. */
     public synchronized int countActiveSessions(String accountId) {
         AccountSessionMap acctMap = mAcctSessionMap.get(accountId);
         if (acctMap != null) {
@@ -87,7 +78,29 @@ final class SessionMap {
             return 0;
         }
     }
-    
+
+    public synchronized Collection<AccountSessionMap> activeAccounts() { return Collections.unmodifiableCollection(mAcctSessionMap.values()); }
+
+    /** Fetches a {@link Session} from the cache by owner and session ID and
+     *  returns it.  Returns <tt>null</tt> if no matching <tt>Session</tt> is
+     *  found.  As a side-effect, updates the last access time on the returned
+     *  <tt>Session</tt>. */
+    public synchronized Session get(String accountId, String sessionId) {
+        AccountSessionMap acctMap = mAcctSessionMap.get(accountId);
+        if (acctMap != null) {
+            Session session = acctMap.get(sessionId);
+            if (session != null)
+                updateAccessTime(session);
+            return session;
+        } else {
+            return null;
+        }
+    }
+
+    /** Looks up a {@link Session} by owner and session ID, removes it from
+     *  the cache, and returns it.  If no such <tt>Session</tt> is found,
+     *  returns <tt>null</tt>.  As a side effect, unsets the session ID on
+     *  the removed <tt>Session</tt>. */
     public synchronized Session remove(String accountId, String sessionId) {
         AccountSessionMap acctMap = mAcctSessionMap.get(accountId);
         if (acctMap != null) {
@@ -102,15 +115,24 @@ final class SessionMap {
                     mSessionAccessSet.remove(removedTimeout);
                 if (acctMap.isEmpty())
                     mAcctSessionMap.remove(accountId);
+                removed.setSessionId(null);
             }
             return removed;
-        } else
+        } else {
             return null;
+        }
     }
-    
+
+    /** Adds a {@link Session} to the cache, making sure that this doesn't
+     *  cause the owner to exceed their maximum permitted number of that type
+     *  of <tt>Session</tt>.  If it would cause them to go over the limit, the
+     *  owner's least recently accessed <tt>Session</tt> of that type is
+     *  removed from the cache and its {@link Session#doCleanup()} method is
+     *  called.  As a side effect, all removed <tt>Session</tt>s have their
+     *  session ID unset. */
     public synchronized Session putAndPrune(String accountId, String sessionId, Session session, int maxSessionsPerAcct) {
         Session oldValue = put(accountId, sessionId, session);
-        assert(session!=null);
+        assert(session != null);
         AccountSessionMap acctMap = mAcctSessionMap.get(accountId);
         while (acctMap.size() > maxSessionsPerAcct) {
             long leastRecent = Long.MAX_VALUE;
@@ -124,14 +146,21 @@ final class SessionMap {
             }
             assert(leastRecentId != null);
             int prevSize = acctMap.size();
-            remove(accountId, leastRecentId);
+            Session removed = remove(accountId, leastRecentId);
+            if (removed != null)
+                removed.doCleanup();
             assert(acctMap.size() < prevSize);
         }
         return oldValue;
     }
-    
+
+    /** Adds a {@link Session} to the cache.  As a side effect, updates the
+     *  <tt>Session</tt>'s last access time.
+     *  
+     * @return any already-cached <tt>Session</tt> with the same owner and
+     *         session ID */
     public synchronized Session put(String accountId, String sessionId, Session session) {
-        assert(session!=null);
+        assert(session != null);
         AccountSessionMap acctMap = mAcctSessionMap.get(accountId);
         if (acctMap == null) {
             acctMap = new AccountSessionMap();
@@ -143,14 +172,14 @@ final class SessionMap {
         updateAccessTime(session);
         return oldValue;
     }
-    
+
     synchronized private void updateAccessTime(Session session) {
         HashSet<Session> set = getSessionAccessSet(session.getSessionIdleLifetime());
         set.remove(session);
         session.updateAccessTime();
         set.add(session);
     }
-    
+
     /**
      * @return
      */
@@ -208,7 +237,7 @@ final class SessionMap {
         for (Map.Entry<Long, HashSet<Session>> entry : mSessionAccessSet.entrySet()) {
             long cutoff = cutoffIn;
             if (all) {
-                cutoff= Long.MAX_VALUE;
+                cutoff = Long.MAX_VALUE;
             } else {
                 if (cutoff == -1)
                     cutoff = now - entry.getKey();
@@ -220,12 +249,13 @@ final class SessionMap {
                     toRet.add(s);
                     iter.remove();
                     mTotalActiveSessions--;
-                    AccountSessionMap acctMap = mAcctSessionMap.get(s.getAccountId());
+                    AccountSessionMap acctMap = mAcctSessionMap.get(s.getAuthenticatedAccountId());
                     Session removed = acctMap.remove(s.getSessionId());
                     assert(removed == s);
                     if (removed != null) {
                         if (acctMap.isEmpty())
-                            mAcctSessionMap.remove(s.getAccountId());
+                            mAcctSessionMap.remove(s.getAuthenticatedAccountId());
+                        removed.setSessionId(null);
                     }
                 } else {
                     // iter is last-access order, so we know we can quit now
@@ -264,14 +294,14 @@ final class SessionMap {
     static boolean unitTest() {
         try {
             SessionMap map = new SessionMap(Session.Type.NULL);
-            
-            Session s1 =   new AdminSession("a1", "s1");
-            Session s1_2 = new AdminSession("a1", "s2");
-            Session s2 =   new AdminSession("a2", "s1");
-            Session s3 =   new AdminSession("a3", "s1");
-            Session s4 =   new AdminSession("a4", "s1");
-            Session s5 =   new AdminSession("a5", "s1");
-            Session s5_2 = new AdminSession("a5", "s2");
+
+            Session s1 =   new AdminSession("a1").setSessionId("s1");
+            Session s1_2 = new AdminSession("a1").setSessionId("s2");
+            Session s2 =   new AdminSession("a2").setSessionId("s1");
+            Session s3 =   new AdminSession("a3").setSessionId("s1");
+            Session s4 =   new AdminSession("a4").setSessionId("s1");
+            Session s5 =   new AdminSession("a5").setSessionId("s1");
+            Session s5_2 = new AdminSession("a5").setSessionId("s2");
             
             map.put("a1", "s1", s1);
             map.put("a1", "s2", s1_2);
@@ -305,13 +335,13 @@ final class SessionMap {
             boolean hasA1S2 = false;
             boolean hasA2 = false;
             for (Session s : removed) {
-                if (s.getAccountId().equals("a1")) {
+                if (s.getAuthenticatedAccountId().equals("a1")) {
                     if (s.getSessionId().equals("s1"))
                         hasA1S1 = true;
                     if (s.getSessionId().equals("s2"))
                         hasA1S2 = true;
                 }
-                if (s.getAccountId().equals("a2"))
+                if (s.getAuthenticatedAccountId().equals("a2"))
                     hasA2 = true;
             }
             if (!hasA1S1)
@@ -333,7 +363,7 @@ final class SessionMap {
             
             System.out.println("Final session list:");
             for (Session s : map.copySessionList()) {
-                System.out.println("\t"+s.getAccountId()+"_"+s.getSessionId());
+                System.out.println("\t"+s.getAuthenticatedAccountId()+"_"+s.getSessionId());
             }
             return true;
         } catch (ServiceException e) {
@@ -346,9 +376,9 @@ final class SessionMap {
     
     /** All the sessions for a given account */
     static final class AccountSessionMap extends HashMap<String, Session> {
-        AccountSessionMap() {
-            super(4);
-        }
+        private static final long serialVersionUID = -8141746787729464753L;
+
+        AccountSessionMap()  { super(4); }
     }
     
     
@@ -364,5 +394,4 @@ final class SessionMap {
             System.out.println("Unit tests FAILED!");
         }
     }
-    
 }

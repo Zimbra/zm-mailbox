@@ -204,7 +204,7 @@ class ImapURL {
             OperationContext octxt = session.getContext();
             byte[] content = null;
             // special-case the situation where the relevant folder is already SELECTed
-            if (acct.getId().equals(session.getAccountId()) && state == ImapHandler.State.SELECTED) {
+            if (acct.getId().equals(session.getAuthenticatedAccountId()) && state == ImapHandler.State.SELECTED) {
                 ImapFolder i4folder = handler.getSelectedFolder();
                 if (i4folder != null && mPath.equals(i4folder.getPath())) {
                     ImapMessage i4msg = i4folder.getByImapId(mUid);
@@ -225,7 +225,7 @@ class ImapURL {
             }
             // last option: handle off-server URLs
             if (content == null) {
-                Account authacct = Provisioning.getInstance().get(AccountBy.id, session.getAccountId());
+                Account authacct = Provisioning.getInstance().get(AccountBy.id, session.getAuthenticatedAccountId());
                 AuthToken auth = new AuthToken(authacct, System.currentTimeMillis() + 60 * 1000);
                 HashMap<String, String> params = new HashMap<String, String>();
                 params.put(UserServlet.QP_IMAP_ID, Integer.toString(mUid));
@@ -275,8 +275,8 @@ class ImapURL {
     public static void main(String[] args) throws ImapParseException, ServiceException {
         Account acct = Provisioning.getInstance().get(AccountBy.name, "user1@macbeth.liquidsys.com");
         ImapHandler handler = new TcpImapHandler(null);
-        ImapSession session = new ImapSession(acct.getId(), "test");
-        session.setUsername(acct.getName());
+        ImapSession session = new ImapSession(acct, handler, ImapSession.EnabledHack.NONE);
+        session.register();
         handler.setSelectedFolder(new ImapFolder(new ImapPath("trash", session), true, session));
 
         System.out.println(new ImapURL("tag", handler, session, "/Drafts;UIDVALIDITY=385759045/;UID=20/;section=HEADER"));

@@ -42,10 +42,20 @@ public class WikiSession extends Session {
 	}
 	private static WikiSession sSession;
 	
-    private WikiSession(String accountId) throws ServiceException {
-    	super(accountId, "wiki-session", Session.Type.WIKI);
+    private WikiSession(String accountId) {
+    	super(accountId, Session.Type.WIKI);
     }
-    
+
+    @Override
+    protected boolean isMailboxListener() {
+        return true;
+    }
+
+    @Override
+    protected boolean isRegisteredInCache() {
+        return false;
+    }
+
 	@Override
 	protected void cleanup() {
 	}

@@ -39,7 +39,7 @@ public class WaitSet {
             this.interests = interest;
         }
     }
-    
+
     /**
      * Simple struct used to communicate error codes for individual accounts during a wait 
      */
@@ -50,16 +50,16 @@ public class WaitSet {
             NOT_IN_SET_DURING_REMOVE,
             ;
         }
-        
+
         public final String accountId;
         public final Type error;
-        
+
         public WaitSetError(String accountId, Type error) {
             this.accountId = accountId;
             this.error = error;
         }
     }
-    
+
     /**
      * Create a new WaitSet, optionally specifying an initial set of accounts
      * to start listening wait on
@@ -71,7 +71,7 @@ public class WaitSet {
      * @param defaultInterest
      * @param add
      * @return
-     * @throws ServiceException
+     * @throws ServiceException 
      */
     public static Object[] create(int defaultInterest, List<WaitSetAccount> add) throws ServiceException {
         synchronized(sWaitSets) {
@@ -175,7 +175,7 @@ public class WaitSet {
      * @param defaultInterest
      * @throws ServiceException
      */
-    private WaitSet(String id, int defaultInterest) throws ServiceException {
+    private WaitSet(String id, int defaultInterest) {
         mWaitSetId = id;
         mDefaultInterest = defaultInterest;
     }
@@ -321,7 +321,7 @@ public class WaitSet {
             String[] toRet = new String[mSentSignalledSets.size()];
             int i = 0;
             for (WaitSetSession session : mSentSignalledSets) {
-                toRet[i] = session.getAccountId();
+                toRet[i] = session.getAuthenticatedAccountId();
             }
             mCb.dataReady(this, mCurrentSeqNo, false, toRet);
             mCurrentSeqNo++;
@@ -345,11 +345,11 @@ public class WaitSet {
     
     private List<WaitSetError> addAccounts(List<WaitSetAccount> accts) throws ServiceException {
         List<WaitSetError> errors = new ArrayList<WaitSetError>();
-        
+
         for (WaitSetAccount acct : accts) {
             if (!mWaitSets.containsKey(acct.accountId)) {
-                String sessionId = acct.accountId+"-"+mWaitSetId;
-                WaitSetSession ws = new WaitSetSession(this, acct.accountId, sessionId, acct.interests, acct.lastKnownSyncToken);
+                WaitSetSession ws = new WaitSetSession(this, acct.accountId, acct.interests, acct.lastKnownSyncToken);
+                ws.register();
                 mWaitSets.put(acct.accountId, ws);
                 mNumActiveSessions++;
             } else {
@@ -358,8 +358,8 @@ public class WaitSet {
         }
         return errors;
     }
-    
-    private List<WaitSetError> updateAccounts(List<WaitSetAccount> accts) throws ServiceException {
+
+    private List<WaitSetError> updateAccounts(List<WaitSetAccount> accts) {
         assert(Thread.holdsLock(this));
         List<WaitSetError> errors = new ArrayList<WaitSetError>();
         
@@ -375,7 +375,7 @@ public class WaitSet {
         return errors;
     }
     
-    private List<WaitSetError> removeAccounts(List<String> accts) throws ServiceException {
+    private List<WaitSetError> removeAccounts(List<String> accts) {
         assert(Thread.holdsLock(this));
         List<WaitSetError> errors = new ArrayList<WaitSetError>();
         

@@ -262,7 +262,7 @@ public class OzImapConnectionHandler extends ImapHandler implements OzConnection
 
                 if (mSession != null) {
                     mSession.setHandler(null);
-                    SessionCache.clearSession(mSession.getSessionId(), mSession.getAccountId());
+                    SessionCache.clearSession(mSession);
                     mSession = null;
                 }
 

@@ -512,6 +512,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     void setSelectedFolder(ImapFolder i4folder) {
+//        ImapFolder oldFolder = mSelectedFolder;
         mSelectedFolder = i4folder;
     }
 
@@ -737,16 +738,11 @@ public abstract class ImapHandler extends ProtocolHandler {
             return null;
         }
 
-        ImapSession session = (ImapSession) SessionCache.getNewSession(account.getId(), Session.Type.IMAP);
-        if (session == null) {
-            sendNO(tag, "AUTHENTICATE failed");
-            return null;
-        }
-        session.enableHack(hack);
+        ImapSession session = new ImapSession(account, this, hack);
+        session.register();
 
         Mailbox mbox = session.getMailbox();
         synchronized (mbox) {
-            session.setUsername(account.getName());
             for (Tag ltag : mbox.getTagList(session.getContext()))
                 session.cacheTag(ltag);
         }
@@ -754,7 +750,6 @@ public abstract class ImapHandler extends ProtocolHandler {
         // everything's good, so store the session in the handler
         mMailbox = mbox;
         mSession = session;
-        mSession.setHandler(this);
 
         return session;
     }
@@ -1245,7 +1240,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                 // FIXME: set APPENDUID if possible
                 String createdId = zmbx.addMessage(zfolder.getId(), Flag.bitmaskToFlags(flagMask), null, date.getTime(), content, true);
                 if (appendHint != null && uvv > 0 && createdId != null)
-                    appendHint.append("[APPENDUID ").append(uvv).append(' ').append(new ItemId(createdId, mSession.getAccountId()).getId()).append("] ");
+                    appendHint.append("[APPENDUID ").append(uvv).append(' ').append(new ItemId(createdId, mSession.getAuthenticatedAccountId()).getId()).append("] ");
             } else {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(path.getOwner());
             }
@@ -1955,7 +1950,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             // check target folder permissions before attempting the copy
             if (mboxobj instanceof Mailbox) {
                 Mailbox mbox = (Mailbox) mboxobj;
-                sameMailbox = mSession.getAccountId().equalsIgnoreCase(mbox.getAccountId());
+                sameMailbox = mSession.getAuthenticatedAccountId().equalsIgnoreCase(mbox.getAccountId());
                 Folder folder = mbox.getFolderByPath(getContext(), path.asZimbraPath());
                 iidTarget = new ItemId(folder);
                 uvv = ImapFolder.getUIDValidity(folder);
@@ -1992,7 +1987,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                     ItemActionOperation op = ItemActionOperation.COPY(mSession, getContext(), mSession.getMailbox(), Requester.IMAP,
                                                                       idlist, MailItem.TYPE_UNKNOWN, null, iidTarget);
                     for (String target : op.getCreatedIds())
-                        createdList.add(new ItemId(target, mSession.getAccountId()).getId());
+                        createdList.add(new ItemId(target, mSession.getAuthenticatedAccountId()).getId());
                 }
 
                 if (createdList.size() != i4list.size())

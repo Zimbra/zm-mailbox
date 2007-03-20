@@ -149,7 +149,7 @@ public class ImapPath {
         if (mOwner != null)
             return Provisioning.getInstance().get(AccountBy.name, mOwner);
         else if (mSession != null)
-            return Provisioning.getInstance().get(AccountBy.id, mSession.getAccountId());
+            return Provisioning.getInstance().get(AccountBy.id, mSession.getAuthenticatedAccountId());
         else
             return null;
     }
@@ -184,7 +184,7 @@ public class ImapPath {
             return null;
 
         Account target = getOwnerAccount();
-        Account acct = Provisioning.getInstance().get(AccountBy.id, mSession.getAccountId());
+        Account acct = Provisioning.getInstance().get(AccountBy.id, mSession.getAuthenticatedAccountId());
         try {
             ZMailbox.Options options = new ZMailbox.Options(new AuthToken(acct).getEncoded(), AccountUtil.getSoapUri(target));
             options.setTargetAccount(target.getName());

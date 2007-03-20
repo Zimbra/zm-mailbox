@@ -232,7 +232,7 @@ public class TcpImapHandler extends ImapHandler {
     void dropConnection(boolean sendBanner) {
         if (mSession != null) {
             mSession.setHandler(null);
-            SessionCache.clearSession(mSession.getSessionId(), mSession.getAccountId());
+            SessionCache.clearSession(mSession);
             mSession = null;
         }
 

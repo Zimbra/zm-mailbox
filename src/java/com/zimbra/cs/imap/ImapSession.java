@@ -29,7 +29,6 @@
 package com.zimbra.cs.imap;
 
 import java.io.IOException;
-import java.io.Writer;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,9 +39,11 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Flag;
@@ -56,7 +57,6 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.Session;
-import com.zimbra.common.soap.Element;
 
 /**
  * @author dkarp
@@ -81,36 +81,44 @@ public class ImapSession extends Session {
     private static final String SN_IMAP = "imap";
     private static final String FN_SUBSCRIPTIONS = "subs";
 
-    private String      mUsername;
-    private String      mIdleTag;
+    private final String      mUsername;
+    private final EnabledHack mEnabledHack;
+
     private ImapHandler mHandler;
+    private String      mIdleTag;
     private ImapFlagCache mFlags = new ImapFlagCache();
     private ImapFlagCache mTags = new ImapFlagCache();
-    private EnabledHack mEnabledHack;
 
-    public ImapSession(String accountId, String contextId) throws ServiceException {
-        super(accountId, contextId, Session.Type.IMAP);
-        getMailbox().beginTrackingImap(getContext());
-        mFlags = ImapFlagCache.getSystemFlags(getMailbox());
+    public ImapSession(Account acct, ImapHandler handler, EnabledHack hack) {
+        super(acct.getId(), Session.Type.IMAP);
+        mUsername = acct.getName();
+        mHandler = handler;
+        mEnabledHack = (hack == null ? EnabledHack.NONE : hack);
+    }
+
+    @Override
+    public Session register() throws ServiceException {
+        super.register();
+
+        mMailbox.beginTrackingImap(getContext());
+        mFlags = ImapFlagCache.getSystemFlags(mMailbox);
 //        try {
 //            parseConfig(getMailbox().getConfig(getContext(), SN_IMAP));
 //        } catch (ServiceException e) { }
+        return this;
     }
 
-    public void dumpState(Writer w) {
-        try {
-            StringBuilder s = new StringBuilder(this.toString());
-            s.append("\n\t\tuser=").append(mUsername);
-            s.append("\n\t\tidleTag=").append(mIdleTag);
-//            s.append("\n\t\tselectedFolder=").append(mSelectedFolder.toString());
-            s.append("\n\t\thacks=").append(mEnabledHack);
-            
-            w.write(s.toString());
-            if (mHandler != null) 
-                mHandler.dumpState(w);
-        } catch(IOException e) { e.printStackTrace(); }
+    @Override
+    protected boolean isMailboxListener() {
+        return true;
     }
-    
+
+    @Override
+    protected boolean isRegisteredInCache() {
+        return true;
+    }
+
+    @Override
     public void doEncodeState(Element parent) {
         Element e = parent.addElement("imap");
         e.addAttribute("username", mUsername);
@@ -123,21 +131,25 @@ public class ImapSession extends Session {
             mHandler.encodeState(e);
     }
 
-
+    @Override
     protected long getSessionIdleLifetime() {
         return IMAP_IDLE_TIMEOUT_MSEC;
     }
 
-    void setHandler(ImapHandler handler)  { mHandler = handler; }
+    void setHandler(ImapHandler handler) {
+        mHandler = handler;
+    }
 
-    String getUsername()          { return mUsername; }
-    void setUsername(String name) { mUsername = name; }
+    String getUsername() {
+        return mUsername;
+    }
 
-    void enableHack(EnabledHack hack)        { mEnabledHack = hack; }
-    boolean isHackEnabled(EnabledHack hack)  { return mEnabledHack == hack; }
+    boolean isHackEnabled(EnabledHack hack) {
+        return mEnabledHack == hack;
+    }
 
     OperationContext getContext() throws ServiceException {
-        return new OperationContext(getAccountId());
+        return new OperationContext(getAuthenticatedAccountId());
     }
 
 
@@ -423,7 +435,7 @@ public class ImapSession extends Session {
         return true;
     }
 
-
+    @Override
     protected void cleanup() {
         // XXX: is there a synchronization issue here?
         if (mHandler != null) {

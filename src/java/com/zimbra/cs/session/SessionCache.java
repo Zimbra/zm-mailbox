@@ -28,20 +28,15 @@
  */
 package com.zimbra.cs.session;
 
-import java.io.IOException;
-import java.io.Writer;
-import java.util.*;
+import java.util.List;
+import java.util.TimerTask;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
-import com.zimbra.cs.imap.ImapSession;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ValueCounter;
-import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.util.Zimbra;
 
 /** A Simple Cache with timeout (based on last-accessed time) for a {@link Session}. objects<p>
  * 
@@ -50,38 +45,26 @@ import com.zimbra.common.util.ZimbraLog;
  **/
 public final class SessionCache {
 
-    /** Creates a new {@link Session} of the specified type and starts its
-     *  expiry timeout.
-     * 
-     * @param accountId    The owner for the new Session.
-     * @param sessionType  The type of session (SOAP, IMAP, etc.) we need.
-     * @return A brand-new session for this account, or <code>null</code>
-     *         if an error occurred. */
-    public static Session getNewSession(String accountId, Session.Type sessionType) {
-        if (sShutdown || accountId == null || accountId.trim().equals(""))
+    /** Adds a {@link Session} to the cache and assigns it a session ID if it
+     *  doesn't already have one.  When a reigistered <tt>Session</tt> ages out
+     *  of the cache due to extended idle time, its {@link Session#doCleanup()}
+     *  method is invoked and its session ID is unset.
+     *  
+     * @param session  The <tt>Session</tt> to add to the cache
+     * @return the session ID assigned to the <tt>Session</tt>
+     * @see Session#getSessionIdleLifetime() */
+    static String registerSession(Session session) {
+        if (sShutdown || session == null)
             return null;
 
-        String sessionId = getNextSessionId(sessionType);
-        Session session = null;
-        try {
-            switch (sessionType) {
-                case IMAP:   session = new ImapSession(accountId, sessionId);   break;
-                case ADMIN:  session = new AdminSession(accountId, sessionId);  break;
-                case SYNCLISTENER: throw ServiceException.FAILURE("SYNCLISTENER sessions should not be created by the session cache", null);
-                case WAITSET: throw ServiceException.FAILURE("WAITSET sessions should not be created by the session cache", null);
-                default:
-                case SOAP:   session = new SoapSession(accountId, sessionId);   break;
-            }
-        } catch (ServiceException e) {
-            ZimbraLog.session.warn("failed to create session", e);
-            return null;
-        }
-        
-        if (ZimbraLog.session.isDebugEnabled())
-            ZimbraLog.session.debug("Created " + session);
-        
-        getSessionMap(sessionType).putAndPrune(accountId, sessionId, session, sessionType.getMaxPerAccount());
-        return session;
+        Session.Type sessionType = session.getSessionType();
+        String sessionId = session.getSessionId();
+        if (sessionId == null)
+            sessionId = getNextSessionId(sessionType);
+
+        getSessionMap(sessionType).putAndPrune(session.getAuthenticatedAccountId(), sessionId, session, sessionType.getMaxPerAccount());
+        session.setSessionId(sessionId);
+        return sessionId;
     }
 
     /** Fetches a {@link Session} from the cache.  Checks to make sure that
@@ -104,38 +87,43 @@ public final class SessionCache {
         return s;
     }
 
-    /** Immediately removes this {@link Session} from the session cache.
+    /** Immediately removes the {@link Session} from the session cache and
+     *  runs its {@link Session#doCleanup()} method.
      * 
-     * @param session The Session to be removed. */
+     * @param session  The Session to be removed. */
     public static void clearSession(Session session) {
-        if (session != null)
-            clearSession(session.getSessionId(), session.getAccountId());
-    }
-
-    /** Immediately removes this session from the session cache.  Checks to
-     *  make sure that the provided account ID matches the one on the cached
-     *  {@link Session}.
-     * 
-     * @param sessionId  The identifier for the requested Session.
-     * @param accountId  The owner of the requested Session. */
-    public static void clearSession(String sessionId, String accountId) {
-        if (sShutdown)
+        Session target = unregisterSession(session);
+        if (target == null)
             return;
 
-        if (ZimbraLog.session.isDebugEnabled())
-            ZimbraLog.session.debug("Clearing session " + sessionId);
-        
-        Session.Type type = getSessionTypeFromId(sessionId);
-        Session session = getSessionMap(type).remove(accountId, sessionId);
-        if (session != null) {
+        Session.Type type = target.getSessionType();
+        if (target != null) {
             assert(!Thread.holdsLock(getSessionMap(type)));
-            session.doCleanup();
+            target.doCleanup();
         }
     }
-    
-    /**
-     * Inintializes the session cache, starts the sweeper timer
-     */
+
+    /** Removes the <tt>Session</tt> from the cache and unsets its session ID.
+     *  Unlike {@link #clearSession(Session)}, the <tt>Session</tt>'s
+     *  {@link Session#doCleanup()} method is not automatically invoked.
+     * 
+     * @param session  The <tt>Session</tt> to remove from the cache
+     * @return the <tt>Session</tt> removed from the cache, or <tt>null</tt>
+     *         if the given Session was not cached
+     * @see #clearSession(Session)
+     * @see #registerSession(Session) */
+    public static Session unregisterSession(Session session) {
+        if (sShutdown || session == null || session.getSessionId() == null)
+            return null;
+
+        if (ZimbraLog.session.isDebugEnabled())
+            ZimbraLog.session.debug("Unregistering session " + session.getSessionId());
+
+        Session.Type type = session.getSessionType();
+        return getSessionMap(type).remove(session.getAuthenticatedAccountId(), session.getSessionId());
+    }
+
+    /** Inintializes the session cache and starts the sweeper timer. */
     public static void startup() {
         Zimbra.sTimer.schedule(new SweepMapTimerTask(), 30000, SESSION_SWEEP_INTERVAL_MSEC);
     }
@@ -150,7 +138,7 @@ public final class SessionCache {
             List<Session> list = sessionMap.pruneSessionsByTime(Long.MAX_VALUE);
             
             // Call deadlock-prone Session.doCleanup() after releasing lock on sLRUMap.
-            for (Session s: list) {
+            for (Session s : list) {
                 assert(!Thread.holdsLock(sessionMap));
                 s.doCleanup();
             }
@@ -213,7 +201,7 @@ public final class SessionCache {
                     totalAccounts++;
                     int count = 0;
                     for (Session session : activeAcct.values()) {
-                        accountId = session.getAccountId();
+                        accountId = session.getAuthenticatedAccountId();
                         totalSessions++;
                         count++;
                         sessionTypeCounter[sessionMap.getType().getIndex()]++;
@@ -285,7 +273,7 @@ public final class SessionCache {
                 // keep track of the count of each session type that's removed
                 removedByType[sessionMap.getType().getIndex()]+=toReap.size();
                 
-                for (Session s: toReap) {
+                for (Session s : toReap) {
                     if (ZimbraLog.session.isDebugEnabled())
                         ZimbraLog.session.debug("Removing cached session: " + s);
                     assert(!Thread.holdsLock(sessionMap));
@@ -298,10 +286,10 @@ public final class SessionCache {
             
             int totalRemoved = 0;
             for (int r : removedByType) {
-                totalRemoved+=r;
+                totalRemoved += r;
             }
             
-            if (sLog.isInfoEnabled() && totalRemoved>0) {
+            if (sLog.isInfoEnabled() && totalRemoved > 0) {
                 StringBuilder sb = new StringBuilder("Removed ").append(totalRemoved).append(" idle sessions (");
                 StringBuilder typeStr = new StringBuilder();
                 for (int i = 1; i < removedByType.length; i++) {

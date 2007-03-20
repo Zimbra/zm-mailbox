@@ -42,6 +42,7 @@ import org.dom4j.QName;
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.session.SessionCache;
@@ -73,7 +74,7 @@ public class ZimbraSoapContext {
         }
 
         void clearSession() {
-            SessionCache.clearSession(session.getSessionId(), getAuthtokenAccountId());
+            SessionCache.clearSession(session);
             session = null;
         }
 
@@ -111,6 +112,8 @@ public class ZimbraSoapContext {
     private String      mUserAgent;
     private String      mRequestIP;
 
+    /** Creates a <tt>ZimbraSoapContext</tt> from another existing
+     *  <tt>ZimbraSoapContext</tt> for use in proxying. */
     public ZimbraSoapContext(ZimbraSoapContext lc, String targetAccountId) throws ServiceException {
         mRawAuthToken = lc.mRawAuthToken;
         mAuthToken = lc.mAuthToken;
@@ -129,12 +132,13 @@ public class ZimbraSoapContext {
         mMountpointTraversed = lc.mMountpointTraversed;
     }
 
-    /**
-     * @param ctxt can be null if not present in request
-     * @param context the engine context, which might have the auth token in it
-     * @param requestProtocol TODO
-     * @throws ServiceException
-     */
+    /** Creates a <tt>ZimbraSoapContext</tt> from the <tt>&lt;context></tt>
+     *  {@link Element} from the SOAP header.
+     *  
+     * @param ctxt     The <tt>&lt;context></tt> Element (can be null if not
+     *                 present in request)
+     * @param context  The engine context, which might contain the auth token
+     * @param requestProtocol  The SOAP protocol used for the request */
     public ZimbraSoapContext(Element ctxt, Map context, SoapProtocol requestProtocol) throws ServiceException {
         if (ctxt != null && !ctxt.getQName().equals(HeaderConstants.CONTEXT))
             throw new IllegalArgumentException("expected ctxt, got: " + ctxt.getQualifiedName());
@@ -376,9 +380,10 @@ public class ZimbraSoapContext {
      * @param type  One of the types defined in the {@link SessionCache} class.
      * @return A matching SessionInfo object or <code>null</code>. */
     private SessionInfo findSessionInfo(Session.Type type) {
-        for (SessionInfo sinfo : mSessionInfo)
+        for (SessionInfo sinfo : mSessionInfo) {
             if (sinfo.session.getSessionType() == type)
                 return sinfo;
+        }
         return null;
     }
 
@@ -415,8 +420,16 @@ public class ZimbraSoapContext {
         SessionInfo sinfo = findSessionInfo(type);
         if (sinfo != null)
             s = sinfo.session;
-        if (s == null && !mSessionSuppressed) {
-            s = SessionCache.getNewSession(mAuthTokenAccountId, type);
+        if (s == null && !mSessionSuppressed && mAuthTokenAccountId != null) {
+            try {
+                if (type == Session.Type.SOAP && mAuthTokenAccountId.equalsIgnoreCase(getRequestedAccountId())) {
+                    // not permitting delegated notification yet...
+//                    s = new SoapSession(mAuthTokenAccountId, mRequestedAccountId);
+                    s = new SoapSession(mAuthTokenAccountId).register();
+                } else if (type == Session.Type.ADMIN) {
+                    s = new AdminSession(mAuthTokenAccountId).register();
+                }
+            } catch (ServiceException e) { }
             if (s != null)
                 mSessionInfo.add(sinfo = new SessionInfo(s, true));
         }

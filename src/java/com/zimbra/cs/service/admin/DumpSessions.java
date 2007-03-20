@@ -76,10 +76,10 @@ public class DumpSessions extends AdminDocumentHandler {
                     // stick the sessions into a big map organized by the account ID
                     HashMap<String/*accountid*/, List<Session>> map = new HashMap<String, List<Session>>();
                     for (Session s : sessions) {
-                        List<Session> list = map.get(s.getAccountId());
+                        List<Session> list = map.get(s.getAuthenticatedAccountId());
                         if (list == null) {
                             list = new ArrayList<Session>();
-                            map.put(s.getAccountId(), list);
+                            map.put(s.getAuthenticatedAccountId(), list);
                         }
                         list.add(s);
                     }
@@ -111,7 +111,7 @@ public class DumpSessions extends AdminDocumentHandler {
     private static void encodeSession(Element parent, Session s, boolean includeAcct) {
         Element sElt = parent.addElement("s");
         if (includeAcct) {
-            sElt.addAttribute(AdminConstants.A_ZIMBRA_ID, s.getAccountId());
+            sElt.addAttribute(AdminConstants.A_ZIMBRA_ID, s.getAuthenticatedAccountId());
         }
         sElt.addAttribute(AdminConstants.A_SESSION_ID, s.getSessionId());
         sElt.addAttribute(AdminConstants.A_CREATED_DATE, s.getCreationTime());

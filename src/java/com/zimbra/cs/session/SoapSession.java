@@ -73,14 +73,36 @@ public class SoapSession extends Session {
     private static final long SOAP_SESSION_TIMEOUT_MSEC = 10 * Constants.MILLIS_PER_MINUTE;
 
 
-    SoapSession(String accountId, String contextId) throws ServiceException {
-        super(accountId, contextId, Session.Type.SOAP);
+    /** Creates a <tt>SoapSession</tt> owned by the given account and
+     *  listening on its {@link Mailbox}.
+     * @see Session#register() */
+    public SoapSession(String authenticatedId) {
+        super(authenticatedId, Session.Type.SOAP);
     }
 
+    /** Creates a <tt>SoapSession</tt> owned by one account and potentially
+     *  listening on another user's {@link Mailbox}.
+     * @see Session#register() */
+    public SoapSession(String authenticatedId, String requestedId) {
+        super(authenticatedId, requestedId, Session.Type.SOAP);
+    }
+
+    @Override
+    protected boolean isMailboxListener() {
+        return true;
+    }
+
+    @Override
+    protected boolean isRegisteredInCache() {
+        return true;
+    }
+
+    @Override
     protected long getSessionIdleLifetime() {
         return SOAP_SESSION_TIMEOUT_MSEC;
     }
-    
+
+    @Override
     public void doEncodeState(Element parent) {
         parent.addAttribute(AdminConstants.A_NOTIFY, mNotify);
         if (mPushChannel != null) {
@@ -103,7 +125,8 @@ public class SoapSession extends Session {
             mNotify = true;
         }
     }
-    
+
+    @Override
     public void notifyIM(IMNotification imn) {
         if (!mNotify)
             return;
@@ -112,9 +135,10 @@ public class SoapSession extends Session {
         pm.addIMNotification(imn);
         notifyPendingChanges(-1, pm);
     }
-    
+
+    @Override
     protected boolean shouldRegisterWithIM() { return true; }
-    
+
     /**
      * A callback interface which is listening on this session and waiting for new notifications
      */
@@ -182,6 +206,7 @@ public class SoapSession extends Session {
      *
      * @param changeId The sync-token change Id of the change 
      * @param pms   A set of new change notifications from our Mailbox  */
+    @Override
     public void notifyPendingChanges(int changeId, PendingModifications pms) {
         if (!pms.hasNotifications() || !mNotify || mMailbox == null)
             return;
@@ -313,7 +338,7 @@ public class SoapSession extends Session {
         if (ctxt == null || mMailbox == null)
             return null;
 
-        String explicitAcct = getAccountId().equals(zsc.getAuthtokenAccountId()) ? null : getAccountId();
+        String explicitAcct = getAuthenticatedAccountId().equals(zsc.getAuthtokenAccountId()) ? null : getAuthenticatedAccountId();
 
         // must lock the Mailbox before locking the Session to avoid deadlock
         //   because ToXML functions can now call back into the Mailbox

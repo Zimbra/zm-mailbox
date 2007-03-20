@@ -63,7 +63,7 @@ public class ImapListOperation extends Operation {
         if (pattern.endsWith("/"))
             pattern = pattern.substring(0, pattern.length() - 1);
 
-        boolean isLocal = mMailbox.getAccountId().equalsIgnoreCase(mSession.getAccountId());
+        boolean isLocal = mMailbox.getAccountId().equalsIgnoreCase(mSession.getAuthenticatedAccountId());
 
         synchronized (mMailbox) {
             Collection<Folder> folders = mMailbox.getVisibleFolders(getOpCtxt());
