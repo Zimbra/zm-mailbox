@@ -53,6 +53,7 @@ public abstract class Db {
     public static enum Capability {
         BITWISE_OPERATIONS,
         BOOLEAN_DATATYPE,
+        BROKEN_IN_CLAUSE,
         CASE_SENSITIVE_COMPARISON,
         CAST_AS_BIGINT,
         CLOB_COMPARISON,
@@ -86,8 +87,12 @@ public abstract class Db {
 
     private static final int DEFAULT_IN_CLAUSE_BATCH_SIZE = 400;
 
-    public int getINClauseBatchSize() {
-        return DEFAULT_IN_CLAUSE_BATCH_SIZE;
+    /** Returns the maximum number of items to include in an "IN (?, ?, ...)"
+     *  clause.  For databases with a broken or hugely nonperformant IN clause,
+     *  e.g. Derby pre-10.3 (see DERBY-47 JIRA), we hardcode the IN clause
+     *  batch size to 1. */
+    public static int getINClauseBatchSize() {
+        return getInstance().supportsCapability(Capability.BROKEN_IN_CLAUSE) ? 1 : DEFAULT_IN_CLAUSE_BATCH_SIZE;
     }
 
 

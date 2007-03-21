@@ -427,8 +427,8 @@ public class DbMailItem {
 //            }
 
             String imapRenumber = mbox.isTrackingImap() ? ", imap_id = CASE WHEN imap_id IS NULL THEN NULL ELSE 0 END" : "";
-            for (int i = 0; i < msgs.size(); i += Db.getInstance().getINClauseBatchSize()) {
-                int count = Math.min(Db.getInstance().getINClauseBatchSize(), msgs.size() - i);
+            for (int i = 0; i < msgs.size(); i += Db.getINClauseBatchSize()) {
+                int count = Math.min(Db.getINClauseBatchSize(), msgs.size() - i);
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(folder) +
                             " SET folder_id = ?, mod_metadata = ?, change_date = ?" + imapRenumber +
                             " WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(count));
@@ -467,8 +467,8 @@ public class DbMailItem {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            for (int i = 0; i < children.length; i += Db.getInstance().getINClauseBatchSize()) {
-                int count = Math.min(Db.getInstance().getINClauseBatchSize(), children.length - i);
+            for (int i = 0; i < children.length; i += Db.getINClauseBatchSize()) {
+                int count = Math.min(Db.getINClauseBatchSize(), children.length - i);
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
                             " SET parent_id = ?, mod_metadata = ?, change_date = ?" +
                             " WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(count));
@@ -866,8 +866,8 @@ public class DbMailItem {
             String operation = (add ? " + " : " - ");
             String precondition = (add ? "NOT " : "") + Db.bitmaskAND(column);
 
-            for (int i = 0; i < itemIDs.size(); i += Db.getInstance().getINClauseBatchSize()) {
-                int count = Math.min(Db.getInstance().getINClauseBatchSize(), itemIDs.size() - i);
+            for (int i = 0; i < itemIDs.size(); i += Db.getINClauseBatchSize()) {
+                int count = Math.min(Db.getINClauseBatchSize(), itemIDs.size() - i);
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(tag) +
                             " SET " + column + " = " + column + operation + "?, mod_metadata = ?, change_date = ?" +
                             " WHERE " + IN_THIS_MAILBOX_AND + precondition + " AND id IN " + DbUtil.suitableNumberOfVariables(count));
@@ -977,8 +977,8 @@ public class DbMailItem {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            for (int i = 0; i < itemIDs.size(); i += Db.getInstance().getINClauseBatchSize()) {
-                int count = Math.min(Db.getInstance().getINClauseBatchSize(), itemIDs.size() - i);
+            for (int i = 0; i < itemIDs.size(); i += Db.getINClauseBatchSize()) {
+                int count = Math.min(Db.getINClauseBatchSize(), itemIDs.size() - i);
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
                             " SET unread = ?, mod_metadata = ?, change_date = ?" +
                             " WHERE " + IN_THIS_MAILBOX_AND + "unread = ? AND id IN " + DbUtil.suitableNumberOfVariables(count) +
@@ -1051,8 +1051,8 @@ public class DbMailItem {
 
                 for (Map.Entry<Integer, List<Integer>> update : counts.entrySet()) {
                     List<Integer> convIDs = update.getValue();
-                    for (int i = 0; i < convIDs.size(); i += Db.getInstance().getINClauseBatchSize()) {
-                        int count = Math.min(Db.getInstance().getINClauseBatchSize(), convIDs.size() - i);
+                    for (int i = 0; i < convIDs.size(); i += Db.getINClauseBatchSize()) {
+                        int count = Math.min(Db.getINClauseBatchSize(), convIDs.size() - i);
                         stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(folder) +
                                 " SET size = size - ?, metadata = NULL, mod_metadata = ?, change_date = ?" +
                                 " WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(count) +
@@ -1099,8 +1099,8 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             if (Db.supports(Db.Capability.MULTITABLE_UPDATE)) {
-                for (int i = 0; i < ids.size(); i += Db.getInstance().getINClauseBatchSize()) {
-                    int count = Math.min(Db.getInstance().getINClauseBatchSize(), ids.size() - i);
+                for (int i = 0; i < ids.size(); i += Db.getINClauseBatchSize()) {
+                    int count = Math.min(Db.getINClauseBatchSize(), ids.size() - i);
                     stmt = conn.prepareStatement("UPDATE " + table + ", " +
                                 "(SELECT parent_id pid, COUNT(*) count FROM " + getMailItemTableName(mbox) +
                                 " WHERE " + IN_THIS_MAILBOX_AND + "id IN" + DbUtil.suitableNumberOfVariables(count) + "AND parent_id IS NOT NULL GROUP BY parent_id) AS x" +
@@ -1173,8 +1173,8 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            for (int i = 0; i < convIDs.size(); i += Db.getInstance().getINClauseBatchSize()) {
-                int count = Math.min(Db.getInstance().getINClauseBatchSize(), convIDs.size() - i);
+            for (int i = 0; i < convIDs.size(); i += Db.getINClauseBatchSize()) {
+                int count = Math.min(Db.getINClauseBatchSize(), convIDs.size() - i);
                 stmt = conn.prepareStatement("SELECT id FROM " + getMailItemTableName(mbox) +
                             " WHERE " + IN_THIS_MAILBOX_AND + "id IN" + DbUtil.suitableNumberOfVariables(count) + "AND size <= 0");
                 int pos = 1;
@@ -1227,9 +1227,9 @@ public class DbMailItem {
 
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
-        for (int i = 0; i < targets.size(); i += Db.getInstance().getINClauseBatchSize()) {
+        for (int i = 0; i < targets.size(); i += Db.getINClauseBatchSize()) {
             try {
-                int count = Math.min(Db.getInstance().getINClauseBatchSize(), targets.size() - i);
+                int count = Math.min(Db.getINClauseBatchSize(), targets.size() - i);
                 stmt = conn.prepareStatement("DELETE FROM " + getMailItemTableName(mbox) +
                             " WHERE " + IN_THIS_MAILBOX_AND + "id IN" + DbUtil.suitableNumberOfVariables(count));
                 int pos = 1;
@@ -1769,9 +1769,9 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         Iterator<Integer> it = ids.iterator();
-        for (int i = 0; i < ids.size(); i += Db.getInstance().getINClauseBatchSize()) {
+        for (int i = 0; i < ids.size(); i += Db.getINClauseBatchSize()) {
             try {
-                int count = Math.min(Db.getInstance().getINClauseBatchSize(), ids.size() - i);
+                int count = Math.min(Db.getINClauseBatchSize(), ids.size() - i);
                 stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                             " FROM " + getMailItemTableName(mbox, "mi") +
                             " WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(count));
@@ -1926,9 +1926,9 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
 
-        for (int i = 0; i < convData.size(); i += Db.getInstance().getINClauseBatchSize()) {
+        for (int i = 0; i < convData.size(); i += Db.getINClauseBatchSize()) {
             try {
-                int count = Math.min(Db.getInstance().getINClauseBatchSize(), convData.size() - i);
+                int count = Math.min(Db.getINClauseBatchSize(), convData.size() - i);
                 stmt = conn.prepareStatement("SELECT parent_id, id, unread, flags, tags" +
                         " FROM " + getMailItemTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "parent_id IN " + DbUtil.suitableNumberOfVariables(count) +
@@ -2171,8 +2171,8 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            for (int i = 0; i < indexIDs.size(); i += Db.getInstance().getINClauseBatchSize()) {
-                int count = Math.min(Db.getInstance().getINClauseBatchSize(), indexIDs.size() - i);
+            for (int i = 0; i < indexIDs.size(); i += Db.getINClauseBatchSize()) {
+                int count = Math.min(Db.getINClauseBatchSize(), indexIDs.size() - i);
                 stmt = conn.prepareStatement("SELECT index_id FROM " + getMailItemTableName(mbox) +
                             " WHERE " + IN_THIS_MAILBOX_AND + "index_id IN " + DbUtil.suitableNumberOfVariables(count));
                 int pos = 1;

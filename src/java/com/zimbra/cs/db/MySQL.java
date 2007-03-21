@@ -51,6 +51,7 @@ public class MySQL extends Db {
         switch (capability) {
             case BITWISE_OPERATIONS:         return true;
             case BOOLEAN_DATATYPE:           return true;
+            case BROKEN_IN_CLAUSE:           return false;
             case CASE_SENSITIVE_COMPARISON:  return false;
             case CAST_AS_BIGINT:             return false;
             case CLOB_COMPARISON:            return true;
