@@ -47,12 +47,32 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.zclient.ZFolder.Color;
 import com.zimbra.cs.zclient.ZGrant.GranteeType;
+import com.zimbra.cs.zclient.ZInvite.ZTimeZone;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.MessagePart;
 import com.zimbra.cs.zclient.ZSearchParams.Cursor;
-import com.zimbra.cs.zclient.event.*;
-import com.zimbra.cs.zclient.ZInvite.ZTimeZone;
-import com.zimbra.cs.zclient.ZInvite.ZDateTime;
+import com.zimbra.cs.zclient.event.ZCreateAppointmentEvent;
+import com.zimbra.cs.zclient.event.ZCreateContactEvent;
+import com.zimbra.cs.zclient.event.ZCreateConversationEvent;
+import com.zimbra.cs.zclient.event.ZCreateEvent;
+import com.zimbra.cs.zclient.event.ZCreateFolderEvent;
+import com.zimbra.cs.zclient.event.ZCreateMessageEvent;
+import com.zimbra.cs.zclient.event.ZCreateMountpointEvent;
+import com.zimbra.cs.zclient.event.ZCreateSearchFolderEvent;
+import com.zimbra.cs.zclient.event.ZCreateTagEvent;
+import com.zimbra.cs.zclient.event.ZDeleteEvent;
+import com.zimbra.cs.zclient.event.ZEventHandler;
+import com.zimbra.cs.zclient.event.ZModifyAppointmentEvent;
+import com.zimbra.cs.zclient.event.ZModifyContactEvent;
+import com.zimbra.cs.zclient.event.ZModifyConversationEvent;
+import com.zimbra.cs.zclient.event.ZModifyEvent;
+import com.zimbra.cs.zclient.event.ZModifyFolderEvent;
+import com.zimbra.cs.zclient.event.ZModifyMailboxEvent;
+import com.zimbra.cs.zclient.event.ZModifyMessageEvent;
+import com.zimbra.cs.zclient.event.ZModifyMountpointEvent;
+import com.zimbra.cs.zclient.event.ZModifySearchFolderEvent;
+import com.zimbra.cs.zclient.event.ZModifyTagEvent;
+import com.zimbra.cs.zclient.event.ZRefreshEvent;
 import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
@@ -2825,7 +2845,7 @@ public class ZMailbox {
         return new ZAppointmentResult(invoke(req));
     }
 
-    public ZAppointmentResult createAppointmentException(String id, String component, ZInvite.ZDateTime exceptionId, ZOutgoingMessage message, ZInvite invite, String optionalUid) throws ServiceException {
+    public ZAppointmentResult createAppointmentException(String id, String component, ZDateTime exceptionId, ZOutgoingMessage message, ZInvite invite, String optionalUid) throws ServiceException {
         XMLElement req = new XMLElement(MailConstants.CREATE_APPOINTMENT_EXCEPTION_REQUEST);
 
         req.addAttribute(MailConstants.A_ID, id);
