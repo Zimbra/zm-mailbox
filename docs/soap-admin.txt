@@ -216,7 +216,7 @@ Access: domain admin sufficient
 <AddAccountAliasRequest>
   <id>{value-of-zimbraId}</id>
   <alias>...</alias>
-</AddAliasRequest>
+</AddAccountAliasRequest>
 
 <AddAccountAliasResponse/>
 
