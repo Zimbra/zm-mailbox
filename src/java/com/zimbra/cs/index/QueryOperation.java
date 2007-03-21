@@ -66,6 +66,18 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
 
     protected SearchParams mParams;
     public SortBy getSortBy() { return mParams.getSortBy(); }
+    
+    // based on data from our internal mail server:
+    //
+    // HOWTO Calculate avg msgs/conv from SQL:
+    //
+    // TOT_MSGS = select count(*) from mail_item mi where mi.type=5 and mi.mailbox_id=?;
+    // TOT_CONVS = select count(*) from mail_item mi where mi.type=4 and mi.mailbox_id=?;
+    // TOT_VIRTUAL_CONVS = select count(*) from mail_item mi where mi.type=5 and mi.parent_id is NULL and mi.mailbox_id=?;
+    //
+    // MSGS_PER_CONV = TOT_MSGS / (TOT_CONVS + TOT_VIRT_CONVS);
+    //
+    private static final float MESSAGES_PER_CONV_ESTIMATE = 2.25f;
 
     ////////////////////
     // Top-Level Execution  
@@ -106,11 +118,11 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
                 if (mParams.getPrefetch() && USE_PRELOADING_GROUPER) {
                     chunkSize+= 2; // one for the ConvQueryResults, one for the Grouper  
                     setupResults(mbox, new ConvQueryResults(new ItemPreloadingGrouper(this, chunkSize, mbox), types, mParams.getSortBy(), mParams.getMode()));
-                    chunkSize*=2; // guess 2 msgs per conv
+                    chunkSize*=MESSAGES_PER_CONV_ESTIMATE; // guess 2 msgs per conv
                 } else {
                     chunkSize++; // one for the ConvQueryResults
                     setupResults(mbox, new ConvQueryResults(this, types, mParams.getSortBy(), mParams.getMode()));
-                    chunkSize*=2;
+                    chunkSize*=MESSAGES_PER_CONV_ESTIMATE;
                 }
                 preloadOuterResults = true;
                 break;
