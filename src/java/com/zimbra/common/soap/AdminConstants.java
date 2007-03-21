@@ -279,6 +279,13 @@ public class AdminConstants {
     public static final QName DESTROY_WAIT_SET_REQUEST = QName.get("DestroyWaitSetRequest", NAMESPACE);
     public static final QName DESTROY_WAIT_SET_RESPONSE = QName.get("DestroyWaitSetResponse", NAMESPACE);
     
+    // Admin saved searches
+    public static final QName GET_ADMIN_SAVED_SEARCHES_REQUEST = QName.get("GetAdminSavedSearchesRequest", NAMESPACE);
+    public static final QName GET_ADMIN_SAVED_SEARCHES_RESPONSE = QName.get("GetAdminSavedSearchesResponse", NAMESPACE);
+    public static final QName MODIFY_ADMIN_SAVED_SEARCHES_REQUEST = QName.get("ModifyAdminSavedSearchesRequest", NAMESPACE);
+    public static final QName MODIFY_ADMIN_SAVED_SEARCHES_RESPONSE = QName.get("ModifyAdminSavedSearchesResponse", NAMESPACE);
+    
+    
     // DumpSessions
     public static final String E_SESSION = "session";
     public static final String A_ZIMBRA_ID = "zid";
@@ -336,6 +343,7 @@ public class AdminConstants {
     public static final String E_PROGRESS = "progress";
     public static final String E_SOAP_URL = "soapURL";
     public static final String E_ADMIN_SOAP_URL = "adminSoapURL";
+    public static final String E_SEARCH = "search";
 
     public static final String A_ACTION = "action";
     public static final String A_APPLY_CONFIG = "applyConfig";
