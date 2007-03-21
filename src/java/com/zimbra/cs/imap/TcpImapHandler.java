@@ -133,8 +133,12 @@ public class TcpImapHandler extends ImapHandler {
             if (mInputStream == null)
                 return STOP_PROCESSING;
 
-            if (mSession != null)
+            if (mSession != null) {
                 ZimbraLog.addAccountNameToContext(mSession.getUsername());
+                if (mSession.getMailbox() != null) {
+                    ZimbraLog.addMboxToContext(mSession.getMailbox().getId());
+                }
+            }
             ZimbraLog.addIpToContext(mRemoteAddress);
 
             req = mIncompleteRequest;
