@@ -2023,4 +2023,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Voicemail features enabled</desc>
 </attr>
 
+<attr id="446" name="zimbraAdminSavedSearches" type="string" max="512" cardinality="multi" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <desc>admin saved searches</desc>
+</attr>
+
 </attrs>

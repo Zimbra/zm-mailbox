@@ -1834,3 +1834,33 @@ to it for (default of) 10 minutes.
   
   
 ---------------------------
+
+# returns admin saved searches.
+
+<GetAdminSavedSearchesRequest>
+  <search name="{search-name}"/>*
+</GetAdminSavedSearchesRequest>
+  
+  If no <search> is present server will return all saved searches.
+
+<GetAdminSavedSearchesResponse>
+  <search name="{search-name}">{{search-query}}</search>*
+</GetAdminSavedSearchesResponse>
+
+---------------------------
+
+# modifies admin saved searches.
+
+# returns the admin saved searches.
+<ModifyAdminSavedSearchesRequest>
+  {<search name="{search-name}">{search-query}</search>}+
+</ModifyAdminSavedSearchesRequest>
+
+  If {search-query} is empty => delete the search if it exists
+  If {search-name} already exists => replace with new {search-query}
+  If {search-name} does not exist => save as a new search
+
+<ModifyAdminSavedSearchesResponse/>
+
+-----------------------------
+

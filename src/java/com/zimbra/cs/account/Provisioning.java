@@ -1160,6 +1160,12 @@ public abstract class Provisioning {
     
     public static final String A_zimbraSyncWindowSize = "zimbraSyncWindowSize";
     
+    /*
+     * admin saved searches
+     */
+    public static final String A_zimbraAdminSavedSearches = "zimbraAdminSavedSearches";
+
+    
     private static Provisioning sProvisioning;
 
     public synchronized static Provisioning getInstance() {

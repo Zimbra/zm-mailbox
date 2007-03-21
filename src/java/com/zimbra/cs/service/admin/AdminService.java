@@ -181,6 +181,11 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.CREATE_WAIT_SET_REQUEST, new CreateWaitSet());
         dispatcher.registerHandler(AdminConstants.WAIT_MULTIPLE_ACCOUNTS_REQUEST, new WaitMultipleAccounts());
         dispatcher.registerHandler(AdminConstants.DESTROY_WAIT_SET_REQUEST, new DestroyWaitSet());
+        
+        // admin saved searches
+        dispatcher.registerHandler(AdminConstants.GET_ADMIN_SAVED_SEARCHES_REQUEST, new GetAdminSavedSearches());
+        dispatcher.registerHandler(AdminConstants.MODIFY_ADMIN_SAVED_SEARCHES_REQUEST, new ModifyAdminSavedSearches());
+        
     }
 
     /**

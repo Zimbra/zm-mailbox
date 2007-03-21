@@ -1,0 +1,80 @@
+package com.zimbra.cs.service.admin;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.service.admin.GetAdminSavedSearches;
+import com.zimbra.soap.ZimbraSoapContext;
+
+public class ModifyAdminSavedSearches extends AdminDocumentHandler {
+    
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        Account acct = getRequestedAccount(lc);
+
+        Element response = lc.createElement(AdminConstants.MODIFY_ADMIN_SAVED_SEARCHES_RESPONSE);
+        
+        HashMap<String, String> searches = null;
+        for (Iterator it = request.elementIterator(AdminConstants.E_SEARCH); it.hasNext(); ) {
+            if (searches == null)
+                searches = new HashMap<String, String>();
+            Element e = (Element) it.next();
+            String name = e.getAttribute(AdminConstants.A_NAME);
+            String query = e.getText();
+            if (name != null && name.length() != 0)
+                searches.put(name, query);
+            else
+                ZimbraLog.account.warn("ModifyAdminSavedSearches: empty search name ignored");
+        }
+
+        handle(acct, response, searches);
+        return response;
+    }
+    
+    public void handle(Account acct, Element response, HashMap<String, String> modSearches) throws ServiceException {
+        String[] searches = acct.getMultiAttr(Provisioning.A_zimbraAdminSavedSearches);
+        Map<String, GetAdminSavedSearches.AdminSearch> curSearches = new HashMap<String, GetAdminSavedSearches.AdminSearch>();
+        for (int i = 0; i < searches.length; i++) {
+            GetAdminSavedSearches.AdminSearch as = GetAdminSavedSearches.AdminSearch.parse(searches[i]);
+            curSearches.put(as.getName(), as);
+        }
+        
+        for (Iterator it = modSearches.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry entry = (Map.Entry)it.next();
+            String name = (String)entry.getKey();
+            String query = (String)entry.getValue();
+            GetAdminSavedSearches.AdminSearch mod = new GetAdminSavedSearches.AdminSearch(name, query);
+            if (curSearches.containsKey(name)) {
+                if (query.length() == 0)
+                    curSearches.remove(name);             
+                else
+                    curSearches.put(name, mod);
+            } else {
+                if (query.length() == 0)
+                    throw ServiceException.INVALID_REQUEST("query for " + name + " is empty", null);
+                else
+                    curSearches.put(name, mod);
+            }
+        }
+
+        String[] mods = new String[curSearches.size()];
+        int i = 0;
+        for (Iterator it = curSearches.values().iterator(); it.hasNext(); ) {
+            GetAdminSavedSearches.AdminSearch m = (GetAdminSavedSearches.AdminSearch)it.next();
+            mods[i++] = m.encode();
+        }
+            
+        Provisioning prov = Provisioning.getInstance();
+        Map<String,String[]> modmap = new HashMap<String,String[]>();
+        modmap.put(Provisioning.A_zimbraAdminSavedSearches, mods);
+        prov.modifyAttrs(acct, modmap);
+
+    }
+}
