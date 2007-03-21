@@ -195,20 +195,28 @@ public class ZFolder implements ZItem, Comparable {
 
         // sub folders
         for (Element child : e.listElements(MailConstants.E_FOLDER))
-            addChild(new ZFolder(child, this));
+            mSubFolders.add(new ZFolder(child, this));
         
         // search
         for (Element s : e.listElements(MailConstants.E_SEARCH))
-            addChild(new ZSearchFolder(s, this));
+            mSubFolders.add(new ZSearchFolder(s, this));
         
         // link
         for (Element l : e.listElements(MailConstants.E_MOUNT))
-            addChild(new ZMountpoint(l, this));
+            mSubFolders.add(new ZMountpoint(l, this));
     }
 
-    void addChild(ZFolder folder)        { mSubFolders.add(folder); }
+    synchronized void addChild(ZFolder folder) {
+        List<ZFolder> newSubs = new ArrayList<ZFolder>(mSubFolders);
+        newSubs.add(folder);
+        mSubFolders = newSubs;
+    }
     
-    void removeChild(ZFolder folder)       { mSubFolders.remove(folder); }
+    synchronized void removeChild(ZFolder folder) {
+        List<ZFolder> newSubs = new ArrayList<ZFolder>(mSubFolders);
+        newSubs.remove(folder);
+        mSubFolders = newSubs;
+    }
 
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
         if (event instanceof ZModifyFolderEvent) {
