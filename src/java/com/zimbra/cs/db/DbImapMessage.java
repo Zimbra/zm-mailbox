@@ -94,7 +94,7 @@ public class DbImapMessage {
 
             int i = 1;
             stmt.setInt(i++, mbox.getId());
-            stmt.setInt(i++, imapFolder.getId());
+            stmt.setInt(i++, imapFolder.getItemId());
             rs = stmt.executeQuery();
             while (rs.next()) {
                 long uid = rs.getLong("imap.uid");

@@ -47,45 +47,43 @@ import com.zimbra.cs.zclient.ZMailbox.ZImportStatus;
 public class TestImapImport
 extends TestCase {
     
-    private static final String USER1_NAME = "testimapimport1";
-    private static final String USER2_NAME = "testimapimport2";
+    private static final String REMOTE_USER_NAME = "testimapimportremote";
+    private static final String LOCAL_USER_NAME = "testimapimportlocal";
     private static final String NAME_PREFIX = "TestImapImport";
-    private static final String DEST_FOLDER_ROOT = "/" + NAME_PREFIX;
+    private static final String DS_FOLDER_ROOT = "/" + NAME_PREFIX;
     
-    private ZMailbox mMbox1;
-    private ZMailbox mMbox2;
+    private ZMailbox mRemoteMbox;
+    private ZMailbox mLocalMbox;
     private String mOriginalCleartextValue;
     private ZDataSource mDataSource;
-    
     
     public void setUp()
     throws Exception {
         cleanUp();
         
         // Get mailbox references
-        if (!TestUtil.accountExists(USER1_NAME)) {
-            TestUtil.createAccount(USER1_NAME);
+        if (!TestUtil.accountExists(LOCAL_USER_NAME)) {
+            TestUtil.createAccount(LOCAL_USER_NAME);
         }
-        if (!TestUtil.accountExists(USER2_NAME)) {
-            TestUtil.createAccount(USER2_NAME);
+        if (!TestUtil.accountExists(REMOTE_USER_NAME)) {
+            TestUtil.createAccount(REMOTE_USER_NAME);
         }
-        mMbox1 = TestUtil.getZMailbox(USER1_NAME);
-        mMbox2 = TestUtil.getZMailbox(USER2_NAME);
+        mRemoteMbox = TestUtil.getZMailbox(REMOTE_USER_NAME);
+        mLocalMbox = TestUtil.getZMailbox(LOCAL_USER_NAME);
         
         // Get or create folder
-        ZFolder folder = mMbox2.getFolderByPath(DEST_FOLDER_ROOT);
+        ZFolder folder = mLocalMbox.getFolderByPath(DS_FOLDER_ROOT);
         if (folder == null) {
-            folder = mMbox2.createFolder(
-                Integer.toString(Mailbox.ID_FOLDER_USER_ROOT), NAME_PREFIX, null, null, null, null);
+            folder = TestUtil.createFolder(mLocalMbox, NAME_PREFIX);
         }
         
         // Create data source
         int port = Integer.parseInt(TestUtil.getServerAttr(Provisioning.A_zimbraImapBindPort));
         mDataSource = new ZImapDataSource(NAME_PREFIX, true, "localhost",
-            port, USER1_NAME, TestUtil.DEFAULT_PASSWORD, folder.getId(), DataSource.ConnectionType.cleartext); 
-        String id = mMbox2.createDataSource(mDataSource);
+            port, REMOTE_USER_NAME, TestUtil.DEFAULT_PASSWORD, folder.getId(), DataSource.ConnectionType.cleartext); 
+        String id = mLocalMbox.createDataSource(mDataSource);
         mDataSource = null;
-        for (ZDataSource ds : mMbox2.getAllDataSources()) {
+        for (ZDataSource ds : mLocalMbox.getAllDataSources()) {
             if (ds.getId().equals(id)) {
                 mDataSource = ds;
             }
@@ -100,59 +98,69 @@ extends TestCase {
     
     public void testImapImport()
     throws Exception {
-        String subject = NAME_PREFIX;
-        String inbox1Query = String.format("in:inbox subject:\"%s\"", subject);
-        String inbox2Query = String.format("in:%s/inbox subject:\"%s\"", DEST_FOLDER_ROOT, subject);
-        String trash2Query = String.format("in:%s/trash subject:\"%s\"", DEST_FOLDER_ROOT, subject);
-        
-        // Make sure source and destination folders are empty
-        List<ZMessage> msgs1 = TestUtil.search(mMbox1, inbox1Query);
-        assertEquals("msgs1.size()", 0, msgs1.size());
-        List<ZMessage> msgs2 = TestUtil.search(mMbox2, inbox2Query);
-        assertEquals("msgs2.size()", 0, msgs2.size());
+        // Compare mailboxes in their initial state
+        importImap();
+        compare();
         
         // Add 1 message
-        TestUtil.insertMessage(mMbox1, 1, subject);
-        msgs1 = TestUtil.search(mMbox1, inbox1Query);
-        assertEquals("msgs1.size()", 1, msgs1.size());
-        
+        TestUtil.insertMessage(mRemoteMbox, 1, NAME_PREFIX + " 1");
         importImap();
-        
-        // Confirm that the message was imported
-        msgs2 = TestUtil.search(mMbox2, inbox2Query);
-        assertEquals("msgs2.size()", 1, msgs2.size());
-        compareMessages(msgs1, msgs2);
+        compare();
         
         // Flag
-        assertFalse("msg2 is flagged", msgs2.get(0).isFlagged());
-        mMbox1.flagMessage(msgs1.get(0).getId(), true);
+        List<ZMessage> msgs1 = TestUtil.search(mRemoteMbox, "in:inbox");
+        assertEquals("msgs1.size()", 1, msgs1.size());
+        mRemoteMbox.flagMessage(msgs1.get(0).getId(), true);
         importImap();
-        msgs2 = TestUtil.search(mMbox2, inbox2Query);
-        assertTrue("msg2 is not flagged", msgs2.get(0).isFlagged());
+        compare();
         
         // Move to trash
-        mMbox1.moveMessage(msgs1.get(0).getId(), Integer.toString(Mailbox.ID_FOLDER_TRASH));
-        msgs1 = TestUtil.search(mMbox1, "in:inbox");
-        assertEquals("msgs1.size()", 0, msgs1.size());
-        List<ZMessage> trash2 = TestUtil.search(mMbox2, trash2Query);
-        assertEquals("trash2.size()", 0, trash2.size());
+        mRemoteMbox.moveMessage(msgs1.get(0).getId(), Integer.toString(Mailbox.ID_FOLDER_TRASH));
         importImap();
-        msgs2 = TestUtil.search(mMbox2, inbox2Query);
-        assertEquals("msgs2.size()", 0, msgs2.size());
-        trash2 = TestUtil.search(mMbox2, trash2Query);
-        assertEquals("trash2.size()", 1, trash2.size());
+        compare();
+        
+        // Create folders on both sides
+        String remote1 = "/" + NAME_PREFIX + "-remote1";
+        String remote2 = remote1 + "/" + NAME_PREFIX + "-remote2";
+        String local1 = "/" + NAME_PREFIX + "/" + NAME_PREFIX + "-local1";
+        String local2 = local1 + "/" + NAME_PREFIX + "-local2";
+        
+        TestUtil.createFolder(mRemoteMbox, remote1);
+        TestUtil.createFolder(mRemoteMbox, remote2);
+        TestUtil.createFolder(mLocalMbox, local1);
+        TestUtil.createFolder(mLocalMbox, local2);
+        importImap();
+        compare();
+        
+        // Add message to remote folder and delete local folder at the same time
+        ZFolder remoteFolder2 = mRemoteMbox.getFolderByPath(remote2); 
+        TestUtil.insertMessage(mRemoteMbox, 2, NAME_PREFIX + " 2", remoteFolder2.getId());
+        ZFolder localFolder1 = mLocalMbox.getFolderByPath(local1);
+        mLocalMbox.deleteFolder(localFolder1.getId());
+        importImap();
+        compare();
+        
+        // Add message to a local folder and delete the same folder in remote mailbox
+        String path = "/" + NAME_PREFIX + remote2;
+        ZFolder localFolder = mLocalMbox.getFolderByPath(path);
+        assertNotNull("Could not find local folder " + path, localFolder);
+        TestUtil.insertMessage(mLocalMbox, 3, NAME_PREFIX + " 3", localFolder.getId());
+        ZFolder remoteFolder1 = mRemoteMbox.getFolderByPath(remote1);
+        mRemoteMbox.deleteFolder(remoteFolder1.getId());
+        importImap();
+        compare();
     }
     
     private void importImap()
     throws Exception {
         List<ZDataSource> list = new ArrayList<ZDataSource>();
         list.add(mDataSource);
-        mMbox2.importData(list);
+        mLocalMbox.importData(list);
         
         // Wait for import to complete
         ZImportStatus status = null;
         while (true) {
-            List<ZImportStatus> statusList = mMbox2.getImportStatus();
+            List<ZImportStatus> statusList = mLocalMbox.getImportStatus();
             assertEquals("Unexpected number of imports running", 1, statusList.size());
             status = statusList.get(0);
             assertEquals("Unexpected data source type", status.getType(), DataSource.Type.imap.name());
@@ -162,6 +170,47 @@ extends TestCase {
             Thread.sleep(500);
         }
         assertTrue("Import failed: " + status.getError(), status.getSuccess());
+    }
+
+    private void compare()
+    throws Exception {
+        // Do a no-op, to get the latest state chanages after an IMAP import
+        mRemoteMbox.noOp();
+        mLocalMbox.noOp();
+        
+        // Recursively compare the folder trees
+        ZFolder folder1 = mRemoteMbox.getUserRoot();
+        ZFolder folder2 = mLocalMbox.getFolderByPath(DS_FOLDER_ROOT);
+        compare(mRemoteMbox, folder1, mLocalMbox, folder2);
+    }
+    
+    private void compare(ZMailbox mbox1, ZFolder folder1, ZMailbox mbox2, ZFolder folder2)
+    throws Exception {
+        assertNotNull(mbox1);
+        assertNotNull(folder1);
+        assertNotNull(mbox2);
+        assertNotNull(folder2);
+        
+        // Recursively compare children
+        for (ZFolder child1 : folder1.getSubFolders()) {
+            if (isMailFolder(child1)) {
+                ZFolder child2 = folder2.getSubFolderByPath(child1.getName());
+                String msg = String.format("Could not find folder %s/%s for %s",
+                    folder2.getPath(), child1.getName(), mbox2.getName());
+                assertNotNull(msg, child2);
+                compare(mbox1, child1, mbox2, child2);
+            }
+        }
+        assertEquals("Message count doesn't match", folder1.getMessageCount(), folder2.getMessageCount());
+        
+        List<ZMessage> msgs1 = TestUtil.search(mbox1, "in:" + folder1.getPath());
+        List<ZMessage> msgs2 = TestUtil.search(mbox2, "in:" + folder2.getPath());
+        compareMessages(msgs1, msgs2);
+    }
+
+    private boolean isMailFolder(ZFolder folder) {
+        ZFolder.View view = folder.getDefaultView();
+        return view == null || view == ZFolder.View.message || view == ZFolder.View.conversation;
     }
     
     private void compareMessages(List<ZMessage> msgs1, List<ZMessage> msgs2)
@@ -181,7 +230,7 @@ extends TestCase {
             assertEquals("Flags don't match", msg1.getFlags(), msg2.getFlags());
         }
         
-        // Handle any remaining messages
+        // Fail if there are any remaining messages
         if (msgMap.size() != 0) {
             List<String> subjects = new ArrayList<String>();
             for (ZMessage msg : msgMap.values()) {
@@ -193,25 +242,25 @@ extends TestCase {
     
     public void tearDown()
     throws Exception {
-        cleanUp();
+        // cleanUp();
         TestUtil.setServerAttr(
             Provisioning.A_zimbraImapCleartextLoginEnabled, mOriginalCleartextValue);
     }
     
     public void cleanUp()
     throws Exception {
-        if (TestUtil.accountExists(USER1_NAME)) {
-            TestUtil.deleteTestData(USER1_NAME, NAME_PREFIX);
+        if (TestUtil.accountExists(REMOTE_USER_NAME)) {
+            TestUtil.deleteTestData(REMOTE_USER_NAME, NAME_PREFIX);
         }
-        if (TestUtil.accountExists(USER2_NAME)) {
-            ZMailbox mbox = TestUtil.getZMailbox(USER2_NAME);
+        if (TestUtil.accountExists(LOCAL_USER_NAME)) {
+            ZMailbox mbox = TestUtil.getZMailbox(LOCAL_USER_NAME);
             for (ZDataSource ds : mbox.getAllDataSources()) {
                 if (ds.getName().contains(NAME_PREFIX)) {
                     mbox.deleteDataSource(ds);
                 }
             }
 
-            TestUtil.deleteTestData(USER2_NAME, NAME_PREFIX);
+            TestUtil.deleteTestData(LOCAL_USER_NAME, NAME_PREFIX);
         }
     }
     
@@ -224,11 +273,11 @@ extends TestCase {
         
         public void testTeardown()
         throws Exception {
-            if (TestUtil.accountExists(USER1_NAME)) {
-                TestUtil.deleteAccount(USER1_NAME);
+            if (TestUtil.accountExists(LOCAL_USER_NAME)) {
+                TestUtil.deleteAccount(LOCAL_USER_NAME);
             }
-            if (TestUtil.accountExists(USER2_NAME)) {
-                TestUtil.deleteAccount(USER2_NAME);
+            if (TestUtil.accountExists(REMOTE_USER_NAME)) {
+                TestUtil.deleteAccount(REMOTE_USER_NAME);
             }
         }
     }
@@ -237,6 +286,6 @@ extends TestCase {
     throws Exception {
         CliUtil.toolSetup();
         TestUtil.runTest(new TestSuite(TestImapImport.class), null);
-        TestUtil.runTest(new TestSuite(TestImapImport.TearDown.class), null);
+        // TestUtil.runTest(new TestSuite(TestImapImport.TearDown.class), null);
     }
 }

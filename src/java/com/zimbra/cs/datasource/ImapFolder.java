@@ -27,24 +27,29 @@ package com.zimbra.cs.datasource;
 
 public class ImapFolder {
     private int mMailboxId;
-    private int mId;
+    private int mItemId;
     private String mDataSourceId;
-    private String mFolderPath;
+    private String mLocalPath;
+    private String mRemotePath;
     
-    public ImapFolder(int mailboxId, int id, String dataSourceId, String folderPath) {
+    public ImapFolder(int mailboxId, int id, String dataSourceId, String localPath, String remotePath) {
         mMailboxId = mailboxId;
-        mId = id;
+        mItemId = id;
         mDataSourceId = dataSourceId;
-        mFolderPath = folderPath;
+        mLocalPath = localPath;
+        mRemotePath = remotePath;
     }
     
     public int getMailboxId() { return mMailboxId; }
-    public int getId() { return mId; }
+    public int getItemId() { return mItemId; }
     public String getDataSourceId() { return mDataSourceId; }
-    public String getFolderPath() { return mFolderPath; }
+    public String getLocalPath() { return mLocalPath; }
+    public String getRemotePath() { return mRemotePath; }
+    
+    void setLocalPath(String localPath) { mLocalPath = localPath; }
     
     public String toString() {
-        return String.format("ImapFolder: { mailboxId=%d, id=%d, dataSourceId=%s, folderPath=%s }",
-            mMailboxId, mId, mDataSourceId, mFolderPath);
+        return String.format("ImapFolder: { mailboxId=%d, itemId=%d, dataSourceId=%s, localPath=%s, remotePath=%s }",
+            mMailboxId, mItemId, mDataSourceId, mLocalPath, mRemotePath);
     }
 }
