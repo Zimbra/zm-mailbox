@@ -489,8 +489,20 @@ public class ZMailbox {
         }
     }
 
+    private List<ZFolder> parentCheck(List<ZFolder> list, ZFolder f, ZFolder parent) {
+        if (parent != null) {
+            parent.addChild(f);
+        } else {
+            if (list == null) list = new ArrayList<ZFolder>();
+            list.add(f);
+        }
+        return list;
+    }
+    
     private void handleCreated(Element created) throws ServiceException {
         if (created == null) return;
+        List<ZCreateEvent> events = null;
+        List<ZFolder> parentFixup = null;
         for (Element e : created.listElements()) {
         	ZCreateEvent event = null;
             if (e.getName().equals(MailConstants.E_CONV)) {
@@ -505,26 +517,49 @@ public class ZMailbox {
                 String parentId = e.getAttribute(MailConstants.A_FOLDER);
                 ZFolder parent = getFolderById(parentId);
                 ZFolder child = new ZFolder(e, parent);
+                addItemIdMapping(child);
                 event = new ZCreateFolderEvent(child);
-                parent.addChild(child);
+                parentFixup = parentCheck(parentFixup, child, parent);
             } else if (e.getName().equals(MailConstants.E_MOUNT)) {
                 String parentId = e.getAttribute(MailConstants.A_FOLDER);
                 ZFolder parent = getFolderById(parentId);
                 ZMountpoint child = new ZMountpoint(e, parent);
+             	addItemIdMapping(child);
+            	addRemoteItemIdMapping(child.getCanonicalRemoteId(), child);               
+                parentFixup = parentCheck(parentFixup, child, parent);
                 event = new ZCreateMountpointEvent(child);
-                parent.addChild(child);
             } else if (e.getName().equals(MailConstants.E_SEARCH)) {
                 String parentId = e.getAttribute(MailConstants.A_FOLDER);
                 ZFolder parent = getFolderById(parentId);
                 ZSearchFolder child = new ZSearchFolder(e, parent);
+                addItemIdMapping(child);
                 event = new ZCreateSearchFolderEvent(child);
-                parent.addChild(child);
+                parentFixup = parentCheck(parentFixup, child, parent);
             } else if (e.getName().equals(MailConstants.E_TAG)) {
                 event = new ZCreateTagEvent(new ZTag(e));
+                addTag(((ZCreateTagEvent)event).getTag());
             }
-            if (event != null)
-            	for (ZEventHandler handler : mHandlers)
-            		handler.handleCreate(event, this);
+            if (event != null) {
+                if (events == null) events = new ArrayList<ZCreateEvent>();
+                events.add(event);
+            }
+        }
+
+        if (parentFixup != null) {
+            for (ZFolder f : parentFixup) {
+                ZFolder parent = getFolderById(f.getParentId());
+                if (parent != null) {
+                    parent.addChild(f);
+                    f.setParent(parent);
+                }
+            }
+        }
+
+        if (events != null) {
+            for (ZCreateEvent event : events) {
+                for (ZEventHandler handler : mHandlers)
+                    handler.handleCreate(event, this);
+            }
         }
     }
 
@@ -565,17 +600,7 @@ public class ZMailbox {
         }
 
         public synchronized void handleCreate(ZCreateEvent event, ZMailbox mailbox) {
-            if (event instanceof ZCreateTagEvent) {
-                addTag(((ZCreateTagEvent)event).getTag());
-            } else if (event instanceof ZCreateSearchFolderEvent) {
-            	mailbox.addItemIdMapping(((ZCreateSearchFolderEvent)event).getSearchFolder());
-            } else if (event instanceof ZCreateMountpointEvent) {
-            	ZMountpoint mp =  ((ZCreateMountpointEvent)event).getMountpoint();
-            	mailbox.addItemIdMapping(mp);
-            	mailbox.addRemoteItemIdMapping(mp.getCanonicalRemoteId(), mp);
-            } else if (event instanceof ZCreateFolderEvent) {
-            	mailbox.addItemIdMapping(((ZCreateFolderEvent)event).getFolder());
-            }
+            // do nothing
         }
 
         public synchronized void handleModify(ZModifyEvent event, ZMailbox mailbox) throws ServiceException {
