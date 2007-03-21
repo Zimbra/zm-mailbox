@@ -235,7 +235,7 @@ public class ZSimpleRecurrence {
                     break;
                 case YEA:
                     if (empty(byRules) && rr.getInterval() < 2 && mEnd == ZSimpleRecurrenceEnd.NEVER) {
-                        mType = ZSimpleRecurrenceType.MONTHLY; /////
+                        mType = ZSimpleRecurrenceType.YEARLY; /////
                         return;
                     } else if (rr.getInterval() < 2 && byRules != null && byRules.size() == 2) {
                         ZByRule bymonth = findType(byRules, ZByType.BY_MONTH);
