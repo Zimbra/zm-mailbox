@@ -279,8 +279,12 @@ public class Folder extends MailItem {
     }
 
 
+    /** Returns this folder's parent folder.  The root folder's
+     * parent is itself.
+     * @see Mailbox#ID_FOLDER_ROOT
+     */
     @Override
-    MailItem getParent() throws ServiceException {
+    public MailItem getParent() throws ServiceException {
         return mParent != null ? mParent : super.getFolder();
     }
 
@@ -494,6 +498,7 @@ public class Folder extends MailItem {
 
         Folder folder = new Folder(mbox, data);
         folder.finishCreation(parent);
+        ZimbraLog.mailbox.info("Created folder %s, id=%d", folder.getPath(), folder.getId());
         return folder;
     }
 
@@ -770,6 +775,7 @@ public class Folder extends MailItem {
 
     /** Deletes just this folder without affecting its subfolders. */
     void deleteSingleFolder(boolean writeTombstones) throws ServiceException {
+        ZimbraLog.mailbox.info("Deleting folder %s, id=%d", getPath(), getId());
         super.delete(hasSubfolders() ? DeleteScope.CONTENTS_ONLY : DeleteScope.ENTIRE_ITEM, writeTombstones);
     }
 
