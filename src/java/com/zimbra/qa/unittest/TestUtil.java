@@ -28,6 +28,7 @@ package com.zimbra.qa.unittest;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -171,8 +172,7 @@ public class TestUtil {
         "From: Jeff Spiccoli <${SENDER}@${DOMAIN}>",
         "To: Test User 1 <${RECIPIENT}@${DOMAIN}>",
         "Subject: ${SUBJECT}",
-        "Date: Mon, 28 Mar 2005 10:21:10 -0700",
-        "X-Zimbra-Received: Mon, 28 Mar 2005 10:21:1${MESSAGE_NUM} -0700",
+        "Date: ${DATE}",
         "Content-Type: text/plain",
         "",
         "Dude,",
@@ -193,6 +193,10 @@ public class TestUtil {
         pm.analyze();
         return mbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX, false, Flag.BITMASK_UNREAD, null);
     }
+    
+    private static String getDateHeaderValue() {
+        return String.format("%1$ta, %1$td %1$tb %1$tY %1$tH:%1$tM:%1$tS %1$tz (%1$tZ)", new Date());
+    }
 
     private static String getTestMessage(int messageNum, String subject)
     throws ServiceException {
@@ -202,6 +206,7 @@ public class TestUtil {
         vars.put("DOMAIN", getDomain());
         vars.put("SENDER", "jspiccoli");
         vars.put("RECIPIENT", "user1");
+        vars.put("DATE", getDateHeaderValue());
         return StringUtil.fillTemplate(MESSAGE_TEMPLATE, vars);
     }
 
@@ -213,6 +218,7 @@ public class TestUtil {
         vars.put("DOMAIN", getDomain());
         vars.put("SENDER", sender);
         vars.put("RECIPIENT", recipient);
+        vars.put("DATE", getDateHeaderValue());
         return StringUtil.fillTemplate(MESSAGE_TEMPLATE, vars);
     }
 
@@ -297,17 +303,11 @@ public class TestUtil {
     throws ServiceException {
         ZMailbox mbox = TestUtil.getZMailbox(userName);
         
-        // Delete messages
-        ZSearchParams params = new ZSearchParams("in:inbox " + subjectSubstring);
-        params.setTypes(ZSearchParams.TYPE_MESSAGE);
-        List<ZSearchHit> hits = mbox.search(params).getHits();
-        if (hits.size() > 0) {
-            List<String> ids = new ArrayList<String>();
-            for (ZSearchHit hit : hits) {
-                ids.add(hit.getId());
-            }
-            mbox.deleteMessage(StringUtil.join(",", ids));
-        }
+        deleteMessages(mbox, "is:anywhere " + subjectSubstring);
+        
+        // Workaround for bug 15160 (is:anywhere is busted)
+        deleteMessages(mbox, "in:trash " + subjectSubstring);
+        deleteMessages(mbox, "in:junk " + subjectSubstring);
         
         // Delete tags
         for (ZTag tag : mbox.getAllTags()) {
@@ -323,7 +323,21 @@ public class TestUtil {
             }
         }
     }
-    
+
+    private static void deleteMessages(ZMailbox mbox, String query)
+    throws ServiceException {
+        // Delete messages
+        ZSearchParams params = new ZSearchParams(query);
+        params.setTypes(ZSearchParams.TYPE_MESSAGE);
+        List<ZSearchHit> hits = mbox.search(params).getHits();
+        if (hits.size() > 0) {
+            List<String> ids = new ArrayList<String>();
+            for (ZSearchHit hit : hits) {
+                ids.add(hit.getId());
+            }
+            mbox.deleteMessage(StringUtil.join(",", ids));
+        }
+    }
 
     /**
      * Runs a test and writes the output to the logfile.
@@ -448,5 +462,29 @@ public class TestUtil {
         String flags = msg.getFlags();
         String errorMsg = String.format("Flag %s not found in %s", flag.getFlagChar(), msg.getFlags());
         Assert.assertTrue(errorMsg, flags.indexOf(flag.getFlagChar()) >= 0);
+    }
+    
+    public static ZFolder createFolder(ZMailbox mbox, String path)
+    throws ServiceException {
+        String parentId = Integer.toString(Mailbox.ID_FOLDER_USER_ROOT);
+        String name = null;
+        int idxLastSlash = path.lastIndexOf('/');
+        
+        if (idxLastSlash < 0) {
+            name = path;
+        } else if (idxLastSlash == 0) {
+            name = path.substring(1);
+        } else {
+            String parentPath = path.substring(0, idxLastSlash);
+            name = path.substring(idxLastSlash + 1);
+            ZFolder parent = mbox.getFolderByPath(parentPath);
+            if (parent == null) {
+                String msg = String.format("Creating folder %s: parent %s does not exist", name, parentPath);
+                throw ServiceException.FAILURE(msg, null);
+            }
+            parentId = parent.getId();
+        }
+        
+        return mbox.createFolder(parentId, name, null, null, null, null);
     }
 }
