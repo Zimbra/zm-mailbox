@@ -35,6 +35,9 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.util.Zimbra;
 
 
 /**
@@ -162,6 +165,12 @@ public class DataSourceManager {
         public void run() {
             ZimbraLog.addAccountNameToContext(mAccount.getName());
             ZimbraLog.addDataSourceNameToContext(mDataSource.getName());
+            try {
+                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
+                ZimbraLog.addMboxToContext(mbox.getId());
+            } catch (ServiceException e) {
+                ZimbraLog.datasource.warn("Unable to look up mailbox", e);
+            }
             
             MailItemImport mii = sImports.get(mDataSource.getType());
             boolean success = false;
@@ -172,9 +181,16 @@ public class DataSourceManager {
                 mii.importData(mAccount, mDataSource);
                 ZimbraLog.datasource.info("Import completed");
                 success = true;
-            } catch (ServiceException e) {
-                ZimbraLog.datasource.warn("Import from " + mDataSource + " failed", e);
-                error = e.getMessage();
+            } catch (Throwable t) {
+                // Catch Throwable, so that we don't lose track of runtime exceptions 
+                if (t instanceof OutOfMemoryError) {
+                    Zimbra.halt("DataSourceManager.run()", t);
+                }
+                ZimbraLog.datasource.warn("Import from %s failed", mDataSource, t);
+                error = t.getMessage();
+                if (error == null) {
+                    error = t.toString();
+                }
             } finally {
                 ImportStatus importStatus = getImportStatus(mAccount, mDataSource);
                 synchronized (importStatus) {
