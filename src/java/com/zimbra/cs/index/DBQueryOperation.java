@@ -50,6 +50,7 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.BooleanClause.Occur;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.db.Db;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbMailItem.SearchResult;
@@ -823,7 +824,11 @@ class DBQueryOperation extends QueryOperation
         do {
             // DON'T set an sql LIMIT if we're asking for lucene hits!!!  If we did, then we wouldn't be
             // sure that we'd "consumed" all the Lucene-ID's, and therefore we could miss hits!
-            mLuceneChunk = mLuceneOp.getNextResultsChunk(mHitsPerChunk);
+            
+            // this is horrible and hideous and for bug 15511
+            boolean forceOneHitPerChunk = Db.supports(Db.Capability.BROKEN_IN_CLAUSE);
+            
+            mLuceneChunk = mLuceneOp.getNextResultsChunk(forceOneHitPerChunk ? 1 : mHitsPerChunk);
 
             // we need to set our index-id's here!
             DbLeafNode sc = topLevelAndedConstraint();
