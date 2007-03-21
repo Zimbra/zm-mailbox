@@ -25,6 +25,8 @@
 
 package com.zimbra.qa.unittest;
 
+import java.util.List;
+
 import junit.framework.TestCase;
 
 import com.zimbra.common.util.ZimbraLog;
@@ -232,6 +234,21 @@ public class TestFolders extends TestCase
         mMbox.delete(null, f.getId(), f.getType());
         conv = mMbox.getConversationById(null, convId);
         assertEquals("Conversation size after folder delete", 1, conv.getSize());
+    }
+    
+    /**
+     * Confirms that deleting a subfolder correctly updates the subfolder hierarchy.
+     */
+    public void testHierarchy()
+    throws Exception {
+        Folder f1 = mMbox.createFolder(null, "/f1", (byte) 0, MailItem.TYPE_UNKNOWN);
+        Folder f2 = mMbox.createFolder(null, "/f1/f2", (byte) 0, MailItem.TYPE_UNKNOWN);
+        mMbox.createFolder(null, "/f1/f2/f3", (byte) 0, MailItem.TYPE_UNKNOWN);
+        assertEquals("Hierarchy size before delete", 3, f1.getSubfolderHierarchy().size());
+        mMbox.delete(null, f2.getId(), f2.getType());
+        List<Folder> hierarchy = f1.getSubfolderHierarchy();
+        assertEquals("Hierarchy size after delete", 1, hierarchy.size());
+        assertEquals("Folder id", f1.getId(), hierarchy.get(0).getId());
     }
 
     private void cleanUp()
