@@ -1404,7 +1404,27 @@ public class ZInvite {
         private int mWeekOrd;
         private ZWeekDay mDay;
 
+        public static List<ZByDayWeekDay> getList(ZWeekDay... days) {
+            List<ZByDayWeekDay> result = new ArrayList<ZByDayWeekDay>(days.length);
+            for (ZWeekDay day : days)
+                result.add(new ZByDayWeekDay(day, 0));
+            return result;
+        }
+
+        public static List<ZByDayWeekDay> getList(List<ZWeekDay> days) {
+            List<ZByDayWeekDay> result = new ArrayList<ZByDayWeekDay>(days.size());
+            for (ZWeekDay day : days)
+                result.add(new ZByDayWeekDay(day, 0));
+            return result;
+        }
+
         public ZByDayWeekDay() {
+
+        }
+
+        public ZByDayWeekDay(ZWeekDay day, int weekOrd) {
+            mDay = day;
+            mWeekOrd = weekOrd;
 
         }
         
@@ -1609,6 +1629,10 @@ public class ZInvite {
         private List<ZByRule> mByRules;
         private ZWeekDay mWeekStart;
 
+        public ZRecurrenceRule() {
+
+        }
+        
         public ZRecurrenceRule(Element e) throws ServiceException {
             mFrequency = ZFrequency.fromString(e.getAttribute(MailConstants.A_CAL_RULE_FREQ));
             mByRules = new ArrayList<ZByRule>();

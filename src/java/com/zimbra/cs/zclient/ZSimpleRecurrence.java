@@ -29,6 +29,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.zclient.ZInvite.ZByDayWeekDay;
 import com.zimbra.cs.zclient.ZInvite.ZByRule;
 import com.zimbra.cs.zclient.ZInvite.ZByType;
+import com.zimbra.cs.zclient.ZInvite.ZFrequency;
 import com.zimbra.cs.zclient.ZInvite.ZRecurrence;
 import com.zimbra.cs.zclient.ZInvite.ZRecurrenceRule;
 import com.zimbra.cs.zclient.ZInvite.ZWeekDay;
@@ -41,7 +42,6 @@ import java.util.List;
 import java.util.Set;
 
 public class ZSimpleRecurrence {
-
 
     public enum ZSimpleRecurrenceType {
         NONE,
@@ -157,8 +157,6 @@ public class ZSimpleRecurrence {
         }
 
         List<ZByRule> byRules = rr.getByRules();
-
-        // TODO: SET END TYPE UP FRONT
 
         if (rr.getUntilDate() != null) {
             mEnd = ZSimpleRecurrenceEnd.UNTIL;
@@ -434,6 +432,92 @@ public class ZSimpleRecurrence {
 
     public void setYearlyRelativeMonth(int yearlyRelativeMonth) {
         mYearlyRelativeMonth = yearlyRelativeMonth;
+    }
+
+    public ZRecurrence getRecurrence() {
+        ZRecurrence recur = new ZRecurrence();
+
+        if (getType().isComplex() || getType().isNone())
+            return recur;
+        
+        ZRecurrenceRule rule = new ZRecurrenceRule();
+        List<ZRecurrenceRule> rules = new ArrayList<ZRecurrenceRule>();
+        rules.add(rule);
+        recur.setRules(rules);
+
+        switch (getType()) {
+            case DAILY:
+                rule.setFrequency(ZFrequency.DAI);
+                break;
+            case DAILY_INTERVAL:
+                rule.setFrequency(ZFrequency.DAI);
+                rule.setInterval(getDailyInterval());
+                break;
+            case DAILY_WEEKDAY:
+                rule.setFrequency(ZFrequency.DAI);
+                rule.setByRules(new ArrayList<ZByRule>());
+                rule.getByRules().add(
+                        new ZByRule(ZByType.BY_DAY, null,
+                                ZByDayWeekDay.getList(ZWeekDay.MO, ZWeekDay.TU, ZWeekDay.WE, ZWeekDay.TH, ZWeekDay.FR)));
+                break;
+            case WEEKLY:
+                rule.setFrequency(ZFrequency.WEE);
+                break;
+            case WEEKLY_BY_DAY:
+                rule.setFrequency(ZFrequency.WEE);
+                rule.setByRules(new ArrayList<ZByRule>());
+                rule.getByRules().add(new ZByRule(ZByType.BY_DAY, null, ZByDayWeekDay.getList(getWeeklyByDay())));
+                break;
+            case WEEKLY_CUSTOM:
+                rule.setFrequency(ZFrequency.WEE);
+                rule.setInterval(getWeeklyInterval());
+                rule.setByRules(new ArrayList<ZByRule>());
+                rule.getByRules().add(new ZByRule(ZByType.BY_DAY, null, ZByDayWeekDay.getList(getWeeklyIntervalDays())));
+                break;
+            case MONTHLY:
+                rule.setFrequency(ZFrequency.MON);
+                break;
+            case MONTHLY_BY_MONTH_DAY:
+                rule.setFrequency(ZFrequency.MON);
+                rule.setInterval(getMonthlyInterval());
+                rule.setByRules(new ArrayList<ZByRule>());
+                rule.getByRules().add(new ZByRule(ZByType.BY_MONTHDAY, Integer.toString(getMonthlyMonthDay()), null));
+                break;
+            case MONTHLY_RELATIVE:
+                rule.setFrequency(ZFrequency.MON);
+                rule.setInterval(getMonthlyInterval());
+                rule.setByRules(new ArrayList<ZByRule>());
+                rule.getByRules().add(new ZByRule(ZByType.BY_DAY, null, Arrays.asList(getMonthlyRelativeDay())));
+                break;
+            case YEARLY:
+                rule.setFrequency(ZFrequency.YEA);
+                break;
+            case YEARLY_BY_DATE:
+                rule.setFrequency(ZFrequency.YEA);
+                rule.setByRules(new ArrayList<ZByRule>());
+                rule.getByRules().add(new ZByRule(ZByType.BY_MONTHDAY, Integer.toString(getYearlyByDateMonthDay()), null));
+                rule.getByRules().add(new ZByRule(ZByType.BY_MONTH, Integer.toString(getYearlyByDateMonth()), null));
+                break;
+            case YEARLY_RELATIVE:
+                rule.setFrequency(ZFrequency.YEA);
+                rule.setByRules(new ArrayList<ZByRule>());
+                rule.getByRules().add(new ZByRule(ZByType.BY_DAY, null, Arrays.asList(getYearlyRelativeDay())));
+                rule.getByRules().add(new ZByRule(ZByType.BY_MONTH, Integer.toString(getYearlyRelativeMonth()), null));
+                break;
+        }
+        
+        switch(getEnd()) {
+            case NEVER:
+                break;
+            case COUNT:
+                rule.setCount((int)getCount());
+                break;
+            case UNTIL:
+                rule.setUntilDate(getUntilDate());
+                break;
+        }
+        
+        return recur;
     }
 
 }
