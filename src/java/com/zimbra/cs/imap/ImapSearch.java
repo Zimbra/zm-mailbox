@@ -175,7 +175,7 @@ abstract class ImapSearch {
         boolean canBeRunLocally()  { return true; }
 
         String toZimbraSearch(ImapFolder i4folder) {
-            ImapFlag i4flag = i4folder.getSession().getFlagByName(mFlagName);
+            ImapFlag i4flag = i4folder.getFlagByName(mFlagName);
             if (i4flag == null)
                 return "item:none";
             String prefix = i4flag.mPositive ? "" : "(-", suffix = i4flag.mPositive ? "" : ")";
@@ -185,7 +185,7 @@ abstract class ImapSearch {
         }
 
         ImapMessageSet evaluate(ImapFolder i4folder) {
-            ImapFlag i4flag = i4folder.getSession().getFlagByName(mFlagName);
+            ImapFlag i4flag = i4folder.getFlagByName(mFlagName);
             if (i4flag == null)
                 return new ImapMessageSet();
             if (i4flag.mPositive)
@@ -219,7 +219,7 @@ abstract class ImapSearch {
             else if (mTimestamp > System.currentTimeMillis() + 36 * Constants.MILLIS_PER_MONTH)
                 return (mRelation == Relation.before ? "item:all" : "item:none");
             else
-                return mRelation + i4folder.getSession().getZimbraDateFormat().format(mDate);
+                return mRelation + i4folder.getHandler().getZimbraFormat().format(mDate);
         }
 
         ImapMessageSet evaluate(ImapFolder i4folder) {

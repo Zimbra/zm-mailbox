@@ -33,6 +33,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.operation.Operation;
+import com.zimbra.cs.session.Session;
 
 public class ImapListOperation extends Operation {
 	
@@ -44,15 +45,17 @@ public class ImapListOperation extends Operation {
     	}
 
     private ImapPath mPattern;
+    private ImapCredentials mCredentials;
     private boolean mOutputChildInfo;
 
 	private List<String> mMatches;
 
 
-    ImapListOperation(ImapSession session, OperationContext oc, Mailbox mbox, ImapPath pattern, boolean children) {
+    ImapListOperation(Session session, OperationContext oc, Mailbox mbox, ImapPath pattern, ImapCredentials creds, boolean children) {
 		super(session, oc, mbox, Requester.IMAP, Requester.IMAP.getPriority(), LOAD);
 
 		mPattern = pattern;
+        mCredentials = creds;
         mOutputChildInfo = children;
     }
 
@@ -63,7 +66,7 @@ public class ImapListOperation extends Operation {
         if (pattern.endsWith("/"))
             pattern = pattern.substring(0, pattern.length() - 1);
 
-        boolean isLocal = mMailbox.getAccountId().equalsIgnoreCase(mSession.getAuthenticatedAccountId());
+        boolean isLocal = mMailbox.getAccountId().equalsIgnoreCase(mCredentials.getAccountId());
 
         synchronized (mMailbox) {
             Collection<Folder> folders = mMailbox.getVisibleFolders(getOpCtxt());
@@ -76,7 +79,7 @@ public class ImapListOperation extends Operation {
 					continue;
 				if (path.asImapPath().toUpperCase().matches(pattern)) {
 				    // FIXME: need to determine "name attributes" for mailbox (\Marked, \Unmarked, \Noinferiors, \Noselect)
-                    String attrs = isLocal ? getFolderAttributes((ImapSession) mSession, folder, mOutputChildInfo) : "";
+                    String attrs = isLocal ? getFolderAttributes(mCredentials, folder, mOutputChildInfo) : "";
 					mMatches.add("LIST (" + attrs + ") \"/\" " + path.asUtf7String());
                 }
 			}
@@ -95,9 +98,9 @@ public class ImapListOperation extends Operation {
         "\\Noinferiors"
     };
 
-    static String getFolderAttributes(ImapSession session, Folder folder, boolean children) throws ServiceException {
+    static String getFolderAttributes(ImapCredentials creds, Folder folder, boolean children) throws ServiceException {
         int attributes = (folder.hasSubfolders() ? 0x01 : 0x00);
-        attributes    |= (!new ImapPath(null, folder, session).isSelectable() ? 0x02 : 0x00);
+        attributes    |= (!new ImapPath(null, folder, creds).isSelectable() ? 0x02 : 0x00);
         attributes    |= (folder.getId() == Mailbox.ID_FOLDER_SPAM ? 0x04 : 0x00);
         return children ? FOLDER_ATTRIBUTES[attributes] : NO_CHILDREN_FOLDER_ATTRIBUTES[attributes];
     }

@@ -74,6 +74,7 @@ public class ImapServer extends TcpServer implements RealtimeStatsCallback {
         ZimbraPerf.addStatsCallback(this);
     }
 
+    @Override
     protected ProtocolHandler newProtocolHandler() {
         return new TcpImapHandler(this);
     }
@@ -90,8 +91,9 @@ public class ImapServer extends TcpServer implements RealtimeStatsCallback {
 
     boolean isConnectionSSL()       { return mConnectionSSL; }
 
+    @Override
     public int getConfigMaxIdleMilliSeconds() {
-        return (int) ImapSession.IMAP_IDLE_TIMEOUT_MSEC;
+        return (int) ImapFolder.IMAP_IDLE_TIMEOUT_MSEC;
     }
 
     static boolean isExtensionDisabled(Object server, String name) {

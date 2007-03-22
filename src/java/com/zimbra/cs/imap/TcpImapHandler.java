@@ -68,7 +68,8 @@ public class TcpImapHandler extends ImapHandler {
             w.write("\n\tImapHandler(Thread-Per-Connection) " + this);
         } catch(IOException e) {};
     }
-    
+
+    @Override
     void encodeState(Element parent) {
         Element e = parent.addElement("ThreadPerConnIMAP");
         if (mConnection != null) {
@@ -116,8 +117,8 @@ public class TcpImapHandler extends ImapHandler {
     @Override
     protected void setIdle(boolean idle) {
         super.setIdle(idle);
-        if (mSession != null)
-            mSession.updateAccessTime();
+        if (mSelectedFolder != null)
+            mSelectedFolder.updateAccessTime();
     }
 
     @Override
@@ -133,25 +134,23 @@ public class TcpImapHandler extends ImapHandler {
             if (mInputStream == null)
                 return STOP_PROCESSING;
 
-            if (mSession != null) {
-                ZimbraLog.addAccountNameToContext(mSession.getUsername());
-                if (mSession.getMailbox() != null) {
-                    ZimbraLog.addMboxToContext(mSession.getMailbox().getId());
-                }
-            }
+            if (mCredentials != null)
+                ZimbraLog.addAccountNameToContext(mCredentials.getUsername());
+            if (mSelectedFolder != null)
+                ZimbraLog.addMboxToContext(mSelectedFolder.getMailbox().getId());
             ZimbraLog.addIpToContext(mRemoteAddress);
 
             req = mIncompleteRequest;
             if (req == null)
-                req = new TcpImapRequest(mInputStream, this, mSession);
+                req = new TcpImapRequest(mInputStream, this);
             req.continuation();
 
             long start = ZimbraPerf.STOPWATCH_IMAP.start();
 
             // check account status before executing command
-            if (mMailbox != null) {
+            if (mCredentials != null) {
                 try {
-                    Account account = mMailbox.getAccount();
+                    Account account = mCredentials.getAccount();
                     if (account == null || !account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE)) {
                         ZimbraLog.imap.warn("account missing or not active; dropping connection");
                         return STOP_PROCESSING;
@@ -162,10 +161,24 @@ public class TcpImapHandler extends ImapHandler {
                 }
             }
 
+            // check target folder's aowner's account status before executing command
+            if (mSelectedFolder != null && !mCredentials.getAccountId().equalsIgnoreCase(mSelectedFolder.getTargetAccountId())) {
+                try {
+                    Account account = Provisioning.getInstance().get(Provisioning.AccountBy.id, mSelectedFolder.getTargetAccountId());
+                    if (account == null || !account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE)) {
+                        ZimbraLog.imap.warn("target account missing or not active; dropping connection");
+                        return STOP_PROCESSING;
+                    }
+                } catch (ServiceException e) {
+                    ZimbraLog.imap.warn("error checking target account status; dropping connection", e);
+                    return STOP_PROCESSING;
+                }
+            }
+
             if (mAuthenticator != null)
                 keepGoing = continueAuthentication(req);
             else
-                keepGoing = executeRequest(req, mSession);
+                keepGoing = executeRequest(req);
             setIdle(false);
             mIncompleteRequest = null;
 
@@ -234,10 +247,10 @@ public class TcpImapHandler extends ImapHandler {
 
     @Override
     void dropConnection(boolean sendBanner) {
-        if (mSession != null) {
-            mSession.setHandler(null);
-            SessionCache.clearSession(mSession);
-            mSession = null;
+        if (mSelectedFolder != null) {
+            mSelectedFolder.setHandler(null);
+            SessionCache.clearSession(mSelectedFolder);
+            mSelectedFolder = null;
         }
 
         try {
@@ -285,16 +298,19 @@ public class TcpImapHandler extends ImapHandler {
     }
 
     void INFO(String message, Throwable e) {
-        if (ZimbraLog.imap.isInfoEnabled()) ZimbraLog.imap.info(withClientInfo(message), e); 
+        if (ZimbraLog.imap.isInfoEnabled())
+            ZimbraLog.imap.info(withClientInfo(message), e); 
     }
 
     void INFO(String message) {
-        if (ZimbraLog.imap.isInfoEnabled()) ZimbraLog.imap.info(withClientInfo(message));
+        if (ZimbraLog.imap.isInfoEnabled())
+            ZimbraLog.imap.info(withClientInfo(message));
     }
 
     private StringBuilder withClientInfo(String message) {
         int length = 64;
-        if (message != null) length += message.length();
+        if (message != null)
+            length += message.length();
         return new StringBuilder(length).append("[").append(mRemoteAddress).append("] ").append(message);
     }
 

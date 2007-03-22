@@ -46,12 +46,12 @@ public class TcpImapRequest extends ImapRequest {
     private boolean mUnlogged;
 
     TcpImapRequest(String line, ImapHandler handler) {
-        super(handler, null);
+        super(handler);
         mParts.add(line);
     }
 
-    TcpImapRequest(TcpServerInputStream tsis, ImapHandler handler, ImapSession session) {
-        super(handler, session);
+    TcpImapRequest(TcpServerInputStream tsis, ImapHandler handler) {
+        super(handler);
         mStream  = tsis;
     }
 

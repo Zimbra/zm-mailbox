@@ -33,12 +33,10 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.codec.binary.Base64;
@@ -87,16 +85,14 @@ abstract class ImapRequest {
             REGEXP_ESCAPED['\\'] = true;
         }
 
-    final ImapSession mSession;
     final ImapHandler mHandler;
 
     String mTag;
     List<Object> mParts = new ArrayList<Object>();
     int mIndex, mOffset;
 
-    ImapRequest(ImapHandler handler, ImapSession session) {
+    ImapRequest(ImapHandler handler) {
         mHandler = handler;
-        mSession = session;
     }
 
     boolean extensionEnabled(String extension) {
@@ -394,8 +390,9 @@ abstract class ImapRequest {
                 if (peekChar() == '\\') {
                     skipChar('\\');
                     String flagName = '\\' + readAtom();
-                    if (mSession != null) {
-                        ImapFlag i4flag = mSession.getFlagByName(flagName);
+                    ImapFolder i4folder = mHandler.getSelectedFolder();
+                    if (i4folder != null) {
+                        ImapFlag i4flag = i4folder.getFlagByName(flagName);
                         if (i4flag == null || !i4flag.mListed)
                             throw new ImapParseException(mTag, "non-storable system tag \"" + flagName + '"');
                         tags.add(flagName);
@@ -413,7 +410,7 @@ abstract class ImapRequest {
     }
 
     private Date readDate() throws ImapParseException {
-        return readDate(mSession == null ? new SimpleDateFormat("dd-MMM-yyyy", Locale.US) : mSession.getDateFormat(), false);
+        return readDate(mHandler.getDateFormat(), false);
     }
     Date readDate(DateFormat format, boolean checkRange) throws ImapParseException {
         String dateStr = (peekChar() == '"' ? readQuoted() : readAtom());

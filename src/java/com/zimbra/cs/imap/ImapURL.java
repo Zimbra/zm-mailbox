@@ -74,10 +74,10 @@ class ImapURL {
     private int mUid;
     private ImapPartSpecifier mPart;
 
-    ImapURL(String tag, ImapHandler handler, ImapSession session, String url) throws ImapParseException {
+    ImapURL(String tag, ImapHandler handler, String url) throws ImapParseException {
         if (url == null || url.length() == 0)
             throw new ImapUrlException(tag, url, "blank/null IMAP URL");
-        parse(tag, session, url);
+        parse(tag, handler.getCredentials(), url);
         mURL = url;
 
         if (mPath == null || mPath.asZimbraPath().length() == 0) {
@@ -89,7 +89,7 @@ class ImapURL {
         if (mUsername == null || mUsername.length() == 0) {
             if (handler.getState() == ImapHandler.State.NOT_AUTHENTICATED)
                 throw new ImapUrlException(tag, url, "IMAP URL must specify user if session not AUTHENTICATED");
-            mUsername = session.getUsername();
+            mUsername = handler.getCredentials().getUsername();
             if (mPath != null && mPath.getOwner() != null) {
                 try {
                     Account owner = mPath.getOwnerAccount();
@@ -115,7 +115,7 @@ class ImapURL {
 
     String getURL() { return mURL; }
 
-    private void parse(String tag, ImapSession session, String url) throws ImapParseException {
+    private void parse(String tag, ImapCredentials creds, String url) throws ImapParseException {
         String lcurl = url.toLowerCase();
         int pos = 0;
         // check to see if it's an absolute URL or a relative one...
@@ -155,7 +155,7 @@ class ImapURL {
         int iuid = lcurl.indexOf("/;uid=", pos), uvv = lcurl.indexOf(";uidvalidity=", pos);
         if (iuid == -1)
             throw new ImapUrlException(tag, url, "only \"imessagepart\"-type IMAP URLs supported");
-        mPath = new ImapPath(urlDecode(url.substring(pos, uvv != -1 && uvv < iuid ? uvv : iuid)), session);
+        mPath = new ImapPath(urlDecode(url.substring(pos, uvv != -1 && uvv < iuid ? uvv : iuid)), creds);
         pos = iuid + 6;
 
         int isection = lcurl.indexOf("/;section=", pos);
@@ -170,7 +170,7 @@ class ImapURL {
                 List<Object> list = new ArrayList<Object>();
                 list.add(section);
                 try {
-                    OzImapRequest req = new OzImapRequest(tag, list, null, null);
+                    OzImapRequest req = new OzImapRequest(tag, list, null);
                     mPart = req.readPartSpecifier(false, false);
                     if (!req.eof())
                         throw new ImapUrlException(tag, url, "extra chars at end of IMAP URL SECTION");
@@ -191,7 +191,7 @@ class ImapURL {
         }
     }
 
-    public byte[] getContent(ImapHandler handler, ImapSession session, String tag) throws ImapParseException {
+    public byte[] getContent(ImapHandler handler, ImapCredentials creds, String tag) throws ImapParseException {
         ImapHandler.State state = handler.getState();
         if (state == ImapHandler.State.NOT_AUTHENTICATED)
             throw new ImapUrlException(tag, mURL, "must be in AUTHENTICATED state");
@@ -201,16 +201,16 @@ class ImapURL {
             if (acct == null)
                 throw new ImapUrlException(tag, mURL, "cannot find user: " + mUsername);
 
-            OperationContext octxt = session.getContext();
+            OperationContext octxt = creds.getContext();
             byte[] content = null;
             // special-case the situation where the relevant folder is already SELECTed
-            if (acct.getId().equals(session.getAuthenticatedAccountId()) && state == ImapHandler.State.SELECTED) {
+            if (state == ImapHandler.State.SELECTED) {
                 ImapFolder i4folder = handler.getSelectedFolder();
-                if (i4folder != null && mPath.equals(i4folder.getPath())) {
+                if (i4folder != null && acct.getId().equals(i4folder.getTargetAccountId()) && mPath.equals(i4folder.getPath())) {
                     ImapMessage i4msg = i4folder.getByImapId(mUid);
                     if (i4msg == null || i4msg.isExpunged())
                         throw new ImapUrlException(tag, mURL, "no such message");
-                    MailItem item = session.getMailbox().getItemById(octxt, i4msg.msgId, i4msg.getType());
+                    MailItem item = i4folder.getMailbox().getItemById(octxt, i4msg.msgId, i4msg.getType());
                     content = ImapMessage.getContent(item);
                 }
             }
@@ -225,7 +225,7 @@ class ImapURL {
             }
             // last option: handle off-server URLs
             if (content == null) {
-                Account authacct = Provisioning.getInstance().get(AccountBy.id, session.getAuthenticatedAccountId());
+                Account authacct = Provisioning.getInstance().get(AccountBy.id, creds.getAccountId());
                 AuthToken auth = new AuthToken(authacct, System.currentTimeMillis() + 60 * 1000);
                 HashMap<String, String> params = new HashMap<String, String>();
                 params.put(UserServlet.QP_IMAP_ID, Integer.toString(mUid));
@@ -275,16 +275,15 @@ class ImapURL {
     public static void main(String[] args) throws ImapParseException, ServiceException {
         Account acct = Provisioning.getInstance().get(AccountBy.name, "user1@macbeth.liquidsys.com");
         ImapHandler handler = new TcpImapHandler(null);
-        ImapSession session = new ImapSession(acct, handler, ImapSession.EnabledHack.NONE);
-        session.register();
-        handler.setSelectedFolder(new ImapFolder(new ImapPath("trash", session), true, session));
+        ImapCredentials creds = new ImapCredentials(acct, ImapCredentials.EnabledHack.NONE);
+        handler.setSelectedFolder(new ImapFolder(new ImapPath("trash", creds), true, handler, creds));
 
-        System.out.println(new ImapURL("tag", handler, session, "/Drafts;UIDVALIDITY=385759045/;UID=20/;section=HEADER"));
-        System.out.println(new ImapURL("tag", handler, session, "/;UID=20/;section=1.mime"));
-        System.out.println(new ImapURL("tag", handler, session, "/INBOX;UIDVALIDITY=785799047/;UID=113330/;section=1.5.9"));
-        System.out.println(new ImapURL("tag", handler, session, "imap://minbari.org:7143/\\\"gray-council\\\";UIDVALIDITY=385759045/;UID=20"));
-        System.out.println(new ImapURL("tag", handler, session, "imap://bester;auth=gssapi@psicorp.org/~peter/%E6%97%A5%E6%9C%AC%E8%AA%9E/%E5%8F%B0%E5%8C%97/;UID=11916"));
-        System.out.println(new ImapURL("tag", handler, session, "imap://;AUTH=*@minbari.org/gray-council/;uid=20/;section="));
+        System.out.println(new ImapURL("tag", handler, "/Drafts;UIDVALIDITY=385759045/;UID=20/;section=HEADER"));
+        System.out.println(new ImapURL("tag", handler, "/;UID=20/;section=1.mime"));
+        System.out.println(new ImapURL("tag", handler, "/INBOX;UIDVALIDITY=785799047/;UID=113330/;section=1.5.9"));
+        System.out.println(new ImapURL("tag", handler, "imap://minbari.org:7143/\\\"gray-council\\\";UIDVALIDITY=385759045/;UID=20"));
+        System.out.println(new ImapURL("tag", handler, "imap://bester;auth=gssapi@psicorp.org/~peter/%E6%97%A5%E6%9C%AC%E8%AA%9E/%E5%8F%B0%E5%8C%97/;UID=11916"));
+        System.out.println(new ImapURL("tag", handler, "imap://;AUTH=*@minbari.org/gray-council/;uid=20/;section="));
 
         System.out.println(new ImapUrlException("tag", "\"\\\"", "msg").mCode);
     }

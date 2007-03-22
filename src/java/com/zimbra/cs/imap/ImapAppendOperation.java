@@ -42,6 +42,7 @@ import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.operation.Operation;
+import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.AccountUtil;
 
 public class ImapAppendOperation extends Operation  {
@@ -60,7 +61,7 @@ public class ImapAppendOperation extends Operation  {
     private List<Tag> mNewTags;
     private StringBuilder mAppendHint;
 
-    public ImapAppendOperation(ImapSession session, OperationContext octxt, Mailbox mbox,
+    public ImapAppendOperation(Session session, OperationContext octxt, Mailbox mbox,
             				   ImapHandler handler, ImapPath path, List<String> flagNames,
             				   Date date, byte[] content, List<Tag> newTags, StringBuilder appendHint) {
         super(session, octxt, mbox, Requester.IMAP, Requester.IMAP.getPriority(), LOAD);
@@ -87,7 +88,7 @@ public class ImapAppendOperation extends Operation  {
             if (mFlagNames != null) {
                 List<ImapFlag> i4flags;
                 if (mTargetPath.belongsTo(mSession.getMailbox()))
-                    i4flags = mHandler.findOrCreateTags(mFlagNames, mNewTags);
+                    i4flags = mHandler.findOrCreateTags(mMailbox, mFlagNames, mNewTags);
                 else
                     i4flags = mHandler.getSystemFlags(mFlagNames);
 

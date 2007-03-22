@@ -30,12 +30,12 @@ import java.util.List;
  * @author dkarp
  */
 class OzImapRequest extends ImapRequest {
-    OzImapRequest(OzImapConnectionHandler handler, ImapSession session) {
-        super(handler, session);
+    OzImapRequest(OzImapConnectionHandler handler) {
+        super(handler);
     }
 
-    public OzImapRequest(String tag, List<Object> currentRequestParts, OzImapConnectionHandler handler, ImapSession session) {
-        super(handler, session);
+    public OzImapRequest(String tag, List<Object> currentRequestParts, OzImapConnectionHandler handler) {
+        super(handler);
         mTag = tag;
         mParts = currentRequestParts;
     }

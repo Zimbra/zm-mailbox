@@ -181,7 +181,7 @@ public class ImapMessage implements Comparable<ImapMessage> {
 
     private static final String NO_FLAGS = "FLAGS ()";
 
-    String getFlags(ImapSession session) {
+    String getFlags(ImapFolder i4folder) {
         if ((flags & IMAP_FLAGS) == Flag.BITMASK_UNREAD && tags == 0 && sflags == 0)
             return NO_FLAGS;
         StringBuilder result = new StringBuilder("FLAGS (");
@@ -216,7 +216,7 @@ public class ImapMessage implements Comparable<ImapMessage> {
         for (int i = 0; tagBuffer != 0 && i < 64; i++) {
             long mask = 1L << i;
             if ((tagBuffer & mask) != 0) {
-                ImapFlag i4flag = session.getTagByMask(mask);
+                ImapFlag i4flag = i4folder.getTagByMask(mask);
                 if (i4flag != null)
                     result.append(result.length() == empty ? "" : " ").append(i4flag);
                 tagBuffer &= ~mask;

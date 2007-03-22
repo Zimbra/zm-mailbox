@@ -40,6 +40,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.SearchFolder;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.zclient.ZFolder;
@@ -49,7 +50,7 @@ import com.zimbra.cs.zclient.ZSearchFolder;
 public class ImapPath {
     static final String NAMESPACE_PREFIX = "/home/";
 
-    private ImapSession mSession;
+    private ImapCredentials mCredentials;
     private String mOwner;
     private String mPath;
     private Object mMailbox;
@@ -60,11 +61,11 @@ public class ImapPath {
      *  Does <b>not</b> do IMAP-UTF-7 decoding; this is assumed to have been
      *  already done by the appropriate method in {@link ImapRequest}.
      *  
-     * @param imapPath     The client-provided logical IMAP pathname.
-     * @param session  The authenticated user's current session.
-     * @see #exportPath(String, ImapSession) */
-    ImapPath(String imapPath, ImapSession session) {
-        mSession = session;
+     * @param imapPath   The client-provided logical IMAP pathname.
+     * @param creds      The authenticated user's login credentials.
+     * @see #exportPath(String, ImapCredentials) */
+    ImapPath(String imapPath, ImapCredentials creds) {
+        mCredentials = creds;
         mPath = imapPath;
 
         if (imapPath.toLowerCase().startsWith(NAMESPACE_PREFIX)) {
@@ -83,25 +84,25 @@ public class ImapPath {
 
         // Windows Mobile 5 hack: server must map "Sent Items" to "Sent"
         String lcname = mPath.toLowerCase();
-        if (session != null && session.isHackEnabled(ImapSession.EnabledHack.WM5)) {
+        if (creds != null && creds.isHackEnabled(ImapCredentials.EnabledHack.WM5)) {
             if (lcname.startsWith("sent items") && (lcname.length() == 10 || lcname.charAt(10) == '/'))
                 mPath = "Sent" + mPath.substring(10);
         }
     }
 
-    ImapPath(String owner, String zimbraPath, ImapSession session) {
-        mSession = session;
+    ImapPath(String owner, String zimbraPath, ImapCredentials session) {
+        mCredentials = session;
         mOwner = owner;
         mPath = zimbraPath.substring(1);
     }
 
-    ImapPath(String owner, Folder folder, ImapSession session) {
+    ImapPath(String owner, Folder folder, ImapCredentials session) {
         this(owner, folder.getPath(), session);
         mMailbox = folder.getMailbox();
         mFolder = folder;
     }
 
-    ImapPath(String owner, ZMailbox zmbx, ZFolder zfolder, ImapSession session) {
+    ImapPath(String owner, ZMailbox zmbx, ZFolder zfolder, ImapCredentials session) {
         this(owner, zfolder.getPath(), session);
         mMailbox = zmbx;
         mFolder = zfolder;
@@ -128,7 +129,7 @@ public class ImapPath {
 
     @Override
     public int hashCode() {
-        return (mOwner == null ? 0 : mOwner.hashCode()) ^ mPath.hashCode() ^ (mSession == null ? 0 : mSession.hashCode());
+        return (mOwner == null ? 0 : mOwner.hashCode()) ^ mPath.hashCode() ^ (mCredentials == null ? 0 : mCredentials.hashCode());
     }
 
 
@@ -136,20 +137,24 @@ public class ImapPath {
         return mOwner;
     }
 
-    ImapSession getSession() {
-        return mSession;
+    ImapCredentials getSession() {
+        return mCredentials;
     }
 
     boolean belongsTo(Mailbox mbox) throws ServiceException {
+        return belongsTo(mbox.getAccountId());
+    }
+
+    boolean belongsTo(String accountId) throws ServiceException {
         Account owner = getOwnerAccount();
-        return owner != null && owner.getId().equalsIgnoreCase(mbox.getAccountId());
+        return owner != null && owner.getId().equalsIgnoreCase(accountId);
     }
 
     Account getOwnerAccount() throws ServiceException {
         if (mOwner != null)
             return Provisioning.getInstance().get(AccountBy.name, mOwner);
-        else if (mSession != null)
-            return Provisioning.getInstance().get(AccountBy.id, mSession.getAuthenticatedAccountId());
+        else if (mCredentials != null)
+            return Provisioning.getInstance().get(AccountBy.id, mCredentials.getAccountId());
         else
             return null;
     }
@@ -167,9 +172,9 @@ public class ImapPath {
             Account target = getOwnerAccount();
             if (target == null)
                 mMailbox = null;
-            else if (Provisioning.onLocalServer(target) && mSession != null && belongsTo(mSession.getMailbox()))
+            else if (Provisioning.onLocalServer(target))
                 mMailbox = MailboxManager.getInstance().getMailboxByAccount(target);
-            else if (mSession == null)
+            else if (mCredentials == null)
                 mMailbox = null;
             else
                 mMailbox = getOwnerZMailbox();
@@ -180,11 +185,11 @@ public class ImapPath {
     ZMailbox getOwnerZMailbox() throws ServiceException {
         if (mMailbox instanceof ZMailbox)
             return (ZMailbox) mMailbox;
-        if (mSession == null)
+        if (mCredentials == null)
             return null;
 
         Account target = getOwnerAccount();
-        Account acct = Provisioning.getInstance().get(AccountBy.id, mSession.getAuthenticatedAccountId());
+        Account acct = Provisioning.getInstance().get(AccountBy.id, mCredentials.getAccountId());
         try {
             ZMailbox.Options options = new ZMailbox.Options(new AuthToken(acct).getEncoded(), AccountUtil.getSoapUri(target));
             options.setTargetAccount(target.getName());
@@ -199,7 +204,7 @@ public class ImapPath {
         if (mFolder == null) {
             Object mboxobj = getOwnerMailbox();
             if (mboxobj instanceof Mailbox) {
-                mFolder = ((Mailbox) mboxobj).getFolderByPath(mSession == null ? null : mSession.getContext(), asZimbraPath());
+                mFolder = ((Mailbox) mboxobj).getFolderByPath(mCredentials == null ? null : mCredentials.getContext(), asZimbraPath());
             } else if (mboxobj instanceof ZMailbox) {
                 mFolder = ((ZMailbox) mboxobj).getFolderByPath(asZimbraPath());
                 if (mFolder == null)
@@ -219,9 +224,17 @@ public class ImapPath {
                !path.matches("\\s*calendar\\s*(/.*)?");
     }
 
+    /** Returns whether the server can return the <tt>READ-WRITE</tt> response
+     *  code when the folder referenced by this path is <tt>SELECT</tt>ed. */
     boolean isWritable() throws ServiceException {
-        return isWritable((short) (ACL.RIGHT_DELETE | ACL.RIGHT_INSERT | ACL.RIGHT_WRITE));
+        // RFC 4314 5.2: "The server SHOULD include a READ-WRITE response code in the tagged OK
+        //                response if at least one of the "i", "e", or "shared flag rights" is
+        //                granted to the current user."
+        return isWritable(ACL.RIGHT_DELETE) || isWritable(ACL.RIGHT_INSERT) || isWritable(ACL.RIGHT_WRITE);
     }
+
+    /** Returns <tt>true</tt> if all of the specified rights have been granted
+     *  on the folder referenced by this path to the authenticated user. */
     boolean isWritable(short rights) throws ServiceException {
         if (!isSelectable())
             return false;
@@ -232,7 +245,8 @@ public class ImapPath {
                 return false;
             if (rights == 0)
                 return true;
-            short granted = folder.getMailbox().getEffectivePermissions(mSession == null ? null : mSession.getContext(), folder.getId(), folder.getType());
+            OperationContext octxt = mCredentials == null ? null : mCredentials.getContext();
+            short granted = folder.getMailbox().getEffectivePermissions(octxt, folder.getId(), folder.getType());
             return (granted & rights) == rights;
         } else {
             ZFolder zfolder = (ZFolder) mFolder;
@@ -256,7 +270,7 @@ public class ImapPath {
     }
 
     boolean isVisible() throws ServiceException {
-        if (mSession != null && mSession.isHackEnabled(ImapSession.EnabledHack.WM5)) {
+        if (mCredentials != null && mCredentials.isHackEnabled(ImapCredentials.EnabledHack.WM5)) {
             String lcname = mPath.toLowerCase();
             if (lcname.startsWith("sent items") && (lcname.length() == 10 || lcname.charAt(10) == '/'))
                 return false;
@@ -297,14 +311,14 @@ public class ImapPath {
     /** Formats a folder path as an IMAP-UTF-7 quoted-string.  Applies all
      *  special hack-specific path transforms.
      * @param mPath     The Zimbra-local folder pathname.
-     * @param mSession  The authenticated user's current session.
-     * @see #importPath(String, ImapSession) */
+     * @param mCredentials  The authenticated user's current session.
+     * @see #importPath(String, ImapCredentials) */
     String asImapPath() {
         String path = mPath, lcpath = path.toLowerCase();
         // make sure that the Inbox is called "INBOX", regardless of how we capitalize it
         if (lcpath.startsWith("inbox") && (lcpath.length() == 5 || lcpath.charAt(5) == '/')) {
             path = "INBOX" + path.substring(5);
-        } else if (mSession != null && mSession.isHackEnabled(ImapSession.EnabledHack.WM5)) {
+        } else if (mCredentials != null && mCredentials.isHackEnabled(ImapCredentials.EnabledHack.WM5)) {
             if (lcpath.startsWith("sent") && (lcpath.length() == 4 || lcpath.charAt(4) == '/'))
                 path = "Sent Items" + path.substring(4);
         }

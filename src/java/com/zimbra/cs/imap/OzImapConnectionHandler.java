@@ -110,20 +110,21 @@ public class OzImapConnectionHandler extends ImapHandler implements OzConnection
     @Override protected boolean authenticate()                      { return true; }
     @Override protected void notifyIdleConnection()                 { }
 
+    @Override
     protected boolean processCommand() throws IOException {
-        OzImapRequest req = new OzImapRequest(mCurrentRequestTag, mCurrentRequestData, this, mSession);
+        OzImapRequest req = new OzImapRequest(mCurrentRequestTag, mCurrentRequestData, this);
         boolean keepGoing = CONTINUE_PROCESSING;
         String logPushedUsername = null;
         try {
-            if (mSession != null) {
-                logPushedUsername = mSession.getUsername();
+            if (mCredentials != null) {
+                logPushedUsername = mCredentials.getUsername();
                 ZimbraLog.pushbackContext(ZimbraLog.C_NAME, logPushedUsername);
             }
-            
+
             // check account status before executing command
-            if (mMailbox != null) {
+            if (mCredentials != null) {
                 try {
-                    Account account = mMailbox.getAccount();
+                    Account account = mCredentials.getAccount();
                     if (account == null || !account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE)) {
                         ZimbraLog.imap.warn("account missing or not active; dropping connection");
                         return STOP_PROCESSING;
@@ -134,7 +135,21 @@ public class OzImapConnectionHandler extends ImapHandler implements OzConnection
                 }
             }
 
-            keepGoing = executeRequest(req, mSession);
+            // check target folder's aowner's account status before executing command
+            if (mSelectedFolder != null && !mCredentials.getAccountId().equalsIgnoreCase(mSelectedFolder.getTargetAccountId())) {
+                try {
+                    Account account = Provisioning.getInstance().get(Provisioning.AccountBy.id, mSelectedFolder.getTargetAccountId());
+                    if (account == null || !account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE)) {
+                        ZimbraLog.imap.warn("target account missing or not active; dropping connection");
+                        return STOP_PROCESSING;
+                    }
+                } catch (ServiceException e) {
+                    ZimbraLog.imap.warn("error checking target account status; dropping connection", e);
+                    return STOP_PROCESSING;
+                }
+            }
+
+            keepGoing = executeRequest(req);
         } catch (ImapParseException ipe) {
             if (ipe.mTag == null)
                 sendUntagged("BAD " + ipe.getMessage(), true);
@@ -260,10 +275,10 @@ public class OzImapConnectionHandler extends ImapHandler implements OzConnection
             try {
                 mConnection.setMatcher(new OzAllMatcher());
 
-                if (mSession != null) {
-                    mSession.setHandler(null);
-                    SessionCache.clearSession(mSession);
-                    mSession = null;
+                if (mSelectedFolder != null) {
+                    mSelectedFolder.setHandler(null);
+                    SessionCache.clearSession(mSelectedFolder);
+                    mSelectedFolder = null;
                 }
 
                 if (sendBanner) {
@@ -330,9 +345,8 @@ public class OzImapConnectionHandler extends ImapHandler implements OzConnection
             return;
         }
                 
-        if (mSession != null) {
-            mSession.updateAccessTime();
-        }
+        if (mSelectedFolder != null)
+            mSelectedFolder.updateAccessTime();
 
         mCurrentData.add(buffer);
 
@@ -366,7 +380,7 @@ public class OzImapConnectionHandler extends ImapHandler implements OzConnection
                 }
 
                 mCurrentRequestData.add(mCurrentData.toAsciiString());
-                OzImapRequest req = new OzImapRequest(mAuthenticator.mTag, mCurrentRequestData, this, mSession);
+                OzImapRequest req = new OzImapRequest(mAuthenticator.mTag, mCurrentRequestData, this);
                 if (continueAuthentication(req))
                     gotoReadLineState(true);
                 else
