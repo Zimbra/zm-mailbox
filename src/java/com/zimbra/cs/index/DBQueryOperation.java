@@ -710,6 +710,12 @@ class DBQueryOperation extends QueryOperation
             return false;
         }
         
+        // look for item-id or conv-id query parts, if those are set, then we'll execute DB-FIRST
+        DbLeafNode toplevel = topLevelAndedConstraint();
+        if (toplevel.convId > 0 || toplevel.itemIds.size() > 0) {
+            return true;
+        }
+        
         if (mLuceneOp != null && mLuceneOp.shouldExecuteDbFirst()) {
             return true;
         }

@@ -261,10 +261,14 @@ public final class ZimbraQuery {
     public static class ConvQuery extends BaseQuery
     {
         private int mConvId;
-        public ConvQuery(Analyzer analyzer, int modifier, String target) {
+        public ConvQuery(Analyzer analyzer, int modifier, String target) throws ServiceException {
             super(modifier, ZimbraQueryParser.CONV);
             mConvId = 0;
             mConvId = Integer.parseInt(target);
+            if (mConvId < 0) {
+                // should never happen (make an ItemQuery instead
+                throw ServiceException.FAILURE("Illegal Negative ConvID: "+target+", use ItemQuery for virtual convs", null);
+            }
         }
 
         protected QueryOperation getQueryOperation(boolean truth) {
