@@ -299,6 +299,8 @@ public abstract class WikiUtil {
             auth();
             ZFolder root = getRootFolder();
             ZFolder f = findFolder(root, sDEFAULTFOLDER);
+            if (f == null)
+            	throw WikiServiceException.ERROR("can't open mailbox for " + account.getName() + " (wrong host?)");
             mMbox.modifyFolderGrant(f.getId(), GranteeType.fromString(grantee), name, "rwid", null, true);
             f = findFolder(root, sDEFAULTTEMPLATEFOLDER);
             if (f == null)
