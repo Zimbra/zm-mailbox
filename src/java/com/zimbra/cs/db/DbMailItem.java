@@ -1452,7 +1452,9 @@ public class DbMailItem {
         DbSearchConstraintsNode.NodeType ntype = node.getNodeType();
         DbSearchConstraints constraints = node.getSearchConstraints();
         if (ntype == DbSearchConstraintsNode.NodeType.LEAF) {
-            if (constraints.convId > 0) {
+            if (!constraints.itemIds.isEmpty()) {
+                return "";
+            } else if (constraints.convId > 0) {
                 index = MI_I_MBOX_PARENT;
             } else if (!constraints.indexIds.isEmpty()) {
                 index = MI_I_MBOX_INDEX;
