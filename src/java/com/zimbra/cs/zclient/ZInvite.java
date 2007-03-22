@@ -1360,6 +1360,13 @@ public class ZInvite {
         }
 
         public int getOrdinal() { return ordinal(); }
+
+        public static ZWeekDay fromOrdinal(int ord) throws ServiceException {
+            if (ord < 0 || ord >= ZWeekDay.values().length)
+                throw ZClientException.CLIENT_ERROR("invalid weekday ordinal: "+ord, null);
+            else
+                return ZWeekDay.values()[ord];
+        }
         
         public boolean isSunday() { return equals(SU); }
         public boolean isMonday() { return equals(MO); }
