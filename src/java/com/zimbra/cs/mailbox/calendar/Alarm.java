@@ -368,6 +368,8 @@ public class Alarm {
             ZProperty prop = propIter.next();
             ICalTok tok = prop.getToken();
             String val = prop.getValue();
+            if (tok == null)
+            	continue;
             switch (tok) {
             case ACTION:
                 if (val != null) {
