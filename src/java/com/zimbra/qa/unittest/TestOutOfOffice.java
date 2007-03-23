@@ -66,7 +66,7 @@ public class TestOutOfOffice extends TestCase
         mMbox = MailboxManager.getInstance().getMailboxByAccount(account);
         mConn = DbPool.getConnection();
 
-        DbOutOfOffice.clear(mConn, mMbox);
+        DbOutOfOffice.clear(mConn, account.getId());
         mConn.commit();
 }
     
@@ -200,7 +200,7 @@ public class TestOutOfOffice extends TestCase
     
     protected void tearDown() throws Exception
     {
-        DbOutOfOffice.clear(mConn, mMbox);
+        DbOutOfOffice.clear(mConn, mMbox.getAccountId());
         mConn.commit();
         
         DbPool.quietClose(mConn);
