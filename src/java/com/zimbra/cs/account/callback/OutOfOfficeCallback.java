@@ -34,8 +34,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbOutOfOffice;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Notification;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -45,7 +43,7 @@ public class OutOfOfficeCallback implements AttributeCallback {
     private static final String KEY = OutOfOfficeCallback.class.getName();
 
     public void preModify(Map context, String attrName, Object value,
-            Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
+            Map attrsToModify, Entry entry, boolean isCreate) {
     }
 
     /**
@@ -69,9 +67,8 @@ public class OutOfOfficeCallback implements AttributeCallback {
         Connection conn = null;
         try {
             // clear the OOF database for this account
-            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
             conn = DbPool.getConnection();
-            DbOutOfOffice.clear(conn, mbox);
+            DbOutOfOffice.clear(conn, account.getId());
             conn.commit();
             ZimbraLog.misc.info("reset vacation info");
             //  Convenient place to prune old data, until we determine that this

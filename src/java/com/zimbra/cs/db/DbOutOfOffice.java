@@ -37,6 +37,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Mailbox;
 
@@ -173,25 +174,33 @@ public class DbOutOfOffice {
      * @param mbox mailbox
      * @throws ServiceException if a database error occurred
      */
-    public static void clear(Connection conn, Mailbox mbox)
-            throws ServiceException {
+    public static void clear(Connection conn, String accountId) throws ServiceException {
         PreparedStatement stmt = null;
+        ResultSet rs = null;
         try {
+            stmt = conn.prepareStatement("SELECT id FROM zimbra.mailbox WHERE account_id = ?");
+            stmt.setString(1, accountId);
+            rs = stmt.executeQuery();
+            if (!rs.next())
+                throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
+            int mailboxId = rs.getInt(1);
+            rs.close();
+            stmt.close();
+
             stmt = conn.prepareStatement("DELETE FROM " + TABLE_NAME + " WHERE mailbox_id = ?");
-            stmt.setInt(1, mbox.getId());
+            stmt.setInt(1, mailboxId);
             int num = stmt.executeUpdate();
-            mLog.debug("DbOutOfOffice.clear() mbox=" + mbox + " rows=" + num);
+            mLog.debug("DbOutOfOffice.clear() mbox=" + mailboxId + " rows=" + num);
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("DbOutOfOffice.clear mbox="
-                    + mbox.getId(), e);
+            throw ServiceException.FAILURE("DbOutOfOffice.clear acctId=" + accountId, e);
         } finally {
+            DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
         }
     }
     
     public static void prune(Connection conn, long cacheDurationMillis)
-    throws ServiceException
-    {
+    throws ServiceException {
         PreparedStatement stmt = null;
         try {
             Timestamp cutoff = new Timestamp(System.currentTimeMillis() - cacheDurationMillis);
