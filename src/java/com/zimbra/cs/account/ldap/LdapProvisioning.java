@@ -2299,35 +2299,31 @@ public class LdapProvisioning extends Provisioning {
     
     @Override
     public void preAuthAccount(Account acct, String acctValue, String acctBy, long timestamp, long expires, String preAuth) throws ServiceException {
-        try {
-            checkAccountStatus(acct);
-            if (preAuth == null || preAuth.length() == 0)
-                throw ServiceException.INVALID_REQUEST("preAuth must not be empty", null);
-
-            // see if domain is configured for preauth
-            Provisioning prov = Provisioning.getInstance();
-            String domainPreAuthKey = prov.getDomain(acct).getAttr(Provisioning.A_zimbraPreAuthKey, null);
-            if (domainPreAuthKey == null)
-                throw ServiceException.INVALID_REQUEST("domain is not configured for preauth", null);
+        checkAccountStatus(acct);
+        if (preAuth == null || preAuth.length() == 0)
+            throw ServiceException.INVALID_REQUEST("preAuth must not be empty", null);
+	
+        // see if domain is configured for preauth
+        Provisioning prov = Provisioning.getInstance();
+        String domainPreAuthKey = prov.getDomain(acct).getAttr(Provisioning.A_zimbraPreAuthKey, null);
+        if (domainPreAuthKey == null)
+            throw ServiceException.INVALID_REQUEST("domain is not configured for preauth", null);
         
-            // see if request is recent
-            long now = System.currentTimeMillis();
-            long diff = Math.abs(now-timestamp);
-            if (diff > TIMESTAMP_WINDOW)
-                throw AccountServiceException.AUTH_FAILED(acct.getName()+" (preauth timestamp is too old)");
+        // see if request is recent
+        long now = System.currentTimeMillis();
+	    long diff = Math.abs(now-timestamp);
+	    if (diff > TIMESTAMP_WINDOW)
+	        throw AccountServiceException.AUTH_FAILED(acct.getName()+" (preauth timestamp is too old)");
         
-            // compute expected preAuth
-            HashMap<String,String> params = new HashMap<String,String>();
-            params.put("account", acctValue);
-            params.put("by", acctBy);
-            params.put("timestamp", timestamp+"");
-            params.put("expires", expires+"");
-            String computedPreAuth = PreAuthKey.computePreAuth(params, domainPreAuthKey);
-            if (!computedPreAuth.equalsIgnoreCase(preAuth))
-                throw AccountServiceException.AUTH_FAILED(acct.getName()+" (preauth mismatch)");
-        } catch (ServiceException e) {
-            
-        }
+	    // compute expected preAuth
+	    HashMap<String,String> params = new HashMap<String,String>();
+	    params.put("account", acctValue);
+	    params.put("by", acctBy);
+	    params.put("timestamp", timestamp+"");
+	    params.put("expires", expires+"");
+	    String computedPreAuth = PreAuthKey.computePreAuth(params, domainPreAuthKey);
+	    if (!computedPreAuth.equalsIgnoreCase(preAuth))
+	        throw AccountServiceException.AUTH_FAILED(acct.getName()+" (preauth mismatch)");
     }
     
     /* (non-Javadoc)
