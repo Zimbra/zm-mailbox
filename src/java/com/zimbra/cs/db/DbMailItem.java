@@ -3328,11 +3328,12 @@ public class DbMailItem {
 
 
     /** Makes sure that the argument won't overflow the maximum length of a
-     *  MySQL VARCHAR(1024) column (1024 characters) by truncating the string
-     *  if necessary.
+     *  MySQL VARCHAR(1024) column (1024 characters).
      * 
      * @param subject  The string to check (can be null).
-     * @return The passed-in String, truncated to 1024 chars. */
+     * @return The passed-in String.
+     * @throws ServiceException <code>service.FAILURE</code> if the
+     *         parameter would be silently truncated when inserted. */
     static String checkSubjectLength(String subject) throws ServiceException {
         if (subject == null || subject.length() <= MAX_SUBJECT_LENGTH)
             return subject;

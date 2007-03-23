@@ -48,6 +48,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
 import com.zimbra.cs.convert.ConversionException;
+import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.TopLevelMessageHandler;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.localconfig.DebugConfig;
@@ -725,9 +726,10 @@ public class ParsedMessage {
         try {
             mNormalizedSubject = mSubject = mMimeMessage.getSubject();
         } catch (MessagingException e) { }
-        if (mSubject == null)
+
+        if (mSubject == null) {
             mNormalizedSubject = mSubject = "";
-        else {
+        } else {
             String originalSubject = mNormalizedSubject = StringUtil.stripControlCharacters(mNormalizedSubject).trim();
             mNormalizedSubject = trimPrefixes(mNormalizedSubject);
             if (mNormalizedSubject != originalSubject)
@@ -746,6 +748,8 @@ public class ParsedMessage {
             }
 
             mNormalizedSubject = compressWhitespace(mNormalizedSubject);
+            if (mNormalizedSubject.length() > DbMailItem.MAX_SUBJECT_LENGTH)
+                mNormalizedSubject = mNormalizedSubject.substring(0, DbMailItem.MAX_SUBJECT_LENGTH).trim();
         }
     }
 
@@ -758,6 +762,10 @@ public class ParsedMessage {
                     subject = subject.substring(0, endBracket + 1) + ' ' + trimPrefixes(subject.substring(endBracket + 1).trim());
             }
         }
-        return compressWhitespace(subject);
+        subject = compressWhitespace(subject);
+        if (subject != null && subject.length() > DbMailItem.MAX_SUBJECT_LENGTH)
+            subject = subject.substring(0, DbMailItem.MAX_SUBJECT_LENGTH).trim();
+
+        return subject;
     }
 }
