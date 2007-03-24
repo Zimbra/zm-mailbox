@@ -274,6 +274,11 @@ public class TimeZoneFixup {
                 -540, 11, 4,
                 -480, 3, 11);
         sWorldMap.put(policy, tz);
+        policy = new TZPolicy(
+                "US/Alaska January 1st without rule (bug 15241)",
+                -540, 1, 1,
+                -480, 1, 1);
+        sWorldMap.put(policy, tz);
 
         tz = WellKnownTimeZones.getTimeZoneById("(GMT-08.00) Pacific Time (US & Canada)");
         policy = new TZPolicy(
@@ -300,6 +305,11 @@ public class TimeZoneFixup {
                 "2007 US/Pacific BYMONTHDAY using 2007 rule",
                 -480, 11, 4,
                 -420, 3, 11);
+        sWorldMap.put(policy, tz);
+        policy = new TZPolicy(
+                "US/Pacific January 1st without rule (bug 15241)",
+                -480, 1, 1,
+                -420, 1, 1);
         sWorldMap.put(policy, tz);
 
         tz = WellKnownTimeZones.getTimeZoneById("(GMT-07.00) Mountain Time (US & Canada)");
@@ -328,6 +338,11 @@ public class TimeZoneFixup {
                 -420, 11, 4,
                 -360, 3, 11);
         sWorldMap.put(policy, tz);
+        policy = new TZPolicy(
+                "US/Mountain January 1st without rule (bug 15241)",
+                -420, 1, 1,
+                -360, 1, 1);
+        sWorldMap.put(policy, tz);
 
         tz = WellKnownTimeZones.getTimeZoneById("(GMT-06.00) Central Time (US & Canada)");
         policy = new TZPolicy(
@@ -354,6 +369,11 @@ public class TimeZoneFixup {
                 "2007 US/Central BYMONTHDAY using 2007 rule",
                 -360, 11, 4,
                 -300, 3, 11);
+        sWorldMap.put(policy, tz);
+        policy = new TZPolicy(
+                "US/Central January 1st without rule (bug 15241)",
+                -360, 1, 1,
+                -300, 1, 1);
         sWorldMap.put(policy, tz);
 
         tz = WellKnownTimeZones.getTimeZoneById("(GMT-05.00) Eastern Time (US & Canada)");
@@ -382,6 +402,11 @@ public class TimeZoneFixup {
                 -300, 11, 4,
                 -240, 3, 11);
         sWorldMap.put(policy, tz);
+        policy = new TZPolicy(
+                "US/Eastern January 1st without rule (bug 15241)",
+                -300, 1, 1,
+                -240, 1, 1);
+        sWorldMap.put(policy, tz);
 
         tz = WellKnownTimeZones.getTimeZoneById("(GMT-04.00) Atlantic Time (Canada)");
         policy = new TZPolicy(
@@ -409,6 +434,11 @@ public class TimeZoneFixup {
                 -240, 11, 4,
                 -180, 3, 11);
         sWorldMap.put(policy, tz);
+        policy = new TZPolicy(
+                "Canada/Atlantic January 1st without rule (bug 15241)",
+                -240, 1, 1,
+                -180, 1, 1);
+        sWorldMap.put(policy, tz);
 
         tz = WellKnownTimeZones.getTimeZoneById("(GMT-03.30) Newfoundland");
         policy = new TZPolicy(
@@ -435,6 +465,11 @@ public class TimeZoneFixup {
                 "2007 Canada/Newfoundland BYMONTHDAY using 2007 rule",
                 -210, 11, 4,
                 -150, 3, 11);
+        sWorldMap.put(policy, tz);
+        policy = new TZPolicy(
+                "Canada/Newfoundland January 1st without rule (bug 15241)",
+                -210, 1, 1,
+                -150, 1, 1);
         sWorldMap.put(policy, tz);
 
         tz = WellKnownTimeZones.getTimeZoneById("(GMT-03.00) Brasilia");
@@ -522,6 +557,32 @@ public class TimeZoneFixup {
                 270, 3, 4);
         sWorldMap.put(policy, tz);
 
+        // fixup for bug 15241 for European countries
+        tz = WellKnownTimeZones.getTimeZoneById("(GMT) Greenwich Mean Time - Dublin / Edinburgh / Lisbon / London");
+        policy = new TZPolicy(
+                "Europe GMT+0 January 1st without rule (bug 15241)",
+                0, 1, 1,
+                60, 1, 1);
+        sWorldMap.put(policy, tz);
+        tz = WellKnownTimeZones.getTimeZoneById("(GMT+01.00) Amsterdam / Berlin / Bern / Rome / Stockholm / Vienna");
+        policy = new TZPolicy(
+                "Europe GMT+1 January 1st without rule (bug 15241)",
+                60, 1, 1,
+                120, 1, 1);
+        sWorldMap.put(policy, tz);
+        tz = WellKnownTimeZones.getTimeZoneById("(GMT+02.00) Helsinki / Kyiv / Riga / Sofia / Tallinn / Vilnius");
+        policy = new TZPolicy(
+                "Europe GMT+2 January 1st without rule (bug 15241)",
+                120, 1, 1,
+                180, 1, 1);
+        sWorldMap.put(policy, tz);
+        tz = WellKnownTimeZones.getTimeZoneById("(GMT+03.00) Moscow / St. Petersburg / Volgograd");
+        policy = new TZPolicy(
+                "Europe GMT+3 January 1st without rule (bug 15241)",
+                180, 1, 1,
+                240, 1, 1);
+        sWorldMap.put(policy, tz);
+
         tz = WellKnownTimeZones.getTimeZoneById("(GMT+08.00) Perth");
         policy = new TZPolicy("2006 Australia/Perth", 480);
         sAustraliaMap.put(policy, tz);
@@ -546,6 +607,25 @@ public class TimeZoneFixup {
                 "2007 Australia/Perth BYMONTHDAY using 2007 rule, rev 2",
                 480, 3, 25,
                 540, 10, 28);
+        sAustraliaMap.put(policy, tz);
+        policy = new TZPolicy(
+                "Australia/Perth January 1st without rule (bug 15241)",
+                480, 1, 1,
+                540, 1, 1);
+        sAustraliaMap.put(policy, tz);
+
+        tz = WellKnownTimeZones.getTimeZoneById("(GMT+09.30) Adelaide");
+        policy = new TZPolicy(
+                "Australia/Adelaide January 1st without rule (bug 15241)",
+                570, 1, 1,
+                630, 1, 1);
+        sAustraliaMap.put(policy, tz);
+
+        tz = WellKnownTimeZones.getTimeZoneById("(GMT+10.00) Canberra / Melbourne / Sydney");
+        policy = new TZPolicy(
+                "Australia/Sydney January 1st without rule (bug 15241)",
+                600, 1, 1,
+                660, 1, 1);
         sAustraliaMap.put(policy, tz);
     }
 }
