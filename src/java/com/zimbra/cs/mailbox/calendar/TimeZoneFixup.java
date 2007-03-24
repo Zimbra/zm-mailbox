@@ -163,6 +163,15 @@ public class TimeZoneFixup {
                 sb.append(", dstOnset=[").append(mDaylightOnset.toString()).append("]");
             return sb.toString();
         }
+
+        // Does this timezone use daylight savings time but have identical
+        // onset date/rule for standard and daylight times?
+        public boolean isBug15241() {
+            return mStandardOffset != mDaylightOffset &&
+                   mStandardOnset != null &&
+                   mDaylightOnset != null &&
+                   sameOnset(mStandardOnset, mDaylightOnset);
+        }
     }
 
     private static ICalTimeZone fixTZ(ICalTimeZone oldTZ, Map<TZPolicy, ICalTimeZone> fixmap) {
@@ -173,6 +182,11 @@ public class TimeZoneFixup {
                     "Found replacement timezone: old=" +
                     oldTZ.getID() + ", new=" + newTZ.getID());
             return newTZ.cloneWithNewTZID(oldTZ.getID());
+        } else if (oldPolicy.isBug15241()) {
+            ZimbraLog.calendar.info(
+                "Found DST timezone without onset rules: " +
+                oldTZ.getID() + "; converting to non-DST timezone");
+            return new ICalTimeZone(oldTZ.getID(), oldTZ.getStandardOffset());
         } else {
             return null;
         }
