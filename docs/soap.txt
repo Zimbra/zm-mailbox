@@ -1703,7 +1703,7 @@ Contacts:
   {folder-id} = id of folder to create contact in. Un-specified means use the default Contacts folder.
 ----------
 
-<CreateContactRequest>
+<CreateContactRequest [verbose="0|1"]>
   <cn [l="{folder-id}"] [t="{tags}"]>
      <a>...</a>+
   </cn>
@@ -1714,7 +1714,7 @@ Contacts:
     -- mid/part attributes specifying an existing message part
     -- aid attribute specifying an uploaded text/calendar file
 
-<CreateContactRequest>
+<CreateContactRequest [verbose="0|1"]>
   <cn [l="{folder-id}"] [t="{tags}"]>
     <vcard [mid="{message-id}" part="{part-identifier}] [aid={uploaded-attachment-id"}"]>
 [BEGIN:VCARD
@@ -1724,6 +1724,7 @@ END:VCARD]
   </cn>
 </CreateContactRequest>
 
+
 <CreateContactResponse>
    (<cn> definition above)
 </CreateContactResponse>
@@ -1731,9 +1732,12 @@ END:VCARD]
   {folder-id} = id of folder to create contact in. Un-specified means use the default Contacts folder.
   {tags} = list of tags to apply to the created contact
 
+  -- if "verbose='0'" (defaults to '1') was specified on the request, the returned <cn>
+         is just a placeholder containing the new contact ID (i.e. <cn id="{id}"/>)
+
 ----------
 
-<ModifyContactRequest replace="{replace-mode}">
+<ModifyContactRequest [replace="{replace-mode}"] [verbose="0|1"]>
   <cn id="...">
     <a>{attr-value}</a>+
   </cn>
@@ -1747,11 +1751,16 @@ END:VCARD]
   the attrs are merged with the existing contact.
 
 <ModifyContactResponse>
-   <cn id="..." s="..." cd="..."/>
+   <cn ...>
+     <a n="...">...</a>
+     ...
+   </cn>
 </ModifyContactResponse>
 
 NOTE: should we return modified attrs in response?
 
+  -- if verbose='0' (defaults to '1') was specified on the request, the returned <cn>
+         is just a placeholder containing the contact ID (i.e. <cn id="{id}"/>)
 
 ----------
 

@@ -55,16 +55,17 @@ public class ModifyContact extends MailDocumentHandler  {
     protected boolean checkMountpointProxy(Element request)  { return false; }
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
-        OperationContext octxt = lc.getOperationContext();
-        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zsc);
+        OperationContext octxt = zsc.getOperationContext();
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
         Session session = getSession(context);
 
         boolean replace = request.getAttributeBool(MailConstants.A_REPLACE, false);
+        boolean verbose = request.getAttributeBool(MailConstants.A_VERBOSE, true);
 
         Element cn = request.getElement(MailConstants.E_CONTACT);
-        ItemId iid = new ItemId(cn.getAttribute(MailConstants.A_ID), lc);
+        ItemId iid = new ItemId(cn.getAttribute(MailConstants.A_ID), zsc);
         Map<String, String> fields = parseFields(cn.listElements(MailConstants.E_ATTRIBUTE));
 
         ModifyContactOperation op = new ModifyContactOperation(session, octxt, mbox, Requester.SOAP, iid, fields, replace);
@@ -72,9 +73,13 @@ public class ModifyContact extends MailDocumentHandler  {
 
 
         Contact con = mbox.getContactById(octxt, iid.getId());
-        Element response = lc.createElement(MailConstants.MODIFY_CONTACT_RESPONSE);
-        if (con != null)
-            ToXML.encodeContact(response, ifmt, con, null, true, null);
+        Element response = zsc.createElement(MailConstants.MODIFY_CONTACT_RESPONSE);
+        if (con != null) {
+            if (verbose)
+                ToXML.encodeContact(response, ifmt, con, null, true, null);
+            else
+                response.addElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, con.getId());
+        }
         return response;
     }
 
