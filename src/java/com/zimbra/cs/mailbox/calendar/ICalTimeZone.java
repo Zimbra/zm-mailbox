@@ -548,25 +548,11 @@ public class ICalTimeZone extends SimpleTimeZone {
         }
     }
 
+    public ICalTimeZone(String tzId, int offset) {
+        this(tzId, offset, null, offset, null);
+    }
     
 
-//    public ICalTimeZone(String tzId,
-//                        int stdOffset, String stdDtStart, String stdRRule,
-//                        int dayOffset, String dayDtStart, String dayRRule) {
-//        super(tzId,
-//              stdOffset, stdDtStart, stdRRule,
-//              dayOffset, dayDtStart, dayRRule);
-//        mTzId = tzId;
-//    }
-//
-//    public ICalTimeZone(String tzId,
-//                        int standardOffset, SimpleOnset standardOnset,
-//                        int daylightOffset, SimpleOnset daylightOnset) {
-//        super(tzId,
-//              standardOffset, standardOnset, daylightOffset, daylightOnset);
-//        mTzId = tzId;
-//    }
-    
     private static String toICalDtStart(SimpleOnset onset) {
         String hourStr = Integer.toString(onset.getHour() + 100).substring(1);
         String minuteStr = Integer.toString(onset.getMinute() + 100).substring(1);

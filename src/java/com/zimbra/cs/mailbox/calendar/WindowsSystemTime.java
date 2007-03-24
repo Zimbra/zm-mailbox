@@ -25,6 +25,9 @@
 
 package com.zimbra.cs.mailbox.calendar;
 
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
 
 /**
@@ -104,8 +107,17 @@ public class WindowsSystemTime {
         int week = onset.getWeek();
         if (week == -1)
             week = 5;
-        return new WindowsSystemTime(
-                0, onset.getMonth(), onset.getDayOfWeek() - 1, week,
-                onset.getHour(), onset.getMinute(), onset.getSecond(), 0);
+        if (week != 0) {
+            return new WindowsSystemTime(
+                    0, onset.getMonth(), onset.getDayOfWeek() - 1, week,
+                    onset.getHour(), onset.getMinute(), onset.getSecond(), 0);
+        } else {
+            Calendar cal = new GregorianCalendar();
+            int year = cal.get(Calendar.YEAR);
+            cal.set(year, onset.getMonth() - 1, onset.getDayOfMonth(), onset.getHour(), onset.getMinute());
+            return new WindowsSystemTime(
+                    year, onset.getMonth(), cal.get(Calendar.DAY_OF_WEEK) - 1, onset.getDayOfMonth(),
+                    onset.getHour(), onset.getMinute(), onset.getSecond(), 0);
+        }
     }
 }
