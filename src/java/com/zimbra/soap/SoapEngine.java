@@ -258,7 +258,7 @@ public class SoapEngine {
                 if (zsc.isDelegatedRequest() && !handler.isAdminCommand()) {
                     Account target = Provisioning.getInstance().get(AccountBy.id, zsc.getRequestedAccountId());
                     if (target == null || !target.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
-                        return soapProto.soapFault(AccountServiceException.ACCOUNT_INACTIVE(target.getName()));
+                        return soapProto.soapFault(AccountServiceException.ACCOUNT_INACTIVE(target == null ? zsc.getRequestedAccountId() : target.getName()));
                 }
             } catch (ServiceException ex) {
                 return soapProto.soapFault(ex);
