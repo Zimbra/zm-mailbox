@@ -125,7 +125,6 @@ public class MailConstants {
 
 
     // Calendar
-
     public static final QName GET_APPT_SUMMARIES_REQUEST = QName.get("GetApptSummariesRequest", NAMESPACE);
     public static final QName GET_APPOINTMENT_REQUEST = QName.get("GetAppointmentRequest", NAMESPACE);
     public static final QName SET_APPOINTMENT_REQUEST = QName.get("SetAppointmentRequest", NAMESPACE);
@@ -294,7 +293,8 @@ public class MailConstants {
     public static final String A_CAL_EXPAND_INST_END = "calExpandInstEnd";
     public static final String A_RESULT_MODE = "resultMode";
     public static final String A_PREFETCH = "prefetch";
-    
+    public static final String A_VERBOSE = "verbose";
+
     // send/save draft
     public static final String E_ATTACH = "attach";
     public static final String A_ATTACHMENT_ID = "aid";
