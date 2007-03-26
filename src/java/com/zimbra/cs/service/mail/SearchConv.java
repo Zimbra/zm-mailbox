@@ -78,16 +78,14 @@ public class SearchConv extends Search {
         Session session = getSession(context);
 
         boolean nest = request.getAttributeBool(MailConstants.A_NEST_MESSAGES, false);
-
-        // FIXME: should proxy if conversation is a qualified ID in another mailbox
-        ItemId cid = new ItemId(request.getAttribute(MailConstants.A_CONV_ID), zsc);
         
         Account acct = getRequestedAccount(zsc);
         SearchParams params = SearchParams.parse(request, zsc, acct.getAttr(Provisioning.A_zimbraPrefMailInitialSearch));
 
         // append (conv:(convid)) onto the beginning of the queryStr
-        StringBuffer queryBuffer = new StringBuffer("conv:\"");
-        queryBuffer.append(cid.toString((String) null));
+        ItemId cid = new ItemId(request.getAttribute(MailConstants.A_CONV_ID), zsc);
+        StringBuilder queryBuffer = new StringBuilder("conv:\"");
+        queryBuffer.append(cid.toString());
         queryBuffer.append("\" (");
         queryBuffer.append(params.getQueryStr());
         queryBuffer.append(")");
