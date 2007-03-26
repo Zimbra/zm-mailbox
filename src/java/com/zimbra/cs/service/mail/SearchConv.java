@@ -64,11 +64,9 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class SearchConv extends Search {
     private static Log sLog = LogFactory.getLog(Search.class);
 
-    private static final String[] TARGET_CONV_PATH = new String[] { MailConstants.A_CONV_ID };
-    protected String[] getProxiedIdPath(Element request)  { return TARGET_CONV_PATH; }
-
     private static final int CONVERSATION_FIELD_MASK = Change.MODIFIED_SIZE | Change.MODIFIED_TAGS | Change.MODIFIED_FLAGS;
 
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         if (sLog.isDebugEnabled())
             sLog.debug("**Start SearchConv");
@@ -89,7 +87,7 @@ public class SearchConv extends Search {
 
         // append (conv:(convid)) onto the beginning of the queryStr
         StringBuffer queryBuffer = new StringBuffer("conv:\"");
-        queryBuffer.append(cid.getId());
+        queryBuffer.append(cid.toString((String) null));
         queryBuffer.append("\" (");
         queryBuffer.append(params.getQueryStr());
         queryBuffer.append(")");
