@@ -38,11 +38,9 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 /**
- * @author kchen
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
+ * Encapsulates text extracted from a document, its character encoding, MIME type(s),
+ * and associated attributes.
+ */ 
 public class DocumentText {
     public static DocumentText EMPTY;
     static {
@@ -106,22 +104,20 @@ public class DocumentText {
     }
     
     /**
-     * 
-     * @return comma-separated mime types
+     * @return comma-separated MIME types
      */
     public String getContentTypes() {
         return mContentTypes;
     }
     
     /**
-     * 
-     * @return a list of mime types or an empty list
+     * @return a <tt>List</tt> of MIME types or an empty list
      */
-    public List getContentTypeList() {
+    public List<String> getContentTypeList() {
         if (mContentTypes == null || "".equals(mContentTypes)) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
-        List a = new ArrayList();
+        List<String> a = new ArrayList<String>();
         StringTokenizer st = new StringTokenizer(mContentTypes, ",");
         while (st.hasMoreTokens()) {
             a.add(st.nextToken().trim());
