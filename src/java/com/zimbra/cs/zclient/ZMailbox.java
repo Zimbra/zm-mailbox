@@ -2924,6 +2924,8 @@ public class ZMailbox {
         
         if (message != null) getMessageElement(req, message);
 
+        mMessageCache.remove(id);
+
         invoke(req);
     }
 
@@ -2979,6 +2981,8 @@ public class ZMailbox {
 
         if (message != null) getMessageElement(req, message);
         
+        mMessageCache.remove(id);
+
         return new ZSendInviteReplyResult(invoke(req));
     }
 
