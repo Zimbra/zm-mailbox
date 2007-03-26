@@ -49,7 +49,6 @@ import com.zimbra.cs.zclient.ZFolder.Color;
 import com.zimbra.cs.zclient.ZGrant.GranteeType;
 import com.zimbra.cs.zclient.ZInvite.ZTimeZone;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
-import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.MessagePart;
 import com.zimbra.cs.zclient.ZSearchParams.Cursor;
 import com.zimbra.cs.zclient.event.ZCreateAppointmentEvent;
 import com.zimbra.cs.zclient.event.ZCreateContactEvent;
@@ -2303,7 +2302,14 @@ public class ZMailbox {
         public static class MessagePart {
             private String mContentType;
             private String mContent;
+            private List<MessagePart> mSubParts;
 
+            /**
+             * create a new message part with the given content type and content.
+             *
+             * @param contentType MIME content type
+             * @param content content for the part (null if content-type is multi-part)
+             */
             public MessagePart(String contentType, String content) {
                 mContent = content;
                 mContentType = contentType;
@@ -2313,14 +2319,29 @@ public class ZMailbox {
             public void setContentType(String contentType) { mContentType = contentType; }
 
             public String getContent() { return mContent; }
-
             public void setContent(String content) { mContentType = content; }
+
+            public List<MessagePart> getSubParts() { return mSubParts; }
+            public void setSubParts(List<MessagePart> subParts) { mSubParts = subParts; }
+
+            public Element toElement(Element parent) {
+                Element mpEl = parent.addElement(MailConstants.E_MIMEPART);
+                mpEl.addAttribute(MailConstants.A_CONTENT_TYPE, mContentType);
+                if (mContent != null)
+                    mpEl.addElement(MailConstants.E_CONTENT).setText(mContent);
+                if (mSubParts != null) {
+                    for (MessagePart subPart : mSubParts) {
+                        subPart.toElement(mpEl);
+                    }
+                }
+                return mpEl;
+            }
         }
 
         private List<ZEmailAddress> mAddresses;
         private String mSubject;
         private String mInReplyTo;
-        private List<MessagePart> mMessageParts;
+        private MessagePart mMessagePart;
         private String mAttachmentUploadId;
         private List<AttachedMessagePart> mMessagePartsToAttach;
         private List<String> mContactIdsToAttach;
@@ -2337,8 +2358,8 @@ public class ZMailbox {
         public List<String> getContactIdsToAttach() { return mContactIdsToAttach; }
         public void setContactIdsToAttach(List<String> contactIdsToAttach) { mContactIdsToAttach = contactIdsToAttach; }
 
-        public List<MessagePart> getMessageParts() { return mMessageParts; }
-        public void setMessageParts(List<MessagePart> messageParts) { mMessageParts = messageParts; }
+        public MessagePart getMessagePart() { return mMessagePart; }
+        public void setMessagePart(MessagePart messagePart) { mMessagePart = messagePart; }
 
         public List<AttachedMessagePart> getMessagePartsToAttach() { return mMessagePartsToAttach; }
         public void setMessagePartsToAttach(List<AttachedMessagePart> messagePartsToAttach) { mMessagePartsToAttach = messagePartsToAttach; }
@@ -2383,13 +2404,8 @@ public class ZMailbox {
         if (message.getInReplyTo() != null)
             m.addElement(MailConstants.E_IN_REPLY_TO).setText(message.getInReplyTo());
 
-        if (message.getMessageParts() != null) {
-            for (MessagePart part : message.getMessageParts()) {
-                Element mp = m.addElement(MailConstants.E_MIMEPART);
-                mp.addAttribute(MailConstants.A_CONTENT_TYPE, part.getContentType());
-                mp.addElement(MailConstants.E_CONTENT).setText(part.getContent());
-            }
-        }
+        if (message.getMessagePart() != null)
+            message.getMessagePart().toElement(m);
 
         Element attach = null;
 

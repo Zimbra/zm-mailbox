@@ -1108,8 +1108,7 @@ public class ZMailboxUtil implements DebugListener {
 
         ZMailbox.ZOutgoingMessage message = new ZOutgoingMessage();
         message.setSubject("test zclient API");
-        message.setMessageParts(new ArrayList<MessagePart>());
-        message.getMessageParts().add(new MessagePart("text/plain", "this is da body"));
+        message.setMessagePart(new MessagePart("text/plain", "this is da body"));
         ZInvite invite = new ZInvite();
         ZComponent comp = new ZComponent();
         comp.setStart(new ZDateTime("20070309T170000", mMbox.getPrefs().getTimeZoneWindowsId()));
