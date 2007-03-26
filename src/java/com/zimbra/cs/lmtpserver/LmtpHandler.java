@@ -390,7 +390,13 @@ public class LmtpHandler extends ProtocolHandler {
         // Log envelope information
         if (ZimbraLog.lmtp.isInfoEnabled()) {
             StringBuilder recipients = new StringBuilder();
+            boolean firstTime = true;
             for (LmtpAddress recipient : mEnvelope.getRecipients()) {
+                if (!firstTime) {
+                    recipients.append(',');
+                } else {
+                    firstTime = false;
+                }
                 recipients.append(recipient);
                 if (recipients.length() > 100) {
                     recipients.setLength(100);
@@ -400,7 +406,7 @@ public class LmtpHandler extends ProtocolHandler {
             }
             String size = (mEnvelope.getSize() == 0 ?
                 "unspecified" : Integer.toString(mEnvelope.getSize()) + " bytes");
-            ZimbraLog.lmtp.info("Delivering message: sender=%s, recipient(s)=%s, size=%s",
+            ZimbraLog.lmtp.info("Delivering message: sender=%s, recipient(s)={%s}, size=%s",
                 mEnvelope.getSender(), recipients, size);
         }
 
