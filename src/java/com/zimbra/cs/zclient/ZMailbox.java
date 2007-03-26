@@ -2315,6 +2315,14 @@ public class ZMailbox {
                 mContentType = contentType;
             }
 
+            public MessagePart(String contentType, MessagePart... parts) {
+                mContent = null;
+                mContentType = contentType;
+                mSubParts = new ArrayList<MessagePart>();
+                for (MessagePart sub : parts)
+                    mSubParts.add(sub);
+            }
+
             public String getContentType() { return mContentType; }
             public void setContentType(String contentType) { mContentType = contentType; }
 
