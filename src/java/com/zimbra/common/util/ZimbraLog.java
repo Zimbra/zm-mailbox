@@ -95,6 +95,10 @@ public class ZimbraLog {
      */
     private static final String C_DATA_SOURCE_NAME = "ds";
     
+    /**
+     * "port" key for context.  The server port to which the client connected.  
+     */
+    private static final String C_PORT = "port";
     
     /**
      * the "zimbra.misc" logger. For all events that don't have a specific-catagory.
@@ -345,6 +349,10 @@ public class ZimbraLog {
     
     public static void addDataSourceNameToContext(String dataSourceName) {
         ZimbraLog.addToContext(C_DATA_SOURCE_NAME, dataSourceName);
+    }
+    
+    public static void addPortToContext(int port) {
+        ZimbraLog.addToContext(C_PORT, Integer.toString(port));
     }
     
     private static boolean checkContext(String context, String key) {
