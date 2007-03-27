@@ -24,6 +24,7 @@
  */
 package com.zimbra.cs.dav;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -35,6 +36,7 @@ import org.dom4j.io.SAXReader;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.dav.service.DavResponse;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -54,6 +56,7 @@ public class DavContext {
 	private String mPath;
 	private int mStatus;
 	private Document mRequestMsg;
+	private byte[] mRequestData;
 	private DavResponse mResponse;
 	private boolean mResponseSent;
 	
@@ -183,19 +186,32 @@ public class DavContext {
 				hdr != null && Integer.parseInt(hdr) > 0);
 	}
 	
+	public byte[] getRequestData() throws DavException {
+		try {
+			if (mRequestData == null)
+				mRequestData = ByteUtil.getContent(mReq.getInputStream(), 0);
+
+			if (ZimbraLog.dav.isDebugEnabled())
+				ZimbraLog.dav.debug(new String(mRequestData, "UTF-8"));
+
+		} catch (IOException e) {
+			throw new DavException("unable to read input", HttpServletResponse.SC_BAD_REQUEST, e);
+		}
+		return mRequestData;
+	}
+	
 	/* Returns XML Document containing the request. */
 	public Document getRequestMessage() throws DavException {
 		if (mRequestMsg != null)
 			return mRequestMsg;
 		try {
 			if (hasRequestMessage()) {
-				mRequestMsg = new SAXReader().read(mReq.getInputStream());
+				ByteArrayInputStream bais = new ByteArrayInputStream(getRequestData());
+				mRequestMsg = new SAXReader().read(bais);
 				return mRequestMsg;
 			}
 		} catch (DocumentException e) {
 			throw new DavException("unable to parse request message", HttpServletResponse.SC_BAD_REQUEST, e);
-		} catch (IOException e) {
-			throw new DavException("unable to read input", HttpServletResponse.SC_BAD_REQUEST, e);
 		}
 		throw new DavException("no request msg", HttpServletResponse.SC_BAD_REQUEST, null);
 	}

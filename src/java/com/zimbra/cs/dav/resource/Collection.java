@@ -32,7 +32,6 @@ import java.util.List;
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
@@ -178,8 +177,7 @@ public class Collection extends MailItemResource {
 
 		String author = ctxt.getAuthAccount().getName();
 		String ctype = ctxt.getRequest().getContentType();
-		int clen = ctxt.getRequest().getContentLength();
-		byte[] data = ByteUtil.getContent(ctxt.getRequest().getInputStream(), clen);
+		byte[] data = ctxt.getRequestData();
 		if (ctype == null)
 			ctype = URLConnection.getFileNameMap().getContentTypeFor(name);
 		if (ctype == null)

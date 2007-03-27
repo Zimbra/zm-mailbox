@@ -29,6 +29,7 @@ import java.io.IOException;
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.resource.DavResource;
@@ -55,6 +56,10 @@ public class Get extends DavMethod {
 		//resp.setContentLength(resource.getContentLength());
 		if (!resource.hasContent(ctxt))
 			return;
+		if (ZimbraLog.dav.isDebugEnabled()) {
+			ZimbraLog.dav.debug("GET "+ctxt.getUri());
+			ZimbraLog.dav.debug(new String(ByteUtil.getContent(resource.getContent(ctxt), 0), "UTF-8"));
+		}
 		ByteUtil.copy(resource.getContent(ctxt), true, ctxt.getResponse().getOutputStream(), false);
 	}
 }
