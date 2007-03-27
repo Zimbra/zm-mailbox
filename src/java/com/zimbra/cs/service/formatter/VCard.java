@@ -39,26 +39,34 @@ import org.apache.commons.codec.net.QuotedPrintableCodec;
 
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.ZimbraLog;
 
 public class VCard {
 
     public String fn;
     public String formatted;
     public Map<String, String> fields;
+    public List<Attachment> attachments;
 
-    private VCard(String xfn, String xformatted, Map<String, String> xfields) {
-        fn = xfn;  formatted = xformatted;  fields = xfields;
+    private VCard(String xfn, String xformatted, Map<String, String> xfields, List<Attachment> xattachments) {
+        fn = xfn;  formatted = xformatted;  fields = xfields;  attachments = xattachments;
+    }
+
+    public ParsedContact asParsedContact() throws ServiceException {
+        return new ParsedContact(fields, attachments, System.currentTimeMillis());
     }
 
 
     private static final Set<String> PROPERTY_NAMES = new HashSet<String>(Arrays.asList(new String[] {
-        "BEGIN", "FN", "N", "NICKNAME", "BDAY", "ADR", "TEL", "EMAIL", "URL", "ORG", "TITLE", "NOTE", "AGENT", "END"
+            "BEGIN", "FN", "N", "NICKNAME", "PHOTO", "BDAY", "ADR", "TEL", "EMAIL", "URL", "ORG", "TITLE", "NOTE", "AGENT", "END"
     }));
 
-    static final HashMap<String, String> PARAM_ABBREVIATIONS = new HashMap<String, String>();
+    static final Map<String, String> PARAM_ABBREVIATIONS = new HashMap<String, String>();
         static {
             PARAM_ABBREVIATIONS.put("BASE64", "ENCODING=B");
             PARAM_ABBREVIATIONS.put("QUOTED-PRINTABLE", "ENCODING=QUOTED-PRINTABLE");
@@ -82,7 +90,14 @@ public class VCard {
 
         boolean isEmpty()       { return isEmpty; }
         Encoding getEncoding()  { return encoding; }
-        boolean containsParam(String param) { return params.contains(param); }
+        boolean containsParam(String param)  { return params.contains(param); }
+        String getParamValue(String pname) {
+            pname = pname.toUpperCase() + '=';
+            for (String param : params)
+                if (param.startsWith(pname))
+                    return param.substring(pname.length());
+            return null;
+        }
 
         private void reset() {
             name = value = null;
@@ -155,12 +170,23 @@ public class VCard {
             } catch (Exception e) { }
             return value;
         }
+
+        byte[] getDecoded() {
+            byte[] encoded = value.getBytes();
+            try {
+                if (encoding == Encoding.B && Base64.isArrayByteBase64(encoded))
+                    encoded = Base64.decodeBase64(encoded);
+                encoding = Encoding.NONE;
+            } catch (Exception e) { }
+            return encoded;
+        }
     }
 
     public static List<VCard> parseVCard(String vcard) throws ServiceException {
         List<VCard> cards = new ArrayList<VCard>();
 
-        HashMap<String, String> fields = new HashMap<String, String>();
+        Map<String, String> fields = new HashMap<String, String>();
+        List<Attachment> attachments = new ArrayList<Attachment>();
 
         VCardProperty vcprop = new VCardProperty();
         int depth = 0;
@@ -189,17 +215,16 @@ public class VCard {
             } while (folded);
             if (vcprop.isEmpty())
                 continue;
-            
-            value = vcprop.getValue();
 
-            if (name.equals(""))
+            if (name.equals("")) {
                 throw ServiceException.PARSE_ERROR("missing property name in line " + line, null);
-            else if (!PROPERTY_NAMES.contains(name))
+            } else if (!PROPERTY_NAMES.contains(name)) {
                 continue;
-            else if (name.equals("BEGIN")) {
+            } else if (name.equals("BEGIN")) {
                 if (++depth == 1) {
                     // starting a top-level vCard; reset state
                     fields = new HashMap<String, String>();
+                    attachments = new ArrayList<Attachment>();
                     cardstart = linestart;
                     emails = 0;
                 }
@@ -209,7 +234,7 @@ public class VCard {
                     // finished a vCard; add to list if non-empty
                     if (!fields.isEmpty()) {
                         Contact.normalizeFileAs(fields);
-                        cards.add(new VCard(fields.get(Contact.A_fullName), vcard.substring(cardstart, pos), fields));
+                        cards.add(new VCard(fields.get(Contact.A_fullName), vcard.substring(cardstart, pos), fields, attachments));
                     }
                 }
                 continue;
@@ -217,15 +242,30 @@ public class VCard {
                 continue;
             } else if (name.equals("AGENT")) {
                 // catch AGENT on same line as BEGIN block when rest of AGENT is not on the same line
-                if (value.trim().toUpperCase().matches("BEGIN\\s*:\\s*VCARD"))
+                if (vcprop.getValue().trim().toUpperCase().matches("BEGIN\\s*:\\s*VCARD"))
                     depth++;
                 continue;
             }
+
+            if (vcprop.getEncoding() == Encoding.B && !vcprop.containsParam("VALUE=URI")) {
+                if (name.equals("PHOTO")) {
+                    String suffix = vcprop.getParamValue("TYPE"), ctype = null;
+                    if (suffix != null && !suffix.equals("")) {
+                        ctype = "image/" + suffix.toLowerCase();
+                        suffix = '.' + suffix;
+                    }
+                    attachments.add(new Attachment(vcprop.getDecoded(), ctype, "image", "image" + suffix));
+                    continue;
+                }
+            }
+
+            value = vcprop.getValue();
 
             // decode the property's value and assign to the appropriate contact field(s)
             if (name.equals("FN"))             fields.put(Contact.A_fullName, vcfDecode(value));
             else if (name.equals("N"))         decodeStructured(value, NAME_FIELDS, fields);
             else if (name.equals("NICKNAME"))  fields.put(Contact.A_nickname, vcfDecode(value));
+            else if (name.equals("PHOTO"))     fields.put(Contact.A_image, vcfDecode(value));
             else if (name.equals("BDAY"))      fields.put(Contact.A_birthday, vcfDecode(value));
             else if (name.equals("ADR"))       decodeAddress(value, vcprop, fields);
             else if (name.equals("TEL"))       decodeTelephone(value, vcprop, fields);
@@ -336,6 +376,7 @@ public class VCard {
 
     public static VCard formatContact(Contact con) {
         Map<String, String> fields = con.getFields();
+        List<Attachment> attachments = con.getAttachments();
         List<String> emails = con.getEmailAddresses();
 
         StringBuilder sb = new StringBuilder();
@@ -359,6 +400,7 @@ public class VCard {
             sb.append("N:").append(n).append("\r\n");
 
         encodeField(sb, "NICKNAME", fields.get(Contact.A_nickname));
+        encodeField(sb, "PHOTO;VALUE=URI", fields.get(Contact.A_image));
         String bday = fields.get(Contact.A_birthday);
         if (bday != null) {
             Date date = DateUtil.parseDateSpecifier(bday);
@@ -408,6 +450,22 @@ public class VCard {
 
         encodeField(sb, "NOTE", fields.get(Contact.A_notes));
 
+        if (attachments != null) {
+            for (Attachment attach : attachments) {
+                try {
+                    if (attach.getName().equalsIgnoreCase(Contact.A_image)) {
+                        String field = "PHOTO;ENCODING=B";
+                        if (attach.getContentType().startsWith("image/"))
+                            field += ";TYPE=" + attach.getContentType().substring(6).toUpperCase();
+                        String encoded = new String(Base64.encodeBase64Chunked(attach.getContent(con))).trim().replace("\r\n", "\r\n ");
+                        sb.append(field).append(":\r\n ").append(encoded).append("\r\n");
+                    }
+                } catch (Throwable t) {
+                    ZimbraLog.misc.info("error fetching attachment content: " + attach.getName(), t);
+                }
+            }
+        }
+
         try {
             List<Tag> tags = con.getTagList();
             if (!tags.isEmpty()) {
@@ -422,7 +480,7 @@ public class VCard {
         sb.append("UID:").append(con.getMailbox().getAccountId()).append(':').append(con.getId()).append("\r\n");
         // sb.append("MAILER:Zimbra ").append(BuildInfo.VERSION).append("\r\n");
         sb.append("END:VCARD\r\n");
-        return new VCard(fn, sb.toString(), fields);
+        return new VCard(fn, sb.toString(), fields, attachments);
     }
 
     private static void encodeField(StringBuilder sb, String name, String value) {

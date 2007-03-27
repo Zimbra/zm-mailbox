@@ -59,6 +59,7 @@ public class Metadata {
     static final String FN_CALITEM_IDS     = "ais";
     static final String FN_CALITEM_END     = "ape";
     static final String FN_CALITEM_START   = "aps";
+    static final String FN_ATTACHMENTS     = "att";
     static final String FN_COLOR           = "c";
     static final String FN_COMPONENT       = "comp";
     static final String FN_CREATOR         = "cr";

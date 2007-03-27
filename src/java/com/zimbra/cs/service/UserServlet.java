@@ -892,6 +892,10 @@ public class UserServlet extends ZimbraServlet {
         return getRemoteResource(authToken, target, folder, params).getSecond();
     }
 
+    public static byte[] getRemoteContent(String authToken, String hostname, String url) throws ServiceException {
+        return getRemoteResource(authToken, hostname, url).getSecond();
+    }
+
     public static Pair<Header[], byte[]> getRemoteResource(String authToken, ItemId iid, Map<String, String> params) throws ServiceException {
         Account target = Provisioning.getInstance().get(AccountBy.id, iid.getAccountId());
         Map<String, String> pcopy = new HashMap<String, String>(params);

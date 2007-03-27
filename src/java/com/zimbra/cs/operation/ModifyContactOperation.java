@@ -24,11 +24,10 @@
  */
 package com.zimbra.cs.operation;
 
-import java.util.Map;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 
@@ -41,19 +40,17 @@ public class ModifyContactOperation extends Operation {
             LOAD = c.mLoad;
     }
 
-    ItemId mIid;
-    Map<String, String> mFields;	
-    boolean mReplace;
+    private ItemId mIid;
+    private ParsedContact mParsedContact;	
 
     public ModifyContactOperation(Session session, OperationContext oc, Mailbox mbox, Requester req, 
-                ItemId iid, Map<String, String> fields, boolean replace) {
+                ItemId iid, ParsedContact pc) {
         super(session, oc, mbox, req, LOAD);
         mIid = iid;
-        mFields = fields;
-        mReplace = replace;
+        mParsedContact = pc;
     }	
 
     protected void callback() throws ServiceException {
-        getMailbox().modifyContact(getOpCtxt(), mIid.getId(), mFields, mReplace);
+        getMailbox().modifyContact(getOpCtxt(), mIid.getId(), mParsedContact);
     }
 }

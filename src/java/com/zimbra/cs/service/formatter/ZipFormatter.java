@@ -111,7 +111,7 @@ public class ZipFormatter extends Formatter {
                         // add ZIP entry to output stream
                         out.putNextEntry(new ZipEntry(getZipEntryName(item, item.getSubject(), ".eml", context, usedNames)));
                         try {
-                            InputStream is = ((Message) item).getRawMessage();
+                            InputStream is = ((Message) item).getContentStream();
                             ByteUtil.copy(is, true, out, false);
                         } finally {
                             out.closeEntry();

@@ -595,7 +595,7 @@ public class Pop3Handler extends ProtocolHandler {
         Message m = mMbx.getMessage(msg);
         InputStream is = null;        
         try {
-            is = m.getRawMessage();
+            is = m.getContentStream();
             sendOK("message follows", false);
             sendMessage(is, Integer.MAX_VALUE);
         } finally {
@@ -624,7 +624,7 @@ public class Pop3Handler extends ProtocolHandler {
         Message m = mMbx.getMessage(msg);
         InputStream is = null;        
         try {
-            is = m.getRawMessage();
+            is = m.getContentStream();
             sendOK("message top follows", false);
             sendMessage(is, n);
         } finally {

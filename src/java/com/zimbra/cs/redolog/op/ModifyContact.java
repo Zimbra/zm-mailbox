@@ -32,8 +32,10 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -43,36 +45,41 @@ import com.zimbra.cs.redolog.RedoLogOutput;
 public class ModifyContact extends RedoableOp {
 
     private int mId;
-    private boolean mReplace;
-    private Map<String, String> mAttrs;
+    private Map<String, String> mFields;
+    private byte[] mBlob;
+    private short mVolumeId = -1;
 
     public ModifyContact() {
         mId = UNKNOWN_ID;
     }
 
-    public ModifyContact(int mailboxId, int id, Map<String, String> attrs, boolean replace) {
+    public ModifyContact(int mailboxId, int id, ParsedContact pc) {
         setMailboxId(mailboxId);
         mId = id;
-        mReplace = replace;
-        mAttrs = attrs;
+        mFields = pc.getFields();
+        mBlob = pc.getBlob();
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.redolog.op.RedoableOp#getOperationCode()
-     */
+    public void setVolumeId(short volumeId) {
+        mVolumeId = volumeId;
+    }
+
+    public short getVolumeId() {
+        return mVolumeId;
+    }
+
+    @Override
     public int getOpCode() {
         return OP_MODIFY_CONTACT;
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.redolog.op.RedoableOp#getPrintableData()
-     */
+    @Override
     protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=");
-        sb.append(mId).append(", replace=").append(mReplace);
-        if (mAttrs != null && mAttrs.size() > 0) {
+        sb.append(mId);
+        if (mFields != null && mFields.size() > 0) {
             sb.append(", attrs={");
-            for (Map.Entry<String, String> entry : mAttrs.entrySet()) {
+            for (Map.Entry<String, String> entry : mFields.entrySet()) {
                 String key = entry.getKey();
                 String value = entry.getValue();
                 sb.append("\n    ").append(key).append(": ").append(value);
@@ -82,43 +89,53 @@ public class ModifyContact extends RedoableOp {
         return sb.toString();
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.redolog.op.RedoableOp#serializeData(java.io.RedoLogOutput)
-     */
+    @Override
     protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mId);
-        out.writeBoolean(mReplace);
-        int numAttrs = mAttrs != null ? mAttrs.size() : 0;
+//        out.writeBoolean(mReplace);
+        int numAttrs = mFields != null ? mFields.size() : 0;
         out.writeShort((short) numAttrs);
         if (numAttrs > 0) {
-            for (Map.Entry<String, String> entry : mAttrs.entrySet()) {
+            for (Map.Entry<String, String> entry : mFields.entrySet()) {
                 out.writeUTF(entry.getKey());
                 String value = entry.getValue();
                 out.writeUTF(value != null ? value : "");
             }
         }
-    }
-
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.redolog.op.RedoableOp#deserializeData(java.io.RedoLogInput)
-     */
-    protected void deserializeData(RedoLogInput in) throws IOException {
-        mId = in.readInt();
-        mReplace = in.readBoolean();
-        int numAttrs = in.readShort();
-        if (numAttrs > 0) {
-            mAttrs = new HashMap<String, String>(numAttrs);
-            for (int i = 0; i < numAttrs; i++) {
-                String key = in.readUTF();
-                String value = in.readUTF();
-                mAttrs.put(key, value);
-            }
+        if (getVersion().atLeast(1, 14)) {
+            out.writeShort(mVolumeId);
+            out.writeInt(mBlob == null ? 0 : mBlob.length);
+            if (mBlob != null)
+                out.write(mBlob);
         }
     }
 
-    public void redo() throws Exception {
-        int mboxId = getMailboxId();
-        Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
-        mailbox.modifyContact(getOperationContext(), mId, mAttrs, mReplace);
+    @Override
+    protected void deserializeData(RedoLogInput in) throws IOException {
+        mId = in.readInt();
+        if (!getVersion().atLeast(1, 14))
+            in.readBoolean();
+        int numAttrs = in.readShort();
+        if (numAttrs > 0) {
+            mFields = new HashMap<String, String>(numAttrs);
+            for (int i = 0; i < numAttrs; i++) {
+                String key = in.readUTF();
+                String value = in.readUTF();
+                mFields.put(key, value);
+            }
+        }
+        if (getVersion().atLeast(1, 14)) {
+            mVolumeId = in.readShort();
+            int length = in.readInt();
+            if (length > 0)
+                in.readFully(mBlob = new byte[length]);
+        }
+    }
+
+    @Override
+    public void redo() throws ServiceException {
+        Mailbox mailbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
+        ParsedContact pc = new ParsedContact(mFields, mBlob, getTimestamp());
+        mailbox.modifyContact(getOperationContext(), mId, pc);
     }
 }

@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,10 +40,13 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.util.Pair;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.operation.ContactActionOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemId;
@@ -109,10 +113,14 @@ public class ContactAction extends ItemAction {
                 String flags = action.getAttribute(MailConstants.A_FLAGS, null);
                 String tags  = action.getAttribute(MailConstants.A_TAGS, null);
                 byte color = (byte) action.getAttributeLong(MailConstants.A_COLOR, -1);
-                Map<String, String> fields = ModifyContact.parseFields(action.listElements(MailConstants.E_ATTRIBUTE));
+                ParsedContact pc = null;
+                if (!action.listElements(MailConstants.E_ATTRIBUTE).isEmpty()) {
+                    Pair<Map<String,String>, List<Attachment>> cdata = CreateContact.parseContact(zsc, action);
+                    pc = new ParsedContact(cdata.getFirst(), cdata.getSecond(), System.currentTimeMillis());
+                }
 
                 localResults = ContactActionOperation.UPDATE(zsc, session, octxt, mbox, Requester.SOAP,
-                                                             local, iidFolder, flags, tags, color, fields).getResult();
+                                                             local, iidFolder, flags, tags, color, pc).getResult();
             } else {
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
             }

@@ -81,7 +81,7 @@ public class Note extends MailItem {
     }
 
     /** Returns the <code>Note</code>'s content. */
-    public String getContent() {
+    public String getText() {
         return getSubject();
     }
 

@@ -24,6 +24,7 @@
  */
 package com.zimbra.cs.service.formatter;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -40,6 +41,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -92,6 +94,8 @@ public class NativeFormatter extends Formatter {
                 handleCalendarItem(context, (CalendarItem) item);
             } else if (item instanceof Document) {
                 handleDocument(context, (Document) item);
+            } else if (item instanceof Contact) {
+                handleContact(context, (Contact) item);
             } else {
                 throw UserServletException.notImplemented("can only handle messages/appointments/tasks/documents");
             }
@@ -99,7 +103,7 @@ public class NativeFormatter extends Formatter {
             throw ServiceException.FAILURE(me.getMessage(), me);
         }
     }
-    
+
     private void handleMessage(Context context, Message msg) throws IOException, ServiceException, MessagingException, ServletException {
         if (context.hasBody()) {
             List<MPartInfo> parts = Mime.getParts(msg.getMimeMessage());
@@ -114,7 +118,7 @@ public class NativeFormatter extends Formatter {
             handleMessagePart(context, mp, msg);
         } else {
             context.resp.setContentType(Mime.CT_TEXT_PLAIN);
-            InputStream is = msg.getRawMessage();
+            InputStream is = msg.getContentStream();
             ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
         }
     }
@@ -135,7 +139,20 @@ public class NativeFormatter extends Formatter {
             ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
         }
     }
-    
+
+    private void handleContact(Context context, Contact con) throws IOException, ServiceException, MessagingException, ServletException {
+        if (!con.hasAttachment()) {
+            context.resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "body not found");
+        } else if (context.hasPart()) {
+            MimePart mp = Mime.getMimePart(con.getMimeMessage(false), context.getPart());
+            handleMessagePart(context, mp, con);
+        } else {
+            context.resp.setContentType(Mime.CT_TEXT_PLAIN);
+            InputStream is = new ByteArrayInputStream(con.getContent());
+            ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
+        }
+    }
+
     private void handleMessagePart(Context context, MimePart mp, MailItem item) throws IOException, MessagingException, ServletException {
         if (mp == null) {
             context.resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "part not found");

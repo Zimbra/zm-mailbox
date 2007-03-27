@@ -35,9 +35,12 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.Pair;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.operation.ModifyContactOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemId;
@@ -66,9 +69,15 @@ public class ModifyContact extends MailDocumentHandler  {
 
         Element cn = request.getElement(MailConstants.E_CONTACT);
         ItemId iid = new ItemId(cn.getAttribute(MailConstants.A_ID), zsc);
-        Map<String, String> fields = parseFields(cn.listElements(MailConstants.E_ATTRIBUTE));
 
-        ModifyContactOperation op = new ModifyContactOperation(session, octxt, mbox, Requester.SOAP, iid, fields, replace);
+        Pair<Map<String,String>, List<Attachment>> cdata = CreateContact.parseContact(zsc, cn);
+        ParsedContact pc;
+        if (replace)
+            pc = new ParsedContact(cdata.getFirst(), cdata.getSecond(), System.currentTimeMillis());
+        else
+            pc = new ParsedContact(mbox.getContactById(octxt, iid.getId())).modify(cdata.getFirst(), cdata.getSecond());
+
+        ModifyContactOperation op = new ModifyContactOperation(session, octxt, mbox, Requester.SOAP, iid, pc);
         op.schedule();
 
 

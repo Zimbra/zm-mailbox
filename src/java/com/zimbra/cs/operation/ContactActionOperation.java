@@ -31,6 +31,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -39,25 +40,25 @@ public class ContactActionOperation extends ItemActionOperation {
 
     public static ContactActionOperation UPDATE(ZimbraSoapContext zc, Session session, OperationContext octxt,
                                                 Mailbox mbox, Requester req, List<Integer> ids, ItemId iidFolder,
-                                                String flags, String tags, byte color, Map<String, String> fields)
+                                                String flags, String tags, byte color, ParsedContact pc)
     throws ServiceException {
         ContactActionOperation ca = new ContactActionOperation(session, octxt, mbox, req, LOAD, ids, Op.UPDATE);
         ca.setIidFolder(iidFolder);
         ca.setFlags(flags);
         ca.setTags(tags);
         ca.setColor(color);
-        ca.setFields(fields);
+        ca.setParsedContact(pc);
         ca.schedule();
         return ca;
     }
 
     // only when OP=UPDATE
-    private Map<String, String> mFields;
+    private ParsedContact mParsedContact;
 
 
-    public void setFields(Map<String, String> fields) {                        
+    public void setParsedContact(ParsedContact pc) {                        
         assert(mOperation == Op.UPDATE);
-        mFields = (fields == null || fields.isEmpty() ? null : fields); 
+        mParsedContact = pc;
     }
 
     ContactActionOperation(Session session, OperationContext octxt, Mailbox mbox, Requester req,
@@ -79,9 +80,9 @@ public class ContactActionOperation extends ItemActionOperation {
                     getMailbox().setTags(getOpCtxt(), mIds, mItemType, mFlags, mTags, mTargetConstraint);
                 if (mColor >= 0)
                     getMailbox().setColor(getOpCtxt(), mIds, mItemType, mColor);
-                if (mFields != null)
+                if (mParsedContact != null)
                     for (int id : mIds)
-                        getMailbox().modifyContact(getOpCtxt(), id, mFields, true);
+                        getMailbox().modifyContact(getOpCtxt(), id, mParsedContact);
                 break;
             default:
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + mOperation, null);
@@ -96,8 +97,8 @@ public class ContactActionOperation extends ItemActionOperation {
     public String toString() {
         StringBuffer toRet = new StringBuffer(super.toString());
         if (mOperation == Op.UPDATE) {
-            if (mFields != null)
-                toRet.append(" Fields=").append(mFields);
+            if (mParsedContact != null)
+                toRet.append(" Fields=").append(mParsedContact.getFields());
         }
         return toRet.toString();
     }

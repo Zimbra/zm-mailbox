@@ -1687,8 +1687,8 @@ needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
 Contacts: 
  
   <cn id="{contact-id}" [t="{tags}"] [f="{flags}"] md="{modified-date}" [l="{folder}"] [fileAsStr="{file-as}"]>
-    <a [n="{attr-name}" id="{attr-id}"] [ref="{attr-id}"]>{attr-data}</a>+
-    <!-- <mp>...</mp>* -->
+    <a n="{attr-name}">{attr-data}</a>+
+    <a n="{attr-name}" aid="{upload-id}"/>*
   </cn>
 
   {contact-id} = unique contact id
@@ -1698,9 +1698,19 @@ Contacts:
   {attr-name} = name of the attribute (firstName, etc)
   {attr-id} = for the scope of a response, a unique id assigned to the attr-name. The first contact with
                a given attr will include the name and id, the second will only include the ref.
-  
-  <mp>....</mp> = zero or more (non-nested) mime parts if this contact has attachments
+
   {folder-id} = id of folder to create contact in. Un-specified means use the default Contacts folder.
+
+  to add attachments, specify an {upload-id} instead of providing {attr-data} on the attr
+
+
+  when contacts are returned, they look like:
+
+  <cn id="{contact-id}" t="{tags}" f="{flags}" md="{modified-date}" l="{folder}" fileAsStr="{file-as}">
+    <a n="{attr-name}">{attr-data}</a>+
+    <a n="{attr-name}" size="{attach-size}" ctype="{attach-content-type}" filename="{attach-filename}" part="{part-id}"/>*
+  </cn>
+
 ----------
 
 <CreateContactRequest [verbose="0|1"]>

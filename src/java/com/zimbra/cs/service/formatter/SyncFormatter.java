@@ -129,7 +129,7 @@ public class SyncFormatter extends Formatter {
 
     private void handleMessage(Context context, Message msg) throws IOException, ServiceException {
         context.resp.setContentType(Mime.CT_TEXT_PLAIN);
-        InputStream is = msg.getRawMessage();
+        InputStream is = msg.getContentStream();
         addXZimbraHeaders(context, msg, msg.getSize());
         ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
     }

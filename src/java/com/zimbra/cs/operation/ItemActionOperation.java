@@ -499,7 +499,7 @@ public class ItemActionOperation extends Operation {
                     // fall through...
 
                 case MailItem.TYPE_MESSAGE:
-                    createdId = zmbx.addMessage(folderStr, flags, null, item.getDate(), ((Message) item).getMessageContent(), true);
+                    createdId = zmbx.addMessage(folderStr, flags, null, item.getDate(), ((Message) item).getContent(), true);
                     mCreatedIds.add(createdId);
                     break;
 
@@ -508,7 +508,7 @@ public class ItemActionOperation extends Operation {
                         if (!TargetConstraint.checkItem(mTargetConstraint, msg))
                             continue;
                         flags = (mOperation == Op.UPDATE && mFlags != null ? mFlags : msg.getFlagString());
-                        createdId = zmbx.addMessage(folderStr, flags, null, msg.getDate(), msg.getMessageContent(), true);
+                        createdId = zmbx.addMessage(folderStr, flags, null, msg.getDate(), msg.getContent(), true);
                         mCreatedIds.add(createdId);
                     }
                     break;

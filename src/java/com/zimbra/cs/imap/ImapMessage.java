@@ -140,7 +140,7 @@ public class ImapMessage implements Comparable<ImapMessage> {
 
     static byte[] getContent(MailItem item) throws ServiceException {
         if (item instanceof Message) {
-            return ((Message) item).getMessageContent();
+            return ((Message) item).getContent();
         } else if (item instanceof Contact) {
             try {
                 VCard vcard = VCard.formatContact((Contact) item);

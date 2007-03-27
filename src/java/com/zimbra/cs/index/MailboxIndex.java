@@ -1615,7 +1615,7 @@ public final class MailboxIndex
             case MailItem.TYPE_CHAT:
             case MailItem.TYPE_MESSAGE:
                 Message msg =  mbox.getMessageById(null, itemId);
-                InputStream is =msg.getRawMessage();
+                InputStream is =msg.getContentStream();
                 MimeMessage mm;
                 try {
                     mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
@@ -1780,7 +1780,7 @@ public final class MailboxIndex
                 sLog.debug("indexNote("+note+")");
             }
             try {
-                String toIndex = note.getContent();
+                String toIndex = note.getText();
                 int indexId = note.getIndexId(); 
 
                 if (sLog.isDebugEnabled()) {

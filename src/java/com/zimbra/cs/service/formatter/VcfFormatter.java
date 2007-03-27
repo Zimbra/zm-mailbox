@@ -103,7 +103,7 @@ public class VcfFormatter extends Formatter {
         for (VCard vcf : cards) {
             if (vcf.fields.isEmpty())
                 continue;
-            folder.getMailbox().createContact(context.opContext, vcf.fields, folder.getId(), null);
+            folder.getMailbox().createContact(context.opContext, vcf.asParsedContact(), folder.getId(), null);
         }
     }
 }

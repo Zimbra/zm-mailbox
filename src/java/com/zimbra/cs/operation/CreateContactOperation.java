@@ -34,6 +34,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.operation.Scheduler.Priority;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
@@ -49,7 +50,7 @@ public class CreateContactOperation extends Operation {
 	
 	private ItemId mIidFolder;
 	private String mTagsStr;
-	private List<Map<String, String>> mList;
+	private List<ParsedContact> mList;
 	
 	private List<Contact> mContacts;
     
@@ -58,40 +59,39 @@ public class CreateContactOperation extends Operation {
     public static List<ItemId> ImportCsvContacts(Session session, OperationContext oc, Mailbox mbox, Requester req,
                 ItemId iidFolder, List<Map<String, String>> csvContacts, String tagsStr) throws ServiceException {
         
-        List<ItemId> toRet = new LinkedList<ItemId>();
+        List<ItemId> createdIds = new LinkedList<ItemId>();
         
         Iterator<Map<String, String>> iter = csvContacts.iterator();
         
-        List<Map<String, String>> curChunk = new LinkedList<Map<String,String>>();
+        List<ParsedContact> curChunk = new LinkedList<ParsedContact>();
         
-        while(iter.hasNext()) {
+        while (iter.hasNext()) {
             curChunk.clear();
-            for (int i = 0; i < CHUNK_SIZE && iter.hasNext(); i++) {
-                curChunk.add(iter.next());
-            }
+            for (int i = 0; i < CHUNK_SIZE && iter.hasNext(); i++)
+                curChunk.add(new ParsedContact(iter.next()));
+
             CreateContactOperation op = new CreateContactOperation(session, oc, mbox, req, iidFolder, curChunk, tagsStr);
             op.schedule();
             for (Contact c : op.getContacts())
-                toRet.add(new ItemId(c));
-            
+                createdIds.add(new ItemId(c));
+
             op = null;
         }
         
-        return toRet;
+        return createdIds;
     }
 
 	public CreateContactOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
-				ItemId iidFolder, Map<String,String> attrs, String tagsStr)
+				ItemId iidFolder, ParsedContact pc, String tagsStr)
 	{
 		super(session, oc, mbox, req, LOAD);
 		mIidFolder = iidFolder;
-		mList = new ArrayList<Map<String, String>>(1);
-		mList.add(attrs);
+		(mList = new ArrayList<ParsedContact>(1)).add(pc);
 		mTagsStr = tagsStr;
 	}
-	
+
 	public CreateContactOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
-				ItemId iidFolder, List<Map<String,String>> list, String tagsStr)
+				ItemId iidFolder, List<ParsedContact> list, String tagsStr)
 	{
 		super(session, oc, mbox, req, Priority.BATCH, Math.max(LOAD * list.size(), 30));
 		mIidFolder = iidFolder;
@@ -102,8 +102,8 @@ public class CreateContactOperation extends Operation {
 	protected void callback() throws ServiceException {
 		mContacts = new ArrayList<Contact>();
 		synchronized(getMailbox()) {
-			for (Map<String, String> attrs : mList) 
-				mContacts.add(getMailbox().createContact(getOpCtxt(), attrs, mIidFolder.getId(), mTagsStr));
+			for (ParsedContact pc : mList) 
+				mContacts.add(getMailbox().createContact(getOpCtxt(), pc, mIidFolder.getId(), mTagsStr));
 		}
 	}
 	

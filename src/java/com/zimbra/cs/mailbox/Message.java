@@ -256,31 +256,6 @@ public class Message extends MailItem {
             return null;
     }
 
-    /** Returns an {@link InputStream} of the raw, uncompressed content of
-     *  the message.  This is the message body as received via SMTP; no
-     *  postprocessing has been performed to make opaque attachments (e.g.
-     *  TNEF) visible.
-     * 
-     * @return The InputStream fetched from the {@link MessageCache}.
-     * @throws ServiceException when the message file does not exist.
-     * @see #getMimeMessage()
-     * @see #getMessageContent() */
-    public InputStream getRawMessage() throws ServiceException {
-        return MessageCache.getRawContent(this);
-    }
-
-    /** Returns the raw, uncompressed content of the message as a byte array.
-     *  This is the message body as received via SMTP; no postprocessing has
-     *  been performed to make opaque attachments (e.g. TNEF) visible.
-     * 
-     * @return The InputStream returned by the {@link MessageCache}.
-     * @throws ServiceException when the message file does not exist.
-     * @see #getMimeMessage()
-     * @see #getRawMessage() */
-    public byte[] getMessageContent() throws ServiceException {
-        return MessageCache.getItemContent(this);
-    }
-
     /** Returns a JavaMail {@link javax.mail.internet.MimeMessage}
      *  encapsulating the message content.  If possible, TNEF and uuencoded
      *  attachments are expanded and their components are presented as
@@ -291,8 +266,8 @@ public class Message extends MailItem {
      * @throws ServiceException when errors occur opening, reading,
      *                          uncompressing, or parsing the message file,
      *                          or when the file does not exist.
-     * @see #getRawMessage()
-     * @see #getMessageContent()
+     * @see MailItem#getContentStream()
+     * @see MailItem#getContent()
      * @see TnefConverter
      * @see UUEncodeConverter */
     public MimeMessage getMimeMessage() throws ServiceException {
@@ -310,8 +285,8 @@ public class Message extends MailItem {
      * @throws ServiceException when errors occur opening, reading,
      *                          uncompressing, or parsing the message file,
      *                          or when the file does not exist.
-     * @see #getRawMessage()
-     * @see #getMessageContent()
+     * @see #getContentStream()
+     * @see #getContent()
      * @see TnefConverter
      * @see UUEncodeConverter */
     public MimeMessage getMimeMessage(boolean runConverters) throws ServiceException {

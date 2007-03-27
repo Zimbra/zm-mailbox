@@ -89,6 +89,7 @@ import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.pop3.Pop3Message;
@@ -802,7 +803,7 @@ public class Mailbox {
      * @param deleteFirst True if we need to delete this item from the index before indexing it again
      * @param data  The extra data to be used for the indexing step.
      * @see #commitCache(Mailbox.MailboxChange) */
-    void queueForIndexing(MailItem item, boolean deleteFirst,  Object data) {
+    void queueForIndexing(MailItem item, boolean deleteFirst, Object data) {
         mCurrentChange.addIndexedItem(item, deleteFirst, data);
     }
 
@@ -4331,32 +4332,50 @@ public class Mailbox {
         CalendarItem calItem = CalendarItem.create(createId, getFolderById(folderId), volumeId, tags, uid, pm, invite);
 
         if (redoRecorder != null)
-            redoRecorder.setCalendarItemAttrs(calItem.getId(),
-                        calItem.getFolderId(),
-                        calItem.getVolumeId());
+            redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId(), calItem.getVolumeId());
         return calItem;
     }
 
-    public synchronized Contact createContact(OperationContext octxt, Map<String, String> attrs, int folderId, String tags)
-    throws ServiceException {
-        CreateContact redoRecorder = new CreateContact(mId, folderId, attrs, tags);
+    public Contact createContact(OperationContext octxt, ParsedContact pc, int folderId, String tags) throws ServiceException {
+        return createContactInternal(octxt, pc.analyze(this), folderId, tags);
+    }
+
+    private synchronized Contact createContactInternal(OperationContext octxt, ParsedContact pc, int folderId, String tags) throws ServiceException {
+        CreateContact redoRecorder = new CreateContact(mId, folderId, pc, tags);
 
         boolean success = false;
         try {
             beginTransaction("createContact", octxt, redoRecorder);
             CreateContact redoPlayer = (CreateContact) mCurrentChange.getRedoPlayer();
+            boolean isRedo = redoPlayer != null;
 
-            int contactId;
-            if (redoPlayer == null) {
-                contactId = getNextItemId(ID_AUTO_INCREMENT);
-            } else {
-                contactId = getNextItemId(redoPlayer.getContactId());
+            int contactId = getNextItemId(isRedo ? redoPlayer.getContactId() : ID_AUTO_INCREMENT);
+            short volumeId = -1;
+            if (pc.hasAttachment()) {
+                if (isRedo)
+                    volumeId = redoPlayer.getVolumeId();
+                if (volumeId == -1)
+                    volumeId = Volume.getCurrentMessageVolume().getId();
             }
-            Contact con = Contact.create(contactId, getFolderById(folderId), (short) -1, attrs, tags);
+
+            Contact con = Contact.create(contactId, getFolderById(folderId), volumeId, pc, tags);
+
+            if (pc.hasAttachment()) {
+                try {
+                    StoreManager sm = StoreManager.getInstance();
+                    Blob blob = sm.storeIncoming(pc.getBlob(), pc.getDigest(), null, volumeId);
+                    MailboxBlob mblob = sm.renameTo(blob, this, contactId, getOperationChangeID(), volumeId);
+
+                    markOtherItemDirty(mblob);
+                } catch (IOException ioe) {
+                    throw ServiceException.FAILURE("could not save contact blob", ioe);
+                }
+            }
 
             redoRecorder.setContactId(con.getId());
-            redoRecorder.setVolumeId(con.getVolumeId());
-            queueForIndexing(con, false, null);
+            redoRecorder.setVolumeId(volumeId);
+            queueForIndexing(con, false, pc);
+
             success = true;
             return con;
         } finally {
@@ -4364,20 +4383,41 @@ public class Mailbox {
         }
     }
 
-    public synchronized void modifyContact(OperationContext octxt, int contactId, Map<String, String> attrs, boolean replace)
-    throws ServiceException {
-        ModifyContact redoRecorder = new ModifyContact(mId, contactId, attrs, replace);
+    public void modifyContact(OperationContext octxt, int contactId, ParsedContact pc) throws ServiceException {
+        modifyContactInternal(octxt, contactId, pc.analyze(this));
+    }
+
+    public synchronized void modifyContactInternal(OperationContext octxt, int contactId, ParsedContact pc) throws ServiceException {
+        ModifyContact redoRecorder = new ModifyContact(mId, contactId, pc);
 
         boolean success = false;
         try {
             beginTransaction("modifyContact", octxt, redoRecorder);
+            ModifyContact redoPlayer = (ModifyContact) mCurrentChange.getRedoPlayer();
 
             Contact con = getContactById(contactId);
             if (!checkItemChangeID(con))
                 throw MailServiceException.MODIFY_CONFLICT();
-            con.modify(attrs, replace);
 
-            queueForIndexing(con, true, null);
+            short volumeId = -1;
+            if (pc.hasAttachment()) {
+                if (redoPlayer != null)
+                    volumeId = redoPlayer.getVolumeId();
+                if (volumeId == -1)
+                    volumeId = Volume.getCurrentMessageVolume().getId();
+            }
+
+            try {
+                if (pc.getBlob() == null && con.mData.blobDigest == null)
+                    con.setFields(pc);
+                else
+                    con.setContent(pc.getBlob(), pc.getDigest(), volumeId, pc);
+            } catch (IOException ioe) {
+                throw ServiceException.FAILURE("could not save contact blob", ioe);
+            }
+
+            redoRecorder.setVolumeId(volumeId);
+            queueForIndexing(con, true, pc);
             success = true;
         } finally {
             endTransaction(success);

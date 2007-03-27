@@ -167,7 +167,7 @@ public class ContentServlet extends ZimbraServlet {
                         }
 
                         resp.setContentType(Mime.CT_TEXT_PLAIN);
-                        InputStream is = msg.getRawMessage();
+                        InputStream is = msg.getContentStream();
                         ByteUtil.copy(is, true, resp.getOutputStream(), false);
                     } else if (item instanceof Appointment) {
                         Appointment appt = (Appointment) item;

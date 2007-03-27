@@ -45,6 +45,7 @@ import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
+import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
@@ -375,17 +376,26 @@ public class ToXML {
         } catch (ServiceException e) { }
 
         Map<String, String> attrs = contact.getFields();
+        List<Attachment> attachments = contact.getAttachments();
         if (attrFilter != null) {
             for (String name : attrFilter) {
                 // XXX: How to distinguish between a non-existent attribute and
                 //      an existing attribute with null or empty string value?
                 String value = attrs.get(name);
-                if (value == null || value.equals(""))
+                if (value == null || value.equals("")) {
+                    if (attachments != null) {
+                        for (Attachment attach : attachments) {
+                            if (attach.getName().equals(name))
+                                encodeContactAttachment(elem, cacache, attach);
+                        }
+                    }
                     continue;
+                }
+
                 if (cacache != null)
                     cacache.makeAttr(elem, name, value);
                 else
-                    elem.addAttribute(name, value, Element.DISP_ELEMENT);
+                    elem.addElement(MailConstants.E_ATTRIBUTE).addAttribute(MailConstants.A_ATTRIBUTE_NAME, name).setText(value);
             }
         } else {
             for (Map.Entry<String, String> me : attrs.entrySet()) {
@@ -393,13 +403,30 @@ public class ToXML {
                 String value = me.getValue();
                 if (name == null || name.trim().equals("") || value == null || value.equals(""))
                     continue;
+
                 if (cacache != null)
                     cacache.makeAttr(elem, name, value);
                 else
-                    elem.addAttribute(name, value, Element.DISP_ELEMENT);
+                    elem.addElement(MailConstants.E_ATTRIBUTE).addAttribute(MailConstants.A_ATTRIBUTE_NAME, name).setText(value);
+            }
+            if (attachments != null) {
+                for (Attachment attach : attachments)
+                    encodeContactAttachment(elem, cacache, attach);
             }
         }
         return elem;
+    }
+
+    private static Element encodeContactAttachment(Element elem, ContactAttrCache cacache, Attachment attach) {
+        Element child;
+        if (cacache != null)
+            child = cacache.makeAttr(elem, attach.getName(), null);
+        else
+            child = elem.addElement(MailConstants.E_ATTRIBUTE).addAttribute(MailConstants.A_ATTRIBUTE_NAME, attach.getName());
+        child.addAttribute(MailConstants.A_PART, attach.getPartName()).addAttribute(MailConstants.A_CONTENT_TYPE, attach.getContentType());
+        child.addAttribute(MailConstants.A_SIZE, attach.getSize()).addAttribute(MailConstants.A_CONTENT_FILENAME, attach.getFilename());
+
+        return child;
     }
 
     public static Element encodeNote(Element parent, ItemIdFormatter ifmt, Note note) {
@@ -421,7 +448,7 @@ public class ToXML {
         if (needToOutput(fields, Change.MODIFIED_COLOR))
             elem.addAttribute(MailConstants.A_COLOR, note.getColor());
         if (needToOutput(fields, Change.MODIFIED_CONTENT))
-            elem.addAttribute(MailConstants.E_CONTENT, note.getContent(), Element.DISP_CONTENT);
+            elem.addAttribute(MailConstants.E_CONTENT, note.getText(), Element.DISP_CONTENT);
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
             elem.addAttribute(MailConstants.A_CHANGE_DATE, note.getChangeDate() / 1000);
             elem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, note.getModifiedSequence());
@@ -953,7 +980,7 @@ public class ToXML {
             content.addAttribute(MailConstants.A_URL, CONTENT_SERVLET_URI + ifmt.formatItemId(msg));
         } else {
             try {
-                byte[] raw = msg.getMessageContent();
+                byte[] raw = msg.getContent();
                 if (!ByteUtil.isASCII(raw))
                     content.addAttribute(MailConstants.A_URL, CONTENT_SERVLET_URI + ifmt.formatItemId(msg));
                 else

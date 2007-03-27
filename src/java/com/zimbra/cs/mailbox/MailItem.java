@@ -29,6 +29,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 import com.zimbra.cs.account.Account;
@@ -588,6 +589,8 @@ public abstract class MailItem implements Comparable<MailItem> {
         return mData.modMetadata;
     }
 
+    /** Returns the item's size as it counts against mailbox quota.  For items
+     *  that have a blob, this is the size in bytes of the raw blob. */
     public int getSize() {
         return mData.size;
     }
@@ -610,10 +613,6 @@ public abstract class MailItem implements Comparable<MailItem> {
     public String getSortSender() {
         String sender = getSender();
         return sender.toUpperCase().substring(0, Math.min(DbMailItem.MAX_SENDER_LENGTH, sender.length()));
-    }
-
-    public int getUnreadCount() {
-        return mData.unreadCount;
     }
 
     /** Returns the "external" flag bitmask, which includes
@@ -666,8 +665,19 @@ public abstract class MailItem implements Comparable<MailItem> {
         return ((bitmask & (1L << position)) != 0);
     }
 
+    /** Returns whether the item's unread count is >0.
+     * @see #getUnreadCount() */
     public boolean isUnread() {
         return mData.unreadCount > 0;
+    }
+
+    /** Returns the item's unread count.  For "leaf items", this will be either
+     *  <tt>0</tt> or <tt>1</tt>; for aggregates like {@link Folder}s and
+     *  {@link Tag}s and {@link Conversation}s, it's the total number of unread
+     *  aggregated "leaf items".  {@link Mountpoint}s will always have an
+     *  unread count of <tt>0</tt>. */
+    public int getUnreadCount() {
+        return mData.unreadCount;
     }
 
     public boolean isFlagged() {
@@ -782,6 +792,32 @@ public abstract class MailItem implements Comparable<MailItem> {
                 throw ServiceException.FAILURE("missing blob for id: " + mId + ", change: " + mData.modContent, null);
         }
         return mBlob;
+    }
+
+    /** Returns an {@link InputStream} of the raw, uncompressed content of
+     *  the message.  This is the message body as received via SMTP; no
+     *  postprocessing has been performed to make opaque attachments (e.g.
+     *  TNEF) visible.
+     * 
+     * @return The InputStream fetched from the {@link MessageCache}.
+     * @throws ServiceException when the message file does not exist.
+     * @see #getMimeMessage()
+     * @see #getContent() */
+    public InputStream getContentStream() throws ServiceException {
+        return mData.blobDigest == null ? null : MessageCache.getRawContent(this);
+    }
+
+    /** Returns the raw, uncompressed content of the item's blob as a byte
+     *  array.  For messages, this is the message body as received via SMTP;
+     *  no postprocessing has been performed to make opaque attachments
+     *  (e.g. TNEF) visible.  When possible, this content is cached in the
+     * 
+     * @return The blob content, or <tt>null</tt> if the item has no blob.
+     * @throws ServiceException when the blob file does not exist.
+     * @see #getMimeMessage()
+     * @see #getContentStream() */
+    public byte[] getContent() throws ServiceException {
+        return mData.blobDigest == null ? null : MessageCache.getItemContent(this);
     }
 
 
@@ -1166,7 +1202,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
         mData.blobDigest = digest;
         mData.date       = mMailbox.getOperationTimestamp();
-        mData.volumeId   = volumeId;
+        mData.volumeId   = data == null ? -1 : volumeId;
         mData.imapId     = mMailbox.isTrackingImap() ? 0 : mData.id;
         mData.contentChanged(mMailbox);
         mBlob = null;
