@@ -1457,6 +1457,7 @@ public class ZMailbox {
             m.addAttribute(MailConstants.A_TAGS, tags);
         if (receivedDate != 0)
             m.addAttribute(MailConstants.A_DATE, receivedDate);
+        m.addAttribute(MailConstants.A_NO_ICAL, noICal);
         m.addElement(MailConstants.E_CONTENT).setText(content);
         return invoke(req).getElement(MailConstants.E_MSG).getAttribute(MailConstants.A_ID);
     }
@@ -1488,6 +1489,7 @@ public class ZMailbox {
         if (receivedDate > 0)
             m.addAttribute(MailConstants.A_DATE, receivedDate);
         m.addAttribute(MailConstants.A_ATTACHMENT_ID, aid);
+        m.addAttribute(MailConstants.A_NO_ICAL, noICal);
         return invoke(req).getElement(MailConstants.E_MSG).getAttribute(MailConstants.A_ID);
     }
 
