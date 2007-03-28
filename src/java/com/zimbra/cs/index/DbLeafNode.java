@@ -191,6 +191,34 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
             }
         }
     }
+    
+    /**
+     * @param itemId
+     * @param truth
+     */
+    void addRemoteItemIdClause(ItemId itemId, boolean truth) {
+        if (truth) {
+            if (!remoteItemIds.contains(itemId)) {
+                //
+                // {1} AND {-1} AND {1} == no-results 
+                //  ... NOT {1} (which could happen if you removed from both arrays on combining!)
+                if (prohibitedRemoteItemIds== null || !prohibitedRemoteItemIds.contains(itemId)) {
+                    remoteItemIds.add(itemId);
+                }
+            }
+        } else {
+            if (!prohibitedRemoteItemIds.contains(itemId)) {
+                //
+                // {1} AND {-1} AND {1} == no-results 
+                //  ... NOT {1} (which could happen if you removed from both arrays on combining!)
+                if (remoteItemIds != null && remoteItemIds.contains(itemId)) {
+                    remoteItemIds.remove(itemId);
+                }
+                prohibitedRemoteItemIds.add(itemId);
+            }
+        }
+    }
+    
 
     /**
      * @param lowest
@@ -309,6 +337,7 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
      * @param prohibited
      */
     void addConvId(int cid, boolean truth) {
+        
         if (truth) {
             if (prohibitedConvIds.contains(cid)) {
                 noResults = true;
@@ -332,12 +361,41 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
     }
     
     /**
+     * @param convId
+     * @param prohibited
+     */
+    void addRemoteConvId(ItemId cid, boolean truth) {
+        
+        if (truth) {
+            if (prohibitedRemoteConvIds.contains(cid)) {
+                noResults = true;
+            }
+
+            if (remoteConvId == null) {
+                remoteConvId = cid;
+            } else {
+                if (DBQueryOperation.mLog.isDebugEnabled()) {
+                    DBQueryOperation.mLog.debug("Query requested two conflicting Remote convIDs, this is now a no-results-query");
+                }
+                remoteConvId = new ItemId(cid.getAccountId(), Integer.MAX_VALUE);
+                noResults = true;
+            }
+        } else {
+            if (remoteConvId.equals(cid)) {
+                noResults = true;
+            }
+            prohibitedRemoteConvIds.add(cid);
+        }
+    }
+    
+    
+    /**
      * For remote folder
      * 
      * @param id
      * @param truth
      */
-    void addInIdClause(ItemId id, boolean truth)
+    void addInRemoteFolderClause(ItemId id, boolean truth)
     {
         if (truth) {
             if ((remoteFolders.size() > 0 && !remoteFolders.contains(id)) 

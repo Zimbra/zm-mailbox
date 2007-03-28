@@ -28,6 +28,7 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -35,19 +36,31 @@ import java.util.Map;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
+import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Conversation;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.operation.SearchOperation;
@@ -56,6 +69,8 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -93,45 +108,93 @@ public class SearchConv extends Search {
 
         // force to group-by-message
         params.setTypesStr(MailboxIndex.GROUP_BY_MESSAGE);
-
-        //ZimbraQueryResults results = this.getResults(mbox, params, lc, session);
-        SearchOperation op = new SearchOperation(session, zsc, zsc.getOperationContext(), mbox, Requester.SOAP,  params);
-        op.schedule();
-        ZimbraQueryResults results = op.getResults();        
-
-        try {
-            Element response = zsc.createElement(MailConstants.SEARCH_CONV_RESPONSE);
-            response.addAttribute(MailConstants.A_QUERY_OFFSET, Integer.toString(params.getOffset()));
+        
+        if (cid.belongsTo(mbox)) {
+            // LOCAL!
+            //ZimbraQueryResults results = this.getResults(mbox, params, lc, session);
+            SearchOperation op = new SearchOperation(session, zsc, zsc.getOperationContext(), mbox, Requester.SOAP,  params);
+            op.schedule();
+            ZimbraQueryResults results = op.getResults();        
             
-            SortBy sb = results.getSortBy();
-            response.addAttribute(MailConstants.A_SORTBY, sb.toString());
-
-            List<Message> msgs = mbox.getMessagesByConversation(octxt, cid.getId(), sb.getDbMailItemSortByte());
-            if (msgs.isEmpty() && zsc.isDelegatedRequest())
-                throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
-
-            // filter out IMAP \Deleted messages from the message lists
-            Conversation conv = mbox.getConversationById(octxt, cid.getId());
-            if (conv.isTagged(mbox.mDeletedFlag)) {
-                List<Message> raw = msgs;
-                msgs = new ArrayList<Message>();
-                for (Message msg : raw) {
-                    if (!msg.isTagged(mbox.mDeletedFlag))
-                        msgs.add(msg);
+            try {
+                Element response = zsc.createElement(MailConstants.SEARCH_CONV_RESPONSE);
+                response.addAttribute(MailConstants.A_QUERY_OFFSET, Integer.toString(params.getOffset()));
+                
+                SortBy sb = results.getSortBy();
+                response.addAttribute(MailConstants.A_SORTBY, sb.toString());
+                
+                List<Message> msgs = mbox.getMessagesByConversation(octxt, cid.getId(), sb.getDbMailItemSortByte());
+                if (msgs.isEmpty() && zsc.isDelegatedRequest())
+                    throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+                
+                // filter out IMAP \Deleted messages from the message lists
+                Conversation conv = mbox.getConversationById(octxt, cid.getId());
+                if (conv.isTagged(mbox.mDeletedFlag)) {
+                    List<Message> raw = msgs;
+                    msgs = new ArrayList<Message>();
+                    for (Message msg : raw) {
+                        if (!msg.isTagged(mbox.mDeletedFlag))
+                            msgs.add(msg);
+                    }
                 }
+                
+                Element container = nest ? ToXML.encodeConversationSummary(response, ifmt, octxt, conv, CONVERSATION_FIELD_MASK): response;
+                
+                boolean more = putHits(zsc, ifmt, container, msgs, results, params);
+                response.addAttribute(MailConstants.A_QUERY_MORE, more);
+                
+                // call me AFTER putHits since some of the <info> is generated by the getting of the hits!
+                putInfo(response, params, results);
+                
+                return response;
+            } finally {
+                results.doneWithSearchResults();
             }
+        } else {
+            try {
+                Element proxyRequest = zsc.createElement(MailConstants.SEARCH_CONV_REQUEST);
+                
+                proxyRequest.addAttribute(MailConstants.A_SEARCH_TYPES, params.getTypesStr());
+                proxyRequest.addAttribute(MailConstants.A_SORTBY, params.getSortByStr());
+                proxyRequest.addAttribute(MailConstants.A_QUERY_OFFSET, params.getOffset());
+                proxyRequest.addAttribute(MailConstants.A_QUERY_LIMIT, params.getLimit());
+                proxyRequest.addAttribute(MailConstants.A_NEST_MESSAGES, nest);
+                proxyRequest.addAttribute(MailConstants.A_CONV_ID, cid.toString());
+                
+                try {
+                    // okay, lets run the search through the query parser -- this has the side-effect of
+                    // re-writing the query in a format that is OK to proxy to the other server -- since the
+                    // query has an "AND conv:remote-conv-id" part, the query parser will figure out the right
+                    // format for us.  TODO somehow make this functionality a bit more exposed in the
+                    // ZimbraQuery APIs...
+                    boolean includeTrash = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeTrashInSearch, false);
+                    boolean includeSpam = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
+                    ZimbraQuery zq = new ZimbraQuery(mbox, params, includeTrash, includeSpam);
+                    proxyRequest.addAttribute(MailConstants.E_QUERY, zq.toQueryString(), Element.DISP_CONTENT);
+                    
+                    // now create a soap transport to talk to the remote account
+                    Account target = Provisioning.getInstance().get(AccountBy.id, cid.getAccountId());
+                    SoapHttpTransport soapTransp = new SoapHttpTransport(AccountUtil.getSoapUri(target));
+                    soapTransp.setAuthToken(new AuthToken(acct).getEncoded());
+                    soapTransp.setTargetAcctId(target.getId());
+                    soapTransp.setSoapProtocol(zsc.getResponseProtocol());
 
-            Element container = nest ? ToXML.encodeConversationSummary(response, ifmt, octxt, conv, CONVERSATION_FIELD_MASK): response;
-
-            boolean more = putHits(zsc, ifmt, container, msgs, results, params);
-            response.addAttribute(MailConstants.A_QUERY_MORE, more);
-
-            // call me AFTER putHits since some of the <info> is generated by the getting of the hits!
-            putInfo(response, params, results);
-
-            return response;
-        } finally {
-            results.doneWithSearchResults();
+                    // and just pass the response on through!
+                    Element response = soapTransp.invokeWithoutSession(proxyRequest);
+                    return response;
+                } catch (ParseException e) {
+                    if (e.currentToken != null)
+                        throw MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(), e, e.currentToken.image, e.currentToken.beginLine, e.currentToken.beginColumn);
+                    else 
+                        throw MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(), e, "", -1, -1);
+                } catch (IOException ex) {
+                    throw ServiceException.FAILURE("IOException: ", ex);
+                } catch (SoapFaultException ex) {
+                    throw ServiceException.FAILURE("SoapFaultException: ", ex);
+                }                    
+            } catch (AuthTokenException e) {
+                throw ServiceException.FAILURE("AuthTokenException: ", e);
+            }
         }
     }
 

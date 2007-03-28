@@ -1309,7 +1309,13 @@ public class ToXML {
             CalendarItem calItem = null;
             try {
                 calItem = mbox.getCalendarItemById(octxt, info.getCalendarItemId());
-            } catch (MailServiceException.NoSuchItemException e) {}
+            } catch (MailServiceException.NoSuchItemException e) {
+                // ignore
+            } catch (ServiceException e) {
+                // eat PERM_DENIED
+                if (e.getCode() != ServiceException.PERM_DENIED)
+                    throw e;
+            }
 
             if (calItem != null) {
                 setCalendarItemType(ie, calItem);

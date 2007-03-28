@@ -2402,7 +2402,8 @@ public class DbMailItem {
         /*
          * FORCE INDEX (...)
          */
-        select.append(getForceIndexClause(node, sort, validLIMIT));
+        if (!includeCalTable) // can't force index when selecting from two tables?
+            select.append(getForceIndexClause(node, sort, validLIMIT));
         
         /*
          *  WHERE mi.mailboxId=? [AND ap.mailboxId=? AND mi.id = ap.id ] AND "

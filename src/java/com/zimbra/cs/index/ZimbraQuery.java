@@ -260,22 +260,34 @@ public final class ZimbraQuery {
 
     public static class ConvQuery extends BaseQuery
     {
-        private int mConvId;
-        public ConvQuery(Analyzer analyzer, int modifier, String target) throws ServiceException {
+        private ItemId mConvId;
+        private Mailbox mMailbox; 
+        
+        private ConvQuery(Mailbox mbox, Analyzer analyzer, int modifier, ItemId convId) throws ServiceException {
             super(modifier, ZimbraQueryParser.CONV);
-            mConvId = 0;
-            mConvId = Integer.parseInt(target);
-            if (mConvId < 0) {
+            mMailbox = mbox;
+            mConvId = convId; 
+            
+            if (mConvId.getId() < 0) {
                 // should never happen (make an ItemQuery instead
-                throw ServiceException.FAILURE("Illegal Negative ConvID: "+target+", use ItemQuery for virtual convs", null);
+                throw ServiceException.FAILURE("Illegal Negative ConvID: "+convId.toString()+", use ItemQuery for virtual convs", null);
+            }
+        }
+        
+        public static BaseQuery create(Mailbox mbox, Analyzer analyzer, int modifier, String target) throws ServiceException {
+            ItemId convId = new ItemId(target, mbox.getAccountId());
+            if (convId.getId() < 0) {
+                List<ItemId> iidList = new ArrayList<ItemId>(1);
+                iidList.add(convId);
+                return new ItemQuery(mbox, analyzer, modifier, false, false, iidList);
+            } else {
+                return new ConvQuery(mbox, analyzer, modifier, convId);
             }
         }
 
         protected QueryOperation getQueryOperation(boolean truth) {
             DBQueryOperation op = DBQueryOperation.Create();
-
-            op.addConvId(mConvId, calcTruth(truth));
-
+            op.addConvId(mMailbox, mConvId, calcTruth(truth));
             return op;
         }
 
@@ -735,7 +747,6 @@ public final class ZimbraQuery {
         public static final Integer IN_REMOTE_FOLDER = new Integer(-4);
 
         public static BaseQuery Create(Mailbox mailbox, Analyzer analyzer, int modifier, Integer folderId) throws ServiceException {
-//          try {
             if (folderId < 0) {
                 InQuery toRet = new InQuery(mailbox, analyzer, folderId);
                 toRet.mSpecialTarget = folderId;
@@ -744,29 +755,26 @@ public final class ZimbraQuery {
                 Folder folder = mailbox.getFolderById(null, folderId.intValue());
                 return new InQuery(mailbox, analyzer, modifier, folder);
             }
-//          } catch (NoSuchItemException nsie) {
-//          TIM: why is this here?  Seems strange to eat this error!
-//          return null;
-//          } 
         }
 
         public static BaseQuery Create(Mailbox mailbox, Analyzer analyzer, int modifier, String folderName) throws ServiceException {
-//          try {
             Folder folder = mailbox.getFolderByPath(null, folderName);
             return new InQuery(mailbox, analyzer, modifier, folder);
-//          } catch (NoSuchItemException nsie) {
-//          return null;
-//          }
         }
+        
         private Folder mFolder;
-        private ItemId mInId;
+        private ItemId mRemoteId;
         private Integer mSpecialTarget = null;
         private Mailbox mMailbox;
 
-        public InQuery(Mailbox mailbox, Analyzer analyzer, int modifier, ItemId itemId) {
+        public InQuery(Mailbox mailbox, Analyzer analyzer, int modifier, ItemId itemId) throws ServiceException {
             super(modifier, ZimbraQueryParser.IN);
             mFolder = null;
-            mInId = itemId;
+            if (itemId.belongsTo(mailbox)) {
+                mFolder = mailbox.getFolderById(null, itemId.getId());
+            } else {
+                mRemoteId = itemId;
+            }
             mMailbox = mailbox;
         }
 
@@ -782,7 +790,13 @@ public final class ZimbraQuery {
             mMailbox = mailbox;
         }
 
-        protected QueryOperation getLocalFolderOperation(Mailbox mbox) {
+        /**
+         * Used for "is:local" queries
+         * 
+         * @param mbox
+         * @return 
+         */
+        private QueryOperation getLocalFolderOperation(Mailbox mbox) {
 
             try {
                 Folder root = mbox.getFolderById(null, Mailbox.ID_FOLDER_ROOT);
@@ -819,7 +833,14 @@ public final class ZimbraQuery {
             }
         }
 
-        protected QueryOperation getRemoteFolderOperation(boolean truth, Mailbox mbox) {
+        /**
+         * Used for "is:remote" queries
+         *  
+         * @param truth
+         * @param mbox
+         * @return
+         */
+        private QueryOperation getRemoteFolderOperation(boolean truth, Mailbox mbox) {
 
             try {
                 Folder root = mbox.getFolderById(null, Mailbox.ID_FOLDER_ROOT);
@@ -914,8 +935,8 @@ public final class ZimbraQuery {
             DBQueryOperation dbOp = DBQueryOperation.Create();
             if (mFolder != null) {
                 dbOp.addInClause(mFolder, calcTruth(truth));
-            } else if (mInId != null) {
-                dbOp.addInIdClause(mInId, calcTruth(truth));
+            } else if (mRemoteId != null) {
+                dbOp.addInRemoteFolderClause(mRemoteId, calcTruth(truth));
             } else {
                 assert(false);
             }
@@ -936,7 +957,7 @@ public final class ZimbraQuery {
                 return toRet;
             } else {
                 return super.toString(expLevel)+
-                ",IN:"+(mInId!=null ? mInId.toString() :
+                ",IN:"+(mRemoteId!=null ? mRemoteId.toString() :
                     (mFolder!=null?mFolder.getName():"ANY_FOLDER"))
                     +")";
             }
@@ -1215,11 +1236,11 @@ public final class ZimbraQuery {
 
     public static class ItemQuery extends BaseQuery
     {
-        public static BaseQuery Create(Analyzer analyzer, int modifier, String str) 
+        public static BaseQuery Create(Mailbox mbox, Analyzer analyzer, int modifier, String str) 
         throws ServiceException {
             boolean allQuery = false;
             boolean noneQuery = false;
-            List<Integer> itemIds = new ArrayList<Integer>();
+            List<ItemId> itemIds = new ArrayList<ItemId>();
 
             if (str.equalsIgnoreCase("all")) {
                 allQuery = true;
@@ -1229,8 +1250,8 @@ public final class ZimbraQuery {
                 String[] items = str.split(",");
                 for (int i = 0; i < items.length; i++) {
                     if (items[i].length() > 0) {
-                        Integer id = Integer.decode(items[i].trim());
-                        itemIds.add(id);
+                        ItemId iid = new ItemId(items[i], mbox.getAccountId());
+                        itemIds.add(iid);
                     }
                 }
                 if (itemIds.size() == 0) {
@@ -1238,19 +1259,21 @@ public final class ZimbraQuery {
                 }
             }
 
-            return new ItemQuery(analyzer, modifier, allQuery, noneQuery, itemIds);
+            return new ItemQuery(mbox, analyzer, modifier, allQuery, noneQuery, itemIds);
         }
 
         private boolean mIsAllQuery;
         private boolean mIsNoneQuery;
-        private List mItemIds;
+        private List<ItemId> mItemIds;
+        private Mailbox mMailbox;
 
-        public ItemQuery(Analyzer analyzer, int modifier, boolean all, boolean none, List ids) 
+        ItemQuery(Mailbox mbox, Analyzer analyzer, int modifier, boolean all, boolean none, List<ItemId> ids) 
         {
             super(modifier, ZimbraQueryParser.ITEM);
             mIsAllQuery = all;
             mIsNoneQuery = none;
             mItemIds = ids;
+            mMailbox = mbox;
         }
 
         protected QueryOperation getQueryOperation(boolean truth) {
@@ -1263,9 +1286,8 @@ public final class ZimbraQuery {
             } else if (truth&&mIsNoneQuery || !truth&&mIsAllQuery) {
                 return new NullQueryOperation();
             } else {
-                for (Iterator iter = mItemIds.iterator(); iter.hasNext();) {
-                    Integer cur = (Integer)iter.next();
-                    dbOp.addItemIdClause(cur, truth);
+                for (ItemId iid : mItemIds) {
+                    dbOp.addItemIdClause(mMailbox, iid, truth);
                 }
             }
             return dbOp;
@@ -2239,6 +2261,13 @@ public final class ZimbraQuery {
             }
         }
         return ret;
+    }
+    
+    public String toQueryString() {
+        if (mOp == null)
+            return "";
+        else
+            return mOp.toQueryString();
     }
 
 }

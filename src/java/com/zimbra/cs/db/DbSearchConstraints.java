@@ -122,22 +122,28 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
             if (negated) {
                 retVal.append("NOT (");
             }
-
-            if (lowest > -1) {
-                retVal.append(">");
-                if (lowestEqual)
-                    retVal.append('=');
+            
+            // special-case ">=N AND <=N" to be "=N"
+            if (lowest>-1 && lowestEqual && highestEqual && lowest == highest) {
                 retVal.append(lowest);
-                retVal.append(' ');
+            } else {
+                if (lowest > -1) {
+                    retVal.append(">");
+                    if (lowestEqual)
+                        retVal.append('=');
+                    retVal.append(lowest);
+                    retVal.append(' ');
+                }
+                
+                if (highest > -1) {
+                    retVal.append("<");
+                    if (highestEqual)
+                        retVal.append('=');
+                    retVal.append(highest);
+                    retVal.append(' ');
+                }
             }
-
-            if (highest > -1) {
-                retVal.append("<");
-                if (highestEqual)
-                    retVal.append('=');
-                retVal.append(highest);
-                retVal.append(' ');
-            }
+            
             if (negated) {
                 retVal.append(")");
             }
@@ -176,10 +182,16 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
     public Set<ItemId> excludeRemoteFolders = new HashSet<ItemId>();  /* optional - ALL listed folders are not OK */
     
     public int convId = 0;                          /* optional - must match this convId  */
-    public Set<Integer> prohibitedConvIds = new HashSet<Integer>();          /* optional - ALL listed folders not allowed*/
+    public Set<Integer> prohibitedConvIds = new HashSet<Integer>();          /* optional - ALL listed convs not allowed*/
+    
+    public ItemId remoteConvId = null;  /* optional */
+    public Set<ItemId>  prohibitedRemoteConvIds = new HashSet<ItemId>(); /* optional - ALL listed convs not allowed */
 
     public Set<Integer> itemIds = new HashSet<Integer>();                             /* optional - ANY of these itemIDs are OK.*/
     public Set<Integer> prohibitedItemIds = new HashSet<Integer>(); /* optional - ALL of these itemIDs are excluded*/
+    
+    public Set<ItemId> remoteItemIds = new HashSet<ItemId>();                             /* optional - ANY of these itemIDs are OK.*/
+    public Set<ItemId> prohibitedRemoteItemIds = new HashSet<ItemId>(); /* optional - ALL of these itemIDs are excluded*/
 
     public Set<Integer> indexIds = new HashSet<Integer>();                   /* optional - ANY of these indexIDs are OK.  */
 
@@ -271,18 +283,21 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
             calStartDates.isEmpty() &&
             calEndDates.isEmpty() &&
             modified.isEmpty() &&
-            convCounts.isEmpty() &&
             sizes.isEmpty() &&
+            convCounts.isEmpty() &&
             subjectRanges.isEmpty() &&
-            senderRanges.isEmpty() &&
-            remoteFolders.isEmpty() && excludeRemoteFolders.isEmpty();
+            senderRanges.isEmpty();
     }
     
     /**
-     * @return TRUE if the conv-count constraint is set, and if the constraint
+     * @return TRUE/FALSE if the conv-count constraint is set, and if the constraint
      * is exactly 1 (ie >=1 && <=1)....this is a useful special case b/c if 
      * this is true then we can generate much simpler SQL than for the more complicated
-     * conv-count cases...
+     * conv-count cases...return NULL otherwise.  
+     * 
+     *    TRUE   "is:solo"  
+     *    FLASE  "-is:solo"
+     *    null   everything else
      */
     public Boolean getIsSoloPart() {
         if (convCounts.size() != 1)
@@ -300,22 +315,6 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         }
     }
     
-    /**
-     * @return TRUE if the conv-count constraint is set, and if the constraint
-     * is exactly 1 (ie >=1 && <=1)....this is a useful special case b/c if 
-     * this is true then we can generate much simpler SQL than for the more complicated
-     * conv-count cases...
-     */
-    public boolean isConvCountExactlyOne() {
-        if (convCounts.size() != 1)
-            return false;
-        NumericRange r = convCounts.iterator().next();
-        
-        return (r.highest == 1 && r.highestEqual == true &&
-                    r.lowest == 1 && r.lowestEqual == true);
-    }
-    
-
     public Object clone() throws CloneNotSupportedException {
         DbSearchConstraints toRet = (DbSearchConstraints)super.clone();
 
@@ -334,9 +333,15 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         
         toRet.convId = convId;
         toRet.prohibitedConvIds = new HashSet<Integer>(); toRet.prohibitedConvIds.addAll(prohibitedConvIds);
+        
+        toRet.remoteConvId = remoteConvId;
+        toRet.prohibitedRemoteConvIds = new HashSet<ItemId>(); toRet.prohibitedRemoteConvIds.addAll(prohibitedRemoteConvIds);
 
         toRet.itemIds = new HashSet<Integer>();  toRet.itemIds.addAll(itemIds);
         toRet.prohibitedItemIds = new HashSet<Integer>(); toRet.prohibitedItemIds.addAll(prohibitedItemIds);
+        
+        toRet.remoteItemIds = new HashSet<ItemId>();  toRet.remoteItemIds.addAll(remoteItemIds);
+        toRet.prohibitedRemoteItemIds = new HashSet<ItemId>(); toRet.prohibitedRemoteItemIds.addAll(prohibitedRemoteItemIds);
 
         toRet.indexIds = new HashSet<Integer>(); toRet.indexIds.addAll(indexIds);
 
@@ -348,8 +353,8 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         toRet.calEndDates = new HashSet<NumericRange>(); toRet.calEndDates.addAll(calEndDates);
         
         toRet.modified = new HashSet<NumericRange>(); toRet.modified.addAll(modified);
-        toRet.convCounts = new HashSet<NumericRange>(); toRet.convCounts.addAll(convCounts);
         toRet.sizes = new HashSet<NumericRange>(); toRet.sizes.addAll(sizes);
+        toRet.convCounts = new HashSet<NumericRange>(); toRet.convCounts.addAll(convCounts);
         toRet.subjectRanges = new HashSet<StringRange>(); toRet.subjectRanges.addAll(subjectRanges);
         toRet.senderRanges = new HashSet<StringRange>(); toRet.senderRanges.addAll(senderRanges);
 
@@ -408,7 +413,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
     }
     
     private static class RemoteFolderPrinter {
-        void run(StringBuilder str, boolean truthiness, Collection<ItemId> collect) {
+        void run(StringBuilder str, boolean truthiness, Collection<ItemId> collect, String intro) {
             if (!ListUtil.isEmpty(collect)) {
                 str.append("(");
                 boolean atFirst = true;
@@ -418,7 +423,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
 
                     if (!truthiness)
                     	str.append("-");
-                    str.append("INID:\"").append(id.toString()).append("\"");
+                    str.append(intro).append(":\"").append(id.toString()).append("\"");
                     atFirst = false;
                 }
                 str.append(") ");
@@ -436,6 +441,10 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
     public String toString()
     {
         StringBuilder retVal = new StringBuilder("");
+        
+        if (noResults) {
+            retVal.append("-is:anywhere ");
+        }
 
         //
         // all this pain could have been eliminated with a simple preprocessor macro...fucking java...
@@ -465,19 +474,28 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         fp.run(retVal, false, excludeFolders);
 
         // remote folders
-        rfp.run(retVal, true, remoteFolders);
-        rfp.run(retVal, false, excludeRemoteFolders);
+        rfp.run(retVal, true, remoteFolders, "INID");
+        rfp.run(retVal, false, excludeRemoteFolders, "INID");
         
         // convId
         if (convId != 0) {
             retVal.append("CONV:(").append(convId).append(") ");
         }
         ip.run(retVal, prohibitedConvIds, "-CONVID");
-        ip.run(retVal, prohibitedConvIds, "-CONVID");
+        
+        // remoteConvId
+        if (remoteConvId != null) {
+            retVal.append("CONV:\"").append(remoteConvId).append("\" ");
+        }
+        rfp.run(retVal, false, prohibitedRemoteConvIds, "CONV");
 
         // itemId
         ip.run(retVal, itemIds, "ITEM");
         ip.run(retVal, prohibitedItemIds, "-ITEM");
+        
+        // remoteItemId
+        rfp.run(retVal, true, remoteItemIds, "ITEM");
+        rfp.run(retVal, false, prohibitedRemoteItemIds, "ITEM");
 
         // indexId
         ip.run(retVal, indexIds, "INDEXID");
@@ -497,12 +515,12 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         if (!modified.isEmpty())
             new ObjectPrinter<NumericRange>().run(retVal, modified, "MOD") ;
         
-        if (!convCounts.isEmpty())
-            new ObjectPrinter<NumericRange>().run(retVal, convCounts, "CONV-COUNT");
-
         if (!sizes.isEmpty()) 
             new ObjectPrinter<NumericRange>().run(retVal, sizes, "SIZE");
         
+        if (!convCounts.isEmpty())
+            new ObjectPrinter<NumericRange>().run(retVal, convCounts, "CONV-COUNT");
+
         if (!subjectRanges.isEmpty())
             new ObjectPrinter<StringRange>().run(retVal, subjectRanges, "SUBJECT");
         
@@ -581,6 +599,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         MySetUtil<Folder> fu = new MySetUtil<Folder>();
         MySetUtil<Integer> iu = new MySetUtil<Integer>();
         MySetUtil<Byte> bu = new MySetUtil<Byte>();
+        MySetUtil<ItemId> iiu = new MySetUtil<ItemId>();
 
         // tags
         tags = tu.union(tags, other.tags);
@@ -626,6 +645,25 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         
         
         excludeFolders = fu.union(excludeFolders, other.excludeFolders);
+        
+        
+        //
+        // remoteFolders
+        //
+        {
+            // if both sets are empty going in, then an empty set means 
+            // "no constraint"....on the other hand if either set is nonempty
+            // going in, then an empty set coming out means "no results".
+            // ugly.  Should modify this so folders=null means "no constraint" and
+            // folders=[] means "no results".  TODO...
+            if (remoteFolders.size() >  0 ||  other.remoteFolders.size() > 0) {
+                remoteFolders = iiu.intersectIfNonempty(remoteFolders, other.remoteFolders);
+                if (remoteFolders.size() == 0)
+                    noResults = true;
+            }
+        }
+        excludeRemoteFolders = iiu.union(excludeRemoteFolders, other.excludeRemoteFolders);
+        
 
         // convId
         if (other.convId != 0) {
@@ -639,14 +677,27 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
             }
         }
         prohibitedConvIds = iu.union(prohibitedConvIds, other.prohibitedConvIds);
+        
+        
+        // remoteConvID
+        if (other.remoteConvId != null) {
+            if (remoteConvId != null) {
+                if (!remoteConvId.equals(other.remoteConvId)) {
+                    ZimbraLog.index.debug("ANDING a constraint with incompatible remoteConvIds, this is a NO_RESULTS constraint now");
+                    noResults = true;
+                }
+            } else {
+                remoteConvId = other.remoteConvId;
+            }
+        }
+        prohibitedRemoteConvIds = iiu.union(prohibitedRemoteConvIds, other.prohibitedRemoteConvIds);
 
 
         // itemId
-
-        // these we have to intersect:
-        //
-        //   Item{A or B or C} AND Item{B or C or D} --> Item{IN-BOTH}
         {
+            // these we have to intersect:
+            //
+            //   Item{A or B or C} AND Item{B or C or D} --> Item{IN-BOTH}
             boolean prevNonempty = false;
             if (itemIds.size() > 0 || other.itemIds.size() > 0)
                 prevNonempty = true;
@@ -655,13 +706,35 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
                 noResults = true;
         }
         
-
         // these we can just union, since:
         //
         // -Item{A or B} AND -Item{C or D} --> 
         //   (-Item(A) AND -Item(B)) AND (-C AND -D) -->
         //     (A AND B AND C AND D)
         prohibitedItemIds = iu.union(prohibitedItemIds, other.prohibitedItemIds);
+        
+        
+        // remoteItemId
+        {
+            // these we have to intersect:
+            //
+            //   Item{A or B or C} AND Item{B or C or D} --> Item{IN-BOTH}
+            boolean prevNonempty = false;
+            if (remoteItemIds.size() > 0 || other.remoteItemIds.size() > 0)
+                prevNonempty = true;
+            remoteItemIds = iiu.intersectIfNonempty(remoteItemIds, other.remoteItemIds);
+            if (itemIds.size() == 0 && prevNonempty)
+                noResults = true;
+        }
+        
+        // remote prohibitedItemId
+        // these we can just union, since:
+        //
+        // -Item{A or B} AND -Item{C or D} --> 
+        //   (-Item(A) AND -Item(B)) AND (-C AND -D) -->
+        //     (A AND B AND C AND D)
+        prohibitedRemoteItemIds = iiu.union(prohibitedRemoteItemIds, other.prohibitedRemoteItemIds);
+        
 
         // indexId
         //   IndexId{A or B or C} AND IndexId{B or C or D} --> IndexId{IN-BOTH}
@@ -715,6 +788,13 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
             modified.addAll(other.modified);
         }
         
+        // sizes
+        if (other.sizes!= null) {
+            if (sizes == null) 
+                sizes = new ArrayList<NumericRange>();
+            sizes.addAll(other.sizes);
+        }
+
         // conv-counts
         if (other.convCounts != null) {
             if (convCounts == null)
@@ -722,14 +802,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
             convCounts.addAll(other.convCounts);
         }
 
-        // sizes
-        if (other.sizes!= null) {
-            if (sizes == null) 
-                sizes = new ArrayList<NumericRange>();
-            sizes.addAll(other.sizes);
-        }
-        
-        // sizes
+        // subjectRanges
         if (other.subjectRanges!= null) {
             if (subjectRanges== null) 
                 subjectRanges = new ArrayList<StringRange>();

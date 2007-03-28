@@ -249,9 +249,17 @@ class DBQueryOperation extends QueryOperation
         mLuceneOp = op;
     }
 
-    void addItemIdClause(Integer itemId, boolean truth) {
+    void addItemIdClause(Mailbox mbox, ItemId itemId, boolean truth) {
         mAllResultsQuery = false;
-        topLevelAndedConstraint().addItemIdClause(itemId, truth);
+        if (itemId.belongsTo(mbox)) {
+            // LOCAL
+            topLevelAndedConstraint().addItemIdClause(itemId.getId(), truth);
+        } else {
+            // REMOTE
+            topLevelAndedConstraint().addRemoteItemIdClause(itemId, truth);
+            
+        }
+        
     }
 
     /**
@@ -336,25 +344,35 @@ class DBQueryOperation extends QueryOperation
      * @param convId
      * @param prohibited
      */
-    void addConvId(int convId, boolean truth) {
+    void addConvId(Mailbox mbox, ItemId convId, boolean truth) {
         mAllResultsQuery = false;
-        topLevelAndedConstraint().addConvId(convId, truth);
-    }
+        if (convId.belongsTo(mbox)) {
+            // LOCAL!
+            if (mQueryTarget != QueryTarget.LOCAL && mQueryTarget != QueryTarget.UNSPECIFIED) 
+                throw new IllegalArgumentException("Cannot addConvId w/ local target b/c DBQueryOperation already has a remote target");
+            mQueryTarget = QueryTarget.LOCAL;
+            topLevelAndedConstraint().addConvId(convId.getId(), truth);
+        } else {
+            // REMOTE!
+            if (mQueryTarget != QueryTarget.UNSPECIFIED && !mQueryTarget.toString().equals(convId.getAccountId()))
+                throw new IllegalArgumentException("Cannot addConvId w/ remote target b/c DBQueryOperation already has an incompatible remote target");
 
+            mQueryTarget = new QueryTarget(convId.getAccountId());
+            topLevelAndedConstraint().addRemoteConvId(convId, truth);
+        }
+    }
+    
     /**
      * Handles inid: query clause that resolves to a remote folder.
      * 
-     * @param ownerId
-     * @param folderId
-     * @param truth
      */
-    void addInIdClause(ItemId itemId, boolean truth)
+    void addInRemoteFolderClause(ItemId remoteFolderId, boolean truth)
     {
-        if (mQueryTarget != QueryTarget.UNSPECIFIED && !mQueryTarget.toString().equals(itemId.getAccountId()))
+        if (mQueryTarget != QueryTarget.UNSPECIFIED && !mQueryTarget.toString().equals(remoteFolderId.getAccountId()))
             throw new IllegalArgumentException("Cannot addInClause b/c DBQueryOperation already has an incompatible remote target");
 
-        mQueryTarget = new QueryTarget(itemId.getAccountId());
-        topLevelAndedConstraint().addInIdClause(itemId, truth);
+        mQueryTarget = new QueryTarget(remoteFolderId.getAccountId());
+        topLevelAndedConstraint().addInRemoteFolderClause(remoteFolderId, truth);
     }
 
     /**
@@ -365,8 +383,6 @@ class DBQueryOperation extends QueryOperation
     {
         mAllResultsQuery = false;
 
-        boolean isRemote = false;
-
         // is it a mountpoint?
         if (folder instanceof Mountpoint) { 
             Mountpoint mpt = (Mountpoint)folder;
@@ -375,18 +391,15 @@ class DBQueryOperation extends QueryOperation
             if  (!mpt.getOwnerId().equals(mpt.getMailbox().getAccountId())) 
             {
                 // remote!
-                isRemote = true;
-                addInIdClause(new ItemId(mpt.getOwnerId(), mpt.getRemoteId()), truth);
+                addInRemoteFolderClause(new ItemId(mpt.getOwnerId(), mpt.getRemoteId()), truth);
+                return;
             }
         }
 
-        if (!isRemote) {
-            if (mQueryTarget != QueryTarget.LOCAL && mQueryTarget != QueryTarget.UNSPECIFIED) 
-                throw new IllegalArgumentException("Cannot addInClause w/ local target b/c DBQueryOperation already has a remote target");
-
-            mQueryTarget = QueryTarget.LOCAL;
-        }
-
+        if (mQueryTarget != QueryTarget.LOCAL && mQueryTarget != QueryTarget.UNSPECIFIED) 
+            throw new IllegalArgumentException("Cannot addInClause w/ local target b/c DBQueryOperation already has a remote target");
+        mQueryTarget = QueryTarget.LOCAL;
+        
         topLevelAndedConstraint().addInClause(folder, truth);
     }
 

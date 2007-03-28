@@ -145,7 +145,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
           case TYPE:
             return new ZimbraQuery.TypeQuery(mAnalyzer, modifier,tok);
           case ITEM:
-            return ZimbraQuery.ItemQuery.Create(mAnalyzer, modifier, tok);
+            return ZimbraQuery.ItemQuery.Create(mMailbox, mAnalyzer, modifier, tok);
           case INID:
                   iid = new ItemId(tok, (String)null);
               folderId = iid.getId();
@@ -175,12 +175,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
                 throw new ParseException("Unknown text after is: in query string");
             }
           case CONV:
-            if (tok.charAt(0) != '-') {
-                return new ZimbraQuery.ConvQuery(mAnalyzer, modifier, tok);
-            } else {
-                // virtual-conversation: search for the item-id with id = -1*X
-                return ZimbraQuery.ItemQuery.Create(mAnalyzer, modifier, tok.substring(1));
-            }
+            return ZimbraQuery.ConvQuery.create(mMailbox, mAnalyzer, modifier, tok);
           case CONV_COUNT:
             return ZimbraQuery.ConvCountQuery.create(mMailbox, mAnalyzer, modifier, target, tok);
           case DATE:

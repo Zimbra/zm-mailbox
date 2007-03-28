@@ -104,6 +104,10 @@ public class ItemId {
 
     public boolean hasSubpart()   { return mSubpartId >= 0; }
 
+    /**
+     * @return TRUE if this item is on the local server
+     * @throws ServiceException
+     */
     public boolean isLocal() throws ServiceException {
         if (mAccountId == null)
             return true;
@@ -113,12 +117,24 @@ public class ItemId {
         return DocumentHandler.LOCAL_HOST.equalsIgnoreCase(acctTarget.getAttr(Provisioning.A_zimbraMailHost));
     }
 
+    /**
+     * @param acct
+     * @return TRUE if the item is in the passed-in account
+     */
     public boolean belongsTo(Account acct) {
         return acct == null || mAccountId == null || mAccountId.equals(acct.getId());
     }
+    /**
+     * @param acctId
+     * @return TRUE if the item is in the passed-in account
+     */
     public boolean belongsTo(String acctId) {
         return acctId == null || mAccountId == null || mAccountId.equals(acctId);
     }
+    /**
+     * @param mbox
+     * @return TRUE if the item is in the passed-in mailbox
+     */
     public boolean belongsTo(Mailbox mbox) {
         return mbox == null || mAccountId == null || mAccountId.equals(mbox.getAccountId());
     }
@@ -151,5 +167,24 @@ public class ItemId {
             e.printStackTrace();
         }
         System.out.println(foo.toString());
+    }
+    
+    public boolean equals(Object that) {
+        if (this == that)
+            return true;
+        ItemId other = (ItemId)that;
+        if ((other.mAccountId==null && this.mAccountId==null) || (other.mAccountId.equals(this.mAccountId))) {
+            // same acct
+            return (other.mId == this.mId && other.mSubpartId == this.mSubpartId);
+        } else {
+            return false;
+        }
+    }
+    
+    public int hashCode() {
+        int toRet = 0;
+        if (mAccountId != null)
+            toRet = mAccountId.hashCode();
+        return (toRet ^ mId);
     }
 }

@@ -155,8 +155,10 @@ public class ZConversation implements ZItem {
         private String mFolderId;
         private ZEmailAddress mSender;
         private long mSize;
+        private Element mElement;
         
         public ZMessageSummary(Element e) throws ServiceException {
+            mElement = e;
             mId = e.getAttribute(MailConstants.A_ID);
             mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
             mDate = e.getAttributeLong(MailConstants.A_DATE);
@@ -168,6 +170,8 @@ public class ZConversation implements ZItem {
             Element emailEl = e.getOptionalElement(MailConstants.E_EMAIL);
             if (emailEl != null) mSender = new ZEmailAddress(emailEl);
         }
+        
+        public Element getElement() { return mElement; }
         
         public void modifyNotification(ZModifyEvent event) throws ServiceException {
         	if (event instanceof ZModifyMessageEvent) {
