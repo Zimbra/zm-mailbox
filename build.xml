@@ -790,8 +790,10 @@
 			zimbraPrefGalAutoCompleteEnabled FALSE \
 			zimbraPrefImapSearchFoldersEnabled FALSE \
 			zimbraPrefReadingPaneEnabled TRUE \
-			zimbraPrefSkin velodrome \
-			telephoneNumber '+1 650 555 5555'
+			zimbraPrefSkin velodrome2 \
+            zimbraFeaturePortalEnabled TRUE \
+            zimbraPortalName velodrome2 \
+            telephoneNumber '+1 650 555 5555'
 		ca spam-sink@${zimbra.server.hostname} test123 \
 			zimbraMailHost ${zimbra.server.hostname} \
 			zimbraAttachmentsIndexingEnabled FALSE \
