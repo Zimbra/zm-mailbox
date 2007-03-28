@@ -783,6 +783,8 @@
 			zimbraFeatureTaggingEnabled FALSE \
 			zimbraFeatureTasksEnabled FALSE \
 			zimbraFeatureViewInHtmlEnabled FALSE \
+            zimbraFeaturePortalEnabled TRUE \
+            zimbraFeatureVoiceEnabled TRUE \
 			zimbraImapEnabled FALSE \
 			zimbraPasswordLockoutEnabled FALSE \
 			zimbraPop3Enabled TRUE \
@@ -791,7 +793,6 @@
 			zimbraPrefImapSearchFoldersEnabled FALSE \
 			zimbraPrefReadingPaneEnabled TRUE \
 			zimbraPrefSkin velodrome2 \
-            zimbraFeaturePortalEnabled TRUE \
             zimbraPortalName velodrome2 \
             telephoneNumber '+1 650 555 5555'
 		ca spam-sink@${zimbra.server.hostname} test123 \
