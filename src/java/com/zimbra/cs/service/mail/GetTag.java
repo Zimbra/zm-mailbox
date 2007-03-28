@@ -35,15 +35,13 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.operation.GetItemListOperation;
-import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemIdFormatter;
-import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -56,11 +54,9 @@ public class GetTag extends MailDocumentHandler  {
 		Mailbox mbox = getRequestedMailbox(lc);
 		OperationContext octxt = lc.getOperationContext();
         ItemIdFormatter ifmt = new ItemIdFormatter(lc);
-		Session session = getSession(context);
         
-		GetItemListOperation op = new GetItemListOperation(session, octxt, mbox, Requester.SOAP, MailItem.TYPE_TAG);
-		op.schedule();
-		List tags = op.getResults();
+		List<? extends MailItem> tags = mbox.getItemList(octxt, MailItem.TYPE_TAG, -1, DbMailItem.SORT_NONE);
+        
 
 		Element response = lc.createElement(MailConstants.GET_TAG_RESPONSE);
 		if (tags != null) {

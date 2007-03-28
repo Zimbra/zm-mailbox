@@ -36,12 +36,12 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
-import com.zimbra.cs.operation.CreateMountpointOperation;
-import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.Session;
@@ -63,7 +63,6 @@ public class CreateMountpoint extends MailDocumentHandler {
         Mailbox mbox = getRequestedMailbox(lc);
         Mailbox.OperationContext octxt = lc.getOperationContext();
         ItemIdFormatter ifmt = new ItemIdFormatter(lc);
-        Session session = getSession(context);
 
         Element t = request.getElement(MailConstants.E_MOUNT);
         String name = t.getAttribute(MailConstants.A_NAME);
@@ -91,10 +90,20 @@ public class CreateMountpoint extends MailDocumentHandler {
                 throw MailServiceException.NO_SUCH_FOLDER(remotePath);
         }
 
-        CreateMountpointOperation op = new CreateMountpointOperation(session, octxt, mbox, Requester.SOAP,
-        			iidParent, name, ownerId, remoteId, view, flags, color, fetchIfExists);
-        op.schedule();
-        Mountpoint mpt = op.getMountpoint();
+        Mountpoint mpt;
+        try {
+            mpt = mbox.createMountpoint(octxt, iidParent.getId(), name, ownerId, remoteId, 
+                MailItem.getTypeForName(view), Flag.flagsToBitmask(flags), color);
+        } catch (ServiceException se) {
+            if (se.getCode() == MailServiceException.ALREADY_EXISTS && fetchIfExists) {
+                Folder folder = mbox.getFolderByName(octxt, iidParent.getId(), name);
+                if (folder instanceof Mountpoint)
+                    mpt = (Mountpoint) folder;
+                else
+                    throw se;
+            } else
+                throw se;
+        }
 
         Element response = lc.createElement(MailConstants.CREATE_MOUNTPOINT_RESPONSE);
         if (mpt != null)

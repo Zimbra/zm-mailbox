@@ -28,6 +28,7 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
@@ -46,7 +47,6 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.operation.ItemActionOperation;
-import com.zimbra.cs.operation.SaveDraftOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.util.ItemId;
@@ -120,10 +120,12 @@ public class SaveDraft extends MailDocumentHandler {
 
         ParsedMessage pm = new ParsedMessage(mm, date, mbox.attachmentsIndexingEnabled());
 
-        SaveDraftOperation op = new SaveDraftOperation(session, octxt, mbox, Requester.SOAP,
-                    pm, id, origId, replyType, identity);
-        op.schedule();
-        Message msg = op.getMsg();
+        Message msg;
+        try {
+            msg = mbox.saveDraft(octxt, pm, id, origId, replyType, identity);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("IOException while saving draft", e);
+        }
 
         // we can now purge the uploaded attachments
         if (mimeData.uploads != null)

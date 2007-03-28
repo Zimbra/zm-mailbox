@@ -36,21 +36,17 @@ import java.util.Map;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
-import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
-import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.SearchParams;
@@ -63,14 +59,11 @@ import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.operation.SearchOperation;
-import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -111,10 +104,7 @@ public class SearchConv extends Search {
         
         if (cid.belongsTo(mbox)) {
             // LOCAL!
-            //ZimbraQueryResults results = this.getResults(mbox, params, lc, session);
-            SearchOperation op = new SearchOperation(session, zsc, zsc.getOperationContext(), mbox, Requester.SOAP,  params);
-            op.schedule();
-            ZimbraQueryResults results = op.getResults();        
+            ZimbraQueryResults results = this.doSearch(zsc, mbox, params);
             
             try {
                 Element response = zsc.createElement(MailConstants.SEARCH_CONV_RESPONSE);

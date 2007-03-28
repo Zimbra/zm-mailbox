@@ -35,11 +35,8 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.operation.GetContactListOperation;
-import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.formatter.ContactCSV;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -55,7 +52,6 @@ public class ExportContacts extends MailDocumentHandler  {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
-        Session session = getSession(context);
 
         String folder = request.getAttribute(MailConstants.A_FOLDER, null);
         ItemId iidFolder = folder == null ? null : new ItemId(folder, lc);
@@ -63,10 +59,8 @@ public class ExportContacts extends MailDocumentHandler  {
         String ct = request.getAttribute(MailConstants.A_CONTENT_TYPE);
         if (!ct.equals("csv"))
             throw ServiceException.INVALID_REQUEST("unsupported content type: " + ct, null);
-
-        GetContactListOperation op = new GetContactListOperation(session, octxt, mbox, Requester.SOAP, iidFolder);
-        op.schedule();
-        List<Contact> contacts = op.getResults();
+        
+        List<Contact> contacts = mbox.getContactList(octxt, iidFolder != null ? iidFolder.getId() : -1);
         
         StringBuffer sb = new StringBuffer();
         if (contacts == null)

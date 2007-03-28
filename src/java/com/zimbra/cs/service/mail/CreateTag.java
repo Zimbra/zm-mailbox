@@ -36,10 +36,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.operation.CreateTagOperation;
-import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemIdFormatter;
-import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -52,16 +49,12 @@ public class CreateTag extends MailDocumentHandler  {
         Mailbox mbox = getRequestedMailbox(lc);
         Mailbox.OperationContext octxt = lc.getOperationContext();
         ItemIdFormatter ifmt = new ItemIdFormatter(lc);
-        Session session = getSession(context);
 
         Element t = request.getElement(MailConstants.E_TAG);
         String name = t.getAttribute(MailConstants.A_NAME);
         byte color = (byte) t.getAttributeLong(MailConstants.A_COLOR, MailItem.DEFAULT_COLOR);
         
-        CreateTagOperation op = new CreateTagOperation(session, octxt, mbox, Requester.SOAP,
-        			name, color);
-        op.schedule();
-        Tag tag = op.getTag();
+        Tag tag = mbox.createTag(octxt, name, color);
         
         Element response = lc.createElement(MailConstants.CREATE_TAG_RESPONSE);
         if (tag != null)

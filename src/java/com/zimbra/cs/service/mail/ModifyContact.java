@@ -41,8 +41,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedContact;
-import com.zimbra.cs.operation.ModifyContactOperation;
-import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.Session;
@@ -62,7 +60,6 @@ public class ModifyContact extends MailDocumentHandler  {
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = zsc.getOperationContext();
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
-        Session session = getSession(context);
 
         boolean replace = request.getAttributeBool(MailConstants.A_REPLACE, false);
         boolean verbose = request.getAttributeBool(MailConstants.A_VERBOSE, true);
@@ -77,10 +74,8 @@ public class ModifyContact extends MailDocumentHandler  {
         else
             pc = new ParsedContact(mbox.getContactById(octxt, iid.getId())).modify(cdata.getFirst(), cdata.getSecond());
 
-        ModifyContactOperation op = new ModifyContactOperation(session, octxt, mbox, Requester.SOAP, iid, pc);
-        op.schedule();
-
-
+        mbox.modifyContact(octxt, iid.getId(), pc);
+        
         Contact con = mbox.getContactById(octxt, iid.getId());
         Element response = zsc.createElement(MailConstants.MODIFY_CONTACT_RESPONSE);
         if (con != null) {

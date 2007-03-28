@@ -36,10 +36,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Note;
-import com.zimbra.cs.operation.GetNoteOperation;
-import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemIdFormatter;
-import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -52,15 +49,12 @@ public class GetNote extends MailDocumentHandler {
 		Mailbox mbox = getRequestedMailbox(lc);
 		Mailbox.OperationContext octxt = lc.getOperationContext();
         ItemIdFormatter ifmt = new ItemIdFormatter(lc);
-		Session session = getSession(context);
 		
 		Element enote = request.getElement(MailConstants.E_NOTE);
 		int noteId = (int) enote.getAttributeLong(MailConstants.A_ID);
 		
-		GetNoteOperation op = new GetNoteOperation(session, octxt, mbox, Requester.SOAP, noteId);
-		op.schedule();
-		Note note = op.getResult();
-		
+		Note note = mbox.getNoteById(octxt, noteId);
+        
 		if (note == null)
 			throw MailServiceException.NO_SUCH_NOTE(noteId);
 		

@@ -28,6 +28,7 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +39,6 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.mailbox.BrowseResult;
 import com.zimbra.cs.mailbox.BrowseResult.DomainItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.operation.BrowseOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SoapSession;
@@ -58,10 +58,15 @@ public class Browse extends MailDocumentHandler  {
         if (browseBy == null)
             browseBy = request.getAttribute(MailConstants.A_BROWSE_BY);
         
-        BrowseOperation op = new BrowseOperation(session, zc.getOperationContext(), mbox, Requester.SOAP, browseBy);
-        op.schedule();
-        
-        BrowseResult browse =  op.getResult();
+//        BrowseOperation op = new BrowseOperation(session, zc.getOperationContext(), mbox, Requester.SOAP, browseBy);
+//        op.schedule();
+//        BrowseResult browse =  op.getResult();
+        BrowseResult browse;
+        try {
+            browse = mbox.browse(zc.getOperationContext(), browseBy);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("IO error", e);
+        }
         
         Element response = zc.createElement(MailConstants.BROWSE_RESPONSE);
         

@@ -37,8 +37,6 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.mailbox.Note.Rectangle;
-import com.zimbra.cs.operation.CreateNoteOperation;
-import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.Session;
@@ -69,10 +67,7 @@ public class CreateNote extends MailDocumentHandler {
         String strBounds = t.getAttribute(MailConstants.A_BOUNDS, null);
         Rectangle bounds = new Rectangle(strBounds);
 
-        CreateNoteOperation op = new CreateNoteOperation(session, octxt, mbox, Requester.SOAP,
-        			content, bounds, color, iidFolder);
-        op.schedule();
-        Note note = op.getNote();
+        Note note = mbox.createNote(octxt, content, bounds, color, iidFolder.getId());
 
         Element response = lc.createElement(MailConstants.CREATE_NOTE_RESPONSE);
         if (note != null)

@@ -78,8 +78,6 @@ import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.operation.AlterTagOperation;
-import com.zimbra.cs.operation.DeleteOperation;
 import com.zimbra.cs.operation.ItemActionOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemId;
@@ -1514,6 +1512,8 @@ public abstract class ImapHandler extends ProtocolHandler {
         sendOK(tag, "UNSELECT completed");
         return CONTINUE_PROCESSING;
     }
+    
+    private final int SUGGESTED_DELETE_BATCH_SIZE = 30;
 
     boolean doEXPUNGE(String tag, boolean byUID, String sequenceSet) throws IOException {
         if (!checkState(tag, State.SELECTED)) {
@@ -1545,7 +1545,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         synchronized (mSelectedFolder.getMailbox()) {
             i4set = (sequenceSet == null ? null : i4folder.getSubsequence(sequenceSet, true));
         }
-        List<Integer> ids = new ArrayList<Integer>(DeleteOperation.SUGGESTED_BATCH_SIZE);
+        List<Integer> ids = new ArrayList<Integer>(SUGGESTED_DELETE_BATCH_SIZE);
 
         long checkpoint = System.currentTimeMillis();
         for (int i = 1, max = i4folder.getSize(); i <= max; i++) {
@@ -1554,16 +1554,22 @@ public abstract class ImapHandler extends ProtocolHandler {
                 if (i4set == null || i4set.contains(i4msg))
                     ids.add(i4msg.msgId);
 
-            if (ids.size() >= (i == max ? 1 : DeleteOperation.SUGGESTED_BATCH_SIZE)) {
+            if (ids.size() >= (i == max ? 1 : SUGGESTED_DELETE_BATCH_SIZE)) {
                 try {
                     ZimbraLog.imap.debug("  ** deleting: " + ids);
-                    new DeleteOperation(mSelectedFolder, getContext(), mSelectedFolder.getMailbox(), Requester.IMAP, ids, MailItem.TYPE_UNKNOWN, null).schedule();
+                    
+                    int[] idsArray = new int[ids.size()];
+                    int counter  = 0;
+                    for (int id : ids)
+                        idsArray[counter++] = id;
+                    mSelectedFolder.getMailbox().delete(getContext(), idsArray, MailItem.TYPE_UNKNOWN, null);
+                    
                 } catch (MailServiceException.NoSuchItemException e) {
                     // something went wrong, so delete *this* batch one at a time
                     for (int id : ids) {
                         try {
                             ZimbraLog.imap.debug("  ** fallback deleting: " + id);
-                            new DeleteOperation(mSelectedFolder, getContext(), mSelectedFolder.getMailbox(), Requester.IMAP, id, MailItem.TYPE_UNKNOWN, null).schedule();
+                            mSelectedFolder.getMailbox().delete(getContext(), new int[] {id}, MailItem.TYPE_UNKNOWN, null);
                         } catch (MailServiceException.NoSuchItemException nsie) {
                             i4msg = i4folder.getById(id);
                             if (i4msg != null)
@@ -1828,6 +1834,8 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     enum StoreAction { REPLACE, ADD, REMOVE };
+    
+    private final int SUGGESTED_BATCH_SIZE = 100;
 
     boolean doSTORE(String tag, String sequenceSet, List<String> flagNames, StoreAction operation, boolean silent, boolean byUID) throws IOException {
         if (!checkState(tag, State.SELECTED))
@@ -1878,12 +1886,12 @@ public abstract class ImapHandler extends ProtocolHandler {
             long checkpoint = System.currentTimeMillis();
 
             int i = 0;
-            List<ImapMessage> i4list = new ArrayList<ImapMessage>(AlterTagOperation.SUGGESTED_BATCH_SIZE);
-            List<Integer> idlist = new ArrayList<Integer>(AlterTagOperation.SUGGESTED_BATCH_SIZE);
+            List<ImapMessage> i4list = new ArrayList<ImapMessage>(SUGGESTED_BATCH_SIZE);
+            List<Integer> idlist = new ArrayList<Integer>(SUGGESTED_BATCH_SIZE);
             for (ImapMessage msg : i4set) {
                 // we're sending 'em off in batches of 100
                 i4list.add(msg);  idlist.add(msg.msgId);
-                if (++i % AlterTagOperation.SUGGESTED_BATCH_SIZE != 0 && i != i4set.size())
+                if (++i % SUGGESTED_BATCH_SIZE != 0 && i != i4set.size())
                     continue;
 
                 try {
@@ -1956,6 +1964,8 @@ public abstract class ImapHandler extends ProtocolHandler {
             sendNO(tag, command + " completed");
         return CONTINUE_PROCESSING;
     }
+    
+    private final int SUGGESTED_COPY_BATCH_SIZE = 50;
 
     boolean doCOPY(String tag, String sequenceSet, ImapPath path, boolean byUID) throws IOException {
         if (!checkState(tag, State.SELECTED))
@@ -2010,20 +2020,36 @@ public abstract class ImapHandler extends ProtocolHandler {
             List<Integer> copyUIDs = extensionEnabled("UIDPLUS") ? new ArrayList<Integer>() : null;
 
             int i = 0;
-            List<ImapMessage> i4list = new ArrayList<ImapMessage>(ImapCopyOperation.SUGGESTED_BATCH_SIZE);
-            List<Integer> idlist = new ArrayList<Integer>(ImapCopyOperation.SUGGESTED_BATCH_SIZE);
-            List<Integer> createdList = new ArrayList<Integer>(ImapCopyOperation.SUGGESTED_BATCH_SIZE);
+            List<ImapMessage> i4list = new ArrayList<ImapMessage>(SUGGESTED_COPY_BATCH_SIZE);
+            List<Integer> idlist = new ArrayList<Integer>(SUGGESTED_COPY_BATCH_SIZE);
+            List<Integer> createdList = new ArrayList<Integer>(SUGGESTED_COPY_BATCH_SIZE);
             for (ImapMessage i4msg : i4set) {
                 // we're sending 'em off in batches of 50
                 i4list.add(i4msg);  idlist.add(i4msg.msgId);
-                if (++i % ImapCopyOperation.SUGGESTED_BATCH_SIZE != 0 && i != i4set.size())
+                if (++i % SUGGESTED_COPY_BATCH_SIZE != 0 && i != i4set.size())
                     continue;
 
                 if (sameMailbox) {
-                    ImapCopyOperation op = new ImapCopyOperation(mSelectedFolder, getContext(), mbox, Requester.IMAP, i4list, iidTarget.getId());
-                    op.schedule();
-                    copies.addAll(op.getMessages());
-                    for (MailItem target : op.getMessages())
+                    
+                    List<MailItem> copyMsgs;
+                    try {
+                        byte type = MailItem.TYPE_UNKNOWN;
+                        int[] mItemIds = new int[i4list.size()];
+                        int counter  = 0;
+                        for (ImapMessage curMsg : i4set) {
+                            mItemIds[counter++] = i4msg.msgId;
+                            if (counter == 1)
+                                type = curMsg.getType();
+                            else if (i4msg.getType() != type)
+                                type = MailItem.TYPE_UNKNOWN;
+                        }
+                        copyMsgs = mbox.imapCopy(getContext(), mItemIds, type, iidTarget.getId());
+                    } catch (IOException e) {
+                        throw ServiceException.FAILURE("Caught IOException execiting " + this, e);
+                    }
+                    
+                    copies.addAll(copyMsgs);
+                    for (MailItem target : copyMsgs)
                         createdList.add(target.getImapUid());
                 } else {
                     ItemActionOperation op = ItemActionOperation.COPY(mSelectedFolder, getContext(), mbox, Requester.IMAP, idlist, MailItem.TYPE_UNKNOWN, null, iidTarget);

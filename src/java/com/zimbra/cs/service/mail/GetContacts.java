@@ -41,12 +41,8 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.operation.GetContactListOperation;
-import com.zimbra.cs.operation.GetContactOperation;
-import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
-import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -64,7 +60,6 @@ public class GetContacts extends MailDocumentHandler  {
 		Mailbox mbox = getRequestedMailbox(zsc);
 		Mailbox.OperationContext octxt = zsc.getOperationContext();
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
-		Session session = getSession(context);
 
 		boolean sync = request.getAttributeBool(MailConstants.A_SYNC, false);
 		String folderIdStr  = request.getAttribute(MailConstants.A_FOLDER, null);
@@ -131,21 +126,19 @@ public class GetContacts extends MailDocumentHandler  {
 			}
 
 			if (local.size() > 0) {
-				GetContactOperation op = new GetContactOperation(session, octxt, mbox, Requester.SOAP, local);
-				op.schedule();
-				List<Contact> contacts = op.getResults();
-				
-				for (Contact con : contacts) {
-					if (con != null && (folderId == ALL_FOLDERS || folderId == con.getFolderId()))
-						ToXML.encodeContact(response, ifmt, con, cacache, false, attrs, fields);
-				}
+			    synchronized(mbox) {
+                    for (int id : local) {
+                        Contact con = mbox.getContactById(octxt, id);
+                        if (con != null && (folderId == ALL_FOLDERS || folderId == con.getFolderId()))
+                            ToXML.encodeContact(response, ifmt, con, cacache, false, attrs, fields);
+                    }
+			    }
 			}
 			
 		} else {
 			ItemId iidFolder = new ItemId(mbox, folderId);
-			GetContactListOperation op = new GetContactListOperation(session, octxt, mbox, Requester.SOAP, iidFolder, sort);
-			op.schedule();
-			List<Contact> contacts = op.getResults();
+            List<Contact> contacts;
+            contacts = mbox.getContactList(octxt, iidFolder != null ? iidFolder.getId() : -1, sort);
 
 			for (Contact con : contacts) {
 				if (con != null)

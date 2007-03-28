@@ -36,11 +36,8 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.operation.ModifySearchFolderOperation;
-import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
-import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -57,7 +54,6 @@ public class ModifySearchFolder extends MailDocumentHandler  {
 		Mailbox mbox = getRequestedMailbox(lc);
 		OperationContext octxt = lc.getOperationContext();
         ItemIdFormatter ifmt = new ItemIdFormatter(lc);
-		Session session = getSession(context);
 		
         Element t = request.getElement(MailConstants.E_SEARCH);
         ItemId iid = new ItemId(t.getAttribute(MailConstants.A_ID), lc);
@@ -65,10 +61,8 @@ public class ModifySearchFolder extends MailDocumentHandler  {
         String types = t.getAttribute(MailConstants.A_SEARCH_TYPES, null);
         String sort = t.getAttribute(MailConstants.A_SORTBY, null);
         
-        ModifySearchFolderOperation op = new ModifySearchFolderOperation(session, octxt, mbox, Requester.SOAP,
-        			iid, query, types, sort);
-        op.schedule();
-        SearchFolder search = op.getSf();
+        mbox.modifySearchFolder(octxt, iid.getId(), query, types, sort);
+        SearchFolder search = mbox.getSearchFolderById(octxt, iid.getId());
         
         Element response = lc.createElement(MailConstants.MODIFY_SEARCH_FOLDER_RESPONSE);
     	ToXML.encodeSearchFolder(response, ifmt, search);

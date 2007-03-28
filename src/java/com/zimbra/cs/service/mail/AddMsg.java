@@ -28,6 +28,7 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -39,12 +40,12 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.operation.AddMsgOperation;
-import com.zimbra.cs.operation.Operation.Requester;
+import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
@@ -127,9 +128,13 @@ public class AddMsg extends MailDocumentHandler {
         else
             mm = ParseMimeMessage.importMsgSoap(msgElem);
         
-        AddMsgOperation op = new AddMsgOperation(session, octxt, mbox, Requester.SOAP, date, tagsStr, folderId, flagsStr, noICal, mm);
-        op.schedule();
-        Message msg = op.getMessage();
+        Message msg;
+        try {
+            ParsedMessage pm = new ParsedMessage(mm, date, mbox.attachmentsIndexingEnabled());
+            msg = mbox.addMessage(octxt, pm, folderId, noICal, Flag.flagsToBitmask(flagsStr), tagsStr);
+        } catch(IOException ioe) {
+            throw ServiceException.FAILURE("Error While Delivering Message", ioe);
+        }
         
         // we can now purge the uploaded attachments
         if (mimeData.uploads != null)

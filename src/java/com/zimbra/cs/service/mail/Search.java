@@ -28,6 +28,7 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -45,14 +46,15 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.*;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
+import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Conversation;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.operation.ItemActionOperation;
-import com.zimbra.cs.operation.SearchOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.mail.GetCalendarItemSummaries.EncodeCalendarItemResult;
 import com.zimbra.cs.service.mail.ToXML.EmailType;
@@ -75,10 +77,16 @@ public class Search extends MailDocumentHandler  {
         Mailbox mbox = getRequestedMailbox(zsc);
         Account acct = getRequestedAccount(zsc);
         SearchParams params = SearchParams.parse(request, zsc, acct.getAttr(Provisioning.A_zimbraPrefMailInitialSearch));
-
-        SearchOperation op = new SearchOperation(session, zsc, zsc.getOperationContext(), mbox, Requester.SOAP,  params);
-        op.schedule();
-        ZimbraQueryResults results = op.getResults();
+        
+        String query = params.getQueryStr();
+        query = "(" + query + ") -tag:\\Deleted";
+        params.setQueryStr(query);
+        
+    
+//        SearchOperation op = new SearchOperation(session, zsc, zsc.getOperationContext(), mbox, Requester.SOAP,  params);
+//        op.schedule();
+        
+        ZimbraQueryResults results = doSearch(zsc, mbox, params);
         
         try {
             // create the XML response Element
@@ -101,6 +109,21 @@ public class Search extends MailDocumentHandler  {
         } finally {
             results.doneWithSearchResults();
         }
+    }
+    
+    protected ZimbraQueryResults doSearch(ZimbraSoapContext zsc, Mailbox mbox, SearchParams params) throws ServiceException {
+        ZimbraQueryResults results;
+        try {
+            results = mbox.search(zsc.getResponseProtocol(), zsc.getOperationContext(), params);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("IO error", e);
+        } catch (ParseException e) {
+            if (e.currentToken != null)
+                throw MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(), e, e.currentToken.image, e.currentToken.beginLine, e.currentToken.beginColumn);
+            else 
+                throw MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(), e, "", -1, -1);
+        }
+        return results;
     }
     
     protected static void putInfo(Element response, SearchParams params, ZimbraQueryResults results) {

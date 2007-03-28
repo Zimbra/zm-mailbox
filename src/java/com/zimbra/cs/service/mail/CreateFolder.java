@@ -31,11 +31,11 @@ package com.zimbra.cs.service.mail;
 import java.util.Map;
 
 import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.operation.CreateFolderOperation;
-import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.Session;
@@ -74,12 +74,39 @@ public class CreateFolder extends MailDocumentHandler {
         boolean fetchIfExists = t.getAttributeBool(MailConstants.A_FETCH_IF_EXISTS, false);
         ACL acl          = FolderAction.parseACL(t.getOptionalElement(MailConstants.E_ACL));
 
-        CreateFolderOperation op = new CreateFolderOperation(session, octxt, mbox, Requester.SOAP, name, iidParent, view, flags, color, url, fetchIfExists);
-        op.schedule();
-        Folder folder = op.getFolder();
+        Folder folder;
+        boolean alreadyExisted = false;
+        
+        try {
+            if (iidParent != null)
+                folder = mbox.createFolder(octxt, name, iidParent.getId(), MailItem.getTypeForName(view), Flag.flagsToBitmask(flags), color, url);
+            else 
+                folder = mbox.createFolder(octxt, name, (byte) 0, MailItem.getTypeForName(view));
+
+            if (!folder.getUrl().equals("")) {
+                try {
+                    mbox.synchronizeFolder(octxt, folder.getId());
+                } catch (ServiceException e) {
+                    // if the synchronization fails, roll back the folder create
+                    rollbackFolder(folder);
+                    throw e;
+                } catch (RuntimeException e) {
+                    // if the synchronization fails, roll back the folder create
+                    rollbackFolder(folder);
+                    throw ServiceException.FAILURE("could not synchronize with remote feed", e);
+                }
+            }
+        } catch (ServiceException se) {
+            if (se.getCode() == MailServiceException.ALREADY_EXISTS && fetchIfExists) {
+                folder = mbox.getFolderByName(octxt, iidParent.getId(), name);
+                alreadyExisted = true;
+            } else {
+                throw se;
+            }
+        }
 
         // set the folder ACL as a separate operation, when appropriate
-        if (acl != null && !op.alreadyExisted()) {
+        if (acl != null && !alreadyExisted) {
             try {
                 mbox.setPermissions(octxt, folder.getId(), acl);
             } catch (ServiceException e) {
@@ -98,4 +125,13 @@ public class CreateFolder extends MailDocumentHandler {
             ToXML.encodeFolder(response, ifmt, octxt, folder);
         return response;
     }
+    
+    private void rollbackFolder(Folder folder) {
+        try {
+            folder.getMailbox().delete(null, folder.getId(), MailItem.TYPE_FOLDER);
+        } catch (ServiceException nse) {
+            ZimbraLog.mailbox.warn("error ignored while rolling back folder create", nse);
+        }
+    }
+    
 }

@@ -63,7 +63,6 @@ import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.MimeCompoundHeader;
-import com.zimbra.cs.operation.GetFolderOperation;
 import com.zimbra.cs.operation.GetItemOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.formatter.*;
@@ -532,9 +531,8 @@ public class UserServlet extends ZimbraServlet {
         // special-case the fetch-by-IMAP-id option
         if (context.imapId > 0) {
             // fetch the folder from the path
-            GetFolderOperation gfop = new GetFolderOperation(null, context.opContext, context.targetMailbox, Requester.REST, context.itemPath);
-            gfop.schedule();
-            Folder folder = gfop.getFolder();
+            Folder folder = context.targetMailbox.getFolderByPath(context.opContext, context.itemPath);
+            
             // and then fetch the item from the "imap_id" query parameter
             GetItemOperation op = new GetItemOperation(null, context.opContext, context.targetMailbox, Requester.REST, context.imapId, folder.getId());
             op.schedule();

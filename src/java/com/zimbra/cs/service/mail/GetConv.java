@@ -40,8 +40,6 @@ import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.operation.GetConversationByIdOperation;
-import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.Session;
@@ -60,7 +58,6 @@ public class GetConv extends MailDocumentHandler  {
         Mailbox mbox = getRequestedMailbox(zsc);
         Mailbox.OperationContext octxt = zsc.getOperationContext();
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
-        Session session = getSession(context);
 
         Element econv = request.getElement(MailConstants.E_CONV);
         ItemId iid = new ItemId(econv.getAttribute(MailConstants.A_ID), zsc);
@@ -72,10 +69,8 @@ public class GetConv extends MailDocumentHandler  {
 //          params.setMarkRead(econv.getAttributeBool(MailConstants.A_MARK_READ, false));
         }
 
-        GetConversationByIdOperation op = new GetConversationByIdOperation(session, octxt, mbox, Requester.SOAP, iid.getId());
-        op.schedule();
+        Conversation conv = mbox.getConversationById(octxt, iid.getId());
 
-        Conversation conv = op.getResult();
         if (conv == null)
             throw MailServiceException.NO_SUCH_CONV(iid.getId());
 
