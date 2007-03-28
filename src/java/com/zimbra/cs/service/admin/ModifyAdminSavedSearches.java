@@ -15,6 +15,13 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class ModifyAdminSavedSearches extends AdminDocumentHandler {
     
+    /**
+     * must be careful and only allow on accounts domain admin has access to
+     */
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+    
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(lc);
