@@ -79,6 +79,12 @@ public class ImapCredentials {
         return mEnabledHack == hack;
     }
 
+    EnabledHack[] getEnabledHacks() {
+        if (mEnabledHack == null || mEnabledHack == EnabledHack.NONE)
+            return null;
+        return new EnabledHack[] { mEnabledHack };
+    }
+
     String getAccountId() {
         return mAccountId;
     }

@@ -63,7 +63,6 @@ import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 class ImapFolder extends Session implements Iterable<ImapMessage> {
@@ -275,7 +274,11 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
 
     @Override
     public void doEncodeState(Element parent) {
-        parent.addElement("imap");
+        ImapCredentials.EnabledHack[] hacks = mCredentials.getEnabledHacks();
+        Element imap = parent.addElement("imap");
+        imap.addAttribute("hack", hacks == null ? null : Arrays.toString(hacks));
+        imap.addAttribute("folder", mPath.asImapPath()).addAttribute("query", mQuery).addAttribute("size", mSequence.size());
+        imap.addAttribute("writable", mWritable).addAttribute("dirty", mDirtyMessages.size());
     }
 
     @Override
