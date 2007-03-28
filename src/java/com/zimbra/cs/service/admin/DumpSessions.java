@@ -24,17 +24,20 @@
  */
 package com.zimbra.cs.service.admin;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.session.Session;
+import com.zimbra.cs.session.SessionCache;
+import com.zimbra.soap.ZimbraSoapContext;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.zimbra.cs.session.Session;
-import com.zimbra.cs.session.SessionCache;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
-import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.common.soap.AdminConstants;
 
 public class DumpSessions extends AdminDocumentHandler {
     
@@ -46,6 +49,7 @@ public class DumpSessions extends AdminDocumentHandler {
         boolean includeAccounts = request.getAttributeBool(AdminConstants.A_LIST_SESSIONS, false);
         boolean groupByAccount = request.getAttributeBool(AdminConstants.A_GROUP_BY_ACCOUNT, false);
         int totalActiveSessions = 0;
+        Provisioning prov = Provisioning.getInstance();
         
         for (Session.Type type : Session.Type.values()) {
             if (type == Session.Type.NULL)
@@ -88,9 +92,10 @@ public class DumpSessions extends AdminDocumentHandler {
                     
                     for (Map.Entry<String, List<Session>> entry : map.entrySet()) {
                         Element acctElt = e.addElement(AdminConstants.A_ZIMBRA_ID);
+                        acctElt.addAttribute(AdminConstants.A_NAME, getName(prov, entry.getKey()));
                         acctElt.addAttribute(AdminConstants.A_ID, entry.getKey());
                         for (Session s : entry.getValue()) {
-                            encodeSession(acctElt, s, false);
+                            encodeSession(acctElt, s, false, prov);
                         }
                     }
                 } else {
@@ -98,7 +103,7 @@ public class DumpSessions extends AdminDocumentHandler {
                     e.addAttribute(AdminConstants.A_ACTIVE_ACCOUNTS, stats[0]);
                     
                     for (Session s : sessions) {
-                        encodeSession(e, s, true);
+                        encodeSession(e, s, true, prov);
                     }
                 }
             }
@@ -107,11 +112,21 @@ public class DumpSessions extends AdminDocumentHandler {
         
         return response;
     }
-    
-    private static void encodeSession(Element parent, Session s, boolean includeAcct) {
+
+    private static String getName(Provisioning prov, String id) {
+        try {
+            Account acct = prov.get(AccountBy.id, id);
+            return acct == null ? id : acct.getName();
+        } catch (ServiceException e) {
+            return id;
+        }
+    }
+
+    private static void encodeSession(Element parent, Session s, boolean includeAcct, Provisioning prov) {
         Element sElt = parent.addElement("s");
         if (includeAcct) {
             sElt.addAttribute(AdminConstants.A_ZIMBRA_ID, s.getAuthenticatedAccountId());
+            sElt.addAttribute(AdminConstants.A_NAME, getName(prov, s.getAuthenticatedAccountId()));
         }
         sElt.addAttribute(AdminConstants.A_SESSION_ID, s.getSessionId());
         sElt.addAttribute(AdminConstants.A_CREATED_DATE, s.getCreationTime());

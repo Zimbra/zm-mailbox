@@ -1280,12 +1280,12 @@ Notes:
    <soap activeSessions="count" activeAccounts="count">
    [ if listSessions set:
       [
-        <s zid="accountId" sid="sessionId" cd="creationDate" ld="lastAccessedDate"
+        <s zid="accountId" name="accountName" sid="sessionId" cd="creationDate" ld="lastAccessedDate"
            SOAP-SPECIFIC-PARAMETERS, e.g. [notify="0" if noNotify is set]...</s>
       ]
       OR (depends on groupByAccount setting)
       [
-         <zid id="accountId">
+         <zid id="accountId" name="accountName">
             <s sid="sessionId" cd="creationDate" ld="lastAccessedDate/>*
          </zid>*
       ]
@@ -1295,6 +1295,8 @@ Notes:
    <imap>...</imap>
    <admin>...</admin>
 </DumpSessionsResponse>
+
+If accountName is unvailable for some reason, it will be set to the same as accountId.
 
 -----------------------------
 
