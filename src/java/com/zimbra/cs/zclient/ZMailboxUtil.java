@@ -725,9 +725,9 @@ public class ZMailboxUtil implements DebugListener {
 
     private String flagsOpt()    { return mCommandLine.getOptionValue(O_FLAGS.getOpt()); }
 
-    private String urlOpt() throws SoapFaultException {
+    private String urlOpt(boolean admin) throws SoapFaultException {
         String url = mCommandLine.getOptionValue(O_URL.getOpt());
-        return (url == null) ? mUrl : url;
+        return (url == null && admin) ? mUrl : url;
     }
 
     private String outputFileOpt() throws SoapFaultException {
@@ -1327,11 +1327,11 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private void doAdminAuth(String[] args) throws ServiceException {
-        adminAuth(args[0], args[1], urlOpt());
+        adminAuth(args[0], args[1], urlOpt(true));
     }
 
     private void doAuth(String[] args) throws ServiceException {
-        auth(args[0], args[1], urlOpt());
+        auth(args[0], args[1], urlOpt(true));
     }
 
     private void addMessage(String folderId, String tags, long date, File file) throws ServiceException, IOException {
@@ -1375,7 +1375,7 @@ public class ZMailboxUtil implements DebugListener {
                 folderViewOpt(),
                 folderColorOpt(),
                 flagsOpt(),
-                null);
+                urlOpt(false));
         System.out.println(cf.getId());
     }
 
