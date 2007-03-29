@@ -273,8 +273,14 @@ public class SoapEngine {
             if (needsAuth || needsAdminAuth)
                 response = handler.proxyIfNecessary(request, context);
             // if no proxy, execute the request locally
-            if (response == null)
-                response = handler.handle(request, context);
+            if (response == null) {
+                Object userObj = handler.preHandle(request, context);
+                try {
+                    response = handler.handle(request, context);
+                } finally {
+                    handler.postHandle(userObj);
+                }
+            }
         } catch (SoapFaultException e) {
             response = e.getFault() != null ? e.getFault().detach() : soapProto.soapFault(ServiceException.FAILURE(e.toString(), e)); 
             if (!e.isSourceLocal())

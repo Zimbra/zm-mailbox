@@ -36,7 +36,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedDocument;
-import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.common.service.ServiceException;
@@ -49,13 +48,6 @@ import com.zimbra.cs.wiki.WikiTemplate;
 
 public class WikiFormatter extends Formatter {
 
-    public static class Format {};
-    public static class Save {};
-    static int sFormatLoad = Operation.setLoad(WikiFormatter.Format.class, 10);
-    static int sSaveLoad = Operation.setLoad(WikiFormatter.Save.class, 10);
-    int getFormatLoad() { return  sFormatLoad; }
-    int getSaveLoad() { return sSaveLoad; }
-    
 	@Override
 	public String getType() {
 		return "wiki";

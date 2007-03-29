@@ -37,7 +37,6 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
-import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.common.service.ServiceException;
@@ -46,13 +45,6 @@ import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.soap.Element;
 
 public class AtomFormatter extends Formatter {
-    
-    public static class Format {};
-    public static class Save {};
-    static int sFormatLoad = Operation.setLoad(AtomFormatter.Format.class, 10);
-    static int sSaveLoad = Operation.setLoad(AtomFormatter.Save.class, 10);
-    int getFormatLoad() { return  sFormatLoad; }
-    int getSaveLoad() { return sSaveLoad; }
     
     public void formatCallback(Context context, MailItem item) throws IOException, ServiceException {
         Iterator<? extends MailItem> iterator = null;

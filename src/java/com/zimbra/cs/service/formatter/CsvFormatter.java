@@ -40,7 +40,6 @@ import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.service.mail.ImportContacts;
@@ -50,13 +49,6 @@ import com.zimbra.common.util.HttpUtil;
 
 public class CsvFormatter extends Formatter {
 
-    public static class Format {};
-    public static class Save {};
-    static int sFormatLoad = Operation.setLoad(CsvFormatter.Format.class, 10);
-    static int sSaveLoad = Operation.setLoad(CsvFormatter.Save.class, 10);
-    int getFormatLoad() { return  sFormatLoad; }
-    int getSaveLoad() { return sSaveLoad; }
-    
     public String getType() {
         return "csv";
     }

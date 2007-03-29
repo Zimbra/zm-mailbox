@@ -42,6 +42,7 @@ import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.operation.Operation;
+import com.zimbra.cs.operation.Requester;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.AccountUtil;
 

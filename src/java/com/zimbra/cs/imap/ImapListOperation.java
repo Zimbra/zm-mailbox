@@ -33,6 +33,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.operation.Operation;
+import com.zimbra.cs.operation.Requester;
 import com.zimbra.cs.session.Session;
 
 public class ImapListOperation extends Operation {

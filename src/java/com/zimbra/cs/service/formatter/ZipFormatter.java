@@ -46,7 +46,6 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.common.service.ServiceException;
@@ -55,13 +54,6 @@ import com.zimbra.common.util.HttpUtil;
 
 public class ZipFormatter extends Formatter {
     
-    public static class Format {};
-    public static class Save {};
-    static int sFormatLoad = Operation.setLoad(ZipFormatter.Format.class, 10);
-    static int sSaveLoad = Operation.setLoad(ZipFormatter.Save.class, 10);
-    @Override int getFormatLoad()  { return sFormatLoad; }
-    @Override int getSaveLoad()    { return sSaveLoad; }
-
     private Pattern ILLEGAL_CHARS = Pattern.compile("[\\/\\:\\*\\?\\\"\\<\\>\\|]");
 
     @Override

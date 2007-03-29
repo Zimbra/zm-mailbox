@@ -42,7 +42,6 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
@@ -51,13 +50,6 @@ import com.zimbra.common.util.HttpUtil.Browser;
 
 public class IcsFormatter extends Formatter {
 
-    public static class Format {};
-    public static class Save {};
-    static int sFormatLoad = Operation.setLoad(IcsFormatter.Format.class, 10);
-    static int sSaveLoad = Operation.setLoad(IcsFormatter.Save.class, 10);
-    int getFormatLoad() { return  sFormatLoad; }
-    int getSaveLoad() { return sSaveLoad; }
-    
     public String getType() {
         return "ics";
     }

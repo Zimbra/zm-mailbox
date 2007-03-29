@@ -33,13 +33,36 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.operation.BlockingOperation;
+import com.zimbra.cs.operation.Requester;
+import com.zimbra.cs.operation.Scheduler.Priority;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
+import com.zimbra.cs.session.Session;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public abstract class MailDocumentHandler extends DocumentHandler {
+    
+    @Override
+    public Object preHandle(Element request, Map<String, Object> context) throws ServiceException { 
+        Session session = getSession(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox.OperationContext octxt = zsc.getOperationContext();
+        Mailbox mbox = getRequestedMailbox(zsc);
+        return BlockingOperation.schedule(request.getName(), session, octxt, mbox, Requester.SOAP, getSchedulerPriority(), 1);   
+    }
+    
+    @Override
+    public void postHandle(Object userObj) { 
+        ((BlockingOperation)userObj).finish();
+    }
+    
+    protected Priority getSchedulerPriority() {
+        return Priority.INTERACTIVE_HIGH;
+    }
+    
 
     protected String[] getProxiedIdPath(Element request)     { return null; }
     protected boolean checkMountpointProxy(Element request)  { return false; }

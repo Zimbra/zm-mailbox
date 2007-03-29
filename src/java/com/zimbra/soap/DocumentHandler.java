@@ -61,15 +61,36 @@ public abstract class DocumentHandler {
     }
 
     public static String LOCAL_HOST, LOCAL_HOST_ID;
-        static {
-            try {
-                Server localServer = Provisioning.getInstance().getLocalServer();
-                LOCAL_HOST = localServer.getAttr(Provisioning.A_zimbraServiceHostname);
-                LOCAL_HOST_ID = localServer.getId();
-            } catch (Exception e) {
-                Zimbra.halt("could not fetch local server name from LDAP for request proxying");
-            }
+    static {
+        try {
+            Server localServer = Provisioning.getInstance().getLocalServer();
+            LOCAL_HOST = localServer.getAttr(Provisioning.A_zimbraServiceHostname);
+            LOCAL_HOST_ID = localServer.getId();
+        } catch (Exception e) {
+            Zimbra.halt("could not fetch local server name from LDAP for request proxying");
         }
+    }
+    
+    
+    /**
+     * Guaranteed to be called by the engine before handle() is called.  If an exception is thrown,
+     * then the handler() is *not* called. 
+     * 
+     * If no exception is thrown, then the system guarantees that postHandle() will be called.
+     * 
+     * @param request
+     * @param context
+     * @return user-defined object which will be passed along to postHandle()
+     * 
+     */
+    public Object preHandle(Element request, Map<String, Object> context) throws ServiceException { return null; }
+    
+    /**
+     * Guaranteed to be called by the engine after handle() is called.  (Called from a finally{} block)
+     *  
+     * @param userObj
+     */
+    public void postHandle(Object userObj) { }
 
     public abstract Element handle(Element request, Map<String, Object> context) throws ServiceException;
 

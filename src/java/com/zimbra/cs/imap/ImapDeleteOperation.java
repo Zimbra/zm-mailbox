@@ -30,6 +30,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.operation.Operation;
+import com.zimbra.cs.operation.Requester;
 import com.zimbra.cs.session.Session;
 
 class ImapDeleteOperation extends Operation {

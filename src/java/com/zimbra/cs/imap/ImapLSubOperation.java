@@ -37,6 +37,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.operation.Operation;
+import com.zimbra.cs.operation.Requester;
 import com.zimbra.cs.session.Session;
 
 public class ImapLSubOperation extends Operation {

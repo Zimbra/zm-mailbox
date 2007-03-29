@@ -40,7 +40,9 @@ import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.operation.Operation;
+import com.zimbra.cs.operation.BlockingOperation;
+import com.zimbra.cs.operation.Requester;
+import com.zimbra.cs.operation.Scheduler.Priority;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
@@ -82,9 +84,15 @@ public abstract class Formatter {
     }
 
     public final void format(UserServlet.Context context, MailItem item) throws UserServletException, IOException, ServletException, ServiceException {
+        BlockingOperation op = BlockingOperation.schedule(this.getClass().getSimpleName()+"(FORMAT)", null, context.opContext, context.targetMailbox, Requester.REST, Priority.BATCH, 1);
         try {
-            FormatOperation op = new FormatOperation(context, item, this);
-            op.schedule();
+            formatCallback(context, item);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Caught IOException", e);
+        } catch (ServletException e) {
+            throw ServiceException.FAILURE("Caught ServletException", e); 
+        } catch (UserServletException e) {
+            throw ServiceException.FAILURE("Caught UserServletException", e); 
         } catch (ServiceException e) {
             Throwable cause = e.getCause();
             if (cause instanceof UserServletException)
@@ -94,14 +102,22 @@ public abstract class Formatter {
             if (cause instanceof IOException)
                 throw (IOException) cause;
             throw e;
+        } finally {
+            op.finish();
         }
     }
 
     public final void save(byte[] body, UserServlet.Context context, String contentType, Folder folder, String filename)
     throws UserServletException, IOException, ServletException, ServiceException {
+        BlockingOperation op = BlockingOperation.schedule(this.getClass().getSimpleName()+"(SAVE)", null, context.opContext, context.targetMailbox, Requester.REST, Priority.BATCH, 1);
         try {
-            SaveOperation op = new SaveOperation(body, context, folder, contentType, filename, this);
-            op.schedule();
+            saveCallback(body, context, contentType, folder, filename);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Caught IOException", e);
+        } catch (ServletException e) {
+            throw ServiceException.FAILURE("Caught ServletException", e); 
+        } catch (UserServletException e) {
+            throw ServiceException.FAILURE("Caught UserServletException", e); 
         } catch (ServiceException e) {
             Throwable cause = e.getCause();
             if (cause instanceof UserServletException)
@@ -111,6 +127,8 @@ public abstract class Formatter {
             if (cause instanceof IOException)
                 throw (IOException) cause;
             throw e;
+        } finally {
+            op.finish();
         }
     }
     
@@ -227,65 +245,5 @@ public abstract class Formatter {
             mResults = null;
         }
     }
-    
-    abstract int getFormatLoad();
-    abstract int getSaveLoad();
-    
-    protected static class FormatOperation extends Operation {
-        Context mContext;
-        MailItem mItem;
-        Formatter mFmt;
-
-        public FormatOperation(Context context, MailItem item, Formatter fmt) {
-            super(null, context.opContext, context.targetMailbox, Requester.REST, fmt.getFormatLoad());
-            mContext = context;
-            mItem = item;
-            mFmt = fmt;
-        }
-
-        public void callback() throws ServiceException {
-            try {
-                mFmt.formatCallback(mContext, mItem);
-            } catch (IOException e) {
-                throw ServiceException.FAILURE("Caught IOException", e);
-            } catch (ServletException e) {
-                throw ServiceException.FAILURE("Caught ServletException", e); 
-            } catch (UserServletException e) {
-                throw ServiceException.FAILURE("Caught UserServletException", e); 
-            }
-        }
-    }
-        
-    protected static class SaveOperation extends Operation {
-        byte[] mBody;
-        Context mContext;
-        String mContentType;
-        Folder mFolder;
-        String mFilename;
-        Formatter mFmt;
-
-        public SaveOperation(byte[] body, Context context, Folder folder, String contentType, String filename, Formatter fmt) {
-            super(null, context.opContext, context.targetMailbox, Requester.REST, fmt.getSaveLoad());
-            mBody = body;
-            mContext = context;
-            mContentType = contentType;
-            mFolder = folder;
-            mFilename = filename;
-            mFmt = fmt;
-        }
-
-        public void callback() throws ServiceException {
-            try {
-                mFmt.saveCallback(mBody, mContext, mContentType, mFolder, mFilename);
-            } catch (IOException e) {
-                throw ServiceException.FAILURE("Caught IOException", e);
-            } catch (ServletException e) {
-                throw ServiceException.FAILURE("Caught ServletException", e); 
-            } catch (UserServletException e) {
-                throw ServiceException.FAILURE("Caught UserServletException", e); 
-            }
-        }
-    }
-
     
 }

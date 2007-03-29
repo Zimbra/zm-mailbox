@@ -41,7 +41,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.common.service.ServiceException;
@@ -51,13 +50,6 @@ import com.zimbra.common.util.Pair;
 
 public class SyncFormatter extends Formatter {
     
-    public static class Format {};
-    public static class Save {};
-    static int sFormatLoad = Operation.setLoad(SyncFormatter.Format.class, 10);
-    static int sSaveLoad = Operation.setLoad(SyncFormatter.Save.class, 10);
-    int getFormatLoad() { return  sFormatLoad; }
-    int getSaveLoad() { return sSaveLoad; }
-
     public static final String QP_NOHDR = "nohdr";
 
     public String getType() {

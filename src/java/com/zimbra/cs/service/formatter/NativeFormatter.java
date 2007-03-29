@@ -52,7 +52,6 @@ import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServlet.Context;
@@ -62,14 +61,6 @@ import com.zimbra.common.util.HttpUtil;
 
 public class NativeFormatter extends Formatter {
     
-    public static class Format {};
-    public static class Save {};
-    static int sFormatLoad = Operation.setLoad(NativeFormatter.Format.class, 10);
-    static int sSaveLoad = Operation.setLoad(NativeFormatter.Save.class, 10);
-    int getFormatLoad() { return  sFormatLoad; }
-    int getSaveLoad() { return sSaveLoad; }
-    
-
     private static final String CONVERSION_PATH = "/extension/convertd";
     public static final String ATTR_MIMEPART   = "mimepart";
     public static final String ATTR_MSGDIGEST  = "msgdigest";

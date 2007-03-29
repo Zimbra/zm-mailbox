@@ -38,6 +38,10 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.operation.BlockingOperation;
+import com.zimbra.cs.operation.Requester;
+import com.zimbra.cs.operation.Scheduler.Priority;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.common.soap.Element;
@@ -46,6 +50,29 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 /** @author schemers */
 public abstract class AdminDocumentHandler extends DocumentHandler {
+    
+    @Override
+    public Object preHandle(Element request, Map<String, Object> context) throws ServiceException { 
+        Session session = getSession(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox.OperationContext octxt = null;
+        Mailbox mbox = null;
+        
+        if (zsc.getAuthToken() !=  null) { 
+            octxt = zsc.getOperationContext();
+        }
+        return BlockingOperation.schedule(request.getName(), session, octxt, mbox, Requester.ADMIN, getSchedulerPriority(), 1);   
+    }
+    
+    @Override
+    public void postHandle(Object userObj) { 
+        ((BlockingOperation)userObj).finish();
+    }
+    
+    protected Priority getSchedulerPriority() {
+        return Priority.INTERACTIVE_HIGH;
+    }
+    
 
     public boolean needsAuth(Map<String, Object> context) {
         return true;

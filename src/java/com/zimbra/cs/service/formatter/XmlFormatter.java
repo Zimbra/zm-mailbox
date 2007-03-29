@@ -34,7 +34,6 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.service.mail.ToXML;
@@ -84,18 +83,4 @@ public class XmlFormatter extends Formatter {
         throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "format not supported for save");
     }
 
-    public static class Format {};
-    public static class Save {};
-    private static int sFormatLoad = Operation.setLoad(JsonFormatter.Format.class, 10);
-    private static int sSaveLoad = Operation.setLoad(JsonFormatter.Save.class, 10);
-
-    @Override
-    int getFormatLoad() {
-        return sFormatLoad;
-    }
-
-    @Override
-    int getSaveLoad() {
-        return sSaveLoad;
-    }
 }

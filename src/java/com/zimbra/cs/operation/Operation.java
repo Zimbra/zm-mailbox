@@ -86,25 +86,6 @@ public abstract class Operation implements IOperation
     }
     
     /**
-     * The Requester is used to denote what subsystem is calling a particular 
-     * Operation.  Each Requester has a default Priority level, which can be used
-     * or ignored by a particular Operation implementation.
-     */
-    public static enum Requester {
-        ADMIN(Priority.ADMIN),
-        SOAP(Priority.INTERACTIVE_HIGH),
-        REST(Priority.INTERACTIVE_LOW),
-        IMAP(Priority.BATCH),
-        SYNC(Priority.BATCH),
-        POP(Priority.BATCH);
-
-        private Priority mDefaultPrio;
-
-        private Requester(Priority defaultPrio) { mDefaultPrio = defaultPrio; }
-        public Priority getPriority() { return mDefaultPrio; }
-    }
-
-    /**
      * @param session {@link com.zimbra.cs.Session} object or NULL if none
      * @param oc        OperationContext for the current request
      * @param mbox     Mailbox this request is targeted to, or NULL if none
@@ -247,9 +228,13 @@ public abstract class Operation implements IOperation
      * @return
      */
     protected String toCompletedString() { return toString(); }
+    
+    protected String getClassName() {
+        return this.getClass().getSimpleName();
+    }
 
     public String toString() {
-        StringBuilder toRet = new StringBuilder(this.getClass().getSimpleName());
+        StringBuilder toRet = new StringBuilder(getClassName());
         toRet.append(" Req=").append(mReq.toString());
         if (mMailbox != null)
             toRet.append(" Mbox=").append(mMailbox.getId());

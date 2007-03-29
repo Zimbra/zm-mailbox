@@ -33,7 +33,6 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.calendar.FreeBusy;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.common.service.ServiceException;
@@ -41,14 +40,6 @@ import com.zimbra.common.util.Constants;
 
 public class IfbFormatter extends Formatter {
    
-    public static class Format {};
-    public static class Save {};
-    static int sFormatLoad = Operation.setLoad(IfbFormatter.Format.class, 10);
-    static int sSaveLoad = Operation.setLoad(IfbFormatter.Save.class, 10);
-    int getFormatLoad() { return  sFormatLoad; }
-    int getSaveLoad() { return sSaveLoad; }
-    
-    
     private static final long MAX_PERIOD_SIZE_IN_DAYS = 200;
     
     private static final long ONE_MONTH = Constants.MILLIS_PER_DAY*31;

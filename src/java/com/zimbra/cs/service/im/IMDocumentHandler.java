@@ -24,14 +24,40 @@
  */
 package com.zimbra.cs.service.im;
 
+import java.util.Map;
+
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.im.IMRouter;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.operation.BlockingOperation;
+import com.zimbra.cs.operation.Requester;
+import com.zimbra.cs.operation.Scheduler.Priority;
+import com.zimbra.cs.session.Session;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public abstract class IMDocumentHandler extends DocumentHandler {
+    
+    @Override
+    public Object preHandle(Element request, Map<String, Object> context) throws ServiceException { 
+        Session session = getSession(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox.OperationContext octxt = zsc.getOperationContext();
+        Mailbox mbox = getRequestedMailbox(zsc);
+        return BlockingOperation.schedule(this.getClass().getName(), session, octxt, mbox, Requester.SOAP, getSchedulerPriority(), 1);   
+    }
+    
+    @Override
+    public void postHandle(Object userObj) { 
+        ((BlockingOperation)userObj).finish();
+    }
+    
+    protected Priority getSchedulerPriority() {
+        return Priority.INTERACTIVE_HIGH;
+    }
+    
 
     Object getLock(ZimbraSoapContext zc) throws ServiceException {
         return super.getRequestedMailbox(zc);
