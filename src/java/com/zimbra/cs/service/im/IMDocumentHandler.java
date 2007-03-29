@@ -46,7 +46,7 @@ public abstract class IMDocumentHandler extends DocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox.OperationContext octxt = zsc.getOperationContext();
         Mailbox mbox = getRequestedMailbox(zsc);
-        return BlockingOperation.schedule(this.getClass().getName(), session, octxt, mbox, Requester.SOAP, getSchedulerPriority(), 1);   
+        return BlockingOperation.schedule(request.getName(), session, octxt, mbox, Requester.SOAP, getSchedulerPriority(), 1);   
     }
     
     @Override
