@@ -34,10 +34,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.operation.GetMsgOperation;
-import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemIdFormatter;
-import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -53,7 +50,6 @@ public class GetMsgMetadata extends MailDocumentHandler {
         Mailbox mbox = getRequestedMailbox(zsc);
         Mailbox.OperationContext octxt = zsc.getOperationContext();
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
-        Session session = getSession(context);
 
         String ids = request.getElement(MailConstants.E_MSG).getAttribute(MailConstants.A_IDS);
         ArrayList<Integer> local = new ArrayList<Integer>();
@@ -69,10 +65,7 @@ public class GetMsgMetadata extends MailDocumentHandler {
         }
         
         if (local.size() > 0) {
-            GetMsgOperation op = new GetMsgOperation(session, octxt, mbox, Requester.SOAP, local, false);
-            op.schedule();
-            List<Message> msgs = op.getMsgList();
-
+            List<Message> msgs = GetMsg.getMsgs(octxt, mbox, local, false);
             for (Message msg : msgs) {
                 if (msg != null)
                     ToXML.encodeMessageSummary(response, ifmt, octxt, msg, null, SUMMARY_FIELDS);

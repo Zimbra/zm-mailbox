@@ -54,15 +54,11 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.WikiItem;
-import com.zimbra.cs.operation.ItemActionOperation;
-import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.mail.GetCalendarItemSummaries.EncodeCalendarItemResult;
 import com.zimbra.cs.service.mail.ToXML.EmailType;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications;
-import com.zimbra.cs.session.Session;
-import com.zimbra.cs.session.SoapSession;
 import com.zimbra.soap.ZimbraSoapContext;
 
 
@@ -73,7 +69,6 @@ public class Search extends MailDocumentHandler  {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        SoapSession session = (SoapSession) zsc.getSession(Session.Type.SOAP);
         Mailbox mbox = getRequestedMailbox(zsc);
         Account acct = getRequestedAccount(zsc);
         SearchParams params = SearchParams.parse(request, zsc, acct.getAttr(Provisioning.A_zimbraPrefMailInitialSearch));
@@ -81,10 +76,6 @@ public class Search extends MailDocumentHandler  {
         String query = params.getQueryStr();
         query = "(" + query + ") -tag:\\Deleted";
         params.setQueryStr(query);
-        
-    
-//        SearchOperation op = new SearchOperation(session, zsc, zsc.getOperationContext(), mbox, Requester.SOAP,  params);
-//        op.schedule();
         
         ZimbraQueryResults results = doSearch(zsc, mbox, params);
         
@@ -284,7 +275,7 @@ public class Search extends MailDocumentHandler  {
             try {
                 ArrayList<Integer> ids = new ArrayList<Integer>(1);
                 ids.add(msg.getId());
-                ItemActionOperation.READ(null, zsc.getOperationContext(), msg.getMailbox(), Requester.SOAP, ids, MailItem.TYPE_MESSAGE, true, null);
+                ItemActionHelper.READ(zsc.getOperationContext(), msg.getMailbox(), ids, MailItem.TYPE_MESSAGE, true, null);
             } catch (ServiceException e) {
                 mLog.warn("problem marking message as read (ignored): " + msg.getId(), e);
             }
@@ -321,7 +312,7 @@ public class Search extends MailDocumentHandler  {
             try {
                 ArrayList<Integer> ids = new ArrayList<Integer>(1);
                 ids.add(msg.getId());
-                ItemActionOperation.READ(null, zsc.getOperationContext(), msg.getMailbox(), Requester.SOAP, ids, MailItem.TYPE_MESSAGE, true, null);
+                ItemActionHelper.READ(zsc.getOperationContext(), msg.getMailbox(), ids, MailItem.TYPE_MESSAGE, true, null);
             } catch (ServiceException e) {
                 mLog.warn("problem marking message as read (ignored): " + msg.getId(), e);
             }

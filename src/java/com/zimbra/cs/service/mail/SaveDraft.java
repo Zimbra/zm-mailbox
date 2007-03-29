@@ -46,12 +46,9 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.operation.ItemActionOperation;
-import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
-import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -75,7 +72,6 @@ public class SaveDraft extends MailDocumentHandler {
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = zsc.getOperationContext();
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
-        Session session = getSession(context);
 
         Element msgElem = request.getElement(MailConstants.E_MSG);
 
@@ -135,7 +131,7 @@ public class SaveDraft extends MailDocumentHandler {
         if (folderId != null || flags != null || tags != null || color >= 0) {
             try {
                 // best not to fail if there's an error here...
-                ItemActionOperation.UPDATE(session, octxt, mbox, Requester.SOAP, Arrays.asList(msg.getId()), MailItem.TYPE_MESSAGE,
+                ItemActionHelper.UPDATE(octxt, mbox, Arrays.asList(msg.getId()), MailItem.TYPE_MESSAGE,
                                            null, null, iidFolder, flags, tags, color);
                 // and make sure the Message object reflects post-update reality
                 msg = mbox.getMessageById(octxt, msg.getId());

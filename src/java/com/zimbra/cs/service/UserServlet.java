@@ -63,9 +63,8 @@ import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.MimeCompoundHeader;
-import com.zimbra.cs.operation.GetItemOperation;
-import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.formatter.*;
+import com.zimbra.cs.service.mail.GetItem;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.common.service.ServiceException;
@@ -534,16 +533,12 @@ public class UserServlet extends ZimbraServlet {
             Folder folder = context.targetMailbox.getFolderByPath(context.opContext, context.itemPath);
             
             // and then fetch the item from the "imap_id" query parameter
-            GetItemOperation op = new GetItemOperation(null, context.opContext, context.targetMailbox, Requester.REST, context.imapId, folder.getId());
-            op.schedule();
-            return op.getItem();
+            return GetItem.getItemByImapId(context.opContext, context.targetMailbox, context.imapId, folder.getId());
         }
 
         MailItem item = null;
         if (context.itemId != null) {
-            GetItemOperation op = new GetItemOperation(null, context.opContext, context.targetMailbox, Requester.REST, context.itemId.getId(), MailItem.TYPE_UNKNOWN);
-            op.schedule();
-            item = op.getItem();
+            item = GetItem.getItemById(context.opContext, context.targetMailbox, context.itemId.getId(), MailItem.TYPE_UNKNOWN);
 
             context.itemPath = item.getPath();
             if (item instanceof Mountpoint || context.extraPath == null || context.extraPath.equals(""))
@@ -560,9 +555,7 @@ public class UserServlet extends ZimbraServlet {
 
         try {
             // first, try the full path
-            GetItemOperation op = new GetItemOperation(null, context.opContext, context.targetMailbox, Requester.REST, context.itemPath, MailItem.TYPE_UNKNOWN);
-            op.schedule();
-            item = op.getItem();
+            item = GetItem.getItemByPath(context.opContext, context.targetMailbox, context.itemPath, MailItem.TYPE_UNKNOWN);
         } catch (ServiceException e) {
             if (!(e instanceof NoSuchItemException) && e.getCode() != ServiceException.PERM_DENIED)
                 throw e;
@@ -581,9 +574,7 @@ public class UserServlet extends ZimbraServlet {
             String unsuffixedPath = context.itemPath.substring(0, dot);
 
             // try again, w/ the extension removed...
-            GetItemOperation op = new GetItemOperation(null, context.opContext, context.targetMailbox, Requester.REST, unsuffixedPath, MailItem.TYPE_UNKNOWN);
-            op.schedule();
-            item = op.getItem();
+            item = GetItem.getItemByPath(context.opContext, context.targetMailbox, unsuffixedPath, MailItem.TYPE_UNKNOWN);
 
             context.format = context.itemPath.substring(dot + 1);
             context.itemPath = unsuffixedPath;

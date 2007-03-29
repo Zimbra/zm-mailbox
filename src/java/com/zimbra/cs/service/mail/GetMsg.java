@@ -28,19 +28,23 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.operation.GetMsgOperation;
-import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
-import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -57,7 +61,6 @@ public class GetMsg extends MailDocumentHandler {
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
         ItemIdFormatter ifmt = new ItemIdFormatter(lc);
-        Session session = getSession(context);
         
         Element eMsg = request.getElement(MailConstants.E_MSG);
         ItemId iid = new ItemId(eMsg.getAttribute(MailConstants.A_ID), lc);
@@ -66,23 +69,57 @@ public class GetMsg extends MailDocumentHandler {
         boolean neuter = eMsg.getAttributeBool(MailConstants.A_NEUTER, true);
         String part = eMsg.getAttribute(MailConstants.A_PART, null);
         
-        GetMsgOperation op = new GetMsgOperation(session, octxt, mbox, Requester.SOAP, iid, read);
-        op.schedule();
+        boolean wantHTML = eMsg.getAttributeBool(MailConstants.A_WANT_HTML, false);
         
         Element response = lc.createElement(MailConstants.GET_MSG_RESPONSE);
-        if (raw) {
-            ToXML.encodeMessageAsMIME(response, ifmt, op.getMsg(), part);
+        if (iid.hasSubpart()) {
+            // calendar item
+            CalendarItem calItem = getCalendarItem(octxt, mbox, iid);
+            if (raw) {
+                throw MailServiceException.INVALID_REQUEST("Cannot request RAW formatted subpart message", null);
+            } else {
+                ToXML.encodeInviteAsMP(response, ifmt, calItem, iid, part, wantHTML, neuter);
+            }
         } else {
-            boolean wantHTML = eMsg.getAttributeBool(MailConstants.A_WANT_HTML, false);
-            if (op.getMsg() != null)
-                ToXML.encodeMessageAsMP(response, ifmt, octxt, op.getMsg(), part, wantHTML, neuter);
-            else if (op.getCalendarItem() != null)
-                ToXML.encodeInviteAsMP(response, ifmt, op.getCalendarItem(), iid, part, wantHTML, neuter);
+            Message msg = getMsg(octxt, mbox, iid, read);
+            if (raw) {
+                ToXML.encodeMessageAsMIME(response, ifmt, msg, part);
+            } else {
+                ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, part, wantHTML, neuter);
+            }
         }
         return response;
     }
 
     public boolean isReadOnly() {
         return RedoLogProvider.getInstance().isSlave();
+    }
+    
+    public static CalendarItem getCalendarItem(OperationContext octxt, Mailbox mbox, ItemId iid) throws ServiceException {
+        assert(iid.hasSubpart());
+        return mbox.getCalendarItemById(octxt, iid.getId());
+    }
+    
+    public static Message getMsg(OperationContext octxt, Mailbox mbox, ItemId iid, boolean read) throws ServiceException {
+        assert(!iid.hasSubpart());
+        Message msg = mbox.getMessageById(octxt, iid.getId());
+        if (read && msg.isUnread() && !RedoLogProvider.getInstance().isSlave())
+            mbox.alterTag(octxt, msg.getId(), MailItem.TYPE_MESSAGE, Flag.ID_FLAG_UNREAD, false);
+        return msg;
+    }
+    
+    public static List<Message> getMsgs(OperationContext octxt, Mailbox mbox, List<Integer> iids, boolean read) throws ServiceException {
+        int i = 0;
+        int[] msgIdArray = new int[iids.size()];
+        for (int id : iids)
+            msgIdArray[i++] = id;
+        
+        List<Message> toRet = new ArrayList<Message>(msgIdArray.length);
+        for (MailItem item : mbox.getItemById(octxt, msgIdArray, MailItem.TYPE_MESSAGE)) {
+            toRet.add((Message) item);
+            if (read && item.isUnread() && !RedoLogProvider.getInstance().isSlave())
+                mbox.alterTag(octxt, item.getId(), MailItem.TYPE_MESSAGE, Flag.ID_FLAG_UNREAD, false);
+        }
+        return toRet;
     }
 }

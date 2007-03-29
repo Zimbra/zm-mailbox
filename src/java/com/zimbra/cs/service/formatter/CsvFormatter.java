@@ -40,11 +40,10 @@ import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.operation.CreateContactOperation;
 import com.zimbra.cs.operation.Operation;
-import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
+import com.zimbra.cs.service.mail.ImportContacts;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.HttpUtil;
@@ -100,11 +99,8 @@ public class CsvFormatter extends Formatter {
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(body), "UTF-8"));
             List<Map<String, String>> contacts = ContactCSV.getContacts(reader);
-            
             ItemId iidFolder = new ItemId(folder);
-            
-            CreateContactOperation.ImportCsvContacts(null, context.opContext, context.targetMailbox, Requester.REST, iidFolder, contacts, null);
-            
+            ImportContacts.ImportCsvContacts(context.opContext, context.targetMailbox, iidFolder, contacts, null);
         } catch (ContactCSV.ParseException e) {
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "could not parse csv file");
         } catch (UnsupportedEncodingException uee) {

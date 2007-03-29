@@ -78,8 +78,8 @@ import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.operation.ItemActionOperation;
 import com.zimbra.cs.operation.Operation.Requester;
+import com.zimbra.cs.service.mail.ItemActionHelper;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.stats.StatsFile;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
@@ -2052,7 +2052,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                     for (MailItem target : copyMsgs)
                         createdList.add(target.getImapUid());
                 } else {
-                    ItemActionOperation op = ItemActionOperation.COPY(mSelectedFolder, getContext(), mbox, Requester.IMAP, idlist, MailItem.TYPE_UNKNOWN, null, iidTarget);
+                    ItemActionHelper op = ItemActionHelper.COPY(getContext(), mbox, idlist, MailItem.TYPE_UNKNOWN, null, iidTarget);
                     for (String target : op.getCreatedIds())
                         createdList.add(new ItemId(target, mSelectedFolder.getAuthenticatedAccountId()).getId());
                 }

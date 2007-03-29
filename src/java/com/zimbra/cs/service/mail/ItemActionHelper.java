@@ -22,7 +22,7 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.operation;
+package com.zimbra.cs.service.mail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -50,132 +50,112 @@ import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.service.util.SpamHandler;
-import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.zclient.ZMailbox;
 
-public class ItemActionOperation extends Operation {
+public class ItemActionHelper {
 
-    // each of these is "per operation" -- real load is calculated as LOAD * local.size()
-    private static final int DELETE_MULT = 3;
-    private static final int SPAM_MULT = 4;
-
-    protected static int LOAD = 3;
-    private static int MAX = 20;
-    private static int SCALE = 10;
-    static {
-        Operation.Config c = loadConfig(ItemActionOperation.class);
-        if (c != null) {
-            LOAD = c.mLoad;
-            if (c.mScale > 0)
-                SCALE = c.mScale;
-            if (c.mMaxLoad > 0)
-                MAX = c.mMaxLoad;
-        }
-    }
-    
-    public static ItemActionOperation TAG(Session session, OperationContext oc, Mailbox mbox,
-                Requester req, List<Integer> ids, byte type, boolean flagValue, 
+    public static ItemActionHelper TAG(OperationContext oc, Mailbox mbox,
+        List<Integer> ids, byte type, boolean flagValue, 
                 TargetConstraint tcon, int tagId)
     throws ServiceException {
-        ItemActionOperation ia = new ItemActionOperation(session, oc, mbox, req, LOAD, 
+        ItemActionHelper ia = new ItemActionHelper(oc, mbox, 
                     ids, Op.TAG, type, flagValue, tcon);
         ia.setTagId(tagId);
         ia.schedule();
         return ia;
     }
     
-    public static ItemActionOperation FLAG(Session session, OperationContext oc, Mailbox mbox,
-                Requester req, List<Integer> ids, byte type, boolean flagValue, 
+    public static ItemActionHelper FLAG(OperationContext oc, Mailbox mbox,
+                List<Integer> ids, byte type, boolean flagValue, 
                 TargetConstraint tcon)
     throws ServiceException {
-        ItemActionOperation ia = new ItemActionOperation(session, oc, mbox, req, LOAD, 
+        ItemActionHelper ia = new ItemActionHelper(oc, mbox,
                     ids, Op.FLAG, type, flagValue, tcon);
         ia.schedule();
         return ia;
     }
     
-    public static ItemActionOperation READ(Session session, OperationContext oc, Mailbox mbox,
-                Requester req, List<Integer> ids, byte type, boolean flagValue, 
+    public static ItemActionHelper READ(OperationContext oc, Mailbox mbox,
+                List<Integer> ids, byte type, boolean flagValue, 
                 TargetConstraint tcon)
     throws ServiceException {
-        ItemActionOperation ia = new ItemActionOperation(session, oc, mbox, req, LOAD, 
+        ItemActionHelper ia = new ItemActionHelper(oc, mbox, 
                     ids, Op.READ, type, flagValue, tcon);
         ia.schedule();
         return ia;
     }
     
-    public static ItemActionOperation COLOR(Session session, OperationContext oc, Mailbox mbox,
-                Requester req, List<Integer> ids, byte type, TargetConstraint tcon, 
+    public static ItemActionHelper COLOR(OperationContext oc, Mailbox mbox,
+                List<Integer> ids, byte type, TargetConstraint tcon, 
                 byte color)
     throws ServiceException {
-        ItemActionOperation ia = new ItemActionOperation(session, oc, mbox, req, LOAD, 
+        ItemActionHelper ia = new ItemActionHelper(oc, mbox, 
                     ids, Op.COLOR, type, true, tcon);
         ia.setColor(color);
         ia.schedule();
         return ia;
     }
 
-    public static ItemActionOperation HARD_DELETE(Session session, OperationContext oc, Mailbox mbox,
-                Requester req, List<Integer> ids, byte type, TargetConstraint tcon)
+    public static ItemActionHelper HARD_DELETE(OperationContext oc, Mailbox mbox,
+        List<Integer> ids, byte type, TargetConstraint tcon)
     throws ServiceException {
-        ItemActionOperation ia = new ItemActionOperation(session, oc, mbox, req, DELETE_MULT * LOAD, 
+        ItemActionHelper ia = new ItemActionHelper(oc, mbox,  
                     ids, Op.HARD_DELETE, type, true, tcon);
         ia.schedule();
         return ia;
     }
     
-    public static ItemActionOperation MOVE(Session session, OperationContext oc, Mailbox mbox,
-                Requester req, List<Integer> ids, byte type, TargetConstraint tcon, 
+    public static ItemActionHelper MOVE(OperationContext oc, Mailbox mbox,
+        List<Integer> ids, byte type, TargetConstraint tcon, 
                 ItemId iidFolder)
     throws ServiceException {
-        ItemActionOperation ia = new ItemActionOperation(session, oc, mbox, req, LOAD, 
+        ItemActionHelper ia = new ItemActionHelper(oc, mbox,
                     ids, Op.MOVE, type, true, tcon);
         ia.setIidFolder(iidFolder);
         ia.schedule();
         return ia;
     }
     
-    public static ItemActionOperation COPY(Session session, OperationContext oc, Mailbox mbox,
-                Requester req, List<Integer> ids, byte type, TargetConstraint tcon, 
+    public static ItemActionHelper COPY(OperationContext oc, Mailbox mbox,
+                List<Integer> ids, byte type, TargetConstraint tcon, 
                 ItemId iidFolder)
     throws ServiceException {
-        ItemActionOperation ia = new ItemActionOperation(session, oc, mbox, req, LOAD, 
+        ItemActionHelper ia = new ItemActionHelper(oc, mbox,
                     ids, Op.COPY, type, true, tcon);
         ia.setIidFolder(iidFolder);
         ia.schedule();
         return ia;
     }
 
-    public static ItemActionOperation SPAM(Session session, OperationContext oc, Mailbox mbox,
-                Requester req, List<Integer> ids, byte type, boolean flagValue, 
+    public static ItemActionHelper SPAM(OperationContext oc, Mailbox mbox,
+                List<Integer> ids, byte type, boolean flagValue, 
                 TargetConstraint tcon, int folderId)
     throws ServiceException {
-        ItemActionOperation ia = new ItemActionOperation(session, oc, mbox, req, SPAM_MULT * LOAD, 
+        ItemActionHelper ia = new ItemActionHelper(oc, mbox, 
                     ids, Op.SPAM, type, flagValue, tcon);
         ia.setFolderId(folderId);
         ia.schedule();
         return ia;
     }
     
-    public static ItemActionOperation TRASH(Session session, OperationContext oc, Mailbox mbox,
-                Requester req, List<Integer> ids, 
+    public static ItemActionHelper TRASH(OperationContext oc, Mailbox mbox,
+                List<Integer> ids, 
                 byte type, TargetConstraint tcon) throws ServiceException {
-        ItemActionOperation ia = new ItemActionOperation(session, oc, mbox, req, LOAD, 
+        ItemActionHelper ia = new ItemActionHelper(oc, mbox,
                     ids, Op.TRASH, type, true, tcon);
         ia.schedule();
         return ia;
     }
 
-    public static ItemActionOperation RENAME(Session session, OperationContext oc, Mailbox mbox,
-                Requester req, List<Integer> ids, byte type, TargetConstraint tcon, 
+    public static ItemActionHelper RENAME(OperationContext oc, Mailbox mbox,
+                List<Integer> ids, byte type, TargetConstraint tcon, 
                 String name, ItemId iidFolder)
     throws ServiceException {
-        ItemActionOperation ia = new ItemActionOperation(session, oc, mbox, req, LOAD, 
+        ItemActionHelper ia = new ItemActionHelper(oc, mbox,
                     ids, Op.RENAME, type, true, tcon);
         ia.setName(name);
         ia.setIidFolder(iidFolder);
@@ -183,12 +163,12 @@ public class ItemActionOperation extends Operation {
         return ia;
     }
     
-    public static ItemActionOperation UPDATE(Session session, OperationContext oc, Mailbox mbox,
-                Requester req, List<Integer> ids, byte type, TargetConstraint tcon, 
+    public static ItemActionHelper UPDATE(OperationContext oc, Mailbox mbox,
+                List<Integer> ids, byte type, TargetConstraint tcon, 
                 String name, ItemId iidFolder, String flags,
                 String tags, byte color)
     throws ServiceException {
-        ItemActionOperation ia = new ItemActionOperation(session, oc, mbox, req, LOAD, 
+        ItemActionHelper ia = new ItemActionHelper(oc, mbox, 
                     ids, Op.UPDATE, type, true, tcon);
         ia.setName(name);
         ia.setIidFolder(iidFolder);
@@ -314,12 +294,14 @@ public class ItemActionOperation extends Operation {
         mTags = tags; 
     }
 
-    ItemActionOperation(Session session, OperationContext octxt, Mailbox mbox,
-                Requester req, int baseLoad, List<Integer> ids, 
+    ItemActionHelper(OperationContext octxt, Mailbox mbox,
+                List<Integer> ids, 
                 Op op, byte type, boolean flagValue, 
                 TargetConstraint tcon)
     throws ServiceException {
-        super(session, octxt, mbox, req, req.getPriority(), Math.min(ids.size() > 0 ? ids.size() * (baseLoad / SCALE): baseLoad, MAX));
+        
+        mOpCtxt = octxt;
+        mMailbox = mbox;
 
         mAuthenticatedAccount = octxt == null ? null : octxt.getAuthenticatedUser();
         if (mAuthenticatedAccount == null)
@@ -338,8 +320,13 @@ public class ItemActionOperation extends Operation {
         mFlagValue = flagValue;
         mTargetConstraint = tcon;
     }
+    
+    private OperationContext mOpCtxt;
+    private Mailbox mMailbox;
+    protected Mailbox getMailbox() { return mMailbox; }
+    protected OperationContext getOpCtxt() { return mOpCtxt; }
 
-    protected void callback() throws ServiceException {
+    protected void schedule() throws ServiceException {
         boolean movable = mOperation == Op.MOVE || mOperation == Op.COPY || mOperation == Op.RENAME || mOperation == Op.UPDATE;
 
         // deal with local mountpoints pointing at local folders here

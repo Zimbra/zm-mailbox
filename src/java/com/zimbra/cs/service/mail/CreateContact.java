@@ -44,17 +44,15 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Contact.Attachment;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
-import com.zimbra.cs.operation.CreateContactOperation;
-import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.formatter.VCard;
-import com.zimbra.cs.session.Session;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
@@ -81,7 +79,6 @@ public class CreateContact extends MailDocumentHandler  {
         Mailbox mbox = getRequestedMailbox(zsc);
         Mailbox.OperationContext octxt = zsc.getOperationContext();
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
-        Session session = getSession(context);
 
         boolean verbose = request.getAttributeBool(MailConstants.A_VERBOSE, true);
 
@@ -100,10 +97,10 @@ public class CreateContact extends MailDocumentHandler  {
             pclist.add(new ParsedContact(cdata.getFirst(), cdata.getSecond(), System.currentTimeMillis()));
         }
 
-        CreateContactOperation op = new CreateContactOperation(session, octxt, mbox, Requester.SOAP,
-        			iidFolder, pclist, tagsStr);
-        op.schedule();
-        Contact con = op.getContact();
+        List<Contact> contacts = createContacts(octxt, mbox, iidFolder, pclist, tagsStr);
+        Contact con = null;
+        if (contacts.size() > 0)
+            con = contacts.get(0);
         
         Element response = zsc.createElement(MailConstants.CREATE_CONTACT_RESPONSE);
         if (con != null) {
@@ -207,5 +204,17 @@ public class CreateContact extends MailDocumentHandler  {
         for (VCard vcf : cards)
             pclist.add(vcf.asParsedContact());
         return pclist;
+    }
+    
+    public static List<Contact> createContacts(OperationContext oc, Mailbox mbox, 
+        ItemId iidFolder, List<ParsedContact> list, String tagsStr) throws ServiceException {
+        
+        List<Contact> toRet = new ArrayList<Contact>();
+        
+        synchronized(mbox) {
+            for (ParsedContact pc : list) 
+                toRet.add(mbox.createContact(oc, pc, iidFolder.getId(), tagsStr));
+        }
+        return toRet;
     }
 }

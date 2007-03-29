@@ -22,10 +22,9 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.operation;
+package com.zimbra.cs.service.mail;
 
 import java.util.List;
-import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
@@ -33,16 +32,15 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class ContactActionOperation extends ItemActionOperation {
+public class ContactActionHelper extends ItemActionHelper {
 
-    public static ContactActionOperation UPDATE(ZimbraSoapContext zc, Session session, OperationContext octxt,
-                                                Mailbox mbox, Requester req, List<Integer> ids, ItemId iidFolder,
+    public static ContactActionHelper UPDATE(ZimbraSoapContext zc, OperationContext octxt,
+                                                Mailbox mbox, List<Integer> ids, ItemId iidFolder,
                                                 String flags, String tags, byte color, ParsedContact pc)
     throws ServiceException {
-        ContactActionOperation ca = new ContactActionOperation(session, octxt, mbox, req, LOAD, ids, Op.UPDATE);
+        ContactActionHelper ca = new ContactActionHelper(octxt, mbox, ids, Op.UPDATE);
         ca.setIidFolder(iidFolder);
         ca.setFlags(flags);
         ca.setTags(tags);
@@ -61,10 +59,8 @@ public class ContactActionOperation extends ItemActionOperation {
         mParsedContact = pc;
     }
 
-    ContactActionOperation(Session session, OperationContext octxt, Mailbox mbox, Requester req,
-            int baseLoad, List<Integer> ids, Op op)
-            throws ServiceException {
-        super(session, octxt, mbox, req, baseLoad, ids, op, MailItem.TYPE_CONTACT, true, null);
+    ContactActionHelper(OperationContext octxt, Mailbox mbox, List<Integer> ids, Op op) throws ServiceException {
+        super(octxt, mbox, ids, op, MailItem.TYPE_CONTACT, true, null);
     }
 
     protected void callback() throws ServiceException {

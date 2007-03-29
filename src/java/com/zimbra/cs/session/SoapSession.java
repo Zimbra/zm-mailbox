@@ -35,10 +35,9 @@ import java.util.List;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.*;
-import com.zimbra.cs.operation.GetFolderTreeOperation;
-import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.mail.GetFolder;
 import com.zimbra.cs.service.mail.ToXML;
+import com.zimbra.cs.service.mail.GetFolder.FolderNode;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
@@ -276,13 +275,9 @@ public class SoapSession extends Session {
 
             // dump recursive folder hierarchy starting at USER_ROOT (i.e. folders visible to the user)
             try {
-//          	Folder root = mbox.getFolderById(octxt, Mailbox.ID_FOLDER_USER_ROOT);
-//              GetFolder.handleFolder(mbox, root, eRefresh, zc, octxt);
-            	
             	// use the operation here just so we can re-use the logic...
-            	GetFolderTreeOperation op = new GetFolderTreeOperation(this, octxt, mMailbox, Requester.SOAP, null, true);
-            	op.runImmediately();
-            	GetFolder.encodeFolderNode(ifmt, zsc.getOperationContext(), eRefresh, op.getResult());
+                FolderNode root = GetFolder.getFolderTree(octxt, mMailbox, null, true);
+                GetFolder.encodeFolderNode(ifmt, zsc.getOperationContext(), eRefresh, root);
             } catch (ServiceException e) {
                 if (e.getCode() != ServiceException.PERM_DENIED)
                     throw e;

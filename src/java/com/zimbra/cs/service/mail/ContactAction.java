@@ -47,11 +47,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedContact;
-import com.zimbra.cs.operation.ContactActionOperation;
-import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.session.Session;
-import com.zimbra.cs.session.SoapSession;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -90,9 +86,7 @@ public class ContactAction extends ItemAction {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
-        SoapSession session = (SoapSession) zsc.getSession(Session.Type.SOAP);
         OperationContext octxt = zsc.getOperationContext();
-
 
         // figure out which items are local and which ones are remote, and proxy accordingly
         ArrayList<Integer> local = new ArrayList<Integer>();
@@ -119,7 +113,7 @@ public class ContactAction extends ItemAction {
                     pc = new ParsedContact(cdata.getFirst(), cdata.getSecond(), System.currentTimeMillis());
                 }
 
-                localResults = ContactActionOperation.UPDATE(zsc, session, octxt, mbox, Requester.SOAP,
+                localResults = ContactActionHelper.UPDATE(zsc, octxt, mbox,
                                                              local, iidFolder, flags, tags, color, pc).getResult();
             } else {
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
@@ -129,28 +123,4 @@ public class ContactAction extends ItemAction {
 
         return successes.toString();
     }
-    
-//    protected String doUpdate(ZimbraSoapContext zc, Session session, OperationContext octxt,
-//        Mailbox mbox, Requester req, List<Integer> ids, ItemId iidFolder,
-//        String flags, String tags, byte color, ParsedContact pc) throws ServiceException {
-//        if (!iidFolder.belongsTo(mbox))
-//            throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
-//        
-//        if (iidFolder.getId() > 0)
-//            mbox.move(octxt, ids, mItemType, mIidFolder.getId(), mTargetConstraint);
-//        if (mTags != null || mFlags != null)
-//            getMailbox().setTags(getOpCtxt(), mIds, mItemType, mFlags, mTags, mTargetConstraint);
-//        if (mColor >= 0)
-//            getMailbox().setColor(getOpCtxt(), mIds, mItemType, mColor);
-//        if (mParsedContact != null)
-//            for (int id : mIds)
-//                getMailbox().modifyContact(getOpCtxt(), id, mParsedContact);
-//        
-//        StringBuilder successes = new StringBuilder();
-//        for (int id : mIds)
-//            successes.append(successes.length() > 0 ? "," : "").append(mIdFormatter.formatItemId(id));
-//        
-//        return successes.toString();
-//    }
-    
 }
