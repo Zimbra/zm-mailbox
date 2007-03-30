@@ -420,24 +420,35 @@ public class Conversation extends MailItem {
     void alterUnread(boolean unread) throws ServiceException {
         markItemModified(Change.MODIFIED_UNREAD);
 
+        boolean excludeAccess = false;
+
         // Decrement the in-memory unread count of each message.  Each message will
         // then implicitly decrement the unread count for its conversation, folder
         // and tags.
         TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
         List<Integer> targets = new ArrayList<Integer>();
         for (Message msg : getMessages(DbMailItem.DEFAULT_SORT_ORDER)) {
-            if (msg.isUnread() != unread && msg.checkChangeID() &&
-                    TargetConstraint.checkItem(tcon, msg) &&
-                    msg.canAccess(ACL.RIGHT_WRITE)) {
-                msg.updateUnread(unread ? 1 : -1);
-                msg.mData.metadataChanged(mMailbox);
-                targets.add(msg.getId());
+            // skip messages that don't need to be changed, or that the client can't modify, doesn't know about, or has explicitly excluded
+            if (msg.isUnread() == unread ) {
+                continue;
+            } else if (!msg.canAccess(ACL.RIGHT_WRITE)) {
+                excludeAccess = true;  continue;
+            } else if (!msg.checkChangeID() || !TargetConstraint.checkItem(tcon, msg)) {
+                continue;
             }
+
+            msg.updateUnread(unread ? 1 : -1);
+            msg.mData.metadataChanged(mMailbox);
+            targets.add(msg.getId());
         }
 
         // mark the selected messages in this conversation as read in the database
-        if (!targets.isEmpty())
+        if (targets.isEmpty()) {
+            if (excludeAccess)
+                throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+        } else {
             DbMailItem.alterUnread(mMailbox, targets, unread);
+        }
     }
 
     /** Tags or untags all messages in the conversation.  Persists the change
@@ -469,27 +480,38 @@ public class Conversation extends MailItem {
         
         markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
 
+        boolean excludeAccess = false;
+
         TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
         List<Integer> targets = new ArrayList<Integer>();
         for (Message msg : getMessages(SORT_ID_ASCENDING)) {
-            if (msg.isTagged(tag) != add && msg.checkChangeID() &&
-                    TargetConstraint.checkItem(tcon, msg) &&
-                    msg.canAccess(ACL.RIGHT_WRITE)) {
-                // don't let the user tag things as "has attachments" or "draft"
-                if (tag instanceof Flag && (tag.getBitmask() & Flag.FLAG_SYSTEM) != 0)
-                    throw MailServiceException.CANNOT_TAG(tag, msg);
-                // since we're adding/removing a tag, the tag's unread count may change
-            	if (tag.trackUnread() && msg.isUnread())
-                    tag.updateUnread(add ? 1 : -1);
-
-                targets.add(msg.getId());
-                msg.tagChanged(tag, add);
-                mInheritedTagSet.update(tag, add);
+            // skip messages that don't need to be changed, or that the client can't modify, doesn't know about, or has explicitly excluded
+            if (msg.isTagged(tag) == add) {
+                continue;
+            } else if (!msg.canAccess(ACL.RIGHT_WRITE)) {
+                excludeAccess = true;  continue;
+            } else if (!msg.checkChangeID() || !TargetConstraint.checkItem(tcon, msg)) {
+                continue;
             }
+
+            // don't let the user tag things as "has attachments" or "draft"
+            if (tag instanceof Flag && (tag.getBitmask() & Flag.FLAG_SYSTEM) != 0)
+                throw MailServiceException.CANNOT_TAG(tag, msg);
+            // since we're adding/removing a tag, the tag's unread count may change
+        	if (tag.trackUnread() && msg.isUnread())
+                tag.updateUnread(add ? 1 : -1);
+
+            targets.add(msg.getId());
+            msg.tagChanged(tag, add);
+            mInheritedTagSet.update(tag, add);
         }
 
-        if (!targets.isEmpty())
+        if (targets.isEmpty()) {
+            if (excludeAccess)
+                throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+        } else {
             DbMailItem.alterTag(tag, targets, add);
+        }
     }
 
     @Override
@@ -538,7 +560,6 @@ public class Conversation extends MailItem {
         // if mData.unread is wrong, what to do?  right now, always use the calculated value
         mData.unreadCount = oldUnread;
 
-        // only close the conversation if it's being moved to spam and there are no permissions issues
         boolean excludeAccess = false;
 
         List<Integer> markedRead = new ArrayList<Integer>();
@@ -546,12 +567,14 @@ public class Conversation extends MailItem {
         for (Message msg : msgs) {
             Folder source = msg.getFolder();
 
-            // skip messages that the client doesn't know about, can't modify, or has explicitly excluded
-            if (!source.canAccess(ACL.RIGHT_DELETE) || !target.canAccess(ACL.RIGHT_INSERT)) {
-                excludeAccess = true;  continue;
-            }
-            if (!msg.checkChangeID() || !TargetConstraint.checkItem(tcon, msg))
+            // skip messages that don't need to be moved, or that the client can't modify, doesn't know about, or has explicitly excluded
+            if (source.getId() == target.getId()) {
                 continue;
+            } else if (!source.canAccess(ACL.RIGHT_DELETE) || !target.canAccess(ACL.RIGHT_INSERT)) {
+                excludeAccess = true;  continue;
+            } else if (!msg.checkChangeID() || !TargetConstraint.checkItem(tcon, msg)) {
+                continue;
+            }
 
             if (msg.isUnread()) {
                 if (!toTrash || msg.inTrash()) {
