@@ -95,6 +95,7 @@ public class ZMessage implements ZItem {
     private String mInReplyTo;
     private String mOrigId;
     private ZInvite mInvite;
+    private ZShare mShare;
         
     public ZMessage(Element e) throws ServiceException {
         mId = e.getAttribute(MailConstants.A_ID);
@@ -136,6 +137,14 @@ public class ZMessage implements ZItem {
         Element inviteEl = e.getOptionalElement(MailConstants.E_INVITE);
         if (inviteEl != null)
             mInvite = new ZInvite(inviteEl);
+
+        Element shrEl = e.getOptionalElement("shr");
+        if (shrEl != null) {
+            Element contEl = shrEl.getElement(MailConstants.E_CONTENT);
+            if (contEl != null) {
+                mShare = ZShare.parseXml(contEl.getText());
+            }
+        }
     }
 
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
@@ -149,6 +158,11 @@ public class ZMessage implements ZItem {
             }
         }
     }
+
+    public  ZShare getShare() {
+        return mShare;
+    }
+
 
     /**
      *
@@ -218,6 +232,8 @@ public class ZMessage implements ZItem {
         sb.addStruct("mimeStructure", mMimeStructure.toString());
         if (mInvite != null)
                 sb.addStruct("invite", mInvite.toString());
+        if (mShare != null)
+            sb.addStruct("share", mShare.toString());
         sb.endStruct();
         return sb;
     }
@@ -288,7 +304,7 @@ public class ZMessage implements ZItem {
         return mContentURL;
     }
     
-    public class ZMimePart {
+    public static class ZMimePart {
         private String mPartName;
         private String mName;
         private String mContentType;
