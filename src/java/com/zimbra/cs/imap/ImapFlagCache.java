@@ -30,8 +30,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 
 public class ImapFlagCache {
     static final class ImapFlag {
@@ -78,8 +83,24 @@ public class ImapFlagCache {
     }
 
 
-    Map<String, ImapFlagCache.ImapFlag> mNames  = new LinkedHashMap<String, ImapFlagCache.ImapFlag>();
-    Map<Long, ImapFlagCache.ImapFlag> mBitmasks = new HashMap<Long, ImapFlagCache.ImapFlag>();
+    private final Mailbox mMailbox;
+    private final Map<String, ImapFlag> mNames  = new LinkedHashMap<String, ImapFlag>();
+    private final Map<Long, ImapFlag> mBitmasks = new HashMap<Long, ImapFlag>();
+
+    ImapFlagCache()  { mMailbox = null; }
+
+    ImapFlagCache(Mailbox mbox, OperationContext octxt) throws ServiceException {
+        mMailbox = mbox;
+        try {
+            for (Tag ltag : mbox.getTagList(octxt)) {
+                if (!(ltag instanceof Flag))
+                    cache(new ImapFlag(ltag.getName(), ltag, true));
+            }
+        } catch (ServiceException e) {
+            if (!e.getCode().equals(ServiceException.PERM_DENIED))
+                throw e;
+        }
+    }
 
     static ImapFlagCache getSystemFlags(Mailbox mbox) {
         ImapFlagCache i4cache = new ImapFlagCache();
@@ -104,7 +125,53 @@ public class ImapFlagCache {
         return i4cache;
     }
 
-    ImapFlagCache.ImapFlag cache(ImapFlagCache.ImapFlag i4flag) {
+
+    ImapFlag getByName(String name) {
+        ImapFlag i4flag = mNames.get(name.toUpperCase());
+        return (i4flag == null || i4flag.mListed == ImapFlag.HIDDEN ? null : i4flag);
+    }
+
+    ImapFlag getByMask(long mask) {
+        return mBitmasks.get(mask);
+    }
+
+    List<String> listNames(boolean permanentOnly) {
+        List<String> names = new ArrayList<String>();
+        for (Map.Entry<String, ImapFlag> entry : mNames.entrySet()) {
+            ImapFlag i4flag = entry.getValue();
+            if (i4flag.mListed && (!permanentOnly || i4flag.mPermanent))
+                names.add(i4flag.mImapName);
+        }
+        return names;
+    }
+
+
+    ImapFlag createTag(OperationContext octxt, String name, List<Tag> newTags) throws ServiceException {
+        if (mMailbox == null)
+            return null;
+
+        ImapFlag i4flag = getByName(name);
+        if (i4flag != null)
+            return i4flag;
+
+        if (name.startsWith("\\"))
+            throw MailServiceException.INVALID_NAME(name);
+
+        try {
+            Tag ltag = mMailbox.createTag(octxt, name, MailItem.DEFAULT_COLOR);
+            newTags.add(ltag);
+            i4flag = getByName(name);
+            if (i4flag == null)
+                return cache(i4flag = new ImapFlag(name, ltag, true));
+        } catch (ServiceException e) {
+            if (!e.getCode().equals(ServiceException.PERM_DENIED) && !e.getCode().equals(MailServiceException.TOO_MANY_TAGS))
+                throw e;
+        }
+        return null;
+    }
+
+
+    ImapFlag cache(ImapFlag i4flag) {
         mNames.put(i4flag.mImapName.toUpperCase(), i4flag);
         Long bitmask = new Long(i4flag.mBitmask);
         if (!mBitmasks.containsKey(bitmask))
@@ -113,7 +180,7 @@ public class ImapFlagCache {
     }
 
     void uncache(long bitmask) {
-        ImapFlagCache.ImapFlag i4flag = mBitmasks.remove(bitmask);
+        ImapFlag i4flag = mBitmasks.remove(bitmask);
         if (i4flag != null)
             mNames.remove(i4flag.mImapName.toUpperCase());
     }
@@ -121,25 +188,5 @@ public class ImapFlagCache {
     void clear() {
         mNames.clear();
         mBitmasks.clear();
-    }
-
-
-    ImapFlag getByName(String name) {
-        return mNames.get(name.toUpperCase());
-    }
-
-    ImapFlag getByMask(long mask) {
-        return mBitmasks.get(mask);
-    }
-
-
-    List<String> listNames(boolean permanentOnly) {
-        List<String> names = new ArrayList<String>();
-        for (Map.Entry<String, ImapFlagCache.ImapFlag> entry : mNames.entrySet()) {
-            ImapFlagCache.ImapFlag i4flag = entry.getValue();
-            if (i4flag.mListed && (!permanentOnly || i4flag.mPermanent))
-                names.add(i4flag.mImapName);
-        }
-        return names;
     }
 }

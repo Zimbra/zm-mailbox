@@ -93,10 +93,8 @@ public class OzImapConnectionHandler extends ImapHandler implements OzConnection
     
     void encodeState(Element parent) {
         Element e = parent.addElement("OZIMAP");
-        if (mConnection != null) {
-            Element ce = e.addElement("connection");
-            ce.setText(mConnection.toString());
-        }
+        if (mConnection != null)
+            e.addElement("connection").setText(mConnection.toString());
         e.addAttribute("startedTls", mStartedTLS);
         e.addAttribute("goodbyeSent", mGoodbyeSent);
     }
@@ -170,9 +168,9 @@ public class OzImapConnectionHandler extends ImapHandler implements OzConnection
 
     @Override
     boolean doSTARTTLS(String tag) throws IOException {
-        if (!checkState(tag, State.NOT_AUTHENTICATED))
+        if (!checkState(tag, State.NOT_AUTHENTICATED)) {
             return CONTINUE_PROCESSING;
-        else if (mStartedTLS) {
+        } else if (mStartedTLS) {
             sendNO(tag, "TLS already started");
             return CONTINUE_PROCESSING;
         }
@@ -191,7 +189,7 @@ public class OzImapConnectionHandler extends ImapHandler implements OzConnection
         // Session timeout will take care of closing an IMAP connection with no activity.
         ZimbraLog.imap.debug("disabling unauth connection alarm");
         mConnection.cancelAlarm();
-        
+
         int lcMax = LC.nio_imap_write_queue_max_size.intValue();
         com.zimbra.cs.account.Config config = Provisioning.getInstance().getConfig();            
         int msgMax = config.getIntAttr(Provisioning.A_zimbraMtaMaxMessageSize, lcMax);
@@ -248,6 +246,7 @@ public class OzImapConnectionHandler extends ImapHandler implements OzConnection
             mCurrentRequestData = new ArrayList<Object>();
             mCurrentRequestTag = null;
         }
+
         if (ZimbraLog.nio.isDebugEnabled())
             ZimbraLog.nio.debug("entered command read state");
     }
@@ -259,6 +258,7 @@ public class OzImapConnectionHandler extends ImapHandler implements OzConnection
         mConnection.setMatcher(mLiteralMatcher);
         mConnection.enableReadInterest();
         mCurrentData = new OzByteBufferGatherer(target, target);
+
         if (ZimbraLog.nio.isDebugEnabled())
             ZimbraLog.nio.debug("entered literal read state target=" + target);
     }
@@ -268,9 +268,8 @@ public class OzImapConnectionHandler extends ImapHandler implements OzConnection
     private void gotoClosedStateInternal(boolean sendBanner) throws IOException {
         synchronized (mCloseLock) {
             // Close only once
-            if (mState == ConnectionState.CLOSED) {
+            if (mState == ConnectionState.CLOSED)
                 throw new IllegalStateException("connection already closed");
-            }
 
             try {
                 mConnection.setMatcher(new OzAllMatcher());
@@ -282,9 +281,8 @@ public class OzImapConnectionHandler extends ImapHandler implements OzConnection
                 }
 
                 if (sendBanner) {
-                    if (!mGoodbyeSent) {
+                    if (!mGoodbyeSent)
                         sendUntagged(ImapServer.getGoodbye(), true);
-                    }
                     mGoodbyeSent = true;
                 }
             } finally {
@@ -327,8 +325,10 @@ public class OzImapConnectionHandler extends ImapHandler implements OzConnection
             gotoClosedState(true);
             return;
         }
+
         if (mConnection.getProperty(PROPERTY_SECURE_SERVER, null) != null)
             mStartedTLS = true;
+
         sendUntagged(ImapServer.getBanner(), true);
         gotoReadLineState(true);
     }
@@ -426,22 +426,19 @@ public class OzImapConnectionHandler extends ImapHandler implements OzConnection
             }
 
             /* Add either the literal removed line or a no-literal present at all
-             * line (ie, it's line in either case) to the request in flight.
-             */ 
+             * line (ie, it's line in either case) to the request in flight. */ 
             mCurrentRequestData.add(line);
 
             if (literal.octets() > 0) {
-                if (literal.blocking()) {
+                if (literal.blocking())
                     sendContinuation();
-                }
                 gotoReadLiteralState(literal.octets());
                 return;
             } else {
-                if (processCommand()) {
+                if (processCommand())
                     gotoReadLineState(true);
-                } else {
+                else
                     gotoClosedState(true);
-                }
                 return;
             }
         }

@@ -43,7 +43,6 @@ import org.apache.commons.codec.binary.Base64;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.imap.ImapSearch.*;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -95,26 +94,41 @@ abstract class ImapRequest {
         mHandler = handler;
     }
 
+    /** Returns whether the specified IMAP extension is enabled for this
+     *  session.
+     * @see ImapHandler#extensionEnabled(String) */
     boolean extensionEnabled(String extension) {
         return mHandler == null || mHandler.extensionEnabled(extension);
     }
 
+    /** Records the "tag" for the request.  This tag will later be used to
+     *  indicate that the server has finished processing the request.
+     *  It may also be used when generating a parse exception. */
     void setTag(String tag)  { mTag = tag; }
 
     private static int DEFAULT_MAX_REQUEST_LENGTH = 10000000;
 
+    /** Returns the size of the largest request (total size of all non-literals
+     *  and literals) this IMAP server will handle. */
     static int getMaxRequestLength() {
         int maxSize = DEFAULT_MAX_REQUEST_LENGTH;
         try {
             Server server = Provisioning.getInstance().getLocalServer();
+            // enough space to hold the largest possible message, plus a bit extra to cover IMAP protocol chatter
             maxSize = server.getIntAttr(Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_REQUEST_LENGTH);
             if (maxSize <= 0)
                 maxSize = DEFAULT_MAX_REQUEST_LENGTH;
+            else
+                maxSize += 1024;
         } catch (ServiceException e) { }
         return maxSize;
     }
 
+    /** Returns whether the read position is at the very end of the request. */
     boolean eof()  { return peekChar() == -1; }
+
+    /** Returns the character at the read position, or -1 if we're at the end
+     *  of a literal or of a line. */
     int peekChar() {
         if (mIndex >= mParts.size())
             return -1;
@@ -124,6 +138,7 @@ abstract class ImapRequest {
         else
             return (mOffset >= ((byte[]) part).length) ? -1 : ((byte[]) part)[mOffset];
     }
+
     String peekATOM() {
         int index = mIndex, offset = mOffset;
         try {
@@ -136,6 +151,7 @@ abstract class ImapRequest {
     }
 
     void skipSpace() throws ImapParseException { skipChar(' '); }
+
     void skipChar(char c) throws ImapParseException {
         Object part = mParts.get(mIndex);
         if (part instanceof String && mOffset < ((String) part).length() && ((String) part).charAt(mOffset) == c)
@@ -383,26 +399,19 @@ abstract class ImapRequest {
         if (parens)
             skipChar('(');
         else if (mOffset == content.length())
-            throw new ImapParseException(mTag, "missing STORE flag list");
+            throw new ImapParseException(mTag, "missing flag list");
 
-        if (!parens || peekChar() != ')')
+        if (!parens || peekChar() != ')') {
             while (mOffset < content.length()) {
                 if (peekChar() == '\\') {
-                    skipChar('\\');
-                    String flagName = '\\' + readAtom();
-                    ImapFolder i4folder = mHandler.getSelectedFolder();
-                    if (i4folder != null) {
-                        ImapFlag i4flag = i4folder.getFlagByName(flagName);
-                        if (i4flag == null || !i4flag.mListed)
-                            throw new ImapParseException(mTag, "non-storable system tag \"" + flagName + '"');
-                        tags.add(flagName);
-                    }
+                    skipChar('\\');  tags.add('\\' + readAtom());
                 } else {
                     tags.add(readAtom());
                 }
                 if (parens && peekChar() == ')')      break;
                 else if (mOffset < content.length())  skipSpace();
             }
+        }
 
         if (parens)
             skipChar(')');

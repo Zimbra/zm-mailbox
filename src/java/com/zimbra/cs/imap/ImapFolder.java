@@ -126,14 +126,7 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
 
         // initialize the flag and tag caches
         mFlags = ImapFlagCache.getSystemFlags(mMailbox);
-        mTags = new ImapFlagCache();
-        try {
-            for (Tag ltag : mMailbox.getTagList(mCredentials.getContext()))
-                cacheTag(ltag);
-        } catch (ServiceException e) {
-            if (!e.getCode().equals(ServiceException.PERM_DENIED))
-                throw e;
-        }
+        mTags = new ImapFlagCache(mMailbox, mCredentials.getContext());
         return this;
     }
 
@@ -438,7 +431,10 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
 
 
     ImapFlag cacheTag(Tag ltag) {
-        return (ltag instanceof Flag ? null : mTags.cache(new ImapFlag(ltag.getName(), ltag, true)));
+        assert(!(ltag instanceof Flag));
+        if (ltag instanceof Flag)
+            return null;
+        return mTags.cache(new ImapFlag(ltag.getName(), ltag, true));
     }
 
     ImapFlag getFlagByName(String name) {
@@ -454,6 +450,10 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
         List <String> names = mFlags.listNames(permanentOnly);
         names.addAll(mTags.listNames(permanentOnly));
         return names;
+    }
+
+    ImapFlagCache getTagset() {
+        return mTags;
     }
 
     void clearTagCache() {
