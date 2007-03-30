@@ -35,10 +35,10 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -76,7 +76,7 @@ public class GetMsg extends MailDocumentHandler {
             // calendar item
             CalendarItem calItem = getCalendarItem(octxt, mbox, iid);
             if (raw) {
-                throw MailServiceException.INVALID_REQUEST("Cannot request RAW formatted subpart message", null);
+                throw ServiceException.INVALID_REQUEST("Cannot request RAW formatted subpart message", null);
             } else {
                 ToXML.encodeInviteAsMP(response, ifmt, calItem, iid, part, wantHTML, neuter);
             }
@@ -103,8 +103,16 @@ public class GetMsg extends MailDocumentHandler {
     public static Message getMsg(OperationContext octxt, Mailbox mbox, ItemId iid, boolean read) throws ServiceException {
         assert(!iid.hasSubpart());
         Message msg = mbox.getMessageById(octxt, iid.getId());
-        if (read && msg.isUnread() && !RedoLogProvider.getInstance().isSlave())
-            mbox.alterTag(octxt, msg.getId(), MailItem.TYPE_MESSAGE, Flag.ID_FLAG_UNREAD, false);
+        if (read && msg.isUnread() && !RedoLogProvider.getInstance().isSlave()) {
+            try {
+                mbox.alterTag(octxt, msg.getId(), MailItem.TYPE_MESSAGE, Flag.ID_FLAG_UNREAD, false);
+            } catch (ServiceException e) {
+                if (e.getCode().equals(ServiceException.PERM_DENIED))
+                    ZimbraLog.mailbox.info("no permissions to mark message as read (ignored): " + msg.getId());
+                else
+                    ZimbraLog.mailbox.warn("problem marking message as read (ignored): " + msg.getId(), e);
+            }
+        }
         return msg;
     }
     

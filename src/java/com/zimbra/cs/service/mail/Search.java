@@ -49,6 +49,7 @@ import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Conversation;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
@@ -60,7 +61,6 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.soap.ZimbraSoapContext;
-
 
 public class Search extends MailDocumentHandler  {
     protected static Log mLog = LogFactory.getLog(Search.class);
@@ -273,11 +273,12 @@ public class Search extends MailDocumentHandler  {
         if (inline && msg.isUnread() && params.getMarkRead()) {
             // Mark the message as READ          
             try {
-                ArrayList<Integer> ids = new ArrayList<Integer>(1);
-                ids.add(msg.getId());
-                ItemActionHelper.READ(zsc.getOperationContext(), msg.getMailbox(), ids, MailItem.TYPE_MESSAGE, true, null);
+                msg.getMailbox().alterTag(zsc.getOperationContext(), msg.getId(), msg.getType(), Flag.ID_FLAG_UNREAD, false);
             } catch (ServiceException e) {
-                mLog.warn("problem marking message as read (ignored): " + msg.getId(), e);
+                if (e.getCode().equals(ServiceException.PERM_DENIED))
+                    mLog.info("no permissions to mark message as read (ignored): " + msg.getId());
+                else
+                    mLog.warn("problem marking message as read (ignored): " + msg.getId(), e);
             }
         }
         
