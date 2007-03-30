@@ -667,7 +667,7 @@ public class Folder extends MailItem {
     /** Moves this folder so that it is a subfolder of <code>target</code>.
      * 
      * @perms {@link ACL#RIGHT_INSERT} on the target folder,
-     *         {@link ACL#RIGHT_DELETE} on the source folder */
+     *        {@link ACL#RIGHT_DELETE} on the folder being moved */
     @Override
     protected void move(Folder target) throws ServiceException {
         markItemModified(Change.MODIFIED_FOLDER | Change.MODIFIED_PARENT);
@@ -675,7 +675,7 @@ public class Folder extends MailItem {
             return;
         if (!isMovable())
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
-        if (!mParent.canAccess(ACL.RIGHT_DELETE) || !target.canAccess(ACL.RIGHT_INSERT))
+        if (!canAccess(ACL.RIGHT_DELETE) || !target.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have the required permissions");
         if (!target.canContain(this))
             throw MailServiceException.CANNOT_CONTAIN();
