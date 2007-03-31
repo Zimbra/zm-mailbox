@@ -520,7 +520,7 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
 		toRet.append("PRODID:").append(ZCalendar.sZimbraProdID).append("\n");
 		toRet.append("BEGIN:VFREEBUSY").append(NL);
 
-		toRet.append("ORGANIZER:").append(organizer).append(NL);
+		toRet.append("ORGANIZER:");
 		if (!organizer.startsWith(MAILTO) && !organizer.startsWith("http:"))
 			toRet.append(MAILTO);
 		toRet.append(organizer).append(NL);
