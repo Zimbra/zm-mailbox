@@ -37,6 +37,8 @@ import org.apache.log4j.Priority;
  */
 public class Log {
 
+    public enum Level { ERROR, WARN, INFO, DEBUG };
+    
     Logger mLogger;
     
     Log(Logger logger) {
@@ -228,6 +230,18 @@ public class Log {
     public void fatal(String format, Object o1, Object o2, Object o3, Throwable t) {
         if (isFatalEnabled()) {
             mLogger.fatal(String.format(format, o1, o2, o3), t);
+        }
+    }
+    
+    public void setLevel(Level level) {
+        if (level == Level.ERROR) {
+            mLogger.setLevel(org.apache.log4j.Level.ERROR);
+        } else if (level == Level.WARN) {
+            mLogger.setLevel(org.apache.log4j.Level.WARN);
+        } else if (level == Level.INFO) {
+            mLogger.setLevel(org.apache.log4j.Level.INFO);
+        } else if (level == Level.DEBUG) {
+            mLogger.setLevel(org.apache.log4j.Level.DEBUG);
         }
     }
 }
