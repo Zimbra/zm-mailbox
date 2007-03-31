@@ -61,7 +61,18 @@ AjxDebug.DBG3 = 3; // anything goes
      &to={...}&subject={...}&body={...}
 
   http://server/zimbra/?view=compose&to=a@b.com&subject=hello%20world&body=test
-    
+
+
+
+ day|workWeek|week|month
+
+     &date=YYYYMMDD
+
+  http://server/zimbra/?app=calendar&view=workWeek&date=20030313
+
+ Note: the "app=calendar" part is required for this work.
+
+
 ----------------------------------------
 
  redirect=0|1
