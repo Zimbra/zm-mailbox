@@ -47,6 +47,7 @@ import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
+import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -159,6 +160,23 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                                 String tags = calItem.getTagString();
                                 if (tags != null && !tags.equals(""))
                                     calItemElem.addAttribute(MailConstants.A_TAGS, tags);
+                            }
+
+                            // Organizer
+                            if (inv.hasOrganizer()) {
+                                ZOrganizer org = inv.getOrganizer();
+                                Element orgElt = calItemElem.addUniqueElement(MailConstants.E_CAL_ORGANIZER);
+                                String str = org.getAddress();
+                                orgElt.addAttribute(MailConstants.A_ADDRESS, str);
+//                                orgElt.addAttribute(MailConstants.A_URL, str);  // for backward compatibility
+//                                if (org.hasCn())
+//                                    orgElt.addAttribute(MailConstants.A_DISPLAY, org.getCn());
+                                if (org.hasSentBy())
+                                    orgElt.addAttribute(MailConstants.A_CAL_SENTBY, org.getSentBy());
+//                                if (org.hasDir())
+//                                    orgElt.addAttribute(MailConstants.A_CAL_DIR, org.getDir());
+//                                if (org.hasLanguage())
+//                                    orgElt.addAttribute(MailConstants.A_CAL_LANGUAGE, org.getLanguage());
                             }
                         }
 
@@ -285,6 +303,23 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                         String tags = calItem.getTagString();
                         if (tags != null && !tags.equals(""))
                             calItemElem.addAttribute(MailConstants.A_TAGS, tags);
+
+                        // Organizer
+                        if (defaultInvite.hasOrganizer()) {
+                            ZOrganizer org = defaultInvite.getOrganizer();
+                            Element orgElt = calItemElem.addUniqueElement(MailConstants.E_CAL_ORGANIZER);
+                            String str = org.getAddress();
+                            orgElt.addAttribute(MailConstants.A_ADDRESS, str);
+//                            orgElt.addAttribute(MailConstants.A_URL, str);  // for backward compatibility
+//                            if (org.hasCn())
+//                                orgElt.addAttribute(MailConstants.A_DISPLAY, org.getCn());
+                            if (org.hasSentBy())
+                                orgElt.addAttribute(MailConstants.A_CAL_SENTBY, org.getSentBy());
+//                            if (org.hasDir())
+//                                orgElt.addAttribute(MailConstants.A_CAL_DIR, org.getDir());
+//                            if (org.hasLanguage())
+//                                orgElt.addAttribute(MailConstants.A_CAL_LANGUAGE, org.getLanguage());
+                        }
                     }
                 }
                 
