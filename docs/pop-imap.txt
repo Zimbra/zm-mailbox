@@ -13,6 +13,7 @@ IMAP protocol and extensions suppoted:
     [IMAPURL]          RFC 2192: IMAP URL Scheme
     [LITERAL+]         RFC 2088: IMAP4 non-synchronizing literals
     [LOGIN-REFERRALS]  RFC 2221: IMAP4 Login Referrals
+    [MULTIAPPEND]      RFC 3502: Internet Message Access Protocol (IMAP) - MULTIAPPEND Extension
     [NAMESPACE]        RFC 2342: IMAP4 Namespace
     [QUOTA]            RFC 2087: IMAP4 QUOTA extension
     [SASL-IR]          draft-siemborski-imap-sasl-initial-response-06: IMAP Extension for SASL Initial Client Response

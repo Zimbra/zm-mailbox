@@ -559,8 +559,8 @@ public abstract class ImapHandler extends ProtocolHandler {
 
     private static final String[] SUPPORTED_EXTENSIONS = new String[] {
         "BINARY", "CATENATE", "CHILDREN", "ESEARCH", "ID", "IDLE",
-        "LITERAL+", "LOGIN-REFERRALS", "NAMESPACE", "QUOTA", "SASL-IR",
-        "UIDPLUS", "UNSELECT", "WITHIN", "X-DRAFT-I05-SEARCHRES"
+        "LITERAL+", "LOGIN-REFERRALS", "MULTIAPPEND", "NAMESPACE", "QUOTA",
+        "SASL-IR", "UIDPLUS", "UNSELECT", "WITHIN", "X-DRAFT-I05-SEARCHRES"
     };
 
     private void sendCapability() throws IOException {
@@ -576,6 +576,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         // [IDLE]             RFC 2177: IMAP4 IDLE command
         // [LITERAL+]         RFC 2088: IMAP4 non-synchronizing literals
         // [LOGIN-REFERRALS]  RFC 2221: IMAP4 Login Referrals
+        // [MULTIAPPEND]      RFC 3502: Internet Message Access Protocol (IMAP) - MULTIAPPEND Extension
         // [NAMESPACE]        RFC 2342: IMAP4 Namespace
         // [QUOTA]            RFC 2087: IMAP4 QUOTA extension
         // [SASL-IR]          draft-siemborski-imap-sasl-initial-response-06: IMAP Extension for SASL Initial Client Response
