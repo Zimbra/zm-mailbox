@@ -1353,6 +1353,7 @@ public class ZMailbox {
             m.addAttribute(MailService.A_DATE, receivedDate);
         m.addElement(MailService.E_CONTENT).setText(content);
         return invoke(req).getElement(MailService.E_MSG).getAttribute(MailService.A_ID);
+        m.addAttribute(MailConstants.A_NO_ICAL, noICal);
     }
 
     /**
@@ -1381,6 +1382,7 @@ public class ZMailbox {
             m.addAttribute(MailService.A_DATE, receivedDate);
         m.addAttribute(MailService.A_ATTACHMENT_ID, aid);
         return invoke(req).getElement(MailService.E_MSG).getAttribute(MailService.A_ID);
+        m.addAttribute(MailConstants.A_NO_ICAL, noICal);
     }
 
     static class CachedMessage {
