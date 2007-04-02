@@ -37,19 +37,18 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.TimerTask;
+import java.util.concurrent.Callable;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.TaskScheduler;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbUtil;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.service.util.ThreadLocalData;
-import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.util.Zimbra;
-import com.zimbra.common.util.ZimbraLog;
 
 /**
  * A collection of methods for keeping track of server performance statistics.
@@ -58,6 +57,7 @@ public class ZimbraPerf {
 
     static Log sLog = LogFactory.getLog(ZimbraPerf.class);
     private static final com.zimbra.common.util.Log sZimbraStats = LogFactory.getLog("zimbra.stats");
+    private static TaskScheduler<Void> sTaskScheduler = new TaskScheduler<Void>("ZimbraStats", 1, 1);  
 
     // Name constants for real-time statistics
     public static final String RTS_JAVA_HEAP_MB = "java_heap_MB"; 
@@ -203,7 +203,7 @@ public class ZimbraPerf {
         StatementStats stats = null;
         
         synchronized (sSqlToStats) {
-            stats = (StatementStats) sSqlToStats.get(normalized);
+            stats = sSqlToStats.get(normalized);
             if (stats == null) {
                 stats = new StatementStats(normalized);
                 sSqlToStats.put(normalized, stats);
@@ -322,7 +322,7 @@ public class ZimbraPerf {
         FileWriter writer = null;
         
         synchronized (sWriterMap) {
-            writer = (FileWriter) sWriterMap.get(statsFile.getFilename());
+            writer = sWriterMap.get(statsFile.getFilename());
             if (writer != null) {
                 return writer;
             }
@@ -523,45 +523,36 @@ public class ZimbraPerf {
         COUNTER_IDX_WRT.setShowAverage(true);
         COUNTER_IDX_WRT.setShowCount(false);
         COUNTER_IDX_WRT.setShowTotal(false);
-        
-        Zimbra.sTimer.scheduleAtFixedRate(new ZimbraStatsDumper(), DUMP_FREQUENCY, DUMP_FREQUENCY);
+
+        sTaskScheduler.schedule("ZimbraStats", new ZimbraStatsDumper(), true, DUMP_FREQUENCY, 0);
         sIsInitialized = true;
     }
 
     /**
-     * <code>TimerTask</code> implementation that writes a row to zimbrastats.csv once a minute.
+     * Scheduled task that writes a row to zimbrastats.csv with the latest
+     * <tt>Accumulator</tt> data.
      */
-    private static final class ZimbraStatsDumper extends TimerTask {
-        
-        public boolean cancel() {
-            ZimbraLog.perf.error("StatsDumper canceled");
-            return super.cancel();
-        }
-        
-        public void run() {
-            try {
-                List<Object> data = new ArrayList<Object>();
-                data.add(TIMESTAMP_FORMATTER.format(new Date()));
-                for (Accumulator a : sAccumulators) {
-                    synchronized (a) {
-                        data.addAll(a.getData());
-                        a.reset();
-                    }
+    private static final class ZimbraStatsDumper
+    implements Callable<Void>
+    {
+        public Void call() {
+            List<Object> data = new ArrayList<Object>();
+            data.add(TIMESTAMP_FORMATTER.format(new Date()));
+            for (Accumulator a : sAccumulators) {
+                synchronized (a) {
+                    data.addAll(a.getData());
+                    a.reset();
                 }
-                
-                // Clean up nulls 
-                for (int i = 0; i < data.size(); i++) {
-                    if (data.get(i) == null) {
-                        data.set(i, "");
-                    }
-                }
-                sZimbraStats.info(StringUtil.join(",", data));
-            } catch (Throwable t) {
-                if (t instanceof OutOfMemoryError) {
-                    throw (OutOfMemoryError) t;
-                }
-                ZimbraLog.perf.error("Accumulator error", t);
             }
+
+            // Clean up nulls 
+            for (int i = 0; i < data.size(); i++) {
+                if (data.get(i) == null) {
+                    data.set(i, "");
+                }
+            }
+            sZimbraStats.info(StringUtil.join(",", data));
+            return null;
         }
     }
 }

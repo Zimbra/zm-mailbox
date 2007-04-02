@@ -82,6 +82,7 @@ public class ZimbraSuite extends TestSuite
         suite.addTest(new TestSuite(TestFilter.class));
         suite.addTest(new TestSuite(TestPop3ImapAuth.class));
         suite.addTest(new TestSuite(TestContacts.class));
+        suite.addTest(new TestSuite(TestTaskScheduler.class));
 
         // xxx bburtin: Commenting out IMAP tests, since the new schema hasn't been
         // checked in
