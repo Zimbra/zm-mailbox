@@ -211,7 +211,7 @@ public class TestFolders extends TestCase
      */
     public void testMarkDeletionTargets()
     throws Exception {
-        String name = NAME_PREFIX + "MDT";
+        String name = NAME_PREFIX + " MDT";
 
         // Create three messages and move two of them into a new folder.
         Message m1 = TestUtil.insertMessage(mMbox, 1, name);
