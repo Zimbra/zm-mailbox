@@ -1097,6 +1097,36 @@ public class ZMailbox {
         return doAction(actionEl);
     }
 
+    public static class ZImportContactsResult {
+
+        private String mIds;
+        private long mCount;
+
+        public ZImportContactsResult(Element response) throws ServiceException {
+            mIds = response.getAttribute(MailConstants.A_ID, null);
+            mCount = response.getAttributeLong(MailConstants.A_NUM);
+        }
+
+        public String getIds() {
+            return mIds;
+        }
+
+        public long getCount() {
+            return mCount;
+        }
+    }
+
+    public static final String CONTACT_IMPORT_TYPE_CSV = "csv";
+    
+    public ZImportContactsResult importContacts(String folderId, String type, String attachmentId) throws ServiceException {
+    	XMLElement req = new XMLElement(MailConstants.IMPORT_CONTACTS_REQUEST);
+    	req.addAttribute(MailConstants.A_CONTENT_TYPE, type);
+    	req.addAttribute(MailConstants.A_FOLDER, folderId);
+    	Element content = req.addElement(MailConstants.E_CONTENT);
+    	content.addAttribute(MailConstants.A_ATTACHMENT_ID, attachmentId);
+    	return new ZImportContactsResult(invoke(req).getElement(MailConstants.E_CONTACT));
+    }
+
 
     /**
      *
