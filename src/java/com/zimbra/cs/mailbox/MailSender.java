@@ -25,7 +25,6 @@
 
 package com.zimbra.cs.mailbox;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -189,9 +188,7 @@ public class MailSender {
                 convId = mbox.getConversationIdFromReferent(mm, origMsgId);
 
             // set the From, Sender, Date, Reply-To, etc. headers
-            updateHeaders(mm, acct, authuser,
-                    octxt != null ? octxt.getRequestIP() : null,
-                    replyToSender);
+            updateHeaders(mm, acct, authuser, octxt != null ? octxt.getRequestIP() : null, replyToSender);
 
             // run any pre-send/pre-save MIME mutators
             try {
@@ -203,11 +200,14 @@ public class MailSender {
             }
 
             // don't save if the message doesn't actually get *sent*
-            if (saveToSent)
-                saveToSent &= (mm.getAllRecipients() != null);
+            boolean hasRecipients = (mm.getAllRecipients() != null);
+            saveToSent &= hasRecipients;
+
+            // #0 is the authenticated user's, #1 is the send-as user's
+            RollbackData[] rollback = new RollbackData[2];
 
             // if requested, save a copy of the message to the Sent Mail folder
-            RollbackData rdata = null;
+            ParsedMessage pm = null;
             if (saveToSent) {
                 if (identity == null)
                     identity = Provisioning.getInstance().getDefaultIdentity(authuser);
@@ -219,12 +219,11 @@ public class MailSender {
 
                 if (mboxSave != null) {
                     int flags = Flag.BITMASK_FROM_ME;
-                    ParsedMessage pm = new ParsedMessage(mm, mm.getSentDate().getTime(),
-                                                         mboxSave.attachmentsIndexingEnabled());
+                    pm = new ParsedMessage(mm, mm.getSentDate().getTime(), mboxSave.attachmentsIndexingEnabled());
                     // save it to the requested folder
                     int sentFolderId = getSentFolderId(mboxSave, identity);
                     Message msg = mboxSave.addMessage(octxt, pm, sentFolderId, true, flags, null, convId);
-                    rdata = new RollbackData(msg);
+                    rollback[0] = new RollbackData(msg);
                 } else {
                     // delegated request, not local
                     String uri = AccountUtil.getSoapUri(authuser);
@@ -234,11 +233,10 @@ public class MailSender {
                             options.setNoSession(true);
                             ZMailbox zmbox = ZMailbox.getMailbox(options);
                             String sentFolder = identity.getAttr(Provisioning.A_zimbraPrefSentMailFolder, "" + Mailbox.ID_FOLDER_SENT);
-                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                            mm.writeTo(baos);
+                            pm = new ParsedMessage(mm, mm.getSentDate().getTime(), mbox.attachmentsIndexingEnabled());
 
-                            String msgId = zmbox.addMessage(sentFolder, "s", null, mm.getSentDate().getTime(), baos.toByteArray(), true);
-                            rdata = new RollbackData(zmbox, authuser, msgId);
+                            String msgId = zmbox.addMessage(sentFolder, "s", null, mm.getSentDate().getTime(), pm.getRawData(), true);
+                            rollback[0] = new RollbackData(zmbox, authuser, msgId);
                         } catch (Exception e) {
                             ZimbraLog.smtp.warn("could not save to remote sent folder (perm denied); continuing", e);
                         }
@@ -246,8 +244,18 @@ public class MailSender {
                 }
             }
 
+            // if this is a delegated send, automatically save a copy to the "From" user's mailbox
+            if (isDelegatedRequest && hasRecipients && acct.getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, true)) {
+                int flags = Flag.BITMASK_UNREAD | Flag.BITMASK_FROM_ME;
+                if (pm == null || pm.isAttachmentIndexingEnabled() != mbox.attachmentsIndexingEnabled())
+                    pm = new ParsedMessage(mm, mm.getSentDate().getTime(), mbox.attachmentsIndexingEnabled());
+                int sentFolderId = getSentFolderId(mbox, Provisioning.getInstance().getDefaultIdentity(acct));
+                Message msg = mbox.addMessage(octxt, pm, sentFolderId, true, flags, null, convId);
+                rollback[1] = new RollbackData(msg);
+            }
+
             // actually send the message via SMTP
-            sendMessage(mm, ignoreFailedAddresses, rdata);
+            sendMessage(mm, ignoreFailedAddresses, rollback);
 
             // check if this is a reply, and if so flag the msg appropriately
             if (origMsgId > 0) {
@@ -280,7 +288,7 @@ public class MailSender {
                 }
             }
 
-            return (rdata != null ? rdata.msgId : null);
+            return (rollback[0] != null ? rollback[0].msgId : null);
 
         } catch (SendFailedException sfe) {
             ZimbraLog.smtp.warn("exception ocurred during SendMsg", sfe);
@@ -382,7 +390,7 @@ public class MailSender {
         mm.saveChanges();
     }
 
-    private void sendMessage(final MimeMessage mm, final boolean ignoreFailedAddresses, final RollbackData rdata) throws MessagingException {
+    private void sendMessage(final MimeMessage mm, final boolean ignoreFailedAddresses, final RollbackData[] rollback) throws MessagingException {
         // send the message via SMTP
         try {
             boolean retry = ignoreFailedAddresses;
@@ -413,10 +421,14 @@ public class MailSender {
                 } while(retry);
             }
         } catch (MessagingException e) {
-            if (rdata != null)  rdata.rollback();
+            for (RollbackData rdata : rollback)
+                if (rdata != null)
+                    rdata.rollback();
             throw e;
         } catch (RuntimeException e) {
-            if (rdata != null)  rdata.rollback();
+            for (RollbackData rdata : rollback)
+                if (rdata != null)
+                    rdata.rollback();
             throw e;
         } 
     }

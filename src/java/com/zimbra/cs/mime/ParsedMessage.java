@@ -307,6 +307,10 @@ public class ParsedMessage {
         return mRawDigest;
     }
 
+    public boolean isAttachmentIndexingEnabled() {
+        return mIndexAttachments;
+    }
+
     public List<MPartInfo> getMessageParts() throws ServiceException {
         parse();
         return mMessageParts;
