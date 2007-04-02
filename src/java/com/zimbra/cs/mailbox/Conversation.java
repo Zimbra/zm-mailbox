@@ -570,7 +570,9 @@ public class Conversation extends MailItem {
             // skip messages that don't need to be moved, or that the client can't modify, doesn't know about, or has explicitly excluded
             if (source.getId() == target.getId()) {
                 continue;
-            } else if (!source.canAccess(ACL.RIGHT_DELETE) || !target.canAccess(ACL.RIGHT_INSERT)) {
+            } else if (!source.canAccess(ACL.RIGHT_DELETE)) {
+                excludeAccess = true;  continue;
+            } else if (target.getId() != Mailbox.ID_FOLDER_TRASH && target.getId() != Mailbox.ID_FOLDER_SPAM && !target.canAccess(ACL.RIGHT_INSERT)) {
                 excludeAccess = true;  continue;
             } else if (!msg.checkChangeID() || !TargetConstraint.checkItem(tcon, msg)) {
                 continue;

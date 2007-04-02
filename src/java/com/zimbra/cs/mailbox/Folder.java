@@ -84,10 +84,9 @@ public class Folder extends MailItem {
     }
 
     /** Returns the folder's absolute path.  Paths are UNIX-style with 
-     *  <code>'/'</code> as the path delimiter.  Paths are relative to
-     *  the user root folder ({@link Mailbox#ID_FOLDER_USER_ROOT}),
-     *  which has the path <code>"/"</code>.  So the Inbox's path is
-     *  <code>"/Inbox"</code>, etc. */
+     *  <tt>'/'</tt> as the path delimiter.  Paths are relative to the user
+     *  root folder ({@link Mailbox#ID_FOLDER_USER_ROOT}), which has the path
+     *  <tt>"/"</tt>.  So the Inbox's path is <tt>"/Inbox"</tt>, etc. */
     public String getPath() {
         if (mId == Mailbox.ID_FOLDER_ROOT || mId == Mailbox.ID_FOLDER_USER_ROOT)
             return "/";
@@ -111,15 +110,15 @@ public class Folder extends MailItem {
         return mAttributes;
     }
 
-    /** Returns the URL the folder syncs to, or <code>""</code> if there
-     *  is no such association.
+    /** Returns the URL the folder syncs to, or <tt>""</tt> if there is no
+     *  such association.
      * @see #setUrl(String) */
     public String getUrl() {
         return (mSyncData == null || mSyncData.url == null ? "" : mSyncData.url);
     }
 
-    /** Returns the URL the folder syncs to, or <code>""</code> if there
-     *  is no such association.
+    /** Returns the URL the folder syncs to, or <tt>""</tt> if there is no
+     *  such association.
      * @see #setUrl(String) */
     public SyncData getSyncData() {
         return mSyncData;
@@ -220,9 +219,9 @@ public class Folder extends MailItem {
      * @param inherit   Whether subfolders inherit these same rights.
      * @perms {@link ACL#RIGHT_ADMIN} on the folder
      * @throws ServiceException The following error codes are possible:<ul>
-     *    <li><code>service.FAILURE</code> - if there's a database failure
-     *    <li><code>service.PERM_DENIED</code> - if you don't have
-     *        sufficient permissions</ul> */
+     *    <li><tt>service.FAILURE</tt> - if there's a database failure
+     *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
+     *        permissions</ul> */
     void grantAccess(String zimbraId, byte type, short rights, boolean inherit, String args) throws ServiceException {
         if (!canAccess(ACL.RIGHT_ADMIN))
             throw ServiceException.PERM_DENIED("you do not have admin rights to folder " + getPath());
@@ -239,9 +238,9 @@ public class Folder extends MailItem {
      * @param zimbraId  The zimbraId of the entry being revoked rights.
      * @perms {@link ACL#RIGHT_ADMIN} on the folder
      * @throws ServiceException The following error codes are possible:<ul>
-     *    <li><code>service.FAILURE</code> - if there's a database failure
-     *    <li><code>service.PERM_DENIED</code> - if you don't have
-     *        sufficient permissions</ul> */
+     *    <li><tt>service.FAILURE</tt> - if there's a database failure
+     *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
+     *        permissions</ul> */
     void revokeAccess(String zimbraId) throws ServiceException {
         if (!canAccess(ACL.RIGHT_ADMIN))
             throw ServiceException.PERM_DENIED("you do not have admin rights to folder " + getPath());
@@ -256,12 +255,12 @@ public class Folder extends MailItem {
     /** Replaces the folder's {@link ACL} with the supplied one and updates
      *  the database accordingly.
      * 
-     * @param acl  The new ACL being applied (<code>null</code> is OK).
+     * @param acl  The new ACL being applied (<tt>null</tt> is OK).
      * @perms {@link ACL#RIGHT_ADMIN} on the folder
      * @throws ServiceException The following error codes are possible:<ul>
-     *    <li><code>service.FAILURE</code> - if there's a database failure
-     *    <li><code>service.PERM_DENIED</code> - if you don't have
-     *        sufficient permissions</ul> */
+     *    <li><tt>service.FAILURE</tt> - if there's a database failure
+     *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
+     *        permissions</ul> */
     void setPermissions(ACL acl) throws ServiceException {
         if (!canAccess(ACL.RIGHT_ADMIN))
             throw ServiceException.PERM_DENIED("you do not have admin rights to folder " + getPath());
@@ -272,17 +271,16 @@ public class Folder extends MailItem {
         saveMetadata();
     }
 
-    /** Returns a copy of the ACL on the folder, or <code>null</code> if
-     *  one is not set. */
+    /** Returns a copy of the ACL on the folder, or <tt>null</tt> if one is
+     *  not set. */
     public ACL getPermissions() {
         return mRights == null ? null : mRights.duplicate();
     }
 
 
-    /** Returns this folder's parent folder.  The root folder's
-     * parent is itself.
-     * @see Mailbox#ID_FOLDER_ROOT
-     */
+    /** Returns this folder's parent folder.  The root folder's parent is
+     *  itself.
+     * @see Mailbox#ID_FOLDER_ROOT */
     @Override
     public MailItem getParent() throws ServiceException {
         return mParent != null ? mParent : super.getFolder();
@@ -302,8 +300,8 @@ public class Folder extends MailItem {
      *  case-insensitive.
      * 
      * @param name  The folder name to search for.
-     * @return The matching subfolder, or <code>null</code> if no such
-     *         folder exists. */
+     * @return The matching subfolder, or <tt>null</tt> if no such folder
+     *         exists. */
     Folder findSubfolder(String name) {
         if (name == null || mSubfolders == null)
             return null;
@@ -339,7 +337,7 @@ public class Folder extends MailItem {
         return visible;
     }
 
-    /** Returns a <code>List</code> that includes this folder and all its
+    /** Returns a <tt>List</tt> that includes this folder and all its
      *  subfolders.  The tree traversal is done depth-first, so this folder
      *  is the first element in the list, followed by its children, then
      *  its grandchildren, etc. */
@@ -426,15 +424,14 @@ public class Folder extends MailItem {
      * @param name    The new folder's name.
      * @perms {@link ACL#RIGHT_INSERT} on the parent folder
      * @throws ServiceException   The following error codes are possible:<ul>
-     *    <li><code>mail.CANNOT_CONTAIN</code> - if the target folder
-     *        can't have subfolders
-     *    <li><code>mail.ALREADY_EXISTS</code> - if a folder by that name
-     *        already exists in the parent folder
-     *    <li><code>mail.INVALID_NAME</code> - if the new folder's name is
-     *        invalid
-     *    <li><code>service.FAILURE</code> - if there's a database failure
-     *    <li><code>service.PERM_DENIED</code> - if you don't have
-     *        sufficient permissions</ul>
+     *    <li><tt>mail.CANNOT_CONTAIN</tt> - if the target folder can't have
+     *        subfolders
+     *    <li><tt>mail.ALREADY_EXISTS</tt> - if a folder by that name already
+     *        exists in the parent folder
+     *    <li><tt>mail.INVALID_NAME</tt> - if the new folder's name is invalid
+     *    <li><tt>service.FAILURE</tt> - if there's a database failure
+     *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
+     *        permissions</ul>
      * @see #validateItemName(String)
      * @see #canContain(byte) */
     static Folder create(int id, Mailbox mbox, Folder parent, String name) throws ServiceException {
@@ -456,15 +453,14 @@ public class Folder extends MailItem {
      * @param url         The (optional) url to sync folder contents to.
      * @perms {@link ACL#RIGHT_INSERT} on the parent folder
      * @throws ServiceException   The following error codes are possible:<ul>
-     *    <li><code>mail.CANNOT_CONTAIN</code> - if the target folder
-     *        can't have subfolders
-     *    <li><code>mail.ALREADY_EXISTS</code> - if a folder by that name
-     *        already exists in the parent folder
-     *    <li><code>mail.INVALID_NAME</code> - if the new folder's name is
-     *        invalid
-     *    <li><code>service.FAILURE</code> - if there's a database failure
-     *    <li><code>service.PERM_DENIED</code> - if you don't have
-     *        sufficient permissions</ul>
+     *    <li><tt>mail.CANNOT_CONTAIN</tt> - if the target folder can't have
+     *        subfolders
+     *    <li><tt>mail.ALREADY_EXISTS</tt> - if a folder by that name already
+     *        exists in the parent folder
+     *    <li><tt>mail.INVALID_NAME</tt> - if the new folder's name is invalid
+     *    <li><tt>service.FAILURE</tt> - if there's a database failure
+     *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
+     *        permissions</ul>
      * @see #validateItemName(String)
      * @see #canContain(byte)
      * @see #FOLDER_IS_IMMUTABLE
@@ -510,17 +506,16 @@ public class Folder extends MailItem {
      *  This is <i>not</i> used to mount other Zimbra users' folders; to do
      *  that, use a {@link Mountpoint}.
      * 
-     * @param url  The new URL for the folder, or <code>null</code> to
-     *             remove the association with a remote object.
+     * @param url  The new URL for the folder, or <tt>null</tt> to remove the
+     *             association with a remote object.
      * @perms {@link ACL#RIGHT_WRITE} on the folder
      * @throws ServiceException   The following error codes are possible:<ul>
-     *    <li><code>mail.CANNOT_SUBSCRIBE</code> - if you're attempting to
+     *    <li><tt>mail.CANNOT_SUBSCRIBE</tt> - if you're attempting to
      *        associate a URL with an existing, normal folder
-     *    <li><code>mail.IMMUTABLE_OBJECT</code> - if the folder can't be
-     *        modified
-     *    <li><code>service.FAILURE</code> - if there's a database failure
-     *    <li><code>service.PERM_DENIED</code> - if you don't have
-     *        sufficient permissions</ul> */
+     *    <li><tt>mail.IMMUTABLE_OBJECT</tt> - if the folder can't be modified
+     *    <li><tt>service.FAILURE</tt> - if there's a database failure
+     *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
+     *        permissions</ul> */
     void setUrl(String url) throws ServiceException {
         if (url == null)
             url = "";
@@ -546,11 +541,10 @@ public class Folder extends MailItem {
      * @param date  The last synchronized remote item's timestamp.
      * @perms {@link ACL#RIGHT_WRITE} on the folder
      * @throws ServiceException   The following error codes are possible:<ul>
-     *    <li><code>mail.IMMUTABLE_OBJECT</code> - if the folder can't be
-     *        modified
-     *    <li><code>service.FAILURE</code> - if there's a database failure
-     *    <li><code>service.PERM_DENIED</code> - if you don't have
-     *        sufficient permissions</ul> */
+     *    <li><tt>mail.IMMUTABLE_OBJECT</tt> - if the folder can't be modified
+     *    <li><tt>service.FAILURE</tt> - if there's a database failure
+     *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
+     *        permissions</ul> */
     void setSubscriptionData(String guid, long date) throws ServiceException {
         if (getUrl().equals(""))
             return;
@@ -617,7 +611,7 @@ public class Folder extends MailItem {
      *  At present, user tags and non-folder-specific flags cannot be applied
      *  or removed on a folder.</i>  For folder-specific flags like
      *  {@link Mailbox#mSubscribeFlag}, the tagging or untagging applies to
-     *  the <code>Folder</code> itself.<p>
+     *  the <tt>Folder</tt> itself.<p>
      * 
      *  You must use {@link #alterUnread} to change a folder's unread state.
      * 
@@ -645,12 +639,12 @@ public class Folder extends MailItem {
     }
 
     /** Renames the item and optionally moves it.  Altering an item's
-     *  case (e.g. from <code>foo</code> to <code>FOO</code>) is allowed.
+     *  case (e.g. from <tt>foo</tt> to <tt>FOO</tt>) is allowed.
      *  If you don't want the item to be moved, you must pass 
-     *  <code>folder.getFolder()</code> as the second parameter.
+     *  <tt>folder.getFolder()</tt> as the second parameter.
      * 
      * @perms {@link ACL#RIGHT_WRITE} on the folder to rename it,
-     *        {@link ACL#RIGHT_DELETE} on the parent folder and
+     *        {@link ACL#RIGHT_DELETE} on the folder and
      *        {@link ACL#RIGHT_INSERT} on the target folder to move it */
     void rename(String name, Folder target) throws ServiceException {
         validateItemName(name);
@@ -664,7 +658,7 @@ public class Folder extends MailItem {
             RuleManager.getInstance().folderRenamed(getAccount(), originalPath, getPath());
     }
 
-    /** Moves this folder so that it is a subfolder of <code>target</code>.
+    /** Moves this folder so that it is a subfolder of <tt>target</tt>.
      * 
      * @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *        {@link ACL#RIGHT_DELETE} on the folder being moved */
@@ -675,7 +669,9 @@ public class Folder extends MailItem {
             return;
         if (!isMovable())
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
-        if (!canAccess(ACL.RIGHT_DELETE) || !target.canAccess(ACL.RIGHT_INSERT))
+        if (!canAccess(ACL.RIGHT_DELETE))
+            throw ServiceException.PERM_DENIED("you do not have the required permissions");
+        if (target.getId() != Mailbox.ID_FOLDER_TRASH && target.getId() != Mailbox.ID_FOLDER_SPAM && !target.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have the required permissions");
         if (!target.canContain(this))
             throw MailServiceException.CANNOT_CONTAIN();
@@ -789,11 +785,11 @@ public class Folder extends MailItem {
      * 
      * @perms {@link ACL#RIGHT_DELETE} on the folder
      * @throws ServiceException The following error codes are possible:<ul>
-     *    <li><code>mail.MODIFY_CONFLICT</code> - if the caller specified a
+     *    <li><tt>mail.MODIFY_CONFLICT</tt> - if the caller specified a
      *        max change number and a modification check, and the modified
      *        change number of a contained item is greater
-     *    <li><code>service.FAILURE</code> - if there's a database failure
-     *    <li><code>service.PERM_DENIED</code> - if you don't have
+     *    <li><tt>service.FAILURE</tt> - if there's a database failure
+     *    <li><tt>service.PERM_DENIED</tt> - if you don't have
      *        sufficient permissions</ul> */
     @Override
     MailItem.PendingDelete getDeletionInfo() throws ServiceException {

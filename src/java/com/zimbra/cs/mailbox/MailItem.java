@@ -1629,17 +1629,16 @@ public abstract class MailItem implements Comparable<MailItem> {
     void rename(String name, Folder target) throws ServiceException {
         validateItemName(name);
 
-        Folder folder = getFolder();
         boolean renamed = !name.equals(mData.name);
-        boolean moved   = target != folder;
+        boolean moved   = target != getFolder();
 
         if (!renamed && !moved)
             return;
 
-        if (moved &&!target.canAccess(ACL.RIGHT_INSERT))
+        if (moved && target.getId() != Mailbox.ID_FOLDER_TRASH && target.getId() != Mailbox.ID_FOLDER_SPAM && !target.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the target item");
-        if (moved && !folder.canAccess(ACL.RIGHT_DELETE))
-            throw ServiceException.PERM_DENIED("you do not have the required rights on the parent item");
+        if (moved && !canAccess(ACL.RIGHT_DELETE))
+            throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
         if (renamed && !canAccess(ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
 
@@ -1743,7 +1742,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         Folder oldFolder = getFolder();
         if (!oldFolder.canAccess(ACL.RIGHT_DELETE))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the source folder");
-        if (!target.canAccess(ACL.RIGHT_INSERT))
+        if (target.getId() != Mailbox.ID_FOLDER_TRASH && target.getId() != Mailbox.ID_FOLDER_SPAM && !target.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the target folder");
 
         if (isLeafNode()) {
