@@ -29,11 +29,16 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 
+import java.util.List;
+import java.util.Map;
+
 public class ZAuthResult {
     private String mAuthToken;
     private long mExpires;
     private long mLifetime;
     private String mRefer;
+    private Map<String, List<String>> mAttrs;
+    private Map<String, List<String>> mPrefs;
 
     public ZAuthResult(Element e) throws ServiceException {
         mAuthToken = e.getElement(AccountConstants.E_AUTH_TOKEN).getText();
@@ -41,6 +46,8 @@ public class ZAuthResult {
         mExpires = System.currentTimeMillis() + mLifetime;
         Element re = e.getOptionalElement(AccountConstants.E_REFERRAL);
         if (re != null) mRefer = re.getText();
+        mAttrs = ZGetInfoResult.getMap(e, AccountConstants.E_ATTRS, AccountConstants.E_ATTR);
+        mPrefs = ZGetInfoResult.getMap(e, AccountConstants.E_PREFS, AccountConstants.E_PREF);
     }
 
     public String getAuthToken() {
@@ -57,5 +64,13 @@ public class ZAuthResult {
     
     public String getRefer() {
         return mRefer;
+    }
+
+    public Map<String, List<String>> getAttrs() {
+        return mAttrs;
+    }
+
+    public Map<String, List<String>> getPrefs() {
+        return mPrefs;
     }
 }

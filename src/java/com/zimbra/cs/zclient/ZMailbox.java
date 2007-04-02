@@ -173,6 +173,8 @@ public class ZMailbox {
         private boolean mNoNotify;
         private boolean mAuthAuthToken;
         private ZEventHandler mHandler;
+        private List<String> mAttrs;
+        private List<String> mPrefs; 
 
         public Options() {
         }
@@ -237,6 +239,13 @@ public class ZMailbox {
 
         public ZEventHandler getEventHandler() { return mHandler; }
         public void setEventHandler(ZEventHandler handler) { mHandler = handler; }
+
+        public List<String> getPrefs() { return mPrefs; }
+        public void setPrefs(List<String> prefs) { mPrefs = prefs; }
+
+        public List<String> getAttrs() { return mAttrs; }
+        public void setAttrs(List<String> attrs) { mAttrs = attrs; }
+
     }
 
     private String mAuthToken;
@@ -296,7 +305,7 @@ public class ZMailbox {
         initPreAuth(options.getUri(), options.getDebugListener(), options.getTimeout(), options.getRetryCount());
         if (options.getAuthToken() != null) {
             if (options.getAuthAuthToken())
-                mAuthResult = auth(options.getAuthToken());
+                mAuthResult = authByAuthToken(options);
             initAuthToken(options.getAuthToken());
         } else {
             String password;
@@ -306,7 +315,7 @@ public class ZMailbox {
             } else {
                 password = options.getPassword();
             }
-            mAuthResult = auth(options.getAccount(), options.getAccountBy(), password, options.getVirtualHost());
+            mAuthResult = authByPassword(options, password);
             initAuthToken(mAuthResult.getAuthToken());
         }
         if (options.getTargetAccount() != null) {
@@ -359,23 +368,40 @@ public class ZMailbox {
         invoke(req);
     }
 
-    private ZAuthResult auth(String key, AccountBy by, String password, String virtualHost) throws ServiceException {
+    private void addAttrsAndPrefs(Element req, Options options) {
+        List<String> prefs = options.getPrefs();
+        if (prefs != null && !prefs.isEmpty()) {
+            Element prefsEl = req.addElement(AccountConstants.E_PREFS);
+            for (String p : prefs)
+                prefsEl.addElement(AccountConstants.E_PREF).addAttribute(AccountConstants.A_NAME, p);
+        }
+        List<String> attrs = options.getAttrs();
+        if (attrs != null && !attrs.isEmpty()) {
+            Element attrsEl = req.addElement(AccountConstants.E_ATTRS);
+            for (String a : attrs)
+                attrsEl.addElement(AccountConstants.E_ATTR).addAttribute(AccountConstants.A_NAME, a);
+        }
+    }
+    
+    private ZAuthResult authByPassword(Options options, String password) throws ServiceException {
         if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling authenticate", null);
         XMLElement req = new XMLElement(AccountConstants.AUTH_REQUEST);
         Element account = req.addElement(AccountConstants.E_ACCOUNT);
-        account.addAttribute(AccountConstants.A_BY, by.name());
-        account.setText(key);
+        account.addAttribute(AccountConstants.A_BY, options.getAccountBy().name());
+        account.setText(options.getAccount());
         req.addElement(AccountConstants.E_PASSWORD).setText(password);
-        if (virtualHost != null)
-            req.addElement(AccountConstants.E_VIRTUAL_HOST).setText(virtualHost);
+        if (options.getVirtualHost() != null)
+            req.addElement(AccountConstants.E_VIRTUAL_HOST).setText(options.getVirtualHost());
+        addAttrsAndPrefs(req, options);
         return new ZAuthResult(invoke(req));
     }
 
-    private ZAuthResult auth(String authToken) throws ServiceException {
+    private ZAuthResult authByAuthToken(Options options) throws ServiceException {
         if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling authenticate", null);
         XMLElement req = new XMLElement(AccountConstants.AUTH_REQUEST);
         Element authTokenEl = req.addElement(AccountConstants.E_AUTH_TOKEN);
-        authTokenEl.setText(authToken);
+        authTokenEl.setText(options.getAuthToken());
+        addAttrsAndPrefs(req, options);
         return new ZAuthResult(invoke(req));
     }
 

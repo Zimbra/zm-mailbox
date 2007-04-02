@@ -55,7 +55,7 @@ public class ZGetInfoResult {
     private List<String> mMailURLs;
     private Set<String> mEmailAddresses;
     
-    private static Map<String, List<String>> getMap(Element e, String root, String child) throws ServiceException {
+    static Map<String, List<String>> getMap(Element e, String root, String child) throws ServiceException {
         Map<String, List<String>> result = new HashMap<String, List<String>>();
         Element attrsEl = e.getOptionalElement(root);
         if (attrsEl != null) {
