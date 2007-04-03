@@ -33,7 +33,6 @@ import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.mailbox.Conversation.TagSet;
 
 /**
  * @author dkarp
