@@ -112,7 +112,7 @@ public class ToXML {
         else if (item instanceof Note)
             encodeNote(parent, ifmt, (Note) item, fields);
         else if (item instanceof Contact)
-            encodeContact(parent, ifmt, (Contact) item, null, false, null, fields);
+            encodeContact(parent, ifmt, (Contact) item, false, null, fields);
         else if (item instanceof CalendarItem) 
             encodeCalendarItemSummary(parent, ifmt, (CalendarItem) item, fields, true);
         else if (item instanceof Conversation)
@@ -323,13 +323,11 @@ public class ToXML {
         }
     }
 
-    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact,
-                ContactAttrCache cacache, boolean summary, List<String> attrFilter) {
-        return encodeContact(parent, ifmt, contact, cacache, summary, attrFilter, NOTIFY_FIELDS);
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact, boolean summary, List<String> attrFilter) {
+        return encodeContact(parent, ifmt, contact, summary, attrFilter, NOTIFY_FIELDS);
     }
 
-    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact,
-                ContactAttrCache cacache, boolean summary, List<String> attrFilter, int fields) {
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact, boolean summary, List<String> attrFilter, int fields) {
         Element elem = parent.addElement(MailConstants.E_CONTACT);
         elem.addAttribute(MailConstants.A_ID, ifmt.formatItemId(contact));
         if (needToOutput(fields, Change.MODIFIED_FOLDER))
@@ -382,51 +380,34 @@ public class ToXML {
                 // XXX: How to distinguish between a non-existent attribute and
                 //      an existing attribute with null or empty string value?
                 String value = attrs.get(name);
-                if (value == null || value.equals("")) {
-                    if (attachments != null) {
-                        for (Attachment attach : attachments) {
-                            if (attach.getName().equals(name))
-                                encodeContactAttachment(elem, cacache, attach);
-                        }
+                if (value != null && !value.equals("")) {
+                    elem.addKeyValuePair(name, value);
+                } else if (attachments != null) {
+                    for (Attachment attach : attachments) {
+                        if (attach.getName().equals(name))
+                            encodeContactAttachment(elem, attach);
                     }
-                    continue;
                 }
-
-                if (cacache != null)
-                    cacache.makeAttr(elem, name, value);
-                else
-                    elem.addElement(MailConstants.E_ATTRIBUTE).addAttribute(MailConstants.A_ATTRIBUTE_NAME, name).setText(value);
             }
         } else {
             for (Map.Entry<String, String> me : attrs.entrySet()) {
                 String name = me.getKey();
                 String value = me.getValue();
-                if (name == null || name.trim().equals("") || value == null || value.equals(""))
-                    continue;
-
-                if (cacache != null)
-                    cacache.makeAttr(elem, name, value);
-                else
-                    elem.addElement(MailConstants.E_ATTRIBUTE).addAttribute(MailConstants.A_ATTRIBUTE_NAME, name).setText(value);
+                if (name != null && !name.trim().equals("") && value != null && !value.equals(""))
+                    elem.addKeyValuePair(name, value);
             }
             if (attachments != null) {
                 for (Attachment attach : attachments)
-                    encodeContactAttachment(elem, cacache, attach);
+                    encodeContactAttachment(elem, attach);
             }
         }
         return elem;
     }
 
-    private static Element encodeContactAttachment(Element elem, ContactAttrCache cacache, Attachment attach) {
-        Element child;
-        if (cacache != null)
-            child = cacache.makeAttr(elem, attach.getName(), null);
-        else
-            child = elem.addElement(MailConstants.E_ATTRIBUTE).addAttribute(MailConstants.A_ATTRIBUTE_NAME, attach.getName());
-        child.addAttribute(MailConstants.A_PART, attach.getPartName()).addAttribute(MailConstants.A_CONTENT_TYPE, attach.getContentType());
-        child.addAttribute(MailConstants.A_SIZE, attach.getSize()).addAttribute(MailConstants.A_CONTENT_FILENAME, attach.getFilename());
-
-        return child;
+    private static void encodeContactAttachment(Element elem, Attachment attach) {
+        Element.KeyValuePair kvp = elem.addKeyValuePair(attach.getName(), null);
+        kvp.addAttribute(MailConstants.A_PART, attach.getPartName()).addAttribute(MailConstants.A_CONTENT_TYPE, attach.getContentType());
+        kvp.addAttribute(MailConstants.A_SIZE, attach.getSize()).addAttribute(MailConstants.A_CONTENT_FILENAME, attach.getFilename());
     }
 
     public static Element encodeNote(Element parent, ItemIdFormatter ifmt, Note note) {

@@ -173,7 +173,7 @@ public class Search extends MailDocumentHandler  {
                 e = addMessagePartHit(response, mph);                
             } else if (hit instanceof ContactHit) {
                 ContactHit ch = (ContactHit) hit;
-                e = ToXML.encodeContact(response, ifmt, ch.getContact(), null, true, null);
+                e = ToXML.encodeContact(response, ifmt, ch.getContact(), true, null);
             } else if (hit instanceof NoteHit) {
                 NoteHit nh = (NoteHit) hit;
                 e = ToXML.encodeNote(response, ifmt, nh.getNote());
@@ -354,7 +354,7 @@ public class Search extends MailDocumentHandler  {
     }
 
     Element addContactHit(ItemIdFormatter ifmt, Element response, ContactHit ch) throws ServiceException {
-        return ToXML.encodeContact(response, ifmt, ch.getContact(), null, true, null);
+        return ToXML.encodeContact(response, ifmt, ch.getContact(), true, null);
     }
 
     Element addDocumentHit(ItemIdFormatter ifmt, Element response, DocumentHit dh) throws ServiceException {

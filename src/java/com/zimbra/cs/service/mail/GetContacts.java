@@ -103,7 +103,6 @@ public class GetContacts extends MailDocumentHandler  {
 			}
 
 		Element response = zsc.createElement(MailConstants.GET_CONTACTS_RESPONSE);
-		ContactAttrCache cacache = null;
 
 		// want to return modified date only on sync-related requests
 		int fields = ToXML.NOTIFY_FIELDS;
@@ -130,7 +129,7 @@ public class GetContacts extends MailDocumentHandler  {
                     for (int id : local) {
                         Contact con = mbox.getContactById(octxt, id);
                         if (con != null && (folderId == ALL_FOLDERS || folderId == con.getFolderId()))
-                            ToXML.encodeContact(response, ifmt, con, cacache, false, attrs, fields);
+                            ToXML.encodeContact(response, ifmt, con, false, attrs, fields);
                     }
 			    }
 			}
@@ -142,7 +141,7 @@ public class GetContacts extends MailDocumentHandler  {
 
 			for (Contact con : contacts) {
 				if (con != null)
-					ToXML.encodeContact(response, ifmt, con, cacache, false, attrs, fields);
+					ToXML.encodeContact(response, ifmt, con, false, attrs, fields);
             }
 		}
 		return response;

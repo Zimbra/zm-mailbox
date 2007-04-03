@@ -43,7 +43,6 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
-import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -80,7 +79,7 @@ public class ModifyContact extends MailDocumentHandler  {
         Element response = zsc.createElement(MailConstants.MODIFY_CONTACT_RESPONSE);
         if (con != null) {
             if (verbose)
-                ToXML.encodeContact(response, ifmt, con, null, true, null);
+                ToXML.encodeContact(response, ifmt, con, true, null);
             else
                 response.addElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, con.getId());
         }

@@ -105,7 +105,7 @@ public class CreateContact extends MailDocumentHandler  {
         Element response = zsc.createElement(MailConstants.CREATE_CONTACT_RESPONSE);
         if (con != null) {
             if (verbose)
-                ToXML.encodeContact(response, ifmt, con, null, true, null);
+                ToXML.encodeContact(response, ifmt, con, true, null);
             else
                 response.addElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, con.getId());
         }
