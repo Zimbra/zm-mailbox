@@ -294,7 +294,6 @@ public class ZMailboxUtil implements DebugListener {
     private static Option O_OUTPUT_FILE = new Option("o", "output", true, "output filename");
     private static Option O_FOLDER = new Option("f", "folder", true, "folder-path-or-id");
     private static Option O_IGNORE = new Option("i", "ignore", false, "ignore unknown contact attrs");
-    private static Option O_INHERIT = new Option("i", "inherit", false, "whether rights granted on this folder are also granted on all subfolders");
     private static Option O_LAST = new Option("l", "last", false, "add as last filter rule");    
     private static Option O_LIMIT = new Option("l", "limit", true, "max number of results to return");
     private static Option O_NEXT = new Option("n", "next", false, "next page of search results");
@@ -359,7 +358,7 @@ public class ZMailboxUtil implements DebugListener {
         MODIFY_FOLDER_CHECKED("modifyFolderChecked", "mfch", "{folder-path} [0|1*]", "modify whether a folder is checked in the UI", Category.FOLDER, 1, 2),
         MODIFY_FOLDER_COLOR("modifyFolderColor", "mfc", "{folder-path} {new-color}", "modify a folder's color", Category.FOLDER, 2, 2),
         MODIFY_FOLDER_EXCLUDE_FREE_BUSY("modifyFolderExcludeFreeBusy", "mfefb", "{folder-path} [0|1*]", "change whether folder is excluded from free-busy", Category.FOLDER, 1, 2),
-        MODIFY_FOLDER_GRANT("modifyFolderGrant", "mfg", "{folder-path} {account {name}|group {name}|domain {name}|all|public|guest {email} {password}] {permissions|none}}", "add/remove a grant to a folder", Category.FOLDER, 3, 5, O_INHERIT),
+        MODIFY_FOLDER_GRANT("modifyFolderGrant", "mfg", "{folder-path} {account {name}|group {name}|domain {name}|all|public|guest {email} {password}] {permissions|none}}", "add/remove a grant to a folder", Category.FOLDER, 3, 5),
         MODIFY_FOLDER_URL("modifyFolderURL", "mfu", "{folder-path} {url}", "modify a folder's URL", Category.FOLDER, 2, 2),
         MODIFY_IDENTITY("modifyIdentity", "mid", "{identity-name} [attr1 value1 [attr2 value2...]]", "modify an identity", Category.ACCOUNT, 1, Integer.MAX_VALUE),
         MODIFY_TAG_COLOR("modifyTagColor", "mtc", "{tag-name} {tag-color}", "modify a tag's color", Category.TAG, 2, 2),
@@ -749,8 +748,6 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private String folderOpt()   { return mCommandLine.getOptionValue(O_FOLDER.getOpt()); }
-
-    private boolean inheritOpt() { return mCommandLine.hasOption(O_INHERIT.getOpt()); }
 
     private boolean replaceOpt() { return mCommandLine.hasOption(O_REPLACE.getOpt()); }
 
@@ -1251,15 +1248,14 @@ public class ZMailboxUtil implements DebugListener {
             System.out.format("[%n%s%n]%n", sb.toString());
 
         } else {
-            String format = "%7.7s  %11.11s  %6.6s  %s%n";
-            System.out.format(format,   "Inherit", "Permissions", "Type",  "Display");
-            System.out.format(format,  "-------", "-----------", "------","-------");
+            String format = "%11.11s  %6.6s  %s%n";
+            System.out.format(format, "Permissions", "Type",   "Display");
+            System.out.format(format, "-----------", "------", "-------");
             
             for (ZGrant g : f.getGrants()) {
                 GranteeType gt = g.getGranteeType();
                 String dn = (gt == GranteeType.all || gt == GranteeType.pub) ? "" : g.getGranteeName(); 
-                System.out.format(format, 
-                        g.getInherit(), g.getPermissions(), getGranteeDisplay(g.getGranteeType()), dn);
+                System.out.format(format, g.getPermissions(), getGranteeDisplay(g.getGranteeType()), dn);
             }
         }
     }
@@ -1322,7 +1318,7 @@ public class ZMailboxUtil implements DebugListener {
             
             mMbox.modifyFolderRevokeGrant(folderId, grantee);
         } else {
-            mMbox.modifyFolderGrant(folderId, type, grantee, perms, arg, inheritOpt());
+            mMbox.modifyFolderGrant(folderId, type, grantee, perms, arg);
         }
     }
 

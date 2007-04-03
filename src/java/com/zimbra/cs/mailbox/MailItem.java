@@ -1270,8 +1270,8 @@ public abstract class MailItem implements Comparable<MailItem> {
      * 
      *  You must use {@link #alterUnread} to change an item's unread state.
      * 
-     * @param tag  The tag or flag to add or remove from the item.
-     * @param add  <tt>true</tt> to tag the item, <tt>false</tt> to untag it.
+     * @param tag       The tag or flag to add or remove from the item.
+     * @param newValue  <tt>true</tt> to tag the item, <tt>false</tt> to untag it.
      * @perms {@link ACL#RIGHT_WRITE} on the item
      * @throws ServiceException  The following error codes are possible:<ul>
      *    <li><tt>mail.CANNOT_TAG</tt> - if the item can't be tagged with the
@@ -1281,10 +1281,10 @@ public abstract class MailItem implements Comparable<MailItem> {
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
      *        permissions</ul>
      * @see #alterUnread(boolean) */
-    void alterTag(Tag tag, boolean add) throws ServiceException {
+    void alterTag(Tag tag, boolean newValue) throws ServiceException {
         if (tag == null)
             throw ServiceException.FAILURE("no tag supplied when trying to tag item " + mId, null);
-        if (!isTaggable() || (add && !tag.canTag(this)))
+        if (!isTaggable() || (newValue && !tag.canTag(this)))
             throw MailServiceException.CANNOT_TAG(tag, this);
         if (tag.getId() == Flag.ID_FLAG_UNREAD)
             throw ServiceException.FAILURE("unread state must be set with alterUnread", null);
@@ -1292,7 +1292,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
 
         // detect NOOPs and bail
-        if (add == isTagged(tag))
+        if (newValue == isTagged(tag))
             return;
         // don't let the user tag things as "has attachments" or "draft"
         if (tag instanceof Flag && (tag.getBitmask() & Flag.FLAG_SYSTEM) != 0)
@@ -1301,19 +1301,19 @@ public abstract class MailItem implements Comparable<MailItem> {
         markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
 
         // change our cached tags
-        tagChanged(tag, add);
+        tagChanged(tag, newValue);
 
-        // tell our parent about the tag change (note: must precede DbMailItem.alterTags)
+        // tell our parent about the tag change (note: must precede DbMailItem.alterTag)
         MailItem parent = getCachedParent();
         if (parent != null)
-            parent.inheritedTagChanged(tag, add);
+            parent.inheritedTagChanged(tag, newValue);
 
         // since we're adding/removing a tag, the tag's unread count may change
         if (tag.trackUnread() && mData.unreadCount > 0)
-            tag.updateUnread((add ? 1 : -1) * mData.unreadCount);
+            tag.updateUnread((newValue ? 1 : -1) * mData.unreadCount);
 
         // alter our tags in the DB
-        DbMailItem.alterTag(this, tag, add);
+        DbMailItem.alterTag(this, tag, newValue);
     }
 
     /** Updates the object's in-memory state to reflect a {@link Tag} change.

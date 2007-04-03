@@ -36,9 +36,9 @@ import com.zimbra.common.service.ServiceException;
  */
 public class Flag extends Tag {
 
-    /** Array mapping each <code>Flag</code> to a character that represents
-     *  it in a string encoding.  The <code>Flag</code>'s position in this
-     *  array is the same as its "index": <code>-1 - FLAG_ID</code>. */
+    /** Array mapping each <tt>Flag</tt> to a character that represents it in
+     *  a string encoding.  The <tt>Flag</tt>'s position in this array is the
+     *  same as its "index": <code>-1 - FLAG_ID</code>. */
     static char[] FLAG_REP = new char[31];
         static {
             for (int i = 0; i < 31; i++)  FLAG_REP[i] = 'X';
@@ -80,13 +80,10 @@ public class Flag extends Tag {
     public static final int BITMASK_NOTIFIED = 1 << getIndex(ID_FLAG_NOTIFIED); // 256
         static { FLAG_REP[getIndex(ID_FLAG_NOTIFIED)] = 'n'; }
 
-    /**
-     * The outside world (callers of {@link Mailbox} methods treat
-     * <code>FLAG_UNREAD</code> like the other flags.  Internally,
-     * we break it out into a separate <code>unreadCount</code> 
-     * variable.  It's also persisted in a separate indexed column, for fast
-     * lookups of unread <code>MailItem</code>s.
-     */
+    /** Callers of {@link Mailbox} methods treat <tt>FLAG_UNREAD</tt> like the
+     *  other flags.  Internally, we break it out into a separate variable,
+     *  <code>unreadCount</code>.  It's also persisted in a separate indexed
+     *  column for fast lookups of unread <tt>MailItem</tt>s. */
     public static final int ID_FLAG_UNREAD = -10;
     public static final int BITMASK_UNREAD = 1 << getIndex(ID_FLAG_UNREAD); // 512
         static { FLAG_REP[getIndex(ID_FLAG_UNREAD)] = 'u'; }
@@ -97,17 +94,21 @@ public class Flag extends Tag {
 
     public static final int ID_FLAG_EXCLUDE_FREEBUSY = -21;
     public static final int BITMASK_EXCLUDE_FREEBUSY = 1 << getIndex(ID_FLAG_EXCLUDE_FREEBUSY); // 1048576
-         static { FLAG_REP[getIndex(ID_FLAG_EXCLUDE_FREEBUSY)] = 'b'; }
+        static { FLAG_REP[getIndex(ID_FLAG_EXCLUDE_FREEBUSY)] = 'b'; }
 
-     public static final int ID_FLAG_CHECKED = -22;
-     public static final int BITMASK_CHECKED = 1 << getIndex(ID_FLAG_CHECKED); // 2097152
-         static { FLAG_REP[getIndex(ID_FLAG_CHECKED)] = '#'; }
+    public static final int ID_FLAG_CHECKED = -22;
+    public static final int BITMASK_CHECKED = 1 << getIndex(ID_FLAG_CHECKED); // 2097152
+        static { FLAG_REP[getIndex(ID_FLAG_CHECKED)] = '#'; }
+
+    public static final int ID_FLAG_NO_INHERIT = -23;
+    public static final int BITMASK_NO_INHERIT = 1 << getIndex(ID_FLAG_NO_INHERIT); // 4194304
+        static { FLAG_REP[getIndex(ID_FLAG_NO_INHERIT)] = 'i'; }
 
 
     static final String UNREAD_FLAG_ONLY = getAbbreviation(ID_FLAG_UNREAD) + "";
 
     public static final int FLAG_SYSTEM = BITMASK_FROM_ME | BITMASK_ATTACHED | BITMASK_COPIED | BITMASK_DRAFT;
-    public static final int FLAGS_FOLDER = BITMASK_CHECKED | BITMASK_SUBSCRIBED | BITMASK_EXCLUDE_FREEBUSY;
+    public static final int FLAGS_FOLDER = BITMASK_CHECKED | BITMASK_SUBSCRIBED | BITMASK_EXCLUDE_FREEBUSY | BITMASK_NO_INHERIT;
     public static final int FLAGS_ALL = BITMASK_FROM_ME   | BITMASK_ATTACHED | BITMASK_REPLIED  |
                                         BITMASK_FORWARDED | BITMASK_COPIED   | BITMASK_FLAGGED  |
                                         BITMASK_DRAFT     | BITMASK_DELETED  | BITMASK_NOTIFIED |

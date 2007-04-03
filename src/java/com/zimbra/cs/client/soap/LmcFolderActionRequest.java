@@ -45,7 +45,6 @@ public class LmcFolderActionRequest extends LmcSoapRequest {
         private String mPerm;
         private String mGrantee;
         private String mD;
-        private boolean mInherit;
 
         /**
          * Set the list of Folder ID's to operate on
@@ -71,11 +70,10 @@ public class LmcFolderActionRequest extends LmcSoapRequest {
                 mTargetFolder = f;
         }
 
-        public void setGrant(String perm, String grantee, String d, boolean inherit) {
+        public void setGrant(String perm, String grantee, String d) {
             mPerm = perm;
             mGrantee = grantee;
             mD = d;
-            mInherit = inherit;
         }
 
         public String getFolderList() {
@@ -110,7 +108,6 @@ public class LmcFolderActionRequest extends LmcSoapRequest {
                             DomUtil.addAttr(grant, MailConstants.A_GRANT_TYPE, mGrantee);
                         if (mD != null)
                             DomUtil.addAttr(grant, MailConstants.A_DISPLAY, mD);
-                        DomUtil.addAttr(grant, MailConstants.A_INHERIT, mInherit);
                     }
                 }
                 if (mName != null)

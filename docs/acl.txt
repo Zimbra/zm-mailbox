@@ -79,70 +79,83 @@ access check).
 
 INHERITANCE
 ===========
-In a mail application, sometimes you'll want to grant access to a folder
-and all its subfolders, like in the standard "public folders" model.
-Other times, you'll just want to share a single folder but not its
+In a mail application, you'll usually want to grant access to a folder and
+all its subfolders, like in the standard "public folders" model.  More
+rarely, you'll just want to share a folder but not one or more of its
 children, like when you want to share your Calendar folder but not its
-Calendar/Personal subfolder.  We'll want to support both options.  This
-feature may not be included in the Birdseye release, but will probably be
-included shortly thereafter.
+Calendar/Personal subfolder.  We'll want to support both options.
 
-One result of privilege inheritance is that newly-created subfolders will
+One result of privilege inheritance is that newly-created subfolders
 automatically inherit granted rights as appropriate.  Existing folders
 moved to a different point in the folder hierarchy will also reinterpret
 their inherited permissions in the context of their new location.  This is
 probably the behavior that the user would expect.
 
 The set of rights that apply to a given folder is derived by starting at
-that folder and going up the folder hierarchy, considering the first folder
-with explicitly set rights (whether or not they are inherited by the folder
-in question) and then stopping.  In other words, take the *first* (and only
-the first) of the following that exists:
+that folder and going up the folder hierarchy.  If we hit a folder that
+has a set of rights explicitly set on it, we stop and use those.  If we
+hit a folder that doesn't inherit priviliges from its parent, we stop and
+treat it as if no rights are granted on the target folder.  In other
+words, take the *first* (and only the first) of the following that exists,
+stopping at "do not inherit" folders:
 
     - the set of rights granted on the folder directly
-    - the inherited subset of rights granted on the folder's parent
-    - the inherited subset of rights granted on the folder's grandparent
+    - the set of rights granted on the folder's parent
+    - the set of rights granted on the folder's grandparent
       ...
-    - the inherited subset of rights granted on the mailbox's root folder
+    - the set of rights granted on the mailbox's root folder
     - no rights at all
 
 So if the folder hierarchy looks like this:
 
-                 root  <- inherited "read+write" granted to user A
+                 root  <- "read+write" granted to user A
                  /  \
                 V    W  <- "read" granted to users A and B
                /    / \
               X    Y   Z
 
 then user A has "write" rights on folders V and X, but not W, Y, and Z,
-and user B has "read" rights on folder W but not V, X, Y, or Z.
+B has "read" rights on folders W, Y, and Z but not V or X.
+
+If the folder hierarchy looks like this:
+
+                 root  <- "read+write" granted to user A
+                 /  \
+                V    W  <- "do not inherit" flag set
+               /    / \
+              X    Y   Z  <- "read" granted to users A and B
+
+then user A has "write" rights on folders V and X, but not W, Y, and Z,
+user A has "read" rights on folders V, X, and Z but not W or Y, and
+user B has "read" rights on folder Z but not V, X, W, or Y.
 
 COMBINING RIGHTS
 ================
 Rights combine.  When checking to see if a user has privileges to perform
-an operation, we combine all the granted rights from all sources: the
-folder and all the applicable tags.
+an operation, we combine all the granted rights on the folder.
 
 For instance, if a folder grants "read" privileges to user A and "action"
 privileges to a group of which user A is a member, user A will have *both*
 rights on items in that folder and will be able to accept the folder's
 appointments, etc.
 
-If the user has only "read" rights on the folder and has only "action"
-rights on a tag with which the appointment is tagged, the two combine on
-that appointment and the user can still accept it, etc.
+Once we support granting rights on a tag (timeframe for this feature is
+not yet set), those rights will combine with folder rights.  So if the
+user had only "read" rights on the folder containing an appointment and
+had only "action" rights on one of the appointment's tags, the two would
+combine on that appointment and the user could still accept it, etc.
 
 NEGATIVE RIGHTS
 ===============
-In a future release post-Birdseye, we'll begin supporting negative rights.
-Negative rights are exactly what you'd expect: they deny certain
-privileges to the "grantee".  Negative rights always take precedence over
-positive rights.
+In a future release (timeframe for this feature not yet set), we may begin
+supporting negative rights.  Negative rights are exactly what you'd
+expect: they deny certain privileges to the "grantee".  Negative rights
+will take precedence over positive rights.
 
-For example, if you grant "no read" on a folder to user A, the user will
-not be able to read items in the folder, period.  Regardless of what other
-rights are granted to them (or to their domain, or COS, etc.) on tags or
-folders, negative rights override positive rights.
+For example, if you granted "no read" on a folder to user A, the user
+would not be able to read items in the folder, period.  Regardless of what
+other rights are granted to them (or to their domain, or COS, etc.) on
+tags or folders, negative rights would override positive rights.
 
 MOUNTPOINTS
 ===========
@@ -189,13 +202,13 @@ relationship and partition the requests accordingly.
 NOTIFICATION
 ============
 With displayed items potentially spanning servers, notification becomes
-significantly more complex.  We'd like to avoid proxying noop requests
+significantly more complex.  We'd like to avoid proxying NOOP requests
 around the system on every client request due to overhead.  That implies
 that remote sessions are referenced indirectly through the user's primary
 session and not directly in the client's SOAP request header.
 
-One possible solution might be to keep a timer and proxy noops only on
-client requests after timer expiration.  Another might be to proxy noops
+One possible solution might be to keep a timer and proxy NOOPs only on
+client requests after timer expiration.  Another might be to proxy NOOPs
 independent of client requests and cache the results in the client's
 primary session.  Neither option seems attractive; the former is a bit
 simpler to implement and manage.

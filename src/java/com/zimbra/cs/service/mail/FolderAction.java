@@ -153,7 +153,6 @@ public class FolderAction extends ItemAction {
             mbox.revokeAccess(octxt, iid.getId(), zid);
         } else if (operation.equals(OP_GRANT)) {
             Element grant = action.getElement(MailConstants.E_GRANT);
-            boolean inherit = grant.getAttributeBool(MailConstants.A_INHERIT, false);
             short rights = ACL.stringToRights(grant.getAttribute(MailConstants.A_RIGHTS));
             byte gtype   = stringToType(grant.getAttribute(MailConstants.A_GRANT_TYPE));
             String zid   = grant.getAttribute(MailConstants.A_ZIMBRA_ID, null);
@@ -186,7 +185,7 @@ public class FolderAction extends ItemAction {
             		gtype = ACL.GRANTEE_GROUP;
             }
             
-            mbox.grantAccess(octxt, iid.getId(), zid, gtype, rights, inherit, password);
+            mbox.grantAccess(octxt, iid.getId(), zid, gtype, rights, password);
             // kinda hacky -- return the zimbra id and name of the grantee in the response
             result.addAttribute(MailConstants.A_ZIMBRA_ID, zid);
             if (nentry != null)
@@ -206,12 +205,12 @@ public class FolderAction extends ItemAction {
             byte color = (byte) action.getAttributeLong(MailConstants.A_COLOR, -1);
             ACL acl = parseACL(action.getOptionalElement(MailConstants.E_ACL));
 
-            if (flags != null)
-                mbox.setTags(octxt, iid.getId(), MailItem.TYPE_FOLDER, flags, null, null);
             if (color >= 0)
                 mbox.setColor(octxt, iid.getId(), MailItem.TYPE_FOLDER, color);
             if (acl != null)
                 mbox.setPermissions(octxt, iid.getId(), acl);
+            if (flags != null)
+                mbox.setTags(octxt, iid.getId(), MailItem.TYPE_FOLDER, flags, null, null);
             if (newName != null)
                 mbox.rename(octxt, iid.getId(), MailItem.TYPE_FOLDER, newName, iidFolder.getId());
             else if (iidFolder.getId() > 0)
@@ -232,9 +231,8 @@ public class FolderAction extends ItemAction {
             String zid   = grant.getAttribute(MailConstants.A_ZIMBRA_ID);
             byte gtype   = stringToType(grant.getAttribute(MailConstants.A_GRANT_TYPE));
             short rights = ACL.stringToRights(grant.getAttribute(MailConstants.A_RIGHTS));
-            boolean inherit = grant.getAttributeBool(MailConstants.A_INHERIT, false);
             String args   = grant.getAttribute(MailConstants.A_ARGS, null);
-            acl.grantAccess(zid, gtype, rights, inherit, args);
+            acl.grantAccess(zid, gtype, rights, args);
         }
         return acl;
     }

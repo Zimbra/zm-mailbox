@@ -191,7 +191,7 @@ public class ToXML {
         if (canAdminister) {
             // return full ACLs for folders we have admin rights on
             if (needToOutput(fields, Change.MODIFIED_ACL)) {
-                ACL acl = folder.getPermissions();
+                ACL acl = folder.getACL();
                 if (acl != null || fields != NOTIFY_FIELDS) {
                     Element eACL = elem.addUniqueElement(MailConstants.E_ACL);
                     if (acl != null) {
@@ -201,7 +201,6 @@ public class ToXML {
                             eACL.addElement(MailConstants.E_GRANT)
                                 .addAttribute(MailConstants.A_ZIMBRA_ID, grant.getGranteeId())
                                 .addAttribute(MailConstants.A_GRANT_TYPE, FolderAction.typeToString(grant.getGranteeType()))
-                                .addAttribute(MailConstants.A_INHERIT, grant.isGrantInherited())
                                 .addAttribute(MailConstants.A_RIGHTS, ACL.rightsToString(grant.getGrantedRights()))
                                 .addAttribute(MailConstants.A_DISPLAY, nentry == null ? null : nentry.getName());
                         }

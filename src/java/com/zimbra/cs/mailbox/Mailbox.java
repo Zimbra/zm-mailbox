@@ -369,21 +369,17 @@ public class Mailbox {
     public Flag mUnreadFlag;
     /** flag: IMAP-subscribed folders */
     public Flag mSubscribeFlag;
-    /** flag: Exclude folder from free-busy calculations */
+    /** flag: exclude folder from free-busy calculations */
     public Flag mExcludeFBFlag;
     /** flag: folders "checked" for display in the web UI */
     public Flag mCheckedFlag;
+    /** flag: whether a folder does not inherit permissions from its parent */
+    public Flag mNoInheritFlag;
 
     /** the full set of message flags, in order */
     final Flag[] mFlags = new Flag[31];
 
 
-    /**
-     * Constructor
-     * 
-     * @param data
-     * @throws ServiceException
-     */
     Mailbox(MailboxData data) throws ServiceException {
         mId   = data.id;
         mData = data;
@@ -404,19 +400,20 @@ public class Mailbox {
     }
 
     /** Returns the ID of this mailbox's Account.  This is a 36-character
-     *  GUID, e.g. <code>"1b4e28ba-2fa1-11d2-883f-b9a761bde3fb"</code>.
+     *  GUID, e.g. <tt>"1b4e28ba-2fa1-11d2-883f-b9a761bde3fb"</tt>.
      * 
      * @see #getAccount() */
     public String getAccountId() {
         return mData.accountId;
     }
 
+    /** Returns which MBOXGROUP<N> database this mailbox is homed in. */
     public int getSchemaGroupId() {
         return mData.schemaGroupId;
     }
 
     /** Returns the {@link Account} object for this mailbox's owner.  At
-     *  present, each account can have at most one <code>Mailbox</code>.
+     *  present, each account can have at most one <tt>Mailbox</tt>.
      *  
      * @throws AccountServiceException if no account exists */
     public synchronized Account getAccount() throws ServiceException {
@@ -433,6 +430,7 @@ public class Mailbox {
         return mMailboxIndex;
     }
 
+    /** Retuns the ID of the volume this <tt>Mailbox</tt>'s index lives on. */
     public short getIndexVolume() {
         return mData.indexVolumeId;
     }
@@ -514,7 +512,7 @@ public class Mailbox {
 
     /** Returns the operation timestamp as a UNIX int with 1-second
      *  resolution.  This time is set at the start of the Mailbox
-     *  transaction and should match the <code>long</code> returned
+     *  transaction and should match the <tt>long</tt> returned
      *  by {@link #getOperationTimestampMillis}. */
     public int getOperationTimestamp() {
         return (int) (mCurrentChange.timestamp / 1000);
@@ -522,7 +520,7 @@ public class Mailbox {
 
     /** Returns the operation timestamp as a Java long with full
      *  millisecond resolution.  This time is set at the start of
-     *  the Mailbox transaction and should match the <code>int</code>
+     *  the Mailbox transaction and should match the <tt>int</tt>
      *  returned by {@link #getOperationTimestamp}. */
     public long getOperationTimestampMillis() {
         return mCurrentChange.timestamp;
@@ -569,10 +567,10 @@ public class Mailbox {
      *  Every write to the database is assigned a monotonically-increasing
      *  (though not necessarily gap-free) change number.  All writes in
      *  a single transaction receive the same change number.  This change
-     *  number is persisted as <code>MAIL_ITEM.MOD_METADATA</code> in all
-     *  non-delete cases, as <code>MAIL_ITEM.MOD_CONTENT</code> for any 
+     *  number is persisted as <tt>MAIL_ITEM.MOD_METADATA</tt> in all
+     *  non-delete cases, as <tt>MAIL_ITEM.MOD_CONTENT</tt> for any 
      *  items that were created or had their "content" modified, and as
-     *  <code>TOMBSTONE.SEQUENCE</code> for hard deletes. */
+     *  <tt>TOMBSTONE.SEQUENCE</tt> for hard deletes. */
     public int getOperationChangeID() throws ServiceException {
         if (mCurrentChange.changeId == MailboxChange.NO_CHANGE)
             setOperationChangeID(ID_AUTO_INCREMENT);
@@ -643,9 +641,9 @@ public class Mailbox {
 
 
     /** Returns the {@link Account} for the authenticated user for the
-     *  transaction.  Returns <code>null</code> if none was supplied in the
+     *  transaction.  Returns <tt>null</tt> if none was supplied in the
      *  transaction's {@link Mailbox.OperationContext} or if the authenticated
-     *  user is the same as the <code>Mailbox</code>'s owner. */
+     *  user is the same as the <tt>Mailbox</tt>'s owner. */
     Account getAuthenticatedAccount() {
         Account authuser = null;
         if (mCurrentChange.active && mCurrentChange.octxt != null)
@@ -669,7 +667,7 @@ public class Mailbox {
     }
 
     /** Returns whether the authenticated user has full access to this
-     *  <code>Mailbox</code>.   The following users have full access:<ul>
+     *  <tt>Mailbox</tt>.   The following users have full access:<ul>
      *    <li>the mailbox's owner
      *    <li>all global admin accounts (if using admin privileges)
      *    <li>appropriate domain admins (if using admin privileges)</ul>
@@ -720,12 +718,12 @@ public class Mailbox {
 
     /** Updates the count of contacts currently in the mailbox.  The
      *  administrator can place a limit on a user's contact count by setting
-     *  the <code>zimbraContactMaxNumEntries</code> COS attribute.  Contacts
+     *  the <tt>zimbraContactMaxNumEntries</tt> COS attribute.  Contacts
      *  in the Trash still count against this quota.
      * 
      * @param delta  The change in contact count, negative to decrease.
      * @throws ServiceException  The following error codes are possible:<ul>
-     *    <li><code>mail.TOO_MANY_CONTACTS</code> - if the user's contact
+     *    <li><tt>mail.TOO_MANY_CONTACTS</tt> - if the user's contact
      *        quota would be exceeded</ul> */
     void updateContactCount(int delta) throws ServiceException {
         if (delta == 0)
@@ -830,7 +828,7 @@ public class Mailbox {
      * @return A new MailboxLock token for use in a subsequent call to
      *         {@link MailboxManager#endMaintenance(Mailbox.MailboxLock, boolean, boolean)}.
      * @throws ServiceException MailServiceException.MAINTENANCE if the
-     *         <code>Mailbox</code> is already in maintenance mode. */
+     *         <tt>Mailbox</tt> is already in maintenance mode. */
     synchronized MailboxLock beginMaintenance() throws ServiceException {
         if (mMaintenance != null)
             throw MailServiceException.MAINTENANCE(mId);
@@ -912,13 +910,13 @@ public class Mailbox {
      *  We segment the mailbox-level configuration data into "sections" to
      *  allow server applications to store their config separate from all
      *  other apps.  (So the IMAP server could store and retrieve the
-     *  <code>"imap"</code> config section, etc.)
+     *  <tt>"imap"</tt> config section, etc.)
      * 
      * @param octxt    The context for this request (e.g. auth user id).
      * @param section  The config section to fetch.
      * @perms full access to the mailbox (see {@link #hasFullAccess()})
      * @return The {@link Metadata} representing the appropriate section's
-     *         configuration information, or <code>null</code> if none is
+     *         configuration information, or <tt>null</tt> if none is
      *         found or if the caller does not have sufficient privileges
      *         to read the mailbox's config. */
     public synchronized Metadata getConfig(OperationContext octxt, String section) throws ServiceException {
@@ -960,8 +958,8 @@ public class Mailbox {
      * @param config   The new config data for the section.
      * @perms full access to the mailbox (see {@link #hasFullAccess()})
      * @throws ServiceException  The following error codes are possible:<ul>
-     *    <li><code>service.FAILURE</code> - if there's a database failure
-     *    <li><code>service.PERM_DENIED</code> - if you don't have
+     *    <li><tt>service.FAILURE</tt> - if there's a database failure
+     *    <li><tt>service.PERM_DENIED</tt> - if you don't have
      *        sufficient permissions</ul>
      * @see #getConfig(OperationContext, String) */
     public synchronized void setConfig(OperationContext octxt, String section, Metadata config) throws ServiceException {
@@ -1042,7 +1040,7 @@ public class Mailbox {
         item.uncacheChildren();
     }
 
-    /** Removes an item from the <code>Mailbox</code>'s item cache.  If the
+    /** Removes an item from the <tt>Mailbox</tt>'s item cache.  If the
      *  item has any children, they are also uncached.  <i>Note: This function
      *  cannot be used to uncache {@link Tag}s and {@link Folder}s.  You must
      *  call {@link #uncache(MailItem)} to remove those items from their
@@ -1057,7 +1055,7 @@ public class Mailbox {
             item.uncacheChildren();
     }
 
-    /** Removes all items of a specified type from the <code>Mailbox</code>'s
+    /** Removes all items of a specified type from the <tt>Mailbox</tt>'s
      *  caches.  There may be some collateral damage: purging non-tag,
      *  non-folder types will drop the entire item cache.
      * 
@@ -1146,6 +1144,7 @@ public class Mailbox {
         mSubscribeFlag = Flag.instantiate(this, "\\Subscribed", Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SUBSCRIBED);
         mExcludeFBFlag = Flag.instantiate(this, "\\ExcludeFB",  Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_EXCLUDE_FREEBUSY);
         mCheckedFlag   = Flag.instantiate(this, "\\Checked",    Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_CHECKED);
+        mNoInheritFlag = Flag.instantiate(this, "\\NoInherit",  Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_NO_INHERIT);
     }
 
     private void loadFoldersAndTags() throws ServiceException {
@@ -1584,9 +1583,9 @@ public class Mailbox {
      * @return An OR'ed-together set of rights, e.g. {@link ACL#RIGHT_READ}
      *         and {@link ACL#RIGHT_INSERT}.
      * @throws ServiceException   The following error codes are possible:<ul>
-     *    <li><code>mail.NO_SUCH_ITEM</code> - the specified item does not
+     *    <li><tt>mail.NO_SUCH_ITEM</tt> - the specified item does not
      *        exist
-     *    <li><code>service.FAILURE</code> - if there's a database failure,
+     *    <li><tt>service.FAILURE</tt> - if there's a database failure,
      *        LDAP error, or other internal error</ul>
      * @see ACL
      * @see MailItem#checkRights(short, Account, boolean) */
@@ -1608,10 +1607,10 @@ public class Mailbox {
     }
 
     /** Returns whether this type of {@link MailItem} is definitely preloaded
-     *  in one of the <code>Mailbox</code>'s caches.
+     *  in one of the <tt>Mailbox</tt>'s caches.
      * 
-     * @param type  The type of <code>MailItem</code>.
-     * @return <code>true</code> if the item is a {@link Folder} or {@link Tag}
+     * @param type  The type of <tt>MailItem</tt>.
+     * @return <tt>true</tt> if the item is a {@link Folder} or {@link Tag}
      *         or one of their subclasses.
      * @see #mTagCache
      * @see #mFolderCache */
@@ -1628,7 +1627,7 @@ public class Mailbox {
     }
 
     /**
-     * Returns the <code>MailItem</code> with the specified id. 
+     * Returns the <tt>MailItem</tt> with the specified id. 
      * @throws NoSuchItemException if the item does not exist
      */
     public synchronized MailItem getItemById(OperationContext octxt, int id, byte type) throws ServiceException {
@@ -1673,7 +1672,7 @@ public class Mailbox {
     }
 
     /**
-     * Returns <code>MailItem</code>s with the specified ids. 
+     * Returns <tt>MailItem</tt>s with the specified ids. 
      * @throws NoSuchItemException any item does not exist
      */
     public synchronized MailItem[] getItemById(OperationContext octxt, Collection<Integer> ids, byte type) throws ServiceException {
@@ -1681,7 +1680,7 @@ public class Mailbox {
     }
 
     /**
-     * Returns <code>MailItem</code>s with the specified ids. 
+     * Returns <tt>MailItem</tt>s with the specified ids. 
      * @throws NoSuchItemException any item does not exist
      */
     public synchronized MailItem[] getItemById(OperationContext octxt, int[] ids, byte type) throws ServiceException {
@@ -1853,8 +1852,8 @@ public class Mailbox {
     }
 
     /**
-     * Fetches a <code>MailItem</code> by its IMAP id.
-     * @throws MailServiceException if there is no <code>MailItem</code> with the given id.
+     * Fetches a <tt>MailItem</tt> by its IMAP id.
+     * @throws MailServiceException if there is no <tt>MailItem</tt> with the given id.
      * @see MailServiceException#NO_SUCH_ITEM
      */
     public synchronized MailItem getItemByImapId(OperationContext octxt, int imapId, int folderId) throws ServiceException {
@@ -2202,7 +2201,7 @@ public class Mailbox {
      *  {@link #getModifiedTags(OperationContext, long)}.  Modified items not
      *  visible to the caller (i.e. the caller lacks {@link ACL#RIGHT_READ})
      *  are returned in a separate Integer List in the returned Pair.  When
-     *  <code>type</code> is {@link MailItem#TYPE_UNKNOWN}, all modified non-
+     *  <tt>type</tt> is {@link MailItem#TYPE_UNKNOWN}, all modified non-
      *  tag, non-folders are returned.
      *  
      * @param octxt     The context for this request (e.g. auth user id).
@@ -2256,8 +2255,8 @@ public class Mailbox {
         }
     }
 
-    /** Returns a list of all <code>Folder</code>s the authenticated user has
-     *  {@link ACL#RIGHT_READ} access to.  Returns <code>null</code> if the
+    /** Returns a list of all <tt>Folder</tt>s the authenticated user has
+     *  {@link ACL#RIGHT_READ} access to.  Returns <tt>null</tt> if the
      *  authenticated user has read access to the entire Mailbox. */
     Set<Folder> getVisibleFolders() throws ServiceException {
         if (!mCurrentChange.isActive())
@@ -2445,7 +2444,7 @@ public class Mailbox {
     }
 
     /**
-     * Returns the <code>Message</code> with the specified id. 
+     * Returns the <tt>Message</tt> with the specified id. 
      * @throws NoSuchItemException if the item does not exist
      */
     public synchronized Message getMessageById(OperationContext octxt, int id) throws ServiceException {
@@ -2660,18 +2659,18 @@ public class Mailbox {
     }
 
 
-    /** Returns a <code>Collection</code> of all {@link CalendarItem}s which
+    /** Returns a <tt>Collection</tt> of all {@link CalendarItem}s which
      *  overlap the specified time period.  There is no guarantee that the
      *  returned calendar items actually contain a recurrence within the range;
      *  all that is required is that there is some intersection between the
-     *  (<code>start</code>, <code>end</code>) range and the period from the
+     *  (<tt>start</tt>, <tt>end</tt>) range and the period from the
      *  start time of the calendar item's first recurrence to the end time of
      *  its last recurrence.<p>
      * 
-     *  If a <code>folderId</code> is specified, only calendar items
+     *  If a <tt>folderId</tt> is specified, only calendar items
      *  in that folder are returned.  If {@link #ID_AUTO_INCREMENT} is passed
-     *  in as the <code>folderId</code>, all calendar items not in
-     *  <code>Spam</code> or <code>Trash</code> are returned.
+     *  in as the <tt>folderId</tt>, all calendar items not in
+     *  <tt>Spam</tt> or <tt>Trash</tt> are returned.
      * 
      * @param type      If MailItem.TYPE_APPOINTMENT, return only appointments.
      *                  If MailItem.TYPE_TASK, return only tasks.
@@ -4145,18 +4144,18 @@ public class Mailbox {
         delete(octxt, new int[] { item.getId() }, item.getType(), tcon);
     }
 
-    /**
-     * Deletes the <tt>MailItem</tt> with the given id.  Does nothing
-     * if there is the <tt>MailItem</tt> doesn't exist.
-     */
+    /** Deletes the <tt>MailItem</tt> with the given id.  If there is no such
+     *  <tt>MailItem</tt>, nothing happens and no error is generated.  If the
+     *  id maps to an existing <tt>MailItem</tt> of an incompatible type,
+     *  however, an error is thrown. */
     public synchronized void delete(OperationContext octxt, int itemId, byte type, TargetConstraint tcon) throws ServiceException {
         delete(octxt, new int[] { itemId }, type, tcon);
     }
 
-    /**
-     * Deletes <tt>MailItem</tt>s with the given id's.  If a <tt>MailItem</code>
-     * cannot be found for a given id, that id is ignored.
-     */
+    /** Deletes the <tt>MailItem</tt>s with the given id.  If there is no
+     *  <tt>MailItem</tt> for a given id, that id is ignored.  If the id maps
+     *  to an existing <tt>MailItem</tt> of an incompatible type, however,
+     *  an error is thrown. */
     public synchronized void delete(OperationContext octxt, int[] itemIds, byte type, TargetConstraint tcon) throws ServiceException {
         DeleteItem redoRecorder = new DeleteItem(mId, itemIds, type, tcon);
 
@@ -4517,8 +4516,8 @@ public class Mailbox {
         }
     }
 
-    public synchronized void grantAccess(OperationContext octxt, int folderId, String grantee, byte granteeType, short rights, boolean inherit, String args) throws ServiceException {
-        GrantAccess redoPlayer = new GrantAccess(mId, folderId, grantee, granteeType, rights, inherit, args);
+    public synchronized void grantAccess(OperationContext octxt, int folderId, String grantee, byte granteeType, short rights, String args) throws ServiceException {
+        GrantAccess redoPlayer = new GrantAccess(mId, folderId, grantee, granteeType, rights, args);
 
         boolean success = false;
         try {
@@ -4526,7 +4525,7 @@ public class Mailbox {
 
             Folder folder = getFolderById(folderId);
             checkItemChangeID(folder);
-            folder.grantAccess(grantee, granteeType, rights, inherit, args);
+            folder.grantAccess(grantee, granteeType, rights, args);
             success = true;
         } finally {
             endTransaction(success);

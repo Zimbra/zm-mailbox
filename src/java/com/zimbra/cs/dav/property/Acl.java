@@ -62,7 +62,7 @@ public class Acl extends ResourceProperty {
 			return props;
 		
 		String owner = rs.getOwner();
-		ACL acl = folder.getPermissions();
+		ACL acl = folder.getACL();
 		props.add(getSupportedPrivilegeSet());
 		props.add(getCurrentUserPrivilegeSet(acl, folder.getAccount()));
 		props.add(getAcl(acl, owner));

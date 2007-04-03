@@ -207,14 +207,12 @@ public abstract class WikiUtil {
                     id,
                     grantee.equals("pub") ? ACL.GRANTEE_PUBLIC : ACL.GRANTEE_DOMAIN,
                     ACL.stringToRights("rwid"),
-                    true,
                     null);
             mbox.grantAccess(octxt,
                     template.getId(),
                     ACL.GUID_PUBLIC,
                     ACL.GRANTEE_PUBLIC,
                     ACL.stringToRights("r"),
-                    true,
                     null);
         }
 
@@ -246,7 +244,7 @@ public abstract class WikiUtil {
             //LmcSoapRequest.setDumpXML(true);
         }
 
-        private void auth() throws IOException, ServiceException {
+        private void auth() throws ServiceException {
             if (mProv instanceof SoapProvisioning) {
                 adminAuth();
                 return;
@@ -259,7 +257,7 @@ public abstract class WikiUtil {
             mMbox = ZMailbox.getMailbox(options);
         }
 
-        private void adminAuth() throws IOException, ServiceException {
+        private void adminAuth() throws ServiceException {
             SoapProvisioning prov = (SoapProvisioning) mProv;
             DelegateAuthResponse dar = prov.delegateAuth(AccountBy.name, mUsername, 60*60*24);
             ZMailbox.Options options = new ZMailbox.Options(dar.getAuthToken(), prov.soapGetURI());
@@ -294,18 +292,18 @@ public abstract class WikiUtil {
             return mMbox.getUserRoot();
         }
 
-        protected void setFolderPermission(Account account, String grantee, String name, String id) throws ServiceException, IOException {
+        protected void setFolderPermission(Account account, String grantee, String name, String id) throws ServiceException {
             System.out.println("Initializing folders ");
             auth();
             ZFolder root = getRootFolder();
             ZFolder f = findFolder(root, sDEFAULTFOLDER);
             if (f == null)
             	throw WikiServiceException.ERROR("can't open mailbox for " + account.getName() + " (wrong host?)");
-            mMbox.modifyFolderGrant(f.getId(), GranteeType.fromString(grantee), name, "rwid", null, true);
+            mMbox.modifyFolderGrant(f.getId(), GranteeType.fromString(grantee), name, "rwid", null);
             f = findFolder(root, sDEFAULTTEMPLATEFOLDER);
             if (f == null)
                 f = createFolder(root, sDEFAULTTEMPLATEFOLDER);
-            mMbox.modifyFolderGrant(f.getId(), GranteeType.pub, name, "r", null, true);
+            mMbox.modifyFolderGrant(f.getId(), GranteeType.pub, name, "r", null);
         }
 
         private boolean purgeFolder(ZFolder folder) throws ServiceException {

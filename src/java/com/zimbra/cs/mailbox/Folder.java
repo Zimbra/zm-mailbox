@@ -163,10 +163,12 @@ public class Folder extends MailItem {
      *  All other users must be explicitly granted access.<p>
      * 
      *  The set of rights that apply to a given folder is derived by starting
-     *  at that folder and going up the folder hierarchy, considering the first
-     *  folder with explicitly set rights (whether or not they are inherited by
-     *  the folder in question) and then stopping.  In other words, take the
-     *  *first* (and only the first) of the following that exists:<ul>
+     *  at that folder and going up the folder hierarchy.  If we hit a folder
+     *  that has a set of rights explicitly set on it, we stop and use those.
+     *  If we hit a folder that doesn't inherit priviliges from its parent, we
+     *  stop and treat it as if no rights are granted on the target folder.
+     *  In other words, take the *first* (and only the first) of the following
+     *  that exists, stopping at "do not inherit" folders:<ul>
      *    <li>the set of rights granted on the folder directly
      *    <li>the set of inherited rights granted on the folder's parent
      *    <li>the set of inherited rights granted on the folder's grandparent
@@ -175,13 +177,14 @@ public class Folder extends MailItem {
      *    <li>no rights at all</ul><p>
      * 
      *  So if the folder hierarchy looks like this:<pre>
-     *           root  <- inherited "read+write" granted to user A
-     *           /  \
-     *          V    W  <- "read" granted to users A and B
-     *         /    / \
-     *        X    Y   Z</pre>
+     *                   root  <- "read+write" granted to user A
+     *                   /  \
+     *                  V    W  <- "do not inherit" flag set
+     *                 /    / \
+     *                X    Y   Z  <- "read" granted to users A and B</pre>
      *  then user A has "write" rights on folders V and X, but not W, Y, and Z,
-     *  and user B has "read" rights on folder W but not V, X, Y, or Z.
+     *  user A has "read" rights on folders V, X, and Z but not W or Y, and
+     *  user B has "read" rights on folder Z but not V, X, W, or Y.
      * 
      * @param rightsNeeded  A set of rights (e.g. {@link ACL#RIGHT_READ}
      *                      and {@link ACL#RIGHT_DELETE}).
@@ -189,10 +192,6 @@ public class Folder extends MailItem {
      * @see ACL */
     @Override
     short checkRights(short rightsNeeded, Account authuser, boolean asAdmin) throws ServiceException {
-        return checkRights(rightsNeeded, authuser, asAdmin, false);
-    }
-
-    private short checkRights(short rightsNeeded, Account authuser, boolean asAdmin, boolean inheritedOnly) throws ServiceException {
         if (rightsNeeded == 0)
             return rightsNeeded;
         // XXX: in Mailbox, authuser is set to null if authuser == owner.
@@ -203,11 +202,13 @@ public class Folder extends MailItem {
         if (asAdmin && AccessManager.getInstance().canAccessAccount(authuser, getAccount()))
             return rightsNeeded;
         // check the ACLs to see if access has been explicitly granted
-        Short granted = mRights != null ? mRights.getGrantedRights(authuser, inheritedOnly) : null;
+        Short granted = mRights != null ? mRights.getGrantedRights(authuser) : null;
         if (granted != null)
             return (short) (granted.shortValue() & rightsNeeded);
-        // no ACLs apply; check parent folder for inherited rights
-        return mId == Mailbox.ID_FOLDER_ROOT ? 0 : mParent.checkRights(rightsNeeded, authuser, asAdmin, true);
+        // no ACLs apply; can we check parent folder for inherited rights?
+        if (mId == Mailbox.ID_FOLDER_ROOT || isTagged(mMailbox.mNoInheritFlag))
+            return 0;
+        return mParent.checkRights(rightsNeeded, authuser, asAdmin);
     }
 
     /** Grants the specified set of rights to the target and persists them
@@ -216,20 +217,23 @@ public class Folder extends MailItem {
      * @param zimbraId  The zimbraId of the entry being granted rights.
      * @param type      The type of principal the grantee's ID refers to.
      * @param rights    A bitmask of the rights being granted.
-     * @param inherit   Whether subfolders inherit these same rights.
      * @perms {@link ACL#RIGHT_ADMIN} on the folder
      * @throws ServiceException The following error codes are possible:<ul>
      *    <li><tt>service.FAILURE</tt> - if there's a database failure
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
      *        permissions</ul> */
-    void grantAccess(String zimbraId, byte type, short rights, boolean inherit, String args) throws ServiceException {
+    void grantAccess(String zimbraId, byte type, short rights, String args) throws ServiceException {
         if (!canAccess(ACL.RIGHT_ADMIN))
             throw ServiceException.PERM_DENIED("you do not have admin rights to folder " + getPath());
+
         markItemModified(Change.MODIFIED_ACL);
         if (mRights == null)
             mRights = new ACL();
-        mRights.grantAccess(zimbraId, type, rights, inherit, args);
+        mRights.grantAccess(zimbraId, type, rights, args);
         saveMetadata();
+
+        // if there's an ACL on the folder, the folder does not inherit from its parent
+        alterTag(mMailbox.mNoInheritFlag, true);
     }
 
     /** Removes the set of rights granted to the specified (id, type) pair
@@ -244,12 +248,17 @@ public class Folder extends MailItem {
     void revokeAccess(String zimbraId) throws ServiceException {
         if (!canAccess(ACL.RIGHT_ADMIN))
             throw ServiceException.PERM_DENIED("you do not have admin rights to folder " + getPath());
+
         markItemModified(Change.MODIFIED_ACL);
         if (mRights == null || !mRights.revokeAccess(zimbraId))
             return;
+
         if (mRights.isEmpty())
             mRights = null;
         saveMetadata();
+
+        // if there's an ACL on the folder, the folder does not inherit from its parent
+        alterTag(mMailbox.mNoInheritFlag, mRights != null);
     }
 
     /** Replaces the folder's {@link ACL} with the supplied one and updates
@@ -264,17 +273,32 @@ public class Folder extends MailItem {
     void setPermissions(ACL acl) throws ServiceException {
         if (!canAccess(ACL.RIGHT_ADMIN))
             throw ServiceException.PERM_DENIED("you do not have admin rights to folder " + getPath());
+
         markItemModified(Change.MODIFIED_ACL);
+        if (acl != null && acl.isEmpty())
+            acl = null;
+
         if (acl == null && mRights == null)
             return;
         mRights = acl;
         saveMetadata();
+
+        // if we're setting an ACL on the folder, the folder does not inherit from its parent
+        alterTag(mMailbox.mNoInheritFlag, acl != null);
     }
 
-    /** Returns a copy of the ACL on the folder, or <tt>null</tt> if one is
-     *  not set. */
-    public ACL getPermissions() {
+    /** Returns a copy of the ACL directly set on the folder, or <tt>null</tt>
+     *  if one is not set. */
+    public ACL getACL() {
         return mRights == null ? null : mRights.duplicate();
+    }
+
+    /** Returns a copy of the ACL that applies to the folder (possibly
+     *  inherited from a parent), or <tt>null</tt> if one is not set. */
+    public ACL getEffectiveACL() {
+        if (mId == Mailbox.ID_FOLDER_ROOT || mRights != null || isTagged(mMailbox.mNoInheritFlag))
+            return getACL();
+        return mParent.getEffectiveACL();
     }
 
 
@@ -613,29 +637,38 @@ public class Folder extends MailItem {
      *  {@link Mailbox#mSubscribeFlag}, the tagging or untagging applies to
      *  the <tt>Folder</tt> itself.<p>
      * 
-     *  You must use {@link #alterUnread} to change a folder's unread state.
+     *  You must use {@link #alterUnread} to change a folder's unread state.<p>
+     *  
+     *  Note that clearing the "no inherit" flag on a folder enables permission
+     *  inheritance and hence clears the folder's ACL as a side-effect.
      * 
      * @perms {@link ACL#RIGHT_WRITE} on the folder */
     @Override
-    void alterTag(Tag tag, boolean add) throws ServiceException {
+    void alterTag(Tag tag, boolean newValue) throws ServiceException {
         // folder flags are applied to the folder, not the contents
         if (!(tag instanceof Flag) || !((Flag) tag).isFolderOnly()) {
-            super.alterTag(tag, add);
+            super.alterTag(tag, newValue);
             return;
         }
 
-        if (!canAccess(ACL.RIGHT_WRITE))
-            throw ServiceException.PERM_DENIED("you do not have the necessary privileges on the folder");
-        if (add == isTagged(tag))
+        if (newValue == isTagged(tag))
             return;
+
+        boolean isNoInheritFlag = tag.getId() == Flag.ID_FLAG_NO_INHERIT;
+        if (!canAccess(isNoInheritFlag ? ACL.RIGHT_ADMIN : ACL.RIGHT_WRITE))
+            throw ServiceException.PERM_DENIED("you do not have the necessary privileges on the folder");
 
         // change the tag on the Folder itself, not on its contents
         markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
-        tagChanged(tag, add);
+        tagChanged(tag, newValue);
 
         List<Integer> ids = new ArrayList<Integer>();
         ids.add(mId);
-        DbMailItem.alterTag(tag, ids, add);
+        DbMailItem.alterTag(tag, ids, newValue);
+
+        // clearing the "no inherit" flag sets inherit ON and thus must clear the folder's ACL
+        if (isNoInheritFlag && !newValue && mRights != null && !mRights.isEmpty())
+            setPermissions(null);
     }
 
     /** Renames the item and optionally moves it.  Altering an item's
@@ -922,9 +955,12 @@ public class Folder extends MailItem {
             mSyncData = new SyncData(meta.get(Metadata.FN_URL), meta.get(Metadata.FN_SYNC_GUID, null), meta.getLong(Metadata.FN_SYNC_DATE, 0));
 
         MetadataList mlistACL = meta.getList(Metadata.FN_RIGHTS, true);
-        if (mlistACL != null)
+        if (mlistACL != null) {
             if ((mRights = new ACL(mlistACL)).isEmpty())
                 mRights = null;
+            else if (!isTagged(mMailbox.mNoInheritFlag))
+                alterTag(mMailbox.mNoInheritFlag, true);
+        }
     }
 
     @Override
@@ -936,7 +972,7 @@ public class Folder extends MailItem {
         return encodeMetadata(new Metadata(), color, attributes, hint, rights, fsd, uidnext).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, byte color, byte attributes, byte hint, ACL rights, SyncData fsd, int uidnext) {
+    static Metadata encodeMetadata(Metadata meta, byte color, byte attributes, byte hint, ACL rights, SyncData sync, int uidnext) {
         if (hint != TYPE_UNKNOWN)
             meta.put(Metadata.FN_VIEW, hint);
         if (attributes != 0)
@@ -945,11 +981,11 @@ public class Folder extends MailItem {
             meta.put(Metadata.FN_UIDNEXT, uidnext);
         if (rights != null)
             meta.put(Metadata.FN_RIGHTS, rights.encode());
-        if (fsd != null && fsd.url != null && !fsd.url.equals("")) {
-            meta.put(Metadata.FN_URL, fsd.url);
-            meta.put(Metadata.FN_SYNC_GUID, fsd.lastGuid);
-            if (fsd.lastDate > 0)
-                meta.put(Metadata.FN_SYNC_DATE, fsd.lastDate);
+        if (sync != null && sync.url != null && !sync.url.equals("")) {
+            meta.put(Metadata.FN_URL, sync.url);
+            meta.put(Metadata.FN_SYNC_GUID, sync.lastGuid);
+            if (sync.lastDate > 0)
+                meta.put(Metadata.FN_SYNC_DATE, sync.lastDate);
         }
         return MailItem.encodeMetadata(meta, color);
     }

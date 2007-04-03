@@ -2066,10 +2066,9 @@ public class ZMailbox {
      */
     public ZActionResult modifyFolderGrant(
             String folderId, GranteeType granteeType, String grantreeId,
-            String perms, String args, boolean inherit) throws ServiceException {
+            String perms, String args) throws ServiceException {
         Element action = folderAction("grant", folderId);
         Element grant = action.addElement(MailConstants.E_GRANT);
-        grant.addAttribute(MailConstants.A_INHERIT, inherit);
         grant.addAttribute(MailConstants.A_RIGHTS, perms);
         grant.addAttribute(MailConstants.A_DISPLAY, grantreeId);
         grant.addAttribute(MailConstants.A_GRANT_TYPE, granteeType.name());

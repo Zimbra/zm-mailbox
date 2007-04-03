@@ -37,7 +37,6 @@ public class ZGrant {
     private String mGranteeName;
     private String mGranteeId;
     private GranteeType mGranteeType;
-    private boolean mInherit;
     private String mPermissions;
     
     public enum Permission {
@@ -116,7 +115,6 @@ public class ZGrant {
         mGranteeName = e.getAttribute(MailConstants.A_DISPLAY, null);
         mGranteeId = e.getAttribute(MailConstants.A_ZIMBRA_ID, null);
         mGranteeType = GranteeType.fromString(e.getAttribute(MailConstants.A_GRANT_TYPE));
-        mInherit = e.getAttributeBool(MailConstants.A_INHERIT);
     }
 
     public void toElement(Element parent) {
@@ -131,8 +129,6 @@ public class ZGrant {
 
         if (mGranteeName != null)
             grant.addAttribute(MailConstants.A_DISPLAY, mGranteeName);
-
-        grant.addAttribute(MailConstants.A_INHERIT, mInherit);
 
         if (mArgs != null && mArgs.length() > 0)
             grant.addAttribute(MailConstants.A_ARGS, mArgs);
@@ -198,13 +194,6 @@ public class ZGrant {
     }
     
     /**
-     * whether rights granted on this folder are also granted on all subfolders
-     */
-    public boolean getInherit() {
-        return mInherit;
-    }
-    
-    /**
      *  optional argument.  password when {grantee-type} is "guest"
      */
     public String getArgs() {
@@ -218,7 +207,6 @@ public class ZGrant {
         sb.add("name", mGranteeName);
         sb.add("id", mGranteeId);
         sb.add("permissions", mPermissions);
-        sb.add("inherit", mInherit);
         sb.add("args", mArgs);
         sb.endStruct();
         return sb.toString();

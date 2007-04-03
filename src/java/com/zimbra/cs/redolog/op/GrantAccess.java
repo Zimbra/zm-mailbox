@@ -45,22 +45,20 @@ public class GrantAccess extends RedoableOp {
     private String mGrantee;
     private byte mGranteeType;
     private short mRights;
-    private boolean mInherit;
-    private String mArgs;
+    private String mPassword;
 
     public GrantAccess() {
         mFolderId = UNKNOWN_ID;
         mGrantee = "";
     }
 
-    public GrantAccess(int mailboxId, int folderId, String grantee, byte granteeType, short rights, boolean inherit, String args) {
+    public GrantAccess(int mailboxId, int folderId, String grantee, byte granteeType, short rights, String password) {
         setMailboxId(mailboxId);
         mFolderId = folderId;
         mGrantee = grantee == null ? "" : grantee;
         mGranteeType = granteeType;
         mRights = rights;
-        mInherit = inherit;
-        mArgs = args == null ? "" : args;
+        mPassword = password == null ? "" : password;
     }
 
     public int getOpCode() {
@@ -72,8 +70,7 @@ public class GrantAccess extends RedoableOp {
         sb.append(", grantee=").append(mGrantee);
         sb.append(", type=").append(mGranteeType);
         sb.append(", rights=").append(ACL.rightsToString(mRights));
-        sb.append(", inherit=").append(mInherit);
-        sb.append(", args=").append(mArgs);
+        sb.append(", args=").append(mPassword);
         return sb.toString();
     }
 
@@ -82,9 +79,9 @@ public class GrantAccess extends RedoableOp {
         out.writeUTF(mGrantee);
         out.writeByte(mGranteeType);
         out.writeShort(mRights);
-        out.writeBoolean(mInherit);
+        out.writeBoolean(true);
         if (getVersion().atLeast(1, 2))
-        	out.writeUTF(mArgs);
+        	out.writeUTF(mPassword);
     }
 
     protected void deserializeData(RedoLogInput in) throws IOException {
@@ -92,13 +89,13 @@ public class GrantAccess extends RedoableOp {
         mGrantee = in.readUTF();
         mGranteeType = in.readByte();
         mRights = in.readShort();
-        mInherit = in.readBoolean();
+        in.readBoolean();  // "INHERIT", deprecated as of 02-Apr-2006
         if (getVersion().atLeast(1, 2))
-        	mArgs = in.readUTF();
+        	mPassword = in.readUTF();
     }
 
     public void redo() throws ServiceException {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-        mbox.grantAccess(getOperationContext(), mFolderId, mGrantee, mGranteeType, mRights, mInherit, mArgs);
+        mbox.grantAccess(getOperationContext(), mFolderId, mGrantee, mGranteeType, mRights, mPassword);
     }
 }
