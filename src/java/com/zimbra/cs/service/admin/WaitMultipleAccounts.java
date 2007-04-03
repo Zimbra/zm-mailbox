@@ -104,7 +104,7 @@ public class WaitMultipleAccounts extends AdminDocumentHandler {
         synchronized(cb) {
             errors = ws.doWait(cb, lastKnownSeqNo, block, add, update, remove);
             
-            if (!cb.completed) { // don't wait if it completed right away
+            if (block && !cb.completed) { // don't wait if it completed right away
                 try {
                     cb.wait(1000 * 60 * 5); // timeout after 5 minutes
                 } catch (InterruptedException ex) {} 
