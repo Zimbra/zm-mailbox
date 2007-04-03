@@ -301,6 +301,7 @@ public final class SessionCache {
                     }
                 }
                 sb.append(typeStr).append("). ").append(totalActive).append(" active sessions remain.");
+                sLog.info(sb.toString());
             }
         }
     }
