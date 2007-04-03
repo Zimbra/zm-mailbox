@@ -145,6 +145,7 @@ public class ZInvite {
         private ZOrganizer mOrganizer;
         private List<ZAttendee> mAttendees;
         private ZRecurrence mRecurrence;
+        private String mComponentNum;
 
         public ZComponent() {
             mStatus = ZStatus.CONF;
@@ -168,6 +169,7 @@ public class ZInvite {
             mPriority = e.getAttribute(MailConstants.A_CAL_PRIORITY, "0");
             mPercentCompleted = e.getAttribute(MailConstants.A_TASK_PERCENT_COMPLETE, "0");
             mCompleted = e.getAttribute(MailConstants.A_TASK_COMPLETED, null);
+            mComponentNum = e.getAttribute(MailConstants.A_CAL_COMPONENT_NUM, "0");
             mReplies = new ArrayList<ZReply>();
             Element repliesEl = e.getOptionalElement(MailConstants.E_CAL_REPLIES);
             if (repliesEl != null) {
@@ -410,6 +412,14 @@ public class ZInvite {
             mAttendees = attendees;
         }
 
+        public void setComponentNumber(String compNum) {
+            mComponentNum = compNum;
+        }
+
+        public String getComponentNumber() {
+            return mComponentNum;
+        }
+
         ZSoapSB toString(ZSoapSB sb) {
             sb.beginStruct();
             sb.add("status", mStatus.name());
@@ -418,6 +428,7 @@ public class ZInvite {
             sb.add("transparency", mTransparency.name());
             sb.add("isAllDay", mIsAllDay);
             sb.add("name", mName);
+            sb.add("compNum", mComponentNum);
             sb.add("locaiton", mLocation);
             sb.add("isOrganizer", mIsOrganizer);
             sb.add("sequenceNumber", mSequenceNumber);
