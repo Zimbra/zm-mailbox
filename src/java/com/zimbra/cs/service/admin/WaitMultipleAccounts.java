@@ -92,6 +92,11 @@ public class WaitMultipleAccounts extends AdminDocumentHandler {
         boolean block = request.getAttributeBool(AdminConstants.A_BLOCK, false);
         
         WaitSet ws = WaitSet.lookup(waitSetId);
+
+        if (ws == null) {
+            throw AdminServiceException.NO_SUCH_WAITSET(waitSetId);
+        }
+        
         List<WaitSetAccount> add = parseAddUpdateAccounts(
             request.getOptionalElement(AdminConstants.E_WAITSET_ADD), ws.getDefaultInterest());
         List<WaitSetAccount> update = parseAddUpdateAccounts(

@@ -1750,6 +1750,9 @@ is the first time Wait has been called with the account)
   [ <error ...something.../>]*
 </WaitMultipleAccountsResponse>
 
+If the specified wait set does not exist, the server will throw an
+admin.NO_SUCH_WAITSET exception.
+
 NOTE: an empty response to a blocking request *is* possible: it would
 happen if the server timed-out the waiting.  The server does this
 occasionally just so that requests don't get "stuck".  The client
