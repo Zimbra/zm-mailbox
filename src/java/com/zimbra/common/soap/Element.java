@@ -56,16 +56,20 @@ public abstract class Element {
     protected Map<String, Object> mAttributes;
     protected Map<String, String> mNamespaces;
 
-    /** These two attributes can be used to control the way things render into XML/JSON
-     * 
-     * Specifically, in our model, the following two pieces of XML are *equivalent*:
-     *    1) <a><b>something</b></a>
-     *    2) <a b="something"/>
-     *    
-     *  By setting the dispositon of an attribute to DISP_CONTENT, you can force the
-     *  attribute to be rendered in form (1) */
-    public static final byte DISP_ATTRIBUTE = 0;
-    public static final byte DISP_CONTENT   = 1;
+    /** These values are used to control how the <tt>Element</tt> serializes
+     *  an attribute.  In our model, {@link Element#getAttribute(String)} will
+     *  find the attribute <tt>b</tt> with value <tt>"something"</tt> when
+     *  presented with either of the following two pieces of XML:<ul>
+     *    <li>&lt;a>&lt;b>something&lt;/b>&lt;/a>
+     *    <li>&lt;a b="something"/></ul><p>
+     *  By setting the dispositon of an attribute to {@link #CONTENT}, you can
+     *  force the attribute to be rendered in the former form.<p>
+     *  
+     *  <i>Note that JSON serialization ignores all such hints and serializes
+     *  all attributes as <tt>"key": "value"</tt>.</i> */
+    public static enum Disposition {
+        ATTRIBUTE, CONTENT
+    }
 
     /** Creates a new <tt>Element</tt> with the given name.  This method should
      *  be used when generating a standalone <tt>Element</tt>.  If you want to
@@ -76,7 +80,7 @@ public abstract class Element {
             return new JavaScriptElement(name);
         else if (proto == SoapProtocol.Soap11 || proto == SoapProtocol.Soap12)
             return new XMLElement(name);
-        throw ServiceException.INVALID_REQUEST("Unknown SoapProtocol: "+proto, null);
+        throw ServiceException.INVALID_REQUEST("Unknown SoapProtocol: " + proto, null);
     }
 
     /** Creates a new <tt>Element</tt> with the given {@link QName}.  This
@@ -88,15 +92,21 @@ public abstract class Element {
             return new JavaScriptElement(qname);
         else if (proto == SoapProtocol.Soap11 || proto == SoapProtocol.Soap12)
             return new XMLElement(qname);
-        throw ServiceException.INVALID_REQUEST("Unknown SoapProtocol: "+proto, null);
+        throw ServiceException.INVALID_REQUEST("Unknown SoapProtocol: " + proto, null);
     }
 
 
+    /** Returns the appropriate {@link ElementFactory} for generating
+     *  <tt>Element</tt>s of this <tt>Element</tt>'s type. */
     public abstract ElementFactory getFactory();
 
-    // writing to the element hierarchy
+    /** Creates a new child <tt>Element</tt> with the given name and adds it
+     *  to this <tt>Element</tt>. */
     public abstract Element addElement(String name) throws ContainerException;
+    /** Creates a new child <tt>Element</tt> with the given QName and adds it
+     *  to this <tt>Element</tt>. */
     public abstract Element addElement(QName qname) throws ContainerException;
+    /** Adds an existing <tt>Element</tt> to this <tt>Element</tt>. */
     public abstract Element addElement(Element elt) throws ContainerException;
 
     public Element addUniqueElement(String name) throws ContainerException  { return addElement(name); }
@@ -114,15 +124,15 @@ public abstract class Element {
     public abstract Element setText(String content) throws ContainerException;
     public Element addText(String content) throws ContainerException  { return setText(getText() + content); }
 
-    public Element addAttribute(String key, String value) throws ContainerException   { return addAttribute(key, value, DISP_ATTRIBUTE); }
-    public Element addAttribute(String key, long value) throws ContainerException     { return addAttribute(key, value, DISP_ATTRIBUTE); }
-    public Element addAttribute(String key, double value) throws ContainerException   { return addAttribute(key, value, DISP_ATTRIBUTE); }
-    public Element addAttribute(String key, boolean value) throws ContainerException  { return addAttribute(key, value, DISP_ATTRIBUTE); }
+    public Element addAttribute(String key, String value) throws ContainerException   { return addAttribute(key, value, Disposition.ATTRIBUTE); }
+    public Element addAttribute(String key, long value) throws ContainerException     { return addAttribute(key, value, Disposition.ATTRIBUTE); }
+    public Element addAttribute(String key, double value) throws ContainerException   { return addAttribute(key, value, Disposition.ATTRIBUTE); }
+    public Element addAttribute(String key, boolean value) throws ContainerException  { return addAttribute(key, value, Disposition.ATTRIBUTE); }
 
-    public abstract Element addAttribute(String key, String value, byte disposition) throws ContainerException;
-    public Element addAttribute(String key, long value, byte disposition) throws ContainerException     { return addAttribute(key, Long.toString(value), disposition); }
-    public Element addAttribute(String key, double value, byte disposition) throws ContainerException   { return addAttribute(key, Double.toString(value), disposition); }
-    public Element addAttribute(String key, boolean value, byte disposition) throws ContainerException  { return addAttribute(key, value ? "1" : "0", disposition); }
+    public abstract Element addAttribute(String key, String value, Disposition disp) throws ContainerException;
+    public Element addAttribute(String key, long value, Disposition disp) throws ContainerException     { return addAttribute(key, Long.toString(value), disp); }
+    public Element addAttribute(String key, double value, Disposition disp) throws ContainerException   { return addAttribute(key, Double.toString(value), disp); }
+    public Element addAttribute(String key, boolean value, Disposition disp) throws ContainerException  { return addAttribute(key, value ? "1" : "0", disp); }
 
     public KeyValuePair addKeyValuePair(String key, String value) throws ContainerException  { return addKeyValuePair(key, value, null); }
     public abstract KeyValuePair addKeyValuePair(String key, String value, String eltname) throws ContainerException;
@@ -145,32 +155,18 @@ public abstract class Element {
 
     public Element getParent()        { return mParent; }
 
-    /**
-     * Returns a required sub-element.
-     * @return the first sub-element with a matching name
-     * @exception ServiceException if no element is found
-     */
+    /** Returns the first child <tt>Element</tt> with the given name.
+     * @throws ServiceException if no matching <tt>Element</tt> is found */
     public Element getElement(String name) throws ServiceException  { return checkNull(name, getOptionalElement(name)); }
-
-    /**
-     * Returns a required sub-element.
-     * @return the first sub-element with a matching name
-     * @exception ServiceException if no element is found
-     */
+    /** Returns the first child <tt>Element</tt> with the given QName.
+     * @throws ServiceException if no matching <tt>Element</tt> is found */
     public Element getElement(QName qname) throws ServiceException  { return checkNull(qname.getName(), getOptionalElement(qname)); }
 
-    /**
-     * Returns an optional sub-element.
-     * @return the first sub-element with a matching name, or <tt>null</tt>
-     * if the sub-element doesn't exist.
-     */
+    /** Returns the first child <tt>Element</tt> with the given name, or
+     *  <tt>null</tt> if no matching <tt>Element</tt> is found. */
     public abstract Element getOptionalElement(String name);
-
-    /**
-     * Returns an optional sub-element.
-     * @return the first sub-element with a matching name, or <tt>null</tt>
-     * if the sub-element doesn't exist.
-     */
+    /** Returns the first child <tt>Element</tt> with the given QName, or
+     *  <tt>null</tt> if no matching <tt>Element</tt> is found. */
     public Element getOptionalElement(QName qname)                  { return getOptionalElement(qname.getName()); }
 
     public abstract Set<Attribute> listAttributes();
@@ -510,11 +506,11 @@ public abstract class Element {
                 return null;
             String name = elt.getName();
             Object obj = mAttributes.get(name);
-            if (obj instanceof List)
+            if (obj instanceof List) {
                 throw new ContainerException("already stored non-unique element(s) with name: " + name);
-            else if (obj instanceof String || obj instanceof Integer)
+            } else if (obj instanceof String || obj instanceof Number || obj instanceof Boolean) {
                 throw new ContainerException("already stored attribute with name: " + name);
-            else if (obj instanceof Element) {
+            } else if (obj instanceof Element) {
                 if (elt.mAttributes.isEmpty())
                     return (Element) obj;
                 else if (!((Element) obj).mAttributes.isEmpty())
@@ -528,7 +524,7 @@ public abstract class Element {
 
         public Element setText(String content) throws ContainerException  { return addAttribute(A_CONTENT, content); }
 
-        public Element addAttribute(String key, String value, byte disposition) throws ContainerException {
+        public Element addAttribute(String key, String value, Disposition disp) throws ContainerException {
             if (value == null)
                 return this;
             checkNamingConflict(key);
@@ -536,19 +532,19 @@ public abstract class Element {
             return this;
         }
 
-        public Element addAttribute(String key, long value, byte disposition) throws ContainerException {
+        public Element addAttribute(String key, long value, Disposition disp) throws ContainerException {
             checkNamingConflict(key);
             mAttributes.put(key, new Long(value));
             return this;
         }
 
-        public Element addAttribute(String key, double value, byte disposition) throws ContainerException {
+        public Element addAttribute(String key, double value, Disposition disp) throws ContainerException {
             checkNamingConflict(key);
             mAttributes.put(key, new Double(value));
             return this;
         }
 
-        public Element addAttribute(String key, boolean value, byte disposition) throws ContainerException {
+        public Element addAttribute(String key, boolean value, Disposition disp) throws ContainerException {
             checkNamingConflict(key);
             mAttributes.put(key, new Boolean(value));
             return this;
@@ -882,11 +878,11 @@ public abstract class Element {
             return this;
         }
 
-        public Element addAttribute(String key, String value, byte disposition) throws ContainerException {
+        public Element addAttribute(String key, String value, Disposition disp) throws ContainerException {
             validateName(key);
             if (value == null) {
                 return this;
-            } else if (disposition == DISP_CONTENT) {
+            } else if (disp == Disposition.CONTENT) {
                 addElement(key).setText(value);
             } else {
                 if (mAttributes == null)
@@ -1071,7 +1067,7 @@ public abstract class Element {
         Element env = new JavaScriptElement(proto.getEnvelopeQName());
         env.addUniqueElement(proto.getBodyQName()).addUniqueElement(MailConstants.GET_MSG_RESPONSE)
            .addUniqueElement(qm).addAttribute("id", 1115).addAttribute("f", "aw").addAttribute("t", "64,67").addAttribute("score", 0.953)
-           .addAttribute("s", "Subject of the message has a \"\\\" in it", DISP_CONTENT).addAttribute("mid", "<kashdfgiai67r3wtuwfg@goo.com>", DISP_CONTENT)
+           .addAttribute("s", "Subject of the message has a \"\\\" in it", Disposition.CONTENT).addAttribute("mid", "<kashdfgiai67r3wtuwfg@goo.com>", Disposition.CONTENT)
            .addElement("mp").addAttribute("part", "TEXT").addAttribute("ct", "multipart/mixed").addAttribute("s", 3718);
         System.out.println(env);
         System.out.println(Element.parseJSON(env.toString()).toString());
@@ -1080,7 +1076,7 @@ public abstract class Element {
         env = new XMLElement(proto.getEnvelopeQName());
         env.addUniqueElement(proto.getBodyQName()).addUniqueElement(MailConstants.GET_MSG_RESPONSE)
            .addUniqueElement(qm).addAttribute("id", 1115).addAttribute("f", "aw").addAttribute("t", "64,67").addAttribute("score", 0.953)
-           .addAttribute("s", "Subject of the message has a \"\\\" in it", DISP_CONTENT).addAttribute("mid", "<kashdfgiai67r3wtuwfg@goo.com>", DISP_CONTENT)
+           .addAttribute("s", "Subject of the message has a \"\\\" in it", Disposition.CONTENT).addAttribute("mid", "<kashdfgiai67r3wtuwfg@goo.com>", Disposition.CONTENT)
            .addElement("mp").addAttribute("part", "TEXT").addAttribute("ct", "multipart/mixed").addAttribute("s", 3718);
         System.out.println(env.prettyPrint());
         System.out.println("             name: " + env.getName());

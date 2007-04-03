@@ -62,7 +62,7 @@ public class SoapUtil {
     public static Element toCtxt(SoapProtocol protocol, String authToken, boolean noSession) {
         Element ctxt = protocol.getFactory().createElement(HeaderConstants.CONTEXT);
         if (authToken != null)
-            ctxt.addAttribute(HeaderConstants.E_AUTH_TOKEN, authToken, Element.DISP_CONTENT);
+            ctxt.addAttribute(HeaderConstants.E_AUTH_TOKEN, authToken, Element.Disposition.CONTENT);
         if (noSession)
             ctxt.addUniqueElement(HeaderConstants.E_NO_SESSION);
         return ctxt;
