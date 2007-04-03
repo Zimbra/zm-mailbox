@@ -247,10 +247,12 @@ public class MailSender {
             // if this is a delegated send, automatically save a copy to the "From" user's mailbox
             if (isDelegatedRequest && hasRecipients && acct.getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, true)) {
                 int flags = Flag.BITMASK_UNREAD | Flag.BITMASK_FROM_ME;
+                // save the sent copy using the target's credentials, as the sender doesn't necessarily have write access
+                OperationContext octxtTarget = new OperationContext(acct);
                 if (pm == null || pm.isAttachmentIndexingEnabled() != mbox.attachmentsIndexingEnabled())
                     pm = new ParsedMessage(mm, mm.getSentDate().getTime(), mbox.attachmentsIndexingEnabled());
                 int sentFolderId = getSentFolderId(mbox, Provisioning.getInstance().getDefaultIdentity(acct));
-                Message msg = mbox.addMessage(octxt, pm, sentFolderId, true, flags, null, convId);
+                Message msg = mbox.addMessage(octxtTarget, pm, sentFolderId, true, flags, null, convId);
                 rollback[1] = new RollbackData(msg);
             }
 
@@ -265,8 +267,9 @@ public class MailSender {
                     else if (MSGTYPE_FORWARD.equals(replyType))
                         mbox.alterTag(octxt, origMsgId, MailItem.TYPE_MESSAGE, Flag.ID_FLAG_FORWARDED, true);
                 } catch (ServiceException e) {
-                    // this is not an error case: when accepting/declining an
-                    // appointment, the original message may be gone
+                    // this is not an error case:
+                    //   - the original message may be gone when accepting/declining an appointment
+                    //   - we may have PERM_DENIED on delegated send
                 }
             }
 
