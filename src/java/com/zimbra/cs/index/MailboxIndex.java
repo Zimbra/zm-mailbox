@@ -291,7 +291,10 @@ public final class MailboxIndex
      */
     public void flush() {
         synchronized(getLock()) {
-            closeIndexWriter();
+            if (mIndexWriter != null)
+                closeIndexWriter();
+            else
+                sIndexReadersCache.removeIndexReader(this);
         }
     }
 
@@ -937,7 +940,7 @@ public final class MailboxIndex
             
             IndexReader reader = null;
             try {
-                flush();
+                closeIndexWriter();
                 reader = IndexReader.open(mIdxDirectory);
             } catch(IOException e) {
                 // Handle the special case of trying to open a not-yet-created
@@ -946,7 +949,7 @@ public final class MailboxIndex
                 File indexDir = mIdxDirectory.getFile();
                 if (indexDirIsEmpty(indexDir)) {
                     openIndexWriter();
-                    flush();
+                    closeIndexWriter();
                     try {
                         reader = IndexReader.open(mIdxDirectory);
                     } catch (IOException e1) {
