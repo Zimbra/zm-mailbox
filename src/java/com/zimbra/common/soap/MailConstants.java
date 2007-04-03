@@ -229,7 +229,6 @@ public class MailConstants {
     public static final String E_GRANT = "grant";
     public static final String A_ZIMBRA_ID = "zid";
     public static final String A_RIGHTS = "perm";
-    public static final String A_INHERIT = "inh";
     public static final String A_GRANT_TYPE = "gt";
 
     // email addresses
