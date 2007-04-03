@@ -277,6 +277,8 @@ public final class ZimbraQuery {
         public static BaseQuery create(Mailbox mbox, Analyzer analyzer, int modifier, String target) throws ServiceException {
             ItemId convId = new ItemId(target, mbox.getAccountId());
             if (convId.getId() < 0) {
+                // ...convert negative convId to positive ItemId...
+                convId = new ItemId(convId.getAccountId(), -1 * convId.getId());                
                 List<ItemId> iidList = new ArrayList<ItemId>(1);
                 iidList.add(convId);
                 return new ItemQuery(mbox, analyzer, modifier, false, false, iidList);
