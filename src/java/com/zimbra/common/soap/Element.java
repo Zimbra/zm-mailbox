@@ -30,7 +30,15 @@ package com.zimbra.common.soap;
 
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Set;
 
 import org.dom4j.QName;
 
@@ -48,31 +56,21 @@ public abstract class Element {
     protected Map<String, Object> mAttributes;
     protected Map<String, String> mNamespaces;
 
-    /**
-     *
-     * These three attributes can be used to control the way things render into XML/JSon
+    /** These two attributes can be used to control the way things render into XML/JSON
      * 
-     * Specifically, in our model, the following two pieces of XML are *equivalend*:
+     * Specifically, in our model, the following two pieces of XML are *equivalent*:
      *    1) <a><b>something</b></a>
      *    2) <a b="something"/>
      *    
      *  By setting the dispositon of an attribute to DISP_CONTENT, you can force the
-     *  attribute to be rendered in form (1)      
-     * 
-     */
+     *  attribute to be rendered in form (1) */
     public static final byte DISP_ATTRIBUTE = 0;
     public static final byte DISP_CONTENT   = 1;
-    public static final byte DISP_ELEMENT   = 2;
 
-    /**
-     * Call element.addElement if you have an existing element, only use this for new
-     * trees.
-     * 
-     * @param proto SoapJS or Soap11 or Soap12
-     * @param name
-     * @return
-     * @throws ServiceException
-     */
+    /** Creates a new <tt>Element</tt> with the given name.  This method should
+     *  be used when generating a standalone <tt>Element</tt>.  If you want to
+     *  add a child to an existing <tt>Element</tt>, please use
+     *  {@link #addElement(String) instead. */
     public static Element create(SoapProtocol proto, String name) throws ServiceException {
         if (proto == SoapProtocol.SoapJS)
             return new JavaScriptElement(name);
@@ -81,15 +79,10 @@ public abstract class Element {
         throw ServiceException.INVALID_REQUEST("Unknown SoapProtocol: "+proto, null);
     }
 
-    /**
-     * Call element.addElement if you have an existing element, only use this for new
-     * trees.
-     * 
-     * @param proto SoapJS or Soap11 or Soap12
-     * @param name
-     * @return
-     * @throws ServiceException
-     */
+    /** Creates a new <tt>Element</tt> with the given {@link QName}.  This
+     *  method should be used when generating a standalone <tt>Element</tt>.
+     *  If you want to add a child to an existing <tt>Element</tt>, please
+     *  use {@link #addElement(QName) instead. */
     public static Element create(SoapProtocol proto, QName qname) throws ServiceException {
         if (proto == SoapProtocol.SoapJS)
             return new JavaScriptElement(qname);
@@ -131,6 +124,9 @@ public abstract class Element {
     public Element addAttribute(String key, double value, byte disposition) throws ContainerException   { return addAttribute(key, Double.toString(value), disposition); }
     public Element addAttribute(String key, boolean value, byte disposition) throws ContainerException  { return addAttribute(key, value ? "1" : "0", disposition); }
 
+    public KeyValuePair addKeyValuePair(String key, String value) throws ContainerException  { return addKeyValuePair(key, value, null); }
+    public abstract KeyValuePair addKeyValuePair(String key, String value, String eltname) throws ContainerException;
+
     protected void detach(Element child) throws ContainerException {
         if (child == null)
             return;
@@ -165,14 +161,14 @@ public abstract class Element {
 
     /**
      * Returns an optional sub-element.
-     * @return the first sub-element with a matching name, or <code>null</code>
+     * @return the first sub-element with a matching name, or <tt>null</tt>
      * if the sub-element doesn't exist.
      */
     public abstract Element getOptionalElement(String name);
 
     /**
      * Returns an optional sub-element.
-     * @return the first sub-element with a matching name, or <code>null</code>
+     * @return the first sub-element with a matching name, or <tt>null</tt>
      * if the sub-element doesn't exist.
      */
     public Element getOptionalElement(QName qname)                  { return getOptionalElement(qname.getName()); }
@@ -190,17 +186,17 @@ public abstract class Element {
     public abstract List<Element> listElements(String name);
 
     /**
-     * Returns all attributes as an <code>Iterator</code>.
+     * Returns all attributes as an <tt>Iterator</tt>.
      */
     public Iterator<Attribute> attributeIterator()           { return listAttributes().iterator(); }
     
     /**
-     * Returns all sub-elements as an <code>Iterator</code>.
+     * Returns all sub-elements as an <tt>Iterator</tt>.
      */
     public Iterator<Element>   elementIterator()             { return listElements().iterator(); }
     
     /**
-     * Returns all sub-elements matching the given name as an <code>Iterator</code>.
+     * Returns all sub-elements matching the given name as an <tt>Iterator</tt>.
      */
     public Iterator<Element>   elementIterator(String name)  { return listElements(name).iterator(); }
 
@@ -427,6 +423,13 @@ public abstract class Element {
         public Element createElement(QName qname);
     }
 
+    public static interface KeyValuePair {
+        public KeyValuePair addAttribute(String key, String value) throws ContainerException;
+        public KeyValuePair addAttribute(String key, long value) throws ContainerException;
+        public KeyValuePair addAttribute(String key, double value) throws ContainerException;
+        public KeyValuePair addAttribute(String key, boolean value) throws ContainerException;
+    }
+
     public static class Attribute {
         private String  mKey;
         private Object  mValue;
@@ -451,6 +454,24 @@ public abstract class Element {
         private static final class JavaScriptFactory implements ElementFactory {
             public Element createElement(String name)  { return new JavaScriptElement(name); }
             public Element createElement(QName qname)  { return new JavaScriptElement(qname); }
+        }
+
+        private final class JavaScriptKeyValuePair implements KeyValuePair {
+            private Element mTarget;
+            JavaScriptKeyValuePair(String key, String value)  { (mTarget = addUniqueElement(key)).setText(value); }
+
+            public KeyValuePair addAttribute(String key, String value) throws ContainerException   { mTarget.addAttribute(key, value);  return this; }
+            public KeyValuePair addAttribute(String key, long value) throws ContainerException     { mTarget.addAttribute(key, value);  return this; }
+            public KeyValuePair addAttribute(String key, double value) throws ContainerException   { mTarget.addAttribute(key, value);  return this; }
+            public KeyValuePair addAttribute(String key, boolean value) throws ContainerException  { mTarget.addAttribute(key, value);  return this; }
+            public String toString() {
+                if (mTarget.mAttributes.isEmpty())
+                    return "null";
+                else if (mTarget.mAttributes.size() == 1 && mTarget.mAttributes.containsKey(A_CONTENT))
+                    return '"' + StringUtil.jsEncode(mTarget.mAttributes.get(A_CONTENT)) + '"';
+                else
+                    return mTarget.toString();
+            }
         }
 
         public ElementFactory getFactory()  { return mFactory; }
@@ -510,42 +531,26 @@ public abstract class Element {
         public Element addAttribute(String key, String value, byte disposition) throws ContainerException {
             if (value == null)
                 return this;
-            else if (disposition == DISP_ELEMENT)
-                addUniqueElement(E_ATTRS).addAttribute(key, value);
-            else {
-                checkNamingConflict(key);
-                mAttributes.put(key, value);
-            }
+            checkNamingConflict(key);
+            mAttributes.put(key, value);
             return this;
         }
 
         public Element addAttribute(String key, long value, byte disposition) throws ContainerException {
-            if (disposition == DISP_ELEMENT)
-                addUniqueElement(E_ATTRS).addAttribute(key, value);
-            else {
-                checkNamingConflict(key);
-                mAttributes.put(key, new Long(value));
-            }
+            checkNamingConflict(key);
+            mAttributes.put(key, new Long(value));
             return this;
         }
 
         public Element addAttribute(String key, double value, byte disposition) throws ContainerException {
-            if (disposition == DISP_ELEMENT)
-                addUniqueElement(E_ATTRS).addAttribute(key, value);
-            else {
-                checkNamingConflict(key);
-                mAttributes.put(key, new Double(value));
-            }
+            checkNamingConflict(key);
+            mAttributes.put(key, new Double(value));
             return this;
         }
 
         public Element addAttribute(String key, boolean value, byte disposition) throws ContainerException {
-            if (disposition == DISP_ELEMENT)
-                addUniqueElement(E_ATTRS).addAttribute(key, value);
-            else {
-                checkNamingConflict(key);
-                mAttributes.put(key, new Boolean(value));
-            }
+            checkNamingConflict(key);
+            mAttributes.put(key, new Boolean(value));
             return this;
         }
 
@@ -553,6 +558,13 @@ public abstract class Element {
             Object obj = mAttributes.get(key);
             if (obj instanceof Element || obj instanceof List)
                 throw new ContainerException("already stored element with name: " + key);
+        }
+
+        public KeyValuePair addKeyValuePair(String key, String value, String eltname) {
+            JavaScriptElement attrs = (JavaScriptElement) addUniqueElement(E_ATTRS);
+            KeyValuePair kvp = attrs.new JavaScriptKeyValuePair(key, value);
+            attrs.mAttributes.put(key, kvp);
+            return kvp;
         }
 
         protected void detach(Element elt) throws ContainerException {
@@ -769,10 +781,11 @@ public abstract class Element {
                     sb.append('"').append(attr.getKey()).append(indent >= 0 ? "\": " : "\":");
 
                     Object value = attr.getValue();
-                    if (value instanceof String)                  sb.append('"').append(StringUtil.jsEncode(value)).append('"');
-                    else if (value instanceof JavaScriptElement)  ((JavaScriptElement) value).toString(sb, indent);
-                    else if (value instanceof Element)            sb.append('"').append(StringUtil.jsEncode(value)).append('"');
-                    else if (!(value instanceof List))            sb.append(value);
+                    if (value instanceof String)                       sb.append('"').append(StringUtil.jsEncode(value)).append('"');
+                    else if (value instanceof JavaScriptKeyValuePair)  sb.append(((JavaScriptKeyValuePair) value).toString());
+                    else if (value instanceof JavaScriptElement)       ((JavaScriptElement) value).toString(sb, indent);
+                    else if (value instanceof Element)                 sb.append('"').append(StringUtil.jsEncode(value)).append('"');
+                    else if (!(value instanceof List))                 sb.append(value);
                     else {
                         sb.append('[');
                         if ((lsize = ((List) value).size()) > 0)
@@ -826,6 +839,17 @@ public abstract class Element {
             public Element createElement(QName qname)  { return new XMLElement(qname); }
         }
 
+        private final class XMLKeyValuePair implements KeyValuePair {
+            private Element mTarget;
+            XMLKeyValuePair(String key, String value, String eltname)  { (mTarget = addElement(eltname)).addAttribute(A_ATTR_NAME, key).setText(value); }
+
+            public KeyValuePair addAttribute(String key, String value) throws ContainerException   { mTarget.addAttribute(key, value);  return this; }
+            public KeyValuePair addAttribute(String key, long value) throws ContainerException     { mTarget.addAttribute(key, value);  return this; }
+            public KeyValuePair addAttribute(String key, double value) throws ContainerException   { mTarget.addAttribute(key, value);  return this; }
+            public KeyValuePair addAttribute(String key, boolean value) throws ContainerException  { mTarget.addAttribute(key, value);  return this; }
+            public String toString()  { return mTarget.toString(); }
+        }
+
         public ElementFactory getFactory()  { return mFactory; }
 
         public Element addElement(String name) throws ContainerException { return addElement(new XMLElement(name)); }
@@ -851,21 +875,20 @@ public abstract class Element {
             if (content != null && !content.trim().equals("")) {
                 if (mChildren != null)
                     throw new ContainerException("cannot set text on element with children");
-            } else
+            } else {
                 content = null;
+            }
             mText = content;
             return this;
         }
 
         public Element addAttribute(String key, String value, byte disposition) throws ContainerException {
             validateName(key);
-            if (value == null)
+            if (value == null) {
                 return this;
-            else if (disposition == DISP_ELEMENT)
-                addElement(E_ATTRIBUTE).addAttribute(A_ATTR_NAME, key).setText(value);
-            else if (disposition == DISP_CONTENT)
+            } else if (disposition == DISP_CONTENT) {
                 addElement(key).setText(value);
-            else {
+            } else {
                 if (mAttributes == null)
                     mAttributes = new HashMap<String, Object>();
                 mAttributes.put(key, value);
@@ -873,9 +896,14 @@ public abstract class Element {
             return this;
         }
 
+        public KeyValuePair addKeyValuePair(String key, String value, String eltname) throws ContainerException {
+            return new XMLKeyValuePair(validateName(key), value, eltname == null ? E_ATTRIBUTE : eltname);
+        }
+
         private String validateName(String name) throws ContainerException  {
             if (name == null || name.equals(""))
                 throw new ContainerException("blank/missing XML attribute name");
+
             for (int i = 0; i < name.length(); i++) {
                 char c = name.charAt(i);
                 if (c == ':' || c == '_' || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
@@ -1061,27 +1089,37 @@ public abstract class Element {
 
         Element e = new JavaScriptElement(MailConstants.GET_CONTACTS_RESPONSE);
         e.addElement("cn");
-        e.addElement("cn").addAttribute("id", 256).addAttribute("md", 1111196674000L).addAttribute("l", 7).addAttribute("x", false)
-         .addAttribute("workPhone", "(408) 973-0500 x112", DISP_ELEMENT).addAttribute("notes", "These are &\nrandom notes", DISP_ELEMENT)
-         .addAttribute("firstName", "Ross \"Killa\"", DISP_ELEMENT).addAttribute("lastName", "Dargahi", DISP_ELEMENT);
-        e.addElement("cn").addAttribute("id", 257).addAttribute("md", 1111196674000L).addAttribute("l", 7)
-         .addAttribute("workPhone", "(408) 973-0500 x111", DISP_ELEMENT).addAttribute("jobTitle", "CEO", DISP_ELEMENT)
-         .addAttribute("firstName", "Satish", DISP_ELEMENT).addAttribute("lastName", "Dharmaraj", DISP_ELEMENT);
+        Element cn = e.addElement("cn").addAttribute("id", 256).addAttribute("md", 1111196674000L).addAttribute("l", 7).addAttribute("x", false);
+        cn.addKeyValuePair("workPhone", "(408) 973-0500 x112", "pm");
+        cn.addKeyValuePair("notes", "These are &\nrandom notes", "pm");
+        cn.addKeyValuePair("firstName", "Ross \"Killa\"", "pm");
+        cn.addKeyValuePair("lastName", "Dargahi", "pm");
+        cn.addKeyValuePair("image", null, "pm").addAttribute("size", 34102).addAttribute("ct", "image/png").addAttribute("part", "1");
+        cn = e.addElement("cn").addAttribute("id", 257).addAttribute("md", 1111196674000L).addAttribute("l", 7);
+        cn.addKeyValuePair("workPhone", "(408) 973-0500 x111");
+        cn.addKeyValuePair("jobTitle", "CEO");
+        cn.addKeyValuePair("firstName", "Satish");
+        cn.addKeyValuePair("lastName", "Dharmaraj");
         System.out.println(e);
         System.out.println(e.prettyPrint());
         System.out.println(Element.parseJSON(e.toString()).toString());
 
         e = new XMLElement(MailConstants.GET_CONTACTS_RESPONSE);
         e.addElement("cn");
-        e.addElement("cn").addAttribute("id", 256).addAttribute("md", 1111196674000L).addAttribute("l", 7).addAttribute("x", false)
-         .addAttribute("workPhone", "(408) 973-0500 x112", DISP_ELEMENT).addAttribute("notes", "These are &\nrandom notes", DISP_ELEMENT)
-         .addAttribute("firstName", "Ross \"Killa\"", DISP_ELEMENT).addAttribute("lastName", "Dargahi", DISP_ELEMENT);
-        e.addElement("cn").addAttribute("id", 257).addAttribute("md", 1111196674000L).addAttribute("l", 7)
-         .addAttribute("workPhone", "(408) 973-0500 x111", DISP_ELEMENT).addAttribute("jobTitle", "CEO", DISP_ELEMENT)
-         .addAttribute("firstname", "Satish", DISP_ELEMENT).addAttribute("lastName", "Dharmaraj", DISP_ELEMENT);
-        System.out.println(e);
-        for (Element cn : e.listElements())
-            System.out.println("  found: id=" + cn.getAttribute("ID", null));
+        cn = e.addElement("cn").addAttribute("id", 256).addAttribute("md", 1111196674000L).addAttribute("l", 7).addAttribute("x", false);
+        cn.addKeyValuePair("workPhone", "(408) 973-0500 x112", "pm");
+        cn.addKeyValuePair("notes", "These are &\nrandom notes", "pm");
+        cn.addKeyValuePair("firstName", "Ross \"Killa\"", "pm");
+        cn.addKeyValuePair("lastName", "Dargahi", "pm");
+        cn.addKeyValuePair("image", null, "pm").addAttribute("size", 34102).addAttribute("ct", "image/png").addAttribute("part", "1");
+        cn = e.addElement("cn").addAttribute("id", 257).addAttribute("md", 1111196674000L).addAttribute("l", 7);
+        cn.addKeyValuePair("workPhone", "(408) 973-0500 x111");
+        cn.addKeyValuePair("jobTitle", "CEO");
+        cn.addKeyValuePair("firstName", "Satish");
+        cn.addKeyValuePair("lastName", "Dharmaraj");
+        System.out.println(e.prettyPrint());
+        for (Element elt : e.listElements())
+            System.out.println("  found: id=" + elt.getAttribute("ID", null));
 
 //        System.out.println(com.zimbra.common.soap.SoapProtocol.toString(e.toXML(), true));
         System.out.println(new XMLElement("test").setText("  this\t    is\nthe\rway ").getTextTrim() + "|");
