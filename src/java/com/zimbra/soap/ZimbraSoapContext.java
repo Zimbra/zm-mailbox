@@ -537,7 +537,7 @@ public class ZimbraSoapContext {
     Element toProxyCtxt(SoapProtocol proto) {
         Element ctxt = proto.getFactory().createElement(HeaderConstants.CONTEXT);
         if (mRawAuthToken != null)
-            ctxt.addAttribute(HeaderConstants.E_AUTH_TOKEN, mRawAuthToken, Element.DISP_CONTENT);
+            ctxt.addAttribute(HeaderConstants.E_AUTH_TOKEN, mRawAuthToken, Element.Disposition.CONTENT);
         if (mResponseProtocol != mRequestProtocol)
             ctxt.addElement(HeaderConstants.E_FORMAT).addAttribute(HeaderConstants.A_TYPE, mResponseProtocol == SoapProtocol.SoapJS ? HeaderConstants.TYPE_JAVASCRIPT : HeaderConstants.TYPE_XML);
         Element eAcct = ctxt.addElement(HeaderConstants.E_ACCOUNT).addAttribute(HeaderConstants.A_HOPCOUNT, mHopCount).addAttribute(HeaderConstants.A_MOUNTPOINT, mMountpointTraversed);

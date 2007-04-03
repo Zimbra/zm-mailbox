@@ -278,7 +278,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
             searchElt.addAttribute(MailConstants.A_QUERY_OFFSET, mBufferStartOffset);
             searchElt.addAttribute(MailConstants.A_QUERY_LIMIT, chunkSizeToUse);
 
-            searchElt.addAttribute(MailConstants.E_QUERY, mSearchParams.getQueryStr(), Element.DISP_CONTENT);
+            searchElt.addAttribute(MailConstants.E_QUERY, mSearchParams.getQueryStr(), Element.Disposition.CONTENT);
 
             if (isMultipleMailboxes) {
                 if (isAllMailboxes) {

@@ -84,7 +84,6 @@ public class RulesUtil {
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup();
         RulesUtil util = new RulesUtil();
-        RuleManager mgr = RuleManager.getInstance();
         if (args.length !=5) {
             util.usage();
             return;
@@ -137,8 +136,8 @@ public class RulesUtil {
     private Element createAuthRequest(String acctEmail, String pwd) {
         // gonna go with XML here; may want to switch to a binary protocol at some point
         Element request = new Element.XMLElement(AccountConstants.AUTH_REQUEST);
-        request.addAttribute(AccountConstants.E_ACCOUNT, acctEmail, Element.DISP_CONTENT);
-        request.addAttribute(AccountConstants.E_PASSWORD, pwd, Element.DISP_CONTENT);
+        request.addAttribute(AccountConstants.E_ACCOUNT, acctEmail, Element.Disposition.CONTENT);
+        request.addAttribute(AccountConstants.E_PASSWORD, pwd, Element.Disposition.CONTENT);
         return request;
     }
 }

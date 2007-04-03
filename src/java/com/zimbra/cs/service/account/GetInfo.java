@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.Map.Entry;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -61,12 +60,12 @@ public class GetInfo extends AccountDocumentHandler  {
         Account acct = getRequestedAccount(lc);
 		
         Element response = lc.createElement(AccountConstants.GET_INFO_RESPONSE);
-        response.addAttribute(AccountConstants.E_ID, acct.getId(), Element.DISP_CONTENT);
-        response.addAttribute(AccountConstants.E_NAME, acct.getName(), Element.DISP_CONTENT);
+        response.addAttribute(AccountConstants.E_ID, acct.getId(), Element.Disposition.CONTENT);
+        response.addAttribute(AccountConstants.E_NAME, acct.getName(), Element.Disposition.CONTENT);
         long lifetime = lc.getAuthToken().getExpires() - System.currentTimeMillis();
-        response.addAttribute(AccountConstants.E_LIFETIME, lifetime, Element.DISP_CONTENT);
+        response.addAttribute(AccountConstants.E_LIFETIME, lifetime, Element.Disposition.CONTENT);
         try {
-            response.addAttribute(AccountConstants.E_QUOTA_USED, getRequestedMailbox(lc).getSize(), Element.DISP_CONTENT);
+            response.addAttribute(AccountConstants.E_QUOTA_USED, getRequestedMailbox(lc).getSize(), Element.Disposition.CONTENT);
         } catch (ServiceException e) { }
 
         Map attrMap = acct.getAttrs();

@@ -158,7 +158,7 @@ public class SearchConv extends Search {
                     boolean includeTrash = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeTrashInSearch, false);
                     boolean includeSpam = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
                     ZimbraQuery zq = new ZimbraQuery(mbox, params, includeTrash, includeSpam);
-                    proxyRequest.addAttribute(MailConstants.E_QUERY, zq.toQueryString(), Element.DISP_CONTENT);
+                    proxyRequest.addAttribute(MailConstants.E_QUERY, zq.toQueryString(), Element.Disposition.CONTENT);
                     
                     // now create a soap transport to talk to the remote account
                     Account target = Provisioning.getInstance().get(AccountBy.id, cid.getAccountId());

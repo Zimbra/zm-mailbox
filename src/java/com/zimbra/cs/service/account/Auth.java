@@ -43,7 +43,6 @@ import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.session.Session;
-import com.zimbra.cs.session.SessionCache;
 import com.zimbra.soap.ZimbraSoapContext;
 
 import java.util.Iterator;
@@ -138,8 +137,8 @@ public class Auth extends AccountDocumentHandler {
         }
 
         Element response = lc.createElement(AccountConstants.AUTH_RESPONSE);
-        response.addAttribute(AccountConstants.E_AUTH_TOKEN, token, Element.DISP_CONTENT);
-        response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.DISP_CONTENT);
+        response.addAttribute(AccountConstants.E_AUTH_TOKEN, token, Element.Disposition.CONTENT);
+        response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
         boolean isCorrectHost =  Provisioning.onLocalServer(acct);
         if (isCorrectHost) {
             Session session = lc.getNewSession(acct.getId(), Session.Type.SOAP);
@@ -147,7 +146,7 @@ public class Auth extends AccountDocumentHandler {
                 ZimbraSoapContext.encodeSession(response, session, true);
         }
         if (!isCorrectHost || LC.zimbra_auth_always_send_refer.booleanValue())
-            response.addAttribute(AccountConstants.E_REFERRAL, acct.getAttr(Provisioning.A_zimbraMailHost), Element.DISP_CONTENT);
+            response.addAttribute(AccountConstants.E_REFERRAL, acct.getAttr(Provisioning.A_zimbraMailHost), Element.Disposition.CONTENT);
 
 		Element prefsRequest = request.getOptionalElement(AccountConstants.E_PREFS);
 		if (prefsRequest != null) {

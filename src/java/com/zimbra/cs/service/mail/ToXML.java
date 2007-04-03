@@ -429,7 +429,7 @@ public class ToXML {
         if (needToOutput(fields, Change.MODIFIED_COLOR))
             elem.addAttribute(MailConstants.A_COLOR, note.getColor());
         if (needToOutput(fields, Change.MODIFIED_CONTENT))
-            elem.addAttribute(MailConstants.E_CONTENT, note.getText(), Element.DISP_CONTENT);
+            elem.addAttribute(MailConstants.E_CONTENT, note.getText(), Element.Disposition.CONTENT);
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
             elem.addAttribute(MailConstants.A_CHANGE_DATE, note.getChangeDate() / 1000);
             elem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, note.getModifiedSequence());
@@ -475,7 +475,7 @@ public class ToXML {
         if (msgs.isEmpty())
             return c;
 
-        c.addAttribute(MailConstants.E_SUBJECT, msgs.get(0).getSubject(), Element.DISP_CONTENT);
+        c.addAttribute(MailConstants.E_SUBJECT, msgs.get(0).getSubject(), Element.Disposition.CONTENT);
 
         Mailbox mbox = conv.getMailbox();
         ExpandResults expand = params.getFetchFirst();
@@ -493,7 +493,7 @@ public class ToXML {
                 m.addAttribute(MailConstants.A_SIZE, msg.getSize());
                 m.addAttribute(MailConstants.A_FOLDER, ifmt.formatItemId(msg.getFolderId()));
                 recordItemTags(m, msg, fields);
-                m.addAttribute(MailConstants.E_FRAG, msg.getFragment(), Element.DISP_CONTENT);
+                m.addAttribute(MailConstants.E_FRAG, msg.getFragment(), Element.Disposition.CONTENT);
                 encodeEmail(m, msg.getSender(), EmailType.FROM);
             }
         }
@@ -533,9 +533,9 @@ public class ToXML {
         if (needToOutput(fields, Change.MODIFIED_DATE))
             c.addAttribute(MailConstants.A_DATE, msgHit != null ? msgHit.getDate() : conv.getDate());
         if (needToOutput(fields, Change.MODIFIED_SUBJECT))
-            c.addAttribute(MailConstants.E_SUBJECT, conv.getSubject(), Element.DISP_CONTENT);
+            c.addAttribute(MailConstants.E_SUBJECT, conv.getSubject(), Element.Disposition.CONTENT);
         if (fields == NOTIFY_FIELDS && msgHit != null)
-            c.addAttribute(MailConstants.E_FRAG, msgHit.getFragment(), Element.DISP_CONTENT);
+            c.addAttribute(MailConstants.E_FRAG, msgHit.getFragment(), Element.Disposition.CONTENT);
 
         if (addRecips) {
             try {
@@ -672,15 +672,15 @@ public class ToXML {
 
             String subject = mm.getSubject();
             if (subject != null)
-                m.addAttribute(MailConstants.E_SUBJECT, StringUtil.stripControlCharacters(subject), Element.DISP_CONTENT);
+                m.addAttribute(MailConstants.E_SUBJECT, StringUtil.stripControlCharacters(subject), Element.Disposition.CONTENT);
 
             String fragment = msg.getFragment();
             if (fragment != null && !fragment.equals(""))
-                m.addAttribute(MailConstants.E_FRAG, fragment, Element.DISP_CONTENT);
+                m.addAttribute(MailConstants.E_FRAG, fragment, Element.Disposition.CONTENT);
 
             String messageID = mm.getMessageID();
             if (messageID != null && !messageID.trim().equals(""))
-                m.addAttribute(MailConstants.E_MSG_ID_HDR, StringUtil.stripControlCharacters(messageID), Element.DISP_CONTENT);
+                m.addAttribute(MailConstants.E_MSG_ID_HDR, StringUtil.stripControlCharacters(messageID), Element.Disposition.CONTENT);
 
             if (wholeMessage && msg.isDraft()) {
                 if (msg.getDraftOrigId() > 0)
@@ -691,7 +691,7 @@ public class ToXML {
                     m.addAttribute(MailConstants.A_IDENTITY_ID, msg.getDraftIdentityId());
                 String inReplyTo = mm.getHeader("In-Reply-To", null);
                 if (inReplyTo != null && !inReplyTo.equals(""))
-                    m.addAttribute(MailConstants.E_IN_REPLY_TO, StringUtil.stripControlCharacters(inReplyTo), Element.DISP_CONTENT);
+                    m.addAttribute(MailConstants.E_IN_REPLY_TO, StringUtil.stripControlCharacters(inReplyTo), Element.Disposition.CONTENT);
             }
 
             if (!wholeMessage)
@@ -885,10 +885,10 @@ public class ToXML {
 
             String subject = mm.getSubject();
             if (subject != null)
-                m.addAttribute(MailConstants.E_SUBJECT, StringUtil.stripControlCharacters(subject), Element.DISP_CONTENT);
+                m.addAttribute(MailConstants.E_SUBJECT, StringUtil.stripControlCharacters(subject), Element.Disposition.CONTENT);
             String messageID = mm.getMessageID();
             if (messageID != null && !messageID.trim().equals(""))
-                m.addAttribute(MailConstants.E_MSG_ID_HDR, StringUtil.stripControlCharacters(messageID), Element.DISP_CONTENT);
+                m.addAttribute(MailConstants.E_MSG_ID_HDR, StringUtil.stripControlCharacters(messageID), Element.Disposition.CONTENT);
 
 //          if (wholeMessage && msg.isDraft()) {
 //              if (msg.getDraftOrigId() > 0)
@@ -897,7 +897,7 @@ public class ToXML {
 //                  m.addAttribute(MailService.A_REPLY_TYPE, msg.getDraftReplyType());
 //              String inReplyTo = mm.getHeader("In-Reply-To", null);
 //              if (inReplyTo != null && !inReplyTo.equals(""))
-//                  m.addAttribute(MailService.E_IN_REPLY_TO, StringUtil.stripControlCharacters(inReplyTo), Element.DISP_CONTENT);
+//                  m.addAttribute(MailService.E_IN_REPLY_TO, StringUtil.stripControlCharacters(inReplyTo), Element.Disposition.CONTENT);
 //          }
 
             if (!wholeMessage)
@@ -998,12 +998,12 @@ public class ToXML {
         if (addSenders)
             encodeEmail(e, msg.getSender(), EmailType.FROM);
 
-        e.addAttribute(MailConstants.E_SUBJECT, StringUtil.stripControlCharacters(msg.getSubject()), Element.DISP_CONTENT);
+        e.addAttribute(MailConstants.E_SUBJECT, StringUtil.stripControlCharacters(msg.getSubject()), Element.Disposition.CONTENT);
 
         // fragment has already been sanitized...
         String fragment = msg.getFragment();
         if (!fragment.equals(""))
-            e.addAttribute(MailConstants.E_FRAG, fragment, Element.DISP_CONTENT);
+            e.addAttribute(MailConstants.E_FRAG, fragment, Element.Disposition.CONTENT);
 
         if (msg.isInvite()) {
             try {
@@ -1471,7 +1471,7 @@ public class ToXML {
 
         if (data != null) {
             data = StringUtil.stripControlCharacters(data);
-            elt.addAttribute(MailConstants.E_CONTENT, data, Element.DISP_CONTENT);
+            elt.addAttribute(MailConstants.E_CONTENT, data, Element.Disposition.CONTENT);
         }
         // TODO: CDATA worth the effort?
     }
@@ -1561,7 +1561,7 @@ public class ToXML {
                 m.addAttribute(MailConstants.A_MODIFIED_DATE, revision.getRevDate());
                 String frag = revision.getFragment();
                 if (frag != null && !frag.equals(""))
-                    m.addAttribute(MailConstants.E_FRAG, frag, Element.DISP_CONTENT);
+                    m.addAttribute(MailConstants.E_FRAG, frag, Element.Disposition.CONTENT);
             } catch (Exception ex) {
                 mLog.warn("ignoring exception while fetching revision for document " + doc.getSubject(), ex);
             }
@@ -1585,7 +1585,7 @@ public class ToXML {
         m.addAttribute(MailConstants.A_MODIFIED_DATE, page.getModifiedDate());
         String frag = page.getFragment();
         if (frag != null && !frag.equals(""))
-            m.addAttribute(MailConstants.E_FRAG, frag, Element.DISP_CONTENT);
+            m.addAttribute(MailConstants.E_FRAG, frag, Element.Disposition.CONTENT);
         return m;
     }
 

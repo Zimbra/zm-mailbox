@@ -86,7 +86,7 @@ public class GetWiki extends WikiDocumentHandler {
         		Element wikiElem = ToXML.encodeWikiPage(response, wikiPage);
         		String contents = wikiPage.getContents(wctxt);
         		if (contents != null && contents != "") {
-        			wikiElem.addAttribute(MailConstants.A_BODY, contents, Element.DISP_CONTENT);
+        			wikiElem.addAttribute(MailConstants.A_BODY, contents, Element.Disposition.CONTENT);
         		}
         		return response;
         	}
@@ -120,7 +120,7 @@ public class GetWiki extends WikiDocumentHandler {
         		// old revision is gone, and revision.getContent() returns null.
         		if (is != null) {
         			byte[] raw = ByteUtil.getContent(is, 0);
-        			wikiElem.addAttribute(MailConstants.A_BODY, new String(raw, "UTF-8"), Element.DISP_CONTENT);
+        			wikiElem.addAttribute(MailConstants.A_BODY, new String(raw, "UTF-8"), Element.Disposition.CONTENT);
         		}
         	} catch (IOException ioe) {
         		ZimbraLog.wiki.error("cannot read the wiki message body", ioe);

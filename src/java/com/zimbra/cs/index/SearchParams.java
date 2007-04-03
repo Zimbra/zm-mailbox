@@ -236,7 +236,7 @@ public final class SearchParams {
     public void encodeParams(Element searchElt) {
         searchElt.addAttribute(MailConstants.A_CAL_EXPAND_INST_START, getCalItemExpandStart());
         searchElt.addAttribute(MailConstants.A_CAL_EXPAND_INST_END, getCalItemExpandEnd());
-        searchElt.addAttribute(MailConstants.E_QUERY, getQueryStr(), Element.DISP_CONTENT);
+        searchElt.addAttribute(MailConstants.E_QUERY, getQueryStr(), Element.Disposition.CONTENT);
         searchElt.addAttribute(MailConstants.A_SEARCH_TYPES, getTypesStr());
         searchElt.addAttribute(MailConstants.A_SORTBY, getSortByStr());
         if (getFetchFirst() != null) 

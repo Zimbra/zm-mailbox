@@ -183,8 +183,8 @@ public abstract class SoapCLI {
         mAuth = false;
         
         Element authReq = new Element.XMLElement(AdminConstants.AUTH_REQUEST);
-        authReq.addAttribute(AdminConstants.E_NAME, mUser, Element.DISP_CONTENT);
-        authReq.addAttribute(AdminConstants.E_PASSWORD, mPassword, Element.DISP_CONTENT);
+        authReq.addAttribute(AdminConstants.E_NAME, mUser, Element.Disposition.CONTENT);
+        authReq.addAttribute(AdminConstants.E_PASSWORD, mPassword, Element.Disposition.CONTENT);
         try {
             Element authResp = mTrans.invokeWithoutSession(authReq);
             String authToken = authResp.getAttribute(AdminConstants.E_AUTH_TOKEN);

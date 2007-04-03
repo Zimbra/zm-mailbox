@@ -420,8 +420,8 @@ public class SpamExtract {
         transport.setTimeout(0);
 
         Element authReq = new Element.XMLElement(AdminConstants.AUTH_REQUEST);
-        authReq.addAttribute(AdminConstants.E_NAME, adminUser, Element.DISP_CONTENT);
-        authReq.addAttribute(AdminConstants.E_PASSWORD, adminPassword, Element.DISP_CONTENT);
+        authReq.addAttribute(AdminConstants.E_NAME, adminUser, Element.Disposition.CONTENT);
+        authReq.addAttribute(AdminConstants.E_PASSWORD, adminPassword, Element.Disposition.CONTENT);
         try {
             if (mVerbose) mLog.info("Auth request to: " + adminURL);
             if (mLog.isDebugEnabled()) mLog.debug(authReq.prettyPrint());

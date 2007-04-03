@@ -116,8 +116,8 @@ public class Auth extends AdminDocumentHandler {
         } catch (AuthTokenException e) {
             throw  ServiceException.FAILURE("unable to encode auth token", e);
         }
-        response.addAttribute(AdminConstants.E_AUTH_TOKEN, token, Element.DISP_CONTENT);
-        response.addAttribute(AdminConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.DISP_CONTENT);
+        response.addAttribute(AdminConstants.E_AUTH_TOKEN, token, Element.Disposition.CONTENT);
+        response.addAttribute(AdminConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
         response.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, Provisioning.A_zimbraIsDomainAdminAccount).setText(isDomainAdmin+"");
         Session session = lc.getNewSession(acct.getId(), Session.Type.ADMIN);
         if (session != null)

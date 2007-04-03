@@ -215,7 +215,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                                 // fragment has already been sanitized...
                                 String frag = inv.getFragment();
                                 if (!frag.equals("")) {
-                                    instElt.addAttribute(MailConstants.E_FRAG, frag, Element.DISP_CONTENT);
+                                    instElt.addAttribute(MailConstants.E_FRAG, frag, Element.Disposition.CONTENT);
                                 }
                             }
 
@@ -369,7 +369,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                     // fragment has already been sanitized...
                     String fragment = defaultInvite.getFragment();
                     if (!fragment.equals("")) {
-                        calItemElem.addAttribute(MailConstants.E_FRAG, fragment, Element.DISP_CONTENT);
+                        calItemElem.addAttribute(MailConstants.E_FRAG, fragment, Element.Disposition.CONTENT);
                     }
                 }
                 

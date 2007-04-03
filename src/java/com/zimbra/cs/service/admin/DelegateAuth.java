@@ -96,8 +96,8 @@ public class DelegateAuth extends AdminDocumentHandler {
         } catch (AuthTokenException e) {
             throw  ServiceException.FAILURE("unable to encode auth token", e);
         }
-        response.addAttribute(AdminConstants.E_AUTH_TOKEN, token, Element.DISP_CONTENT);
-        response.addAttribute(AdminConstants.E_LIFETIME, lifetime, Element.DISP_CONTENT);
+        response.addAttribute(AdminConstants.E_AUTH_TOKEN, token, Element.Disposition.CONTENT);
+        response.addAttribute(AdminConstants.E_LIFETIME, lifetime, Element.Disposition.CONTENT);
 		return response;
 	}
 
