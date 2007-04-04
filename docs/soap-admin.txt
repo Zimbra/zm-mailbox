@@ -1758,6 +1758,12 @@ happen if the server timed-out the waiting.  The server does this
 occasionally just so that requests don't get "stuck".  The client
 should re-submit the original request if this happens.
 
+If a second WaitMultiple request arrives at the server while one is
+already waiting, the first request will be immediately completed and
+will return with the "canceled" flag set.
+
+
+
 
 *************************************
 DestroyWaitSet: Use this to close out the wait set.  Note that the
