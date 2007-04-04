@@ -119,13 +119,21 @@ public class WaitSet {
      * @throws ServiceException
      */
     public static void destroy(String id) throws ServiceException {
+        HashMap<String, WaitSetSession> toCleanup = null;
+        
         synchronized(sWaitSets) {
             WaitSet ws = lookup(id);
             if (ws == null)
                 throw MailServiceException.NO_SUCH_WAITSET(id);
             assert(!Thread.holdsLock(ws));
             sWaitSets.remove(id);
-            ws.destroy();
+            toCleanup = ws.destroy();
+            if (toCleanup != null) {
+                assert(!Thread.holdsLock(ws));
+                for (WaitSetSession session : toCleanup.values()) {
+                    session.doCleanup();
+                }
+            }
         }
     }
     
@@ -143,17 +151,28 @@ public class WaitSet {
             for (Iterator<WaitSet> iter = sWaitSets.values().iterator(); iter.hasNext();) {
                 WaitSet ws = iter.next();
                 assert(!Thread.holdsLock(ws)); // must never lock WS before sWaitSets or deadlock
+
+                HashMap<String, WaitSetSession> toCleanup = null;
+                
                 synchronized(ws) {
                     // only timeout if no cb AND if not accessed for a timeout
                     if (ws.mCb == null && ws.mLastAccessedTime < cutoffTime) {
                         iter.remove();
-                        ws.destroy();
+                        toCleanup = ws.destroy();
                         removed++;
                     } else {
                         if (ws.mCb != null)
                             withCallback++;
                         activeSets++;
                         activeSessions+=ws.mNumActiveSessions;
+                    }
+                }
+                
+                // cleanup w/o WaitSet lock held
+                if (toCleanup != null) {
+                    assert(!Thread.holdsLock(ws));
+                    for (WaitSetSession session : toCleanup.values()) {
+                        session.doCleanup();
                     }
                 }
             }
@@ -183,17 +202,16 @@ public class WaitSet {
     /**
      * Cleanup and remove all the sessions referenced by this WaitSet
      */
-    private synchronized void destroy() {
+    private synchronized HashMap<String, WaitSetSession> destroy() {
         cancelExistingCB();
-        for (WaitSetSession session : mWaitSets.values()) {
-            session.doCleanup();
-        }
-        mWaitSets.clear();
+        HashMap<String, WaitSetSession> toRet = mWaitSets;
+        mWaitSets = new HashMap<String, WaitSetSession>();
         mNumActiveSessions = 0;
         mCurrentSignalledSets.clear();
         mSentSignalledSets.clear();
         mCurrentSeqNo = Integer.MAX_VALUE;
-    }
+        return toRet;
+   }
     
     /**
      * Just a helper: the 'default interest' is set when the WaitSet is created,
@@ -271,9 +289,10 @@ public class WaitSet {
      * @param session
      */
     synchronized void signalDataReady(WaitSetSession session) {
-        assert(mWaitSets.containsValue(session));
-        if (mCurrentSignalledSets.add(session)) {
-            trySendData();
+        if (mWaitSets.containsValue(session)) { // ...false if waitset is shutting down...
+            if (mCurrentSignalledSets.add(session)) {
+                trySendData();
+            }
         }
     }
     
@@ -412,6 +431,8 @@ public class WaitSet {
     
     /** this is the signalled set data that is new (has never been sent) */
     private HashSet<WaitSetSession> mCurrentSignalledSets = new HashSet<WaitSetSession>();
+    
+    public String getWaitSetId() { return mWaitSetId; }
     
     private int mCurrentSeqNo = 1;
     private String mWaitSetId;
