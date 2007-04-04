@@ -38,6 +38,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.Constants;
@@ -57,7 +58,7 @@ public class ZimbraPerf {
 
     static Log sLog = LogFactory.getLog(ZimbraPerf.class);
     private static final com.zimbra.common.util.Log sZimbraStats = LogFactory.getLog("zimbra.stats");
-    private static TaskScheduler<Void> sTaskScheduler = new TaskScheduler<Void>("ZimbraStats", 1, 1);  
+    private static TaskScheduler<Void> sTaskScheduler = new TaskScheduler<Void>("ZimbraStats", 1, 1);
 
     // Name constants for real-time statistics
     public static final String RTS_JAVA_HEAP_MB = "java_heap_MB"; 
@@ -95,28 +96,52 @@ public class ZimbraPerf {
     public static StopWatch STOPWATCH_POP = new StopWatch("pop");
     public static Counter COUNTER_IDX_WRT = new Counter("idx_wrt");
     
-    private static RealtimeStats sRealtimeStats = new RealtimeStats(
-        new String[] {
+    private static RealtimeStats sRealtimeStats = 
+        new RealtimeStats(new String[] {
             RTS_JAVA_HEAP_MB, 
             RTS_DB_POOL_SIZE,
             RTS_MYSQL_OPENED_TABLES, RTS_MYSQL_SLOW_QUERIES, RTS_MYSQL_THREADS_CONNECTED,
             RTS_INNODB_PAGES_READ, RTS_INNODB_PAGES_WRITTEN, RTS_INNODB_BP_HIT_RATE,
-            RTS_POP_CONN, RTS_POP_SSL_CONN, RTS_IMAP_CONN, RTS_IMAP_SSL_CONN
-        });
+            RTS_POP_CONN, RTS_POP_SSL_CONN, RTS_IMAP_CONN, RTS_IMAP_SSL_CONN 
+            }
+        );
 
-    private static Accumulator[] sAccumulators = {
-        COUNTER_LMTP_RCVD_MSGS, COUNTER_LMTP_RCVD_BYTES, COUNTER_LMTP_RCVD_RCPT,
-        COUNTER_LMTP_DLVD_MSGS, COUNTER_LMTP_DLVD_BYTES,
-        STOPWATCH_DB_CONN,
-        STOPWATCH_LDAP_DC,
-        STOPWATCH_MBOX_ADD_MSG, STOPWATCH_MBOX_GET, COUNTER_MBOX_CACHE,
-        COUNTER_MBOX_MSG_CACHE, COUNTER_MBOX_ITEM_CACHE,
-        STOPWATCH_SOAP,
-        STOPWATCH_IMAP,
-        STOPWATCH_POP,
-        COUNTER_IDX_WRT,
-        sRealtimeStats
-    };
+    private static CopyOnWriteArrayList<Accumulator> sAccumulators = 
+        new CopyOnWriteArrayList<Accumulator>(
+                    new Accumulator[] {
+                        COUNTER_LMTP_RCVD_MSGS, COUNTER_LMTP_RCVD_BYTES, COUNTER_LMTP_RCVD_RCPT,
+                        COUNTER_LMTP_DLVD_MSGS, COUNTER_LMTP_DLVD_BYTES,
+                        STOPWATCH_DB_CONN,
+                        STOPWATCH_LDAP_DC,
+                        STOPWATCH_MBOX_ADD_MSG, STOPWATCH_MBOX_GET, COUNTER_MBOX_CACHE,
+                        COUNTER_MBOX_MSG_CACHE, COUNTER_MBOX_ITEM_CACHE,
+                        STOPWATCH_SOAP,
+                        STOPWATCH_IMAP,
+                        STOPWATCH_POP,
+                        COUNTER_IDX_WRT,
+                        sRealtimeStats
+                    }
+        );
+    
+    /**
+     * This may only be called BEFORE ZimbraPerf.initialize is called, otherwise the column
+     * names will not be output correctly into the logs
+     */
+    public static void addRealtimeStatName(String name) {
+        if (sIsInitialized)
+            throw new IllegalStateException("Cannot add stat name after ZimbraPerf.initialize() is called");
+        sRealtimeStats.addName(name);
+    }
+    
+    /**
+     * This may only be called BEFORE ZimbraPerf.initialize is called, otherwise the column
+     * names will not be output correctly into the logs
+     */
+    public static void addAccumulator(Accumulator toAdd) {
+        if (sIsInitialized)
+            throw new IllegalStateException("Cannot add stat name after ZimbraPerf.initialize() is called");
+        sAccumulators.add(toAdd);
+    }
     
     private static Map<String, StatementStats> sSqlToStats =
         new HashMap<String, StatementStats>();
@@ -135,7 +160,7 @@ public class ZimbraPerf {
      */
     private static int sPrepareCount = 0;
 
-    private static final long STATS_WRITE_INTERVAL = Constants.MILLIS_PER_MINUTE;
+    private static final long DB_STATS_WRITE_INTERVAL = Constants.MILLIS_PER_MINUTE;
     private static final long SLOW_QUERY_THRESHOLD = 300;  // ms
     private static long sLastStatsWrite = System.currentTimeMillis();
     
@@ -225,7 +250,7 @@ public class ZimbraPerf {
             writeSlowQuery(sql, normalized, durationMillis);
         }
         long now = System.currentTimeMillis();
-        if (now - sLastStatsWrite > STATS_WRITE_INTERVAL) {
+        if (now - sLastStatsWrite > DB_STATS_WRITE_INTERVAL) {
             writeDbStats();
             sLastStatsWrite = now;
         }
@@ -493,7 +518,7 @@ public class ZimbraPerf {
         return columns;
     }
     
-    private static final long DUMP_FREQUENCY = Constants.MILLIS_PER_MINUTE;
+    private static final long CSV_DUMP_FREQUENCY = Constants.MILLIS_PER_MINUTE;
     private static boolean sIsInitialized = false;
 
     public synchronized static void initialize() {
@@ -524,7 +549,7 @@ public class ZimbraPerf {
         COUNTER_IDX_WRT.setShowCount(false);
         COUNTER_IDX_WRT.setShowTotal(false);
 
-        sTaskScheduler.schedule("ZimbraStats", new ZimbraStatsDumper(), true, DUMP_FREQUENCY, 0);
+        sTaskScheduler.schedule("ZimbraStats", new ZimbraStatsDumper(), true, CSV_DUMP_FREQUENCY, 0);
         sIsInitialized = true;
     }
 

@@ -138,9 +138,12 @@ public class Zimbra {
                 ImapServer.startupImapSSLServer();
         }
         
-        ZimbraPerf.initialize();
-        
         WaitSet.startup();
+        
+        MemoryStats.startup();
+
+        // should be last, so that other subsystems can add dynamic stats counters 
+        ZimbraPerf.initialize();
         
         sInited = true;
     }
@@ -150,6 +153,8 @@ public class Zimbra {
             return;
 
         sInited = false;
+
+        MemoryStats.shutdown();
         
         WaitSet.shutdown();
         

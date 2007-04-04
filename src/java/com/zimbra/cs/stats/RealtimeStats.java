@@ -56,6 +56,10 @@ class RealtimeStats implements Accumulator {
         }
     }
     
+    void addName(String name) {
+        mNames.add(name);
+    }
+    
     void addCallback(RealtimeStatsCallback callback) {
         mCallbacks.add(callback);
     }
