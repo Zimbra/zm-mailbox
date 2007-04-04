@@ -500,6 +500,7 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
 
     private static final String NL = "\n";
     private static final String MAILTO = "mailto:";
+    private static final String HTTP = "http:";
 
     /*
      * attendee is required for METHOD == REQUEST || METHOD == REPLY
@@ -521,12 +522,12 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
 		toRet.append("BEGIN:VFREEBUSY").append(NL);
 
 		toRet.append("ORGANIZER:");
-		if (!organizer.startsWith(MAILTO) && !organizer.startsWith("http:"))
+		if (!organizer.toLowerCase().startsWith(MAILTO) && !organizer.toLowerCase().startsWith(HTTP))
 			toRet.append(MAILTO);
 		toRet.append(organizer).append(NL);
 		if (attendee != null) {
 			toRet.append("ATTENDEE:");
-			if (!attendee.startsWith(MAILTO))
+			if (!attendee.toLowerCase().startsWith(MAILTO) && !attendee.toLowerCase().startsWith(HTTP))
 				toRet.append(MAILTO);
 			toRet.append(attendee).append(NL);
 		}

@@ -189,7 +189,10 @@ public abstract class CalendarUser {
     }
 
     public ZProperty toProperty() throws ServiceException {
-        ZProperty prop = new ZProperty(getPropertyName(), "MAILTO:" + getAddress());
+    	String addr = getAddress();
+    	if (addr.indexOf(':') < 0)
+    		addr = "MAILTO:" + addr;
+        ZProperty prop = new ZProperty(getPropertyName(), addr);
         setProperty(prop);
         return prop;
     }

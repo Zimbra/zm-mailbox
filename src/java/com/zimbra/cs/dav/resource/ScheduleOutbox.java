@@ -55,7 +55,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 
-public class ScheduleOutbox extends Collection {
+public class ScheduleOutbox extends CalendarCollection {
 	public ScheduleOutbox(DavContext ctxt, Folder f) throws DavException, ServiceException {
 		super(ctxt, f);
 		ResourceProperty rtype = getProperty(DavElements.E_RESOURCETYPE);
@@ -86,7 +86,7 @@ public class ScheduleOutbox extends Collection {
 			ParsedDateTime startTime = ParsedDateTime.parseUtcOnly(dtstartProp.getValue());
 			start = startTime.getUtcTime();
 			if (dtendProp != null) {
-				end = ParsedDateTime.parseUtcOnly(dtstartProp.getValue()).getUtcTime();
+				end = ParsedDateTime.parseUtcOnly(dtendProp.getValue()).getUtcTime();
 			} else {
 				ParsedDuration dur = ParsedDuration.parse(durationProp.getValue());
 				end = start + dur.getDurationAsMsecs(new Date(start));
@@ -96,20 +96,21 @@ public class ScheduleOutbox extends Collection {
 		}
 		String originator = ctxt.getRequest().getHeader("Originator");
 		Enumeration recipients = ctxt.getRequest().getHeaders("Recipient");
-		ZimbraLog.dav.debug("originator: "+originator);
+		ZimbraLog.dav.debug("originator: "+originator+", "+"start: "+new Date(start)+", "+"end:   "+new Date(end));
 		Provisioning prov = Provisioning.getInstance();
 		Element resp = ctxt.getDavResponse().getTop(DavElements.E_SCHEDULE_RESPONSE);
 		while (recipients.hasMoreElements()) {
-			String rcpt = (String)recipients.nextElement();
-			ZimbraLog.dav.debug("recipient: "+rcpt);
+			String originalRcpt = (String)recipients.nextElement();
+			String rcpt = this.getAddressFromPrincipalURL(originalRcpt);
+			ZimbraLog.dav.debug("recipient: "+originalRcpt+", email: "+rcpt);
 			Element r = resp.addElement(DavElements.E_CALDAV_RESPONSE);
 			try {
 				Account rcptAcct = prov.get(Provisioning.AccountBy.name, rcpt);
 				if (Provisioning.onLocalServer(rcptAcct)) {
 					Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(rcptAcct);
 					FreeBusy fb = mbox.getFreeBusy(start, end);
-					String fbMsg = fb.toVCalendar(FreeBusy.Method.REPLY, originator, rcpt, null);
-					r.addElement(DavElements.E_RECIPIENT).setText("mailto:"+rcpt);
+					String fbMsg = fb.toVCalendar(FreeBusy.Method.REPLY, originator, originalRcpt, null);
+					r.addElement(DavElements.E_RECIPIENT).setText(originalRcpt);
 					r.addElement(DavElements.E_REQUEST_STATUS).setText("2.0;Success");
 					r.addElement(DavElements.E_CALENDAR_DATA).setText(fbMsg);
 				} else {

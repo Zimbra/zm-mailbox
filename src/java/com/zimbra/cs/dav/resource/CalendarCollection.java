@@ -37,7 +37,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -63,6 +62,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.util.L10nUtil;
@@ -198,7 +198,7 @@ public class CalendarCollection extends Collection {
 		
 		Provisioning prov = Provisioning.getInstance();
 		try {
-			byte[] item = ByteUtil.getContent(req.getInputStream(), req.getContentLength());
+			byte[] item = ctxt.getRequestData();
 			ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(new InputStreamReader(new ByteArrayInputStream(item)));
 			List<Invite> invites = Invite.createFromCalendar(ctxt.getAuthAccount(), 
 					findSummary(vcalendar), 
@@ -246,21 +246,22 @@ public class CalendarCollection extends Collection {
 				// check for valid organizer field.
 				if (i.hasOrganizer()) {
 					String addr = i.getOrganizer().getAddress();
-					if (addr.startsWith("http://")) {
-						// XXX workaround for iCal build 9A321
-						// iCal sets the organizer field to be the URL of
-						// CalDAV account.
-						//     ORGANIZER:http://jylee-macbook:7070/service/dav/user1
-						int pos = addr.indexOf("/service/dav/");
-						if (pos != -1) {
-							int start = pos + 13;
-							int end = addr.indexOf("/", start);
-							String userId = (end == -1) ? addr.substring(start) : addr.substring(start, end);
-							Account organizer = prov.get(AccountBy.name, userId);
-							if (organizer == null)
-								throw new DavException("user not found: "+userId, HttpServletResponse.SC_BAD_REQUEST, null);
-							i.setOrganizer(new ZOrganizer(organizer.getName(), organizer.getAttr(Provisioning.A_cn)));
+					String newAddr = getAddressFromPrincipalURL(addr);
+					if (!addr.equals(newAddr)) {
+						i.setOrganizer(new ZOrganizer(newAddr, null));
+						ZProperty href = null;
+						Iterator<ZProperty> xprops = i.xpropsIterator();
+						while (xprops.hasNext()) {
+							href = xprops.next();
+							if (href.getName().equals(DavElements.ORGANIZER_HREF))
+								break;
+							href = null;
 						}
+						if (href == null) {
+							href = new ZProperty(DavElements.ORGANIZER_HREF);
+							i.addXProp(href);
+						}
+						href.setValue(addr);
 					}
 				}
 				//ZimbraLog.dav.debug(i);
@@ -278,5 +279,32 @@ public class CalendarCollection extends Collection {
 		Mailbox mbox = getMailbox(ctxt);
 		FreeBusy fb = mbox.getFreeBusy(range.getStart(), range.getEnd());
 		return fb.toVCalendar(FreeBusy.Method.REPLY, ctxt.getAuthAccount().getName(), mbox.getAccount().getName(), null);
+	}
+	
+	/*
+	 * to workaround the pre release iCal bugs
+	 */
+	protected String getAddressFromPrincipalURL(String url) throws ServiceException, DavException {
+		if (url.startsWith("http://")) {
+			// iCal sets the organizer field to be the URL of
+			// CalDAV account.
+			//     ORGANIZER:http://jylee-macbook:7070/service/dav/user1
+			int pos = url.indexOf("/service/dav/");
+			if (pos != -1) {
+				int start = pos + 13;
+				int end = url.indexOf("/", start);
+				String userId = (end == -1) ? url.substring(start) : url.substring(start, end);
+				Account organizer = Provisioning.getInstance().get(AccountBy.name, userId);
+				if (organizer == null)
+					throw new DavException("user not found: "+userId, HttpServletResponse.SC_BAD_REQUEST, null);
+				return organizer.getName();
+			}
+		} else if (url.toLowerCase().startsWith("mailto:")) {
+			// iCal sometimes prefixes the email addr with more than one mailto:
+			while (url.toLowerCase().startsWith("mailto:")) {
+				url = url.substring(7);
+			}
+		}
+		return url;
 	}
 }

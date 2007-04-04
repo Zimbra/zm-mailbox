@@ -42,6 +42,8 @@ import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
+import com.zimbra.cs.mailbox.calendar.ZOrganizer;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mime.Mime;
 
 /**
@@ -116,6 +118,15 @@ public class CalendarObject extends MailItemResource {
 				continue;
 			CharArrayWriter wr = new CharArrayWriter();
 			try {
+				ZProperty href = null;
+				Iterator<ZProperty> xprops = inv.xpropsIterator();
+				while (xprops.hasNext()) {
+					href = xprops.next();
+					if (href.getName().equalsIgnoreCase(DavElements.ORGANIZER_HREF)) {
+						inv.setOrganizer(new ZOrganizer(href));
+						break;
+					}
+				}
 				inv.newToVComponent(false).toICalendar(wr);
 			} catch (ServiceException se) {
 				ZimbraLog.dav.error("cannot convert to ICalendar", se);

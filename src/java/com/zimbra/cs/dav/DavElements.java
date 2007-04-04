@@ -194,6 +194,8 @@ public class DavElements {
 	public static final String P_WRITE_CONTENT = "write-content";
 	public static final String P_WRITE_PROPERTIES = "write-properties";
 	
+	public static final String ORGANIZER_HREF = "X-ORGANIZER-HREF";
+	
 
 	// QNames
 	public static final QName E_ABSTRACT = QName.get(P_ABSTRACT, WEBDAV_NS);
