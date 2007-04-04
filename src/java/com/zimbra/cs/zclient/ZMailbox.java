@@ -1098,6 +1098,10 @@ public class ZMailbox {
         return doAction(contactAction("delete", ids));
     }
 
+    public ZActionResult trashContact(String ids) throws ServiceException {
+        return doAction(contactAction("trash", ids));
+    }
+
     public ZActionResult flagContact(String ids, boolean flag) throws ServiceException {
         return doAction(contactAction(flag ? "flag" : "!flag", ids));
     }
@@ -1205,6 +1209,20 @@ public class ZMailbox {
      */
     public ZActionResult deleteConversation(String ids, String targetConstraints) throws ServiceException {
         return doAction(convAction("delete", ids, targetConstraints));
+    }
+
+    /**
+     * moves conversation to trash folder.
+     *
+     * @param ids list of conversation ids to act on
+     * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
+     *         affected items in a conversation. A leading '-' means to negate the constraint(s). Use null for
+     *         no constraints.
+     * @return action result
+     * @throws ServiceException on error
+     */
+    public ZActionResult trashConversation(String ids, String targetConstraints) throws ServiceException {
+        return doAction(convAction("trash", ids, targetConstraints));
     }
 
     /**
@@ -1318,6 +1336,21 @@ public class ZMailbox {
     public ZActionResult deleteItem(String ids, String targetConstraints) throws ServiceException {
         return doAction(itemAction("delete", ids, targetConstraints));
     }
+
+    /**
+     * move item(s) to trash
+     *
+     * @param ids list of item ids to act on
+     * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
+     *         affected items. A leading '-' means to negate the constraint(s). Use null for
+     *         no constraints.
+     * @return action result
+     * @throws ServiceException on error
+     */
+    public ZActionResult trashItem(String ids, String targetConstraints) throws ServiceException {
+        return doAction(itemAction("trash", ids, targetConstraints));
+    }
+
 
     /**
      * mark item as read/unread
@@ -1585,6 +1618,16 @@ public class ZMailbox {
      */
     public ZActionResult deleteMessage(String ids) throws ServiceException {
         return doAction(messageAction("delete", ids));
+    }
+
+    /**
+     * move message(s) to trash
+     * @param ids ids to act on
+     * @return action result
+     * @throws ServiceException on error
+     */
+    public ZActionResult trashMessage(String ids) throws ServiceException {
+        return doAction(messageAction("trash", ids));
     }
 
     /**
@@ -1981,6 +2024,16 @@ public class ZMailbox {
      */
     public ZActionResult deleteFolder(String ids) throws ServiceException {
         return doAction(folderAction("delete", ids));
+    }
+
+    /** move the folder to the Trash, marking all contents as read and
+     * renaming the folder if a folder by that name is already present in the Trash
+     * @param ids ids to delete
+     * @return action result
+     * @throws ServiceException on error
+     */
+    public ZActionResult trashFolder(String ids) throws ServiceException {
+        return doAction(folderAction("trash", ids));
     }
 
     /** hard delete all items in folder and sub folders (doesn't delete the folder itself)
