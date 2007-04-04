@@ -75,7 +75,7 @@ public class WaitMultipleAccounts extends AdminDocumentHandler {
     </remove> ]  
 </WaitMultipleAccountsRequest>
 
-<WaitMultipleAccountsResponse waitSet="setId" seq="seqNo" [cancelled="1"]>
+<WaitMultipleAccountsResponse waitSet="setId" seq="seqNo" [canceled="1"]>
   [ <n id="ACCTID"/>]*
   [ <error ...something.../>]*
 </WaitMultipleAccountsResponse>
@@ -118,8 +118,8 @@ public class WaitMultipleAccounts extends AdminDocumentHandler {
         
         Element response = zsc.createElement(AdminConstants.WAIT_MULTIPLE_ACCOUNTS_RESPONSE);
         response.addAttribute(AdminConstants.A_WAITSET_ID, waitSetId);
-        if (cb.cancelled) {
-            response.addAttribute(AdminConstants.A_CANCELLED, true);
+        if (cb.canceled) {
+            response.addAttribute(AdminConstants.A_CANCELED, true);
         } else if (cb.completed) {
             response.addAttribute(AdminConstants.A_SEQ, cb.seqNo);
             
@@ -165,11 +165,11 @@ public class WaitMultipleAccounts extends AdminDocumentHandler {
     }
     
     static class Callback implements WaitSet.WaitSetCallback {
-        public void dataReady(WaitSet ws, int seqNo, boolean cancelled, String[] signalledAccounts) {
+        public void dataReady(WaitSet ws, int seqNo, boolean canceled, String[] signalledAccounts) {
             synchronized(this) {
                 ZimbraLog.session.info("Called WaitMultiplAccounts WaitSetCallback.dataReady()!");
                 this.waitSet = ws;
-                this.cancelled = cancelled;
+                this.canceled = canceled;
                 this.signalledAccounts = signalledAccounts;
                 this.seqNo = seqNo;
                 this.completed = true;
@@ -178,7 +178,7 @@ public class WaitMultipleAccounts extends AdminDocumentHandler {
         }
 
         public boolean completed = false;
-        public boolean cancelled;
+        public boolean canceled;
         public String[] signalledAccounts;
         public WaitSet waitSet;
         public int seqNo;

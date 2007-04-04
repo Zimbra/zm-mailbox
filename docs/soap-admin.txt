@@ -1745,7 +1745,7 @@ is the first time Wait has been called with the account)
     </remove> ]  
 </WaitMultipleAccountsRequest>
 
-<WaitMultipleAccountsResponse waitSet="setId" [seq="seqNo" OR cancelled="1"]>
+<WaitMultipleAccountsResponse waitSet="setId" [seq="seqNo" OR canceled="1"]>
   [ <n id="ACCTID"/>]*
   [ <error ...something.../>]*
 </WaitMultipleAccountsResponse>
