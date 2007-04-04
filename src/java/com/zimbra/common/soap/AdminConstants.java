@@ -451,7 +451,7 @@ public class AdminConstants {
     public static final String A_WAITSET_ID = "waitSet";
     public static final String A_SEQ = "seq";
     public static final String A_BLOCK = "block";
-    public static final String A_CANCELLED = "cancelled";
+    public static final String A_CANCELED = "canceled";
     public static final String A_DEFTYPES = "defTypes";
     
 }
