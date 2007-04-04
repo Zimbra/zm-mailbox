@@ -29,9 +29,12 @@ import com.sun.net.ssl.TrustManager;
 import com.sun.net.ssl.TrustManagerFactory;
 import com.sun.net.ssl.X509TrustManager;
 
+import java.security.InvalidKeyException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.SignatureException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
@@ -95,15 +98,36 @@ public class EasyX509TrustManager implements X509TrustManager
                 LOG.debug("X509Certificate[" + i + "]=" + certificates[i]);
             }
         }
-        if ((certificates != null) && (certificates.length == 1)) {
-            X509Certificate certificate = certificates[0];
-            try {
-                certificate.checkValidity(); 
-            }
-            catch (CertificateException e) {
-                LOG.error(e.toString());
+        
+        if ((certificates != null) && (certificates.length > 0)) {
+        	try {
+                // NOTE: this is not a full-featured path validation algorithm.
+                //
+                // Step 0: check if the target is valid now.
+	        	certificates[0].checkValidity();
+	        	LOG.debug("X509Certificate[0] valid");
+	        	
+	            // Step 1: verify that the chain is complete and valid.
+	            for (int i = 1; i < certificates.length; i++) {
+	            	certificates[i].checkValidity();
+	            	LOG.debug("X509Certificate[" + i + "] valid");
+	                try {
+	                	certificates[i-1].verify(certificates[i].getPublicKey());
+	                	LOG.debug("X509Certificate[" + (i-1) + "] trusted by X509Certificate[" + i + "]");
+	                } catch (NoSuchAlgorithmException x) {
+	                    throw new CertificateException(x.toString());
+	                } catch (NoSuchProviderException x) {
+	                    throw new CertificateException(x.toString());
+	                } catch (InvalidKeyException x) {
+	                    throw new CertificateException(x.toString());
+	                } catch (SignatureException x) {
+	                    throw new CertificateException(x.toString());
+	                }
+	            }
+        	} catch (CertificateException x) {
+                LOG.error(x.toString());
                 return false;
-            }
+        	}
             return true;
         } else {
             return this.standardTrustManager.isServerTrusted(certificates);
