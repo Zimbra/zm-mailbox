@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -49,6 +50,18 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 public class MailboxManager {
+    
+    /**
+     * Listener for mailbox loading
+     */
+    public static interface MailboxLoadedListener {
+        /**
+         * Called whenever a mailbox is loaded or created
+         * 
+         * @param mbox
+         */
+        public void mailboxLoaded(Mailbox mbox);
+    }
 
     public static final class MailboxLock {
         private final String accountId;
@@ -90,7 +103,16 @@ public class MailboxManager {
                 mailbox = mbox;
         }
     }
-
+    
+    private CopyOnWriteArrayList<MailboxLoadedListener> mLoadListeners = new CopyOnWriteArrayList<MailboxLoadedListener>();
+    
+    public void addListener(MailboxLoadedListener listener)      { mLoadListeners.add(listener); }
+    public void removeListener(MailboxLoadedListener listener)   { mLoadListeners.remove(listener); }
+    
+    private void notifyMailboxLoaded(Mailbox mbox) {
+        for (MailboxLoadedListener listener : mLoadListeners) 
+            listener.mailboxLoaded(mbox);
+    }
 
     private static MailboxManager sInstance;
 
@@ -327,6 +349,7 @@ public class MailboxManager {
 
         // this is only reached if the mailbox wasn't found in the cache
         mbox.checkUpgrade();
+        notifyMailboxLoaded(mbox);
 
         ZimbraPerf.STOPWATCH_MBOX_GET.stop(startTime);
         return mbox;
@@ -579,6 +602,8 @@ public class MailboxManager {
             }
         }
 
+        notifyMailboxLoaded(mailbox);
+        
         return mailbox;
     }
 
