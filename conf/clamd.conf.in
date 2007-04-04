@@ -31,16 +31,16 @@ LogFileMaxSize 20M
 
 # Log time with each message.
 # Default: disabled
-LogTime
+LogTime yes
 
 # Also log clean files. Useful in debugging but drastically increases the
 # log size.
 # Default: disabled
-#LogClean
+#LogClean no
 
 # Use system logger (can work together with LogFile).
 # Default: disabled
-LogSyslog
+LogSyslog yes
 
 # Specify the type of syslog messages - please refer to 'man syslog'
 # for facility names.
@@ -49,7 +49,7 @@ LogFacility LOG_LOCAL0
 
 # Enable verbose logging.
 # Default: disabled
-#LogVerbose
+#LogVerbose no
 
 # This option allows you to save a process identifier of the listening
 # daemon (main thread).
