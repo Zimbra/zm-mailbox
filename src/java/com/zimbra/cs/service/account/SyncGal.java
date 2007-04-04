@@ -52,6 +52,9 @@ public class SyncGal extends AccountDocumentHandler {
         String tokenAttr = request.getAttribute(MailConstants.A_TOKEN, "");
         Account acct = getRequestedAccount(getZimbraSoapContext(context));
 
+        if (!acct.getBooleanAttr(Provisioning.A_zimbraFeatureGalEnabled , false))
+            throw ServiceException.PERM_DENIED("cannot sync GAL");
+        
         Domain d = Provisioning.getInstance().getDomain(acct);
         SearchGalResult result = Provisioning.getInstance().searchGal(d, "", Provisioning.GAL_SEARCH_TYPE.ALL, tokenAttr);
         if (result.token != null)

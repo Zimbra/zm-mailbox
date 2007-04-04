@@ -1622,7 +1622,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="359" name="zimbraFeatureGalAutoCompleteEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
   <defaultCOSValue>TRUE</defaultCOSValue>
-  <desc>enable auto-completion from the GAL</desc>
+  <desc>enable auto-completion from the GAL, zimbraFeatureGalEnabled also has to be enabled for the auto-completion feature</desc>
 </attr>
 
 <attr id="360" name="zimbraGalAutoCompleteLdapFilter" type="string" max="4096" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
