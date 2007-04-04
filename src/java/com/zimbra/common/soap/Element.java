@@ -134,8 +134,9 @@ public abstract class Element {
     public Element addAttribute(String key, double value, Disposition disp) throws ContainerException   { return addAttribute(key, Double.toString(value), disp); }
     public Element addAttribute(String key, boolean value, Disposition disp) throws ContainerException  { return addAttribute(key, value ? "1" : "0", disp); }
 
-    public KeyValuePair addKeyValuePair(String key, String value) throws ContainerException  { return addKeyValuePair(key, value, null); }
-    public abstract KeyValuePair addKeyValuePair(String key, String value, String eltname) throws ContainerException;
+    public KeyValuePair addKeyValuePair(String key, String value) throws ContainerException  { return addKeyValuePair(key, value, null, null); }
+    public abstract KeyValuePair addKeyValuePair(String key, String value, String eltname, String attrname) throws ContainerException;
+
 
     protected void detach(Element child) throws ContainerException {
         if (child == null)
@@ -167,34 +168,23 @@ public abstract class Element {
     public abstract Element getOptionalElement(String name);
     /** Returns the first child <tt>Element</tt> with the given QName, or
      *  <tt>null</tt> if no matching <tt>Element</tt> is found. */
-    public Element getOptionalElement(QName qname)                  { return getOptionalElement(qname.getName()); }
+    public Element getOptionalElement(QName qname)  { return getOptionalElement(qname.getName()); }
 
+    /** Returns all an <tt>Element</tt>'s attributes. */
     public abstract Set<Attribute> listAttributes();
-    
-    /**
-     * Returns all sub-elements.
-     */
-    public List<Element>   listElements()                    { return listElements(null); }
-    
-    /**
-     * Returns all sub-elements matching the given name.
-     */
+    /** Returns all an <tt>Element</tt>'s sub-elements. */
+    public List<Element> listElements()  { return listElements(null); }
+    /** Returns all the sub-elements with the given name.  If <tt>name></tt>
+     *  is <tt>null</tt>, returns <u>all</u> sub-elements. */
     public abstract List<Element> listElements(String name);
 
-    /**
-     * Returns all attributes as an <tt>Iterator</tt>.
-     */
-    public Iterator<Attribute> attributeIterator()           { return listAttributes().iterator(); }
-    
-    /**
-     * Returns all sub-elements as an <tt>Iterator</tt>.
-     */
-    public Iterator<Element>   elementIterator()             { return listElements().iterator(); }
-    
-    /**
-     * Returns all sub-elements matching the given name as an <tt>Iterator</tt>.
-     */
-    public Iterator<Element>   elementIterator(String name)  { return listElements(name).iterator(); }
+    /** Returns all attributes as an <tt>Iterator</tt>. */
+    public Iterator<Attribute> attributeIterator()         { return listAttributes().iterator(); }
+    /** Returns all sub-elements as an <tt>Iterator</tt>. */
+    public Iterator<Element> elementIterator()             { return listElements().iterator(); }
+    /** Returns all sub-elements with the given name as an <tt>Iterator</tt>.
+     *  If <tt>name></tt> is <tt>null</tt>, returns <u>all</u> sub-elements. */
+    public Iterator<Element> elementIterator(String name)  { return listElements(name).iterator(); }
 
     public abstract String getText();
     public String getTextTrim()  { return getText().trim().replaceAll("\\s+", " "); }
@@ -420,6 +410,7 @@ public abstract class Element {
     }
 
     public static interface KeyValuePair {
+        public KeyValuePair setValue(String value) throws ContainerException;
         public KeyValuePair addAttribute(String key, String value) throws ContainerException;
         public KeyValuePair addAttribute(String key, long value) throws ContainerException;
         public KeyValuePair addAttribute(String key, double value) throws ContainerException;
@@ -456,6 +447,7 @@ public abstract class Element {
             private Element mTarget;
             JavaScriptKeyValuePair(String key, String value)  { (mTarget = addUniqueElement(key)).setText(value); }
 
+            public KeyValuePair setValue(String value) throws ContainerException   { mTarget.setText(value);  return this; }
             public KeyValuePair addAttribute(String key, String value) throws ContainerException   { mTarget.addAttribute(key, value);  return this; }
             public KeyValuePair addAttribute(String key, long value) throws ContainerException     { mTarget.addAttribute(key, value);  return this; }
             public KeyValuePair addAttribute(String key, double value) throws ContainerException   { mTarget.addAttribute(key, value);  return this; }
@@ -556,10 +548,20 @@ public abstract class Element {
                 throw new ContainerException("already stored element with name: " + key);
         }
 
-        public KeyValuePair addKeyValuePair(String key, String value, String eltname) {
+        public KeyValuePair addKeyValuePair(String key, String value, String eltname, String attrname) {
             JavaScriptElement attrs = (JavaScriptElement) addUniqueElement(E_ATTRS);
+            Object existing = attrs.mAttributes.get(key);
             KeyValuePair kvp = attrs.new JavaScriptKeyValuePair(key, value);
-            attrs.mAttributes.put(key, kvp);
+
+            if (existing == null) {
+                attrs.mAttributes.put(key, kvp);
+            } else if (existing instanceof KeyValuePair) {
+                List<KeyValuePair> pairs = new ArrayList<KeyValuePair>();
+                pairs.add((KeyValuePair) existing);  pairs.add(kvp);
+                attrs.mAttributes.put(key, pairs);
+            } else {
+                ((List<KeyValuePair>) existing).add(kvp);
+            }
             return kvp;
         }
 
@@ -711,11 +713,51 @@ public abstract class Element {
             private void error(String cause) throws SoapParseException  { throw new SoapParseException(cause, js); }
         }
 
-        static Element parseElement(JSRequest jsr, QName qname, ElementFactory factory) throws SoapParseException {
-            return parseElement(jsr, qname.getName(), factory).setNamespace("", qname.getNamespaceURI());
+        private static void parseKeyValuePair(JSRequest jsr, String key, Element parent) throws SoapParseException {
+            Object value;
+            switch (jsr.peekChar()) {
+                case '{':  jsr.skipChar();  KeyValuePair kvp = parent.addKeyValuePair(key, null);
+                           do {
+                               String attr = jsr.readString();
+                               switch (jsr.readChar()) {
+                                   case ':':  break;
+                                   case '=':  if (jsr.peekChar() == '>')  jsr.skipChar();  break;
+                                   default:   throw new SoapParseException("missing expected ':'", jsr.js);
+                               }
+                               if ((value = jsr.readValue()) == null)  /* do nothing */;
+                               else if (key.equals(A_CONTENT))         kvp.setValue(value.toString());
+                               else if (value instanceof Boolean)      kvp.addAttribute(attr, ((Boolean) value).booleanValue());
+                               else if (value instanceof Long)         kvp.addAttribute(attr, ((Long) value).longValue());
+                               else if (value instanceof Double)       kvp.addAttribute(attr, ((Double) value).doubleValue());
+                               else                                    kvp.addAttribute(attr, value.toString());
+                               switch (jsr.peekChar()) {
+                                   case '}':  break;
+                                   case ',':
+                                   case ';':  jsr.skipChar();  break;
+                                   default:   throw new SoapParseException("missing expected ',' or ']'", jsr.js);
+                               }
+                           } while (jsr.peekChar() != '}');  jsr.skipChar();  break;
+                case '[':  jsr.skipChar();
+                           do {
+                               parseKeyValuePair(jsr, key, parent);
+                               switch (jsr.peekChar()) {
+                                   case ']':  break;
+                                   case ',':
+                                   case ';':  jsr.skipChar();  break;
+                                   default:   throw new SoapParseException("missing expected ',' or ']'", jsr.js);
+                               }
+                           } while (jsr.peekChar() != ']');  jsr.skipChar();  break;
+                default:   if ((value = jsr.readValue()) != null)
+                               parent.addKeyValuePair(key, value.toString());  break;
+            }
         }
-        private static Element parseElement(JSRequest jsr, String name, ElementFactory factory) throws SoapParseException {
-            Element elt = factory.createElement(name);
+
+        static Element parseElement(JSRequest jsr, QName qname, ElementFactory factory) throws SoapParseException {
+            return parseElement(jsr, qname.getName(), factory, null).setNamespace("", qname.getNamespaceURI());
+        }
+        private static Element parseElement(JSRequest jsr, String name, ElementFactory factory, Element parent) throws SoapParseException {
+            boolean isAttrs = parent != null && name.equals(E_ATTRS);
+            Element elt = isAttrs ? null : factory.createElement(name);
             jsr.skipChar('{');
             while (jsr.peekChar() != '}') {
                 String key = jsr.readString();
@@ -725,26 +767,29 @@ public abstract class Element {
                     case '=':  if (jsr.peekChar() == '>')  jsr.skipChar();  break;
                     default:   throw new SoapParseException("missing expected ':'", jsr.js);
                 }
-                switch (jsr.peekChar()) {
-                    case '{':  elt.addUniqueElement(parseElement(jsr, key, factory));  break;
-                    case '[':  jsr.skipChar();
-                               do {
-                                   elt.addElement(parseElement(jsr, key, factory));
-                                   switch (jsr.peekChar()) {
-                                       case ']':  break;
-                                       case ',':
-                                       case ';':  jsr.skipChar();  break;
-                                       default:   throw new SoapParseException("missing expected ',' or ']'", jsr.js);
-                                   }
-                               } while (jsr.peekChar() != ']');  jsr.skipChar();  break;
-                    default:   if ((value = jsr.readValue()) == null)             break;
-                               if (key.equals(A_NAMESPACE))        elt.setNamespace("", value.toString());
-                               else if (value instanceof Boolean)  elt.addAttribute(key, ((Boolean) value).booleanValue());
-                               else if (value instanceof Long)     elt.addAttribute(key, ((Long) value).longValue());
-                               else if (value instanceof Double)   elt.addAttribute(key, ((Double) value).doubleValue());
-                               else                                elt.addAttribute(key, value.toString());
-                               break;
-                }
+                if (isAttrs)
+                    parseKeyValuePair(jsr, key, parent);
+                else
+                    switch (jsr.peekChar()) {
+                        case '{':  elt.addUniqueElement(parseElement(jsr, key, factory, elt));  break;
+                        case '[':  jsr.skipChar();
+                                   do {
+                                       elt.addElement(parseElement(jsr, key, factory, elt));
+                                       switch (jsr.peekChar()) {
+                                           case ']':  break;
+                                           case ',':
+                                           case ';':  jsr.skipChar();  break;
+                                           default:   throw new SoapParseException("missing expected ',' or ']'", jsr.js);
+                                       }
+                                   } while (jsr.peekChar() != ']');  jsr.skipChar();  break;
+                        default:   if ((value = jsr.readValue()) == null)  break;
+                                   if (key.equals(A_NAMESPACE))            elt.setNamespace("", value.toString());
+                                   else if (value instanceof Boolean)      elt.addAttribute(key, ((Boolean) value).booleanValue());
+                                   else if (value instanceof Long)         elt.addAttribute(key, ((Long) value).longValue());
+                                   else if (value instanceof Double)       elt.addAttribute(key, ((Double) value).doubleValue());
+                                   else                                    elt.addAttribute(key, value.toString());
+                                   break;
+                    }
                 switch (jsr.peekChar()) {
                     case '}':  break;
                     case ',':
@@ -778,7 +823,7 @@ public abstract class Element {
 
                     Object value = attr.getValue();
                     if (value instanceof String)                       sb.append('"').append(StringUtil.jsEncode(value)).append('"');
-                    else if (value instanceof JavaScriptKeyValuePair)  sb.append(((JavaScriptKeyValuePair) value).toString());
+                    else if (value instanceof JavaScriptKeyValuePair)  sb.append(value.toString());
                     else if (value instanceof JavaScriptElement)       ((JavaScriptElement) value).toString(sb, indent);
                     else if (value instanceof Element)                 sb.append('"').append(StringUtil.jsEncode(value)).append('"');
                     else if (!(value instanceof List))                 sb.append(value);
@@ -789,9 +834,11 @@ public abstract class Element {
                                 int lindent = indent < 0 ? -1 : indent + INDENT_SIZE;
                                 if (lsize > 1)
                                     indent(sb, lindent, true);
-                                Element child = (Element) lit.next();
+                                Object child = lit.next();
                                 if (child instanceof JavaScriptElement)
                                     ((JavaScriptElement) child).toString(sb, lindent);
+                                else if (child instanceof JavaScriptKeyValuePair)
+                                    sb.append(child.toString());
                                 else
                                     sb.append('"').append(StringUtil.jsEncode(child)).append('"');
                                 if (lit.nextIndex() != lsize)  sb.append(",");
@@ -837,8 +884,9 @@ public abstract class Element {
 
         private final class XMLKeyValuePair implements KeyValuePair {
             private Element mTarget;
-            XMLKeyValuePair(String key, String value, String eltname)  { (mTarget = addElement(eltname)).addAttribute(A_ATTR_NAME, key).setText(value); }
+            XMLKeyValuePair(String key, String value, String eltname, String attrname)  { (mTarget = addElement(eltname)).addAttribute(attrname, key).setText(value); }
 
+            public KeyValuePair setValue(String value) throws ContainerException   { mTarget.setText(value);  return this; }
             public KeyValuePair addAttribute(String key, String value) throws ContainerException   { mTarget.addAttribute(key, value);  return this; }
             public KeyValuePair addAttribute(String key, long value) throws ContainerException     { mTarget.addAttribute(key, value);  return this; }
             public KeyValuePair addAttribute(String key, double value) throws ContainerException   { mTarget.addAttribute(key, value);  return this; }
@@ -892,8 +940,8 @@ public abstract class Element {
             return this;
         }
 
-        public KeyValuePair addKeyValuePair(String key, String value, String eltname) throws ContainerException {
-            return new XMLKeyValuePair(validateName(key), value, eltname == null ? E_ATTRIBUTE : eltname);
+        public KeyValuePair addKeyValuePair(String key, String value, String eltname, String attrname) throws ContainerException {
+            return new XMLKeyValuePair(validateName(key), value, eltname == null ? E_ATTRIBUTE : eltname, attrname == null ? A_ATTR_NAME : attrname);
         }
 
         private String validateName(String name) throws ContainerException  {
@@ -1033,13 +1081,14 @@ public abstract class Element {
                 for (Map.Entry<String, Object> attr : mAttributes.entrySet())
                     sb.append(' ').append(attr.getKey()).append("=\"").append(xmlEncode((String) attr.getValue(), true)).append('"');
             // new namespaces defined on this element
-            if (mNamespaces != null)
+            if (mNamespaces != null) {
                 for (Map.Entry<String, String> ns : mNamespaces.entrySet()) {
                     String prefix = ns.getKey();
                     String uri = ns.getValue();
                     if (namespaceDeclarationNeeded(prefix, uri))
                         sb.append(' ').append(A_NAMESPACE).append(prefix.equals("") ? "" : ":").append(prefix).append("=\"").append(xmlEncode(uri, true)).append('"');
                 }
+            }
             // element content (children/text) and closing
             if (mChildren != null || mText != null) {
                 sb.append('>');
@@ -1064,55 +1113,25 @@ public abstract class Element {
         QName qm = new QName("m", bogusNS);
 
         SoapProtocol proto = SoapProtocol.SoapJS;
-        Element env = new JavaScriptElement(proto.getEnvelopeQName());
-        env.addUniqueElement(proto.getBodyQName()).addUniqueElement(MailConstants.GET_MSG_RESPONSE)
-           .addUniqueElement(qm).addAttribute("id", 1115).addAttribute("f", "aw").addAttribute("t", "64,67").addAttribute("score", 0.953)
-           .addAttribute("s", "Subject of the message has a \"\\\" in it", Disposition.CONTENT).addAttribute("mid", "<kashdfgiai67r3wtuwfg@goo.com>", Disposition.CONTENT)
-           .addElement("mp").addAttribute("part", "TEXT").addAttribute("ct", "multipart/mixed").addAttribute("s", 3718);
+        Element env = testMessage(new JavaScriptElement(proto.getEnvelopeQName()), proto, qm);
         System.out.println(env);
-        System.out.println(Element.parseJSON(env.toString()).toString());
+        System.out.println(Element.parseJSON(env.toString()));
 
         proto = SoapProtocol.Soap12;
-        env = new XMLElement(proto.getEnvelopeQName());
-        env.addUniqueElement(proto.getBodyQName()).addUniqueElement(MailConstants.GET_MSG_RESPONSE)
-           .addUniqueElement(qm).addAttribute("id", 1115).addAttribute("f", "aw").addAttribute("t", "64,67").addAttribute("score", 0.953)
-           .addAttribute("s", "Subject of the message has a \"\\\" in it", Disposition.CONTENT).addAttribute("mid", "<kashdfgiai67r3wtuwfg@goo.com>", Disposition.CONTENT)
-           .addElement("mp").addAttribute("part", "TEXT").addAttribute("ct", "multipart/mixed").addAttribute("s", 3718);
+        env = testMessage(new XMLElement(proto.getEnvelopeQName()), proto, qm);
         System.out.println(env.prettyPrint());
         System.out.println("             name: " + env.getName());
         System.out.println("   qualified name: " + env.getQualifiedName());
         System.out.println("            qname: " + env.getQName());
 
-        Element e = new JavaScriptElement(MailConstants.GET_CONTACTS_RESPONSE);
-        e.addElement("cn");
-        Element cn = e.addElement("cn").addAttribute("id", 256).addAttribute("md", 1111196674000L).addAttribute("l", 7).addAttribute("x", false);
-        cn.addKeyValuePair("workPhone", "(408) 973-0500 x112", "pm");
-        cn.addKeyValuePair("notes", "These are &\nrandom notes", "pm");
-        cn.addKeyValuePair("firstName", "Ross \"Killa\"", "pm");
-        cn.addKeyValuePair("lastName", "Dargahi", "pm");
-        cn.addKeyValuePair("image", null, "pm").addAttribute("size", 34102).addAttribute("ct", "image/png").addAttribute("part", "1");
-        cn = e.addElement("cn").addAttribute("id", 257).addAttribute("md", 1111196674000L).addAttribute("l", 7);
-        cn.addKeyValuePair("workPhone", "(408) 973-0500 x111");
-        cn.addKeyValuePair("jobTitle", "CEO");
-        cn.addKeyValuePair("firstName", "Satish");
-        cn.addKeyValuePair("lastName", "Dharmaraj");
+        Element e = testContacts(new JavaScriptElement(MailConstants.GET_CONTACTS_RESPONSE));
         System.out.println(e);
         System.out.println(e.prettyPrint());
-        System.out.println(Element.parseJSON(e.toString()).toString());
 
-        e = new XMLElement(MailConstants.GET_CONTACTS_RESPONSE);
-        e.addElement("cn");
-        cn = e.addElement("cn").addAttribute("id", 256).addAttribute("md", 1111196674000L).addAttribute("l", 7).addAttribute("x", false);
-        cn.addKeyValuePair("workPhone", "(408) 973-0500 x112", "pm");
-        cn.addKeyValuePair("notes", "These are &\nrandom notes", "pm");
-        cn.addKeyValuePair("firstName", "Ross \"Killa\"", "pm");
-        cn.addKeyValuePair("lastName", "Dargahi", "pm");
-        cn.addKeyValuePair("image", null, "pm").addAttribute("size", 34102).addAttribute("ct", "image/png").addAttribute("part", "1");
-        cn = e.addElement("cn").addAttribute("id", 257).addAttribute("md", 1111196674000L).addAttribute("l", 7);
-        cn.addKeyValuePair("workPhone", "(408) 973-0500 x111");
-        cn.addKeyValuePair("jobTitle", "CEO");
-        cn.addKeyValuePair("firstName", "Satish");
-        cn.addKeyValuePair("lastName", "Dharmaraj");
+        System.out.println(Element.parseJSON(e.toString()));
+        System.out.println(Element.parseJSON(e.toString(), XMLElement.mFactory).prettyPrint());
+
+        e = testContacts(new XMLElement(MailConstants.GET_CONTACTS_RESPONSE));
         System.out.println(e.prettyPrint());
         for (Element elt : e.listElements())
             System.out.println("  found: id=" + elt.getAttribute("ID", null));
@@ -1120,5 +1139,30 @@ public abstract class Element {
 //        System.out.println(com.zimbra.common.soap.SoapProtocol.toString(e.toXML(), true));
         System.out.println(new XMLElement("test").setText("  this\t    is\nthe\rway ").getTextTrim() + "|");
         System.out.println(Element.parseJSON("{part:\"TEXT\",t:null,h:true,i:\"false\",\"ct\":\"\\x25multipart\\u0025\\/mixed\",\\u0073:3718}").toString());
+    }
+
+    private static Element testMessage(Element env, SoapProtocol proto, QName qm) {
+        env.addUniqueElement(proto.getBodyQName()).addUniqueElement(MailConstants.GET_MSG_RESPONSE)
+           .addUniqueElement(qm).addAttribute("id", 1115).addAttribute("f", "aw").addAttribute("t", "64,67").addAttribute("score", 0.953)
+           .addAttribute("s", "Subject of the message has a \"\\\" in it", Disposition.CONTENT).addAttribute("mid", "<kashdfgiai67r3wtuwfg@goo.com>", Disposition.CONTENT)
+           .addElement("mp").addAttribute("part", "TEXT").addAttribute("ct", "multipart/mixed").addAttribute("s", 3718);
+        return env;
+    }
+
+    private static Element testContacts(Element parent) {
+        parent.addElement("cn");
+        Element cn = parent.addElement("cn").addAttribute("id", 256).addAttribute("md", 1111196674000L).addAttribute("l", 7).addAttribute("x", false);
+        cn.addKeyValuePair("workPhone", "(408) 973-0500 x112", "pm", "name");
+        cn.addKeyValuePair("notes", "These are &\nrandom notes", "pm", "name");
+        cn.addKeyValuePair("firstName", "Ross \"Killa\"", "pm", "name");
+        cn.addKeyValuePair("lastName", "Dargahi", "pm", "name");
+        cn.addKeyValuePair("lastName", "Dangerous", "pm", "name");
+        cn.addKeyValuePair("image", null, "pm", "name").addAttribute("size", 34102).addAttribute("ct", "image/png").addAttribute("part", "1");
+        cn = parent.addElement("cn").addAttribute("id", 257).addAttribute("md", 1111196674000L).addAttribute("l", 7);
+        cn.addKeyValuePair("workPhone", "(408) 973-0500 x111");
+        cn.addKeyValuePair("jobTitle", "CEO");
+        cn.addKeyValuePair("firstName", "Satish");
+        cn.addKeyValuePair("lastName", "Dharmaraj");
+        return parent;
     }
 }
