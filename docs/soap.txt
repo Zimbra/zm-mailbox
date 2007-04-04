@@ -1791,11 +1791,11 @@ NOTE: should we return modified attrs in response?
 
 <ContactActionRequest>
   <!-- some actions can be preceeded by a "!" to negate them -->
-  <action id="{list}" op="move|delete|flag|tag|update" tag="..." l="..."/>
+  <action id="{list}" op="move|delete|flag|trash|tag|update" tag="..." l="..."/>
 </ContactActionRequest>
 
 <ContactActionResponse>
-  <action id="{list}" op="move|delete|flag|tag|update"/>
+  <action id="{list}" op="move|delete|flag|trash|tag|update"/>
 </ContactActionResponse>
 
   {list} = on input, list of contacts to act on, on output, list of
