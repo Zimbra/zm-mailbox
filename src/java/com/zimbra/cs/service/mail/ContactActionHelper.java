@@ -63,7 +63,8 @@ public class ContactActionHelper extends ItemActionHelper {
         super(octxt, mbox, ids, op, MailItem.TYPE_CONTACT, true, null);
     }
 
-    protected void callback() throws ServiceException {
+    @Override
+    protected void schedule() throws ServiceException {
         // iterate over the local items and perform the requested operation
         switch (mOperation) {
             case UPDATE:
