@@ -66,15 +66,10 @@ public class ParsedContact {
     private List<Attachment> mAttachments;
     private byte[] mBlob;
     private String mDigest;
-    private long mDate;
 
     private List<Document> mLuceneDocuments;
 
     public ParsedContact(Map<String, String> fields) throws ServiceException {
-        this(fields, System.currentTimeMillis());
-    }
-
-    public ParsedContact(Map<String, String> fields, long date) throws ServiceException {
         // prune out the empty and blank fields
         if (fields == null)
             throw ServiceException.INVALID_REQUEST("contact must have fields", null);
@@ -93,11 +88,10 @@ public class ParsedContact {
         addNicknameAndTypeIfPDL(fields);
 
         mFields = fields;
-        mDate = date;
     }
 
-    public ParsedContact(Map<String, String> fields, byte[] blob, long date) throws ServiceException {
-        this(fields, date);
+    public ParsedContact(Map<String, String> fields, byte[] blob) throws ServiceException {
+        this(fields);
 
         if (blob != null && blob.length > 0) {
             try {
@@ -117,8 +111,8 @@ public class ParsedContact {
         }
     }
 
-    public ParsedContact(Map<String, String> fields, List<Attachment> attachments, long date) throws ServiceException {
-        this(fields, date);
+    public ParsedContact(Map<String, String> fields, List<Attachment> attachments) throws ServiceException {
+        this(fields);
 
         if (attachments != null && !attachments.isEmpty()) {
             try {
@@ -137,7 +131,7 @@ public class ParsedContact {
     }
 
     public ParsedContact(Contact con) throws ServiceException {
-        this(con.getFields(), con.getContent(), con.getDate());
+        this(con.getFields(), con.getContent());
     }
 
     private static byte[] generateBlob(List<Attachment> attachments) throws MessagingException {
@@ -217,10 +211,6 @@ public class ParsedContact {
         return mDigest;
     }
 
-    public long getDate() {
-        return mDate;
-    }
-
 
     public ParsedContact modify(Map<String, String> fieldDelta, List<Attachment> attachDelta) throws ServiceException {
         if (attachDelta != null && !attachDelta.isEmpty()) {
@@ -258,7 +248,6 @@ public class ParsedContact {
 
         mBlob = null;
         mDigest = null;
-        mDate = System.currentTimeMillis();
         mLuceneDocuments = null;
 
         if (mAttachments != null) {

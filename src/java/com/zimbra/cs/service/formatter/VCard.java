@@ -58,7 +58,7 @@ public class VCard {
     }
 
     public ParsedContact asParsedContact() throws ServiceException {
-        return new ParsedContact(fields, attachments, System.currentTimeMillis());
+        return new ParsedContact(fields, attachments);
     }
 
 

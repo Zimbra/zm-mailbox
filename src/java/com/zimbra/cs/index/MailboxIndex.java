@@ -50,7 +50,6 @@ import org.apache.lucene.search.*;
 import org.apache.lucene.search.spans.SpanQuery;
 import org.apache.lucene.search.spans.Spans;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.store.LockFactory;
 import org.apache.lucene.store.SingleInstanceLockFactory;
 
 import com.zimbra.cs.account.Provisioning;
@@ -1604,28 +1603,28 @@ public final class MailboxIndex
             case MailItem.TYPE_DOCUMENT:
             case MailItem.TYPE_WIKI:
                 try {
-                    com.zimbra.cs.mailbox.Document document = (com.zimbra.cs.mailbox.Document)item;
+                    com.zimbra.cs.mailbox.Document document = (com.zimbra.cs.mailbox.Document) item;
                     ParsedDocument pd = new ParsedDocument(document.getBlob().getBlob().getFile(),
                                 document.getName(), 
                                 document.getContentType(),
                                 timestamp,
                                 document.getCreator());
                     indexDocument(mbox, redo, deleteFirst, pd, document);
-                } catch (IOException e) {
-                    throw ServiceException.FAILURE("indexDocument caught Exception", e);
+                } catch (IOException ioe) {
+                    throw ServiceException.FAILURE("indexDocument caught Exception", ioe);
                 }
                 break;
             case MailItem.TYPE_CHAT:
             case MailItem.TYPE_MESSAGE:
-                Message msg =  mbox.getMessageById(null, itemId);
-                InputStream is =msg.getContentStream();
+                Message msg = (Message) item;
+                InputStream is = msg.getContentStream();
                 MimeMessage mm;
                 try {
                     mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
                     ParsedMessage pm = new ParsedMessage(mm, timestamp, mbox.attachmentsIndexingEnabled());
                     indexMessage(mbox, redo, deleteFirst, pm, msg);
-                } catch (Throwable e) {
-                    sLog.warn("Skipping indexing; Unable to parse message " + itemId + ": " + e.toString(), e);
+                } catch (Throwable t) {
+                    sLog.warn("Skipping indexing; Unable to parse message " + itemId + ": " + t.toString(), t);
                     // Eat up all errors during message analysis.  Throwing
                     // anything here will force server halt during crash
                     // recovery.  Because we can't possibly predict all
@@ -1649,7 +1648,7 @@ public final class MailboxIndex
             default:
                 if (redo != null)
                     redo.abort();
-            throw ServiceException.FAILURE("Invalid item type for indexing: type=" + itemType, null);
+                throw ServiceException.FAILURE("Invalid item type for indexing: type=" + itemType, null);
         }
     }
     

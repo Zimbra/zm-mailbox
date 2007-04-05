@@ -135,7 +135,7 @@ public class ModifyContact extends RedoableOp {
     @Override
     public void redo() throws ServiceException {
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-        ParsedContact pc = new ParsedContact(mFields, mBlob, getTimestamp());
+        ParsedContact pc = new ParsedContact(mFields, mBlob);
         mailbox.modifyContact(getOperationContext(), mId, pc);
     }
 }

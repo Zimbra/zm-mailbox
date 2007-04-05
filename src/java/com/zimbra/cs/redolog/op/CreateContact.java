@@ -157,7 +157,7 @@ public class CreateContact extends RedoableOp {
         int mboxId = getMailboxId();
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
         try {
-            ParsedContact pc = new ParsedContact(mFields, mBlob, getTimestamp());
+            ParsedContact pc = new ParsedContact(mFields, mBlob);
             mailbox.createContact(getOperationContext(), pc, mFolderId, mTags);
         } catch (ServiceException e) {
             String code = e.getCode();

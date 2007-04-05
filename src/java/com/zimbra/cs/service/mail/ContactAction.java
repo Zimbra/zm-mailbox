@@ -110,7 +110,7 @@ public class ContactAction extends ItemAction {
                 ParsedContact pc = null;
                 if (!action.listElements(MailConstants.E_ATTRIBUTE).isEmpty()) {
                     Pair<Map<String,String>, List<Attachment>> cdata = CreateContact.parseContact(zsc, action);
-                    pc = new ParsedContact(cdata.getFirst(), cdata.getSecond(), System.currentTimeMillis());
+                    pc = new ParsedContact(cdata.getFirst(), cdata.getSecond());
                 }
 
                 localResults = ContactActionHelper.UPDATE(zsc, octxt, mbox,

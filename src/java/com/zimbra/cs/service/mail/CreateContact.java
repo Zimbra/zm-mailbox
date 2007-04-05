@@ -94,7 +94,7 @@ public class CreateContact extends MailDocumentHandler  {
         } else {
             pclist = new ArrayList<ParsedContact>(1);
             Pair<Map<String,String>, List<Attachment>> cdata = parseContact(zsc, cn);
-            pclist.add(new ParsedContact(cdata.getFirst(), cdata.getSecond(), System.currentTimeMillis()));
+            pclist.add(new ParsedContact(cdata.getFirst(), cdata.getSecond()));
         }
 
         List<Contact> contacts = createContacts(octxt, mbox, iidFolder, pclist, tagsStr);

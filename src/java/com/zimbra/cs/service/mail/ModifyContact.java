@@ -69,7 +69,7 @@ public class ModifyContact extends MailDocumentHandler  {
         Pair<Map<String,String>, List<Attachment>> cdata = CreateContact.parseContact(zsc, cn);
         ParsedContact pc;
         if (replace)
-            pc = new ParsedContact(cdata.getFirst(), cdata.getSecond(), System.currentTimeMillis());
+            pc = new ParsedContact(cdata.getFirst(), cdata.getSecond());
         else
             pc = new ParsedContact(mbox.getContactById(octxt, iid.getId())).modify(cdata.getFirst(), cdata.getSecond());
 
