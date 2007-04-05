@@ -117,6 +117,9 @@ public class LocalConfig {
     }
 
     String expand(String key, String rawValue) throws ConfigException {
+        if (rawValue == null)
+            return null;
+
         Set<String> seenKeys = new HashSet<String>();
         seenKeys.add(key);
         StringBuffer result = new StringBuffer(rawValue);
