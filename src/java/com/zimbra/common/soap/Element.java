@@ -233,8 +233,7 @@ public abstract class Element {
     public static boolean parseBool(String key, String value) throws ServiceException {
         if (value.equals("1") || value.equalsIgnoreCase("true"))        return true;
         else if (value.equals("0") || value.equalsIgnoreCase("false"))  return false;
-        throw ServiceException.INVALID_REQUEST(
-            "invalid boolean value '" + value + "' for attribute: " + key, null);
+        throw ServiceException.INVALID_REQUEST("invalid boolean value '" + value + "' for attribute: " + key, null);
     }
 
     protected boolean namespaceDeclarationNeeded(String prefix, String uri) {
@@ -349,7 +348,7 @@ public abstract class Element {
     }
 
 
-    public static Element parseJSON(InputStream is) throws SoapParseException { return parseJSON(is, JSONElement.mFactory); }
+    public static Element parseJSON(InputStream is) throws SoapParseException  { return parseJSON(is, JSONElement.mFactory); }
     public static Element parseJSON(InputStream is, ElementFactory factory) throws SoapParseException {
         try {
             return parseJSON(new String(com.zimbra.common.util.ByteUtil.getContent(is, -1), "utf-8"), factory);
@@ -359,9 +358,16 @@ public abstract class Element {
             throw new SoapParseException("could not transcode request from utf-8", null);
         }
     }
-    public static Element parseJSON(String js) throws SoapParseException { return parseJSON(js, JSONElement.mFactory); }
+
+    public static Element parseJSON(String js) throws SoapParseException  { return parseJSON(js, JSONElement.mFactory); }
     public static Element parseJSON(String js, ElementFactory factory) throws SoapParseException {
-        return JSONElement.parseElement(new JSONElement.JSRequest(js), SoapProtocol.SoapJS.getEnvelopeQName(), factory);
+        try {
+            return JSONElement.parseElement(new JSONElement.JSRequest(js), SoapProtocol.SoapJS.getEnvelopeQName(), factory);
+        } catch (ContainerException ce) {
+            SoapParseException spe = new SoapParseException(ce.getMessage(), js);
+            spe.initCause(ce);
+            throw spe;
+        }
     }
 
     private static final String XHTML_NS_URI = "http://www.w3.org/1999/xhtml";
@@ -370,10 +376,12 @@ public abstract class Element {
     public static Element parseXML(InputStream is, ElementFactory factory) throws org.dom4j.DocumentException {
         return convertDOM(new org.dom4j.io.SAXReader().read(is).getRootElement(), factory);
     }
+
     public static Element parseXML(String xml) throws org.dom4j.DocumentException { return parseXML(xml, XMLElement.mFactory); }
     public static Element parseXML(String xml, ElementFactory factory) throws org.dom4j.DocumentException {
         return convertDOM(org.dom4j.DocumentHelper.parseText(xml).getRootElement(), factory);
     }
+
     public static Element convertDOM(org.dom4j.Element d4root) { return convertDOM(d4root, XMLElement.mFactory); }
     public static Element convertDOM(org.dom4j.Element d4root, ElementFactory factory) {
         Element elt = factory.createElement(d4root.getQName());
@@ -425,6 +433,7 @@ public abstract class Element {
         public String getValue()            { return mValue.toString(); }
         public void setValue(String value)  { mParent.addAttribute(mKey, value); mValue = value; }
     }
+
 
     public static class JSONElement extends Element {
         public static final ElementFactory mFactory = new JSONFactory();
@@ -1153,6 +1162,11 @@ public abstract class Element {
 //        System.out.println(com.zimbra.common.soap.SoapProtocol.toString(e.toXML(), true));
         System.out.println(new XMLElement("test").setText("  this\t    is\nthe\rway ").getTextTrim() + "|");
         System.out.println(Element.parseJSON("{part:\"TEXT\",t:null,h:true,i:\"false\",\"ct\":\"\\x25multipart\\u0025\\/mixed\",\\u0073:3718}").toString());
+        try {
+            Element.parseJSON("{\"wkday\":{\"day\":\"TU\"},\"wkday\":{\"day\":\"WE\"},\"wkday\":{\"day\":\"FR\"}}");
+        } catch (SoapParseException spe) {
+            System.out.println("caught exception (expected): " + spe.getMessage());
+        }
     }
 
     private static Element testMessage(Element env, SoapProtocol proto, QName qm) {
