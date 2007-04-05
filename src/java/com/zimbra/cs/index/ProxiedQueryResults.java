@@ -298,7 +298,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
             }
 
             // call the remote server now!
-            transp.setSoapProtocol(searchElt instanceof Element.JavaScriptElement ? SoapProtocol.SoapJS : SoapProtocol.Soap12);
+            transp.setSoapProtocol(searchElt instanceof Element.JSONElement ? SoapProtocol.SoapJS : SoapProtocol.Soap12);
             Element searchResp  = null;            
             try {
                 if (ZimbraLog.index.isDebugEnabled()) ZimbraLog.index.debug("Fetching remote search results from "+transp.toString());

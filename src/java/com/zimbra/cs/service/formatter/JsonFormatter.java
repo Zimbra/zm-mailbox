@@ -35,6 +35,6 @@ public class JsonFormatter extends XmlFormatter {
 
     @Override
     Element.ElementFactory getFactory() {
-        return Element.JavaScriptElement.mFactory;
+        return Element.JSONElement.mFactory;
     }
 }

@@ -158,7 +158,7 @@ public abstract class ZimletMeta {
 	 * returns JSON representation of the parsed DOM tree.
 	 */
 	public String toJSONString() {
-		return toString(Element.JavaScriptElement.mFactory);
+		return toString(Element.JSONElement.mFactory);
 	}
 
 	/*

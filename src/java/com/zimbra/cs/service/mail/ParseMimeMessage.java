@@ -726,7 +726,7 @@ public class ParseMimeMessage {
     }
 
     public static void main(String[] args) throws ServiceException, IOException, MessagingException, com.zimbra.cs.account.AuthTokenException {
-        Element m = new Element.JavaScriptElement(MailConstants.E_MSG);
+        Element m = new Element.JSONElement(MailConstants.E_MSG);
         m.addAttribute(MailConstants.E_SUBJECT, "dinner appt");
         m.addUniqueElement(MailConstants.E_MIMEPART).addAttribute(MailConstants.A_CONTENT_TYPE, "text/plain").addAttribute(MailConstants.E_CONTENT, "foo bar");
         m.addElement(MailConstants.E_EMAIL).addAttribute(MailConstants.A_ADDRESS_TYPE, EmailType.TO.toString()).addAttribute(MailConstants.A_ADDRESS, "test@localhost");
