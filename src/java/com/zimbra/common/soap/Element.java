@@ -270,12 +270,10 @@ public abstract class Element {
     }
     private org.dom4j.Element toXML(org.dom4j.Element d4parent) {
         org.dom4j.Element d4elt = (d4parent == null ? org.dom4j.DocumentHelper.createElement(getQName()) : d4parent.addElement(getQName()));
-        for (Iterator it = attributeIterator(); it.hasNext(); ) {
-            Attribute attr = (Attribute) it.next();
+        for (Attribute attr : listAttributes())
             d4elt.addAttribute(attr.getKey(), attr.getValue());
-        }
-        for (Iterator it = elementIterator(); it.hasNext(); )
-            ((Element) it.next()).toXML(d4elt);
+        for (Element elt : listElements())
+            elt.toXML(d4elt);
         d4elt.setText(getText());
         return d4elt;
     }
@@ -445,7 +443,7 @@ public abstract class Element {
 
         private final class JavaScriptKeyValuePair implements KeyValuePair {
             private Element mTarget;
-            JavaScriptKeyValuePair(String key, String value)  { (mTarget = addUniqueElement(key)).setText(value); }
+            JavaScriptKeyValuePair(String key, String value)  { mTarget = new JavaScriptElement(key).setText(value); }
 
             public KeyValuePair setValue(String value) throws ContainerException   { mTarget.setText(value);  return this; }
             public KeyValuePair addAttribute(String key, String value) throws ContainerException   { mTarget.addAttribute(key, value);  return this; }
@@ -459,6 +457,11 @@ public abstract class Element {
                     return '"' + StringUtil.jsEncode(mTarget.mAttributes.get(A_CONTENT)) + '"';
                 else
                     return mTarget.toString();
+            }
+            Element asElement() {
+                Element elt = new JavaScriptElement(XMLElement.E_ATTRIBUTE).addAttribute(XMLElement.A_ATTR_NAME, mTarget.mName);
+                elt.mAttributes.putAll(mTarget.mAttributes);
+                return elt;
             }
         }
 
@@ -595,7 +598,7 @@ public abstract class Element {
             HashSet<Attribute> set = new HashSet<Attribute>();
             for (Map.Entry<String, Object> attr : mAttributes.entrySet()) {
                 Object obj = attr.getValue();
-                if (obj != null && !(obj instanceof Element || obj instanceof List))
+                if (obj != null && !attr.getKey().equals(A_CONTENT) && !(obj instanceof Element || obj instanceof List))
                     set.add(new Attribute(attr, this));
             }
             return set;
@@ -604,15 +607,26 @@ public abstract class Element {
         public List<Element> listElements(String name) {
             if (mAttributes.isEmpty())
                 return Collections.emptyList();
-            ArrayList<Element> list = new ArrayList<Element>();
-            for (Map.Entry<String, Object> attr : mAttributes.entrySet())
-                if (name == null || name.equals(attr.getKey())) {
-                    Object obj = attr.getValue();
+
+            List<Element> list = new ArrayList<Element>();
+            for (Map.Entry<String, Object> entry : mAttributes.entrySet()) {
+                String key = entry.getKey();
+                Object obj = entry.getValue();
+                if ((name == null || name.equals(XMLElement.E_ATTRIBUTE)) && key.equals(E_ATTRS) && obj instanceof JavaScriptElement) {
+                    for (Object attr : ((Element) obj).mAttributes.values()) {
+                        if (attr instanceof JavaScriptKeyValuePair)
+                            list.add(((JavaScriptKeyValuePair) attr).asElement());
+                        else
+                            for (JavaScriptKeyValuePair kvp : (List<JavaScriptKeyValuePair>) attr)
+                                list.add(kvp.asElement());
+                    }
+                } else if (name == null || name.equals(key)) {
                     if (obj instanceof Element)
                         list.add((Element) obj);
                     else if (obj instanceof List)
                         list.addAll((List<Element>) obj);
                 }
+            }
             return list;
         }
 
