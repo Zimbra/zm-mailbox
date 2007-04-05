@@ -322,7 +322,7 @@ public abstract class SoapProtocol {
             return Soap12;
         else if (Soap11.isEnvelope(env))
             return Soap11;
-        else if (env instanceof Element.JavaScriptElement)
+        else if (env instanceof Element.JSONElement)
             return SoapJS;
         else
             return null;

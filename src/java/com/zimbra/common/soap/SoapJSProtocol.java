@@ -56,7 +56,7 @@ public class SoapJSProtocol extends SoapProtocol {
 
     SoapJSProtocol()  { super(); }
 
-    public Element.ElementFactory getFactory()  { return Element.JavaScriptElement.mFactory; }
+    public Element.ElementFactory getFactory()  { return Element.JSONElement.mFactory; }
 
     public Namespace getNamespace()  { return NS; }
 

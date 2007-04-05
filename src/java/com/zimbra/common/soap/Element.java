@@ -77,7 +77,7 @@ public abstract class Element {
      *  {@link #addElement(String) instead. */
     public static Element create(SoapProtocol proto, String name) throws ServiceException {
         if (proto == SoapProtocol.SoapJS)
-            return new JavaScriptElement(name);
+            return new JSONElement(name);
         else if (proto == SoapProtocol.Soap11 || proto == SoapProtocol.Soap12)
             return new XMLElement(name);
         throw ServiceException.INVALID_REQUEST("Unknown SoapProtocol: " + proto, null);
@@ -89,7 +89,7 @@ public abstract class Element {
      *  use {@link #addElement(QName) instead. */
     public static Element create(SoapProtocol proto, QName qname) throws ServiceException {
         if (proto == SoapProtocol.SoapJS)
-            return new JavaScriptElement(qname);
+            return new JSONElement(qname);
         else if (proto == SoapProtocol.Soap11 || proto == SoapProtocol.Soap12)
             return new XMLElement(qname);
         throw ServiceException.INVALID_REQUEST("Unknown SoapProtocol: " + proto, null);
@@ -349,7 +349,7 @@ public abstract class Element {
     }
 
 
-    public static Element parseJSON(InputStream is) throws SoapParseException { return parseJSON(is, JavaScriptElement.mFactory); }
+    public static Element parseJSON(InputStream is) throws SoapParseException { return parseJSON(is, JSONElement.mFactory); }
     public static Element parseJSON(InputStream is, ElementFactory factory) throws SoapParseException {
         try {
             return parseJSON(new String(com.zimbra.common.util.ByteUtil.getContent(is, -1), "utf-8"), factory);
@@ -359,9 +359,9 @@ public abstract class Element {
             throw new SoapParseException("could not transcode request from utf-8", null);
         }
     }
-    public static Element parseJSON(String js) throws SoapParseException { return parseJSON(js, JavaScriptElement.mFactory); }
+    public static Element parseJSON(String js) throws SoapParseException { return parseJSON(js, JSONElement.mFactory); }
     public static Element parseJSON(String js, ElementFactory factory) throws SoapParseException {
-        return JavaScriptElement.parseElement(new JavaScriptElement.JSRequest(js), SoapProtocol.SoapJS.getEnvelopeQName(), factory);
+        return JSONElement.parseElement(new JSONElement.JSRequest(js), SoapProtocol.SoapJS.getEnvelopeQName(), factory);
     }
 
     private static final String XHTML_NS_URI = "http://www.w3.org/1999/xhtml";
@@ -426,24 +426,24 @@ public abstract class Element {
         public void setValue(String value)  { mParent.addAttribute(mKey, value); mValue = value; }
     }
 
-    public static class JavaScriptElement extends Element {
-        public static final ElementFactory mFactory = new JavaScriptFactory();
+    public static class JSONElement extends Element {
+        public static final ElementFactory mFactory = new JSONFactory();
 
         private static final String E_ATTRS     = "_attrs";
         private static final String A_CONTENT   = "_content";
         private static final String A_NAMESPACE = "_jsns";
 
-        public JavaScriptElement(String name)  { mName = name; mAttributes = new HashMap<String, Object>(); }
-        public JavaScriptElement(QName qname)  { this(qname.getName()); setNamespace("", qname.getNamespaceURI()); }
+        public JSONElement(String name)  { mName = name; mAttributes = new HashMap<String, Object>(); }
+        public JSONElement(QName qname)  { this(qname.getName()); setNamespace("", qname.getNamespaceURI()); }
 
-        private static final class JavaScriptFactory implements ElementFactory {
-            public Element createElement(String name)  { return new JavaScriptElement(name); }
-            public Element createElement(QName qname)  { return new JavaScriptElement(qname); }
+        private static final class JSONFactory implements ElementFactory {
+            public Element createElement(String name)  { return new JSONElement(name); }
+            public Element createElement(QName qname)  { return new JSONElement(qname); }
         }
 
-        private final class JavaScriptKeyValuePair implements KeyValuePair {
+        private final class JSONKeyValuePair implements KeyValuePair {
             private Element mTarget;
-            JavaScriptKeyValuePair(String key, String value)  { mTarget = new JavaScriptElement(key).setText(value); }
+            JSONKeyValuePair(String key, String value)  { mTarget = new JSONElement(key).setText(value); }
 
             public KeyValuePair setValue(String value) throws ContainerException   { mTarget.setText(value);  return this; }
             public KeyValuePair addAttribute(String key, String value) throws ContainerException   { mTarget.addAttribute(key, value);  return this; }
@@ -459,7 +459,7 @@ public abstract class Element {
                     return mTarget.toString();
             }
             Element asElement() {
-                Element elt = new JavaScriptElement(XMLElement.E_ATTRIBUTE).addAttribute(XMLElement.A_ATTR_NAME, mTarget.mName);
+                Element elt = new JSONElement(XMLElement.E_ATTRIBUTE).addAttribute(XMLElement.A_ATTR_NAME, mTarget.mName);
                 elt.mAttributes.putAll(mTarget.mAttributes);
                 return elt;
             }
@@ -467,9 +467,9 @@ public abstract class Element {
 
         public ElementFactory getFactory()  { return mFactory; }
 
-        public Element addElement(String name) throws ContainerException  { return addElement(new JavaScriptElement(name)); }
+        public Element addElement(String name) throws ContainerException  { return addElement(new JSONElement(name)); }
 
-        public Element addElement(QName qname) throws ContainerException  { return addElement(new JavaScriptElement(qname)); }
+        public Element addElement(QName qname) throws ContainerException  { return addElement(new JSONElement(qname)); }
 
         public Element addElement(Element elt) throws ContainerException {
             if (elt == null || elt.mParent == this)
@@ -492,9 +492,9 @@ public abstract class Element {
             return elt;
         }
 
-        public Element addUniqueElement(String name) throws ContainerException  { return addUniqueElement(new JavaScriptElement(name)); }
+        public Element addUniqueElement(String name) throws ContainerException  { return addUniqueElement(new JSONElement(name)); }
 
-        public Element addUniqueElement(QName qname) throws ContainerException  { return addUniqueElement(new JavaScriptElement(qname)); }
+        public Element addUniqueElement(QName qname) throws ContainerException  { return addUniqueElement(new JSONElement(qname)); }
 
         public Element addUniqueElement(Element elt) throws ContainerException {
             if (elt == null)
@@ -552,9 +552,9 @@ public abstract class Element {
         }
 
         public KeyValuePair addKeyValuePair(String key, String value, String eltname, String attrname) {
-            JavaScriptElement attrs = (JavaScriptElement) addUniqueElement(E_ATTRS);
+            JSONElement attrs = (JSONElement) addUniqueElement(E_ATTRS);
             Object existing = attrs.mAttributes.get(key);
-            KeyValuePair kvp = attrs.new JavaScriptKeyValuePair(key, value);
+            KeyValuePair kvp = attrs.new JSONKeyValuePair(key, value);
 
             if (existing == null) {
                 attrs.mAttributes.put(key, kvp);
@@ -612,12 +612,12 @@ public abstract class Element {
             for (Map.Entry<String, Object> entry : mAttributes.entrySet()) {
                 String key = entry.getKey();
                 Object obj = entry.getValue();
-                if ((name == null || name.equals(XMLElement.E_ATTRIBUTE)) && key.equals(E_ATTRS) && obj instanceof JavaScriptElement) {
+                if ((name == null || name.equals(XMLElement.E_ATTRIBUTE)) && key.equals(E_ATTRS) && obj instanceof JSONElement) {
                     for (Object attr : ((Element) obj).mAttributes.values()) {
-                        if (attr instanceof JavaScriptKeyValuePair)
-                            list.add(((JavaScriptKeyValuePair) attr).asElement());
+                        if (attr instanceof JSONKeyValuePair)
+                            list.add(((JSONKeyValuePair) attr).asElement());
                         else
-                            for (JavaScriptKeyValuePair kvp : (List<JavaScriptKeyValuePair>) attr)
+                            for (JSONKeyValuePair kvp : (List<JSONKeyValuePair>) attr)
                                 list.add(kvp.asElement());
                     }
                 } else if (name == null || name.equals(key)) {
@@ -718,7 +718,7 @@ public abstract class Element {
 
             private void skipWhitespace() throws SoapParseException {
                 if (offset >= max)
-                    error("unexpected end of JavaScript input");
+                    error("unexpected end of JSON input");
                 for (char c = js.charAt(offset); offset < max; c = js.charAt(++offset))
                     if (c != 0x09 && (c < 0x0A || c > 0x0D) && (c < 0x1C || c > 0x20))
                         break;
@@ -837,8 +837,8 @@ public abstract class Element {
 
                     Object value = attr.getValue();
                     if (value instanceof String)                       sb.append('"').append(StringUtil.jsEncode(value)).append('"');
-                    else if (value instanceof JavaScriptKeyValuePair)  sb.append(value.toString());
-                    else if (value instanceof JavaScriptElement)       ((JavaScriptElement) value).toString(sb, indent);
+                    else if (value instanceof JSONKeyValuePair)  sb.append(value.toString());
+                    else if (value instanceof JSONElement)       ((JSONElement) value).toString(sb, indent);
                     else if (value instanceof Element)                 sb.append('"').append(StringUtil.jsEncode(value)).append('"');
                     else if (!(value instanceof List))                 sb.append(value);
                     else {
@@ -849,9 +849,9 @@ public abstract class Element {
                                 if (lsize > 1)
                                     indent(sb, lindent, true);
                                 Object child = lit.next();
-                                if (child instanceof JavaScriptElement)
-                                    ((JavaScriptElement) child).toString(sb, lindent);
-                                else if (child instanceof JavaScriptKeyValuePair)
+                                if (child instanceof JSONElement)
+                                    ((JSONElement) child).toString(sb, lindent);
+                                else if (child instanceof JSONKeyValuePair)
                                     sb.append(child.toString());
                                 else
                                     sb.append('"').append(StringUtil.jsEncode(child)).append('"');
@@ -1127,7 +1127,7 @@ public abstract class Element {
         QName qm = new QName("m", bogusNS);
 
         SoapProtocol proto = SoapProtocol.SoapJS;
-        Element env = testMessage(new JavaScriptElement(proto.getEnvelopeQName()), proto, qm);
+        Element env = testMessage(new JSONElement(proto.getEnvelopeQName()), proto, qm);
         System.out.println(env);
         System.out.println(Element.parseJSON(env.toString()));
 
@@ -1138,7 +1138,7 @@ public abstract class Element {
         System.out.println("   qualified name: " + env.getQualifiedName());
         System.out.println("            qname: " + env.getQName());
 
-        Element e = testContacts(new JavaScriptElement(MailConstants.GET_CONTACTS_RESPONSE));
+        Element e = testContacts(new JSONElement(MailConstants.GET_CONTACTS_RESPONSE));
         System.out.println(e);
         System.out.println(e.prettyPrint());
 
