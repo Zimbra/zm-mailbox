@@ -327,7 +327,7 @@ public class Message extends MailItem {
             throw MailServiceException.CANNOT_CONTAIN();
         if (!folder.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
-        
+
         Mailbox mbox = folder.getMailbox();
 
         List<Invite> components = null;
@@ -368,7 +368,7 @@ public class Message extends MailItem {
         data.date        = (int) (pm.getReceivedDate() / 1000);
         data.size        = msgSize;
         data.blobDigest  = digest;
-        data.flags       = flags;
+        data.flags       = flags & (Flag.FLAGS_MESSAGE | Flag.FLAGS_GENERIC);
         data.tags        = tags;
         data.sender      = pm.getParsedSender().getSortString();
         data.subject     = pm.getNormalizedSubject();
@@ -408,7 +408,7 @@ public class Message extends MailItem {
                 if (calItem == null) { 
                     // ONLY create a calendar item if this is a REQUEST method...otherwise don't.
                     if (method.equals(ICalTok.REQUEST.toString())) {
-                        calItem = mMailbox.createCalendarItem(Mailbox.ID_FOLDER_CALENDAR, volumeId, 0, cur.getUid(), pm, cur);
+                        calItem = mMailbox.createCalendarItem(Mailbox.ID_FOLDER_CALENDAR, volumeId, 0, 0, cur.getUid(), pm, cur);
                         calItemIsNew = true;
                     } else {
                         sLog.info("Mailbox " + getMailboxId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c no CalendarItem could be found");
