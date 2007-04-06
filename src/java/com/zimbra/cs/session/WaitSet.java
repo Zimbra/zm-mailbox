@@ -444,6 +444,6 @@ public class WaitSet {
     private static int sWaitSetNumber = 1;
     private static final HashMap<String, WaitSet> sWaitSets = new HashMap<String, WaitSet>();
 
-    private static final int WAITSET_TIMEOUT = 1000 * 60 * 5; // 5min
+    private static final int WAITSET_TIMEOUT = 1000 * 60 * 20; // 20min
     private static final int WAITSET_SWEEP_DELAY = 1000 * 60; // once every minute
 }
