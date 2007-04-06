@@ -39,8 +39,6 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.mailbox.BrowseResult;
 import com.zimbra.cs.mailbox.BrowseResult.DomainItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.session.Session;
-import com.zimbra.cs.session.SoapSession;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -51,15 +49,11 @@ public class Browse extends MailDocumentHandler  {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zc);
-        SoapSession session = (SoapSession) zc.getSession(Session.Type.SOAP);
         
         String browseBy = request.getAttribute("browseby", null);
         if (browseBy == null)
             browseBy = request.getAttribute(MailConstants.A_BROWSE_BY);
         
-//        BrowseOperation op = new BrowseOperation(session, zc.getOperationContext(), mbox, Requester.SOAP, browseBy);
-//        op.schedule();
-//        BrowseResult browse =  op.getResult();
         BrowseResult browse;
         try {
             browse = mbox.browse(zc.getOperationContext(), browseBy);

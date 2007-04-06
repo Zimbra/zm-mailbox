@@ -39,7 +39,6 @@ import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.mailbox.Note.Rectangle;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
-import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -58,7 +57,6 @@ public class CreateNote extends MailDocumentHandler {
         Mailbox mbox = getRequestedMailbox(lc);
         Mailbox.OperationContext octxt = lc.getOperationContext();
         ItemIdFormatter ifmt = new ItemIdFormatter(lc);
-        Session session = getSession(context);
 
         Element t = request.getElement(MailConstants.E_NOTE);
         ItemId iidFolder = new ItemId(t.getAttribute(MailConstants.A_FOLDER), lc);

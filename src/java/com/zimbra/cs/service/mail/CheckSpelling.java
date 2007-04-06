@@ -38,8 +38,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.service.util.RemoteServerRequest;
-import com.zimbra.cs.session.Session;
-import com.zimbra.cs.session.SoapSession;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.soap.MailConstants;
@@ -57,7 +55,6 @@ public class CheckSpelling extends MailDocumentHandler {
     throws ServiceException {
         ZimbraSoapContext zc = getZimbraSoapContext(context);
         Element response = zc.createElement(MailConstants.CHECK_SPELLING_RESPONSE);
-        SoapSession session = (SoapSession) zc.getSession(Session.Type.SOAP);
         
         String text = request.getTextTrim();
         if (StringUtil.isNullOrEmpty(text)) {

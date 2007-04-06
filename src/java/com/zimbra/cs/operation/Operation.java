@@ -86,7 +86,7 @@ public abstract class Operation implements IOperation
     }
     
     /**
-     * @param session {@link com.zimbra.cs.Session} object or NULL if none
+     * @param session {@link com.zimbra.cs.InteropSession} object or NULL if none
      * @param oc        OperationContext for the current request
      * @param mbox     Mailbox this request is targeted to, or NULL if none
      * @param req      {@link Requester} gives information about what subsystem is making this request
@@ -100,7 +100,7 @@ public abstract class Operation implements IOperation
     /**
      * This version uses the default priority of the Requestor
      * 
-     * @param session {@link com.zimbra.cs.Session} object or NULL if none
+     * @param session {@link com.zimbra.cs.InteropSession} object or NULL if none
      * @param oc        OperationContext for the current request
      * @param mbox     Mailbox this request is targeted to, or NULL if none
      * @param req      {@link Requester} gives information about what subsystem is making this request
