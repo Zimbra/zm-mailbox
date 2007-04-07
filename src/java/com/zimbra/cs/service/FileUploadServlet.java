@@ -39,9 +39,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.TimerTask;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.ContentDisposition;
-import javax.mail.internet.MimeUtility;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -72,6 +69,8 @@ import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mime.MimeCompoundHeader.ContentDisposition;
+import com.zimbra.cs.mime.MimeCompoundHeader.ContentType;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -219,10 +218,6 @@ public class FileUploadServlet extends ZimbraServlet {
             String contentType = ctHeader == null ? "text/plain" : ctHeader.getValue();
             Header cdispHeader = method.getResponseHeader("Content-Disposition");
             String filename = cdispHeader == null ? "unknown" : new ContentDisposition(cdispHeader.getValue()).getParameter("filename");
-            if (filename != null && filename.indexOf("=?") != -1 && filename.indexOf("?=") != -1)
-                try {
-                    filename = MimeUtility.decodeText(filename);
-                } catch (UnsupportedEncodingException uee) { }
 
             // store the fetched file as a normal upload
             DiskFileUpload upload = getUploader();
@@ -230,8 +225,6 @@ public class FileUploadServlet extends ZimbraServlet {
             ByteUtil.copy(is = method.getResponseBodyAsStream(), false, fi.getOutputStream(), false);
             return new Upload(accountId, fi);
         } catch (HttpException e) {
-            throw ServiceException.PROXY_ERROR(e, url);
-        } catch (MessagingException e) {
             throw ServiceException.PROXY_ERROR(e, url);
         } catch (IOException e) {
             throw ServiceException.FAILURE("can't fetch remote upload: " + uploadId, e);
@@ -296,157 +289,198 @@ public class FileUploadServlet extends ZimbraServlet {
     }
 
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
-		int status = HttpServletResponse.SC_OK;
-        List<FileItem> items = null;
-        String attachmentId = null;
-        String reqId = null;
+	    String fmt = req.getParameter(ContentServlet.PARAM_FORMAT);
         ZimbraLog.addIpToContext(req.getRemoteAddr());
-        
-        do {
-            // file upload requires authentication
-            int adminPort = -1;
+
+        // file upload requires authentication
+        int adminPort = -1;
+        try {
+            adminPort = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, -1);
+        } catch (ServiceException e) {
+            throw new ServletException(e);
+        }
+        boolean isAdminRequest = (req.getLocalPort() == adminPort);
+        AuthToken at = isAdminRequest ? getAdminAuthTokenFromCookie(req, resp, true) : getAuthTokenFromCookie(req, resp, true);
+        if (at == null) {
+            sendResponse(req, resp, HttpServletResponse.SC_UNAUTHORIZED, fmt, null, null, null);
+            return;
+        }
+
+        if (!isAdminRequest) {
             try {
-                adminPort = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, -1);
+                // make sure we're on the right host; proxy if we're not...
+                Provisioning prov = Provisioning.getInstance();
+                Account acct = prov.get(AccountBy.id, at.getAccountId());
+                if (acct == null)
+                    throw AccountServiceException.NO_SUCH_ACCOUNT(at.getAccountId());
+                ZimbraLog.addAccountNameToContext(acct.getName());
+                if (!Provisioning.onLocalServer(acct)) {
+                    proxyServletRequest(req, resp, prov.getServer(acct), null);
+                    return;
+                }
+                // make sure the authenticated account is active
+                if (acct.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE))
+                    throw AccountServiceException.MAINTENANCE_MODE();
+                else if (!acct.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+                    throw AccountServiceException.ACCOUNT_INACTIVE(acct.getName());
+                // fetching the mailbox will except if it's in maintenance mode
+                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId(), false);
+                if (mbox != null)
+                    ZimbraLog.addMboxToContext(mbox.getId());
             } catch (ServiceException e) {
                 throw new ServletException(e);
             }
-            boolean isAdminRequest = (req.getLocalPort() == adminPort);
-    		AuthToken at = isAdminRequest ? getAdminAuthTokenFromCookie(req, resp, true) : getAuthTokenFromCookie(req, resp, true);
-            if (at == null) {
-                status = HttpServletResponse.SC_UNAUTHORIZED;
-                break;
-            }
+        }
 
-            if (!isAdminRequest) {
-                try {
-                    // make sure we're on the right host; proxy if we're not...
-                    Provisioning prov = Provisioning.getInstance();
-                    Account acct = prov.get(AccountBy.id, at.getAccountId());
-                    if (acct == null)
-                        throw AccountServiceException.NO_SUCH_ACCOUNT(at.getAccountId());
-                    ZimbraLog.addAccountNameToContext(acct.getName());
-                    if (!Provisioning.onLocalServer(acct)) {
-                        proxyServletRequest(req, resp, prov.getServer(acct), null);
-                        return;
-                    }
-                    // make sure the authenticated account is active
-                    if (acct.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE))
-                        throw AccountServiceException.MAINTENANCE_MODE();
-                    else if (!acct.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
-                        throw AccountServiceException.ACCOUNT_INACTIVE(acct.getName());
-                    // fetching the mailbox will except if it's in maintenance mode
-                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId(), false);
-                    if (mbox != null) {
-                        ZimbraLog.addMboxToContext(mbox.getId());
-                    }
-                } catch (ServiceException e) {
-                    throw new ServletException(e);
-                }
-            }
+        // file upload requires multipart enctype
+        if (FileUploadBase.isMultipartContent(req))
+            handleMultipartUpload(req, resp, fmt, at.getAccountId());
+        else
+            handlePlainUpload(req, resp, fmt, at.getAccountId());
+    }
 
-            // file upload requires multipart enctype
-            if (!FileUploadBase.isMultipartContent(req)) {
-            	status = HttpServletResponse.SC_BAD_REQUEST;
-                break;
-            }
+    private void handleMultipartUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, String accountId) throws IOException {
+        int status = HttpServletResponse.SC_OK;
+        List<FileItem> items = null;
+        String attachmentId = null, reqId = null;
 
-            DiskFileUpload upload = getUploader();
-            try {
-            	items = upload.parseRequest(req);
-            } catch (FileUploadBase.SizeLimitExceededException e) {
-                // at least one file was over max allowed size
-                status = HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE;
-                mLog.info("Exceeded maximum upload size of " + upload.getSizeMax() + " bytes: " + e);
-                break;
-            } catch (FileUploadBase.InvalidContentTypeException e) {
-                // at least one file was of a type not allowed
-                status = HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE;
-                mLog.info("File upload failed", e);
-                break;
-            } catch (FileUploadException e) {
-            	// parse of request failed for some other reason
-                status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
-                mLog.info("File upload failed", e);
-                break;
-            }
+        DiskFileUpload upload = getUploader();
+        try {
+            items = upload.parseRequest(req);
+        } catch (FileUploadBase.SizeLimitExceededException e) {
+            // at least one file was over max allowed size
+            mLog.info("Exceeded maximum upload size of " + upload.getSizeMax() + " bytes: " + e);
+            sendResponse(req, resp, HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE, fmt, reqId, attachmentId, items);
+            return;
+        } catch (FileUploadBase.InvalidContentTypeException e) {
+            // at least one file was of a type not allowed
+            mLog.info("File upload failed", e);
+            sendResponse(req, resp, HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE, fmt, reqId, attachmentId, items);
+            return;
+        } catch (FileUploadException e) {
+            // parse of request failed for some other reason
+            mLog.info("File upload failed", e);
+            sendResponse(req, resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, fmt, reqId, attachmentId, items);
+            return;
+        }
 
-            String lastName = null, charset = "utf-8";
-            HashMap<FileItem, String> filenames = new HashMap<FileItem, String>();
-            if (items != null)
-                for (Iterator<FileItem> it = items.iterator(); it.hasNext(); ) {
-                    FileItem fi = it.next();
-                    if (fi == null)
-                        continue;
-                    if (fi.isFormField()) {
-                        // correlate this file upload session's request and response
-                        if (fi.getFieldName().equals("requestId"))
-                            reqId = fi.getString();
-                        // get the form value charset, if specified
-                        if (fi.getFieldName().equals("_charset_") && !fi.getString().equals(""))
-                            charset = fi.getString();
-                        // allow a client to explicitly provide filenames for the uploads
-                        if (fi.getFieldName().startsWith("filename"))
-                            lastName = fi.getString(charset);
-                        // strip form fields out of the list of uploads
+        String lastName = null, charset = "utf-8";
+        HashMap<FileItem, String> filenames = new HashMap<FileItem, String>();
+        if (items != null) {
+            for (Iterator<FileItem> it = items.iterator(); it.hasNext(); ) {
+                FileItem fi = it.next();
+                if (fi == null)
+                    continue;
+                if (fi.isFormField()) {
+                    // correlate this file upload session's request and response
+                    if (fi.getFieldName().equals("requestId"))
+                        reqId = fi.getString();
+                    // get the form value charset, if specified
+                    if (fi.getFieldName().equals("_charset_") && !fi.getString().equals(""))
+                        charset = fi.getString();
+                    // allow a client to explicitly provide filenames for the uploads
+                    if (fi.getFieldName().startsWith("filename"))
+                        lastName = fi.getString(charset);
+                    // strip form fields out of the list of uploads
+                    it.remove();
+                } else {
+                    if (fi.getName() == null || fi.getName().trim().equals("")) {
                         it.remove();
                     } else {
-                        if (fi.getName() == null || fi.getName().trim().equals("")) {
-                            it.remove();
-                        } else {
-                            filenames.put(fi, lastName);
-                            lastName = null;
-                        }
+                        filenames.put(fi, lastName);
+                        lastName = null;
                     }
                 }
-
-            // empty upload is not a "success"
-            if (items == null || items.isEmpty()) {
-                status = HttpServletResponse.SC_NO_CONTENT;
-                break;
             }
+        }
 
-            // cache the uploaded files in the hash and construct the list of upload IDs
-            try {
-                for (FileItem fi : items) {
-                    String name = filenames.get(fi);
-                    if (name == null || name.trim().equals(""))
-                        name = fi.getName();
-                    Upload up = new Upload(at.getAccountId(), fi, name);
+        // empty upload is not a "success"
+        if (items == null || items.isEmpty()) {
+            sendResponse(req, resp, HttpServletResponse.SC_NO_CONTENT, fmt, reqId, attachmentId, items);
+            return;
+        }
 
-                    ZimbraLog.mailbox.info("FileUploadServlet received %s", up);
-                    synchronized (mPending) {
-                    	mPending.put(up.uuid, up);
-                    }
-                    attachmentId = (attachmentId == null ? up.uuid : attachmentId + UPLOAD_DELIMITER + up.uuid);
+        // cache the uploaded files in the hash and construct the list of upload IDs
+        try {
+            for (FileItem fi : items) {
+                String name = filenames.get(fi);
+                if (name == null || name.trim().equals(""))
+                    name = fi.getName();
+                Upload up = new Upload(accountId, fi, name);
+
+                ZimbraLog.mailbox.info("FileUploadServlet received %s", up);
+                synchronized (mPending) {
+                    mPending.put(up.uuid, up);
                 }
-            } catch (ServiceException e) {
-                status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
-                mLog.info("File upload failed", e);
+                attachmentId = (attachmentId == null ? up.uuid : attachmentId + UPLOAD_DELIMITER + up.uuid);
             }
-        } while (false);
+        } catch (ServiceException e) {
+            status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+            mLog.info("File upload failed", e);
+        }
 
+        sendResponse(req, resp, status, fmt, reqId, attachmentId, items);
+    }
+
+    private void handlePlainUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, String accountId) throws IOException {
+        // metadata is encoded in the response's HTTP headers
+        ContentType ctype = new ContentType(req.getContentType());
+        String contentType = ctype.getValue(), filename = ctype.getParameter("name");
+        if (filename == null)
+            filename = new ContentDisposition(req.getHeader("Content-Disposition")).getParameter("filename");
+
+        if (filename == null || filename.trim().equals("")) {
+            sendResponse(req, resp, HttpServletResponse.SC_NO_CONTENT, fmt, null, null, null);
+            return;
+        }
+
+        // store the fetched file as a normal upload
+        DiskFileUpload upload = getUploader();
+        FileItem fi = upload.getFileItemFactory().createItem("upload", contentType, false, filename);
+        ByteUtil.copy(req.getInputStream(), true, fi.getOutputStream(), true);
+        List<FileItem> items = new ArrayList<FileItem>(1);
+        items.add(fi);
+
+        int status = HttpServletResponse.SC_OK;
+        String attachmentId = null;
+        try {
+            Upload up = new Upload(accountId, fi, filename);
+            ZimbraLog.mailbox.info("FileUploadServlet received " + up);
+            synchronized (mPending) {
+                mPending.put(attachmentId = up.uuid, up);
+            }
+        } catch (ServiceException e) {
+            status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+            mLog.info("File upload failed", e);
+        }
+
+        sendResponse(req, resp, status, fmt, null, attachmentId, items);
+    }
+
+    private void sendResponse(HttpServletRequest req, HttpServletResponse resp, int status, String fmt, String reqId, String attachmentId, List<FileItem> items)
+    throws IOException {
         StringBuffer results = new StringBuffer();
-    	results.append(status).append(",'").append(reqId != null ? reqId : "null").append('\'');
+        results.append(status).append(",'").append(reqId != null ? reqId : "null").append('\'');
         if (status == HttpServletResponse.SC_OK)
-        	results.append(",'").append(attachmentId).append('\'');
+            results.append(",'").append(attachmentId).append('\'');
 
         resp.setContentType("text/html");
         PrintWriter out = resp.getWriter();
 
-        String fmt = req.getParameter(ContentServlet.PARAM_FORMAT);
-        if (ContentServlet.FORMAT_RAW.equals(fmt))
-			out.println(results);
-        else {			
-			out.println("<html><head></head><body onload=\"window.parent._uploadManager.loaded(" + results + ");\">");
-			out.println("</body></html>");
-		}
-		out.close();
+        if (ContentServlet.FORMAT_RAW.equals(fmt)) {
+            out.println(results);
+        } else {          
+            out.println("<html><head></head><body onload=\"window.parent._uploadManager.loaded(" + results + ");\">");
+            out.println("</body></html>");
+        }
+        out.close();
 
         // handle failure by cleaning up the failed upload
-        if (status != HttpServletResponse.SC_OK && items != null && items.size() > 0)
+        if (status != HttpServletResponse.SC_OK && items != null && items.size() > 0) {
             for (FileItem fi : items)
                 fi.delete();
-	}
+        }
+    }
 
     private static DiskFileUpload getUploader() {
         // look up the maximum file size for uploads
