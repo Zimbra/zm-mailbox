@@ -29,6 +29,7 @@
 package com.zimbra.cs.session;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -71,14 +72,14 @@ public final class PendingModifications {
         Change(Object thing, int reason)  { what = thing;  why = reason; }
     }
 
-    
+
     /** Set of all the MailItem types that are included in this structure
      * The mask is generated from the MailItem type using 
      * @link{MailItem#typeToBitmask} */
     public int changedTypes = 0;
-    
+
     // The key is MailItemID
-    public HashMap<Integer, MailItem> created;
+    public LinkedHashMap<Integer, MailItem> created;
     public HashMap<Integer, Change> modified;
     public HashMap<Integer, Object> deleted;
 
@@ -109,25 +110,29 @@ public final class PendingModifications {
     public void recordCreated(MailItem item) {
 //        ZimbraLog.mailbox.debug("--> NOTIFY: created " + item.getId());
         if (created == null)
-            created = new HashMap<Integer, MailItem>();
+            created = new LinkedHashMap<Integer, MailItem>();
         changedTypes |= MailItem.typeToBitmask(item.getType());
         created.put(item.getId(), item);
     }
-    public void recordDeleted(byte type, int id) {
+
+    public void recordDeleted(int id, byte type) {
         if (type != 0) 
             changedTypes |= MailItem.typeToBitmask(type);
         Integer key = new Integer(id);
         delete(key, key);
     }
-    public void recordDeleted(int typesMask, List<Integer> ids) {
+
+    public void recordDeleted(List<Integer> ids, int typesMask) {
         changedTypes |= typesMask;
         for (Integer id : ids) 
             delete(id,id);
     }
+
     public void recordDeleted(MailItem item) {
         changedTypes |= MailItem.typeToBitmask(item.getType());
         delete(new Integer(item.getId()), item);
     }
+
     private void delete(Integer key, Object value) {
 //      ZimbraLog.mailbox.debug("--> NOTIFY: deleted " + key);
       if (created != null)
@@ -139,13 +144,16 @@ public final class PendingModifications {
           deleted = new HashMap<Integer, Object>();
       deleted.put(key, value);
     }
+
     public void recordModified(Mailbox mbox, int reason) {
         recordModified(new Integer(0), mbox, reason);
     }
+
     public void recordModified(MailItem item, int reason) {
         changedTypes |= MailItem.typeToBitmask(item.getType());
         recordModified(new Integer(item.getId()), item, reason);
     }
+
     private void recordModified(Integer key, Object item, int reason) {
 //        ZimbraLog.mailbox.debug("--> NOTIFY: modified " + key + " (" + reason + ')');
         Change chg = null;
@@ -176,7 +184,7 @@ public final class PendingModifications {
                 if (obj instanceof MailItem)
                     recordDeleted((MailItem) obj);
                 else if (obj instanceof Integer)
-                    recordDeleted((byte)0, ((Integer) obj).intValue());
+                    recordDeleted((Integer) obj, (byte) 0);
         }
 
         if (other.created != null) {
