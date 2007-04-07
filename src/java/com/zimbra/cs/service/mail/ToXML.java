@@ -1348,10 +1348,9 @@ public class ToXML {
         // figure out attachment size
         try {
             int size = mp.getSize();
-            if (size >= 0) {
-                if ("base64".equalsIgnoreCase(mp.getEncoding())) size = (int) ((size * 0.75) - (size/76));
-                elem.addAttribute(MailConstants.A_SIZE, size);
-            }
+            if ("base64".equalsIgnoreCase(mp.getEncoding()))
+                size = (int) ((size * 0.75) - (size / 76));
+            elem.addAttribute(MailConstants.A_SIZE, size);
         } catch (MessagingException me) {
             // don't put out size if we get exception
         }
