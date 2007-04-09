@@ -4876,7 +4876,7 @@ public class Mailbox {
             blob = sm.storeIncoming(data, digest, null, volumeId);
             redoRecorder.setMessageBodyInfo(data, blob.getPath(), blob.getVolumeId());
             markOtherItemDirty(blob);
-            chat = Chat.create(itemId, getFolderById(folderId), pm, msgSize, digest, volumeId, true, flags, tags);
+            chat = Chat.create(itemId, getFolderById(folderId), pm, msgSize, digest, volumeId, false, flags, tags);
             redoRecorder.setMessageId(chat.getId());
             sm.link(blob, this, itemId, chat.getSavedSequence(), chat.getVolumeId());
             queueForIndexing(chat, false, pm);
