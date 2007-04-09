@@ -2787,21 +2787,22 @@ public class Mailbox {
         boolean includeTrash = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeTrashInSearch, false);
         boolean includeSpam = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
 
-        ZimbraQuery zq = new ZimbraQuery(this, params, includeTrash, includeSpam);
-        try {
-            zq.executeRemoteOps(proto, octxt);
-            ZimbraQueryResults results = zq.execute(); 
-            return results;
-        } catch (IOException e) {
-            zq.doneWithQuery();
-            throw e;
-        } catch (ServiceException e) {
-            zq.doneWithQuery();
-            throw e;
-        } catch (Throwable t) {
-            zq.doneWithQuery();
-            throw ServiceException.FAILURE("Caught "+t.getMessage(), t);
-        }
+//        ZimbraQuery zq = new ZimbraQuery(this, params, includeTrash, includeSpam);
+//        try {
+//            zq.executeRemoteOps(proto, octxt);
+//            ZimbraQueryResults results = zq.execute(); 
+//            return results;
+//        } catch (IOException e) {
+//            zq.doneWithQuery();
+//            throw e;
+//        } catch (ServiceException e) {
+//            zq.doneWithQuery();
+//            throw e;
+//        } catch (Throwable t) {
+//            zq.doneWithQuery();
+//            throw ServiceException.FAILURE("Caught "+t.getMessage(), t);
+//        }
+        return MailboxIndex.search(proto, octxt, this, params, includeTrash, includeSpam);
     }                    
     
     /**
@@ -2830,6 +2831,29 @@ public class Mailbox {
         params.setPrefetch(prefetch);
         params.setMode(mode);
         return search(proto, octxt, params);
+    }
+    
+    /**
+     * @param octxt
+     * @param params
+     * @return A "mailbox neutral" representation of the query string: ie one that is re-written so that all Folder names (and other by-name
+     *         search parts) are re-written using ID's.  This is useful in some situations where you want to proxy the search
+     *         request (since you cannot directly proxy a search request with local folder names in it)
+     * @throws IOException
+     * @throws ParseException
+     * @throws ServiceException
+     */
+    public String getRewrittenQueryString(OperationContext octxt, SearchParams params) throws IOException, ParseException, ServiceException {
+        if (octxt == null)
+            throw ServiceException.INVALID_REQUEST("The OperationContext must not be null", null);
+        
+        Account acct = getAccount();
+        boolean includeTrash = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeTrashInSearch, false);
+        boolean includeSpam = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
+        // okay, lets run the search through the query parser -- this has the side-effect of
+        // re-writing the query in a format that is OK to proxy to the other server
+        ZimbraQuery zq = new ZimbraQuery(this, params, includeTrash, includeSpam);
+        return zq.toQueryString();
     }
     
     public synchronized FreeBusy getFreeBusy(long start, long end) throws ServiceException {

@@ -74,7 +74,12 @@ public class Search extends MailDocumentHandler  {
         SearchParams params = SearchParams.parse(request, zsc, acct.getAttr(Provisioning.A_zimbraPrefMailInitialSearch));
         
         String query = params.getQueryStr();
-        query = "(" + query + ") -tag:\\Deleted";
+        
+        // HACK: temporary until we get UI for gateway reg/unreg 
+        if (!query.startsWith("$im")) 
+            query = "(" + query + ") -tag:\\Deleted";
+        
+        
         params.setQueryStr(query);
         
         ZimbraQueryResults results = doSearch(zsc, mbox, params);

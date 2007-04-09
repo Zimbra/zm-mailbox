@@ -58,6 +58,8 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbSearchConstraints;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.cs.im.interop.Interop.ServiceName;
+import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Contact;
@@ -67,12 +69,15 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Note;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.op.IndexItem;
+import com.zimbra.cs.service.im.IMGatewayRegister;
 import com.zimbra.cs.store.Volume;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.util.JMSession;
 
 /**
@@ -80,6 +85,46 @@ import com.zimbra.cs.util.JMSession;
  */
 public final class MailboxIndex 
 {
+    public static ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, Mailbox mbox, SearchParams params,
+        boolean includeTrashByDefault, boolean includeSpamByDefault) throws IOException, ParseException, ServiceException {
+        
+        String qs = params.getQueryStr();
+        if (qs.startsWith("$im")) {
+            String[] words = qs.split(" ");
+            if ("$im_reg".equals(words[0])) {
+                if (words.length < 4)
+                    throw ServiceException.FAILURE("USAGE: \"$im_reg service service_login_name service_login_password\"", null);
+                ServiceName service = ServiceName.valueOf(words[1]);
+                IMGatewayRegister.register(mbox, octxt,  service, words[2], words[3]);
+            } else if ("$im_unreg".equals(words[0])) {
+                if (words.length < 2)
+                    throw ServiceException.FAILURE("USAGE: \"$im_unreg service service_login_name service_login_password\"", null);
+                ServiceName service = ServiceName.valueOf(words[1]);
+                IMGatewayRegister.unregister(mbox, octxt,  service);
+            } else {
+                throw ServiceException.FAILURE("Usage: \"$im_reg service name password\" or \"$im_unreg service\"", null); 
+            }
+                
+            return new EmptyQueryResults(params.getTypes(), params.getSortBy(), params.getMode());
+        }
+        
+        ZimbraQuery zq = new ZimbraQuery(mbox, params, includeTrashByDefault, includeSpamByDefault);
+        try {
+            zq.executeRemoteOps(proto, octxt);
+            ZimbraQueryResults results = zq.execute(); 
+            return results;
+        } catch (IOException e) {
+            zq.doneWithQuery();
+            throw e;
+        } catch (ServiceException e) {
+            zq.doneWithQuery();
+            throw e;
+        } catch (Throwable t) {
+            zq.doneWithQuery();
+            throw ServiceException.FAILURE("Caught "+t.getMessage(), t);
+        }
+    }
+    
     private static class TermEnumCallback implements TermEnumInterface {
         private Collection mCollection;
 

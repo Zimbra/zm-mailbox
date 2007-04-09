@@ -31,6 +31,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.im.IMRouter;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.operation.BlockingOperation;
 import com.zimbra.cs.operation.Requester;
 import com.zimbra.cs.operation.Scheduler.Priority;
@@ -63,7 +64,12 @@ public abstract class IMDocumentHandler extends DocumentHandler {
         return super.getRequestedMailbox(zc);
     }
     
-    IMPersona getRequestedPersona(ZimbraSoapContext zc, Object lock) throws ServiceException {
+    static IMPersona getRequestedPersona(ZimbraSoapContext zc, Object lock) throws ServiceException {
         return IMRouter.getInstance().findPersona(zc.getOperationContext(), (Mailbox)lock);
     }
+    
+    static IMPersona getRequestedPersona(OperationContext oc, Object lock) throws ServiceException {
+        return IMRouter.getInstance().findPersona(oc, (Mailbox)lock);
+    }
+    
 }

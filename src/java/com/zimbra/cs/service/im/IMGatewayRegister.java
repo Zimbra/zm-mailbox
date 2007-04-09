@@ -6,6 +6,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.IMConstants;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.im.interop.Interop;
+import com.zimbra.cs.im.interop.Interop.ServiceName;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -16,26 +19,36 @@ public class IMGatewayRegister extends IMDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         
         Element response = lc.createElement(IMConstants.IM_GATEWAY_REGISTER_RESPONSE);
-        
         Object lock = super.getLock(lc);
-        synchronized (lock) {
-            IMPersona persona = getRequestedPersona(lc, lock);
-            String op = request.getAttribute("op");
-            boolean retVal = false;
-            
-            if (op.equals("unreg")) {
-                String serviceStr = request.getAttribute("service");
-                persona.gatewayUnRegister(Interop.ServiceName.valueOf(serviceStr));
-            } else {
-                String serviceStr = request.getAttribute("service");
-                String nameStr = request.getAttribute("name");
-                String pwStr = request.getAttribute("password");
-                
-                persona.gatewayRegister(Interop.ServiceName.valueOf(serviceStr), nameStr, pwStr);
-            }
-            response.addAttribute("result", true);
+        
+        String op = request.getAttribute("op");
+        String serviceStr = request.getAttribute("service");
+        boolean result = true;
+        if ("register".equals(op)) {
+            String nameStr = request.getAttribute("name");
+            String pwStr = request.getAttribute("password");
+            result = register((Mailbox)lock, lc.getOperationContext(), ServiceName.valueOf(serviceStr), nameStr, pwStr);
+        } else {
+            unregister((Mailbox)lock, lc.getOperationContext(), ServiceName.valueOf(serviceStr));
         }
+        response.addAttribute("result", result);
         
         return response;
+    }
+    
+    public static boolean register(Mailbox mbox, OperationContext octxt, ServiceName service, 
+        String name, String password) throws ServiceException {
+        synchronized (mbox) {
+            IMPersona persona = getRequestedPersona(octxt, mbox);
+            persona.gatewayRegister(service, name, password);
+            return true;
+        }
+    }
+    
+    public static void unregister(Mailbox mbox, OperationContext octxt, ServiceName service) throws ServiceException {
+        synchronized (mbox) {
+            IMPersona persona = getRequestedPersona(octxt, mbox);
+            persona.gatewayUnRegister(service);
+        }
     }
 }
