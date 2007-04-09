@@ -2790,18 +2790,8 @@ public class Mailbox {
         ZimbraQuery zq = new ZimbraQuery(this, params, includeTrash, includeSpam);
         try {
             zq.executeRemoteOps(proto, octxt);
-            
-            synchronized (this) {
-                boolean success = false;
-                try {
-                    beginTransaction("search", octxt);
-                    ZimbraQueryResults results = zq.execute(); 
-                    success = true;
-                    return results;
-                } finally {
-                    endTransaction(success);
-                }
-            }
+            ZimbraQueryResults results = zq.execute(); 
+            return results;
         } catch (IOException e) {
             zq.doneWithQuery();
             throw e;
