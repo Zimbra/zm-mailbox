@@ -105,6 +105,8 @@ public class DavProtocol {
 	// caldav extensions
 	public static final String HEADER_IF_MATCH = "If-Match";
 	public static final String HEADER_IF_NONE_MATCH = "If-None-Match";
+	public static final String HEADER_ORIGINATOR = "Originator";
+	public static final String HEADER_RECIPIENT = "Recipient";
 	
 	public static final int STATUS_PROCESSING = 102;
 	public static final int STATUS_MULTI_STATUS = 207;

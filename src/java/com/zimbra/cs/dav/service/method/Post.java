@@ -28,12 +28,9 @@ import java.io.IOException;
 
 import javax.servlet.http.HttpServletResponse;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.resource.DavResource;
-import com.zimbra.cs.dav.resource.ScheduleOutbox;
 import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavMethod;
 
@@ -62,13 +59,7 @@ public class Post extends DavMethod {
 			}
 		}
 		
-		if (rs instanceof ScheduleOutbox) {
-			try {
-				((ScheduleOutbox)rs).handleScheduleRequest(ctxt);
-				sendResponse(ctxt);
-			} catch (ServiceException se) {
-				ZimbraLog.dav.error("can't schedule", se);
-			}
-		}
+		rs.handlePost(ctxt);
+		sendResponse(ctxt);
 	}
 }

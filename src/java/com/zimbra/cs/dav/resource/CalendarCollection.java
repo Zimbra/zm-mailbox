@@ -86,9 +86,7 @@ public class CalendarCollection extends Collection {
 		mDavCompliance.add(Compliance.calendar_access);
 		mDavCompliance.add(Compliance.calendar_schedule);
 
-		ResourceProperty rtype = getProperty(DavElements.E_RESOURCETYPE);
-		rtype.addChild(DavElements.E_CALENDAR);
-		rtype.addChild(DavElements.E_PRINCIPAL);
+		addResourceType(DavElements.E_CALENDAR);
 		
 		// the display name can be a user friendly string like "John Smith's Calendar".
 		// but the problem is the name may be too long to fit into the field in UI.
@@ -232,8 +230,6 @@ public class CalendarCollection extends Collection {
 				throw new DavException("event already exists", HttpServletResponse.SC_CONFLICT, null);
 			
 			if (isUpdate) {
-				if (etag.charAt(0) == '"' && etag.charAt(0) == '"')
-					etag = etag.substring(1, etag.length()-1);
 				CalendarObject calObj = new CalendarObject(ctxt, calItem);
 				ResourceProperty etagProp = calObj.getProperty(DavElements.P_GETETAG);
 				if (!etagProp.getStringValue().equals(etag))

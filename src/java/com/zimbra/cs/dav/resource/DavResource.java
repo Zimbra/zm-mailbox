@@ -34,6 +34,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.dom4j.Element;
 import org.dom4j.QName;
 
@@ -79,10 +81,9 @@ public abstract class DavResource {
 		mDavCompliance.add(Compliance.calendar_access);
 		mDavCompliance.add(Compliance.calendar_schedule);
 		
-		ResourceProperty rs = new ResourceProperty(DavElements.E_RESOURCETYPE);
-		if (isCollection())
-			rs.addChild(DavElements.E_COLLECTION);
-		addProperty(rs);
+		ResourceProperty rtype = new ResourceProperty(DavElements.E_RESOURCETYPE);
+		addProperty(rtype);
+
 		ResourceProperty href = new ResourceProperty(DavElements.E_HREF);
 		href.setProtected(true);
 		try {
@@ -93,6 +94,8 @@ public abstract class DavResource {
 		addProperty(href);
 		if (hasEtag())
 			setProperty(DavElements.E_GETETAG, getEtag(), true);
+		if (isCollection())
+			addResourceType(DavElements.E_COLLECTION);
 	}
 	
 	protected static String getOwner(Account acct) throws ServiceException {
@@ -225,5 +228,14 @@ public abstract class DavResource {
 	
 	public void patchProperties(DavContext ctxt, Collection<Element> set, Collection<QName> remove) throws DavException {
 		throw new DavException("PROPPATCH not supported on "+getUri(), DavProtocol.STATUS_FAILED_DEPENDENCY, null);
+	}
+	
+	protected void addResourceType(QName type) {
+		ResourceProperty rtype = getProperty(DavElements.E_RESOURCETYPE);
+		rtype.addChild(type);
+	}
+	
+	public void handlePost(DavContext ctxt) throws DavException, IOException {
+		throw new DavException("the resource does not handle POST", HttpServletResponse.SC_FORBIDDEN);
 	}
 }

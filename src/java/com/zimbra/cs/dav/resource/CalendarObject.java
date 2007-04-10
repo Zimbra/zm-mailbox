@@ -65,7 +65,6 @@ public class CalendarObject extends MailItemResource {
 		Invite defInv = calItem.getDefaultInviteOrNull();
 		if (defInv != null)
 			setProperty(DavElements.P_DISPLAYNAME, defInv.getName());
-		setProperty(DavElements.P_GETETAG, Long.toString(calItem.getDate()));
 		setProperty(DavElements.P_GETCONTENTTYPE, Mime.CT_TEXT_CALENDAR);
 		setProperty(DavElements.P_GETCONTENTLENGTH, Integer.toString(calItem.getSize()));
 		addProperty(CalDavProperty.getCalendarData(this));

@@ -25,11 +25,11 @@
 package com.zimbra.cs.dav.resource;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.Iterator;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -43,7 +43,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
-import com.zimbra.cs.dav.property.ResourceProperty;
+import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -58,24 +58,37 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 public class ScheduleOutbox extends CalendarCollection {
 	public ScheduleOutbox(DavContext ctxt, Folder f) throws DavException, ServiceException {
 		super(ctxt, f);
-		ResourceProperty rtype = getProperty(DavElements.E_RESOURCETYPE);
-		rtype.addChild(DavElements.E_SCHEDULE_OUTBOX);
+		addResourceType(DavElements.E_SCHEDULE_OUTBOX);
 	}
 	
-	public void handleScheduleRequest(DavContext ctxt) throws DavException, ServiceException, java.io.IOException {
+	public void handlePost(DavContext ctxt) throws DavException, IOException {
 		byte[] msg = ByteUtil.getContent(ctxt.getRequest().getInputStream(), 0);
 		if (ZimbraLog.dav.isDebugEnabled())
 			ZimbraLog.dav.debug(new String(msg, "UTF-8"));
-		ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(new InputStreamReader(new ByteArrayInputStream(msg)));
-		Iterator<ZComponent> iter = vcalendar.getComponentIterator();
-		while (iter.hasNext()) {
-			ZComponent comp = iter.next();
-			if (comp.getTok().equals(ICalTok.VFREEBUSY))
-				handleFreebusyRequest(ctxt, comp);
+		ZCalendar.ZVCalendar vcalendar;
+		String      originator = ctxt.getRequest().getHeader(DavProtocol.HEADER_ORIGINATOR);
+		Enumeration recipients = ctxt.getRequest().getHeaders(DavProtocol.HEADER_RECIPIENT);
+		try {
+			vcalendar = ZCalendar.ZCalendarBuilder.build(new InputStreamReader(new ByteArrayInputStream(msg)));
+			ZComponent req = vcalendar.getComponentIterator().next();
+			if (req == null)
+				throw new DavException("empty request", HttpServletResponse.SC_BAD_REQUEST);
+			while (recipients.hasMoreElements()) {
+				String rcpt = (String) recipients.nextElement();
+				switch (req.getTok()) {
+				case VFREEBUSY:
+					handleFreebusyRequest(ctxt, req, originator, rcpt);
+					break;
+				default:
+					throw new DavException("unrecognized request: "+req.getTok(), HttpServletResponse.SC_BAD_REQUEST);
+				}
+			}
+		} catch (ServiceException se) {
+			throw new DavException("error handling POST request", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, se);
 		}
 	}
 	
-	private void handleFreebusyRequest(DavContext ctxt, ZComponent vfreebusy) throws DavException, ServiceException, java.io.IOException {
+	private void handleFreebusyRequest(DavContext ctxt, ZComponent vfreebusy, String originator, String originalRcpt) throws DavException, ServiceException, IOException {
 		ZProperty dtstartProp = vfreebusy.getProperty(ICalTok.DTSTART);
 		ZProperty dtendProp = vfreebusy.getProperty(ICalTok.DTEND);
 		ZProperty durationProp = vfreebusy.getProperty(ICalTok.DURATION);
@@ -94,31 +107,23 @@ public class ScheduleOutbox extends CalendarCollection {
 		} catch (ParseException pe) {
 			throw new DavException("can't parse date", HttpServletResponse.SC_BAD_REQUEST, pe);
 		}
-		String originator = ctxt.getRequest().getHeader("Originator");
-		Enumeration recipients = ctxt.getRequest().getHeaders("Recipient");
-		ZimbraLog.dav.debug("originator: "+originator+", "+"start: "+new Date(start)+", "+"end:   "+new Date(end));
+
+		ZimbraLog.dav.debug("originator: "+originator+", "+"start: "+new Date(start)+", end: "+new Date(end));
 		Provisioning prov = Provisioning.getInstance();
 		Element resp = ctxt.getDavResponse().getTop(DavElements.E_SCHEDULE_RESPONSE);
-		while (recipients.hasMoreElements()) {
-			String originalRcpt = (String)recipients.nextElement();
-			String rcpt = this.getAddressFromPrincipalURL(originalRcpt);
-			ZimbraLog.dav.debug("recipient: "+originalRcpt+", email: "+rcpt);
-			Element r = resp.addElement(DavElements.E_CALDAV_RESPONSE);
-			try {
-				Account rcptAcct = prov.get(Provisioning.AccountBy.name, rcpt);
-				if (Provisioning.onLocalServer(rcptAcct)) {
-					Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(rcptAcct);
-					FreeBusy fb = mbox.getFreeBusy(start, end);
-					String fbMsg = fb.toVCalendar(FreeBusy.Method.REPLY, originator, originalRcpt, null);
-					r.addElement(DavElements.E_RECIPIENT).setText(originalRcpt);
-					r.addElement(DavElements.E_REQUEST_STATUS).setText("2.0;Success");
-					r.addElement(DavElements.E_CALENDAR_DATA).setText(fbMsg);
-				} else {
-					// XXX get the freebusy information from remote server
-				}
-			} catch (ServiceException se) {
-				ZimbraLog.dav.error("can't get account", se);
-			}
+		String rcpt = this.getAddressFromPrincipalURL(originalRcpt);
+		ZimbraLog.dav.debug("recipient: "+originalRcpt+", email: "+rcpt);
+		Element r = resp.addElement(DavElements.E_CALDAV_RESPONSE);
+		Account rcptAcct = prov.get(Provisioning.AccountBy.name, rcpt);
+		if (Provisioning.onLocalServer(rcptAcct)) {
+			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(rcptAcct);
+			FreeBusy fb = mbox.getFreeBusy(start, end);
+			String fbMsg = fb.toVCalendar(FreeBusy.Method.REPLY, originator, originalRcpt, null);
+			r.addElement(DavElements.E_RECIPIENT).setText(originalRcpt);
+			r.addElement(DavElements.E_REQUEST_STATUS).setText("2.0;Success");
+			r.addElement(DavElements.E_CALENDAR_DATA).setText(fbMsg);
+		} else {
+			// XXX get the freebusy information from remote server
 		}
 	}
 }

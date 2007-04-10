@@ -95,6 +95,7 @@ public abstract class MailItemResource extends DavResource {
 		} catch (Exception e) {
 			// somehow couldn't get the dead props.
 		}
+		setProperty(DavElements.P_GETETAG, mEtag);
 	}
 	
 	public MailItemResource(String path, String acct) {

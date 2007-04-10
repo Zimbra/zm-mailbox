@@ -29,6 +29,12 @@ public class DavException extends Exception {
 	private boolean mStatusIsSet;
 	private int mStatus;
 	
+	public DavException(String msg, int status) {
+		super(msg);
+		mStatus = status;
+		mStatusIsSet = true;
+	}
+	
 	public DavException(String msg, Throwable cause) {
 		super(msg, cause);
 		mStatusIsSet = false;

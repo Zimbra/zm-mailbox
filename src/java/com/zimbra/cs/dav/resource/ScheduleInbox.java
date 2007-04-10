@@ -28,13 +28,11 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
-import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.mailbox.Folder;
 
-public class ScheduleInbox extends Collection {
+public class ScheduleInbox extends CalendarCollection {
 	public ScheduleInbox(DavContext ctxt, Folder f) throws DavException, ServiceException {
 		super(ctxt, f);
-		ResourceProperty rtype = getProperty(DavElements.E_RESOURCETYPE);
-		rtype.addChild(DavElements.E_SCHEDULE_INBOX);
+		addResourceType(DavElements.E_SCHEDULE_INBOX);
 	}
 }

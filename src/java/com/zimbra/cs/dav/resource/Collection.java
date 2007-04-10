@@ -72,6 +72,11 @@ public class Collection extends MailItemResource {
 		mView = f.getDefaultView();
 		mType = f.getType();
 		addProperties(Acl.getAclProperties(this, f));
+		
+		/* root folder is also the principal URL for the user */
+		if (isRootCollection())
+			addResourceType(DavElements.E_PRINCIPAL);
+		
 		boolean hasCalendar = false;
 		for (Folder sub : f.getSubfolderHierarchy())
 			if (sub.getDefaultView() == MailItem.TYPE_APPOINTMENT) {
@@ -127,7 +132,7 @@ public class Collection extends MailItemResource {
 			ZimbraLog.dav.error("can't get children from folder: id="+mId, e);
 		}
 		// this is where we add the phantom folder for attachment browser.
-		if (mId == Mailbox.ID_FOLDER_USER_ROOT) {
+		if (isRootCollection()) {
 			children.add(new Collection(UrlNamespace.ATTACHMENTS_PREFIX, getOwner()));
 		}
 		return children;
@@ -214,5 +219,9 @@ public class Collection extends MailItemResource {
 		} catch (ServiceException e) {
 			throw new DavException("cannot get item", HttpServletResponse.SC_NOT_FOUND, e);
 		}
+	}
+	
+	protected boolean isRootCollection() {
+		return (mId == Mailbox.ID_FOLDER_USER_ROOT);
 	}
 }
