@@ -437,7 +437,20 @@ public class FileUploadServlet extends ZimbraServlet {
         // store the fetched file as a normal upload
         DiskFileUpload upload = getUploader();
         FileItem fi = upload.getFileItemFactory().createItem("upload", contentType, false, filename);
-        ByteUtil.copy(req.getInputStream(), true, fi.getOutputStream(), true);
+        try {
+            // write the upload to disk, but make sure not to exceed the permitted max upload size
+            int size = ByteUtil.copy(req.getInputStream(), true, fi.getOutputStream(), true, upload.getSizeMax() * 3);
+            if (size > upload.getSizeMax()) {
+                fi.delete();
+                mLog.info("Exceeded maximum upload size of " + upload.getSizeMax() + " bytes: " + accountId);
+                sendResponse(req, resp, HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE, fmt, null, null, null);
+                return;
+            }
+        } catch (IOException ioe) {
+            fi.delete();
+            sendResponse(req, resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, fmt, null, null, null);
+            return;
+        }
         List<FileItem> items = new ArrayList<FileItem>(1);
         items.add(fi);
 
