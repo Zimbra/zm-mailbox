@@ -44,8 +44,8 @@ import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 public class UUEncodeConverter extends MimeVisitor {
-    protected boolean visitMultipart(MimeMultipart mp, VisitPhase visitKind)  { return false; }
-    protected boolean visitBodyPart(MimeBodyPart bp)                          { return false; }
+    protected boolean visitMultipart(MimeMultipart mmp, VisitPhase visitKind)  { return false; }
+    protected boolean visitBodyPart(MimeBodyPart bp)                           { return false; }
 
     protected boolean visitMessage(MimeMessage msg, VisitPhase visitKind) throws MessagingException {
         // do the decode in the exit phase
@@ -64,7 +64,7 @@ public class UUEncodeConverter extends MimeVisitor {
             for (int location = 0; initial || (location = text.indexOf("\nbegin ", location)) != -1; initial = false, location++) {
                 // find the end of the uuencoded block
                 int end = text.indexOf("\nend");
-                if (end != -1)
+                if (end != -1) {
                     try {
                         // parse the uuencoded content into a String
                         int start = initial ? location: location + 1;
@@ -82,6 +82,7 @@ public class UUEncodeConverter extends MimeVisitor {
                         text = text.substring(0, start) + text.substring(end + 4);
                         location--;
                     } catch (ParseException pe) { }
+                }
             }
             
             if (mmp == null)
@@ -105,6 +106,7 @@ public class UUEncodeConverter extends MimeVisitor {
             return false;
         // and replace the top-level part with a new multipart/related
         msg.setContent(mmp);
+        msg.setHeader("Content-Type", mmp.getContentType() + "; generated=true");
         return true;
     }
 

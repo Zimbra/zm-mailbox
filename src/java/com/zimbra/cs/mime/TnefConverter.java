@@ -107,21 +107,22 @@ public class TnefConverter extends MimeVisitor {
             return false;
         // and put the new multipart/alternative where the TNEF used to be
         msg.setContent(multi);
+        msg.setHeader("Content-Type", multi.getContentType() + "; generated=true");
         return false;
     }
 
-    protected boolean visitMultipart(MimeMultipart mp, VisitPhase visitKind) throws MessagingException {
+    protected boolean visitMultipart(MimeMultipart mmp, VisitPhase visitKind) throws MessagingException {
         // do the decode in the exit phase
         if (visitKind != VisitPhase.VISIT_END)
             return false;
         // proactively ignore already-converted TNEF attachments
-        if (Mime.CT_MULTIPART_ALTERNATIVE.equals(mp.getContentType()))
+        if (Mime.CT_MULTIPART_ALTERNATIVE.equals(mmp.getContentType()))
             return false;
 
         Map<Integer, MimeBodyPart> changedParts = null;
         try {
-            for (int i = 0; i < mp.getCount(); i++) {
-                BodyPart bp = mp.getBodyPart(i);
+            for (int i = 0; i < mmp.getCount(); i++) {
+                BodyPart bp = mmp.getBodyPart(i);
                 if (bp instanceof MimeBodyPart && TNEFUtils.isTNEFMimeType(bp.getContentType())) {
                     // try to expand the TNEF into a suitable Multipart
                     MimeMultipart multi = null;
@@ -155,8 +156,8 @@ public class TnefConverter extends MimeVisitor {
             return false;
         // and put the new multipart/alternatives where the TNEF used to be
         for (Map.Entry<Integer, MimeBodyPart> change : changedParts.entrySet()) {
-            mp.removeBodyPart(change.getKey());
-            mp.addBodyPart(change.getValue(), change.getKey());
+            mmp.removeBodyPart(change.getKey());
+            mmp.addBodyPart(change.getValue(), change.getKey());
         }
         return true;
     }

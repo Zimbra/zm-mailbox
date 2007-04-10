@@ -237,7 +237,7 @@ public class Mime {
         ContentType ctype = new ContentType(mp.getContentType());
         try {
             String boundary = ctype.getParameter("boundary");
-            if (boundary != null && !findStartBoundary(mp, boundary))
+            if (boundary != null && !ctype.containsParameter("generated") && !findStartBoundary(mp, boundary))
                 return new MimeMultipart(new RawContentMultipartDataSource(mp, ctype));
             multi.getCount();
         } catch (ParseException pe) {
