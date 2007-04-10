@@ -103,17 +103,17 @@ public final class ResultsPager
     }
     
     public boolean hasNext() throws ServiceException {
-        if (!mBufferedHits.isEmpty())
+        if (mBufferedHits != null && !mBufferedHits.isEmpty())
             return true;
         else
             return mResults.hasNext();
     }
     
     public ZimbraHit getNextHit() throws ServiceException {
-        if (mBufferedHits.isEmpty())
-            return mResults.getNext();
-        else
+        if (mBufferedHits != null && !mBufferedHits.isEmpty())
             return mBufferedHits.remove(0);
+        else
+            return mResults.getNext();
     }
     
     private ZimbraHit forwardFindFirst() throws ServiceException {
