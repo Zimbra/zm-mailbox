@@ -82,7 +82,7 @@ public class ZSearchResult {
             } else if (h.getName().equals(MailConstants.E_CONTACT)) {
                 mHits.add(new ZContactHit(h));
             } else if (h.getName().equals(MailConstants.E_APPOINTMENT)) {
-                ZApptSummary.addInstances(h, mHits, null, tz);
+                ZAppointmentHit.addInstances(h, mHits, tz);
             } else if (h.getName().equals(MailConstants.E_DOC)) {
                 mHits.add(new ZDocumentHit(h));
             } else if (h.getName().equals(MailConstants.E_WIKIWORD)) {

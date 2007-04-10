@@ -44,16 +44,11 @@ import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.zclient.ZConversation.ZMessageSummary;
 import com.zimbra.cs.zclient.ZGrant.GranteeType;
-import com.zimbra.cs.zclient.ZInvite.ZComponent;
-import com.zimbra.cs.zclient.ZInvite.ZOrganizer;
 import com.zimbra.cs.zclient.ZMailbox.Fetch;
 import com.zimbra.cs.zclient.ZMailbox.OwnerBy;
 import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
 import com.zimbra.cs.zclient.ZMailbox.SharedItemBy;
-import com.zimbra.cs.zclient.ZMailbox.ZAppointmentResult;
 import com.zimbra.cs.zclient.ZMailbox.ZApptSummaryResult;
-import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage;
-import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.MessagePart;
 import com.zimbra.cs.zclient.ZMessage.ZMimePart;
 import com.zimbra.cs.zclient.ZTag.Color;
 import com.zimbra.cs.zclient.event.ZCreateEvent;
@@ -1100,7 +1095,7 @@ public class ZMailboxUtil implements DebugListener {
       </recur>
     </comp></inv><su>test yearly</su><mp ct="multipart/alternative"><mp ct="text/plain"><content></content></mp><mp ct="text/html"><content>&lt;html&gt;&lt;body&gt;&lt;/body&gt;&lt;/html&gt;</content></mp></mp></m></CreateAppointmentRequest>
      */
-
+/*
     private void testCreateAppt() throws ServiceException {
 
         ZMailbox.ZOutgoingMessage message = new ZOutgoingMessage();
@@ -1118,7 +1113,7 @@ public class ZMailboxUtil implements DebugListener {
         ZAppointmentResult response = mMbox.createAppointment(ZFolder.ID_CALENDAR, null, message, invite, null);
         System.out.printf("calItemId(%s) inviteId(%s)%n", response.getCalItemId(), response.getInviteId());
     }
-
+*/
 
     private void doGetAppointmentSummaries(String args[]) throws ServiceException {
         long startTime = DateUtil.parseDateSpecifier(args[0], new Date().getTime());
@@ -1132,7 +1127,7 @@ public class ZMailboxUtil implements DebugListener {
 
         System.out.print("[");
         boolean first = true;
-        for (ZApptSummary appt : result.getAppointments()) {
+        for (ZAppointmentHit appt : result.getAppointments()) {
             if (!first) System.out.println(",");
             System.out.print(appt);
             if (first) first = false;
@@ -1584,8 +1579,8 @@ public class ZMailboxUtil implements DebugListener {
                 String from = mh.getSender() == null ? "<none>" : mh.getSender().getDisplay();
                 mIndexToId.put(i, mh.getId());
                 System.out.format(itemFormat, i++, mh.getId(), "mess", from, sub, c);
-            } else if (hit instanceof ZApptSummary) {
-                ZApptSummary ah = (ZApptSummary) hit;
+            } else if (hit instanceof ZAppointmentHit) {
+                ZAppointmentHit ah = (ZAppointmentHit) hit;
                 if (ah.getInstanceExpanded()) {
                     c.setTimeInMillis(ah.getStartTime());
                 } else {

@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.TimeZone;
 import java.util.ArrayList;
 
-public class ZApptSummary implements ZItem, ZSearchHit {
+public class ZAppointmentHit implements ZSearchHit {
 
     public static final String FBA_FREE = "F";
     public static final String FBA_BUSY = "B";
@@ -121,11 +121,11 @@ public class ZApptSummary implements ZItem, ZSearchHit {
 
     private String mFolderId;
 
-    private ZApptSummary() {
+    private ZAppointmentHit() {
 
     }
 
-    public static void addInstances(Element e, List<ZSearchHit> appts, String folderId, TimeZone timeZone) throws ServiceException {
+    public static void addInstances(Element e, List<ZSearchHit> appts, TimeZone timeZone) throws ServiceException {
         String id = e.getAttribute(MailConstants.A_ID);
         String freeBusyActual = e.getAttribute(MailConstants.A_APPT_FREEBUSY_ACTUAL, null);
         String transparency = e.getAttribute(MailConstants.A_APPT_TRANSPARENCY, null);
@@ -151,7 +151,7 @@ public class ZApptSummary implements ZItem, ZSearchHit {
         long size = (int) e.getAttributeLong(MailConstants.A_SIZE, 0);
         String convId = e.getAttribute(MailConstants.A_CONV_ID, null);
         float score = (float) e.getAttributeDouble(MailConstants.A_SCORE, 0);
-        folderId = e.getAttribute(MailConstants.A_FOLDER, folderId);
+        String folderId = e.getAttribute(MailConstants.A_FOLDER, null);
 
         Element fragmentEl = e.getOptionalElement(MailConstants.E_FRAG);
         String fragment = (fragmentEl != null) ? fragmentEl.getText() : null;
@@ -165,7 +165,7 @@ public class ZApptSummary implements ZItem, ZSearchHit {
         }
 
         for (Element inst : instances) {
-            ZApptSummary appt = new ZApptSummary();
+            ZAppointmentHit appt = new ZAppointmentHit();
             appt.mInstanceExpanded = !noInstances;
             appt.mFolderId = folderId;
             appt.mId = id;
@@ -374,17 +374,17 @@ public class ZApptSummary implements ZItem, ZSearchHit {
 
     public boolean hasTags() { return mTags != null && mTags.length() > 0; }
 
-    public boolean hasAttachment() { return hasFlags() && mFlags.indexOf(ZApptSummary.Flag.attachment.getFlagChar()) != -1; }
+    public boolean hasAttachment() { return hasFlags() && mFlags.indexOf(ZAppointmentHit.Flag.attachment.getFlagChar()) != -1; }
 
     public boolean isInRange(long start, long end) {
         return mStartTime < end && mEndTime > start;
     }
 
-    public boolean isOverLapping(ZApptSummary that) {
+    public boolean isOverLapping(ZAppointmentHit that) {
         return this.mStartTime < that.mEndTime && this.mEndTime > that.mStartTime;
     }
 
-    public boolean isOverLapping(ZApptSummary that, long msecsIncr) {
+    public boolean isOverLapping(ZAppointmentHit that, long msecsIncr) {
         long thisStart = ((long)(this.mStartTime / msecsIncr)) * msecsIncr;
         long thisEnd = ((long)((this.mEndTime + msecsIncr - 1) / msecsIncr)) * msecsIncr;
 
@@ -417,10 +417,10 @@ public class ZApptSummary implements ZItem, ZSearchHit {
      */
     public static class SortByTimeDurationFolder implements Comparator {
         public int compare(Object obja, Object objb) {
-            if (!(obja instanceof ZApptSummary && objb instanceof ZApptSummary) )
+            if (!(obja instanceof ZAppointmentHit && objb instanceof ZAppointmentHit) )
                 return 0;
-            ZApptSummary a = (ZApptSummary) obja;
-            ZApptSummary b = (ZApptSummary) objb;
+            ZAppointmentHit a = (ZAppointmentHit) obja;
+            ZAppointmentHit b = (ZAppointmentHit) objb;
             if (!a.isAllDay() && b.isAllDay()) return 1;
             if (a.isAllDay() && !b.isAllDay()) return -1;
             if (a.getStartTime() > b.getStartTime()) return 1;

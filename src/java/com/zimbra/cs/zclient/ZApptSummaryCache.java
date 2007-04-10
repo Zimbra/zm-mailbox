@@ -67,7 +67,7 @@ public class ZApptSummaryCache extends ZEventHandler {
     }
 
     synchronized void add(ZApptSummaryResult result, TimeZone timezone) {
-        for (ZApptSummary appt : result.getAppointments()) {
+        for (ZAppointmentHit appt : result.getAppointments()) {
             mIds.add(appt.getId());
         }
         mResults.put(makeKey(result.getStart(), result.getEnd(), result.getFolderId(), timezone, result.getQuery()), result);
@@ -80,8 +80,8 @@ public class ZApptSummaryCache extends ZEventHandler {
             // let's see if results might potentially be contained within another result
             for (ZApptSummaryResult cached : mResults.values()) {
                 if (cached.getQuery().equals(query) && cached.getTimeZone().getID().equals(timezone.getID()) && cached.getFolderId().equals(folderId) && (cached.getStart() <= start && end <= cached.getEnd())) {
-                    List<ZApptSummary> appts = new ArrayList<ZApptSummary>();
-                    for (ZApptSummary appt : cached.getAppointments()) {
+                    List<ZAppointmentHit> appts = new ArrayList<ZAppointmentHit>();
+                    for (ZAppointmentHit appt : cached.getAppointments()) {
                         if (appt.isInRange(start, end))
                             appts.add(appt);
                     }

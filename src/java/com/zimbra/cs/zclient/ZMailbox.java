@@ -2859,13 +2859,13 @@ public class ZMailbox {
     public static class ZApptSummaryResult {
         private String mFolderId;
         private ServiceException mException;
-        private List<ZApptSummary> mAppointments;
+        private List<ZAppointmentHit> mAppointments;
         private long mStart;
         private long mEnd;
         private TimeZone mTimeZone;
         private String mQuery;
 
-        ZApptSummaryResult(long start, long end, String folderId, TimeZone timeZone, List<ZApptSummary> appointments, String query) {
+        ZApptSummaryResult(long start, long end, String folderId, TimeZone timeZone, List<ZAppointmentHit> appointments, String query) {
             mFolderId = folderId;
             mAppointments = appointments;
             mStart = start;
@@ -2899,7 +2899,7 @@ public class ZMailbox {
             return mException;
         }
 
-        public List<ZApptSummary> getAppointments() {
+        public List<ZAppointmentHit> getAppointments() {
             return mAppointments;
         }
 
@@ -2927,10 +2927,14 @@ public class ZMailbox {
      */
     public List<ZApptSummaryResult> getApptSummaries(String query, long startMsec, long endMsec, String folderIds[], TimeZone timeZone) throws ServiceException {
         if (query == null) query = "";
+        if (folderIds == null || folderIds.length == 0)
+            folderIds = new String[] { ZFolder.ID_CALENDAR };
+        
         List<ZApptSummaryResult> summaries = new ArrayList<ZApptSummaryResult>();
         List<String> idsToFetch = new ArrayList<String>(folderIds.length);
 
         for (String folderId : folderIds) {
+            if (folderId == null) folderId = ZFolder.ID_CALENDAR;
             ZApptSummaryResult cached = mApptSummaryCache.get(startMsec, endMsec, folderId, timeZone, query);
             if (cached == null) {
                 idsToFetch.add(folderId);
@@ -2948,7 +2952,7 @@ public class ZMailbox {
                 if (searchQuery.length() > 1) searchQuery.append(" or ");
                 searchQuery.append("inid:").append(folderId);
                 //folder2List.
-                List<ZApptSummary> appts = new ArrayList<ZApptSummary>();
+                List<ZAppointmentHit> appts = new ArrayList<ZAppointmentHit>();
                 ZApptSummaryResult result = new ZApptSummaryResult(startMsec, endMsec, folderId, timeZone, appts, query);
                 summaries.add(result);
                 folder2List.put(folderId, result);
@@ -2971,8 +2975,8 @@ public class ZMailbox {
             while (n++ < 100) {
                 ZSearchResult result = search(params);
                 for (ZSearchHit hit : result.getHits()) {
-                    if (hit instanceof ZApptSummary) {
-                        ZApptSummary as = (ZApptSummary) hit;
+                    if (hit instanceof ZAppointmentHit) {
+                        ZAppointmentHit as = (ZAppointmentHit) hit;
                         ZApptSummaryResult r = folder2List.get(as.getFolderId());
                         if (r != null) r.getAppointments().add(as);
                     }
