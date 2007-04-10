@@ -204,41 +204,60 @@ public class FileUploadServlet extends ZimbraServlet {
         state.addCookie(new Cookie(hostname, ZimbraServlet.COOKIE_ZM_AUTH_TOKEN, authtoken, "/", null, false));
         HttpClient client = new HttpClient();
         client.setState(state);
-        GetMethod method = new GetMethod(url);
+        GetMethod get = new GetMethod(url);
 
-        InputStream is = null;
+        FileItem fi = null;
+        boolean success = false;
         try {
             // fetch the remote item
-            int statusCode = client.executeMethod(method);
+            int statusCode = client.executeMethod(get);
             if (statusCode != HttpStatus.SC_OK)
                 return null;
 
             // metadata is encoded in the response's HTTP headers
-            Header ctHeader = method.getResponseHeader("Content-Type");
+            Header ctHeader = get.getResponseHeader("Content-Type");
             String contentType = ctHeader == null ? "text/plain" : ctHeader.getValue();
-            Header cdispHeader = method.getResponseHeader("Content-Disposition");
+            Header cdispHeader = get.getResponseHeader("Content-Disposition");
             String filename = cdispHeader == null ? "unknown" : new ContentDisposition(cdispHeader.getValue()).getParameter("filename");
 
             // store the fetched file as a normal upload
-            DiskFileUpload upload = getUploader();
-            FileItem fi = upload.getFileItemFactory().createItem("upload", contentType, false, filename);
-            ByteUtil.copy(is = method.getResponseBodyAsStream(), false, fi.getOutputStream(), false);
-            return new Upload(accountId, fi);
+            return saveUpload(get.getResponseBodyAsStream(), filename, contentType, accountId);
         } catch (HttpException e) {
             throw ServiceException.PROXY_ERROR(e, url);
         } catch (IOException e) {
-            throw ServiceException.FAILURE("can't fetch remote upload: " + uploadId, e);
+            throw ServiceException.RESOURCE_UNREACHABLE("can't fetch remote upload: " + url, e);
         } finally {
-            if (is != null)
-                try { is.close(); } catch (IOException e1) { }
-            method.releaseConnection();
+            if (!success && fi != null)
+                fi.delete();
+            get.releaseConnection();
+        }
+    }
+
+    public static Upload saveUpload(InputStream is, String filename, String contentType, String accountId) throws ServiceException, IOException {
+        FileItem fi = null;
+        boolean success = false;
+        try {
+            // store the fetched file as a normal upload
+            DiskFileUpload upload = getUploader();
+            fi = upload.getFileItemFactory().createItem("upload", contentType, false, filename);
+            int size = ByteUtil.copy(is, true, fi.getOutputStream(), true, upload.getSizeMax() * 3);
+            if (size > upload.getSizeMax())
+                throw MailServiceException.UPLOAD_REJECTED(filename, "upload too large");
+
+            Upload up = new Upload(accountId, fi);
+            success = true;
+            return up;
+        } finally {
+            if (!success && fi != null)
+                fi.delete();
         }
     }
 
     public static void deleteUploads(List<Upload> uploads) {
-        if (uploads != null && !uploads.isEmpty())
+        if (uploads != null && !uploads.isEmpty()) {
             for (Upload up : uploads)
                 deleteUpload(up);
+        }
     }
 
     public static void deleteUpload(Upload upload) {
