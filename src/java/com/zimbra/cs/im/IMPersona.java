@@ -393,10 +393,21 @@ public class IMPersona extends ClassLogger {
     }
 
     void handleIQPacket(boolean toMe, IQ iq) {
-        // is it a MUC iq?
-        IMChat chat = findTargetMUC(iq);
-        if (chat != null)
-            chat.handleIQPacket(iq);
+        switch (iq.getType()) {
+            case error:
+                ZimbraLog.im.info("Ignoring IQ error packet: "+iq);
+                break;
+            case result:
+                ZimbraLog.im.info("Ignoring IQ result packet: "+iq);
+                break;
+            default:
+            {
+                // is it a MUC iq?
+                IMChat chat = findTargetMUC(iq);
+                if (chat != null)
+                    chat.handleIQPacket(iq);
+            }
+        }
     }
 
     private void handleMessagePacket(boolean toMe, Message msg) {
@@ -655,11 +666,21 @@ public class IMPersona extends ClassLogger {
         for (Session session : mListeners)
             session.notifyIM(not);
     }
+    
+    void processIntercepted(Packet packet) {
+        debug("Intercepted packet: %s", packet);
+        processInternal(packet, true);
+    }
 
     /**
      * callback from the Router thread
      */
     void process(Packet packet) {
+        debug("Incoming packet %s: ", packet);
+        processInternal(packet, false);
+    }
+    
+    private void processInternal(Packet packet, boolean intercepted) {
         // because we are receiving packets from the PacketInterceptor as well
         // as the session, we need to differentiate the outgoing from the
         // incoming packets
@@ -668,7 +689,6 @@ public class IMPersona extends ClassLogger {
                     && !packet.getTo().toBareJID().equals(this.getAddr().getAddr())) {
             toMe = false;
         }
-        debug("processing %s packet %s", toMe ? "INCOMING" : "OUTGOING", packet);
         if (packet instanceof Message) {
             handleMessagePacket(toMe, (Message) packet);
         } else if (packet instanceof Presence) {

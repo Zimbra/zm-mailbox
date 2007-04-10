@@ -24,7 +24,7 @@ public class IMGatewayRegister extends IMDocumentHandler {
         String op = request.getAttribute("op");
         String serviceStr = request.getAttribute("service");
         boolean result = true;
-        if ("register".equals(op)) {
+        if ("reg".equals(op)) {
             String nameStr = request.getAttribute("name");
             String pwStr = request.getAttribute("password");
             result = register((Mailbox)lock, lc.getOperationContext(), ServiceName.valueOf(serviceStr), nameStr, pwStr);
