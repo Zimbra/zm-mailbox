@@ -65,6 +65,7 @@ import org.apache.commons.codec.net.QCodec;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
+import com.zimbra.cs.mime.MimeCompoundHeader.ContentType;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -232,38 +233,198 @@ public class Mime {
         }
     }
 
-    private static MimeMultipart validateMultipart(MimeMultipart multi, MimePart mp) throws MessagingException {
+    private static MimeMultipart validateMultipart(MimeMultipart multi, MimePart mp) throws MessagingException, IOException {
+        ContentType ctype = new ContentType(mp.getContentType());
         try {
-             multi.getCount();
+            String boundary = ctype.getParameter("boundary");
+            if (boundary != null && !findStartBoundary(mp, boundary))
+                return new MimeMultipart(new RawContentMultipartDataSource(mp, ctype));
+            multi.getCount();
         } catch (ParseException pe) {
-            FixedMultipartDataSource ds = new FixedMultipartDataSource(mp);
-            multi = new MimeMultipart(ds);
+            multi = new MimeMultipart(new FixedMultipartDataSource(mp, ctype));
+        } catch (MessagingException me) {
+            multi = new MimeMultipart(new FixedMultipartDataSource(mp, ctype));
         }
         return multi;
     }
 
+    /** Max length (in bytes) that a MIME multipart preamble can be before
+     *  we give up and wrap the whole multipart in a text/plain. */
+    private static final int MAX_PREAMBLE_LENGTH = 1024;
+
+    /** Returns whether the given "boundary" string occurs within the first
+     *  {@link #MAX_PREAMBLE_LENGTH} bytes of the {@link MimePart}'s content.*/
+    private static boolean findStartBoundary(MimePart mp, String boundary) throws IOException {
+        InputStream is;
+        try {
+            is = getRawInputStream(mp);
+        } catch (MessagingException me) {
+            return true;
+        }
+        final int blength = boundary.length();
+        int bindex = 0, dashes = 0;
+        boolean failed = false;
+        for (int i = 0; i < MAX_PREAMBLE_LENGTH; i++) {
+            int c = is.read();
+            if (c == -1) {
+                return false;
+            } else if (c == '\r' || c == '\n') {
+                if (!failed && bindex == blength)
+                    return true;
+                bindex = dashes = 0;  failed = false;
+            } else if (failed) {
+                continue;
+            } else if (dashes != 2) {
+                if (c == '-')
+                    dashes++;
+                else
+                    failed = true;
+            } else {
+                if (bindex >= blength || c != boundary.charAt(bindex++))
+                    failed = true;
+            }
+        }
+        return false;
+    }
+
+    static InputStream getRawInputStream(MimePart mp) throws MessagingException {
+        if (mp instanceof MimeBodyPart)
+            return ((MimeBodyPart) mp).getRawInputStream();
+        if (mp instanceof MimeMessage)
+            return ((MimeMessage) mp).getRawInputStream();
+        return new ByteArrayInputStream(new byte[0]);
+    }
+
     private static class FixedMultipartDataSource implements DataSource {
         private final MimePart mMimePart;
-        private final String mContentType;
-        FixedMultipartDataSource(MimePart mp) throws MessagingException {
+        private final ContentType mContentType;
+        FixedMultipartDataSource(MimePart mp, ContentType ctype) {
             mMimePart = mp;
-            mContentType = new MimeCompoundHeader.ContentType(mp.getContentType()).toString();
+            mContentType = ctype;
         }
 
-        public String getContentType()         { return mContentType; }
+        public ContentType getParsedContentType()  { return mContentType; }
+
+        public String getContentType()         { return mContentType.toString(); }
         public String getName()                { return null; }
         public OutputStream getOutputStream()  { throw new UnsupportedOperationException(); }
         public InputStream getInputStream() throws IOException {
             try {
-                if (mMimePart instanceof MimeBodyPart)
-                    return ((MimeBodyPart) mMimePart).getRawInputStream();
-                if (mMimePart instanceof MimeMessage)
-                    return ((MimeMessage) mMimePart).getRawInputStream();
-                return new ByteArrayInputStream(new byte[0]);
+                return getRawInputStream(mMimePart);
             } catch (MessagingException e) {
                 IOException ioex = new IOException("failed to get raw input stream for mime part");
                 ioex.initCause(e);
                 throw ioex;
+            }
+        }
+    }
+
+    private static class RawContentMultipartDataSource extends FixedMultipartDataSource {
+        RawContentMultipartDataSource(MimePart mp, ContentType ctype) {
+            super(mp, ctype);
+        }
+
+        public InputStream getInputStream() throws IOException {
+            return new RawContentInputStream(super.getInputStream());
+        }
+
+        private class RawContentInputStream extends InputStream {
+            private final InputStream mInputStream;
+            private final String mBoundary = getParsedContentType().getParameter("boundary");
+            private byte[] mPrologue;
+            private byte[] mEpilogue;
+            private int mPrologueIndex = 0, mEpilogueIndex = 0;
+            private boolean mInPrologue = true, mInContent = false, mInEpilogue = false;
+            private StringBuilder sb = new StringBuilder();
+
+            RawContentInputStream(InputStream is) {
+                mInputStream = is;
+
+                byte[] boundary = mBoundary.getBytes();
+
+                mPrologue = new byte[2 + boundary.length + 4];
+                mPrologue[0] = mPrologue[1] = '-';
+                System.arraycopy(boundary, 0, mPrologue, 2, boundary.length);
+                mPrologue[boundary.length + 2] = mPrologue[boundary.length + 4] = '\r';
+                mPrologue[boundary.length + 3] = mPrologue[boundary.length + 5] = '\n';
+
+                mEpilogue = new byte[4 + boundary.length + 4];
+                mEpilogue[0] = mEpilogue[boundary.length + 6] = '\r';
+                mEpilogue[1] = mEpilogue[boundary.length + 7] = '\n';
+                mEpilogue[2] = mEpilogue[3] = '-';
+                System.arraycopy(boundary, 0, mEpilogue, 4, boundary.length);
+                mEpilogue[boundary.length + 4] = mEpilogue[boundary.length + 5] = '-';
+            }
+
+            @Override
+            public int available() throws IOException {
+                return mPrologue.length - mPrologueIndex + mInputStream.available() + mEpilogue.length - mEpilogueIndex;
+            }
+
+            @Override
+            public int read() throws IOException {
+                int c;
+                if (mInPrologue) {
+                    c = mPrologue[mPrologueIndex++];
+                    if (mPrologueIndex >= mPrologue.length) {
+                        mInPrologue = false;  mInContent = true;
+                    }
+                } else if (mInContent) {
+                    c = mInputStream.read();
+                    if (c == -1) {
+                        c = mEpilogue[0];  mEpilogueIndex = 1;
+                        mInContent = false;  mInEpilogue = true;
+                    }
+                } else if (mInEpilogue) {
+                    c = mEpilogue[mEpilogueIndex++];
+                    if (mEpilogueIndex >= mEpilogue.length) {
+                        mInEpilogue = false;
+                    }
+                } else {
+                    c = -1;
+                }
+                if (c != -1)
+                    sb.append((char) c);
+                else
+                    System.out.println(sb);
+                return c;
+            }
+
+            @Override
+            public int read(byte[] b, int off, int len) throws IOException {
+                int remaining = len;
+                if (remaining == 0)
+                    return len;
+                if (mInPrologue) {
+                    int prologue = Math.min(len, mPrologue.length - mPrologueIndex);
+                    System.arraycopy(mPrologue, mPrologueIndex, b, off, prologue);
+                    mPrologueIndex += prologue;
+                    if (mPrologueIndex >= mPrologue.length) {
+                        mInPrologue = false;  mInContent = true;
+                    }
+                    remaining -= prologue;  off += prologue;
+                }
+                if (remaining == 0)
+                    return len;
+                if (mInContent) {
+                    int content = mInputStream.read(b, off, remaining);
+                    if (content != remaining) {
+                        mInContent = false;  mInEpilogue = true;
+                    }
+                    remaining -= content;  off += content;
+                }
+                if (remaining == 0)
+                    return len;
+                if (mInEpilogue) {
+                    int epilogue = Math.min(len, mEpilogue.length - mEpilogueIndex);
+                    System.arraycopy(mEpilogue, mEpilogueIndex, b, off, epilogue);
+                    mEpilogueIndex += epilogue;
+                    if (mEpilogueIndex >= mEpilogue.length) {
+                        mInEpilogue = false;
+                    }
+                    remaining -= epilogue;  off += epilogue;
+                }
+                return len - remaining;
             }
         }
     }
@@ -525,7 +686,7 @@ public class Mime {
      *  string.  Uses a permissive, RFC2231-capable parser, and defaults
      *  when appropriate. */
     public static final String getContentType(String cthdr) {
-        return new MimeCompoundHeader.ContentType(cthdr).getValue().trim();
+        return new ContentType(cthdr).getValue().trim();
     }
 
 	/**
@@ -575,7 +736,7 @@ public class Mime {
     }
 
     public static String getCharset(String contentType) {
-        String charset = new MimeCompoundHeader.ContentType(contentType).getParameter(P_CHARSET);
+        String charset = new ContentType(contentType).getParameter(P_CHARSET);
         if (charset == null || charset.trim().equals(""))
             charset = null;
         return charset;
