@@ -33,8 +33,9 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.ArrayList;
 
-public class ZApptSummary implements ZItem {
+public class ZApptSummary implements ZItem, ZSearchHit {
 
     public static final String FBA_FREE = "F";
     public static final String FBA_BUSY = "B";
@@ -106,6 +107,12 @@ public class ZApptSummary implements ZItem {
     private String mPercentComplete;
     private long mDuration;
     private String mFragment;
+    private String mSortField;
+    private float mScore;
+    private long mSize;
+    private String mConvId;
+    private long mHitDate;
+    private boolean mInstanceExpanded;
     
     private long mStartTime;
     private long mEndTime;
@@ -117,8 +124,8 @@ public class ZApptSummary implements ZItem {
     private ZApptSummary() {
 
     }
-    
-    public static void addInstances(Element e, List<ZApptSummary> appts, String folderId, TimeZone timeZone) throws ServiceException {
+
+    public static void addInstances(Element e, List<ZSearchHit> appts, String folderId, TimeZone timeZone) throws ServiceException {
         String id = e.getAttribute(MailConstants.A_ID);
         String freeBusyActual = e.getAttribute(MailConstants.A_APPT_FREEBUSY_ACTUAL, null);
         String transparency = e.getAttribute(MailConstants.A_APPT_TRANSPARENCY, null);
@@ -137,15 +144,36 @@ public class ZApptSummary implements ZItem {
         boolean isOrganizer = e.getAttributeBool(MailConstants.A_CAL_ISORG, false);
         String priority = e.getAttribute(MailConstants.A_CAL_PRIORITY, null);
         String percentComplete = e.getAttribute(MailConstants.A_TASK_PERCENT_COMPLETE, null);
-        long duration = e.getAttributeLong(MailConstants.A_CAL_DURATION, 0);
+        long duration = e.getAttributeLong(MailConstants.A_CAL_NEW_DURATION, 0);
+        long hitDate = e.getAttributeLong(MailConstants.A_DATE, 0);
+
+        String sortField = e.getAttribute(MailConstants.A_SORT_FIELD, null);
+        long size = (int) e.getAttributeLong(MailConstants.A_SIZE, 0);
+        String convId = e.getAttribute(MailConstants.A_CONV_ID, null);
+        float score = (float) e.getAttributeDouble(MailConstants.A_SCORE, 0);
+        folderId = e.getAttribute(MailConstants.A_FOLDER, folderId);
 
         Element fragmentEl = e.getOptionalElement(MailConstants.E_FRAG);
         String fragment = (fragmentEl != null) ? fragmentEl.getText() : null;
 
-        for (Element inst : e.listElements(MailConstants.E_INSTANCE)) {
+        List<Element> instances = e.listElements(MailConstants.E_INSTANCE);
+        // if empty, add self as only instance
+        boolean noInstances = instances.isEmpty();
+        if (noInstances) {
+            instances = new ArrayList<Element>();
+            instances.add(e);
+        }
+
+        for (Element inst : instances) {
             ZApptSummary appt = new ZApptSummary();
+            appt.mInstanceExpanded = !noInstances;
             appt.mFolderId = folderId;
             appt.mId = id;
+            appt.mScore = score;
+            appt.mSize = size;
+            appt.mSortField = sortField;
+            appt.mConvId = convId;
+            appt.mHitDate = hitDate;
 
             appt.mIsAllDay = inst.getAttributeBool(MailConstants.A_CAL_ALLDAY, isAllDay);
             appt.mTimeZoneOffset = inst.getAttributeLong(MailConstants.A_CAL_TZ_OFFSET, 0);
@@ -199,8 +227,36 @@ public class ZApptSummary implements ZItem {
         return mId;
     }
 
+    public String getSortField() {
+        return mSortField;
+    }
+
+    public float getScore() {
+        return mScore;
+    }
+
     public String getFolderId() {
         return mFolderId;
+    }
+
+    public long getSize() {
+        return mSize;
+    }
+
+    public String getConversationId() {
+        return mConvId;
+    }
+
+    public long getHitDate() {
+        return mHitDate;
+    }
+
+    /**
+     * @return returns true if this appt was expanded and has instance data (start time, etc), or not (such as an appointment
+     * returned from calling SearchRequest without specifying calExpandInstStart/calExpandInstEnd).
+     */
+    public boolean getInstanceExpanded() {
+        return mInstanceExpanded;
     }
 
     public String toString() {
@@ -230,6 +286,11 @@ public class ZApptSummary implements ZItem {
         sb.add("timeZoneOffset", mTimeZoneOffset);
         sb.add("exception", mIsException);
         sb.add("fragment", mFragment);
+        sb.add("sortField", mSortField);
+        sb.add("score", mScore);
+        sb.add("conversationId", mConvId);
+        sb.add("size", mSize);
+        sb.addDate("hitDate", mHitDate);
         sb.endStruct();
         return sb.toString();
     }

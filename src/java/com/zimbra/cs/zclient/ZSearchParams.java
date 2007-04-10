@@ -39,7 +39,9 @@ public class ZSearchParams {
     public static final String TYPE_CONTACT = "contact";
     
     public static final String TYPE_APPOINTMENT = "appointment";
-    
+
+    public static final String TYPE_TASK = "task";
+
     public static final String TYPE_DOCUMENT = "document";
     
     public static final String TYPE_WIKI = "wiki";
@@ -62,6 +64,8 @@ public class ZSearchParams {
                 sb.append(TYPE_DOCUMENT);
             else if (s.startsWith("w") && TYPE_WIKI.startsWith(s))
                 sb.append(TYPE_WIKI);
+            else if (s.startsWith("t") && TYPE_TASK.startsWith(s))
+                sb.append(TYPE_TASK);            
             else
                 throw ZClientException.CLIENT_ERROR("invlaid search type: "+s, null);
         }
@@ -127,6 +131,9 @@ public class ZSearchParams {
     
     private Cursor mCursor;
 
+    private long mCalExpandInstStart;
+    private long mCalExpandInstEnd;
+
     /**
      * used only for equals/hascode purposes
      */
@@ -151,7 +158,9 @@ public class ZSearchParams {
                 this.mFetch != that.mFetch ||
                 this.mPreferHtml != that.mPreferHtml ||
                 this.mMarkAsRead != that.mMarkAsRead ||
-                this.mRecipientMode != that.mRecipientMode)
+                this.mRecipientMode != that.mRecipientMode ||
+                this.mCalExpandInstStart != that.mCalExpandInstStart ||
+                this.mCalExpandInstEnd != that.mCalExpandInstEnd)
             return false;
 
         if (    !StringUtil.equal(this.mTypes, that.mTypes) ||
@@ -179,6 +188,8 @@ public class ZSearchParams {
         this.mTypes = that.mTypes;
         this.mField = that.mField;
         this.mConvId = that.mConvId;
+        this.mCalExpandInstEnd = that.mCalExpandInstEnd;
+        this.mCalExpandInstStart = that.mCalExpandInstStart;
     }
 
     public ZSearchParams(String query) {
@@ -281,6 +292,22 @@ public class ZSearchParams {
 
     public void setTypes(String types) {
         mTypes = types;
+    }
+
+    public long getCalExpandInstStart() {
+        return mCalExpandInstStart;
+    }
+
+    public void setCalExpandInstStart(long calExpandInstStart) {
+        mCalExpandInstStart = calExpandInstStart;
+    }
+
+    public long getCalExpandInstEnd() {
+        return mCalExpandInstEnd;
+    }
+
+    public void setCalExpandInstEnd(long calExpandInstEnd) {
+        mCalExpandInstEnd = calExpandInstEnd;
     }
 
     public String getField() {

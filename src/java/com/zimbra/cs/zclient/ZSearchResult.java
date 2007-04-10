@@ -33,6 +33,7 @@ import com.zimbra.common.soap.Element;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TimeZone;
 
 public class ZSearchResult {
 
@@ -42,17 +43,17 @@ public class ZSearchResult {
     private String mSortBy;
     private int mOffset;
 
-    public ZSearchResult(Element e) throws ServiceException {
-        init(e, e);
+    private ZSearchResult(Element e) throws ServiceException {
+        init(e, e, null);
     }
 
-    public ZSearchResult(Element e, boolean convNest) throws ServiceException {
+    public ZSearchResult(Element e, boolean convNest, TimeZone tz) throws ServiceException {
         if (!convNest) {
-            init(e, e);
+            init(e, e, tz);
         } else {
             Element c = e.getElement(MailConstants.E_CONV);
             mConvSummary = new ZConversationSummary(c);
-            init(e, c);
+            init(e, c, tz);
         }
     }
 
@@ -68,7 +69,7 @@ public class ZSearchResult {
         mOffset = offset;
     }
 
-    private void init(Element resp, Element hits) throws ServiceException {
+    private void init(Element resp, Element hits, TimeZone tz) throws ServiceException {
         mSortBy = resp.getAttribute(MailConstants.A_SORTBY);
         mHasMore = resp.getAttributeBool(MailConstants.A_QUERY_MORE);
         mOffset = (int) resp.getAttributeLong(MailConstants.A_QUERY_OFFSET);
@@ -80,6 +81,8 @@ public class ZSearchResult {
                 mHits.add(new ZMessageHit(h));
             } else if (h.getName().equals(MailConstants.E_CONTACT)) {
                 mHits.add(new ZContactHit(h));
+            } else if (h.getName().equals(MailConstants.E_APPOINTMENT)) {
+                ZApptSummary.addInstances(h, mHits, null, tz);
             } else if (h.getName().equals(MailConstants.E_DOC)) {
                 mHits.add(new ZDocumentHit(h));
             } else if (h.getName().equals(MailConstants.E_WIKIWORD)) {
@@ -132,7 +135,7 @@ public class ZSearchResult {
     }
 
     /*
-     * TODO: this class is really not a ZSearchHit, but for now that works best do to ZSEarchPagerCache. modifyNotication handling
+     * TODO: this class is really not a ZSearchHit, but for now that works best do to ZSearchPagerCache. modifyNotication handling
      */
     public class ZConversationSummary implements ZSearchHit {
 

@@ -61,29 +61,31 @@ public class ZApptSummaryCache extends ZEventHandler {
         mIds = new HashSet<String>();
     }
 
-    private String makeKey(long start, long end, String folderId, TimeZone timezone) {
-        return start+":"+end+":"+folderId+":"+timezone.getID();
+    private String makeKey(long start, long end, String folderId, TimeZone timezone, String query) {
+        if (query == null) query = "";
+        return start+":"+end+":"+folderId+":"+timezone.getID() + ":"+ query;
     }
 
-    public synchronized void add(ZApptSummaryResult result, TimeZone timezone) {
+    synchronized void add(ZApptSummaryResult result, TimeZone timezone) {
         for (ZApptSummary appt : result.getAppointments()) {
             mIds.add(appt.getId());
         }
-        mResults.put(makeKey(result.getStart(), result.getEnd(), result.getFolderId(), timezone), result);
+        mResults.put(makeKey(result.getStart(), result.getEnd(), result.getFolderId(), timezone, result.getQuery()), result);
     }
 
-    public synchronized ZApptSummaryResult get(long start, long end, String folderId, TimeZone timezone) {
-        ZApptSummaryResult result = mResults.get(makeKey(start, end, folderId, timezone));
+    synchronized ZApptSummaryResult get(long start, long end, String folderId, TimeZone timezone, String query) {
+        if (query == null) query = "";
+        ZApptSummaryResult result = mResults.get(makeKey(start, end, folderId, timezone, query));
         if (result == null && (end-start) < MSECS_PER_MONTH_GRID) {
             // let's see if results might potentially be contained within another result
             for (ZApptSummaryResult cached : mResults.values()) {
-                if (cached.getTimeZone().getID().equals(timezone.getID()) && cached.getFolderId().equals(folderId) && (cached.getStart() <= start && end <= cached.getEnd())) {
+                if (cached.getQuery().equals(query) && cached.getTimeZone().getID().equals(timezone.getID()) && cached.getFolderId().equals(folderId) && (cached.getStart() <= start && end <= cached.getEnd())) {
                     List<ZApptSummary> appts = new ArrayList<ZApptSummary>();
                     for (ZApptSummary appt : cached.getAppointments()) {
                         if (appt.isInRange(start, end))
                             appts.add(appt);
                     }
-                    return new ZApptSummaryResult(start, end, folderId, timezone, appts);
+                    return new ZApptSummaryResult(start, end, folderId, timezone, appts, query);
                 }
             }
         }

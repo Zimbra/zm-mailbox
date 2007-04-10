@@ -2199,6 +2199,9 @@ public class ZMailbox {
             // use "1" for "first" for backward compat until DF is updated
             req.addAttribute(MailConstants.A_FETCH, params.getFetch() == Fetch.first ? "1" : params.getFetch().name());
         }
+        if (params.getCalExpandInstStart() != 0) req.addAttribute(MailConstants.A_CAL_EXPAND_INST_START, params.getCalExpandInstStart());
+        if (params.getCalExpandInstEnd() != 0) req.addAttribute(MailConstants.A_CAL_EXPAND_INST_END, params.getCalExpandInstEnd());
+        
         if (params.isPreferHtml()) req.addAttribute(MailConstants.A_WANT_HTML, params.isPreferHtml());
         if (params.isMarkAsRead()) req.addAttribute(MailConstants.A_MARK_READ, params.isMarkAsRead());
         if (params.isRecipientMode()) req.addAttribute(MailConstants.A_RECIPIENTS, params.isRecipientMode());
@@ -2213,7 +2216,7 @@ public class ZMailbox {
             if (cursor.getPreviousSortValue() != null) cursorEl.addAttribute(MailConstants.A_SORTVAL, cursor.getPreviousSortValue());
         }
 
-        return new ZSearchResult(invoke(req), nest);
+        return new ZSearchResult(invoke(req), nest, getPrefs().getTimeZone());
     }
 
     /**
@@ -2860,13 +2863,15 @@ public class ZMailbox {
         private long mStart;
         private long mEnd;
         private TimeZone mTimeZone;
+        private String mQuery;
 
-        ZApptSummaryResult(long start, long end, String folderId, TimeZone timeZone, List<ZApptSummary> appointments) {
+        ZApptSummaryResult(long start, long end, String folderId, TimeZone timeZone, List<ZApptSummary> appointments, String query) {
             mFolderId = folderId;
             mAppointments = appointments;
             mStart = start;
             mEnd = end;
             mTimeZone = timeZone;
+            mQuery = query;
         }
 
         ZApptSummaryResult(long start, long end, String folderId, TimeZone timeZone, ServiceException exception) {
@@ -2897,6 +2902,10 @@ public class ZMailbox {
         public List<ZApptSummary> getAppointments() {
             return mAppointments;
         }
+
+        public String getQuery() {
+            return mQuery; 
+        }
     }
 
     /**
@@ -2908,7 +2917,7 @@ public class ZMailbox {
     }
 
     /**
-     *
+     * @param query optional seach query to limit appts returend
      * @param startMsec starting time of range, in msecs
      * @param endMsec ending time of range, in msecs
      * @param folderIds list of folder ids
@@ -2916,12 +2925,13 @@ public class ZMailbox {
      * @return list of appts within the specified range
      * @throws ServiceException on error
      */
-    public List<ZApptSummaryResult> getApptSummaries(long startMsec, long endMsec, String folderIds[], TimeZone timeZone) throws ServiceException {
+    public List<ZApptSummaryResult> getApptSummaries(String query, long startMsec, long endMsec, String folderIds[], TimeZone timeZone) throws ServiceException {
+        if (query == null) query = "";
         List<ZApptSummaryResult> summaries = new ArrayList<ZApptSummaryResult>();
         List<String> idsToFetch = new ArrayList<String>(folderIds.length);
 
         for (String folderId : folderIds) {
-            ZApptSummaryResult cached = mApptSummaryCache.get(startMsec, endMsec, folderId, timeZone);
+            ZApptSummaryResult cached = mApptSummaryCache.get(startMsec, endMsec, folderId, timeZone, query);
             if (cached == null) {
                 idsToFetch.add(folderId);
             } else {
@@ -2929,39 +2939,54 @@ public class ZMailbox {
             }
         }
 
-        if (!idsToFetch.isEmpty()) {
+        Map<String, ZApptSummaryResult> folder2List = new HashMap<String, ZApptSummaryResult>();
 
-            XMLElement req = new XMLElement(ZimbraNamespace.E_BATCH_REQUEST);
+        if (!idsToFetch.isEmpty()) {
+            StringBuilder searchQuery = new StringBuilder();
+            searchQuery.append("(");
             for (String folderId : idsToFetch) {
-                Element gas = req.addElement(MailConstants.GET_APPT_SUMMARIES_REQUEST);
-                gas.addAttribute(ZimbraNamespace.A_REQUEST_ID, folderId);
-                gas.addAttribute(MailConstants.A_CAL_START_TIME, startMsec);
-                gas.addAttribute(MailConstants.A_CAL_END_TIME, endMsec);
-                gas.addAttribute(MailConstants.A_FOLDER, folderId);
+                if (searchQuery.length() > 1) searchQuery.append(" or ");
+                searchQuery.append("inid:").append(folderId);
+                //folder2List.
+                List<ZApptSummary> appts = new ArrayList<ZApptSummary>();
+                ZApptSummaryResult result = new ZApptSummaryResult(startMsec, endMsec, folderId, timeZone, appts, query);
+                summaries.add(result);
+                folder2List.put(folderId, result);
+            }
+            searchQuery.append(")");
+            
+            if (query.length() > 0) {
+                searchQuery.append("AND (").append(query).append(")");
             }
 
-            Element resp = invoke(req);
-
-            int index = 0;
-            for (Element e : resp.listElements()) {
-                String folderId = e.getAttribute(ZimbraNamespace.A_REQUEST_ID, null);
-                if (folderId == null)
-                    folderId = idsToFetch.get(index);
-                index++;
-                if (mTransport.getSoapProtocol().isFault(e)) {
-                    // TODO: cache this if it permission denied or some other perm error?
-                    summaries.add(new ZApptSummaryResult(startMsec, endMsec, folderId, timeZone, mTransport.getSoapProtocol().soapFault(e)));
-                } else {
-                    List<ZApptSummary> appts = new ArrayList<ZApptSummary>();
-                    for (Element appt : e.listElements(MailConstants.E_APPOINTMENT)) {
-                        ZApptSummary.addInstances(appt, appts, folderId, timeZone);
+            
+            ZSearchParams params = new ZSearchParams(searchQuery.toString());
+            params.setCalExpandInstStart(startMsec);
+            params.setCalExpandInstEnd(endMsec);
+            params.setTypes(ZSearchParams.TYPE_APPOINTMENT);
+            params.setLimit(2000);
+            params.setSortBy(SearchSortBy.dateAsc);
+            int n = 0;
+            // really while(true), but add in a safety net?
+            while (n++ < 100) {
+                ZSearchResult result = search(params);
+                for (ZSearchHit hit : result.getHits()) {
+                    if (hit instanceof ZApptSummary) {
+                        ZApptSummary as = (ZApptSummary) hit;
+                        ZApptSummaryResult r = folder2List.get(as.getFolderId());
+                        if (r != null) r.getAppointments().add(as);
                     }
-                    ZApptSummaryResult summary = new ZApptSummaryResult(startMsec, endMsec, folderId, timeZone, appts);
-                    mApptSummaryCache.add(summary, timeZone);
-                    summaries.add(summary);
+                }
+                List<ZSearchHit> hits = result.getHits();
+                if (result.hasMore() && !hits.isEmpty()) {
+                    ZSearchHit lastHit = hits.get(hits.size()-1);
+                    params.setCursor(new Cursor(lastHit.getId(), lastHit.getSortField()));
+                } else {
+                    break;
                 }
             }
-
+            for (ZApptSummaryResult r : folder2List.values())
+                mApptSummaryCache.add(r, timeZone);
         }
         return summaries;
     }

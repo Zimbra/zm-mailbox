@@ -301,7 +301,7 @@ public class ZMailboxUtil implements DebugListener {
     private static Option O_SORT = new Option("s", "sort", true, "sort order TODO");
     private static Option O_REPLACE = new Option("r", "replace", false, "replace contact (default is to merge)");
     private static Option O_TAGS = new Option("T", "tags", true, "list of tag ids/names");
-    private static Option O_TYPES = new Option("t", "types", true, "list of types to search for (message,conversation,contact,wiki)");
+    private static Option O_TYPES = new Option("t", "types", true, "list of types to search for (message,conversation,contact,appointment,wiki)");
     private static Option O_URL = new Option("u", "url", true, "url to connect to");
     private static Option O_VERBOSE = new Option("v", "verbose", false, "verbose output");
     private static Option O_VIEW = new Option("V", "view", true, "default type for folder (conversation,message,contact,appointment,wiki)");
@@ -1124,7 +1124,7 @@ public class ZMailboxUtil implements DebugListener {
         long startTime = DateUtil.parseDateSpecifier(args[0], new Date().getTime());
         long endTime = DateUtil.parseDateSpecifier(args[1], (new Date().getTime()) + 1000*60*60*24*7);
         String folderId = args.length == 3 ? lookupFolderId(args[2]) : null;
-        List<ZApptSummaryResult> results = mMbox.getApptSummaries(startTime, endTime, new String[] {folderId}, TimeZone.getDefault());
+        List<ZApptSummaryResult> results = mMbox.getApptSummaries(null, startTime, endTime, new String[] {folderId}, TimeZone.getDefault());
         if (results.size() != 1) return;
         ZApptSummaryResult result = results.get(0);
         if (result.isFault())
@@ -1584,6 +1584,17 @@ public class ZMailboxUtil implements DebugListener {
                 String from = mh.getSender() == null ? "<none>" : mh.getSender().getDisplay();
                 mIndexToId.put(i, mh.getId());
                 System.out.format(itemFormat, i++, mh.getId(), "mess", from, sub, c);
+            } else if (hit instanceof ZApptSummary) {
+                ZApptSummary ah = (ZApptSummary) hit;
+                if (ah.getInstanceExpanded()) {
+                    c.setTimeInMillis(ah.getStartTime());
+                } else {
+                    c.setTimeInMillis(ah.getHitDate());
+                }
+                String sub = ah.getName();
+                String from = "<na>";
+                mIndexToId.put(i, ah.getId());
+                System.out.format(itemFormat, i++, ah.getId(), "appo", from, sub, c);
             } else if (hit instanceof ZDocumentHit) {
                 ZDocumentHit dh = (ZDocumentHit) hit;
                 ZDocument doc = dh.getDocument();
