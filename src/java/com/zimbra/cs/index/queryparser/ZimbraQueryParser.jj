@@ -104,16 +104,6 @@ public final class ZimbraQueryParser {
                               return new ZimbraQuery.DraftQuery(mbx, analyze, modifier, true);
                       } } );
 
-        sIsStrMap.put("sent",  /* sent by me */ 
-                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
-                          return new ZimbraQuery.SentQuery(mbx, analyze, modifier, true);
-                      } } );
-
-        sIsStrMap.put("fromme", /* sent by me */ 
-                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
-                          return new ZimbraQuery.SentQuery(mbx, analyze, modifier, true);
-                      } } );
-        
         sIsStrMap.put("received",
                       new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
                           return new ZimbraQuery.SentQuery(mbx, analyze, modifier, false);
@@ -162,6 +152,46 @@ public final class ZimbraQueryParser {
         sIsStrMap.put("solo",
                       new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
                           return ZimbraQuery.ConvCountQuery.create(mbx, analyze, modifier, ZimbraQueryParser.CONV_COUNT, "1");
+                      } } );
+                      
+        sIsStrMap.put("sent",  /* sent by me */ 
+                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return new ZimbraQuery.SentQuery(mbx, analyze, modifier, true);
+                      } } );
+                      
+        sIsStrMap.put("tome",
+                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return ZimbraQuery.MeQuery.create(mbx, analyze, modifier, ZimbraQuery.ADDR_BITMASK_TO);
+                      } } );
+                      
+        sIsStrMap.put("fromme", /* sent by me */ 
+                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return new ZimbraQuery.SentQuery(mbx, analyze, modifier, true);
+                      } } );
+        
+        sIsStrMap.put("ccme",
+                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return ZimbraQuery.MeQuery.create(mbx, analyze, modifier, ZimbraQuery.ADDR_BITMASK_CC);
+                      } } );
+                      
+        sIsStrMap.put("tofromme",
+                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return ZimbraQuery.MeQuery.create(mbx, analyze, modifier, ZimbraQuery.ADDR_BITMASK_TO | ZimbraQuery.ADDR_BITMASK_FROM);
+                      } } );
+                      
+        sIsStrMap.put("toccme",
+                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return ZimbraQuery.MeQuery.create(mbx, analyze, modifier, ZimbraQuery.ADDR_BITMASK_TO | ZimbraQuery.ADDR_BITMASK_CC);
+                      } } );
+                      
+        sIsStrMap.put("fromccme",
+                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return ZimbraQuery.MeQuery.create(mbx, analyze, modifier, ZimbraQuery.ADDR_BITMASK_FROM | ZimbraQuery.ADDR_BITMASK_CC);
+                      } } );
+                      
+        sIsStrMap.put("tofromccme",
+                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return ZimbraQuery.MeQuery.create(mbx, analyze, modifier, ZimbraQuery.ADDR_BITMASK_TO | ZimbraQuery.ADDR_BITMASK_FROM | ZimbraQuery.ADDR_BITMASK_CC);
                       } } );
     }
 
@@ -231,6 +261,14 @@ public final class ZimbraQueryParser {
               q.parseDate(modifier, tok, mTimeZone, mLocale);
               return q;
           }
+          case TOFROM:
+          case TOCC:
+          case FROMCC:
+          case TOFROMCC:
+			if (tok == null || tok.length() < 1) {
+                 throw new ParseException("Missing required text after a TO/FROM/CC");
+			}
+			return ZimbraQuery.AddrQuery.createFromTarget(mMailbox, mAnalyzer, modifier, target, tok);
           case FROM:
 			if (tok == null || tok.length() < 1) {
                  throw new ParseException("Missing required text after a TO/FROM/CC");
@@ -334,13 +372,19 @@ PARSER_END(ZimbraQueryParser)
 {
    <CONTENT:   "content:"> 
 |  <SUBJECT:    "subject:">
-|  <FROM:       "from:">
 |  <MSGID:      "msgid:">
 |  <ENVTO:      "envto:">                            
 |  <ENVFROM:    "envfrom:">         
 |  <CONTACT:   "contact:">
 |  <TO:         "to:">         
-|  <CC:         "cc:">         
+|  <FROM:       "from:">
+|  <CC:         "cc:">       
+
+|  <TOFROM:     "tofrom:">         
+|  <TOCC:       "tocc:">         
+|  <FROMCC:     "fromcc:">         
+|  <TOFROMCC:   "tofromcc:">         
+
 |  <IN:         "in:">  
 |  <INID:         "inid:">  
 |  <HAS:        "has:">
@@ -564,6 +608,7 @@ ZimbraQuery.BaseQuery Clause() throws ServiceException :
     | (
           (
   	           t=<MSGID>|t=<ENVFROM>|t=<ENVTO>|t=<FROM>|t=<TO>|t=<CC>|t=<CONTACT>
+  	          | t=<TOFROM>|t=<TOCC>|t=<FROMCC>|t=<TOFROMCC> 
   		      | t=<CONTENT>|t=<MESSAGE>|t=<SUBJECT>|t=<IN>|t=<INID>
        		  |  t=<TYPE>|t=<ATTACHMENT>|t=<HAS>|t=<FILENAME>|t=<AUTHOR>|t=<TITLE>|t=<KEYWORDS>|t=<COMPANY>|t=<METADATA>
 	     	  | t=<MY>|t=<IS>|t=<TAG>|t=<CONV>|t=<CONV_COUNT>|t=<CONV_MINM>|t=<CONV_MAXM>

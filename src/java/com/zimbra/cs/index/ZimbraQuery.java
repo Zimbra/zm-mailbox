@@ -50,6 +50,7 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.BooleanClause.Occur;
 
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.queryparser.Token;
 import com.zimbra.cs.index.queryparser.ZimbraQueryParser;
@@ -146,8 +147,6 @@ public final class ZimbraQuery {
 
         /**
          * Called by the optimizer, this returns an initialized QueryOperation of the requested type.
-         * 
-         * Type must be one of the types returned by canExec() 
          * 
          * @param type 
          * @param truth
@@ -250,11 +249,6 @@ public final class ZimbraQuery {
             return null;
         }
 
-
-        protected int canExec() {
-            assert(false);
-            return 0;
-        }
 
     } 
 
@@ -1057,7 +1051,7 @@ public final class ZimbraQuery {
             }
         }
     }
-
+    
     public static class SizeQuery extends BaseQuery
     {
         private String mSizeStr;
@@ -1155,7 +1149,7 @@ public final class ZimbraQuery {
             super(modifier, SUBQUERY_TOKEN );
             mSubClauses = exp;
         }
-
+        
         protected BaseQuery getSubClauseHead() {
             return (BaseQuery)mSubClauses.get(0);
         }
@@ -1177,10 +1171,117 @@ public final class ZimbraQuery {
             ret+=indent(expLevel)+" )";
             return ret;        
         }
+    }
 
-        protected int canExec() {
-            assert(false);
-            return 0;
+    // bitmask for choosing "FROM/TO/CC" of messages...used for AddrQuery and MeQuery 
+    public static final int ADDR_BITMASK_FROM = 0x1;
+    public static final int ADDR_BITMASK_TO =   0x2;
+    public static final int ADDR_BITMASK_CC =   0x4;
+    
+    /** A simpler way of expressing (to:FOO or from:FOO or cc:FOO) */
+    public static class AddrQuery extends SubQuery {
+        protected AddrQuery(Analyzer analyzer, int modifier, AbstractList exp) {
+            super(analyzer, modifier, exp);
+        }
+        public static ZimbraQuery.BaseQuery createFromTarget(Mailbox mbox, Analyzer analyzer, int modifier, int target, String text) throws ServiceException {
+            int bitmask = 0;
+            switch (target) {
+                case ZimbraQueryParser.TOFROM:
+                    bitmask = ADDR_BITMASK_TO | ADDR_BITMASK_FROM;
+                    break;
+                case ZimbraQueryParser.TOCC:
+                    bitmask = ADDR_BITMASK_TO | ADDR_BITMASK_CC;
+                    break;
+                case ZimbraQueryParser.FROMCC:
+                    bitmask = ADDR_BITMASK_FROM | ADDR_BITMASK_CC;
+                    break;
+                case ZimbraQueryParser.TOFROMCC:
+                    bitmask = ADDR_BITMASK_TO | ADDR_BITMASK_FROM | ADDR_BITMASK_CC;
+                    break;
+            }
+            return createFromBitmask(mbox, analyzer, modifier, text, bitmask);
+        }
+        
+        public static ZimbraQuery.BaseQuery createFromBitmask(Mailbox mbox, Analyzer analyzer, int modifier, String text, int operatorBitmask) throws ServiceException {
+            ArrayList<ZimbraQuery.BaseQuery> clauses = new ArrayList<ZimbraQuery.BaseQuery>();
+            boolean atFirst = true;
+            
+            if ((operatorBitmask & ADDR_BITMASK_FROM) !=0) {
+                clauses.add(new TextQuery(mbox, analyzer, modifier, ZimbraQueryParser.FROM, text));
+                atFirst = false;
+            } 
+            if ((operatorBitmask & ADDR_BITMASK_TO) != 0) {
+                if (atFirst) 
+                    atFirst = false;
+                else
+                    clauses.add(new ConjQuery(analyzer, ConjQuery.OR));
+                clauses.add(new TextQuery(mbox, analyzer, modifier, ZimbraQueryParser.TO, text)); 
+            }
+            if ((operatorBitmask & ADDR_BITMASK_CC) != 0) {
+                if (atFirst) 
+                    atFirst = false;
+                else
+                    clauses.add(new ConjQuery(analyzer, ConjQuery.OR));
+                clauses.add(new TextQuery(mbox, analyzer, modifier, ZimbraQueryParser.CC, text)); 
+            }
+            return new AddrQuery(analyzer, modifier, clauses); 
+        }
+    }
+    
+    /** Messages "to me" "from me" or "cc me" or any combination thereof */
+    public static class MeQuery extends SubQuery {
+        protected MeQuery(Analyzer analyzer, int modifier, AbstractList exp) {
+            super(analyzer, modifier, exp);
+        }
+        
+        public static ZimbraQuery.BaseQuery create(Mailbox mbox, Analyzer analyzer, int modifier, int operatorBitmask) throws ServiceException {
+            ArrayList<ZimbraQuery.BaseQuery> clauses = new ArrayList<ZimbraQuery.BaseQuery>();
+            Account acct = mbox.getAccount();
+            boolean atFirst = true;
+            if ((operatorBitmask & ADDR_BITMASK_FROM) !=0) {
+                clauses.add(new SentQuery(mbox, analyzer, modifier, true));
+                atFirst = false;
+            } 
+            if ((operatorBitmask & ADDR_BITMASK_TO) != 0) {
+                if (atFirst) 
+                    atFirst = false;
+                else
+                    clauses.add(new ConjQuery(analyzer, ConjQuery.OR));
+                clauses.add(new TextQuery(mbox, analyzer, modifier, ZimbraQueryParser.TO, acct.getName())); 
+            }
+            if ((operatorBitmask & ADDR_BITMASK_CC) != 0) {
+                if (atFirst) 
+                    atFirst = false;
+                else
+                    clauses.add(new ConjQuery(analyzer, ConjQuery.OR));
+                clauses.add(new TextQuery(mbox, analyzer, modifier, ZimbraQueryParser.CC, acct.getName())); 
+            }
+            
+            String[] aliases = acct.getAliases();
+            for (String alias : aliases) {
+//                if ((operatorBitmask & ADDR_BITMASK_FROM) !=0) {
+//                    if (atFirst) {
+//                        clauses.add(new ConjQuery(analyzer, ConjQuery.OR));
+//                        atFirst = false;
+//                    }
+//                    clauses.add(new SentQuery(mbox, analyzer, modifier, true)); 
+//                } 
+                if ((operatorBitmask & ADDR_BITMASK_TO) != 0) {
+                    if (atFirst) 
+                        atFirst = false;
+                    else
+                        clauses.add(new ConjQuery(analyzer, ConjQuery.OR));
+                    clauses.add(new TextQuery(mbox, analyzer, modifier, ZimbraQueryParser.TO, alias)); 
+                }
+                if ((operatorBitmask & ADDR_BITMASK_CC) != 0) {
+                    if (atFirst) 
+                        atFirst = false;
+                    else
+                        clauses.add(new ConjQuery(analyzer, ConjQuery.OR));
+                    clauses.add(new TextQuery(mbox, analyzer, modifier, ZimbraQueryParser.CC, alias)); 
+                }
+            }
+            return new MeQuery(analyzer, modifier, clauses); 
         }
     }
 
