@@ -24,25 +24,26 @@
  */
 package com.zimbra.cs.index;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
 
 /**
- * @author tim
- * 
- * A helper class which deals with paging through search results (see bug 2937)
- *
+ * Helper class -- deals with finding the "first result" to be returned, which
+ * is dealt with in one of several ways depending on if this is an offset/limit
+ * request, a forward cursor request, or a backward cursor request. 
+ * (see bug 2937)
  */
-public class ResultsPager 
+public final class ResultsPager 
 {
     private ZimbraQueryResults mResults;
     private boolean mFixedOffset;
-    private List<ZimbraHit> mHits;
+    private AbstractList<ZimbraHit> mBufferedHits = null;;
     private SearchParams mParams;
+    private boolean mForward = true;
     
     public MailboxIndex.SortBy getSortOrder() { return mParams.getSortBy(); }
     
@@ -55,7 +56,7 @@ public class ResultsPager
         params.setSortBy(results.getSortBy());
         
         if (!params.hasCursor()) {
-            toRet = new ResultsPager(results, params);
+            toRet = new ResultsPager(results, params, false, true);
         } else {
             // are we paging FORWARD or BACKWARD?  If requested starting-offset is the same or bigger then the cursor's offset, 
             // then we're going FORWARD, otherwise we're going BACKWARD
@@ -63,70 +64,57 @@ public class ResultsPager
             if (params.getOffset() < params.getPrevOffset()) {
                 forward = false;
             }
-            toRet = new ResultsPager(results, params, forward);
-            
+            toRet = new ResultsPager(results, params, true, forward);
         }
         return toRet;
     }
     
-    private ResultsPager(ZimbraQueryResults results, SearchParams params, boolean forward) throws ServiceException {
-        mResults = results;
-        mParams = params;
-        mFixedOffset = false;
-        
-        if (forward) {
-            forward();
-        } else {
-            backward();
-        }
-    }
-
     /**
-     * Simple offset
-     * 
-     * @param params SearchParams, requires SortBy, offset, limit to be set
+     * @param params SearchParams: if OFFSET-MODE, requires SortBy, offset, limit to be set, 
+     *               otherwise requires cursor to be set
      * @throws ServiceException
      */
-    private ResultsPager(ZimbraQueryResults results, SearchParams params) throws ServiceException {
+    private ResultsPager(ZimbraQueryResults results, SearchParams params, boolean useCursor, boolean forward) throws ServiceException {
         mResults = results;
         mParams = params;
-        mFixedOffset = true;
-        
-        if (params.getOffset() > 0) {
-            mResults.skipToHit(params.getOffset()-1);
+        mFixedOffset = !useCursor;
+        mForward = forward;
+        assert(forward || !mFixedOffset); // only can go backward if using cursor 
+        reset();
+    }
+
+    public void reset() throws ServiceException {
+        if (mFixedOffset) {
+            if (mParams.getOffset() > 0) {
+                mResults.skipToHit(mParams.getOffset()-1);
+            } else {
+                mResults.resetIterator();
+            }
         } else {
-            mResults.resetIterator();
-        }
-        forward();
+            if (mForward) {
+                mBufferedHits = new ArrayList<ZimbraHit>(1);
+                ZimbraHit current = forwardFindFirst();
+                if (current != null)
+                    mBufferedHits.add(current);
+            } else {
+                mBufferedHits = backward();
+            }
+        }       
     }
     
-    public List<ZimbraHit> getHits() { return mHits; }
-    public boolean hasNext() throws ServiceException { return mResults.hasNext(); }
-    
-    /**
-     * @return a dummy hit which is immediately before the first hit we want to return
-     */
-    private ZimbraHit getDummyPrevHit() {
-        long dateVal = 0;
-        String strVal = "";
-        strVal = mParams.getPrevSortValueStr();
-        dateVal = mParams.getPrevSortValueLong();
-        
-        return new DummyHit(strVal, strVal, dateVal, mParams.getPrevMailItemId().getId());
+    public boolean hasNext() throws ServiceException {
+        if (!mBufferedHits.isEmpty())
+            return true;
+        else
+            return mResults.hasNext();
     }
     
-    /**
-     * @return a dummy hit which is immediately after the last hit we want to return
-     */
-    private ZimbraHit getDummyEndHit() {
-        long dateVal = 0;
-        String strVal = "";
-        strVal = mParams.getEndSortValueStr();
-        dateVal = mParams.getEndSortValueLong();
-        
-        return new DummyHit(strVal, strVal, dateVal, 0);
+    public ZimbraHit getNextHit() throws ServiceException {
+        if (mBufferedHits.isEmpty())
+            return mResults.getNext();
+        else
+            return mBufferedHits.remove(0);
     }
-    
     
     private ZimbraHit forwardFindFirst() throws ServiceException {
         int offset = 0;
@@ -171,33 +159,14 @@ public class ResultsPager
         return null;
     }
     
-    
-    private void forward() throws ServiceException {
-        mHits = new ArrayList<ZimbraHit>(Math.max(mParams.getLimit(), 1000));
-        
-        ZimbraHit hit;
-        
-        if (!mFixedOffset) {
-            hit = forwardFindFirst();
-        } else {
-            hit = mResults.getNext();
-        }
-        if (hit != null) {
-            mHits.add(0, hit);
-        }
-        
-        for (int i = 1; hit != null && i < mParams.getLimit(); i++) {
-            hit = mResults.getNext();
-            if (hit != null) {
-                mHits.add(i, hit);
-            }
-        }
-    }
-    
-    private void backward() throws ServiceException {
+    /**
+     * @return A list (in reverse order) of all hits between start and current-cursor
+     *         position 
+     * @throws ServiceException
+     */
+    private AbstractList<ZimbraHit> backward() throws ServiceException {
         LinkedList<ZimbraHit> ll = new LinkedList<ZimbraHit>();
-        mHits = ll;
-
+    
         int offset = 0;
         ZimbraHit hit = mResults.getFirstHit();
         ZimbraHit prevHit = getDummyPrevHit();
@@ -209,9 +178,11 @@ public class ResultsPager
         
         while(hit != null) {
             offset++;
+
+            ll.addLast(hit);
             
             if (hit.getItemId() == mParams.getPrevMailItemId().getId())
-                // found old one -- DON'T include it in list
+                // found old one 
                 break;
             
             // if (hit COMES AFTER prevSortValue) {
@@ -222,24 +193,33 @@ public class ResultsPager
             if (mParams.hasEndSortValue() && (hit.compareBySortField(mParams.getSortBy(), dummyEndHit) <=0)) 
                 break;
             
-            // okay, so it isn't time to stop yet.
-            // add this hit onto our growing list.... and also take
-            // existing things off the list if the list is already 
-            // as big as we need it..
-            if (offset >= mParams.getLimit()) {
-                ll.removeFirst();
-            }
-            ll.addLast(hit);
-            
             hit = mResults.getNext();
         }
-
-        // possible that we backed up to the start of the results set....so
-        // we do have to check and see if we got enough results...
-        while (ll.size() < mParams.getLimit() && hit != null) {
-            ll.addLast(hit);
-            hit = mResults.getNext();
-        }
+        return ll;
+    }
+    
+    /**
+     * @return a dummy hit which is immediately before the first hit we want to return
+     */
+    private ZimbraHit getDummyPrevHit() {
+        long dateVal = 0;
+        String strVal = "";
+        strVal = mParams.getPrevSortValueStr();
+        dateVal = mParams.getPrevSortValueLong();
+        
+        return new DummyHit(strVal, strVal, dateVal, mParams.getPrevMailItemId().getId());
+    }
+    
+    /**
+     * @return a dummy hit which is immediately after the last hit we want to return
+     */
+    private ZimbraHit getDummyEndHit() {
+        long dateVal = 0;
+        String strVal = "";
+        strVal = mParams.getEndSortValueStr();
+        dateVal = mParams.getEndSortValueLong();
+        
+        return new DummyHit(strVal, strVal, dateVal, 0);
     }
     
     private static class DummyHit extends ZimbraHit

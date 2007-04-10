@@ -155,9 +155,10 @@ public class Search extends MailDocumentHandler  {
         ExpandResults expand = params.getFetchFirst();
         if (expand == ExpandResults.HITS)
             expand = ExpandResults.NONE;      // "hits" is not a valid value for Search...
-        for (ZimbraHit hit : pager.getHits()) {
-//          for (ZimbraHit hit = results.skipToHit(offset); hit != null; hit = results.getNext()) {
-            if (++totalNumHits > limit) {
+        
+        while (pager.hasNext()) {
+            ZimbraHit hit = pager.getNextHit();
+            if (totalNumHits >= limit) {
                 if (mLog.isDebugEnabled()) {
                     mLog.debug("Search results limited to " + limit + " hits.");
                 }
@@ -200,14 +201,21 @@ public class Search extends MailDocumentHandler  {
                 e.addAttribute(MailConstants.A_SORT_FIELD, hit.getSortField(pager.getSortOrder()).toString());
             }
             if (e != null && includeMailbox) {
-//              String idStr = hit.getMailboxIdStr() + "/" + hit.getItemId();
                 ItemId iid = new ItemId(hit.getAcctIdStr(), hit.getItemId());
                 e.addAttribute(MailConstants.A_ID, iid.toString());
+            }
+            if (e != null)
+                totalNumHits++;
+            
+            if (totalNumHits >= limit) {
+                if (mLog.isDebugEnabled()) {
+                    mLog.debug("Search results limited to " + limit + " hits.");
+                }
+                break;
             }
         }
 
         response.addAttribute(MailConstants.A_QUERY_MORE, pager.hasNext());
-        
 
         return response;
     }
