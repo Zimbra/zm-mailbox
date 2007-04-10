@@ -362,19 +362,22 @@ public class ByteUtil {
      * @return
      * @throws IOException
      */
-	public static int copy(InputStream in,
-                           boolean closeIn,
-                           OutputStream out,
-                           boolean closeOut)
-    throws IOException {
+    public static int copy(InputStream in, boolean closeIn, OutputStream out, boolean closeOut) throws IOException {
+        return copy(in, closeIn, out, closeOut, -1L);
+    }
+
+    public static int copy(InputStream in, boolean closeIn, OutputStream out, boolean closeOut, long maxLength) throws IOException {
         try {
-    		byte buffer[] = new byte[8192];
-    		int numRead;
+            byte buffer[] = new byte[8192];
+            int numRead;
             int transferred = 0;
-    		while ((numRead = in.read(buffer)) >= 0) {
-    			out.write(buffer, 0, numRead);
+            while ((numRead = in.read(buffer)) >= 0) {
+                out.write(buffer, 0, numRead);
                 transferred += numRead;
-    		}
+
+                if (maxLength >= 0 && transferred > maxLength)
+                    throw new IOException("stream exceeded allowable length: " + transferred);
+            }
             return transferred;
         } finally {
             if (closeIn) {
@@ -392,7 +395,7 @@ public class ByteUtil {
                 }
             }
         }
-	}
+    }
 
     // Custom read/writeUTF8 methods to replace DataInputStream.readUTF() and 
     // DataOutputStream.writeUTF() which have 64KB limit
