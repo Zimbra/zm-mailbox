@@ -1119,7 +1119,7 @@ public class ZMailboxUtil implements DebugListener {
         long startTime = DateUtil.parseDateSpecifier(args[0], new Date().getTime());
         long endTime = DateUtil.parseDateSpecifier(args[1], (new Date().getTime()) + 1000*60*60*24*7);
         String folderId = args.length == 3 ? lookupFolderId(args[2]) : null;
-        List<ZApptSummaryResult> results = mMbox.getApptSummaries(null, startTime, endTime, new String[] {folderId}, TimeZone.getDefault());
+        List<ZApptSummaryResult> results = mMbox.getApptSummaries(null, startTime, endTime, new String[] {folderId}, TimeZone.getDefault(), ZSearchParams.TYPE_APPOINTMENT);
         if (results.size() != 1) return;
         ZApptSummaryResult result = results.get(0);
         if (result.isFault())
@@ -1589,7 +1589,7 @@ public class ZMailboxUtil implements DebugListener {
                 String sub = ah.getName();
                 String from = "<na>";
                 mIndexToId.put(i, ah.getId());
-                System.out.format(itemFormat, i++, ah.getId(), "appo", from, sub, c);
+                System.out.format(itemFormat, i++, ah.getId(), ah.getIsTask() ? "task" : "appo", from, sub, c);
             } else if (hit instanceof ZDocumentHit) {
                 ZDocumentHit dh = (ZDocumentHit) hit;
                 ZDocument doc = dh.getDocument();

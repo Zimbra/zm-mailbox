@@ -2113,7 +2113,6 @@ public class ZMailbox {
      * @param grantreeId id of grantree
      * @param perms permission mask ("rwid")
      * @param args extra args
-     * @param inherit inherited bit
      * @return action result
      * @throws ServiceException on error
      */
@@ -2922,10 +2921,13 @@ public class ZMailbox {
      * @param endMsec ending time of range, in msecs
      * @param folderIds list of folder ids
      * @param timeZone TimeZone used to correct allday appts
+     * @param types ZSearchParams.TYPE_APPOINTMENT and/or ZSearchParams.TYPE_TASK. If null, TYPE_APPOINTMENT is used.
      * @return list of appts within the specified range
      * @throws ServiceException on error
      */
-    public List<ZApptSummaryResult> getApptSummaries(String query, long startMsec, long endMsec, String folderIds[], TimeZone timeZone) throws ServiceException {
+    public List<ZApptSummaryResult> getApptSummaries(String query, long startMsec, long endMsec, String folderIds[], TimeZone timeZone, String types) throws ServiceException {
+
+        if (types == null) types = ZSearchParams.TYPE_APPOINTMENT;
         if (query == null) query = "";
         if (folderIds == null || folderIds.length == 0)
             folderIds = new String[] { ZFolder.ID_CALENDAR };
@@ -2967,7 +2969,7 @@ public class ZMailbox {
             ZSearchParams params = new ZSearchParams(searchQuery.toString());
             params.setCalExpandInstStart(startMsec);
             params.setCalExpandInstEnd(endMsec);
-            params.setTypes(ZSearchParams.TYPE_APPOINTMENT);
+            params.setTypes(types);
             params.setLimit(2000);
             params.setSortBy(SearchSortBy.dateAsc);
             int n = 0;

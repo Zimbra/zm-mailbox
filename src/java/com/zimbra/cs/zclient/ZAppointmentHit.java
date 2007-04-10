@@ -113,6 +113,7 @@ public class ZAppointmentHit implements ZSearchHit {
     private String mConvId;
     private long mHitDate;
     private boolean mInstanceExpanded;
+    private boolean mIsTask;
     
     private long mStartTime;
     private long mEndTime;
@@ -121,11 +122,11 @@ public class ZAppointmentHit implements ZSearchHit {
 
     private String mFolderId;
 
-    private ZAppointmentHit() {
+    ZAppointmentHit() {
 
     }
 
-    public static void addInstances(Element e, List<ZSearchHit> appts, TimeZone timeZone) throws ServiceException {
+    static void addInstances(Element e, List<ZSearchHit> appts, TimeZone timeZone, boolean isTask) throws ServiceException {
         String id = e.getAttribute(MailConstants.A_ID);
         String freeBusyActual = e.getAttribute(MailConstants.A_APPT_FREEBUSY_ACTUAL, null);
         String transparency = e.getAttribute(MailConstants.A_APPT_TRANSPARENCY, null);
@@ -165,7 +166,7 @@ public class ZAppointmentHit implements ZSearchHit {
         }
 
         for (Element inst : instances) {
-            ZAppointmentHit appt = new ZAppointmentHit();
+            ZAppointmentHit appt = isTask ? new ZTaskHit() : new ZAppointmentHit();
             appt.mInstanceExpanded = !noInstances;
             appt.mFolderId = folderId;
             appt.mId = id;
@@ -174,6 +175,7 @@ public class ZAppointmentHit implements ZSearchHit {
             appt.mSortField = sortField;
             appt.mConvId = convId;
             appt.mHitDate = hitDate;
+            appt.mIsTask = isTask;
 
             appt.mIsAllDay = inst.getAttributeBool(MailConstants.A_CAL_ALLDAY, isAllDay);
             appt.mTimeZoneOffset = inst.getAttributeLong(MailConstants.A_CAL_TZ_OFFSET, 0);
@@ -239,6 +241,10 @@ public class ZAppointmentHit implements ZSearchHit {
         return mFolderId;
     }
 
+    public boolean getIsTask() {
+        return mIsTask;
+    }
+    
     public long getSize() {
         return mSize;
     }
@@ -290,6 +296,7 @@ public class ZAppointmentHit implements ZSearchHit {
         sb.add("score", mScore);
         sb.add("conversationId", mConvId);
         sb.add("size", mSize);
+        sb.add("isTask", mIsTask);
         sb.addDate("hitDate", mHitDate);
         sb.endStruct();
         return sb.toString();
