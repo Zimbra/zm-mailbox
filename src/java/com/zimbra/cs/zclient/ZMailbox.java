@@ -3157,4 +3157,8 @@ public class ZMailbox {
         req.addAttribute(MailConstants.A_SYNC, true);
         return new ZAppointment(invoke(req));
     }
+
+    public void clearMessageCache() {
+        mMessageCache.clear();
+    }
 }
