@@ -194,7 +194,9 @@ public class DavElements {
 	public static final String P_WRITE_CONTENT = "write-content";
 	public static final String P_WRITE_PROPERTIES = "write-properties";
 	
-	public static final String ORGANIZER_HREF = "X-ORGANIZER-HREF";
+	public static final String ORGANIZER        = "ORGANIZER";
+	public static final String ORGANIZER_HREF   = "X-ORGANIZER-HREF";
+	public static final String ORGANIZER_MAILTO = "X-ORGANIZER-MAILTO";
 	
 
 	// QNames

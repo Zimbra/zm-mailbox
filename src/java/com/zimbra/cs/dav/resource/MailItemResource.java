@@ -85,7 +85,7 @@ public abstract class MailItemResource extends DavResource {
 		mFolderId = item.getFolderId();
 		mId = item.getId();
 		mType = item.getType();
-		mEtag = "\""+Long.toString(item.getChangeDate())+"\"";
+		mEtag = MailItemResource.getEtag(item);
 		mSubject = item.getSubject();
 		mPath = item.getPath();
 		mModifiedDate = item.getDate();
@@ -306,5 +306,9 @@ public abstract class MailItemResource extends DavResource {
 		writer.write(e);
 		buf.append(new String(baos.toByteArray()));
 		return new ByteArrayInputStream(buf.toString().getBytes("UTF-8"));
+	}
+	
+	public static String getEtag(MailItem item) {
+		return "\""+Long.toString(item.getModifiedSequence())+"-"+Long.toString(item.getChangeDate())+"\"";
 	}
 }

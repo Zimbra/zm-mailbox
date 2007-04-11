@@ -90,19 +90,18 @@ public class CalendarCollection extends Collection {
 		
 		// the display name can be a user friendly string like "John Smith's Calendar".
 		// but the problem is the name may be too long to fit into the field in UI.
-		//String displayName = acct.getAttr(Provisioning.A_displayName) + "'s" + f.getName();
-		String displayName = f.getName();
-		ResourceProperty desc = new ResourceProperty(DavElements.E_CALENDAR_DESCRIPTION);
 		Locale lc = acct.getLocale();
+		String description = L10nUtil.getMessage(MsgKey.caldavCalendarDescription, lc, acct.getAttr(Provisioning.A_displayName), f.getName());
+		ResourceProperty desc = new ResourceProperty(DavElements.E_CALENDAR_DESCRIPTION);
 		desc.setMessageLocale(lc);
-		desc.setStringValue(L10nUtil.getMessage(MsgKey.caldavCalendarDescription, lc, displayName));
+		desc.setStringValue(description);
 		desc.setProtected(true);
 		addProperty(desc);
 		addProperty(CalDavProperty.getSupportedCalendarComponentSet());
 		addProperty(CalDavProperty.getSupportedCalendarData());
 		addProperty(CalDavProperty.getSupportedCollationSet());
 		
-		setProperty(DavElements.E_DISPLAYNAME, displayName);
+		setProperty(DavElements.E_DISPLAYNAME, f.getName());
 		setProperty(DavElements.E_PRINCIPAL_URL, UrlNamespace.getResourceUrl(this), true);
 		setProperty(DavElements.E_ALTERNATE_URI_SET, null, true);
 		setProperty(DavElements.E_GROUP_MEMBER_SET, null, true);
@@ -230,10 +229,9 @@ public class CalendarCollection extends Collection {
 				throw new DavException("event already exists", HttpServletResponse.SC_CONFLICT, null);
 			
 			if (isUpdate) {
-				CalendarObject calObj = new CalendarObject(ctxt, calItem);
-				ResourceProperty etagProp = calObj.getProperty(DavElements.P_GETETAG);
-				if (!etagProp.getStringValue().equals(etag))
-					throw new DavException("event has different etag ("+etagProp.getStringValue()+") vs "+etag, HttpServletResponse.SC_CONFLICT, null);
+				String itemEtag = CalendarObject.getEtag(calItem);
+				if (!itemEtag.equals(etag))
+					throw new DavException("event has different etag ("+itemEtag+") vs "+etag, HttpServletResponse.SC_CONFLICT, null);
 			}
 			for (Invite i : invites) {
 				// check for valid uid.
@@ -260,7 +258,6 @@ public class CalendarCollection extends Collection {
 						href.setValue(addr);
 					}
 				}
-				//ZimbraLog.dav.debug(i);
 				mbox.addInvite(ctxt.getOperationContext(), i, mId, false, null);
 			}
 			calItem = mbox.getCalendarItemByUid(ctxt.getOperationContext(), uid);
