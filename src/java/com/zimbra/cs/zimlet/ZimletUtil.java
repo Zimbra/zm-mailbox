@@ -68,8 +68,6 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.*;
 import com.zimbra.common.soap.*;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.Element.XMLElement;
 
 /**
@@ -1148,13 +1146,13 @@ public class ZimletUtil {
 				if (listener != null)
 					listener.markFinished(server);
 			} catch (Exception e) {
+				ZimbraLog.zimlet.info("deploy failed on "+server.getName(), e);
 				if (listener != null)
 					listener.markFailed(server);
 				else if (e instanceof ServiceException)
 					throw (ServiceException)e;
 				else 
 					throw ServiceException.FAILURE("Unable to deploy Zimlet " + zimlet + " on " + server.getName(), e);
-				ZimbraLog.zimlet.info("deploy", e);
 			} finally {
 				if (mTransport != null)
 					mTransport.shutdown();
@@ -1432,7 +1430,10 @@ public class ZimletUtil {
 				break;
 			}
 		} catch (Exception e) {
-			System.out.println("Error: " + e.getMessage());
+			if (sQuietMode)
+				ZimbraLog.zimlet.error("Error " + e.getMessage());
+			else
+				ZimbraLog.zimlet.error("Error", e);
 			System.exit(1);
 		}
 	}
