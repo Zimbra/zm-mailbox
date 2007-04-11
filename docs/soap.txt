@@ -393,6 +393,9 @@ an authToken can be passed instead of account/password/preauth to validate an ex
         username="mylogin" l="{folder-id}"/>
      ...
    </dataSources>*
+   <childAccounts>
+        <childAccount name="{child-account-name}" visible="0|1" id="{child-account-id}"></childAccount>*
+   </childAccounts>
    [<license status="inGracePeriod|bad"/>]
 </GetInfoResponse>
  

@@ -28,6 +28,7 @@
  */
 package com.zimbra.cs.service.account;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -86,6 +87,9 @@ public class GetInfo extends AccountDocumentHandler  {
         doIdentities(ids, acct);
         Element ds = response.addUniqueElement(AccountConstants.E_DATA_SOURCES);
         doDataSources(ds, acct, lc);
+        Element ca = response.addUniqueElement(AccountConstants.E_CHILD_ACCOUNTS);
+        doChildAccounts(ca, acct);
+        
         GetAccountInfo.addUrls(response, acct);
         
         return response;
@@ -170,6 +174,64 @@ public class GetInfo extends AccountDocumentHandler  {
             }
         } catch (ServiceException se) {
             ZimbraLog.mailbox.error("Unable to get data sources", se);
+        }
+    }
+ 
+    private static void doChildAccounts(Element ca, Account acct) throws ServiceException {
+        String[] childAccounts = acct.getMultiAttr(Provisioning.A_zimbraChildAccount);
+        String[] visibleChildAccounts = acct.getMultiAttr(Provisioning.A_zimbraChildVisibleAccount);
+
+        if (childAccounts.length > 0 || visibleChildAccounts.length > 0) {
+            
+            class ChildInfo {
+                public boolean mVisible;
+                public String mName;
+                ChildInfo(boolean visible) {
+                    mVisible = visible;
+                }
+            }
+            
+            Map<String, ChildInfo> children = new HashMap<String, ChildInfo>();
+            for (int i = 0; i < visibleChildAccounts.length; i++) {
+                children.put(visibleChildAccounts[i], new ChildInfo(true));
+            }
+            for (int i = 0; i < childAccounts.length; i++) {
+                if (!children.containsKey(childAccounts[i]))
+                    children.put(childAccounts[i], new ChildInfo(false));
+            }
+            
+            Provisioning prov = Provisioning.getInstance();
+            int flags = Provisioning.SA_ACCOUNT_FLAG;
+            StringBuilder query = new StringBuilder();
+            query.append("(|");
+            for (Iterator it=children.keySet().iterator(); it.hasNext();) {
+                query.append(String.format("(%s=%s)", Provisioning.A_zimbraId, (String)it.next()));
+            }
+            query.append(")");
+            
+            List accounts = prov.searchAccounts(query.toString(), null, null, true, flags);
+            
+            for (Object obj: accounts) {
+                if (!(obj instanceof Account))
+                    throw ServiceException.FAILURE("child id is not an account", null);
+                Account childAcct = (Account)obj;
+                String childId = childAcct.getId();
+                String childName = childAcct.getName();
+                
+                ChildInfo ci = children.get(childId);
+                assert(ci.mName == null);
+                ci.mName = childName;
+            }
+            
+            for (Iterator it=children.entrySet().iterator(); it.hasNext();) {
+                Map.Entry entry = (Map.Entry)it.next();
+                String id = (String)entry.getKey();
+                ChildInfo ci = (ChildInfo)entry.getValue();
+                Element acctElem = ca.addElement(AccountConstants.E_CHILD_ACCOUNT);
+                acctElem.addAttribute(AccountConstants.A_ID, id);
+                acctElem.addAttribute(AccountConstants.A_NAME, ci.mName);
+                acctElem.addAttribute(AccountConstants.A_VISIBLE, ci.mVisible);
+            }
         }
     }
 }

@@ -1165,7 +1165,13 @@ public abstract class Provisioning {
      */
     public static final String A_zimbraAdminSavedSearches = "zimbraAdminSavedSearches";
 
-    
+    /*
+     * family mailboxes
+     */
+    public static final String A_zimbraChildAccount          = "zimbraChildAccount";
+    public static final String A_zimbraChildVisibleAccount   = "zimbraChildVisibleAccount";
+    public static final String A_zimbraFeatureOptionsEnabled = "zimbraFeatureOptionsEnabled";
+
     private static Provisioning sProvisioning;
 
     public synchronized static Provisioning getInstance() {

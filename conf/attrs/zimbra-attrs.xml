@@ -2037,4 +2037,17 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>portal name</desc>
 </attr>
 
+<attr id="449" name="zimbraChildAccount" type="id" cardinality="multi" optionalIn="account" flags="domainAdminModifiable">
+  <desc>zimbraId of child accounts</desc>
+</attr>
+
+<attr id="450" name="zimbraChildVisibleAccount" type="id" cardinality="multi" optionalIn="account" flags="domainAdminModifiable">
+  <desc>zimbraId of visible child accounts</desc>
+</attr>
+
+<attr id="451" name="zimbraFeatureOptionsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether an account can modify its zimbraPref* attributes</desc>
+</attr>
+
 </attrs>
