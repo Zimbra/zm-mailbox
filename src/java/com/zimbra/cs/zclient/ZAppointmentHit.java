@@ -56,6 +56,7 @@ public class ZAppointmentHit implements ZSearchHit {
     public static final String PSTATUS_DELEGATED = "DG";
 
     public enum Flag {
+        flagged('f'),
         attachment('a');
 
         private char mFlagChar;
@@ -379,10 +380,14 @@ public class ZAppointmentHit implements ZSearchHit {
         return mFlags != null && mFlags.length() > 0;
     }
 
-    public boolean hasTags() { return mTags != null && mTags.length() > 0; }
+    public boolean getHasTags() { return mTags != null && mTags.length() > 0; }
 
-    public boolean hasAttachment() { return hasFlags() && mFlags.indexOf(ZAppointmentHit.Flag.attachment.getFlagChar()) != -1; }
+    public boolean getHasAttachment() { return hasFlags() && mFlags.indexOf(ZAppointmentHit.Flag.attachment.getFlagChar()) != -1; }
 
+    public boolean getIsFlagged() {
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.flagged.getFlagChar()) != -1;
+    }
+    
     public boolean isInRange(long start, long end) {
         return mStartTime < end && mEndTime > start;
     }
