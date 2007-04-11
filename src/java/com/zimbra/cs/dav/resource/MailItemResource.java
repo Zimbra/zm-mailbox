@@ -257,9 +257,9 @@ public abstract class MailItemResource extends DavResource {
 
 	protected boolean isWebRequest(DavContext ctxt) {
 		String userAgent = ctxt.getRequest().getHeader(DavProtocol.HEADER_USER_AGENT);
-		if (userAgent == null || 
-				userAgent.indexOf("MSIE") >= 0 ||
-				userAgent.indexOf("Mozilla") >= 0) {
+		if (userAgent != null && 
+				(userAgent.indexOf("MSIE") >= 0 ||
+				 userAgent.indexOf("Mozilla") >= 0)) {
 			return true;
 		}
 		return false;
@@ -282,11 +282,11 @@ public abstract class MailItemResource extends DavResource {
 		StringBuilder buf = new StringBuilder();
 		buf.append("Request\n\n");
 		buf.append("\tAuthenticated user:\t").append(ctxt.getAuthAccount().getName()).append("\n");
-		buf.append("\tCurrent date:\t").append(new Date(System.currentTimeMillis())).append("\n");
+		buf.append("\tCurrent date:\t\t").append(new Date(System.currentTimeMillis())).append("\n");
 		buf.append("\nResource\n\n");
-		buf.append("\tName:\t").append(mSubject).append("\n");
-		buf.append("\tPath:\t").append(mPath).append("\n");
-		buf.append("\tDate:\t").append(new Date(mModifiedDate)).append("\n");
+		buf.append("\tName:\t\t\t").append(mSubject).append("\n");
+		buf.append("\tPath:\t\t\t").append(mPath).append("\n");
+		buf.append("\tDate:\t\t\t").append(new Date(mModifiedDate)).append("\n");
 		buf.append("\tOwner account Id:\t").append(mOwnerId).append("\n");
 		try {
 			Provisioning prov = Provisioning.getInstance();

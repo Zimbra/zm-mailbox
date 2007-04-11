@@ -70,7 +70,12 @@ public class Notebook extends MailItemResource {
 				return mDoc.getRawDocument();
 			Wiki wiki = Wiki.getInstance(mWctxt, mDoc.getAccount().getId(), mDoc.getFolderId());
 			String val = wiki.getTemplate(mWctxt, mDoc.getName()).getComposedPage(mWctxt, mDoc, "_Template");
-			return new ByteArrayInputStream(val.getBytes());
+			StringBuilder buf = new StringBuilder();
+			buf.append("<html><head>");
+			buf.append("<title>").append(mDoc.getName()).append("</title>");
+			buf.append("<link rel='stylesheet' type='text/css' href='/zimbra/css/wiki.css'>");
+			buf.append("</head><body style='margin:0px'>").append(val).append("</body></html>");
+			return new ByteArrayInputStream(buf.toString().getBytes());
 		} catch (ServiceException se) {
 			throw new DavException("cannot get contents", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, se);
 		}
