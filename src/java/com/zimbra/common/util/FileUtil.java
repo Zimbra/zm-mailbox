@@ -55,6 +55,10 @@ public class FileUtil {
 	}
 
     public static void copy(File from, File to) throws IOException {
+        copy(from, to, false);
+    }
+
+    public static void copy(File from, File to, boolean sync) throws IOException {
     	FileInputStream fin = null;
     	FileOutputStream fout = null;
     	try {
@@ -67,6 +71,8 @@ public class FileUtil {
     		if (target != transferred) {
     			throw new IOException("FileUtil.copy(" + from + "," + to + "): incomplete transfer target=" + target + " transferred=" + transferred); 
     		}
+            if (sync)
+                cout.force(true);
     	} finally {
     		if (fin != null) {
     			try {
@@ -86,11 +92,19 @@ public class FileUtil {
     }
 
     public static void copyOIO(File src, File dest) throws IOException {
+        copyOIO(src, dest, false);
+    }
+
+    public static void copyOIO(File src, File dest, boolean sync) throws IOException {
         byte[] buf = new byte[COPYBUFLEN];
-        copyOIO(src, dest, buf);
+        copyOIO(src, dest, buf, sync);
     }
 
     public static void copyOIO(File src, File dest, byte[] buf) throws IOException {
+        copyOIO(src, dest, buf, false);
+    }
+
+    public static void copyOIO(File src, File dest, byte[] buf, boolean sync) throws IOException {
         FileInputStream fis = null;
         FileOutputStream fos = null;
         try {
@@ -100,6 +114,8 @@ public class FileUtil {
             while ((byteRead = fis.read(buf)) != -1) {
                 fos.write(buf, 0, byteRead);
             }
+            if (sync)
+                fos.getChannel().force(true);
         } finally {
             if (fos != null) {
                 try {
