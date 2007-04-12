@@ -285,6 +285,9 @@ public class AdminConstants {
     public static final QName MODIFY_ADMIN_SAVED_SEARCHES_REQUEST = QName.get("ModifyAdminSavedSearchesRequest", NAMESPACE);
     public static final QName MODIFY_ADMIN_SAVED_SEARCHES_RESPONSE = QName.get("ModifyAdminSavedSearchesResponse", NAMESPACE);
     
+    // Soap logger
+    public static final QName SOAP_LOGGER_REQUEST = QName.get("SoapLoggerRequest", NAMESPACE);
+    public static final QName SOAP_LOGGER_RESPONSE = QName.get("SoapLoggerResponse", NAMESPACE);
     
     // DumpSessions
     public static final String E_SESSION = "session";

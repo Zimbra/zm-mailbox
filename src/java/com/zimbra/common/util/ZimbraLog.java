@@ -169,6 +169,12 @@ public class ZimbraLog {
      * the "zimbra.soap" logger. For soap-related events
      */
     public static final Log soap = LogFactory.getLog("zimbra.soap");
+    
+    /**
+     * the "zimbra.acctrace" logger.  For tracing soap requests to/from specific accounts
+     * (see the <SoapLoggerRequest> admin command
+     */
+    public static final Log acctrace = LogFactory.getLog("zimbra.acctrace");
 
     /**
      * the "zimbra.test" logger. For testing-related events
