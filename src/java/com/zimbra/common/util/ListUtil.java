@@ -36,6 +36,28 @@ public class ListUtil {
 	public static boolean isEmpty(Collection c) {
 		return (c == null || c.size() == 0);
 	}
+    
+	/**
+     * Given two unsorted lists, return TRUE if they contain exactly the same things
+     * (regardless of order)
+     * 
+	 * @param <T>
+	 * @param lhs
+	 * @param rhs
+	 * @return
+	 */
+	public static <T> boolean listsEqual(List<T> lhs, List<T> rhs) {
+        if (lhs.size() != rhs.size())
+            return false;
+        
+        HashSet<T> set = new HashSet<T>();
+        set.addAll(lhs);
+        for (T t: rhs) {
+            if (!set.remove(t))
+                return false;
+        }
+        return (set.size() == 0);
+    }
 	
     /**
      * Merge two sorted Lists
