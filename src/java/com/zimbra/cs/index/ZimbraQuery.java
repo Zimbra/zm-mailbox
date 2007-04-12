@@ -2287,7 +2287,7 @@ public final class ZimbraQuery {
 
             if (targets.size() > 1) {
                 UnionQueryOperation union = (UnionQueryOperation)mOp;
-                mOp = union.runRemoteSearches(proto, mMbox, octxt, mbidx, mParams.getTypes(), mParams.getSortBy(), 0, mChunkSize, mParams.getMode());
+                mOp = union.runRemoteSearches(proto, mMbox, octxt, mbidx, mParams);
             } else {
                 if (targets.hasExternalTargets()) {
                     RemoteQueryOperation remote = new RemoteQueryOperation();
@@ -2302,7 +2302,7 @@ public final class ZimbraQuery {
                     // important code there (permissions checks).  FIXME!
                     UnionQueryOperation union = new UnionQueryOperation();
                     union.add(mOp);
-                    mOp = union.runRemoteSearches(proto, mMbox, octxt, mbidx, mParams.getTypes(), mParams.getSortBy(), 0, mChunkSize, mParams.getMode());
+                    mOp = union.runRemoteSearches(proto, mMbox, octxt, mbidx, mParams);
                     mOp = mOp.optimize(mMbox);
                 }
             }

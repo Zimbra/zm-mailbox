@@ -223,7 +223,7 @@ class UnionQueryOperation extends QueryOperation
         }
     }
     
-    QueryOperation runRemoteSearches(SoapProtocol proto, Mailbox mbox, OperationContext octxt, MailboxIndex mbidx, byte[] types, SortBy searchOrder, int offset, int limit, Mailbox.SearchResultMode mode) 
+    QueryOperation runRemoteSearches(SoapProtocol proto, Mailbox mbox, OperationContext octxt, MailboxIndex mbidx, SearchParams params) 
     throws ServiceException, IOException {
 
         boolean hasRemoteOps = false;
@@ -302,8 +302,6 @@ class UnionQueryOperation extends QueryOperation
                 if (toSetup instanceof RemoteQueryOperation) {
                     try {
                         RemoteQueryOperation remote = (RemoteQueryOperation) toSetup;
-                        SearchParams params = (SearchParams)mParams.clone();
-                        params.setLimit(limit);
                         remote.setup(proto, octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges(), params);
                     } catch(Exception e) {
                         ZimbraLog.index.info("Ignoring "+e+" during RemoteQuery generation for "+this.toString());
