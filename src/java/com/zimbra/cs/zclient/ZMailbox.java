@@ -2931,6 +2931,7 @@ public class ZMailbox {
         }
 
         Map<String, ZApptSummaryResult> folder2List = new HashMap<String, ZApptSummaryResult>();
+        Map<String, String> folderIdMapper = new HashMap<String, String>();
 
         if (!idsToFetch.isEmpty()) {
             StringBuilder searchQuery = new StringBuilder();
@@ -2943,6 +2944,12 @@ public class ZMailbox {
                 ZApptSummaryResult result = new ZApptSummaryResult(startMsec, endMsec, folderId, timeZone, appts, query);
                 summaries.add(result);
                 folder2List.put(folderId, result);
+                ZFolder folder = getFolderById(folderId);
+                if (folder != null && folder instanceof ZMountpoint) {
+                    folderIdMapper.put(((ZMountpoint)folder).getCanonicalRemoteId(), folderId);
+                } else {
+                    folderIdMapper.put(folderId, folderId);
+                }
             }
             searchQuery.append(")");
             
@@ -2964,7 +2971,8 @@ public class ZMailbox {
                 for (ZSearchHit hit : result.getHits()) {
                     if (hit instanceof ZAppointmentHit) {
                         ZAppointmentHit as = (ZAppointmentHit) hit;
-                        ZApptSummaryResult r = folder2List.get(as.getFolderId());
+                        String fid = folderIdMapper.get(as.getFolderId());
+                        ZApptSummaryResult r = folder2List.get(fid);
                         if (r != null) r.getAppointments().add(as);
                     }
                 }
