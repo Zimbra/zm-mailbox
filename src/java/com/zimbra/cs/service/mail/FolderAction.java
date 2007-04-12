@@ -259,7 +259,7 @@ public class FolderAction extends ItemAction {
         return null;
     }
 
-    static NamedEntry lookupEmailAddress(String name) throws ServiceException {
+    public static NamedEntry lookupEmailAddress(String name) throws ServiceException {
     	NamedEntry nentry = null;
         Provisioning prov = Provisioning.getInstance();
         nentry = prov.get(AccountBy.name, name);
@@ -268,14 +268,14 @@ public class FolderAction extends ItemAction {
         return nentry;
     }
     
-    static NamedEntry lookupGranteeByName(String name, byte type, ZimbraSoapContext lc) throws ServiceException {
+    static NamedEntry lookupGranteeByName(String name, byte type, ZimbraSoapContext zsc) throws ServiceException {
         if (type == ACL.GRANTEE_AUTHUSER || type == ACL.GRANTEE_PUBLIC || type == ACL.GRANTEE_GUEST)
             return null;
 
         Provisioning prov = Provisioning.getInstance();
         // for addresses, default to the authenticated user's domain
         if ((type == ACL.GRANTEE_USER || type == ACL.GRANTEE_GROUP) && name.indexOf('@') == -1) {
-            Account authacct = prov.get(AccountBy.id, lc.getAuthtokenAccountId());
+            Account authacct = prov.get(AccountBy.id, zsc.getAuthtokenAccountId());
             String authname = (authacct == null ? null : authacct.getName());
             if (authacct != null)
                 name += authname.substring(authname.indexOf('@'));
@@ -301,7 +301,7 @@ public class FolderAction extends ItemAction {
         }
     }
 
-    static NamedEntry lookupGranteeByZimbraId(String zid, byte type) {
+    public static NamedEntry lookupGranteeByZimbraId(String zid, byte type) {
         Provisioning prov = Provisioning.getInstance();
         try {
             switch (type) {

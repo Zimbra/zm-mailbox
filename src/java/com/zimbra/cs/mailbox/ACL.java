@@ -28,6 +28,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -314,12 +315,12 @@ public class ACL {
     }
 
     /** Removes the set of rights granted to the specified id.  If no rights
-     *  were previously granted to the target, no error is  thrown and 
+     *  were previously granted to the target, no error is thrown and 
      *  <tt>false</tt> is returned.
      * 
      * @param zimbraId  The zimbraId of the entry being revoked rights.
      * @return whether an {@link Grant} was actually removed from the set. */
-    boolean revokeAccess(String zimbraId) {
+    public boolean revokeAccess(String zimbraId) {
         if (mGrants == null || mGrants.isEmpty())
             return false;
         int count = mGrants.size();
@@ -340,6 +341,7 @@ public class ACL {
         return mlist;
     }
 
+    @Override
     public String toString() {
         return encode().toString();
     }
@@ -347,10 +349,10 @@ public class ACL {
     /** Returns a different <tt>ACL</tt> with the same contents. */
     public ACL duplicate()  { return new ACL(encode()); }
 
-    /** Returns an <tt>Iterator</tt> over this <tt>ACL</tt>'s set of
-     *  encapsulated {@link ACL.Grant} objects. */
-    public Iterator<Grant> grantIterator() {
-        return mGrants.iterator();
+    /** Returns the list of this <tt>ACL</tt>'s set of encapsulated
+     *  {@link ACL.Grant} objects. */
+    public List<Grant> getGrants() {
+        return Collections.unmodifiableList(mGrants);
     }
 
     public static final char ABBR_READ = 'r';

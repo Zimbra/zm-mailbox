@@ -59,8 +59,10 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
 import com.zimbra.cs.imap.ImapCredentials.EnabledHack;
@@ -81,6 +83,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.mail.FolderAction;
 import com.zimbra.cs.service.mail.ItemActionHelper;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.stats.StatsFile;
@@ -89,6 +92,7 @@ import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZGrant;
 import com.zimbra.cs.zclient.ZMailbox;
 
 /**
@@ -294,6 +298,11 @@ public abstract class ImapHandler extends ProtocolHandler {
                         req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mCredentials);
                         checkEOF(tag, req);
                         return doDELETE(tag, path);
+                    } else if (command.equals("DELETEACL") && extensionEnabled("ACL")) {
+                        req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mCredentials);
+                        req.skipSpace();  String principal = req.readAstring();
+                        checkEOF(tag, req);
+                        return doDELETEACL(tag, path, principal);
                     }
                     break;
                 case 'E':
@@ -324,6 +333,10 @@ public abstract class ImapHandler extends ProtocolHandler {
                         req.skipSpace();  ImapPath qroot = new ImapPath(req.readAstring(), mCredentials);
                         checkEOF(tag, req);
                         return doGETQUOTA(tag, qroot);
+                    } else if (command.equals("GETACL") && extensionEnabled("ACL")) {
+                        req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mCredentials);
+                        checkEOF(tag, req);
+                        return doGETACL(tag, path);
                     } else if (command.equals("GETQUOTAROOT") && extensionEnabled("QUOTA")) {
                         req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mCredentials);
                         checkEOF(tag, req);
@@ -359,6 +372,18 @@ public abstract class ImapHandler extends ProtocolHandler {
                         req.skipSpace();  String pattern = req.readFolderPattern();
                         checkEOF(tag, req);
                         return doLSUB(tag, base, pattern);
+                    } else if (command.equals("LISTRIGHTS") && extensionEnabled("ACL")) {
+                        req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mCredentials);
+                        req.skipSpace();  String principal = req.readAstring();
+                        checkEOF(tag, req);
+                        return doLISTRIGHTS(tag, path, principal);
+                    }
+                    break;
+                case 'M':
+                    if (command.equals("MYRIGHTS") && extensionEnabled("ACL")) {
+                        req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mCredentials);
+                        checkEOF(tag, req);
+                        return doMYRIGHTS(tag, path);
                     }
                     break;
                 case 'N':
@@ -448,6 +473,15 @@ public abstract class ImapHandler extends ProtocolHandler {
                         req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mCredentials);
                         checkEOF(tag, req);
                         return doSUBSCRIBE(tag, path);
+                    } else if (command.equals("SETACL") && extensionEnabled("ACL")) {
+                        StoreAction action = StoreAction.REPLACE;
+                        req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mCredentials);
+                        req.skipSpace();  String principal = req.readAstring();
+                        req.skipSpace();  String i4rights = req.readAstring();
+                        checkEOF(tag, req);
+                        if (i4rights.startsWith("+"))       { action = StoreAction.ADD;  i4rights = i4rights.substring(1); }
+                        else if (i4rights.startsWith("-"))  { action = StoreAction.REMOVE;  i4rights = i4rights.substring(1); }
+                        return doSETACL(tag, path, principal, i4rights, action);
                     } else if (command.equals("SETQUOTA") && extensionEnabled("QUOTA")) {
                         Map<String, String> limits = new HashMap<String, String>();
                         req.skipSpace();  String qroot = req.readAstring();
@@ -558,9 +592,9 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     private static final String[] SUPPORTED_EXTENSIONS = new String[] {
-        "BINARY", "CATENATE", "CHILDREN", "ESEARCH", "ID", "IDLE",
+        "ACL", "BINARY", "CATENATE", "CHILDREN", "ESEARCH", "ID", "IDLE",
         "LITERAL+", "LOGIN-REFERRALS", "MULTIAPPEND", "NAMESPACE", "QUOTA",
-        "SASL-IR", "UIDPLUS", "UNSELECT", "WITHIN", "X-DRAFT-I05-SEARCHRES"
+        "RIGHTS=ektx", "SASL-IR", "UIDPLUS", "UNSELECT", "WITHIN", "X-DRAFT-I05-SEARCHRES"
     };
 
     private void sendCapability() throws IOException {
@@ -568,6 +602,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         // [LOGINDISABLED]    RFC 3501: Internet Message Access Protocol - Version 4rev1
         // [STARTTLS]         RFC 3501: Internet Message Access Protocol - Version 4rev1
         // [AUTH=PLAIN]       RFC 2595: Using TLS with IMAP, POP3 and ACAP
+        // [ACL]              RFC 4314: IMAP4 Access Control List (ACL) Extension
         // [BINARY]           RFC 3516: IMAP4 Binary Content Extension
         // [CATENATE]         RFC 4469: Internet Message Access Protocol (IMAP) CATENATE Extension
         // [CHILDREN]         RFC 3348: IMAP4 Child Mailbox Extension
@@ -579,6 +614,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         // [MULTIAPPEND]      RFC 3502: Internet Message Access Protocol (IMAP) - MULTIAPPEND Extension
         // [NAMESPACE]        RFC 2342: IMAP4 Namespace
         // [QUOTA]            RFC 2087: IMAP4 QUOTA extension
+        // [RIGHTS=ektx]      RFC 4314: IMAP4 Access Control List (ACL) Extension
         // [SASL-IR]          draft-siemborski-imap-sasl-initial-response-06: IMAP Extension for SASL Initial Client Response
         // [UIDPLUS]          RFC 4315: Internet Message Access Protocol (IMAP) - UIDPLUS extension
         // [UNSELECT]         RFC 3691: IMAP UNSELECT command
@@ -605,6 +641,8 @@ public abstract class ImapHandler extends ProtocolHandler {
         // check whether one of the extension's prerequisites is disabled on the server
         if (extension.equalsIgnoreCase("X-DRAFT-I05-SEARCHRES"))
             return extensionEnabled("ESEARCH");
+        if (extension.equalsIgnoreCase("RIGHTS=ektx"))
+            return extensionEnabled("ACL");
         // see if the user's session has disabled the extension
         if (extension.equalsIgnoreCase("IDLE") && mCredentials != null && mCredentials.isHackEnabled(EnabledHack.NO_IDLE))
             return false;
@@ -1224,11 +1262,11 @@ public abstract class ImapHandler extends ProtocolHandler {
         long tags = 0;
         short sflags = 0;
 
-        Append(List<String> flags, Date date, byte[] content) {
-            mFlagNames = flags;  mDate = date;  mContent = content;
+        Append(List<String> flagNames, Date date, byte[] content) {
+            mFlagNames = flagNames;  mDate = date;  mContent = content;
         }
-        Append(List<String> flags, Date date, List<Object> parts) {
-            mFlagNames = flags;  mDate = date;  mParts = parts;
+        Append(List<String> flagNames, Date date, List<Object> parts) {
+            mFlagNames = flagNames;  mDate = date;  mParts = parts;
         }
     }
 
@@ -1377,30 +1415,6 @@ public abstract class ImapHandler extends ProtocolHandler {
         }
     }
 
-//    List<ImapFlag> findOrCreateTags(Mailbox mbox, List<String> tagNames, List<Tag> newTags) throws ServiceException {
-//        if (tagNames == null || tagNames.isEmpty())
-//            return Collections.emptyList();
-//
-//        List<ImapFlag> i4flags = getSystemFlags(tagNames);
-//        if (tagNames.isEmpty())
-//            return i4flags;
-//
-//        ImapFlagCache i4cache = new ImapFlagCache(mbox, mCredentials.getContext());
-//        for (String name : tagNames) {
-//            ImapFlag i4flag = i4cache.getByName(name);
-//            if (i4flag == null) {
-//                if (newTags == null)
-//                    continue;
-//
-//                Tag ltag = mbox.createTag(getContext(), name, MailItem.DEFAULT_COLOR);
-//                i4flags.add(i4flag = new ImapFlag(name, ltag, true));
-//                newTags.add(ltag);
-//            }
-//            i4flags.add(i4flag);
-//        }
-//        return i4flags;
-//    }
-
     private void deleteTags(List<Tag> ltags) {
         if (ltags == null || ltags.isEmpty())
             return;
@@ -1524,6 +1538,325 @@ public abstract class ImapHandler extends ProtocolHandler {
         sendUntagged("NAMESPACE ((\"\" \"/\")) ((\"" + ImapPath.NAMESPACE_PREFIX + "\" \"/\")) NIL");
         sendNotifications(true, false);
         sendOK(tag, "NAMESPACE completed");
+        return CONTINUE_PROCESSING;
+    }
+
+    private static final String IMAP_READ_RIGHTS   = "lr";
+    private static final String IMAP_WRITE_RIGHTS  = "sw";
+    private static final String IMAP_INSERT_RIGHTS = "ick";
+    private static final String IMAP_DELETE_RIGHTS = "xted";
+    private static final String IMAP_ADMIN_RIGHTS  = "a";
+
+    /** Returns whether all of a set of <tt>linked</tt> RFC 4314 rights is
+     *  contained within a string. */
+    private boolean allRightsPresent(final String i4rights, final String linked) {
+        for (int i = 0; i < linked.length(); i++)
+            if (i4rights.indexOf(linked.charAt(i)) == -1)
+                return false;
+        return true;
+    }
+
+    boolean doSETACL(String tag, ImapPath path, String principal, String i4rights, StoreAction action) throws IOException {
+        if (!checkState(tag, State.AUTHENTICATED))
+            return CONTINUE_PROCESSING;
+
+        // RFC 4314 2: "If rights are tied in an implementation, the implementation must be
+        //              conservative in granting rights in response to SETACL commands--unless
+        //              all rights in a tied set are specified, none of that set should be
+        //              included in the ACL entry for that identifier."
+        short rights = 0;
+        for (int i = 0; i < i4rights.length(); i++) {
+            char c = i4rights.charAt(i);
+            if (IMAP_READ_RIGHTS.indexOf(c) != -1) {
+                if (allRightsPresent(i4rights, IMAP_READ_RIGHTS))    rights |= ACL.RIGHT_READ;
+            } else if (IMAP_WRITE_RIGHTS.indexOf(c) != -1) {
+                if (allRightsPresent(i4rights, IMAP_WRITE_RIGHTS))   rights |= ACL.RIGHT_WRITE;
+            } else if (IMAP_INSERT_RIGHTS.indexOf(c) != -1) {
+                if (allRightsPresent(i4rights, IMAP_INSERT_RIGHTS))  rights |= ACL.RIGHT_INSERT;
+            } else if (IMAP_DELETE_RIGHTS.indexOf(c) != -1) {
+                if (allRightsPresent(i4rights, IMAP_DELETE_RIGHTS))  rights |= ACL.RIGHT_DELETE;
+            } else if (IMAP_ADMIN_RIGHTS.indexOf(c) != -1) {
+                if (allRightsPresent(i4rights, IMAP_ADMIN_RIGHTS))   rights |= ACL.RIGHT_ADMIN;
+            } else {
+                // RFC 4314 3.1: "Note that an unrecognized right MUST cause the command to return
+                //                the BAD response.  In particular, the server MUST NOT silently
+                //                ignore unrecognized rights."
+                ZimbraLog.imap.info("SETACL failed: invalid rights string: " + i4rights);
+                sendBAD(tag, "SETACL failed: invalid right");
+                return CONTINUE_PROCESSING;
+            }
+        }
+
+        try {
+            // make sure the requester has sufficient permissions to make the request
+            if ((path.getFolderRights() & ACL.RIGHT_ADMIN) == 0) {
+                ZimbraLog.imap.info("SETACL failed: user does not have admin access: " + path);
+                sendNO(tag, "SETACL failed");
+                return CONTINUE_PROCESSING;
+            }
+
+            // detect a no-op early and short-circuit out here
+            if (action != StoreAction.REPLACE && rights == 0) {
+                sendNotifications(true, false);
+                sendOK(tag, "SETACL completed");
+                return CONTINUE_PROCESSING;
+            }
+
+            // figure out who's being granted permissions
+            String granteeId = null;
+            byte granteeType = 0;
+            if (principal.equals("anyone")) {
+                granteeId = ACL.GUID_AUTHUSER;  granteeType = ACL.GRANTEE_AUTHUSER;
+            } else {
+                granteeType = ACL.GRANTEE_USER;
+                NamedEntry entry = Provisioning.getInstance().get(AccountBy.name, principal);
+                if (entry == null) {
+                    entry = Provisioning.getInstance().get(DistributionListBy.name, principal);
+                    granteeType = ACL.GRANTEE_GROUP;
+                }
+                if (entry != null)
+                    granteeId = entry.getId();
+            }
+            if (granteeId == null) {
+                ZimbraLog.imap.info("SETACL failed: cannot resolve principal: " + principal);
+                sendNO(tag, "SETACL failed");
+                return CONTINUE_PROCESSING;
+            }
+
+            Object folderobj = path.getFolder();
+            if (folderobj instanceof Folder) {
+                Folder folder = (Folder) folderobj;
+                short oldRights = 0, newRights = 0;
+                ACL acl = folder.getEffectiveACL();
+                if (acl != null) {
+                    for (ACL.Grant grant : acl.getGrants()) {
+                        if (grant.getGranteeId().equals(granteeId) || (granteeType == ACL.GRANTEE_AUTHUSER && grant.getGranteeType() == ACL.GRANTEE_PUBLIC))
+                            oldRights |= grant.getGrantedRights();
+                    }
+                }
+                if (action == StoreAction.REMOVE)    newRights = (short) (oldRights & ~rights);
+                else if (action == StoreAction.ADD)  newRights = (short) (oldRights | rights);
+                else                                 newRights = rights;
+
+                if (newRights != oldRights) {
+                    if (acl == null)
+                        acl = new ACL();
+                    acl.grantAccess(granteeId, granteeType, newRights, null);
+                    Mailbox mbox = (Mailbox) path.getOwnerMailbox();
+                    mbox.setPermissions(getContext(), folder.getId(), acl);
+                    mbox.alterTag(getContext(), folder.getId(), folder.getType(), Flag.ID_FLAG_NO_INHERIT, true);
+                }
+            }
+        } catch (ServiceException e) {
+            if (e.getCode().equals(ServiceException.PERM_DENIED))
+                ZimbraLog.imap.info("SETACL failed: permission denied on folder " + path);
+            else if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER))
+                ZimbraLog.imap.info("SETACL failed: no such folder " + path);
+            else if (e.getCode().equals(AccountServiceException.NO_SUCH_ACCOUNT))
+                ZimbraLog.imap.info("SETACL failed: no such account " + path.getOwner());
+            else
+                ZimbraLog.imap.warn("SETACL failed", e);
+            sendNO(tag, "SETACL failed");
+            return CONTINUE_PROCESSING;
+        }
+
+        sendNotifications(true, false);
+        sendOK(tag, "SETACL completed");
+        return CONTINUE_PROCESSING;
+    }
+
+    boolean doDELETEACL(String tag, ImapPath path, String principal) throws IOException {
+        if (!checkState(tag, State.AUTHENTICATED))
+            return CONTINUE_PROCESSING;
+
+        try {
+            // make sure the requester has sufficient permissions to make the request
+            if ((path.getFolderRights() & ACL.RIGHT_ADMIN) == 0) {
+                ZimbraLog.imap.info("DELETEACL failed: user does not have admin access: " + path);
+                sendNO(tag, "DELETEACL failed");
+                return CONTINUE_PROCESSING;
+            }
+    
+            Object folderobj = path.getFolder();
+            if (folderobj instanceof Folder) {
+                Folder folder = (Folder) folderobj;
+                ACL acl = folder.getEffectiveACL();
+                if (acl == null) {
+                    boolean modified = false;
+                    if (principal.equals("anyone")) {
+                        modified  = acl.revokeAccess(ACL.GUID_AUTHUSER);
+                        modified |= acl.revokeAccess(ACL.GUID_PUBLIC);
+                    } else {
+                        NamedEntry entry = Provisioning.getInstance().get(AccountBy.name, principal);
+                        if (entry == null)
+                            entry = Provisioning.getInstance().get(DistributionListBy.name, principal);
+                        if (entry != null)
+                            modified = acl.revokeAccess(entry.getId());
+                    }
+                    if (modified) {
+                        Mailbox mbox = (Mailbox) path.getOwnerMailbox();
+                        mbox.setPermissions(getContext(), folder.getId(), acl);
+                        mbox.alterTag(getContext(), folder.getId(), folder.getType(), Flag.ID_FLAG_NO_INHERIT, true);
+                    }
+                }
+            }
+        } catch (ServiceException e) {
+            if (e.getCode().equals(ServiceException.PERM_DENIED))
+                ZimbraLog.imap.info("DELETEACL failed: permission denied on folder " + path);
+            else if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER))
+                ZimbraLog.imap.info("DELETEACL failed: no such folder " + path);
+            else if (e.getCode().equals(AccountServiceException.NO_SUCH_ACCOUNT))
+                ZimbraLog.imap.info("DELETEACL failed: no such account " + path.getOwner());
+            else
+                ZimbraLog.imap.warn("DELETEACL failed", e);
+            sendNO(tag, "DELETEACL failed");
+            return CONTINUE_PROCESSING;
+        }
+
+        sendNotifications(true, false);
+        sendOK(tag, "DELETEACL completed");
+        return CONTINUE_PROCESSING;
+    }
+
+    boolean doGETACL(String tag, ImapPath path) throws IOException {
+        if (!checkState(tag, State.AUTHENTICATED))
+            return CONTINUE_PROCESSING;
+
+        StringBuilder i4acl = new StringBuilder("ACL ").append(path.asImapPath());
+
+        try {
+            // make sure the requester has sufficient permissions to make the request
+            short rights = path.getFolderRights();
+            if ((rights & ACL.RIGHT_ADMIN) == 0) {
+                ZimbraLog.imap.info("GETACL failed: user does not have admin access: " + path);
+                sendNO(tag, "GETACL failed");
+                return CONTINUE_PROCESSING;
+            }
+    
+            // the target folder's owner always has full rights
+            Account owner = path.getOwnerAccount();
+            if (owner != null)
+                i4acl.append(" \"").append(owner.getName()).append("\" lrswikxteacd");
+    
+            Object folderobj = path.getFolder();
+            if (folderobj instanceof Folder) {
+                ACL acl = ((Folder) folderobj).getEffectiveACL();
+                if (acl != null) {
+                    for (ACL.Grant grant : acl.getGrants()) {
+                        byte type = grant.getGranteeType();
+                        String imapRights = exportRights(grant.getGrantedRights());
+                        if (type == ACL.GRANTEE_AUTHUSER || type == ACL.GRANTEE_PUBLIC) {
+                            i4acl.append(" anyone ").append(imapRights);
+                        } else if (type == ACL.GRANTEE_USER || type == ACL.GRANTEE_GROUP) {
+                            NamedEntry entry = FolderAction.lookupGranteeByZimbraId(grant.getGranteeId(), type);
+                            if (entry != null)
+                                i4acl.append(" \"").append(entry.getName()).append("\" ").append(imapRights);
+                        }
+                    }
+                }
+            }
+        } catch (ServiceException e) {
+            if (e.getCode().equals(ServiceException.PERM_DENIED))
+                ZimbraLog.imap.info("GETACL failed: permission denied on folder " + path);
+            else if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER))
+                ZimbraLog.imap.info("GETACL failed: no such folder " + path);
+            else if (e.getCode().equals(AccountServiceException.NO_SUCH_ACCOUNT))
+                ZimbraLog.imap.info("GETACL failed: no such account " + path.getOwner());
+            else
+                ZimbraLog.imap.warn("GETACL failed", e);
+            sendNO(tag, "GETACL failed");
+            return CONTINUE_PROCESSING;
+        }
+
+        sendUntagged(i4acl.toString());
+        sendNotifications(true, false);
+        sendOK(tag, "GETACL completed");
+        return CONTINUE_PROCESSING;
+    }
+
+    /** The set of rights required to create a new subfolder in ZCS. */
+    private short SUBFOLDER_RIGHTS = ACL.RIGHT_INSERT | ACL.RIGHT_READ;
+
+    /** Converts a Zimbra rights bitmask to an RFC 4314-compatible rights
+     *  string. */
+    private String exportRights(short rights) {
+        StringBuilder imapRights = new StringBuilder(12);
+        if ((rights & ACL.RIGHT_READ) == ACL.RIGHT_READ)      imapRights.append("lr");
+        if ((rights & ACL.RIGHT_WRITE) == ACL.RIGHT_WRITE)    imapRights.append("sw");
+        if ((rights & ACL.RIGHT_INSERT) == ACL.RIGHT_INSERT)  imapRights.append("ic");
+        if ((rights & SUBFOLDER_RIGHTS) == SUBFOLDER_RIGHTS)  imapRights.append("k");
+        if ((rights & ACL.RIGHT_DELETE) == ACL.RIGHT_DELETE)  imapRights.append("xted");
+        if ((rights & ACL.RIGHT_ADMIN) == ACL.RIGHT_ADMIN)    imapRights.append("a");
+        return imapRights.length() == 0 ? "\"\"" : imapRights.toString();
+    }
+
+    /** All the supported IMAP rights, concatenated together into a single string. */
+    private static final String IMAP_CONCATENATED_RIGHTS = IMAP_READ_RIGHTS + IMAP_WRITE_RIGHTS + IMAP_INSERT_RIGHTS + IMAP_DELETE_RIGHTS + IMAP_ADMIN_RIGHTS;
+    /** All the supported IMAP rights, with <tt>linked</tt> sets of rights
+     *  grouped together and the groups delimited by spaces. */
+    private static final String IMAP_DELIMITED_RIGHTS = IMAP_READ_RIGHTS + ' ' + IMAP_WRITE_RIGHTS + ' ' + IMAP_INSERT_RIGHTS + ' ' + IMAP_DELETE_RIGHTS + ' ' + IMAP_ADMIN_RIGHTS;
+
+    boolean doLISTRIGHTS(String tag, ImapPath path, String principal) throws IOException {
+        if (!checkState(tag, State.AUTHENTICATED))
+            return CONTINUE_PROCESSING;
+
+        boolean isOwner = false;
+        try {
+            if (!principal.equals("anyone")) {
+                Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.name, principal);
+                if (acct == null)
+                    throw AccountServiceException.NO_SUCH_ACCOUNT(principal);
+                isOwner = path.belongsTo(acct.getId());
+            }
+            // as a side effect, path.getFolderRights() checks for the existence of the target folder
+            if ((path.getFolderRights() & ACL.RIGHT_ADMIN) == 0)
+                throw ServiceException.PERM_DENIED("you must have admin privileges to perform LISTRIGHTS");
+        } catch (ServiceException e) {
+            if (e.getCode().equals(ServiceException.PERM_DENIED))
+                ZimbraLog.imap.info("LISTRIGHTS failed: permission denied on folder " + path);
+            else if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER))
+                ZimbraLog.imap.info("LISTRIGHTS failed: no such folder " + path);
+            else if (e.getCode().equals(AccountServiceException.NO_SUCH_ACCOUNT))
+                ZimbraLog.imap.info("LISTRIGHTS failed: no such account " + path.getOwner());
+            else
+                ZimbraLog.imap.warn("LISTRIGHTS failed", e);
+            sendNO(tag, "LISTRIGHTS failed");
+            return canContinue(e);
+        }
+
+        if (isOwner)
+            sendUntagged("LISTRIGHTS " + path.asUtf7String() + " \"" + principal + "\" " + IMAP_CONCATENATED_RIGHTS);
+        else
+            sendUntagged("LISTRIGHTS " + path.asUtf7String() + " \"" + principal + "\" \"\" " + IMAP_DELIMITED_RIGHTS);
+        sendNotifications(true, false);
+        sendOK(tag, "LISTRIGHTS completed");
+        return CONTINUE_PROCESSING;
+    }
+
+    boolean doMYRIGHTS(String tag, ImapPath path) throws IOException {
+        if (!checkState(tag, State.AUTHENTICATED))
+            return CONTINUE_PROCESSING;
+
+        short rights;
+        try {
+            // as a side effect, path.getFolderRights() checks for the existence of the target folder
+            rights = path.getFolderRights();
+        } catch (ServiceException e) {
+            if (e.getCode().equals(ServiceException.PERM_DENIED))
+                ZimbraLog.imap.info("MYRIGHTS failed: permission denied on folder " + path);
+            else if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER))
+                ZimbraLog.imap.info("MYRIGHTS failed: no such folder " + path);
+            else if (e.getCode().equals(AccountServiceException.NO_SUCH_ACCOUNT))
+                ZimbraLog.imap.info("MYRIGHTS failed: no such account " + path.getOwner());
+            else
+                ZimbraLog.imap.warn("MYRIGHTS failed", e);
+            sendNO(tag, "MYRIGHTS failed");
+            return canContinue(e);
+        }
+
+        sendUntagged("MYRIGHTS " + path.asUtf7String() + ' ' + exportRights(rights));
+        sendNotifications(true, false);
+        sendOK(tag, "MYRIGHTS completed");
         return CONTINUE_PROCESSING;
     }
 
@@ -1932,8 +2265,13 @@ public abstract class ImapHandler extends ProtocolHandler {
 
             if (operation != StoreAction.REMOVE) {
                 for (ImapFlag i4flag : i4flags) {
-                    if (i4flag.mId == Flag.ID_FLAG_DELETED && !mSelectedFolder.getPath().isWritable(ACL.RIGHT_DELETE))
-                        throw ServiceException.PERM_DENIED("you do not have permission to set the \\Deleted flag");
+                    if (i4flag.mId == Flag.ID_FLAG_DELETED) {
+                        if (!mSelectedFolder.getPath().isWritable(ACL.RIGHT_DELETE))
+                            throw ServiceException.PERM_DENIED("you do not have permission to set the \\Deleted flag");
+                    } else if (i4flag.mPermanent) {
+                        if (!mSelectedFolder.getPath().isWritable(ACL.RIGHT_WRITE))
+                            throw ServiceException.PERM_DENIED("you do not have permission to set the " + i4flag.mName + " flag");
+                    }
                 }
             }
 

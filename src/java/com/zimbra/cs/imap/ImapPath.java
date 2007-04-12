@@ -243,19 +243,26 @@ public class ImapPath {
             Folder folder = (Folder) mFolder;
             if (folder instanceof SearchFolder || folder.getDefaultView() == MailItem.TYPE_CONTACT)
                 return false;
-            if (rights == 0)
-                return true;
-            OperationContext octxt = mCredentials == null ? null : mCredentials.getContext();
-            short granted = folder.getMailbox().getEffectivePermissions(octxt, folder.getId(), folder.getType());
-            return (granted & rights) == rights;
         } else {
             ZFolder zfolder = (ZFolder) mFolder;
             if (zfolder instanceof ZSearchFolder || zfolder.getDefaultView() == ZFolder.View.contact)
                 return false;
-            if (rights == 0 || zfolder.getEffectivePerm() == null)
-                return true;
-            short granted = ACL.stringToRights(zfolder.getEffectivePerm());
-            return (granted & rights) == rights;
+        }
+
+        if (rights == 0)
+            return true;
+        return (getFolderRights() & rights) == rights;
+    }
+
+    short getFolderRights() throws ServiceException {
+        if (getFolder() instanceof Folder) {
+            OperationContext octxt = mCredentials == null ? null : mCredentials.getContext();
+            Folder folder = (Folder) mFolder;
+            return folder.getMailbox().getEffectivePermissions(octxt, folder.getId(), folder.getType());
+        } else {
+            ZFolder zfolder = (ZFolder) mFolder;
+            String rights = zfolder.getEffectivePerm();
+            return rights == null ? ~0 : ACL.stringToRights(rights);
         }
     }
 

@@ -25,7 +25,6 @@
 package com.zimbra.cs.dav.property;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 import org.dom4j.Element;
@@ -121,10 +120,8 @@ public class Acl extends ResourceProperty {
 		
 		if (mAcl == null)
 			return acl;
-		
-		Iterator<ACL.Grant> iter = mAcl.grantIterator();
-		while (iter.hasNext()) {
-			Grant g = iter.next();
+
+        for (Grant g : mAcl.getGrants()) {
 			try {
 				if (g.getGrantedRights(ctxt.getAuthAccount()) == 0)
 					continue;
@@ -235,10 +232,8 @@ public class Acl extends ResourceProperty {
 					addPrivileges(cups, (short)(ACL.RIGHT_READ | ACL.RIGHT_WRITE | ACL.RIGHT_DELETE | ACL.RIGHT_INSERT));
 				return cups;
 			}
-			
-			Iterator<ACL.Grant> iter = mAcl.grantIterator();
-			while (iter.hasNext()) {
-				Grant g = iter.next();
+
+            for (Grant g : mAcl.getGrants()) {
 				try {
 					short rights = g.getGrantedRights(ctxt.getAuthAccount());
 					if (rights > 0) {

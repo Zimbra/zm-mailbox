@@ -195,8 +195,7 @@ public class ToXML {
                 if (acl != null || fields != NOTIFY_FIELDS) {
                     Element eACL = elem.addUniqueElement(MailConstants.E_ACL);
                     if (acl != null) {
-                        for (Iterator it = acl.grantIterator(); it.hasNext(); ) {
-                            ACL.Grant grant = (ACL.Grant) it.next();
+                        for (ACL.Grant grant : acl.getGrants()) {
                             NamedEntry nentry = FolderAction.lookupGranteeByZimbraId(grant.getGranteeId(), grant.getGranteeType());
                             eACL.addElement(MailConstants.E_GRANT)
                                 .addAttribute(MailConstants.A_ZIMBRA_ID, grant.getGranteeId())
