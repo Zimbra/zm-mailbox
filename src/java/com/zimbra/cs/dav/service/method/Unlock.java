@@ -32,6 +32,8 @@ import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.LockMgr;
+import com.zimbra.cs.dav.resource.DavResource;
+import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavMethod;
 
 public class Unlock extends DavMethod {
@@ -41,13 +43,14 @@ public class Unlock extends DavMethod {
 	}
 	public void handle(DavContext ctxt) throws DavException, IOException {
 		String token = ctxt.getRequest().getHeader(DavProtocol.HEADER_LOCK_TOKEN);
+		DavResource rs = UrlNamespace.getResource(ctxt);
 		if (token != null) {
 			// RFC2518bis section 10.5
 			// Lock-Token = "Lock-Token" ":" Coded-URL
 			// Coded-URL  = "<" absolute-URI ">"
 			int len = token.length();
 			if (token.charAt(0) == '<' && token.charAt(len-1) == '>')
-				LockMgr.getInstance().deleteLock(ctxt, token.substring(1, len-1));
+				LockMgr.getInstance().deleteLock(ctxt, rs, token.substring(1, len-1));
 		}
 		ctxt.getResponse().setStatus(HttpServletResponse.SC_NO_CONTENT);
 	}

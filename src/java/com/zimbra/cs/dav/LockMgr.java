@@ -120,7 +120,25 @@ public class LockMgr {
 	
 	private static final String sTOKEN_PREFIX = "urn:uuid:";
 	
-	public synchronized Lock createLock(DavContext ctxt, DavResource rs, LockType type, LockScope scope, int depth) {
+	private synchronized boolean canLock(DavResource rs, LockType type, LockScope scope) {
+		List<String> locks = mLockedResources.get(rs);
+		if (locks != null) {
+			for (String token : locks) {
+				Lock l = (Lock)mLocks.get(token);
+				if (l == null)
+					continue;
+				else if (scope == LockScope.exclusive)
+					return false;
+				else if (scope == LockScope.shared && l.scope == LockScope.exclusive)
+					return false;
+			}
+		}
+		return true;
+	}
+	
+	public synchronized Lock createLock(DavContext ctxt, DavResource rs, LockType type, LockScope scope, int depth) throws DavException {
+		if (!canLock(rs, type, scope))
+			throw new DavException("can't lock the resource "+rs.getUri(), DavProtocol.STATUS_LOCKED);
 		Lock l = new Lock(type, scope, depth, ctxt.getAuthAccount().getName());
 		l.token = sTOKEN_PREFIX + UUID.randomUUID().toString();
 		
@@ -134,11 +152,18 @@ public class LockMgr {
 		return l;
 	}
 	
-	public synchronized void deleteLock(DavContext ctxt, String token) {
+	public synchronized void deleteLock(DavContext ctxt, DavResource rs, String token) {
+		List<String> locks = mLockedResources.get(rs);
+		if (locks == null)
+			return;
+		if (!locks.contains(token))
+			return;
 		if (mLocks.containsKey(token)) {
 			Lock l = (Lock)mLocks.get(token);
-			if (l.owner.equals(ctxt.getAuthAccount().getName()))
+			if (l.owner.equals(ctxt.getAuthAccount().getName())) {
 				mLocks.remove(token);
+				locks.remove(token);
+			}
 		}
 	}
 }
