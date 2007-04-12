@@ -31,7 +31,6 @@ import javax.servlet.http.HttpServletResponse;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.resource.DavResource;
-import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavMethod;
 
 public class Delete extends DavMethod {
@@ -40,7 +39,7 @@ public class Delete extends DavMethod {
 		return DELETE;
 	}
 	public void handle(DavContext ctxt) throws DavException, IOException {
-		DavResource rsc = UrlNamespace.getResource(ctxt);
+		DavResource rsc = ctxt.getRequestedResource();
 		if (rsc == null)
 			throw new DavException("cannot find the resource", HttpServletResponse.SC_NOT_FOUND, null);
 		rsc.delete(ctxt);

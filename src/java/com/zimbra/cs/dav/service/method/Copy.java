@@ -46,7 +46,7 @@ public class Copy extends Move {
 		String destination = ctxt.getRequest().getHeader(DavProtocol.HEADER_DESTINATION);
 		if (destination == null)
 			throw new DavException("no destination specified", HttpServletResponse.SC_BAD_REQUEST, null);
-		DavResource rs = UrlNamespace.getResource(ctxt);
+		DavResource rs = ctxt.getRequestedResource();
 		Collection col = UrlNamespace.getCollectionAtUrl(ctxt, destination);
 		if (!(col instanceof MailItemResource))
 			throw new DavException("cannot copy", HttpServletResponse.SC_BAD_REQUEST, null);

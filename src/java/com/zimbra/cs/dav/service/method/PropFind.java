@@ -36,7 +36,6 @@ import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavContext.Depth;
 import com.zimbra.cs.dav.resource.DavResource;
-import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavMethod;
 import com.zimbra.cs.dav.service.DavResponse;
 
@@ -59,7 +58,7 @@ public class PropFind extends DavMethod {
 		}
 		
 		RequestProp reqProp = getRequestProp(ctxt);
-		DavResource resource = UrlNamespace.getResource(ctxt);
+		DavResource resource = ctxt.getRequestedResource();
 		addComplianceHeader(ctxt, resource);
 		DavResponse resp = ctxt.getDavResponse();
 		

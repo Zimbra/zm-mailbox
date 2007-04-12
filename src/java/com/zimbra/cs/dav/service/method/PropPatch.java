@@ -37,7 +37,6 @@ import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.resource.DavResource;
-import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavMethod;
 import com.zimbra.cs.dav.service.DavResponse;
 
@@ -73,7 +72,7 @@ public class PropPatch extends DavMethod {
 			}
 		}
 		
-		DavResource resource = UrlNamespace.getResource(ctxt);
+		DavResource resource = ctxt.getRequestedResource();
 		resource.patchProperties(ctxt, set, remove);
 		DavResponse resp = ctxt.getDavResponse();
 		

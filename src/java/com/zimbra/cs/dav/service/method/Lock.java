@@ -41,7 +41,6 @@ import com.zimbra.cs.dav.LockMgr.LockScope;
 import com.zimbra.cs.dav.LockMgr.LockType;
 import com.zimbra.cs.dav.property.LockDiscovery;
 import com.zimbra.cs.dav.resource.DavResource;
-import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavMethod;
 
 public class Lock extends DavMethod {
@@ -88,7 +87,7 @@ public class Lock extends DavMethod {
 				throw new DavException("unrecognized type element "+v.toString(), HttpServletResponse.SC_BAD_REQUEST, null);
 		}
 		
-		DavResource rs = UrlNamespace.getResource(ctxt);
+		DavResource rs = ctxt.getRequestedResource();
 		LockMgr lockmgr = LockMgr.getInstance();
 		LockMgr.Lock lock = lockmgr.createLock(ctxt, rs, type, scope, d);
 		

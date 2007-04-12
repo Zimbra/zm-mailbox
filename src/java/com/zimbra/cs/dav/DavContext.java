@@ -35,6 +35,8 @@ import org.dom4j.DocumentException;
 import org.dom4j.io.SAXReader;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.dav.resource.DavResource;
+import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavResponse;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -226,5 +228,9 @@ public class DavContext {
 		if (mResponse == null)
 			mResponse = new DavResponse();
 		return mResponse;
+	}
+	
+	public DavResource getRequestedResource() throws DavException {
+		return UrlNamespace.getResourceAt(this, mUser, mPath);
 	}
 }

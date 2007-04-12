@@ -82,7 +82,7 @@ public class UrlNamespace {
 			path = "/";
 		else
 			path = path.substring(0, index);
-		DavResource rsc = getResourceAt(ctxt, path);
+		DavResource rsc = getResourceAt(ctxt, ctxt.getUser(), path);
 		if (rsc instanceof Collection)
 			return (Collection)rsc;
 		throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
@@ -102,16 +102,6 @@ public class UrlNamespace {
 		return getResourceAt(ctxt, user, path);
 	}
 
-	/* Returns DavResource pointed by the request URL. */
-	public static DavResource getResource(DavContext ctxt) throws DavException {
-		return getResourceAt(ctxt, ctxt.getPath());
-	}
-
-	/* Returns DavResource pointed by the path. */
-	public static DavResource getResourceAt(DavContext ctxt, String path) throws DavException {
-		return getResourceAt(ctxt, ctxt.getUser(), path);
-	}
-	
 	/* Returns DavResource in the user's mailbox at the specified path. */
 	public static DavResource getResourceAt(DavContext ctxt, String user, String path) throws DavException {
 		if (path == null)

@@ -48,14 +48,14 @@ public class Post extends DavMethod {
 		
 		DavResource rs = null;
 		try {
-			rs = UrlNamespace.getResource(ctxt);
+			rs = ctxt.getRequestedResource();
 		} catch (DavException e) {
 			DavResource parent = UrlNamespace.getCollectionAtUrl(ctxt, ctxt.getPath());
 			if (parent.getUri() == "/") {
 				String item = ctxt.getItem();
 				if (item.equals("outbox"))
 					item = "sent";
-				rs = UrlNamespace.getResourceAt(ctxt, item);
+				rs = UrlNamespace.getResourceAt(ctxt, user, item);
 			}
 		}
 		

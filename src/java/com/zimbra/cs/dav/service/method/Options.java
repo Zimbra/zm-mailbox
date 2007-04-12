@@ -30,8 +30,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
-import com.zimbra.cs.dav.resource.DavResource;
-import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavMethod;
 import com.zimbra.cs.dav.service.DavServlet;
 
@@ -41,8 +39,7 @@ public class Options extends DavMethod {
 		return OPTIONS;
 	}
 	public void handle(DavContext ctxt) throws DavException, IOException {
-		DavResource resource = UrlNamespace.getResource(ctxt);
-		addComplianceHeader(ctxt, resource);
+		addComplianceHeader(ctxt, ctxt.getRequestedResource());
 		HttpServletResponse resp = ctxt.getResponse();
 		DavServlet.setAllowHeader(resp);
 		resp.setContentLength(0);

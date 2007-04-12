@@ -37,7 +37,6 @@ import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.caldav.TimeRange;
 import com.zimbra.cs.dav.resource.CalendarCollection;
 import com.zimbra.cs.dav.resource.DavResource;
-import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.mime.Mime;
 
 /*
@@ -57,7 +56,7 @@ public class FreeBusyQuery extends Report {
 			throw new DavException("need time-range", HttpServletResponse.SC_BAD_REQUEST, null);
 			
 		TimeRange timeRange = new TimeRange(trElem);
-		DavResource rs = UrlNamespace.getResource(ctxt);
+		DavResource rs = ctxt.getRequestedResource();
 		
 		if (!(rs instanceof CalendarCollection))
 			throw new DavException("not a calendar collection", HttpServletResponse.SC_BAD_REQUEST, null);

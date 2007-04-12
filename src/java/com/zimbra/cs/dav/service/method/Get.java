@@ -33,7 +33,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.resource.DavResource;
-import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavMethod;
 
 public class Get extends DavMethod {
@@ -42,7 +41,7 @@ public class Get extends DavMethod {
 		return GET;
 	}
 	public void handle(DavContext ctxt) throws DavException, IOException {
-		DavResource resource = UrlNamespace.getResource(ctxt);
+		DavResource resource = ctxt.getRequestedResource();
 		HttpServletResponse resp = ctxt.getResponse();
 		resp.setContentType(resource.getContentType());
 		
