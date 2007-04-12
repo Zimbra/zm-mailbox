@@ -2857,7 +2857,6 @@ public class ZMailbox {
 
     public static class ZApptSummaryResult {
         private String mFolderId;
-        private ServiceException mException;
         private List<ZAppointmentHit> mAppointments;
         private long mStart;
         private long mEnd;
@@ -2873,14 +2872,6 @@ public class ZMailbox {
             mQuery = query;
         }
 
-        ZApptSummaryResult(long start, long end, String folderId, TimeZone timeZone, ServiceException exception) {
-            mFolderId = folderId;
-            mStart = start;
-            mEnd = end;
-            mException = exception;
-            mTimeZone = timeZone;
-        }
-
         public String getFolderId() {
             return mFolderId;
         }
@@ -2891,12 +2882,6 @@ public class ZMailbox {
 
         public long getStart() { return mStart; }
         public long getEnd() { return mEnd; }
-
-        public boolean isFault() { return mException != null; }
-
-        public ServiceException getServiceException() {
-            return mException;
-        }
 
         public List<ZAppointmentHit> getAppointments() {
             return mAppointments;

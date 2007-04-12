@@ -1122,8 +1122,6 @@ public class ZMailboxUtil implements DebugListener {
         List<ZApptSummaryResult> results = mMbox.getApptSummaries(null, startTime, endTime, new String[] {folderId}, TimeZone.getDefault(), ZSearchParams.TYPE_APPOINTMENT);
         if (results.size() != 1) return;
         ZApptSummaryResult result = results.get(0);
-        if (result.isFault())
-            throw result.getServiceException();
 
         System.out.print("[");
         boolean first = true;
