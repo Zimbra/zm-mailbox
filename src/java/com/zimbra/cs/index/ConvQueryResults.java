@@ -41,7 +41,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 class ConvQueryResults extends ZimbraQueryResultsImpl {
     ZimbraQueryResults mResults;
 
-    public ConvQueryResults(ZimbraQueryResults results, byte[] types,
+    ConvQueryResults(ZimbraQueryResults results, byte[] types,
             SortBy searchOrder, Mailbox.SearchResultMode mode) {
         super(types, searchOrder, mode);
         mResults = results;

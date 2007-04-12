@@ -79,13 +79,20 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
     protected SoapTransport mTransport = null;
     protected SoapProtocol mResponseProto = null;
 
-    SearchParams mSearchParams;
+    private SearchParams mSearchParams;
 
     // mailbox specifier
     private boolean isMultipleMailboxes = false;
     private boolean isAllMailboxes = false;
     private List /*ParseMailboxID*/ mMailboxes;
-
+    
+    private void setSearchParams(SearchParams params) {
+        this.mSearchParams = (SearchParams)params.clone();
+        mSearchParams.clearCursor();
+        // when doing offset-paging, since we do a mergesort locally, the remote query must start
+        // at offset 0 and page through all the results
+        mSearchParams.setOffset(0); 
+    }
 
     /**
      * A search request in the current mailbox on a different server
@@ -97,7 +104,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
     public ProxiedQueryResults(SoapProtocol respProto, String encodedAuthToken, String targetAccountId, String server, SearchParams params, Mailbox.SearchResultMode mode) {
         super(params.getTypes(), params.getSortBy(), mode);
 
-        this.mSearchParams = params;
+        setSearchParams(params);
         this.mAuthToken = encodedAuthToken;
         this.mServer = server;
         this.mTargetAcctId = targetAccountId;
@@ -114,7 +121,8 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
     public ProxiedQueryResults(SoapProtocol respProto, String encodedAuthToken, String server, SearchParams params, Mailbox.SearchResultMode mode) {
         super(params.getTypes(), params.getSortBy(), mode);
 
-        this.mSearchParams = params;
+        setSearchParams(params);
+        mSearchParams.setOffset(0); 
         this.mAuthToken = encodedAuthToken;
         this.mServer = server;
         this.mResponseProto = respProto;
@@ -133,7 +141,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
 
         assert(searchAllMailboxes == SEARCH_ALL_MAILBOXES);
 
-        this.mSearchParams = params;
+        setSearchParams(params);
         this.mAuthToken = encodedAuthToken;
         this.mServer = server;
         this.isMultipleMailboxes = true;
@@ -152,7 +160,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
     {
         super(params.getTypes(), params.getSortBy(), mode);
 
-        this.mSearchParams = params;
+        setSearchParams(params);
         this.mAuthToken = encodedAuthToken;
         this.mServer = server;
         this.isMultipleMailboxes = true;
@@ -272,6 +280,8 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
                 searchElt = Element.create(mResponseProto, MailConstants.SEARCH_REQUEST);
             }
 
+            mSearchParams.setOffset(mBufferStartOffset);
+            mSearchParams.setLimit(chunkSizeToUse);
             mSearchParams.encodeParams(searchElt);
 
             if (isMultipleMailboxes) {
@@ -310,9 +320,6 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
                 return false;
             }
             
-            
-
-
             int hitOffset = (int) searchResp.getAttributeLong(MailConstants.A_QUERY_OFFSET);
             boolean hasMore = searchResp.getAttributeBool(MailConstants.A_QUERY_MORE);
 

@@ -54,10 +54,10 @@ import com.zimbra.cs.mailbox.Mailbox;
 
 abstract class QueryOperation implements Cloneable, ZimbraQueryResults
 {
-    private static final int MIN_CHUNK_SIZE = 26;
-    private static final int MAX_CHUNK_SIZE = 5000;
+    static final int MIN_CHUNK_SIZE = 26;
+    static final int MAX_CHUNK_SIZE = 5000;
     
-    private static final boolean USE_PRELOADING_GROUPER = true;
+    static final boolean USE_PRELOADING_GROUPER = true;
 
     /**
      * @return A representation of this operation as a parsable query string
@@ -154,7 +154,7 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
         }
     }
 
-
+    
     /******************
      * 
      * Hits iteration

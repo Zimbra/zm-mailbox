@@ -187,6 +187,7 @@ public class Search extends MailDocumentHandler  {
                 ProxiedHit ph = (ProxiedHit) hit;
                 response.addElement(ph.getElement().detach());
                 addSortField = false;
+                totalNumHits++;
             } else if (hit instanceof CalendarItemHit) {
                 CalendarItemHit ah = (CalendarItemHit)hit;
                 e = addCalendarItemHit(zsc, ifmt, response, ah, inline, params);

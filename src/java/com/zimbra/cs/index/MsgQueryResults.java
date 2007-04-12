@@ -42,7 +42,7 @@ class MsgQueryResults extends ZimbraQueryResultsImpl
 //    QueryOperation mResults;
     ZimbraQueryResults mResults;
 
-    public MsgQueryResults(ZimbraQueryResults topLevelQueryOperation, byte[] types, SortBy searchOrder, Mailbox.SearchResultMode mode) {
+    MsgQueryResults(ZimbraQueryResults topLevelQueryOperation, byte[] types, SortBy searchOrder, Mailbox.SearchResultMode mode) {
         super(types, searchOrder, mode);
         mResults = topLevelQueryOperation;
     }

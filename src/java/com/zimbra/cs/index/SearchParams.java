@@ -209,7 +209,16 @@ public final class SearchParams implements Cloneable {
                 mEndSortValueLong = Long.MAX_VALUE;
             }
         }
-    } 
+    }
+    public void clearCursor() {
+        mHasCursor = false;
+        mPrevOffset = 0;
+        mPrevMailItemId = null;
+        mPrevSortValueStr = null;
+        mPrevSortValueLong = 0;
+        mEndSortValueStr = null;
+        mEndSortValueLong = -1;
+    }
     public void setPrefetch(boolean truthiness) { mPrefetch = truthiness; }
     public void setMode(Mailbox.SearchResultMode mode) { mMode = mode; }
     
@@ -253,6 +262,9 @@ public final class SearchParams implements Cloneable {
         searchElt.addAttribute(MailConstants.A_RESULT_MODE, getMode().name());
         searchElt.addAttribute(MailConstants.A_ESTIMATE_SIZE, getEstimateSize());
         searchElt.addAttribute(MailConstants.A_FIELD, getDefaultField());
+        
+        searchElt.addAttribute(MailConstants.A_QUERY_LIMIT, mLimit);
+        searchElt.addAttribute(MailConstants.A_QUERY_OFFSET, mOffset);
         
         // skip limit
         // skip offset
@@ -419,8 +431,10 @@ public final class SearchParams implements Cloneable {
     
     private static int parseLimit(Element request) throws ServiceException {
         int limit = (int) request.getAttributeLong(MailConstants.A_QUERY_LIMIT, -1);
-        if (limit <= 0 || limit > 1000)
-            limit = 30; // default limit of...say..30...
+        if (limit <= 0)
+            limit = 30;
+        if (limit > 1000)
+            limit = 1000;
         return limit;
     }
 

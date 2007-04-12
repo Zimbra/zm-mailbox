@@ -46,7 +46,7 @@ class UngroupedQueryResults extends ZimbraQueryResultsImpl
 {
     ZimbraQueryResults mResults;
     
-    public UngroupedQueryResults(ZimbraQueryResults results, byte[] types, SortBy searchOrder, Mailbox.SearchResultMode mode) {
+    UngroupedQueryResults(ZimbraQueryResults results, byte[] types, SortBy searchOrder, Mailbox.SearchResultMode mode) {
         super(types, searchOrder, mode);
         mResults = results;
     }

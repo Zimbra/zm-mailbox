@@ -40,12 +40,12 @@ import java.util.*;
  * This is done so that we can lower the number of SELECT calls to the DB
  * by batch-fetching the Message objects from the store 
  */
-public class ItemPreloadingGrouper extends BufferingResultsGrouper {
+class ItemPreloadingGrouper extends BufferingResultsGrouper {
 
     private int mChunkSize;
     private OperationContext mOpContext;
 
-    public ItemPreloadingGrouper(ZimbraQueryResults results, int chunkSize, Mailbox mbox) {
+    ItemPreloadingGrouper(ZimbraQueryResults results, int chunkSize, Mailbox mbox) {
         super(results);
         mChunkSize = chunkSize;
         mOpContext = mbox.getOperationContext();
