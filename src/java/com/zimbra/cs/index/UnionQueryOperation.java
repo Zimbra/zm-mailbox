@@ -302,7 +302,9 @@ class UnionQueryOperation extends QueryOperation
                 if (toSetup instanceof RemoteQueryOperation) {
                     try {
                         RemoteQueryOperation remote = (RemoteQueryOperation) toSetup;
-                        remote.setup(proto, octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges(), types, searchOrder, offset, limit, mode);
+                        SearchParams params = (SearchParams)mParams.clone();
+                        params.setLimit(limit);
+                        remote.setup(proto, octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges(), params);
                     } catch(Exception e) {
                         ZimbraLog.index.info("Ignoring "+e+" during RemoteQuery generation for "+this.toString());
                     }

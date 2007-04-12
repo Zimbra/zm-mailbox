@@ -2292,7 +2292,9 @@ public final class ZimbraQuery {
                 if (targets.hasExternalTargets()) {
                     RemoteQueryOperation remote = new RemoteQueryOperation();
                     remote.tryAddOredOperation(mOp);
-                    remote.setup(proto, octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges(), mParams.getTypes(), mParams.getSortBy(), 0, mChunkSize, mParams.getMode());
+                    SearchParams params = (SearchParams)mParams.clone();
+                    params.setLimit(mChunkSize);
+                    remote.setup(proto, octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges(), params);
                     mOp = remote;
                 } else {
                     // 1 local target...HACK: for now we'll temporarily wrap it in a UnionQueryOperation,

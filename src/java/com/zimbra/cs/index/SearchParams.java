@@ -61,7 +61,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  *   and will break cross-server search if you do not comply.
  *
  */
-public final class SearchParams {
+public final class SearchParams implements Cloneable {
     
     private static final int MAX_OFFSET = 10000000; // 10M
     private static final int MAX_LIMIT = 10000000; // 10M
@@ -262,7 +262,7 @@ public final class SearchParams {
     /**
      * Parse the search parameters from a <SearchRequest> or similar element.  
      * 
-     * @param request
+     * @param requesthttp
      *            The <SearchRequest> itself, or similar element (<SearchConvRequest>, etc)
      * @param requestedAccount 
      *            The account who's mailbox we should search in
@@ -428,7 +428,41 @@ public final class SearchParams {
         // Lookup the offset= and limit= parameters in the soap request
         return (int) request.getAttributeLong(MailConstants.A_QUERY_OFFSET, 0);
     }
-
+    
+    public Object clone() {
+        SearchParams o = new SearchParams();
+        
+        o.mDefaultField = mDefaultField;
+        o.mQueryStr = mQueryStr;
+        o.mOffset = mOffset;
+        o.mLimit = mLimit;
+        o.mFetchFirst = mFetchFirst;
+        o.mMarkRead = mMarkRead;
+        o.mWantHtml = mWantHtml;
+        o.mNeuterImages = mNeuterImages;
+        o.mRecipients = mRecipients;
+        o.mCalItemExpandStart = mCalItemExpandStart;
+        o.mCalItemExpandEnd = mCalItemExpandEnd;
+        o.mTimeZone = mTimeZone;
+        o.mLocale = mLocale;
+        o.mHasCursor = mHasCursor;
+        o.mPrevMailItemId = mPrevMailItemId;
+        o.mPrevSortValueStr = mPrevSortValueStr;
+        o.mPrevSortValueLong = mPrevSortValueLong;
+        o.mPrevOffset = mPrevOffset;
+        o.mEndSortValueStr = mEndSortValueStr;
+        o.mEndSortValueLong = mEndSortValueLong;
+        o.mGroupByStr = mGroupByStr;
+        o.mSortByStr = mSortByStr;
+        o.mSortBy = mSortBy;
+        o.types = types;
+        o.mPrefetch = mPrefetch;
+        o.mMode = mMode;
+        o.mEstimateSize = mEstimateSize;
+        
+        return o;
+    }
+    
     private String mDefaultField = "content:";
     private String mQueryStr;
     private int mOffset;

@@ -269,16 +269,10 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
             if (isMultipleMailboxes) {
                 searchElt = Element.create(mResponseProto, AdminConstants.SEARCH_MULTIPLE_MAILBOXES_REQUEST);
             } else {
-//              searchElt = new Element.XMLElement(MailService.SEARCH_REQUEST);
                 searchElt = Element.create(mResponseProto, MailConstants.SEARCH_REQUEST);
             }
 
-            searchElt.addAttribute(MailConstants.A_SEARCH_TYPES, mSearchParams.getTypesStr());
-            searchElt.addAttribute(MailConstants.A_SORTBY, mSearchParams.getSortByStr());
-            searchElt.addAttribute(MailConstants.A_QUERY_OFFSET, mBufferStartOffset);
-            searchElt.addAttribute(MailConstants.A_QUERY_LIMIT, chunkSizeToUse);
-
-            searchElt.addAttribute(MailConstants.E_QUERY, mSearchParams.getQueryStr(), Element.Disposition.CONTENT);
+            mSearchParams.encodeParams(searchElt);
 
             if (isMultipleMailboxes) {
                 if (isAllMailboxes) {
