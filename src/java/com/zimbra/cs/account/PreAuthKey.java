@@ -31,20 +31,17 @@
  */
 package com.zimbra.cs.account;
 
+import com.zimbra.common.service.ServiceException;
+import org.apache.commons.codec.binary.Hex;
+
+import javax.crypto.Mac;
+import javax.crypto.SecretKey;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeSet;
-
-import javax.crypto.Mac;
-import javax.crypto.SecretKey;
-
-import org.apache.commons.codec.binary.Hex;
-
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Constants;
 
 /**
  * @author schemers
@@ -111,11 +108,11 @@ public class PreAuthKey {
     public static void main(String args[]) throws ServiceException {
         long now = System.currentTimeMillis();
         HashMap<String,String> params = new HashMap<String,String>();
-        params.put("account", "user1@slapshot");
-        params.put("timestamp", now+"");
-        params.put("expires", (now+Constants.MILLIS_PER_MINUTE*4)+"");
-        String key = generateRandomPreAuthKey();
+        params.put("account", "user1");
+        params.put("by", "name");
+        params.put("timestamp", "1176399950434");
+        params.put("expires", "0");
+        String key = "9d8ad87fd726ba7d5fecf3d705621024b31cedb142310ec965f9263568fa0f27";
         System.out.printf("key=%s preAuth=%s\n", key, computePreAuth(params, key));
-        System.out.printf("key=%s preAuth=%s\n", "helloworld", computePreAuth(params, "helloworld"));
     }
 }
