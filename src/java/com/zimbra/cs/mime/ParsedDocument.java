@@ -81,9 +81,9 @@ public class ParsedDocument {
                 handler.init(new ByteArrayDataSource(content, ctype));
             handler.setFilename(filename);
             handler.setPartName(LuceneFields.L_PARTNAME_TOP);
-            mFragment = Fragment.getFragment(handler.getContent(), false);
             handler.setMessageDigest(mDigest);
-
+            
+            mFragment = Fragment.getFragment(handler.getContent(), false);
             mDocument = handler.getDocument();
             mDocument.add(new Field(LuceneFields.L_SIZE, Integer.toString(mSize), Field.Store.YES, Field.Index.NO));
             mDocument.add(new Field(LuceneFields.L_H_SUBJECT, filename, Field.Store.NO, Field.Index.TOKENIZED));
