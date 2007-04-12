@@ -669,7 +669,9 @@ public class IMPersona extends ClassLogger {
     
     void processIntercepted(Packet packet) {
         debug("Intercepted packet: %s", packet);
-        processInternal(packet, true);
+        if (packet instanceof Message) {
+            processInternal(packet, true);
+        }
     }
 
     /**
@@ -848,7 +850,7 @@ public class IMPersona extends ClassLogger {
 
     @Override
     public String toString() {
-        return new Formatter().format("IMPersona(%s  Presence:%s)", mAddr, mMyPresence)
+        return new Formatter().format("IMPersona(%s  %s)", mAddr, mMyPresence)
                     .toString();
     }
 
