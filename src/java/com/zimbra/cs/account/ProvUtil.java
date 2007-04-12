@@ -305,7 +305,7 @@ public class ProvUtil implements DebugListener {
             mProv = Provisioning.getInstance();
         else {
             SoapProvisioning sp = new SoapProvisioning();            
-            sp.soapSetURI("https://"+mServer+":"+mPort+ZimbraServlet.ADMIN_SERVICE_URI);
+            sp.soapSetURI(LC.zimbra_admin_service_scheme.value()+mServer+":"+mPort+ZimbraServlet.ADMIN_SERVICE_URI);
             if (mDebug) sp.soapSetTransportDebugListener(this);
             if (mAccount != null && mPassword != null)
                 sp.soapAdminAuthenticate(mAccount, mPassword);

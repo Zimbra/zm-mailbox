@@ -153,7 +153,7 @@ public class URLUtil {
         String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
         int port = server.getIntAttr(Provisioning.A_zimbraAdminPort, 0);
         StringBuffer sb = new StringBuffer(128);
-        sb.append(SCHEME_HTTPS).append(hostname).append(":").append(port).append(path);
+        sb.append(LC.zimbra_admin_service_scheme.value()).append(hostname).append(":").append(port).append(path);
         return sb.toString();
     }
 
@@ -167,7 +167,7 @@ public class URLUtil {
     public static String getAdminURL(String hostname) {
         int port = (int) LC.zimbra_admin_service_port.longValue();
         StringBuffer sb = new StringBuffer(128);
-        sb.append(SCHEME_HTTPS).append(hostname).append(":").append(port).append(ZimbraServlet.ADMIN_SERVICE_URI);
+        sb.append(LC.zimbra_admin_service_scheme.value()).append(hostname).append(":").append(port).append(ZimbraServlet.ADMIN_SERVICE_URI);
         return sb.toString();
     }
     
