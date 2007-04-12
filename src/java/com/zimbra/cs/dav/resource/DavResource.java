@@ -226,7 +226,7 @@ public abstract class DavResource {
 		return null;
 	}
 	
-	public void patchProperties(DavContext ctxt, Collection<Element> set, Collection<QName> remove) throws DavException {
+	public void patchProperties(DavContext ctxt, Collection<Element> set, Collection<QName> remove) throws DavException, IOException {
 		throw new DavException("PROPPATCH not supported on "+getUri(), DavProtocol.STATUS_FAILED_DEPENDENCY, null);
 	}
 	

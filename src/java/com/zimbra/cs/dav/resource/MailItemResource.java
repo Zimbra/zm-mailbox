@@ -42,6 +42,7 @@ import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -93,7 +94,7 @@ public abstract class MailItemResource extends DavResource {
 		try {
 			mDeadProps = getDeadProps(ctxt, item);
 		} catch (Exception e) {
-			// somehow couldn't get the dead props.
+			ZimbraLog.dav.warn("can't get dead properties for MailItem id="+mId, e);
 		}
 		setProperty(DavElements.P_GETETAG, mEtag);
 	}
@@ -208,7 +209,7 @@ public abstract class MailItemResource extends DavResource {
 	 * Properties in the parameter 'set' are added to the existing properties.
 	 * Properties in 'remove' are removed.
 	 */
-	public void patchProperties(DavContext ctxt, java.util.Collection<Element> set, java.util.Collection<QName> remove) throws DavException {
+	public void patchProperties(DavContext ctxt, java.util.Collection<Element> set, java.util.Collection<QName> remove) throws DavException, IOException {
 		for (QName n : remove)
 				mDeadProps.remove(n);
 		for (Element e : set)
@@ -230,16 +231,14 @@ public abstract class MailItemResource extends DavResource {
 			if (configVal.length() > PROP_LENGTH_LIMIT)
 				throw new DavException("unable to patch properties", DavProtocol.STATUS_INSUFFICIENT_STORAGE, null);
 
-			synchronized (MailItemResource.class) {
-				Mailbox mbox = getMailbox(ctxt);
+			Mailbox mbox = getMailbox(ctxt);
+			synchronized (mbox) {
 				Metadata data = mbox.getConfig(ctxt.getOperationContext(), CONFIG_KEY);
 				if (data == null)
 					data = new Metadata();
 				data.put(Integer.toString(mId), configVal);
 				mbox.setConfig(ctxt.getOperationContext(), CONFIG_KEY, data);
 			}
-		} catch (IOException ioe) {
-			throw new DavException("unable to patch properties", HttpServletResponse.SC_FORBIDDEN, ioe);
 		} catch (ServiceException se) {
 			throw new DavException("unable to patch properties", HttpServletResponse.SC_FORBIDDEN, se);
 		}

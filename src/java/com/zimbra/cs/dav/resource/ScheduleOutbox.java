@@ -51,6 +51,7 @@ import com.zimbra.cs.mailbox.calendar.FreeBusy;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
+import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
@@ -73,6 +74,13 @@ public class ScheduleOutbox extends CalendarCollection {
 			ZComponent req = vcalendar.getComponentIterator().next();
 			if (req == null)
 				throw new DavException("empty request", HttpServletResponse.SC_BAD_REQUEST);
+			ZProperty organizerProp = req.getProperty(ICalTok.ORGANIZER);
+			if (organizerProp != null) {
+				ZOrganizer organizer = new ZOrganizer(organizerProp);
+				String organizerStr = this.getAddressFromPrincipalURL(organizer.getAddress());
+				if (!organizerStr.equals(ctxt.getAuthAccount().getName()))
+					throw new DavException("the requestor is not the organizer", HttpServletResponse.SC_FORBIDDEN);
+			}
 			while (recipients.hasMoreElements()) {
 				String rcpt = (String) recipients.nextElement();
 				switch (req.getTok()) {
