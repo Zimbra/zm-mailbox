@@ -1875,3 +1875,20 @@ to it for (default of) 10 minutes.
 
 -----------------------------
 
+# enables/disables logging of Soap requests/responses (logged to the
+# zimbra.acctrace logger) on a per-account basis
+
+ADD a new account to be logged:
+   <SoapLoggerRequest op="add" [id="account_id" | name="account_name"]/>
+
+REMOVE an account from the list of logged accounts:
+   <SoapLoggerRequest op="remove" [id="account_id" | name="account_name"]/>
+
+CLEAR all accounts from the logger list:
+   <SoapLoggerRequest op="clear"/>
+
+LIST all accounts being logged:
+   <SoapLoggerRequest op="list"/>
+
+-----------------------------
+

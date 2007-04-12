@@ -45,10 +45,12 @@ import com.zimbra.cs.service.admin.AdminDocumentHandler;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.Zimbra;
 import org.dom4j.DocumentException;
+import org.jivesoftware.util.ConcurrentHashSet;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The soap engine.
@@ -97,6 +99,9 @@ public class SoapEngine {
         return dispatch(path, document, context);
     }
 
+    private static final ConcurrentHashSet<String> mAcctsToLog = new ConcurrentHashSet<String>();
+    public static final Set<String> acctsToLog() { return mAcctsToLog; }
+    
     /**
      * dispatch to the given serviceName the specified document,
      * which should be a soap envelope containing a document to 
@@ -127,7 +132,9 @@ public class SoapEngine {
             return soapProto.soapEnvelope(soapProto.soapFault(e));
         }
         SoapProtocol responseProto = zsc.getResponseProtocol();
-
+        
+        boolean loggedRequest = false;
+        
         ZimbraLog.clearContext();
         try {
             String rid = zsc.getRequestedAccountId();
@@ -145,6 +152,13 @@ public class SoapEngine {
             if (zsc.getUserAgent() != null)
                 ZimbraLog.addToContext(ZimbraLog.C_USER_AGENT, zsc.getUserAgent());
 
+            
+            String authTokenAcctId = zsc.getAuthtokenAccountId();
+            if (authTokenAcctId!=null && mAcctsToLog.contains(authTokenAcctId)) {
+                loggedRequest = true;
+                ZimbraLog.acctrace.info(envelope.prettyPrint());
+            }
+            
             context.put(ZIMBRA_CONTEXT, zsc);
             context.put(ZIMBRA_ENGINE, this);
 
@@ -206,8 +220,14 @@ public class SoapEngine {
 
             // put notifications (new sessions and incremental change notifications)
             Element responseHeader = zsc.generateResponseHeader();
-
-            return responseProto.soapEnvelope(responseBody, responseHeader);
+            
+            Element response = responseProto.soapEnvelope(responseBody, responseHeader);
+            
+            if (loggedRequest) {
+                ZimbraLog.acctrace.info(response.prettyPrint());
+            }
+            
+            return response;
         } finally {
             ZimbraLog.clearContext();
         }

@@ -185,7 +185,8 @@ public class AdminService implements DocumentService {
         // admin saved searches
         dispatcher.registerHandler(AdminConstants.GET_ADMIN_SAVED_SEARCHES_REQUEST, new GetAdminSavedSearches());
         dispatcher.registerHandler(AdminConstants.MODIFY_ADMIN_SAVED_SEARCHES_REQUEST, new ModifyAdminSavedSearches());
-        
+
+        dispatcher.registerHandler(AdminConstants.SOAP_LOGGER_REQUEST, new SoapLogger());
     }
 
     /**
