@@ -254,8 +254,10 @@ public final class SearchParams implements Cloneable {
         searchElt.addAttribute(MailConstants.A_WANT_HTML, getWantHtml());
         searchElt.addAttribute(MailConstants.A_NEUTER, getNeuterImages());
         searchElt.addAttribute(MailConstants.A_RECIPIENTS, mRecipients);
-        if (getTimeZone() != null)
-            searchElt.addElement(MailConstants.E_CAL_TZ).setText(getTimeZone().getID());
+//        if (getTimeZone() != null) {
+//            Element tz = searchElt.addElement(MailConstants.E_CAL_TZ).setText(getTimeZone().getID());
+//            tz.addAttribute(MailConstants.A_ID, 
+//        }
         if (getLocale() != null) 
             searchElt.addElement(MailConstants.E_LOCALE).setText(getLocale().toString());
         searchElt.addAttribute(MailConstants.A_PREFETCH, getPrefetch());
