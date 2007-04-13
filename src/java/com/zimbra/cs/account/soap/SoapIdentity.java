@@ -28,18 +28,19 @@ package com.zimbra.cs.account.soap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Identity;
 
 import java.util.Map;
 
 class SoapIdentity extends Identity implements SoapEntry {
     
-    SoapIdentity(String name, String id, Map<String, Object> attrs) {
-        super(name, id, attrs);
+    SoapIdentity(Account acct, String name, String id, Map<String, Object> attrs) {
+        super(acct, name, id, attrs);
     }
 
-    SoapIdentity(Element e) throws ServiceException {
-        super(e.getAttribute(AccountConstants.A_NAME), e.getAttribute(AccountConstants.A_ID), SoapProvisioning.getAttrs(e, AccountConstants.A_NAME));
+    SoapIdentity(Account acct, Element e) throws ServiceException {
+        super(acct, e.getAttribute(AccountConstants.A_NAME), e.getAttribute(AccountConstants.A_ID), SoapProvisioning.getAttrs(e, AccountConstants.A_NAME));
     }
     
     public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {

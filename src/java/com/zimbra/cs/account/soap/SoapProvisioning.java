@@ -1130,7 +1130,7 @@ public class SoapProvisioning extends Provisioning {
         identity.addAttribute(AccountConstants.A_NAME, identityName);
         addAttrElementsMailService(identity, attrs);
         Element response = invokeOnTargetAccount(req, account.getId()).getElement(AccountConstants.E_IDENTITY);
-        return new SoapIdentity(response);
+        return new SoapIdentity(account, response);
     }
 
     @Override
@@ -1147,7 +1147,7 @@ public class SoapProvisioning extends Provisioning {
         XMLElement req = new XMLElement(AccountConstants.GET_IDENTITIES_REQUEST);
         Element resp = invokeOnTargetAccount(req, account.getId());
         for (Element identity: resp.listElements(AccountConstants.E_IDENTITY)) {
-            result.add(new SoapIdentity(identity));
+            result.add(new SoapIdentity(account, identity));
         }
         return result;
     }

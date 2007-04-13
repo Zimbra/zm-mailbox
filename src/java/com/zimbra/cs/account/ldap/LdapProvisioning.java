@@ -3575,7 +3575,7 @@ public class LdapProvisioning extends Provisioning {
         ldl.removeMembers(members, this);        
     }
 
-    private List<Identity> getIdentitiesByQuery(LdapEntry entry, String query, DirContext initCtxt) throws ServiceException {
+    private List<Identity> getIdentitiesByQuery(Account acct, LdapEntry entry, String query, DirContext initCtxt) throws ServiceException {
         DirContext ctxt = initCtxt;
         List<Identity> result = new ArrayList<Identity>();
         try {
@@ -3585,7 +3585,7 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = LdapUtil.searchDir(ctxt, base, query, sSubtreeSC);
             while(ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                result.add(new LdapIdentity(sr.getNameInNamespace(), sr.getAttributes()));
+                result.add(new LdapIdentity(acct, sr.getNameInNamespace(), sr.getAttributes()));
             }
             ne.close();            
         } catch (NameNotFoundException e) {
@@ -3601,9 +3601,9 @@ public class LdapProvisioning extends Provisioning {
         return result;
     }
 
-    private Identity getIdentityByName(LdapEntry entry, String name,  DirContext ctxt) throws ServiceException {
+    private Identity getIdentityByName(Account acct, LdapEntry entry, String name,  DirContext ctxt) throws ServiceException {
         name = LdapUtil.escapeSearchFilterArg(name);
-        List<Identity> result = getIdentitiesByQuery(entry, "(&(zimbraPrefIdentityName="+name+")(objectclass=zimbraIdentity))", ctxt); 
+        List<Identity> result = getIdentitiesByQuery(acct, entry, "(&(zimbraPrefIdentityName="+name+")(objectclass=zimbraIdentity))", ctxt); 
         return result.isEmpty() ? null : result.get(0);
     }
 
@@ -3662,7 +3662,7 @@ public class LdapProvisioning extends Provisioning {
             
             LdapUtil.createEntry(ctxt, dn, attrs, "createIdentity");
 
-            Identity identity = getIdentityByName(ldapEntry, identityName, ctxt);
+            Identity identity = getIdentityByName(account, ldapEntry, identityName, ctxt);
             AttributeManager.getInstance().postModify(identityAttrs, identity, attrManagerContext, true);
 
             return identity;
@@ -3693,7 +3693,7 @@ public class LdapProvisioning extends Provisioning {
             modifyAttrs(account, identityAttrs);
         } else {
             
-            LdapIdentity identity = (LdapIdentity) getIdentityByName(ldapEntry, identityName, null);
+            LdapIdentity identity = (LdapIdentity) getIdentityByName(account, ldapEntry, identityName, null);
             if (identity == null)
                     throw AccountServiceException.NO_SUCH_IDENTITY(identityName);   
         
@@ -3740,7 +3740,7 @@ public class LdapProvisioning extends Provisioning {
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(true);
-            Identity identity = getIdentityByName(ldapEntry, identityName, ctxt);
+            Identity identity = getIdentityByName(account, ldapEntry, identityName, ctxt);
             if (identity == null)
                 throw AccountServiceException.NO_SUCH_IDENTITY(identityName);
             String dn = getIdentityDn(ldapEntry, identityName);            
@@ -3765,7 +3765,7 @@ public class LdapProvisioning extends Provisioning {
             return result;
         }
         
-        result = getIdentitiesByQuery(ldapEntry, "(objectclass=zimbraIdentity)", null);
+        result = getIdentitiesByQuery(account, ldapEntry, "(objectclass=zimbraIdentity)", null);
         for (Identity identity: result) {
             // gross hack for 4.5beta. should be able to remove post 4.5
             if (identity.getId() == null) {

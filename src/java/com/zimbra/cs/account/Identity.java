@@ -26,14 +26,18 @@
 package com.zimbra.cs.account;
 
 import java.util.Map;
+import com.zimbra.common.service.ServiceException;
 
 /**
  * @author schemers
  */
 public class Identity extends NamedEntry implements Comparable {
 
-    public Identity(String name, String id, Map<String, Object> attrs) {
+    private final String mAcctId;
+    
+    public Identity(Account acct, String name, String id, Map<String, Object> attrs) {
         super(name, id, attrs, null);
+        mAcctId = acct.getId();
     }
     
     /**
@@ -44,6 +48,13 @@ public class Identity extends NamedEntry implements Comparable {
     public void setId(String id) {
         mId = id;
         getRawAttrs().put(Provisioning.A_zimbraPrefIdentityId, id);
+    }
+    
+    /*
+     * get account of the identity
+     */
+    public Account getAccount() throws ServiceException {
+        return Provisioning.getInstance().get(Provisioning.AccountBy.id, mAcctId);
     }
 }
 

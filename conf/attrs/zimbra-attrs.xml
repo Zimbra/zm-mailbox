@@ -223,7 +223,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>mail quota in bytes</desc>
 </attr>
 
-<attr id="17" name="zimbraPrefMailSignature" type="string" max="1024" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable">
+<attr id="17" name="zimbraPrefMailSignature" type="string" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable" callback="MailSignature">
   <desc>mail signature</desc>
 </attr>
 
@@ -2058,6 +2058,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="453" name="zimbraPrefClientType" type="enum" value="basic,advanced" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>advanced</defaultCOSValue>
   <desc>user preference of client type</desc>
+</attr>
+
+<attr id="454" name="zimbraMailSignatureMaxLength" type="long" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <defaultCOSValue>1024</defaultCOSValue>
+  <desc>maximum length of mail signature, 0 means unlimited. If not set, default is 1024</desc>
 </attr>
 
 </attrs>

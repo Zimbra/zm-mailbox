@@ -846,6 +846,7 @@ public abstract class Provisioning {
      * the mail .signature value
      */
     public static final String A_zimbraPrefMailSignature = "zimbraPrefMailSignature";
+    public static final String A_zimbraMailSignatureMaxLength = "zimbraMailSignatureMaxLength";
     
     /**
      * wether or not to save outgoing mail
@@ -1939,7 +1940,7 @@ public abstract class Provisioning {
                     attrs.put(A_zimbraPrefForwardReplyFormat, composeFormat);
             }
         }
-        return new Identity(DEFAULT_IDENTITY_NAME, account.getId(), attrs);        
+        return new Identity(account, DEFAULT_IDENTITY_NAME, account.getId(), attrs);        
     }
     
     public abstract Identity createIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException;

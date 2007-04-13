@@ -25,6 +25,7 @@
 
 package com.zimbra.cs.account.ldap;
 
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 
@@ -38,8 +39,8 @@ import javax.naming.directory.Attributes;
 
     private String mDn;
 
-    LdapIdentity(String dn, Attributes attrs) throws NamingException {
-        super(
+    LdapIdentity(Account acct, String dn, Attributes attrs) throws NamingException {
+        super(  acct,
                 LdapUtil.getAttrString(attrs, Provisioning.A_zimbraPrefIdentityName),
                 LdapUtil.getAttrString(attrs, Provisioning.A_zimbraPrefIdentityId),
                 LdapUtil.getAttrs(attrs));
