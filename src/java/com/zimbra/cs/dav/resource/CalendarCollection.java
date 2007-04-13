@@ -171,23 +171,21 @@ public class CalendarCollection extends Collection {
 			throw new DavException("empty request", HttpServletResponse.SC_BAD_REQUEST, null);
 		
 		/*
+		 * some of the iCal clients do not behave very well when it comes to
+		 * etags.
+		 * 
 		 * chandler doesn't set User-Agent header, doesn't understand 
-		 * If-None-Match or If-Match headers.  assume the worst, and don't expect
-		 * If-None-Match or If-Match headers unless the client is verified
-		 * to work correctly with those headers, like Evolution 2.8.
+		 * If-None-Match or If-Match headers.
+		 * 
+		 * evolution 2.8 always sets If-None-Match although we return etag in REPORT.
+		 * 
+		 * ical correctly understands etag and sets If-Match for existing etags, but
+		 * does not use If-None-Match for new resource creation.
 		 */
-		String userAgent = req.getHeader(DavProtocol.HEADER_USER_AGENT);
-		boolean beLessRestrictive = (userAgent == null) || 
-			(!userAgent.startsWith("Evolution")); // && !userAgent.startsWith("DAVKit"));
+		boolean useEtag = ctxt.isIcalClient();
 		
 		String etag = req.getHeader(DavProtocol.HEADER_IF_MATCH);
-
-		String noneMatch = req.getHeader(DavProtocol.HEADER_IF_NONE_MATCH);
-		if (!beLessRestrictive &&
-				(etag != null && noneMatch != null ||
-				 etag == null && noneMatch == null ||
-				 name == null))
-			throw new DavException("bad request", HttpServletResponse.SC_BAD_REQUEST, null);
+		//String noneMatch = req.getHeader(DavProtocol.HEADER_IF_NONE_MATCH);
 		
 		boolean isUpdate = (etag != null);
 		if (name.endsWith(CalendarObject.CAL_EXTENSION))
@@ -225,7 +223,7 @@ public class CalendarCollection extends Collection {
 			if (calItem == null && isUpdate)
 				throw new DavException("event not found", HttpServletResponse.SC_NOT_FOUND, null);
 			
-			if (!beLessRestrictive && calItem != null && !isUpdate)
+			if (useEtag && calItem != null && !isUpdate)
 				throw new DavException("event already exists", HttpServletResponse.SC_CONFLICT, null);
 			
 			if (isUpdate) {

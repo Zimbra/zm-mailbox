@@ -31,6 +31,7 @@ import org.dom4j.Element;
 import org.dom4j.QName;
 
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.dav.resource.CalendarObject;
@@ -137,13 +138,20 @@ public class CalDavProperty extends ResourceProperty {
 	}
 	
 	private static class CalendarData extends CalDavProperty {
+		CalendarObject rs;
 		public CalendarData(CalendarObject calobj) {
 			super(DavElements.E_CALENDAR_DATA);
-			try {
-				setStringValue(calobj.getVcalendar(null));
-			} catch (IOException e) {
-				ZimbraLog.dav.warn("can't get appt data", e);
-			}
+			rs = calobj;
+		}
+		public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
+			if (getStringValue() == null)
+				try {
+					setStringValue(rs.getVcalendar(ctxt, null));
+				} catch (IOException e) {
+					setStringValue("");
+					ZimbraLog.dav.warn("can't get appt data", e);
+				}
+			return super.toElement(ctxt, parent, nameOnly);
 		}
 	}
 	

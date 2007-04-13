@@ -44,12 +44,13 @@ public class Post extends DavMethod {
 		String name = ctxt.getItem();
 		
 		if (user == null || name == null)
-			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_ACCEPTABLE, null);
+			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND);
 		
 		DavResource rs = null;
 		try {
 			rs = ctxt.getRequestedResource();
 		} catch (DavException e) {
+			/* hack for iCal build 9A321 */
 			DavResource parent = UrlNamespace.getCollectionAtUrl(ctxt, ctxt.getPath());
 			if (parent.getUri() == "/") {
 				String item = ctxt.getItem();

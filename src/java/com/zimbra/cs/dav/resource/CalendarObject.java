@@ -95,7 +95,7 @@ public class CalendarObject extends MailItemResource {
 	/* Returns iCalendar representation of events that matches
 	 * the supplied filter.
 	 */
-	public String getVcalendar(Filter filter) throws IOException {
+	public String getVcalendar(DavContext ctxt, Filter filter) throws IOException {
 		StringBuilder buf = new StringBuilder();
 		
 		buf.append("BEGIN:VCALENDAR\r\n");
@@ -123,13 +123,15 @@ public class CalendarObject extends MailItemResource {
 			buf.append(wr.toCharArray());
 			wr.close();
 		}
-		// XXX hack for early iCal release that puts HTTP url for organizer field.
-		int orgPos = buf.indexOf(DavElements.ORGANIZER);
-		int xorgPos = buf.indexOf(DavElements.ORGANIZER_HREF+":");
-		if (orgPos > 0 && xorgPos > 0) {
-			buf.replace(orgPos, orgPos + 9, DavElements.ORGANIZER_MAILTO);
-			xorgPos = buf.indexOf(DavElements.ORGANIZER_HREF+":");
-			buf.replace(xorgPos, xorgPos+16, DavElements.ORGANIZER);
+		if (ctxt.isIcalClient()) {
+			// XXX hack for early iCal release that puts HTTP url for organizer field.
+			int orgPos = buf.indexOf(DavElements.ORGANIZER);
+			int xorgPos = buf.indexOf(DavElements.ORGANIZER_HREF+":");
+			if (orgPos > 0 && xorgPos > 0) {
+				buf.replace(orgPos, orgPos + 9, DavElements.ORGANIZER_MAILTO);
+				xorgPos = buf.indexOf(DavElements.ORGANIZER_HREF+":");
+				buf.replace(xorgPos, xorgPos+16, DavElements.ORGANIZER);
+			}
 		}
 		buf.append("END:VCALENDAR\r\n");
 		return buf.toString();
@@ -137,7 +139,7 @@ public class CalendarObject extends MailItemResource {
 	
 	@Override
 	public InputStream getContent(DavContext ctxt) throws IOException, DavException {
-		return new ByteArrayInputStream(getVcalendar(null).getBytes());
+		return new ByteArrayInputStream(getVcalendar(ctxt, null).getBytes());
 	}
 
 	@Override

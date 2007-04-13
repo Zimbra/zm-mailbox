@@ -233,4 +233,22 @@ public class DavContext {
 	public DavResource getRequestedResource() throws DavException {
 		return UrlNamespace.getResourceAt(this, mUser, mPath);
 	}
+	
+	private static final String EVOLUTION = "Evolution";
+	private static final String ICAL = "DAVKit";
+	
+	private boolean userAgentHeaderContains(String str) {
+		String userAgent = mReq.getHeader(DavProtocol.HEADER_USER_AGENT);
+		if (userAgent == null)
+			return false;
+		return userAgent.indexOf(str) >= 0;
+	}
+	
+	public boolean isEvolutionClient() {
+		return userAgentHeaderContains(EVOLUTION);
+	}
+	
+	public boolean isIcalClient() {
+		return userAgentHeaderContains(ICAL);
+	}
 }
