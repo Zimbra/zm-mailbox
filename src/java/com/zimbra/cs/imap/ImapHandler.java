@@ -1623,37 +1623,47 @@ public abstract class ImapHandler extends ProtocolHandler {
                 return CONTINUE_PROCESSING;
             }
 
+            // figure out the rights already granted on the folder
+            short oldRights = 0, newRights = 0;
             Object folderobj = path.getFolder();
             if (folderobj instanceof Folder) {
-                Folder folder = (Folder) folderobj;
-                short oldRights = 0, newRights = 0;
-                ACL acl = folder.getEffectiveACL();
+                ACL acl = ((Folder) folderobj).getEffectiveACL();
                 if (acl != null) {
                     for (ACL.Grant grant : acl.getGrants()) {
-                        if (grant.getGranteeId().equals(granteeId) || (granteeType == ACL.GRANTEE_AUTHUSER && grant.getGranteeType() == ACL.GRANTEE_PUBLIC))
+                        if (granteeId.equalsIgnoreCase(grant.getGranteeId()) || (granteeType == ACL.GRANTEE_AUTHUSER && (grant.getGranteeType() == ACL.GRANTEE_AUTHUSER || grant.getGranteeType() == ACL.GRANTEE_PUBLIC)))
                             oldRights |= grant.getGrantedRights();
                     }
                 }
-                if (action == StoreAction.REMOVE)    newRights = (short) (oldRights & ~rights);
-                else if (action == StoreAction.ADD)  newRights = (short) (oldRights | rights);
-                else                                 newRights = rights;
+            } else {
+                for (ZGrant zgrant : ((ZFolder) folderobj).getGrants()) {
+                    if (granteeId.equalsIgnoreCase(zgrant.getGranteeId()) || (granteeType == ACL.GRANTEE_AUTHUSER && (zgrant.getGranteeType() == ZGrant.GranteeType.all || zgrant.getGranteeType() == ZGrant.GranteeType.pub)))
+                        oldRights |= ACL.stringToRights(zgrant.getPermissions());
+                }
+            }
 
-                if (newRights != oldRights) {
-                    if (acl == null)
-                        acl = new ACL();
-                    acl.grantAccess(granteeId, granteeType, newRights, null);
+            // calculate the new rights we want granted on the folder
+            if (action == StoreAction.REMOVE)    newRights = (short) (oldRights & ~rights);
+            else if (action == StoreAction.ADD)  newRights = (short) (oldRights | rights);
+            else                                 newRights = rights;
+
+            // and update the folder appropriately, if necessary
+            if (newRights != oldRights) {
+                if (folderobj instanceof Folder) {
                     Mailbox mbox = (Mailbox) path.getOwnerMailbox();
-                    mbox.setPermissions(getContext(), folder.getId(), acl);
-                    mbox.alterTag(getContext(), folder.getId(), folder.getType(), Flag.ID_FLAG_NO_INHERIT, true);
+                    mbox.grantAccess(getContext(), ((Folder) folderobj).getId(), granteeId, granteeType, newRights, null);
+                } else {
+                    ZMailbox zmbx = (ZMailbox) path.getOwnerMailbox();
+                    ZGrant.GranteeType type = (granteeType == ACL.GRANTEE_AUTHUSER ? ZGrant.GranteeType.all : ZGrant.GranteeType.usr);
+                    zmbx.modifyFolderGrant(((ZFolder) folderobj).getId(), type, principal, ACL.rightsToString(newRights), null);
                 }
             }
         } catch (ServiceException e) {
             if (e.getCode().equals(ServiceException.PERM_DENIED))
-                ZimbraLog.imap.info("SETACL failed: permission denied on folder " + path);
+                ZimbraLog.imap.info("SETACL failed: permission denied on folder: " + path);
             else if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER))
-                ZimbraLog.imap.info("SETACL failed: no such folder " + path);
+                ZimbraLog.imap.info("SETACL failed: no such folder: " + path);
             else if (e.getCode().equals(AccountServiceException.NO_SUCH_ACCOUNT))
-                ZimbraLog.imap.info("SETACL failed: no such account " + path.getOwner());
+                ZimbraLog.imap.info("SETACL failed: no such account: " + principal);
             else
                 ZimbraLog.imap.warn("SETACL failed", e);
             sendNO(tag, "SETACL failed");
@@ -1677,36 +1687,49 @@ public abstract class ImapHandler extends ProtocolHandler {
                 return CONTINUE_PROCESSING;
             }
     
-            Object folderobj = path.getFolder();
-            if (folderobj instanceof Folder) {
-                Folder folder = (Folder) folderobj;
-                ACL acl = folder.getEffectiveACL();
-                if (acl == null) {
-                    boolean modified = false;
-                    if (principal.equals("anyone")) {
-                        modified  = acl.revokeAccess(ACL.GUID_AUTHUSER);
-                        modified |= acl.revokeAccess(ACL.GUID_PUBLIC);
-                    } else {
-                        NamedEntry entry = Provisioning.getInstance().get(AccountBy.name, principal);
-                        if (entry == null)
-                            entry = Provisioning.getInstance().get(DistributionListBy.name, principal);
-                        if (entry != null)
-                            modified = acl.revokeAccess(entry.getId());
-                    }
-                    if (modified) {
-                        Mailbox mbox = (Mailbox) path.getOwnerMailbox();
-                        mbox.setPermissions(getContext(), folder.getId(), acl);
-                        mbox.alterTag(getContext(), folder.getId(), folder.getType(), Flag.ID_FLAG_NO_INHERIT, true);
-                    }
+            // figure out whose permissions are being revoked
+            String granteeId = null;
+            if (principal.equals("anyone")) {
+                granteeId = ACL.GUID_AUTHUSER;
+            } else {
+                NamedEntry entry = Provisioning.getInstance().get(AccountBy.name, principal);
+                if (entry == null)
+                    entry = Provisioning.getInstance().get(DistributionListBy.name, principal);
+                if (entry != null)
+                    granteeId = entry.getId();
+            }
+            if (granteeId == null) {
+                ZimbraLog.imap.info("DELETEACL failed: cannot resolve principal: " + principal);
+                sendNO(tag, "DELETEACL failed");
+                return CONTINUE_PROCESSING;
+            }
+
+            // and revoke the permissions appropriately
+            Object mboxobj = path.getOwnerMailbox();
+            if (mboxobj instanceof Mailbox) {
+                Mailbox mbox = (Mailbox) mboxobj;
+                Folder folder = (Folder) path.getFolder();
+                if (folder.getEffectiveACL() != null) {
+                    mbox.revokeAccess(getContext(), folder.getId(), granteeId);
+                    if (granteeId == ACL.GUID_AUTHUSER)
+                        mbox.revokeAccess(getContext(), folder.getId(), ACL.GUID_PUBLIC);
+                }
+            } else {
+                ZMailbox zmbx = (ZMailbox) mboxobj;
+                ZFolder zfolder = (ZFolder) path.getFolder();
+                if (!zfolder.getGrants().isEmpty()) {
+                    zmbx.modifyFolderRevokeGrant(zfolder.getId(), granteeId);
+                    if (granteeId == ACL.GUID_AUTHUSER)
+                        zmbx.modifyFolderRevokeGrant(zfolder.getId(), ACL.GUID_PUBLIC);
                 }
             }
         } catch (ServiceException e) {
             if (e.getCode().equals(ServiceException.PERM_DENIED))
-                ZimbraLog.imap.info("DELETEACL failed: permission denied on folder " + path);
+                ZimbraLog.imap.info("DELETEACL failed: permission denied on folder: " + path);
             else if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER))
-                ZimbraLog.imap.info("DELETEACL failed: no such folder " + path);
+                ZimbraLog.imap.info("DELETEACL failed: no such folder: " + path);
             else if (e.getCode().equals(AccountServiceException.NO_SUCH_ACCOUNT))
-                ZimbraLog.imap.info("DELETEACL failed: no such account " + path.getOwner());
+                ZimbraLog.imap.info("DELETEACL failed: no such account: " + principal);
             else
                 ZimbraLog.imap.warn("DELETEACL failed", e);
             sendNO(tag, "DELETEACL failed");
@@ -1726,42 +1749,58 @@ public abstract class ImapHandler extends ProtocolHandler {
 
         try {
             // make sure the requester has sufficient permissions to make the request
-            short rights = path.getFolderRights();
-            if ((rights & ACL.RIGHT_ADMIN) == 0) {
+            if ((path.getFolderRights() & ACL.RIGHT_ADMIN) == 0) {
                 ZimbraLog.imap.info("GETACL failed: user does not have admin access: " + path);
                 sendNO(tag, "GETACL failed");
                 return CONTINUE_PROCESSING;
             }
-    
+
             // the target folder's owner always has full rights
             Account owner = path.getOwnerAccount();
             if (owner != null)
-                i4acl.append(" \"").append(owner.getName()).append("\" lrswikxteacd");
-    
+                i4acl.append(" \"").append(owner.getName()).append("\" ").append(IMAP_CONCATENATED_RIGHTS);
+
+            // write out the grants to all users and groups
+            Short anyoneRights = null;
             Object folderobj = path.getFolder();
             if (folderobj instanceof Folder) {
                 ACL acl = ((Folder) folderobj).getEffectiveACL();
                 if (acl != null) {
                     for (ACL.Grant grant : acl.getGrants()) {
                         byte type = grant.getGranteeType();
-                        String imapRights = exportRights(grant.getGrantedRights());
+                        short rights = grant.getGrantedRights();
                         if (type == ACL.GRANTEE_AUTHUSER || type == ACL.GRANTEE_PUBLIC) {
-                            i4acl.append(" anyone ").append(imapRights);
+                            anyoneRights = (short) ((anyoneRights == null ? 0 : anyoneRights) | rights);
                         } else if (type == ACL.GRANTEE_USER || type == ACL.GRANTEE_GROUP) {
                             NamedEntry entry = FolderAction.lookupGranteeByZimbraId(grant.getGranteeId(), type);
                             if (entry != null)
-                                i4acl.append(" \"").append(entry.getName()).append("\" ").append(imapRights);
+                                i4acl.append(" \"").append(entry.getName()).append("\" ").append(exportRights(rights));
                         }
                     }
                 }
+            } else {
+                for (ZGrant zgrant : ((ZFolder) folderobj).getGrants()) {
+                    ZGrant.GranteeType ztype = zgrant.getGranteeType();
+                    short rights = ACL.stringToRights(zgrant.getPermissions());
+                    if (ztype == ZGrant.GranteeType.pub || ztype == ZGrant.GranteeType.all) {
+                        anyoneRights = (short) ((anyoneRights == null ? 0 : anyoneRights) | rights);
+                    } else if (ztype == ZGrant.GranteeType.usr || ztype == ZGrant.GranteeType.grp) {
+                        byte granteeType = ztype == ZGrant.GranteeType.usr ? ACL.GRANTEE_USER : ACL.GRANTEE_GROUP;
+                        NamedEntry entry = FolderAction.lookupGranteeByZimbraId(zgrant.getGranteeId(), granteeType);
+                        if (entry != null)
+                            i4acl.append(" \"").append(entry.getName()).append("\" ").append(exportRights(rights));
+                    }
+                }
             }
+
+            // aggregate all the "public" and "auth user" grants into the "anyone" IMAP ACL
+            if (anyoneRights != null)
+                i4acl.append(" anyone ").append(exportRights(anyoneRights));
         } catch (ServiceException e) {
             if (e.getCode().equals(ServiceException.PERM_DENIED))
-                ZimbraLog.imap.info("GETACL failed: permission denied on folder " + path);
+                ZimbraLog.imap.info("GETACL failed: permission denied on folder: " + path);
             else if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER))
-                ZimbraLog.imap.info("GETACL failed: no such folder " + path);
-            else if (e.getCode().equals(AccountServiceException.NO_SUCH_ACCOUNT))
-                ZimbraLog.imap.info("GETACL failed: no such account " + path.getOwner());
+                ZimbraLog.imap.info("GETACL failed: no such folder: " + path);
             else
                 ZimbraLog.imap.warn("GETACL failed", e);
             sendNO(tag, "GETACL failed");
@@ -1813,11 +1852,11 @@ public abstract class ImapHandler extends ProtocolHandler {
                 throw ServiceException.PERM_DENIED("you must have admin privileges to perform LISTRIGHTS");
         } catch (ServiceException e) {
             if (e.getCode().equals(ServiceException.PERM_DENIED))
-                ZimbraLog.imap.info("LISTRIGHTS failed: permission denied on folder " + path);
+                ZimbraLog.imap.info("LISTRIGHTS failed: permission denied on folder: " + path);
             else if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER))
-                ZimbraLog.imap.info("LISTRIGHTS failed: no such folder " + path);
+                ZimbraLog.imap.info("LISTRIGHTS failed: no such folder: " + path);
             else if (e.getCode().equals(AccountServiceException.NO_SUCH_ACCOUNT))
-                ZimbraLog.imap.info("LISTRIGHTS failed: no such account " + path.getOwner());
+                ZimbraLog.imap.info("LISTRIGHTS failed: no such account: " + principal);
             else
                 ZimbraLog.imap.warn("LISTRIGHTS failed", e);
             sendNO(tag, "LISTRIGHTS failed");
@@ -1843,11 +1882,11 @@ public abstract class ImapHandler extends ProtocolHandler {
             rights = path.getFolderRights();
         } catch (ServiceException e) {
             if (e.getCode().equals(ServiceException.PERM_DENIED))
-                ZimbraLog.imap.info("MYRIGHTS failed: permission denied on folder " + path);
+                ZimbraLog.imap.info("MYRIGHTS failed: permission denied on folder: " + path);
             else if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER))
-                ZimbraLog.imap.info("MYRIGHTS failed: no such folder " + path);
+                ZimbraLog.imap.info("MYRIGHTS failed: no such folder: " + path);
             else if (e.getCode().equals(AccountServiceException.NO_SUCH_ACCOUNT))
-                ZimbraLog.imap.info("MYRIGHTS failed: no such account " + path.getOwner());
+                ZimbraLog.imap.info("MYRIGHTS failed: no such account: " + path.getOwner());
             else
                 ZimbraLog.imap.warn("MYRIGHTS failed", e);
             sendNO(tag, "MYRIGHTS failed");

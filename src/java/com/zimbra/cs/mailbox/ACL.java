@@ -374,6 +374,7 @@ public class ACL {
                     case ABBR_DELETE:  rights |= RIGHT_DELETE;  break;
                     case ABBR_ACTION:  rights |= RIGHT_ACTION;  break;
                     case ABBR_ADMIN:   rights |= RIGHT_ADMIN;   break;
+                    case ABBR_CREATE_FOLDER:                    break;
                     default:  throw ServiceException.INVALID_REQUEST("unknown right: " + encoded.charAt(i), null);
                 }
         return rights;

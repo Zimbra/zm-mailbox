@@ -225,15 +225,17 @@ public class Folder extends MailItem {
     void grantAccess(String zimbraId, byte type, short rights, String args) throws ServiceException {
         if (!canAccess(ACL.RIGHT_ADMIN))
             throw ServiceException.PERM_DENIED("you do not have admin rights to folder " + getPath());
+        if (type == ACL.GRANTEE_USER && zimbraId.equalsIgnoreCase(getMailbox().getAccountId()))
+            throw ServiceException.PERM_DENIED("cannot grant access to the owner of the folder");
+        
+        // if there's an ACL on the folder, the folder does not inherit from its parent
+        alterTag(mMailbox.mNoInheritFlag, true);
 
         markItemModified(Change.MODIFIED_ACL);
         if (mRights == null)
             mRights = new ACL();
         mRights.grantAccess(zimbraId, type, rights, args);
         saveMetadata();
-
-        // if there's an ACL on the folder, the folder does not inherit from its parent
-        alterTag(mMailbox.mNoInheritFlag, true);
     }
 
     /** Removes the set of rights granted to the specified (id, type) pair
@@ -248,17 +250,21 @@ public class Folder extends MailItem {
     void revokeAccess(String zimbraId) throws ServiceException {
         if (!canAccess(ACL.RIGHT_ADMIN))
             throw ServiceException.PERM_DENIED("you do not have admin rights to folder " + getPath());
+        if (zimbraId.equalsIgnoreCase(getMailbox().getAccountId()))
+            throw ServiceException.PERM_DENIED("cannot revoke access from the owner of the folder");
+
+        ACL acl = getEffectiveACL();
+        if (acl == null || !acl.revokeAccess(zimbraId))
+            return;
+        
+        // if there's an ACL on the folder, the folder does not inherit from its parent
+        alterTag(mMailbox.mNoInheritFlag, true);
 
         markItemModified(Change.MODIFIED_ACL);
-        if (mRights == null || !mRights.revokeAccess(zimbraId))
-            return;
-
+        mRights.revokeAccess(zimbraId);
         if (mRights.isEmpty())
             mRights = null;
         saveMetadata();
-
-        // if there's an ACL on the folder, the folder does not inherit from its parent
-        alterTag(mMailbox.mNoInheritFlag, mRights != null);
     }
 
     /** Replaces the folder's {@link ACL} with the supplied one and updates
@@ -273,30 +279,34 @@ public class Folder extends MailItem {
     void setPermissions(ACL acl) throws ServiceException {
         if (!canAccess(ACL.RIGHT_ADMIN))
             throw ServiceException.PERM_DENIED("you do not have admin rights to folder " + getPath());
+        if (acl != null) {
+            for (ACL.Grant grant : acl.getGrants())
+                if (grant.getGranteeType() == ACL.GRANTEE_USER && grant.getGranteeId().equalsIgnoreCase(getMailbox().getAccountId()))
+                    throw ServiceException.PERM_DENIED("cannot grant access to the owner of the folder");
+        }
+
+        // if we're setting an ACL on the folder, the folder does not inherit from its parent
+        alterTag(mMailbox.mNoInheritFlag, true);
 
         markItemModified(Change.MODIFIED_ACL);
         if (acl != null && acl.isEmpty())
             acl = null;
-
         if (acl == null && mRights == null)
             return;
         mRights = acl;
         saveMetadata();
-
-        // if we're setting an ACL on the folder, the folder does not inherit from its parent
-        alterTag(mMailbox.mNoInheritFlag, acl != null);
     }
 
     /** Returns a copy of the ACL directly set on the folder, or <tt>null</tt>
      *  if one is not set. */
-    public ACL getACL() {
+    ACL getACL() {
         return mRights == null ? null : mRights.duplicate();
     }
 
     /** Returns a copy of the ACL that applies to the folder (possibly
      *  inherited from a parent), or <tt>null</tt> if one is not set. */
     public ACL getEffectiveACL() {
-        if (mId == Mailbox.ID_FOLDER_ROOT || mRights != null || isTagged(mMailbox.mNoInheritFlag))
+        if (mId == Mailbox.ID_FOLDER_ROOT || isTagged(mMailbox.mNoInheritFlag))
             return getACL();
         return mParent.getEffectiveACL();
     }
@@ -657,6 +667,7 @@ public class Folder extends MailItem {
         boolean isNoInheritFlag = tag.getId() == Flag.ID_FLAG_NO_INHERIT;
         if (!canAccess(isNoInheritFlag ? ACL.RIGHT_ADMIN : ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have the necessary privileges on the folder");
+        ACL effectiveACL = getEffectiveACL();
 
         // change the tag on the Folder itself, not on its contents
         markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
@@ -667,8 +678,12 @@ public class Folder extends MailItem {
         DbMailItem.alterTag(tag, ids, newValue);
 
         // clearing the "no inherit" flag sets inherit ON and thus must clear the folder's ACL
-        if (isNoInheritFlag && !newValue && mRights != null && !mRights.isEmpty())
-            setPermissions(null);
+        if (isNoInheritFlag) {
+            if (!newValue && mRights != null && !mRights.isEmpty())
+                setPermissions(null);
+            else if (newValue)
+                setPermissions(effectiveACL);
+        }
     }
 
     /** Renames the item and optionally moves it.  Altering an item's

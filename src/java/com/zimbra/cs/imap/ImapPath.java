@@ -261,7 +261,7 @@ public class ImapPath {
             return folder.getMailbox().getEffectivePermissions(octxt, folder.getId(), folder.getType());
         } else {
             ZFolder zfolder = (ZFolder) mFolder;
-            String rights = zfolder.getEffectivePerm();
+            String rights = zfolder.getEffectivePerms();
             return rights == null ? ~0 : ACL.stringToRights(rights);
         }
     }

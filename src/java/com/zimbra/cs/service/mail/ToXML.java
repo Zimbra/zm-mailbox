@@ -191,7 +191,7 @@ public class ToXML {
         if (canAdminister) {
             // return full ACLs for folders we have admin rights on
             if (needToOutput(fields, Change.MODIFIED_ACL)) {
-                ACL acl = folder.getACL();
+                ACL acl = folder.getEffectiveACL();
                 if (acl != null || fields != NOTIFY_FIELDS) {
                     Element eACL = elem.addUniqueElement(MailConstants.E_ACL);
                     if (acl != null) {

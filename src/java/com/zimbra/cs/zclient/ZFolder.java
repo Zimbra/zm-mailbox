@@ -33,6 +33,7 @@ import com.zimbra.cs.zclient.event.ZModifyFolderEvent;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class ZFolder implements ZItem, Comparable {
@@ -79,6 +80,7 @@ public class ZFolder implements ZItem, Comparable {
 
     public enum Flag {
         checkedInUI('#'),
+        doesNotInheritPermissions('i'),
         excludeFreeBusyInfo('b'),
         imapDeleted('x'),
         imapSubscribed('*');
@@ -382,7 +384,7 @@ public class ZFolder implements ZItem, Comparable {
      * 
      * @return
      */
-    public String getEffectivePerm() {
+    public String getEffectivePerms() {
         return mEffectivePerms;
     }
     
