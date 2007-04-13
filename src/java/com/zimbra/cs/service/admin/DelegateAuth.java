@@ -28,19 +28,19 @@
  */
 package com.zimbra.cs.service.admin;
 
-import java.util.Map;
-
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
+
+import java.util.Map;
 
 /**
  * @author schemers
@@ -78,7 +78,7 @@ public class DelegateAuth extends AdminDocumentHandler {
             throw AccountServiceException.NO_SUCH_ACCOUNT(value);
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                new String[] {"cmd", "DelegateAuth","accountId", account.getId()})); 
+                new String[] {"cmd", "DelegateAuth","accountId", account.getId(),"accountName", account.getName()})); 
 
         Element response = lc.createElement(AdminConstants.DELEGATE_AUTH_RESPONSE);
         long maxLifetime = account.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, DEFAULT_AUTH_LIFETIME*1000); 
