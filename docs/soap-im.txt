@@ -139,7 +139,7 @@ IMGatewayList - gateways to external IM services
 
 
 <IMGatewayListResponse>
-  <service name="name" type="aim|msn|yahoo|icq"/>
+  <service name="name" type="aim|msn|yahoo|icq" domain="aim.mydomain.com"/>
 </IMGatewayListResponse/>
 
 

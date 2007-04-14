@@ -23,10 +23,12 @@ public class IMGatewayList extends IMDocumentHandler {
             IMPersona persona = getRequestedPersona(lc, lock);
             
             List<Interop.ServiceName> types = persona.getAvailableGateways();
+            String domain = persona.getDomain();
             
             for (Interop.ServiceName t : types) {
                 Element typeElt = response.addElement("service");
                 typeElt.addAttribute("type", t.name());
+                typeElt.addAttribute("domain", t.name()+"."+domain);
             }
         }
         return response;

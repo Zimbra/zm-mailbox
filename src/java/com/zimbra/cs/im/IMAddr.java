@@ -45,6 +45,8 @@ public class IMAddr {
     
     public String toString() { return mAddr; }
     
+    public String getDomain() { return makeJID().getDomain();}
+    
     public JID makeJID() {
         int domainSplit = mAddr.indexOf('@');
         

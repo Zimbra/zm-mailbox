@@ -283,6 +283,11 @@ public class IMPersona extends ClassLogger {
     public IMAddr getAddr() {
         return mAddr;
     }
+    
+    public String getDomain() {
+        return mAddr.getDomain();
+    }
+    
 
     /**
      * @return The set of gateways this user has access to
