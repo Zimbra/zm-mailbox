@@ -34,10 +34,13 @@ import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -363,10 +366,56 @@ public abstract class ImapHandler extends ProtocolHandler {
                         checkEOF(tag, req);
                         return doLOGOUT(tag);
                     } else if (command.equals("LIST")) {
-                        req.skipSpace();  String base = req.readEscapedFolder();
-                        req.skipSpace();  String pattern = req.readFolderPattern();
+                        Set<String> patterns = new LinkedHashSet<String>(2);
+                        boolean parenthesized = false;
+                        byte selectOptions = 0, returnOptions = 0;
+
+                        req.skipSpace();
+                        if (req.peekChar() == '(' && extensionEnabled("LIST-EXTENDED")) {
+                            req.skipChar('(');
+                            while (req.peekChar() != ')') {
+                                if (selectOptions != 0)
+                                    req.skipSpace();
+                                String option = req.readATOM();
+                                if (option.equals("RECURSIVEMATCH"))   selectOptions |= SELECT_RECURSIVE;
+                                else if (option.equals("SUBSCRIBED"))  selectOptions |= SELECT_SUBSCRIBED;
+                                else if (option.equals("REMOTE"))      selectOptions |= SELECT_REMOTE;
+                                else
+                                    throw new ImapParseException(tag, "unknown LIST select option \"" + option + '"');
+                            }
+                            if ((selectOptions & (SELECT_SUBSCRIBED | SELECT_RECURSIVE)) == SELECT_RECURSIVE)
+                                throw new ImapParseException(tag, "must include SUBSCRIBED when specifying RECURSIVEMATCH", false);
+                            req.skipChar(')');  req.skipSpace();
+                        }
+
+                        String base = req.readEscapedFolder();  req.skipSpace();
+
+                        if (req.peekChar() == '(' && extensionEnabled("LIST-EXTENDED")) {
+                            parenthesized = true;  req.skipChar('(');
+                        }
+                        do {
+                            if (!patterns.isEmpty())  req.skipSpace();
+                            patterns.add(req.readFolderPattern());
+                        } while (parenthesized && req.peekChar() != ')');
+                        if (parenthesized)
+                            req.skipChar(')');
+
+                        if (req.peekChar() == ' ' && extensionEnabled("LIST-EXTENDED")) {
+                            req.skipSpace();  req.skipAtom("RETURN");
+                            req.skipSpace();  req.skipChar('(');
+                            while (req.peekChar() != ')') {
+                                if (returnOptions != 0)
+                                    req.skipSpace();
+                                String option = req.readATOM();
+                                if (option.equals("SUBSCRIBED"))     returnOptions |= RETURN_SUBSCRIBED;
+                                else if (option.equals("CHILDREN"))  returnOptions |= RETURN_CHILDREN;
+                                else
+                                    throw new ImapParseException(tag, "unknown LIST return option \"" + option + '"');
+                            }
+                            req.skipChar(')');
+                        }
                         checkEOF(tag, req);
-                        return doLIST(tag, base, pattern);
+                        return doLIST(tag, base, patterns, selectOptions, returnOptions);
                     } else if (command.equals("LSUB")) {
                         req.skipSpace();  String base = req.readEscapedFolder();
                         req.skipSpace();  String pattern = req.readFolderPattern();
@@ -592,7 +641,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     private static final String[] SUPPORTED_EXTENSIONS = new String[] {
-        "ACL", "BINARY", "CATENATE", "CHILDREN", "ESEARCH", "ID", "IDLE",
+        "ACL", "BINARY", "CATENATE", "CHILDREN", "ESEARCH", "ID", "IDLE", "LIST-EXTENDED",
         "LITERAL+", "LOGIN-REFERRALS", "MULTIAPPEND", "NAMESPACE", "QUOTA",
         "RIGHTS=ektx", "SASL-IR", "UIDPLUS", "UNSELECT", "WITHIN", "X-DRAFT-I05-SEARCHRES"
     };
@@ -609,6 +658,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         // [ESEARCH]          RFC 4731: IMAP4 Extension to SEARCH Command for Controlling What Kind of Information Is Returned
         // [ID]               RFC 2971: IMAP4 ID Extension
         // [IDLE]             RFC 2177: IMAP4 IDLE command
+        // [LIST-EXTENDED]    draft-ietf-imapext-list-extensions-18: IMAP4 LIST Command Extensions
         // [LITERAL+]         RFC 2088: IMAP4 non-synchronizing literals
         // [LOGIN-REFERRALS]  RFC 2221: IMAP4 Login Referrals
         // [MULTIAPPEND]      RFC 3502: Internet Message Access Protocol (IMAP) - MULTIAPPEND Extension
@@ -831,7 +881,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             }
 
             ImapFolder i4folder = null;
-            if (i4oldFolder != null && !i4oldFolder.isVirtual() && path.equals(i4oldFolder.getPath())) {
+            if (i4oldFolder != null && !i4oldFolder.isVirtual() && path.isEquivalent(i4oldFolder.getPath())) {
                 try {
                     i4oldFolder.reopen(writable);
                     i4folder = i4oldFolder;
@@ -852,7 +902,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                 permflags = i4folder.getFlagList(true);
                 if (!path.isWritable(ACL.RIGHT_DELETE))
                     permflags.remove("\\Deleted");
-                if (path.belongsTo(mCredentials.getAccountId()))
+                if (path.belongsTo(mCredentials))
                     permflags.add("\\*");
             }
         } catch (ServiceException e) {
@@ -915,7 +965,10 @@ public abstract class ImapHandler extends ProtocolHandler {
                 cause += ": invalid mailbox name";
             else if (e.getCode().equals(ServiceException.PERM_DENIED))
                 cause += ": permission denied";
-            ZimbraLog.imap.warn(cause, e);
+            if (cause.equals("CREATE failed"))
+                ZimbraLog.imap.warn(cause, e);
+            else
+                ZimbraLog.imap.info(cause);
             sendNO(tag, cause);
             return canContinue(e);
         }
@@ -948,7 +1001,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(path.getOwner());
             }
 
-            if (mSelectedFolder != null && path.equals(mSelectedFolder.getPath()))
+            if (mSelectedFolder != null && path.isEquivalent(mSelectedFolder.getPath()))
                 unsetSelectedFolder();
         } catch (ServiceException e) {
             if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER))
@@ -1025,7 +1078,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             return CONTINUE_PROCESSING;
 
         try {
-            if (path.belongsTo(mCredentials.getAccountId())) {
+            if (path.belongsTo(mCredentials)) {
                 Mailbox mbox = mCredentials.getMailbox();
                 Folder folder = mbox.getFolderByPath(getContext(), path.asZimbraPath());
                 if (!path.isVisible())
@@ -1061,7 +1114,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             return CONTINUE_PROCESSING;
 
         try {
-            if (path.belongsTo(mCredentials.getAccountId())) {
+            if (path.belongsTo(mCredentials)) {
                 try {
                     Mailbox mbox = mCredentials.getMailbox();
                     Folder folder = mbox.getFolderByPath(getContext(), path.asZimbraPath());
@@ -1084,11 +1137,18 @@ public abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean doLIST(String tag, String referenceName, String mailboxName) throws IOException {
+    private static final byte SELECT_SUBSCRIBED = 0x01;
+    private static final byte SELECT_REMOTE     = 0x02;
+    private static final byte SELECT_RECURSIVE  = 0x04;
+
+    private static final byte RETURN_SUBSCRIBED = 0x01;
+    private static final byte RETURN_CHILDREN   = 0x02;
+
+    boolean doLIST(String tag, String referenceName, Set<String> mailboxNames, byte selectOptions, byte returnOptions) throws IOException {
         if (!checkState(tag, State.AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
-        if (mailboxName.equals("")) {
+        if (selectOptions == 0 && returnOptions == 0 && mailboxNames.size() == 1 && mailboxNames.contains("")) {
             // 6.3.8: "An empty ("" string) mailbox name argument is a special request to return
             //         the hierarchy delimiter and the root name of the name given in the reference."
             sendUntagged("LIST (\\Noselect) \"/\" \"\"");
@@ -1096,42 +1156,116 @@ public abstract class ImapHandler extends ProtocolHandler {
             return CONTINUE_PROCESSING;
         }
 
-        List<String> matches = null;
+        // LIST-EXTENDED 4: "The CHILDREN return option is simply an indication that the client
+        //                   wants this information; a server MAY provide it even if the option is
+        //                   not specified."
+        if (extensionEnabled("CHILDREN"))
+            returnOptions |= RETURN_CHILDREN;
+
+        // LIST-EXTENDED 3.1: "Note that the SUBSCRIBED selection option implies the SUBSCRIBED
+        //                     return option (see below)."
+        boolean selectSubscribed = (selectOptions & SELECT_SUBSCRIBED) != 0;
+        if (selectSubscribed)
+            returnOptions |= RETURN_SUBSCRIBED;
+        boolean returnSubscribed = (returnOptions & RETURN_SUBSCRIBED) != 0;
+        Set<String> subscriptions = null;
+
+        boolean selectRecursive = (selectOptions & SELECT_RECURSIVE) != 0;
+
+        Map<ImapPath, String> matches = new LinkedHashMap<ImapPath, String>();
         try {
-            String pattern = mailboxName;
-            if (!mailboxName.startsWith("/")) {
-                if (referenceName.endsWith("/"))  pattern = referenceName + mailboxName;
-                else                              pattern = referenceName + '/' + mailboxName;
-            }
-            ImapPath patternPath = new ImapPath(pattern, mCredentials);
-            pattern = patternPath.asImapPath().toUpperCase();
+            for (String mailboxName : mailboxNames) {
+                // LIST-EXTENDED 3: "In particular, if an extended LIST command has multiple mailbox
+                //                   names and one (or more) of them is the empty string, the empty
+                //                   string MUST be ignored for the purpose of matching."
+                if (mailboxName.equals(""))
+                    continue;
 
-            if (patternPath.getOwner() != null && patternPath.getOwner().indexOf('*') != -1) {
-                // RFC 2342 5: "Alternatively, a server MAY return NO to such a LIST command,
-                //              requiring that a user name be included with the Other Users'
-                //              Namespace prefix before listing any other user's mailboxes."
-                ZimbraLog.imap.info("LIST failed: wildcards not permitted in username " + pattern);
-                sendNO(tag, "LIST failed: wildcards not permitted in username");
-                return CONTINUE_PROCESSING;
-            }
+                String pattern = mailboxName;
+                if (!mailboxName.startsWith("/")) {
+                    if (referenceName.endsWith("/"))  pattern = referenceName + mailboxName;
+                    else                              pattern = referenceName + '/' + mailboxName;
+                }
+                ImapPath patternPath = new ImapPath(pattern, mCredentials);
+                pattern = patternPath.asImapPath().toUpperCase();
+    
+                if (patternPath.getOwner() != null && patternPath.getOwner().indexOf('*') != -1) {
+                    // RFC 2342 5: "Alternatively, a server MAY return NO to such a LIST command,
+                    //              requiring that a user name be included with the Other Users'
+                    //              Namespace prefix before listing any other user's mailboxes."
+                    ZimbraLog.imap.info("LIST failed: wildcards not permitted in username " + pattern);
+                    sendNO(tag, "LIST failed: wildcards not permitted in username");
+                    return CONTINUE_PROCESSING;
+                }
 
-            // make sure we can do a  LIST "" "/home/user1"
-            if (patternPath.getOwner() != null && (ImapPath.NAMESPACE_PREFIX + patternPath.getOwner()).toUpperCase().equals(pattern)) {
-                matches = new ArrayList<String>();
-                matches.add("LIST (\\Noselect) \"/\" " + patternPath.asUtf7String());
-            } else {
+                // make sure we can do a  LIST "" "/home/user1"
+                if (patternPath.getOwner() != null && (ImapPath.NAMESPACE_PREFIX + patternPath.getOwner()).toUpperCase().equals(pattern)) {
+                    matches.put(patternPath, "LIST (\\Noselect) \"/\" " + patternPath.asUtf7String());
+                    continue;
+                }
+
+                // if there's no matching account, skip this pattern
+                Account acct = patternPath.getOwnerAccount();
+                if (acct == null)
+                    continue;
+
+                boolean isOwner = patternPath.belongsTo(mCredentials);
+                if (!isOwner && subscriptions == null && (selectSubscribed || returnSubscribed))
+                    subscriptions = mCredentials.listSubscriptions();
+
+                // get the set of *all* folders; we'll iterate over it below to find matches
+                Map<ImapPath, ItemId> paths = new LinkedHashMap<ImapPath, ItemId>();
                 Object mboxobj = patternPath.getOwnerMailbox();
                 if (mboxobj instanceof Mailbox) {
-                	ImapListOperation op = new ImapListOperation(mSelectedFolder, getContext(), (Mailbox) mboxobj, patternPath, mCredentials, extensionEnabled("CHILDREN"));
-                	op.schedule();
-                	matches = op.getMatches();
+                    Mailbox mbox = (Mailbox) mboxobj;
+                    Collection<Folder> folders = mbox.getVisibleFolders(getContext());
+                    if (folders == null)
+                        folders = mbox.getFolderById(getContext(), Mailbox.ID_FOLDER_USER_ROOT).getSubfolderHierarchy();
+                    for (Folder folder : folders) {
+                        ImapPath path = new ImapPath(patternPath.getOwner(), folder, mCredentials);
+                        if (path.isVisible())
+                            paths.put(path, new ItemId(folder));
+                    }
                 } else if (mboxobj instanceof ZMailbox) {
-                    matches = new ArrayList<String>();
                     ZMailbox zmbx = (ZMailbox) mboxobj;
                     for (ZFolder zfolder : zmbx.getAllFolders()) {
-                        ImapPath zpath = new ImapPath(patternPath.getOwner(), zmbx, zfolder, mCredentials);
-                        if (zpath.asImapPath().toUpperCase().matches(pattern) && zpath.isVisible())
-                            matches.add("LIST () \"/\" " + zpath.asUtf7String());
+                        ImapPath path = new ImapPath(patternPath.getOwner(), zmbx, zfolder, mCredentials);
+                        if (path.isVisible())
+                            paths.put(path, new ItemId(zfolder.getId(), acct.getId()));
+                    }
+                }
+
+                // get the set of folders matching the selection criteria (either all folders or selected folders)
+                Map<ImapPath, ItemId> selected = paths;
+                if (selectSubscribed) {
+                    selected = new LinkedHashMap<ImapPath, ItemId>();
+                    for (Map.Entry<ImapPath, ItemId> entry : paths.entrySet()) {
+                        ImapPath path = entry.getKey();
+                        if (isPathSubscribed(path, isOwner, subscriptions))
+                            selected.put(path, entry.getValue());
+                    }
+                    if (!isOwner) {
+                        // handle nonexistent selected folders by adding them to the list with a null ItemId
+                        for (String sub : subscriptions) {
+                            ImapPath spath = new ImapPath(sub, mCredentials);
+                            if (!selected.containsKey(spath) && spath.belongsTo(patternPath.getOwnerAccountId()))
+                                selected.put(spath, null);
+                        }
+                    }
+                }
+
+                // return only the selected folders (and perhaps their parents) matching the pattern
+                for (ImapPath path : selected.keySet()) {
+                    if (!matches.containsKey(path) && path.asImapPath().toUpperCase().matches(pattern))
+                        matches.put(path, "LIST (" + getFolderAttrs(path, returnOptions, paths, isOwner, subscriptions) + ") \"/\" " + path.asUtf7String());
+
+                    if (!selectRecursive)
+                        continue;
+                    String folderName = path.asZimbraPath();
+                    for (int index = folderName.length() + 1; (index = folderName.lastIndexOf('/', index - 1)) != -1; ) {
+                        ImapPath parent = new ImapPath(path.getOwner(), folderName.substring(0, index), mCredentials);
+                        if (parent.asImapPath().toUpperCase().matches(pattern))
+                            matches.put(parent, "LIST (" + getFolderAttrs(parent, returnOptions, paths, isOwner, subscriptions) + ") \"/\" " + parent.asUtf7String() + " (\"CHILDINFO\" (\"SUBSCRIBED\"))");
                     }
                 }
             }
@@ -1142,13 +1276,61 @@ public abstract class ImapHandler extends ProtocolHandler {
         }
 
         if (matches != null) {
-        	for (String match : matches)
+        	for (String match : matches.values())
         		sendUntagged(match);
         }
 
         sendNotifications(true, false);
         sendOK(tag, "LIST completed");
         return CONTINUE_PROCESSING;
+    }
+
+    private String getFolderAttrs(ImapPath path, byte returnOptions, Map<ImapPath, ItemId> paths, boolean isOwner, Set<String> subscriptions)
+    throws ServiceException {
+        StringBuilder attrs = new StringBuilder();
+
+        ItemId iid = paths.get(path);
+        if (iid == null)
+            attrs.append(attrs.length() == 0 ? "" : " ").append("\\NonExistent");
+
+        if ((returnOptions & RETURN_SUBSCRIBED) != 0 && isPathSubscribed(path, isOwner, subscriptions))
+            attrs.append(attrs.length() == 0 ? "" : " ").append("\\Subscribed");
+
+        if (iid == null)
+            return attrs.toString();
+
+        boolean noinferiors = (iid.getId() == Mailbox.ID_FOLDER_SPAM);
+        if (noinferiors)
+            attrs.append(attrs.length() == 0 ? "" : " ").append("\\NoInferiors");
+
+        if (!path.isSelectable())
+            attrs.append(attrs.length() == 0 ? "" : " ").append("\\NoSelect");
+
+        if (!noinferiors && (returnOptions & RETURN_CHILDREN) != 0) {
+            String prefix = path.asZimbraPath().toUpperCase() + '/';
+            boolean children = false;
+            for (ImapPath other : paths.keySet()) {
+                if (other.asZimbraPath().toUpperCase().startsWith(prefix) && other.isVisible()) {
+                    children = true;  break;
+                }
+            }
+            attrs.append(attrs.length() == 0 ? "" : " ").append(children ? "\\HasChildren" : "\\HasNoChildren");
+        }
+
+        return attrs.toString();
+    }
+
+    private boolean isPathSubscribed(ImapPath path, boolean isOwner, Set<String> subscriptions) throws ServiceException {
+        if (isOwner) {
+            Folder folder = (Folder) path.getFolder();
+            return folder.isTagged(folder.getMailbox().mSubscribeFlag);
+        } else if (subscriptions != null && !subscriptions.isEmpty()) {
+            for (String sub : subscriptions) {
+                if (sub.equalsIgnoreCase(path.asImapPath()))
+                    return true;
+            }
+        }
+        return false;
     }
 
     boolean doLSUB(String tag, String referenceName, String mailboxName) throws IOException {
@@ -1469,14 +1651,14 @@ public abstract class ImapHandler extends ProtocolHandler {
             return CONTINUE_PROCESSING;
 
         try {
-            if (!qroot.belongsTo(mCredentials.getAccountId())) {
+            if (!qroot.belongsTo(mCredentials)) {
                 ZimbraLog.imap.info("GETQUOTA failed: cannot get quota for other user's mailbox: " + qroot);
                 sendNO(tag, "GETQUOTA failed: permission denied");
                 return CONTINUE_PROCESSING;
             }
 
             long quota = mCredentials.getAccount().getIntAttr(Provisioning.A_zimbraMailQuota, 0);
-            if (qroot == null || !qroot.equals("") || quota <= 0) {
+            if (qroot == null || !qroot.asImapPath().equals("") || quota <= 0) {
                 ZimbraLog.imap.info("GETQUOTA failed: unknown quota root: '" + qroot + "'");
                 sendNO(tag, "GETQUOTA failed: unknown quota root");
                 return CONTINUE_PROCESSING;
@@ -1499,7 +1681,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             return CONTINUE_PROCESSING;
 
         try {
-            if (!qroot.belongsTo(mCredentials.getAccountId())) {
+            if (!qroot.belongsTo(mCredentials)) {
                 ZimbraLog.imap.info("GETQUOTAROOT failed: cannot get quota root for other user's mailbox: " + qroot);
                 sendNO(tag, "GETQUOTAROOT failed: permission denied");
                 return CONTINUE_PROCESSING;

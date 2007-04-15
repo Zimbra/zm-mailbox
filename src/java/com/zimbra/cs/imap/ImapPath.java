@@ -72,7 +72,7 @@ public class ImapPath {
             imapPath = imapPath.substring(NAMESPACE_PREFIX.length());
             if (!imapPath.equals("") && !imapPath.startsWith("/")) {
                 int slash = imapPath.indexOf('/');
-                mOwner = (slash == -1 ? imapPath : imapPath.substring(0, slash));
+                mOwner = (slash == -1 ? imapPath : imapPath.substring(0, slash)).toLowerCase();
                 mPath = (slash == -1 ? "" : imapPath.substring(slash));
             }
         }
@@ -92,8 +92,8 @@ public class ImapPath {
 
     ImapPath(String owner, String zimbraPath, ImapCredentials session) {
         mCredentials = session;
-        mOwner = owner;
-        mPath = zimbraPath.substring(1);
+        mOwner = owner == null ? null : owner.toLowerCase();
+        mPath = zimbraPath.startsWith("/") ? zimbraPath.substring(1) : zimbraPath;
     }
 
     ImapPath(String owner, Folder folder, ImapCredentials session) {
@@ -109,12 +109,7 @@ public class ImapPath {
     }
 
 
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof ImapPath))
-            return super.equals(obj);
-
-        ImapPath other = (ImapPath) obj;
+    public boolean isEquivalent(ImapPath other) {
         if (!mPath.equalsIgnoreCase(other.mPath))
             return false;
         if (mOwner == other.mOwner || (mOwner != null && mOwner.equalsIgnoreCase(other.mOwner)))
@@ -128,8 +123,15 @@ public class ImapPath {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof ImapPath))
+            return super.equals(obj);
+        return asImapPath().equalsIgnoreCase(((ImapPath) obj).asImapPath());
+    }
+
+    @Override
     public int hashCode() {
-        return (mOwner == null ? 0 : mOwner.hashCode()) ^ mPath.hashCode() ^ (mCredentials == null ? 0 : mCredentials.hashCode());
+        return (mOwner == null ? 0 : mOwner.toUpperCase().hashCode()) ^ mPath.toUpperCase().hashCode() ^ (mCredentials == null ? 0 : mCredentials.hashCode());
     }
 
 
@@ -137,7 +139,7 @@ public class ImapPath {
         return mOwner;
     }
 
-    ImapCredentials getSession() {
+    ImapCredentials getCredentials() {
         return mCredentials;
     }
 
@@ -145,9 +147,22 @@ public class ImapPath {
         return belongsTo(mbox.getAccountId());
     }
 
+    boolean belongsTo(ImapCredentials creds) throws ServiceException {
+        return belongsTo(creds.getAccountId());
+    }
+
     boolean belongsTo(String accountId) throws ServiceException {
         Account owner = getOwnerAccount();
         return owner != null && owner.getId().equalsIgnoreCase(accountId);
+    }
+
+    String getOwnerAccountId() throws ServiceException {
+        if (mOwner == null && mCredentials != null)
+            return mCredentials.getAccountId();
+        else if (mOwner == null)
+            return null;
+        Account acct = getOwnerAccount();
+        return acct == null ? null : acct.getId();
     }
 
     Account getOwnerAccount() throws ServiceException {
@@ -281,6 +296,14 @@ public class ImapPath {
             String lcname = mPath.toLowerCase();
             if (lcname.startsWith("sent items") && (lcname.length() == 10 || lcname.charAt(10) == '/'))
                 return false;
+        }
+
+        try {
+            getFolder();
+        } catch (ServiceException e) {
+            if (ServiceException.PERM_DENIED.equals(e.getCode()))
+                return false;
+            throw e;
         }
 
         if (getFolder() instanceof Folder) {

@@ -116,6 +116,16 @@ public class ImapLSubOperation extends Operation {
         return matched;
     }
 
+    private static final String[][] FOLDER_ATTRIBUTES = { {
+        "\\HasNoChildren",              "\\HasChildren",
+        "\\HasNoChildren \\NoSelect",   "\\HasChildren \\NoSelect",
+        "\\HasNoChildren \\NoInferiors"
+    }, {
+        "",             "",
+        "\\NoSelect",   "\\NoSelect",
+        "\\NoInferiors"
+    } };
+
     private String getFolderAttributes(ImapPath path, boolean matched) throws ServiceException {
         if (!matched)
             return "\\Noselect";
@@ -124,7 +134,10 @@ public class ImapLSubOperation extends Operation {
         try {
             if (path.isVisible()) {
                 Folder folder = getMailbox().getFolderByPath(getOpCtxt(), path.asZimbraPath());
-                return ImapListOperation.getFolderAttributes(mCredentials, folder, mOutputChildInfo);
+                int attributes = (folder.hasSubfolders() ? 0x01 : 0x00);
+                attributes    |= (!new ImapPath(null, folder, mCredentials).isSelectable() ? 0x02 : 0x00);
+                attributes    |= (folder.getId() == Mailbox.ID_FOLDER_SPAM ? 0x04 : 0x00);
+                return FOLDER_ATTRIBUTES[mOutputChildInfo ? 0 : 1][attributes];
             }
         } catch (MailServiceException.NoSuchItemException nsie) { }
         return "\\Noselect";

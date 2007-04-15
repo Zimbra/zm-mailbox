@@ -355,7 +355,7 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
 
     ImapPath getPath()              { return mPath; }
     String getQuotedPath()          { return '"' + mPath.asZimbraPath() + '"'; }
-    void updatePath(Folder folder)  { mPath = new ImapPath(null, folder.getPath(), mPath.getSession()); }
+    void updatePath(Folder folder)  { mPath = new ImapPath(null, folder.getPath(), mPath.getCredentials()); }
 
 
     /** Returns the UID Validity Value for the {@link Folder}.  This is the

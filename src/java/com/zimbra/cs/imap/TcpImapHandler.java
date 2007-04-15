@@ -30,8 +30,10 @@ import java.io.OutputStream;
 import java.io.Writer;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
@@ -318,6 +320,7 @@ public class TcpImapHandler extends ImapHandler {
     public static void main(String[] args) throws IOException, ImapParseException {
         List<ImapPartSpecifier> parts = new ArrayList<ImapPartSpecifier>();
         List<String> pieces = new ArrayList<String>();
+        Set<String> patterns = new HashSet<String>();
         TcpImapHandler handler = new TcpImapHandler(null);
         handler.mOutputStream = System.out;
 
@@ -331,28 +334,34 @@ public class TcpImapHandler extends ImapHandler {
         handler.doID("B002", null);
 
         System.out.println("> A003 LIST \"\" \"\"");
-        handler.doLIST("A003", "", "");
+        patterns.clear();  patterns.add("");
+        handler.doLIST("A003", "", patterns, (byte) 0, (byte) 0);
 
         System.out.println("> B003 CREATE \"/test/slap\"");
         handler.doCREATE("B003", new ImapPath("/test/slap", null));
 
         System.out.println("> A004 LIST \"/\" \"%\"");
-        handler.doLIST("A004", "/", "[^/]*");
+        patterns.clear();  patterns.add("[^/]*");
+        handler.doLIST("A004", "/", patterns, (byte) 0, (byte) 0);
 
         System.out.println("> B004 DELETE \"/test/slap\"");
         handler.doDELETE("B004", new ImapPath("/test/slap", null));
 
         System.out.println("> A005 LIST \"/\" \"*\"");
-        handler.doLIST("A005", "/", ".*");
+        patterns.clear();  patterns.add(".*");
+        handler.doLIST("A005", "/", patterns, (byte) 0, (byte) 0);
 
         System.out.println("> B005 LIST \"/\" \"inbox\"");
-        handler.doLIST("B005", "/", "INBOX");
+        patterns.clear();  patterns.add("INBOX");
+        handler.doLIST("B005", "/", patterns, (byte) 0, (byte) 0);
 
         System.out.println("> C005 LIST \"/\" \"$NBOX+?\"");
-        handler.doLIST("C005", "/", "\\$NBOX\\+\\?");
+        patterns.clear();  patterns.add("\\$NBOX\\+\\?");
+        handler.doLIST("C005", "/", patterns, (byte) 0, (byte) 0);
 
         System.out.println("> D005 LIST \"/\" \"%/sub()\"");
-        handler.doLIST("D005", "/", "[^/]*/SUB\\(\\)");
+        patterns.clear();  patterns.add("[^/]*/SUB\\(\\)");
+        handler.doLIST("D005", "/", patterns, (byte) 0, (byte) 0);
 
         System.out.println("> A006 SELECT \"/floo\"");
         handler.doSELECT("A006", new ImapPath("/floo", null));

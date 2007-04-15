@@ -206,7 +206,7 @@ class ImapURL {
             // special-case the situation where the relevant folder is already SELECTed
             if (state == ImapHandler.State.SELECTED) {
                 ImapFolder i4folder = handler.getSelectedFolder();
-                if (i4folder != null && acct.getId().equals(i4folder.getTargetAccountId()) && mPath.equals(i4folder.getPath())) {
+                if (i4folder != null && acct.getId().equals(i4folder.getTargetAccountId()) && mPath.isEquivalent(i4folder.getPath())) {
                     ImapMessage i4msg = i4folder.getByImapId(mUid);
                     if (i4msg == null || i4msg.isExpunged())
                         throw new ImapUrlException(tag, mURL, "no such message");
