@@ -1236,26 +1236,26 @@ public abstract class ImapHandler extends ProtocolHandler {
                 }
 
                 // get the set of folders matching the selection criteria (either all folders or selected folders)
-                Map<ImapPath, ItemId> selected = paths;
+                Set<ImapPath> selected = paths.keySet();
                 if (selectSubscribed) {
-                    selected = new LinkedHashMap<ImapPath, ItemId>();
+                    selected = new LinkedHashSet<ImapPath>();
                     for (Map.Entry<ImapPath, ItemId> entry : paths.entrySet()) {
                         ImapPath path = entry.getKey();
                         if (isPathSubscribed(path, isOwner, subscriptions))
-                            selected.put(path, entry.getValue());
+                            selected.add(path);
                     }
                     if (!isOwner) {
-                        // handle nonexistent selected folders by adding them to the list with a null ItemId
+                        // handle nonexistent selected folders by adding them to "selected" but not to "paths"
                         for (String sub : subscriptions) {
                             ImapPath spath = new ImapPath(sub, mCredentials);
-                            if (!selected.containsKey(spath) && spath.belongsTo(patternPath.getOwnerAccountId()))
-                                selected.put(spath, null);
+                            if (!selected.contains(spath) && spath.belongsTo(patternPath.getOwnerAccountId()))
+                                selected.add(spath);
                         }
                     }
                 }
 
                 // return only the selected folders (and perhaps their parents) matching the pattern
-                for (ImapPath path : selected.keySet()) {
+                for (ImapPath path : selected) {
                     if (!matches.containsKey(path) && path.asImapPath().toUpperCase().matches(pattern))
                         matches.put(path, "LIST (" + getFolderAttrs(path, returnOptions, paths, isOwner, subscriptions) + ") \"/\" " + path.asUtf7String());
 
