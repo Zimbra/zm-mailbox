@@ -869,6 +869,21 @@ OR
   if sync="1" present, return modified date (md) on appointment.
 
 -------------------------------------------------------------------------------
+
+<ImportAppointmentsRequest ct="{content-type}" [l="{folder-id}"]>
+  <content [aid="{attach-upload-id}"]>...</content>
+</ImportAppointmentsRequest>
+
+<ImportAppointmentsResponse>
+  <appt ids="{list-of-created-ids} n="{num-imported}"/>
+</ImportAppointmentsResponse>
+
+{content-type} = only currently supported content type is "ics"
+{folder-id} = optional folder id to import appointments into
+
+{attach-upload-id} = attachment id from upload server. If specified, then body of content is ignored.
+
+-------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------

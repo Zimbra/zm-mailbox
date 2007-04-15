@@ -3154,4 +3154,34 @@ public class ZMailbox {
     public void clearMessageCache() {
         mMessageCache.clear();
     }
+
+    public static class ZImportAppointmentsResult {
+
+        private String mIds;
+        private long mCount;
+
+        public ZImportAppointmentsResult(Element response) throws ServiceException {
+            mIds = response.getAttribute(MailConstants.A_ID, null);
+            mCount = response.getAttributeLong(MailConstants.A_NUM);
+        }
+
+        public String getIds() {
+            return mIds;
+        }
+
+        public long getCount() {
+            return mCount;
+        }
+    }
+
+    public static final String APPOINTMENT_IMPORT_TYPE_ICS= "ics";
+
+    public ZImportAppointmentsResult importAppointments(String folderId, String type, String attachmentId) throws ServiceException {
+    	XMLElement req = new XMLElement(MailConstants.IMPORT_APPOINTMENTS_REQUEST);
+    	req.addAttribute(MailConstants.A_CONTENT_TYPE, type);
+    	req.addAttribute(MailConstants.A_FOLDER, folderId);
+    	Element content = req.addElement(MailConstants.E_CONTENT);
+    	content.addAttribute(MailConstants.A_ATTACHMENT_ID, attachmentId);
+    	return new ZImportAppointmentsResult(invoke(req).getElement(MailConstants.E_APPOINTMENT));
+    }
 }
