@@ -33,7 +33,6 @@ import com.zimbra.cs.zclient.event.ZModifyFolderEvent;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public class ZFolder implements ZItem, Comparable {
@@ -162,6 +161,15 @@ public class ZFolder implements ZItem, Comparable {
                 throw ZClientException.CLIENT_ERROR("invalid view: "+s+", valid values: "+Arrays.asList(View.values()), e);                
             }
         }
+
+        public boolean isAppointment() { return equals(appointment); }
+        public boolean isContact() { return equals(contact); }
+        public boolean isConversation() { return equals(conversation); }
+        public boolean isDocument() { return equals(document); }
+        public boolean isMessage() { return equals(message); }
+        public boolean isWiki() { return equals(wiki); }
+        public boolean isTask() { return equals(task); }
+
     }
     
     public ZFolder(Element e, ZFolder parent) throws ServiceException {
