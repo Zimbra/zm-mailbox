@@ -47,7 +47,7 @@
             </CreateAccountRequest>
         </t:request>
         <t:response>
-            <t:select path="//admin:CreateAccountResponse/admin:account"/>
+            <t:select path="//admin:CreateAccountResponse/admin:account" attr="id"  set="child1.id"/>
         </t:response>
     </t:test>
     
@@ -62,7 +62,7 @@
             </CreateAccountRequest>
         </t:request>
         <t:response>
-            <t:select path="//admin:CreateAccountResponse/admin:account"/>
+            <t:select path="//admin:CreateAccountResponse/admin:account" attr="id"  set="child2.id"/>
         </t:response>
     </t:test> 
     
@@ -77,7 +77,7 @@
             </CreateAccountRequest>
         </t:request>
         <t:response>
-            <t:select path="//admin:CreateAccountResponse/admin:account"/>
+            <t:select path="//admin:CreateAccountResponse/admin:account" attr="id"  set="child3.id"/>
         </t:response>
     </t:test> 
     
@@ -92,7 +92,7 @@
             </CreateAccountRequest>
         </t:request>
         <t:response>
-            <t:select path="//admin:CreateAccountResponse/admin:account"/>
+            <t:select path="//admin:CreateAccountResponse/admin:account" attr="id"  set="child4.id"/>
         </t:response>
     </t:test> 
     
@@ -107,7 +107,7 @@
             </CreateAccountRequest>
         </t:request>
         <t:response>
-            <t:select path="//admin:CreateAccountResponse/admin:account"/>
+            <t:select path="//admin:CreateAccountResponse/admin:account" attr="id"  set="child5.id"/>
         </t:response>
     </t:test> 
     
@@ -122,7 +122,7 @@
             </CreateAccountRequest>
         </t:request>
         <t:response>
-            <t:select path="//admin:CreateAccountResponse/admin:account"/>
+            <t:select path="//admin:CreateAccountResponse/admin:account" attr="id"  set="child6.id"/>
         </t:response>
     </t:test> 
     
@@ -133,6 +133,15 @@
                 <password>${password}</password>
                 <a n="cn">Demo User Family Parent</a>
                 <a n="displayName">parent</a>
+                <a n="zimbraChildAccount">${child1.id}</a>
+                <a n="zimbraChildAccount">${child2.id}</a>
+                <a n="zimbraChildAccount">${child3.id}</a>
+                <a n="zimbraChildAccount">${child4.id}</a>
+                <a n="zimbraChildAccount">${child5.id}</a>
+                <a n="zimbraChildAccount">${child6.id}</a>
+                <a n="zimbraChildVisibleAccount">${child1.id}</a>
+                <a n="zimbraChildVisibleAccount">${child2.id}</a>
+                <a n="zimbraChildVisibleAccount">${child3.id}</a>
             </CreateAccountRequest>
         </t:request>
         <t:response>
