@@ -30,6 +30,7 @@ package com.zimbra.common.soap;
 
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
+
 import org.apache.commons.cli.*;
 import org.dom4j.DocumentException;
 import org.dom4j.Namespace;
@@ -38,9 +39,11 @@ import org.dom4j.QName;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -207,6 +210,7 @@ public class SoapTestHarness {
         
         options.addOption("h", "help", false, "print usage");
         options.addOption("d", "debug", false, "debug");
+        options.addOption("s", "expandsystemprops", false, "exoand system properties");
         
         Option fileOpt = new Option("f", "file", true, "input document");
         fileOpt.setArgName("request-document");
@@ -227,7 +231,10 @@ public class SoapTestHarness {
 
         mDebug = cl.hasOption("d");
         String file = cl.getOptionValue("f");
-
+        
+        if (cl.hasOption("s"))
+            expandSystemProperties();;
+    
         String docStr = new String(ByteUtil.getContent(new File(file)), "utf-8");
         doTests(Element.parseXML(docStr));
         
@@ -564,4 +571,22 @@ public class SoapTestHarness {
 			super(message, cause);
 		}
 	}
+    
+	private void expandSystemProperties() throws HarnessException {
+       
+		Properties props = System.getProperties();
+
+		if (props != null) {
+			Enumeration keys = props.propertyNames();
+			while (keys.hasMoreElements()) {
+				String key = keys.nextElement().toString();
+				String value = props.getProperty(key).toString();
+				if (value != null)
+					setProperty(key, value);
+				else
+					throw new HarnessException("Invalid Global Property file");
+			}
+		}
+	}
+
 }
