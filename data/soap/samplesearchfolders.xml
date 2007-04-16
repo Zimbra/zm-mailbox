@@ -2,7 +2,10 @@
 
   <t:property name="uri" value="http://localhost:7070/service/soap/"/>
 
-  <t:property name="user" value="user1"/>
+  <!-- system properties: 
+           SAMPLE_USER
+  -->    
+  <t:property name="user" value="${SAMPLE_USER}"/>
   <t:property name="password" value="test123"/>
 
   <t:test id="auth" required="true">

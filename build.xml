@@ -509,11 +509,13 @@
 	<target name="inject" depends="compile">
 		<echo>Inserting default contacts: user1@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.common.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-f data/soap/samplecontacts.xml" />
+			<sysproperty key="SAMPLE_USER" value="user1"/>
+			<arg line="-s -f data/soap/samplecontacts.xml" />
 		</java>
 		<echo>Creating default search folders: user1@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.common.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-f data/soap/samplesearchfolders.xml" />
+			<sysproperty key="SAMPLE_USER" value="user1"/>
+			<arg line="-s -f data/soap/samplesearchfolders.xml" />
 		</java>
 		<echo message="Wait for lmtp host=${lmtp.host} port=${lmtp.port}" />
 		<waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
@@ -691,93 +693,6 @@
 		</java>
 	</target>
 	
-	
-	<target name="family-child-zmprov-command">
-		<echo file="${outfile}" append="true">
-			ca child${acctidx}@${zimbra.server.hostname} test123 \
-				zimbraMailHost ${zimbra.server.hostname} \
-				cn 'Demo User Family Child ${acctidx}' \
-				displayName 'Demo User Family Child ${acctidx}' \
-				zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
-				zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
-				telephoneNumber '+1 650 777 ${acctidx}${acctidx}${acctidx}${acctidx}' \
-				zimbraFeatureOptionsEnabled 'FALSE'
-		</echo>		
-	</target>
-	
-	<target name="create-family-child-accounts">
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true" output="${childid.file}">
-			<arg line="-l -f ${args.file}" />
-		</java>
-		<replaceregexp file="${childid.file}" match="prov>" replace="" flags="g" byline="false"/>
-		<replaceregexp file="${childid.file}" match="\s+" replace=" " flags="g" byline="false"/>
-		<replaceregexp file="${childid.file}" match="\s+$" replace="" flags="g" byline="false"/>
-	</target>
-	
-	<target name="init-family-accounts">
-		<property name="data.dir" value="${build.dir}/data"/>
-		<property name="family.parent" value="${data.dir}/zmprov-family-parent.txt"/>
-		<property name="family.parent.prefix" value="zmprov-family-parent-prefix.txt"/>
-		<property name="family.child.visible" value="${data.dir}/zmprov-family-child-visible.txt"/>
-		<property name="family.child.invisible" value="${data.dir}/zmprov-family-child-invisible.txt"/>
-		<property name="family.childid.visible" value="zmprov-family-childid-visible.txt"/>
-		<property name="family.childid.invisible" value="zmprov-family-childid-invisible.txt"/>
-		<property name="family.childid.all" value="zmprov-family-childid-all.txt"/>
-				
-		<!-- create visible child accounts -->
-		<echo file="${family.child.visible}"/>
-		<for list="1,2,3" param="idx">
-			<sequential>
-				<antcall target="family-child-zmprov-command">
-					<param name="outfile" value="${family.child.visible}"/>
-					<param name="acctidx" value="@{idx}"/>
-				</antcall>	
-			</sequential>	
-		</for>
-		<antcall target="create-family-child-accounts">
-			<param name="args.file" value="${family.child.visible}"/>
-			<param name="childid.file" value="${data.dir}/${family.childid.visible}"/>
-		</antcall>
-				
-		<!-- create invisible child accounts -->
-		<echo file="${family.child.invisible}"/>
-		<for list="4,5,6" param="idx">
-			<sequential>
-				<antcall target="family-child-zmprov-command">
-					<param name="outfile" value="${family.child.invisible}"/>
-					<param name="acctidx" value="@{idx}"/>
-				</antcall>	
-			</sequential>	
-		</for>
-		<antcall target="create-family-child-accounts">
-			<param name="args.file" value="${family.child.invisible}"/>
-			<param name="childid.file" value="${data.dir}/${family.childid.invisible}"/>
-		</antcall>
-		
-		<!-- create parent account -->
-		<echo file="${data.dir}/${family.parent.prefix}">
-			ca parent@${zimbra.server.hostname} test123 \
-				zimbraMailHost ${zimbra.server.hostname} \
-				cn 'Demo User Family Parent' \
-				displayName 'Demo User Family Parent' \
-				zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
-				zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
-				telephoneNumber '+1 650 777 0000' \
-		</echo>
-		<concat destfile="${data.dir}/${family.childid.all}">
-			<filelist dir="${data.dir}" files="${family.childid.visible} ${family.childid.invisible}"/>
-		</concat>
-		<replaceregexp file="${data.dir}/${family.childid.all}" match=" " replace=" zimbraChildAccount " flags="g" byline="false"/>
-		<replaceregexp file="${data.dir}/${family.childid.visible}" match=" " replace=" zimbraChildVisibleAccount " flags="g" byline="false"/>
-
-		<concat destfile="${family.parent}">
-			<filelist dir="${data.dir}" files="${family.parent.prefix} ${family.childid.all} ${family.childid.visible}"/>
-		</concat>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-l -f ${family.parent}" />
-		</java>
-	</target>
-
 	<target name="zmprov-commands" depends="build-init">
 		
 		<echo file="${build.zmprov}">		
@@ -994,7 +909,86 @@
 					       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
 		</echo>
 	</target>
-
+	
+	<target name="family-delete" depends="compile">
+		<property name="data.dir" value="${build.dir}/data"/>
+		<property name="family.delete" value="${data.dir}/zmprov-family-delete.txt"/>
+		<property name="family.delete.out" value="${data.dir}/zmprov-family-delete-out.txt"/>
+			
+		<echo file="${family.delete}"/>
+			
+		<!-- child accounts -->
+		<for list="1,2,3" param="idx">
+			<sequential>
+				<echo file="${family.delete}" append="true">da family-child@{idx}-visible@${zimbra.server.hostname}
+				</echo>
+			</sequential>	
+		</for>
+		<for list="4,5,6" param="idx">
+			<sequential>
+				<echo file="${family.delete}" append="true">da family-child@{idx}-invisible@${zimbra.server.hostname}
+				</echo>
+			</sequential>	
+		</for>
+			
+		<!-- parent account -->
+		<echo file="${family.delete}" append="true">
+			da family-parent@${zimbra.server.hostname}
+		</echo>
+			
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true" output="${family.delete.out}">
+			<arg line="-l -f ${family.delete}" />
+		</java>
+	</target>
+	
+	<target name="family-inject" depends="compile">
+		<echo>Inserting contacts for ${accountToInject}</echo>
+		<java classname="com.zimbra.common.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
+			<sysproperty key="SAMPLE_USER" value="${accountToInject}"/>
+			<arg line="-s -f data/soap/samplecontacts.xml" />
+		</java>
+		<echo>Creating search folders for ${accountToInject}</echo>
+		<java classname="com.zimbra.common.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
+			<sysproperty key="SAMPLE_USER" value="${accountToInject}"/>
+			<arg line="-s -f data/soap/samplesearchfolders.xml" />
+		</java>
+		<echo message="Wait for lmtp host=${lmtp.host} port=${lmtp.port}" />
+		<waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
+			<socket server="${lmtp.host}" port="${lmtp.port}" />
+		</waitfor>
+		<echo>LmtpInject messages for ${accountToInject}</echo>
+		<java classname="com.zimbra.cs.lmtpserver.utils.LmtpInject" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r ${accountToInject} -s ho@example.zimbra.com -d" />
+			<arg path="data/TestMailRaw" />
+		</java>
+		<echo>Importing Wiki documents for ${accountToInject}</echo>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="-l impn ${accountToInject} test123 data/wiki/user1 /" />
+		</java>
+	</target>
+	
+	<target name="family-init" depends="compile">
+		<echo>Deleting family accounts</echo>
+		<antcall target="family-delete"/>
+		
+		<echo>Creating family accounts</echo>
+		<java classname="com.zimbra.common.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
+			<sysproperty key="DOMAIN_NAME" value="${zimbra.server.hostname}"/>
+			<sysproperty key="ADMIN_USER" value="admin@${zimbra.server.hostname}"/>
+			<sysproperty key="ADMIN_PASSWORD" value="test123"/>
+			<arg line="-s -d -f data/soap/samplefamilyaccounts.xml"/>
+		</java>
+		
+		<!-- inject test data for family parent and child -->
+		<for list="family-parent,family-child1-visible" param="accountName">
+			<sequential>
+				<antcall target="family-inject">
+					<param name="accountToInject" value="@{accountName}@${zimbra.server.hostname}"/>
+				</antcall>	
+			</sequential>	
+		</for>
+    </target>
+	
 	<target name="deploy-zimlets" if="dist.zimlet.dir">
 		<foreach target="install-zimlet" param="zimlet">
 			<path>
