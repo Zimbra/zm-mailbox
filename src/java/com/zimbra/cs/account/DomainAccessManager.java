@@ -36,14 +36,18 @@ public class DomainAccessManager extends AccessManager {
         return at.isDomainAdmin() && !at.isAdmin();
     }
 
-    public boolean canAccessAccount(AuthToken at, Account target) throws ServiceException {
-        if (at.isAdmin()) return true;
+    public boolean canAccessAccount(AuthToken at, Account target, boolean asAdmin) throws ServiceException {
+        if (asAdmin && at.isAdmin()) return true;
         if (isParentOf(at, target)) return true;
-        if (!at.isDomainAdmin()) return false;
+        if (!(asAdmin && at.isDomainAdmin())) return false;
         // don't allow a domain-only admin to access a global admin's account
         if (target.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false)) return false;
         Provisioning prov = Provisioning.getInstance();
         return getDomain(at).getId().equals(prov.getDomain(target).getId());
+    }
+    
+    public boolean canAccessAccount(AuthToken at, Account target) throws ServiceException {
+        return canAccessAccount(at, target, true);
     }
 
     /** Returns whether the specified account's credentials are sufficient
@@ -53,14 +57,18 @@ public class DomainAccessManager extends AccessManager {
      *  access, and passing the same account for <code>credentials</code> and
      *  <code>target</code> will not succeed for non-admin accounts.</i>
      * @param credentials  The authenticated account performing the action. 
-     * @param target       The target account for the proposed action. */
-    public boolean canAccessAccount(Account credentials, Account target) {
+     * @param target       The target account for the proposed action. 
+     * @param asAdmin      If the authenticated account is acting as an admin accunt*/
+    public boolean canAccessAccount(Account credentials, Account target, boolean asAdmin) {
         // admin auth account will always succeed
-        if (credentials.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false))
+        if (asAdmin && credentials.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false))
             return true;
         // parent auth account will always succeed
         if (isParentOf(credentials, target))
             return true;
+        // don't allow access if the authenticated account is not acting as an admin
+        if (!asAdmin)
+            return false;
         // don't allow a domain-only admin to access a global admin's account
         if (target.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false))
             return false;
@@ -69,6 +77,10 @@ public class DomainAccessManager extends AccessManager {
             return credentials.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
         // everyone else is out of luck
         return false;
+    }
+    
+    public boolean canAccessAccount(Account credentials, Account target) {
+        return canAccessAccount(credentials, target, true);
     }
 
     public boolean canAccessDomain(AuthToken at, String domainName) throws ServiceException {

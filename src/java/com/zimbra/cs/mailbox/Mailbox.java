@@ -679,8 +679,8 @@ public class Mailbox {
         // XXX: in Mailbox, authuser is set to null if authuser == owner.
         if (authuser == null || getAccountId().equals(authuser.getId()))
             return true;
-        if (mCurrentChange.active && mCurrentChange.octxt != null && isUsingAdminPrivileges())
-            return AccessManager.getInstance().canAccessAccount(authuser, getAccount());
+        if (mCurrentChange.active && mCurrentChange.octxt != null)
+            return AccessManager.getInstance().canAccessAccount(authuser, getAccount(), isUsingAdminPrivileges());
         return false;
     }
 

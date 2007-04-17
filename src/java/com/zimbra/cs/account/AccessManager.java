@@ -54,6 +54,7 @@ public abstract class AccessManager {
         return Provisioning.getInstance().getDomain(getAccount(at));
     }
 
+    public abstract boolean canAccessAccount(AuthToken at, Account target, boolean asAdmin) throws ServiceException;
     public abstract boolean canAccessAccount(AuthToken at, Account target) throws ServiceException;
 
     /** @return Returns whether the specified account's credentials are sufficient
@@ -62,7 +63,9 @@ public abstract class AccessManager {
      *  <code>credentials</code> and <code>target</code> will not succeed
      *  for non-admin accounts.</i>
      * @param credentials  The authenticated account performing the action. 
-     * @param target       The target account for the proposed action. */
+     * @param target       The target account for the proposed action. 
+     * @param asAdmin      If the authenticated account is acting as an admin accunt */
+    public abstract boolean canAccessAccount(Account credentials, Account target, boolean asAdmin);
     public abstract boolean canAccessAccount(Account credentials, Account target);
 
     public abstract boolean canAccessDomain(AuthToken at, String domainName) throws ServiceException;
