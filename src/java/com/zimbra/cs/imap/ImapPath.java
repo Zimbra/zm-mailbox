@@ -134,6 +134,16 @@ public class ImapPath {
         return (mOwner == null ? 0 : mOwner.toUpperCase().hashCode()) ^ mPath.toUpperCase().hashCode() ^ (mCredentials == null ? 0 : mCredentials.hashCode());
     }
 
+    void canonicalize() throws ServiceException {
+        if (getFolder() instanceof Folder)
+            mPath = ((Folder) getFolder()).getPath();
+        else
+            mPath = ((ZFolder) getFolder()).getPath();
+
+        while (mPath.startsWith("/"))
+            mPath = mPath.substring(1);
+    }
+
 
     String getOwner() {
         return mOwner;

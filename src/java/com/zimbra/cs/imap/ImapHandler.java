@@ -1078,6 +1078,9 @@ public abstract class ImapHandler extends ProtocolHandler {
             return CONTINUE_PROCESSING;
 
         try {
+            // canonicalizing the path also throws exceptions when the folder doesn't exist
+            path.canonicalize();
+
             if (path.belongsTo(mCredentials)) {
                 Mailbox mbox = mCredentials.getMailbox();
                 Folder folder = mbox.getFolderByPath(getContext(), path.asZimbraPath());
@@ -1098,6 +1101,8 @@ public abstract class ImapHandler extends ProtocolHandler {
         } catch (ServiceException e) {
             if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER))
                 ZimbraLog.imap.info("SUBSCRIBE failed: no such folder: " + path);
+            else if (e.getCode().equals(ServiceException.PERM_DENIED))
+                ZimbraLog.imap.info("SUBSCRIBE failed: permission denied on folder: " + path);
             else
                 ZimbraLog.imap.warn("SUBSCRIBE failed", e);
             sendNO(tag, "SUBSCRIBE failed");
