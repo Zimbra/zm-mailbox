@@ -279,11 +279,11 @@ public class Folder extends MailItem {
     void setPermissions(ACL acl) throws ServiceException {
         if (!canAccess(ACL.RIGHT_ADMIN))
             throw ServiceException.PERM_DENIED("you do not have admin rights to folder " + getPath());
-        if (acl != null) {
-            for (ACL.Grant grant : acl.getGrants())
-                if (grant.getGranteeType() == ACL.GRANTEE_USER && grant.getGranteeId().equalsIgnoreCase(getMailbox().getAccountId()))
-                    throw ServiceException.PERM_DENIED("cannot grant access to the owner of the folder");
-        }
+//        if (acl != null) {
+//            for (ACL.Grant grant : acl.getGrants())
+//                if (grant.getGranteeType() == ACL.GRANTEE_USER && grant.getGranteeId().equalsIgnoreCase(getMailbox().getAccountId()))
+//                    throw ServiceException.PERM_DENIED("cannot grant access to the owner of the folder");
+//        }
 
         // if we're setting an ACL on the folder, the folder does not inherit from its parent
         alterTag(mMailbox.mNoInheritFlag, true);
@@ -306,7 +306,7 @@ public class Folder extends MailItem {
     /** Returns a copy of the ACL that applies to the folder (possibly
      *  inherited from a parent), or <tt>null</tt> if one is not set. */
     public ACL getEffectiveACL() {
-        if (mId == Mailbox.ID_FOLDER_ROOT || isTagged(mMailbox.mNoInheritFlag))
+        if (mId == Mailbox.ID_FOLDER_ROOT || isTagged(mMailbox.mNoInheritFlag) || mParent == null)
             return getACL();
         return mParent.getEffectiveACL();
     }
@@ -971,9 +971,9 @@ public class Folder extends MailItem {
 
         MetadataList mlistACL = meta.getList(Metadata.FN_RIGHTS, true);
         if (mlistACL != null) {
-            if ((mRights = new ACL(mlistACL)).isEmpty())
-                mRights = null;
-            else if (!isTagged(mMailbox.mNoInheritFlag))
+            ACL acl = new ACL(mlistACL);
+            mRights = acl.isEmpty() ? null : acl;
+            if (!isTagged(mMailbox.mNoInheritFlag))
                 alterTag(mMailbox.mNoInheritFlag, true);
         }
     }
