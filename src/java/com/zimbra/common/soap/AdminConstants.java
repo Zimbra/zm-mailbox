@@ -229,6 +229,8 @@ public class AdminConstants {
 
     public static final QName DUMP_SESSIONS_REQUEST = QName.get("DumpSessionsRequest", NAMESPACE);
     public static final QName DUMP_SESSIONS_RESPONSE = QName.get("DumpSessionsResponse", NAMESPACE);
+    public static final QName GET_SESSIONS_REQUEST = QName.get("GetSessionsRequest", NAMESPACE);
+    public static final QName GET_SESSIONS_RESPONSE = QName.get("GetSessionsResponse", NAMESPACE);
 
     public static final QName GET_QUOTA_USAGE_REQUEST = QName.get("GetQuotaUsageRequest", NAMESPACE);
     public static final QName GET_QUOTA_USAGE_RESPONSE = QName.get("GetQuotaUsageResponse", NAMESPACE);
@@ -374,6 +376,7 @@ public class AdminConstants {
     public static final String A_TOKEN = "token";
     public static final String A_VIA = "via";
     public static final String A_EXCLUDE = "exclude";
+    public static final String A_REFRESH = "refresh";
 
     public static final String BY_ID = "id";
     public static final String BY_QUERY = "query";
