@@ -1300,6 +1300,31 @@ If accountName is unvailable for some reason, it will be set to the same as acco
 
 -----------------------------
 
+<GetSessionsRequest type="{session-type}" refresh="0|1"
+  [limit="..."] [offset="..."] [sortBy="{sort-by}"]/>
+
+<GetSessionsResponse more="{more-flag}" [total="{total}"]>
+  <s zid="accountId" name="accountName" sid="sessionId" cd="creationDate" ld="lastAccessedDate"/>
+</GetSessionsResponse>
+
+Notes:
+
+GetSessionsRequest
+
+    type = soap|imap|admin
+    refresh = if 1, ignore any cached results and start fresh.
+	limit - the number of sessions to return per page (0 is default and means all)
+	offset - the starting offset (0, 25, etc)
+	sortBy - nameAsc, nameDesc, createdAsc, createdDesc, accessedAsc, accessedDesc
+
+    more-flag = true if more sessions left to return
+    total = total number of accounts that matched search (not affected by limit/offset)
+
+
+Access: domain admin sufficient (though a domain admin can't specify "domains" as a type)
+
+-----------------------------
+
 Note: Calendar resource is a special type of Account.  The Create, Delete,
 Modify, Rename, Get, GetAll, and Search operations are very similar to
 those of Account.

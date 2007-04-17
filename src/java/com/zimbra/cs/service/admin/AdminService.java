@@ -141,6 +141,7 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.CONFIGURE_ZIMLET_REQUEST, new ConfigureZimlet());
         dispatcher.registerHandler(AdminConstants.MODIFY_ZIMLET_REQUEST, new ModifyZimlet());
         dispatcher.registerHandler(AdminConstants.DUMP_SESSIONS_REQUEST, new DumpSessions());
+        dispatcher.registerHandler(AdminConstants.GET_SESSIONS_REQUEST, new GetSessions());
 
         // calendar resources
         dispatcher.registerHandler(AdminConstants.CREATE_CALENDAR_RESOURCE_REQUEST,   new CreateCalendarResource());
