@@ -24,15 +24,10 @@
  */
 package com.zimbra.cs.service.formatter;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Reader;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.HttpUtil.Browser;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -43,10 +38,16 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.UserServlet.Context;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.HttpUtil;
-import com.zimbra.common.util.HttpUtil.Browser;
+
+import javax.mail.Part;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 public class IcsFormatter extends Formatter {
 
@@ -80,7 +81,13 @@ public class IcsFormatter extends Formatter {
             if (iterator instanceof QueryResultIterator)
                 ((QueryResultIterator) iterator).finished();
         }
-        
+
+        // todo: get from folder name
+        String filename = context.itemPath;
+        if (filename == null || filename.length() == 0)
+            filename = "contacts";
+        String cd = Part.ATTACHMENT + "; filename=" + HttpUtil.encodeFilename(context.req, filename + ".ics");
+        context.resp.addHeader("Content-Disposition", cd);
         context.resp.setCharacterEncoding(Mime.P_CHARSET_UTF8);
         context.resp.setContentType(Mime.CT_TEXT_CALENDAR );
 
