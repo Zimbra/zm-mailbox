@@ -2228,6 +2228,11 @@ public class LdapProvisioning extends Provisioning {
         
         removeAddressFromAllDistributionLists(dl.getName()); // this doesn't throw any exceptions
         
+        String aliases[] = dl.getAliases();
+        if (aliases != null)
+            for (int i=0; i < aliases.length; i++)
+                removeAlias(dl, aliases[i]); // this also removes each alias from any DLs
+        
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(true);
