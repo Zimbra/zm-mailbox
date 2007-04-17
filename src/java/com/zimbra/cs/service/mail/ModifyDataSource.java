@@ -49,6 +49,9 @@ public class ModifyDataSource extends MailDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         Account account = getRequestedAccount(zsc);
+        
+        canModifyOptions(zsc, account);
+        
         boolean wipeOutOldData = false;
         
         Element eDataSource = CreateDataSource.getDataSourceElement(request);

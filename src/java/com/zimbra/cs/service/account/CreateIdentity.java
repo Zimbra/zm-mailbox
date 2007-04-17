@@ -42,6 +42,8 @@ public class CreateIdentity extends DocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getRequestedAccount(zsc);
         
+        canModifyOptions(zsc, account);
+        
         Element identityEl = request.getElement(AccountConstants.E_IDENTITY);
         String name = identityEl.getAttribute(AccountConstants.A_NAME);
         Map<String,Object> attrs = AccountService.getAttrs(identityEl, AccountConstants.A_NAME);

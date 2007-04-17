@@ -43,6 +43,9 @@ public class ModifyIdentity extends DocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getRequestedAccount(zsc);
+        
+        canModifyOptions(zsc, account);
+        
         Provisioning prov = Provisioning.getInstance();
 
         Element eIdentity = request.getElement(AccountConstants.E_IDENTITY);

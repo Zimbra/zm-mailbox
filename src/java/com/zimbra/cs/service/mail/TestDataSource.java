@@ -47,6 +47,8 @@ public class TestDataSource extends MailDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         Account account = getRequestedAccount(zsc);
+        
+        canModifyOptions(zsc, account);
 
         Map<String, Object> testAttrs = new HashMap<String, Object>();
         String testId = "TestId";

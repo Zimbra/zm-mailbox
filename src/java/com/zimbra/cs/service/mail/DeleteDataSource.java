@@ -48,6 +48,9 @@ public class DeleteDataSource extends MailDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         Account account = getRequestedAccount(zsc);
+        
+        canModifyOptions(zsc, account);
+        
         Mailbox mbox = getRequestedMailbox(zsc);
 
         for (Element eDsrc : request.listElements()) {

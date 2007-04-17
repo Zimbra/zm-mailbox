@@ -49,10 +49,7 @@ public class ModifyPrefs extends AccountDocumentHandler {
 		ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(zsc);
 
-        if (!acct.getBooleanAttr(Provisioning.A_zimbraFeatureOptionsEnabled, true)) {
-            if (!canAccessAccount(zsc, acct))
-                throw ServiceException.PERM_DENIED("can not modify prefs");
-        }
+        canModifyOptions(zsc, acct);
         
         HashMap<String, String> prefs = new HashMap<String, String>();
         for (Element e : request.listElements(AccountConstants.E_PREF)) {

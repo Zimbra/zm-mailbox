@@ -156,6 +156,14 @@ public abstract class DocumentHandler {
             throw ServiceException.INVALID_REQUEST("must be valid email address: "+email, null);
         return canAccessDomain(zsc, parts[1]);
     }
+    
+    public boolean canModifyOptions(ZimbraSoapContext zsc, Account acct) throws ServiceException {
+        if (!acct.getBooleanAttr(Provisioning.A_zimbraFeatureOptionsEnabled, true)) {
+            if (!canAccessAccount(zsc, acct))
+                throw ServiceException.PERM_DENIED("can not modify options");
+        }
+        return true;
+    }
 
     /**
      * @return returns true if domain admin auth is sufficient to run this command. This should be overriden only on admin

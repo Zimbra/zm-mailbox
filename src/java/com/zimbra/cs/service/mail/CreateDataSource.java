@@ -50,6 +50,9 @@ public class CreateDataSource extends MailDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         Account account = getRequestedAccount(zsc);
+        
+        canModifyOptions(zsc, account);
+        
         Mailbox mbox = getRequestedMailbox(zsc);
         
         // Create the data source
