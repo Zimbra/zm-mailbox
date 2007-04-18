@@ -83,6 +83,7 @@ public class AutoCompleteGal extends AccountDocumentHandler {
         return response;
     }
 
+    @Override
     public boolean needsAuth(Map<String, Object> context) {
         return true;
     }
@@ -91,21 +92,16 @@ public class AutoCompleteGal extends AccountDocumentHandler {
         Element cn = response.addElement(MailConstants.E_CONTACT);
         cn.addAttribute(MailConstants.A_ID, contact.getId());
         Map<String, Object> attrs = contact.getAttrs();
-        for (Map.Entry entry : attrs.entrySet()) {
+        for (Map.Entry<String, Object> entry : attrs.entrySet()) {
             Object value = entry.getValue();
             // can't use DISP_ELEMENT because some GAL contact attributes
             //   (e.g. "objectClass") are multi-valued
             if (value instanceof String[]) {
                 String sa[] = (String[]) value;
-                for (int i = 0; i < sa.length; i++) {
-                    cn.addElement(MailConstants.E_ATTRIBUTE)
-                      .addAttribute(MailConstants.A_ATTRIBUTE_NAME, (String) entry.getKey())
-                      .setText(sa[i]);
-                }
+                for (int i = 0; i < sa.length; i++)
+                    cn.addKeyValuePair(entry.getKey(), sa[i], MailConstants.E_ATTRIBUTE, MailConstants.A_ATTRIBUTE_NAME);
             } else {
-                cn.addElement(MailConstants.E_ATTRIBUTE)
-                  .addAttribute(MailConstants.A_ATTRIBUTE_NAME, (String) entry.getKey())
-                  .setText((String) entry.getValue());
+                cn.addKeyValuePair(entry.getKey(), (String) value, MailConstants.E_ATTRIBUTE, MailConstants.A_ATTRIBUTE_NAME);
             }
         }
     }

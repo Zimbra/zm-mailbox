@@ -29,7 +29,6 @@
 package com.zimbra.cs.service.account;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -69,7 +68,7 @@ public class GetInfo extends AccountDocumentHandler  {
             response.addAttribute(AccountConstants.E_QUOTA_USED, getRequestedMailbox(lc).getSize(), Element.Disposition.CONTENT);
         } catch (ServiceException e) { }
 
-        Map attrMap = acct.getAttrs();
+        Map<String, Object> attrMap = acct.getAttrs();
         // take this out when client is updated
         //doPrefs(response, attrMap);
         
@@ -91,7 +90,6 @@ public class GetInfo extends AccountDocumentHandler  {
         doChildAccounts(ca, acct);
         
         GetAccountInfo.addUrls(response, acct);
-        
         return response;
     }
 
@@ -111,19 +109,14 @@ public class GetInfo extends AccountDocumentHandler  {
     static void doAttr(Element response, String key, Object value) {
         if (value instanceof String[]) {
             String sa[] = (String[]) value;
-            for (int i = 0; i < sa.length; i++)
-                if (sa[i] != null && !sa[i].equals("")) {
-                    // FIXME: change to "a"/"n" rather than "attr"/"name"
-                    Element pref = response.addElement(AccountConstants.E_ATTR);
-                    pref.addAttribute(AccountConstants.A_NAME, key);
-                    pref.setText(sa[i]);
-                }
-        } else {
-            if (value != null && !value.equals("")) {
-                Element pref = response.addElement(AccountConstants.E_ATTR);
-                pref.addAttribute(AccountConstants.A_NAME, key);
-                pref.setText((String) value);
+            for (int i = 0; i < sa.length; i++) {
+                // FIXME: change to "a"/"n" rather than "attr"/"name"
+                if (sa[i] != null && !sa[i].equals(""))
+                    response.addKeyValuePair(key, sa[i], AccountConstants.E_ATTR, AccountConstants.A_NAME);
             }
+        } else {
+            if (value != null && !value.equals(""))
+                response.addKeyValuePair(key, (String) value, AccountConstants.E_ATTR, AccountConstants.A_NAME);
         }        
     }
 
@@ -132,9 +125,8 @@ public class GetInfo extends AccountDocumentHandler  {
     	List<Zimlet> zimletList = ZimletUtil.orderZimletsByPriority(attrList);
     	int priority = 0;
     	for (Zimlet z : zimletList) {
-			if (z.isEnabled() && !z.isExtension()) {
+			if (z.isEnabled() && !z.isExtension())
 				ZimletUtil.listZimlet(response, z.getName(), priority);
-			}
     		priority++;
     	}
 
@@ -144,10 +136,8 @@ public class GetInfo extends AccountDocumentHandler  {
 
     private static void doProperties(Element response, Account acct) {
     	ZimletUserProperties zp = ZimletUserProperties.getProperties(acct);
-    	Set props = zp.getAllProperties();
-    	Iterator iter = props.iterator();
-    	while (iter.hasNext()) {
-    		ZimletProperty prop = (ZimletProperty) iter.next();
+    	Set<? extends ZimletProperty> props = zp.getAllProperties();
+        for (ZimletProperty prop : props) {
     		Element elem = response.addElement(AccountConstants.E_PROPERTY);
     		elem.addAttribute(AccountConstants.A_ZIMLET, prop.getZimletName());
     		elem.addAttribute(AccountConstants.A_NAME, prop.getKey());
@@ -158,9 +148,8 @@ public class GetInfo extends AccountDocumentHandler  {
     private static void doIdentities(Element response, Account acct) {
     	try {
     		List<Identity> identities = Provisioning.getInstance().getAllIdentities(acct);
-    		for (Identity i : identities) {
+    		for (Identity i : identities)
     			ToXML.encodeIdentity(response, i);
-    		}
     	} catch (ServiceException se) {
     		ZimbraLog.account.error("can't get identities", se);
     	}
@@ -169,9 +158,8 @@ public class GetInfo extends AccountDocumentHandler  {
     private static void doDataSources(Element response, Account acct, ZimbraSoapContext zsc) {
         try {
             List<DataSource> dataSources = Provisioning.getInstance().getAllDataSources(acct);
-            for (DataSource ds : dataSources) {
+            for (DataSource ds : dataSources)
                 com.zimbra.cs.service.mail.ToXML.encodeDataSource(response, ds);
-            }
         } catch (ServiceException se) {
             ZimbraLog.mailbox.error("Unable to get data sources", se);
         }
@@ -204,13 +192,11 @@ public class GetInfo extends AccountDocumentHandler  {
             int flags = Provisioning.SA_ACCOUNT_FLAG;
             StringBuilder query = new StringBuilder();
             query.append("(|");
-            for (Iterator it=children.keySet().iterator(); it.hasNext();) {
-                query.append(String.format("(%s=%s)", Provisioning.A_zimbraId, (String)it.next()));
-            }
+            for (String id : children.keySet())
+                query.append(String.format("(%s=%s)", Provisioning.A_zimbraId, id));
             query.append(")");
             
             List accounts = prov.searchAccounts(query.toString(), null, null, true, flags);
-            
             for (Object obj: accounts) {
                 if (!(obj instanceof Account))
                     throw ServiceException.FAILURE("child id is not an account", null);
@@ -222,13 +208,11 @@ public class GetInfo extends AccountDocumentHandler  {
                 assert(ci.mName == null);
                 ci.mName = childName;
             }
-            
-            for (Iterator it=children.entrySet().iterator(); it.hasNext();) {
-                Map.Entry entry = (Map.Entry)it.next();
-                String id = (String)entry.getKey();
-                ChildInfo ci = (ChildInfo)entry.getValue();
+
+            for (Map.Entry<String, ChildInfo> child : children.entrySet()) {
+                ChildInfo ci = child.getValue();
                 Element acctElem = ca.addElement(AccountConstants.E_CHILD_ACCOUNT);
-                acctElem.addAttribute(AccountConstants.A_ID, id);
+                acctElem.addAttribute(AccountConstants.A_ID, child.getKey());
                 acctElem.addAttribute(AccountConstants.A_NAME, ci.mName);
                 acctElem.addAttribute(AccountConstants.A_VISIBLE, ci.mVisible);
             }

@@ -64,6 +64,7 @@ public class SyncGal extends AccountDocumentHandler {
         return response;
     }
 
+    @Override
     public boolean needsAuth(Map<String, Object> context) {
         return true;
     }

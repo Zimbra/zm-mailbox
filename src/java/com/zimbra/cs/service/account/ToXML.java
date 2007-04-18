@@ -25,7 +25,6 @@
 
 package com.zimbra.cs.service.account;
 
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
@@ -46,11 +45,7 @@ import java.util.Stack;
 
 public class ToXML {
 
-    public static Element encodeAccount(
-        Element parent,
-        Account account,
-        boolean applyCos)
-    throws ServiceException {
+    public static Element encodeAccount(Element parent, Account account, boolean applyCos) {
         Element acctElem = parent.addElement(AccountConstants.E_ACCOUNT);
         acctElem.addAttribute(AccountConstants.A_NAME, account.getName());
         acctElem.addAttribute(AccountConstants.A_ID, account.getId());
@@ -59,18 +54,11 @@ public class ToXML {
         return acctElem;
     }
 
-    public static Element encodeAccount(
-        Element parent,
-        Account account)
-    throws ServiceException {
+    public static Element encodeAccount(Element parent,Account account) {
         return encodeAccount(parent, account, true);
     }
 
-    public static Element encodeCalendarResource(
-        Element parent,
-        CalendarResource resource,
-        boolean applyCos)
-    throws ServiceException {
+    public static Element encodeCalendarResource(Element parent, CalendarResource resource, boolean applyCos) {
         Element resElem = parent.addElement(AccountConstants.E_CALENDAR_RESOURCE);
         resElem.addAttribute(AccountConstants.A_NAME, resource.getName());
         resElem.addAttribute(AccountConstants.A_ID, resource.getId());
@@ -79,10 +67,7 @@ public class ToXML {
         return resElem;
     }
 
-    public static Element encodeCalendarResource(
-        Element parent,
-        CalendarResource resource)
-    throws ServiceException {
+    public static Element encodeCalendarResource(Element parent, CalendarResource resource) {
         return encodeCalendarResource(parent, resource, false);
     }
 
@@ -92,25 +77,20 @@ public class ToXML {
             String name = (String) entry.getKey();
             Object value = entry.getValue();
 
-            //Never return data source passwords
-            if (name.equalsIgnoreCase(Provisioning.A_zimbraDataSourcePassword)) {
+            // Never return data source passwords
+            if (name.equalsIgnoreCase(Provisioning.A_zimbraDataSourcePassword))
                 continue;
-            }
+
             // Never return password.
             if (name.equalsIgnoreCase(Provisioning.A_userPassword))
                 value = "VALUE-BLOCKED";
 
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;
-                for (int i = 0; i < sv.length; i++) {
-                    Element pref = e.addElement(AccountConstants.E_A);
-                    pref.addAttribute(key, name);
-                    pref.setText(sv[i]);
-                }
+                for (int i = 0; i < sv.length; i++)
+                    e.addKeyValuePair(name, sv[i], AccountConstants.E_A, key);
             } else if (value instanceof String) {
-                Element pref = e.addElement(AccountConstants.E_A);
-                pref.addAttribute(key, name);
-                pref.setText((String) value);
+                e.addKeyValuePair(name, (String) value, AccountConstants.E_A, key);
             }
         }       
     }
@@ -166,7 +146,7 @@ public class ToXML {
         e.addAttribute(AccountConstants.A_ID, locale.toString());
         return e;
     }
-    
+
     public static Element encodeIdentity(Element parent, Identity identity) {
         Element e = parent.addElement(AccountConstants.E_IDENTITY);
         e.addAttribute(AccountConstants.A_NAME, identity.getName());
@@ -174,7 +154,7 @@ public class ToXML {
         addAccountAttrs(e, identity.getAttrs(), AccountConstants.A_NAME);
         return e;
     }
-    
+
     public static Element encodeDataSource(Element parent, DataSource ds) {
         Element e = parent.addElement(AccountConstants.E_DATA_SOURCE);
         e.addAttribute(AccountConstants.A_NAME, ds.getName());
@@ -183,5 +163,4 @@ public class ToXML {
         addAccountAttrs(e, ds.getAttrs(), AccountConstants.A_N);
         return e;
     }
-
 }
