@@ -610,8 +610,51 @@ public class LdapProvisioning extends Provisioning {
     private Account createAccount(String emailAddress,
                                   String password,
                                   Map<String, Object> acctAttrs,
-                                  String[] additionalObjectClasses)
-    throws ServiceException {
+                                  String[] additionalObjectClasses) throws ServiceException {
+        String uuid = null;
+        
+        /*
+         * if zimbrId is provided, validate it
+         */
+        if (acctAttrs.containsKey(Provisioning.A_zimbraId)) {
+            Object value = acctAttrs.get(Provisioning.A_zimbraId);
+            if (!(value instanceof String))
+                throw ServiceException.INVALID_REQUEST(Provisioning.A_zimbraId + " is a single-valued attribute", null);
+            uuid = (String)value;
+            try {
+                if (!LdapUtil.isValidUUID(uuid))
+                    throw ServiceException.INVALID_REQUEST(uuid + " is not a valid UUID", null);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST(uuid + " is not a valid UUID", e);
+            }
+            
+            /* check for uniqueness of the zimbraId
+             * 
+             * for now we go with GIGO (garbage in, garbage out) and not check, since there is a race condition 
+             * that an entry is added after our check.
+             * There is a way to do the uniqueness check in OpenLDAP with an overlay, we will address the uniqueness
+             * when we do that.
+             */
+            /*
+            if (getAccountById(uuid) != null)
+                throw AccountServiceException.ACCOUNT_EXISTS(emailAddress);
+            */
+            
+            // remove it from the attr list
+            acctAttrs.remove(Provisioning.A_zimbraId);
+        }
+        
+        /* 
+         * we now either don't have a caller provided zimbraId or a valid caller provided zimbraId
+         */
+        return createAccount(emailAddress, password, uuid, acctAttrs, additionalObjectClasses);
+    }
+    
+    private Account createAccount(String emailAddress,
+                                  String password,
+                                  String uuid,
+                                  Map<String, Object> acctAttrs,
+                                  String[] additionalObjectClasses) throws ServiceException {
     	validate("createAccount", emailAddress);
         emailAddress = emailAddress.toLowerCase().trim();
 
@@ -662,7 +705,11 @@ public class LdapProvisioning extends Provisioning {
                     oc.add(additionalObjectClasses[i]);
             }
             
-            String zimbraIdStr = LdapUtil.generateUUID();
+            String zimbraIdStr;
+            if (uuid == null)
+                zimbraIdStr = LdapUtil.generateUUID();
+            else
+                zimbraIdStr = uuid;
             attrs.put(A_zimbraId, zimbraIdStr);
 
             // TODO: uncomment when ready

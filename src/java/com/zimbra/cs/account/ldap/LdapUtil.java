@@ -337,6 +337,15 @@ public class LdapUtil {
     public static String generateUUID() {
         return UUID.randomUUID().toString();
     }
+    
+    /*
+     * we want to throw the IllegalArgumentException instead of catching it so the cause
+     * can be logged with the callers catcher.
+     */
+    public static boolean isValidUUID(String strRep) throws IllegalArgumentException {
+        UUID uuid = UUID.fromString(strRep);
+        return (uuid != null);   
+    }
 
     public static String getAttrString(Attributes attrs, String name) throws NamingException {
         Attribute attr = attrs.get(name);
