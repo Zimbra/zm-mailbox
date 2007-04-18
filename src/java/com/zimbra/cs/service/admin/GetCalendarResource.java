@@ -55,8 +55,7 @@ public class GetCalendarResource extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-        boolean applyCos =
-            request.getAttributeBool(AdminConstants.A_APPLY_COS, true);
+        boolean applyCos = request.getAttributeBool(AdminConstants.A_APPLY_COS, true);
         Element cr = request.getElement(AdminConstants.E_CALENDAR_RESOURCE);
         String key = cr.getAttribute(AdminConstants.A_BY);
         String value = cr.getText();
@@ -70,9 +69,8 @@ public class GetCalendarResource extends AdminDocumentHandler {
             throw ServiceException.PERM_DENIED(
                     "can not access calendar resource account");
 
-        Element response = lc.createElement(
-                AdminConstants.GET_CALENDAR_RESOURCE_RESPONSE);
-        ToXML.encodeCalendarResource(response, resource, applyCos);
+        Element response = lc.createElement(AdminConstants.GET_CALENDAR_RESOURCE_RESPONSE);
+        ToXML.encodeCalendarResourceOld(response, resource, applyCos);
 
         return response;
     }

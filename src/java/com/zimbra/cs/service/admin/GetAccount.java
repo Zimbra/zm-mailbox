@@ -71,7 +71,7 @@ public class GetAccount extends AdminDocumentHandler {
             throw ServiceException.PERM_DENIED("can not access account");
 
 	    Element response = lc.createElement(AdminConstants.GET_ACCOUNT_RESPONSE);
-        ToXML.encodeAccount(response, account, applyCos);
+        ToXML.encodeAccountOld(response, account, applyCos);
 
 	    return response;
 	}

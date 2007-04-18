@@ -85,7 +85,7 @@ public class RenameCalendarResource extends AdminDocumentHandler {
         if (resource == null)
             throw ServiceException.FAILURE("unable to get calendar resource after rename: " + id, null);
         Element response = zsc.createElement(AdminConstants.RENAME_CALENDAR_RESOURCE_RESPONSE);
-        ToXML.encodeCalendarResource(response, resource, true);
+        ToXML.encodeCalendarResourceOld(response, resource, true);
         return response;
     }
 }

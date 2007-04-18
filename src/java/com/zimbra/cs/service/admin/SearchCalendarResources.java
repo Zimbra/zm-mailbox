@@ -68,17 +68,13 @@ public class SearchCalendarResources extends AdminDocumentHandler {
         if (limit == 0) limit = Integer.MAX_VALUE;
         int offset = (int) request.getAttributeLong(AdminConstants.A_OFFSET, 0);
         String domain = request.getAttribute(AdminConstants.A_DOMAIN, null);
-        boolean applyCos =
-            request.getAttributeBool(AdminConstants.A_APPLY_COS, true);
+        boolean applyCos = request.getAttributeBool(AdminConstants.A_APPLY_COS, true);
         String sortBy = request.getAttribute(AdminConstants.A_SORT_BY, null);
-        boolean sortAscending =
-            request.getAttributeBool(AdminConstants.A_SORT_ASCENDING, true);
+        boolean sortAscending = request.getAttributeBool(AdminConstants.A_SORT_ASCENDING, true);
         String attrsStr = request.getAttribute(AdminConstants.A_ATTRS, null);
         String[] attrs = attrsStr == null ? null : attrsStr.split(",");
 
-        EntrySearchFilter filter =
-            com.zimbra.cs.service.account.SearchCalendarResources.
-            parseSearchFilter(request);
+        EntrySearchFilter filter = com.zimbra.cs.service.account.SearchCalendarResources.parseSearchFilter(request);
 
         // if we are a domain admin only, restrict to domain
         if (isDomainAdminOnly(lc)) {
@@ -98,28 +94,22 @@ public class SearchCalendarResources extends AdminDocumentHandler {
         }
 
         List resources;
-        AdminSession session =
-            (AdminSession) lc.getSession(Session.Type.ADMIN);
+        AdminSession session = (AdminSession) lc.getSession(Session.Type.ADMIN);
         if (session != null) {
-            resources = session.searchCalendarResources(
-                    d, filter, attrs, sortBy, sortAscending, offset);
+            resources = session.searchCalendarResources(d, filter, attrs, sortBy, sortAscending, offset);
         } else {
             if (d != null) {
                 resources = prov.searchCalendarResources(d, filter, attrs, sortBy, sortAscending);
             } else {
-                resources = prov.searchCalendarResources(
-                        filter, attrs, sortBy, sortAscending);
+                resources = prov.searchCalendarResources(filter, attrs, sortBy, sortAscending);
             }
         }
 
-        Element response = lc.createElement(
-                AdminConstants.SEARCH_CALENDAR_RESOURCES_RESPONSE);
+        Element response = lc.createElement(AdminConstants.SEARCH_CALENDAR_RESOURCES_RESPONSE);
         int i, limitMax = offset+limit;
         for (i=offset; i < limitMax && i < resources.size(); i++) {
             NamedEntry entry = (NamedEntry) resources.get(i);
-            ToXML.encodeCalendarResource(response,
-                                         (CalendarResource) entry,
-                                         applyCos);
+            ToXML.encodeCalendarResourceOld(response, (CalendarResource) entry, applyCos);
         }
 
         response.addAttribute(AdminConstants.A_MORE, i < resources.size());

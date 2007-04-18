@@ -54,7 +54,7 @@ public class GetAllAdminAccounts extends AdminDocumentHandler {
 
         Element response = lc.createElement(AdminConstants.GET_ALL_ADMIN_ACCOUNTS_RESPONSE);
         for (Iterator it=accounts.iterator(); it.hasNext(); ) {
-            ToXML.encodeAccount(response, (Account) it.next());
+            ToXML.encodeAccountOld(response, (Account) it.next());
         }
 	    return response;
 	}

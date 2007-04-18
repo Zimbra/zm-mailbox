@@ -87,7 +87,7 @@ public class RenameAccount extends AdminDocumentHandler {
         if (account == null)
             throw ServiceException.FAILURE("unable to get account after rename: " + id, null);
 	    Element response = lc.createElement(AdminConstants.RENAME_ACCOUNT_RESPONSE);
-        ToXML.encodeAccount(response, account);
+        ToXML.encodeAccountOld(response, account);
 	    return response;
 	}
 }

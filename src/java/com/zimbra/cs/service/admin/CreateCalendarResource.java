@@ -71,7 +71,7 @@ public class CreateCalendarResource extends AdminDocumentHandler {
         Element response = lc.createElement(
                 AdminConstants.CREATE_CALENDAR_RESOURCE_RESPONSE);
 
-        ToXML.encodeCalendarResource(response, resource, true);
+        ToXML.encodeCalendarResourceOld(response, resource, true);
 
         return response;
     }

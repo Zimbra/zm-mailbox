@@ -138,9 +138,9 @@ public class SearchDirectory extends AdminDocumentHandler {
         for (i=offset; i < limitMax && i < accounts.size(); i++) {
             NamedEntry entry = (NamedEntry) accounts.get(i);
         	if (entry instanceof CalendarResource) {
-        	    ToXML.encodeCalendarResource(response, (CalendarResource) entry, applyCos);
+        	    ToXML.encodeCalendarResourceOld(response, (CalendarResource) entry, applyCos);
         	} else if (entry instanceof Account) {
-                ToXML.encodeAccount(response, (Account) entry, applyCos);
+                ToXML.encodeAccountOld(response, (Account) entry, applyCos);
             } else if (entry instanceof DistributionList) {
                 doDistributionList(response, (DistributionList) entry);
             } else if (entry instanceof Alias) {
@@ -155,7 +155,7 @@ public class SearchDirectory extends AdminDocumentHandler {
         return response;
     }
 
-    static void doDistributionList(Element e, DistributionList list) throws ServiceException {
+    static void doDistributionList(Element e, DistributionList list) {
         Element elist = e.addElement(AdminConstants.E_DL);
         elist.addAttribute(AdminConstants.A_NAME, list.getName());
         elist.addAttribute(AdminConstants.A_ID, list.getId());
@@ -163,7 +163,7 @@ public class SearchDirectory extends AdminDocumentHandler {
         doAttrs(elist, attrs);
     }
 
-    static void doAlias(Element e, Alias a) throws ServiceException {
+    static void doAlias(Element e, Alias a) {
         Element ealias = e.addElement(AdminConstants.E_ALIAS);
         ealias.addAttribute(AdminConstants.A_NAME, a.getName());
         ealias.addAttribute(AdminConstants.A_ID, a.getId());

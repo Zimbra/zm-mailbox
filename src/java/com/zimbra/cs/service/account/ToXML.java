@@ -54,8 +54,17 @@ public class ToXML {
         return acctElem;
     }
 
-    public static Element encodeAccount(Element parent,Account account) {
-        return encodeAccount(parent, account, true);
+    public static Element encodeAccountOld(Element parent, Account account, boolean applyCos) {
+        Element acctElem = parent.addElement(AccountConstants.E_ACCOUNT);
+        acctElem.addAttribute(AccountConstants.A_NAME, account.getName());
+        acctElem.addAttribute(AccountConstants.A_ID, account.getId());
+        Map attrs = account.getAttrs(applyCos);
+        addAccountAttrsOld(acctElem, attrs, AccountConstants.A_N);
+        return acctElem;
+    }
+
+    public static Element encodeAccountOld(Element parent, Account account) {
+        return encodeAccountOld(parent, account, true);
     }
 
     public static Element encodeCalendarResource(Element parent, CalendarResource resource, boolean applyCos) {
@@ -64,6 +73,15 @@ public class ToXML {
         resElem.addAttribute(AccountConstants.A_ID, resource.getId());
         Map attrs = resource.getAttrs(applyCos);
         addAccountAttrs(resElem, attrs, AccountConstants.A_N);
+        return resElem;
+    }
+
+    public static Element encodeCalendarResourceOld(Element parent, CalendarResource resource, boolean applyCos) {
+        Element resElem = parent.addElement(AccountConstants.E_CALENDAR_RESOURCE);
+        resElem.addAttribute(AccountConstants.A_NAME, resource.getName());
+        resElem.addAttribute(AccountConstants.A_ID, resource.getId());
+        Map attrs = resource.getAttrs(applyCos);
+        addAccountAttrsOld(resElem, attrs, AccountConstants.A_N);
         return resElem;
     }
 
@@ -91,6 +109,35 @@ public class ToXML {
                     e.addKeyValuePair(name, sv[i], AccountConstants.E_A, key);
             } else if (value instanceof String) {
                 e.addKeyValuePair(name, (String) value, AccountConstants.E_A, key);
+            }
+        }       
+    }
+
+    private static void addAccountAttrsOld(Element e, Map attrs, String key) {
+        for (Iterator iter = attrs.entrySet().iterator(); iter.hasNext(); ) {
+            Map.Entry entry = (Entry) iter.next();
+            String name = (String) entry.getKey();
+            Object value = entry.getValue();
+
+            // Never return data source passwords
+            if (name.equalsIgnoreCase(Provisioning.A_zimbraDataSourcePassword))
+                continue;
+
+            // Never return password.
+            if (name.equalsIgnoreCase(Provisioning.A_userPassword))
+                value = "VALUE-BLOCKED";
+
+            if (value instanceof String[]) {
+                String sv[] = (String[]) value;
+                for (int i = 0; i < sv.length; i++) {
+                    Element pref = e.addElement(AccountConstants.E_A);
+                    pref.addAttribute(key, name);
+                    pref.setText(sv[i]);
+                }
+            } else if (value instanceof String) {
+                Element pref = e.addElement(AccountConstants.E_A);
+                pref.addAttribute(key, name);
+                pref.setText((String) value);
             }
         }       
     }

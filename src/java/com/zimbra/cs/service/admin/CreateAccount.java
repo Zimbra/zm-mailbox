@@ -70,7 +70,7 @@ public class CreateAccount extends AdminDocumentHandler {
 
 	    Element response = lc.createElement(AdminConstants.CREATE_ACCOUNT_RESPONSE);
 
-        ToXML.encodeAccount(response, account);
+        ToXML.encodeAccountOld(response, account);
 
 	    return response;
 	}

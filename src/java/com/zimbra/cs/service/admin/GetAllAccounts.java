@@ -114,8 +114,8 @@ public class GetAllAccounts extends AdminDocumentHandler {
 
     protected void doDomain(final Element e, Domain d) throws ServiceException {
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
-            public void visit(com.zimbra.cs.account.NamedEntry entry) throws ServiceException {
-                ToXML.encodeAccount(e, (Account) entry);
+            public void visit(com.zimbra.cs.account.NamedEntry entry) {
+                ToXML.encodeAccountOld(e, (Account) entry);
             }
         };
         Provisioning.getInstance().getAllAccounts(d, visitor);
