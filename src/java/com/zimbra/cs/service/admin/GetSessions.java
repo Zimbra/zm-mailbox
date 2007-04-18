@@ -45,6 +45,8 @@ import java.util.Map;
 
 public class GetSessions extends AdminDocumentHandler {
 
+    private static final String SESSION_KEY = "GetSessionsCachedResult";
+
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
@@ -131,7 +133,7 @@ public class GetSessions extends AdminDocumentHandler {
     public CachedResult getResult(AdminSession adminSession, Type type, boolean refresh, final SortBy sortBy) {
 
         List<Session> sessions = SessionCache.getActiveSessions(type);
-        CachedResult result = (adminSession == null || refresh) ? null : (CachedResult) adminSession.getData("GetSessionsCachedResult");
+        CachedResult result = (adminSession == null || refresh) ? null : (CachedResult) adminSession.getData(SESSION_KEY);
 
         if (result != null && result.type == type && result.sortBy == sortBy)
             return result;
@@ -171,6 +173,10 @@ public class GetSessions extends AdminDocumentHandler {
             }
         };
         Collections.sort(result.sessions, comparator);
+
+        if (adminSession != null)
+        adminSession.setData(SESSION_KEY, result);
+        
         return result;
     }
 
