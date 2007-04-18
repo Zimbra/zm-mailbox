@@ -167,7 +167,7 @@ public class SearchConv extends Search {
 
                     // and just pass the response on through!
                     Element response = soapTransp.invokeWithoutSession(proxyRequest);
-                    return response;
+                    return response.detach();
                 } catch (ParseException e) {
                     if (e.currentToken != null)
                         throw MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(), e, e.currentToken.image, e.currentToken.beginLine, e.currentToken.beginColumn);
