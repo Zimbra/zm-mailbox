@@ -1140,6 +1140,7 @@ public abstract class Provisioning {
     public static final String A_zimbraDataSourceConnectionType = "zimbraDataSourceConnectionType";    
     public static final String A_zimbraDataSourceMaxNumEntries = "zimbraDataSourceMaxNumEntries";    
     public static final String A_zimbraDataSourceLeaveOnServer = "zimbraDataSourceLeaveOnServer";
+    public static final String A_zimbraDataSourcePollingInterval = "zimbraDataSourcePollingInterval";
 
     /*
      * Extension Text Analyzer

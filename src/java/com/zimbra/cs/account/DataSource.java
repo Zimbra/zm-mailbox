@@ -41,6 +41,7 @@ import javax.crypto.spec.SecretKeySpec;
 import org.apache.commons.codec.binary.Base64;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -123,6 +124,28 @@ public class DataSource extends NamedEntry implements Comparable {
     public String getDecryptedPassword() throws ServiceException {
         String data = getAttr(Provisioning.A_zimbraDataSourcePassword);
         return data == null ? null : decryptData(getId(), data); 
+    }
+    
+    /**
+     * Returns the poll interval in milliseconds, or 0 if
+     * {@link Provisioning#A_zimbraDataSourcePollingInterval} is not specified.
+     */
+    public long getPollingInterval() {
+        long interval = getTimeInterval(Provisioning.A_zimbraDataSourcePollingInterval, 0);
+        long safeguard = 10 * Constants.MILLIS_PER_SECOND;
+        if (0 < interval && interval < safeguard) {
+            // Don't allow anyone to poll more frequently than every 10 seconds
+            interval = safeguard;
+        }
+        return interval;
+    }
+    
+    /**
+     * Returns <tt>true</tt> if this data source has a scheduled poll interval.
+     * @see #getPollInterval
+     */
+    public boolean isScheduled() {
+        return getPollingInterval() != 0;
     }
 
     /**

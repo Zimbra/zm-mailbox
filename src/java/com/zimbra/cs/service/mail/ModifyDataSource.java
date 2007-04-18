@@ -35,6 +35,7 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbPop3Message;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.common.soap.SoapFaultException;
@@ -113,6 +114,11 @@ public class ModifyDataSource extends MailDocumentHandler {
             }
         }
         
+        value = eDataSource.getAttribute(MailConstants.A_DS_POLLING_INTERVAL, null);
+        if (value != null) {
+            dsAttrs.put(Provisioning.A_zimbraDataSourcePollingInterval, value);
+        }
+        
         prov.modifyDataSource(account, id, dsAttrs);
         
         if (wipeOutOldData) {
@@ -121,6 +127,8 @@ public class ModifyDataSource extends MailDocumentHandler {
             Mailbox mbox = getRequestedMailbox(zsc);
             DbPop3Message.deleteUids(mbox, ds.getId());
         }
+        
+        DataSourceManager.updateSchedule(account.getId(), id);
 
         Element response = zsc.createElement(MailConstants.MODIFY_DATA_SOURCE_RESPONSE);
 

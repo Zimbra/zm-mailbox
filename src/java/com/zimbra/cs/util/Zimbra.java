@@ -30,6 +30,7 @@ import java.util.Timer;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.Versions;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.im.IMRouter;
@@ -141,6 +142,8 @@ public class Zimbra {
         WaitSet.startup();
         
         MemoryStats.startup();
+        
+        DataSourceManager.startup();
 
         // should be last, so that other subsystems can add dynamic stats counters 
         ZimbraPerf.initialize();

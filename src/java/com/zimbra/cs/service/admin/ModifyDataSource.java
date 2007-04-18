@@ -32,12 +32,13 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.DataSource;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.Provisioning.DataSourceBy;
+import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.common.soap.*;
-import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class ModifyDataSource extends AdminDocumentHandler {
@@ -90,7 +91,8 @@ public class ModifyDataSource extends AdminDocumentHandler {
         for (String key : toRemove)
             attrs.remove(key);
         
-        Provisioning.getInstance().modifyDataSource(account, dsId, attrs);
+        prov.modifyDataSource(account, dsId, attrs);
+        DataSourceManager.updateSchedule(account.getId(), dsId);
         
         Element response = zsc.createElement(AdminConstants.MODIFY_DATA_SOURCE_RESPONSE);
         return response;

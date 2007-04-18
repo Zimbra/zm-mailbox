@@ -26,15 +26,20 @@ package com.zimbra.cs.datasource;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.TaskScheduler;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.DataSourceBy;
+import com.zimbra.cs.db.DbDataSourceTask;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.util.Zimbra;
@@ -54,10 +59,45 @@ public class DataSourceManager {
     // accountId -> dataSourceId -> ImportStatus
     private static Map<String, Map<String, ImportStatus>> sImportStatus =
         new HashMap<String, Map<String, ImportStatus>>();
+
+    // We don't need many threads, since currently the scheduled task just kicks off
+    // another thread that runs the actual import.
+    private static TaskScheduler<Void> sScheduledPolls =
+        new TaskScheduler<Void>("DataSource", 1, 3);
     
     static {
         registerImport(DataSource.Type.pop3, new Pop3Import());
         registerImport(DataSource.Type.imap, new ImapImport());
+    }
+    
+    public static void startup()
+    throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+
+        long earliest = 0;
+        
+        for (DataSourceTask task : DbDataSourceTask.getAllDataSourceTasks()) {
+            // Look up account and data source
+            Account account = prov.get(AccountBy.id, task.getAccountId());
+            if (account == null) {
+                // Account was deleted
+                DbDataSourceTask.deleteDataSourceTask(task.getDataSourceId());
+                continue;
+            }
+            DataSource ds = prov.get(account, DataSourceBy.id, task.getDataSourceId());
+            if (ds == null) {
+                // Data source was deleted
+                DbDataSourceTask.deleteDataSourceTask(task.getDataSourceId());
+                continue;
+            }
+            
+            // Calculate the scheduling offset.  The earliest task gets executed immediately.  All
+            // subsequent tasks get delayed, relative to the earliest.
+            if (earliest == 0) {
+                earliest = task.getNextExecTime().getTime();
+            }
+            sScheduledPolls.schedule(task.getDataSourceId(), task, task.getNextExecTime().getTime() - earliest);
+        }
     }
 
     /**
@@ -144,9 +184,63 @@ public class DataSourceManager {
         Thread thread = new Thread(new ImportDataThread(account, ds));
         thread.setName("ImportDataThread");
         thread.start();
-        
     }
 
+    /**
+     * Updates scheduling data for this datasource both in memory and in the
+     * <tt>data_source_task</tt> database table.
+     */
+    public static void updateSchedule(String accountId, String dataSourceId)
+    throws ServiceException {
+        DataSourceTask task = (DataSourceTask) sScheduledPolls.cancel(dataSourceId, true);
+        DbDataSourceTask.deleteDataSourceTask(dataSourceId);
+
+        // Look up account and data source
+        Provisioning prov = Provisioning.getInstance();
+        Account account = prov.get(AccountBy.id, accountId);
+        if (account == null) {
+            // Account was deleted
+            return;
+        }
+        DataSource ds = prov.get(account, DataSourceBy.id, dataSourceId);
+        if (ds == null) {
+            // Data source was deleted
+            return;
+        }
+        
+        // Note: currently this algorithm isn't too smart about updating data
+        // in the database.  To make the code simpler, it deletes the row, then
+        // inserts a new one when rescheduling.  We can optimize later if this
+        // becomes a performance problem.
+        
+        
+        if (ds.isScheduled()) {
+            // Calculate delay based on last exec time and current time
+            long delay = ds.getPollingInterval();
+            if (task != null && task.getLastExecTime() != null) {
+                // Take current time into consideration, in case the poll interval is
+                // changing or we got an explicit <ImportDataRequest> between two
+                // scheduled polls
+                delay = task.getLastExecTime().getTime() + delay - System.currentTimeMillis();
+                if (delay < 0) {
+                    delay = 0;
+                }
+            }
+            
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            Date scheduledTime = new Date(System.currentTimeMillis() + delay);
+            
+            if (task == null) {
+                // Create a new task if this is the first time
+                task = new DataSourceTask(mbox.getId(), ds.getId(), account.getId(), null, scheduledTime);
+            }
+            ZimbraLog.datasource.debug("Scheduling automated poll for %s at %s",
+                ds, scheduledTime);
+            sScheduledPolls.schedule(ds.getId(), task, delay);
+            DbDataSourceTask.createDataSourceTask(mbox, ds.getId(), account.getId(), task.getLastExecTime(), scheduledTime);
+        }
+    }
+    
     private static class ImportDataThread implements Runnable {
         Account mAccount;
         DataSource mDataSource;
@@ -197,6 +291,11 @@ public class DataSourceManager {
                     importStatus.mSuccess = success;
                     importStatus.mError = error;
                     importStatus.mIsRunning = false;
+                }
+                try {
+                    updateSchedule(mAccount.getId(), mDataSource.getId());
+                } catch (ServiceException e) {
+                    ZimbraLog.datasource.warn("Unable to reschedule DataSourceTask", e);
                 }
             }
         }

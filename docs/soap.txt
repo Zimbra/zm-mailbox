@@ -390,7 +390,7 @@ an authToken can be passed instead of account/password/preauth to validate an ex
    </identities>
    <dataSources>
      <pop3 id="{id}" name="My POP3 Account" isEnabled="0|1" host="pop3.myisp.com" port="110"
-        username="mylogin" l="{folder-id}"/>
+        username="mylogin" l="{folder-id}" [pollingInterval="10m"]/>
      ...
    </dataSources>*
    <childAccounts>
@@ -2033,12 +2033,13 @@ instead of the saved values.
 <CreateDataSourceRequest/>
   <pop3 name="My POP3 Account" isEnabled="0|1" host="pop.myisp.com" port="110"
     connectionType="cleartext|ssl" username="mylogin" password="mypassword" l="{folder-id}"
-    leaveOnServer="0|1"/>
+    leaveOnServer="0|1" [pollingInterval="10m"]/>
     
   or
   
   <imap name="My IMAP Account" isEnabled="0|1" host="imap.myisp.com" port="143"
-    connectionType="cleartext|ssl" username="mylogin" password="mypassword" l="{folder-id}"/>
+    connectionType="cleartext|ssl" username="mylogin" password="mypassword" l="{folder-id}"
+    [pollingInterval="10m"]/>
 </CreateDataSourceRequest>
 
 <CreateDataSourceResponse>
@@ -2054,9 +2055,9 @@ the POP3 or IMAP protocol.  Only one data source is allowed per request.
 
 <GetDataSourcesResponse>
   *[<pop3 id="{id}" name="My POP3 Account" isEnabled="0|1" host="pop3.myisp.com" port="110"
-    username="mylogin" l="{folder-id}" leaveOnServer="0|1"/>]
+    username="mylogin" l="{folder-id}" leaveOnServer="0|1" [pollingInterval="10m"]/>]
   *[<imap name="My IMAP Account" isEnabled="0|1" host="imap.myisp.com" port="143"
-    connectionType="cleartext|ssl" username="mylogin" l="{folder-id}"/>]
+    connectionType="cleartext|ssl" username="mylogin" l="{folder-id}" [pollingInterval="10m"]/>]
   ...
 </GetDataSourcesResponse>
 
@@ -2068,9 +2069,11 @@ every attribute value is returned except password.
 <ModifyDataSourceRequest>
   *[<pop3 id="{id}" [name="My POP3 Account"] [isEnabled="0|1"] [host="pop3.myisp.com"]
     [port="110"] [connectionType="cleartext|ssl"] [username="mylogin"]
-    [password="mypassword"] [l="{folder-id}"] [leaveOnServer="0|1"]/>]
+    [password="mypassword"] [l="{folder-id}"] [leaveOnServer="0|1"] 
+    [pollingInterval="10m"]/>]
   *[<imap name="My IMAP Account" isEnabled="0|1" host="imap.myisp.com" port="143"
-    connectionType="cleartext|ssl" username="mylogin" password="mypassword" l="{folder-id}"/>]
+    connectionType="cleartext|ssl" username="mylogin" password="mypassword" l="{folder-id}"
+    [pollingInterval="10m"]/>]
 </ModifyDataSourceRequest>
 
 <ModifyDataSourceResponse/>

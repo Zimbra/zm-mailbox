@@ -39,6 +39,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.NamedEntry;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
@@ -1613,6 +1614,10 @@ public class ToXML {
         }
         if (ds.getUsername() != null) {
             m.addAttribute(MailConstants.A_DS_USERNAME, ds.getUsername());
+        }
+        if (ds.getPollingInterval() > 0) {
+            m.addAttribute(MailConstants.A_DS_POLLING_INTERVAL,
+                ds.getAttr(Provisioning.A_zimbraDataSourcePollingInterval));
         }
         return m;
     }

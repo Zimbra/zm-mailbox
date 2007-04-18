@@ -2065,4 +2065,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>maximum length of mail signature, 0 means unlimited. If not set, default is 1024</desc>
 </attr>
 
+<attr id="455" name="zimbraDataSourcePollingInterval" type="duration" cardinality="single" optionalIn="dataSource">
+  <desc>
+    The time interval between automated data imports for this data source.  If unset or 0,
+    the data source will not be scheduled for automated polling.
+  </desc>
+</attr>
+
 </attrs>
