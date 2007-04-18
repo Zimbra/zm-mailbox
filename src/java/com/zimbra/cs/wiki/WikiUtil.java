@@ -333,9 +333,10 @@ public abstract class WikiUtil {
             	mMbox.deleteItem(buf.toString(), null);
             for (ZFolder f : new ArrayList<ZFolder>(folder.getSubFolders())) {
             	int fid = Integer.valueOf(f.getId());
+            	View v = f.getDefaultView();
             	if (fid == Mailbox.ID_FOLDER_NOTEBOOK || fid >= Mailbox.FIRST_USER_ID)
             		deleteAllItemsInFolder(f);
-            	if (fid >= Mailbox.FIRST_USER_ID)
+            	if (v != null && v.equals(View.valueOf(sDEFAULTVIEW)) && fid >= Mailbox.FIRST_USER_ID)
             		mMbox.deleteFolder(f.getId());
             }
         }
