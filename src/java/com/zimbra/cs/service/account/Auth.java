@@ -139,31 +139,32 @@ public class Auth extends AccountDocumentHandler {
         Element response = lc.createElement(AccountConstants.AUTH_RESPONSE);
         response.addAttribute(AccountConstants.E_AUTH_TOKEN, token, Element.Disposition.CONTENT);
         response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
-        boolean isCorrectHost =  Provisioning.onLocalServer(acct);
+        boolean isCorrectHost = Provisioning.onLocalServer(acct);
         if (isCorrectHost) {
             Session session = lc.getNewSession(acct.getId(), Session.Type.SOAP);
             if (session != null)
                 ZimbraSoapContext.encodeSession(response, session, true);
         }
-        if (!isCorrectHost || LC.zimbra_auth_always_send_refer.booleanValue())
+        if (!isCorrectHost || LC.zimbra_auth_always_send_refer.booleanValue()) {
             response.addAttribute(AccountConstants.E_REFERRAL, acct.getAttr(Provisioning.A_zimbraMailHost), Element.Disposition.CONTENT);
+        }
 
 		Element prefsRequest = request.getOptionalElement(AccountConstants.E_PREFS);
 		if (prefsRequest != null) {
-			Element prefsResponse = response.addElement(AccountConstants.E_PREFS);
-			GetPrefs.handle( prefsRequest, prefsResponse, acct);
+			Element prefsResponse = response.addUniqueElement(AccountConstants.E_PREFS);
+			GetPrefs.handle(prefsRequest, prefsResponse, acct);
 		}
 
         Element attrsRequest = request.getOptionalElement(AccountConstants.E_ATTRS);
         if (attrsRequest != null) {
-            Element attrsResponse = response.addElement(AccountConstants.E_ATTRS);
+            Element attrsResponse = response.addUniqueElement(AccountConstants.E_ATTRS);
             Set<String> attrList = AttributeManager.getInstance().getAttrsWithFlag(AttributeFlag.accountInfo);
             for (Iterator it = attrsRequest.elementIterator(AccountConstants.E_ATTR); it.hasNext(); ) {
                 Element e = (Element) it.next();
                 String name = e.getAttribute(AccountConstants.A_NAME);
                 if (name != null && attrList.contains(name)) {
                     Object v = acct.getMultiAttr(name);
-                    if (v != null) GetInfo.doAttr(attrsResponse,name, v);
+                    if (v != null) GetInfo.doAttr(attrsResponse, name, v);
                 }
             }
         }
