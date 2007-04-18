@@ -72,8 +72,13 @@ public class ZMessageHit implements ZSearchHit {
         for (Element hp: e.listElements(MailConstants.E_HIT_MIMEPART)) {
             mMimePartHits.add(hp.getAttribute(MailConstants.A_PART));
         }
-        Element emailEl = e.getOptionalElement(MailConstants.E_EMAIL);
-        if (emailEl != null) mSender = new ZEmailAddress(emailEl);
+        for (Element emailEl : e.listElements(MailConstants.E_EMAIL)) {
+            String t = emailEl.getAttribute(MailConstants.A_ADDRESS_TYPE, null);
+            if (ZEmailAddress.EMAIL_TYPE_FROM.equals(t)) {
+                mSender = new ZEmailAddress(emailEl);
+                break;
+            }
+        }
 
         Element mp = e.getOptionalElement(MailConstants.E_MIMEPART);
         if (mp != null) {
