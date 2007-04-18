@@ -34,6 +34,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.zimbra.common.util.Log.Level;
+
 /**
  * Runs a <tt>Callable</tt> task either once or at a given interval.  Subsequent
  * start times for a task are based on the previous completion time.
@@ -42,7 +44,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class TaskScheduler<V> {
     
-    private static Log sLog = LogFactory.getLog(TaskScheduler.class); 
+    private static Log sLog = LogFactory.getLog(TaskScheduler.class);
+    
+    static {
+        sLog.setLevel(Level.DEBUG);
+    }
 
     /**
      * A modified version of java.util.concurrent.Executors.DefaultThreadFactory
@@ -87,10 +93,13 @@ public class TaskScheduler<V> {
             mIntervalMillis = intervalMillis;
         }
 
+        Callable<V2> getTask() { return mTask; }
+
         public V2 call() throws Exception {
             try {
                 sLog.debug("Executing task %s", mId);
                 mLastResult = mTask.call();
+                sLog.debug("Task returned value %s", mLastResult);
             } catch (Throwable t) {
                 if (t instanceof OutOfMemoryError) {
                     sLog.error("Shutting down", t);
@@ -129,13 +138,23 @@ public class TaskScheduler<V> {
     }
 
     /**
+     * Schedules a task that runs once.
+     * @param taskId the task id, used for looking up results and cancelling the task
+     * @param task the task
+     * @param delayMillis number of milliseconds to wait before executing the task
+     */
+    public void schedule(Object taskId, Callable<V> task, long delayMillis) {
+        schedule(taskId, task, false, 0, delayMillis);
+    }
+    
+    /**
      * Schedules a task.
      * @param taskId the task id, used for looking up results and cancelling the task
      * @param task the task
      * @param recurs <tt>true</tt> if this is a recurring task
      * @param intervalMillis number of milliseconds between executions of a recurring
      * task, measured between the end of the last execution and the start of the next
-     * @param delayMillis number of milliseconds to wait before the first executions
+     * @param delayMillis number of milliseconds to wait before the first execution
      */
     public void schedule(Object taskId, Callable<V> task, boolean recurs, long intervalMillis, long delayMillis) {
         TaskRunner<V> runner = new TaskRunner<V>(taskId, task, recurs, intervalMillis);
@@ -157,15 +176,18 @@ public class TaskScheduler<V> {
 
     /**
      * Cancels a task.
+     * @return the task, or <tt>null</tt> if the task couldn't be found.
      */
-    public boolean cancel(Object taskId, boolean mayInterruptIfRunning) {
-        TaskRunner<V> task = mRunnerMap.get(taskId);
-        if (task == null) {
-            sLog.info("Unable to cancel task %s.  Could not find it in the task list.", taskId);
-            return false;
+    public Callable<V> cancel(Object taskId, boolean mayInterruptIfRunning) {
+        // Don't remove the task runner, so that users can get the last result
+        // after a task has been canceled.
+        TaskRunner<V> runner = mRunnerMap.get(taskId);
+        if (runner == null) {
+            return null;
         }
         sLog.debug("Cancelling task %s", taskId);
-        return task.mSchedule.cancel(mayInterruptIfRunning);
+        runner.mSchedule.cancel(mayInterruptIfRunning);
+        return runner.getTask();
     }
     
     /**

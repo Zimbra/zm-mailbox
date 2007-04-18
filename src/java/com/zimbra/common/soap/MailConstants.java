@@ -526,6 +526,7 @@ public class MailConstants {
     public static final String A_DS_ERROR = "error";
     public static final String A_DS_IS_RUNNING = "isRunning";
     public static final String A_DS_LEAVE_ON_SERVER = "leaveOnServer";
+    public static final String A_DS_POLLING_INTERVAL = "pollingInterval";
 
     // TODO: move to a different service.
     // wiki
