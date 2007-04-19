@@ -50,7 +50,6 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.SearchParams;
-import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;

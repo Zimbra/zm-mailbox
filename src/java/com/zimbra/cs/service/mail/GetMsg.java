@@ -29,8 +29,10 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
@@ -61,16 +63,22 @@ public class GetMsg extends MailDocumentHandler {
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
         ItemIdFormatter ifmt = new ItemIdFormatter(lc);
-        
+
         Element eMsg = request.getElement(MailConstants.E_MSG);
         ItemId iid = new ItemId(eMsg.getAttribute(MailConstants.A_ID), lc);
         boolean raw = eMsg.getAttributeBool(MailConstants.A_RAW, false);
         boolean read = eMsg.getAttributeBool(MailConstants.A_MARK_READ, false);
         boolean neuter = eMsg.getAttributeBool(MailConstants.A_NEUTER, true);
         String part = eMsg.getAttribute(MailConstants.A_PART, null);
-        
+
         boolean wantHTML = eMsg.getAttributeBool(MailConstants.A_WANT_HTML, false);
-        
+
+        Set<String> headers = null;
+        for (Element eHdr : eMsg.listElements(MailConstants.A_HEADER)) {
+            if (headers == null)  headers = new HashSet<String>();
+            headers.add(eHdr.getAttribute(MailConstants.A_ATTRIBUTE_NAME));
+        }
+
         Element response = lc.createElement(MailConstants.GET_MSG_RESPONSE);
         if (iid.hasSubpart()) {
             // calendar item
@@ -78,14 +86,14 @@ public class GetMsg extends MailDocumentHandler {
             if (raw) {
                 throw ServiceException.INVALID_REQUEST("Cannot request RAW formatted subpart message", null);
             } else {
-                ToXML.encodeInviteAsMP(response, ifmt, calItem, iid, part, wantHTML, neuter);
+                ToXML.encodeInviteAsMP(response, ifmt, calItem, iid, part, wantHTML, neuter, headers);
             }
         } else {
             Message msg = getMsg(octxt, mbox, iid, read);
             if (raw) {
                 ToXML.encodeMessageAsMIME(response, ifmt, msg, part);
             } else {
-                ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, part, wantHTML, neuter);
+                ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, part, wantHTML, neuter, headers);
             }
         }
         return response;

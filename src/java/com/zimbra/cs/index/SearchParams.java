@@ -25,7 +25,9 @@
 
 package com.zimbra.cs.index;
 
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -99,6 +101,7 @@ public final class SearchParams implements Cloneable {
     public boolean getMarkRead() { return mMarkRead; }
     public boolean getWantHtml() { return mWantHtml; }
     public boolean getNeuterImages() { return mNeuterImages; }
+    public Set<String> getInlinedHeaders() { return mInlinedHeaders; }
     public OutputParticipants getWantRecipients() { return mRecipients ? OutputParticipants.PUT_RECIPIENTS : OutputParticipants.PUT_SENDERS; }
     public TimeZone getTimeZone() { return mTimeZone; }
     public Locale getLocale() { return mLocale; }
@@ -185,6 +188,10 @@ public final class SearchParams implements Cloneable {
     public void setMarkRead(boolean read) { mMarkRead = read; }
     public void setWantHtml(boolean html) { mWantHtml = html; }
     public void setNeuterImages(boolean neuter) { mNeuterImages = neuter; }
+    public void addInlinedHeader(String name) {
+        if (mInlinedHeaders == null) mInlinedHeaders = new HashSet<String>();
+        mInlinedHeaders.add(name);
+    }
     public void setWantRecipients(boolean recips) { mRecipients = recips; }
     public void setTimeZone(TimeZone tz) { mTimeZone = tz; }
     public void setLocale(Locale loc) { mLocale = loc; }
@@ -253,6 +260,10 @@ public final class SearchParams implements Cloneable {
         searchElt.addAttribute(MailConstants.A_MARK_READ, getMarkRead());
         searchElt.addAttribute(MailConstants.A_WANT_HTML, getWantHtml());
         searchElt.addAttribute(MailConstants.A_NEUTER, getNeuterImages());
+        if (getInlinedHeaders() != null) {
+            for (String name : getInlinedHeaders())
+                searchElt.addElement(MailConstants.A_HEADER).addAttribute(MailConstants.A_ATTRIBUTE_NAME, name);
+        }
         searchElt.addAttribute(MailConstants.A_RECIPIENTS, mRecipients);
 //        if (getTimeZone() != null) {
 //            Element tz = searchElt.addElement(MailConstants.E_CAL_TZ).setText(getTimeZone().getID());
@@ -301,22 +312,20 @@ public final class SearchParams implements Cloneable {
             params.setMarkRead(request.getAttributeBool(MailConstants.A_MARK_READ, false));
             params.setWantHtml(request.getAttributeBool(MailConstants.A_WANT_HTML, false));
             params.setNeuterImages(request.getAttributeBool(MailConstants.A_NEUTER, true));
+            for (Element elt : request.listElements(MailConstants.A_HEADER))
+                params.addInlinedHeader(elt.getAttribute(MailConstants.A_ATTRIBUTE_NAME));
         }
         params.setWantRecipients(request.getAttributeBool(MailConstants.A_RECIPIENTS, false));
 
         // <tz>
         Element tzElt = request.getOptionalElement(MailConstants.E_CAL_TZ);
-        if (tzElt != null) {
-            TimeZone tz = parseTimeZonePart(tzElt);
-            params.setTimeZone(tz);
-        }
-        
+        if (tzElt != null)
+            params.setTimeZone(parseTimeZonePart(tzElt));
+
         // <loc>
         Element locElt = request.getOptionalElement(MailConstants.E_LOCALE);
-        if (locElt != null) {
-            Locale loc = parseLocale(locElt);
-            params.setLocale(loc);
-        }
+        if (locElt != null)
+            params.setLocale(parseLocale(locElt));
         
         params.setPrefetch(request.getAttributeBool(MailConstants.A_PREFETCH, true));
         params.setMode(Mailbox.SearchResultMode.get(request.getAttribute(MailConstants.A_RESULT_MODE, null)));
@@ -324,10 +333,9 @@ public final class SearchParams implements Cloneable {
 
         // field
         String field = request.getAttribute(MailConstants.A_FIELD, null);
-        if (field != null) {
+        if (field != null)
             params.setDefaultField(field);
-        }
-        
+
         params.setLimit(parseLimit(request));
         params.setOffset(parseOffset(request));
         
@@ -456,6 +464,7 @@ public final class SearchParams implements Cloneable {
         o.mMarkRead = mMarkRead;
         o.mWantHtml = mWantHtml;
         o.mNeuterImages = mNeuterImages;
+        o.mInlinedHeaders = mInlinedHeaders;
         o.mRecipients = mRecipients;
         o.mCalItemExpandStart = mCalItemExpandStart;
         o.mCalItemExpandEnd = mCalItemExpandEnd;
@@ -487,6 +496,7 @@ public final class SearchParams implements Cloneable {
     private boolean mMarkRead = false;
     private boolean mWantHtml = false;
     private boolean mNeuterImages = false;
+    private Set<String> mInlinedHeaders = null;
     private boolean mRecipients = false;
     private long mCalItemExpandStart = -1;
     private long mCalItemExpandEnd = -1;

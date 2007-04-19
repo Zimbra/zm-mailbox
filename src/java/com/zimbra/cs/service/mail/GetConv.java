@@ -28,8 +28,10 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
@@ -42,7 +44,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
-import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -67,6 +68,12 @@ public class GetConv extends MailDocumentHandler  {
         if (params.getFetchFirst() != ExpandResults.NONE) {
             params.setWantHtml(econv.getAttributeBool(MailConstants.A_WANT_HTML, false));
 //          params.setMarkRead(econv.getAttributeBool(MailConstants.A_MARK_READ, false));
+
+            Set<String> headers = null;
+            for (Element eHdr : econv.listElements(MailConstants.A_HEADER)) {
+                if (headers == null)  headers = new HashSet<String>();
+                params.addInlinedHeader(eHdr.getAttribute(MailConstants.A_ATTRIBUTE_NAME));
+            }
         }
 
         Conversation conv = mbox.getConversationById(octxt, iid.getId());

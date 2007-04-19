@@ -482,7 +482,7 @@ public class ToXML {
             if (msg.isTagged(mbox.mDeletedFlag))
                 continue;
             if (expand == ExpandResults.FIRST || expand == ExpandResults.ALL) {
-                encodeMessageAsMP(c, ifmt, octxt, msg, null, params.getWantHtml(), params.getNeuterImages());
+                encodeMessageAsMP(c, ifmt, octxt, msg, null, params.getWantHtml(), params.getNeuterImages(), params.getInlinedHeaders());
                 if (expand == ExpandResults.FIRST)
                     expand = ExpandResults.NONE;
             } else {
@@ -623,18 +623,19 @@ public class ToXML {
 
     /** Encodes a Message object into <m> element with <mp> elements for
      *  message body.
-     * @param parent  The Element to add the new <code>&lt;m></code> to.
-     * @param ifmt      The SOAP request's context.
+     * @param parent  The Element to add the new <tt>&lt;m></tt> to.
+     * @param ifmt    The formatter to sue when serializing item ids.
      * @param msg     The Message to serialize.
      * @param part    If non-null, we'll serialuize this message/rfc822 subpart
      *                of the specified Message instead of the Message itself.
-     * @param wantHTML  <code>true</code> to prefer HTML parts as the "body",
-     *                  <code>false</code> to prefer text/plain parts.
+     * @param wantHTML  <tt>true</tt> to prefer HTML parts as the "body",
+     *                  <tt>false</tt> to prefer text/plain parts.
      * @param neuter  Whether to rename "src" attributes on HTML <img> tags.
-     * @return The newly-created <code>&lt;m></code> Element, which has already
-     *         been added as a child to the passed-in <code>parent</code>.
+     * @param headers Extra message headers to include in the returned element.
+     * @return The newly-created <tt>&lt;m></tt> Element, which has already
+     *         been added as a child to the passed-in <tt>parent</tt>.
      * @throws ServiceException */
-    public static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Message msg, String part, boolean wantHTML, boolean neuter)
+    public static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Message msg, String part, boolean wantHTML, boolean neuter, Set<String> headers)
     throws ServiceException {
         boolean wholeMessage = (part == null || part.trim().equals(""));
 
@@ -702,6 +703,16 @@ public class ToXML {
 
             if (msg.isInvite())
                 encodeInvitesForMessage(m, ifmt, octxt, msg, NOTIFY_FIELDS);
+
+            if (headers != null) {
+                for (String name : headers) {
+                    String[] values = mm.getHeader(name);
+                    if (values == null)
+                        continue;
+                    for (int i = 0; i < values.length; i++)
+                        m.addKeyValuePair(name, values[i], MailConstants.A_HEADER, MailConstants.A_ATTRIBUTE_NAME);
+                }
+            }
 
             List<MPartInfo> parts = Mime.getParts(mm);
             if (parts != null && !parts.isEmpty()) {
@@ -840,10 +851,11 @@ public class ToXML {
      * @param wantHTML  <tt>true</tt> to prefer HTML parts as the "body",
      *                  <tt>false</tt> to prefer text/plain parts.
      * @param neuter  Whether to rename "src" attributes on HTML <img> tags.
+     * @param headers Extra message headers to include in the returned element.
      * @return The newly-created <tt>&lt;m></tt> Element, which has already
      *         been added as a child to the passed-in <tt>parent</tt>.
      * @throws ServiceException */
-    public static Element encodeInviteAsMP(Element parent, ItemIdFormatter ifmt, CalendarItem calItem, ItemId iid, String part, boolean wantHTML, boolean neuter)
+    public static Element encodeInviteAsMP(Element parent, ItemIdFormatter ifmt, CalendarItem calItem, ItemId iid, String part, boolean wantHTML, boolean neuter, Set<String> headers)
     throws ServiceException {
         int invId = iid.getSubpartId();
         boolean wholeMessage = (part == null || part.trim().equals(""));
@@ -911,6 +923,16 @@ public class ToXML {
             encodeTimeZoneMap(invElt, calItem.getTimeZoneMap());
             for (Invite inv : calItem.getInvites(invId))
                 encodeInviteComponent(invElt, ifmt, calItem, inv, NOTIFY_FIELDS, repliesWithInvites);
+
+            if (headers != null) {
+                for (String name : headers) {
+                    String[] values = mm.getHeader(name);
+                    if (values == null)
+                        continue;
+                    for (int i = 0; i < values.length; i++)
+                        m.addKeyValuePair(name, values[i], MailConstants.A_HEADER, MailConstants.A_ATTRIBUTE_NAME);
+                }
+            }
 
             List<MPartInfo> parts = Mime.getParts(mm);
             if (parts != null && !parts.isEmpty()) {
@@ -1418,10 +1440,10 @@ public class ToXML {
     }
 
     /** Adds the decoded text content of a message part to the {@link Element}.
-     *  The content is added as the value of a new <code>&lt;content></code>
+     *  The content is added as the value of a new <tt>&lt;content></tt>
      *  sub-element.  <i>Note: This method will only extract the content of a
      *  <b>text/*</b> or <b>xml/*</b> message part.</i> 
-     * @param elt  The element to add the <code>&lt;content></code> to.
+     * @param elt  The element to add the <tt>&lt;content></tt> to.
      * @param mpi  The message part to extract the content from.
      * @throws MessagingException when message parsing or CTE-decoding fails
      * @throws IOException on error during parsing or defanging */
@@ -1430,12 +1452,12 @@ public class ToXML {
     }
 
     /** Adds the decoded text content of a message part to the {@link Element}.
-     *  The content is added as the value of a new <code>&lt;content></code>
+     *  The content is added as the value of a new <tt>&lt;content></tt>
      *  sub-element.  <i>Note: This method will only extract the content of a
      *  <b>text/*</b> or <b>xml/*</b> message part.</i> 
-     * @param elt     The element to add the <code>&lt;content></code> to.
+     * @param elt     The element to add the <tt>&lt;content></tt> to.
      * @param mpi     The message part to extract the content from.
-     * @param neuter  Whether to "neuter" image <code>src</code> attributes.
+     * @param neuter  Whether to "neuter" image <tt>src</tt> attributes.
      * @throws MessagingException when message parsing or CTE-decoding fails
      * @throws IOException on error during parsing or defanging
      * @see HtmlDefang#defang(String, boolean) */

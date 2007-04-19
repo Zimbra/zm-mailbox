@@ -821,6 +821,7 @@ Tags:
                [read="*0|1"] [neuter="0|*1"] [field={default_field}]
                [calExpandInstStart=TIME_IN_MSEC] [calExpandInstEnd=TIME_IN_MSEC]
                >
+  *(<header n="{header-name}/>)
   [<cursor id="prevId" sortVal="prevSortValue" endSortVal="endSortValue"/> ] 
           // sortVal should be set to the value of the 'sf' (SortField) attribute of the last
           // hit on the previous 'page' of search results.
@@ -891,9 +892,10 @@ For a response, the order of the returned results represents the sorted order.  
 
 if fetch="1" (or fetch="first") is specified, the first hit will be expanded inline (messages only at present)
 if fetch="all", all hits are expanded inline
-    + if html="1" is also specified, the inlined first hit will return HTML parts if available
-    + if read="1" is also specified, the inlined first hit will be marked as read
+    + if html="1" is also specified, inlined hits will return HTML parts if available
+    + if read="1" is also specified, inlined hits will be marked as read
     + if neuter="0" is also specified, images in inlined HTML parts will not be "neutered"
+    + if <header>s are requested, any matching headers are included in inlined message hits
 
 if recip="1" is specified
     + returned sent messages will contain the set of "To:" recipients instead of the sender
@@ -979,6 +981,7 @@ message result:
      <e .../>*  <!- from only -->
      <su>{subject}</su>
      <fr>{fragment}</fr>
+    *(<header n="{header-name}">header content</header>)
      [<mp>...</mp>] // if fetch=1, the <mp>'s of the hit (first hit only) 
      <hp part="{mime-part-name}"/>+ // Hit Part -- indicator that the named part matched the search string
    </m>
@@ -1084,6 +1087,7 @@ message-part result:
 
 <SearchConvRequest cid="conversation-id" [limit="..."] [offset="..."] [sortBy="{sort-by}"] [types="{types}"] [nest="0|1"]
 				   [fetch="1|hits|all"] [html="1"] [read="1"] [neuter="0"]>
+  *(<header n="{header-name}/>)
   <query>{query-string}</query>
 </SearchConvRequest>
 
@@ -1099,14 +1103,15 @@ if fetch="all", all messages are expanded inline
 if nest="0" on the request, response looks like this:
 
 <SearchConvResponse sortBy="sort-by" offset="..." more="{more-flag}">
-   [<info>...</info>]
-   <m id="{message-id}" [cm="1"] f="{flags}" s="{size}" d="{date}" cid="{conv-id}" score="..." sf="SORT-FIELD-VALUE">
-     <e .../>  <!- from only -->
-     <su>{subject}</su>
-     <fr>{fragment}</fr>
-     [<mp>...</mp>] // if fetch=1, the <mp>'s of the hit (first hit only) 
-     <hp part="{mime-part-name}"/> // Hit Part -- indicator that the named part matched the search string
-   </m>*
+  [<info>...</info>]
+  <m id="{message-id}" [cm="1"] f="{flags}" s="{size}" d="{date}" cid="{conv-id}" score="..." sf="SORT-FIELD-VALUE">
+    <e .../>  <!- from only -->
+    <su>{subject}</su>
+    <fr>{fragment}</fr>
+    *(<header n="{header-name}">header content</header>)
+    [<mp>...</mp>] // if fetch=1, the <mp>'s of the hit (first hit only) 
+    <hp part="{mime-part-name}"/> // Hit Part -- indicator that the named part matched the search string
+  </m>*
 </SearchConvResponse>
 
 if nest="1" on the request, response looks like this:
@@ -1204,7 +1209,9 @@ folder ID that folder element will represent the virtual root folder.
 ----------
 
 <GetConvRequest>
-  <c id="{conv-id}" [fetch="1|all" html="0|1"]/>
+  <c id="{conv-id}" [fetch="1|all" html="0|1"]>
+    *(<header n="{header-name}/>)
+  </c>
 </GetConvRequest>
 
 GetConvRequest gets information about the 1 conversation named by id's value.
@@ -1212,6 +1219,9 @@ It will return exactly 1 conversation element.
 
 if fetch="1|all" is included, the full expanded message structure is inlined
     for the first (or for all) messages in the conversation
+
+if <header>s are requested, any matching headers are inlined into the response
+    (not available when raw="1")
 
 <GetConvResponse>
   <c id="{conv-id}" [t="{tags}"] n="{num-msgs}" [total="{all-msgs}"] [f="{flags}"]>
@@ -1226,7 +1236,9 @@ if fetch="1|all" is included, the full expanded message structure is inlined
 ------------
 
 <GetMsgRequest>
-  <m id="{msg-id}" [read="1"] [raw="1"] [html="1"] [neuter="0"] [part="{part}"]/>
+  <m id="{msg-id}" [read="1"] [raw="1"] [html="1"] [neuter="0"] [part="{part}"]>
+    *(<header n="{header-name}/>)
+  </m>
 </GetMsgRequest>
 
     The {msg-id} can contain a subpart identifier (e.g. "775-778") to return
@@ -1245,6 +1257,9 @@ neuter="1" to "neuter" <IMG> tags returned in HTML content; this involves switch
 supply a "part" and the retrieved data will be on the specified message/rfc822 subpart.
     if the part does not exist or is not a message/rfc822 part, mail.NO_SUCH_PART
 
+if <header>s are requested, any matching headers are inlined into the response
+    (not available when raw="1")
+
 <GetMsgResponse>
   <m id="{message-id}" [origid="..." rt="r|w"] [part="{part}"] f="{flags}" t="{tags}" s="{size}" [d="{received-date}"] sd="{date-header}" l="{folder}" (cid="{conv}")>
     <e .../>*
@@ -1252,6 +1267,7 @@ supply a "part" and the retrieved data will be on the specified message/rfc822 s
     <fr>{fragment}</fr>
     [<irt>{Message-ID header for message being replied to}</irt>]
     <mid>{Message-ID header}</mid>
+    *(<header n="{header-name}">header content</header>)
     [<mp>...</mp>]
     [<content (url="...")>...</content>]
   </m>

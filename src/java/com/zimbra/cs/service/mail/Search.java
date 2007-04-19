@@ -295,10 +295,10 @@ public class Search extends MailDocumentHandler  {
                     mLog.warn("problem marking message as read (ignored): " + msg.getId(), e);
             }
         }
-        
+
         Element m;
         if (inline)
-            m = ToXML.encodeMessageAsMP(response, ifmt, zsc.getOperationContext(), msg, null, params.getWantHtml(), params.getNeuterImages());
+            m = ToXML.encodeMessageAsMP(response, ifmt, zsc.getOperationContext(), msg, null, params.getWantHtml(), params.getNeuterImages(), params.getInlinedHeaders());
         else
             m = ToXML.encodeMessageSummary(response, ifmt, zsc.getOperationContext(), msg, params.getWantRecipients());
 
@@ -335,7 +335,7 @@ public class Search extends MailDocumentHandler  {
 
         Element m;
         if (inline) {
-            m = ToXML.encodeMessageAsMP(response, ifmt, zsc.getOperationContext(), msg, null, params.getWantHtml(), params.getNeuterImages());
+            m = ToXML.encodeMessageAsMP(response, ifmt, zsc.getOperationContext(), msg, null, params.getWantHtml(), params.getNeuterImages(), null);
             if (!msg.getFragment().equals(""))
                 m.addAttribute(MailConstants.E_FRAG, msg.getFragment(), Element.Disposition.CONTENT);
         } else {
