@@ -201,20 +201,13 @@ public class MailConstants {
     public static final String E_SEARCH = "search";
     public static final String E_MOUNT = "link";
 
-    public static final String E_MIMEPART = "mp";
-	public static final String E_SUBJECT = "su";
-    public static final String E_FRAG = "fr";
-    public static final String E_MSG_ID_HDR = "mid";
-    public static final String E_IN_REPLY_TO = "irt";
     public static final String E_INFO = "info";
     public static final String E_LOCALE = "locale";
-    public static final String E_CONTENT = "content";
     public static final String E_PARAM = "p";
     public static final String E_BROWSE_DATA = "bd";
     public static final String E_ACTION = "action";
     public static final String E_ATTRIBUTE = "a";
     public static final String E_NAME = "name";
-    public static final String E_LOCATION = "loc";
     public static final String E_DESCRIPTION = "desc";
     public static final String E_VCARD = "vcard";
     public static final String E_SIGNATURE = "signature";
@@ -258,24 +251,10 @@ public class MailConstants {
     public static final String A_TAGS = "t";
     public static final String A_FOLDER = "l";
     public static final String A_VISIBLE = "visible";
-    public static final String A_NO_ICAL = "noICal";
-    public static final String A_WANT_HTML = "html";
-    public static final String A_RAW = "raw";
-    public static final String A_MARK_READ = "read";
-    public static final String A_NEUTER = "neuter";
     public static final String A_ESTIMATE_SIZE = "estimateSize";
     public static final String A_URL = "url";
     public static final String A_NUM = "n";
     public static final String A_TOTAL_SIZE = "total";
-    public static final String A_PART = "part";
-    public static final String A_BODY = "body";
-    public static final String A_CONTENT_TYPE = "ct";
-    public static final String A_CONTENT_DISPOSTION = "cd";
-    public static final String A_CONTENT_DESCRIPTION = "cde";
-    public static final String A_CONTENT_ID = "ci";
-    public static final String A_CONTENT_LOCATION = "cl";
-    public static final String A_CONTENT_NAME = "name";
-    public static final String A_CONTENT_FILENAME = "filename";
     public static final String A_OPERATION = "op";
     public static final String A_RECURSIVE = "recursive";
     public static final String A_DEFAULT_VIEW = "view";
@@ -295,6 +274,29 @@ public class MailConstants {
     public static final String A_RESULT_MODE = "resultMode";
     public static final String A_PREFETCH = "prefetch";
     public static final String A_VERBOSE = "verbose";
+
+    // messages
+    public static final String E_MIMEPART = "mp";
+    public static final String E_SUBJECT = "su";
+    public static final String E_FRAG = "fr";
+    public static final String E_MSG_ID_HDR = "mid";
+    public static final String E_IN_REPLY_TO = "irt";
+    public static final String E_CONTENT = "content";
+    public static final String A_PART = "part";
+    public static final String A_BODY = "body";
+    public static final String A_CONTENT_TYPE = "ct";
+    public static final String A_CONTENT_DISPOSTION = "cd";
+    public static final String A_CONTENT_DESCRIPTION = "cde";
+    public static final String A_CONTENT_ID = "ci";
+    public static final String A_CONTENT_LOCATION = "cl";
+    public static final String A_CONTENT_NAME = "name";
+    public static final String A_CONTENT_FILENAME = "filename";
+    public static final String A_NO_ICAL = "noICal";
+    public static final String A_WANT_HTML = "html";
+    public static final String A_RAW = "raw";
+    public static final String A_HEADER = "header";
+    public static final String A_MARK_READ = "read";
+    public static final String A_NEUTER = "neuter";
 
     // send/save draft
     public static final String E_ATTACH = "attach";
