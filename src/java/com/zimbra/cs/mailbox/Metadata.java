@@ -232,9 +232,8 @@ public class Metadata {
             sb.append("[\n");
             for (Iterator it = ((List) object).iterator(); it.hasNext(); )
                 if ((value = it.next()) != null) {
-                    appendIndent(sb, indentLevel);
-                    prettyEncode(sb, value, indentLevel);
-                    sb.append("\n");
+                    appendIndent(sb, indentLevel + 1);
+                    prettyEncode(sb, value, indentLevel + 1);
                 }
             appendIndent(sb, indentLevel);
             sb.append("]\n");
