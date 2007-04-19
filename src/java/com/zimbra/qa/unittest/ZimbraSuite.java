@@ -30,6 +30,8 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.zimbra.cs.index.TestSearch;
+
 import junit.framework.Test;
 import junit.framework.TestResult;
 import junit.framework.TestSuite;
@@ -83,6 +85,7 @@ public class ZimbraSuite extends TestSuite
         suite.addTest(new TestSuite(TestPop3ImapAuth.class));
         suite.addTest(new TestSuite(TestContacts.class));
         suite.addTest(new TestSuite(TestTaskScheduler.class));
+        suite.addTest(new TestSuite(TestSearch.class));
 
         // xxx bburtin: Commenting out IMAP tests, since the new schema hasn't been
         // checked in

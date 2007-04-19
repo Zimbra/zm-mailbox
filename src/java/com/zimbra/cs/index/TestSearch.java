@@ -65,7 +65,7 @@ import com.zimbra.cs.index.ResultValidator.ExpectedHitValidator;
 /**
  * @author tim
  */
-public class UnitTests extends TestCase {
+public class TestSearch extends TestCase {
     
     public void testSearch() throws ServiceException
     {
@@ -581,7 +581,7 @@ public class UnitTests extends TestCase {
     
     public static void runTests()
     {
-        TestSuite suite = new TestSuite(UnitTests.class);
+        TestSuite suite = new TestSuite(TestSearch.class);
         TestResult results = new TestResult();
         suite.run(results);
 //        System.out.println("Test Results: "+results.toString());
@@ -620,7 +620,7 @@ public class UnitTests extends TestCase {
     
     public int mMailboxId = 2;
 
-    public UnitTests() {
+    public TestSearch() {
     }
     /*
      * @see TestCase#setUp()

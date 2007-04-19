@@ -1301,7 +1301,7 @@ public class IndexEditor {
                 } else if (command.equals("dumpall")) {
                     dumpAll(mailboxId);
                 } else if (command.equals("unit")) {
-                    UnitTests.runTests();
+                    TestSearch.runTests();
 //                  } else if (command.equals("archive")) {
 //                  archive(mailboxId);
                 } else if (command.equals("verify")) {
