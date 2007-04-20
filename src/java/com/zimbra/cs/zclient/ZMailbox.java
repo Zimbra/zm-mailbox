@@ -263,6 +263,7 @@ public class ZMailbox {
     private LRUMap mContactCache;
     private ZFilterRules mRules;
     private ZAuthResult mAuthResult;
+    private ZContactAutoCompleteCache mAutoCompleteCache;
 
     private long mSize;
 
@@ -1052,7 +1053,8 @@ public class ZMailbox {
             req.addAttribute(MailConstants.A_SORTBY, sortBy.name());
         if (sync)
             req.addAttribute(MailConstants.A_SYNC, sync);
-        req.addElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, ids);
+        if (ids != null)
+            req.addElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, ids);
         if (attrs != null) {
             for (String name : attrs)
                 req.addElement(MailConstants.E_ATTRIBUTE).addAttribute(MailConstants.A_ATTRIBUTE_NAME, name);
@@ -1080,6 +1082,14 @@ public class ZMailbox {
             mContactCache.put(id, result);
         }
         return result;
+    }
+
+    public synchronized List<ZContact> autoComplete(String query, int limit) throws ServiceException {
+        if (mAutoCompleteCache == null) {
+            mAutoCompleteCache = new ZContactAutoCompleteCache();
+            mHandlers.add(mAutoCompleteCache);
+        }
+        return mAutoCompleteCache.autoComplete(query, limit, this);
     }
 
     private Element contactAction(String op, String id) {

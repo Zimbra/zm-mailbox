@@ -303,6 +303,7 @@ public class ZMailboxUtil implements DebugListener {
 
     enum Command {
         AUTHENTICATE("authenticate", "a", "{name} {password}", "authenticate as account and open mailbox", Category.MISC, 2, 2, O_URL),
+        AUTO_COMPLETE("autoComplete", "ac", "{query}", "contact auto autocomplete", Category.CONTACT,  1, 1, O_VERBOSE),
         ADD_FILTER_RULE("addFilterRule", "afrl", "{name}  [*active|inactive] [any|*all] {conditions}+ {actions}+", "add filter rule", Category.FILTER,  2, Integer.MAX_VALUE, O_AFTER, O_BEFORE, O_FIRST, O_LAST),
         ADD_MESSAGE("addMessage", "am", "{dest-folder-path} {filename-or-dir} [{filename-or-dir} ...]", "add a message to a folder", Category.MESSAGE, 2, Integer.MAX_VALUE, O_TAGS, O_DATE),
         ADMIN_AUTHENTICATE("adminAuthenticate", "aa", "{admin-name} {admin-password}", "authenticate as an admin. can only be used by an admin", Category.ADMIN, 2, 2, O_URL),
@@ -809,6 +810,9 @@ public class ZMailboxUtil implements DebugListener {
         }
 
         switch(mCommand) {
+        case AUTO_COMPLETE:
+            doAutoComplete(args);
+            break;
         case AUTHENTICATE:
             doAuth(args);
             break;
@@ -1769,6 +1773,11 @@ public class ZMailboxUtil implements DebugListener {
 
     private void doGetContacts(String[] args) throws ServiceException {
         dumpContacts(mMbox.getContacts(id(args[0]), null, true, getList(args, 1)));
+    }
+
+    private void doAutoComplete(String[] args) throws ServiceException {
+        List<ZContact> hits = mMbox.autoComplete(args[0], 0);
+        dumpContacts(hits);
     }
 
     private void dumpConversation(ZConversation conv) throws ServiceException {
