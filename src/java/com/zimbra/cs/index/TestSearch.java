@@ -627,7 +627,6 @@ public class TestSearch extends TestCase {
      */
     protected void setUp() throws Exception {
         super.setUp();
-        CliUtil.toolSetup();
     }
 
     public static void main(String[] args)
