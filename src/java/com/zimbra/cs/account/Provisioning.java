@@ -682,7 +682,7 @@ public abstract class Provisioning {
 
     public static final String A_zimbraFeaturePop3DataSourceEnabled = "zimbraFeaturePop3DataSourceEnabled";
     
-    public static final String A_zimbraFeatureKeyboardShortcutsEnabled = "zimbraFeatureKeyboardShortcutsEnabled";
+    public static final String A_zimbraFeatureShortcutAliasesEnabled = "zimbraFeatureShortcutAliasesEnabled";
 
     /**
      * administrative notes for an entry.
