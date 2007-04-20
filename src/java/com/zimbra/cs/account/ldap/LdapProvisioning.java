@@ -616,7 +616,7 @@ public class LdapProvisioning extends Provisioning {
         /*
          * if zimbrId is provided, validate it
          */
-        if (acctAttrs.containsKey(Provisioning.A_zimbraId)) {
+        if (acctAttrs != null && acctAttrs.containsKey(Provisioning.A_zimbraId)) {
             Object value = acctAttrs.get(Provisioning.A_zimbraId);
             if (!(value instanceof String))
                 throw ServiceException.INVALID_REQUEST(Provisioning.A_zimbraId + " is a single-valued attribute", null);
