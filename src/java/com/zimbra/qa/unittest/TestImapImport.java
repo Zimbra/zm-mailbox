@@ -285,7 +285,7 @@ extends TestCase {
     public static void main(String[] args)
     throws Exception {
         CliUtil.toolSetup();
-        TestUtil.runTest(new TestSuite(TestImapImport.class), null);
+        TestUtil.runTest(new TestSuite(TestImapImport.class));
         // TestUtil.runTest(new TestSuite(TestImapImport.TearDown.class), null);
     }
 }

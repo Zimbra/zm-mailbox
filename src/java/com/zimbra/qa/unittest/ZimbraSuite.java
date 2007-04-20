@@ -25,11 +25,11 @@
 
 package com.zimbra.qa.unittest;
 
-import java.io.OutputStream;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.index.TestSearch;
 
 import junit.framework.Test;
@@ -60,9 +60,10 @@ public class ZimbraSuite extends TestSuite
      * Runs the entire test suite and writes the output to the specified
      * <code>OutputStream</code>.
      */
-    public static TestResult runTestSuite(OutputStream outputStream) {
+    public static TestResult runTestSuite(Element response) {
         TestSuite suite = new TestSuite();
 
+        suite.addTest(new TestSuite(TestWaitSet.class));
         suite.addTest(new TestSuite(TestUtilCode.class));
         suite.addTest(new TestSuite(TestEmailUtil.class));
         suite.addTest(new TestSuite(TestOutOfOffice.class));
@@ -98,6 +99,6 @@ public class ZimbraSuite extends TestSuite
             }
         }
         
-        return TestUtil.runTest(suite, outputStream);
+        return TestUtil.runTest(suite, response);
     }
 }

@@ -277,6 +277,6 @@ extends TestCase {
     public static void main(String[] args)
     throws Exception {
         CliUtil.toolSetup();
-        TestUtil.runTest(new TestSuite(TestPop3ImapAuth.class), null);        
+        TestUtil.runTest(new TestSuite(TestPop3ImapAuth.class));        
     }
 }

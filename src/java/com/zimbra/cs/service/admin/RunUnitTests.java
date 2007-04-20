@@ -43,10 +43,12 @@ public class RunUnitTests extends DocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        TestResult result = ZimbraSuite.runTestSuite(os);
-
+        
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Element response = lc.createElement(AdminConstants.RUN_UNIT_TESTS_RESPONSE);
+        
+        TestResult result = ZimbraSuite.runTestSuite(response);
+        
         response.addAttribute(AdminConstants.A_NUM_EXECUTED, Integer.toString(result.runCount()));
         response.addAttribute(AdminConstants.A_NUM_FAILED,
             Integer.toString(result.failureCount() + result.errorCount()));

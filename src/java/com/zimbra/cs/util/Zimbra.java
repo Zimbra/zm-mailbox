@@ -47,7 +47,7 @@ import com.zimbra.cs.pop3.Pop3Server;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.servlet.PrivilegedServlet;
 import com.zimbra.cs.session.SessionCache;
-import com.zimbra.cs.session.WaitSet;
+import com.zimbra.cs.session.WaitSetMgr;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.StoreManager;
 
@@ -139,7 +139,7 @@ public class Zimbra {
                 ImapServer.startupImapSSLServer();
         }
         
-        WaitSet.startup();
+        WaitSetMgr.startup();
         
         MemoryStats.startup();
         
@@ -159,7 +159,7 @@ public class Zimbra {
 
         MemoryStats.shutdown();
         
-        WaitSet.shutdown();
+        WaitSetMgr.shutdown();
         
         RedoLogProvider redoLog = RedoLogProvider.getInstance();
         if (!redoLog.isSlave()) {

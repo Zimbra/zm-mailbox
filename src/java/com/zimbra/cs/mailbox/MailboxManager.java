@@ -50,17 +50,27 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 public class MailboxManager {
+
+    public static enum FetchMode {
+        AUTOCREATE, // create the mailbox if it doesn't exist
+        DO_NOT_AUTOCREATE, // fetch from DB if not in memory, but don't create it if it isn't in the DB
+        ONLY_IF_CACHED, // don't fetch from the DB, only return if cached
+        ; 
+    }
     
     /**
      * Listener for mailbox loading
      */
-    public static interface MailboxLoadedListener {
-        /**
-         * Called whenever a mailbox is loaded or created
-         * 
-         * @param mbox
-         */
+    public static interface Listener {
+        /** Called whenever a mailbox has left Maintenance mode */
+        public void mailboxAvailable(Mailbox mbox);
+        
+        /** Called whenever a mailbox is loaded */
         public void mailboxLoaded(Mailbox mbox);
+        
+        /** Called whenever a mailbox is created */
+        public void mailboxCreated(Mailbox mbox);
+        
     }
 
     public static final class MailboxLock {
@@ -104,15 +114,26 @@ public class MailboxManager {
         }
     }
     
-    private CopyOnWriteArrayList<MailboxLoadedListener> mLoadListeners = new CopyOnWriteArrayList<MailboxLoadedListener>();
+    private CopyOnWriteArrayList<Listener> mListeners = new CopyOnWriteArrayList<Listener>();
     
-    public void addListener(MailboxLoadedListener listener)      { mLoadListeners.add(listener); }
-    public void removeListener(MailboxLoadedListener listener)   { mLoadListeners.remove(listener); }
+    public void addListener(Listener listener)      { mListeners.add(listener); }
+    public void removeListener(Listener listener)   { mListeners.remove(listener); }
+
+    private void notifyMailboxAvailable(Mailbox mbox) {
+        for (Listener listener : mListeners) 
+            listener.mailboxAvailable(mbox);
+    }
     
     private void notifyMailboxLoaded(Mailbox mbox) {
-        for (MailboxLoadedListener listener : mLoadListeners) 
+        for (Listener listener : mListeners) 
             listener.mailboxLoaded(mbox);
     }
+    
+    private void notifyMailboxCreated(Mailbox mbox) {
+        for (Listener listener : mListeners) 
+            listener.mailboxCreated(mbox);
+    }
+    
 
     private static MailboxManager sInstance;
 
@@ -195,7 +216,7 @@ public class MailboxManager {
      *    <li><code>service.WRONG_HOST</code> - if the Account's mailbox
      *        lives on a different host</ul> */
     public Mailbox getMailboxByAccountId(String accountId) throws ServiceException {
-        return getMailboxByAccountId(accountId, true);
+        return getMailboxByAccountId(accountId, FetchMode.AUTOCREATE);
     }
 
     /** Returns the mailbox for the given account id.  Creates a new
@@ -213,6 +234,27 @@ public class MailboxManager {
      *    <li><code>service.WRONG_HOST</code> - if the Account's mailbox
      *        lives on a different host</ul> */
     public Mailbox getMailboxByAccountId(String accountId, boolean autocreate) throws ServiceException {
+        return getMailboxByAccountId(accountId, FetchMode.AUTOCREATE);
+    }
+    
+    /** Returns the mailbox for the given account id.  Creates a new
+     *  mailbox if one doesn't already exist and <code>autocreate</code>
+     *  is <code>true</code>.
+     *
+     * @param accountId   The id of the account whose mailbox we want.
+     * @param fetchMode <code>FetchMode.ONLY_IF_CACHED</code> will return the mailbox only
+     *                     if it is already cached in memory
+     *                  <code>FetchMode.DO_NOT_AUTOCREATE</code>Will fetch the mailbox from
+     *                     the DB if it is not cached, but will not create it. 
+     *                  <code>FetchMode.AUTOCREATE</code> to create the mailbox if needed
+     * @return The requested <code>Mailbox</code> object, or <code>null</code>.
+     * @throws ServiceException  The following error codes are possible:<ul>
+     *    <li><code>mail.MAINTENANCE</code> - if the mailbox is in maintenance
+     *        mode and the calling thread doesn't hold the lock
+     *    <li><code>service.FAILURE</code> - if there's a database failure
+     *    <li><code>service.WRONG_HOST</code> - if the Account's mailbox
+     *        lives on a different host</ul> */    
+    public Mailbox getMailboxByAccountId(String accountId, FetchMode fetchMode) throws ServiceException {
         if (accountId == null)
             throw new IllegalArgumentException();
     
@@ -221,8 +263,8 @@ public class MailboxManager {
             mailboxKey = mMailboxIds.get(accountId.toLowerCase());
         }
         if (mailboxKey != null)
-            return getMailboxById(mailboxKey.intValue());
-        else if (!autocreate)
+            return getMailboxById(mailboxKey.intValue(), fetchMode, false);
+        else if (fetchMode != FetchMode.AUTOCREATE)
             return null;
     
         // auto-create the mailbox if this is the right host...
@@ -234,7 +276,7 @@ public class MailboxManager {
         synchronized (this) {
             mailboxKey = mMailboxIds.get(accountId.toLowerCase());
             if (mailboxKey != null)
-                return getMailboxById(mailboxKey.intValue());
+                return getMailboxById(mailboxKey.intValue(), fetchMode, false);
             else
                 return createMailbox(null, account);
         }
@@ -259,7 +301,7 @@ public class MailboxManager {
      *    <li><code>account.NO_SUCH_ACCOUNT</code> - if the mailbox's Account
      *        has been deleted</ul> */
     public Mailbox getMailboxById(int mailboxId) throws ServiceException {
-        return getMailboxById(mailboxId, false);
+        return getMailboxById(mailboxId, FetchMode.DO_NOT_AUTOCREATE, false);
     }
 
     /** Returns the <code>Mailbox</code> with the given id.  Throws an
@@ -286,7 +328,12 @@ public class MailboxManager {
      *        lives on a different host
      *    <li><code>account.NO_SUCH_ACCOUNT</code> - if the mailbox's Account
      *        has been deleted and <code>skipMailHostCheck=false</code></ul> */
-    public Mailbox getMailboxById(int mailboxId, boolean skipMailHostCheck)
+    public Mailbox getMailboxById(int mailboxId, boolean skipMailHostCheck) 
+    throws ServiceException {
+        return getMailboxById(mailboxId, FetchMode.DO_NOT_AUTOCREATE, skipMailHostCheck);
+    }
+    
+    private Mailbox getMailboxById(int mailboxId, FetchMode fetchMode, boolean skipMailHostCheck)
     throws ServiceException {
         if (mailboxId <= 0)
             throw MailServiceException.NO_SUCH_MBOX(mailboxId);
@@ -302,6 +349,9 @@ public class MailboxManager {
                 return (Mailbox) cached;
             }
         }
+        
+        if (fetchMode == FetchMode.ONLY_IF_CACHED)
+            return null;
 
         ZimbraPerf.COUNTER_MBOX_CACHE.increment(0);
         Connection conn = null;
@@ -353,6 +403,48 @@ public class MailboxManager {
 
         ZimbraPerf.STOPWATCH_MBOX_GET.stop(startTime);
         return mbox;
+    }
+    
+    /** @return A list of *hard references* to all currently-loaded mailboxes which are not
+     *     .   in MAINTENANCE mode.  Caller must be careful to not hang onto this list for
+     *         very long or else mailboxes will not be purged. */
+    public synchronized List<Mailbox> getAllLoadedMailboxes() {
+        List<Mailbox> mboxes = new ArrayList<Mailbox>(mMailboxCache.size());
+        for (Object o : mMailboxCache.values()) {
+            if (o instanceof SoftReference) {
+                Mailbox mbox = (Mailbox) ((SoftReference) o).get();
+                if (mbox != null)
+                    mboxes.add(mbox);
+            } else if (o instanceof Mailbox) {
+                mboxes.add((Mailbox)o);
+            } else if (o instanceof MailboxLock) {
+                MailboxLock lock = (MailboxLock)o;
+                if (lock.canAccess()) {
+                    mboxes.add(lock.getMailbox());
+                } 
+            }
+        }
+        return mboxes;
+    }
+    
+    /**
+     * @param mailboxId
+     * @return TRUE if the specified mailbox is in-memory and not in maintenance mode,
+     *         if false, then caller can assume that one of the @link{Listener} APIs 
+     *         be called for this mailbox at some point in the future, if this mailbox
+     *         is ever accessed
+     */
+    public synchronized boolean isMailboxLoadedAndAvailable(int mailboxId) {
+        Object cached = mMailboxCache.get(mailboxId);
+        if (cached instanceof SoftReference) {
+            Mailbox mbox = (Mailbox) ((SoftReference) cached).get();
+            return (mbox != null);
+        } else if (cached instanceof MailboxLock) {
+            MailboxLock lock = (MailboxLock) cached;
+            return (lock.canAccess());
+        } else {
+            return true;
+        }
     }
 
     private Object retrieveFromCache(int mailboxId, boolean trackGC) throws MailServiceException {
@@ -414,6 +506,8 @@ public class MailboxManager {
     public void endMaintenance(MailboxLock lock, boolean success, boolean removeFromCache) throws ServiceException {
         if (lock == null)
             throw ServiceException.INVALID_REQUEST("no lock provided", null);
+        
+        Mailbox availableMailbox = null;
     
         synchronized (this) {
             Object obj = mMailboxCache.get(lock.getMailboxId());
@@ -447,6 +541,7 @@ public class MailboxManager {
                         mbox.endMaintenance(success);
                         cacheMailbox(lock.getMailbox());
                     }
+                    availableMailbox = mbox;
                 }
             } else {
                 // on failed maintenance, mark the Mailbox object as off-limits to everyone
@@ -455,6 +550,9 @@ public class MailboxManager {
                 lock.markUnavailable();
             }
         }
+        
+        if (availableMailbox != null)
+            notifyMailboxAvailable(availableMailbox);
     }
 
 
@@ -602,7 +700,7 @@ public class MailboxManager {
             }
         }
 
-        notifyMailboxLoaded(mailbox);
+        notifyMailboxCreated(mailbox);
         
         return mailbox;
     }

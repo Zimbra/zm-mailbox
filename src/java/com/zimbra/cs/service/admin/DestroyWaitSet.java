@@ -29,7 +29,7 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.cs.session.WaitSet;
+import com.zimbra.cs.session.WaitSetMgr;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /*
@@ -55,7 +55,7 @@ public class DestroyWaitSet extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         String waitSetId = request.getAttribute(AdminConstants.A_WAITSET_ID);
-        WaitSet.destroy(waitSetId);
+        WaitSetMgr.destroy(waitSetId);
         
         Element response = zsc.createElement(AdminConstants.DESTROY_WAIT_SET_RESPONSE);
         response.addAttribute(AdminConstants.A_WAITSET_ID, waitSetId);

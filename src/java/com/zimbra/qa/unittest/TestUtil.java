@@ -39,6 +39,7 @@ import junit.framework.TestResult;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -343,9 +344,31 @@ public class TestUtil {
      * Runs a test and writes the output to the logfile.
      */
     public static TestResult runTest(Test t) {
-        return runTest(t, null);
+        return runTest(t, (OutputStream)null);
     }
 
+    /**
+     * Runs a test and writes the output to the specified
+     * <code>OutputStream</code>.
+     */
+    public static TestResult runTest(Test t, Element parent) {
+        ZimbraLog.test.debug("Starting unit test suite");
+
+        long suiteStart = System.currentTimeMillis();
+        TestResult result = new TestResult();
+        ZimbraTestListener listener = new ZimbraTestListener(parent);
+        result.addListener(listener);
+        t.run(result);
+
+        double seconds = (double) (System.currentTimeMillis() - suiteStart) / 1000;
+        String msg = String.format(
+            "Unit test suite finished in %.2f seconds.  %d errors, %d failures.\n%s                       ................               ",
+            seconds, result.errorCount(), result.failureCount(), listener.getSummary());
+        ZimbraLog.test.info(msg);
+
+        return result;
+    }
+    
     /**
      * Runs a test and writes the output to the specified
      * <code>OutputStream</code>.
@@ -355,19 +378,20 @@ public class TestUtil {
 
         long suiteStart = System.currentTimeMillis();
         TestResult result = new TestResult();
-        ZimbraTestListener listener = new ZimbraTestListener();
+        ZimbraTestListener listener = new ZimbraTestListener(null);
         result.addListener(listener);
         t.run(result);
 
         double seconds = (double) (System.currentTimeMillis() - suiteStart) / 1000;
         String msg = String.format(
-            "Unit test suite finished in %.2f seconds.  %d errors, %d failures.\n%s",
+            "Unit test suite finished in %.2f seconds.  %d errors, %d failures.\n%s                       ................               ",
             seconds, result.errorCount(), result.failureCount(), listener.getSummary());
         ZimbraLog.test.info(msg);
 
         if (outputStream != null) {
             try {
                 outputStream.write(msg.getBytes());
+                outputStream.write('\n');
             } catch (IOException e) {
                 ZimbraLog.test.error(e.toString());
             }
@@ -375,6 +399,7 @@ public class TestUtil {
 
         return result;
     }
+    
     
     public static ZMailbox getZMailbox(String username)
     throws ServiceException {

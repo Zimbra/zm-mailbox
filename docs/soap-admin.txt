@@ -1729,8 +1729,12 @@ INTEREST_TYPES: comma-separated list.  Start with:
 *************************************
 CreateWaitSet: must be called once to initialize the WaitSet
 and to set its "default interest types"
+
+if "allAccounts" is set, then all mailboxes on the system will be
+listened to, including any mailboxes which are created on the system
+while the WaitSet is in existence.
 ************************************* 
-<CreateWaitSetRequest defTypes="DEFAULT INTEREST_TYPES">
+<CreateWaitSetRequest defTypes="DEFAULT INTEREST_TYPES" [allAccounts=1]>
   [ <add>
       [<a id="ACCTID" [token="lastKnownSyncToken"] [types="if_not_default"]/>]+
     </add> ]

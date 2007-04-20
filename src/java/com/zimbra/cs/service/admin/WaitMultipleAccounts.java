@@ -36,6 +36,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.cs.session.WaitSet;
+import com.zimbra.cs.session.WaitSetMgr;
 import com.zimbra.cs.session.WaitSet.WaitSetAccount;
 import com.zimbra.cs.session.WaitSet.WaitSetError;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -91,7 +92,7 @@ public class WaitMultipleAccounts extends AdminDocumentHandler {
         int lastKnownSeqNo = (int)request.getAttributeLong(AdminConstants.A_SEQ);
         boolean block = request.getAttributeBool(AdminConstants.A_BLOCK, false);
         
-        WaitSet ws = WaitSet.lookup(waitSetId);
+        WaitSet ws = WaitSetMgr.lookup(waitSetId);
 
         if (ws == null) {
             throw AdminServiceException.NO_SUCH_WAITSET(waitSetId);
@@ -164,7 +165,7 @@ public class WaitMultipleAccounts extends AdminDocumentHandler {
         return remove;
     }
     
-    static class Callback implements WaitSet.WaitSetCallback {
+    public static class Callback implements WaitSet.WaitSetCallback {
         public void dataReady(WaitSet ws, int seqNo, boolean canceled, String[] signalledAccounts) {
             synchronized(this) {
                 ZimbraLog.session.info("Called WaitMultiplAccounts WaitSetCallback.dataReady()!");
@@ -184,7 +185,7 @@ public class WaitMultipleAccounts extends AdminDocumentHandler {
         public int seqNo;
     }
     
-    static enum TypeEnum {
+    public static enum TypeEnum {
         m(MailItem.typeToBitmask(MailItem.TYPE_MESSAGE)),
         c(MailItem.typeToBitmask(MailItem.TYPE_CONTACT)),
         a(MailItem.typeToBitmask(MailItem.TYPE_APPOINTMENT)),

@@ -185,6 +185,6 @@ public class TestUtilCode extends TestCase
     }
 
     public static void main(String[] args) {
-        TestUtil.runTest(new TestSuite(TestUtilCode.class), null);
+        TestUtil.runTest(new TestSuite(TestUtilCode.class));
     }
 }

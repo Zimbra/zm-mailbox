@@ -30,7 +30,8 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.cs.session.WaitSet;
+import com.zimbra.common.util.Pair;
+import com.zimbra.cs.session.WaitSetMgr;
 import com.zimbra.cs.session.WaitSet.WaitSetAccount;
 import com.zimbra.cs.session.WaitSet.WaitSetError;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -44,7 +45,7 @@ public class CreateWaitSet extends AdminDocumentHandler {
           CreateWaitSet: must be called once to initialize the WaitSet
           and to set its "default interest types"
          ************************************* -->
-        <CreateWaitSetRequest defTypes="DEFAULT_INTEREST_TYPES">
+        <CreateWaitSetRequest defTypes="DEFAULT_INTEREST_TYPES" [all="1"]>
           [ <add>
             [<a id="ACCTID" [token="lastKnownSyncToken"] [types="if_not_default"]/>]+
             </add> ]
@@ -62,12 +63,14 @@ public class CreateWaitSet extends AdminDocumentHandler {
         String defInterestStr = request.getAttribute(AdminConstants.A_DEFTYPES);
         int defaultInterests = WaitMultipleAccounts.parseInterestStr(defInterestStr, 0);
         
+        boolean allAccts = request.getAttributeBool("allAccounts", false);
+        
         List<WaitSetAccount> add = WaitMultipleAccounts.parseAddUpdateAccounts(
             request.getOptionalElement(AdminConstants.E_WAITSET_ADD), defaultInterests);
         
-        Object[] result = WaitSet.create(defaultInterests, add);
-        String wsId = (String)result[0];
-        List<WaitSetError> errors = (List<WaitSetError>)result[1];
+        Pair<String, List<WaitSetError>> result = WaitSetMgr.create(defaultInterests, allAccts, add);
+        String wsId = result.getFirst();
+        List<WaitSetError> errors = result.getSecond();
         
         Element response = zsc.createElement(AdminConstants.CREATE_WAIT_SET_RESPONSE);
         response.addAttribute(AdminConstants.A_WAITSET_ID, wsId);

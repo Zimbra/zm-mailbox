@@ -254,6 +254,25 @@ public class TestFolders extends TestCase
     private void cleanUp()
     throws Exception {
         TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+        
+        mAccount = TestUtil.getAccount(USER_NAME);
+        mMbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
+        
+        // cleanup after testHierarchy()
+        try { // delete /f1/f2/f3
+            Folder f= mMbox.getFolderByPath(null, "/f1/f2/f3");
+            mMbox.delete(null, f.getId(), f.getType());
+        } catch (Exception e) {}
+        try { // delete /f1/f2
+            Folder f= mMbox.getFolderByPath(null, "/f1/f2");
+            mMbox.delete(null, f.getId(), f.getType());
+        } catch (Exception e) {}
+        try { // delete /f1
+            Folder f= mMbox.getFolderByPath(null, "/f1");
+            mMbox.delete(null, f.getId(), f.getType());
+        } catch (Exception e) {}
+            
+        
     }
     
     protected void tearDown() throws Exception {

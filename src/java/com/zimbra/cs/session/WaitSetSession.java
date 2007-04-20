@@ -60,7 +60,9 @@ public class WaitSetSession extends Session {
     }
 
     @Override
-    protected void cleanup() { }
+    protected void cleanup() { 
+        mWs.cleanupSession(this);
+    }
 
     @Override
     protected long getSessionIdleLifetime() { return 0; }

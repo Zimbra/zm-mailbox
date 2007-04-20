@@ -1,17 +1,21 @@
 package com.zimbra.cs.session;
 
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.TimerTask;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.util.SyncToken;
-import com.zimbra.cs.util.Zimbra;
 
 /**
  * WaitSet: scalable mechanism for listening for changes to many accounts
@@ -24,204 +28,34 @@ import com.zimbra.cs.util.Zimbra;
  *     WaitSet.getDefaultInterest()  // accessor
  *     WaitSet.doWait()              // primary wait API
  */
-public class WaitSet {
+public class WaitSet implements MailboxManager.Listener {
+
     /**
      * Simple struct used to define the parameters of an account during an add or update
      */
     public static class WaitSetAccount {
-        public String accountId;
-        public SyncToken lastKnownSyncToken;
-        public int interests;
-        
         public WaitSetAccount(String id, SyncToken sync, int interest) {
             this.accountId = id;
             this.lastKnownSyncToken = sync;
             this.interests = interest;
+            this.ref = null;
         }
-    }
-
-    /**
-     * Simple struct used to communicate error codes for individual accounts during a wait 
-     */
-    public static class WaitSetError {
-        public static enum Type {
-            ALREADY_IN_SET_DURING_ADD,
-            NOT_IN_SET_DURING_UPDATE,
-            NOT_IN_SET_DURING_REMOVE,
-            ;
+        public WaitSetSession getSession() {
+            if (ref != null) {
+                WaitSetSession toRet = ref.get();
+                if (toRet == null)
+                    ref = null;
+                return toRet;
+            } else
+                return null;
         }
-
-        public final String accountId;
-        public final Type error;
-
-        public WaitSetError(String accountId, Type error) {
-            this.accountId = accountId;
-            this.error = error;
-        }
-    }
-
-    /**
-     * Create a new WaitSet, optionally specifying an initial set of accounts
-     * to start listening wait on
-     * 
-     * WaitSets are stored in a serverwide cache and are stamped with a last-accessed-time,
-     * therefore callers should *not* cache the WaitSet pointer beyond a few seconds they
-     * should instead use the lookup() API to fetch WaitSets between calls
-     * 
-     * @param defaultInterest
-     * @param add
-     * @return
-     * @throws ServiceException 
-     */
-    public static Object[] create(int defaultInterest, List<WaitSetAccount> add) throws ServiceException {
-        synchronized(sWaitSets) {
-            String id = "WaitSet"+sWaitSetNumber;
-            sWaitSetNumber++;
-            WaitSet ws = new WaitSet(id, defaultInterest);
-            ws.mLastAccessedTime = System.currentTimeMillis();
-            sWaitSets.put(id, ws);
-            List<WaitSetError> errors = ws.addAccounts(add);
-            
-            Object[] toRet = new Object[2];
-            toRet[0] = id;
-            toRet[1] = errors;
-            return toRet;
-        }
-    }
-    
-    /**
-     * Find an active waitset.
-     * 
-     * WaitSets are stored in a serverwide cache and are stamped with a last-accessed-time,
-     * therefore callers should *not* cache the WaitSet pointer beyond a few seconds they
-     * should instead use the lookup() API to fetch WaitSets between calls
-     *   
-     * @param id
-     * @return
-     */
-    public static WaitSet lookup(String id) {
-        synchronized(sWaitSets) {
-            WaitSet toRet = sWaitSets.get(id);
-            if (toRet != null) {
-                assert(!Thread.holdsLock(toRet));
-                synchronized(toRet) { 
-                    toRet.mLastAccessedTime = System.currentTimeMillis();
-                }
-            }
-            return toRet;
-        }
-    }
-    
-    /**
-     * Destroy the referenced WaitSet.  
-     * 
-     * @param id
-     * @throws ServiceException
-     */
-    public static void destroy(String id) throws ServiceException {
-        HashMap<String, WaitSetSession> toCleanup = null;
+        public String accountId;
+        public int interests;
         
-        synchronized(sWaitSets) {
-            WaitSet ws = lookup(id);
-            if (ws == null)
-                throw MailServiceException.NO_SUCH_WAITSET(id);
-            assert(!Thread.holdsLock(ws));
-            sWaitSets.remove(id);
-            toCleanup = ws.destroy();
-            if (toCleanup != null) {
-                assert(!Thread.holdsLock(ws));
-                for (WaitSetSession session : toCleanup.values()) {
-                    session.doCleanup();
-                }
-            }
-        }
-    }
-    
-    /**
-     * Called by timer in order to timeout unused WaitSets
-     */
-    private static void sweep() {
-        int activeSets = 0;
-        int activeSessions = 0;
-        int removed = 0;
-        int withCallback = 0;
-        synchronized(sWaitSets) {
-            long cutoffTime = System.currentTimeMillis() - WAITSET_TIMEOUT;
-            
-            for (Iterator<WaitSet> iter = sWaitSets.values().iterator(); iter.hasNext();) {
-                WaitSet ws = iter.next();
-                assert(!Thread.holdsLock(ws)); // must never lock WS before sWaitSets or deadlock
-
-                HashMap<String, WaitSetSession> toCleanup = null;
-                
-                synchronized(ws) {
-                    // only timeout if no cb AND if not accessed for a timeout
-                    if (ws.mCb == null && ws.mLastAccessedTime < cutoffTime) {
-                        iter.remove();
-                        toCleanup = ws.destroy();
-                        removed++;
-                    } else {
-                        if (ws.mCb != null)
-                            withCallback++;
-                        activeSets++;
-                        activeSessions+=ws.mNumActiveSessions;
-                    }
-                }
-                
-                // cleanup w/o WaitSet lock held
-                if (toCleanup != null) {
-                    assert(!Thread.holdsLock(ws));
-                    for (WaitSetSession session : toCleanup.values()) {
-                        session.doCleanup();
-                    }
-                }
-            }
-        }
-        if (removed > 0) {
-            ZimbraLog.session.info("WaitSet sweeper timing out %d WaitSets due to inactivity", removed);
-        }
+        public SyncToken lastKnownSyncToken;
         
-        if (activeSets > 0) {
-            ZimbraLog.session.info("WaitSet sweeper: %d active WaitSets (%d accounts) - %d sets with blocked callbacks",
-                activeSets, activeSessions, withCallback);
-        }
+        public SoftReference<WaitSetSession> ref;
     }
-
-    /**
-     * Constructor 
-     * 
-     * @param id
-     * @param defaultInterest
-     * @throws ServiceException
-     */
-    private WaitSet(String id, int defaultInterest) {
-        mWaitSetId = id;
-        mDefaultInterest = defaultInterest;
-    }
-    
-    /**
-     * Cleanup and remove all the sessions referenced by this WaitSet
-     */
-    private synchronized HashMap<String, WaitSetSession> destroy() {
-        cancelExistingCB();
-        HashMap<String, WaitSetSession> toRet = mWaitSets;
-        mWaitSets = new HashMap<String, WaitSetSession>();
-        mNumActiveSessions = 0;
-        mCurrentSignalledSets.clear();
-        mSentSignalledSets.clear();
-        mCurrentSeqNo = Integer.MAX_VALUE;
-        return toRet;
-   }
-    
-    /**
-     * Just a helper: the 'default interest' is set when the WaitSet is created,
-     * and subsequent requests can access it when creating/updating WaitSetAccounts
-     * if the client didn't specify one with the update.
-     * 
-     * @return
-     */
-    public int getDefaultInterest() { return mDefaultInterest; }
-
     
     /**
      * User-supplied callback which is set by doWait() and which is called when one 
@@ -231,6 +65,97 @@ public class WaitSet {
         void dataReady(WaitSet ws, int seqNo, boolean cancelled, String[] signalledAccounts);
     }
 
+    /**
+     * Simple struct used to communicate error codes for individual accounts during a wait 
+     */
+    public static class WaitSetError {
+        public static enum Type {
+            ALREADY_IN_SET_DURING_ADD,
+            ERROR_LOADING_MAILBOX,
+            MAINTENANCE_MODE,
+            NO_SUCH_ACCOUNT,
+            WRONG_HOST_FOR_ACCOUNT,
+            NOT_IN_SET_DURING_REMOVE,
+            NOT_IN_SET_DURING_UPDATE,
+            ;
+        }
+
+        public WaitSetError(String accountId, Type error) {
+            this.accountId = accountId;
+            this.error = error;
+        }
+        public final String accountId;
+
+        public final Type error;
+    }
+
+    /**
+     * @return the mCb
+     */
+    public WaitSetCallback getCb() {
+        return mCb;
+    }
+
+    /**
+     * @return the mIncludeAllAccounts
+     */
+    public boolean isIncludeAllAccounts() {
+        return mIncludeAllAccounts;
+    }
+
+    /**
+     * @return the mLastAccessedTime
+     */
+    public long getLastAccessedTime() {
+        return mLastAccessedTime;
+    }
+
+    /**
+     * @return the mSessions
+     */
+    public HashMap<String, WaitSetAccount> getSessions() {
+        return mSessions;
+    }
+
+    /**
+     * @param cb the mCb to set
+     */
+    public void setCb(WaitSetCallback cb) {
+        mCb = cb;
+    }
+
+    /**
+     * @param includeAllAccounts the mIncludeAllAccounts to set
+     */
+    public void setIncludeAllAccounts(boolean includeAllAccounts) {
+        mIncludeAllAccounts = includeAllAccounts;
+    }
+
+    /**
+     * @param lastAccessedTime the mLastAccessedTime to set
+     */
+    public void setLastAccessedTime(long lastAccessedTime) {
+        mLastAccessedTime = lastAccessedTime;
+    }
+
+    /**
+     * @param sessions the mSessions to set
+     */
+    public void setSessions(HashMap<String, WaitSetAccount> sessions) {
+        mSessions = sessions;
+    }
+
+    /**
+     * Constructor 
+     * 
+     * @param id
+     * @param defaultInterest
+     * @throws ServiceException
+     */
+    WaitSet(String id, int defaultInterest) {
+        mWaitSetId = id;
+        mDefaultInterest = defaultInterest;
+    }
     
     /**
      * Primary API
@@ -271,9 +196,14 @@ public class WaitSet {
                 " client claimed last-known was "+lastKnownSeqNo, null);
         }
         
-        List<WaitSetError> errors = addAccounts(addAccounts);
-        errors.addAll(updateAccounts(updateAccounts));
-        errors.addAll(removeAccounts(removeAccounts));
+        List<WaitSetError> errors = new LinkedList<WaitSetError>();
+        
+        if (addAccounts != null)
+            errors.addAll(addAccounts(addAccounts));
+        if (updateAccounts != null)
+            errors.addAll(updateAccounts(updateAccounts));
+        if (removeAccounts != null)
+            errors.addAll(removeAccounts(removeAccounts));
         
         // figure out if there is already data here
         mCb = cb;
@@ -284,18 +214,151 @@ public class WaitSet {
     }
     
     /**
-     * Called by the WaitSetSession when there is data to be signalled by this session
+     * Just a helper: the 'default interest' is set when the WaitSet is created,
+     * and subsequent requests can access it when creating/updating WaitSetAccounts
+     * if the client didn't specify one with the update.
      * 
-     * @param session
+     * @return
      */
-    synchronized void signalDataReady(WaitSetSession session) {
-        if (mWaitSets.containsValue(session)) { // ...false if waitset is shutting down...
-            if (mCurrentSignalledSets.add(session)) {
-                trySendData();
+    public int getDefaultInterest() { return mDefaultInterest; }
+    
+    public String getWaitSetId() { return mWaitSetId; }
+    
+    /* @see com.zimbra.cs.mailbox.MailboxManager.Listener#mailboxAvailable(com.zimbra.cs.mailbox.Mailbox) */
+    public synchronized void mailboxAvailable(Mailbox mbox) {
+        this.mailboxLoaded(mbox);
+    }
+    
+    /* @see com.zimbra.cs.mailbox.MailboxManager.Listener#mailboxCreated(com.zimbra.cs.mailbox.Mailbox) */
+    public synchronized void mailboxCreated(Mailbox mbox) {
+        this.mailboxLoaded(mbox);
+    }
+    
+    
+    /* @see com.zimbra.cs.mailbox.MailboxManager.Listener#mailboxLoaded(com.zimbra.cs.mailbox.Mailbox) */
+    public synchronized void mailboxLoaded(Mailbox mbox) {
+        WaitSetAccount wsa = mSessions.get(mbox.getAccountId());
+        if (wsa == null && mIncludeAllAccounts) {
+            wsa = new WaitSetAccount(mbox.getAccountId(), null, mDefaultInterest);
+            mSessions.put(mbox.getAccountId(), wsa);
+        }
+        if (wsa != null) {
+            WaitSetSession session = wsa.getSession();
+            if (session == null) {
+                // create a new session... 
+                initializeWaitSetSession(wsa);
             }
+        } 
+    }
+
+    synchronized List<WaitSetError> addAccounts(List<WaitSetAccount> wsas) throws ServiceException {
+        List<WaitSetError> errors = new ArrayList<WaitSetError>();
+
+        for (WaitSetAccount wsa : wsas) {
+            if (!mSessions.containsKey(wsa.accountId)) {
+                // add the account to our session list  
+                mSessions.put(wsa.accountId, wsa);
+                
+                try {
+                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(wsa.accountId, MailboxManager.FetchMode.ONLY_IF_CACHED);
+                    if (mbox != null) {
+                        WaitSetError error = initializeWaitSetSession(wsa);
+                        if (error != null) { 
+                            errors.add(error);
+                        }
+                    }
+                } catch (ServiceException e) {
+                    if (e.getCode() == AccountServiceException.NO_SUCH_ACCOUNT)
+                        errors.add(new WaitSetError(wsa.accountId, WaitSetError.Type.NO_SUCH_ACCOUNT));
+                    else if (e.getCode() == ServiceException.WRONG_HOST)
+                        errors.add(new WaitSetError(wsa.accountId, WaitSetError.Type.WRONG_HOST_FOR_ACCOUNT));
+                    else 
+                        errors.add(new WaitSetError(wsa.accountId, WaitSetError.Type.ERROR_LOADING_MAILBOX));
+                    mSessions.remove(wsa);
+                }                
+                
+            } else {
+                errors.add(new WaitSetError(wsa.accountId, WaitSetError.Type.ALREADY_IN_SET_DURING_ADD));
+            }
+        }
+        return errors;
+    }
+    
+    synchronized List<WaitSetError> addAllAccounts() throws ServiceException {
+        List<WaitSetError> errors = new ArrayList<WaitSetError>();
+        
+        List<Mailbox> mboxes = MailboxManager.getInstance().getAllLoadedMailboxes();
+        for (Mailbox mbox : mboxes) {
+            WaitSetAccount wsa = new WaitSetAccount(mbox.getAccountId(), null, mDefaultInterest);
+            mSessions.put(mbox.getAccountId(), wsa);
+            WaitSetError error = initializeWaitSetSession(wsa);
+            if (error != null) { 
+                errors.add(error);
+            }
+        }
+        
+        mboxes.clear();
+        return errors;
+    }
+    
+    /**
+     * Cancel any existing callback
+     */
+    private synchronized void cancelExistingCB() {
+        if (mCb != null) {
+            // cancel the existing waiter
+            mCb.dataReady(this, -1, true, null);
+            mCb = null;
+            mLastAccessedTime = System.currentTimeMillis();
         }
     }
     
+    /**
+     * Cleanup and remove all the sessions referenced by this WaitSet
+     */
+    synchronized HashMap<String, WaitSetAccount> destroy() {
+        cancelExistingCB();
+        HashMap<String, WaitSetAccount> toRet = mSessions;
+        mSessions = new HashMap<String, WaitSetAccount>();
+        mCurrentSignalledSessions.clear();
+        mSentSignalledSessions.clear();
+        mCurrentSeqNo = Integer.MAX_VALUE;
+        return toRet;
+   }
+    
+    synchronized WaitSetError initializeWaitSetSession(WaitSetAccount wsa) {
+        WaitSetSession ws = new WaitSetSession(this, wsa.accountId, wsa.interests, wsa.lastKnownSyncToken);
+        try {
+            ws.register();
+            wsa.ref = new SoftReference<WaitSetSession>(ws);
+        } catch (MailServiceException e) {
+            if (e.getCode().equals(MailServiceException.MAINTENANCE)) {
+                return new WaitSetError(wsa.accountId, WaitSetError.Type.MAINTENANCE_MODE);
+            } else {
+                return new WaitSetError(wsa.accountId, WaitSetError.Type.ERROR_LOADING_MAILBOX);
+            }
+        } catch (ServiceException e) {
+            return new WaitSetError(wsa.accountId, WaitSetError.Type.ERROR_LOADING_MAILBOX);
+        }
+        return null;
+    }
+    
+    synchronized List<WaitSetError> removeAccounts(List<String> accts) {
+        List<WaitSetError> errors = new ArrayList<WaitSetError>();
+        
+        for (String id : accts) {
+            WaitSetAccount wsa = mSessions.get(id);
+            if (wsa != null) {
+                WaitSetSession session = wsa.getSession();
+                if (session != null) {
+                    session.doCleanup();
+                }
+            } else {
+                errors.add(new WaitSetError(id, WaitSetError.Type.NOT_IN_SET_DURING_REMOVE));
+            }
+        }
+        return errors;
+    }
     /**
      * @return TRUE if data sent, FALSE otherwise
      */
@@ -305,7 +368,7 @@ public class WaitSet {
         boolean cbIsCurrent = (mCbSeqNo == mCurrentSeqNo-1);
         
         if (cbIsCurrent)
-            mSentSignalledSets.clear();
+            mSentSignalledSessions.clear();
         
         /////////////////////
         // Cases:
@@ -322,25 +385,25 @@ public class WaitSet {
         //        send if CurrentSignalled NOT empty OR
         //                (CB not up to date AND SentSignalled not empty)
         //
-        if (mCurrentSignalledSets.size() > 0 || (!cbIsCurrent && mSentSignalledSets.size() > 0)) {
+        if (mCurrentSignalledSessions.size() > 0 || (!cbIsCurrent && mSentSignalledSessions.size() > 0)) {
             // if sent empty, then just swap sent,current instead of copying
-            if (mSentSignalledSets.size() == 0) {
+            if (mSentSignalledSessions.size() == 0) {
                 // SWAP mSent,mCurrent! save an allocation
-                HashSet<WaitSetSession> temp = mCurrentSignalledSets;
-                mCurrentSignalledSets = mSentSignalledSets;
-                mSentSignalledSets = temp;
+                HashSet<String> temp = mCurrentSignalledSessions;
+                mCurrentSignalledSessions = mSentSignalledSessions;
+                mSentSignalledSessions = temp;
             } else {
                 assert(!cbIsCurrent);
-                mSentSignalledSets.addAll(mCurrentSignalledSets);
-                mCurrentSignalledSets.clear();
+                mSentSignalledSessions.addAll(mCurrentSignalledSessions);
+                mCurrentSignalledSessions.clear();
             }
             // at this point, mSentSignalled is everything we're supposed to send...lets
             // make an array of the account ID's and signal them up!
-            assert(mSentSignalledSets.size() > 0);
-            String[] toRet = new String[mSentSignalledSets.size()];
+            assert(mSentSignalledSessions.size() > 0);
+            String[] toRet = new String[mSentSignalledSessions.size()];
             int i = 0;
-            for (WaitSetSession session : mSentSignalledSets) {
-                toRet[i] = session.getAuthenticatedAccountId();
+            for (String accountId : mSentSignalledSessions) {
+                toRet[i] = accountId;
             }
             mCb.dataReady(this, mCurrentSeqNo, false, toRet);
             mCurrentSeqNo++;
@@ -349,101 +412,63 @@ public class WaitSet {
         }
     }
     
+    
+    private synchronized List<WaitSetError> updateAccounts(List<WaitSetAccount> wsas) {
+        List<WaitSetError> errors = new ArrayList<WaitSetError>();
+        
+        for (WaitSetAccount wsa : wsas) {
+            WaitSetAccount existing = mSessions.get(wsa.accountId);
+            if (existing != null) {
+                existing.interests = wsa.interests;
+                existing.lastKnownSyncToken = existing.lastKnownSyncToken;
+                WaitSetSession session = existing.getSession();
+                if (session != null) {
+                    session.update(existing.interests, existing.lastKnownSyncToken);
+                    // update it!
+                }
+            } else {
+                errors.add(new WaitSetError(wsa.accountId, WaitSetError.Type.NOT_IN_SET_DURING_UPDATE));
+            }
+        }
+        return errors;
+    }
+    
+    synchronized void cleanupSession(WaitSetSession session) {
+        WaitSetAccount acct = mSessions.get(session.getAuthenticatedAccountId());
+        if (acct != null && acct.ref != null) {
+            WaitSetSession existing = acct.getSession();
+            if (existing == session)
+                acct.ref = null;
+        }
+    }
+    
     /**
-     * Cancel any existing callback
+     * Called by the WaitSetSession when there is data to be signalled by this session
+     * 
+     * @param session
      */
-    private void cancelExistingCB() {
-        assert(Thread.holdsLock(this));
-        if (mCb != null) {
-            // cancel the existing waiter
-            mCb.dataReady(this, -1, true, null);
-            mCb = null;
-            mLastAccessedTime = System.currentTimeMillis();
-        }
-    }
-    
-    private List<WaitSetError> addAccounts(List<WaitSetAccount> accts) throws ServiceException {
-        List<WaitSetError> errors = new ArrayList<WaitSetError>();
-
-        for (WaitSetAccount acct : accts) {
-            if (!mWaitSets.containsKey(acct.accountId)) {
-                WaitSetSession ws = new WaitSetSession(this, acct.accountId, acct.interests, acct.lastKnownSyncToken);
-                ws.register();
-                mWaitSets.put(acct.accountId, ws);
-                mNumActiveSessions++;
-            } else {
-                errors.add(new WaitSetError(acct.accountId, WaitSetError.Type.ALREADY_IN_SET_DURING_ADD));
+    synchronized void signalDataReady(WaitSetSession session) {
+        if (mSessions.containsKey(session.getAuthenticatedAccountId())) { // ...false if waitset is shutting down...
+            if (mCurrentSignalledSessions.add(session.getAuthenticatedAccountId())) {
+                trySendData();
             }
         }
-        return errors;
-    }
-
-    private List<WaitSetError> updateAccounts(List<WaitSetAccount> accts) {
-        assert(Thread.holdsLock(this));
-        List<WaitSetError> errors = new ArrayList<WaitSetError>();
-        
-        for (WaitSetAccount acct : accts) {
-            WaitSetSession set = mWaitSets.get(acct.accountId);
-            if (set != null) {
-                set.update(acct.interests, acct.lastKnownSyncToken);
-                // update it!
-            } else {
-                errors.add(new WaitSetError(acct.accountId, WaitSetError.Type.NOT_IN_SET_DURING_UPDATE));
-            }
-        }
-        return errors;
     }
     
-    private List<WaitSetError> removeAccounts(List<String> accts) {
-        assert(Thread.holdsLock(this));
-        List<WaitSetError> errors = new ArrayList<WaitSetError>();
-        
-        for (String id : accts) {
-            WaitSetSession session = mWaitSets.remove(id); 
-            if (session != null) {
-                session.doCleanup();
-                mNumActiveSessions--;
-            } else {
-                errors.add(new WaitSetError(id, WaitSetError.Type.NOT_IN_SET_DURING_REMOVE));
-            }
-        }
-        return errors;
-    }
-    
-    private static final TimerTask sSweeper = new TimerTask() { 
-        public void run() { 
-            WaitSet.sweep();
-        }
-    };
-    
-    public static void startup() {
-        Zimbra.sTimer.schedule(sSweeper, WAITSET_SWEEP_DELAY, WAITSET_SWEEP_DELAY);
-    }
-    public static void shutdown() {
-        sSweeper.cancel();
-    }
-    
-    /** these are the accounts we are listening to... */
-    private HashMap<String, WaitSetSession> mWaitSets = new HashMap<String, WaitSetSession>();
-
-    /** this is the signalled set data that we've already sent, it just hasn't been acked yet */
-    private HashSet<WaitSetSession> mSentSignalledSets = new HashSet<WaitSetSession>();
-    
-    /** this is the signalled set data that is new (has never been sent) */
-    private HashSet<WaitSetSession> mCurrentSignalledSets = new HashSet<WaitSetSession>();
-    
-    public String getWaitSetId() { return mWaitSetId; }
-    
-    private int mCurrentSeqNo = 1;
-    private String mWaitSetId;
-    private final int mDefaultInterest;
     private WaitSetCallback mCb = null;
     private int mCbSeqNo = 0;
+    private int mCurrentSeqNo = 1;
+    /** this is the signalled set data that is new (has never been sent) */
+    private HashSet<String /*accountId*/> mCurrentSignalledSessions = new HashSet<String>();
+    private final int mDefaultInterest;
+    private boolean mIncludeAllAccounts = false;
     private long mLastAccessedTime = -1;
-    private long mNumActiveSessions = 0;
-    private static int sWaitSetNumber = 1;
-    private static final HashMap<String, WaitSet> sWaitSets = new HashMap<String, WaitSet>();
+    /** these are the accounts we *want* to listen to, but couldn't b/c they're not loaded
 
-    private static final int WAITSET_TIMEOUT = 1000 * 60 * 20; // 20min
-    private static final int WAITSET_SWEEP_DELAY = 1000 * 60; // once every minute
+    /** this is the signalled set data that we've already sent, it just hasn't been acked yet */
+    private HashSet<String /*accountId*/> mSentSignalledSessions = new HashSet<String>();
+
+    /** these are the accounts we are listening to.  Stores EITHER a WaitSetSession or an AccountID  */
+    private HashMap<String, WaitSetAccount> mSessions = new HashMap<String, WaitSetAccount>();
+    private String mWaitSetId;
 }

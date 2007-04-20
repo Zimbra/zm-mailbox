@@ -225,6 +225,6 @@ extends TestCase {
     public static void main(String[] args)
     throws Exception {
         CliUtil.toolSetup();
-        TestUtil.runTest(new TestSuite(TestFilter.class), null);
+        TestUtil.runTest(new TestSuite(TestFilter.class));
     }
 }
