@@ -34,6 +34,8 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 public class AttributeInfo {
@@ -85,6 +87,8 @@ public class AttributeInfo {
     private List<String> mDefaultCOSValues;
     
     private long mMin = Long.MIN_VALUE, mMax = Long.MAX_VALUE;
+    
+    private String mMinDuration = null, mMaxDuration = null; 
 
     private int mId;
     
@@ -94,16 +98,24 @@ public class AttributeInfo {
     
     private String mDescription;
     
-    static int parseLong(String value, int def) {
+    private static Integer parseInt(String value) {
         try {
             return Integer.parseInt(value);
         } catch (NumberFormatException e) {
-            return def;
+            return null;
         }
     }
 
+    private static Long parseLong(String value) {
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+    
     AttributeInfo (String attrName, int id, String parentId, int groupId, AttributeCallback callback, AttributeType type,
-                   AttributeOrder order, String value, boolean immutable, long min, long max, 
+                   AttributeOrder order, String value, boolean immutable, String min, String max, 
                    AttributeCardinality cardinality, Set<AttributeClass> requiredIn, 
                    Set<AttributeClass> optionalIn, Set<AttributeFlag> flags,
                    List<String> globalConfigValues, List<String> defaultCOSValues, String description)
@@ -114,8 +126,6 @@ public class AttributeInfo {
         mType = type;
         mOrder = order;
         mValue = value;
-        mMin = min;
-        mMax = max;
         mId = id;
         mParentOid = parentId;
         mGroupId = groupId;
@@ -129,8 +139,50 @@ public class AttributeInfo {
         
         switch (mType) {
         case TYPE_INTEGER:
-            if (mMin < Integer.MIN_VALUE) mMin = Integer.MIN_VALUE;
-            if (mMax > Integer.MAX_VALUE) mMax = Integer.MAX_VALUE;            
+            mMin = Integer.MIN_VALUE;
+            mMax = Integer.MAX_VALUE;
+            
+            if (!StringUtil.isNullOrEmpty(min)) {
+                Integer i = parseInt(min);
+                if (i == null) {
+                    ZimbraLog.misc.warn("Invalid value '%s' for property %s of attribute %s.  Defaulting to %d.",
+                        min, AttributeManager.A_MIN, attrName, mMin);
+                } else {
+                    mMin = i;
+                }
+            }
+            if (!StringUtil.isNullOrEmpty(max)) {
+                Integer i = parseInt(max);
+                if (i == null) {
+                    ZimbraLog.misc.warn("Invalid value '%s' for property %s of attribute %s.  Defaulting to %d.",
+                        max, AttributeManager.A_MAX, attrName, mMax);
+                } else {
+                    mMax = i;
+                }
+            }
+            break;
+        case TYPE_LONG:
+            mMin = Long.MIN_VALUE;
+            mMax = Long.MAX_VALUE;
+            
+            if (!StringUtil.isNullOrEmpty(min)) {
+                Long l = parseLong(min);
+                if (l == null) {
+                    ZimbraLog.misc.warn("Invalid value '%s' for property %s of attribute %s.  Defaulting to %d.",
+                        min, AttributeManager.A_MIN, attrName, mMin);
+                } else {
+                    mMin = l;
+                }
+            }
+            if (!StringUtil.isNullOrEmpty(max)) {
+                Long l = parseLong(max);
+                if (l == null) {
+                    ZimbraLog.misc.warn("Invalid value '%s' for property %s of attribute %s.  Defaulting to %d.",
+                        max, AttributeManager.A_MAX, attrName, mMax);
+                } else {
+                    mMax = l;
+                }
+            }
             break;
         case TYPE_ENUM:
             String enums[] = value.split(",");
@@ -142,7 +194,35 @@ public class AttributeInfo {
         case TYPE_REGEX:
             mRegex = Pattern.compile(value);
             break;
+        case TYPE_DURATION:
+            mMin = 0;
+            mMax = Long.MAX_VALUE;
+            mMinDuration = "0";
+            mMaxDuration = Long.toString(mMax);
+            
+            if (!StringUtil.isNullOrEmpty(min)) {
+                mMin = DateUtil.getTimeInterval(min, -1);
+                if (mMin < 0) {
+                    mMin = 0;
+                    ZimbraLog.misc.warn("Invalid value '%s' for property %s of attribute %s.  Defaulting to 0.",
+                        min, AttributeManager.A_MIN, attrName);
+                } else {
+                    mMinDuration = min;
+                }
+            }
+            if (!StringUtil.isNullOrEmpty(max)) {
+                mMax = DateUtil.getTimeInterval(max, -1);
+                if (mMax < 0) {
+                    mMax = Long.MAX_VALUE;
+                    ZimbraLog.misc.warn("Invalid value '%s' for property %s of attribute %s.  Defaulting to %d.",
+                        max, AttributeManager.A_MAX, attrName, mMax);
+                } else {
+                    mMaxDuration = max;
+                }
+            }
+            break;
         }
+            
     }
 
     public int getEnumValueMaxLength() {
@@ -182,18 +262,22 @@ public class AttributeInfo {
             else
                 throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be TRUE or FALSE", null);
         case TYPE_DURATION:
-            if (DURATION_PATTERN.matcher(value).matches())
-                return;
-            else
+            if (!DURATION_PATTERN.matcher(value).matches())
                 throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be a valid duration: nnnn[hsmd]", null);
+            long l = DateUtil.getTimeInterval(value, 0);
+            if (l < mMin)
+                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" is shorter than minimum allowed: "+mMinDuration, null);
+            if (l > mMax)
+                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" is longer than max allowed: "+mMaxDuration, null);
+            return;
         case TYPE_EMAIL:
             if (value.length() > mMax)
-                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value length("+value.length()+") larger then max allowed: "+mMax, null);              
+                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value length("+value.length()+") larger than max allowed: "+mMax, null);              
             validEmailAddress(value, false);
             return;           
         case TYPE_EMAILP:
             if (value.length() > mMax)
-                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value length("+value.length()+") larger then max allowed: "+mMax, null);              
+                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value length("+value.length()+") larger than max allowed: "+mMax, null);              
             validEmailAddress(value, true);
             return;
         case TYPE_ENUM:
@@ -215,9 +299,9 @@ public class AttributeInfo {
             try {
                 int v = Integer.parseInt(value);
                 if (v < mMin)
-                    throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value("+v+") smaller then minimum allowed: "+mMin, null);
+                    throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value("+v+") smaller than minimum allowed: "+mMin, null);
                 if (v > mMax)
-                    throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value("+v+") larger then max allowed: "+mMax, null);
+                    throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value("+v+") larger than max allowed: "+mMax, null);
                 return;
             } catch (NumberFormatException e) {
                 throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be a valid integer: "+value, e);
@@ -226,9 +310,9 @@ public class AttributeInfo {
             try {
                 long v = Long.parseLong(value);
                 if (v < mMin)
-                    throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value("+v+") smaller then minimum allowed: "+mMin, null);
+                    throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value("+v+") smaller than minimum allowed: "+mMin, null);
                 if (v > mMax)
-                    throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value("+v+") larger then max allowed: "+mMax, null);
+                    throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value("+v+") larger than max allowed: "+mMax, null);
                 return;
             } catch (NumberFormatException e) {
                 throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be a valid long: "+value, e);

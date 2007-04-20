@@ -78,8 +78,8 @@ public class AttributeManager {
     private static final String A_TYPE = "type";
     private static final String A_ORDER = "order";
     private static final String A_VALUE = "value";
-    private static final String A_MAX = "max";
-    private static final String A_MIN = "min";
+    static final String A_MAX = "max";
+    static final String A_MIN = "min";
     private static final String A_CALLBACK = "callback";
     private static final String A_ID = "id";
     private static final String A_PARENT_OID = "parentOid";
@@ -208,8 +208,8 @@ public class AttributeManager {
             AttributeType type = null;
             AttributeOrder order = null;
             String value = null;
-            long min = Long.MIN_VALUE;
-            long max = Long.MAX_VALUE;
+            String min = null;
+            String max = null;
             boolean immutable = false;
 //            boolean ignore = false;
             int id = -1;
@@ -237,9 +237,9 @@ public class AttributeManager {
                 } else if (aname.equals(A_IMMUTABLE)) {
                     immutable = "1".equals(attr.getValue());
                 } else if (aname.equals(A_MAX)) {
-                    max = AttributeInfo.parseLong(attr.getValue(), Integer.MAX_VALUE);
+                    max = attr.getValue();
                 } else if (aname.equals(A_MIN)) {
-                    min = AttributeInfo.parseLong(attr.getValue(), Integer.MIN_VALUE);
+                    min = attr.getValue();
                 } else if (aname.equals(A_TYPE)) {
                     type = AttributeType.getType(attr.getValue());
                     if (type == null) {
