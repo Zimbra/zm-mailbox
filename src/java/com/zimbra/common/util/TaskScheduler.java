@@ -46,10 +46,6 @@ public class TaskScheduler<V> {
     
     private static Log sLog = LogFactory.getLog(TaskScheduler.class);
     
-    static {
-        sLog.setLevel(Level.DEBUG);
-    }
-
     /**
      * A modified version of java.util.concurrent.Executors.DefaultThreadFactory
      * which creates daemon threads instead of user threads.
