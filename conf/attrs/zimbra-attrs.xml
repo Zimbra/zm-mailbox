@@ -1007,7 +1007,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>should be one of: local, alias</desc>
 </attr>
 
-<attr id="213" name="zimbraMailCanonicalAddress" type="email" max="256" cardinality="single" optionalIn="mailRecipient">
+<attr id="213" name="zimbraMailCanonicalAddress" type="email" max="256" cardinality="single" optionalIn="mailRecipient" flags="domainAdminModifiable">
   <desc>RFC822 email address for senders outbound messages</desc>
 </attr>
 
