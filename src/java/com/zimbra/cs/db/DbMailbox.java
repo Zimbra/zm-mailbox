@@ -164,11 +164,9 @@ public class DbMailbox {
         }
     }
 
-    /**
-     * Create a database for the specified mailbox.
+    /** Create a database for the specified mailbox.
      * 
-     * @throws ServiceException if the database creation fails
-     */
+     * @throws ServiceException if the database creation fails */
     public static void createMailboxDatabase(Connection conn, int mailboxId, int groupId)
     throws ServiceException {
         ZimbraLog.mailbox.debug("createMailboxDatabase(" + mailboxId + ")");
@@ -189,7 +187,6 @@ public class DbMailbox {
             vars.put("DATABASE_NAME", dbName);
             String script = StringUtil.fillTemplate(template, vars);
             DbUtil.executeScript(conn, new StringReader(script));
-
         } catch (IOException e) {
             throw ServiceException.FAILURE("unable to read SQL statements from " + file.getPath(), e);
         } catch (SQLException e) {
@@ -279,6 +276,21 @@ public class DbMailbox {
 
     public static void clearMailboxContent(Connection conn, Mailbox mbox) throws ServiceException {
         dropMailboxFromGroup(conn, mbox);
+    }
+
+    public static void clearMailboxContactCount(Mailbox mbox) throws ServiceException {
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement("UPDATE mailbox SET contact_count = NULL WHERE id = ?");
+            stmt.setInt(1, mbox.getId());
+            int num = stmt.executeUpdate();
+            assert(num == 1);
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("clearing contact count for mailbox " + mbox.getId(), e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
     }
 
     public static void updateMailboxStats(Mailbox mbox) throws ServiceException {

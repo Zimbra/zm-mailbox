@@ -1156,8 +1156,8 @@ public class Mailbox {
         ZimbraLog.cache.info("Initializing folder and tag caches for mailbox " + getId());
 
         try {
-            Map<Integer, MailItem.UnderlyingData> folderData = new HashMap<Integer, MailItem.UnderlyingData>();
-            Map<Integer, MailItem.UnderlyingData> tagData    = new HashMap<Integer, MailItem.UnderlyingData>();
+            Map<MailItem.UnderlyingData, Long> folderData = new HashMap<MailItem.UnderlyingData, Long>();
+            Map<MailItem.UnderlyingData, Long> tagData    = new HashMap<MailItem.UnderlyingData, Long>();
             MailboxData stats = DbMailItem.getFoldersAndTags(this, folderData, tagData, initial);
 
             boolean persist = stats != null;
@@ -1174,42 +1174,58 @@ public class Mailbox {
                 DbMailbox.updateMailboxStats(this);
             }
 
-            if (folderData != null) {
-                mFolderCache = new HashMap<Integer, Folder>();
-                // create the folder objects and, as a side-effect, populate the new cache
-                for (MailItem.UnderlyingData ud : folderData.values())
-                    MailItem.constructItem(this, ud);
-                // establish the folder hierarchy
-                for (Folder folder : mFolderCache.values()) {
-                    Folder parent = mFolderCache.get(folder.getParentId());
-                    // FIXME: side effect of this is that parent is marked as dirty...
-                    if (parent != null)
-                        parent.addChild(folder);
-                    if (persist)
-                        folder.saveFolderCounts(initial);
-                }
+            mFolderCache = new HashMap<Integer, Folder>();
+            // create the folder objects and, as a side-effect, populate the new cache
+            for (Map.Entry<MailItem.UnderlyingData, Long> entry : folderData.entrySet()) {
+                Folder folder = (Folder) MailItem.constructItem(this, entry.getKey());
+                if (entry.getValue() > 0)
+                    folder.setSize(folder.getSize(), entry.getValue());
+            }
+            // establish the folder hierarchy
+            for (Folder folder : mFolderCache.values()) {
+                Folder parent = mFolderCache.get(folder.getParentId());
+                // FIXME: side effect of this is that parent is marked as dirty...
+                if (parent != null)
+                    parent.addChild(folder);
+                if (persist)
+                    folder.saveFolderCounts(initial);
             }
 
-            if (tagData != null) {
-                mTagCache = new HashMap<Object, Tag>();
-                // create the tag objects and, as a side-effect, populate the new cache
-                for (MailItem.UnderlyingData ud : tagData.values()) {
-                    Tag tag = new Tag(this, ud);
-                    if (persist)
-                        tag.saveTagCounts();
-                }
-                // flags don't change and thus can be reused in the new cache
-                for (int i = 0; i < mFlags.length; i++) {
-                    if (mFlags[i] == null)
-                        continue;
-                    ZimbraLog.mailbox.debug(i + ": " + mFlags[i]);
-                    cache(mFlags[i]);
-                }
+            mTagCache = new HashMap<Object, Tag>();
+            // create the tag objects and, as a side-effect, populate the new cache
+            for (MailItem.UnderlyingData ud : tagData.keySet()) {
+                Tag tag = new Tag(this, ud);
+                if (persist)
+                    tag.saveTagCounts();
+            }
+            // flags don't change and thus can be reused in the new cache
+            for (int i = 0; i < mFlags.length; i++) {
+                if (mFlags[i] == null)
+                    continue;
+                ZimbraLog.mailbox.debug(i + ": " + mFlags[i]);
+                cache(mFlags[i]);
             }
         } catch (ServiceException e) {
             mTagCache = null;
             mFolderCache = null;
             throw e;
+        }
+    }
+
+    synchronized void recalculateFolderAndTagCounts() throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("recalculateFolderAndTagCounts", null);
+
+            // force the recalculation of all folder/tag/mailbox counts and sizes
+            mTagCache = null;
+            mFolderCache = null;
+            mData.contacts = -1;
+            loadFoldersAndTags();
+
+            success = true;
+        } finally {
+            endTransaction(success);
         }
     }
 
@@ -1324,26 +1340,24 @@ public class Mailbox {
     }
     
     
-    /**
-     * Called once when this mailbox is first instantiated in the system
-     * 
-     * @throws ServiceException
-     */
+    /** Called once when this mailbox is first instantiated in the system. */
     synchronized void checkUpgrade() throws ServiceException {
-        
         if (!getVersion().atLeast(1, 2)) {
             // Version (1.0,1.1)->1.2 Re-Index all contacts 
             Set<Byte> types = new HashSet<Byte>();
             types.add(MailItem.TYPE_CONTACT);
             reIndex(null, types, null, COMPLETED_REINDEX_CONTACTS_V1_2); 
         }
+
+        if (!getVersion().atLeast(1, 3)) {
+            recalculateFolderAndTagCounts();
+            updateVersion(new MailboxVersion((short) 1, (short) 3));
+        }
     }
 
 
-    /**
-     * Status of current reindexing operation for this mailbox, or NULL 
-     * if a re-index is not in progress
-     */
+    /** Status of current reindexing operation for this mailbox, or NULL 
+     *  if a re-index is not in progress. */
     private ReIndexStatus mReIndexStatus = null;
 
     public synchronized boolean isReIndexInProgress() {
@@ -1368,8 +1382,8 @@ public class Mailbox {
      * 
      * @param completionId
      */
-    synchronized void Completion(int completionId) {
-        switch(completionId) {
+    synchronized void completion(int completionId) {
+        switch (completionId) {
             case COMPLETED_REINDEX_CONTACTS_V1_2:
                 // check current version, just in case someone updated the version while
                 // we were gone
@@ -1415,7 +1429,7 @@ public class Mailbox {
             //     -- get a list of all messages in the mailbox
             //     -- delete the index
             //
-            synchronized(this) {
+            synchronized (this) {
                 if (isReIndexInProgress())
                     throw ServiceException.ALREADY_IN_PROGRESS(Integer.toString(mId), mReIndexStatus.toString());
                 
@@ -1517,7 +1531,7 @@ public class Mailbox {
                         +" ("+mReIndexStatus.mNumFailed+" failed) ");
             
             if (completionId > 0)
-                Completion(completionId);
+                completion(completionId);
             
         } finally {
             mReIndexStatus = null;

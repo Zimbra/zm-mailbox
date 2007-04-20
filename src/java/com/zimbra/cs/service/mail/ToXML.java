@@ -155,10 +155,10 @@ public class ToXML {
         Element elem = parent.addElement(MailConstants.E_FOLDER);
         encodeFolderCommon(elem, ifmt, folder, fields);
         if (needToOutput(fields, Change.MODIFIED_SIZE)) {
-            long size = folder.getSize();
-            if (size > 0 || fields != NOTIFY_FIELDS)
-                elem.addAttribute(MailConstants.A_NUM, size);
+            elem.addAttribute(MailConstants.A_NUM, folder.getSize());
+            elem.addAttribute(MailConstants.A_SIZE, folder.getTotalSize());
         }
+
         if (needToOutput(fields, Change.MODIFIED_URL)) {
             String url = folder.getUrl();
             if (!url.equals("") || fields != NOTIFY_FIELDS) {

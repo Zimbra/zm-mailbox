@@ -67,6 +67,7 @@ public class Folder extends MailItem {
     protected byte    mAttributes;
     protected byte    mDefaultView;
     private List<Folder> mSubfolders;
+    private long      mTotalSize;
     private Folder    mParent;
     private ACL       mRights;
     private SyncData  mSyncData;
@@ -108,6 +109,11 @@ public class Folder extends MailItem {
      * @see #FOLDER_DONT_TRACK_COUNTS */
     public byte getAttributes() {
         return mAttributes;
+    }
+
+    /** Returns the sum of the sizes of all items in the folder. */
+    public long getTotalSize() {
+        return mTotalSize;
     }
 
     /** Returns the URL the folder syncs to, or <tt>""</tt> if there is no
@@ -390,15 +396,27 @@ public class Folder extends MailItem {
     /** Updates the number of items in the folder.  Only "leaf node" items in
      *  the folder are summed; items in subfolders are included only in the
      *  size of the subfolder.
-     * @param delta  The change in item count, negative or positive. */
-    void updateSize(int delta) {
-        if (delta == 0 || !trackSize())
+     * @param countDelta  The change in item count, negative or positive.
+     * @param sizeDelta   The change in total size, negative or positive. */
+    void updateSize(int countDelta, long sizeDelta) {
+        if (!trackSize() || (countDelta == 0 && sizeDelta == 0))
             return;
         // if we go negative, that's OK!  just pretend we're at 0.
         markItemModified(Change.MODIFIED_SIZE);
-        mData.size = Math.max(0, mData.size + delta);
-        if (delta > 0)
+        if (countDelta > 0)
             mImapUIDNEXT = mMailbox.getLastItemId() + 1;
+        mData.size = Math.max(0, mData.size + countDelta);
+        mTotalSize = Math.max(0, mTotalSize + sizeDelta);
+    }
+
+    void setSize(int count, long totalSize) {
+        if (!trackSize() || (count == 0 && totalSize == 0))
+            return;
+        markItemModified(Change.MODIFIED_SIZE);
+        if (count > mData.size)
+            mImapUIDNEXT = mMailbox.getLastItemId() + 1;
+        mData.size = count;
+        mTotalSize = totalSize;
     }
 
     @Override boolean isTaggable()       { return false; }
@@ -522,7 +540,7 @@ public class Folder extends MailItem {
         data.flags       = flags & Flag.FLAGS_FOLDER;
         data.name        = name;
         data.subject     = name;
-        data.metadata    = encodeMetadata(color, attributes, view, null, new SyncData(url), id + 1);
+        data.metadata    = encodeMetadata(color, attributes, view, null, new SyncData(url), id + 1, 0);
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 
@@ -889,8 +907,8 @@ public class Folder extends MailItem {
         // update message counts
         for (Map.Entry<Integer, DbMailItem.LocationCount> entry : info.messages.entrySet()) {
             int folderID = entry.getKey();
-            int msgCount = entry.getValue().count;
-            mbox.getFolderById(folderID).updateSize(-msgCount);
+            DbMailItem.LocationCount lcount = entry.getValue();
+            mbox.getFolderById(folderID).updateSize(-lcount.count, -lcount.size);
         }
 
         // update the mailbox's size
@@ -964,6 +982,7 @@ public class Folder extends MailItem {
         }
         mDefaultView = (byte) meta.getLong(Metadata.FN_VIEW, view);
         mAttributes  = (byte) meta.getLong(Metadata.FN_ATTRS, 0);
+        mTotalSize   = meta.getLong(Metadata.FN_TOTAL_SIZE, 0L);
         mImapUIDNEXT = (int) meta.getLong(Metadata.FN_UIDNEXT, 0);
 
         if (meta.containsKey(Metadata.FN_URL))
@@ -980,18 +999,20 @@ public class Folder extends MailItem {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mAttributes, mDefaultView, mRights, mSyncData, mImapUIDNEXT);
+        return encodeMetadata(meta, mColor, mAttributes, mDefaultView, mRights, mSyncData, mImapUIDNEXT, mTotalSize);
     }
 
-    private static String encodeMetadata(byte color, byte attributes, byte hint, ACL rights, SyncData fsd, int uidnext) {
-        return encodeMetadata(new Metadata(), color, attributes, hint, rights, fsd, uidnext).toString();
+    private static String encodeMetadata(byte color, byte attributes, byte hint, ACL rights, SyncData fsd, int uidnext, long totalSize) {
+        return encodeMetadata(new Metadata(), color, attributes, hint, rights, fsd, uidnext, totalSize).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, byte color, byte attributes, byte hint, ACL rights, SyncData sync, int uidnext) {
+    static Metadata encodeMetadata(Metadata meta, byte color, byte attributes, byte hint, ACL rights, SyncData sync, int uidnext, long totalSize) {
         if (hint != TYPE_UNKNOWN)
             meta.put(Metadata.FN_VIEW, hint);
         if (attributes != 0)
             meta.put(Metadata.FN_ATTRS, attributes);
+        if (totalSize > 0)
+            meta.put(Metadata.FN_TOTAL_SIZE, totalSize);
         if (uidnext > 0)
             meta.put(Metadata.FN_UIDNEXT, uidnext);
         if (rights != null)

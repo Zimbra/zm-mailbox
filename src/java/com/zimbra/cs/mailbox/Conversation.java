@@ -592,8 +592,8 @@ public class Conversation extends MailItem {
             }
 
             // handle folder message counts
-            source.updateSize(-1);
-            target.updateSize(1);
+            source.updateSize(-1, -msg.getSize());
+            target.updateSize(1, msg.getSize());
 
             moved.add(msg);
             msg.folderChanged(target, 0);

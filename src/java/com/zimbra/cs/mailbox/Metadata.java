@@ -93,6 +93,7 @@ public class Metadata {
     static final String FN_SYNC_DATE       = "sd";
     static final String FN_SYNC_GUID       = "sg";
 //    static final String FN_SENDER_LIST     = "sl";
+    static final String FN_TOTAL_SIZE      = "sz";
     static final String FN_RECIPIENTS      = "t";
     static final String FN_TYPES           = "t";
     static final String FN_TZMAP           = "tzm"; // calendaring: timezone map

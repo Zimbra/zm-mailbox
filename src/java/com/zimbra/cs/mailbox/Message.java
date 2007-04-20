@@ -554,6 +554,7 @@ public class Message extends MailItem {
         if (mData.size != size) {
             markItemModified(Change.MODIFIED_SIZE);
             mMailbox.updateSize(size - mData.size, false);
+            getFolder().updateSize(0, size - mData.size);
             mData.size = size;
         }
         String metadata = encodeMetadata(mColor, pm, mData.flags, mDraftInfo, mCalendarItemInfos);

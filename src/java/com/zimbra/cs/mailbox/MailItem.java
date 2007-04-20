@@ -1140,7 +1140,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         // update mailbox and folder sizes
         if (isLeafNode()) {
             mMailbox.updateSize(mData.size);
-            folder.updateSize(1);
+            folder.updateSize(1, mData.size);
         }
 
         // let the folder and tags know if the new item is unread
@@ -1198,6 +1198,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         int size = (data == null ? 0 : data.length);
         if (mData.size != size) {
             mMailbox.updateSize(size - mData.size, false);
+            getFolder().updateSize(0, size - mData.size);
             mData.size = size;
         }
         mData.blobDigest = digest;
@@ -1746,8 +1747,8 @@ public abstract class MailItem implements Comparable<MailItem> {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the target folder");
 
         if (isLeafNode()) {
-            oldFolder.updateSize(-1);
-            target.updateSize(1);
+            oldFolder.updateSize(-1, -getSize());
+            target.updateSize(1, getSize());
         }
 
         if (!inTrash() && target.inTrash()) {
@@ -2000,8 +2001,8 @@ public abstract class MailItem implements Comparable<MailItem> {
     void propagateDeletion(PendingDelete info) throws ServiceException {
         for (Map.Entry<Integer, DbMailItem.LocationCount> entry : info.messages.entrySet()) {
             Folder folder = mMailbox.getFolderById(entry.getKey());
-            DbMailItem.LocationCount lc = entry.getValue();
-            folder.updateSize(-lc.count);
+            DbMailItem.LocationCount lcount = entry.getValue();
+            folder.updateSize(-lcount.count, -lcount.size);
         }
 
         if (info.unreadIds.isEmpty())

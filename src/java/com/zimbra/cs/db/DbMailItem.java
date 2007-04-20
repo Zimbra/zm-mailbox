@@ -565,7 +565,7 @@ public class DbMailItem {
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             stmt.setInt(pos++, item.getSavedSequence());
-                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -1475,13 +1475,8 @@ public class DbMailItem {
     }
 
 
-    public static Mailbox.MailboxData getFoldersAndTags(Mailbox mbox, Map<Integer, UnderlyingData> folderData, Map<Integer, UnderlyingData> tagData, boolean reload)
+    public static Mailbox.MailboxData getFoldersAndTags(Mailbox mbox, Map<UnderlyingData, Long> folderData, Map<UnderlyingData, Long> tagData, boolean reload)
     throws ServiceException {
-        boolean fetchFolders = folderData != null;
-        boolean fetchTags    = tagData != null;
-        if (!fetchFolders && !fetchTags && !reload)
-            return null;
-
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -1494,10 +1489,10 @@ public class DbMailItem {
             rs = stmt.executeQuery();
             while (rs.next()) {
                 UnderlyingData data = constructItem(rs);
-                if (fetchFolders && MailItem.isAcceptableType(MailItem.TYPE_FOLDER, data.type))
-                    folderData.put(data.id, data);
-                else if (fetchTags && MailItem.isAcceptableType(MailItem.TYPE_TAG, data.type))
-                    tagData.put(data.id, data);
+                if (MailItem.isAcceptableType(MailItem.TYPE_FOLDER, data.type))
+                    folderData.put(data, -1L);
+                else if (MailItem.isAcceptableType(MailItem.TYPE_TAG, data.type))
+                    tagData.put(data, -1L);
 
                 rs.getInt(CI_UNREAD);
                 reload |= rs.wasNull();
@@ -1508,13 +1503,20 @@ public class DbMailItem {
             if (!reload)
                 return null;
 
+            Map<Integer, UnderlyingData> lookup = new HashMap<Integer, UnderlyingData>(folderData.size() + tagData.size());
+
             // going to recalculate counts, so discard any existing counts...
-            if (fetchFolders)
-                for (UnderlyingData data : folderData.values())
-                    data.size = data.unreadCount = 0;
-            if (fetchTags)
-                for (UnderlyingData data : tagData.values())
-                    data.size = data.unreadCount = 0;
+            for (Map.Entry<UnderlyingData, Long> entry : folderData.entrySet()) {
+                UnderlyingData data = entry.getKey();
+                lookup.put(data.id, data);
+                data.size = data.unreadCount = 0;
+                entry.setValue(0L);
+            }
+
+            for (UnderlyingData data : tagData.keySet()) {
+                lookup.put(data.id, data);
+                data.size = data.unreadCount = 0;
+            }
 
             Mailbox.MailboxData mbd = new Mailbox.MailboxData();
             String totalSize = (Db.supports(Db.Capability.CAST_AS_BIGINT) ? "SUM(CAST(size AS BIGINT))" : "SUM(size)");
@@ -1528,27 +1530,26 @@ public class DbMailItem {
                 int count  = rs.getInt(4);
                 int unread = rs.getInt(5);
                 long size  = rs.getLong(6);
+
                 if (type == MailItem.TYPE_CONTACT)
                     mbd.contacts += count;
                 mbd.size += size;
 
-                if (fetchFolders) {
-                    UnderlyingData data = folderData.get(rs.getInt(1));
-                    assert(data != null);
-                    data.unreadCount += unread;
-                    data.size += count;
-                }
+                UnderlyingData data = lookup.get(rs.getInt(1));
+                assert(data != null);
+                data.unreadCount += unread;
+                data.size += count;
+                Long folderSize = folderData.get(data);
+                folderData.put(data, folderSize == null ? size : folderSize + size);
 
-                if (fetchTags) {
-                    long tags = rs.getLong(3);
-                    for (int i = 0; tags != 0 && i < MailItem.MAX_TAG_COUNT - 1; i++) {
-                        if ((tags & (1L << i)) != 0) {
-                            UnderlyingData data = tagData.get(i + MailItem.TAG_ID_OFFSET);
-                            if (data != null)
-                                data.unreadCount += unread;
-                            // could track cumulative count if desired...
-                            tags &= ~(1L << i);
-                        }
+                long tags = rs.getLong(3);
+                for (int i = 0; tags != 0 && i < MailItem.MAX_TAG_COUNT - 1; i++) {
+                    if ((tags & (1L << i)) != 0) {
+                        data = lookup.get(i + MailItem.TAG_ID_OFFSET);
+                        if (data != null)
+                            data.unreadCount += unread;
+                        // could track cumulative count if desired...
+                        tags &= ~(1L << i);
                     }
                 }
             }
