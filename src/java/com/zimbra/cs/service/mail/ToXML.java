@@ -752,13 +752,12 @@ public class ToXML {
             calItemElem.addAttribute(MailConstants.A_DATE, calItem.getDate());
         if (needToOutput(fields, Change.MODIFIED_FOLDER))
             calItemElem.addAttribute(MailConstants.A_FOLDER, ifmt.formatItemId(calItem.getFolderId()));
-        recordItemTags(calItemElem, calItem, fields);
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
             calItemElem.addAttribute(MailConstants.A_CHANGE_DATE, calItem.getChangeDate() / 1000);
             calItemElem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, calItem.getModifiedSequence());
         }
 
-        if (encodeInvites) {
+        if (needToOutput(fields, Change.MODIFIED_CONTENT) && encodeInvites) {
             for (int i = 0; i < calItem.numInvites(); i++)
                 encodeInvite(calItemElem, ifmt, calItem, calItem.getInvite(i));
         }
