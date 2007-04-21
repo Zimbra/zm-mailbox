@@ -46,14 +46,14 @@ import com.zimbra.common.soap.Element;
 
 public class AtomFormatter extends Formatter {
     
-    public void formatCallback(Context context, MailItem item) throws IOException, ServiceException {
+    public void formatCallback(Context context) throws IOException, ServiceException {
         Iterator<? extends MailItem> iterator = null;
         StringBuffer sb = new StringBuffer();
         Element.XMLElement feed = new Element.XMLElement("feed");
         int offset = context.getOffset();
         int limit = context.getLimit();
         try {
-            iterator = getMailItems(context, item, context.getStartTime(), context.getEndTime(), limit-offset);
+            iterator = getMailItems(context, context.getStartTime(), context.getEndTime(), limit-offset);
             
             context.resp.setCharacterEncoding("UTF-8");
             context.resp.setContentType("application/atom+xml");

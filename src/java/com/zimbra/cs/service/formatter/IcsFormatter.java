@@ -63,13 +63,13 @@ public class IcsFormatter extends Formatter {
         return MailboxIndex.SEARCH_FOR_APPOINTMENTS;
     }
 
-    public void formatCallback(Context context, MailItem mailItem) throws IOException, ServiceException {
+    public void formatCallback(Context context) throws IOException, ServiceException {
         Iterator<? extends MailItem> iterator = null;
         List<CalendarItem> calItems = new ArrayList<CalendarItem>();
         //ZimbraLog.mailbox.info("start = "+new Date(context.getStartTime()));
         //ZimbraLog.mailbox.info("end = "+new Date(context.getEndTime()));
         try {
-            iterator = getMailItems(context, mailItem, context.getStartTime(), context.getEndTime(), Integer.MAX_VALUE);
+            iterator = getMailItems(context, context.getStartTime(), context.getEndTime(), Integer.MAX_VALUE);
 
             // this is lame
             while (iterator.hasNext()) {

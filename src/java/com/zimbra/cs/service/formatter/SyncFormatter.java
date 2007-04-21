@@ -26,6 +26,8 @@ package com.zimbra.cs.service.formatter;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.mail.MessagingException;
 import javax.mail.Part;
@@ -64,41 +66,61 @@ public class SyncFormatter extends Formatter {
     /**
      * add to content as well as http headers for now (unless told not to)... 
      */
-    private static void addHeader(Context context, StringBuffer sb, String name, String value) {
-        if (context.params.get(QP_NOHDR) == null)
-            sb.append(name).append(": ").append(value).append("\r\n");
-        context.resp.addHeader(name, value);
+    private static List<Pair<String, String>> getXZimbraHeaders(MailItem item) {
+    	List<Pair<String, String>> hdrs = new ArrayList<Pair<String, String>>();
+    	hdrs.add(new Pair<String, String>("X-Zimbra-ItemId", item.getId() + ""));
+    	hdrs.add(new Pair<String, String>("X-Zimbra-FolderId", item.getFolderId() + ""));
+        hdrs.add(new Pair<String, String>("X-Zimbra-Tags", item.getTagString()));
+        hdrs.add(new Pair<String, String>("X-Zimbra-Flags", item.getFlagString()));
+        hdrs.add(new Pair<String, String>("X-Zimbra-Received", item.getDate() + ""));
+        hdrs.add(new Pair<String, String>("X-Zimbra-Modified", item.getChangeDate() + ""));
+        hdrs.add(new Pair<String, String>("X-Zimbra-Change", item.getModifiedSequence() + ""));
+        hdrs.add(new Pair<String, String>("X-Zimbra-Revision", item.getSavedSequence() + ""));
+        if (item instanceof Message) {
+        	hdrs.add(new Pair<String, String>("X-Zimbra-Conv", ((Message) item).getConversationId() + ""));
+        }
+        return hdrs;
     }
-
+    
+    private static byte[] getXZimbraHeadersBytes(List<Pair<String, String>> hdrs) {
+    	StringBuilder sb = new StringBuilder();
+    	for (Pair<String, String> pair :  hdrs) {
+    		sb.append(pair.getFirst()).append(": ").append(pair.getSecond()).append("\r\n");
+    	}
+    	return sb.toString().getBytes();
+    }
+    
+    public static byte[] getXZimbraHeadersBytes(MailItem item) {
+    	return getXZimbraHeadersBytes(getXZimbraHeaders(item));
+    }
+    
     private static void addXZimbraHeaders(Context context, MailItem item, long size) throws IOException {
-        StringBuffer hdr = new StringBuffer();
-        addHeader(context, hdr, "X-Zimbra-Tags", item.getTagString());
-        addHeader(context, hdr, "X-Zimbra-Flags", item.getFlagString());
-        addHeader(context, hdr, "X-Zimbra-Received", item.getDate() + "");
-        addHeader(context, hdr, "X-Zimbra-Modified", item.getChangeDate() + "");
-        addHeader(context, hdr, "X-Zimbra-Change", item.getModifiedSequence() + "");
-        addHeader(context, hdr, "X-Zimbra-Revision", item.getSavedSequence() + "");
-        if (item instanceof Message)
-            addHeader(context, hdr, "X-Zimbra-Conv", ((Message) item).getConversationId() + "");
-        byte[] inline = hdr.toString().getBytes();
+    	List<Pair<String, String>> hdrs = getXZimbraHeaders(item);
+    	for (Pair<String, String> pair :  hdrs) {
+    		context.resp.addHeader(pair.getFirst(), pair.getSecond());
+    	}
 
-        // explicitly set the Content-Length header, as it's only done implicitly for short payloads
-        if (size > 0)
-            context.resp.setContentLength(inline.length + (int) size);
-
-        // inline X-Zimbra headers with response body
-        if (inline.length > 0)
-            context.resp.getOutputStream().write(inline);
+    	//inline X-Zimbra headers with response body if nohdr parameter is not present
+    	//also explicitly set the Content-Length header, as it's only done implicitly for short payloads
+    	if (context.params.get(QP_NOHDR) == null) {
+    		byte[] inline = getXZimbraHeadersBytes(hdrs);
+    		if (size > 0) {
+    			context.resp.setContentLength(inline.length + (int)size);
+    		}
+    		context.resp.getOutputStream().write(inline);
+    	} else if (size > 0) {
+    		context.resp.setContentLength((int)size);
+    	}
     }
 
-    public void formatCallback(Context context, MailItem item) throws IOException, ServiceException, UserServletException {
+    public void formatCallback(Context context) throws IOException, ServiceException, UserServletException {
         try {
             if (context.hasPart()) {
-                handleMessagePart(context, item);
-            } else if (item instanceof Message) {
-                handleMessage(context, (Message) item);
-            } else if (item instanceof CalendarItem) {
-                handleCalendarItem(context, (CalendarItem) item);
+                handleMessagePart(context, context.target);
+            } else if (context.target instanceof Message) {
+                handleMessage(context, (Message) context.target);
+            } else if (context.target instanceof CalendarItem) {
+                handleCalendarItem(context, (CalendarItem) context.target);
             }
         } catch (MessagingException me) {
             throw ServiceException.FAILURE(me.getMessage(), me);

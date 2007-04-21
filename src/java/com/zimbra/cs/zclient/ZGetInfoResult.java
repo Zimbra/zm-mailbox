@@ -40,7 +40,7 @@ import java.util.Set;
 
 public class ZGetInfoResult {
 
-
+    private String mVersion;
     private String mId;
     private String mName;
     private long mLifetime;
@@ -73,6 +73,7 @@ public class ZGetInfoResult {
     }
     
     public ZGetInfoResult(Element e) throws ServiceException {
+    	mVersion = e.getAttribute(AccountConstants.E_VERSION, "unknown");
         mId = e.getAttribute(AccountConstants.E_ID, null); // TODO: ID was just added to GetInfo, remove ,null shortly...
         mName = e.getAttribute(AccountConstants.E_NAME);
         mLifetime = e.getAttributeLong(AccountConstants.E_LIFETIME);
@@ -181,6 +182,10 @@ public class ZGetInfoResult {
 
     public String getId() {
         return mId;
+    }
+    
+    public String getVersion() {
+    	return mVersion;
     }
 }
 

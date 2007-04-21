@@ -77,11 +77,11 @@ public class ZipFormatter extends Formatter {
     }
 
     @Override
-    public void formatCallback(Context context, MailItem target) throws IOException, ServiceException {
+    public void formatCallback(Context context) throws IOException, ServiceException {
         Iterator<? extends MailItem> iterator = null;
         ZipOutputStream out = null;
         try {
-            iterator = getMailItems(context, target, getDefaultStartTime(), getDefaultEndTime(), 500);
+            iterator = getMailItems(context, getDefaultStartTime(), getDefaultEndTime(), 500);
 
             // TODO: get name from folder/search/query/etc
             String filename = context.hasPart() ? "attachments.zip" : "items.zip";
@@ -101,7 +101,9 @@ public class ZipFormatter extends Formatter {
                 if (item instanceof Message) {
                     if (!context.hasPart()) {
                         // add ZIP entry to output stream
-                        out.putNextEntry(new ZipEntry(getZipEntryName(item, item.getSubject(), ".eml", context, usedNames)));
+                    	ZipEntry entry = new ZipEntry(getZipEntryName(item, item.getSubject(), ".eml", context, usedNames));
+                    	entry.setExtra(SyncFormatter.getXZimbraHeadersBytes(item));
+                        out.putNextEntry(entry);
                         try {
                             InputStream is = ((Message) item).getContentStream();
                             ByteUtil.copy(is, true, out, false);
@@ -117,7 +119,9 @@ public class ZipFormatter extends Formatter {
                     VCard vcf = VCard.formatContact((Contact) item);
 
                     // add ZIP entry to output stream
-                    out.putNextEntry(new ZipEntry(getZipEntryName(item, vcf.fn, ".vcf", context, usedNames)));
+                    ZipEntry entry = new ZipEntry(getZipEntryName(item, vcf.fn, ".vcf", context, usedNames));
+                    entry.setExtra(SyncFormatter.getXZimbraHeadersBytes(item));
+                    out.putNextEntry(entry);
                     out.write(vcf.formatted.getBytes(Mime.P_CHARSET_UTF8));
                     out.closeEntry();
                 }

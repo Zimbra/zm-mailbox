@@ -59,12 +59,12 @@ public class VcfFormatter extends Formatter {
         return false;
     }
 
-    public void formatCallback(Context context, MailItem target) throws IOException, ServiceException {
+    public void formatCallback(Context context) throws IOException, ServiceException {
         Iterator<? extends MailItem> iterator = null;
         try {
-            iterator = getMailItems(context, target, getDefaultStartTime(), getDefaultEndTime(), Integer.MAX_VALUE);
+            iterator = getMailItems(context, getDefaultStartTime(), getDefaultEndTime(), Integer.MAX_VALUE);
 
-            String filename = target instanceof Contact ? ((Contact) target).getFileAsString() : "contacts";
+            String filename = context.target instanceof Contact ? ((Contact) context.target).getFileAsString() : "contacts";
             String cd = Part.ATTACHMENT + "; filename=" + HttpUtil.encodeFilename(context.req, filename + ".vcf");
             context.resp.addHeader("Content-Disposition", cd);
             context.resp.setContentType(Mime.CT_TEXT_VCARD);

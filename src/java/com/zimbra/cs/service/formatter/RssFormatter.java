@@ -49,7 +49,7 @@ public class RssFormatter extends Formatter {
     
     private SimpleDateFormat mDateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
         
-    public void formatCallback(Context context, MailItem item) throws IOException, ServiceException {
+    public void formatCallback(Context context) throws IOException, ServiceException {
         //ZimbraLog.mailbox.info("start = "+new Date(context.getStartTime()));
         //ZimbraLog.mailbox.info("end = "+new Date(context.getEndTime()));
         Iterator<? extends MailItem> iterator = null;
@@ -59,7 +59,7 @@ public class RssFormatter extends Formatter {
         int limit = context.getLimit();
         
         try {
-            iterator = getMailItems(context, item, context.getStartTime(), context.getEndTime(), limit-offset);
+            iterator = getMailItems(context, context.getStartTime(), context.getEndTime(), limit-offset);
         
             context.resp.setCharacterEncoding("UTF-8");
             context.resp.setContentType("application/rss+xml");

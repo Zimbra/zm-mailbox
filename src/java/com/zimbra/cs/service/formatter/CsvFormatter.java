@@ -61,11 +61,11 @@ public class CsvFormatter extends Formatter {
         return MailboxIndex.SEARCH_FOR_CONTACTS;
     }
 
-    public void formatCallback(Context context, MailItem item) throws IOException, ServiceException {
+    public void formatCallback(Context context) throws IOException, ServiceException {
         Iterator<? extends MailItem> iterator = null;
         StringBuffer sb = new StringBuffer();
         try {
-            iterator = getMailItems(context, item, -1, -1, Integer.MAX_VALUE);
+            iterator = getMailItems(context, -1, -1, Integer.MAX_VALUE);
             ContactCSV.toCSV(iterator, sb);
         } finally {
             if (iterator instanceof QueryResultIterator)

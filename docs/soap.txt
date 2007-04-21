@@ -353,6 +353,7 @@ an authToken can be passed instead of account/password/preauth to validate an ex
 </GetInfoRequest>
  
 <GetInfoResponse>
+   <version>{version}</version>
    <id>{account-id}</id>
    <name>{account-name}</name>
    <lifetime>...</lifetime>   
@@ -399,6 +400,7 @@ an authToken can be passed instead of account/password/preauth to validate an ex
    [<license status="inGracePeriod|bad"/>]
 </GetInfoResponse>
  
+  {version} = server version (4.5.5)
   {account-name} = email address (user@domain)
   {life-time} = number of milliseconds until auth token expires
   {used} = mailbox quota used in bytes

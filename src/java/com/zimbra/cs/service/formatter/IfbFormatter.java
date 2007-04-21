@@ -56,7 +56,7 @@ public class IfbFormatter extends Formatter {
         return MailboxIndex.SEARCH_FOR_APPOINTMENTS;
     }
 
-    public void formatCallback(Context context, MailItem item) throws IOException, ServiceException, UserServletException {
+    public void formatCallback(Context context) throws IOException, ServiceException, UserServletException {
         context.resp.setCharacterEncoding("UTF-8");
         context.resp.setContentType(Mime.CT_TEXT_CALENDAR);
 

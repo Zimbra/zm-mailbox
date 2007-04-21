@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.servlet.ServletException;
 
@@ -83,10 +84,10 @@ public abstract class Formatter {
         return MailboxIndex.SEARCH_FOR_MESSAGES;
     }
 
-    public final void format(UserServlet.Context context, MailItem item) throws UserServletException, IOException, ServletException, ServiceException {
+    public final void format(UserServlet.Context context) throws UserServletException, IOException, ServletException, ServiceException {
         BlockingOperation op = BlockingOperation.schedule(this.getClass().getSimpleName()+"(FORMAT)", null, context.opContext, context.targetMailbox, Requester.REST, Priority.BATCH, 1);
         try {
-            formatCallback(context, item);
+        	formatCallback(context);
         } catch (IOException e) {
             throw ServiceException.FAILURE("Caught IOException", e);
         } catch (ServletException e) {
@@ -132,18 +133,23 @@ public abstract class Formatter {
         }
     }
     
-    public abstract void formatCallback(UserServlet.Context context, MailItem item)
+    public abstract void formatCallback(UserServlet.Context context)
     throws UserServletException, ServiceException, IOException, ServletException;
 
     public abstract void saveCallback(byte[] body, UserServlet.Context context, String contentType, Folder folder, String filename)
     throws UserServletException, ServiceException, IOException, ServletException;
 
-    public Iterator<? extends MailItem> getMailItems(Context context, MailItem item, long startTime, long endTime, long chunkSize) throws ServiceException {
+    public Iterator<? extends MailItem> getMailItems(Context context, long startTime, long endTime, long chunkSize) throws ServiceException {
+    	if (context.respListItems != null) {
+    		return context.respListItems.iterator();
+    	}
+    	
+    	assert(context.target != null);
         String query = context.getQueryString();
         if (query != null) {
             try {
-                if (item instanceof Folder) {
-                    Folder f = (Folder) item;
+                if (context.target instanceof Folder) {
+                    Folder f = (Folder) context.target;
                     ZimbraLog.misc.info("folderId: " + f.getId());
                     if (f.getId() != Mailbox.ID_FOLDER_USER_ROOT)
                         query = "in:" + f.getPath() + " " + query; 
@@ -161,12 +167,12 @@ public abstract class Formatter {
             } catch (ParseException e) {
                 throw ServiceException.FAILURE("search error", e);
             }
-        } else if (item instanceof Folder) {
-            Collection<? extends MailItem> items = getMailItemsFromFolder(context, (Folder) item, startTime, endTime, chunkSize);
+        } else if (context.target instanceof Folder) {
+            Collection<? extends MailItem> items = getMailItemsFromFolder(context, (Folder) context.target, startTime, endTime, chunkSize);
             return items != null ? items.iterator() : null;
         } else {
             ArrayList<MailItem> result = new ArrayList<MailItem>();
-            result.add(item);
+            result.add(context.target);
             return result.iterator();
         }
     }

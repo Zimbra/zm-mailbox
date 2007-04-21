@@ -45,6 +45,7 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.zimlet.ZimletProperty;
 import com.zimbra.cs.zimlet.ZimletUserProperties;
 import com.zimbra.cs.zimlet.ZimletUtil;
@@ -60,6 +61,7 @@ public class GetInfo extends AccountDocumentHandler  {
         Account acct = getRequestedAccount(lc);
 		
         Element response = lc.createElement(AccountConstants.GET_INFO_RESPONSE);
+        response.addAttribute(AccountConstants.E_VERSION, BuildInfo.VERSION, Element.Disposition.CONTENT);
         response.addAttribute(AccountConstants.E_ID, acct.getId(), Element.Disposition.CONTENT);
         response.addAttribute(AccountConstants.E_NAME, acct.getName(), Element.Disposition.CONTENT);
         long lifetime = lc.getAuthToken().getExpires() - System.currentTimeMillis();

@@ -77,16 +77,16 @@ public class NativeFormatter extends Formatter {
         return MailboxIndex.SEARCH_FOR_MESSAGES;
     }
 
-    public void formatCallback(Context context, MailItem item) throws IOException, ServiceException, UserServletException, ServletException {
+    public void formatCallback(Context context) throws IOException, ServiceException, UserServletException, ServletException {
         try {
-            if (item instanceof Message) {
-                handleMessage(context, (Message) item);
-            } else if (item instanceof CalendarItem) {
-                handleCalendarItem(context, (CalendarItem) item);
-            } else if (item instanceof Document) {
-                handleDocument(context, (Document) item);
-            } else if (item instanceof Contact) {
-                handleContact(context, (Contact) item);
+            if (context.target instanceof Message) {
+                handleMessage(context, (Message) context.target);
+            } else if (context.target instanceof CalendarItem) {
+                handleCalendarItem(context, (CalendarItem) context.target);
+            } else if (context.target instanceof Document) {
+                handleDocument(context, (Document) context.target);
+            } else if (context.target instanceof Contact) {
+                handleContact(context, (Contact) context.target);
             } else {
                 throw UserServletException.notImplemented("can only handle messages/appointments/tasks/documents");
             }

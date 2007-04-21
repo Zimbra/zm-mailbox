@@ -165,20 +165,20 @@ public class WikiFormatter extends Formatter {
 	}
     
 	@Override
-	public void formatCallback(Context context, MailItem item) throws UserServletException, ServiceException, IOException {
+	public void formatCallback(Context context) throws UserServletException, ServiceException, IOException {
 		if (!context.targetAccount.getBooleanAttr("zimbraFeatureNotebookEnabled", false))
 			throw UserServletException.badRequest("Notebook is not enabled for user "+context.targetAccount.getName());
 		//long t0 = System.currentTimeMillis();
-        if (item instanceof Folder && context.itemId == null && !context.itemPath.endsWith("/")) {
+        if (context.target instanceof Folder && context.itemId == null && !context.itemPath.endsWith("/")) {
         	context.resp.sendRedirect(context.req.getRequestURI() + "/");
         	return;
         }
-        if (item instanceof WikiItem) {
-            handleWiki(context, (WikiItem) item);
-        } else if (item instanceof Document) {
-            handleDocument(context, (Document) item);
-        } else if (item instanceof Folder) {
-            handleWikiFolder(context, (Folder) item);
+        if (context.target instanceof WikiItem) {
+            handleWiki(context, (WikiItem) context.target);
+        } else if (context.target instanceof Document) {
+            handleDocument(context, (Document) context.target);
+        } else if (context.target instanceof Folder) {
+            handleWikiFolder(context, (Folder) context.target);
         } else {
             throw UserServletException.notImplemented("can only handle Wiki messages and Documents");
         }
