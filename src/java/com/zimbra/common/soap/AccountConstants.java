@@ -78,6 +78,7 @@ public class AccountConstants {
     public static final String E_LIFETIME = "lifetime";
     public static final String E_ACCOUNT = "account";
     public static final String E_CALENDAR_RESOURCE = "calresource";
+    public static final String E_VERSION = "version";
     public static final String E_NAME = "name";
     public static final String E_ID = "id";
     public static final String E_PASSWORD = "password";
