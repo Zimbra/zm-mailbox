@@ -110,6 +110,7 @@ public class FileUploadServlet extends ZimbraServlet {
         }
 
         public String getName()         { return name; }
+        public String getId()           { return uuid; }
         public String getContentType()  { return file.getContentType(); }
         public InputStream getInputStream() throws IOException {
             return file.getInputStream();
