@@ -2072,4 +2072,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
+<attr id="456" name="zimbraPrefWarnOnExit" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether to display a warning when users try to navigate away from ZCS</desc>
+</attr>
+
 </attrs>
