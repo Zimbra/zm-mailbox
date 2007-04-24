@@ -61,6 +61,10 @@ public class DummySSLSocketFactory extends SSLSocketFactory {
         return new DummySSLSocketFactory();
     }
     
+    public Socket createSocket() throws IOException {
+        return factory.createSocket();
+    }
+    
     public Socket createSocket(Socket socket, String s, int i, boolean flag) throws IOException {
         return factory.createSocket(socket, s, i, flag);
     }
