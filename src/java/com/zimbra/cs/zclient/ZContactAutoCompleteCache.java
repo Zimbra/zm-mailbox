@@ -55,8 +55,14 @@ public class ZContactAutoCompleteCache extends ZEventHandler {
         addKey(attrs.get(Contact.A_email), contact);
         addKey(attrs.get(Contact.A_email2), contact);
         addKey(attrs.get(Contact.A_email3), contact);
-        addKey(attrs.get(Contact.A_firstName), contact);
-        addKey(attrs.get(Contact.A_lastName), contact);
+
+        String ln = attrs.get(Contact.A_lastName);
+        String fn = attrs.get(Contact.A_firstName);
+        if (fn != null) {
+            if (ln == null) addKey(fn, contact);
+            else addKey(fn+" "+ln, contact);
+        }
+        addKey(ln, contact);
     }
 
     private void removeKey(String key, ZContact contact) {
@@ -73,8 +79,14 @@ public class ZContactAutoCompleteCache extends ZEventHandler {
         removeKey(attrs.get(Contact.A_email), contact);
         removeKey(attrs.get(Contact.A_email2), contact);
         removeKey(attrs.get(Contact.A_email3), contact);
-        removeKey(attrs.get(Contact.A_firstName), contact);
-        removeKey(attrs.get(Contact.A_lastName), contact);
+
+        String ln = attrs.get(Contact.A_lastName);
+        String fn = attrs.get(Contact.A_firstName);
+        if (fn != null) {
+            if (ln ==null) removeKey(fn, contact);
+            else removeKey(fn+" "+ln, contact);
+        }
+        removeKey(ln, contact);
     }
 
     public synchronized void clear() {
@@ -85,8 +97,10 @@ public class ZContactAutoCompleteCache extends ZEventHandler {
 
     private synchronized void init(ZMailbox mailbox) throws ServiceException {
         List<ZContact> contacts = mailbox.getContacts(null, null, false, Arrays.asList(Contact.A_email, Contact.A_email2, Contact.A_email3, Contact.A_firstName, Contact.A_lastName));
-        for (ZContact contact : contacts)
-            addContact(contact);
+        for (ZContact contact : contacts) {
+            if (!contact.getFolderId().equals(ZFolder.ID_TRASH))
+                addContact(contact);
+        }
         mCleared = false;
     }
 
