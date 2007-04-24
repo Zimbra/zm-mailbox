@@ -53,6 +53,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.filter.jsieve.ActionTag;
 import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mailbox.MailSender.SafeSendFailedException;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -277,7 +278,8 @@ public class ZimbraMailAdapter implements MailAdapter
                     } catch (AddressException e) {
                         throw MailServiceException.PARSE_ERROR("wrongly formatted address: " + addr, e);
                     } catch (SendFailedException e) {
-                        throw MailServiceException.SEND_FAILURE("redirect to " + addr + " failed", e, e.getInvalidAddresses(), e.getValidUnsentAddresses());
+                        SafeSendFailedException ssfe = new SafeSendFailedException(e);
+                        throw MailServiceException.SEND_FAILURE("redirect to " + addr + " failed", ssfe, ssfe.getInvalidAddresses(), ssfe.getValidUnsentAddresses());
                     }
                     
                 } 

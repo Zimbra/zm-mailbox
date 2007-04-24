@@ -31,6 +31,7 @@ package com.zimbra.cs.service.mail;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.MailSender.SafeSendFailedException;
 import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -360,22 +361,23 @@ public class ParseMimeMessage {
 
             if (mLog.isDebugEnabled())
                 dumpMessage(mm);
-            
-			return mm;
-	    } catch (UnsupportedEncodingException encEx) {
-	        String excepStr = ExceptionToString.ToString(encEx);
-	        mLog.warn(excepStr);
-	        throw ServiceException.FAILURE("UnsupportedEncodingExecption", encEx);
-	    } catch (SendFailedException failure) {
-	        String excepStr = ExceptionToString.ToString(failure);
-	        mLog.warn(excepStr);
-	        throw ServiceException.FAILURE("SendFailure", failure);
-	    } catch (MessagingException me) {
-	        String excepStr = ExceptionToString.ToString(me);
-	        mLog.warn(excepStr);
-	        throw ServiceException.FAILURE("MessagingExecption", me);
-	    } catch (IOException e) {
-			e.printStackTrace();
+
+            return mm;
+        } catch (UnsupportedEncodingException encEx) {
+            String excepStr = ExceptionToString.ToString(encEx);
+            mLog.warn(excepStr);
+            throw ServiceException.FAILURE("UnsupportedEncodingExecption", encEx);
+        } catch (SendFailedException sfe) {
+            SafeSendFailedException ssfe = new SafeSendFailedException(sfe);
+            String excepStr = ExceptionToString.ToString(sfe);
+            mLog.warn(excepStr);
+            throw ServiceException.FAILURE("SendFailure", sfe);
+        } catch (MessagingException me) {
+            String excepStr = ExceptionToString.ToString(me);
+            mLog.warn(excepStr);
+            throw ServiceException.FAILURE("MessagingExecption", me);
+        } catch (IOException e) {
+            e.printStackTrace();
             throw ServiceException.FAILURE("IOExecption", e);
 		}
     }
