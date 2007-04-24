@@ -923,7 +923,7 @@ public class LdapProvisioning extends Provisioning {
                 new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, returnAttrs, false, false);
 
             //Set the page size and initialize the cookie that we pass back in subsequent pages
-            int pageSize = 1000;
+            int pageSize = 1000; 
             byte[] cookie = null;
  
             LdapContext lctxt = (LdapContext)ctxt; 
@@ -932,12 +932,15 @@ public class LdapProvisioning extends Provisioning {
 
             NamingEnumeration ne = null;
 
+            int total = 0;
             try {
                 do {
                     lctxt.setRequestControls(new Control[]{new PagedResultsControl(pageSize, cookie, Control.CRITICAL)});
                     
                     ne = ctxt.search(base, query, searchControls);
                     while (ne != null && ne.hasMore()) {
+                        if (maxResults > 0 && total++ > maxResults)
+                        throw new SizeLimitExceededException("exceeded limit of "+maxResults);
                         SearchResult sr = (SearchResult) ne.nextElement();
                         String dn = sr.getNameInNamespace();
                         // skip admin accounts
