@@ -60,6 +60,7 @@ public class ZContact implements ZItem {
     private String mRevision;
     private long mMetaDataChangedDate;
     private Map<String, String> mAttrs;
+    private boolean mGalContact;
 
     public enum Flag {
         flagged('f'),
@@ -91,6 +92,11 @@ public class ZContact implements ZItem {
         }
     }
 
+    public ZContact(Element e, boolean galContact) throws ServiceException {
+        this(e);
+        mGalContact = galContact;
+    }
+
     public ZContact(Element e) throws ServiceException {
         mId = e.getAttribute(MailConstants.A_ID);
         mFolderId = e.getAttribute(MailConstants.A_FOLDER, null);
@@ -110,6 +116,10 @@ public class ZContact implements ZItem {
 
     public String getId() {
         return mId;
+    }
+
+    public boolean isGalContact() {
+        return mGalContact;
     }
 
     public String toString() {

@@ -9,6 +9,8 @@ import com.zimbra.cs.zclient.event.ZEventHandler;
 import com.zimbra.cs.zclient.event.ZModifyAppointmentEvent;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZRefreshEvent;
+import com.zimbra.cs.zclient.ZMailbox.GalEntryType;
+import com.zimbra.cs.zclient.ZMailbox.ZSearchGalResult;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,10 +25,13 @@ import java.util.Map.Entry;
 
 public class ZContactAutoCompleteCache extends ZEventHandler {
 
+    // tree ("first last", "last", "email", "email2", "email3" to contact)
     private TreeMap<String, List<ZContact>> mCache;
 
-    // map of all contacts in our cache
+    // id to contact map of all contacts in our cache
     private Map<String,ZContact> mContacts;
+
+    private Map<String, ZSearchGalResult> mGalCache;
 
     /** true if we have been cleared and need to refetch contacts on next auto-compleete */
     private boolean mCleared;
@@ -34,6 +39,7 @@ public class ZContactAutoCompleteCache extends ZEventHandler {
     public ZContactAutoCompleteCache() {
         mCache = new TreeMap<String, List<ZContact>>();
         mContacts = new HashMap<String, ZContact>();
+        mGalCache = new HashMap<String, ZSearchGalResult>();
         mCleared = true;
     }
 
@@ -91,6 +97,7 @@ public class ZContactAutoCompleteCache extends ZEventHandler {
 
     public synchronized void clear() {
         mCache.clear();
+        mGalCache.clear();
         mContacts.clear();
         mCleared = true;
     }
@@ -102,6 +109,20 @@ public class ZContactAutoCompleteCache extends ZEventHandler {
                 addContact(contact);
         }
         mCleared = false;
+    }
+
+    private synchronized List<ZContact> galCache(String query, ZMailbox mailbox) throws ServiceException {
+        int n = query.length();
+        while (n > 0) {
+            ZSearchGalResult result = mGalCache.get(query.substring(0, n));
+            if (result != null && (n == query.length() || !result.getHasMore())) {
+                return result.getContacts();
+            }
+            n--;
+        }
+        ZSearchGalResult galResult = mailbox.autoCompleteGal(query, GalEntryType.account, 20);
+        mGalCache.put(query, galResult);
+        return galResult.getContacts();
     }
 
     public synchronized List<ZContact> autoComplete(String query, int limit, ZMailbox mailbox) throws ServiceException {
@@ -122,6 +143,14 @@ public class ZContactAutoCompleteCache extends ZEventHandler {
                 break;
             }
             if (limit > 0 && result.size() >= limit) break;
+        }
+        if (result.size() < limit && mailbox.getFeatures().getGalAutoComplete()) {
+            List<ZContact> galContacts = galCache(query, mailbox);
+            int needed = limit > 0 ? result.size() - limit : 0;
+            for (ZContact contact : galContacts) {
+                result.add(contact);
+                if (needed > 0 && result.size() >= needed) break;
+            }
         }
         return result;
     }

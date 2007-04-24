@@ -2860,7 +2860,21 @@ public class ZMailbox {
         Element resp = invoke(req);
         List<ZContact> contacts = new ArrayList<ZContact>();
         for (Element contact : resp.listElements(MailConstants.E_CONTACT)) {
-                contacts.add(new ZContact(contact));
+                contacts.add(new ZContact(contact, true));
+        }
+        return new ZSearchGalResult(contacts, resp.getAttributeBool(AccountConstants.A_MORE, false), query, type);
+    }
+
+    public ZSearchGalResult autoCompleteGal(String query, GalEntryType type, int limit) throws ServiceException {
+        XMLElement req = new XMLElement(AccountConstants.AUTO_COMPLETE_GAL_REQUEST);
+        if (type != null)
+        req.addAttribute(AccountConstants.A_TYPE, type.name());
+        req.addAttribute(AccountConstants.A_LIMIT, limit);
+        req.addElement(AccountConstants.E_NAME).setText(query);
+        Element resp = invoke(req);
+        List<ZContact> contacts = new ArrayList<ZContact>();
+        for (Element contact : resp.listElements(MailConstants.E_CONTACT)) {
+                contacts.add(new ZContact(contact, true));
         }
         return new ZSearchGalResult(contacts, resp.getAttributeBool(AccountConstants.A_MORE, false), query, type);
     }
