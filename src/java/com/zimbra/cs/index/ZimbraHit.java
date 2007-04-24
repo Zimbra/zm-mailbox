@@ -32,6 +32,7 @@ import java.util.Comparator;
 import java.util.Date;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
@@ -111,7 +112,9 @@ public abstract class ZimbraHit
     protected String mCachedName = null;
     protected String mCachedSubj = null;
     private float mScore = (float) 1.0;
-    
+    protected ImapMessage mCachedImapMessage = null;
+    protected int mCachedModseq = -1;
+
     final Mailbox getMailbox() { return mMailbox; }
     final ZimbraQueryResultsImpl getResults() { return mResults; }
 
@@ -142,6 +145,7 @@ public abstract class ZimbraHit
      * @throws ServiceException
      */
     abstract int getConversationId() throws ServiceException;
+
     /**
 	 * Compare this hit to other using the sort field only
 	 * 
@@ -268,7 +272,25 @@ public abstract class ZimbraHit
      * @throws ServiceException
      */
     abstract String getName() throws ServiceException;
-    
+
+    public ImapMessage getImapMessage() throws ServiceException {
+        if (mCachedImapMessage != null)
+            return mCachedImapMessage;
+        MailItem item = getMailItem();
+        if (item == null)
+            return null;
+        return (mCachedImapMessage = new ImapMessage(item));
+    }
+
+    public int getModifiedSequence() throws ServiceException {
+        if (mCachedModseq > 0)
+            return mCachedModseq;
+        MailItem item = getMailItem();
+        if (item == null)
+            return -1;
+        return item.getModifiedSequence();
+    }
+
     final protected void updateScore(float score) {
         if (score > mScore) {
             mScore = score;
@@ -279,19 +301,27 @@ public abstract class ZimbraHit
         switch(sortType) {
         case DATE_ASCENDING:
         case DATE_DESCENDING:
-            mCachedDate = ((Long)sortKey).longValue();
+            mCachedDate = ((Long) sortKey).longValue();
             break;
         case NAME_ASCENDING:
         case NAME_DESCENDING:
-            mCachedName = (String)sortKey;
+            mCachedName = (String) sortKey;
             break;
         case SUBJ_ASCENDING:
         case SUBJ_DESCENDING:
-            mCachedSubj = (String)sortKey;
+            mCachedSubj = (String) sortKey;
             break;
         }
     }
-    
+
+    final void cacheImapMessage(ImapMessage i4msg) {
+        mCachedImapMessage = i4msg;
+    }
+
+    final void cacheModifiedSequence(int modseq) {
+        mCachedModseq = modseq;
+    }
+
 	/**
      * Return a comparator which sorts by the sort field, and THEN by the mail-item-id
      * 

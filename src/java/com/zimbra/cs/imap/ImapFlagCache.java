@@ -26,6 +26,7 @@ package com.zimbra.cs.imap;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +39,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 
-public class ImapFlagCache {
+public class ImapFlagCache implements Iterable<ImapFlagCache.ImapFlag> {
     static final class ImapFlag {
         String  mName;
         String  mImapName;
@@ -47,6 +48,7 @@ public class ImapFlagCache {
         boolean mPositive;
         boolean mPermanent;
         boolean mListed;
+        int     mModseq;
 
         static final boolean VISIBLE = true, HIDDEN = false;
 
@@ -54,14 +56,14 @@ public class ImapFlagCache {
             mId   = ltag.getId();    mBitmask   = ltag.getBitmask();
             mName = ltag.getName();  mImapName  = normalize(name, mId);
             mPositive = positive;    mPermanent = true;
-            mListed = VISIBLE;
+            mListed = VISIBLE;       mModseq    = ltag.getSavedSequence();
         }
 
         ImapFlag(String name, short bitmask, boolean listed) {
             mId   = 0;         mBitmask   = bitmask;
             mName = name;      mImapName  = name;
             mPositive = true;  mPermanent = false;
-            mListed = listed;
+            mListed = listed;  mModseq    = -1;
         }
 
         private String normalize(String name, int id) {
@@ -145,6 +147,13 @@ public class ImapFlagCache {
         return names;
     }
 
+    int getMaximumModseq() {
+        int modseq = 0;
+        for (ImapFlag i4flag : mNames.values())
+            modseq = Math.max(modseq, i4flag.mModseq);
+        return modseq;
+    }
+
 
     ImapFlag createTag(OperationContext octxt, String name, List<Tag> newTags) throws ServiceException {
         if (mMailbox == null)
@@ -161,7 +170,7 @@ public class ImapFlagCache {
             Tag ltag = mMailbox.createTag(octxt, name, MailItem.DEFAULT_COLOR);
             newTags.add(ltag);
             i4flag = getByName(name);
-            if (i4flag == null)
+            if (i4flag != null)
                 return cache(i4flag = new ImapFlag(name, ltag, true));
         } catch (ServiceException e) {
             if (!e.getCode().equals(ServiceException.PERM_DENIED) && !e.getCode().equals(MailServiceException.TOO_MANY_TAGS))
@@ -188,5 +197,9 @@ public class ImapFlagCache {
     void clear() {
         mNames.clear();
         mBitmasks.clear();
+    }
+
+    public Iterator<ImapFlag> iterator() {
+        return mNames.values().iterator();
     }
 }

@@ -79,7 +79,7 @@ public class Sync extends MailDocumentHandler {
         }
         
         synchronized (mbox) {
-            mbox.beginTrackingSync(null);
+            mbox.beginTrackingSync();
 
             if (tokenInt <= 0) {
                 response.addAttribute(MailConstants.A_TOKEN, mbox.getLastChangeID());

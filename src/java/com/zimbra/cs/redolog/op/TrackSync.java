@@ -63,6 +63,6 @@ public class TrackSync extends RedoableOp {
 
     public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-        mbox.beginTrackingSync(getOperationContext());
+        mbox.beginTrackingSync();
     }
 }

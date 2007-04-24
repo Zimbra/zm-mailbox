@@ -72,6 +72,7 @@ public class Folder extends MailItem {
     private ACL       mRights;
     private SyncData  mSyncData;
     private int       mImapUIDNEXT;
+    private int       mImapMODSEQ;
 
     Folder(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         super(mbox, ud);
@@ -132,6 +133,10 @@ public class Folder extends MailItem {
 
     public int getImapUIDNEXT() {
         return mImapUIDNEXT;
+    }
+
+    public int getImapMODSEQ() {
+        return mImapMODSEQ;
     }
 
     /** Returns whether the folder is the Trash folder or any of its
@@ -398,25 +403,41 @@ public class Folder extends MailItem {
      *  size of the subfolder.
      * @param countDelta  The change in item count, negative or positive.
      * @param sizeDelta   The change in total size, negative or positive. */
-    void updateSize(int countDelta, long sizeDelta) {
+    void updateSize(int countDelta, long sizeDelta) throws ServiceException {
         if (!trackSize() || (countDelta == 0 && sizeDelta == 0))
             return;
         // if we go negative, that's OK!  just pretend we're at 0.
         markItemModified(Change.MODIFIED_SIZE);
-        if (countDelta > 0)
+        if (countDelta > 0) {
             mImapUIDNEXT = mMailbox.getLastItemId() + 1;
+            mImapMODSEQ = mMailbox.getOperationChangeID();
+        }
         mData.size = Math.max(0, mData.size + countDelta);
         mTotalSize = Math.max(0, mTotalSize + sizeDelta);
     }
 
-    void setSize(int count, long totalSize) {
+    void setSize(int count, long totalSize) throws ServiceException {
         if (!trackSize() || (count == 0 && totalSize == 0))
             return;
         markItemModified(Change.MODIFIED_SIZE);
-        if (count > mData.size)
+        if (count > mData.size) {
             mImapUIDNEXT = mMailbox.getLastItemId() + 1;
+            mImapMODSEQ = mMailbox.getOperationChangeID();
+        }
         mData.size = count;
         mTotalSize = totalSize;
+    }
+
+    @Override
+    protected void updateUnread(int delta) throws ServiceException {
+        super.updateUnread(delta);
+        if (delta != 0 && trackUnread())
+            updateHighestMODSEQ();
+    }
+
+    void updateHighestMODSEQ() throws ServiceException {
+        markItemModified(Change.MODIFIED_SIZE);
+        mImapMODSEQ = mMailbox.getOperationChangeID();
     }
 
     @Override boolean isTaggable()       { return false; }
@@ -540,7 +561,7 @@ public class Folder extends MailItem {
         data.flags       = flags & Flag.FLAGS_FOLDER;
         data.name        = name;
         data.subject     = name;
-        data.metadata    = encodeMetadata(color, attributes, view, null, new SyncData(url), id + 1, 0);
+        data.metadata    = encodeMetadata(color, attributes, view, null, new SyncData(url), id + 1, 0, mbox.getOperationChangeID());
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 
@@ -955,10 +976,12 @@ public class Folder extends MailItem {
      *  value to the database.
      * @param initial  Whether this is the first time we're saving folder
      *                 counts, in which case we also initialize the IMAP
-     *                 UIDNEXT value. */
+     *                 UIDNEXT and HIGHESTMODSEQ values. */
     protected void saveFolderCounts(boolean initial) throws ServiceException {
-        if (initial)
+        if (initial) {
             mImapUIDNEXT = mMailbox.getLastItemId() + 1;
+            mImapMODSEQ  = mMailbox.getLastChangeID();
+        }
         DbMailItem.persistCounts(this, encodeMetadata());
     }
 
@@ -984,6 +1007,7 @@ public class Folder extends MailItem {
         mAttributes  = (byte) meta.getLong(Metadata.FN_ATTRS, 0);
         mTotalSize   = meta.getLong(Metadata.FN_TOTAL_SIZE, 0L);
         mImapUIDNEXT = (int) meta.getLong(Metadata.FN_UIDNEXT, 0);
+        mImapMODSEQ  = (int) meta.getLong(Metadata.FN_MODSEQ, 0);
 
         if (meta.containsKey(Metadata.FN_URL))
             mSyncData = new SyncData(meta.get(Metadata.FN_URL), meta.get(Metadata.FN_SYNC_GUID, null), meta.getLong(Metadata.FN_SYNC_DATE, 0));
@@ -999,14 +1023,14 @@ public class Folder extends MailItem {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mAttributes, mDefaultView, mRights, mSyncData, mImapUIDNEXT, mTotalSize);
+        return encodeMetadata(meta, mColor, mAttributes, mDefaultView, mRights, mSyncData, mImapUIDNEXT, mTotalSize, mImapMODSEQ);
     }
 
-    private static String encodeMetadata(byte color, byte attributes, byte hint, ACL rights, SyncData fsd, int uidnext, long totalSize) {
-        return encodeMetadata(new Metadata(), color, attributes, hint, rights, fsd, uidnext, totalSize).toString();
+    private static String encodeMetadata(byte color, byte attributes, byte hint, ACL rights, SyncData fsd, int uidnext, long totalSize, int modseq) {
+        return encodeMetadata(new Metadata(), color, attributes, hint, rights, fsd, uidnext, totalSize, modseq).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, byte color, byte attributes, byte hint, ACL rights, SyncData sync, int uidnext, long totalSize) {
+    static Metadata encodeMetadata(Metadata meta, byte color, byte attributes, byte hint, ACL rights, SyncData fsd, int uidnext, long totalSize, int modseq) {
         if (hint != TYPE_UNKNOWN)
             meta.put(Metadata.FN_VIEW, hint);
         if (attributes != 0)
@@ -1015,13 +1039,15 @@ public class Folder extends MailItem {
             meta.put(Metadata.FN_TOTAL_SIZE, totalSize);
         if (uidnext > 0)
             meta.put(Metadata.FN_UIDNEXT, uidnext);
+        if (modseq > 0)
+            meta.put(Metadata.FN_MODSEQ, modseq);
         if (rights != null)
             meta.put(Metadata.FN_RIGHTS, rights.encode());
-        if (sync != null && sync.url != null && !sync.url.equals("")) {
-            meta.put(Metadata.FN_URL, sync.url);
-            meta.put(Metadata.FN_SYNC_GUID, sync.lastGuid);
-            if (sync.lastDate > 0)
-                meta.put(Metadata.FN_SYNC_DATE, sync.lastDate);
+        if (fsd != null && fsd.url != null && !fsd.url.equals("")) {
+            meta.put(Metadata.FN_URL, fsd.url);
+            meta.put(Metadata.FN_SYNC_GUID, fsd.lastGuid);
+            if (fsd.lastDate > 0)
+                meta.put(Metadata.FN_SYNC_DATE, fsd.lastDate);
         }
         return MailItem.encodeMetadata(meta, color);
     }

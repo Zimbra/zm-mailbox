@@ -2266,10 +2266,9 @@ public class DbMailItem {
         public int    indexId;
         public byte   type;
         public Object sortkey;
-        public UnderlyingData data; // OPTIONAL
-        public ImapMessage i4msg; // OPTIONAL
+        public Object extraData;
 
-        public enum ExtraData { NONE, MAIL_ITEM, IMAP_MSG };
+        public enum ExtraData { NONE, MAIL_ITEM, IMAP_MSG, MODSEQ };
 
         public static class SizeEstimate {
             public SizeEstimate() {}
@@ -2298,12 +2297,14 @@ public class DbMailItem {
                     result.sortkey = new Long(rs.getInt(COLUMN_SORTKEY) * 1000L);
                     break;
             }
-                        
+
             if (extra == ExtraData.MAIL_ITEM) {
-                result.data = constructItem(rs, COLUMN_SORTKEY);
+                result.extraData = constructItem(rs, COLUMN_SORTKEY);
             } else if (extra == ExtraData.IMAP_MSG) {
                 int flags = rs.getBoolean(6) ? Flag.BITMASK_UNREAD | rs.getInt(7) : rs.getInt(7);
-                result.i4msg = new ImapMessage(result.id, result.type, rs.getInt(5), flags, rs.getLong(8));
+                result.extraData = new ImapMessage(result.id, result.type, rs.getInt(5), flags, rs.getLong(8));
+            } else if (extra == ExtraData.MODSEQ) {
+                result.extraData = rs.getInt(5);
             }
             return result;
         }
@@ -2375,10 +2376,10 @@ public class DbMailItem {
     }
     
     // put these into constants so that people can easily tell what is dependent on the positons
-    private static final int COLUMN_ID          = 1;
-    private static final int COLUMN_INDEXID  = 2;
-    private static final int COLUMN_TYPE       = 3;
-    private static final int COLUMN_SORTKEY  = 4;
+    private static final int COLUMN_ID      = 1;
+    private static final int COLUMN_INDEXID = 2;
+    private static final int COLUMN_TYPE    = 3;
+    private static final int COLUMN_SORTKEY = 4;
 
     private static final String encodeSelect(Mailbox mbox,
         byte sort, SearchResult.ExtraData extra, boolean includeCalTable,
@@ -2395,7 +2396,9 @@ public class DbMailItem {
             select.append(", " + DB_FIELDS);
         else if (extra == SearchResult.ExtraData.IMAP_MSG)
             select.append(", mi.imap_id, mi.unread, mi.flags, mi.tags");
-        
+        else if (extra == SearchResult.ExtraData.MODSEQ)
+            select.append(", mi.mod_metadata");
+
         select.append(" FROM " + getMailItemTableName(mbox, "mi"));
         if (includeCalTable) 
             select.append(", ").append(getCalendarItemTableName(mbox, "ap"));

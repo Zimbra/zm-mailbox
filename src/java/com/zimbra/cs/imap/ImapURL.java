@@ -276,7 +276,7 @@ class ImapURL {
         Account acct = Provisioning.getInstance().get(AccountBy.name, "user1@macbeth.liquidsys.com");
         ImapHandler handler = new TcpImapHandler(null);
         ImapCredentials creds = new ImapCredentials(acct, ImapCredentials.EnabledHack.NONE);
-        handler.setSelectedFolder(new ImapFolder(new ImapPath("trash", creds), true, handler, creds));
+        handler.setSelectedFolder(new ImapFolder(new ImapPath("trash", creds), (byte) 0, handler, creds));
 
         System.out.println(new ImapURL("tag", handler, "/Drafts;UIDVALIDITY=385759045/;UID=20/;section=HEADER"));
         System.out.println(new ImapURL("tag", handler, "/;UID=20/;section=1.mime"));

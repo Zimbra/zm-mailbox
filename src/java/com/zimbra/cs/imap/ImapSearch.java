@@ -38,6 +38,7 @@ abstract class ImapSearch {
     abstract boolean canBeRunLocally();
     abstract String toZimbraSearch(ImapFolder i4folder);
     abstract ImapMessageSet evaluate(ImapFolder i4folder);
+    boolean requiresMODSEQ()  { return false; }
 
     static boolean isAllMessages(ImapFolder i4folder, Set<ImapMessage> i4set) {
         int size = i4set.size() - (i4set.contains(null) ? 1 : 0);
@@ -80,6 +81,14 @@ abstract class ImapSearch {
 
         LogicalOperation addChild(ImapSearch i4search) {
             mChildren.add(i4search);  return this;
+        }
+
+        @Override
+        boolean requiresMODSEQ() {
+            for (ImapSearch i4search : mChildren)
+                if (i4search.requiresMODSEQ())
+                    return true;
+            return false;
         }
     }
 
@@ -239,6 +248,28 @@ abstract class ImapSearch {
 
         boolean canBeRunLocally()                   { return false; }
         String toZimbraSearch(ImapFolder i4folder)  { return mRelation.toString() + (System.currentTimeMillis() - mOffset * Constants.MILLIS_PER_SECOND); }
+        ImapMessageSet evaluate(ImapFolder i4folder) {
+            throw new UnsupportedOperationException("evaluate of " + toZimbraSearch(i4folder));
+        }
+    }
+
+    static class ModifiedSearch extends ImapSearch {
+        private int mChangedSince;
+        ModifiedSearch(int changeId)  { mChangedSince = changeId; }
+
+        boolean canBeRunLocally()  { return false; }
+        boolean requiresMODSEQ()   { return true; }
+        String toZimbraSearch(ImapFolder i4folder) {
+            ImapFlagCache i4cache = i4folder.getTagset();
+//            StringBuilder query = new StringBuilder("(modseq:>").append(mChangedSince);
+            StringBuilder query = new StringBuilder("(item:all");
+            if (i4cache.getMaximumModseq() > mChangedSince) {
+                for (ImapFlag i4flag : i4cache)
+                    if (i4flag.mModseq > mChangedSince)
+                        query.append(" or tag:").append(i4flag.mName);
+            }
+            return query.append(')').toString();
+        }
         ImapMessageSet evaluate(ImapFolder i4folder) {
             throw new UnsupportedOperationException("evaluate of " + toZimbraSearch(i4folder));
         }

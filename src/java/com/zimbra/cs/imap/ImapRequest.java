@@ -449,6 +449,7 @@ abstract class ImapRequest {
             if (peekChar() == ')')  break;
             skipSpace();
         } while (true);
+        skipChar(')');
         return params;
     }
 
@@ -467,6 +468,7 @@ abstract class ImapRequest {
             else if (item.equals("FLAGS"))          attributes |= ImapHandler.FETCH_FLAGS;
             else if (item.equals("INTERNALDATE"))   attributes |= ImapHandler.FETCH_INTERNALDATE;
             else if (item.equals("UID"))            attributes |= ImapHandler.FETCH_UID;
+            else if (item.equals("MODSEQ") && extensionEnabled("CONDSTORE"))  attributes |= ImapHandler.FETCH_MODSEQ;
             else if (item.equals("RFC822.SIZE"))    attributes |= ImapHandler.FETCH_RFC822_SIZE;
             else if (item.equals("RFC822.HEADER"))  parts.add(new ImapPartSpecifier(item, "", "HEADER"));
             else if (item.equals("RFC822")) {
@@ -616,6 +618,9 @@ abstract class ImapRequest {
                                                   skipSpace(); child = new ContentSearch(relation, readAstring(charset)); }
             else if (key.equals("KEYWORD"))     { skipSpace(); child = new FlagSearch(readAtom()); }
             else if (key.equals("LARGER"))      { skipSpace(); child = new SizeSearch(SizeSearch.Relation.larger, parseLong(readNumber())); }
+            else if (key.equals("MODSEQ") && extensionEnabled("CONDSTORE"))  { skipSpace();
+                                                  if (peekChar() == '"') { readFolder(); skipSpace(); readATOM(); skipSpace(); }
+                                                  child = new ModifiedSearch(parseInteger(readNumber(ZERO_OK))); }
             else if (key.equals("ON"))          { skipSpace(); child = new DateSearch(DateSearch.Relation.date, readDate()); }
             else if (key.equals("OLDER") && extensionEnabled("WITHIN"))  { skipSpace(); child = new RelativeDateSearch(DateSearch.Relation.before, parseInteger(readNumber())); }
             // FIXME: SENTBEFORE, SENTON, and SENTSINCE reference INTERNALDATE, not the Date header

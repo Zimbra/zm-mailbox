@@ -542,6 +542,9 @@ class DBQueryOperation extends QueryOperation
                         case IDS:
                             mExtra = DbMailItem.SearchResult.ExtraData.NONE;
                             break;
+                        case MODSEQ:
+                            mExtra = DbMailItem.SearchResult.ExtraData.MODSEQ;
+                            break;
                     }
                 }
 
@@ -561,7 +564,7 @@ class DBQueryOperation extends QueryOperation
             }
 
             //
-            // at this point, we've fill mDBHits if possible (and initialized it's iterator)
+            // at this point, we've filled mDBHits if possible (and initialized its iterator)
             //
             if (mDBHitsIter != null && mDBHitsIter.hasNext()) {
                 SearchResult sr = (SearchResult) mDBHitsIter.next();
@@ -592,11 +595,11 @@ class DBQueryOperation extends QueryOperation
                 }
 
                 if (docs == null || !ZimbraQueryResultsImpl.shouldAddDuplicateHits(sr.type)) {
-                    ZimbraHit toAdd = getResultsSet().getZimbraHit(getMailbox(), score, sr, null);
+                    ZimbraHit toAdd = getResultsSet().getZimbraHit(getMailbox(), score, sr, null, mExtra);
                     mNextHits.add(toAdd);
                 } else {
                     for (Document doc : docs) {
-                        ZimbraHit toAdd = getResultsSet().getZimbraHit(getMailbox(), score, sr, doc);
+                        ZimbraHit toAdd = getResultsSet().getZimbraHit(getMailbox(), score, sr, doc, mExtra);
                         mNextHits.add(toAdd);
                     }
                 }

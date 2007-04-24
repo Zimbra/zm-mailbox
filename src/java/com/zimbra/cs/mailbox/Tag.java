@@ -216,6 +216,22 @@ public class Tag extends MailItem {
         return name;
     }
 
+    /** Overrides {@link MailItem#rename(String, Folder) to update filter rules
+     *  if necessary. */
+    @Override
+    void rename(String name, Folder target) throws ServiceException {
+        String originalName = getName();
+        super.rename(name, target);
+
+        if (!originalName.equals(name)) {
+            for (Folder folder : mMailbox.listAllFolders()) {
+                if (folder.getSize() > 0)
+                    folder.updateHighestMODSEQ();
+            }
+            RuleManager.getInstance().tagRenamed(getAccount(), originalName, name);
+        }
+    }
+
     @Override
     void purgeCache(PendingDelete info, boolean purgeItem) throws ServiceException {
         // remove the tag from all items in the database
@@ -248,17 +264,6 @@ public class Tag extends MailItem {
 
     static Metadata encodeMetadata(Metadata meta, byte color) {
         return MailItem.encodeMetadata(meta, color);
-    }
-
-    /**
-     * Overrides {@link MailItem#rename(String, Folder) to update filter rules
-     * if necessary.
-     */
-    @Override
-    void rename(String name, Folder target) throws ServiceException {
-        String originalName = getName();
-        super.rename(name, target);
-        RuleManager.getInstance().tagRenamed(getAccount(), originalName, name);
     }
 
     @Override

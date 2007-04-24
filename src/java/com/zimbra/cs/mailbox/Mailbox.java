@@ -289,8 +289,8 @@ public class Mailbox {
             changetype = octxt.changetype;  change  = octxt.change;
         }
 
-        public OperationContext setChangeConstraint(boolean checkCreated, int changeId) {
-            changetype = checkCreated;  change = changeId;  return this;
+        public OperationContext setChangeConstraint(boolean checkModified, int changeId) {
+            changetype = checkModified;  change = changeId;  return this;
         }
         public OperationContext unsetChangeConstraint() {
             changetype = CHECK_CREATED;  change = -1;  return this;
@@ -1349,9 +1349,10 @@ public class Mailbox {
             reIndex(null, types, null, COMPLETED_REINDEX_CONTACTS_V1_2); 
         }
 
-        if (!getVersion().atLeast(1, 3)) {
+        // same prescription for both the 1.2 -> 1.3 and 1.3 -> 1.4 migrations
+        if (!getVersion().atLeast(1, 4)) {
             recalculateFolderAndTagCounts();
-            updateVersion(new MailboxVersion((short) 1, (short) 3));
+            updateVersion(new MailboxVersion((short) 1, (short) 4));
         }
     }
 
@@ -2079,35 +2080,36 @@ public class Mailbox {
     }
 
 
-    public synchronized void beginTrackingImap(OperationContext octxt) throws ServiceException {
+    public synchronized void beginTrackingImap() throws ServiceException {
         if (isTrackingImap())
             return;
 
         TrackImap redoRecorder = new TrackImap(mId);
         boolean success = false;
         try {
-            beginTransaction("beginTrackingImap", octxt, redoRecorder);
-            if (!hasFullAccess())
-                throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+            beginTransaction("beginTrackingImap", null, redoRecorder);
 
             DbMailbox.startTrackingImap(this);
             mCurrentChange.imap = Boolean.TRUE;
+
             success = true;
         } finally {
             endTransaction(success);
         }
     }
 
-    public synchronized void beginTrackingSync(OperationContext octxt) throws ServiceException {
+    public synchronized void beginTrackingSync() throws ServiceException {
         if (isTrackingSync())
             return;
 
         TrackSync redoRecorder = new TrackSync(mId);
         boolean success = false;
         try {
-            beginTransaction("beginTrackingSync", octxt, redoRecorder);
+            beginTransaction("beginTrackingSync", null, redoRecorder);
+
             DbMailbox.startTrackingSync(this);
             mCurrentChange.sync = getLastChangeID();
+
             success = true;
         } finally {
             endTransaction(success);
@@ -2411,6 +2413,10 @@ public class Mailbox {
         for (MailItem item : getItemList(octxt, MailItem.TYPE_FOLDER, -1, sort))
             folders.add((Folder) item);
         return folders;
+    }
+
+    List<Folder> listAllFolders() {
+        return new ArrayList<Folder>(mFolderCache.values());
     }
 
 
@@ -2747,6 +2753,7 @@ public class Mailbox {
     public static enum SearchResultMode {
         NORMAL,        // everything
         IMAP,          // only IMAP data
+        MODSEQ,        // only the metadata modification sequence number
         IDS;           // only IDs
         
         public static SearchResultMode get(String value) throws ServiceException {
@@ -3971,7 +3978,7 @@ public class Mailbox {
 
     public synchronized List<MailItem> imapCopy(OperationContext octxt, int[] itemIds, byte type, int folderId) throws IOException, ServiceException {
         // this is an IMAP command, so we'd better be tracking IMAP changes by now...
-        beginTrackingImap(octxt);
+        beginTrackingImap();
 
         for (int id : itemIds)
             if (id <= 0)

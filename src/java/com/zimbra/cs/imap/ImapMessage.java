@@ -100,7 +100,7 @@ public class ImapMessage implements Comparable<ImapMessage> {
         sflags  = (type == MailItem.TYPE_CONTACT ? FLAG_IS_CONTACT : 0);
     }
 
-    ImapMessage(MailItem item) {
+    public ImapMessage(MailItem item) {
         this(item.getId(), item.getType(), item.getImapUid(), item.getFlagBitmask(), item.getTagBitmask());
     }
 
@@ -159,8 +159,9 @@ public class ImapMessage implements Comparable<ImapMessage> {
             } catch (Exception e) {
                 throw ServiceException.FAILURE("problems serializing contact " + item.getId(), e);
             }
-        } else
+        } else {
             return EMPTY_CONTENT;
+        }
     }
 
     static MimeMessage getMimeMessage(MailItem item, byte[] raw) throws ServiceException {
@@ -177,6 +178,25 @@ public class ImapMessage implements Comparable<ImapMessage> {
         } catch (IOException e) {
             throw ServiceException.FAILURE("error closing stream for " + MailItem.getNameForType(item.getType()) + ' ' + item.getId(), e);
         }
+    }
+
+    int getFlagModseq(ImapFlagCache i4cache) {
+        int modseq = 0;
+        long tagBuffer = tags;
+        for (int i = 0; tagBuffer != 0 && i < 64; i++) {
+            long mask = 1L << i;
+            if ((tagBuffer & mask) != 0) {
+                ImapFlag i4flag = i4cache.getByMask(mask);
+                if (i4flag != null)
+                    modseq = Math.max(modseq, i4flag.mModseq);
+                tagBuffer &= ~mask;
+            }
+        }
+        return modseq;
+    }
+
+    int getModseq(MailItem item, ImapFlagCache i4cache) {
+        return Math.max(item.getModifiedSequence(), getFlagModseq(i4cache));
     }
 
     private static final String NO_FLAGS = "FLAGS ()";
@@ -224,20 +244,20 @@ public class ImapMessage implements Comparable<ImapMessage> {
         }
         return result.append(')').toString();
     }
-    void setPermanentFlags(int f, long t, ImapFolder parent) {
+    void setPermanentFlags(int f, long t, int changeId, ImapFolder parent) {
         if (t == tags && (f & IMAP_FLAGS) == (flags & IMAP_FLAGS))
             return;
         flags = (f & IMAP_FLAGS) | (flags & ~IMAP_FLAGS);
         tags  = t;
         if (parent != null)
-            parent.dirtyMessage(this);
+            parent.dirtyMessage(this, changeId);
     }
     void setSessionFlags(short s, ImapFolder parent) {
         if ((s & MUTABLE_SESSION_FLAGS) == (sflags & MUTABLE_SESSION_FLAGS))
             return;
         sflags = (short) ((s & MUTABLE_SESSION_FLAGS) | (sflags & ~MUTABLE_SESSION_FLAGS));
         if (parent != null)
-            parent.dirtyMessage(this);
+            parent.dirtyMessage(this, -1);
     }
 
     private static final byte[] NIL = { 'N', 'I', 'L' };

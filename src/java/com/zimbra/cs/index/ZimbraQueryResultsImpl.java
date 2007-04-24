@@ -29,7 +29,9 @@
 package com.zimbra.cs.index;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailItem.SearchResult;
+import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -110,7 +112,7 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
     public Mailbox.SearchResultMode getSearchMode() { return mMode; }
 
     protected ConversationHit getConversationHit(Mailbox mbx, int convId, float score) {
-        ConversationHit ch = (ConversationHit) mConversationHits.get(convId);
+        ConversationHit ch = mConversationHits.get(convId);
         if (ch == null) {
             ch = new ConversationHit(this, mbx, convId, score);
             mConversationHits.put(convId, ch);
@@ -121,7 +123,7 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
     }
 
     protected ContactHit getContactHit(Mailbox mbx, int mailItemId, Document d, float score, MailItem.UnderlyingData ud) throws ServiceException {
-        ContactHit hit = (ContactHit) mContactHits.get(mailItemId);
+        ContactHit hit = mContactHits.get(mailItemId);
         if (hit == null) {
             hit = new ContactHit(this, mbx, mailItemId, d, score, ud);
             mContactHits.put(mailItemId, hit);
@@ -132,7 +134,7 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
     }
 
     protected NoteHit getNoteHit(Mailbox mbx, int mailItemId, Document d, float score, MailItem.UnderlyingData ud) throws ServiceException {
-        NoteHit hit = (NoteHit) mNoteHits.get(mailItemId);
+        NoteHit hit = mNoteHits.get(mailItemId);
         if (hit == null) {
             hit = new NoteHit(this, mbx, mailItemId, d, score, ud);
             mNoteHits.put(mailItemId, hit);
@@ -143,7 +145,7 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
     }
 
     protected CalendarItemHit getCalendarItemHit(Mailbox mbx, int mailItemId, Document d, float score, MailItem.UnderlyingData ud) throws ServiceException {
-        CalendarItemHit hit = (CalendarItemHit) mCalItemHits.get(mailItemId);
+        CalendarItemHit hit = mCalItemHits.get(mailItemId);
         if (hit == null) {
             if (d != null) {
                 hit = new CalendarItemHit(this, mbx, mailItemId, d, score, ud);
@@ -158,7 +160,7 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
     }
 
     protected MessageHit getMessageHit(Mailbox mbx, int mailItemId, Document d, float score, MailItem.UnderlyingData underlyingData) throws ServiceException {
-        MessageHit hit = (MessageHit) mMessageHits.get(mailItemId);
+        MessageHit hit = mMessageHits.get(mailItemId);
         if (hit == null) {
             if (d != null) {
                 hit = new MessageHit(this, mbx, mailItemId, d, score, underlyingData);
@@ -175,7 +177,7 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
     protected MessagePartHit getMessagePartHit(Mailbox mbx, int mailItemId, Document d, float score, MailItem.UnderlyingData underlyingData) throws ServiceException 
     {
         String partKey = Integer.toString(mailItemId) + "-" + d.get(LuceneFields.L_PARTNAME);
-        MessagePartHit hit = (MessagePartHit) mPartHits.get(partKey);
+        MessagePartHit hit = mPartHits.get(partKey);
         if (hit == null) {
             hit = new MessagePartHit(this, mbx, mailItemId, d, score, underlyingData);
             mPartHits.put(partKey, hit);
@@ -207,36 +209,50 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
      * @return
      * @throws ServiceException
      */
-    ZimbraHit getZimbraHit(Mailbox mbox, float score, SearchResult sr, Document doc) throws ServiceException {
+    ZimbraHit getZimbraHit(Mailbox mbox, float score, SearchResult sr, Document doc, SearchResult.ExtraData extra) throws ServiceException {
+        MailItem.UnderlyingData ud = null;
+        ImapMessage i4msg = null;
+        int modseq = -1;
+        switch (extra) {
+            case MAIL_ITEM:  ud = (MailItem.UnderlyingData) sr.extraData;                  break;
+            case IMAP_MSG:   i4msg = (ImapMessage) sr.extraData;                           break;
+            case MODSEQ:     modseq = sr.extraData != null ? (Integer) sr.extraData : -1;  break;
+        }
+
         ZimbraHit toRet = null;
-        switch(sr.type) {
+        switch (sr.type) {
             case MailItem.TYPE_CHAT:
             case MailItem.TYPE_MESSAGE:
                 if (doc != null) {
-                    toRet = getMessagePartHit(mbox, sr.id, doc, score, sr.data);
+                    toRet = getMessagePartHit(mbox, sr.id, doc, score, ud);
                     toRet.cacheSortField(getSortBy(), sr.sortkey);
                 } else {
-                    toRet = getMessageHit(mbox, sr.id, null, score, sr.data);
+                    toRet = getMessageHit(mbox, sr.id, null, score, ud);
                     toRet.cacheSortField(getSortBy(), sr.sortkey);
                 }
                 break;
             case MailItem.TYPE_CONTACT:
-                toRet = getContactHit(mbox, sr.id, null, score, sr.data);
+                toRet = getContactHit(mbox, sr.id, null, score, ud);
                 break;
             case MailItem.TYPE_NOTE:
-                toRet = getNoteHit(mbox, sr.id, null, score, sr.data);
+                toRet = getNoteHit(mbox, sr.id, null, score, ud);
                 break;
             case MailItem.TYPE_APPOINTMENT:
             case MailItem.TYPE_TASK:
-                toRet = getCalendarItemHit(mbox, sr.id, null, score, sr.data);
+                toRet = getCalendarItemHit(mbox, sr.id, null, score, ud);
                 break;
             case MailItem.TYPE_DOCUMENT:
             case MailItem.TYPE_WIKI:
-                toRet = getDocumentHit(mbox, sr.id, doc, score, sr.data);
+                toRet = getDocumentHit(mbox, sr.id, doc, score, ud);
                 break;          
             default:
                 assert(false);
         }
+
+        if (i4msg != null)
+            toRet.cacheImapMessage(i4msg);
+        if (modseq > 0)
+            toRet.cacheModifiedSequence(modseq);
 
         return toRet;
     }

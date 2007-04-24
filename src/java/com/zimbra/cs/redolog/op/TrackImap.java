@@ -64,6 +64,6 @@ public class TrackImap extends RedoableOp {
 
     public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-        mbox.beginTrackingImap(getOperationContext());
+        mbox.beginTrackingImap();
     }
 }

@@ -29,7 +29,7 @@ import com.zimbra.common.service.ServiceException;
 public class MailboxVersion {
     // These should be incremented with changes to serialization format.
     private static final short CURRENT_MAJOR = 1;  // range: 0 - Short.MAX_VALUE
-    private static final short CURRENT_MINOR = 3;  // range: 0 - Short.MAX_VALUE
+    private static final short CURRENT_MINOR = 4;  // range: 0 - Short.MAX_VALUE
 
     private short mMajorVer;
     private short mMinorVer;
@@ -59,13 +59,13 @@ public class MailboxVersion {
         short minorVer = 0;
 
         if (md != null) {
-            majorVer = (short)md.getLong("vmaj", 1);
-            minorVer = (short)md.getLong("vmin", 0);
+            majorVer = (short) md.getLong("vmaj", 1);
+            minorVer = (short) md.getLong("vmin", 0);
         }
-        
+
         return new MailboxVersion(majorVer, minorVer);
     }
-    
+
     void writeToMetadata(Metadata md) {
         md.put("vmaj", mMajorVer);
         md.put("vmin", mMinorVer);
