@@ -26,6 +26,7 @@
 package com.zimbra.cs.service;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -970,7 +971,82 @@ public class UserServlet extends ZimbraServlet {
         return getRemoteResource(authToken, hostname, url.toString());
     }
     
+    //Helper class so that we can close connection upon stream close
+    public static class HttpInputStream extends  InputStream {
+
+		private GetMethod get;
+    	private InputStream in;
+    	
+    	HttpInputStream(GetMethod get) throws IOException {
+    		this.get = get;
+    		in = get.getResponseBodyAsStream();
+    	}
+    	
+    	@Override
+		public int read() throws IOException {
+    		return in.read();
+		}
+
+    	@Override
+    	public void close() {
+    		get.releaseConnection();
+    	}
+
+		@Override
+		public int available() throws IOException {
+			return in.available();
+		}
+
+		@Override
+		public synchronized void mark(int arg0) {
+			in.mark(arg0);
+		}
+
+		@Override
+		public boolean markSupported() {
+			return in.markSupported();
+		}
+
+		@Override
+		public int read(byte[] arg0, int arg1, int arg2) throws IOException {
+			return in.read(arg0, arg1, arg2);
+		}
+
+		@Override
+		public int read(byte[] arg0) throws IOException {
+			return in.read(arg0);
+		}
+
+		@Override
+		public synchronized void reset() throws IOException {
+			in.reset();
+		}
+
+		@Override
+		public long skip(long arg0) throws IOException {
+			return in.skip(arg0);
+		}
+    }
+    
+    public static Pair<Header[], HttpInputStream> getRemoteResourceAsStream(String authToken, String hostname, String url) throws ServiceException, IOException {
+    	Pair<Header[], GetMethod> pair = getRemoteResourceInternal(authToken, hostname, url);
+    	return new Pair<Header[], HttpInputStream>(pair.getFirst(), new HttpInputStream(pair.getSecond()));
+    }
+    
     public static Pair<Header[], byte[]> getRemoteResource(String authToken, String hostname, String url) throws ServiceException {
+    	GetMethod get = null;
+    	try {
+    		Pair<Header[], GetMethod> pair = getRemoteResourceInternal(authToken, hostname, url);
+    		get = pair.getSecond();
+    		return new Pair<Header[], byte[]>(pair.getFirst(), get.getResponseBody());
+    	} catch (IOException x) {
+    		throw ServiceException.FAILURE("Can't read response body " + url, x);
+    	} finally {
+            get.releaseConnection();
+        }
+    }
+    
+    private static Pair<Header[], GetMethod> getRemoteResourceInternal(String authToken, String hostname, String url) throws ServiceException {
         // create an HTTP client with the same cookies
         HttpState state = new HttpState();
         state.addCookie(new org.apache.commons.httpclient.Cookie(hostname, COOKIE_ZM_AUTH_TOKEN, authToken, "/", null, false));
@@ -985,13 +1061,11 @@ public class UserServlet extends ZimbraServlet {
                 throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusText(), null);
 
             Header[] headers = get.getResponseHeaders();
-            return new Pair<Header[], byte[]>(headers, get.getResponseBody());
+            return new Pair<Header[], GetMethod>(headers, get);
         } catch (HttpException e) {
             throw ServiceException.RESOURCE_UNREACHABLE("HttpException while fetching " + url, e);
         } catch (IOException e) {
             throw ServiceException.RESOURCE_UNREACHABLE("IOException while fetching " + url, e);
-        } finally {
-            get.releaseConnection();
         }
     }
 }
