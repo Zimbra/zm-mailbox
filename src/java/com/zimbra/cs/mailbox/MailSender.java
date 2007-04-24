@@ -294,11 +294,13 @@ public class MailSender {
             return (rollback[0] != null ? rollback[0].msgId : null);
 
         } catch (SendFailedException sfe) {
-            ZimbraLog.smtp.warn("exception ocurred during SendMsg", sfe);
-            Address[] invalidAddrs = sfe.getInvalidAddresses();
-            Address[] validUnsentAddrs = sfe.getValidUnsentAddresses();
+            SafeSendFailedException ssfe = new SafeSendFailedException(sfe);
+            ZimbraLog.smtp.warn("Exception occurred during SendMsg: ", ssfe);
+
+            Address[] invalidAddrs = ssfe.getInvalidAddresses();
+            Address[] validUnsentAddrs = ssfe.getValidUnsentAddresses();
             if (invalidAddrs != null && invalidAddrs.length > 0) { 
-                StringBuffer msg = new StringBuffer("Invalid address").append(invalidAddrs.length > 1 ? "es: " : ": ");
+                StringBuilder msg = new StringBuilder("Invalid address").append(invalidAddrs.length > 1 ? "es: " : ": ");
                 if (invalidAddrs != null && invalidAddrs.length > 0) {
                     for (int i = 0; i < invalidAddrs.length; i++) {
                         if (i > 0)
@@ -307,11 +309,11 @@ public class MailSender {
                     }
                 }
                 if (JMSession.getSmtpConfig().getSendPartial())
-                    throw MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE(msg.toString(), sfe, invalidAddrs, validUnsentAddrs);
+                    throw MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE(msg.toString(), ssfe, invalidAddrs, validUnsentAddrs);
                 else
-                    throw MailServiceException.SEND_ABORTED_ADDRESS_FAILURE(msg.toString(), sfe, invalidAddrs, validUnsentAddrs);
+                    throw MailServiceException.SEND_ABORTED_ADDRESS_FAILURE(msg.toString(), ssfe, invalidAddrs, validUnsentAddrs);
             } else {
-                throw MailServiceException.SEND_FAILURE("SMTP server reported: " + sfe.getMessage().trim(), sfe, invalidAddrs, validUnsentAddrs);
+                throw MailServiceException.SEND_FAILURE("SMTP server reported: " + ssfe.getMessage(), ssfe, invalidAddrs, validUnsentAddrs);
             }
         } catch (IOException ioe) {
             ZimbraLog.smtp.warn("exception occured during send msg", ioe);
@@ -434,5 +436,64 @@ public class MailSender {
                     rdata.rollback();
             throw e;
         } 
+    }
+
+    /**
+     * Class that temporarily fixes the OutOfMemoryError issue with
+     * MessagingException.toString() that occurs when sending an SMTP
+     * message with too many recipients
+     */
+    public static class SafeSendFailedException extends SendFailedException {
+        private SendFailedException mSfe;
+
+        public SafeSendFailedException(SendFailedException sfe) {
+            mSfe = sfe;
+            setStackTrace(mSfe.getStackTrace());
+        }
+
+        public Address[] getInvalidAddresses() {
+            return mSfe.getInvalidAddresses();
+        }
+
+        public Address[] getValidSentAddresses() {
+            return mSfe.getValidSentAddresses();
+        }
+
+        public Address[] getValidUnsentAddresses() {
+            return mSfe.getValidUnsentAddresses();
+        }
+
+        /**
+         * Override toString method to provide information on nested exceptions
+         * without causing OutOfMemoryError. (meaning, don't call toString()
+         * on the chained exceptions!)
+         */
+        public synchronized String toString() {
+            StringBuilder sb = new StringBuilder(getClass().getName());
+            String s = getMessage();
+            if (s != null)
+                sb.append(": ").append(s);
+            Exception n = mSfe.getNextException();
+            if (n == null)
+                return sb.toString();
+            int numChained = 0;
+            while (n != null) {
+                if (s == null) {
+                    s = n.getMessage();
+                    if (s != null)
+                        sb.append(": ").append(s);
+                } else {
+                    numChained++;
+                }
+                if (n instanceof MessagingException) {
+                    MessagingException mex = (MessagingException)n;
+                    n = mex.getNextException();
+                } else {
+                    n = null;
+                }
+            }
+            sb.append(" (").append(numChained).append(" more chained exceptions)");
+            return sb.toString();
+        }
     }
 }
