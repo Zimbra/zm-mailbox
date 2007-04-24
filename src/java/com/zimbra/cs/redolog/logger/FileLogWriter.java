@@ -32,7 +32,6 @@
 package com.zimbra.cs.redolog.logger;
 
 import java.io.File;
-import java.io.FileDescriptor;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Iterator;
@@ -86,7 +85,6 @@ public class FileLogWriter implements LogWriter {
 
     private File mFile;
     private RandomAccessFile mRAF;
-    private FileDescriptor mFD;
     private long mFileSize;
     private long mLastLogTime;
 
@@ -185,7 +183,6 @@ public class FileLogWriter implements LogWriter {
             if (mRAF != null) return;  // already open
 
             mRAF = new RandomAccessFile(mFile, "rw");
-            mFD = mRAF.getFD();
 
             if (mRAF.length() >= FileHeader.HEADER_LEN) {
                 mHeader.read(mRAF);
@@ -222,7 +219,6 @@ public class FileLogWriter implements LogWriter {
                 mHeader.setFileSize(mRAF.length());
                 mHeader.write(mRAF);
 
-                mFD = null;
                 mRAF.close();
                 mRAF = null;
             } else
@@ -398,7 +394,7 @@ public class FileLogWriter implements LogWriter {
     }
 
     private synchronized void startFsyncThread() {
-        if (mFsyncer == null) {
+        if (mFsyncer == null && mFsyncIntervalMS > 0) {
             mFsyncer = new FsyncThread(mFsyncIntervalMS);
             mFsyncer.start();
         }
@@ -414,6 +410,7 @@ public class FileLogWriter implements LogWriter {
     // do fsync if there are items logged since last fsync
     private void fsync() throws IOException {
         boolean fsyncNeeded = false;
+        boolean fsyncEnabled = mFsyncIntervalMS >= 0;
         int seq = 0;
         synchronized (mLock) {
             if (mFsyncSeq < mLogSeq) {
@@ -421,27 +418,29 @@ public class FileLogWriter implements LogWriter {
                     throw new IOException("Redolog file closed");
                 fsyncNeeded = true;
                 seq = mLogSeq;
-                mFsyncCount++;
+                if (fsyncEnabled)
+                    mFsyncCount++;
             }
         }
-        // no need to synchronize threads for fsync call; just need to get the
-        // mFD value in synchronized block
         if (fsyncNeeded) {
-            long start = System.currentTimeMillis();
-            FileDescriptor fd;
-            synchronized (mLock) {
-                fd = mFD;
+            if (fsyncEnabled) {
+                long start = System.currentTimeMillis();
+                synchronized (mLock) {
+                    if (mRAF != null)
+                        mRAF.getChannel().force(false);
+                    else
+                        throw new IOException("Redolog file closed");
+                }
+                long elapsed = System.currentTimeMillis() - start;
+                mFsyncTime += elapsed;
             }
-            if (fd == null)
-                throw new IOException("log file closed (null file descriptor)");
-            fd.sync();
-            long elapsed = System.currentTimeMillis() - start;
-            mFsyncTime += elapsed;
             synchronized (mLock) {
                 mFsyncSeq = seq;
             }
-            synchronized (mFsyncCond) {
-                mFsyncCond.notifyAll();
+            if (mFsyncIntervalMS > 0) {
+                synchronized (mFsyncCond) {
+                    mFsyncCond.notifyAll();
+                }
             }
         }
     }
