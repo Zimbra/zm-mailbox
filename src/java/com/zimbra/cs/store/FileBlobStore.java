@@ -40,6 +40,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.common.service.ServiceException;
@@ -108,8 +109,10 @@ public class FileBlobStore extends StoreManager {
 
         FileOutputStream fos = new FileOutputStream(file);
         fos.write(writeData);
-        fos.flush();
-        fos.getChannel().force(true);
+        if (!DebugConfig.disableMessageStoreFsync) {
+            fos.flush();
+            fos.getChannel().force(true);
+        }
         fos.close();
 
         if (mLog.isDebugEnabled()) {
@@ -134,7 +137,7 @@ public class FileBlobStore extends StoreManager {
         String destPath = dest.getAbsolutePath();
         ensureParentDirExists(dest);
 
-        FileUtil.copy(src.getFile(), dest, true);
+        FileUtil.copy(src.getFile(), dest, !DebugConfig.disableMessageStoreFsync);
 
         if (mLog.isDebugEnabled()) {
             mLog.debug("Copied id=" + destMsgId +
@@ -192,7 +195,7 @@ public class FileBlobStore extends StoreManager {
         } else {
         	// src and dest are on different volumes and can't be hard linked.
             // Do a copy instead.
-            FileUtil.copy(src.getFile(), dest, true);
+            FileUtil.copy(src.getFile(), dest, !DebugConfig.disableMessageStoreFsync);
         }
 
         if (mLog.isDebugEnabled()) {
@@ -233,7 +236,7 @@ public class FileBlobStore extends StoreManager {
                 throw new IOException("Unable to rename " + srcPath + " to " + destPath);
         } else {
             // Can't rename across volumes.  Copy then delete instead.
-            FileUtil.copy(srcFile, destFile, true);
+            FileUtil.copy(srcFile, destFile, !DebugConfig.disableMessageStoreFsync);
             srcFile.delete();
         }
 

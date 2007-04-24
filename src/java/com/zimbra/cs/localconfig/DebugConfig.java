@@ -88,6 +88,9 @@ public class DebugConfig {
     // supported and others are ignored.
     public static boolean calendarAllowNonDisplayAlarms;
 
+    //  If true, fsync is skipped for message blob file saving.
+    public static boolean disableMessageStoreFsync;
+
     // If true, convert TZ-relative times to UTC time in SOAP responses for
     // non-recurring appointments/tasks.  Recurring series or instances are
     // unaffected by this switch.
@@ -116,6 +119,8 @@ public class DebugConfig {
         }
         disableIndexingAttachmentsSeparately = booleanValue("debug_disable_indexing_attachments_separately", false);
         disableIndexingAttachmentsTogether = booleanValue("debug_disable_indexing_attachments_together", false);
+
+        disableMessageStoreFsync = booleanValue("debug_disable_message_store_fsync", false);
 
         numMailboxGroups = Math.max(LC.zimbra_mailbox_groups.intValue(), 1);
     }
