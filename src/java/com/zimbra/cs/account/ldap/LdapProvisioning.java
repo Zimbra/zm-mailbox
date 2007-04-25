@@ -184,6 +184,7 @@ public class LdapProvisioning extends Provisioning {
     private static final String SERVER_BASE = "cn=servers,cn=zimbra";
     private static final String ADMIN_BASE = "cn=admins,cn=zimbra";
     private static final String ZIMLET_BASE = "cn=zimlets,cn=zimbra";
+    private static final String ACCOUNT_REL_BASE = "ou=people";
 
     private static final int BY_ID = 1;
 
@@ -227,7 +228,15 @@ public class LdapProvisioning extends Provisioning {
     }
     
     static String domainToAccountBaseDN(String domain) {
-        return "ou=people,"+LdapUtil.domainToDN(domain);
+        return ACCOUNT_REL_BASE +","+LdapUtil.domainToDN(domain);
+    }
+    
+    static String domainToAccountBaseDN(LdapDomain domain) {
+        return ACCOUNT_REL_BASE +","+domain.getDN();
+    }
+    
+    static String domainDNToAccountBaseDN(String domainDN) {
+        return ACCOUNT_REL_BASE +","+domainDN;
     }
     
     static String zimletNameToDN(String name) {
@@ -238,8 +247,7 @@ public class LdapProvisioning extends Provisioning {
     private static Pattern sNamePattern = Pattern.compile("([/+])"); 
     
     static String mimeConfigToDN(String name) {
-        name = LdapUtil.escapeRDNValue(name);                   // do LDAP escape first
-        // name = sNamePattern.matcher(name).replaceAll("\\\\$1"); // then do JNDI escape
+        name = LdapUtil.escapeRDNValue(name);
         return "cn=" + name + ",cn=mime," + CONFIG_BASE;
     }
 
@@ -1313,7 +1321,7 @@ public class LdapProvisioning extends Provisioning {
                 LdapUtil.modifyAttributes(ctxt, dn, DirContext.REPLACE_ATTRIBUTE, attrs);
             }
             
-            LdapUtil.simpleCreate(ctxt, "ou=people,"+dn, "organizationalRole",
+            LdapUtil.simpleCreate(ctxt, domainDNToAccountBaseDN(dn), "organizationalRole",
                     new String[] { A_ou, "people", A_cn, "people"});
             
             Domain domain = getDomainById(zimbraIdStr, ctxt);
@@ -1769,7 +1777,7 @@ public class LdapProvisioning extends Provisioning {
 
             String name = d.getName();
 
-            LdapUtil.unbindEntry(ctxt, "ou=people,"+d.getDN());
+            LdapUtil.unbindEntry(ctxt, domainToAccountBaseDN(d));
             
             try {
             	LdapUtil.unbindEntry(ctxt, d.getDN());
@@ -2298,7 +2306,7 @@ public class LdapProvisioning extends Provisioning {
 
         String uid = LdapUtil.escapeSearchFilterArg(parts[0]);
         String domain = parts[1];
-        String dn = "ou=people,"+LdapUtil.domainToDN(domain);
+        String dn = domainToAccountBaseDN(domain);
         return getDistributionListByQuery(dn, "(&(uid="+uid+")(objectclass=zimbraDistributionList))", null);
     }
 
@@ -3305,7 +3313,7 @@ public class LdapProvisioning extends Provisioning {
     @Override
     public void getAllAccounts(Domain d, NamedEntry.Visitor visitor) throws ServiceException {
         LdapDomain ld = (LdapDomain) d;
-        searchObjects("(objectclass=zimbraAccount)", null, "ou=people,"+ld.getDN(), Provisioning.SA_ACCOUNT_FLAG, visitor, 0);
+        searchObjects("(objectclass=zimbraAccount)", null, domainToAccountBaseDN(ld), Provisioning.SA_ACCOUNT_FLAG, visitor, 0);
     }
 
     @Override
@@ -3320,7 +3328,7 @@ public class LdapProvisioning extends Provisioning {
     throws ServiceException {
         LdapDomain ld = (LdapDomain) d;        
         searchObjects("(objectclass=zimbraCalendarResource)",
-                             null, "ou=people," + ld.getDN(),
+                             null, domainToAccountBaseDN(ld),
                              Provisioning.SA_CALENDAR_RESOURCE_FLAG,
                              visitor, 0);
     }
@@ -3334,12 +3342,12 @@ public class LdapProvisioning extends Provisioning {
     public List searchAccounts(Domain d, String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException
     {
         LdapDomain ld = (LdapDomain) d;
-        return searchObjects(query, returnAttrs, sortAttr, sortAscending, "ou=people,"+ld.getDN(), flags, 0);
+        return searchObjects(query, returnAttrs, sortAttr, sortAscending, domainToAccountBaseDN(ld), flags, 0);
     }
 
     public List<NamedEntry> searchDirectory(SearchOptions options) throws ServiceException {
         LdapDomain ld = (LdapDomain) options.getDomain();
-        String base = ld == null ? "" : "ou=people,"+ld.getDN();
+        String base = ld == null ? "" : domainToAccountBaseDN(ld);
         return searchObjects(options.getQuery(), options.getReturnAttrs(), options.getSortAttr(), options.isSortAscending(), base, options.getFlags(), options.getMaxResults());
     }
 
@@ -3354,7 +3362,7 @@ public class LdapProvisioning extends Provisioning {
         LdapDomain ld = (LdapDomain) d;
         return searchCalendarResources(filter, returnAttrs,
                                              sortAttr, sortAscending,
-                                             "ou=people," + ld.getDN());
+                                             domainToAccountBaseDN(ld));
     }
 
     @Override
@@ -3564,7 +3572,7 @@ public class LdapProvisioning extends Provisioning {
             ctxt = LdapUtil.getDirContext(false);
             String searchBase = d.getAttr(Provisioning.A_zimbraGalInternalSearchBase, "DOMAIN");
             if (searchBase.equalsIgnoreCase("DOMAIN"))
-                searchBase = "ou=people,"+ld.getDN();
+                searchBase = domainToAccountBaseDN(ld);
             else if (searchBase.equalsIgnoreCase("SUBDOMAINS"))
                 searchBase = ld.getDN();
             else if (searchBase.equalsIgnoreCase("ROOT"))
