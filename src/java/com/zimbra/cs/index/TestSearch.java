@@ -44,6 +44,7 @@ import junit.framework.TestFailure;
 import junit.framework.TestResult;
 import junit.framework.TestSuite;
 
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.MailItem;
@@ -60,6 +61,7 @@ import com.zimbra.cs.index.ResultValidator.QueryResult;
 import com.zimbra.cs.index.ResultValidator.ExpectedCalendarItemHit;
 import com.zimbra.cs.index.ResultValidator.ExpectedMessageHit;
 import com.zimbra.cs.index.ResultValidator.ExpectedHitValidator;
+import com.zimbra.qa.unittest.TestUtil;
 
 
 
@@ -619,7 +621,7 @@ public class TestSearch extends TestCase {
         }
     }
     
-    public int mMailboxId = 2;
+    public int mMailboxId;
 
     public TestSearch() {
     }
@@ -628,6 +630,8 @@ public class TestSearch extends TestCase {
      */
     protected void setUp() throws Exception {
         super.setUp();
+        Mailbox mbox = TestUtil.getMailbox("user1");
+        mMailboxId = mbox.getId();
     }
 
     public static void main(String[] args)

@@ -44,7 +44,6 @@ import junit.framework.TestSuite;
  */
 public class ZimbraSuite extends TestSuite
 {
-    static final DecimalFormat TEST_TIME_FORMAT = new DecimalFormat("0.00");
     private static List<Test> sAdditionalTests = new ArrayList<Test>();
 
     /**

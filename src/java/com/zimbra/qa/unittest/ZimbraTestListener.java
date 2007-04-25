@@ -32,13 +32,11 @@ import junit.framework.TestListener;
 
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 public class ZimbraTestListener implements TestListener {
     
     long mStartTimestamp;
-    StringBuffer mSummary = new StringBuffer();
     Element mSummaryElement;
     boolean addedName = false;
     
@@ -48,40 +46,31 @@ public class ZimbraTestListener implements TestListener {
         }
     }
     
-    public String getSummary() {
-        return mSummary.toString();
-    }
-    
     public Element getSummaryElement() {
         return mSummaryElement;
     }
     
     public void addError(Test test, Throwable t) {
-        ZimbraLog.test.error("*** TEST ERROR: " + t + "\n" + SystemUtil.getStackTrace(t));
-        StringBuilder summary = new StringBuilder().append("*** TEST " + getTestName(test) + " generated an error: " + t + "\n");
+        ZimbraLog.test.error("*** TEST ERROR", t);
         Element e = mSummaryElement.addElement("error");
         e.addAttribute("name", getTestName(test));
-        e.setText(summary.toString());
+        e.setText(t.toString());
     }
 
     public void addFailure(Test test, AssertionFailedError t) {
-        ZimbraLog.test.error("*** TEST FAILED: " + t + "\n" + SystemUtil.getStackTrace(t));
-        StringBuilder summary = new StringBuilder().append("*** TEST " + getTestName(test) + " failed: " + t + "\n");
+        ZimbraLog.test.error("*** TEST FAILED", t);
         Element e = mSummaryElement.addElement("failure");
         e.addAttribute("name", getTestName(test));
-        e.setText(summary.toString());
+        e.setText(t.toString());
     }
 
     public void endTest(Test test) {
         if (test instanceof TestCase) {
             double seconds = (double) (System.currentTimeMillis() - mStartTimestamp) / 1000;
-            String msg = "Test " + getTestName(test) + " finished in " +
-                ZimbraSuite.TEST_TIME_FORMAT.format(seconds) + " seconds";
-            ZimbraLog.test.info(msg);
-            StringBuilder summary = new StringBuilder().append(msg).append("\n");
+            ZimbraLog.test.info("Test %s finished in %.2f seconds", getTestName(test), seconds);
             Element e = mSummaryElement.addElement("completed");
             e.addAttribute("name", getTestName(test));
-            e.setText(summary.toString());
+            e.addAttribute("execSeconds", String.format("%.2f", seconds));
         }
     }
 
