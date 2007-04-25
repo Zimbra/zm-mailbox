@@ -293,12 +293,10 @@ public class MailSender {
 
             return (rollback[0] != null ? rollback[0].msgId : null);
 
-        } catch (SendFailedException sfe) {
-            SafeSendFailedException ssfe = new SafeSendFailedException(sfe);
-            ZimbraLog.smtp.warn("Exception occurred during SendMsg: ", ssfe);
-
-            Address[] invalidAddrs = ssfe.getInvalidAddresses();
-            Address[] validUnsentAddrs = ssfe.getValidUnsentAddresses();
+        } catch (SafeSendFailedException sfe) {
+            ZimbraLog.smtp.warn("Exception occurred during SendMsg: ", sfe);
+            Address[] invalidAddrs = sfe.getInvalidAddresses();
+            Address[] validUnsentAddrs = sfe.getValidUnsentAddresses();
             if (invalidAddrs != null && invalidAddrs.length > 0) { 
                 StringBuilder msg = new StringBuilder("Invalid address").append(invalidAddrs.length > 1 ? "es: " : ": ");
                 if (invalidAddrs != null && invalidAddrs.length > 0) {
@@ -309,11 +307,11 @@ public class MailSender {
                     }
                 }
                 if (JMSession.getSmtpConfig().getSendPartial())
-                    throw MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE(msg.toString(), ssfe, invalidAddrs, validUnsentAddrs);
+                    throw MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE(msg.toString(), sfe, invalidAddrs, validUnsentAddrs);
                 else
-                    throw MailServiceException.SEND_ABORTED_ADDRESS_FAILURE(msg.toString(), ssfe, invalidAddrs, validUnsentAddrs);
+                    throw MailServiceException.SEND_ABORTED_ADDRESS_FAILURE(msg.toString(), sfe, invalidAddrs, validUnsentAddrs);
             } else {
-                throw MailServiceException.SEND_FAILURE("SMTP server reported: " + ssfe.getMessage(), ssfe, invalidAddrs, validUnsentAddrs);
+                throw MailServiceException.SEND_FAILURE("SMTP server reported: " + sfe.getMessage(), sfe, invalidAddrs, validUnsentAddrs);
             }
         } catch (IOException ioe) {
             ZimbraLog.smtp.warn("exception occured during send msg", ioe);
@@ -395,7 +393,8 @@ public class MailSender {
         mm.saveChanges();
     }
 
-    private void sendMessage(final MimeMessage mm, final boolean ignoreFailedAddresses, final RollbackData[] rollback) throws MessagingException {
+    private void sendMessage(final MimeMessage mm, final boolean ignoreFailedAddresses, final RollbackData[] rollback)
+    throws SafeMessagingException {
         // send the message via SMTP
         try {
             boolean retry = ignoreFailedAddresses;
@@ -425,11 +424,16 @@ public class MailSender {
                     }
                 } while(retry);
             }
+        } catch (SendFailedException e) {
+            for (RollbackData rdata : rollback)
+                if (rdata != null)
+                    rdata.rollback();
+            throw new SafeSendFailedException(e);
         } catch (MessagingException e) {
             for (RollbackData rdata : rollback)
                 if (rdata != null)
                     rdata.rollback();
-            throw e;
+            throw new SafeMessagingException(e);
         } catch (RuntimeException e) {
             for (RollbackData rdata : rollback)
                 if (rdata != null)
@@ -439,16 +443,70 @@ public class MailSender {
     }
 
     /**
-     * Class that temporarily fixes the OutOfMemoryError issue with
-     * MessagingException.toString() that occurs when sending an SMTP
-     * message with too many recipients
+     * Class that avoids JavaMail bug that throws OutOfMemoryError when sending
+     * a message with many recipients and SMTP server rejects many of them.
+     * The bug is in MessagingException.toString().
      */
-    public static class SafeSendFailedException extends SendFailedException {
+    public static class SafeMessagingException extends MessagingException {
+        private MessagingException mMex;
+
+        public SafeMessagingException(MessagingException mex) {
+            mMex = mex;
+            setStackTrace(mMex.getStackTrace());
+        }
+
+        public String getMessage() {
+            String msg = super.getMessage();
+            if (msg == null) {
+                Exception next = mMex.getNextException();
+                if (next != null)
+                    msg = next.getLocalizedMessage();
+            }
+            return msg;
+        }
+
+        public synchronized String toString() {
+            StringBuffer sb = new StringBuffer();
+            appendException(sb, this);
+            Exception n = mMex.getNextException();
+            int more = 0;
+            while (n != null) {
+                if (more == 0) {
+                    sb.append("; chained exception is:\n\t");
+                    appendException(sb, n);
+                }
+                if (n instanceof MessagingException) {
+                    MessagingException mex = (MessagingException) n;
+                    n = mex.getNextException();
+                    if (n != null)
+                        more++;
+                }
+            }
+            if (more > 0) {
+                sb.append("\n\t(").append(more).append(" more chained exception");
+                if (more > 1)
+                    sb.append('s');
+                sb.append(')');
+            }
+            return sb.toString();
+        }
+
+        private static StringBuffer appendException(StringBuffer sb, Exception e) {
+            // pretty much a copy of Throwable.toString()
+            sb.append(e.getClass().getName());
+            String message = e.getLocalizedMessage();
+            if (message != null)
+                sb.append(": ").append(message);
+            return sb;
+        }
+    }
+
+    public static class SafeSendFailedException extends SafeMessagingException {
         private SendFailedException mSfe;
 
         public SafeSendFailedException(SendFailedException sfe) {
+            super(sfe);
             mSfe = sfe;
-            setStackTrace(mSfe.getStackTrace());
         }
 
         public Address[] getInvalidAddresses() {
@@ -461,39 +519,6 @@ public class MailSender {
 
         public Address[] getValidUnsentAddresses() {
             return mSfe.getValidUnsentAddresses();
-        }
-
-        /**
-         * Override toString method to provide information on nested exceptions
-         * without causing OutOfMemoryError. (meaning, don't call toString()
-         * on the chained exceptions!)
-         */
-        public synchronized String toString() {
-            StringBuilder sb = new StringBuilder(getClass().getName());
-            String s = getMessage();
-            if (s != null)
-                sb.append(": ").append(s);
-            Exception n = mSfe.getNextException();
-            if (n == null)
-                return sb.toString();
-            int numChained = 0;
-            while (n != null) {
-                if (s == null) {
-                    s = n.getMessage();
-                    if (s != null)
-                        sb.append(": ").append(s);
-                } else {
-                    numChained++;
-                }
-                if (n instanceof MessagingException) {
-                    MessagingException mex = (MessagingException)n;
-                    n = mex.getNextException();
-                } else {
-                    n = null;
-                }
-            }
-            sb.append(" (").append(numChained).append(" more chained exceptions)");
-            return sb.toString();
         }
     }
 }
