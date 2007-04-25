@@ -35,6 +35,8 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.CharTokenizer;
@@ -336,13 +338,14 @@ public class ZimbraAnalyzer extends StandardAnalyzer
         public org.apache.lucene.analysis.Token nextInternal() throws IOException 
         {
             if (mCurToken == null) {
-                // Step 1: get a new token.  
+                // Step 1: get a new token, and insert the full token (unsplit) into
+                //         into the index
                 org.apache.lucene.analysis.Token newTok = input.next();
                 if (newTok == null) {
                     return null;
                 }
                 if (sPrintNewTokens == true) {
-                    System.out.println("\nnew token: "+newTok.termText());
+                    System.out.println("\nnew token: "+newTok.toString());
                 }
 
 
@@ -355,7 +358,7 @@ public class ZimbraAnalyzer extends StandardAnalyzer
                     return newTok;
                 }
 
-                // Now, insert the full string as a token...we might continue down below
+                // Now, Insert the full string as a token...we might continue down below
                 // (other parts) if there is more to add...
                 mNumSplits = 0;
                 mCurToken = new org.apache.lucene.analysis.Token(
@@ -364,9 +367,21 @@ public class ZimbraAnalyzer extends StandardAnalyzer
 
                 return newTok;
             }
+            
+            // once we get here, we know that the full text has been inserted 
+            // once as a single token, now we need to insert all the split tokens 
             return nextSplit();
         }
 
+        /**
+         * At this point, a token has been extraced from input, and the full token
+         * has been returned to the stream.  Now we want to return all the "split" 
+         * forms of the token.
+         * 
+         * On the first call to this API for this token, mNextSplitPos is set to the value
+         * of getNextSplit(full_token_text)....then this API is called repeatedly until
+         * mCurToken is cleared.
+         */
         public org.apache.lucene.analysis.Token nextSplit()
         {
             if (mNextSplitPos>0 && mNumSplits < mMaxSplits) {
@@ -440,14 +455,73 @@ public class ZimbraAnalyzer extends StandardAnalyzer
         AddressTokenFilter(TokenFilter in) {
             super(in);
             mIncludeSeparatorChar = true;
+            mMaxSplits = 4;
         }
         AddressTokenFilter(TokenStream in) {
             super(in);
             mIncludeSeparatorChar = true;
+            mMaxSplits = 4;
         }
 
         protected int getNextSplit(String s) {
             return s.indexOf("@");
+        }
+        
+        LinkedList<org.apache.lucene.analysis.Token> mSplitStrings = null;
+        
+        public org.apache.lucene.analysis.Token nextSplit()
+        {
+            if (mSplitStrings == null) {
+                mSplitStrings = new LinkedList<org.apache.lucene.analysis.Token>();
+                
+                String termText = mCurToken.termText();
+                // split on the "@"
+                String lhs = termText.substring(0, mNextSplitPos);
+                
+                // yes, we want to include the @!
+                String rhs = termText.substring(mNextSplitPos);
+                
+                // now, split the first part on the "."
+                String[] lhsParts = lhs.split("\\.");
+                if (lhsParts.length > 1) {
+                    int curOffset = mCurToken.startOffset();
+                    for (String s : lhsParts) {
+                        mSplitStrings.addLast(
+                            new org.apache.lucene.analysis.Token(
+                                s,
+                                curOffset,
+                                curOffset+s.length(),
+                                mCurToken.type()));
+                        
+                        curOffset+=s.length()+1;
+                    }
+                }
+                
+                mSplitStrings.addLast(
+                    new org.apache.lucene.analysis.Token(
+                        lhs,
+                        mCurToken.startOffset(),
+                        mCurToken.startOffset()+mNextSplitPos,
+                        mCurToken.type()));
+                
+                mSplitStrings.addLast(
+                    new org.apache.lucene.analysis.Token(
+                        rhs,
+                        mCurToken.startOffset()+mNextSplitPos,
+                        mCurToken.endOffset(),
+                        mCurToken.type()));
+            }
+            
+            // split another piece, save our state, and return...
+            mNumSplits++;
+            org.apache.lucene.analysis.Token toRet = mSplitStrings.removeFirst();
+            
+            if (mSplitStrings.isEmpty()) {
+                mSplitStrings = null;
+                mCurToken = null;
+            }
+            
+            return toRet;
         }
     }
 
@@ -474,8 +548,7 @@ public class ZimbraAnalyzer extends StandardAnalyzer
         }
 
         protected int getNextSplit(String s) {
-            // what about foo.bar.gub.doc?  FIXME find last "." in string..
-            return s.indexOf(".");
+            return s.lastIndexOf(".");
         }
     }
 
@@ -518,7 +591,6 @@ public class ZimbraAnalyzer extends StandardAnalyzer
      * image/jpeg --> "image/jpeg" and "image" 
      */
     public static class MimeTypeTokenFilter extends MultiTokenFilter
-    
     {
 
         MimeTypeTokenFilter(TokenFilter in) {
@@ -559,13 +631,33 @@ public class ZimbraAnalyzer extends StandardAnalyzer
                 return null;
             }
             return new org.apache.lucene.analysis.Token(mStringList[curPos-1], 
-                        curPos, curPos+1);
+                0, mStringList[curPos].length());
         }
     }
 
     
     public static void main(String[] args)
     {
+        MultiTokenFilter.sPrintNewTokens = true;
+        ZimbraAnalyzer la = new ZimbraAnalyzer();
+        String str = "tim@foo.com \"Test Address\" <test.address@mail.nnnn.com>, image/jpeg, text/plain, text/foo/bar, tim (tim@foo.com),bugzilla-daemon@eric.example.zimbra.com, zug zug [zug@gug.com], Foo.gub, \"My Mom\" <mmm@nnnn.com>,asd foo bar aaa/bbb ccc/ddd/eee fff@ggg.com hhh@iiii";
+        {
+            System.out.print("AddressTokenFilter:\n-------------------------");
+            StringReader reader = new StringReader(str);
+
+            TokenStream filter1 = la.tokenStream(LuceneFields.L_H_FROM, reader);
+//          int  i = 1;
+            Token tok = null;
+            do {
+                try {
+                    tok = filter1.next();
+                } catch (IOException e) {}
+                if (tok!=null) {
+                    System.out.println("    "+tok.toString());
+                }
+            } while(tok != null);
+        }
+
         {
             String src = "\"Tim Brown\" <first@domain.com>";
             String concat = ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_FROM, src);
@@ -579,27 +671,6 @@ public class ZimbraAnalyzer extends StandardAnalyzer
 
             System.out.println("SRC="+src+" OUT=\""+concat+"\"");
         }        
-
-
-        MultiTokenFilter.sPrintNewTokens = true;
-        ZimbraAnalyzer la = new ZimbraAnalyzer();
-        String str = "tim (tim@foo.com),image/jpeg, bugzilla-daemon@eric.example.zimbra.com, zug zug [zug@gug.com], Foo.gub, \"My Mom\" <mmm@nnnn.com>,asd foo bar aaa/bbb ccc/ddd/eee fff@ggg.com hhh@iiii";
-        {
-            System.out.print("AddressTokenFilter:\n-------------------------");
-            StringReader reader = new StringReader(str);
-
-            TokenStream filter1 = la.tokenStream(LuceneFields.L_H_FROM, reader);
-//          int  i = 1;
-            Token tok = null;
-            do {
-                try {
-                    tok = filter1.next();
-                } catch (IOException e) {}
-                if (tok!=null) {
-                    System.out.println("    "+tok.termText());
-                }
-            } while(tok != null);
-        }
 
 
         {
