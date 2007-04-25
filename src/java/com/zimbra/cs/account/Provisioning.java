@@ -1336,9 +1336,13 @@ public abstract class Provisioning {
     public abstract List<Zimlet> getObjectTypes() throws ServiceException;
     
     /**
-     * Creates the specified account. The A_zimbraId and A_uid attributes are automatically
+     * Creates the specified account. The A_uid attribute is automatically
      * created and should not be passed in.
      * 
+     * If A_zimbraId is passed in the attrs list, createAccount honors it if it is a valid uuid per RFC 4122. 
+     * It is caller's responsibility to ensure the uuid passed in is unique in the namespace.  
+     * createAccount does not check for uniqueness of the uuid passed in as an argument.
+     *      
      * For example:
      * <pre>
      * HashMap attrs  = new HashMap();
@@ -1358,7 +1362,7 @@ public abstract class Provisioning {
      * @throws ServiceException
      */
     public abstract Account createAccount(String emailAddress, String password, Map<String, Object> attrs) throws ServiceException;
-
+    
     /**
      * deletes the specified account, removing the account and all email aliases.
      * does not remove any mailbox associated with the account.
