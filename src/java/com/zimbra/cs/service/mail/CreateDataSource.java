@@ -32,6 +32,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
@@ -79,6 +80,7 @@ public class CreateDataSource extends MailDocumentHandler {
         }
         
         DataSource ds = prov.createDataSource(account, type, name, dsAttrs);
+        ZimbraLog.addDataSourceNameToContext(ds.getName());
         DataSourceManager.updateSchedule(account.getId(), ds.getId());
         
         // Assemble response

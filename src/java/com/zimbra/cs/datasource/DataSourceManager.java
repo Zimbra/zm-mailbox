@@ -60,10 +60,7 @@ public class DataSourceManager {
     private static Map<String, Map<String, ImportStatus>> sImportStatus =
         new HashMap<String, Map<String, ImportStatus>>();
 
-    // We don't need many threads, since currently the scheduled task just kicks off
-    // another thread that runs the actual import.
-    private static TaskScheduler<Void> sScheduledPolls =
-        new TaskScheduler<Void>("DataSource", 1, 3);
+    private static TaskScheduler<Void> sScheduledImports;
     
     static {
         registerImport(DataSource.Type.pop3, new Pop3Import());
@@ -74,6 +71,10 @@ public class DataSourceManager {
     throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
 
+        int numThreads = prov.getLocalServer().getIntAttr(Provisioning.A_zimbraDataSourceNumThreads, 10);
+        ZimbraLog.datasource.info("Starting %d threads for data source import.", numThreads);
+        sScheduledImports = new TaskScheduler<Void>("DataSource", numThreads, numThreads);
+        
         long earliest = 0;
         
         for (DataSourceTask task : DbDataSourceTask.getAllDataSourceTasks()) {
@@ -96,7 +97,7 @@ public class DataSourceManager {
             if (earliest == 0) {
                 earliest = task.getNextExecTime().getTime();
             }
-            sScheduledPolls.schedule(task.getDataSourceId(), task, task.getNextExecTime().getTime() - earliest);
+            sScheduledImports.schedule(task.getDataSourceId(), task, task.getNextExecTime().getTime() - earliest);
         }
     }
 
@@ -109,13 +110,13 @@ public class DataSourceManager {
      */
     public static String test(DataSource ds)
     throws ServiceException {
-        ZimbraLog.datasource.info("Testing " + ds);
+        ZimbraLog.datasource.info("Testing %s", ds);
         MailItemImport mii = sImports.get(ds.getType());
         String error = mii.test(ds);
         if (error == null) {
-            ZimbraLog.datasource.info("Test of " + ds + " succeeded");
+            ZimbraLog.datasource.info("Test succeeded");
         } else {
-            ZimbraLog.datasource.info("Test of " + ds + " failed: " + error);
+            ZimbraLog.datasource.info("Test failed: %s", error);
         }
         
         return error;
@@ -163,15 +164,15 @@ public class DataSourceManager {
     }
     
     /**
-     * Execute this data source's <code>MailItemImport</code> implementation
-     * to import data. 
+     * Executes the data source's <code>MailItemImport</code> implementation
+     * to import data in the current thread.
      */
-    public static void importData(Account account, DataSource ds) {
+    static void importDataInternal(Account account, DataSource ds) {
         ImportStatus importStatus = getImportStatus(account, ds);
         
         synchronized (importStatus) {
             if (importStatus.isRunning()) {
-                ZimbraLog.datasource.info(ds + ": attempted to start import while " +
+                ZimbraLog.datasource.info("Attempted to start import while " +
                     " an import process was already running.  Ignoring the second request.");
                 return;
             }
@@ -181,18 +182,62 @@ public class DataSourceManager {
             importStatus.mError = null;
         }
         
-        Thread thread = new Thread(new ImportDataThread(account, ds));
-        thread.setName("ImportDataThread");
-        thread.start();
+        
+        MailItemImport mii = sImports.get(ds.getType());
+        boolean success = false;
+        String error = null;
+
+        try {
+            ZimbraLog.datasource.info("Importing data.");
+            mii.importData(account, ds);
+            ZimbraLog.datasource.info("Import completed.");
+            success = true;
+        } catch (Throwable t) {
+            // Catch Throwable, so that we don't lose track of runtime exceptions 
+            if (t instanceof OutOfMemoryError) {
+                Zimbra.halt("DataSourceManager.importDataInternal()", t);
+            }
+            ZimbraLog.datasource.warn("Import failed", t);
+            error = t.getMessage();
+            if (error == null) {
+                error = t.toString();
+            }
+        } finally {
+            synchronized (importStatus) {
+                importStatus.mSuccess = success;
+                importStatus.mError = error;
+                importStatus.mIsRunning = false;
+            }
+        }
     }
 
     /**
-     * Updates scheduling data for this datasource both in memory and in the
+     * Schedules a <tt>DataSourceTask</tt> to import data from the given
+     * <tt>DataSource</tt> now.
+     */
+    public static void importData(Account account, DataSource ds)
+    throws ServiceException {
+        DataSourceTask task = (DataSourceTask) sScheduledImports.cancel(ds.getId(), true);
+        DbDataSourceTask.deleteDataSourceTask(ds.getId());
+        
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        Date now = new Date();
+        if (task == null) {
+            // Task isn't scheduled.  Create a new task.
+            task = new DataSourceTask(mbox.getId(), ds.getId(), account.getId(), null, now);
+        }
+        
+        sScheduledImports.schedule(ds.getId(), task, 0);
+        DbDataSourceTask.createDataSourceTask(mbox, ds.getId(), account.getId(), task.getLastExecTime(), now);
+    }
+    
+    /**
+     * Updates scheduling data for this <tt>DataSource</tt> both in memory and in the
      * <tt>data_source_task</tt> database table.
      */
     public static void updateSchedule(String accountId, String dataSourceId)
     throws ServiceException {
-        DataSourceTask task = (DataSourceTask) sScheduledPolls.cancel(dataSourceId, true);
+        DataSourceTask task = (DataSourceTask) sScheduledImports.cancel(dataSourceId, true);
         DbDataSourceTask.deleteDataSourceTask(dataSourceId);
 
         // Look up account and data source
@@ -216,7 +261,8 @@ public class DataSourceManager {
         
         if (ds.isScheduled()) {
             // Calculate delay based on last exec time and current time
-            long delay = ds.getPollingInterval();
+            long pollingInterval = ds.getPollingInterval();
+            long delay = pollingInterval;
             if (task != null && task.getLastExecTime() != null) {
                 // Take current time into consideration, in case the poll interval is
                 // changing or we got an explicit <ImportDataRequest> between two
@@ -225,6 +271,8 @@ public class DataSourceManager {
                 if (delay < 0) {
                     delay = 0;
                 }
+                ZimbraLog.datasource.debug("Last exec=%s, polling interval=%d, delay=%dms",
+                    task.getLastExecTime(), pollingInterval, delay);
             }
             
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
@@ -234,70 +282,10 @@ public class DataSourceManager {
                 // Create a new task if this is the first time
                 task = new DataSourceTask(mbox.getId(), ds.getId(), account.getId(), null, scheduledTime);
             }
-            ZimbraLog.datasource.debug("Scheduling automated poll for %s at %s",
-                ds, scheduledTime);
-            sScheduledPolls.schedule(ds.getId(), task, delay);
-            DbDataSourceTask.createDataSourceTask(mbox, ds.getId(), account.getId(), task.getLastExecTime(), scheduledTime);
-        }
-    }
-    
-    private static class ImportDataThread implements Runnable {
-        Account mAccount;
-        DataSource mDataSource;
-        
-        public ImportDataThread(Account account, DataSource ds) {
-            if (account == null) {
-                throw new IllegalArgumentException("account cannot be null");
-            }
-            if (ds == null) {
-                throw new IllegalArgumentException("DataSource cannot be null");
-            }
-            mAccount = account;
-            mDataSource = ds;
-        }
-        
-        public void run() {
-            ZimbraLog.addAccountNameToContext(mAccount.getName());
-            ZimbraLog.addDataSourceNameToContext(mDataSource.getName());
-            try {
-                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
-                ZimbraLog.addMboxToContext(mbox.getId());
-            } catch (ServiceException e) {
-                ZimbraLog.datasource.warn("Unable to look up mailbox", e);
-            }
+            ZimbraLog.datasource.debug("Scheduling automated poll at %s", scheduledTime);
             
-            MailItemImport mii = sImports.get(mDataSource.getType());
-            boolean success = false;
-            String error = null;
-
-            try {
-                ZimbraLog.datasource.info("Importing data from %s", mDataSource);
-                mii.importData(mAccount, mDataSource);
-                ZimbraLog.datasource.info("Import completed");
-                success = true;
-            } catch (Throwable t) {
-                // Catch Throwable, so that we don't lose track of runtime exceptions 
-                if (t instanceof OutOfMemoryError) {
-                    Zimbra.halt("DataSourceManager.run()", t);
-                }
-                ZimbraLog.datasource.warn("Import from %s failed", mDataSource, t);
-                error = t.getMessage();
-                if (error == null) {
-                    error = t.toString();
-                }
-            } finally {
-                ImportStatus importStatus = getImportStatus(mAccount, mDataSource);
-                synchronized (importStatus) {
-                    importStatus.mSuccess = success;
-                    importStatus.mError = error;
-                    importStatus.mIsRunning = false;
-                }
-                try {
-                    updateSchedule(mAccount.getId(), mDataSource.getId());
-                } catch (ServiceException e) {
-                    ZimbraLog.datasource.warn("Unable to reschedule DataSourceTask", e);
-                }
-            }
+            sScheduledImports.schedule(ds.getId(), task, delay);
+            DbDataSourceTask.createDataSourceTask(mbox, ds.getId(), account.getId(), task.getLastExecTime(), scheduledTime);
         }
     }
 }

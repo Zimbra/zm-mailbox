@@ -27,6 +27,7 @@ package com.zimbra.cs.datasource;
 import java.util.Date;
 import java.util.concurrent.Callable;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -34,6 +35,8 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 
 public class DataSourceTask
 implements Callable<Void> {
@@ -72,6 +75,7 @@ implements Callable<Void> {
         ZimbraLog.datasource.debug("Executing scheduled import for Account %s, DataSource %s",
             mAccountId, mDataSourceId);
         
+        // Look up account and data source
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(AccountBy.id, mAccountId);
         if (account == null) {
@@ -85,8 +89,26 @@ implements Callable<Void> {
             DataSourceManager.updateSchedule(mAccountId, mDataSourceId);
             return null;
         }
-        DataSourceManager.importData(account, ds);
+        
+        // Initialize logging context
+        ZimbraLog.addAccountNameToContext(account.getName());
+        ZimbraLog.addDataSourceNameToContext(ds.getName());
+        try {
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            ZimbraLog.addMboxToContext(mbox.getId());
+        } catch (ServiceException e) {
+            ZimbraLog.datasource.warn("Unable to look up mailbox", e);
+        }
+
+        // Do the work and reschedule if necessary
+        DataSourceManager.importDataInternal(account, ds);
         mLastExecTime = new Date();
+        try {
+            DataSourceManager.updateSchedule(account.getId(), ds.getId());
+        } catch (ServiceException e) {
+            ZimbraLog.datasource.warn("Unable to reschedule DataSourceTask", e);
+        }
+        
         return null;
     }
 }

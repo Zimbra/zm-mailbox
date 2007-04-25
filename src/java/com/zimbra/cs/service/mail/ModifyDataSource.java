@@ -60,6 +60,9 @@ public class ModifyDataSource extends MailDocumentHandler {
         
         String id = eDataSource.getAttribute(MailConstants.A_ID);
         DataSource ds = prov.get(account, DataSourceBy.id, id);
+        if (ds == null) {
+            throw ServiceException.INVALID_REQUEST("Unable to find data source with id=" + id, null);
+        }
 
         Map<String, Object> dsAttrs = new HashMap<String, Object>();
         String value = eDataSource.getAttribute(MailConstants.A_NAME, null);

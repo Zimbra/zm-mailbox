@@ -39,6 +39,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.common.soap.*;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class ModifyDataSource extends AdminDocumentHandler {
@@ -81,6 +82,11 @@ public class ModifyDataSource extends AdminDocumentHandler {
         }
         
         String dsId = dsEl.getAttribute(AccountConstants.A_ID);
+        DataSource ds = prov.get(account, DataSourceBy.id, dsId);
+        if (ds == null) {
+            throw ServiceException.INVALID_REQUEST("Cannot find data source with id=" + dsId, null);
+        }
+        ZimbraLog.addDataSourceNameToContext(ds.getName());
 
         // remove anything that doesn't start with zimbraDataSource. ldap will also do additional checks
         List<String> toRemove = new ArrayList<String>();
