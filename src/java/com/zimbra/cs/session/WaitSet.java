@@ -8,10 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -62,7 +59,7 @@ public class WaitSet implements MailboxManager.Listener {
      * or more of the waiting sessions has new data.
      */
     public static interface WaitSetCallback {
-        void dataReady(WaitSet ws, int seqNo, boolean cancelled, String[] signalledAccounts);
+        void dataReady(WaitSet ws, long seqNo, boolean cancelled, String[] signalledAccounts);
     }
 
     /**
@@ -89,74 +86,38 @@ public class WaitSet implements MailboxManager.Listener {
         public final Type error;
     }
 
-    /**
-     * @return the mCb
-     */
-    public WaitSetCallback getCb() {
+    public WaitSetCallback getCb() { 
         return mCb;
     }
 
-    /**
-     * @return the mIncludeAllAccounts
-     */
     public boolean isIncludeAllAccounts() {
         return mIncludeAllAccounts;
     }
 
-    /**
-     * @return the mLastAccessedTime
-     */
     public long getLastAccessedTime() {
         return mLastAccessedTime;
     }
 
-    /**
-     * @return the mSessions
-     */
-    public HashMap<String, WaitSetAccount> getSessions() {
+    HashMap<String, WaitSetAccount> getSessions() {
         return mSessions;
     }
 
-    /**
-     * @param cb the mCb to set
-     */
-    public void setCb(WaitSetCallback cb) {
+    void setCb(WaitSetCallback cb) {
         mCb = cb;
     }
 
-    /**
-     * @param includeAllAccounts the mIncludeAllAccounts to set
-     */
-    public void setIncludeAllAccounts(boolean includeAllAccounts) {
+    void setIncludeAllAccounts(boolean includeAllAccounts) {
         mIncludeAllAccounts = includeAllAccounts;
     }
-
-    /**
-     * @param lastAccessedTime the mLastAccessedTime to set
-     */
-    public void setLastAccessedTime(long lastAccessedTime) {
+    
+    void setLastAccessedTime(long lastAccessedTime) {
         mLastAccessedTime = lastAccessedTime;
     }
 
-    /**
-     * @param sessions the mSessions to set
-     */
-    public void setSessions(HashMap<String, WaitSetAccount> sessions) {
+    void setSessions(HashMap<String, WaitSetAccount> sessions) {
         mSessions = sessions;
     }
 
-    /**
-     * Constructor 
-     * 
-     * @param id
-     * @param defaultInterest
-     * @throws ServiceException
-     */
-    WaitSet(String id, int defaultInterest) {
-        mWaitSetId = id;
-        mDefaultInterest = defaultInterest;
-    }
-    
     /**
      * Primary API
      * 
@@ -185,13 +146,13 @@ public class WaitSet implements MailboxManager.Listener {
      * @return
      * @throws ServiceException
      */
-    public synchronized List<WaitSetError> doWait(WaitSetCallback cb, int lastKnownSeqNo, boolean block,   
+    public synchronized List<WaitSetError> doWait(WaitSetCallback cb, long lastKnownSeqNo, boolean block,   
         List<WaitSetAccount> addAccounts, List<WaitSetAccount> updateAccounts, 
         List<String> removeAccounts) throws ServiceException {
         
         cancelExistingCB();
         
-        if (lastKnownSeqNo >= mCurrentSeqNo) {
+        if (lastKnownSeqNo > mCurrentSeqNo) {
             throw ServiceException.INVALID_REQUEST("Sequence number too high: current is "+mCurrentSeqNo+
                 " client claimed last-known was "+lastKnownSeqNo, null);
         }
@@ -233,7 +194,6 @@ public class WaitSet implements MailboxManager.Listener {
     public synchronized void mailboxCreated(Mailbox mbox) {
         this.mailboxLoaded(mbox);
     }
-    
     
     /* @see com.zimbra.cs.mailbox.MailboxManager.Listener#mailboxLoaded(com.zimbra.cs.mailbox.Mailbox) */
     public synchronized void mailboxLoaded(Mailbox mbox) {
@@ -365,7 +325,7 @@ public class WaitSet implements MailboxManager.Listener {
     private synchronized final void trySendData() {
         if (mCb == null)
             return;
-        boolean cbIsCurrent = (mCbSeqNo == mCurrentSeqNo-1);
+        boolean cbIsCurrent = (mCbSeqNo == mCurrentSeqNo);
         
         if (cbIsCurrent)
             mSentSignalledSessions.clear();
@@ -398,20 +358,19 @@ public class WaitSet implements MailboxManager.Listener {
                 mCurrentSignalledSessions.clear();
             }
             // at this point, mSentSignalled is everything we're supposed to send...lets
-            // make an array of the account ID's and signal them up!
+            // make an array of the account IDs and signal them up!
             assert(mSentSignalledSessions.size() > 0);
             String[] toRet = new String[mSentSignalledSessions.size()];
             int i = 0;
             for (String accountId : mSentSignalledSessions) {
                 toRet[i] = accountId;
             }
-            mCb.dataReady(this, mCurrentSeqNo, false, toRet);
             mCurrentSeqNo++;
+            mCb.dataReady(this, mCurrentSeqNo, false, toRet);
             mCb = null;
             mLastAccessedTime = System.currentTimeMillis();
         }
     }
-    
     
     private synchronized List<WaitSetError> updateAccounts(List<WaitSetAccount> wsas) {
         List<WaitSetError> errors = new ArrayList<WaitSetError>();
@@ -455,15 +414,48 @@ public class WaitSet implements MailboxManager.Listener {
         }
     }
     
+    /**
+     * Constructor 
+     * 
+     * @param id
+     * @param defaultInterest
+     * @throws ServiceException
+     */
+    WaitSet(String id, int defaultInterest) {
+        mWaitSetId = id;
+        mDefaultInterest = defaultInterest;
+        mCurrentSeqNo = 1;
+    }
+    
+    /**
+     * Constructor 
+     * 
+     * @param id
+     * @param defaultInterest
+     * @throws ServiceException
+     */
+    WaitSet(String id, int defaultInterest, boolean allAccounts, long startingSeqNo) {
+        mWaitSetId = id;
+        if (allAccounts != true)
+            throw new IllegalArgumentException("AllAccounts must be true for this constructor");
+        if (!id.startsWith(WaitSetMgr.ALL_ACCOUNTS_ID_PREFIX))
+            throw new IllegalArgumentException("Invalid ID for all accounts WaitSet");
+            
+        mDefaultInterest = defaultInterest;
+        mCurrentSeqNo = startingSeqNo;
+    }
+    
+    
     private WaitSetCallback mCb = null;
-    private int mCbSeqNo = 0;
-    private int mCurrentSeqNo = 1;
+    private long mCbSeqNo = 0; // seqno passed in by the current waiting callback
+    private long mCurrentSeqNo; // current sequence number 
+    
     /** this is the signalled set data that is new (has never been sent) */
     private HashSet<String /*accountId*/> mCurrentSignalledSessions = new HashSet<String>();
+    
     private final int mDefaultInterest;
     private boolean mIncludeAllAccounts = false;
     private long mLastAccessedTime = -1;
-    /** these are the accounts we *want* to listen to, but couldn't b/c they're not loaded
 
     /** this is the signalled set data that we've already sent, it just hasn't been acked yet */
     private HashSet<String /*accountId*/> mSentSignalledSessions = new HashSet<String>();

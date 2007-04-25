@@ -116,8 +116,15 @@ public class MailboxManager {
     
     private CopyOnWriteArrayList<Listener> mListeners = new CopyOnWriteArrayList<Listener>();
     
-    public void addListener(Listener listener)      { mListeners.add(listener); }
-    public void removeListener(Listener listener)   { mListeners.remove(listener); }
+    public void addListener(Listener listener) {
+        assert(!mListeners.contains(listener));
+        mListeners.add(listener); 
+    }
+    
+    public void removeListener(Listener listener) {
+        assert(mListeners.contains(listener));
+        mListeners.remove(listener); 
+    }
 
     private void notifyMailboxAvailable(Mailbox mbox) {
         for (Listener listener : mListeners) 

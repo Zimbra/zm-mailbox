@@ -32,6 +32,7 @@ import java.util.TimerTask;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.session.WaitSet.WaitSetAccount;
@@ -49,6 +50,37 @@ public class WaitSetMgr {
     private static final int WAITSET_SWEEP_DELAY = 1000 * 60; // once every minute
     
     private static final int WAITSET_TIMEOUT = 1000 * 60 * 20; // 20min
+
+    public static final String ALL_ACCOUNTS_ID_PREFIX = "All"; 
+    
+    /**
+     * WaitSets that are targeted at "all accounts" can be used across server restarts 
+     * (they are simply re-created)
+     * 
+     * @param id
+     * @param defaultInterests
+     * @return
+     * @throws ServiceException
+     */
+    public static WaitSet lookupOrCreateForAllAccts(String id, int defaultInterests, long lastKnownSeqNo) throws ServiceException {
+        synchronized(sWaitSets) {
+            if (!id.startsWith(ALL_ACCOUNTS_ID_PREFIX))
+                throw ServiceException.INVALID_REQUEST("Called WaitSetMgr.lookupOrCreate but wasn't an 'All-' waitset ID", null);
+            
+            WaitSet toRet = lookup(id);
+            if (toRet == null) {
+                WaitSet ws = new WaitSet(id, defaultInterests, true, lastKnownSeqNo);
+                ws.setIncludeAllAccounts(true);
+                ws.setLastAccessedTime(System.currentTimeMillis());
+                sWaitSets.put(id, ws);
+                MailboxManager.getInstance().addListener(ws);
+                ws.addAllAccounts();
+                
+            }
+            assert(toRet.isIncludeAllAccounts());
+            return toRet;
+        }
+    }
     
     /**
      * Create a new WaitSet, optionally specifying an initial set of accounts
@@ -65,8 +97,13 @@ public class WaitSetMgr {
      */
     public static Pair<String, List<WaitSetError>> create(int defaultInterest, boolean allAccts, List<WaitSetAccount> add) throws ServiceException {
         synchronized(sWaitSets) {
-            String id = "WaitSet"+sWaitSetNumber;
-            sWaitSetNumber++;
+            String id;
+            if (allAccts) {
+                id = "WaitSet"+sWaitSetNumber;
+                sWaitSetNumber++;
+            } else {
+                id = ALL_ACCOUNTS_ID_PREFIX+LdapUtil.generateUUID();
+            }
             WaitSet ws = new WaitSet(id, defaultInterest);
             if (allAccts)
                 ws.setIncludeAllAccounts(true);

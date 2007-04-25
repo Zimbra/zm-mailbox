@@ -85,54 +85,55 @@ public class TestWaitSet extends TestCase {
             errors = result.getSecond();
         }
         
-        int curSeqNo = 0;
-        assertEquals(0, errors.size());
-
-        { // waitset shouldn't signal until message added to a mailbox
-            WaitMultipleAccounts.Callback cb = new WaitMultipleAccounts.Callback();
-            
-            // wait shouldn't find anything yet
-            WaitSet ws = WaitSetMgr.lookup(waitSetId);
-            errors = ws.doWait(cb, 0, true, null, null, null);
+        try {
+            long curSeqNo = 0;
             assertEquals(0, errors.size());
-            synchronized(cb) { assertEquals(false, cb.completed); }
             
-            // inserting a message to existing account should trigger waitset
-            String sender = TestUtil.getAddress(USER_1_NAME);
-            String recipient = TestUtil.getAddress(USER_1_NAME);
-            String subject = NAME_PREFIX + " testWaitSet 1";
-            TestUtil.insertMessageLmtp(1, subject, recipient, sender);
-            try { Thread.sleep(500); } catch (Exception e) {}
-            synchronized(cb) { assertEquals(true, cb.completed); }
-            curSeqNo = cb.seqNo;
-            assertTrue(curSeqNo > 0);
-        }
-        
-        { // waitset should pick up added user
-            WaitMultipleAccounts.Callback cb = new WaitMultipleAccounts.Callback();
+            { // waitset shouldn't signal until message added to a mailbox
+                WaitMultipleAccounts.Callback cb = new WaitMultipleAccounts.Callback();
+                
+                // wait shouldn't find anything yet
+                WaitSet ws = WaitSetMgr.lookup(waitSetId);
+                errors = ws.doWait(cb, 0, true, null, null, null);
+                assertEquals(0, errors.size());
+                synchronized(cb) { assertEquals(false, cb.completed); }
+                
+                // inserting a message to existing account should trigger waitset
+                String sender = TestUtil.getAddress(USER_1_NAME);
+                String recipient = TestUtil.getAddress(USER_1_NAME);
+                String subject = NAME_PREFIX + " testWaitSet 1";
+                TestUtil.insertMessageLmtp(1, subject, recipient, sender);
+                try { Thread.sleep(500); } catch (Exception e) {}
+                synchronized(cb) { assertEquals(true, cb.completed); }
+                curSeqNo = cb.seqNo;
+                assertTrue(curSeqNo > 0);
+            }
             
-            WaitSet ws = WaitSetMgr.lookup(waitSetId);
-            
-            // create a new account, shouldn't trigger waitset
-            Account user2Acct = TestUtil.getAccount(USER_2_NAME);
-            List<WaitSetAccount> add2 = new ArrayList<WaitSetAccount>();
-            add2.add(new WaitSetAccount(user2Acct.getId(), null, TypeEnum.m.getMask()));
-            errors = ws.doWait(cb, curSeqNo, true, add2, null, null);
-            // wait shouldn't find anything yet
-            assertEquals(0, errors.size());
-            synchronized(cb) { assertEquals(false, cb.completed); }
-            
-            // adding a message to the new account SHOULD trigger waitset
-            String sender = TestUtil.getAddress(WS_USER_NAME);
-            String recipient = TestUtil.getAddress(USER_2_NAME);
-            String subject = NAME_PREFIX + " testWaitSet 3";
-            TestUtil.insertMessageLmtp(1, subject, recipient, sender);
-            try { Thread.sleep(500); } catch (Exception e) {}
-            synchronized(cb) { assertEquals(true, cb.completed); }
-            assertTrue(curSeqNo < cb.seqNo);
-            curSeqNo = cb.seqNo;
-        }
-        {
+            { // waitset should pick up added user
+                WaitMultipleAccounts.Callback cb = new WaitMultipleAccounts.Callback();
+                
+                WaitSet ws = WaitSetMgr.lookup(waitSetId);
+                
+                // create a new account, shouldn't trigger waitset
+                Account user2Acct = TestUtil.getAccount(USER_2_NAME);
+                List<WaitSetAccount> add2 = new ArrayList<WaitSetAccount>();
+                add2.add(new WaitSetAccount(user2Acct.getId(), null, TypeEnum.m.getMask()));
+                errors = ws.doWait(cb, curSeqNo, true, add2, null, null);
+                // wait shouldn't find anything yet
+                assertEquals(0, errors.size());
+                synchronized(cb) { assertEquals(false, cb.completed); }
+                
+                // adding a message to the new account SHOULD trigger waitset
+                String sender = TestUtil.getAddress(WS_USER_NAME);
+                String recipient = TestUtil.getAddress(USER_2_NAME);
+                String subject = NAME_PREFIX + " testWaitSet 3";
+                TestUtil.insertMessageLmtp(1, subject, recipient, sender);
+                try { Thread.sleep(500); } catch (Exception e) {}
+                synchronized(cb) { assertEquals(true, cb.completed); }
+                assertTrue(curSeqNo < cb.seqNo);
+                curSeqNo = cb.seqNo;
+            }
+        } finally {
             WaitSetMgr.destroy(waitSetId);
         }
     }
@@ -142,65 +143,66 @@ public class TestWaitSet extends TestCase {
             WaitSetMgr.create(TypeEnum.all.getMask(), true, null);
         
         String waitSetId = result.getFirst();
-        int curSeqNo = 0;
+        long curSeqNo = 0;
         List<WaitSetError> errors = result.getSecond();
         assertEquals(0, errors.size());
         
+        try {
 
-        { // waitset shouldn't signal until message added to a mailbox
-            WaitMultipleAccounts.Callback cb = new WaitMultipleAccounts.Callback();
-            
-            // wait shouldn't find anything yet
-            WaitSet ws = WaitSetMgr.lookup(waitSetId);
-            errors = ws.doWait(cb, 0, true, null, null, null);
-            assertEquals(0, errors.size());
-            synchronized(cb) { assertEquals(false, cb.completed); }
-            
-            // inserting a message to existing account should trigger waitset
-            String sender = TestUtil.getAddress(USER_1_NAME);
-            String recipient = TestUtil.getAddress(USER_1_NAME);
-            String subject = NAME_PREFIX + " testWaitSet 1";
-            TestUtil.insertMessageLmtp(1, subject, recipient, sender);
-            try { Thread.sleep(500); } catch (Exception e) {}
-            synchronized(cb) { assertEquals(true, cb.completed); }
-            curSeqNo = cb.seqNo;
-            assertTrue(curSeqNo > 0);
-        }
-        
-        { // waitset should remain signalled until sequence number is increased
-            WaitMultipleAccounts.Callback cb = new WaitMultipleAccounts.Callback();
-            WaitSet ws = WaitSetMgr.lookup(waitSetId);
-            errors = ws.doWait(cb, 0, true, null, null, null);
-            try { Thread.sleep(500); } catch (Exception e) {}
-            assertEquals(0, errors.size());
-            synchronized(cb) { assertEquals(true, cb.completed); }
-            curSeqNo = cb.seqNo;
-        }
-        
-        { // part 2: waitset for "all" should pick up new account added  
-            WaitMultipleAccounts.Callback cb = new WaitMultipleAccounts.Callback();
-            
-            // wait shouldn't find anything yet
-            WaitSet ws = WaitSetMgr.lookup(waitSetId);
-            errors = ws.doWait(cb, curSeqNo, true, null, null, null);
-            assertEquals(0, errors.size());
-            synchronized(cb) { assertEquals(false, cb.completed); }
-            
-            // create a new account, shouldn't trigger waitset
-            TestUtil.createAccount(WS_USER_NAME);
-            synchronized(cb) { assertEquals(false, cb.completed); }
-            
-            // adding a message to the new account SHOULD trigger waitset
-            String sender = TestUtil.getAddress(WS_USER_NAME);
-            String recipient = TestUtil.getAddress(WS_USER_NAME);
-            String subject = NAME_PREFIX + " testWaitSet 2";
-            TestUtil.insertMessageLmtp(1, subject, recipient, sender);
-            try { Thread.sleep(500); } catch (Exception e) {}
-            synchronized(cb) { assertEquals(true, cb.completed); }
-            assertTrue(curSeqNo < cb.seqNo);
-            curSeqNo = cb.seqNo;
-        }
-        {
+            { // waitset shouldn't signal until message added to a mailbox
+                WaitMultipleAccounts.Callback cb = new WaitMultipleAccounts.Callback();
+
+                // wait shouldn't find anything yet
+                WaitSet ws = WaitSetMgr.lookup(waitSetId);
+                errors = ws.doWait(cb, 0, true, null, null, null);
+                assertEquals(0, errors.size());
+                synchronized(cb) { assertEquals(false, cb.completed); }
+
+                // inserting a message to existing account should trigger waitset
+                String sender = TestUtil.getAddress(USER_1_NAME);
+                String recipient = TestUtil.getAddress(USER_1_NAME);
+                String subject = NAME_PREFIX + " testWaitSet 1";
+                TestUtil.insertMessageLmtp(1, subject, recipient, sender);
+                try { Thread.sleep(500); } catch (Exception e) {}
+                synchronized(cb) { assertEquals(true, cb.completed); }
+                curSeqNo = cb.seqNo;
+                assertTrue(curSeqNo > 0);
+            }
+
+            { // waitset should remain signalled until sequence number is increased
+                WaitMultipleAccounts.Callback cb = new WaitMultipleAccounts.Callback();
+                WaitSet ws = WaitSetMgr.lookup(waitSetId);
+                errors = ws.doWait(cb, 0, true, null, null, null);
+                try { Thread.sleep(500); } catch (Exception e) {}
+                assertEquals(0, errors.size());
+                synchronized(cb) { assertEquals(true, cb.completed); }
+                curSeqNo = cb.seqNo;
+            }
+
+            { // part 2: waitset for "all" should pick up new account added  
+                WaitMultipleAccounts.Callback cb = new WaitMultipleAccounts.Callback();
+
+                // wait shouldn't find anything yet
+                WaitSet ws = WaitSetMgr.lookup(waitSetId);
+                errors = ws.doWait(cb, curSeqNo, true, null, null, null);
+                assertEquals(0, errors.size());
+                synchronized(cb) { assertEquals(false, cb.completed); }
+
+                // create a new account, shouldn't trigger waitset
+                TestUtil.createAccount(WS_USER_NAME);
+                synchronized(cb) { assertEquals(false, cb.completed); }
+
+                // adding a message to the new account SHOULD trigger waitset
+                String sender = TestUtil.getAddress(WS_USER_NAME);
+                String recipient = TestUtil.getAddress(WS_USER_NAME);
+                String subject = NAME_PREFIX + " testWaitSet 2";
+                TestUtil.insertMessageLmtp(1, subject, recipient, sender);
+                try { Thread.sleep(500); } catch (Exception e) {}
+                synchronized(cb) { assertEquals(true, cb.completed); }
+                assertTrue(curSeqNo < cb.seqNo);
+                curSeqNo = cb.seqNo;
+            }
+        } finally {
             WaitSetMgr.destroy(waitSetId);
         }
     }

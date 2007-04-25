@@ -89,11 +89,21 @@ public class WaitMultipleAccounts extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         String waitSetId = request.getAttribute(AdminConstants.A_WAITSET_ID);
-        int lastKnownSeqNo = (int)request.getAttributeLong(AdminConstants.A_SEQ);
+        long lastKnownSeqNo = request.getAttributeLong(AdminConstants.A_SEQ);
         boolean block = request.getAttributeBool(AdminConstants.A_BLOCK, false);
         
-        WaitSet ws = WaitSetMgr.lookup(waitSetId);
-
+        String defInterestStr = null;
+        WaitSet ws = null;
+        
+        if (waitSetId.startsWith(WaitSetMgr.ALL_ACCOUNTS_ID_PREFIX)) {
+            // default interest types required for "All" waitsets
+            defInterestStr = request.getAttribute(AdminConstants.A_DEFTYPES);
+            int defaultInterests = WaitMultipleAccounts.parseInterestStr(defInterestStr, 0);
+            ws = WaitSetMgr.lookupOrCreateForAllAccts(waitSetId, defaultInterests, lastKnownSeqNo);
+        } else {
+            ws = WaitSetMgr.lookup(waitSetId);
+        }
+        
         if (ws == null) {
             throw AdminServiceException.NO_SUCH_WAITSET(waitSetId);
         }
@@ -106,14 +116,27 @@ public class WaitMultipleAccounts extends AdminDocumentHandler {
         
         Callback cb = new Callback();
 
-        List<WaitSetError> errors  = null;        
+        List<WaitSetError> errors  = null;
+
+        // Force the client to wait briefly before processing -- this will stop 'bad' clients from polling 
+        // the server in a very fast loop (they should be using the 'block' mode)
+        try { Thread.sleep(1000); } catch (InterruptedException ex) {} 
+        
         synchronized(cb) {
             errors = ws.doWait(cb, lastKnownSeqNo, block, add, update, remove);
             
             if (block && !cb.completed) { // don't wait if it completed right away
-                try {
+                
+                // No data after initial check...wait a few extra seconds
+                // before going into the notification wait...basically we're just 
+                // trying to let the server coalesce notification data a little 
+                // bit.
+                try { Thread.sleep(3000); } catch (InterruptedException ex) {} 
+
+                try { 
                     cb.wait(1000 * 60 * 5); // timeout after 5 minutes
-                } catch (InterruptedException ex) {} 
+                } catch (InterruptedException ex) {}
+                
             }
         }
         
@@ -166,7 +189,7 @@ public class WaitMultipleAccounts extends AdminDocumentHandler {
     }
     
     public static class Callback implements WaitSet.WaitSetCallback {
-        public void dataReady(WaitSet ws, int seqNo, boolean canceled, String[] signalledAccounts) {
+        public void dataReady(WaitSet ws, long seqNo, boolean canceled, String[] signalledAccounts) {
             synchronized(this) {
                 ZimbraLog.session.info("Called WaitMultiplAccounts WaitSetCallback.dataReady()!");
                 this.waitSet = ws;
@@ -182,7 +205,7 @@ public class WaitMultipleAccounts extends AdminDocumentHandler {
         public boolean canceled;
         public String[] signalledAccounts;
         public WaitSet waitSet;
-        public int seqNo;
+        public long seqNo;
     }
     
     public static enum TypeEnum {
