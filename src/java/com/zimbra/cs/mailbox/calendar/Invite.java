@@ -949,6 +949,15 @@ public class Invite {
     }
     public boolean hasAlarm() { return ((mFlags & APPT_FLAG_HASALARM)!=0); }
     
+    public boolean hasAttachment() { return ((mFlags & APPT_FLAG_HAS_ATTACHMENT)!=0); }
+    public void setHasAttachment(boolean hasAttachment) {
+        if (hasAttachment) {
+            mFlags |= APPT_FLAG_HAS_ATTACHMENT;
+        } else {
+            mFlags &= ~APPT_FLAG_HAS_ATTACHMENT;
+        }
+    }
+    
     public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("{ ");
@@ -1003,6 +1012,7 @@ public class Invite {
     public static final int APPT_FLAG_HASALARM        = 0x10;
     public static final int APPT_FLAG_ISRECUR         = 0x20;
     public static final int APPT_FLAG_NEEDS_REPLY     = 0x40;  // obsolete
+    public static final int APPT_FLAG_HAS_ATTACHMENT  = 0x80;  // obsolete
     
     protected CalendarItem mCalItem = null;
     

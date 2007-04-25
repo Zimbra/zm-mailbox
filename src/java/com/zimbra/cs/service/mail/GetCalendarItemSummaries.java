@@ -150,7 +150,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                         if (calItemElem == null) {
                             calItemElem = lc.createElement(isAppointment ? MailConstants.E_APPOINTMENT : MailConstants.E_TASK);
 
-                            if (!newFormat) {
+//                            if (!newFormat) {
                                 calItemElem.addAttribute("x_uid", calItem.getUid());
                                 
                                     // flags and tags
@@ -160,7 +160,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                                 String tags = calItem.getTagString();
                                 if (tags != null && !tags.equals(""))
                                     calItemElem.addAttribute(MailConstants.A_TAGS, tags);
-                            }
+//                            }
 
                             // Organizer
                             if (inv.hasOrganizer()) {
@@ -169,8 +169,8 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                                 String str = org.getAddress();
                                 orgElt.addAttribute(MailConstants.A_ADDRESS, str);
 //                                orgElt.addAttribute(MailConstants.A_URL, str);  // for backward compatibility
-//                                if (org.hasCn())
-//                                    orgElt.addAttribute(MailConstants.A_DISPLAY, org.getCn());
+                                if (org.hasCn())
+                                    orgElt.addAttribute(MailConstants.A_DISPLAY, org.getCn());
                                 if (org.hasSentBy())
                                     orgElt.addAttribute(MailConstants.A_CAL_SENTBY, org.getSentBy());
 //                                if (org.hasDir())
@@ -293,7 +293,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                 if (calItemElem == null) {
                     calItemElem = lc.createElement(isAppointment ? MailConstants.E_APPOINTMENT : MailConstants.E_TASK);
                     
-                    if (!newFormat) {
+//                    if (!newFormat) {
                         calItemElem.addAttribute("x_uid", calItem.getUid());
                         
                         // flags and tags
@@ -303,23 +303,23 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                         String tags = calItem.getTagString();
                         if (tags != null && !tags.equals(""))
                             calItemElem.addAttribute(MailConstants.A_TAGS, tags);
+//                    }
 
-                        // Organizer
-                        if (defaultInvite.hasOrganizer()) {
-                            ZOrganizer org = defaultInvite.getOrganizer();
-                            Element orgElt = calItemElem.addUniqueElement(MailConstants.E_CAL_ORGANIZER);
-                            String str = org.getAddress();
-                            orgElt.addAttribute(MailConstants.A_ADDRESS, str);
-//                            orgElt.addAttribute(MailConstants.A_URL, str);  // for backward compatibility
-//                            if (org.hasCn())
-//                                orgElt.addAttribute(MailConstants.A_DISPLAY, org.getCn());
-                            if (org.hasSentBy())
-                                orgElt.addAttribute(MailConstants.A_CAL_SENTBY, org.getSentBy());
-//                            if (org.hasDir())
-//                                orgElt.addAttribute(MailConstants.A_CAL_DIR, org.getDir());
-//                            if (org.hasLanguage())
-//                                orgElt.addAttribute(MailConstants.A_CAL_LANGUAGE, org.getLanguage());
-                        }
+                    // Organizer
+                    if (defaultInvite.hasOrganizer()) {
+                        ZOrganizer org = defaultInvite.getOrganizer();
+                        Element orgElt = calItemElem.addUniqueElement(MailConstants.E_CAL_ORGANIZER);
+                        String str = org.getAddress();
+                        orgElt.addAttribute(MailConstants.A_ADDRESS, str);
+//                      orgElt.addAttribute(MailConstants.A_URL, str);  // for backward compatibility
+                        if (org.hasCn())
+                          orgElt.addAttribute(MailConstants.A_DISPLAY, org.getCn());
+                        if (org.hasSentBy())
+                            orgElt.addAttribute(MailConstants.A_CAL_SENTBY, org.getSentBy());
+//                      if (org.hasDir())
+//                      orgElt.addAttribute(MailConstants.A_CAL_DIR, org.getDir());
+//                      if (org.hasLanguage())
+//                      orgElt.addAttribute(MailConstants.A_CAL_LANGUAGE, org.getLanguage());
                     }
                 }
                 

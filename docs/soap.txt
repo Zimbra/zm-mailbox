@@ -1027,7 +1027,7 @@ appointment result:
        [percentComplete="num"]
        [dur="duration"]  // default duration
    >
-    
+     [<or d="friendly name" a="address">] // organizer, if available
      [<fr>DEFAULT FRAGMENT</fr>]
 
 Expanded instance data -- only if calExpandInstStart and

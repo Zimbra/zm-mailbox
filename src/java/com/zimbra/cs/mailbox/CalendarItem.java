@@ -221,6 +221,14 @@ public abstract class CalendarItem extends MailItem {
         if (!folder.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
         Mailbox mbox = folder.getMailbox();
+        
+        if (pm.hasAttachments()) {
+            firstInvite.setHasAttachment(true);
+            flags |= Flag.BITMASK_ATTACHED;
+        } else {
+            firstInvite.setHasAttachment(false);
+            flags &= ~Flag.BITMASK_ATTACHED;
+        }
 
         byte type = firstInvite.isEvent() ? TYPE_APPOINTMENT : TYPE_TASK;
         
@@ -693,6 +701,8 @@ public abstract class CalendarItem extends MailItem {
             mInvites.clear();
             //saveMetadata();
         }
+        invite.setHasAttachment(pm.hasAttachments());
+        
         String method = invite.getMethod();
         if (method.equals(ICalTok.REQUEST.toString()) || method.equals(ICalTok.CANCEL.toString()) || method.equals(ICalTok.PUBLISH.toString())) {
             return processNewInviteRequestOrCancel(originalOrganizer, pm, invite, force, folderId, volumeId);
@@ -887,15 +897,17 @@ public abstract class CalendarItem extends MailItem {
             Folder folder = getMailbox().getFolderById(folderId);
             move(folder);
         }
-
+        
+        boolean hasAttachments = false;
         boolean hasRequests = false;
         for (Iterator iter = mInvites.iterator(); iter.hasNext();) {
             Invite cur = (Invite)iter.next();
             if (cur.getMethod().equals(ICalTok.REQUEST.toString()) ||
-                    cur.getMethod().equals(ICalTok.PUBLISH.toString())) 
-            {
+                    cur.getMethod().equals(ICalTok.PUBLISH.toString())) {
                 hasRequests = true;
-                break;
+            }
+            if (cur.hasAttachment()) {
+                hasAttachments = true;
             }
         }
         
@@ -917,6 +929,11 @@ public abstract class CalendarItem extends MailItem {
                                         pm != null ? pm.getMimeMessage() : null,
                                         false,
                                         newInvite.getPartStat());
+                    }
+                    if (hasAttachments) {
+                        this.mData.flags |= Flag.BITMASK_ATTACHED;
+                    } else {
+                        this.mData.flags &= ~Flag.BITMASK_ATTACHED;
                     }
                     this.saveMetadata();
                     return true;
