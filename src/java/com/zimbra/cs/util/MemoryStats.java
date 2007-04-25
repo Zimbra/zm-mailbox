@@ -151,9 +151,10 @@ public final class MemoryStats implements RealtimeStatsCallback {
         ArrayList<String> array = new ArrayList<String>(pools.size());
         
         for (MemoryPoolMXBean pool : pools) {
-            if (pool.getType() != MemoryType.HEAP) {
-                continue;
-            }
+//          for bug 16398, include non-heap pools (so we get permgen info)            
+//            if (pool.getType() != MemoryType.HEAP) {
+//                continue;
+//            }
             array.add(pool.getName());
         }
         String[] toRet = new String[array.size()];
@@ -234,9 +235,10 @@ public final class MemoryStats implements RealtimeStatsCallback {
         // mempool stats
         List<MemoryPoolMXBean> pools = ManagementFactory.getMemoryPoolMXBeans();
         for (MemoryPoolMXBean pool : pools) {
-            if (pool.getType() != MemoryType.HEAP) {
-                continue;
-            }
+// for bug 16398, include non-heap pools (so we get permgen info)            
+//            if (pool.getType() != MemoryType.HEAP) {
+//                continue;
+//            }
             String poolName = pool.getName().toLowerCase();
             MemoryUsage usage = pool.getUsage();
             heapTotal += usage.getMax();
