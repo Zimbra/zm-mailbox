@@ -395,7 +395,7 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
      * @param id
      * @param truth
      */
-    void addInRemoteFolderClause(ItemId id, boolean truth)
+    void addInRemoteFolderClause(ItemId id, String subfolderPath, boolean truth)
     {
         if (truth) {
             if ((remoteFolders.size() > 0 && !remoteFolders.contains(id)) 
@@ -406,7 +406,7 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
                 noResults = true;
             }
             remoteFolders.clear();
-            remoteFolders.add(id);
+            remoteFolders.add(new DbSearchConstraints.RemoteFolderDescriptor(id, subfolderPath));
             forceHasSpamTrashSetting();
         } else {
             if (remoteFolders.contains(id)) {
@@ -418,7 +418,7 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
                     noResults = true;
                 }
             }
-            excludeRemoteFolders.add(id);
+            excludeRemoteFolders.add(new DbSearchConstraints.RemoteFolderDescriptor(id, subfolderPath));
         }
     }
     

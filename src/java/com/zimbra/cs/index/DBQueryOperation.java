@@ -363,39 +363,30 @@ class DBQueryOperation extends QueryOperation
     }
     
     /**
-     * Handles inid: query clause that resolves to a remote folder.
-     * 
+     * Handles query clause that resolves to a remote folder.
      */
-    void addInRemoteFolderClause(ItemId remoteFolderId, boolean truth)
+    void addInRemoteFolderClause(ItemId remoteFolderId, String subfolderPath, boolean truth)
     {
+        mAllResultsQuery = false;
+
         if (mQueryTarget != QueryTarget.UNSPECIFIED && !mQueryTarget.toString().equals(remoteFolderId.getAccountId()))
             throw new IllegalArgumentException("Cannot addInClause b/c DBQueryOperation already has an incompatible remote target");
 
         mQueryTarget = new QueryTarget(remoteFolderId.getAccountId());
-        topLevelAndedConstraint().addInRemoteFolderClause(remoteFolderId, truth);
+        topLevelAndedConstraint().addInRemoteFolderClause(remoteFolderId, subfolderPath, truth);
     }
 
     /**
      * @param folder
      * @param truth
      */
-    void addInClause(Folder folder, boolean truth) 
+    void addInClause(Folder folder, boolean truth)
     {
         mAllResultsQuery = false;
 
-        // is it a mountpoint?
-        if (folder instanceof Mountpoint) { 
-            Mountpoint mpt = (Mountpoint)folder;
-
-            // check to see if this mountpoint is local, just in case...
-            if  (!mpt.getOwnerId().equals(mpt.getMailbox().getAccountId())) 
-            {
-                // remote!
-                addInRemoteFolderClause(new ItemId(mpt.getOwnerId(), mpt.getRemoteId()), truth);
-                return;
-            }
-        }
-
+        assert(!(folder instanceof Mountpoint) || 
+            ((Mountpoint)folder).getOwnerId().equals(folder.getMailbox().getAccountId()));
+        
         if (mQueryTarget != QueryTarget.LOCAL && mQueryTarget != QueryTarget.UNSPECIFIED) 
             throw new IllegalArgumentException("Cannot addInClause w/ local target b/c DBQueryOperation already has a remote target");
         mQueryTarget = QueryTarget.LOCAL;

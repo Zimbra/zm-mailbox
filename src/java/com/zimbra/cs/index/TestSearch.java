@@ -52,6 +52,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Mailbox.SearchResultMode;
+import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.CliUtil;
@@ -632,6 +633,11 @@ public class TestSearch extends TestCase {
     public static void main(String[] args)
     {
         MailboxIndex.startup();
+        RedoLogProvider redoLog = RedoLogProvider.getInstance();
+        try {
+            redoLog.startup();
+        } catch (ServiceException e) { e.printStackTrace(); }
+        
         CliUtil.toolSetup("DEBUG");
         ZimbraLog.account.info("INFO TEST!");
         ZimbraLog.account.debug("DEBUG TEST!");

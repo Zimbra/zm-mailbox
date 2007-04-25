@@ -272,6 +272,7 @@ class UnionQueryOperation extends QueryOperation
                 if (visibleFolders != null) {
                     if (visibleFolders.size() == 0) {
                         mQueryOperations.remove(i);
+                        ZimbraLog.index.debug("Query changed to NULL_QUERY_OPERATION, no visible folders");
                         mQueryOperations.add(i, new NullQueryOperation());
                     } else {
                         mQueryOperations.remove(i);

@@ -178,8 +178,8 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
     public Set<Folder> folders = new HashSet<Folder>();        /* optional - ANY of these folders are OK */
     public Set<Folder> excludeFolders = new HashSet<Folder>(); /* optional - ALL listed folders not allowed */
 
-    public Set<ItemId> remoteFolders = new HashSet<ItemId>();         /* optional - ANY of these folders are OK */
-    public Set<ItemId> excludeRemoteFolders = new HashSet<ItemId>();  /* optional - ALL listed folders are not OK */
+    public Set<RemoteFolderDescriptor> remoteFolders = new HashSet<RemoteFolderDescriptor>();         /* optional - ANY of these folders are OK */
+    public Set<RemoteFolderDescriptor> excludeRemoteFolders = new HashSet<RemoteFolderDescriptor>();  /* optional - ALL listed folders are not OK */
     
     public int convId = 0;                          /* optional - must match this convId  */
     public Set<Integer> prohibitedConvIds = new HashSet<Integer>();          /* optional - ALL listed convs not allowed*/
@@ -317,47 +317,43 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
     
     public Object clone() throws CloneNotSupportedException {
         DbSearchConstraints toRet = (DbSearchConstraints)super.clone();
-
-        if (tags != null) {
-            toRet.tags = new HashSet<Tag>();          
-            toRet.tags.addAll(tags);
-        }
-
-        toRet.excludeTags = new HashSet<Tag>();   toRet.excludeTags.addAll(excludeTags);
-
-        toRet.folders = new HashSet<Folder>();        toRet.folders.addAll(folders);
-        toRet.excludeFolders = new HashSet<Folder>(); toRet.excludeFolders.addAll(excludeFolders);
-
-        toRet.remoteFolders = new HashSet<ItemId>();         toRet.remoteFolders.addAll(remoteFolders);
-        toRet.excludeRemoteFolders = new HashSet<ItemId>();  toRet.excludeRemoteFolders.addAll(excludeRemoteFolders);
         
+        toRet.tags = SetHelper.cloneHashSet(tags);
+        toRet.excludeTags = SetHelper.cloneHashSet(excludeTags);
+
+        toRet.folders = SetHelper.cloneHashSet(folders);
+        toRet.excludeFolders = SetHelper.cloneHashSet(excludeFolders);
+
+        toRet.remoteFolders = SetHelper.cloneHashSet(remoteFolders);
+        toRet.excludeRemoteFolders = SetHelper.cloneHashSet(excludeRemoteFolders);
+
         toRet.convId = convId;
-        toRet.prohibitedConvIds = new HashSet<Integer>(); toRet.prohibitedConvIds.addAll(prohibitedConvIds);
-        
+        toRet.prohibitedConvIds = SetHelper.cloneHashSet(prohibitedConvIds);
+
         toRet.remoteConvId = remoteConvId;
-        toRet.prohibitedRemoteConvIds = new HashSet<ItemId>(); toRet.prohibitedRemoteConvIds.addAll(prohibitedRemoteConvIds);
+        toRet.prohibitedRemoteConvIds = SetHelper.cloneHashSet(prohibitedRemoteConvIds);
 
-        toRet.itemIds = new HashSet<Integer>();  toRet.itemIds.addAll(itemIds);
-        toRet.prohibitedItemIds = new HashSet<Integer>(); toRet.prohibitedItemIds.addAll(prohibitedItemIds);
+        toRet.itemIds = SetHelper.cloneHashSet(itemIds);
+        toRet.prohibitedItemIds = SetHelper.cloneHashSet(prohibitedItemIds);
+
+        toRet.remoteItemIds = SetHelper.cloneHashSet(remoteItemIds);
+        toRet.prohibitedRemoteItemIds = SetHelper.cloneHashSet(prohibitedRemoteItemIds);
+
+        toRet.indexIds = SetHelper.cloneHashSet(indexIds);
+
+        toRet.types = SetHelper.cloneHashSet(types);
+        toRet.excludeTypes = SetHelper.cloneHashSet(excludeTypes);
+
+        toRet.dates = SetHelper.cloneHashSet(dates);
+        toRet.calStartDates = SetHelper.cloneHashSet(calStartDates);
+        toRet.calEndDates = SetHelper.cloneHashSet(calEndDates);
+
+        toRet.modified = SetHelper.cloneHashSet(modified);
+        toRet.sizes = SetHelper.cloneHashSet(sizes);
+        toRet.convCounts = SetHelper.cloneHashSet(convCounts);
+        toRet.subjectRanges = SetHelper.cloneHashSet(subjectRanges);
+        toRet.senderRanges = SetHelper.cloneHashSet(senderRanges);
         
-        toRet.remoteItemIds = new HashSet<ItemId>();  toRet.remoteItemIds.addAll(remoteItemIds);
-        toRet.prohibitedRemoteItemIds = new HashSet<ItemId>(); toRet.prohibitedRemoteItemIds.addAll(prohibitedRemoteItemIds);
-
-        toRet.indexIds = new HashSet<Integer>(); toRet.indexIds.addAll(indexIds);
-
-        toRet.types = new HashSet<Byte>(); toRet.types.addAll(types);
-        toRet.excludeTypes = new HashSet<Byte>(); toRet.excludeTypes.addAll(excludeTypes);
-
-        toRet.dates = new HashSet<NumericRange>(); toRet.dates.addAll(dates);
-        toRet.calStartDates = new HashSet<NumericRange>(); toRet.calStartDates.addAll(calStartDates);
-        toRet.calEndDates = new HashSet<NumericRange>(); toRet.calEndDates.addAll(calEndDates);
-        
-        toRet.modified = new HashSet<NumericRange>(); toRet.modified.addAll(modified);
-        toRet.sizes = new HashSet<NumericRange>(); toRet.sizes.addAll(sizes);
-        toRet.convCounts = new HashSet<NumericRange>(); toRet.convCounts.addAll(convCounts);
-        toRet.subjectRanges = new HashSet<StringRange>(); toRet.subjectRanges.addAll(subjectRanges);
-        toRet.senderRanges = new HashSet<StringRange>(); toRet.senderRanges.addAll(senderRanges);
-
         return toRet;
     }
 
@@ -411,19 +407,19 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
             }
         }
     }
-    
-    private static class RemoteFolderPrinter {
+
+    private static class ItemIdPrinter {
         void run(StringBuilder str, boolean truthiness, Collection<ItemId> collect, String intro) {
             if (!ListUtil.isEmpty(collect)) {
                 str.append("(");
                 boolean atFirst = true;
-                for (ItemId id: collect) {
+                for (ItemId iid: collect) {
                     if (!atFirst) 
                         str.append(" ");
 
                     if (!truthiness)
-                    	str.append("-");
-                    str.append(intro).append(":\"").append(id.toString()).append("\"");
+                        str.append("-");
+                    str.append(intro).append(":\"").append(iid.toString()).append("\"");
                     atFirst = false;
                 }
                 str.append(") ");
@@ -431,13 +427,34 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         }
     }
     
-    static class ObjectPrinter<T extends Object> extends Printer<T> {
+    private static class RemoteFolderPrinter {
+        void run(StringBuilder str, boolean truthiness, Collection<RemoteFolderDescriptor> collect, String intro) {
+            if (!ListUtil.isEmpty(collect)) {
+                str.append("(");
+                boolean atFirst = true;
+                for (RemoteFolderDescriptor rf: collect) {
+                    if (!atFirst) 
+                        str.append(" ");
+
+                    if (!truthiness)
+                        str.append("-");
+                    str.append(intro).append(":\"").append(rf.getFolderId().toString());
+                    if (rf.getSubfolderPath() != null && rf.getSubfolderPath().length() > 0) 
+                        str.append('/').append(rf.getSubfolderPath());
+                    str.append("\"");
+                    atFirst = false;
+                }
+                str.append(") ");
+            }
+        }
+    }
+    
+    private static class ObjectPrinter<T extends Object> extends Printer<T> {
         void printOne(StringBuilder s, T t) {
             s.append(t.toString());
         }
     }
-
-
+    
     public String toString()
     {
         StringBuilder retVal = new StringBuilder("");
@@ -455,6 +472,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         
         FolderPrinter fp = new FolderPrinter();
         RemoteFolderPrinter rfp = new RemoteFolderPrinter();
+        ItemIdPrinter iip = new ItemIdPrinter();
 
         // tags
         tp.run(retVal, tags, "TAG");
@@ -487,16 +505,16 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         if (remoteConvId != null) {
             retVal.append("CONV:\"").append(remoteConvId).append("\" ");
         }
-        rfp.run(retVal, false, prohibitedRemoteConvIds, "CONV");
+        iip.run(retVal, false, prohibitedRemoteConvIds, "CONV");
 
         // itemId
         ip.run(retVal, itemIds, "ITEM");
         ip.run(retVal, prohibitedItemIds, "-ITEM");
         
         // remoteItemId
-        rfp.run(retVal, true, remoteItemIds, "ITEM");
-        rfp.run(retVal, false, prohibitedRemoteItemIds, "ITEM");
-
+        iip.run(retVal, true, remoteItemIds, "ITEM");
+        iip.run(retVal, false, prohibitedRemoteItemIds, "ITEM");
+        
         // indexId
         ip.run(retVal, indexIds, "INDEXID");
 
@@ -531,15 +549,27 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
     }
 
     /**
-     * @author tim
-     * 
      * NOT general-purpose, makes assumptions about when-to-copy and
      * that NULL != empty-set that are not something one would generally want 
-     *
-     * @param <T>
      */
-    static class MySetUtil<T> {
-        Set<T> clone(Set<T> s) {
+    private static final class SetHelper {
+        static <T> HashSet<T> cloneHashSet(Collection<T> current) {
+            if (current == null) 
+                return null;
+            HashSet<T> toRet = new HashSet<T>();
+            toRet.addAll(current);
+            return toRet;
+        }
+        
+        static void addIdsToSet(Set<Integer> s, Collection<?> items)
+        {
+            if (items != null)
+                for (Object obj : items)
+                    s.add(((MailItem)obj).getId());
+        }
+
+        
+        static <T> Set<T> clone(Set<T> s) {
             Set<T> toRet = null;
             if (s != null) {
                 toRet = new HashSet<T>();
@@ -548,7 +578,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
             return toRet;
         }
 
-        Set<T> intersectIfNonempty(Set<T> lhs, Set<T> rhs) {
+        static <T> Set<T> intersectIfNonempty(Set<T> lhs, Set<T> rhs) {
             assert(lhs != null && rhs != null);
             
             if (lhs.size() == 0)
@@ -571,7 +601,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
             }
         }
 
-        Set<T> union(Set<T> lhs, Set<T> rhs) {
+        static <T> Set<T> union(Set<T> lhs, Set<T> rhs) {
             if (rhs == null) {
                 return lhs;
             } else if (lhs == null) {
@@ -581,7 +611,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
                 return lhs;
             }
         }
-    }
+    }    
 
     /**
      * this = this AND other
@@ -595,15 +625,9 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
             return;
         }
 
-        MySetUtil<Tag> tu = new MySetUtil<Tag>();
-        MySetUtil<Folder> fu = new MySetUtil<Folder>();
-        MySetUtil<Integer> iu = new MySetUtil<Integer>();
-        MySetUtil<Byte> bu = new MySetUtil<Byte>();
-        MySetUtil<ItemId> iiu = new MySetUtil<ItemId>();
-
         // tags
-        tags = tu.union(tags, other.tags);
-        excludeTags = tu.union(excludeTags, other.excludeTags);
+        tags = SetHelper.union(tags, other.tags);
+        excludeTags = SetHelper.union(excludeTags, other.excludeTags);
         
         // bug 2426
         if (tags != null && excludeTags != null)
@@ -637,14 +661,14 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
             // ugly.  Should modify this so folders=null means "no constraint" and
             // folders=[] means "no results".  TODO...
             if (folders.size() >  0 ||  other.folders.size() > 0) {
-                folders = fu.intersectIfNonempty(folders, other.folders);
+                folders = SetHelper.intersectIfNonempty(folders, other.folders);
                 if (folders.size() == 0)
                     noResults = true;
             }
         }
         
         
-        excludeFolders = fu.union(excludeFolders, other.excludeFolders);
+        excludeFolders = SetHelper.union(excludeFolders, other.excludeFolders);
         
         
         //
@@ -657,12 +681,12 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
             // ugly.  Should modify this so folders=null means "no constraint" and
             // folders=[] means "no results".  TODO...
             if (remoteFolders.size() >  0 ||  other.remoteFolders.size() > 0) {
-                remoteFolders = iiu.intersectIfNonempty(remoteFolders, other.remoteFolders);
+                remoteFolders = SetHelper.intersectIfNonempty(remoteFolders, other.remoteFolders);
                 if (remoteFolders.size() == 0)
                     noResults = true;
             }
         }
-        excludeRemoteFolders = iiu.union(excludeRemoteFolders, other.excludeRemoteFolders);
+        excludeRemoteFolders = SetHelper.union(excludeRemoteFolders, other.excludeRemoteFolders);
         
 
         // convId
@@ -676,7 +700,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
                 convId = other.convId;
             }
         }
-        prohibitedConvIds = iu.union(prohibitedConvIds, other.prohibitedConvIds);
+        prohibitedConvIds = SetHelper.union(prohibitedConvIds, other.prohibitedConvIds);
         
         
         // remoteConvID
@@ -690,7 +714,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
                 remoteConvId = other.remoteConvId;
             }
         }
-        prohibitedRemoteConvIds = iiu.union(prohibitedRemoteConvIds, other.prohibitedRemoteConvIds);
+        prohibitedRemoteConvIds = SetHelper.union(prohibitedRemoteConvIds, other.prohibitedRemoteConvIds);
 
 
         // itemId
@@ -701,7 +725,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
             boolean prevNonempty = false;
             if (itemIds.size() > 0 || other.itemIds.size() > 0)
                 prevNonempty = true;
-            itemIds = iu.intersectIfNonempty(itemIds, other.itemIds);
+            itemIds = SetHelper.intersectIfNonempty(itemIds, other.itemIds);
             if (itemIds.size() == 0 && prevNonempty)
                 noResults = true;
         }
@@ -711,7 +735,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         // -Item{A or B} AND -Item{C or D} --> 
         //   (-Item(A) AND -Item(B)) AND (-C AND -D) -->
         //     (A AND B AND C AND D)
-        prohibitedItemIds = iu.union(prohibitedItemIds, other.prohibitedItemIds);
+        prohibitedItemIds = SetHelper.union(prohibitedItemIds, other.prohibitedItemIds);
         
         
         // remoteItemId
@@ -722,7 +746,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
             boolean prevNonempty = false;
             if (remoteItemIds.size() > 0 || other.remoteItemIds.size() > 0)
                 prevNonempty = true;
-            remoteItemIds = iiu.intersectIfNonempty(remoteItemIds, other.remoteItemIds);
+            remoteItemIds = SetHelper.intersectIfNonempty(remoteItemIds, other.remoteItemIds);
             if (itemIds.size() == 0 && prevNonempty)
                 noResults = true;
         }
@@ -733,7 +757,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         // -Item{A or B} AND -Item{C or D} --> 
         //   (-Item(A) AND -Item(B)) AND (-C AND -D) -->
         //     (A AND B AND C AND D)
-        prohibitedRemoteItemIds = iiu.union(prohibitedRemoteItemIds, other.prohibitedRemoteItemIds);
+        prohibitedRemoteItemIds = SetHelper.union(prohibitedRemoteItemIds, other.prohibitedRemoteItemIds);
         
 
         // indexId
@@ -741,7 +765,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         {
             // see comment above at folders 
             if (indexIds.size() > 0 || other.indexIds.size() > 0) {
-                indexIds = iu.intersectIfNonempty(indexIds, other.indexIds);
+                indexIds = SetHelper.intersectIfNonempty(indexIds, other.indexIds);
                 if (indexIds.size() == 0)
                     noResults = true;
             }
@@ -751,14 +775,14 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         // see comments above
         {
             if (types.size() > 0 || other.types.size() > 0) {
-                types = bu.intersectIfNonempty(types, other.types);
+                types = SetHelper.intersectIfNonempty(types, other.types);
                 if (types.size() ==  0)
                     noResults = true;
             }
         }
             
         // see comments above
-        excludeTypes = bu.union(excludeTypes, other.excludeTypes);
+        excludeTypes = SetHelper.union(excludeTypes, other.excludeTypes);
 
         // dates
         if (other.dates != null) {
@@ -817,13 +841,68 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         }
     }
 
+    public static final class RemoteFolderDescriptor {
+        public RemoteFolderDescriptor(ItemId folderId, String subfolderPath) {
+            this.folderId = folderId;
+            this.subfolderPath = subfolderPath;
+            if (this.subfolderPath == null)
+                this.subfolderPath = "";
+        }
+        
+        public RemoteFolderDescriptor(ItemId folderId) {
+            this(folderId, "");
+        }
+        
+        /** @return the folderId */
+        public ItemId getFolderId() {
+            return folderId;
+        }
+        /** @return the subfolderPath */
+        public String getSubfolderPath() {
+            return subfolderPath;
+        }
+        /* @see java.lang.Object#hashCode() */
+        @Override
+        public int hashCode() {
+            final int PRIME = 31;
+            int result = 1;
+            result = PRIME * result + ((folderId == null) ? 0 : folderId.hashCode());
+            result = PRIME * result + ((subfolderPath == null) ? 0 : subfolderPath.hashCode());
+            return result;
+        }
+        /* @see java.lang.Object#equals(java.lang.Object) */
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            final RemoteFolderDescriptor other = (RemoteFolderDescriptor) obj;
+            if (folderId == null) {
+                if (other.folderId != null)
+                    return false;
+            } else if (!folderId.equals(other.folderId))
+                return false;
+            if (subfolderPath == null) {
+                if (other.subfolderPath != null)
+                    return false;
+            } else if (!subfolderPath.equals(other.subfolderPath))
+                return false;
+            return true;
+        }
+        
+        private ItemId folderId;
+        private String subfolderPath;
+    }
 
 
     boolean automaticEmptySet() {
         // Check for tags and folders that are both included and excluded.
         Set<Integer> s = new HashSet<Integer>();
-        addIdsToSet(s, tags);
-        addIdsToSet(s, folders);
+        SetHelper.addIdsToSet(s, tags);
+        SetHelper.addIdsToSet(s, folders);
 
         // FIXME: Tim removed this assert temporarily while I'm reorganizing the DbQueryObject code...I know
         // about this and will fix it soon.
@@ -866,20 +945,5 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
                     iter.remove();
             }
         }
-    }
-
-    private void addIdsToSet(Set<Integer> s, Collection<?> items)
-    {
-        if (items != null)
-            for (Object obj : items)
-                s.add(((MailItem)obj).getId());
-    }
-
-    private boolean setContainsAnyId(Set<Integer> s, Collection<?> items) {
-        if (items != null)
-            for (Object obj : items)
-                if (s.contains(((MailItem)obj).getId()))
-                    return true;
-        return false;
     }
 }

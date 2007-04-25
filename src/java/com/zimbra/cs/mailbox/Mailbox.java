@@ -2407,6 +2407,93 @@ public class Mailbox {
             endTransaction(success);
         }
     }
+    
+    /**
+     * Given a path, resolves as much of the path as possible and returns the folder and the unmatched part.
+     * 
+     * E.G. if the path is "/foo/bar/baz/gub" and this mailbox has a Folder at "/foo/bar" -- this API returns
+     * a Pair containing that Folder and the unmatched part "baz/gub/".  
+     * 
+     * If the returned folder is a Mountpoint, then it can be assumed that the remaining part is a subfolder in
+     * the remote mailbox.
+     * 
+     * @param octxt
+     * @param startingFolder Folder to start from (pass Mailbox.ID_FOLDER_ROOT to start from the root)
+     * @param path 
+     * @return
+     * @throws ServiceException
+     */
+    public synchronized Pair<Folder, String> getFolderByPathLongestMatch(OperationContext octxt, int startingFolder, String path) throws ServiceException {
+        if (path == null)
+            throw MailServiceException.NO_SUCH_FOLDER(path);
+        while (path.startsWith("/"))
+            path = path.substring(1);                         // strip off the optional leading "/"
+        while (path.endsWith("/"))
+            path = path.substring(0, path.length() - 1);      // strip off the optional trailing "/"
+
+        boolean success = false;
+        
+        if (path.length() == 0)
+            throw MailServiceException.NO_SUCH_FOLDER("/" + path);
+            
+        Folder curFolder = getFolderById(null, startingFolder);
+        assert(curFolder != null);
+
+        try {
+            beginTransaction("getFolderByPath", octxt);
+            
+            // for each segment in the path
+            String[] segments = path.split("/");
+            for (int i = 0; i < segments.length; i++) {
+                Folder nextFolder = curFolder.findSubfolder(segments[i]);
+
+                // did we match the current segment?
+                if (nextFolder == null) {
+                    if (curFolder == null) { // couldn't match *anything* throw exception
+                        throw MailServiceException.NO_SUCH_FOLDER("/" + path);
+                    } else {
+                        StringBuilder unmatched = new StringBuilder();
+                        boolean atFirst = true;
+                        for (int j = i; j < segments.length; j++) {
+                            unmatched.append(segments[j]);
+                            if (atFirst) {
+                                atFirst = false;
+                            } else {
+                                unmatched.append('/');
+                            }
+                        }
+                        return new Pair<Folder, String>(curFolder, unmatched.toString());
+                    }
+                }
+                
+                // can we read the current segment?
+                if (!nextFolder.canAccess(ACL.RIGHT_READ)) {
+                    StringBuilder matched = new StringBuilder();
+                    boolean atFirst = true;
+                    for (int j = 0; j <= i; j++) {
+                        matched.append(segments[j]);
+                        if (atFirst) {
+                            atFirst = false;
+                        } else {
+                            matched.append('/');
+                        }
+                    }
+                    throw ServiceException.PERM_DENIED("you do not have sufficient permissions on folder /" + matched);
+                }
+
+                // matched this segment, keep going...
+                curFolder = nextFolder;
+            }
+            
+            // if we got here, folder is a match over the entire path
+            assert(curFolder != null); // should be caught above
+            assert(curFolder.canAccess(ACL.RIGHT_READ)); // should be caught above
+            
+            return new Pair<Folder, String>(curFolder, null);
+        } finally {
+            endTransaction(success);
+        }
+    }
 
     public synchronized List<Folder> getFolderList(OperationContext octxt, byte sort) throws ServiceException {
         List<Folder> folders = new ArrayList<Folder>();

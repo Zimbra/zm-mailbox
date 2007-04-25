@@ -57,6 +57,11 @@ public class Mountpoint extends Folder {
     public int getRemoteId() {
         return mRemoteId;
     }
+    
+    /** @return TRUE if this mountpoint points to its owner's mailbox */
+    public boolean isLocal() {
+        return (getOwnerId().equals(getMailbox().getAccountId()));
+    }
 
     /** Grants the specified set of rights to the target and persists them
      *  to the database.  <i>Note: This function will always throw the 

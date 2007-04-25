@@ -160,9 +160,6 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
 
     public ZimbraQuery.BaseQuery GetQuery(int modifier, int target, String tok) throws ParseException, ServiceException, MailServiceException
     {
-        Integer folderId = null;
-        ItemId iid = null;
-
         switch(target) {
           case HAS:
                 if (!tok.equalsIgnoreCase("attachment")) {
@@ -177,24 +174,29 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
           case ITEM:
             return ZimbraQuery.ItemQuery.Create(mMailbox, mAnalyzer, modifier, tok);
           case INID:
-                  iid = new ItemId(tok, (String)null);
-              folderId = iid.getId();
-              // FALL THROUGH TO BELOW!
+          {
+              ItemId iid = null;
+              int subfolderSplit = tok.indexOf('/');
+              String iidStr;
+              String subfolderPath = null;
+              if (subfolderSplit > 0) {
+                  iidStr = tok.substring(0, subfolderSplit);
+                  subfolderPath = tok.substring(subfolderSplit+1);
+              } else {
+                  iidStr = tok;
+              }
+              iid = new ItemId(iidStr, (String)null);
+              return ZimbraQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, iid, subfolderPath);
+          }
           case IN:
-            if (folderId == null)
-                folderId =  sFolderStrMap.get(tok.toLowerCase());
-            ZimbraQuery.BaseQuery inq;
-            if (iid != null && !iid.belongsTo(mMailbox)) {
-                inq = new ZimbraQuery.InQuery(mMailbox, mAnalyzer, modifier, iid);
-            } else if (folderId != null) {
-                inq = ZimbraQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, folderId);
-            } else {
-                inq = ZimbraQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, tok);
-            }
-            if (inq == null) {
-                throw MailServiceException.NO_SUCH_FOLDER(tok);
-            }
-            return inq;
+          {
+              Integer folderId = sFolderStrMap.get(tok.toLowerCase());
+              if (folderId != null) {
+                  return ZimbraQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, folderId);
+              } else {
+                  return ZimbraQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, tok);
+              }
+          }
           case TAG:
             return new ZimbraQuery.TagQuery(mAnalyzer, modifier, mMailbox.getTagByName(tok), true);
           case IS:
