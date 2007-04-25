@@ -34,8 +34,6 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.zimbra.common.util.Log.Level;
-
 /**
  * Runs a <tt>Callable</tt> task either once or at a given interval.  Subsequent
  * start times for a task are based on the previous completion time.
