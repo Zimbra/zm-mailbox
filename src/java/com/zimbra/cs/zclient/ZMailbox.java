@@ -2563,7 +2563,7 @@ public class ZMailbox {
     public ZSendMessageResponse sendMessage(ZOutgoingMessage message, String sendUid, boolean needCalendarSentByFixup) throws ServiceException {
         XMLElement req = new XMLElement(MailConstants.SEND_MSG_REQUEST);
 
-        if (sendUid != null)
+        if (sendUid != null && sendUid.length() > 0)
             req.addAttribute(MailConstants.A_SEND_UID, sendUid);
 
         if (needCalendarSentByFixup)
