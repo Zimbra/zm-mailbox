@@ -271,6 +271,18 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         calEndDates.add(intv);
     }
     
+    void addModSeqClause(long lowest, boolean lowestEqual, long highest, boolean highestEqual, boolean truth)  {
+        DbSearchConstraints.NumericRange intv = new DbSearchConstraints.NumericRange();
+        intv.lowest = lowest;
+        intv.lowestEqual = lowestEqual;
+        intv.highest = highest;
+        intv.highestEqual = highestEqual;
+        intv.negated = !truth;
+        
+        this.modified.add(intv);
+    }
+    
+    
     void addConvCountClause(long lowest, boolean lowestEqual, long highest, boolean highestEqual, boolean truth)  {
         DbSearchConstraints.NumericRange intv = new DbSearchConstraints.NumericRange();
         intv.lowest = lowest;

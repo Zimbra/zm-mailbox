@@ -44,31 +44,32 @@ public interface ZimbraQueryParserConstants {
   int TAG = 42;
   int MESSAGE = 43;
   int MY = 44;
-  int CONV = 45;
-  int CONV_COUNT = 46;
-  int CONV_MINM = 47;
-  int CONV_MAXM = 48;
-  int CONV_START = 49;
-  int CONV_END = 50;
-  int APPT_START = 51;
-  int APPT_END = 52;
-  int AUTHOR = 53;
-  int TITLE = 54;
-  int KEYWORDS = 55;
-  int COMPANY = 56;
-  int METADATA = 57;
-  int ITEM = 58;
-  int SORTBY = 59;
-  int SORT = 60;
-  int PLUS = 61;
-  int MINUS = 62;
-  int TEXT_TOK = 63;
-  int INITIAL_TERM_CHAR = 64;
-  int SUBSEQUENT_TERM_CHAR = 65;
-  int ERROR_BRACES_WITH_NEWLINE = 67;
-  int BRACES_TOK = 68;
-  int ERROR_QUOTE_WITH_NEWLINE = 70;
-  int QUOTED_TOK = 71;
+  int MODSEQ = 45;
+  int CONV = 46;
+  int CONV_COUNT = 47;
+  int CONV_MINM = 48;
+  int CONV_MAXM = 49;
+  int CONV_START = 50;
+  int CONV_END = 51;
+  int APPT_START = 52;
+  int APPT_END = 53;
+  int AUTHOR = 54;
+  int TITLE = 55;
+  int KEYWORDS = 56;
+  int COMPANY = 57;
+  int METADATA = 58;
+  int ITEM = 59;
+  int SORTBY = 60;
+  int SORT = 61;
+  int PLUS = 62;
+  int MINUS = 63;
+  int TEXT_TOK = 64;
+  int INITIAL_TERM_CHAR = 65;
+  int SUBSEQUENT_TERM_CHAR = 66;
+  int ERROR_BRACES_WITH_NEWLINE = 68;
+  int BRACES_TOK = 69;
+  int ERROR_QUOTE_WITH_NEWLINE = 71;
+  int QUOTED_TOK = 72;
 
   int DEFAULT = 0;
   int BRACES_STATE = 1;
@@ -120,6 +121,7 @@ public interface ZimbraQueryParserConstants {
     "\"tag:\"",
     "\"message:\"",
     "\"my:\"",
+    "\"modseq:\"",
     "\"conv:\"",
     "\"conv-count:\"",
     "\"conv-minm:\"",

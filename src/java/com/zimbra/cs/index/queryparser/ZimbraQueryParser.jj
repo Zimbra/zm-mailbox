@@ -287,6 +287,8 @@ public final class ZimbraQueryParser {
                 return new ZimbraQuery.DomainQuery(mAnalyzer, modifier, target, tok);
             }
             return new ZimbraQuery.TextQuery(mMailbox, mAnalyzer, modifier,target,tok);
+          case MODSEQ:
+            return new ZimbraQuery.ModseqQuery(mMailbox, mAnalyzer, modifier, target, tok);
           case SIZE:
           case BIGGER:
           case SMALLER:
@@ -409,6 +411,7 @@ PARSER_END(ZimbraQueryParser)
 |  <TAG:        "tag:">
 |  <MESSAGE:    "message:">
 |  <MY:         "my:">
+|  <MODSEQ:     "modseq:">
 |  <CONV:       "conv:">
 |  <CONV_COUNT: "conv-count:">  
 |  <CONV_MINM:  "conv-minm:">
@@ -614,7 +617,7 @@ ZimbraQuery.BaseQuery Clause() throws ServiceException :
   		      | t=<CONTENT>|t=<MESSAGE>|t=<SUBJECT>|t=<IN>|t=<INID>
        		  |  t=<TYPE>|t=<ATTACHMENT>|t=<HAS>|t=<FILENAME>|t=<AUTHOR>|t=<TITLE>|t=<KEYWORDS>|t=<COMPANY>|t=<METADATA>
 	     	  | t=<MY>|t=<IS>|t=<TAG>|t=<CONV>|t=<CONV_COUNT>|t=<CONV_MINM>|t=<CONV_MAXM>
-	  	      | t=<SIZE>|t=<BIGGER>|t=<SMALLER>
+	  	      | t=<SIZE>|t=<BIGGER>|t=<SMALLER>|t=<MODSEQ>
            ) q = Rhs_Text(t.kind)
       
       

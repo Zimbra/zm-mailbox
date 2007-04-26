@@ -30,6 +30,7 @@ Tim's short-short summary of the query grammar as of now (updated)
    larger:{SIZE}
    smaller:{SIZE}
    tag:{TAG}
+   modseq:[>,<,>=,<={CHANGE_ID}
    my:{MY_SAVED_SEARCH_NAME}   (UNIMPLEMENTED)
    message:{DB_MSG_ID}
    conv:{DB_CONV_ID}

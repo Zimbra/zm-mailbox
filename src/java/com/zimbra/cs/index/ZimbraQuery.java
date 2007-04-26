@@ -1171,6 +1171,82 @@ public final class ZimbraQuery {
             return super.toString(expLevel)+","+mSize +")";
         }
     }
+    
+    public static class ModseqQuery extends BaseQuery
+    {
+        static enum Operator {
+            EQ, GT, GTEQ, LT, LTEQ;
+        }
+        
+        private int mValue;
+        private Operator mOp;
+
+        public ModseqQuery(Mailbox mbox, Analyzer analyzer, int modifier, int target, String changeId) throws ParseException {
+            super(modifier, target);
+            
+            if (changeId.charAt(0) == '<') {
+                if (changeId.charAt(1) == '=') {
+                    mOp = Operator.LTEQ;
+                    changeId = changeId.substring(2); 
+                } else {
+                    mOp = Operator.LT;
+                    changeId = changeId.substring(1); 
+                }
+            } else if (changeId.charAt(0) == '>') {
+                if (changeId.charAt(1) == '=') {
+                    mOp = Operator.GTEQ;
+                    changeId = changeId.substring(2); 
+                } else {
+                    mOp = Operator.GT;
+                    changeId = changeId.substring(1); 
+                }
+            } else {
+                mOp = Operator.EQ;
+            }
+            mValue = Integer.parseInt(changeId);
+        }
+
+        protected QueryOperation getQueryOperation(boolean truth) 
+        {
+            DBQueryOperation op = DBQueryOperation.Create();
+            truth = calcTruth(truth);
+
+            long highest = -1, lowest = -1;
+            boolean lowestEq = false;
+            boolean highestEq = false;
+            
+            switch (mOp) {
+                case EQ:
+                    highest = mValue;
+                    lowest = mValue;
+                    highestEq = true;
+                    lowestEq = true;
+                    break;
+                case GT:
+                    lowest = mValue;
+                    break;
+                case GTEQ:
+                    lowest = mValue;
+                    lowestEq = true;
+                    break;
+                case LT:
+                    highest = mValue;
+                    break;
+                case LTEQ:
+                    highest = mValue;
+                    highestEq = true;
+                    break;
+            }
+            
+            op.addModSeqClause(lowest, lowestEq, highest, highestEq, truth);
+            return op;
+        }
+
+        public String toString(int expLevel) {
+            return super.toString(expLevel)+","+mOp+" "+mValue+")";
+        }
+    }
+    
 
     public static class SubQuery extends BaseQuery
     {

@@ -306,6 +306,11 @@ class DBQueryOperation extends QueryOperation
         mAllResultsQuery = false;
         topLevelAndedConstraint().addConvCountClause(lowest, lowestEq, highest, highestEq, truth);
     }
+    
+    void addModSeqClause(long lowest, boolean lowestEq, long highest, boolean highestEq, boolean truth)  {
+        mAllResultsQuery = false;
+        topLevelAndedConstraint().addModSeqClause(lowest, lowestEq, highest, highestEq, truth);
+    }
 
     /**
      * @param lowest
