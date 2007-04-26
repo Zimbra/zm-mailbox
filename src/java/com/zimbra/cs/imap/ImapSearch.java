@@ -261,8 +261,7 @@ abstract class ImapSearch {
         boolean requiresMODSEQ()   { return true; }
         String toZimbraSearch(ImapFolder i4folder) {
             ImapFlagCache i4cache = i4folder.getTagset();
-//            StringBuilder query = new StringBuilder("(modseq:>").append(mChangedSince);
-            StringBuilder query = new StringBuilder("(item:all");
+            StringBuilder query = new StringBuilder("(modseq:>").append(mChangedSince);
             if (i4cache.getMaximumModseq() > mChangedSince) {
                 for (ImapFlag i4flag : i4cache)
                     if (i4flag.mModseq > mChangedSince)
