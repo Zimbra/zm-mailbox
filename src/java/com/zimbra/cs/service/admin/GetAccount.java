@@ -45,6 +45,9 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class GetAccount extends AdminDocumentHandler {
 
+    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminConstants.E_ACCOUNT };
+    protected String[] getProxiedAccountElementPath()  { return TARGET_ACCOUNT_PATH; }
+
     /**
      * must be careful and only return accounts a domain admin can see
      */
@@ -53,7 +56,6 @@ public class GetAccount extends AdminDocumentHandler {
     }
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 

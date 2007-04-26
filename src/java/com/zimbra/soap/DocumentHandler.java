@@ -252,6 +252,13 @@ public abstract class DocumentHandler {
         return (request == null ? null : request.getAttribute(xpath[depth], null));
     }
 
+    protected static Element getXPathElement(Element request, String[] xpath) {
+        int depth = 0;
+        while (depth < xpath.length && request != null)
+            request = request.getOptionalElement(xpath[depth++]);
+        return request;
+    }
+
     protected static void setXPath(Element request, String[] xpath, String value) throws ServiceException {
         if (xpath == null || xpath.length == 0)
             return;
