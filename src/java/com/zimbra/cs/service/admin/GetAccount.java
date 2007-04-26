@@ -44,7 +44,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class GetAccount extends AdminDocumentHandler {
 
-    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminConstants.E_ACCOUNT };
+    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminService.E_ACCOUNT };
     protected String[] getProxiedAccountElementPath()  { return TARGET_ACCOUNT_PATH; }
 
     /**

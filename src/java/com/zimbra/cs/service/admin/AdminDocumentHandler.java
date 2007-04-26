@@ -41,7 +41,6 @@ import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.soap.DocumentHandler;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -91,7 +90,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             xpath = getProxiedAccountElementPath();
             Element elt = (xpath != null ? getXPathElement(request, xpath) : null);
             if (elt != null) {
-                Account acct = prov.get(AccountBy.fromString(elt.getAttribute(AdminConstants.A_BY)), elt.getText());
+                Account acct = prov.get(AccountBy.fromString(elt.getAttribute(AdminService.A_BY)), elt.getText());
                 if (acct != null && !Provisioning.onLocalServer(acct))
                     return proxyRequest(request, context, acctId);
             }
