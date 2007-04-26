@@ -2455,12 +2455,12 @@ public class Mailbox {
                         StringBuilder unmatched = new StringBuilder();
                         boolean atFirst = true;
                         for (int j = i; j < segments.length; j++) {
-                            unmatched.append(segments[j]);
                             if (atFirst) {
                                 atFirst = false;
                             } else {
                                 unmatched.append('/');
                             }
+                            unmatched.append(segments[j]);
                         }
                         return new Pair<Folder, String>(curFolder, unmatched.toString());
                     }
@@ -2471,12 +2471,12 @@ public class Mailbox {
                     StringBuilder matched = new StringBuilder();
                     boolean atFirst = true;
                     for (int j = 0; j <= i; j++) {
-                        matched.append(segments[j]);
                         if (atFirst) {
                             atFirst = false;
                         } else {
                             matched.append('/');
                         }
+                        matched.append(segments[j]);
                     }
                     throw ServiceException.PERM_DENIED("you do not have sufficient permissions on folder /" + matched);
                 }
