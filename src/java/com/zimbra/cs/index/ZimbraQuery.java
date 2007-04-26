@@ -87,8 +87,6 @@ import com.zimbra.common.soap.SoapProtocol;
  */
 public final class ZimbraQuery {
     /**
-     * @author tim
-     * 
      * BaseQuery
      *
      * Very simple wrapper classes that each represent a node in the parse tree for the
@@ -1569,7 +1567,7 @@ public final class ZimbraQuery {
             // okay, quite a bit of hackery here....basically, if they're doing a contact:
             // search AND they haven't manually specified a phrase query (expands to more than one term)
             // then lets hack their search and make it a * search.  
-            if (qType == ZimbraQueryParser.CONTACT && mTokens.size() == 1 && text.charAt(text.length()-1)!='*') {
+            if (qType == ZimbraQueryParser.CONTACT && mTokens.size() <= 1 && text.length() > 0 && text.charAt(text.length()-1)!='*') {
                 text = text+'*';
             }
             
