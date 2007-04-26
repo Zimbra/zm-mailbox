@@ -44,6 +44,7 @@ import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.redolog.RedoConfig;
 import com.zimbra.cs.redolog.RedoLogManager;
 import com.zimbra.cs.redolog.RolloverManager;
@@ -89,6 +90,7 @@ public class FileLogWriter implements LogWriter {
     private long mLastLogTime;
 
     private long mFsyncIntervalMS;          // how many milliseconds fsync thread sleeps after each fync
+    private boolean mFsyncDisabled;
 
     private FsyncThread mFsyncer;   // fsync thread
 
@@ -111,6 +113,7 @@ public class FileLogWriter implements LogWriter {
         mLastLogTime = mFile.lastModified();
 
         mFsyncIntervalMS = fsyncIntervalMS;
+        mFsyncDisabled = DebugConfig.disableRedoLogFsync;
 
         mFsyncCount = mLogCount = 0;
         mFsyncTime = 0;
@@ -410,7 +413,6 @@ public class FileLogWriter implements LogWriter {
     // do fsync if there are items logged since last fsync
     private void fsync() throws IOException {
         boolean fsyncNeeded = false;
-        boolean fsyncEnabled = mFsyncIntervalMS >= 0;
         int seq = 0;
         synchronized (mLock) {
             if (mFsyncSeq < mLogSeq) {
@@ -418,12 +420,12 @@ public class FileLogWriter implements LogWriter {
                     throw new IOException("Redolog file closed");
                 fsyncNeeded = true;
                 seq = mLogSeq;
-                if (fsyncEnabled)
+                if (!mFsyncDisabled)
                     mFsyncCount++;
             }
         }
         if (fsyncNeeded) {
-            if (fsyncEnabled) {
+            if (!mFsyncDisabled) {
                 long start = System.currentTimeMillis();
                 synchronized (mLock) {
                     if (mRAF != null)
