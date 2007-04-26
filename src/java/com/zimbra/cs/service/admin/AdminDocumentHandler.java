@@ -41,29 +41,35 @@ import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.soap.DocumentHandler;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
-
 
 /** @author schemers */
 public abstract class AdminDocumentHandler extends DocumentHandler {
 
+
+    @Override
     public boolean needsAuth(Map<String, Object> context) {
         return true;
     }
-    
+
+    @Override
     public boolean needsAdminAuth(Map<String, Object> context) {
         return true;
     }
-    
+
+    @Override
     public boolean isAdminCommand() {
         return true;
     }
 
-    protected String[] getProxiedAccountPath()  { return null; }
-    protected String[] getProxiedResourcePath()  { return null; }
-    protected String[] getProxiedServerPath()  { return null; }
+    protected String[] getProxiedAccountPath()         { return null; }
+    protected String[] getProxiedAccountElementPath()  { return null; }
+    protected String[] getProxiedResourcePath()        { return null; }
+    protected String[] getProxiedServerPath()          { return null; }
 
+    @Override
     protected Element proxyIfNecessary(Element request, Map<String, Object> context) throws ServiceException {
         // if we've explicitly been told to execute here, don't proxy
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -71,12 +77,22 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             return null;
 
         try {
+            Provisioning prov = Provisioning.getInstance();
+
             // check whether we need to proxy to the home server of a target account
             String[] xpath = getProxiedAccountPath();
             String acctId = (xpath != null ? getXPath(request, xpath) : null);
             if (acctId != null) {
-                Account acct = Provisioning.getInstance().get(AccountBy.id, acctId);
-                if (acct != null && !LOCAL_HOST.equalsIgnoreCase(acct.getAttr(Provisioning.A_zimbraMailHost)))
+                Account acct = prov.get(AccountBy.id, acctId);
+                if (acct != null && !Provisioning.onLocalServer(acct))
+                    return proxyRequest(request, context, acctId);
+            }
+
+            xpath = getProxiedAccountElementPath();
+            Element elt = (xpath != null ? getXPathElement(request, xpath) : null);
+            if (elt != null) {
+                Account acct = prov.get(AccountBy.fromString(elt.getAttribute(AdminConstants.A_BY)), elt.getText());
+                if (acct != null && !Provisioning.onLocalServer(acct))
                     return proxyRequest(request, context, acctId);
             }
 
@@ -84,9 +100,9 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             xpath = getProxiedResourcePath();
             String rsrcId = (xpath != null ? getXPath(request, xpath) : null);
             if (rsrcId != null) {
-                CalendarResource rsrc = Provisioning.getInstance().get(CalendarResourceBy.id, rsrcId);
+                CalendarResource rsrc = prov.get(CalendarResourceBy.id, rsrcId);
                 if (rsrc != null) {
-                    Server server = Provisioning.getInstance().get(ServerBy.name, rsrc.getAttr(Provisioning.A_zimbraMailHost));
+                    Server server = prov.get(ServerBy.name, rsrc.getAttr(Provisioning.A_zimbraMailHost));
                     if (server != null && !LOCAL_HOST_ID.equalsIgnoreCase(server.getId()))
                         return proxyRequest(request, context, server, zsc);
                 }
@@ -96,7 +112,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             xpath = getProxiedServerPath();
             String serverId = (xpath != null ? getXPath(request, xpath) : null);
             if (serverId != null) {
-                Server server = Provisioning.getInstance().get(ServerBy.id, serverId);
+                Server server = prov.get(ServerBy.id, serverId);
                 if (server != null && !LOCAL_HOST_ID.equalsIgnoreCase(server.getId()))
                     return proxyRequest(request, context, server, zsc);
             }
@@ -114,6 +130,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
     /** Fetches the in-memory {@link Session} object appropriate for this request.
      *  If none already exists, one is created.
      * @return An {@link com.zimbra.cs.session.AdminSession}. */
+    @Override
     public Session getSession(Map<String, Object> context) {
         return getSession(context, SessionCache.SESSION_ADMIN);
     }
