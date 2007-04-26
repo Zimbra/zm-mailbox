@@ -99,10 +99,10 @@ public class WaitSetMgr {
         synchronized(sWaitSets) {
             String id;
             if (allAccts) {
+                id = ALL_ACCOUNTS_ID_PREFIX+LdapUtil.generateUUID();
+            } else {
                 id = "WaitSet"+sWaitSetNumber;
                 sWaitSetNumber++;
-            } else {
-                id = ALL_ACCOUNTS_ID_PREFIX+LdapUtil.generateUUID();
             }
             WaitSet ws = new WaitSet(id, defaultInterest);
             if (allAccts)
