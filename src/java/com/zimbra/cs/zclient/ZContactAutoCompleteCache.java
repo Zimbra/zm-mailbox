@@ -2,26 +2,26 @@ package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Contact;
-import com.zimbra.cs.zclient.event.ZContactEvent;
+import com.zimbra.cs.zclient.ZMailbox.GalEntryType;
+import com.zimbra.cs.zclient.ZMailbox.ZSearchGalResult;
+import com.zimbra.cs.zclient.event.ZCreateContactEvent;
 import com.zimbra.cs.zclient.event.ZCreateEvent;
 import com.zimbra.cs.zclient.event.ZDeleteEvent;
 import com.zimbra.cs.zclient.event.ZEventHandler;
-import com.zimbra.cs.zclient.event.ZModifyAppointmentEvent;
+import com.zimbra.cs.zclient.event.ZModifyContactEvent;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZRefreshEvent;
-import com.zimbra.cs.zclient.ZMailbox.GalEntryType;
-import com.zimbra.cs.zclient.ZMailbox.ZSearchGalResult;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Map.Entry;
 
 public class ZContactAutoCompleteCache extends ZEventHandler {
 
@@ -81,6 +81,8 @@ public class ZContactAutoCompleteCache extends ZEventHandler {
 
     private synchronized void removeContact(String id) {
         ZContact contact = mContacts.get(id);
+        if (contact == null) return;
+        
         Map<String,String> attrs = contact.getAttrs();
         removeKey(attrs.get(Contact.A_email), contact);
         removeKey(attrs.get(Contact.A_email2), contact);
@@ -170,7 +172,7 @@ public class ZContactAutoCompleteCache extends ZEventHandler {
      * @param mailbox the mailbox that had the event
      */
     public void handleCreate(ZCreateEvent event, ZMailbox mailbox) throws ServiceException {
-        if (event instanceof ZContactEvent) {
+        if (event instanceof ZCreateContactEvent) {
             //ZContactEvent cev = (ZContactEvent) event;
             //TODO: addContact(...);
             clear();
@@ -182,7 +184,7 @@ public class ZContactAutoCompleteCache extends ZEventHandler {
      * @param mailbox the mailbox that had the event
      */
     public void handleModify(ZModifyEvent event, ZMailbox mailbox) throws ServiceException {
-        if (event instanceof ZModifyAppointmentEvent) {
+        if (event instanceof ZModifyContactEvent) {
             // TODO: delete existing by id, add new
             clear();
         }
