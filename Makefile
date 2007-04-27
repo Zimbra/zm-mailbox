@@ -80,6 +80,8 @@ $(BUILD)/IO.o: $(SRC)/native/IO.c $(BUILD)/IO.h $(SRC)/native/zjniutil.h
 # dev environment.
 #
 push: all
+	p4 edit ../ZimbraCommon/jars/zimbra-native.jar
+	cp $(BUILD)/zimbra-native.jar ../ZimbraCommon/jars/zimbra-native.jar
 	p4 edit ../ZimbraServer/lib/libzimbra-native.$(PUSHED_EXT)
 	cp $(BUILD)/libzimbra-native.$(SHARED_EXT) ../ZimbraServer/lib/libzimbra-native.$(PUSHED_EXT)
 
