@@ -70,8 +70,5 @@ public class Config extends Entry {
     public Map<String, Object> getServerDefaults() {
         return mServerDefaults;
     }
-    
-    public void checkPortConflict(Map<String, Object> configAttrsToModify) throws ServiceException {
-        Server.checkPortConflict(this, configAttrsToModify);
-    }
+
 }

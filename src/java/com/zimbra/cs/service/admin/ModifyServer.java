@@ -60,8 +60,6 @@ public class ModifyServer extends AdminDocumentHandler {
         if (server == null)
             throw AccountServiceException.NO_SUCH_SERVER(id);
 
-        server.checkPortConflict(attrs);
-        
         // pass in true to checkImmutable
         prov.modifyAttrs(server, attrs, true);
 

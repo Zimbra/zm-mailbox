@@ -252,7 +252,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>name to use in greeting and sign-off; if empty, uses hostname</desc>
 </attr>
 
-<attr id="24" name="zimbraLmtpBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="24" name="zimbraLmtpBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
   <globalConfigValue>7025</globalConfigValue>
   <desc>port number on which LMTP server should listen</desc>
 </attr>
@@ -450,7 +450,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>name to use in greeting and sign-off; if empty, uses hostname</desc>
 </attr>
 
-<attr id="94" name="zimbraPop3BindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="94" name="zimbraPop3BindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
   <globalConfigValue>7110</globalConfigValue>
   <desc>port number on which POP3 server should listen</desc>
 </attr>
@@ -710,12 +710,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>LDAP Gal attribute to contact attr mapping</desc>
 </attr>
 
-<attr id="154" name="zimbraMailPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="154" name="zimbraMailPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
   <globalConfigValue>80</globalConfigValue>
   <desc>HTTP port for end-user UI</desc>
 </attr>
 
-<attr id="155" name="zimbraAdminPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="155" name="zimbraAdminPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
   <globalConfigValue>7071</globalConfigValue>
   <desc>SSL port for admin UI</desc>
 </attr>
@@ -761,7 +761,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>config for this type</desc>
 </attr>
 
-<attr id="166" name="zimbraMailSSLPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="166" name="zimbraMailSSLPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
   <globalConfigValue>0</globalConfigValue>
   <desc>SSL port for end-user UI</desc>
 </attr>
@@ -828,7 +828,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>interface address(es) on which IMAP server should listen; if empty, binds to all interfaces</desc>
 </attr>
 
-<attr id="180" name="zimbraImapBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="180" name="zimbraImapBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
   <globalConfigValue>7143</globalConfigValue>
   <desc>port number on which IMAP server should listen</desc>
 </attr>
@@ -842,7 +842,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>interface address(es) on which IMAP server should listen; if empty, binds to all interfaces</desc>
 </attr>
 
-<attr id="183" name="zimbraImapSSLBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="183" name="zimbraImapSSLBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
   <globalConfigValue>7993</globalConfigValue>
   <desc>port number on which IMAP SSL server should listen on</desc>
 </attr>
@@ -861,7 +861,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>interface address(es) on which POP3 server should listen; if empty, binds to all interfaces</desc>
 </attr>
 
-<attr id="187" name="zimbraPop3SSLBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="187" name="zimbraPop3SSLBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
   <globalConfigValue>7995</globalConfigValue>
   <desc>port number on which POP3 server should listen</desc>
 </attr>
@@ -1435,7 +1435,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Network interface on which notification server should listen; if empty, binds to all interfaces.</desc>
 </attr>
 
-<attr id="318" name="zimbraNotifyBindPort" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="318" name="zimbraNotifyBindPort" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
   <globalConfigValue>7035</globalConfigValue>
   <desc>Port number on which notification server should listen.</desc>
 </attr>
@@ -1449,7 +1449,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Network interface on which SSL notification server should listen; if empty, binds to all interfaces</desc>
 </attr>
 
-<attr id="321" name="zimbraNotifySSLBindPort" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="321" name="zimbraNotifySSLBindPort" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
   <globalConfigValue>7036</globalConfigValue>
   <desc>Port number on which notification server should listen.</desc>
 </attr>
@@ -1527,7 +1527,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Private key this server should use to access another server</desc>
 </attr>
 
-<attr id="339" name="zimbraRemoteManagementPort" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="339" name="zimbraRemoteManagementPort" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
   <globalConfigValue>22</globalConfigValue>
   <desc>Port on which remote management sshd listening on this server.</desc>
 </attr>
@@ -1568,22 +1568,22 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether to permit mobile sync</desc>
 </attr>
 
-<attr id="348" name="zimbraImapProxyBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="348" name="zimbraImapProxyBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
   <globalConfigValue>143</globalConfigValue>
   <desc>port number on which IMAP proxy server should listen</desc>
 </attr>
 
-<attr id="349" name="zimbraImapSSLProxyBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="349" name="zimbraImapSSLProxyBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
   <globalConfigValue>993</globalConfigValue>
   <desc>port number on which IMAPS proxy server should listen</desc>
 </attr>
 
-<attr id="350" name="zimbraPop3ProxyBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="350" name="zimbraPop3ProxyBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
   <globalConfigValue>110</globalConfigValue>
   <desc>port number on which POP3 proxy server should listen</desc>
 </attr>
 
-<attr id="351" name="zimbraPop3SSLProxyBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="351" name="zimbraPop3SSLProxyBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
   <globalConfigValue>995</globalConfigValue>
   <desc>port number on which POP3S proxy server should listen</desc>
 </attr>
