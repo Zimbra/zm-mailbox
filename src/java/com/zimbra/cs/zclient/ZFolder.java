@@ -57,6 +57,7 @@ public class ZFolder implements ZItem, Comparable {
     private String mId;
     private String mName;
     private int mUnreadCount;
+    private long mSize;
     private View mDefaultView;
     private String mFlags;
     private int mMessageCount;
@@ -191,8 +192,9 @@ public class ZFolder implements ZItem, Comparable {
         mRestURL = e.getAttribute(MailConstants.A_REST_URL, null);
         mRemoteURL = e.getAttribute(MailConstants.A_URL, null);
         mEffectivePerms = e.getAttribute(MailConstants.A_RIGHTS, null);
+        mSize = e.getAttributeLong(MailConstants.A_SIZE, 0);
         
-        mGrants = new ArrayList<ZGrant>();            
+        mGrants = new ArrayList<ZGrant>();
         mSubFolders = new ArrayList<ZFolder>();
 
         Element aclEl = e.getOptionalElement(MailConstants.E_ACL);
@@ -244,6 +246,7 @@ public class ZFolder implements ZItem, Comparable {
                 mRemoteURL = fevent.getRemoteURL(mRemoteURL);
                 mEffectivePerms = fevent.getEffectivePerm(mEffectivePerms);
                 mGrants = fevent.getGrants(mGrants);
+                mSize = fevent.getSize(mSize);
             }
         }
     }
@@ -322,6 +325,14 @@ public class ZFolder implements ZItem, Comparable {
         return mUnreadCount; 
     }
 
+    /**
+     *
+     * @return size of all items in folder (not including sub folders) in bytes
+     */
+
+    public long getSize() {
+        return mSize;
+    }
     /**
      * @return number of unread items in folder
      */

@@ -104,6 +104,15 @@ public class ZModifyFolderEvent implements ZModifyItemEvent {
 
     /**
      * @param defaultValue value to return if unchanged
+     * @return new size count, or defaultVslue if unchanged
+     * @throws ServiceException on error
+     */
+    public long getSize(long defaultValue) throws ServiceException {
+        return mFolderEl.getAttributeLong(MailConstants.A_SIZE, defaultValue);
+    }
+    
+    /**
+     * @param defaultValue value to return if unchanged
      * @return new message count, or defaultValue if unchanged
      * @throws ServiceException on error
      */
