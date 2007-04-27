@@ -27,7 +27,7 @@ package com.zimbra.cs.zimlet;
 import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.Set;
+import java.util.*;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -56,7 +56,9 @@ import com.zimbra.common.util.ZimbraLog;
 @SuppressWarnings("serial")
 public class ZimletFilter extends ZimbraServlet implements Filter {
 
-	private static final String ZIMLET_URL = "^/service/zimlet/([^/\\?]+)[/\\?]?.*$";
+    public static final String ALLOWED_ZIMLETS = "com.zimbra.cs.zimlet.Allowed";
+
+	private static final String ZIMLET_URL = "^/service/zimlet(?:/res)?/([^/\\?]+)[/\\?]?.*$";
 	private Pattern mPattern;
 	
 	public void init(FilterConfig config) throws ServletException {
@@ -68,15 +70,21 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 				res instanceof HttpServletResponse);
 	}
 	
-	private String getZimletName(HttpServletRequest req) throws ServletException {
+	private List<String> getZimletNames(HttpServletRequest req) throws ServletException {
 		String uri = req.getRequestURI();
 		if (uri == null) {
 			return null;
 		}
 		Matcher matcher = mPattern.matcher(uri);
 		if (matcher.matches()) {
-			return matcher.group(1);
-		}
+            List<String> names = new LinkedList<String>();
+            StringTokenizer tokenizer = new StringTokenizer(matcher.group(1), ",");
+            while (tokenizer.hasMoreTokens()) {
+                String token = tokenizer.nextToken();
+                names.add(token);
+            }
+            return names;
+        }
 		return null;
 	}
 
@@ -113,45 +121,62 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
     		return;
         }
         
-    	String zimletName = getZimletName(req);
-    	if (zimletName == null) {
-	    	ZimbraLog.zimlet.info("no zimlet in the request");
+    	List<String> zimletNames = getZimletNames(req);
+    	if (zimletNames == null || zimletNames.size() == 0) {
+	    	ZimbraLog.zimlet.info("no zimlets in the request");
         	resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
     		return;
     	}
-    	
-    	if (!zimletName.equals(com.zimbra.cs.zimlet.ZimletUtil.ZIMLET_DEV_DIR)) {
-            try {
-            	Provisioning prov = Provisioning.getInstance();
-            	Account account = prov.get(AccountBy.id, authToken.getAccountId());
-            	Zimlet z = prov.getZimlet(zimletName);
-            	if (z == null) {
-        	    	ZimbraLog.zimlet.info("no such zimlet");
-                	resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            		return;
-            	}
-            	boolean isAdmin = (authToken.isAdmin() || authToken.isDomainAdmin());
-            	if (z.isExtension()) {
-            		// admin zimlets are accessible only by admins through admin app.
-            		if (!isAdmin) {
-                    	ZimbraLog.zimlet.info("unauthorized request to zimlet "+zimletName+" from non admin user "+authToken.getAccountId());
-                    	resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                		return;
-            		}
-            	} else {
-    	        	Set zimlets = prov.getCOS(account).getMultiAttrSet(Provisioning.A_zimbraZimletAvailableZimlets);
-    	        	if (!zimlets.contains(zimletName)) {
-    	            	ZimbraLog.zimlet.info("unauthorized request to zimlet "+zimletName+" from user "+authToken.getAccountId());
-    	            	resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
-    	        		return;
-    	        	}
-            	}
-            } catch (ServiceException se) {
-            	ZimbraLog.zimlet.info("cannot resolve account "+authToken.getAccountId());
-            	resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            	return;
+
+        Provisioning prov = null;
+        Account account = null;
+
+        Iterator<String> iter = zimletNames.iterator();
+        while (iter.hasNext()) {
+            String zimletName = iter.next();
+            if (!zimletName.equals(com.zimbra.cs.zimlet.ZimletUtil.ZIMLET_DEV_DIR)) {
+                if (account == null) {
+                    try {
+                        prov = Provisioning.getInstance();
+                        account = prov.get(AccountBy.id, authToken.getAccountId());
+                    } catch (ServiceException se) {
+                        ZimbraLog.zimlet.info("cannot resolve account "+authToken.getAccountId());
+                        resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                        return;
+                    }
+                }
+
+                try {
+                    Zimlet z = prov.getZimlet(zimletName);
+                    if (z == null) {
+                        ZimbraLog.zimlet.info("no such zimlet: "+zimletName);
+                        iter.remove();
+                        continue;
+                    }
+
+                    boolean isAdmin = (authToken.isAdmin() || authToken.isDomainAdmin());
+                    if (z.isExtension()) {
+                        // admin zimlets are accessible only by admins through admin app.
+                        if (!isAdmin) {
+                            ZimbraLog.zimlet.info("unauthorized request to zimlet "+zimletName+" from non admin user "+authToken.getAccountId());
+                            iter.remove();
+                        }
+                    } else {
+                        Set zimlets = prov.getCOS(account).getMultiAttrSet(Provisioning.A_zimbraZimletAvailableZimlets);
+                        if (!zimlets.contains(zimletName)) {
+                            ZimbraLog.zimlet.info("unauthorized request to zimlet "+zimletName+" from user "+authToken.getAccountId());
+                            iter.remove();
+                        }
+                    }
+                }
+                catch (ServiceException se) {
+                    ZimbraLog.zimlet.info("service exception to zimlet "+zimletName+" from user "+authToken.getAccountId()+": "+se.getMessage());
+                    iter.remove();
+                }
             }
-    	}
+        }
+
+        req.setAttribute(ZimletFilter.ALLOWED_ZIMLETS, zimletNames);
         chain.doFilter(req, resp);
 	}
 

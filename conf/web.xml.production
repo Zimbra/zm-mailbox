@@ -177,6 +177,15 @@
     <load-on-startup>9</load-on-startup>
   </servlet>
 
+  <servlet>
+    <servlet-name>ZimletResources</servlet-name>
+    <servlet-class>com.zimbra.cs.zimlet.ZimletResources</servlet-class>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>80, 443, 7070, 7443, 7071</param-value>
+    </init-param>
+  </servlet>
+
   <servlet-mapping>
     <servlet-name>ExtensionDispatcherServlet</servlet-name>
     <url-pattern>/extension/*</url-pattern>
@@ -240,5 +249,10 @@
   <servlet-mapping>
     <servlet-name>DavServlet</servlet-name>
     <url-pattern>/dav/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>ZimletResources</servlet-name>
+    <url-pattern>/zimlet/res/*</url-pattern>
   </servlet-mapping>
 </web-app>
