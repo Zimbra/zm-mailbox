@@ -31,26 +31,6 @@ JAVA_BINARY = /usr/bin/java
 PUSHED_EXT := jnilib.MacOSX.i386
 endif
 
-CLASSES = $(BUILD)/classes
-
-JAVA_FILES = \
-	com/zimbra/znative/IO.java \
-	com/zimbra/znative/Process.java \
-	com/zimbra/znative/ProcessorUsage.java \
-	com/zimbra/znative/ResourceUsage.java \
-	com/zimbra/znative/Util.java \
-	com/zimbra/znative/OperationFailedException.java \
-	com/zimbra/znative/tests/HardLinkTest.java \
-	com/zimbra/znative/tests/ChmodTest.java \
-	com/zimbra/znative/tests/LinkCountTest.java \
-	com/zimbra/znative/tests/ProcessTest.java \
-	com/zimbra/znative/tests/UsageTest.java
-
-JAVA_SOURCES = $(patsubst %,$(SRC)/java/%,$(JAVA_FILES))
-
-JAVA_CLASSES = $(patsubst %,$(CLASSES)/%,$(JAVA_FILES:%.java=%.class))
-
-
 all: FORCE
 	ant
 	$(MAKE) $(BUILD)/libzimbra-native.$(SHARED_EXT)
