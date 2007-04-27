@@ -1435,7 +1435,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Network interface on which notification server should listen; if empty, binds to all interfaces.</desc>
 </attr>
 
-<attr id="318" name="zimbraNotifyBindPort" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
+<attr id="318" name="zimbraNotifyBindPort" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
   <globalConfigValue>7035</globalConfigValue>
   <desc>Port number on which notification server should listen.</desc>
 </attr>
@@ -1449,7 +1449,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Network interface on which SSL notification server should listen; if empty, binds to all interfaces</desc>
 </attr>
 
-<attr id="321" name="zimbraNotifySSLBindPort" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
+<attr id="321" name="zimbraNotifySSLBindPort" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
   <globalConfigValue>7036</globalConfigValue>
   <desc>Port number on which notification server should listen.</desc>
 </attr>

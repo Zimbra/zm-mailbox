@@ -36,9 +36,6 @@ public class CheckPortConflict implements AttributeCallback {
         sPortAttrs.add(Provisioning.A_zimbraMailPort);
         sPortAttrs.add(Provisioning.A_zimbraMailSSLPort);
             
-        sPortAttrs.add(Provisioning.A_zimbraNotifyBindPort);
-        sPortAttrs.add(Provisioning.A_zimbraNotifySSLBindPort);
-            
         sPortAttrs.add(Provisioning.A_zimbraPop3BindPort);
         sPortAttrs.add(Provisioning.A_zimbraPop3SSLBindPort);
         sPortAttrs.add(Provisioning.A_zimbraPop3ProxyBindPort);
