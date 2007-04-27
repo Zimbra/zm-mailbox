@@ -41,6 +41,7 @@ JAVA_FILES = \
 	com/zimbra/znative/Util.java \
 	com/zimbra/znative/OperationFailedException.java \
 	com/zimbra/znative/tests/HardLinkTest.java \
+	com/zimbra/znative/tests/ChmodTest.java \
 	com/zimbra/znative/tests/LinkCountTest.java \
 	com/zimbra/znative/tests/ProcessTest.java \
 	com/zimbra/znative/tests/UsageTest.java
@@ -51,33 +52,8 @@ JAVA_CLASSES = $(patsubst %,$(CLASSES)/%,$(JAVA_FILES:%.java=%.class))
 
 
 all: FORCE
-	$(MAKE) $(BUILD)/zimbra-native.jar
+	ant
 	$(MAKE) $(BUILD)/libzimbra-native.$(SHARED_EXT)
-
-#
-# Build jar file that wraps native code and it's shared library.
-#
-$(BUILD)/zimbra-native.jar: remove_classes_list $(JAVA_CLASSES) 
-	mkdir -p $(CLASSES)
-	@CLASSES_LIST="$(shell cat $(BUILD)/.classes.list)"; \
-	    if [ -n "$$CLASSES_LIST" ]; then \
-	        echo javac -source 1.4 -target 1.4 -d $(CLASSES) \
-	            -sourcepath $(SRC)/java -classpath $(CLASSES) \
-		    $(shell cat $(BUILD)/.classes.list); \
-	        javac -source 1.4 -target 1.4 -d $(CLASSES) \
-	            -sourcepath $(SRC)/java -classpath $(CLASSES) \
-		    $(shell cat $(BUILD)/.classes.list) || exit 1; \
-		$(RM) $@; \
-	    fi
-	jar c0vf $@ -C $(CLASSES) com;
-
-$(CLASSES)/%.class: $(SRC)/java/%.java
-	@echo $< >> $(BUILD)/.classes.list
-
-remove_classes_list: FORCE
-	$(RM) $(BUILD)/.classes.list
-	mkdir -p $(BUILD)
-	touch $(BUILD)/.classes.list
 
 FORCE: ;
 
@@ -99,38 +75,11 @@ $(BUILD)/zjniutil.o: $(SRC)/native/zjniutil.c $(SRC)/native/zjniutil.h
 
 $(BUILD)/IO.o: $(SRC)/native/IO.c $(BUILD)/IO.h $(SRC)/native/zjniutil.h
 
-$(BUILD)/IO.h: $(CLASSES)/com/zimbra/znative/IO.class
-	mkdir -p $(@D)
-	$(RM) $@
-	javah -o $@ -classpath $(CLASSES) com.zimbra.znative.IO
-
-$(BUILD)/Process.h: $(CLASSES)/com/zimbra/znative/Process.class
-	mkdir -p $(@D)
-	$(RM) $@
-	javah -o $@ -classpath $(CLASSES) com.zimbra.znative.Process
-
-$(BUILD)/ProcessorUsage.h: $(CLASSES)/com/zimbra/znative/ProcessorUsage.class
-	mkdir -p $(@D)
-	$(RM) $@
-	javah -o $@ -classpath $(CLASSES) com.zimbra.znative.ProcessorUsage
-
-$(BUILD)/ResourceUsage.h: $(CLASSES)/com/zimbra/znative/ResourceUsage.class
-	mkdir -p $(@D)
-	$(RM) $@
-	javah -o $@ -classpath $(CLASSES) com.zimbra.znative.ResourceUsage
-
-$(BUILD)/Util.h: $(CLASSES)/com/zimbra/znative/Util.class
-	mkdir -p $(@D)
-	$(RM) $@
-	javah -o $@ -classpath $(CLASSES) com.zimbra.znative.Util
-
 #
 # Hack to copy to destination for use on incremental builds in a linux
 # dev environment.
 #
 push: all
-	p4 edit ../ZimbraCommon/jars/zimbra-native.jar
-	cp $(BUILD)/zimbra-native.jar ../ZimbraCommon/jars
 	p4 edit ../ZimbraServer/lib/libzimbra-native.$(PUSHED_EXT)
 	cp $(BUILD)/libzimbra-native.$(SHARED_EXT) ../ZimbraServer/lib/libzimbra-native.$(PUSHED_EXT)
 

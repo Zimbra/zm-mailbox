@@ -117,3 +117,44 @@ JNIEXPORT jint JNICALL Java_com_zimbra_znative_IO_linkCount0
         return -1;
     }
 } 
+
+JNIEXPORT void JNICALL Java_com_zimbra_znative_IO_chmod0
+(JNIEnv *env, jclass clz, jbyteArray jpath, jlong mode)
+{
+    int len;
+    char *path;
+
+    if (jpath == NULL) {
+        ZimbraThrowNPE(env, "IO.chmod0 path");
+        return;
+    }
+
+    len = (*env)->GetArrayLength(env, jpath);
+    if (len <= 0) {
+        ZimbraThrowIAE(env, "IO.chmod0 path length <= 0");
+        return;
+    }
+
+    path = alloca(len + 1);      /* +1 for \0 */
+    memset(path, 0, len + 1); /* +1 for \0 */
+    (*env)->GetByteArrayRegion(env, jpath, 0, len, (jbyte *)path);
+
+    if (chmod(path, (mode_t)mode) != 0) {
+        char msg[256];
+        snprintf(msg, sizeof(msg), "chmod(%s): %s", path, strerror(errno));
+        ZimbraThrowIOE(env, msg);
+    }
+} 
+
+JNIEXPORT jint JNICALL Java_com_zimbra_znative_IO_S_1IRUSR(JNIEnv *e, jclass c) { return S_IRUSR; }
+JNIEXPORT jint JNICALL Java_com_zimbra_znative_IO_S_1IWUSR(JNIEnv *e, jclass c) { return S_IWUSR; }
+JNIEXPORT jint JNICALL Java_com_zimbra_znative_IO_S_1IXUSR(JNIEnv *e, jclass c) { return S_IXUSR; }
+JNIEXPORT jint JNICALL Java_com_zimbra_znative_IO_S_1IRGRP(JNIEnv *e, jclass c) { return S_IRGRP; }
+JNIEXPORT jint JNICALL Java_com_zimbra_znative_IO_S_1IWGRP(JNIEnv *e, jclass c) { return S_IWGRP; }
+JNIEXPORT jint JNICALL Java_com_zimbra_znative_IO_S_1IXGRP(JNIEnv *e, jclass c) { return S_IXGRP; }
+JNIEXPORT jint JNICALL Java_com_zimbra_znative_IO_S_1IROTH(JNIEnv *e, jclass c) { return S_IROTH; }
+JNIEXPORT jint JNICALL Java_com_zimbra_znative_IO_S_1IWOTH(JNIEnv *e, jclass c) { return S_IWOTH; }
+JNIEXPORT jint JNICALL Java_com_zimbra_znative_IO_S_1IXOTH(JNIEnv *e, jclass c) { return S_IXOTH; }
+JNIEXPORT jint JNICALL Java_com_zimbra_znative_IO_S_1ISUID(JNIEnv *e, jclass c) { return S_ISUID; }
+JNIEXPORT jint JNICALL Java_com_zimbra_znative_IO_S_1ISGID(JNIEnv *e, jclass c) { return S_ISGID; }
+JNIEXPORT jint JNICALL Java_com_zimbra_znative_IO_S_1ISVTX(JNIEnv *e, jclass c) { return S_ISVTX; }

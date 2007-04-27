@@ -36,6 +36,43 @@ public class IO {
     private static native int linkCount0(byte[] path)
         throws IOException;
 
+    private static native void chmod0(byte[] path, long mode)
+	throws IOException;
+
+    private static native int S_IRUSR();
+    private static native int S_IWUSR();
+    private static native int S_IXUSR();
+    private static native int S_IRGRP();
+    private static native int S_IWGRP();
+    private static native int S_IXGRP();
+    private static native int S_IROTH();
+    private static native int S_IWOTH();
+    private static native int S_IXOTH();
+    private static native int S_ISUID();
+    private static native int S_ISGID();
+    private static native int S_ISVTX();
+    
+    public static final int S_IRUSR = Util.haveNativeCode() ? S_IRUSR() : 0;
+    public static final int S_IWUSR = Util.haveNativeCode() ? S_IWUSR() : 0;
+    public static final int S_IXUSR = Util.haveNativeCode() ? S_IXUSR() : 0;
+    public static final int S_IRGRP = Util.haveNativeCode() ? S_IRGRP() : 0;
+    public static final int S_IWGRP = Util.haveNativeCode() ? S_IWGRP() : 0;
+    public static final int S_IXGRP = Util.haveNativeCode() ? S_IXGRP() : 0;
+    public static final int S_IROTH = Util.haveNativeCode() ? S_IROTH() : 0;
+    public static final int S_IWOTH = Util.haveNativeCode() ? S_IWOTH() : 0;
+    public static final int S_IXOTH = Util.haveNativeCode() ? S_IXOTH() : 0;
+    public static final int S_ISUID = Util.haveNativeCode() ? S_ISUID() : 0;
+    public static final int S_ISGID = Util.haveNativeCode() ? S_ISGID() : 0;
+    public static final int S_ISVTX = Util.haveNativeCode() ? S_ISVTX() : 0;
+    
+    public static void chmod(String path, long mode) throws IOException {
+	if (!Util.haveNativeCode()) {
+	    // No-op where there is no native-code
+	    return;
+	}
+	chmod0(path.getBytes(), mode);
+    }
+
     /**
      * Creates a hard link "newpath" to existing "oldpath".  If
      * we do not support hard links on current platform we just copy
