@@ -29,7 +29,8 @@ extends ZimbraServlet {
 
     private static final Map<String,String> TYPES = new HashMap<String,String>();
 
-    private static final Pattern RE_REMOTE = Pattern.compile("^((https?|ftps?):\\\\x2f\\\\x2f|\\\\x2f)");
+    private static final Pattern RE_REMOTE = Pattern.compile("^((https?|ftps?)://|/)");
+    private static final Pattern RE_CSS_URL = Pattern.compile("(url\\(['\"]?)([^'\"\\)]*)", Pattern.CASE_INSENSITIVE);
 
     static {
         TYPES.put("css", "text/css");
@@ -102,8 +103,9 @@ extends ZimbraServlet {
                 ServletContext clientContext = baseContext.getContext("/zimbra/");
                 RequestDispatcher dispatcher = clientContext.getRequestDispatcher("/js/msgs/");
 
-                List<String> filenames = getFilenames(req, type);
-                for (final String filename : filenames) {
+                List<ZimletFile> files = getZimletFiles(req, type);
+                for (ZimletFile file : files) {
+                    final String filename = file.getAbsolutePath();
                     if (!filename.startsWith("/msgs/")) {
                         continue;
                     }
@@ -138,6 +140,8 @@ extends ZimbraServlet {
 
     private String generate(HttpServletRequest req, String type)
     throws IOException {
+        boolean isCSS = type.equals(T_CSS);
+
         String commentStart = "/* ";
         String commentContinue = " * ";
         String commentEnd = " */";
@@ -146,8 +150,9 @@ extends ZimbraServlet {
         CharArrayWriter cout = new CharArrayWriter(4096 << 2); // 16K buffer to start
         PrintWriter out = new PrintWriter(cout);
 
-        List<String> filenames = getFilenames(req, type);
-        for (String filename : filenames) {
+        List<ZimletFile> files = getZimletFiles(req, type);
+        for (ZimletFile file : files) {
+            String filename = file.getAbsolutePath();
             if (filename.startsWith("/msgs/")) {
                 continue;
             }
@@ -161,9 +166,8 @@ extends ZimbraServlet {
             out.println();
 
             // print file
-            File file = new File(filename);
             if (file.exists()) {
-                printFile(out, file);
+                printFile(out, file, file.zimletName, isCSS);
             }
             else {
                 out.print(commentStart);
@@ -179,10 +183,39 @@ extends ZimbraServlet {
 
     } // generate(HttpServletRequest,String):String
 
-    private void printFile(PrintWriter out, File file) throws IOException {
+    private void printFile(PrintWriter out, File file,
+                           String zimletName, boolean isCSS)
+    throws IOException {
         BufferedReader in = new BufferedReader(new FileReader(file));
         String line;
         while ((line = in.readLine()) != null) {
+            if (isCSS) {
+                Matcher url = RE_CSS_URL.matcher(line);
+                if (url.find()) {
+                    int offset = 0;
+                    do {
+                        int start = url.start();
+                        if (start > offset) {
+                            out.print(line.substring(offset, start));
+                        }
+
+                        out.print(url.group(1));
+
+                        String s = url.group(2);
+                        Matcher remote = RE_REMOTE.matcher(s);
+                        if (!remote.find()) {
+                            out.print("/service/zimlet/"+zimletName+"/");
+                        }
+                        out.print(s);
+
+                        offset = url.end();
+                    } while (url.find());
+                    if (offset < line.length()) {
+                        out.println(line.substring(offset));
+                    }
+                    continue;
+                }
+            }
             out.println(line);
         }
         in.close();
@@ -215,8 +248,8 @@ extends ZimbraServlet {
         return str.toString();
     }
 
-    private List<String> getFilenames(HttpServletRequest req, String type) {
-        List<String> filenames = new LinkedList<String>();
+    private List<ZimletFile> getZimletFiles(HttpServletRequest req, String type) {
+        List<ZimletFile> files = new LinkedList<ZimletFile>();
         List<String> zimletNames = (List<String>)req.getAttribute(ZimletFilter.ALLOWED_ZIMLETS);
         for (String zimletName : zimletNames) {
             // read zimlet manifest
@@ -232,7 +265,7 @@ extends ZimbraServlet {
             // add properties files
             boolean isJavaScript = type.equals(T_JAVASCRIPT);
             if (isJavaScript) {
-                filenames.add("/msgs/"+zimletName);
+                files.add(new ZimletFile(zimletName, "/msgs/"+zimletName));
             }
 
             // add included files
@@ -247,10 +280,10 @@ extends ZimbraServlet {
                 if (RE_REMOTE.matcher(filename).matches()) {
                     continue;
                 }
-                filenames.add(dirname+"/"+filename);
+                files.add(new ZimletFile(zimletName, dirname+"/"+filename));
             }
         }
-        return filenames;
+        return files;
     }
 
     private Document parseDocument(File file, String zimletName) {
@@ -274,6 +307,18 @@ extends ZimbraServlet {
             child = child.getNextSibling();
         }
         return str.toString();
+    }
+
+    //
+    // Classes
+    //
+
+    static class ZimletFile extends File {
+        public String zimletName;
+        public ZimletFile(String zimletName, String filename) {
+            super(filename);
+            this.zimletName = zimletName;
+        }
     }
 
 } // class ZimletResources
