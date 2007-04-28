@@ -44,8 +44,6 @@ import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
-import com.zimbra.znative.IO;
-
 public class LocalConfig {
 
     static final String E_LOCALCONFIG = "localconfig";
@@ -157,7 +155,6 @@ public class LocalConfig {
         xmlWriter.write(fileWriter);
         fileWriter.close();
         configFile.delete();
-        IO.chmod(tempFile.getPath(), IO.S_IRUSR | IO.S_IWUSR);
         tempFile.renameTo(configFile);
     }
 
