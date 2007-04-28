@@ -626,7 +626,6 @@
 	<target name="choose-db-schema">
 		<java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path"
 			  outputproperty="LC.mbox.group.disabled" failonerror="true">
-			<sysproperty key="java.library.path" value="${zimbra.home.dir}/lib"/>
 			<arg line="-q -c conf/localconfig.xml -m nokey debug_disable_mailbox_group"/>
 		</java>
 		<condition property="db.schema.dir" value="src/db/old_schema">
@@ -686,7 +685,6 @@
 		<antcall target="ldap-add"><param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_mimehandlers.ldif"/></antcall>
 		<echo>Editing localconfig zimbra_server_hostname to be ${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-			<sysproperty key="java.library.path" value="${zimbra.home.dir}/lib"/>
 			<arg line="-e zimbra_server_hostname=${zimbra.server.hostname}"/>
 		</java>
 		<echo>Running zmprov commands</echo>
