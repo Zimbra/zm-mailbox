@@ -41,6 +41,9 @@ import com.zimbra.common.localconfig.LC;
 
 public class LmtpClient {
 
+    public static enum Protocol { LMTP, SMTP };
+
+    private Protocol mProtocol;
 	private Socket mConnection;
 	private String mGreetname;
 	private LmtpInputStream mIn;
@@ -48,8 +51,12 @@ public class LmtpClient {
 	private boolean mNewConnection;
 	private String mResponse;
 	private boolean mWarnOnRejectedRecipients = true;
-	
-	public LmtpClient(String host, int port) throws IOException {
+
+	public LmtpClient(String host, int port, Protocol proto) throws IOException {
+	    if (proto != null)
+            mProtocol = proto;
+        else
+            mProtocol = Protocol.LMTP;
 		mGreetname = LC.zimbra_server_hostname.value();
 
 		mConnection = new Socket(host, port);
@@ -58,6 +65,10 @@ public class LmtpClient {
 		
 		mNewConnection = true;
 	}
+
+    public LmtpClient(String host, int port) throws IOException {
+        this(host, port, Protocol.LMTP);
+    }
 
 	public void warnOnRejectedRecipients(boolean yesno) {
 		mWarnOnRejectedRecipients = yesno;
@@ -117,7 +128,12 @@ public class LmtpClient {
 		mResponse = sb.toString();
 		return positiveReplyCode;
 	}
-	
+
+    public boolean sendMessage(byte[] msg, String recipient, String sender, String logLabel)
+    throws IOException, LmtpProtocolException {
+        return sendMessage(msg, new String[] { recipient }, sender, logLabel);
+    }
+    
     /**
      * Sends a MIME message.
      * @param msg the message body
@@ -126,7 +142,7 @@ public class LmtpClient {
      * @param logLabel context string used for logging status
      * @return <code>true</code> if the message was successfully delivered to all recipients
      */
-    public boolean sendMessage(byte[] msg, List<String> recipients, String sender, String logLabel)
+    public boolean sendMessage(byte[] msg, String[] recipients, String sender, String logLabel)
         throws IOException, LmtpProtocolException 
     {
         long start = System.currentTimeMillis();
@@ -137,8 +153,11 @@ public class LmtpClient {
 			if (!replyOk()) {
 				throw new LmtpProtocolException(mResponse);
 			}
-			
-			sendLine("LHLO " + mGreetname);
+
+            if (Protocol.SMTP.equals(mProtocol))
+                sendLine("EHLO " + mGreetname);
+            else
+    			sendLine("LHLO " + mGreetname);
 			if (!replyOk()) {
 				throw new LmtpProtocolException(mResponse);
 			}
@@ -154,7 +173,7 @@ public class LmtpClient {
 			throw new LmtpProtocolException(mResponse);
 		}
 
-        List<String> acceptedRecipients = new ArrayList<String>();
+        List<String> acceptedRecipients = new ArrayList<String>(recipients.length);
 		for (String recipient : recipients) {
 			sendLine("RCPT TO:<" + recipient + ">");
 			if (replyOk()) {
@@ -195,7 +214,7 @@ public class LmtpClient {
 			if (replyOk()) {
                 long elapsed = System.currentTimeMillis() - start;
                 if (!mQuiet) {
-                    info("Delivery OK msg=" + logLabel + " rcpt=" + recipient + " elapsed=" + elapsed + "ms");
+                    info(mProtocol + " delivery OK msg=" + logLabel + " rcpt=" + recipient + " elapsed=" + elapsed + "ms");
                 }
             } else {
                 allDelivered = false;

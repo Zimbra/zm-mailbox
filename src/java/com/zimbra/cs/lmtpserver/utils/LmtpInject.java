@@ -27,8 +27,6 @@ package com.zimbra.cs.lmtpserver.utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -42,6 +40,7 @@ import org.apache.commons.pool.PoolableObjectFactory;
 import org.apache.commons.pool.impl.GenericObjectPool;
 
 import com.zimbra.cs.lmtpserver.LmtpProtocolException;
+import com.zimbra.cs.lmtpserver.utils.LmtpClient.Protocol;
 import com.zimbra.common.util.*;
 
 public class LmtpInject {
@@ -59,6 +58,7 @@ public class LmtpInject {
             "envelope recipients (rcpt to).  This option accepts multiple arguments, so it can't be last " +
             "if a list of input files is used.");
         ropt.setArgs(Option.UNLIMITED_VALUES);
+        mOptions.addOption(null, "sendToAll", false, "send each message to all recipients");
         mOptions.addOption(ropt);
         mOptions.addOption("t", "threads",   true,  "number of worker threads (default 1)");
         mOptions.addOption("q", "quiet",     false, "don't print per-message status");
@@ -69,6 +69,7 @@ public class LmtpInject {
         mOptions.addOption("u", "username",  true,  "username prefix (default \"user\")");
         mOptions.addOption("D", "domain",    true,  "default per-connection recipient domain (default example.zimbra.com)");
         mOptions.addOption("z", "repeat",    true,  "repeatedly inject these messages NUM times");
+        mOptions.addOption(null, "smtp",     false, "use SMTP protocol instead of LMTP");
     }
 
     private static void usage(String errmsg) {
@@ -108,6 +109,7 @@ public class LmtpInject {
         if (cl.hasOption("t")) {
             threads = Integer.valueOf(cl.getOptionValue("t")).intValue();
         }
+
         String host = null;
         if (cl.hasOption("a")) {
             host = cl.getOptionValue("a");
@@ -116,12 +118,15 @@ public class LmtpInject {
         }
 
         int port;
-        if (cl.hasOption("p")) {
-            port = Integer.valueOf(cl.getOptionValue("p")).intValue();
-        } else {
+        Protocol proto = null;
+        if (cl.hasOption("smtp")) {
+            proto = Protocol.SMTP;
+            port = 25;
+        } else
             port = 7025;
-        }
-
+        if (cl.hasOption("p"))
+            port = Integer.valueOf(cl.getOptionValue("p")).intValue();
+        
         mLog.info("connections=" + threads + " host=" + host + " port=" + port);
 
         String defaultUsernamePrefix = "user";
@@ -136,6 +141,7 @@ public class LmtpInject {
         }
         LmtpClientFactory.setRecipientDomain(defaultRecipientDomain);
 
+        boolean sendToAll = cl.hasOption("sendToAll");
         String[] recipients = null;
         String sender = null;
         if (cl.hasOption("r"))
@@ -199,28 +205,27 @@ public class LmtpInject {
         int totalFailed = 0;
         int totalSucceeded = 0;
 
+        LmtpInject injector = null;
+        try {
+            injector = new LmtpInject(threads,
+                    sender, sendToAll, recipients,
+                    host, port, proto,
+                    numRuns, quietMode, tracingEnabled);
+        } catch (Exception e) {
+            mLog.error("Unable to initialize LmtpInject", e);
+            System.exit(-1);
+        }
+
+        injector.setReportEvery(everyN);
+        int numFiles = files.length;
+        if (stopAfter > 0 && warmUpThreshold >= 0)
+            numFiles = Math.min(files.length, warmUpThreshold + stopAfter);
+        injector.setNumInputFiles(numFiles);
+        injector.markStartTime();
+        if (warmUpThreshold > 0)
+            injector.enableWarmUp(warmUpThreshold);
+
         for (int runCount = 0; runCount < numRuns; runCount++) {
-
-            LmtpInject injector = null;
-            try {
-                injector = new LmtpInject(threads,
-                        sender, recipients,
-                        host, port,
-                        quietMode, tracingEnabled);
-            } catch (Exception e) {
-                mLog.error("Unable to initialize LmtpInject", e);
-                System.exit(-1);
-            }
-
-            injector.setReportEvery(everyN);
-            int numFiles = files.length;
-            if (stopAfter > 0 && warmUpThreshold >= 0)
-                numFiles = Math.min(files.length, warmUpThreshold + stopAfter);
-            injector.setNumInputFiles(numFiles);
-            injector.markStartTime();
-            if (warmUpThreshold > 0)
-                injector.enableWarmUp(warmUpThreshold);
-
             for (int i = 0; i < numFiles; i++) {
                 if (files[i].isDirectory()) {
                     mLog.info("Ignoring directory " + files[i].getPath());
@@ -232,49 +237,51 @@ public class LmtpInject {
                 if (!result)
                     injector.incFailure();
             }
-
-            synchronized (injector.mFinishCond) {
-                try {
-                    if (!injector.mFinished)
-                        injector.mFinishCond.wait();
-                } catch (InterruptedException e) {
-                    mLog.warn("InterruptedException while waiting for queue to clear", e);
-                }
-            }
-
-            // Wait until thread pool finishes processing all scheduled injections.
-            try {
-                injector.cleanup();
-            } catch (Exception e) {
-                mLog.warn("Exception while shutting down LmtpInject", e);
-            }
-
-            int succeeded = injector.getSuccessCount();
-            int failedThisTime = injector.getFailureCount();
-            long elapsedMS = injector.getElapsedTime();
-            double elapsed = elapsedMS / 1000.0;
-            double msPerMsg = 0.0;
-            double msgSizeKB = 0.0;
-            if (succeeded > 0) {
-                msPerMsg = elapsedMS;
-                msPerMsg /= succeeded;
-                msPerMsg = (double) (Math.round(msPerMsg * 1000)) / 1000;
-                msgSizeKB = injector.mFileSizeTotal / 1024.0;
-                msgSizeKB /= succeeded;
-                msgSizeKB = (double) (Math.round(msgSizeKB * 1000)) / 1000;
-            }
-            double msgPerSec = ((double) succeeded / (double) elapsedMS) * 1000;
-            msgPerSec = (double) (Math.round(msgPerSec * 1000)) / 1000;
-            System.out.println();
-            System.out.println("LmtpInject Finished");
-            System.out.println("submitted=" + succeeded + " failed=" + failedThisTime);
-            System.out.println("maximum concurrent active connections: " + injector.mHwmActiveClients);
-            System.out.println(elapsed + "s, " + msPerMsg + "ms/msg, " + msgPerSec + "mps");
-            System.out.println("average message size = " + msgSizeKB + "KB");
-
-            totalFailed+=failedThisTime;
-            totalSucceeded+=succeeded;
         }
+
+        synchronized (injector.mFinishCond) {
+            try {
+                if (!injector.mFinished)
+                    injector.mFinishCond.wait();
+            } catch (InterruptedException e) {
+                mLog.warn("InterruptedException while waiting for queue to clear", e);
+            }
+        }
+
+        // Wait until thread pool finishes processing all scheduled injections.
+        try {
+            injector.cleanup();
+        } catch (Exception e) {
+            mLog.warn("Exception while shutting down LmtpInject", e);
+        }
+
+        int succeeded = injector.getSuccessCount();
+        int failedThisTime = injector.getFailureCount();
+        long elapsedMS = injector.getElapsedTime();
+        double elapsed = elapsedMS / 1000.0;
+        double msPerMsg = 0.0;
+        double msgSizeKB = 0.0;
+        if (succeeded > 0) {
+            msPerMsg = elapsedMS;
+            msPerMsg /= succeeded;
+            msgSizeKB = injector.mFileSizeTotal / 1024.0;
+            msgSizeKB /= succeeded;
+        }
+        double msgPerSec = ((double) succeeded / (double) elapsedMS) * 1000;
+        System.out.println();
+        System.out.printf(
+                "LmtpInject Finished\n" +
+                "submitted=%d failed=%d\n" +
+                "maximum concurrent active connections: %d\n" +
+                "%.2fs, %.2fms/msg, %.2fmps\n" +
+                "average message zie = %.2fKB\n",
+                succeeded, failedThisTime,
+                injector.mHwmActiveClients,
+                elapsed, msPerMsg, msgPerSec,
+                msgSizeKB);
+
+        totalFailed+=failedThisTime;
+        totalSucceeded+=succeeded;
 
         if (numRuns > 1) {
             System.out.println("\nLmtpInject Finished "+numRuns+" runs");
@@ -287,7 +294,11 @@ public class LmtpInject {
 
 
     private String mSender;
-    private List<String> mRecipients;
+    private boolean mSendToAll;
+    private String[] mRecipients;
+    private String[][] mSingleRecipients;
+    private int mNextRecipientIndex = 0;
+    private final Object mNextRecipientGuard = new Object();
 
     private ThreadPool mThreadPool;
     private LmtpClientPool mLmtpClientPool;
@@ -298,6 +309,7 @@ public class LmtpInject {
     private final Object mFinishCond = new Object();
 
     private int mNumInputFiles;
+    private int mNumRuns;
     private int mSucceeded;
     private int mFailed;
     private int mIgnored;
@@ -315,20 +327,28 @@ public class LmtpInject {
 
     private LmtpInject(int threadPoolSize,
                        String sender,
+                       boolean sendToAll,
                        String[] recipients,
                        String host,
                        int port,
+                       Protocol proto,
+                       int numRuns,
                        boolean quietMode,
                        boolean tracingEnabled)
     throws Exception {
         mSender = sender;
-        if (recipients != null) {
-            mRecipients = new ArrayList<String>(recipients.length);
-            for (int i = 0; i < recipients.length; i++)
-                mRecipients.add(recipients[i]);
+        mSendToAll = sendToAll;
+        if (recipients != null)
+            mRecipients = recipients;
+        if (!mSendToAll && recipients != null && recipients.length > 0) {
+            mSingleRecipients = new String[recipients.length][];
+            for (int i = 0; i < recipients.length; i++) {
+                mSingleRecipients[i] = new String[] { mRecipients[i] };
+            }
         }
 
         mNumInputFiles = mSucceeded = mFailed = mIgnored = 0;
+        mNumRuns = numRuns;
         mStartTime = mEndTime = mLastProgressTime = 0;
         mLastProgressCount = 0;
 
@@ -338,7 +358,8 @@ public class LmtpInject {
         if (threadPoolSize < 1)
             threadPoolSize = 1;
 
-        mLmtpClientPool = new LmtpClientPool(threadPoolSize, host, port, quietMode, tracingEnabled);
+        mLmtpClientPool = new LmtpClientPool(
+                threadPoolSize, host, port, proto, quietMode, tracingEnabled);
 
         // Force all LMTP connections in pool to connect to server.
         LmtpClient clients[] = new LmtpClient[threadPoolSize];
@@ -430,16 +451,25 @@ public class LmtpInject {
         if (report) {
             long elapsed = now - lastTime;
             long howmany = count - lastCount;
-            long rate = howmany * 1000 / elapsed;
+            double rate = 0.0;
+            if (elapsed > 0)
+                rate = (double) howmany * 1000.0 / (double) elapsed;
 
             long elapsedTotal = now - startTime;
-            long rateAvg = count * 1000 / elapsedTotal;
+            double rateAvg = 0.0;
+            if (elapsedTotal > 0)
+                rateAvg = (double) count * 1000.0 / (double) elapsedTotal;
 
-            String prefix = mWarmedUp ? "[progress] " : "[warm-up] ";
-            System.out.println(
-                prefix + count + " msgs, " + (elapsedTotal / 1000) + "s, " + rateAvg + "mps; " +
-                "last " + howmany + " msgs: " + elapsed + "ms, " + rate + "mps (active: " +
-                activeClients + "/" + activeClientsHWM + ")");
+            String prefix = mWarmedUp ? "[progress]" : "[warm-up]";
+            System.out.printf(
+                    "%s " +
+                    "%d msgs in %dms @ %.2fmps; " +
+                    "last %d msgs in %dms @ %.2fmps " +
+                    "(active: %d/%d)\n",
+                    prefix,
+                    count, elapsedTotal, rateAvg,
+                    howmany, elapsed, rate,
+                    activeClients, activeClientsHWM);
         }
     }
     public synchronized void incFailure() { mFailed++; checkDone(); }
@@ -448,10 +478,23 @@ public class LmtpInject {
     public synchronized int getSuccessCount() { return mSucceeded; }
     public synchronized int getFailureCount() { return mFailed; }
     public String getSender() { return mSender; }
-    public List<String> getRecipients() { return mRecipients; }
+
+    public String[] getRecipients() {
+        if (mSendToAll)
+            return mRecipients;
+        else {
+            int index;
+            synchronized (mNextRecipientGuard) {
+                index = mNextRecipientIndex;
+                mNextRecipientIndex++;
+                mNextRecipientIndex %= mRecipients.length;
+            }
+            return mSingleRecipients[index];
+        }
+    }
 
     private void checkDone() {
-        if (mEndTime == 0 && mSucceeded + mFailed + mIgnored + mWarmUpThreshold == mNumInputFiles) {
+        if (mEndTime == 0 && mSucceeded + mFailed + mIgnored + mWarmUpThreshold == mNumInputFiles * mNumRuns) {
             mEndTime = System.currentTimeMillis();
             synchronized (mFinishCond) {
                 mFinished = true;
@@ -546,12 +589,16 @@ public class LmtpInject {
 
         private String mHost;
         private int mPort;
+        private Protocol mProtocol;
         private boolean mQuietMode;
         private boolean mTracingEnabled;
 
-        public LmtpClientFactory(String host, int port, boolean quietMode, boolean tracingEnabled) {
+        public LmtpClientFactory(
+                String host, int port, Protocol proto, boolean quietMode,
+                boolean tracingEnabled) {
             mHost = host;
             mPort = port;
+            mProtocol = proto;
             mQuietMode = quietMode;
             mTracingEnabled = tracingEnabled;
         }
@@ -560,7 +607,7 @@ public class LmtpInject {
             LmtpClient client = null;
             String rcpt = getNextRecipientAddress();
             try {
-                client = new NamedLmtpClient(rcpt, mHost, mPort);
+                client = new NamedLmtpClient(rcpt, mHost, mPort, mProtocol);
             } catch (IOException e) {
                 mLog.error("Connection to LMTP server failed: ", e);
                 throw e;
@@ -578,18 +625,17 @@ public class LmtpInject {
     }
 
     private static class NamedLmtpClient extends LmtpClient {
-        private List<String> mRecipients;
+        private String[] mRecipients;
 
-        NamedLmtpClient(String recipient, String host, int port) throws IOException {
-            super(host, port);
-            mRecipients = new ArrayList<String>(1);
-            mRecipients.add(recipient);
+        NamedLmtpClient(String recipient, String host, int port, Protocol proto) throws IOException {
+            super(host, port, proto);
+            mRecipients = new String[] { recipient };
         }
 
-        public boolean sendMessage(byte[] msg, List<String> recipients, String sender, String logLabel)
+        public boolean sendMessage(byte[] msg, String[] recipients, String sender, String logLabel)
             throws IOException, LmtpProtocolException
         {
-            List<String> rcpts = recipients != null ? recipients : mRecipients;
+            String[] rcpts = recipients != null ? recipients : mRecipients;
             return super.sendMessage(msg, rcpts, sender, logLabel);
         }
     }
@@ -597,8 +643,11 @@ public class LmtpInject {
     private static class LmtpClientPool {
         private ObjectPool mPool;
 
-        public LmtpClientPool(int poolSize, String host, int port, boolean quietMode, boolean tracingEnabled) {
-            LmtpClientFactory factory = new LmtpClientFactory(host, port, quietMode, tracingEnabled);
+        public LmtpClientPool(
+                int poolSize, String host, int port, Protocol proto,
+                boolean quietMode, boolean tracingEnabled) {
+            LmtpClientFactory factory = new LmtpClientFactory(
+                    host, port, proto, quietMode, tracingEnabled);
             mPool = new GenericObjectPool(factory, poolSize, GenericObjectPool.WHEN_EXHAUSTED_BLOCK, -1, poolSize);
         }
 

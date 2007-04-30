@@ -227,9 +227,7 @@ public class TestUtil {
     throws Exception {
         String message = getTestMessage(messageNum, subject, recipient, sender);
         LmtpClient lmtp = new LmtpClient("localhost", 7025);
-        List<String> recipients = new ArrayList<String>();
-        recipients.add(recipient);
-        lmtp.sendMessage(message.getBytes(), recipients, sender, "TestUtil");
+        lmtp.sendMessage(message.getBytes(), recipient, sender, "TestUtil");
         lmtp.close();
     }
     
