@@ -1,6 +1,8 @@
 <project name="ZimbraServer" default="jar">
 
-	<property environment="env"/>
+    <property file='build-custom.properties' />
+
+    <property environment="env"/>
 
 	<!-- This machine's hostname.  Use ZIMBRA_HOSTNAME environment variable
 	     if set.  If not, use "hostname" command output. -->
