@@ -40,7 +40,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class NoOp extends MailDocumentHandler  {
     
-    private static final long NOP_TIMEOUT = 10 * 60 * 1000; // 10 minutes
+    private static final long NOP_TIMEOUT = 5 * 60 * 1000; // 5 minutes per Zimbra Desktop (NAT issues), TODO perhaps allow client to specify a timeout?
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
