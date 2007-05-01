@@ -241,7 +241,7 @@ public class MailboxManager {
      *    <li><code>service.WRONG_HOST</code> - if the Account's mailbox
      *        lives on a different host</ul> */
     public Mailbox getMailboxByAccountId(String accountId, boolean autocreate) throws ServiceException {
-        return getMailboxByAccountId(accountId, FetchMode.AUTOCREATE);
+        return getMailboxByAccountId(accountId, autocreate ? FetchMode.AUTOCREATE : FetchMode.DO_NOT_AUTOCREATE);
     }
     
     /** Returns the mailbox for the given account id.  Creates a new
