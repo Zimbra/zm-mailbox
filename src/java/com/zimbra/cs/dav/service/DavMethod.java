@@ -35,6 +35,7 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -49,7 +50,7 @@ import com.zimbra.cs.dav.resource.DavResource;
  */
 public abstract class DavMethod {
 	public abstract String getName();
-	public abstract void handle(DavContext ctxt) throws DavException, IOException;
+	public abstract void handle(DavContext ctxt) throws DavException, IOException, ServiceException;
 	
 	public void checkPrecondition(DavContext ctxt) throws DavException {
 	}

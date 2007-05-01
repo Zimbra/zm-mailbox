@@ -28,6 +28,7 @@ import java.io.IOException;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.resource.DavResource;
@@ -39,7 +40,7 @@ public class Post extends DavMethod {
 	public String getName() {
 		return POST;
 	}
-	public void handle(DavContext ctxt) throws DavException, IOException {
+	public void handle(DavContext ctxt) throws DavException, IOException, ServiceException {
 		String user = ctxt.getUser();
 		String name = ctxt.getItem();
 		

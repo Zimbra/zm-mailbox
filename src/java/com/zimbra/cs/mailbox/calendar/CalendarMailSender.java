@@ -315,7 +315,7 @@ public class CalendarMailSender {
         return createCalendarMessage(null, null, null, subject, text, uid, cal);
     }
 
-    private static MimeMessage createCalendarMessage(
+    public static MimeMessage createCalendarMessage(
             Address fromAddr, Address senderAddr, List<Address> toAddrs,
             String subject, String text,
             String uid, ZCalendar.ZVCalendar cal)

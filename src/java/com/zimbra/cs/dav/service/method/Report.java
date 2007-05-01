@@ -33,6 +33,7 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -52,7 +53,7 @@ public class Report extends DavMethod {
 		sReports.put(DavElements.E_CALENDAR_MULTIGET, new CalendarMultiget());
 		sReports.put(DavElements.E_FREE_BUSY_QUERY, new FreeBusyQuery());
 	}
-	public void handle(DavContext ctxt) throws DavException, IOException {
+	public void handle(DavContext ctxt) throws DavException, IOException, ServiceException {
 		if (!ctxt.hasRequestMessage())
 			throw new DavException("empty request body", HttpServletResponse.SC_BAD_REQUEST, null);
 		

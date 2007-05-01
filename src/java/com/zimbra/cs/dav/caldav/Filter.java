@@ -141,7 +141,7 @@ public abstract class Filter {
 					else if (name.equals(DavElements.E_TIME_RANGE))
 						mTimeRange = new TimeRange(e);
 					else
-						ZimbraLog.dav.info("unrecognized filter "+name);
+						ZimbraLog.dav.info("unrecognized filter "+name.getNamespaceURI()+":"+name.getName());
 				}
 			}
 			if (mTimeRange == null)

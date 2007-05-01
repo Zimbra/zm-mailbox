@@ -235,7 +235,7 @@ public abstract class DavResource {
 		rtype.addChild(type);
 	}
 	
-	public void handlePost(DavContext ctxt) throws DavException, IOException {
+	public void handlePost(DavContext ctxt) throws DavException, IOException, ServiceException {
 		throw new DavException("the resource does not handle POST", HttpServletResponse.SC_FORBIDDEN);
 	}
 }
