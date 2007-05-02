@@ -268,12 +268,27 @@ public class SoapEngine {
                 if (!ok)
                     return soapProto.soapFault(ServiceException.PERM_DENIED("need admin token"));
             }
+            boolean delegatedAuth = at.getAdminAccountId() != null && !at.getAdminAccountId().equals("");
 
             try {
-                // make sure that the authenticated account is active and has not been deleted/disabled since the last request
+                // make sure that the authenticated account is still active and has not been deleted since the last request
+                //   note that delegated auth allows access unless the account's in maintenance mode
                 Account account = Provisioning.getInstance().get(AccountBy.id, at.getAccountId());
-                if (account == null || !account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+                if (account == null || 
+                        (delegatedAuth && account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE)) ||
+                        (!delegatedAuth && !account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE)))
                     return soapProto.soapFault(ServiceException.AUTH_EXPIRED());
+
+                // if using delegated auth, make sure the "admin" is really an active admin account
+                if (delegatedAuth) {
+                    Account admin = Provisioning.getInstance().get(AccountBy.id, at.getAdminAccountId());
+                    if (admin == null)
+                        return soapProto.soapFault(ServiceException.AUTH_EXPIRED());
+                    boolean isAdmin = admin.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false) ||
+                                      admin.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);
+                    if (!isAdmin || !admin.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+                        return soapProto.soapFault(ServiceException.AUTH_EXPIRED());
+                }
 
                 // also, make sure that the target account (if any) is active
                 if (zsc.isDelegatedRequest() && !handler.isAdminCommand()) {
