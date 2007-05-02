@@ -324,7 +324,7 @@
 		<isset property="use-tomcat"/>
 	</condition>
 	<!-- jetty has its own log4j and naming stuff, so don't include ldap.jar and commons-logging.jar -->
-	<condition property="war.exclude" value="${ical4j.jar},servlet-api.jar,jsp-api.jar,mail.jar,activation.jar,zimbra-native.jar,KeyView.jar,ldap.jar,commons-logging.jar">
+	<condition property="war.exclude" value="${ical4j.jar},servlet-api.jar,jsp-api.jar,mail.jar,activation.jar,zimbra-native.jar,KeyView.jar,ldap.jar,commons-logging.jar, jetty-util-6.1.2rc1.jar">
 		<isset property="use-jetty"/>
 	</condition>
 
