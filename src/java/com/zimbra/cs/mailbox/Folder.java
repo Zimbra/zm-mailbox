@@ -944,7 +944,8 @@ public class Folder extends MailItem {
         // remove the deleted item(s) from the mailbox's cache
         if (!info.itemIds.isEmpty()) {
             info.cascadeIds = DbMailItem.markDeletionTargets(mbox, info.itemIds.getIds(TYPE_MESSAGE), info.modifiedIds);
-            info.modifiedIds.removeAll(info.cascadeIds);
+            if (info.cascadeIds != null)
+                info.modifiedIds.removeAll(info.cascadeIds);
             mbox.purge(TYPE_CONVERSATION);
             for (int convId : info.modifiedIds)
                 mbox.getConversationById(convId);
