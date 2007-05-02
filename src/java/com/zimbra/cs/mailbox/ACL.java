@@ -59,6 +59,9 @@ public class ACL {
     /** The calculated right to create subfolders in a folder. */
     public static final short RIGHT_SUBFOLDER = 0x0200;
 
+    /** The combination of rights that equates to {@link #RIGHT_SUBFOLDER}. */
+    private static final short SUBFOLDER_RIGHTS = RIGHT_READ | RIGHT_INSERT;
+
     /** Bitmask of all rights that can be explicitly granted.  <i>Note:
      *  CAN_CREATE_FOLDER is calculated and hence cannot be granted. */
     private static final short GRANTABLE_RIGHTS = RIGHT_READ   | RIGHT_WRITE  | RIGHT_INSERT |
@@ -275,7 +278,7 @@ public class ACL {
         short rightsGranted = 0;
         for (Grant grant : mGrants)
             rightsGranted |= grant.getGrantedRights(authuser);
-        if ((rightsGranted & (RIGHT_INSERT | RIGHT_READ)) != 0)
+        if ((rightsGranted & SUBFOLDER_RIGHTS) == SUBFOLDER_RIGHTS)
             rightsGranted |= RIGHT_SUBFOLDER;
 
         return new Short(rightsGranted);
