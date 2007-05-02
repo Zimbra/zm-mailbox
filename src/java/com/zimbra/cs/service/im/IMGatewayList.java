@@ -6,8 +6,10 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.IMConstants;
 import com.zimbra.cs.im.IMPersona;
-import com.zimbra.cs.im.interop.Interop;
+import com.zimbra.cs.im.interop.Interop.ServiceName;
+import com.zimbra.cs.im.interop.Interop.UserStatus;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.Pair;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class IMGatewayList extends IMDocumentHandler {
@@ -22,13 +24,21 @@ public class IMGatewayList extends IMDocumentHandler {
         synchronized (lock) {
             IMPersona persona = getRequestedPersona(lc, lock);
             
-            List<Interop.ServiceName> types = persona.getAvailableGateways();
+            List<Pair<ServiceName, UserStatus>> types = persona.getAvailableGateways();
             String domain = persona.getDomain();
             
-            for (Interop.ServiceName t : types) {
+            for (Pair<ServiceName, UserStatus> p : types) {
                 Element typeElt = response.addElement("service");
-                typeElt.addAttribute("type", t.name());
-                typeElt.addAttribute("domain", t.name()+"."+domain);
+                typeElt.addAttribute("type", p.getFirst().name());
+                typeElt.addAttribute("domain", p.getFirst().name()+"."+domain);
+                if (p.getSecond() != null) {
+                    Element rElt = typeElt.addElement("registration");
+                    rElt.addAttribute("name", p.getSecond().username);
+                    rElt.addAttribute("state", p.getSecond().state.name().toLowerCase());
+                    if (p.getSecond().nextConnectAttemptTime > 0) {
+                        rElt.addAttribute("timeUntilNextConnect", p.getSecond().nextConnectAttemptTime-System.currentTimeMillis());
+                    }
+                } 
             }
         }
         return response;

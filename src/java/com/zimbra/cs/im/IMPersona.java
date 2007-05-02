@@ -27,9 +27,12 @@ import java.util.Formatter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.dom4j.Element;
 import org.jivesoftware.wildfire.ClientSession;
 import org.jivesoftware.wildfire.XMPPServer;
 import org.jivesoftware.wildfire.auth.AuthToken;
@@ -37,6 +40,7 @@ import org.jivesoftware.wildfire.group.Group;
 import org.jivesoftware.wildfire.group.GroupManager;
 import org.jivesoftware.wildfire.group.GroupNotFoundException;
 import org.jivesoftware.wildfire.user.UserNotFoundException;
+import org.xmpp.component.ComponentException;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
@@ -49,12 +53,15 @@ import com.zimbra.cs.im.IMChat.Participant;
 import com.zimbra.cs.im.IMMessage.Lang;
 import com.zimbra.cs.im.IMPresence.Show;
 import com.zimbra.cs.im.interop.Interop;
+import com.zimbra.cs.im.interop.Interop.ServiceName;
+import com.zimbra.cs.im.interop.Interop.UserStatus;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.session.Session;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ClassLogger;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 
 /**
@@ -226,15 +233,33 @@ public class IMPersona extends ClassLogger {
         else
             return super.formatObject(o);
     }
-
+    
+    public void gatewayReconnect(Interop.ServiceName type) throws ServiceException {
+        try {
+            Interop.getInstance().reconnectUser(type, mAddr.makeFullJID());            
+        } catch (Exception e) {
+            throw ServiceException.FAILURE("Exception calling gatewayReconnect("+type.name(), e);
+        }
+    }
+    
     public void gatewayRegister(Interop.ServiceName type, String username, String password)
                 throws ServiceException {
+        
         try {
             Interop.getInstance().connectUser(type, mAddr.makeFullJID(), username, password);
+        } catch (com.zimbra.cs.im.interop.AlreadyConnectedComponentException ace) {
+            try {
+                Interop.getInstance().disconnectUser(type, mAddr.makeFullJID());
+                Interop.getInstance().connectUser(type, mAddr.makeFullJID(), username, password);
+            } catch (Exception e) {
+                throw ServiceException.FAILURE("Exception calling Interop.connectUser("
+                    + username + "," + password, e);
+            }
         } catch (Exception e) {
             throw ServiceException.FAILURE("Exception calling Interop.connectUser("
-                        + username + "," + password, e);
+                + username + "," + password, e);
         }
+        
         // IQ iq = new IQ();
         // { // <iq>
         // iq.setFrom(mAddr.makeJID());
@@ -288,12 +313,21 @@ public class IMPersona extends ClassLogger {
         return mAddr.getDomain();
     }
     
-
     /**
      * @return The set of gateways this user has access to
      */
-    public List<Interop.ServiceName> getAvailableGateways() {
-        return Interop.getInstance().getAvailableServices();
+    public List<Pair<ServiceName, UserStatus>> getAvailableGateways() {
+        List<Pair<ServiceName, UserStatus>>  ret = new LinkedList<Pair<ServiceName, UserStatus>>();     
+        List<ServiceName> services = Interop.getInstance().getAvailableServices();
+        for (ServiceName service : services) {
+            try {
+                ret.add(new Pair<ServiceName, UserStatus>(service, Interop.getInstance().getRegistrationStatus(service, mAddr.makeFullJID())));
+            } catch (ComponentException ex) {
+                debug("Caught component exception trying to get registration status: ", ex);
+            }
+        }
+        
+        return ret;
     }
 
     /**
@@ -416,6 +450,26 @@ public class IMPersona extends ClassLogger {
     }
 
     private void handleMessagePacket(boolean toMe, Message msg) {
+        // is it a gateway notification?
+        Element xe = msg.getChildElement("x", "zimbra:interop:connect");
+        if (xe != null) {
+            String serviceName = msg.getFrom().toBareJID();
+            String[] splits = serviceName.split("\\.");
+            if (splits.length > 0)
+                serviceName = splits[0];
+            boolean successful = true;
+            String cause = null;
+            Element f = xe.element("failure");
+            if (f != null) {
+                successful = false;
+                cause = f.attributeValue("cause");
+            }
+            IMGatewayConnectNotification not = 
+                new IMGatewayConnectNotification(serviceName, successful, cause); 
+            postIMNotification(not);
+            return;
+        }
+        
         // either TO or FROM, depending which one isn't "me"
         JID remoteJID = (toMe ? msg.getFrom() : msg.getTo());
         // Step 1: find the appropriate chat

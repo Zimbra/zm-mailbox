@@ -60,8 +60,6 @@ IMAuthorizeSubscribe -- used to OK another user adding you to their buddy list
 <IMAuthorizeSubscribeResponse/>
 
 
-
-
 IMSetPresence -- modify your presence state
 -------------
 <IMSetPresenceRequest>
@@ -139,14 +137,25 @@ IMGatewayList - gateways to external IM services
 
 
 <IMGatewayListResponse>
-  <service name="name" type="aim|msn|yahoo|icq" domain="aim.mydomain.com"/>
+  <service name="name" type="aim|msn|yahoo|icq" domain="type.mydomain.com">
+[     <registration  name="remoteName" state="connectionState" [timeUntilNextConnect="msec_until_next_connect_attempt"/> ] ]
+  </service>
 </IMGatewayListResponse/>
 
+connectedState is one of:
+   bad_auth               -- auth is bad, will not try to reconnect
+   intentionally_offline  -- user's local im presence is "offline" so not connected
+   online
+   shutdown               -- shutting down
+   start                  -- just created, will attempt first connect soon
+   trying_to_connect      -- connection attempt in progress
+NOT_IMPLEMENTED_YET:   booted_by_other_login  -- will not retry connect: someone has connected to our account has connected from another place
 
 IMGatewayRegister 
 -----------------
-<IMGatewayRegister op="register" service="SERVICE_NAME" name="remoteName" password="remotePassword"/>
-<IMGatewayRegister op="unregister" service="SERVICE_NAME"/>
+<IMGatewayRegister op="reg" service="SERVICE_NAME" name="remoteName" password="remotePassword"/>
+<IMGatewayRegister op="unreg" service="SERVICE_NAME"/>
+<IMGatewayRegister op="reconnect" service="SERVICE_NAME"/> // tell the service to try a reconnect right now
 
 <IMGatewayRegisterResponse result="0|1"/>
 
@@ -207,6 +216,10 @@ IM NOTIFICATIONS
                  // An invitation to join a group chat:
                    <n type="invited" thread="chat-id" addr="ADDRESS">INVITATION_MESSAGE</n>
                 ]*
+                [
+                // interop gateway has succeeded/failed to connect us
+                  <n type="gwConnectStatus" service="GATEWAY_SERVICE_NAME" status="success|failure" [cause="auth|other"]/>
+                ]
                 
                 
              </im>]

@@ -5,15 +5,14 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.IMConstants;
 import com.zimbra.cs.im.IMPersona;
-import com.zimbra.cs.im.interop.Interop;
 import com.zimbra.cs.im.interop.Interop.ServiceName;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class IMGatewayRegister extends IMDocumentHandler {
-
+public class IMGatewayRegister extends IMDocumentHandler 
+{
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
@@ -28,6 +27,8 @@ public class IMGatewayRegister extends IMDocumentHandler {
             String nameStr = request.getAttribute("name");
             String pwStr = request.getAttribute("password");
             result = register((Mailbox)lock, lc.getOperationContext(), ServiceName.valueOf(serviceStr), nameStr, pwStr);
+        } if ("reconnect".equals(op)) {
+            reconnect((Mailbox)lock, lc.getOperationContext(), ServiceName.valueOf(serviceStr));
         } else {
             unregister((Mailbox)lock, lc.getOperationContext(), ServiceName.valueOf(serviceStr));
         }
@@ -51,4 +52,13 @@ public class IMGatewayRegister extends IMDocumentHandler {
             persona.gatewayUnRegister(service);
         }
     }
+    
+    public static boolean reconnect(Mailbox mbox, OperationContext octxt, ServiceName service) throws ServiceException {
+        synchronized (mbox) {
+            IMPersona persona = getRequestedPersona(octxt, mbox);
+            persona.gatewayReconnect(service);
+            return true;
+        }
+    }
+    
 }
