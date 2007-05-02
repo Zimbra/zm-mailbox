@@ -43,6 +43,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.activation.DataSource;
 import javax.mail.BodyPart;
@@ -236,8 +237,7 @@ public class Mime {
     private static MimeMultipart validateMultipart(MimeMultipart multi, MimePart mp) throws MessagingException, IOException {
         ContentType ctype = new ContentType(mp.getContentType());
         try {
-            String boundary = ctype.getParameter("boundary");
-            if (boundary != null && !ctype.containsParameter("generated") && !findStartBoundary(mp, boundary))
+            if (!ctype.containsParameter("generated") && !findStartBoundary(mp, ctype.getParameter("boundary")))
                 return new MimeMultipart(new RawContentMultipartDataSource(mp, ctype));
             multi.getCount();
         } catch (ParseException pe) {
@@ -261,7 +261,7 @@ public class Mime {
         } catch (MessagingException me) {
             return true;
         }
-        final int blength = boundary.length();
+        final int blength = boundary == null ? 0 : boundary.length();
         int bindex = 0, dashes = 0;
         boolean failed = false;
         for (int i = 0; i < MAX_PREAMBLE_LENGTH; i++) {
@@ -269,7 +269,7 @@ public class Mime {
             if (c == -1) {
                 return false;
             } else if (c == '\r' || c == '\n') {
-                if (!failed && bindex == blength)
+                if (!failed && (boundary == null ? bindex > 0 : bindex == blength))
                     return true;
                 bindex = dashes = 0;  failed = false;
             } else if (failed) {
@@ -279,6 +279,10 @@ public class Mime {
                     dashes++;
                 else
                     failed = true;
+            } else if (boundary == null) {
+                if (Character.isWhitespace(c))
+                    failed = true;
+                bindex++;
             } else {
                 if (bindex >= blength || c != boundary.charAt(bindex++))
                     failed = true;
@@ -330,7 +334,7 @@ public class Mime {
 
         private class RawContentInputStream extends InputStream {
             private final InputStream mInputStream;
-            private final String mBoundary = getParsedContentType().getParameter("boundary");
+            private final String mBoundary;
             private byte[] mPrologue;
             private byte[] mEpilogue;
             private int mPrologueIndex = 0, mEpilogueIndex = 0;
@@ -340,6 +344,8 @@ public class Mime {
             RawContentInputStream(InputStream is) {
                 mInputStream = is;
 
+                String explicitBoundary = getParsedContentType().getParameter("boundary");
+                mBoundary = explicitBoundary == null ? "_-_" + UUID.randomUUID().toString() : explicitBoundary;
                 byte[] boundary = mBoundary.getBytes();
 
                 mPrologue = new byte[2 + boundary.length + 4];
