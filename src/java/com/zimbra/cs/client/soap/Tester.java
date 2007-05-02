@@ -49,8 +49,8 @@ public class Tester {
     static {
         gEa = new LmcEmailAddress();
         gEa.setType("t");
-        gEa.setContent("kevin_kluge@yahoo.com");
-        gEa.setEmailAddress("kevin_kluge@yahoo.com");
+        gEa.setContent("kluge@yahoo.com");
+        gEa.setEmailAddress("kluge@yahoo.com");
     }
 
     private static void recursiveDumpFolder(LmcFolder f,
