@@ -2832,13 +2832,12 @@ public abstract class ImapHandler extends ProtocolHandler {
                     continue;
 
                 if (sameMailbox) {
-                    
                     List<MailItem> copyMsgs;
                     try {
                         byte type = MailItem.TYPE_UNKNOWN;
                         int[] mItemIds = new int[i4list.size()];
                         int counter  = 0;
-                        for (ImapMessage curMsg : i4set) {
+                        for (ImapMessage curMsg : i4list) {
                             mItemIds[counter++] = i4msg.msgId;
                             if (counter == 1)
                                 type = curMsg.getType();
