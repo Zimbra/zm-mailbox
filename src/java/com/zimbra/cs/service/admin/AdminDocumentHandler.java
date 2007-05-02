@@ -117,7 +117,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             if (elt != null) {
                 Account acct = prov.get(AccountBy.fromString(elt.getAttribute(AdminConstants.A_BY)), elt.getText());
                 if (acct != null && !Provisioning.onLocalServer(acct))
-                    return proxyRequest(request, context, acctId);
+                    return proxyRequest(request, context, acct.getId());
             }
 
             // check whether we need to proxy to the home server of a target calendar resource
