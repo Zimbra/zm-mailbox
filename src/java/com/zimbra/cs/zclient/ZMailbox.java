@@ -2195,7 +2195,7 @@ public class ZMailbox {
 
     // ------------------------
 
-    private ZSearchResult internalSearch(String convId, ZSearchParams params, boolean nest) throws ServiceException {
+    private synchronized ZSearchResult internalSearch(String convId, ZSearchParams params, boolean nest) throws ServiceException {
         XMLElement req = new XMLElement(convId == null ? MailConstants.SEARCH_REQUEST : MailConstants.SEARCH_CONV_REQUEST);
 
         req.addAttribute(MailConstants.A_CONV_ID, convId);
@@ -2234,7 +2234,7 @@ public class ZMailbox {
      * @return search result
      * @throws ServiceException on error
      */
-    public ZSearchResult search(ZSearchParams params) throws ServiceException {
+    public synchronized ZSearchResult search(ZSearchParams params) throws ServiceException {
         return internalSearch(null, params, false);
     }
 
@@ -2249,7 +2249,7 @@ public class ZMailbox {
      * @param useCache use the cache if possible
      * @param useCursor true to use search cursors, false to use offsets
      */
-    public ZSearchPagerResult search(ZSearchParams params, int page, boolean useCache, boolean useCursor) throws ServiceException {
+    public synchronized ZSearchPagerResult search(ZSearchParams params, int page, boolean useCache, boolean useCursor) throws ServiceException {
         return mSearchPagerCache.search(this, params, page, useCache, useCursor);
     }
 
@@ -2257,7 +2257,7 @@ public class ZMailbox {
      *
      * @param type if non-null, clear only cached searches of the specified tape
      */
-    public void clearSearchCache(String type) {
+    public synchronized void clearSearchCache(String type) {
         mSearchPagerCache.clear(type);
     }
 
@@ -2268,12 +2268,12 @@ public class ZMailbox {
      * @return search result
      * @throws ServiceException on error
      */
-    public ZSearchResult searchConversation(String convId, ZSearchParams params) throws ServiceException {
+    public synchronized ZSearchResult searchConversation(String convId, ZSearchParams params) throws ServiceException {
         if (convId == null) throw ZClientException.CLIENT_ERROR("conversation id must not be null", null);
         return internalSearch(convId, params, true);
     }
 
-    public ZSearchPagerResult searchConversation(String convId, ZSearchParams params, int page, boolean useCache, boolean useCursor) throws ServiceException {
+    public synchronized ZSearchPagerResult searchConversation(String convId, ZSearchParams params, int page, boolean useCache, boolean useCursor) throws ServiceException {
         if (params.getConvId() == null)
             params.setConvId(convId);
         return mSearchConvPagerCache.search(this, params, page, useCache, useCursor);
@@ -2920,7 +2920,7 @@ public class ZMailbox {
      * clear all entries in the appointment summary cache. This is normally handled automatically
      * via notifications, except in the case of shared calendars.
      */
-    public void clearApptSummaryCache() {
+    public synchronized void clearApptSummaryCache() {
         mApptSummaryCache.clear();
     }
 
@@ -2934,7 +2934,7 @@ public class ZMailbox {
      * @return list of appts within the specified range
      * @throws ServiceException on error
      */
-    public List<ZApptSummaryResult> getApptSummaries(String query, long startMsec, long endMsec, String folderIds[], TimeZone timeZone, String types) throws ServiceException {
+    public synchronized List<ZApptSummaryResult> getApptSummaries(String query, long startMsec, long endMsec, String folderIds[], TimeZone timeZone, String types) throws ServiceException {
 
         if (types == null) types = ZSearchParams.TYPE_APPOINTMENT;
         if (query == null) query = "";
