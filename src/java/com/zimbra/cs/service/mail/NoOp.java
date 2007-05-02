@@ -30,9 +30,15 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
+import org.mortbay.util.ajax.Continuation;
+import org.mortbay.util.ajax.ContinuationSupport;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -47,14 +53,14 @@ public class NoOp extends MailDocumentHandler  {
         
         boolean wait = request.getAttributeBool("wait", false);
         if (wait) {
-            if (zsc.beginWaitForNotifications()) {
-                long endWaitingTime = System.currentTimeMillis() + NOP_TIMEOUT; 
-                synchronized(zsc) {
-                    while (zsc.waitingForNotifications() 
-                                && (System.currentTimeMillis() < endWaitingTime)) {
-                        try {
-                            zsc.wait(NOP_TIMEOUT);
-                        } catch (InterruptedException e) { }
+            HttpServletRequest servletRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+            Continuation continuation = ContinuationSupport.getContinuation(servletRequest, zsc);
+            if (!continuation.isResumed()) {
+                if (zsc.beginWaitForNotifications(continuation)) {
+                    synchronized(zsc) {
+                        if (zsc.waitingForNotifications()) {
+                            continuation.suspend(NOP_TIMEOUT);
+                        }
                     }
                 }
             }

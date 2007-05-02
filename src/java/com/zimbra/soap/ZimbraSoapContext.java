@@ -38,6 +38,7 @@ import javax.servlet.http.HttpServletRequest;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import org.dom4j.QName;
+import org.mortbay.util.ajax.Continuation;
 
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -103,6 +104,7 @@ public class ZimbraSoapContext {
     private boolean mHaltNotifications; // if true, then no notifications are sent to this context
     private boolean mUnqualifiedItemIds;
     private boolean mWaitForNotifications;
+    private Continuation mContinuation; // used for blocking requests
 
     private ProxyTarget mProxyTarget;
     private boolean     mIsProxyRequest;
@@ -449,10 +451,11 @@ public class ZimbraSoapContext {
         }
     }
 
-    public boolean beginWaitForNotifications() throws ServiceException {
+    public boolean beginWaitForNotifications(Continuation continuation) throws ServiceException {
         boolean someBlocked = false;
         boolean someReady = false;
         mWaitForNotifications = true;
+        mContinuation = continuation;
         
         // synchronized against 
         for (SessionInfo sinfo : mSessionInfo) {
@@ -479,7 +482,7 @@ public class ZimbraSoapContext {
      */
     synchronized public void signalNotification() {
         mWaitForNotifications = false;
-        this.notifyAll();
+        mContinuation.resume();
     }
     
     synchronized public boolean waitingForNotifications() {

@@ -41,6 +41,8 @@ import com.zimbra.cs.util.Zimbra;
 import org.apache.commons.collections.Factory;
 import org.apache.commons.collections.map.LazyMap;
 import org.apache.log4j.PropertyConfigurator;
+import org.mortbay.util.ajax.Continuation;
+import org.mortbay.util.ajax.ContinuationSupport;
 
 import javax.servlet.ServletException;
 import javax.servlet.UnavailableException;
@@ -206,12 +208,20 @@ public class SoapServlet extends ZimbraServlet {
 
         int len = req.getContentLength();
         byte[] buffer;
-        if (len == -1) {
+        
+        // resuming from a Jetty Continuation does *not* reset the HttpRequest's input stream -
+        // therefore we store the read buffer in the Continuation, and use the stored buffer
+        // if we're resuming
+        Continuation continuation = ContinuationSupport.getContinuation(req, null);
+        if (continuation.isResumed()) {
+            buffer = (byte[])continuation.getObject(); 
+        } else if (len == -1) {
             buffer = readUntilEOF(req.getInputStream());
         } else {
             buffer = new byte[len];
-            readFully(req.getInputStream(), buffer, 0, len);
+            readFully(req.getInputStream(), buffer, 0, len);             
         }
+        continuation.setObject(buffer);
         if (ZimbraLog.soap.isDebugEnabled()) {
             ZimbraLog.soap.debug("SOAP request:\n" + new String(buffer, "utf8"));
         }
@@ -225,6 +235,9 @@ public class SoapServlet extends ZimbraServlet {
         try {
             envelope = mEngine.dispatch(req.getRequestURI(), buffer, context);
         } catch (Throwable e) {
+            // don't interfere with Jetty Continuations -- pass the exception right up
+            if (e.getClass().getName().equals("org.mortbay.jetty.RetryRequest"))
+                throw ((RuntimeException)e);
             if (e instanceof OutOfMemoryError) {
                 Zimbra.halt("handler exception", e);
             }

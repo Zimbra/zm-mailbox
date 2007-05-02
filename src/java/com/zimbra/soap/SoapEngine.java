@@ -318,6 +318,9 @@ public class SoapEngine {
             mLog.info("handler exception", e);
             // XXX: if the session was new, do we want to delete it?
         } catch (Throwable e) {
+            // don't interfere with Jetty Continuations -- pass the exception on up
+            if (e.getClass().getName().equals("org.mortbay.jetty.RetryRequest"))
+                throw ((RuntimeException)e);
             // TODO: better exception stack traces during develope?
             response = soapProto.soapFault(ServiceException.FAILURE(e.toString(), e));
             if (e instanceof OutOfMemoryError)
