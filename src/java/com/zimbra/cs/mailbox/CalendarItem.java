@@ -186,6 +186,8 @@ public abstract class CalendarItem extends MailItem {
         
         for (Invite inv : this.getInvites()) {
             MimeMessage mm = inv.getMimeMessage();
+            if (mm == null)
+                continue;
             
             try {
                 StringBuilder s = new StringBuilder();
