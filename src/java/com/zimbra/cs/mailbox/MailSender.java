@@ -43,6 +43,7 @@ import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Identity;
@@ -188,7 +189,7 @@ public class MailSender {
                 convId = mbox.getConversationIdFromReferent(mm, origMsgId);
 
             // set the From, Sender, Date, Reply-To, etc. headers
-            updateHeaders(mm, acct, authuser, octxt != null ? octxt.getRequestIP() : null, replyToSender);
+            updateHeaders(mm, acct, authuser, octxt, octxt != null ? octxt.getRequestIP() : null, replyToSender);
 
             // run any pre-send/pre-save MIME mutators
             try {
@@ -346,7 +347,7 @@ public class MailSender {
 
     private static final String X_ORIGINATING_IP = "X-Originating-IP";
 
-    void updateHeaders(MimeMessage mm, Account acct, Account authuser, String originIP, boolean replyToSender)
+    void updateHeaders(MimeMessage mm, Account acct, Account authuser, OperationContext octxt, String originIP, boolean replyToSender)
     throws UnsupportedEncodingException, MessagingException, ServiceException {
         if (originIP != null) {
             Provisioning prov = Provisioning.getInstance();
@@ -365,8 +366,8 @@ public class MailSender {
             }
         } catch (Exception e) { }
 
-        boolean isDelegatedRequest = !acct.getId().equalsIgnoreCase(authuser.getId());
-        InternetAddress sender = isDelegatedRequest ? AccountUtil.getFriendlyEmailAddress(authuser) : null;
+        boolean canSendAs = octxt == null || AccessManager.getInstance().canAccessAccount(authuser, acct, octxt.isUsingAdminPrivileges());
+        InternetAddress sender = canSendAs ? null : AccountUtil.getFriendlyEmailAddress(authuser);
 
         // set various headers on the outgoing message
         if (overrideFromHeader)
@@ -448,6 +449,7 @@ public class MailSender {
      * The bug is in MessagingException.toString().
      */
     public static class SafeMessagingException extends MessagingException {
+        private static final long serialVersionUID = -4652297855877992478L;
         private MessagingException mMex;
 
         public SafeMessagingException(MessagingException mex) {
@@ -502,6 +504,7 @@ public class MailSender {
     }
 
     public static class SafeSendFailedException extends SafeMessagingException {
+        private static final long serialVersionUID = 5625565177360027934L;
         private SendFailedException mSfe;
 
         public SafeSendFailedException(SendFailedException sfe) {
