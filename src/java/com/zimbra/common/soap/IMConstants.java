@@ -67,6 +67,8 @@ public class IMConstants {
     public static final String A_FROM           = "from";
     public static final String A_TO             = "to";
     public static final String A_TIMESTAMP      = "ts";
+    public static final String A_SERVICE        = "service";
+    public static final String A_STATUS         = "status";
 
     public static final String E_MESSAGES       = "messages";
     public static final String E_MESSAGE        = "message";
@@ -86,4 +88,5 @@ public class IMConstants {
     public static final String E_SUBSCRIBE      = "subscribe";
     public static final String E_SUBSCRIBED     = "subscribed";
     public static final String E_UNSUBSCRIBED   = "unsubscribed";
+    public static final String E_GATEWAY_CONNECT_STATUS = "gwConnectStatus";
 }
