@@ -35,6 +35,7 @@ import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
@@ -277,7 +278,11 @@ public class SoapEngine {
                 // also, make sure that the target account (if any) is active
                 if (zsc.isDelegatedRequest() && !handler.isAdminCommand()) {
                     Account target = Provisioning.getInstance().get(AccountBy.id, zsc.getRequestedAccountId());
-                    if (target == null || !target.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+                    // treat the account as inactive if (a) it doesn't exist, (b) it's in maintenance mode, or (c) we're non-admins and it's not "active"
+                    boolean inactive = target == null || target.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE);
+                    if (!inactive && (!at.isAdmin() || !AccessManager.getInstance().canAccessAccount(at, target)))
+                        inactive = !target.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE);
+                    if (inactive)
                         return soapProto.soapFault(AccountServiceException.ACCOUNT_INACTIVE(target == null ? zsc.getRequestedAccountId() : target.getName()));
                 }
             } catch (ServiceException ex) {
