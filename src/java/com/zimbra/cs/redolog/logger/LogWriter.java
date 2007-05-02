@@ -71,6 +71,16 @@ public interface LogWriter {
 	 */
 	public void log(RedoableOp op, byte[][] data, boolean synchronous) throws IOException;
 
+    /**
+     * Make sure all writes are committed to disk, or whatever the log
+     * destination medium is.  This is mainly useful only when we need to
+     * make sure the commit record is on disk, because fsync of commit record
+     * is deferred until the logging of the next redo record for performance
+     * reasons.
+     * @throws IOException
+     */
+    public void flush() throws IOException;
+
 	/**
 	 * Returns the current size of the log.  Used for rollover tracking.
 	 * @return

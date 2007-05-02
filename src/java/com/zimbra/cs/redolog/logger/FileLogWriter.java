@@ -222,6 +222,7 @@ public class FileLogWriter implements LogWriter {
                 mHeader.setFileSize(mRAF.length());
                 mHeader.write(mRAF);
 
+                mRAF.getChannel().force(true);
                 mRAF.close();
                 mRAF = null;
             } else
@@ -320,6 +321,10 @@ public class FileLogWriter implements LogWriter {
             // case 3
             fsync();
         }
+    }
+
+    public void flush() throws IOException {
+        fsync();
     }
 
     private boolean mNoStat;

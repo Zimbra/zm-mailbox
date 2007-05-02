@@ -30,6 +30,8 @@ package com.zimbra.cs.redolog;
 
 import java.io.IOException;
 
+import com.zimbra.common.service.ServiceException;
+
 /**
  * @author jhahm
  *
@@ -41,9 +43,9 @@ public class TransactionId {
 	private int mTime;
 	private int mCounter;
 
-	public TransactionId(int time, int count) {
+	public TransactionId(int time, int counter) {
 		mTime = time;
-		mCounter = count;
+		mCounter = counter;
 	}
 
 	public TransactionId() {
@@ -94,4 +96,36 @@ public class TransactionId {
 	public int hashCode() {
 		return mCounter;
 	}
+
+    public int getTime() {
+        return mTime;
+    }
+
+    public int getCounter() {
+        return mCounter;
+    }
+
+    public String encodeToString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(mTime).append('-').append(mCounter);
+        return sb.toString();
+    }
+
+    public static TransactionId decodeFromString(String str)
+    throws ServiceException {
+        Throwable cause = null;
+        if (str != null) {
+            String[] fields = str.split("-", 2);
+            if (fields != null && fields.length == 2) {
+                try {
+                    int time = Integer.parseInt(fields[0]);
+                    int counter = Integer.parseInt(fields[1]);
+                    return new TransactionId(time, counter);
+                } catch (NumberFormatException e) {
+                    cause = e;
+                }
+            }
+        }
+        throw ServiceException.PARSE_ERROR("Invalid TransactionId " + str, cause);
+    }
 }
