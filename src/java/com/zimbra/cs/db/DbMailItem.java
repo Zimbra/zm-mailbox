@@ -45,26 +45,38 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
-
-import com.zimbra.cs.db.DbPool.Connection;
-import com.zimbra.cs.db.DbSearchConstraints.NumericRange;
-import com.zimbra.cs.db.DbSearchConstraints.StringRange;
-import com.zimbra.cs.imap.ImapMessage;
-import com.zimbra.cs.mailbox.*;
-import com.zimbra.cs.mailbox.MailItem.PendingDelete;
-import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
-import com.zimbra.cs.pop3.Pop3Message;
-import com.zimbra.cs.store.StoreManager;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ListUtil;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.TimeoutMap;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbSearchConstraints.NumericRange;
+import com.zimbra.cs.db.DbSearchConstraints.StringRange;
+import com.zimbra.cs.imap.ImapMessage;
+import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.Conversation;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxBlob;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Note;
+import com.zimbra.cs.mailbox.SearchFolder;
+import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.VirtualConversation;
+import com.zimbra.cs.mailbox.MailItem.PendingDelete;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
+import com.zimbra.cs.pop3.Pop3Message;
+import com.zimbra.cs.store.StoreManager;
 
 
 /**
@@ -892,7 +904,7 @@ public class DbMailItem {
                 tagsets.applyMask(tag.getBitmask(), add);
             }
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("updating tag data for items " + itemIDs + "", e);
+            throw ServiceException.FAILURE("updating tag data for " + itemIDs.size() + " items: " + getIdListForLogging(itemIDs), e);
         } finally {
             DbPool.closeStatement(stmt);
         }
@@ -994,7 +1006,8 @@ public class DbMailItem {
                 stmt.executeUpdate();
             }
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("updating unread state for items " + itemIDs, e);
+            throw ServiceException.FAILURE("updating unread state for " +
+                itemIDs.size() + " items: " + getIdListForLogging(itemIDs), e);
         } finally {
             DbPool.closeStatement(stmt);
         }
@@ -1153,7 +1166,8 @@ public class DbMailItem {
                 }
             }
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("marking deletions for conversations touching items " + ids, e);
+            throw ServiceException.FAILURE("marking deletions for conversations touching " +
+                ids.size() + " items: " + getIdListForLogging(ids), e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
@@ -1238,7 +1252,7 @@ public class DbMailItem {
                     stmt.setInt(pos++, targets.get(index));
                 stmt.executeUpdate();
             } catch (SQLException e) {
-                throw ServiceException.FAILURE("deleting item(s): " + ids, e);
+                throw ServiceException.FAILURE("deleting " + ids.size() + " item(s): " + getIdListForLogging(ids), e);
             } finally {
                 DbPool.closeStatement(stmt);
             }
@@ -1795,7 +1809,7 @@ public class DbMailItem {
                     result.add(data);
                 }
             } catch (SQLException e) {
-                throw ServiceException.FAILURE("fetching items: " + ids, e);
+                throw ServiceException.FAILURE("fetching " + ids.size() + " items: " + getIdListForLogging(ids), e);
             } finally {
                 DbPool.closeResults(rs);
                 DbPool.closeStatement(stmt);
@@ -3505,6 +3519,31 @@ public class DbMailItem {
         }
 
         return flagsets;
+    }
+    
+    /**
+     * Returns a comma-separated list of ids for logging.  If the <tt>String</tt> is
+     * more than 200 characters long, cuts off the list and appends &quot...&quot.
+     */
+    private static String getIdListForLogging(Collection<Integer> ids) {
+        if (ids == null) {
+            return null;
+        }
+        StringBuilder idList = new StringBuilder();
+        boolean firstTime = true;
+        for (Integer id : ids) {
+            if (firstTime) {
+                firstTime = false;
+            } else {
+                idList.append(',');
+            }
+            idList.append(id);
+            if (idList.length() > 200) {
+                idList.append("...");
+                break;
+            }
+        }
+        return idList.toString();
     }
 
     public static void main(String[] args) throws ServiceException {
