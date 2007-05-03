@@ -27,7 +27,7 @@ public class IMGatewayRegister extends IMDocumentHandler
             String nameStr = request.getAttribute("name");
             String pwStr = request.getAttribute("password");
             result = register((Mailbox)lock, lc.getOperationContext(), ServiceName.valueOf(serviceStr), nameStr, pwStr);
-        } if ("reconnect".equals(op)) {
+        } else if ("reconnect".equals(op)) {
             reconnect((Mailbox)lock, lc.getOperationContext(), ServiceName.valueOf(serviceStr));
         } else {
             unregister((Mailbox)lock, lc.getOperationContext(), ServiceName.valueOf(serviceStr));
