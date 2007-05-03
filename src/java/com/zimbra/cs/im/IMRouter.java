@@ -28,6 +28,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import org.jivesoftware.wildfire.PacketRouter;
 import org.jivesoftware.wildfire.XMPPServer;
 import org.xmpp.packet.Packet;
 import com.zimbra.cs.account.Account;
@@ -119,7 +121,9 @@ public class IMRouter {
         Packet mPacket = null;
         PostPacket(Packet packet) { mPacket = packet; }
         public void run() { 
-            XMPPServer.getInstance().getPacketRouter().route(mPacket);
+            XMPPServer server = XMPPServer.getInstance();
+            PacketRouter router = server.getPacketRouter();
+            router.route(mPacket);
         }
     }
     
