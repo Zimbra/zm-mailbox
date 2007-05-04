@@ -54,6 +54,7 @@ URL
    http://server/home/[~][{username}]/[{folder}]?[{query-params}]
           fmt={ics, csv, etc}
           id={item-id}
+          list={item-id}*[,{item-id}]
           imap_id={item-imap-id}  (must also specify folder)
           part={mime-part}
           query={search-query}
@@ -113,6 +114,11 @@ URL
           fmt="sync" -- requests that the server return additional metadata in response as X-Zimbra-* HTTP headers
               (query param "nohdr=1" puts the headers only in HTTP; otherwise, they're also inlined in the response body)
 
+          fmt="zip" -- download item(s) in zip package.  Additional metadata (same ones as "sync") are encoded as X-Zimbra-*
+              headers stored in each zip entry's metadata field.
+
+          list={item-id}*[,{item-id}] -- download items specified by the list parameter.  Only works with zip formatter.
+
 ------------------------------------------------------------
 EXAMPLES
 ------------------------------------------------------------
@@ -154,6 +160,10 @@ We should of course be able to convert attachments to HTML (via Verity) with thi
 syntax:
 
 /home/roland/?id=564&part=4&view=html   // part 4 (which could be a word doc) in html
+
+A list of files in a zip package:
+
+/home/smith/?fmt=zip&list=12345,22453    // a zip file containing two mail items
 
 ------------------------------------------------------------
 SEARCHING
