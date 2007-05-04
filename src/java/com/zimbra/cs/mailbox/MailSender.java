@@ -366,8 +366,11 @@ public class MailSender {
             }
         } catch (Exception e) { }
 
-        boolean canSendAs = octxt == null || AccessManager.getInstance().canAccessAccount(authuser, acct, octxt.isUsingAdminPrivileges());
-        InternetAddress sender = canSendAs ? null : AccountUtil.getFriendlyEmailAddress(authuser);
+        // we need to set the Sender to the authenticated user for delegated sends by non-admins
+        boolean isAdminRequest = octxt == null ? false : octxt.isUsingAdminPrivileges();
+        boolean noSenderRequired = acct.getId().equalsIgnoreCase(authuser.getId()) ||
+                                   AccessManager.getInstance().canAccessAccount(authuser, acct, isAdminRequest);
+        InternetAddress sender = noSenderRequired ? null : AccountUtil.getFriendlyEmailAddress(authuser);
 
         // set various headers on the outgoing message
         if (overrideFromHeader)
