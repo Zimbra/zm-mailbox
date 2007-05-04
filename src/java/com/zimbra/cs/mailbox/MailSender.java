@@ -482,6 +482,9 @@ public class MailSender {
                     n = mex.getNextException();
                     if (n != null)
                         more++;
+                } else {
+                    // n != null && !(n instanceof MessagingException)
+                    break;
                 }
             }
             if (more > 0) {
