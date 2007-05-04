@@ -85,6 +85,7 @@ public class Validators {
 			if (maxAccount <= mLastUserCount)
 				throw AccountServiceException.TOO_MANY_ACCOUNTS("domain="+domain+" ("+maxAccount+")");
     	}
+        
         public static long countAccounts(String domain) throws ServiceException {
         	StringBuilder buf = new StringBuilder();
         	buf.append("(&");
@@ -105,7 +106,7 @@ public class Validators {
                 NamingEnumeration<SearchResult> ne = null;
 
                 try {
-                	String dn = "ou=people," + LdapUtil.domainToDN(domain);
+                	String dn = LdapProvisioning.domainToAccountBaseDN(domain);
                 	ne = ctxt.search(dn, query, searchControls);
                 	while (ne != null && ne.hasMore()) {
                 		SearchResult sr = ne.nextElement();
