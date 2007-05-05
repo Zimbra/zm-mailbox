@@ -73,6 +73,8 @@ public abstract class MailItemResource extends DavResource {
 	protected long mModifiedDate;
 	protected String mOwnerId;
 	protected Map<QName,Element> mDeadProps;
+	protected String mRemoteOwnerId;
+	protected int mRemoteId;
 	
 	private static final String CONFIG_KEY = "caldav";
 	private static final int PROP_LENGTH_LIMIT = 1024;
@@ -105,7 +107,7 @@ public abstract class MailItemResource extends DavResource {
 	
 	private static String getItemPath(MailItem item) throws ServiceException {
 		String path = item.getPath();
-		if (item.getType() == MailItem.TYPE_FOLDER && !path.endsWith("/"))
+		if ((item.getType() == MailItem.TYPE_FOLDER || item.getType() == MailItem.TYPE_MOUNTPOINT) && !path.endsWith("/"))
 			return path + "/";
 		return path;
 	}
@@ -178,7 +180,7 @@ public abstract class MailItemResource extends DavResource {
 		}
 	}
 	
-	int getId() {
+	protected int getId() {
 		return mId;
 	}
 	
@@ -309,5 +311,17 @@ public abstract class MailItemResource extends DavResource {
 	
 	public static String getEtag(MailItem item) {
 		return "\""+Long.toString(item.getModifiedSequence())+"-"+Long.toString(item.getChangeDate())+"\"";
+	}
+	
+	public boolean isLocal() {
+		return mRemoteOwnerId == null && mRemoteId == 0;
+	}
+	
+	public String getRemoteOwnerId() {
+		return mRemoteOwnerId;
+	}
+	
+	public int getRemoteId() {
+		return mRemoteId;
 	}
 }

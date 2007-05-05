@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.dom4j.Document;
 import org.dom4j.Element;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -48,7 +49,7 @@ public class Lock extends DavMethod {
 	public String getName() {
 		return LOCK;
 	}
-	public void handle(DavContext ctxt) throws DavException, IOException {
+	public void handle(DavContext ctxt) throws DavException, IOException, ServiceException {
 		if (!ctxt.hasRequestMessage()) {
 			throw new DavException("no request body", HttpServletResponse.SC_BAD_REQUEST, null);
 		}

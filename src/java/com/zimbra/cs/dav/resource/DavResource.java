@@ -238,4 +238,8 @@ public abstract class DavResource {
 	public void handlePost(DavContext ctxt) throws DavException, IOException, ServiceException {
 		throw new DavException("the resource does not handle POST", HttpServletResponse.SC_FORBIDDEN);
 	}
+	
+	public boolean isLocal() {
+		return true;
+	}
 }

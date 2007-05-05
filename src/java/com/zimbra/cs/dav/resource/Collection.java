@@ -46,6 +46,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 
 /**
@@ -73,6 +74,12 @@ public class Collection extends MailItemResource {
 		mType = f.getType();
 		addProperties(Acl.getAclProperties(this, f));
 		
+		if (f instanceof Mountpoint) {
+			Mountpoint mp = (Mountpoint) f;
+			mRemoteOwnerId = mp.getOwnerId();
+			mRemoteId = mp.getRemoteId();
+		}
+
 		/* root folder is also the principal URL for the user */
 		if (isRootCollection())
 			addResourceType(DavElements.E_PRINCIPAL);
@@ -144,10 +151,8 @@ public class Collection extends MailItemResource {
 		List<MailItem> ret = new ArrayList<MailItem>();
 		
 		// XXX aggregate into single call
-		for (MailItem f : mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_FOLDER, mId)) {
-			ret.add(f);
-		}
-		//ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_MOUNTPOINT, mId));
+		ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_FOLDER, mId));
+		ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_MOUNTPOINT, mId));
 		ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_DOCUMENT, mId));
 		ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_WIKI, mId));
 		return ret;

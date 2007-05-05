@@ -38,6 +38,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavResponse;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -56,11 +57,13 @@ public class DavContext {
 	private String mUri;
 	private String mUser;
 	private String mPath;
+	private int mItemId;
 	private int mStatus;
 	private Document mRequestMsg;
 	private byte[] mRequestData;
 	private DavResponse mResponse;
 	private boolean mResponseSent;
+	private DavResource mRequestedResource;
 	
 	public DavContext(HttpServletRequest req, HttpServletResponse resp, Account authUser) {
 		mReq = req;  mResp = resp;
@@ -69,6 +72,11 @@ public class DavContext {
 		if (index != -1) {
 			mUser = mUri.substring(1, index);
 			mPath = mUri.substring(index);
+		}
+		if (req.getQueryString() != null) {
+			String id = req.getParameter("id");
+			if (id != null)
+				mItemId = Integer.parseInt(id);
 		}
 		mStatus = HttpServletResponse.SC_OK;
 		mAuthAccount = authUser;
@@ -230,8 +238,14 @@ public class DavContext {
 		return mResponse;
 	}
 	
-	public DavResource getRequestedResource() throws DavException {
-		return UrlNamespace.getResourceAt(this, mUser, mPath);
+	public DavResource getRequestedResource() throws DavException, ServiceException {
+		if (mRequestedResource != null)
+			return mRequestedResource;
+		if (mItemId != 0)
+			mRequestedResource = UrlNamespace.getResourceByItemId(this, mUser, mItemId);
+		else
+			mRequestedResource = UrlNamespace.getResourceAt(this, mUser, mPath);
+		return mRequestedResource;
 	}
 	
 	private static final String EVOLUTION = "Evolution";

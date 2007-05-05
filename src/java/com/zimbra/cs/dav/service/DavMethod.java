@@ -24,6 +24,7 @@
  */
 package com.zimbra.cs.dav.service;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,9 +32,14 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.PostMethod;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.QName;
+import org.dom4j.io.XMLWriter;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.dav.DavContext;
@@ -62,6 +68,10 @@ public abstract class DavMethod {
 		return "DAV method " + getName();
 	}
 	
+	public String getMethodName() {
+		return getName();
+	}
+	
 	protected static final int STATUS_OK = HttpServletResponse.SC_OK;
 	
 	protected void addComplianceHeader(DavContext ctxt, DavResource rs) throws IOException {
@@ -82,6 +92,23 @@ public abstract class DavMethod {
 			respMsg.writeTo(resp.getOutputStream());
 		}
 		ctxt.responseSent();
+	}
+	
+	public HttpMethod toHttpMethod(DavContext ctxt, String targetUrl) throws IOException, DavException {
+		if (ctxt.hasRequestMessage()) {
+			PostMethod method = new PostMethod(targetUrl) {
+				public String getName() { return getMethodName(); }
+			};
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			XMLWriter writer = new XMLWriter(baos);
+			writer.write(ctxt.getRequestMessage());
+			ByteArrayRequestEntity reqEntry = new ByteArrayRequestEntity(baos.toByteArray());
+			method.setRequestEntity(reqEntry);
+			return method;
+		}
+    	return new GetMethod(targetUrl) {
+    		public String getName() { return getMethodName(); }
+    	};
 	}
 	
 	protected RequestProp getRequestProp(DavContext ctxt) throws DavException {

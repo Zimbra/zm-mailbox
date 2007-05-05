@@ -123,10 +123,14 @@ public class UrlNamespace {
 		return resource;
 	}
 
+	/* Returns DavResource identified by MailItem id .*/
+	public static DavResource getResourceByItemId(DavContext ctxt, String user, int id) throws ServiceException, DavException {
+		MailItem item = getMailItemById(ctxt, user, id);
+		return getResourceFromMailItem(ctxt, item);
+	}
+	
 	/* Returns the root URL of the user. */
 	public static String getHomeUrl(String user) throws DavException {
-		StringBuilder buf = new StringBuilder();
-		buf.append(DavServlet.DAV_PATH).append("/").append(user);
 		try {
 			String url = DavServlet.getDavUrl(user);
             if (url.startsWith("https"))
@@ -264,6 +268,16 @@ public class UrlNamespace {
 		}
 		
 		return resource;
+	}
+	
+	private static MailItem getMailItemById(DavContext ctxt, String user, int id) throws DavException, ServiceException {
+		Provisioning prov = Provisioning.getInstance();
+		Account account = prov.get(AccountBy.name, user);
+		if (account == null)
+			throw new DavException("no such accout "+user, HttpServletResponse.SC_NOT_FOUND, null);
+		
+		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+		return mbox.getItemById(ctxt.getOperationContext(), id, MailItem.TYPE_UNKNOWN);
 	}
 	
 	private static MailItem getMailItem(DavContext ctxt, String user, String path) throws DavException {

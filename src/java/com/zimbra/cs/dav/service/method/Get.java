@@ -28,6 +28,7 @@ import java.io.IOException;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
@@ -40,7 +41,7 @@ public class Get extends DavMethod {
 	public String getName() {
 		return GET;
 	}
-	public void handle(DavContext ctxt) throws DavException, IOException {
+	public void handle(DavContext ctxt) throws DavException, IOException, ServiceException {
 		DavResource resource = ctxt.getRequestedResource();
 		HttpServletResponse resp = ctxt.getResponse();
 		resp.setContentType(resource.getContentType());

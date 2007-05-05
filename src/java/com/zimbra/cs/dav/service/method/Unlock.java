@@ -28,6 +28,7 @@ import java.io.IOException;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
@@ -40,7 +41,7 @@ public class Unlock extends DavMethod {
 	public String getName() {
 		return UNLOCK;
 	}
-	public void handle(DavContext ctxt) throws DavException, IOException {
+	public void handle(DavContext ctxt) throws DavException, IOException, ServiceException {
 		String token = ctxt.getRequest().getHeader(DavProtocol.HEADER_LOCK_TOKEN);
 		DavResource rs = ctxt.getRequestedResource();
 		if (token != null) {

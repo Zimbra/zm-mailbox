@@ -352,8 +352,6 @@ public class UserServlet extends ZimbraServlet {
                 Provisioning prov = Provisioning.getInstance();                
                 proxyServletRequest(req, resp, prov.getServer(context.targetAccount), context.basicAuthHappened ? context.authTokenCookie : null);
                 return true;
-            } catch (ServletException e) {
-                throw ServiceException.FAILURE("proxy error", e);
             } catch (AuthTokenException e) {
                 throw ServiceException.FAILURE("proxy error", e);
             }

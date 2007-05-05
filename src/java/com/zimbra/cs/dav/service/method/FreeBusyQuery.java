@@ -46,7 +46,7 @@ import com.zimbra.cs.mime.Mime;
  *                                
  */
 public class FreeBusyQuery extends Report {
-	public void handle(DavContext ctxt) throws DavException, IOException {
+	public void handle(DavContext ctxt) throws DavException, IOException, ServiceException {
 		Element query = ctxt.getRequestMessage().getRootElement();
 		if (!query.getQName().equals(DavElements.E_FREE_BUSY_QUERY))
 			throw new DavException("msg "+query.getName()+" is not free-busy-query", HttpServletResponse.SC_BAD_REQUEST, null);

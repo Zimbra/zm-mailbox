@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.dom4j.Document;
 import org.dom4j.Element;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -47,7 +48,7 @@ public class PropFind extends DavMethod {
 		return PROPFIND;
 	}
 	
-	public void handle(DavContext ctxt) throws DavException, IOException {
+	public void handle(DavContext ctxt) throws DavException, IOException, ServiceException {
 		
 		if (ctxt.hasRequestMessage()) {
 			Document req = ctxt.getRequestMessage();

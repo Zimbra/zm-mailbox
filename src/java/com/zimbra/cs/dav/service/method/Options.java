@@ -28,6 +28,7 @@ import java.io.IOException;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.service.DavMethod;
@@ -38,7 +39,7 @@ public class Options extends DavMethod {
 	public String getName() {
 		return OPTIONS;
 	}
-	public void handle(DavContext ctxt) throws DavException, IOException {
+	public void handle(DavContext ctxt) throws DavException, IOException, ServiceException {
 		addComplianceHeader(ctxt, ctxt.getRequestedResource());
 		HttpServletResponse resp = ctxt.getResponse();
 		DavServlet.setAllowHeader(resp);

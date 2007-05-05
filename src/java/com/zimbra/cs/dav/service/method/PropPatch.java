@@ -33,6 +33,7 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -45,7 +46,7 @@ public class PropPatch extends DavMethod {
 	public String getName() {
 		return PROPPATCH;
 	}
-	public void handle(DavContext ctxt) throws DavException, IOException {
+	public void handle(DavContext ctxt) throws DavException, IOException, ServiceException {
 		HashSet<Element> set = new HashSet<Element>();
 		HashSet<QName> remove = new HashSet<QName>();
 		

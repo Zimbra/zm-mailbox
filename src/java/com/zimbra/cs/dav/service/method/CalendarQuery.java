@@ -55,7 +55,7 @@ import com.zimbra.cs.mailbox.CalendarItem;
  */
 public class CalendarQuery extends Report {
 
-	public void handle(DavContext ctxt) throws DavException {
+	public void handle(DavContext ctxt) throws DavException, ServiceException {
 		Element query = ctxt.getRequestMessage().getRootElement();
 		if (!query.getQName().equals(DavElements.E_CALENDAR_QUERY))
 			throw new DavException("msg "+query.getName()+" is not calendar-query", HttpServletResponse.SC_BAD_REQUEST, null);

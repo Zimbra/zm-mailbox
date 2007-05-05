@@ -246,110 +246,97 @@ public class ZimbraServlet extends HttpServlet {
     }
 
     protected void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, String accountId)
-    throws IOException, ServletException {
-        try {
-            Provisioning prov = Provisioning.getInstance();
-            Account acct = prov.get(AccountBy.id, accountId);
-            if (acct == null) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "no such user");
-                return;
-            }
-            proxyServletRequest(req, resp, prov.getServer(acct), null);
-        } catch (ServiceException e) {
-            throw new ServletException(e);
-        }
+    throws IOException, ServiceException {
+    	Provisioning prov = Provisioning.getInstance();
+    	Account acct = prov.get(AccountBy.id, accountId);
+    	if (acct == null) {
+    		resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "no such user");
+    		return;
+    	}
+    	proxyServletRequest(req, resp, prov.getServer(acct), null);
     }
 
     protected void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, Server server, String authToken)
-    throws IOException, ServletException {
+    throws IOException, ServiceException {
         String uri = req.getRequestURI(), qs = req.getQueryString();
         if (qs != null)
             uri += '?' + qs;
         proxyServletRequest(req, resp, server, uri, authToken);
     }
     protected void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, Server server, String uri, String authToken)
-    throws IOException, ServletException {
+    throws IOException, ServiceException {
         if (server == null) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "cannot find remote server");
             return;
         }
+    	HttpMethod method;
+    	String url = getServiceUrl(server, null, uri);
+        if (req.getMethod().equalsIgnoreCase("GET")) {
+        	method = new GetMethod(url.toString());
+        } else if (req.getMethod().equalsIgnoreCase("POST") || req.getMethod().equalsIgnoreCase("PUT")) {
+        	PostMethod post = new PostMethod(url.toString());
+        	post.setRequestEntity(new InputStreamRequestEntity(req.getInputStream()));
+        	method = post;
+        } else {
+        	resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "cannot proxy method: " + req.getMethod());
+        	return;
+        }
+        HttpState state = new HttpState();
+        String hostname = method.getURI().getHost();
+        if (authToken != null)
+        	state.addCookie(new Cookie(hostname, COOKIE_ZM_AUTH_TOKEN, authToken, "/", null, false));                
 
         try {
-            // determine the URI for the remote ContentServlet
-            int port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
-            boolean useHTTP = port > 0;
-            if (!useHTTP)
-                port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
-            if (port <= 0)
-                throw ServiceException.FAILURE("remote server " + server.getName() + " has neither http nor https port enabled", null);
-            String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
-
-            StringBuffer url = new StringBuffer(useHTTP ? "http" : "https");
-            url.append("://").append(hostname).append(':').append(port).append(uri);
-
-            // create an HTTP client with the same cookies
-            HttpState state = new HttpState();
-            javax.servlet.http.Cookie cookies[] = req.getCookies();
-            if (cookies != null)
-                for (int i = 0; i < cookies.length; i++)
-                    state.addCookie(new Cookie(hostname, cookies[i].getName(), cookies[i].getValue(), "/", null, false));
-            if (authToken != null)
-                state.addCookie(new Cookie(hostname, COOKIE_ZM_AUTH_TOKEN, authToken, "/", null, false));                
-
-            HttpClient client = new HttpClient();
-            client.setState(state);
-
-            // create a duplicate request (same method, same content, same X-headers)
-            HttpMethod method = null;
-            int hopcount = 0;
-            if (req.getMethod().equalsIgnoreCase("GET")) {
-                method = new GetMethod(url.toString());
-            } else if (req.getMethod().equalsIgnoreCase("POST") || req.getMethod().equalsIgnoreCase("PUT")) {
-                PostMethod post = new PostMethod(url.toString());
-                post.setRequestEntity(new InputStreamRequestEntity(req.getInputStream()));
-                method = post;
-            } else {
-                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "cannot proxy method: " + req.getMethod());
-            }
-
-            for (Enumeration enm = req.getHeaderNames(); enm.hasMoreElements(); ) {
-                String hname = (String) enm.nextElement(), hlc = hname.toLowerCase();
-                if (hlc.equals("x-zimbra-hopcount"))
-                    try { hopcount = Math.max(Integer.parseInt(req.getHeader(hname)), 0); } catch (NumberFormatException e) { }
-                else if (hlc.startsWith("x-") || hlc.startsWith("content-") || hlc.equals("authorization"))
-                    method.addRequestHeader(hname, req.getHeader(hname));
-            }
-            if (hopcount >= MAX_PROXY_HOPCOUNT)
-                throw ServiceException.TOO_MANY_HOPS();
-            method.addRequestHeader("X-Zimbra-Hopcount", Integer.toString(hopcount + 1));
-
-            try {
-                // dispatch the request and copy over the results
-                int statusCode = -1;
-                for (int retryCount = 3; statusCode == -1 && retryCount > 0; retryCount--)
-                    try {
-                        statusCode = client.executeMethod(method);
-                    } catch (HttpRecoverableException e) { }
-                if (statusCode != HttpStatus.SC_OK) {
-                    if (statusCode == -1)
-                        resp.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, "retry limit reached");
-                    else
-                        resp.sendError(statusCode, method.getStatusText());
-                    return;
-                }
-                Header[] headers = method.getResponseHeaders();
-                for (int i = 0; i < headers.length; i++) {
-                    String hname = headers[i].getName(), hlc = hname.toLowerCase();
-                    if (hlc.startsWith("x-") || hlc.startsWith("content-") || hlc.startsWith("www-"))
-                        resp.addHeader(hname, headers[i].getValue());
-                }
-                ByteUtil.copy(method.getResponseBodyAsStream(), false, resp.getOutputStream(), false);
-            } finally {
-                method.releaseConnection();
-            }
-        } catch (ServiceException e) {
-            throw new ServletException(e);
+        	proxyServletRequest(req, resp, method, state);
+        } finally {
+        	method.releaseConnection();
         }
+    }
+    protected void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, HttpMethod method, HttpState state)
+    throws IOException, ServiceException {
+        // create an HTTP client with the same cookies
+        javax.servlet.http.Cookie cookies[] = req.getCookies();
+        String hostname = method.getURI().getHost();
+        if (cookies != null)
+        	for (int i = 0; i < cookies.length; i++)
+        		state.addCookie(new Cookie(hostname, cookies[i].getName(), cookies[i].getValue(), "/", null, false));
+        HttpClient client = new HttpClient();
+        if (state != null)
+        	client.setState(state);
+
+        int hopcount = 0;
+        for (Enumeration enm = req.getHeaderNames(); enm.hasMoreElements(); ) {
+        	String hname = (String) enm.nextElement(), hlc = hname.toLowerCase();
+        	if (hlc.equals("x-zimbra-hopcount"))
+        		try { hopcount = Math.max(Integer.parseInt(req.getHeader(hname)), 0); } catch (NumberFormatException e) { }
+        		else if (hlc.startsWith("x-") || hlc.startsWith("content-") || hlc.equals("authorization"))
+        			method.addRequestHeader(hname, req.getHeader(hname));
+        }
+        if (hopcount >= MAX_PROXY_HOPCOUNT)
+        	throw ServiceException.TOO_MANY_HOPS();
+        method.addRequestHeader("X-Zimbra-Hopcount", Integer.toString(hopcount + 1));
+
+        // dispatch the request and copy over the results
+        int statusCode = -1;
+        for (int retryCount = 3; statusCode == -1 && retryCount > 0; retryCount--) {
+        	try {
+        		statusCode = client.executeMethod(method);
+        	} catch (HttpRecoverableException e) {}
+        }
+        if (statusCode >= 300) {
+        	if (statusCode == -1)
+        		resp.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, "retry limit reached");
+        	else
+        		resp.sendError(statusCode, method.getStatusText());
+        	return;
+        }
+        Header[] headers = method.getResponseHeaders();
+        for (int i = 0; i < headers.length; i++) {
+        	String hname = headers[i].getName(), hlc = hname.toLowerCase();
+        	if (hlc.startsWith("x-") || hlc.startsWith("content-") || hlc.startsWith("www-"))
+        		resp.addHeader(hname, headers[i].getValue());
+        }
+        ByteUtil.copy(method.getResponseBodyAsStream(), false, resp.getOutputStream(), false);
     }
     
 
@@ -427,11 +414,21 @@ public class ZimbraServlet extends HttpServlet {
         Provisioning prov = Provisioning.getInstance();
         Server server = prov.getServer(acct);
         Domain domain = prov.getDomain(acct);
+        String uri;
+        Config config = prov.getConfig();
+        String defaultDomain = config.getAttr(Provisioning.A_zimbraDefaultDomainName, null);
+        if (defaultDomain == null || !defaultDomain.equalsIgnoreCase(acct.getDomainName()))
+            uri = service + "/" + acct.getName();
+        else
+            uri = service + "/" + acct.getUid();
+        return getServiceUrl(server, domain, uri);
+    }
+    public static String getServiceUrl(Server server, Domain domain, String service) throws ServiceException {
         String hostname = domain == null ? null : domain.getAttr(Provisioning.A_zimbraPublicServiceHostname, null);
         if (hostname == null)
             hostname = server.getAttr(Provisioning.A_zimbraServiceHostname, null);
         if (hostname == null)
-            throw ServiceException.FAILURE("unable to determine the service hostname for account " + acct.getName(), null);
+            throw ServiceException.FAILURE("unable to determine the service hostname for server " + server.getName(), null);
 
         StringBuilder url = new StringBuilder();
         int port = 0;
@@ -450,14 +447,8 @@ public class ZimbraServlet extends HttpServlet {
             if (port != PORT_HTTP)
                 url.append(":").append(port);
         }
+        url.append(service);
 
-        url.append(service).append("/");
-        Config config = prov.getConfig();
-        String defaultDomain = config.getAttr(Provisioning.A_zimbraDefaultDomainName, null);
-        if (defaultDomain == null || !defaultDomain.equalsIgnoreCase(acct.getDomainName()))
-            url.append(acct.getName());
-        else
-            url.append(acct.getUid());
         return url.toString();
     }
 }
