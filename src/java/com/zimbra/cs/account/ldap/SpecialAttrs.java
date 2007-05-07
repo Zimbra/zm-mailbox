@@ -18,17 +18,11 @@ public class SpecialAttrs {
     private String mLdapBaseDn;
     private String mLdapRdnAttr;
     
-    protected Map<String, Object> mAttrs;
-    
-    public SpecialAttrs(Map<String, Object> attrs) {
-        mAttrs = attrs;
-    }
-    
     public String getZimbraId()     { return mZimbraId; }
     public String getLdapBaseDn()   { return mLdapBaseDn; }
     public String getLdapRdnAttr()  { return mLdapRdnAttr; }
     
-    protected String getSingleValuedAttr(Map<String, Object> attrs, String attr) throws ServiceException {
+    private String getSingleValuedAttr(Map<String, Object> attrs, String attr) throws ServiceException {
         Object value = attrs.get(attr);
         if (value == null)
             return null;
@@ -39,8 +33,8 @@ public class SpecialAttrs {
             return (String)value;
     }
     
-    protected void processZimbraId() throws ServiceException  {
-        String zimbraId = getSingleValuedAttr(mAttrs, SA_zimbraId);
+    public void handleZimbraId(Map<String, Object> attrs) throws ServiceException  {
+        String zimbraId = getSingleValuedAttr(attrs, SA_zimbraId);
         
         if (zimbraId != null) {
             // present, validate if it is a valid uuid
@@ -64,26 +58,26 @@ public class SpecialAttrs {
             */
         
             // remove it from the attr list
-            mAttrs.remove(Provisioning.A_zimbraId);
+            attrs.remove(SA_zimbraId);
+            mZimbraId = zimbraId;
         }
-        mZimbraId = zimbraId;
     }
         
-    protected void processLdapBaseDn() throws ServiceException {
-        // default is don't support it, do nothing here
-        // if the pseudo attr is present, a NamingExeption will be thrown when the entry is being created
-    }
-    
-    protected void processLdapRdnAttr() throws ServiceException {
-        // default is don't support it, do nothing here
-        // if the pseudo attr is present, a NamingExeption will be thrown when the entry is being created
-    }
-    
-    public void process() throws ServiceException {
-        if (mAttrs != null) {
-            processZimbraId();
-            processLdapBaseDn();
-            processLdapRdnAttr();
+    public void handleLdapBaseDn(Map<String, Object> attrs) throws ServiceException {
+        String baseDn = getSingleValuedAttr(attrs, PA_ldapBase);
+        if (baseDn != null) {
+            attrs.remove(PA_ldapBase);
+            mLdapBaseDn = baseDn;
         }
     }
+    
+    public void handleLdapRdnAttr(Map<String, Object> attrs) throws ServiceException {
+        String rdnAttr = getSingleValuedAttr(attrs, PA_ldapRdnAttr);
+        if (rdnAttr != null) {
+            attrs.remove(PA_ldapRdnAttr);
+            mLdapRdnAttr = rdnAttr;
+        }
+    }
+    
+
 }

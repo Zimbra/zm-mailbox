@@ -40,10 +40,10 @@ import com.zimbra.cs.account.Provisioning;
 
     private String mDn;
     
-    LdapAccount(String dn, Attributes attrs, Map<String, Object> defaults) throws NamingException {
-        super(LdapUtil.dnToEmail(dn), 
-                LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId),
-                LdapUtil.getAttrs(attrs), defaults);
+    LdapAccount(String dn, String email, Attributes attrs, Map<String, Object> defaults) throws NamingException {
+        super(email,
+              LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId),
+              LdapUtil.getAttrs(attrs), defaults);
         mDn = dn;
     }
 

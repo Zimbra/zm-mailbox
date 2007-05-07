@@ -192,7 +192,7 @@ public class LdapProvisioning extends Provisioning {
 
     private static final int BY_NAME = 3;
     
-    private LdapDIT mDIT;
+    protected LdapDIT mDIT;
     public LdapProvisioning() {
         setDIT();
     }
@@ -604,7 +604,7 @@ public class LdapProvisioning extends Provisioning {
                                   Map<String, Object> acctAttrs,
                                   String[] additionalObjectClasses) throws ServiceException {
         
-        SpecialAttrs specialAttrs = processSpecialAttrs(acctAttrs);
+        SpecialAttrs specialAttrs = mDIT.handleSpecialAttrs(acctAttrs);
         String uuid = specialAttrs.getZimbraId();
         String baseDn = specialAttrs.getLdapBaseDn();
         String rdnAttr = specialAttrs.getLdapRdnAttr();
@@ -3047,11 +3047,18 @@ public class LdapProvisioning extends Provisioning {
     private Account makeAccount(String dn, Attributes attrs, LdapProvisioning prov) throws NamingException, ServiceException {
         Attribute a = attrs.get(Provisioning.A_zimbraAccountCalendarUserType);
         boolean isAccount = (a == null) || a.contains(CalendarUserType.USER.toString());
-        Account acct = (isAccount) ? new LdapAccount(dn, attrs, null) : new LdapCalendarResource(dn, attrs, null);
+        
+        String emailAddress = LdapUtil.getAttrString(attrs, Provisioning.A_zimbraMailDeliveryAddress);
+        if (emailAddress == null)
+            emailAddress = LdapUtil.dnToEmail(dn);
+        
+        Account acct = (isAccount) ? new LdapAccount(dn, emailAddress, attrs, null) : new LdapCalendarResource(dn, attrs, null);
         Cos cos = getCOS(acct);
         acct.setDefaults(cos.getAccountDefaults());
         return acct;
     }
+    
+
 
     /**
      *  called when an account/dl is renamed
@@ -4136,13 +4143,6 @@ public class LdapProvisioning extends Provisioning {
             default:
                 return null;
         }
-    }
-    
-
-    SpecialAttrs processSpecialAttrs(Map<String, Object> attrs) throws ServiceException {
-        SpecialAttrs specialAttrs = new SpecialAttrs(attrs);
-        specialAttrs.process();
-        return specialAttrs;
     }
     
     public long countAccounts(String domain) throws ServiceException {

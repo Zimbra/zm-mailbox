@@ -1,5 +1,7 @@
 package com.zimbra.cs.account.ldap;
 
+import java.util.Map;
+
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
@@ -7,7 +9,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
 
 public class LdapDIT {
-    
     protected String ACCOUNT_REL_BASE;
     protected String ACCOUNT_RDN_ATTR;
     
@@ -72,21 +73,17 @@ public class LdapDIT {
         return ACCOUNT_REL_BASE +","+domainDN;
     }
     
-    
- 
-    
-    /*
-    public static void main(String[] args) {
-        
-        LdapDIT junk = new JunkDIT();
-        
-        System.out.println(junk.ACCOUNT_REL_BASE);
-        System.out.println(junk.ACCOUNT_RDN_ATTR);
-        
-        
-        junk = new LdapDIT();
-        System.out.println(junk.ACCOUNT_REL_BASE);
-        System.out.println(junk.ACCOUNT_RDN_ATTR);
+    protected SpecialAttrs handleSpecialAttrs(Map<String, Object> attrs) throws ServiceException {
+        SpecialAttrs specialAttrs = new SpecialAttrs();
+        if (attrs != null) {
+            specialAttrs.handleZimbraId(attrs);
+            
+            // default is don't support pseudo attrs
+            // if the pseudo attr is present and not handled here, a NamingExeption will be thrown 
+            // when the entry is being created
+
+        }
+        return specialAttrs;
     }
-    */
+
 }
