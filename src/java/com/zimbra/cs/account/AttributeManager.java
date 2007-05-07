@@ -768,7 +768,7 @@ public class AttributeManager {
                 ATTRIBUTE_DEFINITIONS.append("attributetype ( " + ai.getName() + "\n");
                 ATTRIBUTE_DEFINITIONS.append("\tNAME ( '" + ai.getName() + "' )\n");
                 ATTRIBUTE_DEFINITIONS.append("\tDESC '" + ai.getDescription() + "'\n");
-                String syntax = null, substr = null, equality = null; 
+                String syntax = null, substr = null, equality = null, ordering = null;
                 switch (ai.getType()) {
                 case TYPE_BOOLEAN:
                     syntax = "1.3.6.1.4.1.1466.115.121.1.7";
@@ -784,6 +784,7 @@ public class AttributeManager {
                 case TYPE_GENTIME:
                 	syntax = "1.3.6.1.4.1.1466.115.121.1.24";
                     equality = "generalizedTimeMatch";
+                    ordering = "generalizedTimeOrderingMatch ";
                     break;
 
                 case TYPE_ID:
@@ -870,7 +871,10 @@ public class AttributeManager {
                 if (substr != null) {
                     ATTRIBUTE_DEFINITIONS.append("\n\tSUBSTR " + substr);
                 }
-                if (ai.getOrder() != null) {
+                
+                if (ordering != null) {
+                    ATTRIBUTE_DEFINITIONS.append("\n\tORDERING " + ordering);
+                } else if (ai.getOrder() != null) {
                     ATTRIBUTE_DEFINITIONS.append("\n\tORDERING " + ai.getOrder());
                 }
                 
