@@ -2418,12 +2418,12 @@ public class Mailbox {
      * the remote mailbox.
      * 
      * @param octxt
-     * @param startingFolder Folder to start from (pass Mailbox.ID_FOLDER_ROOT to start from the root)
+     * @param startingFolderId Folder to start from (pass Mailbox.ID_FOLDER_ROOT to start from the root)
      * @param path 
      * @return
      * @throws ServiceException
      */
-    public synchronized Pair<Folder, String> getFolderByPathLongestMatch(OperationContext octxt, int startingFolder, String path) throws ServiceException {
+    public synchronized Pair<Folder, String> getFolderByPathLongestMatch(OperationContext octxt, int startingFolderId, String path) throws ServiceException {
         if (path == null)
             throw MailServiceException.NO_SUCH_FOLDER(path);
         while (path.startsWith("/"))
@@ -2436,7 +2436,8 @@ public class Mailbox {
         if (path.length() == 0)
             throw MailServiceException.NO_SUCH_FOLDER("/" + path);
             
-        Folder curFolder = getFolderById(null, startingFolder);
+        Folder startingFolder = getFolderById(null, startingFolderId);  
+        Folder curFolder = startingFolder; 
         assert(curFolder != null);
 
         try {
@@ -2450,7 +2451,7 @@ public class Mailbox {
                 // did we match the current segment?
                 if (nextFolder == null) {
                     if (curFolder == null) { // couldn't match *anything* throw exception
-                        throw MailServiceException.NO_SUCH_FOLDER("/" + path);
+                        throw MailServiceException.NO_SUCH_FOLDER(startingFolder.getPath()+"/"+path);
                     } else {
                         StringBuilder unmatched = new StringBuilder();
                         boolean atFirst = true;
@@ -2461,6 +2462,9 @@ public class Mailbox {
                                 unmatched.append('/');
                             }
                             unmatched.append(segments[j]);
+                        }
+                        if (unmatched.length() > 0) {
+                            throw MailServiceException.NO_SUCH_FOLDER(startingFolder.getPath()+"/"+path);
                         }
                         return new Pair<Folder, String>(curFolder, unmatched.toString());
                     }
