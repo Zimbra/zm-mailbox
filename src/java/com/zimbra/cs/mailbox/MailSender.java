@@ -245,8 +245,9 @@ public class MailSender {
                 }
             }
 
-            // if this is a delegated send, automatically save a copy to the "From" user's mailbox
-            if (isDelegatedRequest && hasRecipients && acct.getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, true)) {
+            // if this is a non-admin delegated send, automatically save a copy to the "From" user's mailbox
+            boolean adminSendAs = AccessManager.getInstance().canAccessAccount(authuser, acct, isAdminRequest);
+            if (hasRecipients && isDelegatedRequest && !adminSendAs && acct.getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, true)) {
                 int flags = Flag.BITMASK_UNREAD | Flag.BITMASK_FROM_ME;
                 // save the sent copy using the target's credentials, as the sender doesn't necessarily have write access
                 OperationContext octxtTarget = new OperationContext(acct);
