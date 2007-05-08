@@ -206,4 +206,9 @@ public class TestWaitSet extends TestCase {
             WaitSetMgr.destroy(waitSetId);
         }
     }
+    
+    public void tearDown()
+    throws Exception {
+        cleanUp();
+    }
 }
