@@ -482,7 +482,7 @@ public class ToXML {
             if (msg.isTagged(mbox.mDeletedFlag))
                 continue;
             if (expand == ExpandResults.FIRST || expand == ExpandResults.ALL) {
-                encodeMessageAsMP(c, ifmt, octxt, msg, null, params.getWantHtml(), params.getNeuterImages(), params.getInlinedHeaders());
+                encodeMessageAsMP(c, ifmt, octxt, msg, null, params.getWantHtml(), params.getNeuterImages(), params.getInlinedHeaders(), true);
                 if (expand == ExpandResults.FIRST)
                     expand = ExpandResults.NONE;
             } else {
@@ -632,16 +632,19 @@ public class ToXML {
      *                  <tt>false</tt> to prefer text/plain parts.
      * @param neuter  Whether to rename "src" attributes on HTML <img> tags.
      * @param headers Extra message headers to include in the returned element.
+     * @param serializeType If <tt>false</tt>, always serializes as an
+     *                      <tt>&lt;m></tt> element.
      * @return The newly-created <tt>&lt;m></tt> Element, which has already
      *         been added as a child to the passed-in <tt>parent</tt>.
      * @throws ServiceException */
-    public static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Message msg, String part, boolean wantHTML, boolean neuter, Set<String> headers)
+    public static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Message msg, String part,
+                                            boolean wantHTML, boolean neuter, Set<String> headers, boolean serializeType)
     throws ServiceException {
         boolean wholeMessage = (part == null || part.trim().equals(""));
 
         Element m;
         if (wholeMessage) {
-            m = encodeMessageCommon(parent, ifmt, msg, NOTIFY_FIELDS);
+            m = encodeMessageCommon(parent, ifmt, msg, NOTIFY_FIELDS, serializeType);
             m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
         } else {
             m = parent.addElement(MailConstants.E_MSG);
@@ -851,10 +854,13 @@ public class ToXML {
      *                  <tt>false</tt> to prefer text/plain parts.
      * @param neuter  Whether to rename "src" attributes on HTML <img> tags.
      * @param headers Extra message headers to include in the returned element.
+     * @param serializeType If <tt>false</tt>, always serializes as an
+     *                      <tt>&lt;m></tt> element.
      * @return The newly-created <tt>&lt;m></tt> Element, which has already
      *         been added as a child to the passed-in <tt>parent</tt>.
      * @throws ServiceException */
-    public static Element encodeInviteAsMP(Element parent, ItemIdFormatter ifmt, CalendarItem calItem, ItemId iid, String part, boolean wantHTML, boolean neuter, Set<String> headers)
+    public static Element encodeInviteAsMP(Element parent, ItemIdFormatter ifmt, CalendarItem calItem, ItemId iid, String part,
+                                           boolean wantHTML, boolean neuter, Set<String> headers, boolean serializeType)
     throws ServiceException {
         int invId = iid.getSubpartId();
         boolean wholeMessage = (part == null || part.trim().equals(""));
@@ -863,7 +869,7 @@ public class ToXML {
 
         Element m;
         if (wholeMessage) {
-            m = encodeMessageCommon(parent, ifmt, calItem, NOTIFY_FIELDS);
+            m = encodeMessageCommon(parent, ifmt, calItem, NOTIFY_FIELDS, serializeType);
             m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(calItem, invId));
         } else {
             m = parent.addElement(MailConstants.E_MSG);
@@ -959,13 +965,13 @@ public class ToXML {
      * @return
      * @throws ServiceException
      */
-    public static Element encodeMessageAsMIME(Element parent, ItemIdFormatter ifmt, Message msg, String part)
+    public static Element encodeMessageAsMIME(Element parent, ItemIdFormatter ifmt, Message msg, String part, boolean serializeType)
     throws ServiceException {
         boolean wholeMessage = (part == null || part.trim().equals(""));
 
         Element m;
         if (wholeMessage) {
-            m = encodeMessageCommon(parent, ifmt, msg, NOTIFY_FIELDS);
+            m = encodeMessageCommon(parent, ifmt, msg, NOTIFY_FIELDS, serializeType);
             m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
         } else {
             m = parent.addElement(MailConstants.E_MSG);
@@ -1001,7 +1007,7 @@ public class ToXML {
     }
 
     public static Element encodeMessageSummary(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Message msg, OutputParticipants output, int fields) {
-        Element e = encodeMessageCommon(parent, ifmt, msg, fields);
+        Element e = encodeMessageCommon(parent, ifmt, msg, fields, true);
         e.addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
 
         if (!needToOutput(fields, Change.MODIFIED_CONTENT))
@@ -1036,8 +1042,9 @@ public class ToXML {
         return e;
     }
 
-    private static Element encodeMessageCommon(Element parent, ItemIdFormatter ifmt, MailItem item, int fields) {
-        Element elem = parent.addElement(MailConstants.E_MSG);
+    private static Element encodeMessageCommon(Element parent, ItemIdFormatter ifmt, MailItem item, int fields, boolean serializeType) {
+        String name = serializeType && item instanceof Chat ? MailConstants.E_CHAT : MailConstants.E_MSG;
+        Element elem = parent.addElement(name);
         // DO NOT encode the item-id here, as some Invite-Messages-In-CalendarItems have special item-id's
         if (needToOutput(fields, Change.MODIFIED_SIZE))
             elem.addAttribute(MailConstants.A_SIZE, item.getSize());

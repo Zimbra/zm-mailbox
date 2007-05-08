@@ -142,7 +142,7 @@ public class SaveDraft extends MailDocumentHandler {
 
         Element response = zsc.createElement(MailConstants.SAVE_DRAFT_RESPONSE);
         // FIXME: inefficient -- this recalculates the MimeMessage (but SaveDraft is called rarely)
-        ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, null, false, true, null);
+        ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, null, false, true, null, true);
         return response;
     }
 }

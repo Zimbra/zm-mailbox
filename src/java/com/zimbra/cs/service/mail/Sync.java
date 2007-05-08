@@ -48,9 +48,6 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.Pair;
 import com.zimbra.soap.ZimbraSoapContext;
 
-/**
- * @author dkarp
- */
 public class Sync extends MailDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -93,7 +90,7 @@ public class Sync extends MailDocumentHandler {
 
                 Set<Folder> visible = mbox.getVisibleFolders(octxt);
                 boolean anyFolders = folderSync(zsc, response, mbox, root, visible, SyncPhase.INITIAL);
-//              if no folders are visible, add an empty "<folder/>" as a hint
+                // if no folders are visible, add an empty "<folder/>" as a hint
                 if (!anyFolders)
                     response.addElement(MailConstants.E_FOLDER);
             } else {
@@ -117,45 +114,46 @@ public class Sync extends MailDocumentHandler {
             return false;
         boolean isVisible = visible == null || visible.remove(folder);
 
-//      short-circuit if we know that this won't be in the output
+        // short-circuit if we know that this won't be in the output
         List<Folder> subfolders = folder.getSubfolders(null);
         if (!isVisible && subfolders.isEmpty())
             return false;
 
-//      write this folder's data to the response
+        // write this folder's data to the response
         OperationContext octxt = zsc.getOperationContext();
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         boolean initial = phase == SyncPhase.INITIAL;
         Element f = ToXML.encodeFolder(response, ifmt, octxt, folder, Change.ALL_FIELDS);
         if (initial && isVisible) {
-//          we're in the middle of an initial sync, so serialize the item ids
+            // we're in the middle of an initial sync, so serialize the item ids
             boolean isSearch = folder instanceof SearchFolder;
             if (!isSearch) {
                 if (folder.getId() == Mailbox.ID_FOLDER_TAGS) {
                     initialTagSync(zsc, f, mbox);
                 } else {
                     initialItemSync(f, MailConstants.E_MSG, mbox.listItemIds(octxt, MailItem.TYPE_MESSAGE, folder.getId()));
+                    initialItemSync(f, MailConstants.E_CHAT, mbox.listItemIds(octxt, MailItem.TYPE_CHAT, folder.getId()));
                     initialItemSync(f, MailConstants.E_CONTACT, mbox.listItemIds(octxt, MailItem.TYPE_CONTACT, folder.getId()));
                     initialItemSync(f, MailConstants.E_NOTE, mbox.listItemIds(octxt, MailItem.TYPE_NOTE, folder.getId()));
                     initialItemSync(f, MailConstants.E_APPOINTMENT, mbox.listItemIds(octxt, MailItem.TYPE_APPOINTMENT, folder.getId()));
                     initialItemSync(f, MailConstants.E_TASK, mbox.listItemIds(octxt, MailItem.TYPE_TASK, folder.getId()));
                 }
             } else {
-//              anything else to be done for searchfolders?
+                // anything else to be done for searchfolders?
             }
         }
 
         if (isVisible && visible != null && visible.isEmpty())
             return true;
 
-//      write the subfolders' data to the response
+        // write the subfolders' data to the response
         for (Folder subfolder : subfolders) {
             if (subfolder != null)
                 isVisible |= folderSync(zsc, f, mbox, subfolder, visible, phase);
         }
 
-//      if this folder and all its subfolders are not visible (oops!), remove them from the response
+        // if this folder and all its subfolders are not visible (oops!), remove them from the response
         if (!isVisible)
             f.detach();
 
@@ -184,10 +182,10 @@ public class Sync extends MailDocumentHandler {
     private static final int MAXIMUM_CHANGE_COUNT = 3990;
 
     private static final int MUTABLE_FIELDS = Change.MODIFIED_FLAGS  | Change.MODIFIED_TAGS |
-    Change.MODIFIED_FOLDER | Change.MODIFIED_PARENT |
-    Change.MODIFIED_NAME   | Change.MODIFIED_CONFLICT |
-    Change.MODIFIED_COLOR  | Change.MODIFIED_POSITION |
-    Change.MODIFIED_DATE;
+                                              Change.MODIFIED_FOLDER | Change.MODIFIED_PARENT |
+                                              Change.MODIFIED_NAME   | Change.MODIFIED_CONFLICT |
+                                              Change.MODIFIED_COLOR  | Change.MODIFIED_POSITION |
+                                              Change.MODIFIED_DATE;
 
     private static String deltaSync(final ZimbraSoapContext zsc, final Element response, final Mailbox mbox, final int begin, final boolean typedDeletes, int itemCutoff)
     throws ServiceException {
@@ -198,18 +196,18 @@ public class Sync extends MailDocumentHandler {
         OperationContext octxt = zsc.getOperationContext();
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
-//      first, fetch deleted items
+        // first, fetch deleted items
         MailItem.TypedIdList tombstones = mbox.getTombstoneSet(begin);
         Element eDeleted = response.addElement(MailConstants.E_DELETED);
 
-//      then, handle created/modified folders
+        // then, handle created/modified folders
         if (zsc.isDelegatedRequest()) {
-//          first, make sure that something changed...
+            // first, make sure that something changed...
             if (!mbox.getModifiedFolders(begin).isEmpty()) {
-//              special-case the folder hierarchy for delegated delta sync
+                // special-case the folder hierarchy for delegated delta sync
                 Set<Folder> visible = mbox.getVisibleFolders(octxt);
                 boolean anyFolders = folderSync(zsc, response, mbox, mbox.getFolderById(null, DEFAULT_FOLDER_ID), visible, SyncPhase.DELTA);
-//              if no folders are visible, add an empty "<folder/>" as a hint
+                // if no folders are visible, add an empty "<folder/>" as a hint
                 if (!anyFolders)
                     response.addElement(MailConstants.E_FOLDER);
             }
@@ -218,33 +216,33 @@ public class Sync extends MailDocumentHandler {
                 ToXML.encodeFolder(response, ifmt, octxt, folder, Change.ALL_FIELDS);
         }
 
-//      next, handle created/modified tags
+        // next, handle created/modified tags
         for (Tag tag : mbox.getModifiedTags(octxt, begin))
             ToXML.encodeTag(response, ifmt, tag, Change.ALL_FIELDS);
 
-//      finally, handle created/modified "other items"
+        // finally, handle created/modified "other items"
         int itemCount = 0;
         Pair<List<Integer>,MailItem.TypedIdList> changed = mbox.getModifiedItems(octxt, begin);
         List<Integer> modified = changed.getFirst();
         delta: while (!modified.isEmpty()) {
             List batch = modified.subList(0, Math.min(modified.size(), FETCH_BATCH_SIZE));
             for (MailItem item : mbox.getItemById(octxt, modified, MailItem.TYPE_UNKNOWN)) {
-//              detect interrupted sync and resume from the appropriate place
+                // detect interrupted sync and resume from the appropriate place
                 if (item.getModifiedSequence() == begin + 1 && item.getId() < itemCutoff)
                     continue;
 
-//              if we've overflowed this sync response, set things up so that a subsequent sync starts from where we're cutting off
+                // if we've overflowed this sync response, set things up so that a subsequent sync starts from where we're cutting off
                 if (itemCount >= MAXIMUM_CHANGE_COUNT) {
                     response.addAttribute(MailConstants.A_QUERY_MORE, true);
                     newToken = (item.getModifiedSequence() - 1) + "-" + item.getId();
                     break delta;
                 }
 
-//              For items in the system, if the content has changed since the user last sync'ed 
-//              (because it was edited or created), just send back the folder ID and saved date --
-//              the client will request the whole object out of band -- potentially using the 
-//              content servlet's "include metadata in headers" hack.
-//              If it's just the metadata that changed, send back the set of mutable attributes.
+                // For items in the system, if the content has changed since the user last sync'ed 
+                // (because it was edited or created), just send back the folder ID and saved date --
+                // the client will request the whole object out of band -- potentially using the 
+                // content servlet's "include metadata in headers" hack.
+                // If it's just the metadata that changed, send back the set of mutable attributes.
                 boolean created = item.getSavedSequence() > begin;
                 ToXML.encodeItem(response, ifmt, octxt, item, created ? Change.MODIFIED_FOLDER | Change.MODIFIED_CONFLICT : MUTABLE_FIELDS);
                 itemCount++;
@@ -252,11 +250,11 @@ public class Sync extends MailDocumentHandler {
             batch.clear();
         }
 
-//      items that have been altered in non-visible folders will be returned as "deleted" in order to handle moves
+        // items that have been altered in non-visible folders will be returned as "deleted" in order to handle moves
         if (changed.getSecond() != null)
             tombstones.add(changed.getSecond());
 
-//      cleanup: only return a <deleted> element if we're sending back deleted item ids
+        // cleanup: only return a <deleted> element if we're sending back deleted item ids
         if (tombstones == null || tombstones.isEmpty()) {
             eDeleted.detach();
         } else {
@@ -290,6 +288,7 @@ public class Sync extends MailDocumentHandler {
             case MailItem.TYPE_TAG:          return MailConstants.E_TAG;
             case MailItem.TYPE_VIRTUAL_CONVERSATION:
             case MailItem.TYPE_CONVERSATION: return MailConstants.E_CONV;
+            case MailItem.TYPE_CHAT:         return MailConstants.E_CHAT;
             case MailItem.TYPE_MESSAGE:      return MailConstants.E_MSG;
             case MailItem.TYPE_CONTACT:      return MailConstants.E_CONTACT;
             case MailItem.TYPE_APPOINTMENT:  return MailConstants.E_APPOINTMENT;
@@ -297,7 +296,6 @@ public class Sync extends MailDocumentHandler {
             case MailItem.TYPE_NOTE:         return MailConstants.E_NOTE;
             case MailItem.TYPE_WIKI:         return MailConstants.E_WIKIWORD;
             case MailItem.TYPE_DOCUMENT:     return MailConstants.E_DOC;
-            case MailItem.TYPE_CHAT:      return MailConstants.E_MSG;
             default:                         return null;
         }
     }
@@ -309,13 +307,14 @@ public class Sync extends MailDocumentHandler {
         else if (name.equals(MailConstants.E_TAG))          return MailItem.TYPE_TAG;
         else if (name.equals(MailConstants.E_CONV))         return MailItem.TYPE_CONVERSATION;
         else if (name.equals(MailConstants.E_MSG))          return MailItem.TYPE_MESSAGE;
+        else if (name.equals(MailConstants.E_CHAT))         return MailItem.TYPE_CHAT;
         else if (name.equals(MailConstants.E_CONTACT))      return MailItem.TYPE_CONTACT;
         else if (name.equals(MailConstants.E_APPOINTMENT))  return MailItem.TYPE_APPOINTMENT;
         else if (name.equals(MailConstants.E_TASK))         return MailItem.TYPE_TASK;
         else if (name.equals(MailConstants.E_NOTE))         return MailItem.TYPE_NOTE;
         else if (name.equals(MailConstants.E_WIKIWORD))     return MailItem.TYPE_WIKI;
         else if (name.equals(MailConstants.E_DOC))          return MailItem.TYPE_DOCUMENT;
-        else                                              return MailItem.TYPE_UNKNOWN;
+        else                                                return MailItem.TYPE_UNKNOWN;
     }
 
 }

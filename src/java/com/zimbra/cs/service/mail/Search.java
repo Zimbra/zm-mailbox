@@ -298,7 +298,7 @@ public class Search extends MailDocumentHandler  {
 
         Element m;
         if (inline)
-            m = ToXML.encodeMessageAsMP(response, ifmt, zsc.getOperationContext(), msg, null, params.getWantHtml(), params.getNeuterImages(), params.getInlinedHeaders());
+            m = ToXML.encodeMessageAsMP(response, ifmt, zsc.getOperationContext(), msg, null, params.getWantHtml(), params.getNeuterImages(), params.getInlinedHeaders(), true);
         else
             m = ToXML.encodeMessageSummary(response, ifmt, zsc.getOperationContext(), msg, params.getWantRecipients());
 
@@ -335,7 +335,7 @@ public class Search extends MailDocumentHandler  {
 
         Element m;
         if (inline) {
-            m = ToXML.encodeMessageAsMP(response, ifmt, zsc.getOperationContext(), msg, null, params.getWantHtml(), params.getNeuterImages(), null);
+            m = ToXML.encodeMessageAsMP(response, ifmt, zsc.getOperationContext(), msg, null, params.getWantHtml(), params.getNeuterImages(), null, true);
             if (!msg.getFragment().equals(""))
                 m.addAttribute(MailConstants.E_FRAG, msg.getFragment(), Element.Disposition.CONTENT);
         } else {
