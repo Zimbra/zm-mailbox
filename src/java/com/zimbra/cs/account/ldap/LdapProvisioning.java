@@ -195,7 +195,7 @@ public class LdapProvisioning extends Provisioning {
         mDIT = new LdapDIT();
     }
     
-    private class ReplaceAddressResult {
+    protected static class ReplaceAddressResult {
         ReplaceAddressResult(String oldAddrs[], String newAddrs[]) {
             mOldAddrs = oldAddrs;
             mNewAddrs = newAddrs;
@@ -484,7 +484,7 @@ public class LdapProvisioning extends Provisioning {
         }
     }
     
-    private Account getAccountById(String zimbraId) throws ServiceException {
+    protected Account getAccountById(String zimbraId) throws ServiceException {
         return getAccountById(zimbraId, null);
     }
 
@@ -1612,13 +1612,13 @@ public class LdapProvisioning extends Provisioning {
         try {
             ctxt = LdapUtil.getDirContext(true);
             
-            Account acc = getAccountById(zimbraId, ctxt);
-            LdapEntry entry = (LdapEntry) acc;
-            if (acc == null)
+            Account acct = getAccountById(zimbraId, ctxt);
+            LdapEntry entry = (LdapEntry) acct;
+            if (acct == null)
                 throw AccountServiceException.NO_SUCH_ACCOUNT(zimbraId);
 
             String oldDn = entry.getDN();
-            String oldEmail = acc.getName();
+            String oldEmail = acct.getName();
             String oldDomain = EmailUtil.getValidDomainPart(oldEmail);
             
             newName = newName.toLowerCase().trim();
@@ -1634,12 +1634,12 @@ public class LdapProvisioning extends Provisioning {
             
             String newDn = mDIT.emailToDN(newLocal,domain.getName());
 
-            Map<String,Object> newAttrs = acc.getAttrs(false);
+            Map<String,Object> newAttrs = acct.getAttrs(false);
             
             newAttrs.put(Provisioning.A_uid, newLocal);
             newAttrs.put(Provisioning.A_zimbraMailDeliveryAddress, newName);
             
-            ReplaceAddressResult replacedMails = replaceMailAddresses(acc, Provisioning.A_mail, oldEmail, newName);
+            ReplaceAddressResult replacedMails = replaceMailAddresses(acct, Provisioning.A_mail, oldEmail, newName);
             if (replacedMails.newAddrs().length == 0) {
                 // Set mail to newName if the account currently does not have a mail
                 newAttrs.put(Provisioning.A_mail, newName);
@@ -1648,7 +1648,7 @@ public class LdapProvisioning extends Provisioning {
             }
             
             boolean domainChanged = !oldDomain.equals(newDomain);
-            ReplaceAddressResult replacedAliases = replaceMailAddresses(acc, Provisioning.A_zimbraMailAlias, oldEmail, newName);
+            ReplaceAddressResult replacedAliases = replaceMailAddresses(acct, Provisioning.A_zimbraMailAlias, oldEmail, newName);
             if (replacedAliases.newAddrs().length > 0) {
                 newAttrs.put(Provisioning.A_zimbraMailAlias, replacedAliases.newAddrs());
                 
@@ -1667,7 +1667,7 @@ public class LdapProvisioning extends Provisioning {
             // MOVE OVER the account and all identities/sources/etc. doesn't throw an exception, just logs
             LdapUtil.moveChildren(ctxt, oldDn, newDn);
             
-            // rename the distribution list and all it's renamed aliases to the new name in all distribution lists
+            // rename the account and all it's renamed aliases to the new name in all distribution lists
             // doesn't throw exceptions, just logs
             renameAddressesInAllDistributionLists(oldEmail, newName, replacedAliases);
             
@@ -1680,7 +1680,7 @@ public class LdapProvisioning extends Provisioning {
             LdapUtil.unbindEntry(ctxt, oldDn);
 
             // prune cache
-            sAccountCache.remove(oldEmail, acc.getId());
+            sAccountCache.remove(oldEmail, acct.getId());
             
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.ACCOUNT_EXISTS(newName);            
@@ -3044,7 +3044,7 @@ public class LdapProvisioning extends Provisioning {
      *  
      */
     // void renameAddressInAllDistributionLists(String oldName, String newName)
-    void renameAddressesInAllDistributionLists(String oldName, String newName, ReplaceAddressResult replacedAliasPairs) {
+    protected void renameAddressesInAllDistributionLists(String oldName, String newName, ReplaceAddressResult replacedAliasPairs) {
     	Map<String, String> changedPairs = new HashMap<String, String>();
     	
     	changedPairs.put(oldName, newName);
@@ -3848,7 +3848,7 @@ public class LdapProvisioning extends Provisioning {
         return A_zimbraDataSourceName + "=" + LdapUtil.escapeRDNValue(name) + "," + entry.getDN();    
     }
     
-    private ReplaceAddressResult replaceMailAddresses(Entry entry, String attrName, String oldAddr, String newAddr) throws ServiceException {
+    protected ReplaceAddressResult replaceMailAddresses(Entry entry, String attrName, String oldAddr, String newAddr) throws ServiceException {
         String oldDomain = EmailUtil.getValidDomainPart(oldAddr);
         String newDomain = EmailUtil.getValidDomainPart(newAddr);    
         
@@ -3886,7 +3886,7 @@ public class LdapProvisioning extends Provisioning {
         return new ReplaceAddressResult(oldMails, newMails);
      }
     
-    private boolean addressExists(DirContext ctxt, String baseDN, String[] addrs) throws ServiceException {
+    protected boolean addressExists(DirContext ctxt, String baseDN, String[] addrs) throws ServiceException {
         StringBuilder query = new StringBuilder();
         query.append("(|");
         for (int i=0; i < addrs.length; i++) {
