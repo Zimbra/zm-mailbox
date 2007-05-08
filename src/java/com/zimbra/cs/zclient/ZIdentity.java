@@ -165,8 +165,11 @@ public class ZIdentity  {
     public boolean getWhenInFoldersEnabled() { return getBool(Provisioning.A_zimbraPrefWhenInFoldersEnabled); }
 
     public synchronized boolean containsAddress(ZEmailAddress address) {
+        if (address == null || address.getAddress() == null)
+            return false;
+
         for (String addr: getWhenSentToAddresses()) {
-            if (addr.toLowerCase().contains(address.getAddress().toLowerCase())) {
+            if (addr != null && addr.toLowerCase().contains(address.getAddress().toLowerCase())) {
                     return true;
             }
         }
