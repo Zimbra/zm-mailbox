@@ -52,25 +52,34 @@ public class ZimbraTestListener implements TestListener {
     
     public void addError(Test test, Throwable t) {
         ZimbraLog.test.error("*** TEST ERROR", t);
-        Element e = mSummaryElement.addElement("error");
-        e.addAttribute("name", getTestName(test));
-        e.setText(t.toString());
+
+        if (mSummaryElement != null) {
+            Element e = mSummaryElement.addElement("error");
+            e.addAttribute("name", getTestName(test));
+            e.setText(t.toString());
+        }
     }
 
     public void addFailure(Test test, AssertionFailedError t) {
         ZimbraLog.test.error("*** TEST FAILED", t);
-        Element e = mSummaryElement.addElement("failure");
-        e.addAttribute("name", getTestName(test));
-        e.setText(t.toString());
+        
+        if (mSummaryElement != null) {
+            Element e = mSummaryElement.addElement("failure");
+            e.addAttribute("name", getTestName(test));
+            e.setText(t.toString());
+        }
     }
 
     public void endTest(Test test) {
         if (test instanceof TestCase) {
             double seconds = (double) (System.currentTimeMillis() - mStartTimestamp) / 1000;
             ZimbraLog.test.info("Test %s finished in %.2f seconds", getTestName(test), seconds);
-            Element e = mSummaryElement.addElement("completed");
-            e.addAttribute("name", getTestName(test));
-            e.addAttribute("execSeconds", String.format("%.2f", seconds));
+            
+            if (mSummaryElement != null) {
+                Element e = mSummaryElement.addElement("completed");
+                e.addAttribute("name", getTestName(test));
+                e.addAttribute("execSeconds", String.format("%.2f", seconds));
+            }
         }
     }
 
