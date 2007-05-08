@@ -569,15 +569,15 @@ public class LdapProvisioning extends Provisioning {
     }
     
     public Account createAccount(String emailAddress, String password, Map<String, Object> acctAttrs) throws ServiceException {
-        return createAccount(emailAddress, password, acctAttrs, null);
+        return createAccount(emailAddress, password, acctAttrs, mDIT.handleSpecialAttrs(acctAttrs), null);
     }
     
     private Account createAccount(String emailAddress,
                                   String password,
                                   Map<String, Object> acctAttrs,
+                                  SpecialAttrs specialAttrs,
                                   String[] additionalObjectClasses) throws ServiceException {
         
-        SpecialAttrs specialAttrs = mDIT.handleSpecialAttrs(acctAttrs);
         String uuid = specialAttrs.getZimbraId();
         String baseDn = specialAttrs.getLdapBaseDn();
         String rdnAttr = specialAttrs.getLdapRdnAttr();
@@ -591,6 +591,7 @@ public class LdapProvisioning extends Provisioning {
         }
         AttributeManager.getInstance().preModify(acctAttrs, null, attrManagerContext, true, true);
 
+        String dn = null;
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(true);
@@ -710,7 +711,7 @@ public class LdapProvisioning extends Provisioning {
 
             setInitialPassword(cos, attrs, password);
             
-            String dn = mDIT.accountDN(baseDn, rdnAttr, attrs, domain);
+            dn = mDIT.accountDN(baseDn, rdnAttr, attrs, domain);
             
             LdapUtil.createEntry(ctxt, dn, attrs, "createAccount");
             Account acct = getAccountById(zimbraIdStr, ctxt);
@@ -718,7 +719,10 @@ public class LdapProvisioning extends Provisioning {
 
             return acct;
         } catch (NameAlreadyBoundException nabe) {
-            throw AccountServiceException.ACCOUNT_EXISTS(emailAddress);
+            String info = "";
+            if (rdnAttr != null || baseDn != null)
+                info = "(entry["+dn+"] already bound)";
+            throw AccountServiceException.ACCOUNT_EXISTS(emailAddress+info);
         } catch (NamingException e) {
            throw ServiceException.FAILURE("unable to create account: "+emailAddress, e);
         } finally {
@@ -2895,10 +2899,12 @@ public class LdapProvisioning extends Provisioning {
         calResAttrs.put(Provisioning.A_zimbraAccountCalendarUserType,
                         Account.CalendarUserType.RESOURCE.toString());
 
+        SpecialAttrs specialAttrs = mDIT.handleSpecialAttrs(calResAttrs);
+        
         HashMap attrManagerContext = new HashMap();
         AttributeManager.getInstance().
             preModify(calResAttrs, null, attrManagerContext, true, true);
-        createAccount(emailAddress, password, calResAttrs,
+        createAccount(emailAddress, password, calResAttrs, specialAttrs,
                       new String[] { C_zimbraCalendarResource });
         LdapCalendarResource resource =
             (LdapCalendarResource) getCalendarResourceByName(emailAddress);
@@ -3025,7 +3031,7 @@ public class LdapProvisioning extends Provisioning {
         if (emailAddress == null)
             emailAddress = LdapUtil.dnToEmail(dn);
         
-        Account acct = (isAccount) ? new LdapAccount(dn, emailAddress, attrs, null) : new LdapCalendarResource(dn, attrs, null);
+        Account acct = (isAccount) ? new LdapAccount(dn, emailAddress, attrs, null) : new LdapCalendarResource(dn, emailAddress, attrs, null);
         Cos cos = getCOS(acct);
         acct.setDefaults(cos.getAccountDefaults());
         return acct;

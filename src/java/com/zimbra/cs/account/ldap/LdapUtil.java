@@ -41,6 +41,7 @@ import javax.naming.Context;
 import javax.naming.InvalidNameException;
 import javax.naming.Name;
 import javax.naming.NameAlreadyBoundException;
+import javax.naming.NameNotFoundException;
 import javax.naming.NameParser;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
@@ -734,6 +735,34 @@ public class LdapUtil {
         }
         return dns;
     }
+    
+    
+    /**
+     * given a dn like "uid=foo,ou=people,dc=widgets,dc=com", return the String[]
+     * [0] = uid=foo
+     * [1] = ou=people,dc=widgets,dc=com
+     * 
+     * if the dn cannot be split into rdn and dn:
+     * [0] = ""
+     * [1] = the input dn
+     * 
+     * @param dn
+     * @return
+     */
+    public static String[] dnToRdnAndBaseDn(String dn) {
+        String[] values = new String[2];
+        int baseDnIdx = dn.indexOf(",");
+        
+        if (baseDnIdx!=-1 && dn.length()>baseDnIdx+1) {
+            values[0] = dn.substring(0, baseDnIdx);
+            values[1] = dn.substring(baseDnIdx+1);
+        } else {
+            values[0] = "";
+            values[1] = dn;
+        }
+        
+        return values;
+    }
 
     static String[] removeMultiValue(String values[], String value) {
         List<String> list = new ArrayList<String>(Arrays.asList(values));
@@ -1016,6 +1045,7 @@ public class LdapUtil {
     	}
     }
     
+   
     public static void createEntry(DirContext ctxt, String dn, Attributes attrs, String method)
     throws NameAlreadyBoundException, ServiceException {
         Context newCtxt = null;
@@ -1024,6 +1054,8 @@ public class LdapUtil {
             newCtxt = ctxt.createSubcontext(cpName, attrs);
         } catch (NameAlreadyBoundException e) {            
             throw e;
+        } catch (NameNotFoundException e){
+            throw ServiceException.INVALID_REQUEST(method+" dn not found: "+ dnToRdnAndBaseDn(dn)[1] +e.getMessage(), e);
         } catch (InvalidAttributeIdentifierException e) {
             throw AccountServiceException.INVALID_ATTR_NAME(method+" invalid attr name: "+e.getMessage(), e);
         } catch (InvalidAttributeValueException e) {
@@ -1033,7 +1065,7 @@ public class LdapUtil {
         } catch (InvalidNameException e) {
             throw ServiceException.INVALID_REQUEST(method+" invalid name: "+e.getMessage(), e);
         } catch (SchemaViolationException e) {
-            throw ServiceException.INVALID_REQUEST(method+" invalid schema change: "+e.getMessage(), e);            
+            throw ServiceException.INVALID_REQUEST(method+" invalid schema change: "+e.getMessage(), e); 
         } catch (NamingException e) {
             throw ServiceException.FAILURE(method, e);
         } finally {

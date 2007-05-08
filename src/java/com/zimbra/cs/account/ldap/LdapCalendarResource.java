@@ -40,10 +40,10 @@ class LdapCalendarResource extends CalendarResource implements LdapEntry {
 
     private String mDn;
 
-    LdapCalendarResource(String dn, Attributes attrs, Map<String, Object> defaults) throws NamingException {
-        super(LdapUtil.dnToEmail(dn),
-                LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId), 
-                LdapUtil.getAttrs(attrs), defaults);
+    LdapCalendarResource(String dn, String email, Attributes attrs, Map<String, Object> defaults) throws NamingException {
+        super(email,
+              LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId), 
+              LdapUtil.getAttrs(attrs), defaults);
         mDn = dn;
     }
 
