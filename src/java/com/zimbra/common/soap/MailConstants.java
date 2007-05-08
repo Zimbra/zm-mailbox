@@ -194,7 +194,8 @@ public class MailConstants {
     public static final String E_ITEM = "item";
     public static final String E_MSG = "m";
     public static final String E_CONV = "c";
-	public static final String E_NOTE = "note";
+    public static final String E_CHAT = "chat";
+    public static final String E_NOTE = "note";
 	public static final String E_TAG = "tag";
     public static final String E_CONTACT = "cn";
 	public static final String E_FOLDER = "folder";
