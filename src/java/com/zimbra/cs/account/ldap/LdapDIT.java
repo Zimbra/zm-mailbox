@@ -9,8 +9,14 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
 
 public class LdapDIT {
+    
     protected String ACCOUNT_REL_BASE;
     protected String ACCOUNT_RDN_ATTR;
+    protected String ADMIN_BASE;
+    protected String CONFIG_BASE;     
+    protected String COS_BASE; 
+    protected String SERVER_BASE;
+    protected String ZIMLET_BASE;
     
     public LdapDIT() {
         init();
@@ -19,6 +25,11 @@ public class LdapDIT {
     protected void init() {
         ACCOUNT_REL_BASE = "ou=people";
         ACCOUNT_RDN_ATTR = "uid";
+        ADMIN_BASE = "cn=admins,cn=zimbra";
+        CONFIG_BASE = "cn=config,cn=zimbra";     
+        COS_BASE = "cn=cos,cn=zimbra"; 
+        SERVER_BASE = "cn=servers,cn=zimbra";
+        ZIMLET_BASE = "cn=zimlets,cn=zimbra";
     }
     
     /*
@@ -38,7 +49,7 @@ public class LdapDIT {
         return emailToDN(parts[0], parts[1]);
     }
     
-    public String accountDn(String baseDn, String rdnAttr, Attributes attrs, String domain) throws ServiceException, NamingException {
+    public String accountDN(String baseDn, String rdnAttr, Attributes attrs, String domain) throws ServiceException, NamingException {
         if (baseDn == null)
             baseDn = domainToAccountBaseDN(domain);
         
@@ -52,6 +63,45 @@ public class LdapDIT {
 
         return rdnAttr  + "=" + LdapUtil.escapeRDNValue(rdnValue) + "," + baseDn;
     }
+    
+    
+    /*
+     * ===============
+     *   admin account
+     * ===============
+     */
+    public String adminBaseDN() {
+        return ADMIN_BASE;
+    }
+    
+    public String adminNameToDN(String name) {
+        return "uid=" + LdapUtil.escapeRDNValue(name) + ","+ADMIN_BASE;
+    }
+    
+    
+    /*
+     * ===========
+     *   config
+     * ===========
+     */
+    public String configDN() {
+        return CONFIG_BASE;
+    }
+    
+    
+    /*
+     * ===========
+     *   COS
+     * ===========
+     */
+    public String cosBaseDN() {
+        return COS_BASE;
+    }
+    
+    public String cosNametoDN(String name) {
+        return "cn=" + LdapUtil.escapeRDNValue(name) + ","+COS_BASE;
+    }
+    
     
     /*
      * ===========
@@ -72,6 +122,43 @@ public class LdapDIT {
     public String domainDNToAccountBaseDN(String domainDN) {
         return ACCOUNT_REL_BASE +","+domainDN;
     }
+
+   
+    /*
+     * ===========
+     *   mime
+     * ===========
+     */
+    public String mimeConfigToDN(String name) {
+        name = LdapUtil.escapeRDNValue(name);
+        return "cn=" + name + ",cn=mime," + CONFIG_BASE;
+    }
+    
+    
+    /*
+     * ===========
+     *   server
+     * ===========
+     */
+    public String serverBaseDN() {
+        return SERVER_BASE;
+    }
+    
+    public String serverNametoDN(String name) {
+        return "cn=" + LdapUtil.escapeRDNValue(name) + ","+SERVER_BASE;
+    }
+    
+    
+    /*
+     * ===========
+     *   zimlet
+     * ===========
+     */    
+    public String zimletNameToDN(String name) {
+        return "cn=" + LdapUtil.escapeRDNValue(name) + ","+ZIMLET_BASE;
+    }
+    
+    
     
     protected SpecialAttrs handleSpecialAttrs(Map<String, Object> attrs) throws ServiceException {
         SpecialAttrs specialAttrs = new SpecialAttrs();

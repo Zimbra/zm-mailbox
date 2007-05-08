@@ -178,12 +178,6 @@ public class LdapProvisioning extends Provisioning {
         new NamedEntryCache<LdapZimlet>(
                 LC.ldap_cache_zimlet_maxsize.intValue(),
                 LC.ldap_cache_zimlet_maxage.intValue() * Constants.MILLIS_PER_MINUTE);                
-
-    private static final String CONFIG_BASE = "cn=config,cn=zimbra";     
-    private static final String COS_BASE = "cn=cos,cn=zimbra"; 
-    private static final String SERVER_BASE = "cn=servers,cn=zimbra";
-    private static final String ADMIN_BASE = "cn=admins,cn=zimbra";
-    private static final String ZIMLET_BASE = "cn=zimlets,cn=zimbra";
     
 
     private static final int BY_ID = 1;
@@ -214,30 +208,8 @@ public class LdapProvisioning extends Provisioning {
     }
 
     private static final Random sPoolRandom = new Random();
-    
-    private static String cosNametoDN(String name) {
-        return "cn=" + LdapUtil.escapeRDNValue(name) + ","+COS_BASE;
-    }
-    
-    private static String serverNametoDN(String name) {
-        return "cn=" + LdapUtil.escapeRDNValue(name) + ","+SERVER_BASE;
-    }
-
-    static String adminNameToDN(String name) {
-        return "uid=" + LdapUtil.escapeRDNValue(name) + ","+ADMIN_BASE;
-    }
-    
-    static String zimletNameToDN(String name) {
-    	return "cn=" + LdapUtil.escapeRDNValue(name) + ","+ZIMLET_BASE;
-    }
-    	
 
     private static Pattern sNamePattern = Pattern.compile("([/+])"); 
-    
-    static String mimeConfigToDN(String name) {
-        name = LdapUtil.escapeRDNValue(name);
-        return "cn=" + name + ",cn=mime," + CONFIG_BASE;
-    }
 
     public static interface ProvisioningValidator {
     	public void validate(LdapProvisioning prov, String action, Object arg) throws ServiceException;
@@ -371,7 +343,7 @@ public class LdapProvisioning extends Provisioning {
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
-            Attributes attrs = LdapUtil.getAttributes(ctxt, CONFIG_BASE);
+            Attributes attrs = LdapUtil.getAttributes(ctxt, mDIT.configDN());
             result = attrs != null;
         } catch (NamingException e) {
             mLog.warn("LDAP health check error", e);
@@ -391,9 +363,10 @@ public class LdapProvisioning extends Provisioning {
                 if (sConfig == null) {
                     DirContext ctxt = null;
                     try {
+                        String configDn = mDIT.configDN();
                         ctxt = LdapUtil.getDirContext();
-                        Attributes attrs = LdapUtil.getAttributes(ctxt, CONFIG_BASE);
-                        sConfig = new LdapConfig(CONFIG_BASE, attrs);
+                        Attributes attrs = LdapUtil.getAttributes(ctxt, configDn);
+                        sConfig = new LdapConfig(configDn, attrs);
                     } catch (NamingException e) {
                         throw ServiceException.FAILURE("unable to get config", e);
                     } finally {
@@ -412,7 +385,7 @@ public class LdapProvisioning extends Provisioning {
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
-            String dn = mimeConfigToDN(name);
+            String dn = mDIT.mimeConfigToDN(name);
             Attributes attrs = LdapUtil.getAttributes(ctxt, dn);
             return new LdapMimeType(dn, attrs);
         } catch (NamingException e) {
@@ -427,7 +400,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             ctxt = LdapUtil.getDirContext();
             ext = LdapUtil.escapeSearchFilterArg(ext);
-            NamingEnumeration ne = LdapUtil.searchDir(ctxt, "cn=mime," + CONFIG_BASE, "(" + Provisioning.A_zimbraMimeFileExtension + "=" + ext + ")", sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, "cn=mime," + mDIT.configDN(), "(" + Provisioning.A_zimbraMimeFileExtension + "=" + ext + ")", sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 ne.close();
@@ -529,7 +502,7 @@ public class LdapProvisioning extends Provisioning {
         if (a == null) {
             name = LdapUtil.escapeSearchFilterArg(name);
             a = getAccountByQuery(
-                    ADMIN_BASE,
+                    mDIT.adminBaseDN(),
                     "(&(uid="+name+")" +
                     FILTER_ACCOUNT_OBJECTCLASS + ")",
                     null);
@@ -737,7 +710,7 @@ public class LdapProvisioning extends Provisioning {
 
             setInitialPassword(cos, attrs, password);
             
-            String dn = mDIT.accountDn(baseDn, rdnAttr, attrs, domain);
+            String dn = mDIT.accountDN(baseDn, rdnAttr, attrs, domain);
             
             LdapUtil.createEntry(ctxt, dn, attrs, "createAccount");
             Account acct = getAccountById(zimbraIdStr, ctxt);
@@ -1446,7 +1419,7 @@ public class LdapProvisioning extends Provisioning {
             String zimbraIdStr = LdapUtil.generateUUID();
             attrs.put(A_zimbraId, zimbraIdStr);
             attrs.put(A_cn, name);
-            String dn = cosNametoDN(name);
+            String dn = mDIT.cosNametoDN(name);
             LdapUtil.createEntry(ctxt, dn, attrs, "createCos");
 
             Cos cos = getCosById(zimbraIdStr, ctxt);
@@ -1477,7 +1450,7 @@ public class LdapProvisioning extends Provisioning {
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(true);
-            String newDn = cosNametoDN(newName);
+            String newDn = mDIT.cosNametoDN(newName);
             LdapUtil.renameEntry(ctxt, cos.getDN(), newDn);
             // remove old account from cache
             sCosCache.remove(cos);
@@ -1495,7 +1468,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             if (ctxt == null)
                 ctxt = LdapUtil.getDirContext();
-            NamingEnumeration ne = LdapUtil.searchDir(ctxt, COS_BASE, query, sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, mDIT.cosBaseDN(), query, sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 ne.close();
@@ -1554,7 +1527,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             if (ctxt == null)
                 ctxt = LdapUtil.getDirContext();
-            String dn = cosNametoDN(name);            
+            String dn = mDIT.cosNametoDN(name);            
             Attributes attrs = LdapUtil.getAttributes(ctxt, dn);
             cos  = new LdapCos(dn, attrs);
             sCosCache.put(cos);            
@@ -1579,7 +1552,7 @@ public class LdapProvisioning extends Provisioning {
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
-            NamingEnumeration ne = LdapUtil.searchDir(ctxt, COS_BASE, "(objectclass=zimbraCOS)", sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, mDIT.cosBaseDN(), "(objectclass=zimbraCOS)", sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 result.add(new LdapCos(sr.getNameInNamespace(), sr.getAttributes()));
@@ -1812,7 +1785,7 @@ public class LdapProvisioning extends Provisioning {
             String zimbraIdStr = LdapUtil.generateUUID();
             attrs.put(A_zimbraId, zimbraIdStr);
             attrs.put(A_cn, name);
-            String dn = serverNametoDN(name);
+            String dn = mDIT.serverNametoDN(name);
             
             String zimbraServerHostname = null;
 
@@ -1845,7 +1818,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             if (ctxt == null)
                 ctxt = LdapUtil.getDirContext();
-            NamingEnumeration ne = LdapUtil.searchDir(ctxt, SERVER_BASE, query, sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, mDIT.serverBaseDN(), query, sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 ne.close();
@@ -1917,7 +1890,7 @@ public class LdapProvisioning extends Provisioning {
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
-            String dn = serverNametoDN(name);            
+            String dn = mDIT.serverNametoDN(name);            
             Attributes attrs = LdapUtil.getAttributes(ctxt, dn);
             LdapServer s = new LdapServer(dn, attrs, getConfig().getServerDefaults());
             sServerCache.put(s);            
@@ -1948,7 +1921,7 @@ public class LdapProvisioning extends Provisioning {
             } else {
                 filter = "(objectclass=zimbraServer)";
             }
-            NamingEnumeration ne = LdapUtil.searchDir(ctxt, SERVER_BASE, filter, sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, mDIT.serverBaseDN(), filter, sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 LdapServer s = new LdapServer(sr.getNameInNamespace(), sr.getAttributes(), getConfig().getServerDefaults());
@@ -1972,7 +1945,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             if (ctxt == null)
                 ctxt = LdapUtil.getDirContext();
-            NamingEnumeration ne = LdapUtil.searchDir(ctxt, COS_BASE, "(&(objectclass=zimbraCOS)" + query + ")", sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, mDIT.cosBaseDN(), "(&(objectclass=zimbraCOS)" + query + ")", sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 result.add(new LdapCos(sr.getNameInNamespace(), sr.getAttributes()));
@@ -2821,7 +2794,7 @@ public class LdapProvisioning extends Provisioning {
         		if (ctxt == null) {
         		    ctxt = LdapUtil.getDirContext();
         		}
-        		String dn = zimletNameToDN(name);            
+        		String dn = mDIT.zimletNameToDN(name);            
         		Attributes attrs = LdapUtil.getAttributes(ctxt, dn);
         		zimlet = new LdapZimlet(dn, attrs);
         		if (useCache) {
@@ -2883,7 +2856,7 @@ public class LdapProvisioning extends Provisioning {
     		LdapUtil.addAttr(attrs, A_zimbraZimletEnabled, Provisioning.FALSE);
     		LdapUtil.addAttr(attrs, A_zimbraZimletIndexingEnabled, hasKeyword);
     		
-    		String dn = zimletNameToDN(name);
+    		String dn = mDIT.zimletNameToDN(name);
     		LdapUtil.createEntry(ctxt, dn, attrs, "createZimlet");
     		
     		Zimlet zimlet = lookupZimlet(name, ctxt);
