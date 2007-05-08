@@ -78,8 +78,12 @@ public class ZDateTime {
         return dtEl;
     }
 
+    public boolean getHasNoTimeZone() {
+        return mTimeZoneId == null || mTimeZoneId.length() == 0;
+    }
+
     public TimeZone getTimeZone() {
-        if (mTimeZoneId != null && mTimeZoneId.length() > 0) {
+        if (!getHasNoTimeZone()) {
             return TimeZone.getTimeZone(TZIDMapper.toJava(mTimeZoneId));
         } else {
             return TimeZone.getTimeZone("GMT");
