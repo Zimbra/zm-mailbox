@@ -29,10 +29,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.mail.internet.MailDateFormat;
+import javax.mail.internet.MimeUtility;
+
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.util.Config;
@@ -44,6 +51,8 @@ public class LmtpHandler extends ProtocolHandler {
 	private LmtpInputStream mInputStream;
 	private LmtpWriter mWriter;
 	private String mRemoteAddress;
+    private String mRemoteHostname;
+    private String mLhloArg;
 	
 	// Message specific data
 	private LmtpEnvelope mEnvelope;
@@ -61,6 +70,10 @@ public class LmtpHandler extends ProtocolHandler {
 	protected boolean setupConnection(Socket connection) throws IOException {
 	    reset();
 	    mRemoteAddress = connection.getInetAddress().getHostAddress();
+        mRemoteHostname = connection.getInetAddress().getHostName();
+        if (StringUtil.isNullOrEmpty(mRemoteHostname)) {
+            mRemoteHostname = mRemoteAddress;
+        }
 	    ZimbraLog.addIpToContext(mRemoteAddress);
 	    ZimbraLog.lmtp.debug("connected");
 
@@ -276,6 +289,7 @@ public class LmtpHandler extends ProtocolHandler {
     }
 
     private void doLHLO(String arg) {
+        mLhloArg = arg;
     	if (arg == null || arg.length() == 0) {
     		doSyntaxError("no parameter to lhlo");
     		return;
@@ -381,7 +395,8 @@ public class LmtpHandler extends ProtocolHandler {
 
     	sendResponse("354 End data with <CR><LF>.<CR><LF>");
     	
-    	byte[] data = mInputStream.readMessage(mEnvelope.getSize());
+        // Read message
+    	byte[] data = mInputStream.readMessage(mEnvelope.getSize(), getAdditionalHeaders());
     	if (data == null || data.length == 0) {
     		sendResponse("554 5.6.0 Empty message not allowed");
     		return;
@@ -446,5 +461,38 @@ public class LmtpHandler extends ProtocolHandler {
         ZimbraPerf.COUNTER_LMTP_DLVD_BYTES.increment(numDelivered * dataLength);
         
     	reset();
+    }
+
+    /**
+     * Generates the <tt>Return-Path</tt> and <tt>Received</tt> headers
+     * for the current incoming message.
+     */
+    private String getAdditionalHeaders() {
+        StringBuilder headers = new StringBuilder();
+
+        // Assemble Return-Path header
+        if (mEnvelope.hasSender()) {
+            String sender = mEnvelope.getSender().getEmailAddress();
+            if (!StringUtil.isNullOrEmpty(sender)) {
+                headers.append(String.format("Return-Path: %s\r\n", sender));
+            }
+        }
+        
+        // Assemble Received header
+        String localHostname = "unknown";
+        try {
+            localHostname = Provisioning.getInstance().getLocalServer().getName();
+        } catch (ServiceException e) {
+            ZimbraLog.lmtp.warn("Unable to determine local hostname", e);
+        }
+        String timestamp = new MailDateFormat().format(new Date());
+        String name = "Received: ";
+        String value = String.format("from %s (LHLO %s) (%s) by %s with LMTP; %s",
+            mRemoteHostname, mLhloArg, mRemoteAddress, localHostname, timestamp);
+        headers.append(name);
+        headers.append(MimeUtility.fold(name.length(), value));
+        headers.append("\r\n");
+        
+        return headers.toString();
     }
 }

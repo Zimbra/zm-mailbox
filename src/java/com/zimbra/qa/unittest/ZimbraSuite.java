@@ -25,16 +25,15 @@
 
 package com.zimbra.qa.unittest;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.zimbra.common.soap.Element;
-import com.zimbra.cs.index.TestSearch;
 
 import junit.framework.Test;
 import junit.framework.TestResult;
 import junit.framework.TestSuite;
+
+import com.zimbra.common.soap.Element;
+import com.zimbra.cs.index.TestSearch;
 
 /**
  * Complete unit test suite for the Zimbra code base.
@@ -86,6 +85,7 @@ public class ZimbraSuite extends TestSuite
         suite.addTest(new TestSuite(TestContacts.class));
         suite.addTest(new TestSuite(TestTaskScheduler.class));
         suite.addTest(new TestSuite(TestSearch.class));
+        suite.addTest(new TestSuite(TestSendAndReceive.class));
 
         // xxx bburtin: Commenting out IMAP tests, since the new schema hasn't been
         // checked in

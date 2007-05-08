@@ -36,10 +36,19 @@ public class LmtpInputStream extends TcpServerInputStream {
 		super(is);
 	}
 	
-	private static final int[] EOM = new int[] { CR, LF, (int)'.', CR, LF };
+	private static final int[] EOM = new int[] { CR, LF, '.', CR, LF };
 	private static final int EOMLEN = EOM.length;
 
-	public byte[] readMessage(int sizeHint) throws IOException {
+    /**
+     * Reads a MIME message from this <tt>InputStream</tt>.
+     *
+     * @param prefix header data to prepend to the incoming message, or <tt>null</tt>
+     * @param sizeHint the expected data size.  Used to construct the intermediate
+     * <tt>ByteArrayOutputStream</tt> that stores the message data.
+     * @return a byte array that contains the <tt>prefix</tt>, followed by
+     * the message data
+     */
+	public byte[] readMessage(int sizeHint, String prefix) throws IOException {
 		// We start our state as though \r\n was already matched - so if
 		// the first line is ".\r\n" we recognize that as end of message.
 		int matched = 1;
@@ -47,9 +56,17 @@ public class LmtpInputStream extends TcpServerInputStream {
 		
 		if (sizeHint == 0) {
 			sizeHint = 8192;
+		} else if (prefix != null) {
+            sizeHint += prefix.length();
 		}
 
-		ByteArrayOutputStream bos  = new ByteArrayOutputStream(sizeHint);
+        // Create output stream and write prefix
+		ByteArrayOutputStream bos = new ByteArrayOutputStream(sizeHint);
+        if (prefix != null) {
+            bos.write(prefix.getBytes());
+        }
+        
+        // Write message data
 		while (true) {
 			int ch = read();
 

@@ -42,7 +42,7 @@ class TransparencyTest {
 		System.out.println(expectedOutput == null ? "<exception>" : expectedOutput.replace("\r", "\\r").replace("\n", "\\n"));
 		
 		try {
-			readBytes = lin.readMessage(input.length());
+			readBytes = lin.readMessage(input.length(), null);
 		} catch (IOException ioe) {
 			if (expectedOutput == null) {
 				System.out.println("--- RESULT: PASS EXPECTED: " + ioe.getMessage());
