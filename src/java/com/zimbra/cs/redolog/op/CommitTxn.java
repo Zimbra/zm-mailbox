@@ -15,7 +15,7 @@
  * The Original Code is: Zimbra Collaboration Suite Server.
  * 
  * The Initial Developer of the Original Code is Zimbra, Inc.
- * Portions created by Zimbra are Copyright (C) 2004, 2005, 2006 Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2004, 2005, 2006, 2007 Zimbra, Inc.
  * All Rights Reserved.
  * 
  * Contributor(s): 
@@ -33,6 +33,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
+import com.zimbra.cs.redolog.RedoCommitCallback;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -44,7 +45,7 @@ import com.zimbra.cs.redolog.RedoLogOutput;
  */
 public class CommitTxn extends ControlOp {
 
-    int mTxnOpCode;
+    private int mTxnOpCode;
 
     public CommitTxn() {
         mTxnOpCode = OP_UNKNOWN;
@@ -54,9 +55,10 @@ public class CommitTxn extends ControlOp {
     	super(changeEntry.getTransactionId());
         setMailboxId(changeEntry.getMailboxId());
         mTxnOpCode = changeEntry.getOpCode();
+        mCommitCallback = changeEntry.mCommitCallback;
     }
 
-	public int getOpCode() {
+    public int getOpCode() {
 		return OP_COMMIT_TXN;
 	}
 
@@ -76,5 +78,13 @@ public class CommitTxn extends ControlOp {
 
     protected void deserializeData(RedoLogInput in) throws IOException {
         mTxnOpCode = in.readInt();
+    }
+
+    /**
+     * Returns the callback object that was passed in at transaction start time.
+     * @return
+     */
+    public RedoCommitCallback getCallback() {
+        return mCommitCallback;
     }
 }

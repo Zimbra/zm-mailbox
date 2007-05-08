@@ -15,7 +15,7 @@
  * The Original Code is: Zimbra Collaboration Suite Server.
  * 
  * The Initial Developer of the Original Code is Zimbra, Inc.
- * Portions created by Zimbra are Copyright (C) 2004, 2005, 2006 Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2004, 2005, 2006, 2007 Zimbra, Inc.
  * All Rights Reserved.
  * 
  * Contributor(s): 
@@ -43,6 +43,7 @@ import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.redolog.RedoCommitCallback;
 import com.zimbra.cs.redolog.RedoException;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
@@ -138,8 +139,8 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
         mNoICal = noICal;
     }
 
-    public void start(long timestamp) {
-        super.start(timestamp);
+    public void start(long timestamp, RedoCommitCallback callback) {
+        super.start(timestamp, callback);
         if (mReceivedDate == RECEIVED_DATE_UNSET)
             mReceivedDate = timestamp;
     }

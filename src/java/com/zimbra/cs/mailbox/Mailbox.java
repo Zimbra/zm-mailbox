@@ -872,7 +872,7 @@ public class Mailbox {
         // have a single, consistent timestamp for anything affected by this operation
         mCurrentChange.setTimestamp(time);
         if (recorder != null && needRedo)
-            recorder.start(time);
+            recorder.start(time, null);
 
         // if the caller has specified a constraint on the range of affected items, store it
         if (recorder != null && needRedo && octxt != null && octxt.change > 0)
@@ -1442,7 +1442,7 @@ public class Mailbox {
                     // again, resulting in two entries for the same operation in redolog.
                     beginTransaction("reIndex", octxt, null);
                     if (needRedo) {
-                        redoRecorder.start(getOperationTimestampMillis());
+                        redoRecorder.start(getOperationTimestampMillis(), null);
                         redoRecorder.log();
                         redoInitted = true;
                     }
@@ -3664,7 +3664,7 @@ public class Mailbox {
                     // logged in StoreToIncoming entry.
                     if (needRedo) {
                         storeRedoRecorder = new StoreIncomingBlob(digest, msgSize, sharedDeliveryCtxt.getMailboxIdList());
-                        storeRedoRecorder.start(getOperationTimestampMillis());
+                        storeRedoRecorder.start(getOperationTimestampMillis(), null);
                         storeRedoRecorder.setBlobBodyInfo(data, blobPath, blobVolumeId);
                         storeRedoRecorder.log();
                     }
@@ -5230,7 +5230,7 @@ public class Mailbox {
 
                     if (needRedo) {
                         indexRedo = new IndexItem(mId, item.getId(), item.getType(), entry.getValue().mDeleteFirst);
-                        indexRedo.start(getOperationTimestampMillis());
+                        indexRedo.start(getOperationTimestampMillis(), null);
                         indexRedo.setParentOp(redoRecorder);
                     }
 

@@ -15,7 +15,7 @@
  * The Original Code is: Zimbra Collaboration Suite Server.
  * 
  * The Initial Developer of the Original Code is Zimbra, Inc.
- * Portions created by Zimbra are Copyright (C) 2004, 2005, 2006 Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2004, 2005, 2006, 2007 Zimbra, Inc.
  * All Rights Reserved.
  * 
  * Contributor(s): 
@@ -42,6 +42,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.redolog.RedoCommitCallback;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogManager;
 import com.zimbra.cs.redolog.RedoLogOutput;
@@ -246,6 +247,7 @@ public abstract class RedoableOp {
 	private int mMailboxId;
 	private RedoLogManager mRedoLogMgr;
     private boolean mUnloggedReplay;  // true if redo of this op is not redo-logged
+    RedoCommitCallback mCommitCallback;
 
 	public RedoableOp() {
 		mRedoLogMgr = RedoLogProvider.getInstance().getRedoLogManager();
@@ -262,7 +264,14 @@ public abstract class RedoableOp {
     public boolean getUnloggedReplay() { return mUnloggedReplay; }
     public void setUnloggedReplay(boolean b) { mUnloggedReplay = b; }
 
-    public void start(long timestamp) {
+    /**
+     * Start a transaction.  If a non-null callback object is passed in, it
+     * will be called when the transaction commmits.  It will not be called if
+     * the transaction is aborted/rolled back.
+     * @param timestamp
+     * @param callback
+     */
+    public void start(long timestamp, RedoCommitCallback callback) {
 		// Assign timestamp and txn ID to the operation.
 		// Doing the assignment in this method means we timestamp and sequence
 		// the operation start time, not when the operation get committed or
@@ -274,7 +283,12 @@ public abstract class RedoableOp {
 		mTimestamp = timestamp;
 		if (isStartMarker())
 			setTransactionId(mRedoLogMgr.getNewTxnId());
+        mCommitCallback = callback;
 	}
+
+    public void start(long timestamp) {
+        start(timestamp, null);
+    }
 
 	public void log() {
         log(true);

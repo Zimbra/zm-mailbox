@@ -15,7 +15,7 @@
  * The Original Code is: Zimbra Collaboration Suite Server.
  * 
  * The Initial Developer of the Original Code is Zimbra, Inc.
- * Portions created by Zimbra are Copyright (C) 2004, 2005, 2006 Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2004, 2005, 2006, 2007 Zimbra, Inc.
  * All Rights Reserved.
  * 
  * Contributor(s): 
@@ -31,13 +31,14 @@ package com.zimbra.cs.redolog;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
@@ -84,61 +85,6 @@ public class RedoLogManager {
 		}
 	}
 
-    /**
-     * CommitId consists of redolog sequence number and TransactionId of a
-     * redo transaction.  It helps locate an exact point in redo history,
-     * by going to the redolog of the given sequence and scanning its content
-     * until finding the commit record (not the log record) matching the
-     * TransactionId.
-     */
-    public static class CommitId {
-
-        private long mRedoSeq;  // sequence of redo log at transaction commit
-        private TransactionId mTxnId;
-
-        CommitId(long seq, TransactionId txnId) {
-            mRedoSeq = seq;
-            mTxnId = txnId;
-        }
-
-        public boolean matches(TransactionId txnId) {
-            return mTxnId.equals(txnId);
-        }
-
-        public long getRedoSeq() {
-            return mRedoSeq;
-        }
-
-        public String encodeToString() {
-            int time = mTxnId.getTime();
-            int counter = mTxnId.getCounter();
-            StringBuilder sb = new StringBuilder();
-            sb.append(mRedoSeq).append('-');
-            sb.append(mTxnId.encodeToString());
-            return sb.toString();
-        }
-
-        public static CommitId decodeFromString(String str)
-        throws ServiceException {
-            Throwable cause = null;
-            if (str != null) {
-                String[] fields = str.split("-", 2);
-                if (fields != null && fields.length == 2) {
-                    try {
-                        long seq = Long.parseLong(fields[0]);
-                        TransactionId txnId = TransactionId.decodeFromString(fields[1]);
-                        return new CommitId(seq, txnId);
-                    } catch (NumberFormatException e) {
-                        cause = e;
-                    } catch (ServiceException e) {
-                        cause = e;
-                    }
-                }
-            }
-            throw ServiceException.PARSE_ERROR("Invalid CommitId " + str, cause);
-        }
-    }
-
 	private boolean mEnabled;
     private boolean mInCrashRecovery;
     private final Object mInCrashRecoveryGuard = new Object();
@@ -164,8 +110,6 @@ public class RedoLogManager {
 
 	private TxnIdGenerator mTxnIdGenerator;
 	private RolloverManager mRolloverMgr;
-    private CommitId mLastCommitId;
-    private final Object mLastCommitIdGuard = new Object();
 
     private long mInitialLogSize;	// used in log rollover
 
@@ -425,14 +369,12 @@ public class RedoLogManager {
 	public void commit(RedoableOp op) {
 		if (mEnabled) {
             long redoSeq = mRolloverMgr.getCurrentSequence();
-            CommitId cid = new CommitId(redoSeq, op.getTransactionId());
 			CommitTxn commit = new CommitTxn(op);
             // Commit records are written without fsync.  It's okay to
             // allow fsync to happen by itself or wait for one during
             // logging of next redo item.
 			log(commit, false);
             commit.setSerializedByteArray(null);
-            setLastCommitId(cid);
         }
 	}
 
@@ -713,35 +655,8 @@ public class RedoLogManager {
         return getArchivedLogsAfterSequence(Long.MIN_VALUE);
     }
 
-    private void setLastCommitId(CommitId cid) {
-        if (cid != null) {
-            synchronized (mLastCommitIdGuard) {
-                mLastCommitId = cid;
-            }
-        }
-    }
-
-    /**
-     * Returns the last CommitId.
-     * @return can be null if no transaction had committed yet or if redo
-     *         logging is not enabled
-     */
-    public CommitId getLastCommitId() throws IOException {
-        CommitId cid = null;
-        if (mEnabled) {
-            synchronized (mLastCommitIdGuard) {
-                cid = mLastCommitId;
-            }
-            // Make sure the commit record corresponding to cid is on disk.
-            // This is necessary because we defer to fsync of commit record
-            // until the logging of the next redo record.
-            mLogWriter.flush();
-        }
-        return cid;
-    }
-
-    public List<Integer> getChangedMailboxesSince(CommitId cid) {
-        return new ArrayList<Integer>(0);
+    public Set<Integer> getChangedMailboxesSince(CommitId cid) {
+        return new HashSet<Integer>(0);
         // TODO: Scan redologs to populate the list with IDs of mailboxes
         // that have committed changes since the given commit id.
     }
