@@ -389,7 +389,7 @@ public class DbPool {
     /**
      * Returns the number of connections currently in use.
      */
-    static int getSize() {
+    public static int getSize() {
         return sConnectionPool.getNumActive();
     }
 }
