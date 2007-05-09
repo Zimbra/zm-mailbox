@@ -40,17 +40,15 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
-import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Document;
@@ -76,22 +74,16 @@ import com.zimbra.common.util.CliUtil;
 
 public abstract class WikiUtil {
 
-    private static final String sDEFAULTPASSWORD = "zimbra";
-
     private static final String sDEFAULTFOLDER = "Notebook";
     private static final String sDEFAULTTEMPLATEFOLDER = "Template";
 
     private static final String sDEFAULTVIEW = "wiki";
 
     protected String mUsername;
-    protected String mPassword;
-
     protected Provisioning mProv;
 
     private static class WikiMboxUtil extends WikiUtil {
-        public WikiMboxUtil(String user, String pass) {
-            mUsername = user;
-            mPassword = pass;
+        public WikiMboxUtil() {
             mProv = Provisioning.getInstance();
         }
         private void populateFolders(OperationContext octxt, Mailbox mbox, Folder where, File file) throws ServiceException, IOException {
@@ -157,7 +149,8 @@ public abstract class WikiUtil {
             List<Folder> folders = where.getSubfolders(octxt);
             for (Folder f : folders) {
                 deleteItems(octxt, mbox, f);
-                mbox.delete(octxt, f, null);
+                if (f.getDefaultView() == MailItem.TYPE_WIKI)
+                	mbox.delete(octxt, f, null);
             }
         }
 
@@ -170,11 +163,12 @@ public abstract class WikiUtil {
                 Folder f = mbox.getFolderByPath(octxt, where);
                 deleteItems(octxt, mbox, f);
             } catch (ServiceException se) {
-
+            	ZimbraLog.wiki.error("error emptying Notebook folders", se);
             }
         }
 
-        public void startImport(String where, File what) throws ServiceException, IOException {
+        public void startImport(String username, String where, File what) throws ServiceException, IOException {
+            mUsername = username;
             emptyNotebooks(where);
             Account acct = mProv.get(AccountBy.name, mUsername);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
@@ -224,20 +218,8 @@ public abstract class WikiUtil {
     private static class WikiSoapUtil extends WikiUtil {
         private ZMailbox mMbox;
 
-        private String mUrl;
-
-        public WikiSoapUtil(Provisioning soapProv, String server, String user, String pass) throws ServiceException {
+        public WikiSoapUtil(Provisioning soapProv) throws ServiceException {
             mProv = soapProv;
-            mUsername = user;
-            mPassword = pass;
-            if (pass == null)
-                mPassword = sDEFAULTPASSWORD;
-            Server s;
-            if (server == null || server.equals("localhost"))
-                s = mProv.getLocalServer();
-            else
-                s = mProv.get(ServerBy.name, server);
-            mUrl = URLUtil.getMailURL(s, ZimbraServlet.USER_SERVICE_URI, false);
         }
 
         public void setVerbose() {
@@ -245,19 +227,8 @@ public abstract class WikiUtil {
         }
 
         private void auth() throws ServiceException {
-            if (mProv instanceof SoapProvisioning) {
-                adminAuth();
-                return;
-            }
-            ZMailbox.Options options = new ZMailbox.Options();
-            options.setAccount(mUsername);
-            options.setAccountBy(AccountBy.name);
-            options.setPassword(mPassword);
-            options.setUri(mUrl);
-            mMbox = ZMailbox.getMailbox(options);
-        }
-
-        private void adminAuth() throws ServiceException {
+        	if (!(mProv instanceof SoapProvisioning))
+        		return;
             SoapProvisioning prov = (SoapProvisioning) mProv;
             DelegateAuthResponse dar = prov.delegateAuth(AccountBy.name, mUsername, 60*60*24);
             ZMailbox.Options options = new ZMailbox.Options(dar.getAuthToken(), prov.soapGetURI());
@@ -395,7 +366,8 @@ public abstract class WikiUtil {
             }
         }
 
-        public void startImport(String where, File what) throws ServiceException {
+        public void startImport(String username, String where, File what) throws ServiceException {
+            mUsername = username;
             try {
                 System.out.println("Initializing...");
                 auth();
@@ -425,29 +397,10 @@ public abstract class WikiUtil {
         }
     }
 
-    public abstract void startImport(String folder, File dir) throws ServiceException, IOException;
+    public abstract void startImport(String username, String folder, File dir) throws ServiceException, IOException;
     protected abstract void emptyNotebooks(String folder) throws ServiceException, IOException;
     protected abstract void setFolderPermission(Account account, String grantee, String name, String id) throws ServiceException, IOException;
     public abstract void setVerbose();
-
-    public Account createWikiAccount() throws ServiceException {
-        Account account = null;
-        try {
-            account = mProv.get(AccountBy.name, mUsername);
-        } catch (Exception e) {
-        }
-
-        if (account == null) {
-            if (mPassword == null) {
-                mPassword = sDEFAULTPASSWORD;
-            }
-            Map<String,Object> attrs = new HashMap<String, Object>();
-            attrs.put(Provisioning.A_zimbraHideInGal, Provisioning.TRUE);
-            attrs.put(Provisioning.A_zimbraIsSystemResource, Provisioning.TRUE);
-            account = mProv.createAccount(mUsername, mPassword, attrs);
-        }
-        return account;
-    }
 
     private void initFolders(Account account, Entry entry) throws ServiceException, IOException {
         String grantee, name, id;
@@ -466,12 +419,13 @@ public abstract class WikiUtil {
         setFolderPermission(account, grantee, name, id);
     }
 
-    public void initDefaultWiki() throws ServiceException {
+    public void initDefaultWiki(String username) throws ServiceException {
         Config globalConfig = mProv.getConfig();
-        initWiki(globalConfig);
+        mUsername = globalConfig.getAttr(Provisioning.A_zimbraNotebookAccount, null);
+        initWiki(globalConfig, username);
     }
 
-    public void initDomainWiki(String domain) throws ServiceException {
+    public void initDomainWiki(String domain, String username) throws ServiceException {
         if (domain == null) {
             throw WikiServiceException.ERROR("invalid argument - empty domain");
         }
@@ -479,62 +433,72 @@ public abstract class WikiUtil {
         if (dom == null) {
             throw WikiServiceException.ERROR("invalid domain: " + domain);
         }
-        initDomainWiki(dom);
+        initDomainWiki(dom, username);
     }
 
-    public void initDomainWiki(Domain dom) throws ServiceException {
+    public void initDomainWiki(Domain dom, String username) throws ServiceException {
         Config globalConfig = mProv.getConfig();
         String globalWikiAcct = globalConfig.getAttr(Provisioning.A_zimbraNotebookAccount, null);
         if (globalWikiAcct == null)
             throw WikiServiceException.ERROR("must initialize global wiki before domain wiki");
-        if (globalWikiAcct.equals(mUsername))
+        if (globalWikiAcct.equals(username))
             throw WikiServiceException.ERROR("domain wiki account must be different from global wiki account");
-        initWiki(dom);
+        initWiki(dom, username);
     }
 
-    public void initWiki(Entry entry) throws ServiceException {
-        String prevAcct = entry.getAttr(Provisioning.A_zimbraNotebookAccount);
-        if (mUsername == null && prevAcct != null)
-            mUsername = prevAcct;
-        if (mUsername == null) {
+    public void initWiki(Entry entry, String username) throws ServiceException {
+    	String defaultUsername = entry.getAttr(Provisioning.A_zimbraNotebookAccount, null);
+
+        if (username == null && defaultUsername == null) {
             String errStr = (entry instanceof Config) ?
                     " in globalConfig" : " in domain "+((Domain)entry).getName();
-            throw WikiServiceException.ERROR("empty LDAP domain attribute " +
-                    Provisioning.A_zimbraNotebookAccount + errStr);
+            throw WikiServiceException.ERROR(
+                    Provisioning.A_zimbraNotebookAccount + " must be set" + errStr);
         }
+        
+    	if (username != null && !username.equals(defaultUsername)) {
+    		Map<String,String> attrMap = new HashMap<String,String>();
+    		attrMap.put(Provisioning.A_zimbraNotebookAccount, username);
+    		mProv.modifyAttrs(entry, attrMap);
+    	} else if (username == null) {
+    		username = defaultUsername;
+    	}
 
-        Account acct = createWikiAccount();
+		if (mProv.get(AccountBy.name, username) == null)
+			throw AccountServiceException.NO_SUCH_ACCOUNT(username);
+		
+		mUsername = username;
+        Account acct = mProv.get(Provisioning.AccountBy.name, mUsername);
+        if (!acct.getBooleanAttr(Provisioning.A_zimbraHideInGal, false) ||
+        		!acct.getBooleanAttr(Provisioning.A_zimbraIsSystemResource, false)) {
+        	Map<String,Object> attrs = new HashMap<String, Object>();
+        	attrs.put(Provisioning.A_zimbraHideInGal, Provisioning.TRUE);
+        	attrs.put(Provisioning.A_zimbraIsSystemResource, Provisioning.TRUE);
+        	mProv.modifyAttrs(acct, attrs, true);
+        }
         try {
             initFolders(acct, entry);
         } catch (IOException e) {
             throw WikiServiceException.ERROR("cannot initialize folders", e);
-        }
-
-        if (prevAcct == null || !prevAcct.equals(mUsername)) {
-            ZimbraLog.wiki.info("updating default account from " + prevAcct + " to " + mUsername);
-            HashMap<String,String> attrs = new HashMap<String,String>();
-            attrs.put(Provisioning.A_zimbraNotebookAccount, mUsername);
-            mProv.modifyAttrs(entry, attrs);
         }
     }
 
     /*
     * returns mbox based implementation.  used within the servlet container server.
     */
-    public static WikiUtil getInstance(String user, String pass) {
-        return new WikiMboxUtil(user, pass);
+    public static WikiUtil getInstance() {
+        return new WikiMboxUtil();
     }
 
     /*
     * returns soap based implementation.  used for command line based usage.
     */
-    public static WikiUtil getInstance(Provisioning prov, String server, String user, String pass) throws ServiceException {
-        return new WikiSoapUtil(prov, server, user, pass);
+    public static WikiUtil getInstance(Provisioning prov) throws ServiceException {
+        return new WikiSoapUtil(prov);
     }
 
     public static void main(String[] args) throws Exception {
         String defaultUsername = "user1";
-        String defaultPassword = "test123";
 
         CliUtil.toolSetup();
 
@@ -543,7 +507,6 @@ public abstract class WikiUtil {
         options.addOption("v", "verbose",  false, "verbose");
         options.addOption("s", "server",   true, "server name");
         options.addOption("u", "username", true, "username of the target account");
-        options.addOption("p", "password", true, "password of the target account");
 
         Option opt = new Option("d", "dir", true, "top level directory");
         opt.setArgName("top-level-dir");
@@ -560,18 +523,17 @@ public abstract class WikiUtil {
 
         assert(cl != null);
 
-        String server, username, password;
+        String server, username;
         String dir = cl.getOptionValue("d");
         server = cl.getOptionValue("s", LC.zimbra_zmprov_default_soap_server.value());
         username = cl.getOptionValue("u", defaultUsername);
-        password = cl.getOptionValue("p", defaultPassword);
 
         SoapProvisioning sp = new SoapProvisioning();
         sp.soapSetURI("https://"+server+":"+LC.zimbra_admin_service_port.intValue()+ZimbraServlet.ADMIN_SERVICE_URI);
         sp.soapAdminAuthenticate(LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value());
 
-        WikiUtil prog = WikiUtil.getInstance(sp, server, username, password);
-        prog.initDefaultWiki();
-        prog.startImport("Template", new File(dir));
+        WikiUtil prog = WikiUtil.getInstance(sp);
+        prog.initDefaultWiki(username);
+        prog.startImport(username, "Template", new File(dir));
     }
 }

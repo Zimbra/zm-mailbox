@@ -203,9 +203,9 @@ public class ProvUtil implements DebugListener {
         GET_QUOTA_USAGE("getQuotaUsage", "gqu", "{server}", Category.MISC, 1, 1),        
         GET_SERVER("getServer", "gs", "{name|id} [attr1 [attr2...]]", Category.SERVER, 1, Integer.MAX_VALUE), 
         HELP("help", "?", "commands", Category.MISC, 0, 1),
-        IMPORT_NOTEBOOK("importNotebook", "impn", "{name@domain} {password} {directory} {folder}", Category.NOTEBOOK),
-        INIT_NOTEBOOK("initNotebook", "in", "{name@domain} {password} [ {directory} {folder} ]", Category.NOTEBOOK),
-        INIT_DOMAIN_NOTEBOOK("initDomainNotebook", "idn", "{name@domain} {password} {domain} [ {directory} {folder} ]", Category.NOTEBOOK),
+        IMPORT_NOTEBOOK("importNotebook", "impn", "{name@domain} {directory} {folder}", Category.NOTEBOOK),
+        INIT_NOTEBOOK("initNotebook", "in", "[{name@domain}]", Category.NOTEBOOK),
+        INIT_DOMAIN_NOTEBOOK("initDomainNotebook", "idn", "{domain} [{name@domain}]", Category.NOTEBOOK),
         LDAP(".ldap", ".l"), 
         MODIFY_ACCOUNT("modifyAccount", "ma", "{name@domain|id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 3, Integer.MAX_VALUE),
         MODIFY_CALENDAR_RESOURCE("modifyCalendarResource",  "mcr", "{name@domain|id} [attr1 value1 [attr2 value2...]]", Category.CALENDAR, 3, Integer.MAX_VALUE),
@@ -1199,73 +1199,41 @@ public class ProvUtil implements DebugListener {
     }
 
     private void initNotebook(String[] args) throws ServiceException {
-    	if (args.length != 3 && args.length != 5) {usage(); return; }
-    	
+    	if (args.length > 2) {usage(); return; }
     	String username = null;
-    	String password = null;
-    	String fromDir = null;
-    	String toFolder = null;
     	
-    	username = args[1];
-    	password = args[2];
-    	if (args.length > 3) {
-    		fromDir = args[3];
-    		toFolder = args[4];
-    	}
-    	
-    	WikiUtil wu = WikiUtil.getInstance(mProv, mServer, username, password);
-    	wu.initDefaultWiki();
-    	
-    	if (fromDir != null && toFolder != null) {
-        	doImport(fromDir, toFolder, wu);
-    	}
+    	if (args.length == 2)
+    		username = args[1];
+
+    	WikiUtil wu = WikiUtil.getInstance(mProv);
+    	wu.initDefaultWiki(username);
     }
     private void initDomainNotebook(String[] args) throws ServiceException {
-    	if (args.length != 4 && args.length != 6) {usage(); return; }
+    	if (args.length < 2 || args.length > 3) {usage(); return; }
     	
     	String domain = null;
     	String username = null;
-    	String password = null;
-    	String fromDir = null;
-    	String toFolder = null;
+
+    	domain = args[1];
+    	if (args.length == 3)
+    		username = args[2];
     	
-    	username = args[1];
-    	password = args[2];
-    	domain = args[3];
-    	if (args.length > 4) {
-    		fromDir = args[4];
-    		toFolder = args[5];
-    	}
-    	
-    	WikiUtil wu = WikiUtil.getInstance(mProv, mServer, username, password);
-    	wu.initDomainWiki(domain);
-    	
-    	if (fromDir != null && toFolder != null) {
-        	doImport(fromDir, toFolder, wu);
-    	}
+    	if (mProv.get(AccountBy.name, username) == null)
+    		throw AccountServiceException.NO_SUCH_ACCOUNT(username);
+
+    	WikiUtil wu = WikiUtil.getInstance(mProv);
+    	wu.initDomainWiki(domain, username);
     }
     private void importNotebook(String[] args) throws ServiceException {
-    	if (args.length != 5) {usage(); return; }
+    	if (args.length != 4) {usage(); return; }
     	
-    	String username = null;
-    	String password = null;
-    	String fromDir = null;
-    	String toFolder = null;
-    	
-    	username = args[1];
-    	password = args[2];
-    	if (args.length > 3) {
-    		fromDir = args[3];
-    		toFolder = args[4];
-    	}
-    	
-    	WikiUtil wu = WikiUtil.getInstance(mProv, mServer, username, password);
-    	doImport(fromDir, toFolder, wu);
+    	WikiUtil wu = WikiUtil.getInstance(mProv);
+    	doImport(args[1], args[2], args[3], wu);
     }
     
-    private void doImport(String fromDir, String toFolder, WikiUtil wu) throws ServiceException {
+    private void doImport(String username, String fromDir, String toFolder, WikiUtil wu) throws ServiceException {
     	try {
-    		wu.startImport(toFolder, new java.io.File(fromDir));
+    		wu.startImport(username, toFolder, new java.io.File(fromDir));
     	} catch (Exception e) {
     		System.err.println("Cannot import Wiki documents from " + fromDir);
     		e.printStackTrace();
