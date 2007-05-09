@@ -64,25 +64,35 @@ public class LdapDIT {
         return rdnAttr  + "=" + LdapUtil.escapeRDNValue(rdnValue) + "," + baseDn;
     }
     
-    
+   
     /*
-     * ===============
+     * =================
      *   admin account
-     * ===============
+     * =================
      */
     public String adminBaseDN() {
         return ADMIN_BASE;
     }
     
     public String adminNameToDN(String name) {
-        return "uid=" + LdapUtil.escapeRDNValue(name) + ","+ADMIN_BASE;
+        return ACCOUNT_RDN_ATTR + "=" + LdapUtil.escapeRDNValue(name) + ","+ADMIN_BASE;
     }
     
     
     /*
-     * ===========
+     * ==========
+     *   alias
+     * ==========
+     */
+    public String aliasDN(String entryDn, String aliasLocalPart, String aliasDomain) {
+        return emailToDN(aliasLocalPart, aliasDomain);
+    }
+    
+    
+    /*
+     * ==========
      *   config
-     * ===========
+     * ==========
      */
     public String configDN() {
         return CONFIG_BASE;
@@ -90,9 +100,9 @@ public class LdapDIT {
     
     
     /*
-     * ===========
+     * =======
      *   COS
-     * ===========
+     * =======
      */
     public String cosBaseDN() {
         return COS_BASE;
@@ -102,11 +112,17 @@ public class LdapDIT {
         return "cn=" + LdapUtil.escapeRDNValue(name) + ","+COS_BASE;
     }
     
+    /*
+     * =====================
+     *   distribution list 
+     * =====================
+     */
+    
     
     /*
-     * ===========
+     * ==========
      *   domain
-     * ===========
+     * ==========
      */
     // TODO deprecate and fix all call points that still use it
     public String domainToAccountBaseDN(String domain) {
@@ -125,9 +141,9 @@ public class LdapDIT {
 
    
     /*
-     * ===========
+     * ========
      *   mime
-     * ===========
+     * ========
      */
     public String mimeConfigToDN(String name) {
         name = LdapUtil.escapeRDNValue(name);
@@ -136,9 +152,9 @@ public class LdapDIT {
     
     
     /*
-     * ===========
+     * ==========
      *   server
-     * ===========
+     * ==========
      */
     public String serverBaseDN() {
         return SERVER_BASE;
@@ -150,9 +166,9 @@ public class LdapDIT {
     
     
     /*
-     * ===========
+     * ==========
      *   zimlet
-     * ===========
+     * ==========
      */    
     public String zimletNameToDN(String name) {
         return "cn=" + LdapUtil.escapeRDNValue(name) + ","+ZIMLET_BASE;

@@ -1096,7 +1096,7 @@ public class LdapProvisioning extends Provisioning {
             if (domain == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(aliasDomain);
             
-            String aliasDn = mDIT.emailToDN(aliasName, aliasDomain);
+            String aliasDn = mDIT.aliasDN(((LdapEntry)entry).getDN(), aliasName, aliasDomain);
             // the create and addAttr ideally would be in the same transaction
             LdapUtil.simpleCreate(ctxt, aliasDn, "zimbraAlias",
                     new String[] { Provisioning.A_uid, aliasName, 
