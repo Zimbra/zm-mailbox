@@ -24,8 +24,12 @@
  */
 package com.zimbra.cs.dav.property;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+
+import javax.servlet.http.HttpServletResponse;
 
 import org.dom4j.Element;
 import org.dom4j.QName;
@@ -101,6 +105,7 @@ public class Acl extends ResourceProperty {
 		return new AclRestrictions();
 	}
 	
+	
 	protected ACL mAcl;
 	protected String mOwner;
 	
@@ -172,13 +177,38 @@ public class Acl extends ResourceProperty {
 	}
 	
 	protected Element addPrivileges(Element grant, short rights) {
-		if ((rights & ACL.RIGHT_READ) > 0)
+		if ((rights & ACL.RIGHT_READ) > 0) {
 			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_READ);
-		if ((rights & ACL.RIGHT_WRITE) > 0)
+			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_READ_CURRENT_USER_PRIVILEGE_SET);
+			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_READ_FREE_BUSY);
+		}
+		if ((rights & ACL.RIGHT_WRITE) > 0) {
+			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_BIND);
+			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_UNBIND);
 			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_WRITE);
+			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_WRITE_ACL);
+			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_WRITE_CONTENT);
+			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_WRITE_PROPERTIES);
+		}
 		if ((rights & ACL.RIGHT_ADMIN) > 0)
 			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_UNLOCK);
 		return grant;
+	}
+	
+	static protected HashMap<String, Short> sRightsMap;
+	
+	static {
+		sRightsMap = new HashMap<String, Short>();
+		sRightsMap.put(DavElements.P_READ, ACL.RIGHT_READ);
+		sRightsMap.put(DavElements.P_READ_CURRENT_USER_PRIVILEGE_SET, ACL.RIGHT_READ);
+		sRightsMap.put(DavElements.P_READ_FREE_BUSY, ACL.RIGHT_READ);
+		sRightsMap.put(DavElements.P_BIND, ACL.RIGHT_WRITE);
+		sRightsMap.put(DavElements.P_UNBIND, ACL.RIGHT_WRITE);
+		sRightsMap.put(DavElements.P_WRITE, ACL.RIGHT_WRITE);
+		sRightsMap.put(DavElements.P_WRITE_ACL, ACL.RIGHT_WRITE);
+		sRightsMap.put(DavElements.P_WRITE_CONTENT, ACL.RIGHT_WRITE);
+		sRightsMap.put(DavElements.P_WRITE_PROPERTIES, ACL.RIGHT_WRITE);
+		sRightsMap.put(DavElements.P_UNLOCK, ACL.RIGHT_WRITE); // XXX
 	}
 	
 	private static class SupportedPrivilegeSet extends Acl {
@@ -261,6 +291,78 @@ public class Acl extends ResourceProperty {
 			ar.addElement(DavElements.E_GRANT_ONLY);
 			ar.addElement(DavElements.E_NO_INVERT);
 			return ar;
+		}
+	}
+
+	public static class Ace {
+		private String mPrincipalUrl;
+		private String mId;
+		private short mRights;
+		private byte mGranteeType;
+		
+		public Ace(Element a) throws DavException {
+			Element elem = a.element(DavElements.E_PRINCIPAL);
+			if (elem == null)
+				throw new DavException("missing principal element", HttpServletResponse.SC_BAD_REQUEST);
+			
+			List<Element> principal = elem.elements();
+			if (principal.size() != 1)
+				throw new DavException("invalid principal element", HttpServletResponse.SC_BAD_REQUEST);
+			for (Element p : principal) {
+				QName name = p.getQName();
+				if (name.equals(DavElements.E_HREF)) {
+					mPrincipalUrl = elem.getText();
+					mGranteeType = ACL.GRANTEE_USER;
+					try {
+						Account acc = UrlNamespace.getPrincipal(mPrincipalUrl);
+						if (acc == null)
+							throw new DavException("invalid principal: "+mPrincipalUrl, HttpServletResponse.SC_BAD_REQUEST);
+						mId = acc.getId();
+					} catch (ServiceException se) {
+						throw new DavException("can't find principal: "+mPrincipalUrl, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, se);
+					}
+				} else if (name.equals(DavElements.E_ALL)) {
+					mGranteeType = ACL.GRANTEE_PUBLIC;
+				} else if (name.equals(DavElements.E_UNAUTHENTICATED)) {
+					// XXX we don't yet support "only for unauthenticated users"
+					mGranteeType = ACL.GRANTEE_PUBLIC;
+				} else if (name.equals(DavElements.E_AUTHENTICATED)) {
+					mGranteeType = ACL.GRANTEE_AUTHUSER;
+				} else {
+					throw new DavException("unsupported principal: "+name.getName(), HttpServletResponse.SC_NOT_IMPLEMENTED);
+				}
+			}
+			if (elem != null)
+				elem = elem.element(DavElements.E_HREF);
+			
+
+			mRights = (short)0;
+			elem = a.element(DavElements.E_GRANT);
+			if (elem == null)
+				throw new DavException("missing grant element", HttpServletResponse.SC_BAD_REQUEST);
+			List<Element> priv = elem.elements(DavElements.E_PRIVILEGE);
+			for (Element p : priv) {
+				List<Element> right = p.elements();
+				if (right.size() != 1)
+					throw new DavException("number of right elements contained in privilege element is not one", HttpServletResponse.SC_BAD_REQUEST);
+				mRights |= sRightsMap.get(right.get(0).getName());
+			}
+		}
+		
+		public String getPrincipalUrl() {
+			return mPrincipalUrl;
+		}
+		
+		public String getZimbraId() {
+			return mId;
+		}
+		
+		public byte getGranteeType() {
+			return mGranteeType;
+		}
+		
+		public short getRights() {
+			return mRights;
 		}
 	}
 }

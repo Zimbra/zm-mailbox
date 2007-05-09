@@ -310,4 +310,13 @@ public class UrlNamespace {
 			throw new DavException("cannot get item", HttpServletResponse.SC_NOT_FOUND, e);
 		}
 	}
+	
+	public static Account getPrincipal(String principalUrl) throws ServiceException {
+		int index = principalUrl.indexOf(DavServlet.DAV_PATH);
+		if (index == -1)
+			return null;
+		String acct = principalUrl.substring(index + DavServlet.DAV_PATH.length() + 1);
+		Provisioning prov = Provisioning.getInstance();
+		return prov.get(AccountBy.name, acct);
+	}
 }

@@ -211,7 +211,9 @@ public class DavElements {
 	public static final QName E_ALLPROP_CALDAV = QName.get(P_ALLPROP, CALDAV_NS);
 	public static final QName E_ALTERNATE_URI_SET = QName.get(P_ALTERNATE_URI_SET, WEBDAV_NS);
 	public static final QName E_AUTHENTICATED = QName.get(P_AUTHENTICATED, WEBDAV_NS);
-	
+
+	public static final QName E_BIND    = QName.get(P_BIND, WEBDAV_NS);
+
 	public static final QName E_CALENDAR = QName.get(P_CALENDAR, CALDAV_NS);
 	public static final QName E_CALENDAR_DATA = QName.get(P_CALENDAR_DATA, CALDAV_NS);
 	public static final QName E_CALENDAR_DESCRIPTION = QName.get(P_CALENDAR_DESCRIPTION, CALDAV_NS);
@@ -277,7 +279,10 @@ public class DavElements {
 	public static final QName E_PROP_FILTER = QName.get(P_PROP_FILTER, CALDAV_NS);
 	public static final QName E_PROPSTAT = QName.get(P_PROPSTAT, WEBDAV_NS);
 	
-	public static final QName E_READ   = QName.get(P_READ, WEBDAV_NS);
+	public static final QName E_READ = QName.get(P_READ, WEBDAV_NS);
+	public static final QName E_READ_ACL = QName.get(P_READ_ACL, WEBDAV_NS);
+	public static final QName E_READ_CURRENT_USER_PRIVILEGE_SET = QName.get(P_READ_CURRENT_USER_PRIVILEGE_SET, WEBDAV_NS);
+	public static final QName E_READ_FREE_BUSY = QName.get(P_READ_FREE_BUSY, WEBDAV_NS);
 	public static final QName E_RECIPIENT = QName.get(P_RECIPIENT, CALDAV_NS);
 	public static final QName E_REPORT = QName.get(P_REPORT, WEBDAV_NS);
 	public static final QName E_REQUEST_STATUS = QName.get(P_REQUEST_STATUS, CALDAV_NS);
@@ -311,7 +316,11 @@ public class DavElements {
 	public static final QName E_TIMEZONE = QName.get(P_TIMEZONE, CALDAV_NS);
 	
 	public static final QName E_UNAUTHENTICATED = QName.get(P_UNAUTHENTICATED, WEBDAV_NS);
+	public static final QName E_UNBIND = QName.get(P_UNBIND, WEBDAV_NS);
 	public static final QName E_UNLOCK = QName.get(P_UNLOCK, WEBDAV_NS);
 
-	public static final QName E_WRITE  = QName.get(P_WRITE, WEBDAV_NS);
+	public static final QName E_WRITE = QName.get(P_WRITE, WEBDAV_NS);
+	public static final QName E_WRITE_ACL = QName.get(P_WRITE_ACL, WEBDAV_NS);
+	public static final QName E_WRITE_CONTENT  = QName.get(P_WRITE_CONTENT, WEBDAV_NS);
+	public static final QName E_WRITE_PROPERTIES  = QName.get(P_WRITE_PROPERTIES, WEBDAV_NS);
 }

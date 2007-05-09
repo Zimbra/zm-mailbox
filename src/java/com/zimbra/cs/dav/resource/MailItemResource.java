@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
@@ -51,6 +52,8 @@ import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.property.ResourceProperty;
+import com.zimbra.cs.dav.property.Acl.Ace;
+import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -247,12 +250,14 @@ public abstract class MailItemResource extends DavResource {
 	}
 	
 	public ResourceProperty getProperty(QName prop) {
-		ResourceProperty rp = super.getProperty(prop);
-		if (rp != null || mDeadProps == null)
-			return rp;
+		ResourceProperty rp = null;
+		if (mDeadProps != null) {
 		Element e = mDeadProps.get(prop);
 		if (e != null)
 			rp = new ResourceProperty(e);
+		}
+		if (rp == null)
+			rp = super.getProperty(prop);
 		return rp;
 	}
 
@@ -323,5 +328,14 @@ public abstract class MailItemResource extends DavResource {
 	
 	public int getRemoteId() {
 		return mRemoteId;
+	}
+	
+	public void setAce(DavContext ctxt, List<Ace> aceList) throws ServiceException, DavException {
+		ACL acl = new ACL();
+		for (Ace ace : aceList)
+			acl.grantAccess(ace.getZimbraId(), ace.getGranteeType(), ace.getRights(), null);
+
+		Mailbox mbox = getMailbox(ctxt);
+		mbox.setPermissions(ctxt.getOperationContext(), getId(), acl);
 	}
 }
