@@ -311,7 +311,7 @@ public class FileLogWriter implements LogWriter {
                 RedoCommitCallback cb = cmt.getCallback();
                 if (cb != null) {
                     long redoSeq = mRedoLogMgr.getRolloverManager().getCurrentSequence();
-                    CommitId cid = new CommitId(redoSeq, op.getTransactionId());
+                    CommitId cid = new CommitId(redoSeq, (CommitTxn) op);
                     Notif notif = new Notif(cb, cid);
                     // We queue it instead making the callback right away.
                     // Call it only after the commit record has been fsynced.
