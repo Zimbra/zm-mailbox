@@ -111,9 +111,9 @@ public class ZimbraLog {
     public static final Log index = LogFactory.getLog("zimbra.index");
     
     /**
-     * the "zimbra.journal" logger. For journal-releated events.
+     * the "zimbra.redolog" logger. For redolog-releated events.
      */
-    public static final Log journal = LogFactory.getLog("zimbra.journal");
+    public static final Log redolog = LogFactory.getLog("zimbra.redolog");
     
     /**
      * the "zimbra.lmtp" logger. For LMTP-related events.
