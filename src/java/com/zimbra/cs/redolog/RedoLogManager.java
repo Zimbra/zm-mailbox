@@ -757,6 +757,4 @@ public class RedoLogManager {
             }
         }
     }
-
-    public static CommitId sFirstCommitId = null;
 }
