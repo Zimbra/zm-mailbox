@@ -39,6 +39,9 @@ import com.zimbra.cs.redolog.RedoLogOutput;
 /**
  * @author jhahm
  *
+ * THIS REDOLOG OPERATION IS DEPRECATED.  Backing up a mailbox will no longer
+ * log this operation in redolog.
+ *
  * This operation is a marker within a redo log file to help locate the
  * redo log file that corresponds to a particular backup.  When restoring
  * a mailbox from backup, the mailbox is reinitialized first, the data
@@ -68,7 +71,7 @@ public class BackupMailbox extends RedoableOp {
 	 * @see com.zimbra.cs.redolog.op.RedoableOp#getOperationCode()
 	 */
 	public int getOpCode() {
-		return OP_BACKUP_MAILBOX;
+		return OP_DEPRECATED_BACKUP_MAILBOX;
 	}
 
 	/* (non-Javadoc)

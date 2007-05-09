@@ -26,6 +26,7 @@
 package com.zimbra.cs.redolog;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.redolog.op.CommitTxn;
 
 /**
  * CommitId consists of redolog sequence number and TransactionId of a
@@ -37,15 +38,24 @@ import com.zimbra.common.service.ServiceException;
 public class CommitId {
 
     private long mRedoSeq;  // sequence of redo log at transaction commit
+    private long mTxnTstamp;  // timestamp that goes with mTxnId
+                              // this is used to distinguish between multiple
+                              // commit records with the same txn id, which
+                              // can happen after replayed ops are logged
     private TransactionId mTxnId;
 
-    public CommitId(long seq, TransactionId txnId) {
+    private CommitId(long seq, long txnTstamp, TransactionId txnId) {
         mRedoSeq = seq;
+        mTxnTstamp = txnTstamp;
         mTxnId = txnId;
     }
 
-    public boolean matches(TransactionId txnId) {
-        return mTxnId.equals(txnId);
+    public CommitId(long seq, CommitTxn txn) {
+        this(seq, txn.getTimestamp(), txn.getTransactionId());
+    }
+
+    public boolean matches(CommitTxn txn) {
+        return mTxnId.equals(txn.getTransactionId()) && mTxnTstamp == txn.getTimestamp();
     }
 
     public long getRedoSeq() {
@@ -57,6 +67,7 @@ public class CommitId {
         int counter = mTxnId.getCounter();
         StringBuilder sb = new StringBuilder();
         sb.append(mRedoSeq).append('-');
+        sb.append(mTxnTstamp).append('-');
         sb.append(mTxnId.encodeToString());
         return sb.toString();
     }
@@ -65,12 +76,13 @@ public class CommitId {
     throws ServiceException {
         Throwable cause = null;
         if (str != null) {
-            String[] fields = str.split("-", 2);
-            if (fields != null && fields.length == 2) {
+            String[] fields = str.split("-", 3);
+            if (fields != null && fields.length == 3) {
                 try {
                     long seq = Long.parseLong(fields[0]);
-                    TransactionId txnId = TransactionId.decodeFromString(fields[1]);
-                    return new CommitId(seq, txnId);
+                    long txnTstamp = Long.parseLong(fields[1]);
+                    TransactionId txnId = TransactionId.decodeFromString(fields[2]);
+                    return new CommitId(seq, txnTstamp, txnId);
                 } catch (NumberFormatException e) {
                     cause = e;
                 } catch (ServiceException e) {

@@ -39,13 +39,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 
 import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 import EDU.oswego.cs.dl.util.concurrent.Sync;
 
 import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.redolog.logger.FileLogReader;
 import com.zimbra.cs.redolog.logger.FileLogWriter;
 import com.zimbra.cs.redolog.logger.LogWriter;
 import com.zimbra.cs.redolog.op.AbortTxn;
@@ -54,6 +57,7 @@ import com.zimbra.cs.redolog.op.CommitTxn;
 import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.util.Zimbra;
 //import com.zimbra.cs.redolog.op.Rollover;
+import com.zimbra.znative.IO;
 
 /**
  * @author jhahm
@@ -643,21 +647,116 @@ public class RedoLogManager {
 	}
 
     /**
-     * @param sequenceAtPrevFullBackup
+     * @param seq
      * @return
      * @throws IOException
      */
-    public File[] getArchivedLogsAfterSequence(long sequenceAtPrevFullBackup) throws IOException {
-        return RolloverManager.getArchiveLogs(mArchiveDir, sequenceAtPrevFullBackup);
+    public File[] getArchivedLogsFromSequence(long seq) throws IOException {
+        return RolloverManager.getArchiveLogs(mArchiveDir, seq);
     }
 
     public File[] getArchivedLogs() throws IOException {
-        return getArchivedLogsAfterSequence(Long.MIN_VALUE);
+        return getArchivedLogsFromSequence(Long.MIN_VALUE);
     }
 
-    public Set<Integer> getChangedMailboxesSince(CommitId cid) {
-        return new HashSet<Integer>(0);
-        // TODO: Scan redologs to populate the list with IDs of mailboxes
-        // that have committed changes since the given commit id.
+    public Set<Integer> getChangedMailboxesSince(CommitId cid) throws IOException {
+        Set<Integer> mailboxes = new HashSet<Integer>();
+
+        // Grab a read lock to prevent rollover.
+        Sync readLock = mRWLock.readLock();
+        try {
+            readLock.acquire();
+        } catch (InterruptedException e) {
+            if (!mShuttingDown)
+                mLog.error("InterruptedException during redo log scan for CommitId", e);
+            else
+                mLog.debug("Redo log scan for CommitId interrupted for shutdown");
+            return mailboxes;
+        }
+
+        File linkDir = null;
+        File[] logs;
+        try {
+            try {
+                long seq = cid.getRedoSeq();
+                // TODO: Prevent deletion of files in archive directory.
+                File[] archived = getArchivedLogsFromSequence(seq);
+                if (archived != null) {
+                    logs = new File[archived.length + 1];
+                    System.arraycopy(archived, 0, logs, 0, archived.length);
+                    logs[archived.length] = mLogFile;
+                } else {
+                    logs = new File[] { mLogFile };
+                }
+    
+                // Create a temp directory and make hard links to all redologs.
+                // This prevents the logs from disappearing while being scanned.
+                String dirName = "tmp-scan-" + System.currentTimeMillis();
+                linkDir = new File(mLogFile.getParentFile(), dirName);
+                if (linkDir.exists()) {
+                    int suffix = 1;
+                    while (linkDir.exists()) {
+                        linkDir = new File(mLogFile.getParentFile(), dirName + "-" + suffix);
+                    }
+                }
+                if (!linkDir.mkdir())
+                    throw new IOException("Unable to create temp dir " + linkDir.getAbsolutePath());
+                for (int i = 0; i < logs.length; i++) {
+                    File src = logs[i];
+                    File dest = new File(linkDir, logs[i].getName());
+                    IO.link(src.getAbsolutePath(), dest.getAbsolutePath());
+                    logs[i] = dest;
+                }
+            } finally {
+                // We can let rollover happen now.
+                readLock.release();
+            }
+
+            // Scan redologs to get list with IDs of mailboxes that have
+            // committed changes since the given commit id.
+            boolean foundMarker = false;
+            for (File logfile : logs) {
+                FileLogReader logReader = new FileLogReader(logfile);
+                logReader.open();
+                try {
+                    RedoableOp op = null;
+                    while ((op = logReader.getNextOp()) != null) {
+                        if (ZimbraLog.redolog.isDebugEnabled())
+                            ZimbraLog.redolog.debug("Read: " + op);
+                        if (!(op instanceof CommitTxn))
+                            continue;
+
+                        if (foundMarker) {
+                            int mboxId = op.getMailboxId();
+                            if (mboxId > 0)
+                                mailboxes.add(mboxId);
+                        } else {
+                            CommitTxn commit = (CommitTxn) op;
+                            if (cid.matches(commit))
+                                foundMarker = true;
+                        }
+                    }
+                } catch (IOException e) {
+                    ZimbraLog.redolog.warn("IOException while reading redolog file", e);
+                } finally {
+                    logReader.close();
+                }
+            }
+            return mailboxes;
+        } finally {
+            if (linkDir != null) {
+                // Clean up the temp dir with links.
+                try {
+                    if (linkDir.exists())
+                        FileUtil.deleteDir(linkDir);
+                } catch (IOException e) {
+                    ZimbraLog.redolog.warn(
+                            "Unable to delete temporary directory " +
+                            linkDir.getAbsolutePath(), e);
+                }
+            }
+        }
     }
+
+    public static CommitId sFirstCommitId = null;
 }

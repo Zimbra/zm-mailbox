@@ -88,7 +88,7 @@ public abstract class RedoableOp {
 
     public static final int OP_CREATE_MAILBOX           = 7;
     public static final int OP_DELETE_MAILBOX           = 8;
-    public static final int OP_BACKUP_MAILBOX           = 9;
+    public static final int OP_DEPRECATED_BACKUP_MAILBOX = 9;
     public static final int OP_REINDEX_MAILBOX          = 10;
     public static final int OP_PURGE_OLD_MESSAGES       = 11;
 
