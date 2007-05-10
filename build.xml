@@ -504,7 +504,7 @@
 
 	<target name="reset-the-world-stage1" depends="clean,jar,init" description="Run when tomcat is stopped." />
 	
-	<target name="reset-the-world-stage2" depends="service-deploy,init-wiki,inject" description="Run when tomcat is running." />
+	<target name="reset-the-world-stage2" depends="service-deploy,import-wiki-templates,inject" description="Run when tomcat is running." />
 
 	<target name="init" depends="stop-servers,db-init,dir-init,init-opt-zimbra,start-ldap,ldap-load" />
 
@@ -530,7 +530,7 @@
 		</java>
 		<echo>Importing Wiki documents for user1</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-l impn user1@${zimbra.server.hostname} test123 data/wiki/user1 /" />
+			<arg line="impn user1@${zimbra.server.hostname} data/wiki/user1 /" />
 		</java>
 	</target>
 
@@ -541,17 +541,17 @@
 		</java>
 	</target>
 
-	<target name="import-wiki-templates">
+	<target name="import-wiki-templates" depends="init-wiki">
 		<echo>Importing Wiki templates from ${data.wiki.dir}/Template</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-l impn wiki@${zimbra.server.hostname} test123 data/wiki/Template Template" />
+			<arg line="impn wiki@${zimbra.server.hostname} data/wiki/Template Template" />
 		</java>
 	</target>
 
 	<target name="init-wiki">
 		<echo>Initializing wiki@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="in ${wiki.user.default}@${zimbra.server.hostname} test123 data/wiki/Template Template" />
+			<arg line="in ${wiki.user.default}@${zimbra.server.hostname}" />
 		</java>
 	</target>
 
@@ -909,6 +909,9 @@
 						   zimbraCalResContactPhone '(650)555-1212' \
 					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
 					       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
+		ca wiki@${zimbra.server.hostname} test123 \
+			zimbraMailHost ${zimbra.server.hostname} \
+			zimbraMailQuota 0
 		</echo>
 	</target>
 	
@@ -965,7 +968,7 @@
 		</java>
 		<echo>Importing Wiki documents for ${accountToInject}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-l impn ${accountToInject} test123 data/wiki/user1 /" />
+			<arg line="-l impn ${accountToInject} data/wiki/user1 /" />
 		</java>
 	</target>
 	
@@ -1162,6 +1165,5 @@
 	
 	<target name="restart-webserver" depends="stop-webserver,start-webserver"/>
 	
-	<!-- description="Dummy Target used by project_builder to force eclipse to refresh"  -->
 	<target name="empty" />
 </project>
