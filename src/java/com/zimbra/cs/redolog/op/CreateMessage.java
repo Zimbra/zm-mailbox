@@ -139,8 +139,8 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
         mNoICal = noICal;
     }
 
-    public void start(long timestamp, RedoCommitCallback callback) {
-        super.start(timestamp, callback);
+    public void start(long timestamp) {
+        super.start(timestamp);
         if (mReceivedDate == RECEIVED_DATE_UNSET)
             mReceivedDate = timestamp;
     }

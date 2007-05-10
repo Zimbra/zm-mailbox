@@ -176,7 +176,7 @@ public class StoreIncomingBlob extends RedoableOp {
         if (!getUnloggedReplay()) {
             redoRecorder =
             	new StoreIncomingBlob(mDigest, mMsgSize, mMailboxIdList);
-            redoRecorder.start(getTimestamp(), null);
+            redoRecorder.start(getTimestamp());
             redoRecorder.setBlobBodyInfo(mData, mPath, mVolumeId);
             redoRecorder.log();
         }

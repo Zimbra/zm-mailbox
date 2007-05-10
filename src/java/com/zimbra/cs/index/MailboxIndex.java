@@ -1637,7 +1637,7 @@ public final class MailboxIndex
         IndexItem redo = null;
         if (!noRedo) {
             redo = new IndexItem(mbox.getId(), item.getId(), itemType, deleteFirst);
-            redo.start(System.currentTimeMillis(), null);
+            redo.start(System.currentTimeMillis());
             redo.log();
             redo.allowCommit();
         }

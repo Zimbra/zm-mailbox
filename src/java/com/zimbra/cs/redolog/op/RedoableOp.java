@@ -265,13 +265,16 @@ public abstract class RedoableOp {
     public void setUnloggedReplay(boolean b) { mUnloggedReplay = b; }
 
     /**
-     * Start a transaction.  If a non-null callback object is passed in, it
-     * will be called when the transaction commmits.  It will not be called if
-     * the transaction is aborted/rolled back.
-     * @param timestamp
+     * Set up a callback that will be called when the transaction commits and
+     * the commit record is safely on disk.  This method must be called before
+     * commit() is called.
      * @param callback
      */
-    public void start(long timestamp, RedoCommitCallback callback) {
+    public void setCommitCallback(RedoCommitCallback callback) {
+        mCommitCallback = callback;
+    }
+
+    public void start(long timestamp) {
 		// Assign timestamp and txn ID to the operation.
 		// Doing the assignment in this method means we timestamp and sequence
 		// the operation start time, not when the operation get committed or
@@ -283,12 +286,7 @@ public abstract class RedoableOp {
 		mTimestamp = timestamp;
 		if (isStartMarker())
 			setTransactionId(mRedoLogMgr.getNewTxnId());
-        mCommitCallback = callback;
 	}
-
-    public void start(long timestamp) {
-        start(timestamp, null);
-    }
 
 	public void log() {
         log(true);
