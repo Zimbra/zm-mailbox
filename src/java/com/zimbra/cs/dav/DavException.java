@@ -24,10 +24,20 @@
  */
 package com.zimbra.cs.dav;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+
+import org.dom4j.Document;
+import org.dom4j.io.XMLWriter;
+
+import com.zimbra.common.util.ZimbraLog;
+
 @SuppressWarnings("serial")
 public class DavException extends Exception {
 	private boolean mStatusIsSet;
 	private int mStatus;
+	private Document mErrMsg;
 	
 	public DavException(String msg, int status) {
 		super(msg);
@@ -52,5 +62,19 @@ public class DavException extends Exception {
 	
 	public int getStatus() {
 		return mStatus;
+	}
+	
+	public boolean hasErrorMessage() {
+		return (mErrMsg != null);
+	}
+	
+	public void writeErrorMsg(OutputStream out) throws IOException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		XMLWriter writer = new XMLWriter(baos);
+		writer.write(mErrMsg);
+		byte[] msg = baos.toByteArray();
+		if (ZimbraLog.dav.isDebugEnabled())
+			ZimbraLog.dav.debug(new String(msg, "UTF-8"));
+		out.write(msg);
 	}
 }

@@ -155,9 +155,11 @@ public class DavServlet extends ZimbraServlet {
 				ZimbraLog.dav.error("error handling method "+method.getName(), e);
 			
 			try {
-				if (e.isStatusSet())
-					resp.sendError(e.getStatus());
-				else
+				if (e.isStatusSet()) {
+					resp.setStatus(e.getStatus());
+					if (e.hasErrorMessage())
+						e.writeErrorMsg(resp.getOutputStream());
+				} else
 					resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			} catch (IllegalStateException ise) {
 			}
