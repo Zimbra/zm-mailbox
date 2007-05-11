@@ -33,6 +33,10 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.cs.service.mail.CreateWaitSet;
+import com.zimbra.cs.service.mail.DestroyWaitSet;
+import com.zimbra.cs.service.mail.WaitSetRequest;
 import com.zimbra.soap.DocumentDispatcher;
 import com.zimbra.soap.DocumentService;
 
@@ -177,11 +181,6 @@ public class AdminService implements DocumentService {
 
         // calendar time zone fixup
         dispatcher.registerHandler(AdminConstants.FIX_CALENDAR_TIME_ZONE_REQUEST, new FixCalendarTimeZone());
-        
-        // waitset
-        dispatcher.registerHandler(AdminConstants.CREATE_WAIT_SET_REQUEST, new CreateWaitSet());
-        dispatcher.registerHandler(AdminConstants.WAIT_MULTIPLE_ACCOUNTS_REQUEST, new WaitMultipleAccounts());
-        dispatcher.registerHandler(AdminConstants.DESTROY_WAIT_SET_REQUEST, new DestroyWaitSet());
         
         // admin saved searches
         dispatcher.registerHandler(AdminConstants.GET_ADMIN_SAVED_SEARCHES_REQUEST, new GetAdminSavedSearches());

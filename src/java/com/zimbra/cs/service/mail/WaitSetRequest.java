@@ -22,7 +22,7 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.service.admin;
+package com.zimbra.cs.service.mail;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -30,21 +30,24 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.service.admin.AdminServiceException;
 import com.zimbra.cs.service.util.SyncToken;
-import com.zimbra.cs.session.WaitSet;
+import com.zimbra.cs.session.IWaitSet;
+import com.zimbra.cs.session.WaitSetAccount;
+import com.zimbra.cs.session.WaitSetCallback;
+import com.zimbra.cs.session.WaitSetError;
 import com.zimbra.cs.session.WaitSetMgr;
-import com.zimbra.cs.session.WaitSet.WaitSetAccount;
-import com.zimbra.cs.session.WaitSet.WaitSetError;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * 
  */
-public class WaitMultipleAccounts extends AdminDocumentHandler {
+public class WaitSetRequest extends MailDocumentHandler {
     
     /*
 <!--*************************************
@@ -88,18 +91,24 @@ public class WaitMultipleAccounts extends AdminDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        String waitSetId = request.getAttribute(AdminConstants.A_WAITSET_ID);
-        long lastKnownSeqNo = request.getAttributeLong(AdminConstants.A_SEQ);
-        boolean block = request.getAttributeBool(AdminConstants.A_BLOCK, false);
+        String waitSetId = request.getAttribute(MailConstants.A_WAITSET_ID);
+        String lastKnownSeqNo = request.getAttribute(MailConstants.A_SEQ);
+        boolean block = request.getAttributeBool(MailConstants.A_BLOCK, false);
+        
+        boolean adminAllowed = zsc.getAuthToken().isAdmin(); 
         
         String defInterestStr = null;
-        WaitSet ws = null;
+        IWaitSet ws = null;
         
         if (waitSetId.startsWith(WaitSetMgr.ALL_ACCOUNTS_ID_PREFIX)) {
+            
+            if (!adminAllowed) 
+                throw MailServiceException.PERM_DENIED("Non-Admin accounts may not wait on other accounts");
+            
             // default interest types required for "All" waitsets
-            defInterestStr = request.getAttribute(AdminConstants.A_DEFTYPES);
-            int defaultInterests = WaitMultipleAccounts.parseInterestStr(defInterestStr, 0);
-            ws = WaitSetMgr.lookupOrCreateForAllAccts(waitSetId, defaultInterests, lastKnownSeqNo);
+            defInterestStr = request.getAttribute(MailConstants.A_DEFTYPES);
+            int defaultInterests = WaitSetRequest.parseInterestStr(defInterestStr, 0);
+            ws = WaitSetMgr.lookupOrCreateForAllAccts(zsc.getAuthtokenAccountId(), waitSetId, defaultInterests, lastKnownSeqNo);
         } else {
             ws = WaitSetMgr.lookup(waitSetId);
         }
@@ -108,11 +117,30 @@ public class WaitMultipleAccounts extends AdminDocumentHandler {
             throw AdminServiceException.NO_SUCH_WAITSET(waitSetId);
         }
         
+        if (!ws.getOwnerAccountId().equals(zsc.getAuthtokenAccountId())) {
+            throw ServiceException.PERM_DENIED("Not owner of waitset");
+        }
+        
         List<WaitSetAccount> add = parseAddUpdateAccounts(
-            request.getOptionalElement(AdminConstants.E_WAITSET_ADD), ws.getDefaultInterest());
+            request.getOptionalElement(MailConstants.E_WAITSET_ADD), ws.getDefaultInterest());
         List<WaitSetAccount> update = parseAddUpdateAccounts(
-            request.getOptionalElement(AdminConstants.E_WAITSET_UPDATE), ws.getDefaultInterest());
-        List<String> remove = parseRemoveAccounts(request.getOptionalElement(AdminConstants.E_WAITSET_REMOVE));
+            request.getOptionalElement(MailConstants.E_WAITSET_UPDATE), ws.getDefaultInterest());
+        List<String> remove = parseRemoveAccounts(request.getOptionalElement(MailConstants.E_WAITSET_REMOVE));
+        
+        if (!adminAllowed) {
+            for (WaitSetAccount wsa : add) {
+                if (!wsa.accountId.equals(zsc.getAuthtokenAccountId()))
+                    throw MailServiceException.PERM_DENIED("Non-Admin accounts may not wait on other accounts");
+            }
+            for (WaitSetAccount wsa : update) {
+                if (!wsa.accountId.equals(zsc.getAuthtokenAccountId()))
+                    throw MailServiceException.PERM_DENIED("Non-Admin accounts may not wait on other accounts");
+            }
+            for (String acctId : remove) {
+                if (!acctId.equals(zsc.getAuthtokenAccountId()))
+                    throw MailServiceException.PERM_DENIED("Non-Admin accounts may not wait on other accounts");
+            }
+        }
         
         Callback cb = new Callback();
 
@@ -140,20 +168,20 @@ public class WaitMultipleAccounts extends AdminDocumentHandler {
             }
         }
         
-        Element response = zsc.createElement(AdminConstants.WAIT_MULTIPLE_ACCOUNTS_RESPONSE);
-        response.addAttribute(AdminConstants.A_WAITSET_ID, waitSetId);
+        Element response = zsc.createElement(MailConstants.WAIT_SET_RESPONSE);
+        response.addAttribute(MailConstants.A_WAITSET_ID, waitSetId);
         if (cb.canceled) {
-            response.addAttribute(AdminConstants.A_CANCELED, true);
+            response.addAttribute(MailConstants.A_CANCELED, true);
         } else if (cb.completed) {
-            response.addAttribute(AdminConstants.A_SEQ, cb.seqNo);
+            response.addAttribute(MailConstants.A_SEQ, cb.seqNo);
             
             for (String s : cb.signalledAccounts) {
-                Element saElt = response.addElement(AdminConstants.E_A);
-                saElt.addAttribute(AdminConstants.A_ID, s);
+                Element saElt = response.addElement(MailConstants.E_A);
+                saElt.addAttribute(MailConstants.A_ID, s);
             }
         } else {
             // timed out....they should try again
-            response.addAttribute(AdminConstants.A_SEQ, lastKnownSeqNo);
+            response.addAttribute(MailConstants.A_SEQ, lastKnownSeqNo);
         }
         
         encodeErrors(response, errors);
@@ -164,12 +192,12 @@ public class WaitMultipleAccounts extends AdminDocumentHandler {
     static List<WaitSetAccount> parseAddUpdateAccounts(Element elt, int defaultInterest) throws ServiceException {
         List<WaitSetAccount> toRet = new ArrayList<WaitSetAccount>();
         if (elt != null) {
-            for (Iterator<Element> iter = elt.elementIterator(AdminConstants.E_A); iter.hasNext();) {
+            for (Iterator<Element> iter = elt.elementIterator(MailConstants.E_A); iter.hasNext();) {
                 Element a = iter.next();
-                String id = a.getAttribute(AdminConstants.A_ID);
-                String tokenStr = a.getAttribute(AdminConstants.A_TOKEN, null);
+                String id = a.getAttribute(MailConstants.A_ID);
+                String tokenStr = a.getAttribute(MailConstants.A_TOKEN, null);
                 SyncToken token = tokenStr != null ? new SyncToken(tokenStr) : null;
-                int interests = parseInterestStr(a.getAttribute(AdminConstants.A_TYPES, null), defaultInterest);
+                int interests = parseInterestStr(a.getAttribute(MailConstants.A_TYPES, null), defaultInterest);
                 toRet.add(new WaitSetAccount(id, token, interests));
             }
         }
@@ -179,17 +207,17 @@ public class WaitMultipleAccounts extends AdminDocumentHandler {
     static List<String> parseRemoveAccounts(Element elt) throws ServiceException {
         List<String> remove = new ArrayList<String>();
         if (elt != null) {
-            for (Iterator<Element> iter = elt.elementIterator(AdminConstants.E_A); iter.hasNext();) {
+            for (Iterator<Element> iter = elt.elementIterator(MailConstants.E_A); iter.hasNext();) {
                 Element a = iter.next();
-                String id = a.getAttribute(AdminConstants.A_ID);
+                String id = a.getAttribute(MailConstants.A_ID);
                 remove.add(id);
             }
         }
         return remove;
     }
     
-    public static class Callback implements WaitSet.WaitSetCallback {
-        public void dataReady(WaitSet ws, long seqNo, boolean canceled, String[] signalledAccounts) {
+    public static class Callback implements WaitSetCallback {
+        public void dataReady(IWaitSet ws, String seqNo, boolean canceled, String[] signalledAccounts) {
             synchronized(this) {
                 ZimbraLog.session.info("Called WaitMultiplAccounts WaitSetCallback.dataReady()!");
                 this.waitSet = ws;
@@ -204,8 +232,8 @@ public class WaitMultipleAccounts extends AdminDocumentHandler {
         public boolean completed = false;
         public boolean canceled;
         public String[] signalledAccounts;
-        public WaitSet waitSet;
-        public long seqNo;
+        public IWaitSet waitSet;
+        public String seqNo;
     }
     
     public static enum TypeEnum {
@@ -223,9 +251,9 @@ public class WaitMultipleAccounts extends AdminDocumentHandler {
     
     public static final void encodeErrors(Element parent, List<WaitSetError> errors) {
         for (WaitSetError error : errors) {
-            Element errorElt = parent.addElement(AdminConstants.E_ERROR);
-            errorElt.addAttribute(AdminConstants.A_ID, error.accountId); 
-            errorElt.addAttribute(AdminConstants.A_TYPE, error.error.name()); 
+            Element errorElt = parent.addElement(MailConstants.E_ERROR);
+            errorElt.addAttribute(MailConstants.A_ID, error.accountId); 
+            errorElt.addAttribute(MailConstants.A_TYPE, error.error.name()); 
         }
     }
     

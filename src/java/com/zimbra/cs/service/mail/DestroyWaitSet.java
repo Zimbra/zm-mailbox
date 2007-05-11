@@ -22,13 +22,13 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.service.admin;
+package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.session.WaitSetMgr;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -46,7 +46,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 /**
  * 
  */
-public class DestroyWaitSet extends AdminDocumentHandler {
+public class DestroyWaitSet extends MailDocumentHandler {
 
     /* (non-Javadoc)
      * @see com.zimbra.soap.DocumentHandler#handle(com.zimbra.common.soap.Element, java.util.Map)
@@ -54,11 +54,11 @@ public class DestroyWaitSet extends AdminDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        String waitSetId = request.getAttribute(AdminConstants.A_WAITSET_ID);
-        WaitSetMgr.destroy(waitSetId);
+        String waitSetId = request.getAttribute(MailConstants.A_WAITSET_ID);
+        WaitSetMgr.destroy(zsc.getAuthtokenAccountId(), waitSetId);
         
-        Element response = zsc.createElement(AdminConstants.DESTROY_WAIT_SET_RESPONSE);
-        response.addAttribute(AdminConstants.A_WAITSET_ID, waitSetId);
+        Element response = zsc.createElement(MailConstants.DESTROY_WAIT_SET_RESPONSE);
+        response.addAttribute(MailConstants.A_WAITSET_ID, waitSetId);
         return response;
     }
 }

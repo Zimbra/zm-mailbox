@@ -30,12 +30,12 @@ import java.util.List;
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.service.admin.WaitMultipleAccounts;
-import com.zimbra.cs.service.admin.WaitMultipleAccounts.TypeEnum;
-import com.zimbra.cs.session.WaitSet;
+import com.zimbra.cs.service.mail.WaitSetRequest;
+import com.zimbra.cs.service.mail.WaitSetRequest.TypeEnum;
+import com.zimbra.cs.session.IWaitSet;
+import com.zimbra.cs.session.WaitSetAccount;
+import com.zimbra.cs.session.WaitSetError;
 import com.zimbra.cs.session.WaitSetMgr;
-import com.zimbra.cs.session.WaitSet.WaitSetAccount;
-import com.zimbra.cs.session.WaitSet.WaitSetError;
 
 import junit.framework.TestCase;
 
@@ -48,6 +48,8 @@ public class TestWaitSet extends TestCase {
     private static final String USER_1_NAME = "user1";
     private static final String USER_2_NAME = "user3";
     private static final String NAME_PREFIX = TestWaitSet.class.getSimpleName();
+    
+    private static final String FAKE_ACCOUNT_ID = "fake";
     
     
     public void setUp()
@@ -80,21 +82,21 @@ public class TestWaitSet extends TestCase {
             add.add(new WaitSetAccount(user1Acct.getId(), null, TypeEnum.m.getMask()));
             
             Pair<String, List<WaitSetError>> result = 
-                WaitSetMgr.create(TypeEnum.m.getMask(), false, add);
+                WaitSetMgr.create(FAKE_ACCOUNT_ID, true, TypeEnum.m.getMask(), false, add);
             waitSetId = result.getFirst();
             errors = result.getSecond();
         }
         
         try {
-            long curSeqNo = 0;
+            String curSeqNo = "0";
             assertEquals(0, errors.size());
             
             { // waitset shouldn't signal until message added to a mailbox
-                WaitMultipleAccounts.Callback cb = new WaitMultipleAccounts.Callback();
+                WaitSetRequest.Callback cb = new WaitSetRequest.Callback();
                 
                 // wait shouldn't find anything yet
-                WaitSet ws = WaitSetMgr.lookup(waitSetId);
-                errors = ws.doWait(cb, 0, true, null, null, null);
+                IWaitSet ws = WaitSetMgr.lookup(waitSetId);
+                errors = ws.doWait(cb, "0", true, null, null, null);
                 assertEquals(0, errors.size());
                 synchronized(cb) { assertEquals(false, cb.completed); }
                 
@@ -106,13 +108,12 @@ public class TestWaitSet extends TestCase {
                 try { Thread.sleep(500); } catch (Exception e) {}
                 synchronized(cb) { assertEquals(true, cb.completed); }
                 curSeqNo = cb.seqNo;
-                assertTrue(curSeqNo > 0);
             }
             
             { // waitset should pick up added user
-                WaitMultipleAccounts.Callback cb = new WaitMultipleAccounts.Callback();
+                WaitSetRequest.Callback cb = new WaitSetRequest.Callback();
                 
-                WaitSet ws = WaitSetMgr.lookup(waitSetId);
+                IWaitSet ws = WaitSetMgr.lookup(waitSetId);
                 
                 // create a new account, shouldn't trigger waitset
                 Account user2Acct = TestUtil.getAccount(USER_2_NAME);
@@ -130,31 +131,30 @@ public class TestWaitSet extends TestCase {
                 TestUtil.insertMessageLmtp(1, subject, recipient, sender);
                 try { Thread.sleep(500); } catch (Exception e) {}
                 synchronized(cb) { assertEquals(true, cb.completed); }
-                assertTrue(curSeqNo < cb.seqNo);
                 curSeqNo = cb.seqNo;
             }
         } finally {
-            WaitSetMgr.destroy(waitSetId);
+            WaitSetMgr.destroy(FAKE_ACCOUNT_ID, waitSetId);
         }
     }
     
     public void runMeSecond() throws Exception {
         Pair<String, List<WaitSetError>> result = 
-            WaitSetMgr.create(TypeEnum.all.getMask(), true, null);
+            WaitSetMgr.create(FAKE_ACCOUNT_ID, true, TypeEnum.all.getMask(), true, null);
         
         String waitSetId = result.getFirst();
-        long curSeqNo = 0;
+        String curSeqNo = "0";
         List<WaitSetError> errors = result.getSecond();
         assertEquals(0, errors.size());
         
         try {
 
             { // waitset shouldn't signal until message added to a mailbox
-                WaitMultipleAccounts.Callback cb = new WaitMultipleAccounts.Callback();
+                WaitSetRequest.Callback cb = new WaitSetRequest.Callback();
 
                 // wait shouldn't find anything yet
-                WaitSet ws = WaitSetMgr.lookup(waitSetId);
-                errors = ws.doWait(cb, 0, true, null, null, null);
+                IWaitSet ws = WaitSetMgr.lookup(waitSetId);
+                errors = ws.doWait(cb, "0", true, null, null, null);
                 assertEquals(0, errors.size());
                 synchronized(cb) { assertEquals(false, cb.completed); }
 
@@ -166,13 +166,12 @@ public class TestWaitSet extends TestCase {
                 try { Thread.sleep(500); } catch (Exception e) {}
                 synchronized(cb) { assertEquals(true, cb.completed); }
                 curSeqNo = cb.seqNo;
-                assertTrue(curSeqNo > 0);
             }
 
             { // waitset should remain signalled until sequence number is increased
-                WaitMultipleAccounts.Callback cb = new WaitMultipleAccounts.Callback();
-                WaitSet ws = WaitSetMgr.lookup(waitSetId);
-                errors = ws.doWait(cb, 0, true, null, null, null);
+                WaitSetRequest.Callback cb = new WaitSetRequest.Callback();
+                IWaitSet ws = WaitSetMgr.lookup(waitSetId);
+                errors = ws.doWait(cb, "0", true, null, null, null);
                 try { Thread.sleep(500); } catch (Exception e) {}
                 assertEquals(0, errors.size());
                 synchronized(cb) { assertEquals(true, cb.completed); }
@@ -180,10 +179,10 @@ public class TestWaitSet extends TestCase {
             }
 
             { // part 2: waitset for "all" should pick up new account added  
-                WaitMultipleAccounts.Callback cb = new WaitMultipleAccounts.Callback();
+                WaitSetRequest.Callback cb = new WaitSetRequest.Callback();
 
                 // wait shouldn't find anything yet
-                WaitSet ws = WaitSetMgr.lookup(waitSetId);
+                IWaitSet ws = WaitSetMgr.lookup(waitSetId);
                 errors = ws.doWait(cb, curSeqNo, true, null, null, null);
                 assertEquals(0, errors.size());
                 synchronized(cb) { assertEquals(false, cb.completed); }
@@ -199,11 +198,10 @@ public class TestWaitSet extends TestCase {
                 TestUtil.insertMessageLmtp(1, subject, recipient, sender);
                 try { Thread.sleep(500); } catch (Exception e) {}
                 synchronized(cb) { assertEquals(true, cb.completed); }
-                assertTrue(curSeqNo < cb.seqNo);
                 curSeqNo = cb.seqNo;
             }
         } finally {
-            WaitSetMgr.destroy(waitSetId);
+            WaitSetMgr.destroy(FAKE_ACCOUNT_ID, waitSetId);
         }
     }
     

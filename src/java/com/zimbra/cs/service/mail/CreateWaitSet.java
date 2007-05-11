@@ -22,24 +22,25 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.service.admin;
+package com.zimbra.cs.service.mail;
 
 import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Pair;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.session.WaitSetAccount;
+import com.zimbra.cs.session.WaitSetError;
 import com.zimbra.cs.session.WaitSetMgr;
-import com.zimbra.cs.session.WaitSet.WaitSetAccount;
-import com.zimbra.cs.session.WaitSet.WaitSetError;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * 
  */
-public class CreateWaitSet extends AdminDocumentHandler {
+public class CreateWaitSet extends MailDocumentHandler {
     /*
      <!--*************************************
           CreateWaitSet: must be called once to initialize the WaitSet
@@ -60,24 +61,35 @@ public class CreateWaitSet extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         
-        String defInterestStr = request.getAttribute(AdminConstants.A_DEFTYPES);
-        int defaultInterests = WaitMultipleAccounts.parseInterestStr(defInterestStr, 0);
+        String defInterestStr = request.getAttribute(MailConstants.A_DEFTYPES);
+        int defaultInterests = WaitSetRequest.parseInterestStr(defInterestStr, 0);
+        boolean adminAllowed = zsc.getAuthToken().isAdmin();
         
-        boolean allAccts = request.getAttributeBool("allAccounts", false);
+        boolean allAccts = request.getAttributeBool(MailConstants.A_ALL_ACCOUNTS, false);
+        if (allAccts && !adminAllowed) {
+            throw MailServiceException.PERM_DENIED("Non-Admin accounts may not wait on other accounts");
+        }
         
-        List<WaitSetAccount> add = WaitMultipleAccounts.parseAddUpdateAccounts(
-            request.getOptionalElement(AdminConstants.E_WAITSET_ADD), defaultInterests);
+        List<WaitSetAccount> add = WaitSetRequest.parseAddUpdateAccounts(
+            request.getOptionalElement(MailConstants.E_WAITSET_ADD), defaultInterests);
+
+        if (!adminAllowed) {
+            for (WaitSetAccount wsa : add) {
+                if (!wsa.accountId.equals(zsc.getAuthtokenAccountId()))
+                    throw MailServiceException.PERM_DENIED("Non-Admin accounts may not wait on other accounts");
+            }
+        }
         
-        Pair<String, List<WaitSetError>> result = WaitSetMgr.create(defaultInterests, allAccts, add);
+        Pair<String, List<WaitSetError>> result = WaitSetMgr.create(zsc.getAuthtokenAccountId(), adminAllowed, defaultInterests, allAccts, add);
         String wsId = result.getFirst();
         List<WaitSetError> errors = result.getSecond();
         
-        Element response = zsc.createElement(AdminConstants.CREATE_WAIT_SET_RESPONSE);
-        response.addAttribute(AdminConstants.A_WAITSET_ID, wsId);
-        response.addAttribute(AdminConstants.A_DEFTYPES, WaitMultipleAccounts.interestToStr(defaultInterests));
-        response.addAttribute(AdminConstants.A_SEQ, 0);
+        Element response = zsc.createElement(MailConstants.CREATE_WAIT_SET_RESPONSE);
+        response.addAttribute(MailConstants.A_WAITSET_ID, wsId);
+        response.addAttribute(MailConstants.A_DEFTYPES, WaitSetRequest.interestToStr(defaultInterests));
+        response.addAttribute(MailConstants.A_SEQ, 0);
         
-        WaitMultipleAccounts.encodeErrors(response, errors);
+        WaitSetRequest.encodeErrors(response, errors);
         
         return response;
     }

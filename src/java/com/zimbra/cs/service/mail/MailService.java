@@ -154,5 +154,12 @@ public class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.DELETE_DATA_SOURCE_REQUEST, new DeleteDataSource());
         dispatcher.registerHandler(MailConstants.IMPORT_DATA_REQUEST, new ImportData());
         dispatcher.registerHandler(MailConstants.GET_IMPORT_STATUS_REQUEST, new GetImportStatus());
+        
+        // waitset
+        dispatcher.registerHandler(MailConstants.CREATE_WAIT_SET_REQUEST, new CreateWaitSet());
+        dispatcher.registerHandler(MailConstants.WAIT_SET_REQUEST, new WaitSetRequest());
+        dispatcher.registerHandler(MailConstants.DESTROY_WAIT_SET_REQUEST, new DestroyWaitSet());
+        
+        
     }
 }

@@ -33,11 +33,11 @@ import com.zimbra.cs.service.util.SyncToken;
  * of other channel (e.g. IMAP) for synchronizing with the Mailbox.
  */
 public class WaitSetSession extends Session {
-    WaitSet mWs = null;
+    SomeAccountsWaitSet mWs = null;
     int mInterestMask;
     SyncToken mSyncToken;
 
-    WaitSetSession(WaitSet ws, String accountId, int interestMask, SyncToken lastKnownSyncToken) {
+    WaitSetSession(SomeAccountsWaitSet ws, String accountId, int interestMask, SyncToken lastKnownSyncToken) {
         super(accountId, Session.Type.WAITSET);
         mWs = ws;
         mInterestMask = interestMask;

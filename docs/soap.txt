@@ -2156,3 +2156,17 @@ error:     If the last import failed, the error message that was returned.
 
 
 ---------------------------
+
+WaitSet: scalable mechanism for listening for changes to one or more accounts
+
+<CreateWaitSetRequest>
+<CreateWaitSetResponse>
+<WaitSetRequest>
+<WaitSetResponse>
+<DestroyWaitSet>
+<DestroyWaitSetResponse>
+
+***See soap-waitset.txt for WaitSet API documentation***
+
+---------------------------
+

@@ -95,6 +95,7 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.pop3.Pop3Message;
 import com.zimbra.cs.redolog.op.*;
 import com.zimbra.cs.service.FeedManager;
+import com.zimbra.cs.session.AllAccountsRedoCommitCallback;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
@@ -5310,8 +5311,12 @@ public class Mailbox {
                 //    pre-modification value.  The first case would result in
                 //    a redo error, and the second case would index the wrong
                 //    value.
-                if (redoRecorder != null)
+                if (redoRecorder != null) {
+                    if (mCurrentChange.mDirty != null && mCurrentChange.mDirty.changedTypes != 0) {
+                        redoRecorder.setCommitCallback(new AllAccountsRedoCommitCallback(getAccountId(), mCurrentChange.mDirty.changedTypes));
+                    }
                     redoRecorder.commit();
+                }
     
                 // 6. The commit redo record for indexing sub-transaction is
                 //    written in batch by another thread.  To avoid the batch
