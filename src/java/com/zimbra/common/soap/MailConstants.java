@@ -188,8 +188,14 @@ public class MailConstants {
     public static final QName IMPORT_DATA_RESPONSE = QName.get("ImportDataResponse", NAMESPACE);
     public static final QName GET_IMPORT_STATUS_REQUEST = QName.get("GetImportStatusRequest", NAMESPACE);
     public static final QName GET_IMPORT_STATUS_RESPONSE = QName.get("GetImportStatusResponse", NAMESPACE);
-
-
+    
+    public static final QName CREATE_WAIT_SET_REQUEST = QName.get("CreateWaitSetRequest", NAMESPACE);
+    public static final QName CREATE_WAIT_SET_RESPONSE = QName.get("CreateWaitSetResponse", NAMESPACE);
+    public static final QName WAIT_SET_REQUEST = QName.get("WaitSetRequest", NAMESPACE);
+    public static final QName WAIT_SET_RESPONSE = QName.get("WaitSetResponse", NAMESPACE);
+    public static final QName DESTROY_WAIT_SET_REQUEST = QName.get("DestroyWaitSetRequest", NAMESPACE);
+    public static final QName DESTROY_WAIT_SET_RESPONSE = QName.get("DestroyWaitSetResponse", NAMESPACE);
+    
     public static final String E_MAILBOX = "mbx";
     public static final String E_ITEM = "item";
     public static final String E_MSG = "m";
@@ -547,4 +553,20 @@ public class MailConstants {
     public static final String A_TRAVERSE = "tr";
     public static final String A_ARGS = "args";
     public static final String A_REST_URL = "rest";
+    
+    // WaitSet
+    public static final String E_WAITSET_ADD = "add";
+    public static final String E_WAITSET_UPDATE = "update";
+    public static final String E_WAITSET_REMOVE = "remove";
+    public static final String E_ERROR = "error";
+    public static final String A_WAITSET_ID = "waitSet";
+    public static final String A_SEQ = "seq";
+    public static final String A_BLOCK = "block";
+    public static final String A_CANCELED = "canceled";
+    public static final String A_DEFTYPES = "defTypes";
+    public static final String A_ALL_ACCOUNTS = "allAccounts";
+    public static final String A_TYPES = "types";
+    public static final String E_A = "a";
+    
+    
 }
