@@ -434,8 +434,15 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = LdapUtil.searchDir(ctxt, base, query, sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                if (ne.hasMore())
-                    throw AccountServiceException.MULTIPLE_ACCOUNTS_MATCHED("getAccountByQuery: "+query);
+                if (ne.hasMore()) {
+                    StringBuffer dups = new StringBuffer();
+                    dups.append("[" + sr.getNameInNamespace() + "] ");
+                    while (ne.hasMore()) {
+                        SearchResult dup = (SearchResult) ne.next();
+                        dups.append("[" + dup.getNameInNamespace() + "] ");
+                    }
+                    throw AccountServiceException.MULTIPLE_ACCOUNTS_MATCHED("getAccountByQuery: "+query+" returned multiple entries at "+dups);
+                }
                 ne.close();
                 return makeAccount(sr.getNameInNamespace(), sr.getAttributes(), this);
             }
