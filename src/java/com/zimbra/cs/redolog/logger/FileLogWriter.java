@@ -547,34 +547,34 @@ public class FileLogWriter implements LogWriter {
 
     private class CommitNotifyQueue {
         private Notif[] mQueue = new Notif[100];
-        private int mHead;
-        private int mTail;
+        private int mHead;  // points to first entry
+        private int mTail;  // points to just after last entry (first empty slot)
+        private boolean mFull;
 
         public CommitNotifyQueue(int size) {
             mQueue = new Notif[size];
             mHead = mTail = 0;
+            mFull = false;
         }
 
         public synchronized void push(Notif notif) throws IOException {
             if (notif != null) {
-                if (mHead - mTail == 1) {
-                    // queue is full
-                    flush(true);
-                }
+                if (mFull) flush(true);  // queue is full
+                assert(!mFull);
+                mQueue[mTail] = notif;
                 mTail++;
                 mTail %= mQueue.length;
-                mQueue[mTail] = notif;
+                mFull = mTail == mHead;
             }
         }
 
         private synchronized Notif pop() {
-            if (mHead == mTail) {
-                // queue is empty
-                return null;
-            }
+            if (mHead == mTail && !mFull) return null;  // queue is empty
             Notif n = mQueue[mHead];
+            mQueue[mHead] = null;  // help with GC
             mHead++;
             mHead %= mQueue.length;
+            mFull = false;
             return n;
         }
 
