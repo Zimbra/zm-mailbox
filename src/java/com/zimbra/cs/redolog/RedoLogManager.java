@@ -48,6 +48,7 @@ import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 import EDU.oswego.cs.dl.util.concurrent.Sync;
 
 import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.redolog.logger.FileLogReader;
 import com.zimbra.cs.redolog.logger.FileLogWriter;
 import com.zimbra.cs.redolog.logger.LogWriter;
@@ -659,7 +660,8 @@ public class RedoLogManager {
         return getArchivedLogsFromSequence(Long.MIN_VALUE);
     }
 
-    public Set<Integer> getChangedMailboxesSince(CommitId cid) throws IOException {
+    public Set<Integer> getChangedMailboxesSince(CommitId cid)
+    throws IOException, MailServiceException {
         Set<Integer> mailboxes = new HashSet<Integer>();
 
         // Grab a read lock to prevent rollover.
@@ -741,6 +743,10 @@ public class RedoLogManager {
                 } finally {
                     logReader.close();
                 }
+            }
+            if (!foundMarker) {
+                // Most likely, the CommitId is too old.
+                throw MailServiceException.INVALID_COMMIT_ID(cid.toString());
             }
             return mailboxes;
         } finally {

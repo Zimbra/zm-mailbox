@@ -95,6 +95,7 @@ public class MailServiceException extends ServiceException {
     public static final String SEND_FAILURE = "mail.SEND_FAILURE";
     public static final String TOO_MANY_QUERY_TERMS_EXPANDED = "mail.TOO_MANY_QUERY_TERMS_EXPANDED";
 
+    public static final String INVALID_COMMIT_ID = "mail.INVALID_COMMIT_ID";
 
     public static final String ID              = "id";
     public static final String TOKEN           = "token";
@@ -421,5 +422,9 @@ public class MailServiceException extends ServiceException {
 
     public static MailServiceException TOO_MANY_QUERY_TERMS_EXPANDED(String msg, String token, int max) {
         return new MailServiceException(msg, TOO_MANY_QUERY_TERMS_EXPANDED, SENDERS_FAULT, new Argument("TOKEN", token, Argument.Type.STR), new Argument("MAX", max, Argument.Type.NUM));
+    }
+
+    public static MailServiceException INVALID_COMMIT_ID(String commitId) {
+        return new MailServiceException("CommitId " + commitId + " not found in redo logs", INVALID_COMMIT_ID, SENDERS_FAULT);
     }
 }
