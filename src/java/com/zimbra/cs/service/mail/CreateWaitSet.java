@@ -24,6 +24,7 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -70,16 +71,15 @@ public class CreateWaitSet extends MailDocumentHandler {
             throw MailServiceException.PERM_DENIED("Non-Admin accounts may not wait on other accounts");
         }
         
-        List<WaitSetAccount> add = WaitSetRequest.parseAddUpdateAccounts(
-            request.getOptionalElement(MailConstants.E_WAITSET_ADD), defaultInterests);
-
+        List<String> allowedAccountIds = null;
         if (!adminAllowed) {
-            for (WaitSetAccount wsa : add) {
-                if (!wsa.accountId.equals(zsc.getAuthtokenAccountId()))
-                    throw MailServiceException.PERM_DENIED("Non-Admin accounts may not wait on other accounts");
-            }
+            allowedAccountIds = new ArrayList<String>(1);
+            allowedAccountIds.add(zsc.getAuthtokenAccountId());
         }
         
+        List<WaitSetAccount> add = WaitSetRequest.parseAddUpdateAccounts(
+            request.getOptionalElement(MailConstants.E_WAITSET_ADD), defaultInterests, allowedAccountIds);
+
         Pair<String, List<WaitSetError>> result = WaitSetMgr.create(zsc.getAuthtokenAccountId(), adminAllowed, defaultInterests, allAccts, add);
         String wsId = result.getFirst();
         List<WaitSetError> errors = result.getSecond();
