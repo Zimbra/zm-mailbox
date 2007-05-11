@@ -42,6 +42,7 @@ import java.util.Set;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 
 import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
@@ -660,7 +661,16 @@ public class RedoLogManager {
         return getArchivedLogsFromSequence(Long.MIN_VALUE);
     }
 
-    public Set<Integer> getChangedMailboxesSince(CommitId cid)
+    /**
+     * Returns the set of mailboxes that had any committed changes since a
+     * particular CommitId in the past, by scanning redologs.  Also returns
+     * the last CommitId seen during the scanning process.
+     * @param cid
+     * @return can be null if server is shutting down
+     * @throws IOException
+     * @throws MailServiceException
+     */
+    public Pair<Set<Integer>, CommitId> getChangedMailboxesSince(CommitId cid)
     throws IOException, MailServiceException {
         Set<Integer> mailboxes = new HashSet<Integer>();
 
@@ -673,7 +683,7 @@ public class RedoLogManager {
                 mLog.error("InterruptedException during redo log scan for CommitId", e);
             else
                 mLog.debug("Redo log scan for CommitId interrupted for shutdown");
-            return mailboxes;
+            return null;
         }
 
         File linkDir = null;
@@ -681,7 +691,6 @@ public class RedoLogManager {
         try {
             try {
                 long seq = cid.getRedoSeq();
-                // TODO: Prevent deletion of files in archive directory.
                 File[] archived = getArchivedLogsFromSequence(seq);
                 if (archived != null) {
                     logs = new File[archived.length + 1];
@@ -689,6 +698,12 @@ public class RedoLogManager {
                     logs[archived.length] = mLogFile;
                 } else {
                     logs = new File[] { mLogFile };
+                }
+                // Make sure the first log has the sequence in cid.
+                FileLogReader firstLog = new FileLogReader(logs[0]);
+                if (firstLog.getHeader().getSequence() != seq) {
+                    // Most likely, the CommitId is too old.
+                    throw MailServiceException.INVALID_COMMIT_ID(cid.toString());
                 }
     
                 // Create a temp directory and make hard links to all redologs.
@@ -716,10 +731,13 @@ public class RedoLogManager {
 
             // Scan redologs to get list with IDs of mailboxes that have
             // committed changes since the given commit id.
+            long lastSeq = -1;
+            CommitTxn lastCommitTxn = null;
             boolean foundMarker = false;
             for (File logfile : logs) {
                 FileLogReader logReader = new FileLogReader(logfile);
                 logReader.open();
+                lastSeq = logReader.getHeader().getSequence();
                 try {
                     RedoableOp op = null;
                     while ((op = logReader.getNextOp()) != null) {
@@ -728,13 +746,13 @@ public class RedoLogManager {
                         if (!(op instanceof CommitTxn))
                             continue;
 
+                        lastCommitTxn = (CommitTxn) op;
                         if (foundMarker) {
                             int mboxId = op.getMailboxId();
                             if (mboxId > 0)
                                 mailboxes.add(mboxId);
                         } else {
-                            CommitTxn commit = (CommitTxn) op;
-                            if (cid.matches(commit))
+                            if (cid.matches(lastCommitTxn))
                                 foundMarker = true;
                         }
                     }
@@ -748,7 +766,8 @@ public class RedoLogManager {
                 // Most likely, the CommitId is too old.
                 throw MailServiceException.INVALID_COMMIT_ID(cid.toString());
             }
-            return mailboxes;
+            CommitId lastCommitId = new CommitId(lastSeq, lastCommitTxn);
+            return new Pair(mailboxes, lastCommitId);
         } finally {
             if (linkDir != null) {
                 // Clean up the temp dir with links.
