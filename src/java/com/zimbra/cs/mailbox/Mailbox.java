@@ -5312,8 +5312,15 @@ public class Mailbox {
                 //    a redo error, and the second case would index the wrong
                 //    value.
                 if (redoRecorder != null) {
+                    
                     if (mCurrentChange.mDirty != null && mCurrentChange.mDirty.changedTypes != 0) {
-                        redoRecorder.setCommitCallback(new AllAccountsRedoCommitCallback(getAccountId(), mCurrentChange.mDirty.changedTypes));
+                        // if an "all accounts" waitset is active, and this change has an appropriate type,
+                        // then we'll need to set a commit-callback
+                        AllAccountsRedoCommitCallback cb =
+                            AllAccountsRedoCommitCallback.getRedoCallbackIfNecessary(getAccountId(), mCurrentChange.mDirty.changedTypes);
+                        if (cb != null) {
+                            redoRecorder.setCommitCallback(cb);
+                        }
                     }
                     redoRecorder.commit();
                 }

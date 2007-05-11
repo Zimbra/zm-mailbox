@@ -33,6 +33,7 @@ import java.util.TimerTask;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.util.Zimbra;
@@ -92,9 +93,9 @@ public class WaitSetMgr {
             // generate an appropriate ID for the new WaitSet
             String id;
             if (allAccts) {
-                id = ALL_ACCOUNTS_ID_PREFIX+sWaitSetNumber;
+//                id = ALL_ACCOUNTS_ID_PREFIX+sWaitSetNumber;
+                id = ALL_ACCOUNTS_ID_PREFIX+LdapUtil.generateUUID();
                 sWaitSetNumber++;
-//                id = ALL_ACCOUNTS_ID_PREFIX+LdapUtil.generateUUID();
             } else {
                 id = "WaitSet"+sWaitSetNumber;
                 sWaitSetNumber++;
@@ -221,7 +222,6 @@ public class WaitSetMgr {
                 list.add(id);
 
             }
-            assert(toRet.isIncludeAllAccounts());
             assert(toRet instanceof AllAccountsWaitSet);
             return toRet;
         }

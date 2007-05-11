@@ -61,6 +61,12 @@ public final class AllAccountsWaitSet extends WaitSetBase {
         }
     }
     
+    public static final boolean isCallbackNecessary(int changeMask) {
+        synchronized(sAllAccountsWaitSets) {
+            return (changeMask & sInterestMask) != 0;
+        }
+    }
+    
     /**
      * Used for creating a brand new AllAccountsWaitSet
      * 
@@ -131,12 +137,6 @@ public final class AllAccountsWaitSet extends WaitSetBase {
         
         return new ArrayList<WaitSetError>();
     }
-    
-    /* @see com.zimbra.cs.session.IWaitSet#isIncludeAllAccounts() */
-    public boolean isIncludeAllAccounts() { 
-        return true;
-    }
-    
     
     private synchronized void onMailboxChangeCommitted(String commitIdStr, String accountId, int changedTypesMask) {
         if ((changedTypesMask & mDefaultInterest) != 0) {
@@ -211,59 +211,15 @@ public final class AllAccountsWaitSet extends WaitSetBase {
         }
     }
     
+    protected boolean cbSeqIsCurrent() {
+        return (mCurrentSeqNo.equals(mCbSeqNo));        
+    }
     
-    private synchronized final void trySendData() {
-        if (mCb == null) {
-            return;
-        }
-        
-        boolean cbIsCurrent = (mCurrentSeqNo.equals(mCbSeqNo));
-        
-        if (cbIsCurrent) {
-            mSentSignalledSessions.clear();
-        }
-        
-        /////////////////////
-        // Cases:
-        //
-        // CB up to date 
-        //   AND CurrentSignalled empty --> WAIT
-        //   AND CurrentSignalled NOT empty --> SEND
-        //
-        // CB not up to date
-        //   AND CurrentSignalled empty AND SendSignalled empty --> WAIT
-        //   AND CurrentSignalled NOT empty OR SentSignalled NOT empty --> SEND BOTH
-        //
-        // ...simplifies to:
-        //        send if CurrentSignalled NOT empty OR
-        //                (CB not up to date AND SentSignalled not empty)
-        //
-        if (mCurrentSignalledSessions.size() > 0 || (!cbIsCurrent && mSentSignalledSessions.size() > 0)) {
-            // if sent empty, then just swap sent,current instead of copying
-            if (mSentSignalledSessions.size() == 0) {
-                // SWAP mSent,mCurrent!
-                HashSet<String> temp = mCurrentSignalledSessions;
-                mCurrentSignalledSessions = mSentSignalledSessions;
-                mSentSignalledSessions = temp;
-            } else {
-                assert(!cbIsCurrent);
-                mSentSignalledSessions.addAll(mCurrentSignalledSessions);
-                mCurrentSignalledSessions.clear();
-            }
-            // at this point, mSentSignalled is everything we're supposed to send...lets
-            // make an array of the account IDs and signal them up!
-            assert(mSentSignalledSessions.size() > 0);
-            String[] toRet = new String[mSentSignalledSessions.size()];
-            int i = 0;
-            for (String accountId : mSentSignalledSessions) {
-                toRet[i++] = accountId;
-            }
-            mCurrentSeqNo = mNextSeqNo;
-            assert(mCurrentSeqNo != null);
-            mCb.dataReady(this, mCurrentSeqNo, false, toRet);
-            mCb = null;
-            mLastAccessedTime = System.currentTimeMillis();
-        }
+    
+    protected String toNextSeqNo() {
+        mCurrentSeqNo = mNextSeqNo;
+        assert(mCurrentSeqNo != null);
+        return mCurrentSeqNo;
     }
     
     @Override

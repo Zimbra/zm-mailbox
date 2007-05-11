@@ -34,6 +34,9 @@ import java.util.HashSet;
 public abstract class WaitSetBase implements IWaitSet {
     abstract HashMap<String, WaitSetAccount> destroy();
     abstract int countSessions();
+    abstract protected boolean cbSeqIsCurrent();
+    abstract protected String toNextSeqNo();
+    
     
     public long getLastAccessedTime() {
         return mLastAccessedTime;
@@ -77,6 +80,59 @@ public abstract class WaitSetBase implements IWaitSet {
         mWaitSetId = waitSetId;
         mDefaultInterest = defaultInterest;
     }
+    
+    protected synchronized void trySendData() {
+        if (mCb == null) {
+            return;
+        }
+        
+        boolean cbIsCurrent = cbSeqIsCurrent(); 
+        
+        if (cbIsCurrent) {
+            mSentSignalledSessions.clear();
+        }
+        
+        /////////////////////
+        // Cases:
+        //
+        // CB up to date 
+        //   AND CurrentSignalled empty --> WAIT
+        //   AND CurrentSignalled NOT empty --> SEND
+        //
+        // CB not up to date
+        //   AND CurrentSignalled empty AND SendSignalled empty --> WAIT
+        //   AND CurrentSignalled NOT empty OR SentSignalled NOT empty --> SEND BOTH
+        //
+        // ...simplifies to:
+        //        send if CurrentSignalled NOT empty OR
+        //                (CB not up to date AND SentSignalled not empty)
+        //
+        if (mCurrentSignalledSessions.size() > 0 || (!cbIsCurrent && mSentSignalledSessions.size() > 0)) {
+            // if sent empty, then just swap sent,current instead of copying
+            if (mSentSignalledSessions.size() == 0) {
+                // SWAP mSent,mCurrent!
+                HashSet<String> temp = mCurrentSignalledSessions;
+                mCurrentSignalledSessions = mSentSignalledSessions;
+                mSentSignalledSessions = temp;
+            } else {
+                assert(!cbIsCurrent);
+                mSentSignalledSessions.addAll(mCurrentSignalledSessions);
+                mCurrentSignalledSessions.clear();
+            }
+            // at this point, mSentSignalled is everything we're supposed to send...lets
+            // make an array of the account IDs and signal them up!
+            assert(mSentSignalledSessions.size() > 0);
+            String[] toRet = new String[mSentSignalledSessions.size()];
+            int i = 0;
+            for (String accountId : mSentSignalledSessions) {
+                toRet[i++] = accountId;
+            }
+            mCb.dataReady(this, toNextSeqNo(), false, toRet);
+            mCb = null;
+            mLastAccessedTime = System.currentTimeMillis();
+        }
+    }
+    
     
     protected final String mWaitSetId;
     protected final String mOwnerAccountId;

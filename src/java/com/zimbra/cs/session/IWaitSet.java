@@ -79,8 +79,4 @@ public interface IWaitSet {
      * @return the id of this wait set
      */
     public String getWaitSetId();
-    
-    /** @return true if this is an "all accounts" waitset */
-    public boolean isIncludeAllAccounts();
-    
 }

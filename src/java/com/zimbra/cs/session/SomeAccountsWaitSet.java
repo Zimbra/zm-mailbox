@@ -27,7 +27,6 @@ package com.zimbra.cs.session;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -39,7 +38,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 
 /**
- * AccountsWaitSet: an implementation of IWaitSet that works by listening over one or more Accounts
+ * SomeAccountsWaitSet: an implementation of IWaitSet that works by listening over one or more Accounts
  * 
  * External APIs:
  *     WaitSet.doWait()              // primary wait API
@@ -80,15 +79,10 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
         return errors;
     }
 
-    public boolean isIncludeAllAccounts() {
-        return false;
-    }
-
     /* @see com.zimbra.cs.mailbox.MailboxManager.Listener#mailboxAvailable(com.zimbra.cs.mailbox.Mailbox) */
     public synchronized void mailboxAvailable(Mailbox mbox) {
         this.mailboxLoaded(mbox);
     }
-    
     
     /* @see com.zimbra.cs.mailbox.MailboxManager.Listener#mailboxCreated(com.zimbra.cs.mailbox.Mailbox) */
     public synchronized void mailboxCreated(Mailbox mbox) {
@@ -123,58 +117,14 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
         }
         return null;
     }
-
-    private synchronized final void trySendData() {
-        if (mCb == null) {
-            return;
-        }
-        
-        boolean cbIsCurrent = (mCbSeqNo == mCurrentSeqNo);
-        
-        if (cbIsCurrent) {
-            mSentSignalledSessions.clear();
-        }
-        
-        /////////////////////
-        // Cases:
-        //
-        // CB up to date 
-        //   AND CurrentSignalled empty --> WAIT
-        //   AND CurrentSignalled NOT empty --> SEND
-        //
-        // CB not up to date
-        //   AND CurrentSignalled empty AND SendSignalled empty --> WAIT
-        //   AND CurrentSignalled NOT empty OR SentSignalled NOT empty --> SEND BOTH
-        //
-        // ...simplifies to:
-        //        send if CurrentSignalled NOT empty OR
-        //                (CB not up to date AND SentSignalled not empty)
-        //
-        if (mCurrentSignalledSessions.size() > 0 || (!cbIsCurrent && mSentSignalledSessions.size() > 0)) {
-            // if sent empty, then just swap sent,current instead of copying
-            if (mSentSignalledSessions.size() == 0) {
-                // SWAP mSent,mCurrent! save an allocation
-                HashSet<String> temp = mCurrentSignalledSessions;
-                mCurrentSignalledSessions = mSentSignalledSessions;
-                mSentSignalledSessions = temp;
-            } else {
-                assert(!cbIsCurrent);
-                mSentSignalledSessions.addAll(mCurrentSignalledSessions);
-                mCurrentSignalledSessions.clear();
-            }
-            // at this point, mSentSignalled is everything we're supposed to send...lets
-            // make an array of the account IDs and signal them up!
-            assert(mSentSignalledSessions.size() > 0);
-            String[] toRet = new String[mSentSignalledSessions.size()];
-            int i = 0;
-            for (String accountId : mSentSignalledSessions) {
-                toRet[i++] = accountId;
-            }
-            mCurrentSeqNo++;
-            mCb.dataReady(this, Long.toString(mCurrentSeqNo), false, toRet);
-            mCb = null;
-            mLastAccessedTime = System.currentTimeMillis();
-        }
+    
+    protected boolean cbSeqIsCurrent() {
+        return (mCbSeqNo == mCurrentSeqNo);
+    }
+    
+    protected String toNextSeqNo() {
+        mCurrentSeqNo++;
+        return Long.toString(mCurrentSeqNo);
     }
     
     private synchronized List<WaitSetError> updateAccounts(List<WaitSetAccount> wsas) {
@@ -299,17 +249,6 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
             }
         }
     }
-    
-//    /** Constructor */
-//    SomeAccountsWaitSet(String ownerAccountId, String id, int defaultInterest, String startingSeqNo) {
-//        super(ownerAccountId, id, defaultInterest);
-//        if (allAccounts != true)
-//            throw new IllegalArgumentException("AllAccounts must be true for this constructor");
-//        if (!id.startsWith(WaitSetMgr.ALL_ACCOUNTS_ID_PREFIX))
-//            throw new IllegalArgumentException("Invalid ID for all accounts WaitSet");
-//            
-//        mCurrentSeqNo = Long.parseLong(startingSeqNo);
-//    }
     
     private long mCbSeqNo = 0; // seqno passed in by the current waiting callback
     private long mCurrentSeqNo; // current sequence number 

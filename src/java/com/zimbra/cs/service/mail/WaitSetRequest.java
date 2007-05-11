@@ -121,26 +121,17 @@ public class WaitSetRequest extends MailDocumentHandler {
             throw ServiceException.PERM_DENIED("Not owner of waitset");
         }
         
-        List<WaitSetAccount> add = parseAddUpdateAccounts(
-            request.getOptionalElement(MailConstants.E_WAITSET_ADD), ws.getDefaultInterest());
-        List<WaitSetAccount> update = parseAddUpdateAccounts(
-            request.getOptionalElement(MailConstants.E_WAITSET_UPDATE), ws.getDefaultInterest());
-        List<String> remove = parseRemoveAccounts(request.getOptionalElement(MailConstants.E_WAITSET_REMOVE));
-        
+        List<String> allowedAccountIds = null;
         if (!adminAllowed) {
-            for (WaitSetAccount wsa : add) {
-                if (!wsa.accountId.equals(zsc.getAuthtokenAccountId()))
-                    throw MailServiceException.PERM_DENIED("Non-Admin accounts may not wait on other accounts");
-            }
-            for (WaitSetAccount wsa : update) {
-                if (!wsa.accountId.equals(zsc.getAuthtokenAccountId()))
-                    throw MailServiceException.PERM_DENIED("Non-Admin accounts may not wait on other accounts");
-            }
-            for (String acctId : remove) {
-                if (!acctId.equals(zsc.getAuthtokenAccountId()))
-                    throw MailServiceException.PERM_DENIED("Non-Admin accounts may not wait on other accounts");
-            }
+            allowedAccountIds = new ArrayList<String>(1);
+            allowedAccountIds.add(zsc.getAuthtokenAccountId());
         }
+        
+        List<WaitSetAccount> add = parseAddUpdateAccounts(
+            request.getOptionalElement(MailConstants.E_WAITSET_ADD), ws.getDefaultInterest(), allowedAccountIds);
+        List<WaitSetAccount> update = parseAddUpdateAccounts(
+            request.getOptionalElement(MailConstants.E_WAITSET_UPDATE), ws.getDefaultInterest(), allowedAccountIds);
+        List<String> remove = parseRemoveAccounts(request.getOptionalElement(MailConstants.E_WAITSET_REMOVE), allowedAccountIds);
         
         Callback cb = new Callback();
 
@@ -189,12 +180,22 @@ public class WaitSetRequest extends MailDocumentHandler {
         return response;
     }
     
-    static List<WaitSetAccount> parseAddUpdateAccounts(Element elt, int defaultInterest) throws ServiceException {
+    /**
+     * @param elt
+     * @param defaultInterest
+     * @param allowedAccountIds NULL means "all allowed" (admin)
+     * @return
+     * @throws ServiceException
+     */
+    static List<WaitSetAccount> parseAddUpdateAccounts(Element elt, int defaultInterest, List<String> allowedAccountIds) throws ServiceException {
         List<WaitSetAccount> toRet = new ArrayList<WaitSetAccount>();
         if (elt != null) {
             for (Iterator<Element> iter = elt.elementIterator(MailConstants.E_A); iter.hasNext();) {
                 Element a = iter.next();
                 String id = a.getAttribute(MailConstants.A_ID);
+                if (allowedAccountIds != null && !allowedAccountIds.contains(id)) {
+                    throw ServiceException.PERM_DENIED("Only adins may listen to other account IDs");
+                }
                 String tokenStr = a.getAttribute(MailConstants.A_TOKEN, null);
                 SyncToken token = tokenStr != null ? new SyncToken(tokenStr) : null;
                 int interests = parseInterestStr(a.getAttribute(MailConstants.A_TYPES, null), defaultInterest);
@@ -204,12 +205,15 @@ public class WaitSetRequest extends MailDocumentHandler {
         return toRet;
     }
     
-    static List<String> parseRemoveAccounts(Element elt) throws ServiceException {
+    static List<String> parseRemoveAccounts(Element elt, List<String> allowedAccountIds) throws ServiceException {
         List<String> remove = new ArrayList<String>();
         if (elt != null) {
             for (Iterator<Element> iter = elt.elementIterator(MailConstants.E_A); iter.hasNext();) {
                 Element a = iter.next();
                 String id = a.getAttribute(MailConstants.A_ID);
+                if (allowedAccountIds != null && !allowedAccountIds.contains(id)) {
+                    throw ServiceException.PERM_DENIED("Only adins may listen to other account IDs");
+                }
                 remove.add(id);
             }
         }
