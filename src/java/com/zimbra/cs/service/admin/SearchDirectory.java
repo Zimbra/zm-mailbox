@@ -163,10 +163,13 @@ public class SearchDirectory extends AdminDocumentHandler {
         doAttrs(elist, attrs);
     }
 
-    static void doAlias(Element e, Alias a) {
+    static void doAlias(Element e, Alias a) throws ServiceException {
         Element ealias = e.addElement(AdminConstants.E_ALIAS);
         ealias.addAttribute(AdminConstants.A_NAME, a.getName());
         ealias.addAttribute(AdminConstants.A_ID, a.getId());
+        ealias.addAttribute(AdminConstants.A_TARGETNAME, a.getTargetName());
+        ealias.addAttribute(AdminConstants.A_TYPE, a.getTargetType());
+        
         Map attrs = a.getAttrs();
         doAttrs(ealias, attrs);
     }

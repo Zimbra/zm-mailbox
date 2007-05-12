@@ -31,7 +31,11 @@
  */
 package com.zimbra.cs.account;
 
+import java.util.List;
 import java.util.Map;
+
+import com.zimbra.cs.account.Provisioning.SearchOptions;
+import com.zimbra.common.service.ServiceException;
 
 /**
  * @author anandp
@@ -40,8 +44,74 @@ import java.util.Map;
  * Window - Preferences - Java - Code Style - Code Templates
  */
 public class Alias extends NamedEntry {
+    
+    private static final String ALIAS_TARGET_NAME = "targetName";
+    private static final String ALIAS_TARGET_TYPE = "targetType";
 
     public Alias(String name, String id, Map<String, Object> attrs) {
         super(name, id, attrs, null);
     }
+    
+    private String getTargetInfo(String forInfo) throws ServiceException {
+        Object data = getCachedData(forInfo);
+        if (data != null)
+            return (String)data;
+        
+        /*
+         * not cached, search directory and put info in cache
+         */
+        String targetId = getAttr(Provisioning.A_zimbraAliasTargetId);
+        SearchOptions options = new SearchOptions();
+    
+        int flags = 0;
+    
+        flags |= Provisioning.SA_ACCOUNT_FLAG;
+        flags |= Provisioning.SA_CALENDAR_RESOURCE_FLAG;
+        flags |= Provisioning.SA_DISTRIBUTION_LIST_FLAG;
+                
+        String query = "(" + Provisioning.A_zimbraId + "=" + targetId + ")";
+        
+        options.setFlags(flags);
+        options.setQuery(query);
+        
+        List<NamedEntry> entries = Provisioning.getInstance().searchDirectory(options);
+        if (entries.size() == 0)
+            throw ServiceException.FAILURE("target " + targetId + " of alias " +  getName() + " not found " + query, null);
+        else if (entries.size() > 1)
+            throw AccountServiceException.TOO_MANY_SEARCH_RESULTS("too many results for search " + query, null);
+    
+        NamedEntry entry = entries.get(0);
+        String targetName = entry.getName();
+        
+        String targetType;
+        
+        if (entry instanceof CalendarResource)
+            targetType = "resource";
+        else if (entry instanceof Account)
+            targetType = "account";
+        else if (entry instanceof DistributionList)
+            targetType = "distributionlist";
+        else
+            throw ServiceException.FAILURE("invalid target type for alias " + getName(), null);
+        
+        /*
+         * put targetName and targetType in cache
+         */
+        setCachedData(ALIAS_TARGET_NAME, targetName);
+        setCachedData(ALIAS_TARGET_TYPE, targetType);
+        
+        if (forInfo == ALIAS_TARGET_NAME)
+            return targetName;
+        else 
+            return targetType;
+    }
+
+    public String getTargetName() throws ServiceException {
+        return getTargetInfo(ALIAS_TARGET_NAME);
+    }
+    
+    public String getTargetType() throws ServiceException {
+        return getTargetInfo(ALIAS_TARGET_TYPE);
+    }
+
 }

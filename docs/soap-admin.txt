@@ -324,7 +324,7 @@ Notes: admin verison of mail equiv. Used for testing via zmprov.
   <account name="{name}" id="{id}">
     <a n="...">...</a>+
   </account>
-  <alias name="{name}" id="{id}">
+  <alias name="{name}" id="{id} type="account|distributionlist|resource" targetName={target-name}">
     <a n="...">...</a>+  
   </alias>
   <dl name="{name}" id="{id}>
