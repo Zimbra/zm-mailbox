@@ -158,7 +158,10 @@ public class RemoteManager {
                 // wow this is strange - on hold command we hit NPE here.  TODO file a bug against ganymed
             }
             if (result.mExitStatus != 0) {
-                throw new IOException("command failed" + result.mExitStatus);
+                throw new IOException(
+                        "command failed: exit status=" + result.mExitStatus +
+                        ", stdout=" + new String(result.mStdout) +
+                        ", stderr=" + new String(result.mStderr));
             }
             result.mExitSignal = s.getExitSignal();
             return result;
