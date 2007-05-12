@@ -236,7 +236,17 @@ public class CalendarCollection extends Collection {
 				if (i.getUid() == null)
 					i.setUid(LdapUtil.generateUUID());
 				// check for valid organizer field.
-				if (i.hasOrganizer()) {
+				if (i.hasOrganizer() || i.hasOtherAttendees()) {
+					ZOrganizer org = i.getOrganizer();
+					// if ORGANIZER field is unset, set the field value with authUser's email addr.
+					if (org == null) {
+						org = new ZOrganizer(ctxt.getAuthAccount().getName(), null);
+						i.setOrganizer(org);
+					}
+					/*
+					 * this hack was to work around iCal setting ORGANIZER field
+					 * with principalURL.  iCal seemed to have fixed that bug.
+					 * 
 					String addr = i.getOrganizer().getAddress();
 					String newAddr = getAddressFromPrincipalURL(addr);
 					if (!addr.equals(newAddr)) {
@@ -255,6 +265,7 @@ public class CalendarCollection extends Collection {
 						}
 						href.setValue(addr);
 					}
+					*/
 				}
 				mbox.addInvite(ctxt.getOperationContext(), i, mId, false, null);
 			}

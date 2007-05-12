@@ -139,7 +139,10 @@ public class ScheduleOutbox extends CalendarCollection {
 
 		ZimbraLog.dav.debug("start: "+new Date(start)+", end: "+new Date(end));
 		Provisioning prov = Provisioning.getInstance();
+		rcpt = this.getAddressFromPrincipalURL(rcpt);
 		Account rcptAcct = prov.get(Provisioning.AccountBy.name, rcpt);
+		if (rcptAcct == null)
+			throw new DavException("not on local server: "+rcpt, HttpServletResponse.SC_BAD_REQUEST);
 		if (Provisioning.onLocalServer(rcptAcct)) {
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(rcptAcct);
 			FreeBusy fb = mbox.getFreeBusy(start, end);

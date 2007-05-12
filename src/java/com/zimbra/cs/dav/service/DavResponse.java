@@ -24,7 +24,6 @@
  */
 package com.zimbra.cs.dav.service;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collection;
@@ -36,14 +35,12 @@ import javax.servlet.http.HttpServletResponse;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.QName;
-import org.dom4j.io.OutputFormat;
-import org.dom4j.io.XMLWriter;
 
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
+import com.zimbra.cs.dav.DomUtil;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.dav.resource.DavResource;
 
@@ -151,41 +148,43 @@ public class DavResponse {
 		else
 			propNames = props.props;
 		
+		Map<QName,DavException> errPropMap = props.getErrProps();
 		for (QName name : propNames) {
 			ResourceProperty prop = rs.getProperty(name);
-			if (prop != null)
-				prop.toElement(ctxt, findPropstat(resp, propstatMap, HttpServletResponse.SC_OK), props.nameOnly);
-			else
-				findPropstat(resp, propstatMap, HttpServletResponse.SC_NOT_FOUND).addElement(name);
+			if (prop == null)
+				findProp(resp, propstatMap, HttpServletResponse.SC_NOT_FOUND).addElement(name);
+			else if (!errPropMap.containsKey(prop))
+				prop.toElement(ctxt, findProp(resp, propstatMap, HttpServletResponse.SC_OK), props.nameOnly);
+			else {
+				DavException ex = errPropMap.get(prop);
+				Element propstat = findPropstat(resp, propstatMap, ex.getStatus());
+				propstat.element(DavElements.E_PROP).addElement(name);
+				propstat.addElement(DavElements.E_RESPONSEDESCRIPTION).add(ex.getErrorMessage());
+			}
 		}
 		
 		if (rs.isCollection() && includeChildren)
 			for (DavResource child : rs.getChildren(ctxt))
 				addResource(ctxt, child, props, includeChildren);
 	}
-	
+
+	private Element findProp(Element top, Map<Integer,Element> propstatMap, int status) {
+		Element propstat = findPropstat(top, propstatMap, status);
+		return propstat.element(DavElements.E_PROP);
+	}
 	private Element findPropstat(Element top, Map<Integer,Element> propstatMap, int status) {
-		Element prop = propstatMap.get(status);
-		if (prop == null) {
-			Element propStat = top.addElement(DavElements.E_PROPSTAT);
+		Element propStat = propstatMap.get(status);
+		if (propStat == null) {
+			propStat = top.addElement(DavElements.E_PROPSTAT);
 			propStat.addElement(DavElements.E_STATUS).setText(sStatusTextMap.get(status));
-			prop = propStat.addElement(DavElements.E_PROP);
-			propstatMap.put(status, prop);
+			propStat.addElement(DavElements.E_PROP);
+			propstatMap.put(status, propStat);
 		}
-		return prop;
+		return propStat;
 	}
 
 	/* Writes response XML Document to OutputStream. */
 	public void writeTo(OutputStream out) throws IOException {
-		OutputFormat format = OutputFormat.createPrettyPrint();
-		format.setTrimText(false);
-		format.setOmitEncoding(false);
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		XMLWriter writer = new XMLWriter(baos, format);
-		writer.write(mResponse);
-		byte[] msg = baos.toByteArray();
-		if (ZimbraLog.dav.isDebugEnabled())
-			ZimbraLog.dav.debug(new String(msg, "UTF-8"));
-		out.write(msg);
+		DomUtil.writeDocumentToStream(mResponse, out);
 	}
 }

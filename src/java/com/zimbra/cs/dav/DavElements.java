@@ -155,6 +155,7 @@ public class DavElements {
 	public static final String P_RESOURCE = "resource";
 	public static final String P_RESOURCETYPE = "resourcetype";
 	public static final String P_RESPONSE = "response";
+	public static final String P_RESPONSEDESCRIPTION = "responsedescription";
 	
 	public static final String P_SCHEDULE_INBOX = "schedule-inbox";
 	public static final String P_SCHEDULE_INBOX_URL = "schedule-inbox-URL";
@@ -290,6 +291,7 @@ public class DavElements {
 	public static final QName E_RESOURCE = QName.get(P_RESOURCE, WEBDAV_NS);
 	public static final QName E_RESOURCETYPE = QName.get(P_RESOURCETYPE, WEBDAV_NS);
 	public static final QName E_RESPONSE = QName.get(P_RESPONSE, WEBDAV_NS);
+	public static final QName E_RESPONSEDESCRIPTION = QName.get(P_RESPONSEDESCRIPTION, WEBDAV_NS);
 	public static final QName E_CALDAV_RESPONSE = QName.get(P_RESPONSE, CALDAV_NS);
 	
 	public static final QName E_SCHEDULE_INBOX = QName.get(P_SCHEDULE_INBOX, CALDAV_NS);
@@ -323,4 +325,7 @@ public class DavElements {
 	public static final QName E_WRITE_ACL = QName.get(P_WRITE_ACL, WEBDAV_NS);
 	public static final QName E_WRITE_CONTENT  = QName.get(P_WRITE_CONTENT, WEBDAV_NS);
 	public static final QName E_WRITE_PROPERTIES  = QName.get(P_WRITE_PROPERTIES, WEBDAV_NS);
+
+	// errors
+	public static final QName E_CANNOT_MODIFY_PROTECTED_PROPERTY = QName.get("cannot-modify-protected-property", WEBDAV_NS);
 }

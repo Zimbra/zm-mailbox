@@ -556,7 +556,7 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
 			if (status.equals(IcalXmlStrMap.FBTYPE_FREE)) {
 				continue;
 			} else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY)) {
-				toRet.append("FREEBUSY:");
+				toRet.append("FREEBUSY;FBTYPE=BUSY:");   // default is BUSY, but let's be explicit about it and set FBTYPE to BUSY
 			} else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_TENTATIVE)) {
 				toRet.append("FREEBUSY;FBTYPE=BUSY-TENTATIVE:");
 			} else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE)) {
