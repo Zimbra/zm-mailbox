@@ -312,6 +312,7 @@ public class FileUploadServlet extends ZimbraServlet {
         }
     }
 
+    @Override
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
 	    String fmt = req.getParameter(ContentServlet.PARAM_FORMAT);
         ZimbraLog.addIpToContext(req.getRemoteAddr());
@@ -494,7 +495,7 @@ public class FileUploadServlet extends ZimbraServlet {
         sendResponse(req, resp, status, fmt, null, attachmentId, items);
     }
 
-    private void sendResponse(HttpServletRequest req, HttpServletResponse resp, int status, String fmt, String reqId, String attachmentId, List<FileItem> items)
+    public static void sendResponse(HttpServletRequest req, HttpServletResponse resp, int status, String fmt, String reqId, String attachmentId, List<FileItem> items)
     throws IOException {
         StringBuffer results = new StringBuffer();
         results.append(status).append(",'").append(reqId != null ? reqId : "null").append('\'');
