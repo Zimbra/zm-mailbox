@@ -369,6 +369,7 @@ public class AdminConstants {
     public static final String A_VIA = "via";
     public static final String A_EXCLUDE = "exclude";
     public static final String A_REFRESH = "refresh";
+    public static final String A_TARGETNAME = "targetName";
 
     public static final String BY_ID = "id";
     public static final String BY_QUERY = "query";
