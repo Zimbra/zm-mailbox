@@ -4,6 +4,15 @@
 
     <property environment="env"/>
 
+	<!-- The OS user running ZCS.  Use ZIMBRA_USER environment variable
+	     if set.  If not, default to "zimbra". -->
+	<condition property="zimbra.user" value="${env.ZIMBRA_USER}">
+		<isset property="env.ZIMBRA_USER"/>
+	</condition>
+	<condition property="zimbra.user" value="zimbra">
+		<not><isset property="zimbra.user"/></not>
+	</condition>
+
 	<!-- This machine's hostname.  Use ZIMBRA_HOSTNAME environment variable
 	     if set.  If not, use "hostname" command output. -->
 	<exec executable="hostname" outputproperty="exec.hostname"/>
@@ -381,7 +390,7 @@
 	<target name="init-opt-zimbra" depends="dev-dist,localhost-ssl-cert">
 		<copy todir="${zimbra.home.dir}">
 			<fileset dir="${dist.dir}"/>
-		</copy>	
+		</copy>
 		<chmod perm="a+rx"><fileset dir="${zimbra.home.dir}/bin"/><fileset dir="${zimbra.home.dir}/libexec"/></chmod><!-- ant does not preserve perms on copy -->
 	</target>
 
@@ -689,6 +698,10 @@
 		<java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-e zimbra_server_hostname=${zimbra.server.hostname}"/>
 		</java>
+		<echo>Editing localconfig zimbra_user to be ${zimbra.user}</echo>
+		<java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="-e zimbra_user=${zimbra.user}"/>
+		</java>
 		<echo>Running zmprov commands</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-l -f ${build.zmprov} -v" />
@@ -699,6 +712,7 @@
 		
 		<echo file="${build.zmprov}">		
 		ModifyConfig zimbraLogHostname ${zimbra.server.hostname}
+		ModifyConfig zimbraRemoteManagementUser ${zimbra.user}
 		CreateServer ${zimbra.server.hostname} \
 			zimbraSmtpHostname ${zimbra.smtp.host} \
 			zimbraMailPort 7070 \
