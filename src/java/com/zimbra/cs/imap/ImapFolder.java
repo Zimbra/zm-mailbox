@@ -76,8 +76,8 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
     private boolean  mWritable;
     private String   mQuery;
 
-    private List<ImapMessage>         mSequence   = new ArrayList<ImapMessage>();
-    private Map<Integer, ImapMessage> mMessageIds = new HashMap<Integer, ImapMessage>();
+    private List<ImapMessage>         mSequence = new ArrayList<ImapMessage>();
+    private Map<Integer, ImapMessage> mMessageIds;
 
     private int mUIDValidityValue;
     private int mInitialUIDNEXT = -1;
@@ -312,7 +312,7 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
     }
 
     /** Returns the search folder query associated with this IMAP folder, or
-     *  <code>""</code> if the SELECTed folder is not a search folder. */
+     *  <tt>""</tt> if the SELECTed folder is not a search folder. */
     String getQuery() {
         return mQuery == null ? "" : mQuery;
     }
@@ -389,7 +389,7 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
 
 
     /** Returns the UID Validity Value for the {@link Folder}.  This is the
-     *  folder's <code>MOD_CONTENT</code> change sequence number.
+     *  folder's <tt>MOD_CONTENT</tt> change sequence number.
      * @see Folder#getSavedSequence() */
     static int getUIDValidity(Folder folder)    { return Math.max(folder.getSavedSequence(), 1); }
     static int getUIDValidity(ZFolder zfolder)  { return zfolder.getContentSequence(); }
@@ -412,16 +412,35 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
         while (low <= high) {
             int mid = (low + high) >> 1;
             int targetUid = mSequence.get(mid).imapUid;
-            if (targetUid < uid)      low = mid + 1;
-            else if (targetUid> uid)  high = mid - 1;
-            else                      return mid;  // key found
+            if (targetUid < uid)       low = mid + 1;
+            else if (targetUid > uid)  high = mid - 1;
+            else                       return mid;  // key found
         }
         return -(low + 1);  // key not found
     }
 
     /** Returns the ImapMessage with the given Zimbra item ID from the
      *  folder's {@link #mSequence} message list. */
-    ImapMessage getById(int id)        { if (id <= 0) return null;   return checkRemoved(mMessageIds.get(new Integer(id))); }
+    ImapMessage getById(int id) {
+        if (id <= 0)
+            return null;
+
+        if (mMessageIds == null) {
+            // leverage the fact that by default, the message's item id and its IMAP uid are identical
+            int sequence = uidSearch(id);
+            if (sequence >= 0 && sequence < mSequence.size()) {
+                ImapMessage i4msg = mSequence.get(sequence);
+                if (i4msg != null && i4msg.msgId == id && !i4msg.isExpunged())
+                    return checkRemoved(i4msg);
+            }
+            // lookup miss means we need to generate the item-id-to-imap-message mapping
+            mMessageIds = new HashMap<Integer, ImapMessage>(mSequence.size());
+            for (ImapMessage i4msg : mSequence)
+                if (i4msg != null)
+                    mMessageIds.put(i4msg.msgId, i4msg);
+        }
+        return checkRemoved(mMessageIds.get(new Integer(id)));
+    }
 
     /** Returns the ImapMessage with the given IMAP UID from the folder's
      *  {@link #mSequence} message list. */
@@ -435,15 +454,15 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
      *  message list.  This message corresponds to the "*" IMAP UID. */
     private ImapMessage getLastMessage()  { return getBySequence(mSequence.size()); }
 
-    /** Returns the passed-in ImapMessage, or <coode>null</code> if the
-     *  message has already been expunged.*/
+    /** Returns the passed-in ImapMessage, or <tt>null</tt> if the message has
+     *  already been expunged.*/
     private ImapMessage checkRemoved(ImapMessage i4msg)  { return (i4msg == null || i4msg.isExpunged() ? null : i4msg); }
 
 
     /** Adds the message to the folder.  Messages <b>must</b> be added in
      *  increasing IMAP UID order.  Added messages are appended to the end of
      *  the folder's {@link #mSequence} message list and inserted into the
-     *  {@link #mMessageIds} hash.
+     *  {@link #mMessageIds} hash (if the latter hash has been instantiated).
      * @return the passed-in ImapMessage. */
     ImapMessage cache(ImapMessage i4msg) {
         // provide the information missing from the DB search
@@ -456,15 +475,17 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
 
     private void setIndex(ImapMessage i4msg, int position) {
         i4msg.sequence = position;
-        mMessageIds.put(new Integer(i4msg.msgId), i4msg);
+        if (mMessageIds != null)
+            mMessageIds.put(new Integer(i4msg.msgId), i4msg);
     }
 
     /** Cleans up all references to an ImapMessage from all the folder's data
-     *  structures other than {@link #mSequence}.  The <code>mSequence</code>
+     *  structures other than {@link #mSequence}.  The <tt>mSequence</tt>
      *  cleanup must be done separately. */
     private void uncache(ImapMessage i4msg) {
-        mMessageIds.remove(new Integer(i4msg.msgId));
-        mDirtyMessages.remove(i4msg);
+        if (mMessageIds != null)
+            mMessageIds.remove(new Integer(i4msg.msgId));
+        mDirtyMessages.remove(new Integer(i4msg.imapUid));
     }
 
 
@@ -779,7 +800,7 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
             }
         }
 
-        if (mHandler != null && mHandler.isIdle())
+        if (mHandler != null && mHandler.isIdle()) {
             try {
                 mHandler.sendNotifications(true, true);
             } catch (IOException e) {
@@ -788,6 +809,7 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
                 ZimbraLog.imap.debug("dropping connection due to IOException during IDLE notification", e);
                 mHandler.dropConnection(false);
             }
+        }
     }
 
     private boolean handleDeletes(int changeId, Map<Integer, Object> deleted) {
