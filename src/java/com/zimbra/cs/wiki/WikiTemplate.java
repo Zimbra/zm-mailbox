@@ -673,16 +673,22 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			return "Creator";
 		}
 		public String getPattern() {
-			return "Creator";
+			return "CREATOR";
 		}
 		public WikiTemplate findInclusion(Context ctxt) {
 			return null;
 		}
 		public String apply(Context ctxt) throws ServiceException {
-			if (!(ctxt.item instanceof Document)) 
-				return "";
-			Document doc = (Document) ctxt.item;
-			return doc.getRevision(1).getCreator();
+		   if (ctxt.item instanceof Folder) {
+               //notebook folder
+			   return ctxt.item.getMailbox().getAccount().getName();        
+           }
+           else if (ctxt.item instanceof Document) {
+        	   Document doc = (Document) ctxt.item;
+        	   return doc.getRevision(1).getCreator();        	   
+           }
+
+           return "";
 		}
 	}
 	public static class ModifierWiklet extends Wiklet {
