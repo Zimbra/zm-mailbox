@@ -45,7 +45,8 @@
 	<property name="build.zmprov" location="${build.dir}/data/zmprov.txt" />
 	<property name="dist.dir" location="build/dist" />
 	<property name="generated.java.dir" location="${build.dir}/generated/src/java" />
-	<property name="warfile" location="${build.dir}/service.war" />
+    <property name='warfilename' value='service.war' />
+    <property name="warfile" location="${build.dir}/${warfilename}" />
 	<property name="jarfile" location="${build.dir}/zimbrastore.jar" />
 	<property name="common.dir" location="../ZimbraCommon" />
 	<property name="common.classes.dir" location="${common.dir}/build/classes" />
@@ -363,7 +364,9 @@
 	<target name="deploy-war-jetty" depends="war" if="use-jetty">
 		<antcall target="stop-jetty"/>
 		<copy file="${warfile}" todir="${webserver.root.dir}/webapps"/>
-		<antcall target="start-jetty"/>
+        <mkdir dir='${webserver.root.dir}/webapps/service' />
+        <unzip dest="${webserver.root.dir}/webapps/service" src="${webserver.root.dir}/webapps/${warfilename}" />
+        <antcall target="start-jetty"/>
 	</target>
 
     <target name="remote-deploy" if="remote.deploy.host" depends="war">
