@@ -278,7 +278,10 @@ public class AdminConstants {
     public static final QName GET_ADMIN_SAVED_SEARCHES_RESPONSE = QName.get("GetAdminSavedSearchesResponse", NAMESPACE);
     public static final QName MODIFY_ADMIN_SAVED_SEARCHES_REQUEST = QName.get("ModifyAdminSavedSearchesRequest", NAMESPACE);
     public static final QName MODIFY_ADMIN_SAVED_SEARCHES_RESPONSE = QName.get("ModifyAdminSavedSearchesResponse", NAMESPACE);
-    
+
+    public static final QName CHECK_DIRECTORY_REQUEST = QName.get("CheckDirectoryRequest", NAMESPACE);
+    public static final QName CHECK_DIRECTORY_RESPONSE = QName.get("CheckDirectoryResponse", NAMESPACE);
+
     // Soap logger
     public static final QName SOAP_LOGGER_REQUEST = QName.get("SoapLoggerRequest", NAMESPACE);
     public static final QName SOAP_LOGGER_RESPONSE = QName.get("SoapLoggerResponse", NAMESPACE);
@@ -341,6 +344,7 @@ public class AdminConstants {
     public static final String E_SOAP_URL = "soapURL";
     public static final String E_ADMIN_SOAP_URL = "adminSoapURL";
     public static final String E_SEARCH = "search";
+    public static final String E_DIRECTORY = "directory";
 
     public static final String A_ACTION = "action";
     public static final String A_APPLY_CONFIG = "applyConfig";
@@ -370,6 +374,12 @@ public class AdminConstants {
     public static final String A_EXCLUDE = "exclude";
     public static final String A_REFRESH = "refresh";
     public static final String A_TARGETNAME = "targetName";
+    public static final String A_PATH = "path";
+    public static final String A_CREATE = "create";
+    public static final String A_EXISTS = "exists";
+    public static final String A_IS_DIRECTORY = "isDirectory";
+    public static final String A_READABLE = "readable";
+    public static final String A_WRITABLE = "writable";
 
     public static final String BY_ID = "id";
     public static final String BY_QUERY = "query";
