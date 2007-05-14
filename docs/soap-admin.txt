@@ -1771,3 +1771,21 @@ LIST all accounts being logged:
 
 -----------------------------
 
+# Check existence of one or more directories and optionally create them.
+
+<CheckDirectoryRequest>
+  <directory path="{path}" [create="0|1"]/>+
+</CheckDirectoryRequest>
+
+  path = full path to the directory
+  create = default 0; if 1, create the directory if it doesn't exist
+
+<CheckDirectoryResponse>
+  <directory path="{path}"			// same path as in the request
+             exists="1|0"			// path exists, or not
+             isDirectory="1|0"		// path is a directory, or not
+             readable="1|0"			// path is readable, or not
+             writable="1|0"/>+		// path is writable, or not
+</CheckDirectoryResponse>
+
+-----------------------------

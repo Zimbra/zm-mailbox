@@ -33,10 +33,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.cs.service.mail.CreateWaitSet;
-import com.zimbra.cs.service.mail.DestroyWaitSet;
-import com.zimbra.cs.service.mail.WaitSetRequest;
 import com.zimbra.soap.DocumentDispatcher;
 import com.zimbra.soap.DocumentService;
 
@@ -185,6 +181,8 @@ public class AdminService implements DocumentService {
         // admin saved searches
         dispatcher.registerHandler(AdminConstants.GET_ADMIN_SAVED_SEARCHES_REQUEST, new GetAdminSavedSearches());
         dispatcher.registerHandler(AdminConstants.MODIFY_ADMIN_SAVED_SEARCHES_REQUEST, new ModifyAdminSavedSearches());
+
+        dispatcher.registerHandler(AdminConstants.CHECK_DIRECTORY_REQUEST, new CheckDirectory());
 
         dispatcher.registerHandler(AdminConstants.SOAP_LOGGER_REQUEST, new SoapLogger());
     }
