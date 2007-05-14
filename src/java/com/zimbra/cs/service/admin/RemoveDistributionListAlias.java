@@ -27,7 +27,6 @@ package com.zimbra.cs.service.admin;
 
 import java.util.Map;
 
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
@@ -55,19 +54,21 @@ public class RemoveDistributionListAlias extends AdminDocumentHandler {
         String alias = request.getAttribute(AdminConstants.E_ALIAS);
 
 	    DistributionList dl = prov.get(DistributionListBy.id, id);
-        if (dl == null)
-            throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
-
-        if (!canAccessEmail(lc, dl.getName()))
-            throw ServiceException.PERM_DENIED("can not access dl");
-
+            
+        String dlName = "";
+        if (dl != null) {
+            if (!canAccessEmail(lc, dl.getName()))
+                throw ServiceException.PERM_DENIED("can not access dl");
+            dlName = dl.getName();
+        }
+        
         if (!canAccessEmail(lc, alias)) // sanity check
             throw ServiceException.PERM_DENIED("can not access email: "+alias);
         
         prov.removeAlias(dl, alias);
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                new String[] {"cmd", "RemoveDistributionListAlias", "name", dl.getName(), "alias", alias})); 
+                new String[] {"cmd", "RemoveDistributionListAlias", "name", dlName, "alias", alias})); 
         
 	    Element response = lc.createElement(AdminConstants.REMOVE_DISTRIBUTION_LIST_ALIAS_RESPONSE);
 	    return response;

@@ -450,7 +450,7 @@ public class ProvUtil implements DebugListener {
             mProv.deleteServer(lookupServer(args[1]).getId());
             break;
         case REMOVE_ACCOUNT_ALIAS:
-            mProv.removeAlias(lookupAccount(args[1]), args[2]);
+            mProv.removeAlias(lookupAccount(args[1], false), args[2]);
             break;
         case RENAME_ACCOUNT:
             mProv.renameAccount(lookupAccount(args[1]).getId(), args[2]);            
@@ -511,7 +511,7 @@ public class ProvUtil implements DebugListener {
             mProv.addAlias(lookupDistributionList(args[1]), args[2]);
             break;
         case REMOVE_DISTRIBUTION_LIST_ALIAS:
-            mProv.removeAlias(lookupDistributionList(args[1]), args[2]);
+            mProv.removeAlias(lookupDistributionList(args[1], false), args[2]);
             break;
         case RENAME_DISTRIBUTION_LIST:
             mProv.renameDistributionList(lookupDistributionList(args[1]).getId(), args[2]);
@@ -1241,12 +1241,16 @@ public class ProvUtil implements DebugListener {
     	}
     }
     
-    private Account lookupAccount(String key) throws ServiceException {
+    private Account lookupAccount(String key, boolean mustFind) throws ServiceException {
         Account a = mProv.get(guessAccountBy(key), key);
-        if (a == null)
+        if (mustFind && a == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(key);
         else
             return a;
+    }
+    
+    private Account lookupAccount(String key) throws ServiceException {
+        return lookupAccount(key, true);
     }
 
     private CalendarResource lookupCalendarResource(String key) throws ServiceException {
@@ -1285,12 +1289,16 @@ public class ProvUtil implements DebugListener {
             return s;
     }
 
-    private DistributionList lookupDistributionList(String key) throws ServiceException {
+    private DistributionList lookupDistributionList(String key, boolean mustFind) throws ServiceException {
         DistributionList dl = mProv.get(guessDistributionListBy(key), key);
-        if (dl == null)
+        if (mustFind && dl == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(key);
         else
             return dl;
+    }
+    
+    private DistributionList lookupDistributionList(String key) throws ServiceException {
+        return lookupDistributionList(key, true);
     }
 
     private static boolean isUUID(String value) {

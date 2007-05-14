@@ -1074,7 +1074,7 @@ public class LdapProvisioning extends Provisioning {
     }
 	
     public void removeAlias(Account acct, String alias) throws ServiceException {
-        removeAliasInternal(acct, alias, acct.getAliases());
+        removeAliasInternal(acct, alias, (acct==null)?null:acct.getAliases());
     }
     
     public void addAlias(DistributionList dl, String alias) throws ServiceException {
@@ -1082,9 +1082,9 @@ public class LdapProvisioning extends Provisioning {
     }
 
     public void removeAlias(DistributionList dl, String alias) throws ServiceException {
-        removeAliasInternal(dl, alias, dl.getAliases());
+        removeAliasInternal(dl, alias, (dl==null)?null:dl.getAliases());
     }
-
+    
     private void addAliasInternal(NamedEntry entry, String alias) throws ServiceException {
     	assert(entry instanceof Account || entry instanceof DistributionList);
         alias = alias.toLowerCase().trim();
@@ -1105,10 +1105,36 @@ public class LdapProvisioning extends Provisioning {
             
             String aliasDn = mDIT.aliasDN(((LdapEntry)entry).getDN(), aliasName, aliasDomain);
             // the create and addAttr ideally would be in the same transaction
-            LdapUtil.simpleCreate(ctxt, aliasDn, "zimbraAlias",
+            
+            String aliasUuid = LdapUtil.generateUUID();
+            String targetEntryId = entry.getId();
+            try {
+                LdapUtil.simpleCreate(ctxt, aliasDn, "zimbraAlias",
                     new String[] { Provisioning.A_uid, aliasName, 
-                    Provisioning.A_zimbraId, LdapUtil.generateUUID(),
-                    Provisioning.A_zimbraAliasTargetId, entry.getId()} );
+                                   Provisioning.A_zimbraId, aliasUuid,
+                                   Provisioning.A_zimbraAliasTargetId, targetEntryId} );
+            } catch (NameAlreadyBoundException e) {
+                /*
+                 * check if the alias is a dangling alias.  If so remove the dangling alias
+                 * and create a new one.
+                 */
+                Attributes attrs = LdapUtil.getAttributes(ctxt, aliasDn);
+                LdapAlias aliasEntry = new LdapAlias(aliasDn, attrs);
+                if (aliasEntry.isDangling()) {
+                    // remove the dangling alias 
+                    removeAliasInternal(null, alias, null);
+                    
+                    // try creating teh alias again
+                    LdapUtil.simpleCreate(ctxt, aliasDn, "zimbraAlias",
+                            new String[] { Provisioning.A_uid, aliasName, 
+                                           Provisioning.A_zimbraId, aliasUuid,
+                                           Provisioning.A_zimbraAliasTargetId, targetEntryId} );
+                } else {
+                    // not dangling, rethrow the naming exception
+                    throw e;
+                }
+            }
+            
             HashMap<String, String[]> attrs = new HashMap<String, String[]>();
             attrs.put(Provisioning.A_zimbraMailAlias, addMultiValue(entry, Provisioning.A_zimbraMailAlias, alias));
             attrs.put(Provisioning.A_mail, addMultiValue(entry, Provisioning.A_mail, alias));
@@ -1125,7 +1151,14 @@ public class LdapProvisioning extends Provisioning {
         }                
     }
     
+    /*
+     * if we have a dangling(i.e. targetId of the alias does not exist) alias, entry and aliases would both be null,
+     * otherwise, entry and aliases would not be null  
+     */
     private void removeAliasInternal(NamedEntry entry, String alias, String[] aliases) throws ServiceException {
+        
+        if (entry ==null)
+            ZimbraLog.account.warn("target for alias "+alias+" does not exist, removing dangling alias");
         
         DirContext ctxt = null;
         try {
@@ -1137,13 +1170,15 @@ public class LdapProvisioning extends Provisioning {
 
             alias = alias.toLowerCase();
 
-            boolean found = false;
-            for (int i=0; !found && i < aliases.length; i++) {
-                found = aliases[i].equalsIgnoreCase(alias);
-            }
+            if (entry != null) { 
+                boolean found = false;
+                for (int i=0; !found && i < aliases.length; i++) {
+                    found = aliases[i].equalsIgnoreCase(alias);
+                }
             
-            if (!found)
-                throw AccountServiceException.NO_SUCH_ALIAS(alias);
+                if (!found)
+                    throw AccountServiceException.NO_SUCH_ALIAS(alias);
+            }
             
             String aliasDomain = alias.substring(loc+1);
             String aliasName = alias.substring(0, loc);
@@ -1154,15 +1189,17 @@ public class LdapProvisioning extends Provisioning {
             
             String aliasDn = mDIT.emailToDN(aliasName, aliasDomain);            
             
-            // remove zimbraMailAlias attr first, then alias
-            try {
-                HashMap<String, String[]> attrs = new HashMap<String, String[]>();
-                attrs.put(Provisioning.A_mail, removeMultiValue(entry, Provisioning.A_mail, alias));
-                attrs.put(Provisioning.A_zimbraMailAlias, removeMultiValue(entry, Provisioning.A_zimbraMailAlias, alias));                
-                modifyAttrsInternal(((NamedEntry)entry), ctxt, attrs);
-            } catch (ServiceException e) {
-                ZimbraLog.account.warn("unable to remove zimbraMailAlias/mail attrs: "+alias);
-                // try to remove alias
+            // if the entry exists, remove zimbraMailAlias attr first, then alias
+            if (entry != null) {
+                try {
+                    HashMap<String, String[]> attrs = new HashMap<String, String[]>();
+                    attrs.put(Provisioning.A_mail, removeMultiValue(entry, Provisioning.A_mail, alias));
+                    attrs.put(Provisioning.A_zimbraMailAlias, removeMultiValue(entry, Provisioning.A_zimbraMailAlias, alias));                
+                    modifyAttrsInternal(((NamedEntry)entry), ctxt, attrs);
+                } catch (ServiceException e) {
+                  ZimbraLog.account.warn("unable to remove zimbraMailAlias/mail attrs: "+alias);
+                  // try to remove alias
+                }
             }
 
             // remove address from all DLs
@@ -1170,11 +1207,10 @@ public class LdapProvisioning extends Provisioning {
 
             try {
                 Attributes aliasAttrs = LdapUtil.getAttributes(ctxt, aliasDn);
-                // make sure aliasedObjectName points to this account
+                // make sure aliasedObjectName points to this account/dl(if the entry exists)
                 Attribute a = aliasAttrs.get(Provisioning.A_zimbraAliasTargetId);
-                if ( a != null && ( (String)a.get()).equals(entry.getId())) {
+                if ( a != null && (entry==null || ((String)a.get()).equals(entry.getId())) ) {
                 	LdapUtil.unbindEntry(ctxt, aliasDn);
-                    removeAddressFromAllDistributionLists(alias); // doesn't throw exception
                 } else {
                     ZimbraLog.account.warn("unable to remove alias object: "+alias);
                 }                

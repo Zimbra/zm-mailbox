@@ -64,16 +64,21 @@ public class RemoveAccountAlias extends AdminDocumentHandler {
         String alias = request.getAttribute(AdminConstants.E_ALIAS);
 
 	    Account account = prov.get(AccountBy.id, id);
-        if (account == null)
-            throw AccountServiceException.NO_SUCH_ACCOUNT(id);
-
-        if (!canAccessAccount(lc, account))
-            throw ServiceException.PERM_DENIED("can not access account");
-   
+        
+        String acctName = "";
+        if (account != null) {
+            if (!canAccessAccount(lc, account))
+                throw ServiceException.PERM_DENIED("can not access account");
+            acctName = account.getName();
+        }
+        
+        if (!canAccessEmail(lc, alias)) // sanity check
+            throw ServiceException.PERM_DENIED("can not access email: "+alias);
+        
         prov.removeAlias(account, alias);
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                new String[] {"cmd", "RemoveAccountAlias","name", account.getName(), "alias", alias})); 
+                new String[] {"cmd", "RemoveAccountAlias","name", acctName, "alias", alias})); 
         
 	    Element response = lc.createElement(AdminConstants.REMOVE_ACCOUNT_ALIAS_RESPONSE);
 	    return response;
