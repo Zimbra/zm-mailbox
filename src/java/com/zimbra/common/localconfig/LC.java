@@ -240,7 +240,7 @@ public class LC {
                 "Changing this setting does not immediately reflect in MySQL server.  " +
                 "You will have to, with abundant precaution, re-generate my.cnf and " +
                 "restart MySQL server for the change to take effect.";
-        final String FS = File.separator;
+        final String FS = "/";  // Use Unix-style file separator even on Windows.
         String hostname = "lookup.failed";
         try {
             InetAddress address = InetAddress.getLocalHost();
