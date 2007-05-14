@@ -909,7 +909,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 					title = link;
 			}
 			WikiUrl wurl = (ctxt.item instanceof Folder) ?
-					new WikiUrl(link, ctxt.item.getId()) :
+					new WikiUrl("", ctxt.item.getId()) :
 					new WikiUrl(link, ctxt.item.getFolderId());
 			try {
 				StringBuffer buf = new StringBuffer();
