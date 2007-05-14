@@ -72,7 +72,7 @@ public final class ConversationHit extends ZimbraHit {
         mMessageHits.put(new Long(mh.getItemId()), mh);
     }
 
-    public Collection getMessageHits() {
+    public Collection<MessageHit> getMessageHits() {
         return mMessageHits.values();
     }
 

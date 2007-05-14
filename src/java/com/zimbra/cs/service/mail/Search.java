@@ -30,8 +30,6 @@ package com.zimbra.cs.service.mail;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -72,18 +70,18 @@ public class Search extends MailDocumentHandler  {
         Mailbox mbox = getRequestedMailbox(zsc);
         Account acct = getRequestedAccount(zsc);
         SearchParams params = SearchParams.parse(request, zsc, acct.getAttr(Provisioning.A_zimbraPrefMailInitialSearch));
-        
+
         String query = params.getQueryStr();
-        
+
         // HACK: temporary until we get UI for gateway reg/unreg 
         if (!query.startsWith("$im")) 
             query = "(" + query + ") -tag:\\Deleted";
-        
-        
+
+
         params.setQueryStr(query);
-        
+
         ZimbraQueryResults results = doSearch(zsc, mbox, params);
-        
+
         try {
             // create the XML response Element
             Element response = zsc.createElement(MailConstants.SEARCH_RESPONSE);
@@ -170,10 +168,10 @@ public class Search extends MailDocumentHandler  {
             Element e = null;
             if (hit instanceof ConversationHit) {
                 ConversationHit ch = (ConversationHit) hit;
-                e = addConversationHit(zsc, response, ch, params);
+                e = addConversationHit(zsc, response, ifmt, ch, params);
             } else if (hit instanceof MessageHit) {
                 MessageHit mh = (MessageHit) hit;
-                e = addMessageHit(zsc, ifmt, response, mh, inline, params);
+                e = addMessageHit(zsc, response, ifmt, mh, inline, params);
             } else if (hit instanceof MessagePartHit) {
                 MessagePartHit mph = (MessagePartHit) hit;
                 e = addMessagePartHit(response, mph);                
@@ -189,10 +187,10 @@ public class Search extends MailDocumentHandler  {
                 addSortField = false;
                 totalNumHits++;
             } else if (hit instanceof CalendarItemHit) {
-                CalendarItemHit ah = (CalendarItemHit)hit;
+                CalendarItemHit ah = (CalendarItemHit) hit;
                 e = addCalendarItemHit(zsc, ifmt, response, ah, inline, params);
             } else if (hit instanceof DocumentHit) {
-                DocumentHit dh = (DocumentHit)hit;
+                DocumentHit dh = (DocumentHit) hit;
                 e = addDocumentHit(ifmt, response, dh);
             } else {
                 mLog.error("Got an unknown hit type putting search hits: "+hit);
@@ -222,24 +220,16 @@ public class Search extends MailDocumentHandler  {
     }
 
 
-    protected Element addConversationHit(ZimbraSoapContext zsc, Element response, ConversationHit ch, SearchParams params)
+    protected Element addConversationHit(ZimbraSoapContext zsc, Element response, ItemIdFormatter ifmt, ConversationHit ch, SearchParams params)
     throws ServiceException {
         Conversation conv = ch.getConversation();
-        MessageHit mh = ch.getFirstMessageHit();
-        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
-        Element c = ToXML.encodeConversationSummary(response, ifmt, zsc.getOperationContext(), conv, mh == null ? null : mh.getMessage(), params.getWantRecipients());
+        MessageHit mh1 = ch.getFirstMessageHit();
+        Element c = ToXML.encodeConversationSummary(response, ifmt, zsc.getOperationContext(), conv, mh1 == null ? null : mh1.getMessage(), params.getWantRecipients());
         if (ch.getScore() != 0)
             c.addAttribute(MailConstants.A_SCORE, ch.getScore());
 
-        Collection s = ch.getMessageHits();
-        if (s != null) {
-            for (Iterator mit = s.iterator(); mit.hasNext(); ) {
-                mh = (MessageHit) mit.next();
-                Message msg = mh.getMessage();
-                Element e = c.addElement(MailConstants.E_MSG);
-                e.addAttribute(MailConstants.A_ID, msg.getId());
-            }
-        }
+        for (MessageHit mh : ch.getMessageHits())
+            c.addElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ID, ifmt.formatItemId(mh.getMessage()));
         return c;
     }
 
@@ -279,7 +269,7 @@ public class Search extends MailDocumentHandler  {
     }
 
 
-    protected Element addMessageHit(ZimbraSoapContext zsc, ItemIdFormatter ifmt, Element response, MessageHit mh, boolean inline, SearchParams params)
+    protected Element addMessageHit(ZimbraSoapContext zsc, Element response, ItemIdFormatter ifmt, MessageHit mh, boolean inline, SearchParams params)
     throws ServiceException {
         Message msg = mh.getMessage();
 

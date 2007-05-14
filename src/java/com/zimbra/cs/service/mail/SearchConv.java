@@ -244,7 +244,7 @@ public class SearchConv extends Search {
             ExpandResults expand = params.getFetchFirst();
             for (int i = offset; i < offset + iterLen; i++) {
                 if (matched[i-offset] != null) {
-                    addMessageHit(zsc, ifmt, response, (MessageHit) matched[i-offset], expand != ExpandResults.NONE, params);
+                    addMessageHit(zsc, response, ifmt, (MessageHit) matched[i-offset], expand != ExpandResults.NONE, params);
                     if (expand == ExpandResults.FIRST)
                         expand = ExpandResults.NONE;
                 } else {
