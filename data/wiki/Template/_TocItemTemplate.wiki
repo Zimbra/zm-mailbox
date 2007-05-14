@@ -1,10 +1,10 @@
-﻿<tr class="zmwiki-dotLine">
+<tr class="zmwiki-dotLine">
 
 	<td class='zmwiki-pageIcon' width=16><wiklet class='ICON' /></td>
 	<td class='zmwiki-pageLink'>[[<wiklet class='NAME' />]]</td>
 	<td class='zmwiki-author'><wiklet class='MODIFIER' />&nbsp;</td>
 	<td class='zmwiki-author'> <wiklet class='MODIFYDATE' /></td>
-	<td class='zmwiki-author'>v. <wiklet class='VERSION' /></a></td>
+	<td class='zmwiki-author'> <wiklet class='VERSION' /></a></td>
 	
 </tr>
 

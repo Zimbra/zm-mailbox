@@ -1,4 +1,4 @@
-﻿<div class="zmwiki-toc">
+<div class="zmwiki-toc">
 	<table class="zmwiki-tocTable" cellpadding="2" cellspacing="0">
 		<tbody>
 	
