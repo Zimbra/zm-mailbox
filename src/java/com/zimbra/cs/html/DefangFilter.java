@@ -468,9 +468,6 @@ public class DefangFilter extends DefaultFilter {
     /** End element. */
     public void endElement(QName element, Augmentations augs)
         throws XNIException {
-        if (element.rawname.equalsIgnoreCase("body")) {
-            element.rawname = "div";
-        }
         if (mElementDepth <= mRemovalElementDepth && elementAccepted(element.rawname)) {
             super.endElement(element, augs);
         }
@@ -545,8 +542,6 @@ public class DefangFilter extends DefaultFilter {
                 neuterImageTag(attributes);
             } else if (eName.equals("a")) {
                 fixATag(attributes);
-            } else if (eName.equals("body")) {
-                element.rawname = "div";
             }
 
             return true;
