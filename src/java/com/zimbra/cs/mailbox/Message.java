@@ -132,7 +132,7 @@ public class Message extends MailItem {
         if (mData.parentId < 0)
             mData.parentId = -mId;
     }
-
+    
     /** Returns whether the Message was created as a draft.  Note that this
      *  can only be set when the Message is created; it cannot be altered
      *  thereafter. */
@@ -240,11 +240,18 @@ public class Message extends MailItem {
 
     /** Returns whether the Message has a vCal attachment. */
     public boolean isInvite() {
+        return (mData.flags & Flag.BITMASK_INVITE) != 0;
+    }
+    
+    public boolean hasCalendarItemInfos() {
         return mCalendarItemInfos != null;
     }
 
     public Iterator<CalendarItemInfo> getCalendarItemInfoIterator() {
-        return mCalendarItemInfos.iterator();
+        if (mCalendarItemInfos != null)
+            return mCalendarItemInfos.iterator();
+        else
+            return new ArrayList<CalendarItemInfo>().iterator();
     }
 
     public CalendarItemInfo getCalendarItemInfo(int componentId) {
@@ -351,6 +358,9 @@ public class Message extends MailItem {
             try {
                 components = Invite.createFromCalendar(acct, pm.getFragment(), cal, sentByMe, mbox, id);
                 methodStr = cal.getPropVal(ICalTok.METHOD, ICalTok.PUBLISH.toString());
+                if (components != null) {
+                    flags |= Flag.BITMASK_INVITE;
+                }
             } catch (Exception e) {
                 ZimbraLog.calendar.warn("Unable to process iCalendar attachment", e);
             }
@@ -436,7 +446,7 @@ public class Message extends MailItem {
                 
             }
         }
-
+        
         if (updatedMetadata)
             saveMetadata();
     }
@@ -557,6 +567,7 @@ public class Message extends MailItem {
             getFolder().updateSize(0, size - mData.size);
             mData.size = size;
         }
+        
         String metadata = encodeMetadata(mColor, pm, mData.flags, mDraftInfo, mCalendarItemInfos);
 
         // rewrite the DB row to reflect our new view

@@ -72,7 +72,7 @@ public class ScheduleInbox extends CalendarCollection {
                 ZimbraHit hit = zqr.getNext();
                 if (hit instanceof MessageHit) {
                 	Message msg = ((MessageHit)hit).getMessage();
-                	if (msg.isInvite())
+                	if (msg.isInvite() && msg.hasCalendarItemInfos())
                 		result.add(new CalendarScheduleMessage(ctxt, msg));
                 }
 			}

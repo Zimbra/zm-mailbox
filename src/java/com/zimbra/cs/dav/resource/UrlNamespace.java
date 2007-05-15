@@ -205,7 +205,7 @@ public class UrlNamespace {
 				break;
 			case MailItem.TYPE_MESSAGE :
 				Message msg = (Message)item;
-				if (msg.isInvite())
+				if (msg.isInvite() && msg.hasCalendarItemInfos())
 					resource = new CalendarScheduleMessage(ctxt, msg);
 				break;
 			}

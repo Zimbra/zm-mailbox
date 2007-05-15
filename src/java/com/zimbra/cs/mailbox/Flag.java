@@ -102,16 +102,20 @@ public class Flag extends Tag {
 
     public static final int ID_FLAG_NO_INHERIT = -23;
     public static final int BITMASK_NO_INHERIT = 1 << getIndex(ID_FLAG_NO_INHERIT); // 4194304
-        static { FLAG_REP[getIndex(ID_FLAG_NO_INHERIT)] = 'i'; }
+    static { FLAG_REP[getIndex(ID_FLAG_NO_INHERIT)] = 'i'; }
+            
+    public static final int ID_FLAG_INVITE = -24;
+    public static final int BITMASK_INVITE = 1 << getIndex(ID_FLAG_INVITE); // 8388608
+    static { FLAG_REP[getIndex(ID_FLAG_NO_INHERIT)] = 'v'; }
 
 
     static final String UNREAD_FLAG_ONLY = getAbbreviation(ID_FLAG_UNREAD) + "";
 
-    public static final int FLAG_SYSTEM = BITMASK_FROM_ME | BITMASK_ATTACHED | BITMASK_COPIED | BITMASK_DRAFT;
+    public static final int FLAG_SYSTEM = BITMASK_FROM_ME | BITMASK_ATTACHED | BITMASK_COPIED | BITMASK_DRAFT | BITMASK_INVITE;
 
     public static final int FLAGS_FOLDER  = BITMASK_CHECKED | BITMASK_SUBSCRIBED | BITMASK_EXCLUDE_FREEBUSY | BITMASK_NO_INHERIT;
     public static final int FLAGS_MESSAGE = BITMASK_FROM_ME | BITMASK_REPLIED  | BITMASK_FORWARDED |
-                                            BITMASK_DRAFT   | BITMASK_NOTIFIED | BITMASK_UNREAD;
+                                            BITMASK_DRAFT   | BITMASK_NOTIFIED | BITMASK_UNREAD | BITMASK_INVITE ;
     public static final int FLAGS_GENERIC = BITMASK_ATTACHED | BITMASK_COPIED | BITMASK_FLAGGED | BITMASK_DELETED;
 
     /** Bitmask of all valid flags <b>except</b> {@link #BITMASK_UNREAD}. */

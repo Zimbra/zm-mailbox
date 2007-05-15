@@ -131,7 +131,7 @@ public final class ZimbraQueryParser {
 
         sIsStrMap.put("invite",
                       new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
-                          return ZimbraQuery.DBTypeQuery.IS_INVITE(mbx, analyze, modifier);
+                          return new ZimbraQuery.IsInviteQuery(mbx, analyze, modifier, true);
                       } } );
                       
         sIsStrMap.put("anywhere",
@@ -139,7 +139,7 @@ public final class ZimbraQueryParser {
                           return ZimbraQuery.InQuery.Create(mbx, analyze, modifier, ZimbraQuery.InQuery.IN_ANY_FOLDER);
                       } } );
                       
-        sIsStrMap.put("local",
+        sIsStrMap.put("local", 
                       new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
                           return ZimbraQuery.InQuery.Create(mbx, analyze, modifier, ZimbraQuery.InQuery.IN_LOCAL_FOLDER);
                       } } );

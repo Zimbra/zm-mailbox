@@ -1063,6 +1063,23 @@ public final class ZimbraQuery {
                 return super.toString(expLevel) + ",UNREPLIED)";
             }
         }
+    }
+    
+
+    public static class IsInviteQuery extends TagQuery
+    {
+        public IsInviteQuery(Mailbox mailbox, Analyzer analyzer, int modifier, boolean truth) throws ServiceException
+        {
+            super(analyzer, modifier, mailbox.mInviteFlag, truth);
+        }
+
+        public String toString(int expLevel) {
+            if (mTruth) {
+                return super.toString(expLevel) + ",INVITE)";
+            } else {
+                return super.toString(expLevel) + ",NOT_INVITE)";
+            }
+        }
     }    
 
     public static class SentQuery extends TagQuery
@@ -1411,34 +1428,6 @@ public final class ZimbraQuery {
 
         public String toString(int expLevel) {
             return super.toString(expLevel)+","+mTag+")";
-        }
-    }
-
-    public static class DBTypeQuery extends BaseQuery
-    {
-        private byte mType;
-
-        public DBTypeQuery(Analyzer analyzer, int modifier, byte type) 
-        {
-            super(modifier, ZimbraQueryParser.IS);
-            mType = type;
-        }
-
-        public static DBTypeQuery IS_INVITE(Mailbox mailbox, Analyzer analyzer, int modifier) throws ServiceException {
-//          return new DBTypeQuery(analyzer, modifier, MailItem.TYPE_INVITE);
-            return new DBTypeQuery(analyzer, modifier, MailItem.TYPE_MESSAGE);
-        }
-
-        protected QueryOperation getQueryOperation(boolean truth) {
-            DBQueryOperation dbOp = DBQueryOperation.Create();
-
-            dbOp.addTypeClause(mType, calcTruth(truth));
-
-            return dbOp;
-        }
-
-        public String toString(int expLevel) {
-            return super.toString(expLevel)+","+mType+")";
         }
     }
 

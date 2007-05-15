@@ -376,6 +376,8 @@ public class Mailbox {
     public Flag mCheckedFlag;
     /** flag: whether a folder does not inherit permissions from its parent */
     public Flag mNoInheritFlag;
+    /** flag: when a message is a valid Invite */
+    public Flag mInviteFlag;
 
     /** the full set of message flags, in order */
     final Flag[] mFlags = new Flag[31];
@@ -1146,6 +1148,7 @@ public class Mailbox {
         mExcludeFBFlag = Flag.instantiate(this, "\\ExcludeFB",  Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_EXCLUDE_FREEBUSY);
         mCheckedFlag   = Flag.instantiate(this, "\\Checked",    Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_CHECKED);
         mNoInheritFlag = Flag.instantiate(this, "\\NoInherit",  Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_NO_INHERIT);
+        mInviteFlag   =  Flag.instantiate(this, "\\Invite",     Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_INVITE);
     }
 
     private void loadFoldersAndTags() throws ServiceException {

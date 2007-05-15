@@ -704,7 +704,7 @@ public class ToXML {
             if (sent != null)
                 m.addAttribute(MailConstants.A_SENT_DATE, sent.getTime());
 
-            if (msg.isInvite())
+            if (msg.isInvite() && msg.hasCalendarItemInfos())
                 encodeInvitesForMessage(m, ifmt, octxt, msg, NOTIFY_FIELDS);
 
             if (headers != null) {
@@ -1031,7 +1031,7 @@ public class ToXML {
         if (!fragment.equals(""))
             e.addAttribute(MailConstants.E_FRAG, fragment, Element.Disposition.CONTENT);
 
-        if (msg.isInvite()) {
+        if (msg.isInvite() && msg.hasCalendarItemInfos()) {
             try {
                 encodeInvitesForMessage(e, ifmt, octxt, msg, fields);
             } catch (ServiceException ex) {

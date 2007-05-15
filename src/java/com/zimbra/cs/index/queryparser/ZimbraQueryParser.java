@@ -94,7 +94,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
 
         sIsStrMap.put("invite",
                       new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
-                          return ZimbraQuery.DBTypeQuery.IS_INVITE(mbx, analyze, modifier);
+                          return new ZimbraQuery.IsInviteQuery(mbx, analyze, modifier, true);
                       } } );
 
         sIsStrMap.put("anywhere",
