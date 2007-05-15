@@ -78,7 +78,7 @@ public class ZimbraStatsAppender extends FileAppender {
 
   SimpleDateFormat sdf;
 
-  RollingCalendar rc = new RollingCalendar();
+  ZimbraRollingCalendar rc = new ZimbraRollingCalendar();
 
   int checkPeriod = TOP_OF_TROUBLE;
 
@@ -180,7 +180,7 @@ public class ZimbraStatsAppender extends FileAppender {
   // GMT (the epoch).
 
   int computeCheckPeriod() {
-    RollingCalendar rollingCalendar = new RollingCalendar(gmtTimeZone, Locale.ENGLISH);
+    ZimbraRollingCalendar rollingCalendar = new ZimbraRollingCalendar(gmtTimeZone, Locale.ENGLISH);
     // set sate to 1970-01-01 00:00:00 GMT
     Date epoch = new Date(0);
     if(datePattern != null) {
@@ -303,15 +303,15 @@ public class ZimbraStatsAppender extends FileAppender {
  *  Given a periodicity type and the current time, it computes the
  *  start of the next interval.  
  * */
-class RollingCalendar extends GregorianCalendar {
+class ZimbraRollingCalendar extends GregorianCalendar {
 
   int type = ZimbraStatsAppender.TOP_OF_TROUBLE;
 
-  RollingCalendar() {
+  ZimbraRollingCalendar() {
     super();
   }  
 
-  RollingCalendar(TimeZone tz, Locale locale) {
+  ZimbraRollingCalendar(TimeZone tz, Locale locale) {
     super(tz, locale);
   }  
 
