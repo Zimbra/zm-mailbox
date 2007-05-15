@@ -2,7 +2,7 @@ NOTE: If you are stuck and somehow want to try your luck with tomcat, there's a 
 
 0. Here we assume you have previously been using tomcat and have setup /opt/zimbra with ldap etc.  If not, follow steps in INSTALL*.txt.
 
-1. Copy entire folder from ThirdParty/jetty-{latest-version} to /opt/zimbra and symlink 'ln -s /opt/zimbra/jetty-{verison} /opt/zimbra/jetty.  On Windows because there's no symlink, rename the jetty directory to C:\opt\zimbra\jetty.
+1. untargz ThirdParty/jetty/jetty-{latest-version}.tar.gz to /opt/zimbra and symlink 'ln -s /opt/zimbra/jetty-{verison} /opt/zimbra/jetty.  On Windows because there's no symlink, rename the jetty directory to C:\opt\zimbra\jetty.
 
 2. On Mac or Unix copy ZimbraServer/src/bin/jetty script to /opt/zimbra/bin.  Set env var JAVA_HOME to the right place.  On Mac OS X it should be /System/Library/Frameworks/JavaVM.framework/Home.  On Windows it depends on where you installed JDK.  JAVA_HOME is needed by the jetty start/stop script.
 
