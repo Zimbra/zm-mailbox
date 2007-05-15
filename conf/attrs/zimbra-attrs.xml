@@ -2082,4 +2082,22 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Number of threads that can simultaneously process data source imports.</desc>
 </attr>
 
+<attr id="458" name="zimbraBackupTarget" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>/opt/zimbra/backup</globalConfigValue>
+  <desc>Default backup target path</desc>
+</attr>
+
+<attr id="459" name="zimbraBackupReportEmailRecipients" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited">
+  <desc>Backup report email recipients</desc>
+</attr>
+
+<attr id="460" name="zimbraBackupReportEmailSender" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <desc>Backup report email From address</desc>
+</attr>
+
+<attr id="461" name="zimbraBackupReportEmailSubjectPrefix" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>ZCS Backup Report</globalConfigValue>
+  <desc>Backup report email subject prefix</desc>
+</attr>
+
 </attrs>

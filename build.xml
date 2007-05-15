@@ -726,6 +726,8 @@
 		<echo file="${build.zmprov}">		
 		ModifyConfig zimbraLogHostname ${zimbra.server.hostname}
 		ModifyConfig zimbraRemoteManagementUser ${zimbra.user}
+		ModifyConfig zimbraBackupReportEmailRecipients '"Backup Admin" &lt;user2@${zimbra.server.hostname}&gt;'
+		ModifyConfig zimbraBackupReportEmailSender '"Backup Daemon" &lt;admin@${zimbra.server.hostname}&gt;'
 		CreateServer ${zimbra.server.hostname} \
 			zimbraSmtpHostname ${zimbra.smtp.host} \
 			zimbraMailPort 7070 \

@@ -1183,6 +1183,14 @@ public abstract class Provisioning {
     public static final String A_zimbraChildVisibleAccount   = "zimbraChildVisibleAccount";
     public static final String A_zimbraFeatureOptionsEnabled = "zimbraFeatureOptionsEnabled";
 
+    /*
+     * Backup/Restore
+     */
+    public static final String A_zimbraBackupTarget = "zimbraBackupTarget";
+    public static final String A_zimbraBackupReportEmailRecipients = "zimbraBackupReportEmailRecipients";
+    public static final String A_zimbraBackupReportEmailSender = "zimbraBackupReportEmailSender";
+    public static final String A_zimbraBackupReportEmailSubjectPrefix = "zimbraBackupReportEmailSubjectPrefix";
+
     private static Provisioning sProvisioning;
 
     public synchronized static Provisioning getInstance() {
