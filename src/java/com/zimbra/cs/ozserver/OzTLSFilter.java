@@ -56,7 +56,7 @@ public class OzTLSFilter extends OzFilter {
         try {
             char[] passphrase = "zimbra".toCharArray();
             KeyStore ks = KeyStore.getInstance("JKS");
-            ks.load(new FileInputStream(LC.tomcat_keystore.value()), passphrase);
+            ks.load(new FileInputStream(LC.mailboxd_keystore.value()), passphrase);
             
             KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
             kmf.init(ks, passphrase);

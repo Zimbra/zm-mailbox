@@ -2,7 +2,7 @@
 
     <property file='build-custom.properties' />
 
-    <property environment="env"/>
+	<property environment="env"/>
 
 	<!-- The OS user running ZCS.  Use ZIMBRA_USER environment variable
 	     if set.  If not, default to "zimbra". -->
@@ -92,8 +92,8 @@
 	<condition property="is-windows"><os family="windows"/></condition>
 	<condition property="is-unix"><not><os family="windows"/></not></condition>
 	
-	<condition property="use-jetty"><isset property="env.ZIMBRA_USE_JETTY"/></condition>
-	<condition property="use-tomcat"><not><isset property="use-jetty"/></not></condition>
+	<condition property="use-tomcat"><isset property="env.ZIMBRA_USE_TOMCAT"/></condition>
+	<condition property="use-jetty"><not><isset property="use-tomcat"/></not></condition>
 	
 	<condition property="webserver.name" value="jetty"><isset property="use-jetty"/></condition>
 	<condition property="webserver.name" value="tomcat"><isset property="use-tomcat"/></condition>
@@ -334,7 +334,7 @@
 		<isset property="use-tomcat"/>
 	</condition>
 	<!-- jetty has its own log4j and naming stuff, so don't include ldap.jar and commons-logging.jar -->
-	<condition property="war.exclude" value="${ical4j.jar},servlet-api.jar,jsp-api.jar,mail.jar,activation.jar,zimbra-native.jar,KeyView.jar,ldap.jar,commons-logging.jar, jetty-util-6.1.2rc1.jar">
+	<condition property="war.exclude" value="${ical4j.jar},servlet-api.jar,jsp-api.jar,mail.jar,activation.jar,zimbra-native.jar,KeyView.jar,ldap.jar,jetty-util-*.jar">
 		<isset property="use-jetty"/>
 	</condition>
 
@@ -366,7 +366,7 @@
 		<copy file="${warfile}" todir="${webserver.root.dir}/webapps"/>
         <mkdir dir='${webserver.root.dir}/webapps/service' />
         <unzip dest="${webserver.root.dir}/webapps/service" src="${webserver.root.dir}/webapps/${warfilename}" />
-        <antcall target="start-jetty"/>
+		<antcall target="start-jetty"/>
 	</target>
 
     <target name="remote-deploy" if="remote.deploy.host" depends="war">
@@ -393,7 +393,7 @@
 	<target name="init-opt-zimbra" depends="dev-dist,localhost-ssl-cert">
 		<copy todir="${zimbra.home.dir}">
 			<fileset dir="${dist.dir}"/>
-		</copy>
+		</copy>	
 		<chmod perm="a+rx"><fileset dir="${zimbra.home.dir}/bin"/><fileset dir="${zimbra.home.dir}/libexec"/></chmod><!-- ant does not preserve perms on copy -->
 	</target>
 
@@ -433,14 +433,14 @@
     
 	<target name="dev-dist" depends="war,dev-dist-unix,choose-db-schema">
 		<!-- bin, libexec -->
-		<copy todir="${dist.dir}/bin" overwrite="true"><fileset dir="${src.dir}/bin" excludes="*.production"/></copy>
+		<copy todir="${dist.dir}/bin" overwrite="true"><fileset dir="${src.dir}/bin" excludes="*.production,mailboxdctl"/></copy>
 		<copy todir="${dist.dir}/libexec" overwrite="true"><fileset dir="${src.dir}/libexec" excludes="*.production"/></copy>
-		<if><isset property="use-tomcat"/><then>
-			<copy tofile="${dist.dir}/bin/tomcat" file="${src.dir}/bin/tomcat${production.suffix}" overwrite="true"/>
-		</then></if>
-		<if><isset property="use-jetty"/><then>
-			<copy tofile="${dist.dir}/bin/jetty" file="${src.dir}/bin/jetty${production.suffix}" overwrite="true"/>
-		</then></if>
+		<if><isset property="is-production"/><then>
+		    <copy tofile="${dist.dir}/bin/${webserver.name}" file="${src.dir}/bin/${webserver.name}" overwrite="true"/>
+		    <copy tofile="${dist.dir}/bin/mailboxdctl" file="${src.dir}/bin/mailboxdctl" overwrite="true"/>
+		</then><else>
+		    <copy tofile="${dist.dir}/bin/mailboxdctl" file="${src.dir}/bin/mailboxdctl" overwrite="true"/>
+		</else></if>
 		<copy tofile="${dist.dir}/bin/ldap" file="${src.dir}/bin/ldap${production.suffix}" overwrite="true"/>
 		<fixcrlf srcdir="${dist.dir}/bin" eol="unix"/>
 		<fixcrlf srcdir="${dist.dir}/libexec" eol="unix"/>
@@ -475,9 +475,9 @@
 		<!-- jetty -->
 		<if><isset property="use-jetty"/><then>
 			<copy todir="${dist.dir}/jetty/webapps" file="${warfile}" overwrite="true"/>
-			<copy tofile="${dist.dir}/jetty/etc/jettyrc" file="${config.dir}/jetty-6.1/jettyrc${production.suffix}" overwrite="true"/>
-			<copy tofile="${dist.dir}/jetty/etc/jetty.xml" file="${config.dir}/jetty-6.1/jetty.xml${production.suffix}" overwrite="true"/>
-			<copy tofile="${dist.dir}/jetty/etc/start.config" file="${config.dir}/jetty-6.1/start.config${production.suffix}" overwrite="true"/>
+			<copy tofile="${dist.dir}/jetty/etc/jettyrc" file="${config.dir}/jetty-6.1/jettyrc" overwrite="true"/>
+			<copy tofile="${dist.dir}/jetty/etc/jetty.xml" file="${config.dir}/jetty-6.1/jetty.xml" overwrite="true"/>
+			<copy tofile="${dist.dir}/jetty/etc/start.config" file="${config.dir}/jetty-6.1/start.config" overwrite="true"/>
 			<copy todir="${dist.dir}/jetty/common/lib" overwrite="true"><fileset dir="${common.jars.dir}" includes="${ical4j.jar},mail.jar,activation.jar,zimbra-native.jar,zimbra-charset.jar"/></copy>
 		</then></if>
 		

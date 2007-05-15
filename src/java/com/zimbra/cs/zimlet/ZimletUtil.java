@@ -519,12 +519,12 @@ public class ZimletUtil {
 			FileUtil.mkdirs(zimletDir);
 		}
 		
-		File serviceLibDir = new File(LC.tomcat_directory.value() + File.separator + 
+		File serviceLibDir = new File(LC.mailboxd_directory.value() + File.separator + 
 									"webapps" + File.separator + 
 									"service" + File.separator + 
 									"WEB-INF" + File.separator + 
 									"lib");
-		File msgPropDir = new File(LC.tomcat_directory.value() + File.separator + 
+		File msgPropDir = new File(LC.mailboxd_directory.value() + File.separator + 
 									"webapps" + File.separator + 
 									"zimbra"  + File.separator + 
 									"WEB-INF" + File.separator + 

@@ -78,7 +78,7 @@ public class PrivilegedServlet extends HttpServlet {
             if (LC.ssl_allow_untrusted_certs.booleanValue())
                 EasySSLProtocolSocketFactory.init();
 
-            System.setProperty("javax.net.ssl.keyStore", LC.tomcat_keystore.value());
+            System.setProperty("javax.net.ssl.keyStore", LC.mailboxd_keystore.value());
             System.setProperty("javax.net.ssl.keyStorePassword", "zimbra");
             System.setProperty("javax.net.ssl.trustStorePassword", "changeit");
 
