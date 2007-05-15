@@ -196,12 +196,12 @@ public class LC {
     public static final KnownKey postfix_virtual_mailbox_maps;
     public static final KnownKey postfix_virtual_transport;
 
-    public static final KnownKey tomcat_directory;
-    public static final KnownKey tomcat_java_heap_memory_percent;
-    public static final KnownKey tomcat_java_options;
-    public static final KnownKey tomcat_java_home;
-    public static final KnownKey tomcat_pidfile;
-    public static final KnownKey tomcat_keystore;
+    public static final KnownKey mailboxd_directory;
+    public static final KnownKey mailboxd_java_heap_memory_percent;
+    public static final KnownKey mailboxd_java_options;
+    public static final KnownKey mailboxd_java_home;
+    public static final KnownKey mailboxd_pidfile;
+    public static final KnownKey mailboxd_keystore;
 
     public static final KnownKey ssl_allow_untrusted_certs;
 
@@ -712,37 +712,37 @@ public class LC {
         postfix_virtual_transport.setDefault("error");
         postfix_virtual_transport.setDoc("postfix_virtual_transport");
 
-        tomcat_directory = new KnownKey("tomcat_directory");
-        tomcat_directory.setDefault("${zimbra_home}" + FS + "tomcat");
-        tomcat_directory.setDoc("Location of tomcat installation.");
+        mailboxd_directory = new KnownKey("mailboxd_directory");
+        mailboxd_directory.setDefault("${zimbra_home}" + FS + "mailboxd");
+        mailboxd_directory.setDoc("Location of mailboxd installation.");
 
-        tomcat_java_heap_memory_percent = new KnownKey("tomcat_java_heap_memory_percent");
-        tomcat_java_heap_memory_percent.setDefault("30");
-        tomcat_java_heap_memory_percent.setDoc("Percentage of system memory that will be used as the" +
-                    " maximum Java heap size (-Xmx) of the JVM running Tomcat.");
+        mailboxd_java_heap_memory_percent = new KnownKey("mailboxd_java_heap_memory_percent");
+        mailboxd_java_heap_memory_percent.setDefault("30");
+        mailboxd_java_heap_memory_percent.setDoc("Percentage of system memory that will be used as the" +
+                    " maximum Java heap size (-Xmx) of the JVM running Mailboxd.");
 
-        tomcat_java_options = new KnownKey("tomcat_java_options");
-        tomcat_java_options.setDefault("-client -XX:NewRatio=2 -Djava.awt.headless=true");
-        tomcat_java_options.setDoc("JVM options to use when launching Tomcat.");
+        mailboxd_java_options = new KnownKey("mailboxd_java_options");
+        mailboxd_java_options.setDefault("-client -XX:NewRatio=2 -Djava.awt.headless=true");
+        mailboxd_java_options.setDoc("JVM options to use when launching Mailboxd.");
 
-        tomcat_java_home = new KnownKey("tomcat_java_home");
-        tomcat_java_home.setDefault("${zimbra_java_home}");
-        tomcat_java_home.setDoc("Path to JDK/JRE to use for running Tomcat.");
+        mailboxd_java_home = new KnownKey("mailboxd_java_home");
+        mailboxd_java_home.setDefault("${zimbra_java_home}");
+        mailboxd_java_home.setDoc("Path to JDK/JRE to use for running Mailboxd.");
 
-        tomcat_pidfile = new KnownKey("tomcat_pidfile");
-        tomcat_pidfile.setDefault("${zimbra_log_directory}" + FS + "tomcat.pid");
-        tomcat_pidfile.setDoc("File in which process id of Tomcat JVM is stored.");
+        mailboxd_pidfile = new KnownKey("mailboxd_pidfile");
+        mailboxd_pidfile.setDefault("${zimbra_log_directory}" + FS + "mailboxd.pid");
+        mailboxd_pidfile.setDoc("File in which process id of Mailboxd JVM is stored.");
 
-        tomcat_keystore = new KnownKey("tomcat_keystore");
-        tomcat_keystore.setDefault("${tomcat_directory}" + FS + "conf" + FS + "keystore");
-        tomcat_keystore.setDoc("Location of keystore data file.");
+        mailboxd_keystore = new KnownKey("mailboxd_keystore");
+        mailboxd_keystore.setDefault("${mailboxd_directory}" + FS + "conf" + FS + "keystore");
+        mailboxd_keystore.setDoc("Location of keystore data file.");
 
         ssl_allow_untrusted_certs = new KnownKey("ssl_allow_untrusted_certs");
         ssl_allow_untrusted_certs.setDefault("false");
         ssl_allow_untrusted_certs.setDoc("If true, allow self-signed SSL certificates.");
 
         zimlet_directory = new KnownKey("zimlet_directory");
-        zimlet_directory.setDefault("${tomcat_directory}" + FS + "webapps" + FS + "service" + FS + "zimlet");
+        zimlet_directory.setDefault("${mailboxd_directory}" + FS + "webapps" + FS + "service" + FS + "zimlet");
         zimlet_directory.setDoc("Path to installed Zimlets.");
 
         wiki_enabled = new KnownKey("wiki_enabled");
