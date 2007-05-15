@@ -734,7 +734,7 @@ public class LC {
         mailboxd_pidfile.setDoc("File in which process id of Mailboxd JVM is stored.");
 
         mailboxd_keystore = new KnownKey("mailboxd_keystore");
-        mailboxd_keystore.setDefault("${mailboxd_directory}" + FS + "conf" + FS + "keystore");
+        mailboxd_keystore.setDefault("${mailboxd_directory}" + FS + "etc" + FS + "keystore");
         mailboxd_keystore.setDoc("Location of keystore data file.");
 
         ssl_allow_untrusted_certs = new KnownKey("ssl_allow_untrusted_certs");
