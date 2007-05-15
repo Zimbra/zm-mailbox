@@ -62,7 +62,6 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.util.L10nUtil;
@@ -171,7 +170,7 @@ public class CalendarCollection extends Collection {
 			throw new DavException("empty request", HttpServletResponse.SC_BAD_REQUEST, null);
 		
 		/*
-		 * some of the iCal clients do not behave very well when it comes to
+		 * some of the CalDAV clients do not behave very well when it comes to
 		 * etags.
 		 * 
 		 * chandler doesn't set User-Agent header, doesn't understand 

@@ -56,7 +56,11 @@ public class CalendarObject extends MailItemResource {
 	public static final String CAL_EXTENSION = ".ics";
 	
 	public CalendarObject(DavContext ctxt, CalendarItem calItem) throws ServiceException {
-		super(ctxt, getCalendarPath(calItem), calItem);
+		this(ctxt, getCalendarPath(calItem), calItem);
+	}
+	
+	protected CalendarObject(DavContext ctxt, String path, CalendarItem calItem) throws ServiceException {
+		super(ctxt, path, calItem);
 		mUid = calItem.getUid();
 		mInvites = calItem.getInvites();
 		mTzmap = calItem.getTimeZoneMap();

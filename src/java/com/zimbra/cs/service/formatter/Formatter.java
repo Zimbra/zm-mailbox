@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 
 import javax.servlet.ServletException;
 
@@ -88,12 +87,6 @@ public abstract class Formatter {
         BlockingOperation op = BlockingOperation.schedule(this.getClass().getSimpleName()+"(FORMAT)", null, context.opContext, context.targetMailbox, Requester.REST, Priority.BATCH, 1);
         try {
         	formatCallback(context);
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("Caught IOException", e);
-        } catch (ServletException e) {
-            throw ServiceException.FAILURE("Caught ServletException", e); 
-        } catch (UserServletException e) {
-            throw ServiceException.FAILURE("Caught UserServletException", e); 
         } catch (ServiceException e) {
             Throwable cause = e.getCause();
             if (cause instanceof UserServletException)
@@ -113,12 +106,6 @@ public abstract class Formatter {
         BlockingOperation op = BlockingOperation.schedule(this.getClass().getSimpleName()+"(SAVE)", null, context.opContext, context.targetMailbox, Requester.REST, Priority.BATCH, 1);
         try {
             saveCallback(body, context, contentType, folder, filename);
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("Caught IOException", e);
-        } catch (ServletException e) {
-            throw ServiceException.FAILURE("Caught ServletException", e); 
-        } catch (UserServletException e) {
-            throw ServiceException.FAILURE("Caught UserServletException", e); 
         } catch (ServiceException e) {
             Throwable cause = e.getCause();
             if (cause instanceof UserServletException)

@@ -26,6 +26,7 @@ package com.zimbra.cs.dav.resource;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 import javax.servlet.http.HttpServletResponse;
@@ -34,6 +35,7 @@ import org.apache.commons.httpclient.HttpURL;
 import org.apache.commons.httpclient.HttpsURL;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -48,6 +50,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.Message;
 
 /**
  * UrlNamespace provides a mapping from a URL to a DavResource.
@@ -197,8 +200,13 @@ public class UrlNamespace {
 				resource = new Notebook(ctxt, (Document)item);
 				break;
 			case MailItem.TYPE_APPOINTMENT :
-            case MailItem.TYPE_TASK :
+			case MailItem.TYPE_TASK :
 				resource = new CalendarObject(ctxt, (CalendarItem)item);
+				break;
+			case MailItem.TYPE_MESSAGE :
+				Message msg = (Message)item;
+				if (msg.isInvite())
+					resource = new CalendarScheduleMessage(ctxt, msg);
 				break;
 			}
 		} catch (ServiceException e) {
@@ -288,9 +296,19 @@ public class UrlNamespace {
 				throw new DavException("no such accout "+user, HttpServletResponse.SC_NOT_FOUND, null);
 			
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-
+			String id = null;
+			int index = path.indexOf('?');
+			if (index > 0) {
+				Map<String, String> params = HttpUtil.getURIParams(path.substring(index+1));
+				path = path.substring(0, index);
+				id = params.get("id");
+			}
 			Mailbox.OperationContext octxt = ctxt.getOperationContext();
-			int index = path.lastIndexOf('/');
+
+			if (id != null)
+				return mbox.getItemById(octxt, Integer.parseInt(id), MailItem.TYPE_UNKNOWN);
+
+			index = path.lastIndexOf('/');
 			Folder f = null;
 			if (index != -1) {
 				try {
