@@ -109,9 +109,8 @@ public class MimeCompoundHeader {
     public MimeCompoundHeader(String header) { this(header, false); }
     public MimeCompoundHeader(String header, boolean use2231) {
         use2231Encoding = use2231;
-        if (header == null) {
-            normalizeValue();  return;
-        }
+        if (header == null)
+            return;
         header = header.trim();
 
         RFC2231Data rfc2231 = new RFC2231Data();
@@ -211,13 +210,10 @@ public class MimeCompoundHeader {
 
         rfc2231.saveParameter(mParams);
         mValue = mParams.remove(null);
-        normalizeValue();
     }
 
-    void normalizeValue()  {}
-
     public String getValue()                          { return mValue; }
-    public MimeCompoundHeader setValue(String value)  { mValue = value;  normalizeValue();  return this; }
+    public MimeCompoundHeader setValue(String value)  { mValue = value;  return this; }
 
     public boolean containsParameter(String name)  { return mParams.containsKey(name); }
     public String getParameter(String name)        { return mParams.get(name); }
@@ -312,11 +308,13 @@ public class MimeCompoundHeader {
 
     public static class ContentType extends MimeCompoundHeader {
         private String mPrimaryType, mSubType;
+        private final String mDefault;
 
-        public ContentType(String header)                   { super(header); }
-        public ContentType(String header, boolean use2231)  { super(header, use2231); }
+        public ContentType(String header)                   { super(header);  mDefault = Mime.CT_DEFAULT;  normalizeValue(); }
+        public ContentType(String header, String def)       { super(header);  mDefault = def;  normalizeValue(); }
+        public ContentType(String header, boolean use2231)  { super(header, use2231);  mDefault = Mime.CT_DEFAULT;  normalizeValue(); }
 
-        public ContentType setValue(String value)                   { super.setValue(value);  return this; }
+        public ContentType setValue(String value)                   { super.setValue(value);  normalizeValue();  return this; }
         public ContentType setParameter(String name, String value)  { super.setParameter(name, value);  return this; }
 
         public String getPrimaryType()  { return mPrimaryType; }
@@ -326,7 +324,7 @@ public class MimeCompoundHeader {
             String value = getValue();
             if (value == null || value.trim().equals("")) {
                 // default to "text/plain" if no content-type specified
-                setValue(Mime.CT_DEFAULT);
+                setValue(mDefault);
             } else {
                 if (!value.equals(value.trim().toLowerCase())) {
                     // downcase the content-type if necessary
@@ -340,7 +338,7 @@ public class MimeCompoundHeader {
                         mPrimaryType = value.substring(0, slash).trim();
                         mSubType = value.substring(slash + 1).trim();
                         if (mPrimaryType.equals("") || mSubType.equals(""))
-                            setValue(mPrimaryType.equals("text") ? Mime.CT_DEFAULT : Mime.CT_APPLICATION_OCTET_STREAM);
+                            setValue(mPrimaryType.equals("text") ? Mime.CT_TEXT_PLAIN : Mime.CT_APPLICATION_OCTET_STREAM);
                     }
                 }
             }
@@ -351,10 +349,10 @@ public class MimeCompoundHeader {
 
 
     public static class ContentDisposition extends MimeCompoundHeader {
-        public ContentDisposition(String header)                   { super(header); }
-        public ContentDisposition(String header, boolean use2231)  { super(header, use2231); }
+        public ContentDisposition(String header)                   { super(header);  normalizeValue(); }
+        public ContentDisposition(String header, boolean use2231)  { super(header, use2231);  normalizeValue(); }
 
-        public ContentDisposition setValue(String value)                   { super.setValue(value);  return this; }
+        public ContentDisposition setValue(String value)                   { super.setValue(value);  normalizeValue();  return this; }
         public ContentDisposition setParameter(String name, String value)  { super.setParameter(name, value);  return this; }
 
         void normalizeValue() {
