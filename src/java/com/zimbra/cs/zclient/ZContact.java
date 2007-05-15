@@ -33,6 +33,7 @@ import com.zimbra.common.soap.Element;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 
 public class ZContact implements ZItem {
 
@@ -120,6 +121,12 @@ public class ZContact implements ZItem {
 
     public boolean isGalContact() {
         return mGalContact;
+    }
+
+    public boolean getIsGroup() { return getAttrs().get("dlist") != null; }
+
+    public List<ZEmailAddress> getGroupMembers() throws ServiceException {
+        return ZEmailAddress.parseAddresses(getAttrs().get("dlist"), ZEmailAddress.EMAIL_TYPE_TO);
     }
 
     public String toString() {
