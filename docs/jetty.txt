@@ -41,7 +41,7 @@ To run jetty, go to ZimbraServer directory and run 'ant jetty.run'.  This task a
 
 To debug, run the jetty.run target with ANT_OPTS like this:
 
-ANT_OPTS="-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,address=4000,server=y,suspend=y" ant jetty.run
+ANT_OPTS="-Xdebug -Xnoagent -Djava.compiler=NONE  -Djava.library.path=/opt/zimbra/lib -Xrunjdwp:transport=dt_socket,address=4000,server=y,suspend=y" ant jetty.run
 
 On Windows you can make a bat file to set ANT_OPTS and then run 'ant jetty.run'.
 
