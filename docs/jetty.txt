@@ -2,49 +2,15 @@ NOTE: If you are stuck and somehow want to try your luck with tomcat, there's a 
 
 0. Here we assume you have previously been using tomcat and have setup /opt/zimbra with ldap etc.  If not, follow steps in INSTALL*.txt.
 
-1. Download latest jetty 6.1.x from http://dist.codehaus.org/jetty/.  As of writing the latest version is jetty-6.1.2rc5.zip, but rc5 doesn't work for me when used with jetty-ant plugin so for dev environment I recommend using rc1 for the time being.
+1. Copy entire folder from ThirdParty/jetty-{latest-version} to /opt/zimbra and symlink 'ln -s /opt/zimbra/jetty-{verison} /opt/zimbra/jetty.  On Windows because there's no symlink, rename the jetty directory to C:\opt\zimbra\jetty.
 
-2. Unzip it to /opt/zimbra so that you have /opt/zimbra/jetty-6.1.x directory.  Symlink 'ln -s /opt/zimbra/jetty-6.1.x /opt/zimbra/jetty.  On Windows because there's no symlink, rename the jetty directory to C:\opt\zimbra\jetty.
-   Note that for running jetty you only need the following very small subset of what's in the zip package, which is what we package in production builds:
+2. On Mac or Unix copy ZimbraServer/src/bin/jetty script to /opt/zimbra/bin.  Set env var JAVA_HOME to the right place.  On Mac OS X it should be /System/Library/Frameworks/JavaVM.framework/Home.  On Windows it depends on where you installed JDK.  JAVA_HOME is needed by the jetty start/stop script.
 
-   LICENSES/LICENSE.txt
-   LICENSES/NOTICE.txt
-   common/lib/activation.jar
-   common/lib/ical4j-0.9.16-patched.jar
-   common/lib/mail.jar
-   common/lib/zimbra-charset.jar
-   common/lib/zimbra-native.jar
-   etc/jetty.xml
-   etc/keystore
-   etc/start.config
-   etc/webdefault.xml
-   lib/jcl104-over-slf4j-1.1.0.jar
-   lib/jetty-6.1.2rc1.jar
-   lib/jetty-util-6.1.2rc1.jar
-   lib/jsp-2.1/ant-1.6.5.jar
-   lib/jsp-2.1/core-3.1.1.jar
-   lib/jsp-2.1/jsp-2.1.jar
-   lib/jsp-2.1/jsp-api-2.1.jar
-   lib/naming/jetty-naming-6.1.2rc1.jar
-   lib/plus/activation-1.1.jar
-   lib/plus/jetty-plus-6.1.2rc1.jar
-   lib/plus/mail-1.4.jar
-   lib/servlet-api-2.5-6.1.2rc1.jar
-   lib/slf4j-api-1.3.0.jar
-   lib/slf4j-simple-1.3.0.jar
-   start.jar
+3. On Windows you may want to install jetty as a Windows service for convenience.  This can be achieved using Java Service Wrapper.  Google search and download wrapper-windows-x86-32-3.2.3.zip and unzip it.  Copy the wrapper.exe file under the unzipped bin directory to C:\opt\zimbra\bin.  Copy wrapper.jar and wrapper.dll under the unzipped lib directory to C:\opt\zimbra\lib.  Finally, copy your p4 ZimbraServer\conf\wrapper.conf to C:\opt\zimbra\jetty\etc.  Now run 'wrapper.exe -i C:\opt\zimbra\jetty\etc\wrapper.conf to install jetty as a Windows Service.
 
-   However for dev environment you should just unzip the whole jetty package.  We'll need the source files for debugging.
+4. Run 'ant reset-the-world' under ZimbraServer. Then run 'ant deploy' and 'ant admin-deploy' under ZimbraWebClient as usual.  For offline, run 'ant offline-reset-the-world'.
 
-3. Jetty internally uses slf4j (Simple Logging Facade for Java to replace Log4J) but they don't distribute it.  So you'll need to download slf4j.  As of writing it's slf4j-1.1.0.tar.gz.  Extra three jar files, jcl104-over-slf4j-1.1.0.jar, slf4j-simple-1.1.0.jar and slf4j-api-1.1.0.jar and put them in /opt/zimbra/jetty/lib.
-
-4. On Mac or Unix copy ZimbraServer/src/bin/jetty script to /opt/zimbra/bin.  Set env var JAVA_HOME to the right place.  On Mac OS X it should be /System/Library/Frameworks/JavaVM.framework/Home.  On Windows it depends on where you installed JDK.  JAVA_HOME is needed by the jetty start/stop script.
-
-5. On Windows you may want to install jetty as a Windows service for convenience.  This can be achieved using Java Service Wrapper.  Download wrapper-windows-x86-32-3.2.3.zip and unzip it.  Copy the wrapper.exe file under the unzipped bin directory to C:\opt\zimbra\bin.  Copy wrapper.jar and wrapper.dll under the unzipped lib directory to C:\opt\zimbra\lib.  Finally, copy your p4 ZimbraServer\conf\wrapper.conf to C:\opt\zimbra\jetty\etc.  Now run 'wrapper.exe -i C:\opt\zimbra\jetty\etc\wrapper.conf to install jetty as a Windows Service.
-
-6. Run 'ant reset-the-world' under ZimbraServer. Then run 'ant deploy' and 'ant admin-deploy' under ZimbraWebClient as usual.  For offline, run 'ant offline-reset-the-world'.
-
-7. On Mac OS X or Linux you should be able to bounce jetty with command line 'jetty start' and 'jetty stop'.  On Windows you can start/stop jetty by running command line 'net start jetty' and 'net stop jetty'.
+5. On Mac OS X or Linux you should be able to bounce jetty with command line 'jetty start' and 'jetty stop'.  On Windows you can start/stop jetty by running command line 'net start jetty' and 'net stop jetty'.
 
 ============
 
