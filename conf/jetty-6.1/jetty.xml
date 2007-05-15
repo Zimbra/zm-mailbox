@@ -122,28 +122,28 @@
 
     <New id="service" class="org.mortbay.jetty.webapp.WebAppContext">
       <Arg><Ref id="Contexts"/></Arg>
-      <Arg><SystemProperty name="jetty.home" default="."/>/webapps/service.war</Arg>
+      <Arg><SystemProperty name="jetty.home" default="."/>/webapps/service</Arg>
       <Arg>/service</Arg>
       <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
     </New>
 
     <New id="zimbra-root-context" class="org.mortbay.jetty.webapp.WebAppContext">
       <Arg><Ref id="Contexts"/></Arg>
-      <Arg><SystemProperty name="jetty.home" default="."/>/webapps/zimbra.war</Arg>
+      <Arg><SystemProperty name="jetty.home" default="."/>/webapps/zimbra</Arg>
       <Arg>/</Arg>
       <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
     </New>
 
     <New id="zimbra" class="org.mortbay.jetty.webapp.WebAppContext">
       <Arg><Ref id="Contexts"/></Arg>
-      <Arg><SystemProperty name="jetty.home" default="."/>/webapps/zimbra.war</Arg>
+      <Arg><SystemProperty name="jetty.home" default="."/>/webapps/zimbra</Arg>
       <Arg>/zimbra</Arg>
       <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
     </New>
 
     <New id="zimbraAdmin" class="org.mortbay.jetty.webapp.WebAppContext">
       <Arg><Ref id="Contexts"/></Arg>
-      <Arg><SystemProperty name="jetty.home" default="."/>/webapps/zimbraAdmin.war</Arg>
+      <Arg><SystemProperty name="jetty.home" default="."/>/webapps/zimbraAdmin</Arg>
       <Arg>/zimbraAdmin</Arg>
       <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
     </New>

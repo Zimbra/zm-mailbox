@@ -240,9 +240,12 @@
     <Ref id="pool">
       <Call name="start"/>
     </Ref>
+    
+    <!-- HTTPBEGIN -->
     <Ref id="http">
       <Call name="start"/>
     </Ref>
+    <!-- HTTPEND -->
     
     <!-- HTTPSBEGIN
     <Ref id="ssl">
