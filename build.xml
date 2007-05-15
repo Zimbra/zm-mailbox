@@ -371,7 +371,7 @@
 
     <target name="remote-deploy" if="remote.deploy.host" depends="war">
 		<echo message="Wait for remote tomcat to start at http://${remote.deploy.host}:${remote.deploy.port}/" />
-        <waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
+        <waitfor checkevery="2" checkeveryunit="second" maxwait="60" maxwaitunit="second">
 			<http url="http://${remote.deploy.host}:${remote.deploy.port}/" />
 		</waitfor>
 		<echo message="Remote server found -- trying manager port at http://${remote.deploy.host}:${remote.deploy.port}/manager/" />
