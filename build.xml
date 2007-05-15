@@ -1129,7 +1129,7 @@
 
 	<target name="start-jetty" depends="start-jetty-windows,start-jetty-unix" if="use-jetty">
 		<echo>Waiting for jetty to start</echo>
-		<waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
+		<waitfor checkevery="5" checkeveryunit="second" maxwait="60" maxwaitunit="second">
 			<http url="http://${deploy.host}:${deploy.port}/" />
 		</waitfor>
 	</target>
