@@ -45,11 +45,11 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.zclient.ZConversation.ZMessageSummary;
 import com.zimbra.cs.zclient.ZGrant.GranteeType;
 import com.zimbra.cs.zclient.ZMailbox.Fetch;
+import com.zimbra.cs.zclient.ZMailbox.GalEntryType;
 import com.zimbra.cs.zclient.ZMailbox.OwnerBy;
 import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
 import com.zimbra.cs.zclient.ZMailbox.SharedItemBy;
 import com.zimbra.cs.zclient.ZMailbox.ZApptSummaryResult;
-import com.zimbra.cs.zclient.ZMailbox.GalEntryType;
 import com.zimbra.cs.zclient.ZMailbox.ZSearchGalResult;
 import com.zimbra.cs.zclient.ZMessage.ZMimePart;
 import com.zimbra.cs.zclient.ZTag.Color;
@@ -69,7 +69,11 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
 
+import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.internet.MimeMessage;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -87,6 +91,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
@@ -741,9 +746,9 @@ public class ZMailboxUtil implements DebugListener {
         return t == null ? null : ZSearchParams.getCanonicalTypes(t);
     }
 
-    private long dateOpt() {
+    private long dateOpt(long def) {
         String ds = mCommandLine.getOptionValue(O_DATE.getOpt());
-        return ds == null ? 0 : Long.parseLong(ds);
+        return ds == null ? def : Long.parseLong(ds);
     }
 
     private String folderOpt()   { return mCommandLine.getOptionValue(O_FOLDER.getOpt()); }
@@ -1333,16 +1338,34 @@ public class ZMailboxUtil implements DebugListener {
         auth(args[0], args[1], urlOpt(true));
     }
 
+    private static Session mSession;
+    static {
+            Properties props = new Properties();
+            props.setProperty("mail.mime.address.strict", "false");
+            mSession = Session.getInstance(props);
+            // Assume that most malformed base64 errors occur due to incorrect delimiters,
+            // as opposed to errors in the data itself.  See bug 11213 for more details.
+            System.setProperty("mail.mime.base64.ignoreerrors", "true");
+    }
+    
     private void addMessage(String folderId, String tags, long date, File file) throws ServiceException, IOException {
         //String aid = mMbox.uploadAttachments(new File[] {file}, 5000);
-        String id = mMbox.addMessage(folderId, null, tags, date, new String(ByteUtil.getContent(file)), false);
+
+        byte[] data = ByteUtil.getContent(file);
+        try {
+            if (date == -1)
+                date = new MimeMessage(mSession, new ByteArrayInputStream(data)).getSentDate().getTime();
+        } catch (MessagingException e) {
+            date = 0;
+        }
+        String id = mMbox.addMessage(folderId, null, tags, date, data, false);
         System.out.format("%s (%s)%n", id, file.getPath());
     }
 
     private void doAddMessage(String[] args) throws ServiceException, IOException {
         String folderId = lookupFolderId(args[0], false);
         String tags = tagsOpt();
-        long date = dateOpt();
+        long date = dateOpt(-1);
 
         for (int i=1; i < args.length; i++) {
             File file = new File(args[i]);
