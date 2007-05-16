@@ -372,7 +372,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>maximum number of gal entries to return from a search</desc>
 </attr>
 
-<attr id="54" name="zimbraPrefGroupMailBy" type="enum" value="conversation,message,hybrid" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="54" name="zimbraPrefGroupMailBy" type="enum" value="conversation,message" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>conversation</defaultCOSValue>
   <desc>how to group mail by default</desc>
 </attr>
