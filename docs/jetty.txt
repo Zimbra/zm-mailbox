@@ -25,18 +25,25 @@ ZIMBRA_USE_TOMCAT=1 and reset-the-world.
    unzip it.  Copy the wrapper.exe file under the unzipped bin
    directory to C:\opt\zimbra\bin.  Copy wrapper.jar and wrapper.dll
    under the unzipped lib directory to C:\opt\zimbra\lib.  Finally,
-   copy your p4 ZimbraServer\conf\wrapper.conf to
+   copy your p4 ZimbraServer\conf\jetty-6.1\wrapper.conf to
    C:\opt\zimbra\jetty\etc.  Now run:
 
      wrapper.exe -i C:\opt\zimbra\jetty\etc\wrapper.conf 
 
-   to install jetty as a Windows Service.
+   to install jetty as a Windows Service.  Make sure the 'C' in 'C:' is
+   in upper case because wrapper.exe surprisingly is sensitive to it.
 
-4. Run 'ant reset-the-world' under ZimbraServer. Then run 'ant deploy'
+4. If your Windows box is on an NT domain, you need to launch Control
+   Panel/Administrative Tools/Services and modify the Log On account of
+   Jetty6 Java Service.  Instead of using "Local System account", make
+   it "This account" and fill out it with your domain account username
+   and password.  Otherwise you may run into file permission issues.
+
+5. Run 'ant reset-the-world' under ZimbraServer. Then run 'ant deploy'
    and 'ant admin-deploy' under ZimbraWebClient as usual.  For
    offline, run 'ant offline-reset-the-world'.
 
-5. On Mac OS X or Linux you should be able to bounce jetty with
+6. On Mac OS X or Linux you should be able to bounce jetty with
    command line 'jetty start' and 'jetty stop'.  On Windows you can
    start/stop jetty by running command line 'net start jetty' and 'net
    stop jetty'.
