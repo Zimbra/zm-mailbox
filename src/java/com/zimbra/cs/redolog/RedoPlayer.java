@@ -43,6 +43,7 @@ import java.util.Map.Entry;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.MailboxIndex;
@@ -69,17 +70,19 @@ public class RedoPlayer {
     // LinkedHashMap to ensure iteration order == insertion order
     private LinkedHashMap<TransactionId, RedoableOp> mOpsMap;
 
-    private boolean mWriteable;
+    private boolean mWritable;
     private boolean mUnloggedReplay;
+    private boolean mIgnoreReplayErrors;
 
-    public RedoPlayer(boolean writeable) {
-        this(writeable, false);
+    public RedoPlayer(boolean writable) {
+        this(writable, false, false);
     }
 
-    public RedoPlayer(boolean writeable, boolean unloggedReplay) {
+    public RedoPlayer(boolean writable, boolean unloggedReplay, boolean ignoreReplayErrors) {
 		mOpsMap = new LinkedHashMap<TransactionId, RedoableOp>(INITIAL_MAP_SIZE);
-        mWriteable = writeable;
+        mWritable = writable;
         mUnloggedReplay = unloggedReplay;
+        mIgnoreReplayErrors = ignoreReplayErrors;
     }
 
     public void shutdown() {
@@ -120,7 +123,7 @@ public class RedoPlayer {
                         long startTime,
                         long endTime)
     throws IOException, ServiceException {
-		FileLogReader logReader = new FileLogReader(logfile, mWriteable);
+		FileLogReader logReader = new FileLogReader(logfile, mWritable);
 		logReader.open();
 		long lastPosition = 0;
 
@@ -152,7 +155,7 @@ public class RedoPlayer {
                     " bytes of junk data at the end of " +
                     logfile.getAbsolutePath() +
                     ".";
-                if (mWriteable) {
+                if (mWritable) {
                     mLog.warn(msg + "  File will be truncated to " +
                               lastPosition + " bytes");
                     logReader.truncate(lastPosition);
@@ -318,7 +321,11 @@ public class RedoPlayer {
                             prepareOp.setUnloggedReplay(mUnloggedReplay);
                             prepareOp.redo();
                         } catch(Exception e) {
-                            throw ServiceException.FAILURE("Error executing redoOp", e);
+                            if (!mIgnoreReplayErrors)
+                                throw ServiceException.FAILURE("Error executing redoOp", e);
+                            else
+                                ZimbraLog.redolog.warn(
+                                        "Ignoring error during redo log replay: " + e.getMessage(), e);
                         }
                 	}
                 }
