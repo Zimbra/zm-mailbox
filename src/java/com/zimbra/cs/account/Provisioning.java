@@ -1190,6 +1190,14 @@ public abstract class Provisioning {
     public static final String A_zimbraBackupReportEmailRecipients = "zimbraBackupReportEmailRecipients";
     public static final String A_zimbraBackupReportEmailSender = "zimbraBackupReportEmailSender";
     public static final String A_zimbraBackupReportEmailSubjectPrefix = "zimbraBackupReportEmailSubjectPrefix";
+    
+    /*
+     * IM
+     */
+    public static final String A_zimbraPrefIMFlashIcon      = "zimbraPrefIMFlashIcon";
+    public static final String A_zimbraPrefIMNotifyPresence = "zimbraPrefIMNotifyPresence";
+    public static final String A_zimbraPrefIMNotifyStatus   = "zimbraPrefIMNotifyStatus";
+    
 
     private static Provisioning sProvisioning;
 
