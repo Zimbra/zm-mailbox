@@ -451,23 +451,22 @@ public class IMPersona extends ClassLogger {
 
     private void handleMessagePacket(boolean toMe, Message msg) {
         // is it a gateway notification?
-        Element xe = msg.getChildElement("x", "zimbra:interop:connect");
+        Element xe = msg.getChildElement("x", "zimbra:interop");
         if (xe != null) {
             String serviceName = msg.getFrom().toBareJID();
             String[] splits = serviceName.split("\\.");
             if (splits.length > 0)
                 serviceName = splits[0];
-            boolean successful = true;
-            String cause = null;
-            Element f = xe.element("failure");
-            if (f != null) {
-                successful = false;
-                cause = f.attributeValue("cause");
+            
+            Element selt = xe.element("state");
+            if (selt != null) {
+                String state = selt.attributeValue("value");
+                String delay = selt.attributeValue("delay", null);
+                IMGatewayStateNotification not = 
+                    new IMGatewayStateNotification(serviceName, state, delay);
+                postIMNotification(not);
+                return;
             }
-            IMGatewayConnectNotification not = 
-                new IMGatewayConnectNotification(serviceName, successful, cause); 
-            postIMNotification(not);
-            return;
         }
         
         // either TO or FROM, depending which one isn't "me"

@@ -217,9 +217,9 @@ IM NOTIFICATIONS
                    <n type="invited" thread="chat-id" addr="ADDRESS">INVITATION_MESSAGE</n>
                 ]*
                 [
-                // interop gateway has succeeded/failed to connect us
-                  <n type="gwConnectStatus" service="GATEWAY_SERVICE_NAME" status="success|failure" [cause="auth|other"]/>
-                ]
+                // interop gateway has succeeded/failed to connect us, see <IMGatewayListResponse> above for more info
+                  <n type="gwStatus" service="GATEWAY_SERVICE_NAME" state="connectedState SEE ABOVE" [timeUntilNextConnect="msec_until_next_connect_attempt"/> ] />
+                ]*
                 
                 
              </im>]
