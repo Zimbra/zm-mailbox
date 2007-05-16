@@ -6,6 +6,7 @@ import com.zimbra.common.util.ZimbraLog;
 import java.io.*;
 import java.util.*;
 import java.util.regex.*;
+import java.util.zip.*;
 import javax.servlet.*;
 import javax.servlet.http.*;
 import javax.xml.parsers.*;
@@ -19,6 +20,8 @@ extends ZimbraServlet {
     // Constants
     //
 
+    private static final String COMPRESSED_EXT = ".zgz";
+    
     private static final String P_DEBUG = "debug";
 
     private static final String T_CSS = "css";
@@ -48,7 +51,7 @@ extends ZimbraServlet {
      * <li>Value: String buffer
      * </ul>
      */
-    private Map<String,String> cache = new HashMap<String,String>();
+    private Map<String,byte[]> cache = new HashMap<String,byte[]>();
 
     //
     // HttpServlet methods
@@ -71,10 +74,45 @@ extends ZimbraServlet {
         }
 
         // generate buffer
-        String buffer = !debug ? cache.get(cacheId) : null;
+        byte[] buffer = !debug ? cache.get(cacheId) : null;
         if (buffer == null) {
+            StringWriter writer = new StringWriter();
+            PrintWriter printer = new PrintWriter(writer);
+
+            // zimlet messages
+            if (type.equals(T_JAVASCRIPT)) {
+                ServletConfig config = this.getServletConfig();
+                ServletContext baseContext = config.getServletContext();
+                ServletContext clientContext = baseContext.getContext("/zimbra/");
+                RequestDispatcher dispatcher = clientContext.getRequestDispatcher("/js/msgs/");
+
+                List<ZimletFile> files = getZimletFiles(req, type);
+                for (ZimletFile file : files) {
+                    String filename = file.getAbsolutePath();
+                    if (!filename.startsWith("/msgs/")) {
+                        continue;
+                    }
+                    HttpServletRequest wrappedReq = new RequestWrapper(req, filename);
+                    HttpServletResponse wrappedResp = new ResponseWrapper(resp, printer);
+                    dispatcher.include(wrappedReq, wrappedResp);
+                }
+            }
+
+            // zimlet resources
             if (DEBUG) System.err.println("DEBUG: generating buffer");
-            buffer = generate(req, type);
+            generate(req, type, printer);
+
+            // compress
+            buffer = writer.toString().getBytes("UTF-8");
+            if (uri.endsWith(COMPRESSED_EXT)) {
+                ByteArrayOutputStream bos = new ByteArrayOutputStream(buffer.length);
+                OutputStream gzos = new GZIPOutputStream(bos);
+                gzos.write(buffer);
+                gzos.close();
+                buffer = bos.toByteArray();
+            }
+
+            // store buffer
             if (!debug) {
                 cache.put(cacheId, buffer);
             }
@@ -86,42 +124,22 @@ extends ZimbraServlet {
         // write buffer
         try {
             // We browser sniff so need to make sure any caches do the same.
-//            resp.addHeader("Vary","User-Agent");
+            resp.addHeader("Vary","User-Agent");
             // Cache It!
-//            resp.setHeader("Cache-control", "public, max-age=604800");
+            resp.setHeader("Cache-control", "public, max-age=604800");
             resp.setContentType(contentType);
+            resp.setContentLength(buffer.length);
         }
         catch (IllegalStateException e) {
             // ignore -- thrown if called from including JSP
+            System.err.println("zimletres: "+cacheId);
+            System.err.println("zimletres: "+e.getMessage());
         }
 
         try {
-            // print properties (for JS)
-            if (type.equals(T_JAVASCRIPT)) {
-                ServletConfig config = this.getServletConfig();
-                ServletContext baseContext = config.getServletContext();
-                ServletContext clientContext = baseContext.getContext("/zimbra/");
-                RequestDispatcher dispatcher = clientContext.getRequestDispatcher("/js/msgs/");
-
-                List<ZimletFile> files = getZimletFiles(req, type);
-                for (ZimletFile file : files) {
-                    final String filename = file.getAbsolutePath();
-                    if (!filename.startsWith("/msgs/")) {
-                        continue;
-                    }
-                    HttpServletRequest wrappedReq = new HttpServletRequestWrapper(req) {
-                        public String getRequestURI() {
-                            return "/js"+filename+".js";
-                        }
-                    };
-                    dispatcher.include(wrappedReq, resp);
-                }
-            }
-
             // print files
             OutputStream out = resp.getOutputStream();
-            byte[] bytes = buffer.getBytes("UTF-8");
-            out.write(bytes);
+            out.write(buffer);
             out.flush();
         }
         catch (IllegalStateException e) {
@@ -138,7 +156,7 @@ extends ZimbraServlet {
     // Private methods
     //
 
-    private String generate(HttpServletRequest req, String type)
+    private void generate(HttpServletRequest req, String type, PrintWriter out)
     throws IOException {
         boolean isCSS = type.equals(T_CSS);
 
@@ -147,9 +165,6 @@ extends ZimbraServlet {
         String commentEnd = " */";
 
         // create data buffers
-        CharArrayWriter cout = new CharArrayWriter(4096 << 2); // 16K buffer to start
-        PrintWriter out = new PrintWriter(cout);
-
         List<ZimletFile> files = getZimletFiles(req, type);
         for (ZimletFile file : files) {
             String filename = file.getAbsolutePath();
@@ -176,10 +191,7 @@ extends ZimbraServlet {
             }
             out.println();
         }
-
-        // return data
         out.flush();
-        return cout.toString();
 
     } // generate(HttpServletRequest,String):String
 
@@ -222,8 +234,15 @@ extends ZimbraServlet {
     }
 
     private static String getContentType(String uri) {
-        int index = uri.lastIndexOf('.');
-        String type = index != -1 ? uri.substring(index + 1) : T_PLAIN;
+        int index = uri.indexOf('.');
+        String type = T_PLAIN;
+        if (index != -1) {
+            type = uri.substring(index + 1);
+            index = type.indexOf('.');
+            if (index != -1) {
+                type = type.substring(0, index);
+            }
+        }
         String contentType = TYPES.get(type);
         return contentType != null ? contentType : TYPES.get(T_PLAIN);
     }
@@ -232,11 +251,13 @@ extends ZimbraServlet {
         List<String> zimletNames = (List<String>)req.getAttribute(ZimletFilter.ALLOWED_ZIMLETS);
 
         StringBuilder str = new StringBuilder();
+        str.append(getLocale(req).toString());
+        str.append(":");
         str.append(type);
         str.append(":");
 
         LinkedList<String> ids = new LinkedList<String>(zimletNames);
-        Collections.sort(ids);
+//        Collections.sort(ids);
         Iterator<String> iter = ids.iterator();
         for (int i = 0; iter.hasNext(); i++) {
             if (i > 0) {
@@ -246,6 +267,22 @@ extends ZimbraServlet {
         }
 
         return str.toString();
+    }
+
+    private static Locale getLocale(HttpServletRequest req) {
+        String language = req.getParameter("language");
+        if (language != null) {
+            String country = req.getParameter("country");
+            if (country != null) {
+                String variant = req.getParameter("variant");
+                if (variant != null) {
+                    return new Locale(language, country, variant);
+                }
+                return new Locale(language, country);
+            }
+            return new Locale(language);
+        }
+        return req.getLocale();
     }
 
     private List<ZimletFile> getZimletFiles(HttpServletRequest req, String type) {
@@ -319,6 +356,55 @@ extends ZimbraServlet {
             super(filename);
             this.zimletName = zimletName;
         }
+    }
+
+    static class RequestWrapper extends HttpServletRequestWrapper {
+        private String filename;
+        public RequestWrapper(HttpServletRequest req, String filename) {
+            super(req);
+            this.filename = filename;
+        }
+        public String getRequestURI() {
+            return "/js"+filename+".js";
+        }
+    }
+
+    static class ResponseWrapper extends HttpServletResponseWrapper {
+        private PrintWriter out;
+        public ResponseWrapper(HttpServletResponse resp, PrintWriter out) {
+            super(resp);
+            this.out = out;
+        }
+        public void setHeader(String name, String value) { /* NOP */ }
+        public void addHeader(String name, String value) { /* NOP */ }
+
+        public ServletOutputStream getOutputStream() throws IOException {
+            return new ServletStream(getWriter());
+        }
+        public PrintWriter getWriter() throws IOException {
+            return out;
+        }
+    }
+
+    static class ServletStream extends ServletOutputStream {
+        private PrintWriter out;
+        public ServletStream(PrintWriter out) {
+            this.out = out;
+        }
+        public void write(int i) throws IOException { out.write(i); }
+        public void print(boolean b) throws IOException { out.print(b); }
+        public void print(char c) throws IOException { out.print(c); }
+        public void print(float f) throws IOException { out.print(f); }
+        public void print(int i) throws IOException { out.print(i); }
+        public void print(long l) throws IOException { out.print(l); }
+        public void print(String s) throws IOException { out.print(s); }
+        public void println() throws IOException { out.println(); }
+        public void println(boolean b) throws IOException { out.println(b); }
+        public void println(char c) throws IOException { out.println(c); }
+        public void println(float f) throws IOException { out.println(f); }
+        public void println(int i) throws IOException { out.println(i); }
+        public void println(long l) throws IOException { out.println(l); }
+        public void println(String s) throws IOException { out.println(s); }
     }
 
 } // class ZimletResources
