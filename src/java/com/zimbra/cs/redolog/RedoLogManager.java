@@ -634,15 +634,15 @@ public class RedoLogManager {
 	}
 
     /**
-     * @param sequenceAtPrevFullBackup
+     * @param seq
      * @return
      * @throws IOException
      */
-    public File[] getArchivedLogsAfterSequence(long sequenceAtPrevFullBackup) throws IOException {
-        return RolloverManager.getArchiveLogs(mArchiveDir, sequenceAtPrevFullBackup);
+    public File[] getArchivedLogsFromSequence(long seq) throws IOException {
+        return RolloverManager.getArchiveLogs(mArchiveDir, seq);
     }
 
     public File[] getArchivedLogs() throws IOException {
-        return getArchivedLogsAfterSequence(Long.MIN_VALUE);
+        return getArchivedLogsFromSequence(Long.MIN_VALUE);
     }
 }
