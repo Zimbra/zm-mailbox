@@ -71,7 +71,7 @@
     <!-- =============================================================== -->
     <Call name="addConnector">
       <Arg>
-        <New id="ssl" class="org.mortbay.jetty.security.SslSocketConnector">
+        <New id="ssl" class="org.mortbay.jetty.security.SslSelectChannelConnector">
           <Set name="Port">7071</Set>
           <Set name="maxIdleTime">30000</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
