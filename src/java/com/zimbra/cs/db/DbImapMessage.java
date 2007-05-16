@@ -51,6 +51,10 @@ public class DbImapMessage {
     {
         Connection conn = null;
         PreparedStatement stmt = null;
+        
+        ZimbraLog.datasource.debug(
+            "Storing IMAP message data: mboxId=%d, imapFolderId=%d, uid=%d, itemId=%d",
+            mbox.getId(), imapFolderId, uid, itemId);
 
         try {
             conn = DbPool.getConnection();
