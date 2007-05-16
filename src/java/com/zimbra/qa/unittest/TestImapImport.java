@@ -153,13 +153,14 @@ extends TestCase {
     
     private void importImap()
     throws Exception {
-        List<ZDataSource> list = new ArrayList<ZDataSource>();
-        list.add(mDataSource);
-        mLocalMbox.importData(list);
+        List<ZDataSource> dataSources = new ArrayList<ZDataSource>();
+        dataSources.add(mDataSource);
+        mLocalMbox.importData(dataSources);
         
         // Wait for import to complete
         ZImportStatus status = null;
         while (true) {
+            Thread.sleep(500);
             List<ZImportStatus> statusList = mLocalMbox.getImportStatus();
             assertEquals("Unexpected number of imports running", 1, statusList.size());
             status = statusList.get(0);
@@ -167,7 +168,6 @@ extends TestCase {
             if (!status.isRunning()) {
                 break;
             }
-            Thread.sleep(500);
         }
         assertTrue("Import failed: " + status.getError(), status.getSuccess());
     }
@@ -203,13 +203,19 @@ extends TestCase {
         }
         assertEquals("Message count doesn't match", folder1.getMessageCount(), folder2.getMessageCount());
         
-        List<ZMessage> msgs1 = TestUtil.search(mbox1, "in:" + folder1.getPath());
-        List<ZMessage> msgs2 = TestUtil.search(mbox2, "in:" + folder2.getPath());
-        compareMessages(msgs1, msgs2);
+        // Compare folders as long as neither one is the user root
+        if (!(folder1.getPath().equals("/") || folder2.getPath().equals("/"))) {
+            List<ZMessage> msgs1 = TestUtil.search(mbox1, "in:" + folder1.getPath());
+            List<ZMessage> msgs2 = TestUtil.search(mbox2, "in:" + folder2.getPath());
+            compareMessages(msgs1, msgs2);
+        }
     }
 
     private boolean isMailFolder(ZFolder folder) {
         ZFolder.View view = folder.getDefaultView();
+        if (folder.getName().equals("Drafts")) {
+            return false;
+        }
         return view == null || view == ZFolder.View.message || view == ZFolder.View.conversation;
     }
     
@@ -285,7 +291,7 @@ extends TestCase {
     public static void main(String[] args)
     throws Exception {
         CliUtil.toolSetup();
+        TestUtil.runTest(new TestSuite(TestImapImport.TearDown.class));
         TestUtil.runTest(new TestSuite(TestImapImport.class));
-        // TestUtil.runTest(new TestSuite(TestImapImport.TearDown.class), null);
     }
 }
