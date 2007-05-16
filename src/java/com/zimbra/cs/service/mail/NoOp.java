@@ -34,6 +34,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.mortbay.util.ajax.Continuation;
 import org.mortbay.util.ajax.ContinuationSupport;
+import org.mortbay.util.ajax.WaitingContinuation;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
@@ -56,9 +57,17 @@ public class NoOp extends MailDocumentHandler  {
             HttpServletRequest servletRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
             Continuation continuation = ContinuationSupport.getContinuation(servletRequest, zsc);
             if (!continuation.isResumed()) {
+                if (continuation instanceof WaitingContinuation && (((WaitingContinuation)continuation).getMutex() != zsc)) {
+                    // workaround for a Jetty bug: Jetty currently (in bio mode) re-uses the Continuation object, but doesn't
+                    // clear the mutex...and unfortunately there's no way to re-set the mutex once it is already set.  Fortunately,
+                    // in blocking mode it doesn't matter if we create a brand-new Continuation here since the Continuation
+                    // object is just a wrapper around normal java wait/notify.
+                    continuation = new WaitingContinuation(zsc);
+                }
                 if (zsc.beginWaitForNotifications(continuation)) {
                     synchronized(zsc) {
                         if (zsc.waitingForNotifications()) {
+                            assert (!(continuation instanceof WaitingContinuation) || ((WaitingContinuation)continuation).getMutex()==zsc); 
                             continuation.suspend(NOP_TIMEOUT);
                         }
                     }
