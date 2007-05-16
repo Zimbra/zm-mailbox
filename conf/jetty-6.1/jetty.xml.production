@@ -47,7 +47,7 @@
     <!-- HTTPSBEGIN
     <Call name="addConnector">
       <Arg>
-        <New id="ssl" class="org.mortbay.jetty.security.SslSelectChannelConnector">
+        <New id="ssl" class="org.mortbay.jetty.security.SslSocketConnector">
           <Set name="Port">%%zimbraMailSSLPort%%</Set>
           <Set name="maxIdleTime">30000</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
@@ -62,7 +62,7 @@
     <!-- =============================================================== -->
     <Call name="addConnector">
       <Arg>
-        <New id="admin" class="org.mortbay.jetty.security.SslSelectChannelConnector">
+        <New id="admin" class="org.mortbay.jetty.security.SslSocketConnector">
           <Set name="Port">7071</Set>
           <Set name="maxIdleTime">30000</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
