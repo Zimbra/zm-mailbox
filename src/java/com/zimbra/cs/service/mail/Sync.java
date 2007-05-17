@@ -50,6 +50,11 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class Sync extends MailDocumentHandler {
 
+	protected static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.A_FOLDER };
+	protected String[] getProxiedIdPath(Element request) {
+		return TARGET_FOLDER_PATH;
+	}
+
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
