@@ -55,6 +55,7 @@ SECTION mta
 	LOCAL zimbra_server_hostname
 	REWRITE conf/postfix_header_checks.in conf/postfix_header_checks
 	POSTCONF myhostname		LOCAL zimbra_server_hostname
+  POSTCONF mydestination localhost
 	POSTCONF recipient_delimiter	VAR zimbraMtaRecipientDelimiter
 	POSTCONF smtpd_sasl_auth_enable VAR zimbraMtaAuthEnabled
 	POSTCONF smtpd_tls_auth_only	VAR zimbraMtaTlsAuthOnly
