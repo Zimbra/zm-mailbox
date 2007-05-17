@@ -48,6 +48,7 @@
           <New id="http" class="org.mortbay.jetty.nio.SelectChannelConnector">
             <Set name="port"><SystemProperty name="jetty.port" default="7070"/></Set>
             <Set name="maxIdleTime">30000</Set>
+	    <Set name="lowResourceMaxIdleTime">3000</Set>
             <Set name="Acceptors">2</Set>
             <Set name="confidentialPort">7071</Set>
           </New>
@@ -74,6 +75,7 @@
         <New id="ssl" class="org.mortbay.jetty.security.SslSocketConnector">
           <Set name="Port">7071</Set>
           <Set name="maxIdleTime">30000</Set>
+	  <Set name="lowResourceMaxIdleTime">3000</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">zimbra</Set>
         </New>
