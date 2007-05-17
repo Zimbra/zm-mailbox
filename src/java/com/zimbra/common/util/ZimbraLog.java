@@ -25,9 +25,11 @@
 package com.zimbra.common.util;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.Map.Entry;
 
 import org.apache.log4j.NDC;
@@ -171,12 +173,6 @@ public class ZimbraLog {
     public static final Log soap = LogFactory.getLog("zimbra.soap");
     
     /**
-     * the "zimbra.acctrace" logger.  For tracing soap requests to/from specific accounts
-     * (see the <SoapLoggerRequest> admin command
-     */
-    public static final Log acctrace = LogFactory.getLog("zimbra.acctrace");
-
-    /**
      * the "zimbra.test" logger. For testing-related events
      */
     public static final Log test = LogFactory.getLog("zimbra.test");
@@ -267,18 +263,37 @@ public class ZimbraLog {
     public static final Log io = LogFactory.getLog("zimbra.io");
 
     /**
-     * the "zimbra.datasource" logger.  Logs file data source operations.
+     * the "zimbra.datasource" logger.  Logs data source operations.
      */
     public static final Log datasource = LogFactory.getLog("zimbra.datasource");
 
-    public static String getContext() {
-        return NDC.peek();
-    }
-    
     /**
      * remote management.
      */
     public static final Log rmgmt = LogFactory.getLog("zimbra.rmgmt");
+    
+    /**
+     * Keeps track of the account associated with the current thread, for
+     * per-user logging settings. 
+     */
+    private static ThreadLocal<Set<String>> sAccountNames = new ThreadLocal<Set<String>>();
+
+    static Set<String> getAccountNamesForThread() {
+        Set<String> accountNames = sAccountNames.get();
+        if (accountNames == null) {
+            accountNames = new HashSet<String>();
+            sAccountNames.set(accountNames);
+        }
+        return accountNames;
+    }
+    
+    private static void addAccountForThread(String accountName) {
+        getAccountNamesForThread().add(accountName);
+    }
+    
+    public static String getContext() {
+        return NDC.peek();
+    }
 
     /**
      * adds key/value to context. Doesn't check to see if already in context.
@@ -288,6 +303,9 @@ public class ZimbraLog {
     public static void addToContext(String key, String value) {
         if (key == null)
             return;
+        if (key.equals(C_NAME) || key.equals(C_ANAME)) {
+            addAccountForThread(value);
+        }
         String ndc = NDC.pop();
         if (checkContext(ndc, key))
         	NDC.push(key+"="+value+";"+ndc);
@@ -369,6 +387,7 @@ public class ZimbraLog {
 
     public static void clearContext() {
         NDC.clear();
+        getAccountNamesForThread().clear();
     }
 
     /**
@@ -476,5 +495,4 @@ public class ZimbraLog {
         }
         return sb.toString();
     }
-
 }

@@ -282,10 +282,12 @@ public class AdminConstants {
     public static final QName CHECK_DIRECTORY_REQUEST = QName.get("CheckDirectoryRequest", NAMESPACE);
     public static final QName CHECK_DIRECTORY_RESPONSE = QName.get("CheckDirectoryResponse", NAMESPACE);
 
-    // Soap logger
-    public static final QName SOAP_LOGGER_REQUEST = QName.get("SoapLoggerRequest", NAMESPACE);
-    public static final QName SOAP_LOGGER_RESPONSE = QName.get("SoapLoggerResponse", NAMESPACE);
-    
+    // Account loggers
+    public static final QName ADD_ACCOUNT_LOGGER_REQUEST = QName.get("AddAccountLoggerRequest", NAMESPACE);
+    public static final QName ADD_ACCOUNT_LOGGER_RESPONSE = QName.get("AddAccountLoggerResponse", NAMESPACE);
+    public static final QName REMOVE_ACCOUNT_LOGGER_REQUEST = QName.get("RemoveAccountLoggerRequest", NAMESPACE);
+    public static final QName REMOVE_ACCOUNT_LOGGER_RESPONSE = QName.get("RemoveAccountLoggerResponse", NAMESPACE);
+
     // DumpSessions
     public static final String E_SESSION = "session";
     public static final String A_ZIMBRA_ID = "zid";
@@ -298,8 +300,6 @@ public class AdminConstants {
     public static final String A_LAST_ACCESSED_DATE = "ld";
     public static final String A_NOTIFY = "notify";
     
-    
-
     public static final String E_ACCOUNT = "account";
     public static final String E_CALENDAR_RESOURCE = "calresource";
     public static final String E_AUTH_TOKEN = "authToken";
@@ -453,4 +453,9 @@ public class AdminConstants {
     public static final String A_TZFIXUP_AFTER = "after";
     public static final String A_TZFIXUP_SYNC = "sync";
     
+    // Account loggers
+    public static final String E_LOGGER = "logger";
+    public static final String A_CATEGORY = "category";
+    public static final String A_LEVEL = "level";
+
 }

@@ -24,9 +24,13 @@
  */
 package com.zimbra.common.util;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 import org.apache.log4j.Logger;
 import org.apache.log4j.Priority;
-
 
 /**
  * Wrapper around Log4j that supports <code>printf</code> functionality
@@ -37,9 +41,23 @@ import org.apache.log4j.Priority;
  */
 public class Log {
 
-    public enum Level { ERROR, WARN, INFO, DEBUG };
+    private Map<String, Logger> mAccountLoggers = new ConcurrentHashMap<String, Logger>();
     
-    Logger mLogger;
+    private static final Map<Level, org.apache.log4j.Level> ZIMBRA_TO_LOG4J =
+        new HashMap<Level, org.apache.log4j.Level>();
+    
+    static {
+        ZIMBRA_TO_LOG4J.put(Level.error, org.apache.log4j.Level.ERROR);
+        ZIMBRA_TO_LOG4J.put(Level.warn, org.apache.log4j.Level.WARN);
+        ZIMBRA_TO_LOG4J.put(Level.info, org.apache.log4j.Level.INFO);
+        ZIMBRA_TO_LOG4J.put(Level.debug, org.apache.log4j.Level.DEBUG);
+    }
+    
+    public enum Level {
+        error, warn, info, debug;
+    };
+    
+    private Logger mLogger;
     
     Log(Logger logger) {
         if (logger == null) {
@@ -48,200 +66,264 @@ public class Log {
         mLogger = logger;
     }
     
+    /**
+     * Adds an account-level logger whose log level may be different than
+     * that of the main log category.
+     * 
+     * @param category the main log category name
+     * @param accountName the account name
+     * @param level the log level that applies only to the given account
+     */
+    public static void addAccountLogger(String category, String accountName, Level level) {
+        if (category == null || accountName == null) {
+            return;
+        }
+        
+        // Look up main Zimbra logger
+        Log mainLog = LogFactory.getLog(category);
+        if (mainLog == null) {
+            return;
+        }
+        
+        // If account logger already exists, set the level
+        Logger logger = mainLog.mAccountLoggers.get(accountName);
+        if (logger != null) {
+            logger.setLevel(ZIMBRA_TO_LOG4J.get(level));
+            return;
+        }
+        
+        // Create new account logger
+        String accountCategory = getAccountCategory(category, accountName);
+        logger = Logger.getLogger(accountCategory);
+        logger.setLevel(ZIMBRA_TO_LOG4J.get(level));
+        mainLog.mAccountLoggers.put(accountName, logger);
+    }
+    
+    /**
+     *  Deletes an account-level logger.
+     */
+    public static void deleteAccountLogger(String category, String accountName) {
+        if (category == null || accountName == null) {
+            return;
+        }
+        
+        // Look up main Zimbra logger
+        Log mainLog = LogFactory.getLog(category);
+        if (mainLog == null) {
+            return;
+        }
+        mainLog.mAccountLoggers.remove(accountName);
+    }
+    
+    private static String getAccountCategory(String category, String accountName) {
+        return String.format("%s.%s", accountName, category);    }
+    
     public boolean isDebugEnabled() {
-        return mLogger.isDebugEnabled();
+        return getLogger().isDebugEnabled();
     }
     
     public boolean isInfoEnabled() {
-        return mLogger.isInfoEnabled();
+        return getLogger().isInfoEnabled();
     }
     
     public boolean isWarnEnabled() {
-        return mLogger.isEnabledFor(Priority.WARN);
+        return getLogger().isEnabledFor(Priority.WARN);
     }
     
     public boolean isErrorEnabled() {
-        return mLogger.isEnabledFor(Priority.ERROR);
+        return getLogger().isEnabledFor(Priority.ERROR);
     }
 
     public boolean isFatalEnabled() {
-        return mLogger.isEnabledFor(Priority.FATAL);
+        return getLogger().isEnabledFor(Priority.FATAL);
     }
     
 
     public void debug(Object o) {
-        mLogger.debug(o);
+        getLogger().debug(o);
     }
 
     public void debug(Object o, Throwable t) {
-        mLogger.debug(o, t);
+        getLogger().debug(o, t);
     }
 
     public void debug(String format, Object ... objects) {
         if (isDebugEnabled()) {
-            mLogger.debug(String.format(format, objects));
+            getLogger().debug(String.format(format, objects));
         }
     }
 
     public void debug(String format, Object o, Throwable t) {
         if (isDebugEnabled()) {
-            mLogger.debug(String.format(format, o), t);
+            getLogger().debug(String.format(format, o), t);
         }
     }
 
     public void debug(String format, Object o1, Object o2, Throwable t) {
         if (isDebugEnabled()) {
-            mLogger.debug(String.format(format, o1, o2), t);
+            getLogger().debug(String.format(format, o1, o2), t);
         }
     }
 
     public void debug(String format, Object o1, Object o2, Object o3, Throwable t) {
         if (isDebugEnabled()) {
-            mLogger.debug(String.format(format, o1, o2, o3), t);
+            getLogger().debug(String.format(format, o1, o2, o3), t);
         }
     }
     
 
     public void info(Object o) {
-        mLogger.info(o);
+        getLogger().info(o);
     }
 
     public void info(Object o, Throwable t) {
-        mLogger.info(o, t);
+        getLogger().info(o, t);
     }
 
     public void info(String format, Object ... objects) {
         if (isInfoEnabled()) {
-            mLogger.info(String.format(format, objects));
+            getLogger().info(String.format(format, objects));
         }
     }
 
     public void info(String format, Object o, Throwable t) {
         if (isInfoEnabled()) {
-            mLogger.info(String.format(format, o), t);
+            getLogger().info(String.format(format, o), t);
         }
     }
 
     public void info(String format, Object o1, Object o2, Throwable t) {
         if (isInfoEnabled()) {
-            mLogger.info(String.format(format, o1, o2), t);
+            getLogger().info(String.format(format, o1, o2), t);
         }
     }
 
     public void info(String format, Object o1, Object o2, Object o3, Throwable t) {
         if (isInfoEnabled()) {
-            mLogger.info(String.format(format, o1, o2, o3), t);
+            getLogger().info(String.format(format, o1, o2, o3), t);
         }
     }
     
 
     public void warn(Object o) {
-        mLogger.warn(o);
+        getLogger().warn(o);
     }
 
     public void warn(Object o, Throwable t) {
-        mLogger.warn(o, t);
+        getLogger().warn(o, t);
     }
 
     public void warn(String format, Object ... objects) {
         if (isWarnEnabled()) {
-            mLogger.warn(String.format(format, objects));
+            getLogger().warn(String.format(format, objects));
         }
     }
 
     public void warn(String format, Object o, Throwable t) {
         if (isWarnEnabled()) {
-            mLogger.warn(String.format(format, o), t);
+            getLogger().warn(String.format(format, o), t);
         }
     }
 
     public void warn(String format, Object o1, Object o2, Throwable t) {
         if (isWarnEnabled()) {
-            mLogger.warn(String.format(format, o1, o2), t);
+            getLogger().warn(String.format(format, o1, o2), t);
         }
     }
 
     public void warn(String format, Object o1, Object o2, Object o3, Throwable t) {
         if (isWarnEnabled()) {
-            mLogger.warn(String.format(format, o1, o2, o3), t);
+            getLogger().warn(String.format(format, o1, o2, o3), t);
         }
     }
     
 
     public void error(Object o) {
-        mLogger.error(o);
+        getLogger().error(o);
     }
 
     public void error(Object o, Throwable t) {
-        mLogger.error(o, t);
+        getLogger().error(o, t);
     }
 
     public void error(String format, Object ... objects) {
         if (isErrorEnabled()) {
-            mLogger.error(String.format(format, objects));
+            getLogger().error(String.format(format, objects));
         }
     }
 
     public void error(String format, Object o, Throwable t) {
         if (isErrorEnabled()) {
-            mLogger.error(String.format(format, o), t);
+            getLogger().error(String.format(format, o), t);
         }
     }
 
     public void error(String format, Object o1, Object o2, Throwable t) {
         if (isErrorEnabled()) {
-            mLogger.error(String.format(format, o1, o2), t);
+            getLogger().error(String.format(format, o1, o2), t);
         }
     }
 
     public void error(String format, Object o1, Object o2, Object o3, Throwable t) {
         if (isErrorEnabled()) {
-            mLogger.error(String.format(format, o1, o2, o3), t);
+            getLogger().error(String.format(format, o1, o2, o3), t);
         }
     }
     
 
     public void fatal(Object o) {
-        mLogger.fatal(o);
+        getLogger().fatal(o);
     }
 
     public void fatal(Object o, Throwable t) {
-        mLogger.fatal(o, t);
+        getLogger().fatal(o, t);
     }
 
     public void fatal(String format, Object ... objects) {
         if (isFatalEnabled()) {
-            mLogger.fatal(String.format(format, objects));
+            getLogger().fatal(String.format(format, objects));
         }
     }
 
     public void fatal(String format, Object o, Throwable t) {
         if (isFatalEnabled()) {
-            mLogger.fatal(String.format(format, o), t);
+            getLogger().fatal(String.format(format, o), t);
         }
     }
 
     public void fatal(String format, Object o1, Object o2, Throwable t) {
         if (isFatalEnabled()) {
-            mLogger.fatal(String.format(format, o1, o2), t);
+            getLogger().fatal(String.format(format, o1, o2), t);
         }
     }
 
     public void fatal(String format, Object o1, Object o2, Object o3, Throwable t) {
         if (isFatalEnabled()) {
-            mLogger.fatal(String.format(format, o1, o2, o3), t);
+            getLogger().fatal(String.format(format, o1, o2, o3), t);
         }
     }
     
     public void setLevel(Level level) {
-        if (level == Level.ERROR) {
-            mLogger.setLevel(org.apache.log4j.Level.ERROR);
-        } else if (level == Level.WARN) {
-            mLogger.setLevel(org.apache.log4j.Level.WARN);
-        } else if (level == Level.INFO) {
-            mLogger.setLevel(org.apache.log4j.Level.INFO);
-        } else if (level == Level.DEBUG) {
-            mLogger.setLevel(org.apache.log4j.Level.DEBUG);
+        mLogger.setLevel(ZIMBRA_TO_LOG4J.get(level));
+    }
+    
+    /**
+     * Returns the Log4j logger for this <tt>Log</tt>'s category.  If a custom
+     * logger has been defined for an account associated with the current thread,
+     * returns that logger instead.
+     * 
+     * @see #addAccountLogger
+     */
+    private Logger getLogger() {
+        if (mAccountLoggers.size() == 0) {
+            return mLogger;
         }
+        for (String accountName : ZimbraLog.getAccountNamesForThread()) {
+            Logger logger = mAccountLoggers.get(accountName);
+            if (logger != null) {
+                return logger;
+            }
+        }
+        return mLogger;
     }
 }
