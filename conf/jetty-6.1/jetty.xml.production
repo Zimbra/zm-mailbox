@@ -52,6 +52,7 @@
           <Set name="Port">%%zimbraMailSSLPort%%</Set>
           <Set name="maxIdleTime">30000</Set> 
 	  <Set name="lowResourceMaxIdleTime">3000</Set>
+          <Set name="Acceptors">25</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">zimbra</Set>
         </New>
