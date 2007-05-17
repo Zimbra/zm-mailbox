@@ -328,7 +328,7 @@ public class ParseMimeMessage {
                 } else if (eName.equals(MailConstants.E_MIMEPART)) { /* <mp> */
                     // processMessagePart(mm, elem);
                 } else if (eName.equals(MailConstants.E_EMAIL)) { /* <e> */
-                    maddrs.add(elem);
+                    maddrs.add(elem, defaultCharset);
                 } else if (eName.equals(MailConstants.E_IN_REPLY_TO)) { /* <irt> */
                     // mm.setHeader("In-Reply-To", elem.getText());
                 } else if (eName.equals(MailConstants.E_SUBJECT)) { /* <su> */
@@ -345,7 +345,8 @@ public class ParseMimeMessage {
             }
 
             // deal with things that can be either <m> attributes or subelements
-            mm.setSubject(msgElem.getAttribute(MailConstants.E_SUBJECT, ""), "utf-8");
+            String subject = msgElem.getAttribute(MailConstants.E_SUBJECT, "");
+            mm.setSubject(subject, checkCharset(subject, defaultCharset));
 
             String irt = msgElem.getAttribute(MailConstants.E_IN_REPLY_TO, null);
             if (irt != null)
@@ -353,7 +354,7 @@ public class ParseMimeMessage {
 
             // can have no addresses specified if it's a draft...
             if (!maddrs.isEmpty())
-                addAddressHeaders(mm, maddrs);
+                addAddressHeaders(mm, maddrs, defaultCharset);
 
             if (!hasContent && !isMultipart)
                 mm.setText("", Mime.P_CHARSET_DEFAULT);
@@ -494,7 +495,10 @@ public class ParseMimeMessage {
         }
     }
 
-    private static String checkCharset(String data, String requestedCharset) {
+    static String checkCharset(String data, String requestedCharset) {
+        if (data == null)
+            return Mime.P_CHARSET_DEFAULT;
+
         if (!requestedCharset.equalsIgnoreCase(Mime.P_CHARSET_UTF8)) {
             try {
                 Charset cset = Charset.forName(requestedCharset);
@@ -645,12 +649,12 @@ public class ParseMimeMessage {
             newContacts = contacts;
         }
 
-        public void add(Element elem) throws ServiceException, UnsupportedEncodingException {
+        public void add(Element elem, String defaultCharset) throws ServiceException, UnsupportedEncodingException {
             String emailAddress = elem.getAttribute(MailConstants.A_ADDRESS);
             String personalName = elem.getAttribute(MailConstants.A_PERSONAL, null);
             String addressType = elem.getAttribute(MailConstants.A_ADDRESS_TYPE);
 
-            InternetAddress addr = new InternetAddress(emailAddress, personalName, Mime.P_CHARSET_UTF8);
+            InternetAddress addr = new InternetAddress(emailAddress, personalName, checkCharset(personalName, defaultCharset));
             if (elem.getAttributeBool(MailConstants.A_ADD_TO_AB, false))
                 newContacts.add(addr);
 
@@ -687,7 +691,7 @@ public class ParseMimeMessage {
         }
     }
 
-    private static void addAddressHeaders(MimeMessage mm, MessageAddresses maddrs)
+    private static void addAddressHeaders(MimeMessage mm, MessageAddresses maddrs, String defaultCharset)
     throws MessagingException {
         InternetAddress[] addrs = maddrs.get(EmailType.TO.toString());
         if (addrs != null) {
