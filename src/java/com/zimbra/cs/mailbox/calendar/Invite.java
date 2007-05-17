@@ -1599,6 +1599,10 @@ public class Invite {
                             newInv.setRecurrence(new Recurrence.RecurrenceRule(newInv.getStartTime(), duration, new InviteInfo(newInv), addRules, subRules));
                         }
                     }
+                    
+                    String location = newInv.getLocation();
+                    if (location == null)
+                    	newInv.setLocation("");
                 } catch (ParseException e) {
                     throw ServiceException.PARSE_ERROR(
                         "Unable to parse iCalendar data: " + e.getMessage(), e);

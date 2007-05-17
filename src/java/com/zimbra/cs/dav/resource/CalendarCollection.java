@@ -152,7 +152,7 @@ public class CalendarCollection extends Collection {
 		String uid = null;
 		for (Invite i : invites)
             if (i.getItemType() == MailItem.TYPE_APPOINTMENT) {
-				if (uid != null)
+				if (uid != null && uid.compareTo(i.getUid()) != 0)
 					throw new DavException("too many events", HttpServletResponse.SC_BAD_REQUEST, null);
 				uid = i.getUid();
 			}
@@ -181,12 +181,11 @@ public class CalendarCollection extends Collection {
 		 * ical correctly understands etag and sets If-Match for existing etags, but
 		 * does not use If-None-Match for new resource creation.
 		 */
-		boolean useEtag = ctxt.isIcalClient();
-		
 		String etag = req.getHeader(DavProtocol.HEADER_IF_MATCH);
+		boolean useEtag = (etag != null);
+		
 		//String noneMatch = req.getHeader(DavProtocol.HEADER_IF_NONE_MATCH);
 		
-		boolean isUpdate = (etag != null);
 		if (name.endsWith(CalendarObject.CAL_EXTENSION))
 			name = name.substring(0, name.length()-CalendarObject.CAL_EXTENSION.length());
 		
@@ -219,13 +218,10 @@ public class CalendarCollection extends Collection {
 			}
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 			CalendarItem calItem = mbox.getCalendarItemByUid(ctxt.getOperationContext(), name);
-			if (calItem == null && isUpdate)
+			if (calItem == null && useEtag)
 				throw new DavException("event not found", HttpServletResponse.SC_NOT_FOUND, null);
 			
-			if (useEtag && calItem != null && !isUpdate)
-				throw new DavException("event already exists", HttpServletResponse.SC_CONFLICT, null);
-			
-			if (isUpdate) {
+			if (useEtag) {
 				String itemEtag = CalendarObject.getEtag(calItem);
 				if (!itemEtag.equals(etag))
 					throw new DavException("event has different etag ("+itemEtag+") vs "+etag, HttpServletResponse.SC_CONFLICT, null);
