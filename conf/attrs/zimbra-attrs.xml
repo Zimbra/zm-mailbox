@@ -2115,4 +2115,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Notify for status change</desc>
 </attr>
 
+<attr id="465" name="zimbraSpamReportSenderHeader" type="string" cardinality="single" optionalIn="globalConfig">
+  <globalConfigValue>X-Zimbra-Spam-Report-Sender</globalConfigValue>
+  <desc>mail header name for sender in spam report</desc>
+</attr>
+
+<attr id="466" name="zimbraSpamReportTypeHeader" type="string" cardinality="single" optionalIn="globalConfig">
+  <globalConfigValue>X-Zimbra-Spam-Report-Type</globalConfigValue>
+  <desc>mail header name for report type in spam report</desc>
+</attr>
+
 </attrs>

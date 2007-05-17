@@ -1199,6 +1199,11 @@ public abstract class Provisioning {
     public static final String A_zimbraPrefIMNotifyStatus   = "zimbraPrefIMNotifyStatus";
     
 
+     * spam report headers
+     */
+    public static final String A_zimbraSpamReportSenderHeader = "zimbraSpamReportSenderHeader";
+    public static final String A_zimbraSpamReportTypeHeader   = "zimbraSpamReportTypeHeader";
+    
     private static Provisioning sProvisioning;
 
     public synchronized static Provisioning getInstance() {
