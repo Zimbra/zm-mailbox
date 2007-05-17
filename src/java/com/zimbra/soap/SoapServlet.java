@@ -25,6 +25,23 @@
 
 package com.zimbra.soap;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.ServletException;
+import javax.servlet.UnavailableException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.collections.Factory;
+import org.apache.commons.collections.map.LazyMap;
+import org.apache.log4j.PropertyConfigurator;
+import org.mortbay.util.ajax.Continuation;
+import org.mortbay.util.ajax.ContinuationSupport;
+
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -38,21 +55,6 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.stats.StatsFile;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.Zimbra;
-import org.apache.commons.collections.Factory;
-import org.apache.commons.collections.map.LazyMap;
-import org.apache.log4j.PropertyConfigurator;
-import org.mortbay.util.ajax.Continuation;
-import org.mortbay.util.ajax.ContinuationSupport;
-
-import javax.servlet.ServletException;
-import javax.servlet.UnavailableException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * The soap service servlet
@@ -222,7 +224,12 @@ public class SoapServlet extends ZimbraServlet {
             readFully(req.getInputStream(), buffer, 0, len);             
         }
         continuation.setObject(buffer);
+
+        ZimbraLog.clearContext();
+        
+        boolean loggedRequest = false;
         if (ZimbraLog.soap.isDebugEnabled()) {
+            loggedRequest = true;
             ZimbraLog.soap.debug("SOAP request:\n" + new String(buffer, "utf8"));
         }
 
@@ -233,7 +240,7 @@ public class SoapServlet extends ZimbraServlet {
 
         Element envelope = null;
         try {
-            envelope = mEngine.dispatch(req.getRequestURI(), buffer, context);
+            envelope = mEngine.dispatch(req.getRequestURI(), buffer, context, loggedRequest);
         } catch (Throwable e) {
             // don't interfere with Jetty Continuations -- pass the exception right up
             if (e.getClass().getName().equals("org.mortbay.jetty.RetryRequest"))
@@ -260,6 +267,8 @@ public class SoapServlet extends ZimbraServlet {
         resp.setContentLength(soapBytes.length);
         resp.setStatus(statusCode);
         resp.getOutputStream().write(soapBytes);
+        
+        ZimbraLog.clearContext();
 
         // If perf logging is enabled, track server response times
         if (ZimbraPerf.isPerfEnabled()) {

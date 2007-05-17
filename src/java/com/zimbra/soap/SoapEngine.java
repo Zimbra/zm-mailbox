@@ -25,6 +25,12 @@
 
 package com.zimbra.soap;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.Map;
+
+import org.dom4j.DocumentException;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
@@ -45,13 +51,6 @@ import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.service.admin.AdminDocumentHandler;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.Zimbra;
-import org.dom4j.DocumentException;
-import org.jivesoftware.util.ConcurrentHashSet;
-
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * The soap engine.
@@ -76,7 +75,7 @@ public class SoapEngine {
         mDispatcher = new DocumentDispatcher();
     }
 
-    public Element dispatch(String path, byte[] soapMessage, Map<String, Object> context) {
+    public Element dispatch(String path, byte[] soapMessage, Map<String, Object> context, boolean loggedRequest) {
         if (soapMessage == null || soapMessage.length == 0) {
             SoapProtocol soapProto = SoapProtocol.Soap12;
             return soapProto.soapEnvelope(soapProto.soapFault(ServiceException.PARSE_ERROR("empty request payload", null)));
@@ -97,23 +96,22 @@ public class SoapEngine {
             SoapProtocol soapProto = SoapProtocol.SoapJS;
             return soapProto.soapEnvelope(soapProto.soapFault(ServiceException.PARSE_ERROR(e.getMessage(), e)));
         }
-        return dispatch(path, document, context);
+        return dispatch(path, document, context, loggedRequest);
     }
 
-    private static final ConcurrentHashSet<String> mAcctsToLog = new ConcurrentHashSet<String>();
-    public static final Set<String> acctsToLog() { return mAcctsToLog; }
-    
     /**
      * dispatch to the given serviceName the specified document,
      * which should be a soap envelope containing a document to 
      * execute.
      *
      * @param path  the path (i.e., /service/foo) of the service to dispatch to
-     * @param 
+     * @param envelope the top-level element of the message
+     * @param context user context parameters
+     * @param loggedRequest <tt>true</tt> if the SOAP message has already been logged
      * @return an XmlObject which is a SoapEnvelope containing the response
      *         
      */
-    private Element dispatch(String path, Element envelope, Map<String, Object> context) {
+    private Element dispatch(String path, Element envelope, Map<String, Object> context, boolean loggedRequest) {
     	// if (mLog.isDebugEnabled()) mLog.debug("dispatch(path, envelope, context: " + envelope.getQualifiedName());
     	
         SoapProtocol soapProto = SoapProtocol.determineProtocol(envelope);
@@ -134,104 +132,96 @@ public class SoapEngine {
         }
         SoapProtocol responseProto = zsc.getResponseProtocol();
         
-        boolean loggedRequest = false;
-        
-        ZimbraLog.clearContext();
-        try {
-            String rid = zsc.getRequestedAccountId();
-            if (rid != null) {
-                Account.addAccountToLogContext(rid, ZimbraLog.C_NAME, ZimbraLog.C_ID);
-                String aid = zsc.getAuthtokenAccountId();
-                if (!rid.equals(aid))
-                    Account.addAccountToLogContext(aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID);
-                else if (zsc.getAuthToken().getAdminAccountId() != null)
-                    Account.addAccountToLogContext(zsc.getAuthToken().getAdminAccountId(), ZimbraLog.C_ANAME, ZimbraLog.C_AID);                        
-            }
-            String ip = (String) context.get(REQUEST_IP);
-            if (ip != null)
-                ZimbraLog.addToContext(ZimbraLog.C_IP, ip);
-            if (zsc.getUserAgent() != null)
-                ZimbraLog.addToContext(ZimbraLog.C_USER_AGENT, zsc.getUserAgent());
+        String rid = zsc.getRequestedAccountId();
+        if (rid != null) {
+            Account.addAccountToLogContext(rid, ZimbraLog.C_NAME, ZimbraLog.C_ID);
+            String aid = zsc.getAuthtokenAccountId();
+            if (!rid.equals(aid))
+                Account.addAccountToLogContext(aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID);
+            else if (zsc.getAuthToken().getAdminAccountId() != null)
+                Account.addAccountToLogContext(zsc.getAuthToken().getAdminAccountId(), ZimbraLog.C_ANAME, ZimbraLog.C_AID);                        
+        }
+        String ip = (String) context.get(REQUEST_IP);
+        if (ip != null)
+            ZimbraLog.addToContext(ZimbraLog.C_IP, ip);
+        if (zsc.getUserAgent() != null)
+            ZimbraLog.addToContext(ZimbraLog.C_USER_AGENT, zsc.getUserAgent());
 
-            
-            String authTokenAcctId = zsc.getAuthtokenAccountId();
-            if (authTokenAcctId!=null && mAcctsToLog.contains(authTokenAcctId)) {
-                loggedRequest = true;
-                ZimbraLog.acctrace.info(envelope.prettyPrint());
-            }
-            
-            context.put(ZIMBRA_CONTEXT, zsc);
-            context.put(ZIMBRA_ENGINE, this);
+        // Global SOAP logging happens before the context is determined.  If we
+        // haven't already logged the message and need to log it for the current
+        // user, do it here.
+        if (!loggedRequest && ZimbraLog.soap.isDebugEnabled()) {
+            ZimbraLog.soap.debug("SOAP request:\n" + envelope.prettyPrint());
+        } else {
+            int i = 0;
+            i++;
+        }
 
-            Element doc = soapProto.getBodyElement(envelope);
+        context.put(ZIMBRA_CONTEXT, zsc);
+        context.put(ZIMBRA_ENGINE, this);
 
-            if (mLog.isDebugEnabled())
-                mLog.debug("dispatch: doc " + doc.getQualifiedName());
+        Element doc = soapProto.getBodyElement(envelope);
 
-            Element responseBody = null;
-            if (!zsc.isProxyRequest()) {
-                if (doc.getQName().equals(ZimbraNamespace.E_BATCH_REQUEST)) {
-                    boolean contOnError = doc.getAttribute(ZimbraNamespace.A_ONERROR, ZimbraNamespace.DEF_ONERROR).equals("continue");
-        	        responseBody = zsc.createElement(ZimbraNamespace.E_BATCH_RESPONSE);
-                    for (Element req : doc.listElements()) {
-        	            if (mLog.isDebugEnabled())
-        	                mLog.debug("dispatch: multi " + req.getQualifiedName());
+        if (mLog.isDebugEnabled())
+            mLog.debug("dispatch: doc " + doc.getQualifiedName());
 
-        	            String id = req.getAttribute(A_REQUEST_CORRELATOR, null);
-        	            Element br = dispatchRequest(req, context, zsc);
-        	            if (id != null)
-        	                br.addAttribute(A_REQUEST_CORRELATOR, id);
-        	            responseBody.addElement(br);
-        	            if (!contOnError && responseProto.isFault(br))
-        	                break;
-        	        }
-                } else {
-                    String id = doc.getAttribute(A_REQUEST_CORRELATOR, null);
-                    responseBody = dispatchRequest(doc, context, zsc);
+        Element responseBody = null;
+        if (!zsc.isProxyRequest()) {
+            if (doc.getQName().equals(ZimbraNamespace.E_BATCH_REQUEST)) {
+                boolean contOnError = doc.getAttribute(ZimbraNamespace.A_ONERROR, ZimbraNamespace.DEF_ONERROR).equals("continue");
+                responseBody = zsc.createElement(ZimbraNamespace.E_BATCH_RESPONSE);
+                for (Element req : doc.listElements()) {
+                    if (mLog.isDebugEnabled())
+                        mLog.debug("dispatch: multi " + req.getQualifiedName());
+
+                    String id = req.getAttribute(A_REQUEST_CORRELATOR, null);
+                    Element br = dispatchRequest(req, context, zsc);
                     if (id != null)
-                        responseBody.addAttribute(A_REQUEST_CORRELATOR, id);
+                        br.addAttribute(A_REQUEST_CORRELATOR, id);
+                    responseBody.addElement(br);
+                    if (!contOnError && responseProto.isFault(br))
+                        break;
                 }
             } else {
-                // Proxy the request to target server.  Proxy dispatcher
-                // discards any session information with remote server.
-                // We stick to local server's session when talking to the
-                // client.
-                try {
-                    // Detach doc from its current parent, because it will be
-                    // added as a child element of a new SOAP envelope in the
-                    // proxy dispatcher.  IllegalAddException will be thrown
-                    // if we don't detach it first.
-                    doc.detach();
-                    ZimbraSoapContext zscTarget = new ZimbraSoapContext(zsc, null);
-                	responseBody = zsc.getProxyTarget().dispatch(doc, zscTarget);
-                    responseBody.detach();
-                } catch (SoapFaultException e) {
-                    responseBody = e.getFault() != null ? e.getFault().detach() : responseProto.soapFault(e); 
-                    mLog.debug("proxy handler exception", e);
-                } catch (ServiceException e) {
-                    responseBody = responseProto.soapFault(e);
-                    mLog.info("proxy handler exception", e);
-                } catch (Throwable e) {
-                    responseBody = responseProto.soapFault(ServiceException.FAILURE(e.toString(), e));
-                    if (e instanceof OutOfMemoryError)
-                        Zimbra.halt("proxy handler exception", e);
-                    mLog.warn("proxy handler exception", e);
-                }
+                String id = doc.getAttribute(A_REQUEST_CORRELATOR, null);
+                responseBody = dispatchRequest(doc, context, zsc);
+                if (id != null)
+                    responseBody.addAttribute(A_REQUEST_CORRELATOR, id);
             }
-
-            // put notifications (new sessions and incremental change notifications)
-            Element responseHeader = zsc.generateResponseHeader();
-            
-            Element response = responseProto.soapEnvelope(responseBody, responseHeader);
-            
-            if (loggedRequest) {
-                ZimbraLog.acctrace.info(response.prettyPrint());
+        } else {
+            // Proxy the request to target server.  Proxy dispatcher
+            // discards any session information with remote server.
+            // We stick to local server's session when talking to the
+            // client.
+            try {
+                // Detach doc from its current parent, because it will be
+                // added as a child element of a new SOAP envelope in the
+                // proxy dispatcher.  IllegalAddException will be thrown
+                // if we don't detach it first.
+                doc.detach();
+                ZimbraSoapContext zscTarget = new ZimbraSoapContext(zsc, null);
+                responseBody = zsc.getProxyTarget().dispatch(doc, zscTarget);
+                responseBody.detach();
+            } catch (SoapFaultException e) {
+                responseBody = e.getFault() != null ? e.getFault().detach() : responseProto.soapFault(e); 
+                mLog.debug("proxy handler exception", e);
+            } catch (ServiceException e) {
+                responseBody = responseProto.soapFault(e);
+                mLog.info("proxy handler exception", e);
+            } catch (Throwable e) {
+                responseBody = responseProto.soapFault(ServiceException.FAILURE(e.toString(), e));
+                if (e instanceof OutOfMemoryError)
+                    Zimbra.halt("proxy handler exception", e);
+                mLog.warn("proxy handler exception", e);
             }
-            
-            return response;
-        } finally {
-            ZimbraLog.clearContext();
         }
+
+        // put notifications (new sessions and incremental change notifications)
+        Element responseHeader = zsc.generateResponseHeader();
+
+        Element response = responseProto.soapEnvelope(responseBody, responseHeader);
+
+        return response;
     }
 
     /**
