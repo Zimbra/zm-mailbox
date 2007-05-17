@@ -62,6 +62,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -222,7 +223,11 @@ public class ParseMimeMessage {
         assert(msgElem.getName().equals(MailConstants.E_MSG));
         OperationContext octxt = zsc.getOperationContext();
 
-        boolean use2231 = DocumentHandler.getRequestedAccount(zsc).getBooleanAttr(Provisioning.A_zimbraPrefUseRfc2231, false);
+        Account target = DocumentHandler.getRequestedAccount(zsc);
+        boolean use2231 = target.getBooleanAttr(Provisioning.A_zimbraPrefUseRfc2231, false);
+        String defaultCharset = target.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, Mime.P_CHARSET_UTF8);
+        if (defaultCharset.equals(""))
+            defaultCharset = Mime.P_CHARSET_UTF8;
 
         try {
             MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
@@ -278,7 +283,7 @@ public class ParseMimeMessage {
 
             // handle the content from the client, if any
             if (hasContent) {
-                setContent(mm, mmp, partElem != null ? partElem : inviteElem, alternatives, use2231);
+                setContent(mm, mmp, partElem != null ? partElem : inviteElem, alternatives, use2231, defaultCharset);
             }
 
             if (isMultipart) {
@@ -307,7 +312,7 @@ public class ParseMimeMessage {
                             attachMessage(mmp, mbox.getMessageById(octxt, messageId));
                         } else if (eName.equals(MailConstants.E_CONTACT)) {
                             int contactId = (int) elem.getAttributeLong(MailConstants.A_ID);
-                            attachContact(mmp, mbox.getContactById(octxt, contactId), use2231);
+                            attachContact(mmp, mbox.getContactById(octxt, contactId), use2231, defaultCharset);
                         }
                     }
                 }
@@ -366,9 +371,9 @@ public class ParseMimeMessage {
             throw ServiceException.FAILURE("UnsupportedEncodingExecption", encEx);
         } catch (SendFailedException sfe) {
             SafeSendFailedException ssfe = new SafeSendFailedException(sfe);
-            String excepStr = ExceptionToString.ToString(sfe);
+            String excepStr = ExceptionToString.ToString(ssfe);
             mLog.warn(excepStr);
-            throw ServiceException.FAILURE("SendFailure", sfe);
+            throw ServiceException.FAILURE("SendFailure", ssfe);
         } catch (MessagingException me) {
             String excepStr = ExceptionToString.ToString(me);
             mLog.warn(excepStr);
@@ -389,9 +394,10 @@ public class ParseMimeMessage {
      * @param mmp
      * @param elem
      * @param alternatives
+     * @param defaultCharset TODO
      * @throws MessagingException
      */
-    private static void setContent(MimeMessage mm, MimeMultipart mmp, Element elem, MimeBodyPart[] alternatives, boolean use2231)
+    private static void setContent(MimeMessage mm, MimeMultipart mmp, Element elem, MimeBodyPart[] alternatives, boolean use2231, String defaultCharset)
     throws MessagingException {
         String type = elem.getAttribute(MailConstants.A_CONTENT_TYPE, Mime.CT_DEFAULT).trim();
         ContentType ct = new ContentType(type, use2231);
@@ -419,7 +425,7 @@ public class ParseMimeMessage {
 
                 // add each part in turn (recursively) below
                 for (Element subpart : elem.listElements())
-                    setContent(mm, mmpNew, subpart, null, use2231);
+                    setContent(mm, mmpNew, subpart, null, use2231, defaultCharset);
 
                 // finally, add the alternatives if there are any...
                 if (alternatives != null) {
@@ -439,7 +445,7 @@ public class ParseMimeMessage {
                 mmp = mmpNew;
 
                 // add the entire client's multipart/whatever here inside our multipart/alternative
-                setContent(mm, mmp, elem, null, use2231);
+                setContent(mm, mmp, elem, null, use2231, defaultCharset);
 
                 // add all the alternatives
                 for (int i = 0; i < alternatives.length; i++)
@@ -465,16 +471,19 @@ public class ParseMimeMessage {
             // once we get here, mmp is either NULL, a multipart/mixed from the toplevel, 
             // or a multipart/alternative created just above....either way we are safe to stick
             // the client's nice and simple body right here
-            ct.setParameter(Mime.P_CHARSET, Mime.P_CHARSET_UTF8);
-
             String data = elem.getAttribute(MailConstants.E_CONTENT, "");
+
+            // if the user has specified an alternative charset, make sure it exists and can encode the content
+            String charset = checkCharset(data, defaultCharset);
+            ct.setParameter(Mime.P_CHARSET, charset);
+
             if (mmp != null) {
                 MimeBodyPart mbp = new MimeBodyPart();
-                mbp.setText(data, Mime.P_CHARSET_UTF8);
+                mbp.setText(data, charset);
                 mbp.setHeader("Content-Type", ct.toString());
                 mmp.addBodyPart(mbp);
             } else {
-                mm.setText(data, Mime.P_CHARSET_UTF8);
+                mm.setText(data, charset);
                 mm.setHeader("Content-Type", ct.toString());
             }
 
@@ -483,6 +492,17 @@ public class ParseMimeMessage {
                     mmp.addBodyPart(alternatives[i]);
             }
         }
+    }
+
+    private static String checkCharset(String data, String requestedCharset) {
+        if (!requestedCharset.equalsIgnoreCase(Mime.P_CHARSET_UTF8)) {
+            try {
+                Charset cset = Charset.forName(requestedCharset);
+                if (cset.canEncode() && cset.newEncoder().canEncode(data))
+                    return requestedCharset;
+            } catch (Exception e) {}
+        }
+        return Mime.P_CHARSET_UTF8;
     }
 
     private static List<Upload> attachUploads(MimeMultipart mmp, ZimbraSoapContext zsc, String attachIds, boolean use2231)
@@ -528,14 +548,15 @@ public class ParseMimeMessage {
         mmp.addBodyPart(mbp);
     }
 
-    private static void attachContact(MimeMultipart mmp, com.zimbra.cs.mailbox.Contact contact, boolean use2231)
+    private static void attachContact(MimeMultipart mmp, com.zimbra.cs.mailbox.Contact contact, boolean use2231, String defaultCharset)
     throws MessagingException {
         VCard vcf = VCard.formatContact(contact);
         String filename = vcf.fn + ".vcf";
+        String charset = checkCharset(vcf.formatted, defaultCharset);
 
         MimeBodyPart mbp = new MimeBodyPart();
-        mbp.setText(vcf.formatted, Mime.P_CHARSET_UTF8);
-        mbp.setHeader("Content-Type", new ContentType("text/x-vcard; charset=utf-8", use2231).setParameter("name", filename).toString());
+        mbp.setText(vcf.formatted, charset);
+        mbp.setHeader("Content-Type", new ContentType("text/x-vcard", use2231).setParameter("name", filename).setParameter("charset", charset).toString());
         mbp.setHeader("Content-Disposition", new ContentDisposition(Part.ATTACHMENT, use2231).setParameter("filename", filename).toString());
         mmp.addBodyPart(mbp);
     }
