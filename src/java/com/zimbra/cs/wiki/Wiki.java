@@ -224,6 +224,7 @@ public abstract class Wiki {
 		}
 		/*
 		 * get rid of /./ and /../ in the path.
+		 * and encode ' ', '\'' characters.
 		 */
 		private String normalizePath(String path) throws ServiceException {
 			List<String> tokens = new ArrayList<String>();
@@ -247,11 +248,28 @@ public abstract class Wiki {
 				tokens.add("");
 			StringBuilder newPath = new StringBuilder();
 			for (String token : tokens) {
-				newPath.append("/").append(token);
+				newPath.append("/").append(urlEscape(token));
 			}
 			if (mIsFolder)
 				newPath.append("/");
 			return newPath.toString();
+		}
+		private String urlEscape(String str) {
+			// rfc 2396 url escape.
+			// currently escaping ' and " only
+			if (str.indexOf(' ') == -1 && str.indexOf('\'') == -1 && str.indexOf('"') == -1)
+				return str;
+			StringBuilder buf = new StringBuilder();
+			for (char c : str.toCharArray()) {
+				if (c == ' ')
+					buf.append("%20");
+				else if (c == '"')
+					buf.append("%22");
+				else if (c == '\'')
+					buf.append("%27");
+				else buf.append(c);
+			}
+			return buf.toString();
 		}
 		public boolean isAbsolute() {
 			return (mTokens != null &&
