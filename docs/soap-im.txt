@@ -13,35 +13,13 @@ IMGetRoster -- get buddy list
               </pcps>
            </chat>
         ]*
-     </chats>   
-     
-     <items>
-        [
-          <item addr="foo@bar.com" [name="friendly name"] [ask="ASK"] subscription="both|from|to" groups="group,group,group">
-             [<presence SEE BELOW>]*
-             
-             [ // block/allow list 
-                <block type="id|group|subscription|default" ( [id="foo@bar.com"] OR [value="both|to|from|none"] ) priority="positive number MUST BE UNIQUE">
-                   <message/>
-                   <presence-in/>
-                   <presence-out/>
-                </block>
-             ]*
-             
-          </item>
-        ]*  // 0 or more items 
-     </items>
-     <subscription-defaults>
-        [block/allow list "fall through" settings]*
-     </subscription-defaults>
+     </chats>
+
+     Roster data is sent asynchronously from the server (see "Asynchronous Roster Response" below)
+     in the next notification block.
+
 </IMGetRosterResponse>
 
-For "item"
-===========
-  'subscription' is the current confirmed state of the subcription
-   'ask' means we are pending a response to our request to subscribe/unsubscribe
-      ---> EG:  (subscription="none" ask="subscribe") means we're waiting
-           for a response to subscribe, but we haven't received one yet
 
 
 IMSubscribe -- subscribe to someone's presence / modify subscription 
@@ -180,10 +158,21 @@ IM NOTIFICATIONS
                 [
                 //  Asynchronous Roster Response                
                     <n type="roster">     
-                       <n type="subscribed"...>
-                       <n type="unsubscribed"...>
+                       [<n type="subscribed"...>]* // see "subscribed" notification below
+                       [<n type="unsubscribed"...>]* // see "unsubscribed" notification below
+                       ...
                     </n>
                 ]?
+
+                'ask' means we are pending a response to our request to subscribe/unsubscribe
+                 ---> EG:  (subscription="none" ask="subscribe") means we're waiting
+                 for a response to subscribe, but we haven't received one yet
+                [
+                   <n type="subscribed" to="TOADDR" name="NAME" groups="GROUPS" [ask="subscribe|unsubscribe"]/> // you added them to your buddy list
+                ]*
+                [
+                   <n type="unsubscribed" to="TOADDR" groups="GROUPS" [ask="subscribe|unsubscribe"]/> // you removed them from your buddy list
+                ]*
              
                 [
                 // NEW MESSAGE RECEIVED:
@@ -199,12 +188,6 @@ IM NOTIFICATIONS
                 [
                 // User wants to add you to their buddy list (see <AuthorizeSubscribe> above)
                    <n type="subscribe" from="FROMADDR"/> 
-                ]*
-                [
-                   <n type="subscribed" to="TOADDR" name="NAME" groups="GROUPS" [ask="subscribe|unsubscribe"]/> // you added them to your buddy list
-                ]*
-                [
-                   <n type="unsubscribed" to="TOADDR" groups="GROUPS" [ask="subscribe|unsubscribe"]/> // you removed them from your buddy list
                 ]*
                 [
                    <n type="enteredchat" thread="chat-id" addr="ADDRESS"/> // specified user entered the chat
