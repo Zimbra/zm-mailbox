@@ -154,6 +154,8 @@ public class SpamHandler {
         mbp.setHeader("Content-Disposition", Part.ATTACHMENT);
         mmp.addBodyPart(mbp);
         
+        out.addHeader("X-Zimbra-Spam-Report-Sender", sr.mAccountName);
+        out.addHeader("X-Zimbra-Spam-Report-Type", isSpamString);
         out.setRecipient(javax.mail.Message.RecipientType.TO, toAddress);
         out.setEnvelopeFrom("<>");
         out.setSubject("zimbra-spam-report: " + sr.mAccountName + ": " + isSpamString);
