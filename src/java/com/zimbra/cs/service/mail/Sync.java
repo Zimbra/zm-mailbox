@@ -42,6 +42,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.soap.Element;
@@ -51,9 +52,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class Sync extends MailDocumentHandler {
 
 	protected static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.A_FOLDER };
-	protected String[] getProxiedIdPath(Element request) {
-		return TARGET_FOLDER_PATH;
-	}
+	protected String[] getProxiedIdPath(Element request)  { return TARGET_FOLDER_PATH; }
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -88,9 +87,9 @@ public class Sync extends MailDocumentHandler {
                 response.addAttribute(MailConstants.A_SIZE, mbox.getSize());
                 Folder root = null;
                 try {
-                    int folderId = (int)request.getAttributeLong(MailConstants.A_FOLDER, DEFAULT_FOLDER_ID);
+                    ItemId iidFolder = new ItemId(request.getAttribute(MailConstants.A_FOLDER, DEFAULT_FOLDER_ID + ""), zsc);
                     OperationContext octxtOwner = new OperationContext(mbox.getAccount());
-                    root = mbox.getFolderById(octxtOwner, folderId);
+                    root = mbox.getFolderById(octxtOwner, iidFolder.getId());
                 } catch (MailServiceException.NoSuchItemException nsie) { }
 
                 Set<Folder> visible = mbox.getVisibleFolders(octxt);
