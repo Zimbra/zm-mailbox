@@ -2129,4 +2129,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <defaultCOSValue>UTF-8</defaultCOSValue>
 <desc>Default Charset for mail composing and parsing text</desc>
 
+<attr id="468" name="zimbraSpamReportTypeSpam" type="string" cardinality="single" optionalIn="globalConfig">
+  <globalConfigValue>spam</globalConfigValue>
+  <desc>spam report type value for spam</desc>
+</attr>
+
+<attr id="469" name="zimbraSpamReportTypeHam" type="string" cardinality="single" optionalIn="globalConfig">
+  <globalConfigValue>ham</globalConfigValue>
+  <desc>spam report type value for ham</desc>
+</attr>
+
 </attrs>
