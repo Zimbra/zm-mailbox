@@ -157,12 +157,11 @@ public class Search extends MailDocumentHandler  {
         while (pager.hasNext()) {
             ZimbraHit hit = pager.getNextHit();
             if (totalNumHits >= limit) {
-                if (mLog.isDebugEnabled()) {
+                if (mLog.isDebugEnabled())
                     mLog.debug("Search results limited to " + limit + " hits.");
-                }
                 break;
             }
-            boolean inline = (totalNumHits == 1 && expand == ExpandResults.FIRST) || expand == ExpandResults.ALL;
+            boolean inline = (totalNumHits == 0 && expand == ExpandResults.FIRST) || expand == ExpandResults.ALL;
             boolean addSortField = true;
 
             Element e = null;
@@ -207,9 +206,8 @@ public class Search extends MailDocumentHandler  {
                 totalNumHits++;
             
             if (totalNumHits >= limit) {
-                if (mLog.isDebugEnabled()) {
+                if (mLog.isDebugEnabled())
                     mLog.debug("Search results limited to " + limit + " hits.");
-                }
                 break;
             }
         }
