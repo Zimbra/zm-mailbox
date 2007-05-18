@@ -173,6 +173,7 @@ public class Mime {
 		String cts = getContentType(mp);
         boolean isMultipart = cts.startsWith(CT_MULTIPART_PREFIX); 
         boolean isMessage = !isMultipart && cts.equals(CT_MESSAGE_RFC822);
+        boolean digestParent = parent != null && parent.mContentType.equalsIgnoreCase(CT_MULTIPART_DIGEST);
 
         String disp = null, filename = null;
         try {
@@ -196,7 +197,7 @@ public class Mime {
 		mpart.mPartNum = partNum;
 		mpart.mSize = size;
 		mpart.mChildren = null;
-        mpart.mDisposition = (disp == null ? "" : disp.toLowerCase());
+        mpart.mDisposition = (disp == null ? (digestParent ? Part.ATTACHMENT : "") : disp.toLowerCase());
         mpart.mFilename = (filename == null ? "" : filename.toLowerCase());
 		partList.add(mpart);
 		if (parent != null) {
@@ -874,8 +875,6 @@ public class Mime {
         List<MPartInfo> children;
         if (ctype.equals(CT_MULTIPART_ALTERNATIVE))
             return getAlternativeBodySubpart(base.getChildren(), preferHtml);
-        else if (ctype.equals(CT_MULTIPART_DIGEST))
-            return null;
         else if (ctype.equals(CT_MULTIPART_MIXED))
             children = base.getChildren();
         else
