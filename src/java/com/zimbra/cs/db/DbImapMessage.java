@@ -27,16 +27,15 @@ package com.zimbra.cs.db;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
-import com.zimbra.cs.db.DbPool.Connection;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.datasource.ImapFolder;
 import com.zimbra.cs.datasource.ImapMessage;
+import com.zimbra.cs.datasource.ImapMessageCollection;
+import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.mailbox.Mailbox;
 
 
 public class DbImapMessage {
@@ -77,15 +76,14 @@ public class DbImapMessage {
     }
 
     /**
-     * Returns IMAP message data for the given data source.  The key
-     * in the <tt>Map</tt> is the message's UID.
+     * Returns a collection of tracked IMAP messages for the given data source.
      */
-    public static Map<Long, ImapMessage> getImapMessages(Mailbox mbox, DataSource ds, ImapFolder imapFolder)
+    public static ImapMessageCollection getImapMessages(Mailbox mbox, DataSource ds, ImapFolder imapFolder)
     throws ServiceException {
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        Map<Long, ImapMessage> imapMessages = new HashMap<Long, ImapMessage>();
+        ImapMessageCollection imapMessages = new ImapMessageCollection();
 
         try {
             conn = DbPool.getConnection();
@@ -104,7 +102,7 @@ public class DbImapMessage {
                 long uid = rs.getLong("imap.uid");
                 int itemId = rs.getInt("imap.item_id");
                 int flags = rs.getInt("mi.flags");
-                imapMessages.put(uid, new ImapMessage(uid, itemId, flags));
+                imapMessages.add(new ImapMessage(uid, itemId, flags));
             }
             rs.close();
             stmt.close();
@@ -116,7 +114,8 @@ public class DbImapMessage {
             DbPool.quietClose(conn);
         }
 
-        ZimbraLog.mailbox.debug("Found %d UID's for %s", imapMessages.size(), ds);
+        ZimbraLog.mailbox.debug("Found %d tracked IMAP messages for %s",
+            imapMessages.size(), imapFolder.getRemotePath());
         return imapMessages;
     }
 

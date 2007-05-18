@@ -213,9 +213,6 @@ extends TestCase {
 
     private boolean isMailFolder(ZFolder folder) {
         ZFolder.View view = folder.getDefaultView();
-        if (folder.getName().equals("Drafts")) {
-            return false;
-        }
         return view == null || view == ZFolder.View.message || view == ZFolder.View.conversation;
     }
     

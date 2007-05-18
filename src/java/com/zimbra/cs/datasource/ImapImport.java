@@ -25,8 +25,11 @@
 package com.zimbra.cs.datasource;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,10 +39,13 @@ import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.NoSuchProviderException;
+import javax.mail.ReadOnlyFolderException;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.UIDFolder;
+import javax.mail.internet.MimeMessage;
 
+import com.sun.mail.imap.AppendUID;
 import com.sun.mail.imap.IMAPMessage;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -214,12 +220,13 @@ public class ImapImport implements MailItemImport {
             for (ImapFolder imapFolder : imapFolders) {
                 ZimbraLog.datasource.info("Importing from IMAP folder %s to local folder %s",
                     imapFolder.getRemotePath(), imapFolder.getLocalPath());
-                Folder jmFolder = store.getFolder(imapFolder.getRemotePath());
-                jmFolder.open(Folder.READ_ONLY);
-                com.zimbra.cs.mailbox.Folder zimbraFolder =
-                    mbox.getFolderById(null, imapFolder.getItemId());
-                importFolder(account, ds, imapFolder, jmFolder, zimbraFolder);
-                jmFolder.close(true);
+                try {
+                    importFolder(account, ds, store, imapFolder);
+                } catch (MessagingException e) {
+                    ZimbraLog.datasource.warn("An error occurred while importing folder %s", imapFolder.getRemotePath(), e);
+                } catch (ServiceException e) {
+                    ZimbraLog.datasource.warn("An error occurred while importing folder %s", imapFolder.getRemotePath(), e);
+                }
             }
 
             store.close();
@@ -349,17 +356,40 @@ public class ImapImport implements MailItemImport {
         }
     }
 
-    private void importFolder(Account account, DataSource ds, ImapFolder imapFolder,
-                              Folder jmFolder, com.zimbra.cs.mailbox.Folder zimbraFolder)
+    private void importFolder(Account account, DataSource ds, Store store, ImapFolder trackedFolder)
     throws MessagingException, IOException, ServiceException {
-        Message[] msgs = jmFolder.getMessages();
-        ZimbraLog.datasource.debug("Found %d messages in %s", msgs.length, jmFolder.getFullName());
-
-        if (msgs.length > 0) {
-            // Fetch message UID's for reconciliation (UIDL)
-            jmFolder.fetch(msgs, FETCH_PROFILE);
+        // Instantiate folders
+        com.sun.mail.imap.IMAPFolder remoteFolder =
+            (com.sun.mail.imap.IMAPFolder) store.getFolder(trackedFolder.getRemotePath());
+        try {
+            remoteFolder.open(Folder.READ_WRITE);
+        } catch (ReadOnlyFolderException e) {
+            ZimbraLog.datasource.info("Unable to open folder %s for write.  Skipping this folder.",
+                remoteFolder.getFullName());
+            return;
         }
-
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        com.zimbra.cs.mailbox.Folder localFolder = mbox.getFolderById(null, trackedFolder.getItemId());
+        
+        // Get remote messages
+        Message[] msgArray = remoteFolder.getMessages();
+        ZimbraLog.datasource.debug("Found %d messages in %s", msgArray.length, remoteFolder.getFullName());
+        if (msgArray.length > 0) {
+            // Fetch message UID's for reconciliation (UIDL)
+            remoteFolder.fetch(msgArray, FETCH_PROFILE);
+        }
+        
+        // Check for duplicate UID's, in case the server sends bad data.
+        Map<Long, IMAPMessage> remoteMsgs = new LinkedHashMap<Long, IMAPMessage>();
+        for (Message msg : msgArray) {
+            IMAPMessage imapMsg = (IMAPMessage) msg;
+            long uid = remoteFolder.getUID(imapMsg);
+            if (remoteMsgs.containsKey(uid)) {
+                ZimbraLog.datasource.warn("IMAP server sent duplicate UID %d.", uid);
+            }
+            remoteMsgs.put(uid, imapMsg);
+        }
+        
         // TODO: Check the UID of the first message to make sure the user isn't
         // importing his own mailbox.
         /*
@@ -369,62 +399,96 @@ public class ImapImport implements MailItemImport {
          * from his own mailbox", null); }
          */
 
-        // Insert new messages
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-        Map<Long, ImapMessage> storedMsgs = DbImapMessage.getImapMessages(mbox, ds, imapFolder);
-        int numAdded = 0;
-        int numSkipped = 0;
+        // Get stored message ID'S
+        ImapMessageCollection trackedMsgs = DbImapMessage.getImapMessages(mbox, ds, trackedFolder);
+        Set<Integer> localIds = new HashSet<Integer>();
+        addMailItemIds(localIds, mbox, localFolder.getId(), MailItem.TYPE_MESSAGE);
+        addMailItemIds(localIds, mbox, localFolder.getId(), MailItem.TYPE_CHAT);
+        
+        int numMatched = 0;
         int numUpdated = 0;
-        int numDeleted = 0;
+        int numAddedLocally = 0;
+        int numDeletedLocally = 0;
+        int numAddedRemotely = 0;
+        int numDeletedRemotely = 0;
 
-        for (int i = 0; i < msgs.length; i++) {
-            IMAPMessage imapMsg = (IMAPMessage) msgs[i];
-            long uid = ((com.sun.mail.imap.IMAPFolder) jmFolder).getUID(imapMsg);
+        for (long uid : remoteMsgs.keySet()) {
+            IMAPMessage remoteMsg = remoteMsgs.get(uid);
 
-            if (storedMsgs.containsKey(uid)) {
+            if (trackedMsgs.containsUid(uid)) {
                 // We already know about this message.
-                ImapMessage storedMsg = storedMsgs.remove(uid);
-                int appliedFlags = applyFlags(imapMsg, storedMsg.getFlags());
-                if (appliedFlags != storedMsg.getFlags()) {
-                    // Flags changed
-                    mbox.setTags(null, storedMsg.getItemId(), MailItem.TYPE_MESSAGE, appliedFlags,
-                        MailItem.TAG_UNCHANGED);
-                    numUpdated++;
+                ImapMessage trackedMsg = trackedMsgs.getByUid(uid);
+                
+                if (localIds.contains(trackedMsg.getItemId())) {
+                    // Message exists on both sides.  Sync flags.
+                    // We currently only sync flags from remote to local, not in both directions.
+                    int appliedFlags = applyFlags(remoteMsg, trackedMsg.getFlags());
+                    if (appliedFlags != trackedMsg.getFlags()) {
+                        // Flags changed
+                        mbox.setTags(null, trackedMsg.getItemId(), MailItem.TYPE_MESSAGE, appliedFlags,
+                            MailItem.TAG_UNCHANGED);
+                        numUpdated++;
+                    } else {
+                        numMatched++;
+                    }
+                    localIds.remove(trackedMsg.getItemId());
                 } else {
-                    numSkipped++;
+                    // Message was deleted locally.  Delete it from the remote server.
+                    remoteMsg.setFlag(Flags.Flag.DELETED, true);
+                    numDeletedRemotely++;
                 }
             } else {
-                // Add message to mailbox
+                // New remote message.  Add it to local mailbox.
                 ParsedMessage pm = null;
-                if (imapMsg.getSentDate() != null) {
+                if (remoteMsg.getSentDate() != null) {
                     // Set received date to the original message's date
-                    pm = new ParsedMessage(imapMsg, imapMsg.getSentDate().getTime(),
+                    pm = new ParsedMessage(remoteMsg, remoteMsg.getSentDate().getTime(),
                         mbox.attachmentsIndexingEnabled());
                 } else {
-                    pm = new ParsedMessage(imapMsg, mbox.attachmentsIndexingEnabled());
+                    pm = new ParsedMessage(remoteMsg, mbox.attachmentsIndexingEnabled());
                 }
-                int flags = applyFlags(imapMsg, 0);
+                int flags = applyFlags(remoteMsg, 0);
                 com.zimbra.cs.mailbox.Message zimbraMsg =
-                    mbox.addMessage(null, pm, zimbraFolder.getId(), false, flags, null);
-                numAdded++;
-                DbImapMessage.storeImapMessage(mbox, imapFolder.getItemId(), uid, zimbraMsg.getId());
+                    mbox.addMessage(null, pm, localFolder.getId(), false, flags, null);
+                numAddedLocally++;
+                DbImapMessage.storeImapMessage(mbox, trackedFolder.getItemId(), uid, zimbraMsg.getId());
             }
         }
 
-        // Remaining UID's are not on the remote server. Delete local copies.
-        if (storedMsgs.size() > 0) {
-            int[] idArray = new int[storedMsgs.size()];
-            int i = 0;
-            for (ImapMessage imapMsg : storedMsgs.values()) {
-                idArray[i++] = imapMsg.getItemId();
+        // Remaining local ID's are messages that were not found on the remote server
+        for (int localId : localIds) {
+            if (trackedMsgs.containsItemId(localId)) {
+                // Remote message was deleted
+                mbox.delete(null, localId, MailItem.TYPE_UNKNOWN);
+                numDeletedLocally++;
+            } else {
+                // New local message.  Add it to the remote server.
+                com.zimbra.cs.mailbox.Message localMsg =
+                    (com.zimbra.cs.mailbox.Message) mbox.getItemById(null, localId, MailItem.TYPE_UNKNOWN);
+                MimeMessage[] localMime = new MimeMessage[1];
+                localMime[0] = localMsg.getMimeMessage(false);
+                AppendUID[] newUids = remoteFolder.appendUIDMessages(localMime);
+                numAddedRemotely++;
+                DbImapMessage.storeImapMessage(mbox, localFolder.getId(), newUids[0].uid, localId);
             }
-            mbox.delete(null, idArray, MailItem.TYPE_MESSAGE, null);
-            numDeleted++;
         }
 
         ZimbraLog.datasource.debug(
-            "Import of %s completed.  Added: %d, skipped: %d, updated: %d, deleted: %d.",
-            jmFolder.getFullName(), numAdded, numSkipped, numUpdated, numDeleted);
+            "Import of %s completed.  Matched: %d, updated: %d, added locally: %d, " +
+            "deleted locally: %d, added remotely: %d, deleted remotely: %d.",
+            remoteFolder.getFullName(), numMatched, numUpdated, numAddedLocally,
+            numDeletedLocally, numAddedRemotely, numDeletedRemotely);
+    }
+    
+    /**
+     * Adds item id's to the given set.
+     */
+    private void addMailItemIds(Set<Integer> idSet, Mailbox mbox, int folderId, byte type)
+    throws ServiceException {
+        int[] ids = mbox.listItemIds(null, type, folderId);
+        for (int id : ids) {
+            idSet.add(id);
+        }
     }
 
     private static final Flags.Flag[] IMAP_FLAGS = { Flags.Flag.ANSWERED, Flags.Flag.DELETED,
