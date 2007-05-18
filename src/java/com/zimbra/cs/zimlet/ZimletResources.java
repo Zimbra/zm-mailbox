@@ -12,6 +12,8 @@ import javax.servlet.http.*;
 import javax.xml.parsers.*;
 
 import org.w3c.dom.*;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.Scriptable;
 
 public class ZimletResources
 extends ZimbraServlet {
@@ -102,8 +104,32 @@ extends ZimbraServlet {
             if (DEBUG) System.err.println("DEBUG: generating buffer");
             generate(req, type, printer);
 
+            // minimize javascript
+            String text = writer.toString();
+            if (type.equals(T_JAVASCRIPT)) {
+                Context context = Context.enter();
+                context.setOptimizationLevel(-1);
+                Scriptable scriptable = context.initStandardObjects();
+                Reader reader = new StringReader(text);
+                String script = null;
+                String sourceName = uri;
+                int lineNum = 0;
+                Object securityDomain = null;
+
+                String mintext = org.mozilla.javascript.tools.shell.Main.compressScript(
+                    context, scriptable, reader,
+                    script, sourceName, lineNum, securityDomain
+                );
+                if (mintext == null) {
+                    System.err.println("unable to minimize zimlet JS source");
+                }
+                else {
+                    text = mintext;
+                }
+            }
+
             // compress
-            buffer = writer.toString().getBytes("UTF-8");
+            buffer = text.getBytes("UTF-8");
             if (uri.endsWith(COMPRESSED_EXT)) {
                 ByteArrayOutputStream bos = new ByteArrayOutputStream(buffer.length);
                 OutputStream gzos = new GZIPOutputStream(bos);
@@ -129,6 +155,9 @@ extends ZimbraServlet {
             resp.setHeader("Cache-control", "public, max-age=604800");
             resp.setContentType(contentType);
             resp.setContentLength(buffer.length);
+            if (uri.endsWith(COMPRESSED_EXT)) {
+                resp.setHeader("Content-Encoding", "gzip");
+            }
         }
         catch (IllegalStateException e) {
             // ignore -- thrown if called from including JSP
