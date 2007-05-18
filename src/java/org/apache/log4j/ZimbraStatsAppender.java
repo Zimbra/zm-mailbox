@@ -18,6 +18,8 @@
 
 package org.apache.log4j;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -26,6 +28,7 @@ import java.util.GregorianCalendar;
 import java.util.Calendar;
 import java.util.TimeZone;
 import java.util.Locale;
+import java.util.zip.GZIPOutputStream;
 
 import org.apache.log4j.helpers.LogLog;
 import org.apache.log4j.spi.LoggingEvent;
@@ -51,24 +54,24 @@ public class ZimbraStatsAppender extends FileAppender {
   static final int TOP_OF_WEEK   = 4;
   static final int TOP_OF_MONTH  = 5;
 
-
   /**
      The date pattern. By default, the pattern is set to
-     "'.'yyyy-MM-dd" meaning daily rollover.
+     "yyyy-MM-dd" meaning daily rollover.
    */
-  private String datePattern = "'.'yyyy-MM-dd";
+  private String datePattern = "yyyy-MM-dd";
 
   /**
-     The log file will be renamed to the value of the
-     scheduledFilename variable when the next interval is entered. For
+     When the log rolls over it will be moved to the directory named
+     by scheduledSubdir.  It is a subdirectory under directory configured
+     by zmstat_log_directory localconfig key.
+     The rollover happens when the next interval is entered.  For
      example, if the rollover period is one hour, the log file will be
-     renamed to the value of "scheduledFilename" at the beginning of
-     the next hour. 
+     moved at the beginning of the next hour.
 
      The precise time when a rollover occurs depends on logging
      activity. 
   */
-  private String scheduledFilename;
+  private String scheduledSubdir;
 
   /**
      The next time we estimate a rollover should occur. */
@@ -131,8 +134,9 @@ public class ZimbraStatsAppender extends FileAppender {
       printPeriodicity(type);
       rc.setType(type);
       File file = new File(fileName);
-      scheduledFilename = fileName+sdf.format(new Date(file.lastModified()));
-
+      synchronized (sdf) {
+          scheduledSubdir = sdf.format(new Date(file.lastModified()));
+      }
     } else {
       LogLog.error("Either File or DatePattern options are not set for appender ["
            +name+"].");
@@ -225,28 +229,56 @@ public class ZimbraStatsAppender extends FileAppender {
       return;
     }
 
-    String datedFilename = fileName+sdf.format(now);
+    String subdir;
+    synchronized (sdf) {
+        subdir = sdf.format(now);
+    }
+
     // It is too early to roll over because we are still within the
     // bounds of the current interval. Rollover will occur once the
     // next interval is reached.
-    if (scheduledFilename.equals(datedFilename)) {
-      return;
+    if (scheduledSubdir.equals(subdir)) {
+        return;
     }
 
     // close current file, and rename it to datedFilename
     this.closeFile();
 
-    File target  = new File(scheduledFilename);
-    if (target.exists()) {
-      target.delete();
+    File currFile = new File(fileName);
+    File targetDir = new File(currFile.getParentFile(), scheduledSubdir);
+    if (!targetDir.exists()) {
+      boolean created = targetDir.mkdirs();
+      if (!created) {
+        LogLog.error("Failed to created rollover target directory " + targetDir.getAbsolutePath());
+      }
     }
 
-    File file = new File(fileName);
-    boolean result = file.renameTo(target);
-    if(result) {
-      LogLog.debug(fileName +" -> "+ scheduledFilename);
-    } else {
-      LogLog.error("Failed to rename ["+fileName+"] to ["+scheduledFilename+"].");
+    if (targetDir.exists()) {
+      // gzip the rolled file
+      File target  = new File(targetDir, currFile.getName() + ".gz");
+      if (target.exists()) {
+        target.delete();
+      }
+      FileInputStream fis = null;
+      GZIPOutputStream gos = null;
+      try {
+        fis = new FileInputStream(currFile);
+        gos = new GZIPOutputStream(new FileOutputStream(target));
+        byte[] buf = new byte[4096];
+        int bytesRead = 0;
+        while ((bytesRead = fis.read(buf, 0, buf.length)) != -1) {
+          gos.write(buf, 0, bytesRead);
+        }
+        LogLog.debug(fileName + " -> " + target.getAbsolutePath());
+      } finally {
+        if (gos != null)
+          gos.close();
+        if (fis != null)
+          fis.close();
+      }
+
+      if (!currFile.delete())
+        LogLog.error("Failed to delete " + fileName);
     }
 
     try {
@@ -257,7 +289,7 @@ public class ZimbraStatsAppender extends FileAppender {
     catch(IOException e) {
       errorHandler.error("setFile("+fileName+", false) call failed.");
     }
-    scheduledFilename = datedFilename;
+    scheduledSubdir = subdir;
   }
 
   /**
