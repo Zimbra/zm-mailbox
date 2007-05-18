@@ -1,5 +1,3 @@
-package com.zimbra.perf.chart;
-
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1
@@ -17,7 +15,7 @@ package com.zimbra.perf.chart;
  * The Original Code is: Zimbra Collaboration Suite Server.
  * 
  * The Initial Developer of the Original Code is Zimbra, Inc.
- * Portions created by Zimbra are Copyright (C) 2006 Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2007 Zimbra, Inc.
  * All Rights Reserved.
  * 
  * Contributor(s): 
@@ -25,7 +23,7 @@ package com.zimbra.perf.chart;
  * ***** END LICENSE BLOCK *****
  */
 
-
+package com.zimbra.perf.chart;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -34,8 +32,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.lang.reflect.Array;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -44,7 +40,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.Formatter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -99,8 +94,6 @@ public class ChartFromCsv {
 	private int startOffset = 15;
 	
 	private int endOffset = 10;
-
-	private int clientThread = 0;
 
 	private long gminDate = Long.MAX_VALUE;
 
