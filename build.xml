@@ -619,7 +619,8 @@
 		<delete failonerror="no">
 			<fileset dir="${zimbra.home.dir}/db" excludes="data/**"/>
 		</delete>
-		
+
+		<delete dir="${zimbra.home.dir}/zmstat" />
 		<delete dir="${zimbra.home.dir}/store" />
 		<delete dir="${zimbra.home.dir}/index" />
 		<delete dir="${zimbra.home.dir}/redolog" />
@@ -639,6 +640,7 @@
 
 		<mkdir dir="${zimbra.home.dir}/openldap/var/openldap-data" />
 		<mkdir dir="${zimbra.home.dir}/log" />
+		<mkdir dir="${zimbra.home.dir}/zmstat" />
 		<mkdir dir="${zimbra.home.dir}/store" />
 		<mkdir dir="${zimbra.home.dir}/index" />
 		<mkdir dir="${zimbra.home.dir}/redolog" />
