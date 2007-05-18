@@ -25,7 +25,6 @@
 
 package com.zimbra.common.localconfig;
 
-import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -234,6 +233,8 @@ public class LC {
 
     public static final KnownKey search_disable_database_hints;
     public static final KnownKey search_dbfirst_term_percentage_cutoff;
+
+    public static final KnownKey zmstat_log_directory;
     
     static {
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
@@ -846,5 +847,9 @@ public class LC {
         search_dbfirst_term_percentage_cutoff = new KnownKey("search_dbfirst_term_percentage_cutoff");
         search_dbfirst_term_percentage_cutoff.setDefault("0.8");
         search_dbfirst_term_percentage_cutoff.setDoc("Internal Query Generation parameter");
+
+        zmstat_log_directory = new KnownKey("zmstat_log_directory");
+        zmstat_log_directory.setDefault("${zimbra_home}" + FS + "zmstat");
+        zmstat_log_directory.setDoc("where zmstat csv files are saved");
     }
 }
