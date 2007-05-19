@@ -33,10 +33,10 @@
     <!-- HTTPBEGIN -->
     <Call name="addConnector">
       <Arg>
-          <New id="http" class="org.mortbay.jetty.nio.SelectChannelConnector">
+          <New id="http" class="org.mortbay.jetty.bio.SocketConnector">
             <Set name="port"><SystemProperty name="jetty.port" default="%%zimbraMailPort%%"/></Set>
             <Set name="maxIdleTime">30000</Set>
-	    <Set name="lowResourceMaxIdleTime">3000</Set>
+	    <Set name="lowResourceMaxIdleTime">1000</Set>
             <Set name="Acceptors">2</Set>
             <Set name="confidentialPort">%%zimbraMailSSLPort%%</Set>
           </New>
@@ -48,10 +48,10 @@
     <!-- HTTPSBEGIN
     <Call name="addConnector">
       <Arg>
-        <New id="ssl" class="org.mortbay.jetty.security.SslSelectChannelConnector">
+        <New id="ssl" class="org.mortbay.jetty.security.SslSocketConnector">
           <Set name="Port">%%zimbraMailSSLPort%%</Set>
           <Set name="maxIdleTime">30000</Set> 
-	  <Set name="lowResourceMaxIdleTime">3000</Set>
+	  <Set name="lowResourceMaxIdleTime">1000</Set>
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">zimbra</Set>
@@ -68,7 +68,8 @@
         <New id="admin" class="org.mortbay.jetty.security.SslSocketConnector">
           <Set name="Port">7071</Set>
           <Set name="maxIdleTime">30000</Set>
-	  <Set name="lowResourceMaxIdleTime">3000</Set>
+	  <Set name="lowResourceMaxIdleTime">1000</Set>
+          <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">zimbra</Set>
         </New>
@@ -121,6 +122,7 @@
       <Arg>/service</Arg>
       <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
       <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/service</Set>
+      <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
     </New>
 
     <New id="zimbra-root-context" class="org.mortbay.jetty.webapp.WebAppContext">
@@ -129,6 +131,7 @@
       <Arg>/</Arg>
       <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
       <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/ROOT</Set>
+      <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
     </New>
 
     <New id="zimbra" class="org.mortbay.jetty.webapp.WebAppContext">
@@ -137,6 +140,7 @@
       <Arg>/zimbra</Arg>
       <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
       <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/zimbra</Set>
+      <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
     </New>
 
     <New id="zimbraAdmin" class="org.mortbay.jetty.webapp.WebAppContext">
@@ -145,6 +149,7 @@
       <Arg>/zimbraAdmin</Arg>
       <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
       <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/zimbraAdmin</Set>
+      <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
     </New>
     
     <!-- =========================================================== -->
@@ -239,8 +244,8 @@
     <!-- extra options                                               -->
     <!-- =========================================================== -->
     <Set name="stopAtShutdown">true</Set>
-    <!-- ensure/prevent Server: header being sent to browsers        -->
-    <Set name="sendServerVersion">true</Set>
+    <Set name="sendServerVersion">false</Set>
+    <Set name="sendDateHeader">true</Set>
 
     <!-- =========================================================== -->
     <!-- start connectors                                            -->
