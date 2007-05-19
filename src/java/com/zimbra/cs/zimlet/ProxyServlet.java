@@ -31,7 +31,6 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.Set;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -51,6 +50,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mime.MimeCompoundHeader.ContentDisposition;
 import com.zimbra.cs.mime.MimeCompoundHeader.ContentType;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
@@ -70,6 +70,7 @@ public class ProxyServlet extends ZimbraServlet {
     private static final String USER_PARAM = "user";
     private static final String PASS_PARAM = "pass";
     private static final String FORMAT_PARAM = "fmt";
+    private static final String FILENAME_PARAM = "filename";
     private static final String AUTH_PARAM = "auth";
     private static final String AUTH_BASIC = "basic";
 
@@ -238,10 +239,12 @@ public class ProxyServlet extends ZimbraServlet {
             String contentType = ctHeader == null || ctHeader.getValue() == null ? DEFAULT_CTYPE : ctHeader.getValue();
 
             if (asUpload) {
-                String filename = new ContentType(contentType).getParameter("name");
-                if (filename == null && method.getResponseHeader("Content-Disposition") != null)
-                    filename = new ContentType(method.getResponseHeader("Content-Disposition").getValue()).getParameter("filename");
-                if (filename == null)
+                String filename = req.getParameter(FILENAME_PARAM);
+                if (filename == null || filename.equals(""))
+                    filename = new ContentType(contentType).getParameter("name");
+                if ((filename == null || filename.equals("")) && method.getResponseHeader("Content-Disposition") != null)
+                    filename = new ContentDisposition(method.getResponseHeader("Content-Disposition").getValue()).getParameter("filename");
+                if (filename == null || filename.equals(""))
                     filename = "unknown";
 
                 String attachmentId = null;
