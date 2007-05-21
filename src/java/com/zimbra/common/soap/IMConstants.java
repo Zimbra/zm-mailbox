@@ -91,4 +91,5 @@ public class IMConstants {
     public static final String E_SUBSCRIBED     = "subscribed";
     public static final String E_UNSUBSCRIBED   = "unsubscribed";
     public static final String E_GATEWAY_STATUS = "gwStatus";
+    public static final String E_TYPING         = "typing";
 }
