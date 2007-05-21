@@ -70,6 +70,7 @@ import com.zimbra.common.util.ZimbraLog;
 public class IMPersona extends ClassLogger {
     private static final String FN_ADDRESS = "a";
     private static final String FN_PRESENCE = "p";
+    private static final String FN_INTEROP_SERVICE_PREFIX  = "isvc-";
 
     /**
      * @param octxt
@@ -82,6 +83,9 @@ public class IMPersona extends ClassLogger {
                 throws ServiceException {
         IMPersona toRet = null;
         Metadata meta = mbox.getConfig(octxt, "im");
+        
+        HashMap<String /*ServiceName*/, Map<String, String>> interopReg = new HashMap<String/*ServiceName*/, Map<String, String>>();
+        
         if (meta != null) {
             // FIXME: how are config entries getting written w/o an ADDRESS
             // setting?
@@ -91,10 +95,32 @@ public class IMPersona extends ClassLogger {
                 IMPresence presence = IMPresence.decodeMetadata(meta.getMap(FN_PRESENCE));
                 toRet.mMyPresence = presence;
             }
+
+            // iterate through the metadata, looking for entries with "isvc-" keys,
+            // those are interop registration data blobs
+            for (Object o : meta.asMap().entrySet()) {
+                Map.Entry<String, Object> e = (Map.Entry<String, Object>)o;
+                if (e.getKey().startsWith(FN_INTEROP_SERVICE_PREFIX)) {
+                    Map<String, String> svcData = new HashMap<String,String>();
+
+                    // this is a nested metadata -- iterate it, and put all the 
+                    // values into a <String,String> hash
+                    Metadata tmp = (Metadata)e.getValue();
+                    for (Object tmpo: tmp.asMap().entrySet()) {
+                        Map.Entry tmpEntry = (Map.Entry)tmpo;
+                        svcData.put((String)tmpEntry.getKey(), (String)tmpEntry.getValue());
+                    }
+                    
+                    // put the <String,String> hash into interopReg 
+                    String svcName = e.getKey().substring(FN_INTEROP_SERVICE_PREFIX.length());
+                    interopReg.put(svcName, svcData);
+                }
+            }
         }
         if (toRet == null)
             toRet = new IMPersona(addr, mbox);
         toRet.init();
+        toRet.mInteropRegistrationData = interopReg;        
         return toRet;
     }
 
@@ -112,6 +138,7 @@ public class IMPersona extends ClassLogger {
     private IMPresence mMyPresence = new IMPresence(Show.ONLINE, (byte) 1, null);
     private HashSet<String> mSharedGroups = new HashSet<String>();
     private ClientSession mXMPPSession;
+    private HashMap<String /*ServiceName*/, Map<String, String>> mInteropRegistrationData;
 
     private IMPersona(IMAddr addr, Mailbox lock) {
         super(ZimbraLog.im);
@@ -217,12 +244,22 @@ public class IMPersona extends ClassLogger {
         return null;
     }
 
+    /** Write this persona's metadata to persistent storage */
     private void flush(OperationContext octxt) throws ServiceException {
         Mailbox mbox = getMailbox();
         assert (getAddr().getAddr().equals(mbox.getAccount().getName()));
         Metadata meta = new Metadata();
         meta.put(FN_ADDRESS, mAddr);
         meta.put(FN_PRESENCE, mMyPresence.encodeAsMetadata());
+        
+        for (Map.Entry<String, Map<String, String>> svc : mInteropRegistrationData.entrySet()) {
+            Metadata interopData = new Metadata();
+            for (Map.Entry<String, String> entry : svc.getValue().entrySet()) {
+                interopData.put(entry.getKey(), entry.getValue());
+            }
+            meta.put(FN_INTEROP_SERVICE_PREFIX+svc.getKey(), interopData);
+        }
+        
         mbox.setConfig(octxt, "im", meta);
     }
 
@@ -391,6 +428,15 @@ public class IMPersona extends ClassLogger {
         }
         return toRet;
     }
+    
+    Map<String, String> getIMGatewayRegistration(Interop.ServiceName service) {
+        return mInteropRegistrationData.get(service.name());
+    }
+    
+    void setIMGatewayRegistration(Interop.ServiceName service, Map<String, String> data) throws ServiceException {
+        mInteropRegistrationData.put(service.name(), data);
+        flush(null);
+    }
 
     @Override
     protected String getInstanceInfo() {
@@ -450,7 +496,7 @@ public class IMPersona extends ClassLogger {
     }
 
     private void handleMessagePacket(boolean toMe, Message msg) {
-        // is it a gateway notification?
+        // is it a gateway notification?  If so, then stop processing it here
         Element xe = msg.getChildElement("x", "zimbra:interop");
         if (xe != null) {
             String serviceName = msg.getFrom().toBareJID();
@@ -861,7 +907,7 @@ public class IMPersona extends ClassLogger {
                 mChats.put(threadId, chat);
             }
         }
-        String msg = message.getBody(Lang.DEFAULT).getPlainText();
+        String msg = (message.getBody(Lang.DEFAULT) != null ? message.getBody(Lang.DEFAULT).getPlainText() : null);
         if (msg != null && msg.startsWith("/")) {
             if (msg.startsWith("/add ")) {
                 String username = msg.substring("/add ".length()).trim();

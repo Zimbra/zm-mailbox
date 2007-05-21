@@ -63,8 +63,12 @@ public class IMSendMessage extends IMDocumentHandler {
             body = bodyElt.getText();
         }
         
+        boolean isTyping = false;
+        if (msgElt.getOptionalElement(IMConstants.E_TYPING) != null)
+            isTyping = true;
+        
         IMMessage msg = new IMMessage(subject==null?null:new TextPart(subject),
-                body==null?null:new TextPart(body));
+                body==null?null:new TextPart(body), isTyping);
                 
         OperationContext oc = lc.getOperationContext();
         

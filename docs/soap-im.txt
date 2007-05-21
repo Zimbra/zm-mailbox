@@ -75,6 +75,7 @@ To an existing chat:
    <message thread="threadID">
       [<subject [lang="LANGUAGE"]>SUBJECT</subject>]*   // HTML
       [<body [lang="LANGUAGE">BODY</body>]              // HTML
+      [<typing/>]
    </message>
 </IMSendMessageRequest>
    
@@ -83,10 +84,14 @@ To an existing chat:
    <message addr="foo@bar.com">
       [<subject [lang="LANGUAGE"]>SUBJECT</subject>]*   // HTML
       [<body [lang="LANGUAGE">BODY</body>]              // HTML
+      [<typing/>]
    </message>
 </IMSendMessageRequest>
 
 <IMSendMessageResponse thread="thread id"/>
+
+**Send a blank message to indicate/stop typing indicator by itself**
+
 
 
    
@@ -173,12 +178,12 @@ IM NOTIFICATIONS
                 [
                    <n type="unsubscribed" to="TOADDR" groups="GROUPS" [ask="subscribe|unsubscribe"]/> // you removed them from your buddy list
                 ]*
-             
                 [
                 // NEW MESSAGE RECEIVED:
-                   <n type="message" from="address" thread="chat-id" ts="TIMESTAMP>
+                   <n type="message" from="address" thread="chat-id" ts="TIMESTAMP">
                       [<subject [lang="LANG"]>SUBJECT</subject>]
                       [<body [lang="LANG"]>BODY</body>]
+                      [<typing/>]
                    </n>
                 ]*
                 [
@@ -203,7 +208,6 @@ IM NOTIFICATIONS
                 // interop gateway has succeeded/failed to connect us, see <IMGatewayListResponse> above for more info
                   <n type="gwStatus" service="GATEWAY_SERVICE_NAME" state="connectedState SEE ABOVE" [timeUntilNextConnect="msec_until_next_connect_attempt"/> ] />
                 ]*
-                
                 
              </im>]
           ]?     

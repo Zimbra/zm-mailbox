@@ -31,7 +31,6 @@ import java.util.Map;
 import com.zimbra.common.soap.Element;
 
 /**
- * @author tim
  *
  */
 public class IMMessage {
@@ -61,11 +60,13 @@ public class IMMessage {
             return mText;
         }
         
+        @Override
         public String toString() {
             return mText;
         }
     }
     
+    @Override
     public String toString() {
         return "MESSAGE("+mDate+"): "+mSubject+" "+mBody;
     }
@@ -77,10 +78,11 @@ public class IMMessage {
     }
     
     
-    public IMMessage(TextPart subject, TextPart body) {
+    public IMMessage(TextPart subject, TextPart body, boolean isTyping) {
         mSubject = subject;
         mBody = body;
         mDate = new Date();
+        mIsTyping = isTyping;
     }
     
     void addSubject(TextPart subj) {
@@ -89,11 +91,13 @@ public class IMMessage {
             return;
         }
         
-        if (mSubject == null) 
+        if (mSubject == null) {
             mSubject = subj;
+        }
 
-        if (mLangSubjects == null) 
+        if (mLangSubjects == null) {
             mLangSubjects = new HashMap();
+        }
         
         mLangSubjects.put(subj.mLang, subj);
     }
@@ -104,24 +108,28 @@ public class IMMessage {
             return;
         }
         
-        if (mBody == null) 
+        if (mBody == null) {
             mBody = body;
+        }
         
-        if (mLangBodies == null)
+        if (mLangBodies == null) {
             mLangBodies = new HashMap();
+        }
         
         mLangBodies.put(body.mLang, body);
     }
     
+    public boolean isTyping() { return mIsTyping; }
     
-    TextPart mSubject;
-    TextPart mBody;
+    private TextPart mSubject;
+    private TextPart mBody;
     
-    Map<Lang, TextPart> mLangSubjects;
-    Map<Lang, TextPart> mLangBodies;
-    Date mDate;
-    IMAddr mFrom;
-    IMAddr mTo;
+    private Map<Lang, TextPart> mLangSubjects;
+    private Map<Lang, TextPart> mLangBodies;
+    private Date mDate;
+    private IMAddr mFrom;
+    private IMAddr mTo;
+    private boolean mIsTyping;
     
     public Element toXml(Element parent) {
         {
@@ -149,8 +157,9 @@ public class IMMessage {
                 || (mSubject != null && mSubject.mLang == lang)
                 || mLangSubjects==null 
                 || !mLangSubjects.containsKey(lang)
-        )
+        ) {
             return mSubject;
+        }
         
         return mLangSubjects.get(lang);
     }
@@ -164,8 +173,9 @@ public class IMMessage {
                 || (mBody != null && mBody.mLang == lang)
                 || mLangBodies ==null 
                 || !mLangBodies.containsKey(lang)
-        )
+        ) {
             return mBody;
+        }
         
         return mLangBodies.get(lang);
     }

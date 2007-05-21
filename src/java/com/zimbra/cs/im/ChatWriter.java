@@ -217,17 +217,17 @@ class ChatWriter {
         mmp.addBodyPart(textPart);
         textPart.setText(plainText.toString(), Mime.P_CHARSET_UTF8);
 
+        // html
+        MimeBodyPart htmlPart = new MimeBodyPart();
+        htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(html.toString())));
+        mmp.addBodyPart(htmlPart);
+        
         // xml part
         Element root = new Element.XMLElement("im");
         IMGetChat.chatToXml(chat, root);
         MimeBodyPart xmlPart = new MimeBodyPart();
         mmp.addBodyPart(xmlPart);
         xmlPart.setDataHandler(new DataHandler(new ImXmlPartDataSource(root)));
-
-        // html
-        MimeBodyPart htmlPart = new MimeBodyPart();
-        htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(html.toString())));
-        mmp.addBodyPart(htmlPart);
 
         mm.saveChanges(); // don't forget to call this, or bad things will happen!
 
