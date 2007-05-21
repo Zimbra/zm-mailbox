@@ -43,17 +43,17 @@ public class DbImapMessage {
     public static final String TABLE_IMAP_MESSAGE = "imap_message";
     
     /**
-     * Stores IMAP message data.
+     * Stores IMAP message tracker data.
      */
-    public static void storeImapMessage(Mailbox mbox, int imapFolderId, long uid, int itemId)
+    public static void storeImapMessage(Mailbox mbox, int localFolderId, long remoteUid, int localItemId)
     throws ServiceException
     {
         Connection conn = null;
         PreparedStatement stmt = null;
         
         ZimbraLog.datasource.debug(
-            "Storing IMAP message data: mboxId=%d, imapFolderId=%d, uid=%d, itemId=%d",
-            mbox.getId(), imapFolderId, uid, itemId);
+            "Storing IMAP message tracker: mboxId=%d, localFolderId=%d, remoteUid=%d, localItemId=%d",
+            mbox.getId(), localFolderId, remoteUid, localItemId);
 
         try {
             conn = DbPool.getConnection();
@@ -62,13 +62,44 @@ public class DbImapMessage {
                 " (mailbox_id, imap_folder_id, uid, item_id) " +
                 "VALUES (?, ?, ?, ?)");
             stmt.setInt(1, mbox.getId());
-            stmt.setInt(2, imapFolderId);
-            stmt.setLong(3, uid);
-            stmt.setInt(4, itemId);
+            stmt.setInt(2, localFolderId);
+            stmt.setLong(3, remoteUid);
+            stmt.setInt(4, localItemId);
             stmt.executeUpdate();
             conn.commit();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("Unable to store IMAP message data", e);
+        } finally {
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    }
+
+    /**
+     * Deletes IMAP message tracker data.
+     */
+    public static void deleteImapMessage(Mailbox mbox, int localFolderId, long remoteUid)
+    throws ServiceException
+    {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        
+        ZimbraLog.datasource.debug(
+            "Deleting IMAP message tracker: mboxId=%d, localFolderId=%d, remoteUid=%d",
+            mbox.getId(), localFolderId, remoteUid);
+
+        try {
+            conn = DbPool.getConnection();
+            stmt = conn.prepareStatement(
+                "DELETE FROM " + getTableName(mbox) +
+                " WHERE mailbox_id = ? AND imap_folder_id = ? AND uid = ?");
+            stmt.setInt(1, mbox.getId());
+            stmt.setInt(2, localFolderId);
+            stmt.setLong(3, remoteUid);
+            stmt.executeUpdate();
+            conn.commit();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Unable to delete IMAP message data", e);
         } finally {
             DbPool.closeStatement(stmt);
             DbPool.quietClose(conn);
@@ -90,7 +121,7 @@ public class DbImapMessage {
             stmt = conn.prepareStatement(
                 "SELECT imap.uid, imap.item_id, mi.flags " +
                 "FROM " + getTableName(mbox) + " imap " +
-                "  JOIN " + DbMailItem.getMailItemTableName(mbox) + " mi " +
+                "  LEFT OUTER JOIN " + DbMailItem.getMailItemTableName(mbox) + " mi " +
                 "  ON imap.mailbox_id = mi.mailbox_id AND imap.item_id = mi.id " + 
                 "WHERE imap.mailbox_id = ? AND imap.imap_folder_id = ?");
 

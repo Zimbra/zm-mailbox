@@ -172,7 +172,6 @@ public class ImapImport implements MailItemImport {
                         localFolder.getPath(), remoteFolder.getFullName());
                     imapFolders.add(imapFolder);
                 }
-
             }
 
             // Handle new local folders and deleted remote folders
@@ -190,6 +189,7 @@ public class ImapImport implements MailItemImport {
                         "Skipping folder %s, probably deleted by parent deletion", zimbraFolder.getName());
                     ImapFolder imapFolder = imapFolders.getByItemId(zimbraFolder.getId());
                     imapFolders.remove(imapFolder);
+                    DbImapFolder.deleteImapFolder(mbox, ds, imapFolder);
                     continue;
                 }
                 ZimbraLog.datasource.debug("Processing local folder %s", zimbraFolder.getPath());
@@ -422,7 +422,7 @@ public class ImapImport implements MailItemImport {
                 if (localIds.contains(trackedMsg.getItemId())) {
                     // Message exists on both sides.  Sync flags.
                     // We currently only sync flags from remote to local, not in both directions.
-                    int appliedFlags = applyFlags(remoteMsg, trackedMsg.getFlags());
+                    int appliedFlags = applyFlagsToBitfield(remoteMsg, trackedMsg.getFlags());
                     if (appliedFlags != trackedMsg.getFlags()) {
                         // Flags changed
                         mbox.setTags(null, trackedMsg.getItemId(), MailItem.TYPE_MESSAGE, appliedFlags,
@@ -431,11 +431,14 @@ public class ImapImport implements MailItemImport {
                     } else {
                         numMatched++;
                     }
+                    
+                    // Remove id from the set, so we know we've already processed it.
                     localIds.remove(trackedMsg.getItemId());
                 } else {
                     // Message was deleted locally.  Delete it from the remote server.
                     remoteMsg.setFlag(Flags.Flag.DELETED, true);
                     numDeletedRemotely++;
+                    DbImapMessage.deleteImapMessage(mbox, trackedFolder.getItemId(), trackedMsg.getUid());
                 }
             } else {
                 // New remote message.  Add it to local mailbox.
@@ -447,7 +450,7 @@ public class ImapImport implements MailItemImport {
                 } else {
                     pm = new ParsedMessage(remoteMsg, mbox.attachmentsIndexingEnabled());
                 }
-                int flags = applyFlags(remoteMsg, 0);
+                int flags = applyFlagsToBitfield(remoteMsg, 0);
                 com.zimbra.cs.mailbox.Message zimbraMsg =
                     mbox.addMessage(null, pm, localFolder.getId(), false, flags, null);
                 numAddedLocally++;
@@ -459,19 +462,23 @@ public class ImapImport implements MailItemImport {
         for (int localId : localIds) {
             if (trackedMsgs.containsItemId(localId)) {
                 // Remote message was deleted
+                ImapMessage tracker = trackedMsgs.getByItemId(localId);
                 mbox.delete(null, localId, MailItem.TYPE_UNKNOWN);
                 numDeletedLocally++;
+                DbImapMessage.deleteImapMessage(mbox, trackedFolder.getItemId(), tracker.getUid());
             } else {
                 // New local message.  Add it to the remote server.
                 com.zimbra.cs.mailbox.Message localMsg =
                     (com.zimbra.cs.mailbox.Message) mbox.getItemById(null, localId, MailItem.TYPE_UNKNOWN);
-                MimeMessage[] localMime = new MimeMessage[1];
-                localMime[0] = localMsg.getMimeMessage(false);
-                AppendUID[] newUids = remoteFolder.appendUIDMessages(localMime);
+                MimeMessage mimeMsg = localMsg.getMimeMessage(false);
+                copyFlags(localMsg.getFlagBitmask(), mimeMsg);
+                AppendUID[] newUids = remoteFolder.appendUIDMessages(new MimeMessage[] { mimeMsg });
                 numAddedRemotely++;
                 DbImapMessage.storeImapMessage(mbox, localFolder.getId(), newUids[0].uid, localId);
             }
         }
+        
+        remoteFolder.close(true);
 
         ZimbraLog.datasource.debug(
             "Import of %s completed.  Matched: %d, updated: %d, added locally: %d, " +
@@ -498,9 +505,9 @@ public class ImapImport implements MailItemImport {
         Flag.BITMASK_DRAFT, Flag.BITMASK_FLAGGED, Flag.BITMASK_UNREAD };
 
     /**
-     * Applies the flags from a JavaMail message to the given flag bitmask.
+     * Applies the flags from a JavaMail message to the given flag bitfield.
      */
-    private int applyFlags(Message remoteMsg, int flags)
+    private int applyFlagsToBitfield(Message remoteMsg, int flagBitfield)
     throws MessagingException {
         for (int i = 0; i < IMAP_FLAGS.length; i++) {
             Flags.Flag imapFlag = IMAP_FLAGS[i];
@@ -510,12 +517,29 @@ public class ImapImport implements MailItemImport {
                 isSet = !isSet;
             }
             if (isSet) {
-                flags |= ZIMBRA_FLAG_BITMASKS[i];
+                flagBitfield |= ZIMBRA_FLAG_BITMASKS[i];
             } else {
-                flags &= ~ZIMBRA_FLAG_BITMASKS[i];
+                flagBitfield &= ~ZIMBRA_FLAG_BITMASKS[i];
             }
         }
 
-        return flags;
+        return flagBitfield;
+    }
+    
+    /**
+     * Sets flags on a JavaMail message, based on a local message's flags.
+     */
+    private void copyFlags(long localFlags, Message remoteMsg)
+    throws MessagingException {
+        for (int i = 0; i < IMAP_FLAGS.length; i++) {
+            int bitmask = ZIMBRA_FLAG_BITMASKS[i];
+            Flags.Flag imapFlag = IMAP_FLAGS[i];
+            boolean isSet = ((bitmask & localFlags) > 0);
+            if (imapFlag == Flags.Flag.SEEN) {
+                // IMAP uses "seen", we use "unread"
+                isSet = !isSet;
+            }
+            remoteMsg.setFlag(imapFlag, isSet);
+        }
     }
 }

@@ -34,9 +34,10 @@ import junit.framework.TestSuite;
 
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.Log.Level;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.zclient.ZDataSource;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZImapDataSource;
@@ -51,6 +52,20 @@ extends TestCase {
     private static final String LOCAL_USER_NAME = "testimapimportlocal";
     private static final String NAME_PREFIX = "TestImapImport";
     private static final String DS_FOLDER_ROOT = "/" + NAME_PREFIX;
+    
+    // Folder hierarchy: /TestImapImport-f1/TestImapImport-f2, /TestImapImport-f3/TestImapImport-f4
+    private static final String REMOTE_PATH_F1 = "/" + NAME_PREFIX + "-f1";
+    private static final String REMOTE_PATH_F2 = REMOTE_PATH_F1 + "/" + NAME_PREFIX + "-f2";
+    private static final String REMOTE_PATH_F3 = "/" + NAME_PREFIX + "-f3";
+    private static final String REMOTE_PATH_F4 = REMOTE_PATH_F3 + "/" + NAME_PREFIX + "-f4";
+    
+    private static final String LOCAL_PATH_F1 = DS_FOLDER_ROOT + REMOTE_PATH_F1;
+    private static final String LOCAL_PATH_F2 = DS_FOLDER_ROOT + REMOTE_PATH_F2;
+    private static final String LOCAL_PATH_F3 = DS_FOLDER_ROOT + REMOTE_PATH_F3;
+    private static final String LOCAL_PATH_F4 = DS_FOLDER_ROOT + REMOTE_PATH_F4;
+    
+    private static final String LOCAL_PATH_INBOX = DS_FOLDER_ROOT + "/INBOX";
+    private static final String LOCAL_PATH_TRASH = DS_FOLDER_ROOT + "/Trash";
     
     private ZMailbox mRemoteMbox;
     private ZMailbox mLocalMbox;
@@ -98,57 +113,119 @@ extends TestCase {
     
     public void testImapImport()
     throws Exception {
-        // Compare mailboxes in their initial state
+        // Remote: add 1 message
+        ZimbraLog.test.debug("Testing adding message to remote inbox.");
+        String remoteQuery = "in:inbox msg1";
+        TestUtil.insertMessage(mRemoteMbox, 1, NAME_PREFIX + " msg1");
+        checkMsgCount(mRemoteMbox, remoteQuery, 1);
+        assertNull(mLocalMbox.getFolderByPath(LOCAL_PATH_INBOX));
+
         importImap();
+
+        String localInboxQuery = "in:" + LOCAL_PATH_INBOX;
+        checkMsgCount(mLocalMbox, localInboxQuery, 1);
         compare();
         
-        // Add 1 message
-        TestUtil.insertMessage(mRemoteMbox, 1, NAME_PREFIX + " 1");
+        // Remote: flag message
+        ZimbraLog.test.debug("Testing flag.");
+        List<ZMessage> msgs = TestUtil.search(mRemoteMbox, remoteQuery);
+        assertEquals("Message count in remote inbox", 1, msgs.size());
+        String remoteId = msgs.get(0).getId();
+        mRemoteMbox.flagMessage(remoteId, true);
+        
+        // Make sure local copy is not flagged
+        msgs = TestUtil.search(mLocalMbox, localInboxQuery);
+        assertEquals("Message count in local inbox", 1, msgs.size());
+        assertFalse("Local message is flagged", msgs.get(0).isFlagged());
+        
         importImap();
+        
+        // Make sure that local copy is now flagged
+        msgs = TestUtil.search(mLocalMbox, localInboxQuery);
+        assertEquals("Message count in local inbox", 1, msgs.size());
+        assertTrue("Local message is flagged", msgs.get(0).isFlagged());
         compare();
         
-        // Flag
-        List<ZMessage> msgs1 = TestUtil.search(mRemoteMbox, "in:inbox");
-        assertEquals("msgs1.size()", 1, msgs1.size());
-        mRemoteMbox.flagMessage(msgs1.get(0).getId(), true);
+        // Remote: move to trash
+        ZimbraLog.test.debug("Testing remote move to trash.");
+        mRemoteMbox.trashMessage(remoteId);
+        checkMsgCount(mRemoteMbox, "in:trash", 1);
+        checkMsgCount(mLocalMbox, "in:trash", 0);
         importImap();
+        checkMsgCount(mLocalMbox, "in:" + DS_FOLDER_ROOT + "/Trash", 1);
         compare();
-        
-        // Move to trash
-        mRemoteMbox.moveMessage(msgs1.get(0).getId(), Integer.toString(Mailbox.ID_FOLDER_TRASH));
-        importImap();
-        compare();
-        
+
         // Create folders on both sides
-        String remote1 = "/" + NAME_PREFIX + "-remote1";
-        String remote2 = remote1 + "/" + NAME_PREFIX + "-remote2";
-        String local1 = "/" + NAME_PREFIX + "/" + NAME_PREFIX + "-local1";
-        String local2 = local1 + "/" + NAME_PREFIX + "-local2";
-        
-        TestUtil.createFolder(mRemoteMbox, remote1);
-        TestUtil.createFolder(mRemoteMbox, remote2);
-        TestUtil.createFolder(mLocalMbox, local1);
-        TestUtil.createFolder(mLocalMbox, local2);
+        ZimbraLog.test.debug("Testing folder creation.");
+        TestUtil.createFolder(mRemoteMbox, REMOTE_PATH_F1);
+        TestUtil.createFolder(mRemoteMbox, REMOTE_PATH_F2);
+        TestUtil.createFolder(mLocalMbox, LOCAL_PATH_F3);
+        TestUtil.createFolder(mLocalMbox, LOCAL_PATH_F4);
         importImap();
+        
+        // Make sure that new folders got created on both sides
+        assertNotNull("Local folder " + LOCAL_PATH_F1, mLocalMbox.getFolderByPath(LOCAL_PATH_F1));
+        assertNotNull("Local folder " + LOCAL_PATH_F2, mLocalMbox.getFolderByPath(LOCAL_PATH_F2));
+        assertNotNull("Remote folder " + REMOTE_PATH_F3, mRemoteMbox.getFolderByPath(REMOTE_PATH_F3));
+        assertNotNull("Remote folder " + REMOTE_PATH_F4, mRemoteMbox.getFolderByPath(REMOTE_PATH_F4));
         compare();
         
         // Add message to remote folder and delete local folder at the same time
-        ZFolder remoteFolder2 = mRemoteMbox.getFolderByPath(remote2); 
-        TestUtil.insertMessage(mRemoteMbox, 2, NAME_PREFIX + " 2", remoteFolder2.getId());
-        ZFolder localFolder1 = mLocalMbox.getFolderByPath(local1);
+        ZimbraLog.test.debug("Testing simultaneous message add and folder delete 1.");
+        ZFolder remoteFolder2 = mRemoteMbox.getFolderByPath(REMOTE_PATH_F2); 
+        TestUtil.insertMessage(mRemoteMbox, 2, NAME_PREFIX + " msg2", remoteFolder2.getId());
+        ZFolder localFolder1 = mLocalMbox.getFolderByPath(LOCAL_PATH_F3);
         mLocalMbox.deleteFolder(localFolder1.getId());
+        checkMsgCount(mLocalMbox, "in:" + LOCAL_PATH_F2, 0);
         importImap();
+        
+        // Make sure that remote folders got deleted and that the message was added locally
+        assertNull("Remote folder 3", mRemoteMbox.getFolderByPath(REMOTE_PATH_F3));
+        assertNull("Remote folder 4", mRemoteMbox.getFolderByPath(REMOTE_PATH_F4));
+        checkMsgCount(mLocalMbox, "in:" + LOCAL_PATH_F2, 1);
         compare();
         
         // Add message to a local folder and delete the same folder in remote mailbox
-        String path = "/" + NAME_PREFIX + remote2;
-        ZFolder localFolder = mLocalMbox.getFolderByPath(path);
-        assertNotNull("Could not find local folder " + path, localFolder);
-        TestUtil.insertMessage(mLocalMbox, 3, NAME_PREFIX + " 3", localFolder.getId());
-        ZFolder remoteFolder1 = mRemoteMbox.getFolderByPath(remote1);
+        ZimbraLog.test.debug("Testing simultaneous message add and folder delete 2.");
+        ZFolder localFolder = mLocalMbox.getFolderByPath(LOCAL_PATH_F2);
+        TestUtil.insertMessage(mLocalMbox, 3, NAME_PREFIX + " msg3", localFolder.getId());
+        ZFolder remoteFolder1 = mRemoteMbox.getFolderByPath(REMOTE_PATH_F1);
         mRemoteMbox.deleteFolder(remoteFolder1.getId());
         importImap();
+        
+        // Make sure the folders were deleted locally and remotely
+        assertNull("Local folder 1", mLocalMbox.getFolderByPath(LOCAL_PATH_F1));
+        assertNull("Local folder 2", mLocalMbox.getFolderByPath(LOCAL_PATH_F2));
+        assertNull("Remote folder 1", mRemoteMbox.getFolderByPath(REMOTE_PATH_F1));
+        assertNull("Remote folder 2", mRemoteMbox.getFolderByPath(REMOTE_PATH_F2));
         compare();
+        
+        // Add message to local inbox
+        ZimbraLog.test.debug("Testing sync from local to remote.");
+        checkMsgCount(mLocalMbox, "in:" + LOCAL_PATH_INBOX, 0);
+        ZFolder localInbox = mLocalMbox.getFolderByPath(LOCAL_PATH_INBOX);
+        TestUtil.insertMessage(mLocalMbox, 4, NAME_PREFIX + " msg4", localInbox.getId());
+        checkMsgCount(mLocalMbox, "in:" + LOCAL_PATH_INBOX, 1);
+        checkMsgCount(mRemoteMbox, "in:inbox", 0);
+
+        // Empty local trash
+        checkMsgCount(mLocalMbox, "in:" + LOCAL_PATH_TRASH, 1);
+        ZFolder localTrash = mLocalMbox.getFolderByPath(LOCAL_PATH_TRASH);
+        mLocalMbox.emptyFolder(localTrash.getId());
+        checkMsgCount(mLocalMbox, "in:" + LOCAL_PATH_TRASH, 0);
+        checkMsgCount(mRemoteMbox, "in:trash", 1);
+        importImap();
+        
+        // Make sure that local changes got propagated to remote server
+        checkMsgCount(mRemoteMbox, "in:inbox msg4", 1);
+        checkMsgCount(mRemoteMbox, "in:trash", 0);
+        compare();
+    }
+    
+    private void checkMsgCount(ZMailbox mbox, String query, int expectedCount)
+    throws Exception {
+        List<ZMessage> msgs = TestUtil.search(mbox, query);
+        assertEquals("Result size for query '" + query + "'", expectedCount, msgs.size());
     }
     
     private void importImap()
@@ -170,14 +247,14 @@ extends TestCase {
             }
         }
         assertTrue("Import failed: " + status.getError(), status.getSuccess());
+        
+        // Get any state changes from the server 
+        mLocalMbox.noOp();
+        mRemoteMbox.noOp();
     }
 
     private void compare()
     throws Exception {
-        // Do a no-op, to get the latest state chanages after an IMAP import
-        mRemoteMbox.noOp();
-        mLocalMbox.noOp();
-        
         // Recursively compare the folder trees
         ZFolder folder1 = mRemoteMbox.getUserRoot();
         ZFolder folder2 = mLocalMbox.getFolderByPath(DS_FOLDER_ROOT);
@@ -230,7 +307,7 @@ extends TestCase {
             ZMessage msg1 = msgMap.remove(id);
             assertNotNull("Found message '" + msg2.getSubject() + "' in mbox2 but not in mbox1", msg1);
             assertEquals("Message content", msg1.getContent(), msg2.getContent());
-            assertEquals("Flags don't match", msg1.getFlags(), msg2.getFlags());
+            assertEquals("Flags for message '" + msg1.getSubject() + "' don't match", msg1.getFlags(), msg2.getFlags());
         }
         
         // Fail if there are any remaining messages

@@ -27,6 +27,7 @@ package com.zimbra.cs.datasource;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 
 public class ImapMessageCollection
@@ -67,5 +68,13 @@ implements Iterable<ImapMessage>
 
     public Iterator<ImapMessage> iterator() {
         return mByItemId.values().iterator();
+    }
+    
+    public Set<Long> getUids() {
+        return mByUid.keySet();
+    }
+    
+    public Set<Integer> getItemIds() {
+        return mByItemId.keySet();
     }
 }
