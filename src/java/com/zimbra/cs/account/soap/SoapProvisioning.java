@@ -49,6 +49,7 @@ import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
@@ -449,7 +450,14 @@ public class SoapProvisioning extends Provisioning {
         Element a = req.addElement(AdminConstants.E_ACCOUNT);
         a.setText(key);
         a.addAttribute(AdminConstants.A_BY, keyType.name());
-        return new SoapAccount(invoke(req).getElement(AdminConstants.E_ACCOUNT));
+        try {
+            return new SoapAccount(invoke(req).getElement(AdminConstants.E_ACCOUNT));
+        } catch (ServiceException e) {
+            if (e.getCode().equals(AccountServiceException.NO_SUCH_ACCOUNT))
+                return null;
+            else
+                throw e;
+        }
     }
 
     @Override
@@ -568,7 +576,14 @@ public class SoapProvisioning extends Provisioning {
         Element a = req.addElement(AdminConstants.E_CALENDAR_RESOURCE);
         a.setText(key);
         a.addAttribute(AdminConstants.A_BY, keyType.name());
-        return new SoapCalendarResource(invoke(req).getElement(AdminConstants.E_CALENDAR_RESOURCE));
+        try {
+            return new SoapCalendarResource(invoke(req).getElement(AdminConstants.E_CALENDAR_RESOURCE));
+        } catch (ServiceException e) {
+            if (e.getCode().equals(AccountServiceException.NO_SUCH_CALENDAR_RESOURCE))
+                return null;
+            else
+                throw e;
+        }
     }
 
     @Override
@@ -583,7 +598,14 @@ public class SoapProvisioning extends Provisioning {
         Element a = req.addElement(AdminConstants.E_COS);
         a.setText(key);
         a.addAttribute(AdminConstants.A_BY, keyType.name());
-        return new SoapCos(invoke(req).getElement(AdminConstants.E_COS));
+        try {
+            return new SoapCos(invoke(req).getElement(AdminConstants.E_COS));
+        } catch (ServiceException e) {
+            if (e.getCode().equals(AccountServiceException.NO_SUCH_COS))
+                return null;
+            else
+                throw e;
+        }
     }
 
     @Override
@@ -592,7 +614,14 @@ public class SoapProvisioning extends Provisioning {
         Element a = req.addElement(AdminConstants.E_DL);
         a.setText(key);
         a.addAttribute(AdminConstants.A_BY, keyType.name());
-        return new SoapDistributionList(invoke(req).getElement(AdminConstants.E_DL));
+        try {
+            return new SoapDistributionList(invoke(req).getElement(AdminConstants.E_DL));
+        } catch (ServiceException e) {
+            if (e.getCode().equals(AccountServiceException.NO_SUCH_DISTRIBUTION_LIST))
+                return null;
+            else
+                throw e;
+        }
     }
 
     @Override
@@ -601,7 +630,14 @@ public class SoapProvisioning extends Provisioning {
         Element a = req.addElement(AdminConstants.E_DOMAIN);
         a.setText(key);
         a.addAttribute(AdminConstants.A_BY, keyType.name());
-        return new SoapDomain(invoke(req).getElement(AdminConstants.E_DOMAIN));
+        try {
+            return new SoapDomain(invoke(req).getElement(AdminConstants.E_DOMAIN));
+        } catch (ServiceException e) {
+            if (e.getCode().equals(AccountServiceException.NO_SUCH_DOMAIN))
+                return null;
+            else
+                throw e;
+        }
     }
 
     @Override
@@ -646,7 +682,14 @@ public class SoapProvisioning extends Provisioning {
         Element a = req.addElement(AdminConstants.E_SERVER);
         a.setText(key);
         a.addAttribute(AdminConstants.A_BY, keyType.name());
-        return new SoapServer(invoke(req).getElement(AdminConstants.E_SERVER));
+        try {
+            return new SoapServer(invoke(req).getElement(AdminConstants.E_SERVER));
+        } catch (ServiceException e) {
+            if (e.getCode().equals(AccountServiceException.NO_SUCH_SERVER))
+                return null;
+            else
+                throw e;
+        }
     }
 
     /**
