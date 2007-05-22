@@ -29,5 +29,14 @@ public class InteropRegistrationProviderImpl implements InteropRegistrationProvi
             throw new IOException("Caught IOException when trying to fetch persona: "+e.toString()+" "+SystemUtil.getStackTrace(e));
         }
     }
+    
+    public void removeIMGatewayRegistration(JID userJID, Interop.ServiceName service) throws IOException {
+        try {
+            IMPersona persona = IMRouter.getInstance().findPersona(null, IMAddr.fromJID(userJID));
+            persona.removeIMGatewayRegistration(service);
+        } catch (ServiceException e) {
+            throw new IOException("Caught IOException when trying to fetch persona: "+e.toString()+" "+SystemUtil.getStackTrace(e));
+        }
+    }
 
 }

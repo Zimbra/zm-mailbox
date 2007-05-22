@@ -430,12 +430,23 @@ public class IMPersona extends ClassLogger {
     }
     
     Map<String, String> getIMGatewayRegistration(Interop.ServiceName service) {
-        return mInteropRegistrationData.get(service.name());
+        synchronized(getLock()) {
+            return mInteropRegistrationData.get(service.name());
+        }
     }
     
     void setIMGatewayRegistration(Interop.ServiceName service, Map<String, String> data) throws ServiceException {
-        mInteropRegistrationData.put(service.name(), data);
-        flush(null);
+        synchronized(getLock()) {
+            mInteropRegistrationData.put(service.name(), data);
+            flush(null);
+        }
+    }
+    
+    void removeIMGatewayRegistration(Interop.ServiceName service) throws ServiceException {
+        synchronized(getLock()) {
+            mInteropRegistrationData.remove(service.name());
+            flush(null);
+        }
     }
 
     @Override
