@@ -1198,6 +1198,21 @@
 	<target name="restart-webserver" depends="stop-webserver,start-webserver"/>
 	
         <!-- jetty-ant-plugin stuff -->
+        <property name="jetty_webapps" location="build/jetty/webapps"/>
+
+        <target name="jetty.webinf">
+		<delete dir="${jetty_webapps}"/>
+        	<mkdir dir="${jetty_webapps}" />
+                <war warfile="${jetty_webapps}/service.war" webxml="${config.dir}/web.xml${production.suffix}">
+                        <fileset dir="WebRoot"/>
+                        <lib dir="${common.jars.dir}" includes="*.jar" excludes="${war.exclude}" />
+                        <lib dir="${im.jars.dir}" includes="*.jar" excludes="${war.exclude}" />
+                        <classes dir="${config.dir}" includes="sieveConfig.xml" />
+                </war>
+        	<mkdir dir="${jetty_webapps}/service" />
+        	<unzip dest="${jetty_webapps}/service" src="${jetty_webapps}/service.war" />
+        	<delete file="${jetty_webapps}/service.war" />
+        </target>
 
           <property name="project.outputDirectory" value="build" />
           <property name="jetty.version" value="6.1.3" />
@@ -1224,19 +1239,17 @@
                 <sslConnector port="7071" keystore="${jetty_run_base}/jetty/etc/keystore" password="zimbra"/>
               </connectors>
 
-              <systemProperties>
-                <systemProperty name="zimbra.config" value="${jetty_run_base}/conf/localconfig.xml"/>
-                <systemProperty name="java.library.path" value="${jetty_run_base}/lib"/>
-<!-- -Xdebug -Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n                -->
-              </systemProperties>
+		<systemProperties>
+                <systemproperty name="zimbra.config" value="${jetty_run_base}/conf/localconfig.xml"/>
+                <systemproperty name="java.library.path" value="${jetty_run_base}/lib"/>
+		</systemProperties>
 
-              <webApp name="ZimbraServer" warfile="${jetty_run_base}/jetty/webapps/service" contextpath="/service">
+              <webApp name="ZimbraServer" warfile="${jetty_webapps}/service" contextpath="/service">
                 <lib dir="${jetty_run_base}/jetty/common/lib" includes="*.jar" excludes="not-needed.jar" />
                 <lib dir="${jetty_run_base}/lib" includes="*.jar" excludes="not-needed.jar" />
                 <classes dir="../ZimbraCommon/build/classes"/>
-                <classes dir="../ZimbraServer/build/classes"/>
                 <classes dir="../ZimbraIM/build/classes"/>
-                <classes dir="build/classes"/>
+                <classes dir="../ZimbraServer/build/classes"/>
               </webApp>
                 
               <webApp name="ZimbraWebClient" warfile="${jetty_run_base}/jetty/webapps/zimbra" contextpath="/zimbra">
