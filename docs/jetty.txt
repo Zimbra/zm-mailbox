@@ -33,11 +33,17 @@ ZIMBRA_USE_TOMCAT=1 and reset-the-world.
    to install jetty as a Windows Service.  Make sure the 'C' in 'C:' is
    in upper case because wrapper.exe surprisingly is sensitive to it.
 
-4. If your Windows box is on an NT domain, you need to launch Control
-   Panel/Administrative Tools/Services and modify the Log On account of
-   Jetty6 Java Service.  Instead of using "Local System account", make
-   it "This account" and fill out it with your domain account username
-   and password.  Otherwise you may run into file permission issues.
+4. You may need to fix the permissions on the jetty directory and its
+   subdirectories in order to run jetty as a service.  Open Windows 
+   Explorer.  Right click jetty directory, click Sharing and Security...
+   Click Security tab.  Check if you have SYSTEM user in the list.
+   If there is no SYSTEM user, click Add button, type SYSTEM, 
+   click Check Names button, select the System user (usually the 
+   first one), click OK.  Now select the newly added SYSTEM user, click
+   all the permissions to Allow.  Then click Advanced button, and check
+   "Replace permission entries on all child objects with entries shown
+   here that apply to child objects".  Click OK to dismiss advanced
+   dialog.  Click OK to dismiss the sharing dialog.
 
 5. Run 'ant reset-the-world' under ZimbraServer. Then run 'ant deploy'
    and 'ant admin-deploy' under ZimbraWebClient as usual.  For
