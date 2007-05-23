@@ -32,10 +32,12 @@ import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
@@ -122,20 +124,28 @@ public class L10nUtil {
 
     private static Map<String, Locale> sLocaleMap;
 
-    static {
+    private static ClassLoader getClassLoader(String directory) {
+        ClassLoader classLoader = null;
         try {
-            String msgsDir = LC.localized_msgs_directory.value();
+            String msgsDir = directory;
             // Append "/" at the end to tell URLClassLoader this is a
             // directory rather than a JAR file.
             if (!msgsDir.endsWith("/"))
                 msgsDir = msgsDir + "/";
             URL urls[] = new URL[1];
             urls[0] = new URL("file://" + msgsDir);
-            sMsgClassLoader = new URLClassLoader(urls);
+            classLoader = new URLClassLoader(urls);
         } catch (MalformedURLException e) {
             Zimbra.halt("Unable to initialize localization", e);
         }
-
+        
+        return classLoader;
+    }
+    
+    static {
+        String msgsDir = LC.localized_msgs_directory.value();
+        sMsgClassLoader = getClassLoader(msgsDir);
+        
         Locale[] locales = Locale.getAvailableLocales();
         sLocaleMap = new HashMap<String, Locale>(locales.length);
         for (Locale lc : locales) {
@@ -199,9 +209,14 @@ public class L10nUtil {
 
     private static class LocaleComparatorByDisplayName
     implements Comparator<Locale> {
+        private Locale mInLocale;
+        LocaleComparatorByDisplayName(Locale inLocale) {
+            mInLocale = inLocale;
+        }
+        
         public int compare(Locale a, Locale b) {
-            String da = a.getDisplayName(Locale.US);
-            String db = b.getDisplayName(Locale.US);
+            String da = a.getDisplayName(mInLocale);
+            String db = b.getDisplayName(mInLocale);
             return da.compareTo(db);
         }
     }
@@ -212,7 +227,75 @@ public class L10nUtil {
      */
     public static Locale[] getAllLocalesSorted() {
         Locale[] locales = Locale.getAvailableLocales();
-        Arrays.sort(locales, new LocaleComparatorByDisplayName());
+        Arrays.sort(locales, new LocaleComparatorByDisplayName(Locale.US));
         return locales;
+    }
+    
+    /**
+     * Return all localized(i.e. translated) locales sorted by their inLocale display name 
+     * @return
+     */
+    public static Locale[] getLocalesSorted(Locale inLocale) {
+        return LocalizedClientLocales.getLocales(inLocale);
+    }
+    
+    private static class LocalizedClientLocales {
+        enum ClientResource {
+            I18nMsg,
+            AjxMsg, 
+            ZMsg, 
+            ZaMsg, 
+            ZmMsg,
+            ZhMsg
+        }
+        
+        // set of localized(translated) locales
+        static Set<Locale> sLocalizedLocales;
+        
+        // we cache the sorted list per display locale to avoid the array copy
+        // and sorting each time for a GetLocale request
+        static Map<Locale, Locale[]> sLocalizedLocalesSorted;
+        
+        private static void loadBundles() {
+            sLocalizedLocales = new HashSet<Locale>();
+            
+            // String msgsDir = "/opt/zimbra/jetty/webapps/zimbra/WEB-INF/classes/msgs";
+            String msgsDir = LC.localized_client_msgs_directory.value();
+            ClassLoader classLoader = getClassLoader(msgsDir);
+            Locale[] allLocales = Locale.getAvailableLocales();
+            for (Locale lc : allLocales) {
+                for (ClientResource clientRes : ClientResource.values()) {
+                    try {
+                        ResourceBundle rb = ResourceBundle.getBundle(clientRes.name(), lc, classLoader);
+                        /*
+                         * found a resource for the locale, a locale is considered
+                         * "installed" as long as any of its resource (the list in ClientResource) is present
+                         */ 
+                        sLocalizedLocales.add(lc);
+                        break;
+                    } catch (MissingResourceException e) {
+                    }
+                }
+            }
+        }
+        
+        public synchronized static Locale[] getLocales(Locale inLocale) {
+            if (sLocalizedLocales == null)
+                loadBundles();
+            
+            Locale[] sortedLocales = null;
+            if (sLocalizedLocalesSorted == null)
+                sLocalizedLocalesSorted = new HashMap<Locale, Locale[]>();
+            else
+                sortedLocales = sLocalizedLocalesSorted.get(inLocale);
+            
+            if (sortedLocales == null) {
+                // cache the sorted list per display locale
+                sortedLocales = sLocalizedLocales.toArray(new Locale[sLocalizedLocales.size()]);
+                Arrays.sort(sortedLocales, new LocaleComparatorByDisplayName(inLocale));
+                sLocalizedLocalesSorted.put(inLocale, sortedLocales);
+            }
+            return sortedLocales;
+        }
     }
 }

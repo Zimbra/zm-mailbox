@@ -40,7 +40,7 @@ public class GetAllLocales extends AccountDocumentHandler {
         Locale locales[] = L10nUtil.getAllLocalesSorted();
         Element response = lc.createElement(AccountConstants.GET_ALL_LOCALES_RESPONSE);
         for (Locale locale : locales) {
-            ToXML.encodeLocale(response, locale);
+            ToXML.encodeLocale(response, locale, Locale.US);
         }
         return response;
     }

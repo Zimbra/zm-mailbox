@@ -2020,6 +2020,30 @@ java.util.Locale.getAvailableLocales(), sorted by display name (name attribute).
 
 ---------------------------
 
+<GetLocalesRequest/>
+
+<GetLocalesResponse>
+  <locale id="{locale-id}" name="{locale-name-in-preferred-locale}"/>
+  ...
+</GetLocalesResponse>
+
+Returns all translated locales installed on the system.  The locale list in the response is 
+sorted by display name (name attribute).
+
+{locale-id} : lcoale id. e.g. en_US
+{locale-name-in-preferred-locale} : locale name in the preferred locale
+                For example, if the locale is fr_CA and the preferred locale is en_US, name will contain "French (Canada)"; 
+                if the locale is en_US and the preferred locale is fr_CA, name will contain "anglais (Etats-Unis)"
+                
+                The preferred locale is determined with the following precedence:
+                (1) zimbraPrefLocale of the target account if it is present
+                (2) Otherwise the locale specified in the Accept-Language http header if it is present
+                (3) Otherwise the locale returned by Provisioning.getLocale, which uses a predefined fallback 
+                    chain to determine the preferable locale.  
+                   
+
+---------------------------
+
 <TestDataSourceRequest>
   <pop3 host="pop.myisp.com" port="110" connectionType="cleartext|ssl"
     username="mylogin" password="mypassword"/>
