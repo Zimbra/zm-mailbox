@@ -24,13 +24,17 @@
  */
 package com.zimbra.cs.db;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.db.DbPool.Connection;
 
 public class MySQL extends Db {
 
@@ -79,6 +83,31 @@ public class MySQL extends Db {
     @Override
     DbPool.PoolConfig getPoolConfig() {
         return new MySQLConfig();
+    }
+    
+    @Override
+    public boolean databaseExists(Connection conn, String databaseName)
+    throws ServiceException {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        int numSchemas = 0;
+        
+        try {
+            stmt = conn.prepareStatement(
+                "SELECT COUNT(*) FROM INFORMATION_SCHEMA.SCHEMATA " +
+                "WHERE schema_name = ?");
+            stmt.setString(1, databaseName);
+            rs = stmt.executeQuery();
+            rs.next();
+            numSchemas = rs.getInt(1);
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Unable to determine whether database exists", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+
+        return (numSchemas > 0);
     }
 
     static final class MySQLConfig extends DbPool.PoolConfig {

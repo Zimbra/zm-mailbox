@@ -34,7 +34,9 @@ package com.zimbra.cs.db;
 import java.sql.SQLException;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.db.DbPool.Connection;
 
 /**
  * @author schemers
@@ -119,6 +121,9 @@ public abstract class Db {
      * @see DbPool#getPool() */
     abstract DbPool.PoolConfig getPoolConfig();
 
+    /** Returns <tt>true</tt> if the database with the given name exists. */
+    abstract public boolean databaseExists(Connection conn, String databaseName)
+    throws ServiceException;
 
     /** Generates the correct SQL to direct the current database engine to use
      *  a particular index to perform a SELECT query.  This string should come

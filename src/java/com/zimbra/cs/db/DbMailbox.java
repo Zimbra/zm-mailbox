@@ -175,11 +175,11 @@ public class DbMailbox {
 
         PreparedStatement stmt = null;
         try {
-            if (databaseExists(conn, mailboxId, groupId))
+            String dbName = getDatabaseName(mailboxId, groupId);
+            if (Db.getInstance().databaseExists(conn, dbName))
                 return;
 
             // Create the new database
-            String dbName = getDatabaseName(mailboxId, groupId);
             ZimbraLog.mailbox.info("Creating database " + dbName);
 
             String template = new String(ByteUtil.getContent(file));
@@ -208,28 +208,6 @@ public class DbMailbox {
             DbMailItem.TABLE_TOMBSTONE,
             DbPop3Message.TABLE_POP3_MESSAGE
         };
-    }
-
-    private static boolean databaseExists(Connection conn, int mailboxId, int groupId)
-    throws ServiceException {
-        for (int i = 0; i < sTables.length; i++) {
-            String table = getDatabaseName(mailboxId, groupId) + "." + sTables[i];
-
-            String sql = "SELECT * FROM " + table + (Db.supports(Db.Capability.LIMIT_CLAUSE) ? " LIMIT 1" : "");
-            PreparedStatement stmt = null;
-            ResultSet rs = null;
-            try {
-                stmt = conn.prepareStatement(sql);
-                rs = stmt.executeQuery();
-                rs.next();
-            } catch (SQLException e) {
-                return false;
-            } finally {
-                DbPool.closeResults(rs);
-                DbPool.closeStatement(stmt);
-            }
-        }
-        return true;
     }
 
     private static void dropMailboxFromGroup(Connection conn, Mailbox mbox)
