@@ -452,11 +452,11 @@
 		<if><not><isset property="is-production"/></not><then>
 			<java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
                         	<sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
-                        	<arg line="-e mailboxd_directory=${webserver.root.dir}"/>
+                        	<arg line="-e mailboxd_directory=/opt/zimbra/jetty"/>
                 	</java>
 			<java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
                         	<sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
-                        	<arg line="-e mailboxd_keystore=${webserver.conf.dir}/keystore"/>
+                        	<arg line="-e mailboxd_keystore=/opt/zimbra/jetty/etc/keystore"/>
                 	</java>
 		</then></if>	
 		<copy tofile="${dist.dir}/conf/log4j.properties" file="${config.dir}/log4j.properties${production.suffix}" overwrite="true"/>
