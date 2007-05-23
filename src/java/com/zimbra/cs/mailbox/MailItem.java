@@ -1335,7 +1335,8 @@ public abstract class MailItem implements Comparable<MailItem> {
             else      mData.tags &= ~tag.getBitmask();
         }
 
-        getFolder().updateHighestMODSEQ();
+        if (isLeafNode())
+            getFolder().updateHighestMODSEQ();
     }
 
     protected void inheritedTagChanged(Tag tag, boolean add)  { }
