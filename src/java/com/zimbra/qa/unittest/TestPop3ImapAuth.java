@@ -36,12 +36,10 @@ import javax.net.ssl.SSLSocketFactory;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.DummySSLSocketFactory;
 import com.zimbra.common.util.EasySSLProtocolSocketFactory;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.util.Zimbra;
 
 
 public class TestPop3ImapAuth
@@ -86,7 +84,7 @@ extends TestCase {
         // Initialize SSL for SOAP provisioning
         EasySSLProtocolSocketFactory.init();
         
-        mProv = TestUtil.getSoapProvisioning();
+        mProv = Provisioning.getInstance();
         Server server = mProv.getLocalServer();
         mOrigPop3CleartextLoginEnabled = server.getBooleanAttr(Provisioning.A_zimbraPop3CleartextLoginEnabled, false);
         mOrigImapCleartextLoginEnabled = server.getBooleanAttr(Provisioning.A_zimbraImapCleartextLoginEnabled, false);
@@ -276,7 +274,7 @@ extends TestCase {
     
     public static void main(String[] args)
     throws Exception {
-        CliUtil.toolSetup();
+        TestUtil.cliSetup();
         TestUtil.runTest(new TestSuite(TestPop3ImapAuth.class));        
     }
 }

@@ -30,14 +30,13 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.zimbra.common.util.CliUtil;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.zclient.ZGetMessageParams;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
-
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 
 public class TestSendAndReceive extends TestCase {
@@ -113,7 +112,7 @@ public class TestSendAndReceive extends TestCase {
 
     public static void main(String[] args)
     throws Exception {
-        CliUtil.toolSetup();
+        TestUtil.cliSetup();
         TestUtil.runTest(new TestSuite(TestSendAndReceive.class));
     }
 }

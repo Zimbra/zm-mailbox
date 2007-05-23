@@ -32,10 +32,8 @@ import java.util.Map;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.util.Log.Level;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.zclient.ZDataSource;
@@ -364,7 +362,7 @@ extends TestCase {
     
     public static void main(String[] args)
     throws Exception {
-        CliUtil.toolSetup();
+        TestUtil.cliSetup();
         TestUtil.runTest(new TestSuite(TestImapImport.TearDown.class));
         TestUtil.runTest(new TestSuite(TestImapImport.class));
     }

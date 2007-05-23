@@ -29,11 +29,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import com.zimbra.common.util.CliUtil;
-import com.zimbra.common.util.TaskScheduler;
-
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import com.zimbra.common.util.TaskScheduler;
 
 
 public class TestTaskScheduler
@@ -101,7 +100,7 @@ extends TestCase
     
     public static void main(String[] args)
     throws Exception {
-        CliUtil.toolSetup();
+        TestUtil.cliSetup();
         TestUtil.runTest(new TestSuite(TestTaskScheduler.class), System.out);
     }
 }

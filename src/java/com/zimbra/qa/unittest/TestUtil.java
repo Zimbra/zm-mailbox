@@ -41,6 +41,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -86,17 +87,13 @@ public class TestUtil {
     throws ServiceException {
         String address = getAddress(userName);
         Account account = Provisioning.getInstance().get(AccountBy.name, address);
-        return account != null;
+        return (account != null);
     }
     
     public static Account getAccount(String userName)
     throws ServiceException {
         String address = getAddress(userName);
-        Account account = Provisioning.getInstance().get(AccountBy.name, address);
-        if (account == null) {
-            throw new IllegalArgumentException("Could not find account for '" + address + "'");
-        }
-        return account;
+        return Provisioning.getInstance().get(AccountBy.name, address);
     }
 
     public static String getDomain()
@@ -344,6 +341,18 @@ public class TestUtil {
     public static TestResult runTest(Test t) {
         return runTest(t, (OutputStream)null);
     }
+    
+    /**
+     * Sets up the environment for command-line unit tests.
+     */
+    static void cliSetup()
+    throws ServiceException {
+        SoapProvisioning sp = new SoapProvisioning();
+        sp.soapSetURI("https://localhost:7071" + ZimbraServlet.ADMIN_SERVICE_URI);
+        sp.soapZimbraAdminAuthenticate();
+        Provisioning.setInstance(sp);
+        CliUtil.toolSetup();
+    }
 
     /**
      * Runs a test and writes the output to the specified
@@ -409,21 +418,13 @@ public class TestUtil {
         return ZMailbox.getMailbox(options);
     }
     
-    public static SoapProvisioning getSoapProvisioning()
-    throws ServiceException {
-        SoapProvisioning sp = new SoapProvisioning();
-        sp.soapSetURI("https://localhost:7071" + ZimbraServlet.ADMIN_SERVICE_URI);
-        sp.soapZimbraAdminAuthenticate();
-        return sp;
-    }
-
     /**
      * Creates an account for the given username, with
      * password set to {@link #DEFAULT_PASSWORD}.
      */
     public static Account createAccount(String username)
     throws ServiceException {
-        Provisioning prov = getSoapProvisioning();
+        Provisioning prov = Provisioning.getInstance();
         String address = getAddress(username);
         return prov.createAccount(address, DEFAULT_PASSWORD, null);
     }
@@ -433,7 +434,7 @@ public class TestUtil {
      */
     public static void deleteAccount(String username)
     throws ServiceException {
-        Provisioning prov = getSoapProvisioning();
+        Provisioning prov = Provisioning.getInstance();
         Account account = getAccount(username);
         if (account != null) {
             prov.deleteAccount(account.getId());

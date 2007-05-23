@@ -31,7 +31,6 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.zclient.ZFilterAction;
 import com.zimbra.cs.zclient.ZFilterCondition;
 import com.zimbra.cs.zclient.ZFilterRule;
@@ -224,7 +223,7 @@ extends TestCase {
 
     public static void main(String[] args)
     throws Exception {
-        CliUtil.toolSetup();
+        TestUtil.cliSetup();
         TestUtil.runTest(new TestSuite(TestFilter.class));
     }
 }
