@@ -285,6 +285,7 @@ public class ZMailbox {
      */
     public static void changePassword(Options options) throws ServiceException {
         ZMailbox mailbox = new ZMailbox();
+        mailbox.mNotifyPreference = NotifyPreference.fromOptions(options);
         mailbox.initPreAuth(options.getUri(), options.getDebugListener(), options.getTimeout(), options.getRetryCount());
         mailbox.changePassword(options.getAccount(), options.getAccountBy(), options.getPassword(), options.getNewPassword(), options.getVirtualHost());
     }
