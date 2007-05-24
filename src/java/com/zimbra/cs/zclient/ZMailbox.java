@@ -1915,7 +1915,7 @@ public class ZMailbox {
 
     // ------------------------
     
-    private ZSearchResult internalSearch(String convId, ZSearchParams params, boolean nest) throws ServiceException {
+    private synchronized ZSearchResult internalSearch(String convId, ZSearchParams params, boolean nest) throws ServiceException {
         XMLElement req = new XMLElement(convId == null ? MailService.SEARCH_REQUEST : MailService.SEARCH_CONV_REQUEST);
 
         req.addAttribute(MailService.A_CONV_ID, convId);
@@ -1951,7 +1951,7 @@ public class ZMailbox {
      * @return search result
      * @throws ServiceException on error
      */
-    public ZSearchResult search(ZSearchParams params) throws ServiceException {
+    public synchronized ZSearchResult search(ZSearchParams params) throws ServiceException {
         return internalSearch(null, params, false);
     }
 
@@ -1966,7 +1966,7 @@ public class ZMailbox {
      * @param useCache use the cache if possible
      * @param useCursor true to use search cursors, false to use offsets
      */
-    public ZSearchPagerResult search(ZSearchParams params, int page, boolean useCache, boolean useCursor) throws ServiceException {
+    public synchronized ZSearchPagerResult search(ZSearchParams params, int page, boolean useCache, boolean useCursor) throws ServiceException {
         return mSearchPagerCache.search(this, params, page, useCache, useCursor);
     }
 
@@ -1974,7 +1974,7 @@ public class ZMailbox {
      *
      * @param type if non-null, clear only cached searches of the specified tape
      */
-    public void clearSearchCache(String type) {
+    public synchronized void clearSearchCache(String type) {
         mSearchPagerCache.clear(type);
     }
  
@@ -1985,12 +1985,12 @@ public class ZMailbox {
      * @return search result
      * @throws ServiceException on error  
      */
-    public ZSearchResult searchConversation(String convId, ZSearchParams params) throws ServiceException {
+    public synchronized ZSearchResult searchConversation(String convId, ZSearchParams params) throws ServiceException {
         if (convId == null) throw ZClientException.CLIENT_ERROR("conversation id must not be null", null);
         return internalSearch(convId, params, true);
     }
 
-    public ZSearchPagerResult searchConversation(String convId, ZSearchParams params, int page, boolean useCache, boolean useCursor) throws ServiceException {
+    public synchronized ZSearchPagerResult searchConversation(String convId, ZSearchParams params, int page, boolean useCache, boolean useCursor) throws ServiceException {
         if (params.getConvId() == null)
             params.setConvId(convId);
         return mSearchConvPagerCache.search(this, params, page, useCache, useCursor);
