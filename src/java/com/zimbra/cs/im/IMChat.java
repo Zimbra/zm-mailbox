@@ -361,8 +361,7 @@ public class IMChat extends ClassLogger {
                 }
             }
 
-            // 3-states: NULL (not set), TRUE (typing), FALSE (not typing)
-            Boolean typing = null;
+            boolean typing = false;
             
             // first, look for JEP-0085 events
             org.dom4j.Element x = msg.getChildElement("composing", "http://jabber.org/protocol/chatstates");
@@ -385,13 +384,9 @@ public class IMChat extends ClassLogger {
                         (subject == null || subject.length() == 0) &&
                         (body == null || body.length() == 0)) 
             {
-                if (typing != null) {
-                    IMBaseMessageNotification notification = 
-                        new IMBaseMessageNotification(msg.getFrom().toBareJID(), getThreadId(), typing, System.currentTimeMillis());  
-                    mPersona.postIMNotification(notification);
-                } else {
-                    ZimbraLog.im.debug("Ignoring empty <message>  (not a composing update!): %s"+msg.toXML());
-                }
+                IMBaseMessageNotification notification = 
+                    new IMBaseMessageNotification(msg.getFrom().toBareJID(), getThreadId(), typing, System.currentTimeMillis());  
+                mPersona.postIMNotification(notification);
             } else {
                 if (mucInvitationFrom != null && mMessages.size() > 0) {
                     if (mucInvitationFrom != null) {
@@ -403,7 +398,7 @@ public class IMChat extends ClassLogger {
                         new IMChatInviteNotification(new IMAddr(msg.getFrom().toBareJID()),
                                     getThreadId(), body);
                     mPersona.postIMNotification(inviteNot);
-                    addMessage(true, new IMAddr(messageFrom), subject, body, (typing != null ? typing : false));
+                    addMessage(true, new IMAddr(messageFrom), subject, body, typing);
                     assert(this.getHighestSeqNo() > seqNoStart);
                 }
             }
