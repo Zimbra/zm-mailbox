@@ -88,6 +88,14 @@ public class Flag extends Tag {
     public static final int BITMASK_UNREAD = 1 << getIndex(ID_FLAG_UNREAD); // 512
         static { FLAG_REP[getIndex(ID_FLAG_UNREAD)] = 'u'; }
 
+    public static final int ID_FLAG_HIGH_PRIORITY = -11;
+    public static final int BITMASK_HIGH_PRIORITY = 1 << getIndex(ID_FLAG_HIGH_PRIORITY); // 1024
+        static { FLAG_REP[getIndex(ID_FLAG_HIGH_PRIORITY)] = '!'; }
+
+    public static final int ID_FLAG_LOW_PRIORITY = -12;
+    public static final int BITMASK_LOW_PRIORITY = 1 << getIndex(ID_FLAG_LOW_PRIORITY); // 2048
+        static { FLAG_REP[getIndex(ID_FLAG_LOW_PRIORITY)] = '?'; }
+
     public static final int ID_FLAG_SUBSCRIBED = -20;
     public static final int BITMASK_SUBSCRIBED = 1 << getIndex(ID_FLAG_SUBSCRIBED); // 524288
         static { FLAG_REP[getIndex(ID_FLAG_SUBSCRIBED)] = '*'; }
@@ -111,11 +119,13 @@ public class Flag extends Tag {
 
     static final String UNREAD_FLAG_ONLY = getAbbreviation(ID_FLAG_UNREAD) + "";
 
-    public static final int FLAG_SYSTEM = BITMASK_FROM_ME | BITMASK_ATTACHED | BITMASK_COPIED | BITMASK_DRAFT | BITMASK_INVITE;
+    public static final int FLAG_SYSTEM = BITMASK_FROM_ME | BITMASK_ATTACHED | BITMASK_COPIED | BITMASK_DRAFT |
+                                          BITMASK_INVITE | BITMASK_LOW_PRIORITY | BITMASK_HIGH_PRIORITY;
 
     public static final int FLAGS_FOLDER  = BITMASK_CHECKED | BITMASK_SUBSCRIBED | BITMASK_EXCLUDE_FREEBUSY | BITMASK_NO_INHERIT;
-    public static final int FLAGS_MESSAGE = BITMASK_FROM_ME | BITMASK_REPLIED  | BITMASK_FORWARDED |
-                                            BITMASK_DRAFT   | BITMASK_NOTIFIED | BITMASK_UNREAD | BITMASK_INVITE ;
+    public static final int FLAGS_MESSAGE = BITMASK_FROM_ME | BITMASK_REPLIED      | BITMASK_FORWARDED |
+                                            BITMASK_DRAFT   | BITMASK_NOTIFIED     | BITMASK_UNREAD |
+                                            BITMASK_INVITE  | BITMASK_LOW_PRIORITY | BITMASK_HIGH_PRIORITY;
     public static final int FLAGS_GENERIC = BITMASK_ATTACHED | BITMASK_COPIED | BITMASK_FLAGGED | BITMASK_DELETED;
 
     /** Bitmask of all valid flags <b>except</b> {@link #BITMASK_UNREAD}. */

@@ -1136,7 +1136,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                 Folder folder = mbox.getFolderByPath(getContext(), path.asZimbraPath());
                 if (!path.isVisible())
                     throw ImapServiceException.FOLDER_NOT_VISIBLE(path.asImapPath());
-                if (!folder.isTagged(mbox.mSubscribeFlag))
+                if (!folder.isTagged(mbox.mSubscribedFlag))
                     mbox.alterTag(getContext(), folder.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_SUBSCRIBED, true);
             } else {
                 mCredentials.subscribe(path);
@@ -1173,7 +1173,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                 try {
                     Mailbox mbox = mCredentials.getMailbox();
                     Folder folder = mbox.getFolderByPath(getContext(), path.asZimbraPath());
-                    if (folder.isTagged(mbox.mSubscribeFlag))
+                    if (folder.isTagged(mbox.mSubscribedFlag))
                         mbox.alterTag(getContext(), folder.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_SUBSCRIBED, false);
                 } catch (NoSuchItemException nsie) { }
             } else {
@@ -1378,7 +1378,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     private boolean isPathSubscribed(ImapPath path, boolean isOwner, Set<String> subscriptions) throws ServiceException {
         if (isOwner) {
             Folder folder = (Folder) path.getFolder();
-            return folder.isTagged(folder.getMailbox().mSubscribeFlag);
+            return folder.isTagged(folder.getMailbox().mSubscribedFlag);
         } else if (subscriptions != null && !subscriptions.isEmpty()) {
             for (String sub : subscriptions) {
                 if (sub.equalsIgnoreCase(path.asImapPath()))

@@ -368,16 +368,20 @@ public class Mailbox {
     public Flag mNotifiedFlag;
     /** flag: unread messages */
     public Flag mUnreadFlag;
+    /** flag: when a message is a valid Invite */
+    public Flag mInviteFlag;
+    /** flag: urgent messages */
+    public Flag mUrgentFlag;
+    /** flag: low-priority messages */
+    public Flag mBulkFlag;
     /** flag: IMAP-subscribed folders */
-    public Flag mSubscribeFlag;
+    public Flag mSubscribedFlag;
     /** flag: exclude folder from free-busy calculations */
     public Flag mExcludeFBFlag;
     /** flag: folders "checked" for display in the web UI */
     public Flag mCheckedFlag;
     /** flag: whether a folder does not inherit permissions from its parent */
     public Flag mNoInheritFlag;
-    /** flag: when a message is a valid Invite */
-    public Flag mInviteFlag;
 
     /** the full set of message flags, in order */
     final Flag[] mFlags = new Flag[31];
@@ -1134,21 +1138,24 @@ public class Mailbox {
 
     private void initFlags() throws ServiceException {
         // flags will be added to mFlags array via call to cache() in MailItem constructor
-        mSentFlag      = Flag.instantiate(this, "\\Sent",       Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_FROM_ME);
-        mAttachFlag    = Flag.instantiate(this, "\\Attached",   Flag.FLAG_GENERIC,         Flag.ID_FLAG_ATTACHED);
-        mReplyFlag     = Flag.instantiate(this, "\\Answered",   Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_REPLIED);
-        mForwardFlag   = Flag.instantiate(this, "\\Forwarded",  Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_FORWARDED);
-        mCopiedFlag    = Flag.instantiate(this, "\\Copied",     Flag.FLAG_GENERIC,         Flag.ID_FLAG_COPIED);
-        mFlaggedFlag   = Flag.instantiate(this, "\\Flagged",    Flag.FLAG_GENERIC,         Flag.ID_FLAG_FLAGGED);
-        mDraftFlag     = Flag.instantiate(this, "\\Draft",      Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_DRAFT);
-        mDeletedFlag   = Flag.instantiate(this, "\\Deleted",    Flag.FLAG_GENERIC,         Flag.ID_FLAG_DELETED);
-        mNotifiedFlag  = Flag.instantiate(this, "\\Notified",   Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_NOTIFIED);
-        mUnreadFlag    = Flag.instantiate(this, "\\Unread",     Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_UNREAD);
-        mSubscribeFlag = Flag.instantiate(this, "\\Subscribed", Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SUBSCRIBED);
-        mExcludeFBFlag = Flag.instantiate(this, "\\ExcludeFB",  Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_EXCLUDE_FREEBUSY);
-        mCheckedFlag   = Flag.instantiate(this, "\\Checked",    Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_CHECKED);
-        mNoInheritFlag = Flag.instantiate(this, "\\NoInherit",  Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_NO_INHERIT);
-        mInviteFlag   =  Flag.instantiate(this, "\\Invite",     Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_INVITE);
+        mSentFlag       = Flag.instantiate(this, "\\Sent",       Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_FROM_ME);
+        mAttachFlag     = Flag.instantiate(this, "\\Attached",   Flag.FLAG_GENERIC,         Flag.ID_FLAG_ATTACHED);
+        mReplyFlag      = Flag.instantiate(this, "\\Answered",   Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_REPLIED);
+        mForwardFlag    = Flag.instantiate(this, "\\Forwarded",  Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_FORWARDED);
+        mCopiedFlag     = Flag.instantiate(this, "\\Copied",     Flag.FLAG_GENERIC,         Flag.ID_FLAG_COPIED);
+        mFlaggedFlag    = Flag.instantiate(this, "\\Flagged",    Flag.FLAG_GENERIC,         Flag.ID_FLAG_FLAGGED);
+        mDraftFlag      = Flag.instantiate(this, "\\Draft",      Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_DRAFT);
+        mDeletedFlag    = Flag.instantiate(this, "\\Deleted",    Flag.FLAG_GENERIC,         Flag.ID_FLAG_DELETED);
+        mNotifiedFlag   = Flag.instantiate(this, "\\Notified",   Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_NOTIFIED);
+        mUnreadFlag     = Flag.instantiate(this, "\\Unread",     Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_UNREAD);
+        mInviteFlag     = Flag.instantiate(this, "\\Invite",     Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_INVITE);
+        mUrgentFlag     = Flag.instantiate(this, "\\Urgent",     Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_HIGH_PRIORITY);
+        mBulkFlag       = Flag.instantiate(this, "\\Bulk",       Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_LOW_PRIORITY);
+
+        mSubscribedFlag = Flag.instantiate(this, "\\Subscribed", Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SUBSCRIBED);
+        mExcludeFBFlag  = Flag.instantiate(this, "\\ExcludeFB",  Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_EXCLUDE_FREEBUSY);
+        mCheckedFlag    = Flag.instantiate(this, "\\Checked",    Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_CHECKED);
+        mNoInheritFlag  = Flag.instantiate(this, "\\NoInherit",  Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_NO_INHERIT);
     }
 
     private void loadFoldersAndTags() throws ServiceException {
@@ -3543,6 +3550,10 @@ public class Mailbox {
                 flags |= Flag.BITMASK_ATTACHED;
             else
                 flags &= ~Flag.BITMASK_ATTACHED;
+
+            // priority is calculated from headers
+            flags &= ~(Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
+            flags |= pm.getPriorityBitmask();
 
             Folder folder  = getFolderById(folderId);
             String subject = pm.getNormalizedSubject();

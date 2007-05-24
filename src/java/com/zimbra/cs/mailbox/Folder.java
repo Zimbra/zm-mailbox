@@ -683,7 +683,7 @@ public class Folder extends MailItem {
      *  and the action will be performed on the folder's contents.  <i>Note:
      *  At present, user tags and non-folder-specific flags cannot be applied
      *  or removed on a folder.</i>  For folder-specific flags like
-     *  {@link Mailbox#mSubscribeFlag}, the tagging or untagging applies to
+     *  {@link Mailbox#mSubscribedFlag}, the tagging or untagging applies to
      *  the <tt>Folder</tt> itself.<p>
      * 
      *  You must use {@link #alterUnread} to change a folder's unread state.<p>

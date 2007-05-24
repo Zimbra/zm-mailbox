@@ -72,7 +72,7 @@ public class ImapLSubOperation extends Operation {
         synchronized (mMailbox) {
             List<Folder> folders = mMailbox.getFolderById(getOpCtxt(), Mailbox.ID_FOLDER_USER_ROOT).getSubfolderHierarchy();
             for (Folder folder : folders) {
-                if (folder.isTagged(mMailbox.mSubscribeFlag)) {
+                if (folder.isTagged(mMailbox.mSubscribedFlag)) {
                     if (!checkSubscription(new ImapPath(null, folder.getPath(), mCredentials), pattern, hits))
                         checkSubscription(new ImapPath(acct.getName(), folder.getPath(), mCredentials), pattern, hits);
                 }

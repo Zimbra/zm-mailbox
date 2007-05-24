@@ -35,6 +35,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailSender.SafeSendFailedException;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -93,17 +94,6 @@ import com.zimbra.common.soap.MailConstants;
 public class ParseMimeMessage {
 
     private static Log mLog = LogFactory.getLog(ParseMimeMessage.class);
-//    private static CalendarBuilder mCalBuilder = new CalendarBuilder();
-//    
-//    protected static class GenericInviteParser implements ParseMimeMessage.InviteParser { 
-//        private String mUid;
-//        GenericInviteParser(String uid) { mUid = uid; };
-//
-//        public ParseMimeMessage.InviteParserResult parseInviteElement(OperationContext octxt, Account account, Element inviteElem) throws ServiceException 
-//        {
-//            return CalendarUtils.parseInviteForCreate(account, inviteElem, null, mUid, false);
-//        }
-//    };
 
     private static final long DEFAULT_MAX_SIZE = 10 * 1024 * 1024;
 
@@ -148,7 +138,6 @@ public class ParseMimeMessage {
         public InviteParserResult getResult() { return mResult; }
     }
     static class InviteParserResult {
-//        public Calendar mCal;
         public ZCalendar.ZVCalendar mCal;
         public String mUid;
         public String mSummary;
@@ -358,6 +347,15 @@ public class ParseMimeMessage {
 
             if (!hasContent && !isMultipart)
                 mm.setText("", Mime.P_CHARSET_DEFAULT);
+
+            String flagStr = msgElem.getAttribute(MailConstants.A_FLAGS, "");
+            if (flagStr.indexOf(mbox.mUrgentFlag.getAbbreviation()) != -1) {
+                mm.addHeader("X-Priority", "1");
+                mm.addHeader("Importance", "high");
+            } else if (flagStr.indexOf(mbox.mBulkFlag.getAbbreviation()) != -1) {
+                mm.addHeader("X-Priority", "5");
+                mm.addHeader("Importance", "low");
+            }
 
             // JavaMail tip: don't forget to call this, it is REALLY confusing.  
             mm.saveChanges();

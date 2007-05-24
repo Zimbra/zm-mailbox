@@ -560,6 +560,17 @@ public class Message extends MailItem {
             parent.tagChanged(mMailbox.mAttachFlag, pm.hasAttachments());
         }
 
+        // make sure the "urgency" FLAGs are correct
+        int oldUrgency = mData.flags & (Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
+        int urgency = pm.getPriorityBitmask();
+        mData.flags &= ~(Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
+        mData.flags |= urgency;
+        if (oldUrgency != urgency) {
+            markItemModified(Change.MODIFIED_FLAGS);
+            parent.tagChanged(mMailbox.mUrgentFlag, urgency == Flag.BITMASK_HIGH_PRIORITY);
+            parent.tagChanged(mMailbox.mBulkFlag, urgency == Flag.BITMASK_LOW_PRIORITY);
+        }
+
         // update the SIZE and METADATA
         if (mData.size != size) {
             markItemModified(Change.MODIFIED_SIZE);
