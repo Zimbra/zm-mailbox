@@ -37,6 +37,8 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
+
 import org.dom4j.QName;
 import org.mortbay.util.ajax.Continuation;
 
@@ -431,7 +433,9 @@ public class ZimbraSoapContext {
                 } else if (type == Session.Type.ADMIN) {
                     s = new AdminSession(mAuthTokenAccountId).register();
                 }
-            } catch (ServiceException e) { }
+            } catch (ServiceException e) { 
+                ZimbraLog.session.info("ZimbraSoapContext - exception while creating session: ", e);
+            }
             if (s != null)
                 mSessionInfo.add(sinfo = new SessionInfo(s, true));
         }
