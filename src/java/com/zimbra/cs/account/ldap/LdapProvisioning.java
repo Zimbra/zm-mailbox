@@ -134,8 +134,9 @@ public class LdapProvisioning extends Provisioning {
     
     private static LdapConfig sConfig = null;
     
-    private static Pattern sValidCosName = Pattern.compile("^\\w+$");
-
+    // private static Pattern sValidCosName = Pattern.compile("^\\w+$");
+    private static Pattern sValidCosName = Pattern.compile("[-a-zA-Z0-9\\.]+");
+    
     private static final String[] sInvalidAccountCreateModifyAttrs = {
             Provisioning.A_zimbraMailAlias,
             Provisioning.A_zimbraMailDeliveryAddress,
@@ -153,6 +154,8 @@ public class LdapProvisioning extends Provisioning {
         "(objectclass=zimbraAccount)";
     private static final String FILTER_CALENDAR_RESOURCE_OBJECTCLASS =
         "(objectclass=zimbraCalendarResource)";
+    private static final String FILTER_DISTRIBUTION_LIST_OBJECTCLASS =
+        "(objectclass=zimbraDistributionList)";
 
     private static NamedEntryCache<Account> sAccountCache =
         new NamedEntryCache<Account>(
@@ -2251,7 +2254,8 @@ public class LdapProvisioning extends Provisioning {
 
     private DistributionList getDistributionListById(String zimbraId, DirContext ctxt) throws ServiceException {
         //zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
-        return getDistributionListByQuery("","(&(zimbraId="+zimbraId+")(objectclass=zimbraDistributionList))", ctxt);
+        return getDistributionListByQuery("","(&(zimbraId="+zimbraId+")" + 
+                                          FILTER_DISTRIBUTION_LIST_OBJECTCLASS+ ")", ctxt);
     }
 
     private DistributionList getDistributionListById(String zimbraId) throws ServiceException {
@@ -2290,9 +2294,18 @@ public class LdapProvisioning extends Provisioning {
         String uid = LdapUtil.escapeSearchFilterArg(parts[0]);
         String domain = parts[1];
         String dn = mDIT.domainToAccountBaseDN(domain);
-        return getDistributionListByQuery(dn, "(&(uid="+uid+")(objectclass=zimbraDistributionList))", null);
+        return getDistributionListByQuery(dn, 
+                                          "(&(zimbraMailAlias="+listAddress+")" +
+                                          FILTER_DISTRIBUTION_LIST_OBJECTCLASS+ ")",
+                                          null);
     }
-
+    
+    /*
+    "(&(|(zimbraMailDeliveryAddress=" + emailAddress +
+    ")(zimbraMailAlias=" + emailAddress + "))" +
+    FILTER_ACCOUNT_OBJECTCLASS + ")",
+    */
+    
     public Server getLocalServer() throws ServiceException {
         String hostname = LC.zimbra_server_hostname.value();
         if (hostname == null) {
@@ -3327,7 +3340,7 @@ public class LdapProvisioning extends Provisioning {
 
     @Override
     public List getAllDistributionLists(Domain d) throws ServiceException {
-        return searchAccounts(d, "(objectClass=zimbraDistributionList)", null, null, true, Provisioning.SA_DISTRIBUTION_LIST_FLAG);
+        return searchAccounts(d, FILTER_DISTRIBUTION_LIST_OBJECTCLASS, null, null, true, Provisioning.SA_DISTRIBUTION_LIST_FLAG);
     }
 
     @Override
