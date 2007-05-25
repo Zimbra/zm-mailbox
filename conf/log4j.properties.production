@@ -31,10 +31,10 @@ log4j.appender.AUDIT.layout.ConversionPattern=%d %-5p [%t] [%x] %c{1} - %m%n
 log4j.additivity.zimbra.security=false
 log4j.logger.zimbra.security=INFO,AUDIT
 
-# Appender STATS writes to the file "mailboxd.csv".
+# Appender STATS writes to the file "zimbrastats.csv".
 log4j.appender.STATS=org.apache.log4j.ZimbraStatsAppender
-log4j.appender.STATS.File=/opt/zimbra/zmstat/mailboxd.csv
-log4j.appender.STATS.DatePattern=yyyy-MM-dd
+log4j.appender.STATS.File=/opt/zimbra/log/zimbrastats.csv
+log4j.appender.STATS.DatePattern='.'yyyy-MM-dd
 log4j.appender.STATS.Append=true
 log4j.appender.STATS.layout=org.apache.log4j.PatternLayout
 log4j.appender.STATS.layout.ConversionPattern=%m%n
