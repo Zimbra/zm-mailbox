@@ -11,102 +11,102 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import junit.framework.AssertionFailedError;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.mime.MimeTypeInfo;
 
-public class TestProvisioning {
+public class TestProvisioning extends TestCase {
     
     private Provisioning prov;
     private TestVisitor visitor;
     
-    private String testId;
+    private String TEST_ID;
     
-    private String preAuthKey;
-    private String password;
+    private String PRE_AUTH_KEY;
+    private String PASSWORD;
     
-    private String cosName;
-    private String domainName;
-    private String serverName;
-    private String zimletName;
+    private String COS_NAME;
+    private String DOMAIN_NAME;
+    private String SERVER_NAME;
+    private String ZIMLET_NAME;
     
-    private String newName;  // for testing rename
-    private String newEmail; // for testing rename
+    private String NEW_NAME;  // for testing rename
+    private String NEW_EMAIL; // for testing rename
     
-    private String defaultAdminUser;
-    private String adminUser;
-    private String adminEmail;
-    private String acctUser;
-    private String acctEmail;
-    private String acctAliasUser;
-    private String acctAliasEmail;
-    private String acctFullName;
+    private String DEFAULT_ADMIN_USER;
+    private String ADMIN_USER;
+    private String ADMIN_EMAIL;
+    private String ACCT_USER;
+    private String ACCT_EMAIL;
+    private String ACCT_ALIAS_USER;
+    private String ACCT_ALIAS_EMAIL;
+    private String ACCT_FULL_NAME;
     
-    private String crUser;
-    private String crEmail;
-    private String crAliasUser;
-    private String crAliasEmail;
+    private String CR_USER;
+    private String CR_EMAIL;
+    private String CR_ALIAS_USER;
+    private String CR_ALIAS_EMAIL;
     
-    private String dlUser;
-    private String dlEmail;
-    private String dlAliasUser;
-    private String dlAliasEmail;
-    private String dlNestedUser;
-    private String dlNestedEmail;
-    private String dlNestedAliasUser;
-    private String dlNestedAliasEmail;
+    private String DL_USER;
+    private String DL_EMAIL;
+    private String DL_ALIAS_USER;
+    private String DL_ALIAS_EMAIL;
+    private String DL_NESTED_USER;
+    private String DL_NESTED_EMAIL;
+    private String DL_NESTED_ALIAS_USER;
+    private String DL_NESTED_ALIAS_EMAIL;
     
-    private String dataSourceName;
-    private String identityName;
+    private String DATA_SOURCE_NAME;
+    private String IDENTITY_NAME;
 
-    
-    TestProvisioning(String tid) throws ServiceException {
+    public void setUp() throws Exception {
         prov = Provisioning.getInstance();
         visitor = new TestVisitor();
         
-        if (tid == null) {
-            Date date = new Date();
-            SimpleDateFormat fmt =  new SimpleDateFormat("yyyyMMdd-HHmmss");
-            testId = fmt.format(date);
-        } else
-            testId = tid;
+        Date date = new Date();
+        SimpleDateFormat fmt =  new SimpleDateFormat("yyyyMMdd-HHmmss");
+        TEST_ID = fmt.format(date);
         
-        preAuthKey = PreAuthKey.generateRandomPreAuthKey();
-        password = "test123";
+        PRE_AUTH_KEY = PreAuthKey.generateRandomPreAuthKey();
+        PASSWORD = "test123";
         
-        cosName = "cos-" + testId;
-        domainName = "domain-" + testId + ".ldap-test-domain";
-        serverName = "server-" + testId;
-        zimletName = "zimlet-" + testId;
+        COS_NAME = "cos-" + TEST_ID;
+        DOMAIN_NAME = "domain-" + TEST_ID + ".ldap-test-domain";
+        SERVER_NAME = "server-" + TEST_ID;
+        ZIMLET_NAME = "zimlet-" + TEST_ID;
         
-        newName = "newname";
-        newEmail = newName + "-" + testId + "@" + domainName;
+        NEW_NAME = "newname";
+        NEW_EMAIL = NEW_NAME + "-" + TEST_ID + "@" + DOMAIN_NAME;
         
-        defaultAdminUser = "zimbra";
-        adminUser =  "admin";
-        adminEmail = adminUser + "@" + domainName;
-        acctUser = "acct-1";
-        acctEmail = acctUser + "@" + domainName;
-        acctAliasUser = "alias-of" + acctUser;
-        acctAliasEmail = acctAliasUser + "@" + domainName;
-        acctFullName = "Phoebe Shao";
+        DEFAULT_ADMIN_USER = "zimbra";
+        ADMIN_USER =  "admin";
+        ADMIN_EMAIL = ADMIN_USER + "@" + DOMAIN_NAME;
+        ACCT_USER = "acct-1";
+        ACCT_EMAIL = ACCT_USER + "@" + DOMAIN_NAME;
+        ACCT_ALIAS_USER = "alias-of" + ACCT_USER;
+        ACCT_ALIAS_EMAIL = ACCT_ALIAS_USER + "@" + DOMAIN_NAME;
+        ACCT_FULL_NAME = "Phoebe Shao";
         
-        crUser = "cr-1";
-        crEmail = "cr-1" + "@" + domainName;
-        crAliasUser = "alias-of" + crUser;
-        crAliasEmail = crAliasUser + "@" + domainName;
+        CR_USER = "cr-1";
+        CR_EMAIL = CR_USER + "@" + DOMAIN_NAME;
+        CR_ALIAS_USER = "alias-of" + CR_USER;
+        CR_ALIAS_EMAIL = CR_ALIAS_USER + "@" + DOMAIN_NAME;
         
-        dlUser = "dl-1";
-        dlEmail = dlUser + "@" + domainName;
-        dlAliasUser = "alias-of" + dlUser;
-        dlAliasEmail = dlAliasUser + "@" + domainName;
-        dlNestedUser = "dl-nested";
-        dlNestedEmail = dlNestedUser + "@" + domainName;
-        dlNestedAliasUser = "alias-of" + dlNestedUser;
-        dlNestedAliasEmail = dlNestedAliasUser+ "@" + domainName;
+        DL_USER = "dl-1";
+        DL_EMAIL = DL_USER + "@" + DOMAIN_NAME;
+        DL_ALIAS_USER = "alias-of" + DL_USER;
+        DL_ALIAS_EMAIL = DL_ALIAS_USER + "@" + DOMAIN_NAME;
+        DL_NESTED_USER = "dl-nested";
+        DL_NESTED_EMAIL = DL_NESTED_USER + "@" + DOMAIN_NAME;
+        DL_NESTED_ALIAS_USER = "alias-of" + DL_NESTED_USER;
+        DL_NESTED_ALIAS_EMAIL = DL_NESTED_ALIAS_USER+ "@" + DOMAIN_NAME;
         
-        dataSourceName = "datasource-1";
-        identityName ="identity-1";
+        DATA_SOURCE_NAME = "datasource-1";
+        IDENTITY_NAME ="identity-1";
         
     }
     
@@ -116,42 +116,31 @@ public class TestProvisioning {
         }
     }
     
-    // use ensure onstead of assert so the checking is independent of command-line switches and 
-    // is always effective
-    private void ensure(boolean ok) {
-        if (!ok)
-            throw new java.lang.AssertionError();
-    }
     
-    private void verifySameEntry(NamedEntry entry1, NamedEntry entry2) {
-        try {
-            ensure(entry1 != null && entry2 != null);
-            ensure(entry1.getId().equals(entry2.getId()));
-        } catch (java.lang.AssertionError e) {
-            System.out.println("\n===== verifySameEntry failed =====");
-            System.out.println((entry1 == null)? "entry is null":entry1.getId());
-            System.out.println((entry2 == null)? "entry is null":entry2.getId());
-            
-            throw e;
-        }
+    private void verifySameEntry(NamedEntry entry1, NamedEntry entry2) throws Exception {
+        assertNotNull(entry1);
+        assertNotNull(entry2);
+        assertEquals(entry1.getId(), entry2.getId());
     }
     
     // verify list contains exactly entries, no more no less
-    private void verifyEntries(List<NamedEntry> list, NamedEntry[] entries, boolean checkCount) {
+    private void verifyEntries(List<NamedEntry> list, NamedEntry[] entries, boolean checkCount) throws Exception {
         try {
             if (checkCount)
-                ensure(list.size() == entries.length);
+                assertEquals(list.size(), entries.length);
         
             Set<String> ids = new HashSet<String>();
             for (NamedEntry entry : list)
                 ids.add(entry.getId());
             
             for (NamedEntry entry : entries)
-                ensure(ids.contains(entry.getId()));
+                assertTrue(ids.contains(entry.getId()));
          
-        } catch (java.lang.AssertionError e) {
+        } catch (AssertionFailedError e) {
             System.out.println("\n===== verifyEntries failed =====");
-            System.out.println("list contains " + list.size() + " entries:");
+            System.out.println(e.getMessage());
+            
+            System.out.println("\nlist contains " + list.size() + " entries:");
             for (NamedEntry entry : list)
                 System.out.println("    " + entry.getName());
             System.out.println("entries contains " + entries.length + " entries:");
@@ -163,52 +152,52 @@ public class TestProvisioning {
         }
     }
     
-    private void testHealth() throws ServiceException {
+    private void healthTest() throws Exception {
         System.out.println("Testing health");
         
         prov.healthCheck();
     }
 
-    private Config testConfig() throws ServiceException {
+    private Config configTest() throws Exception {
         System.out.println("Testing config");
         
         Config entry = prov.getConfig();
-        ensure(entry != null);
+        assertNotNull(entry != null);
         
         return entry;
     }
     
-    private Cos testCos() throws ServiceException {
+    private Cos cosTest() throws Exception {
         System.out.println("Testing cos");
         
-        Cos entry = prov.createCos(cosName, new HashMap<String, Object>());
+        Cos entry = prov.createCos(COS_NAME, new HashMap<String, Object>());
         
         Cos entryGot = prov.get(Provisioning.CosBy.id, entry.getId());
         verifySameEntry(entry, entryGot);
-        entryGot = prov.get(Provisioning.CosBy.name, cosName);
+        entryGot = prov.get(Provisioning.CosBy.name, COS_NAME);
         verifySameEntry(entry, entryGot);
         Cos defaultCos = prov.get(Provisioning.CosBy.name, "default");
-        ensure(defaultCos != null);
+        assertNotNull(defaultCos);
         
         List list = prov.getAllCos();
         verifyEntries(list, new NamedEntry[]{defaultCos, entry}, false);
         
-        prov.renameCos(entry.getId(), newName);
-        prov.renameCos(entry.getId(), cosName);
+        prov.renameCos(entry.getId(), NEW_NAME);
+        prov.renameCos(entry.getId(), COS_NAME);
                         
         return entry;
     }
     
-    private Domain testDomain() throws ServiceException {
+    private Domain domainTest() throws Exception {
         System.out.println("Testing domain");
         
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraPreAuthKey, preAuthKey);
-        Domain entry = prov.createDomain(domainName, attrs);
+        attrs.put(Provisioning.A_zimbraPreAuthKey, PRE_AUTH_KEY);
+        Domain entry = prov.createDomain(DOMAIN_NAME, attrs);
         
         Domain entryGot = prov.get(Provisioning.DomainBy.id, entry.getId());
         verifySameEntry(entry, entryGot);
-        entryGot = prov.get(Provisioning.DomainBy.name, domainName);
+        entryGot = prov.get(Provisioning.DomainBy.name, DOMAIN_NAME);
         verifySameEntry(entry, entryGot);
         
         List list = prov.getAllDomains();
@@ -217,30 +206,30 @@ public class TestProvisioning {
         return entry;
     }
     
-    private void testMime() throws ServiceException {
+    private void mimeTest() throws Exception {
         System.out.println("Testing mime");
         
         MimeTypeInfo mime = prov.getMimeType("all"); 
-        ensure(mime != null);
+        assertNotNull(mime);
         
         mime = prov.getMimeTypeByExtension("text");
-        ensure(mime != null);
+        assertNotNull(mime);
     }
 
     
-    private Server testServer() throws ServiceException {
+    private Server serverTest() throws Exception {
         System.out.println("Testing server");
         
         Map<String, Object> serverAttrs = new HashMap<String, Object>();
-        Server entry = prov.createServer(serverName, serverAttrs);
+        Server entry = prov.createServer(SERVER_NAME, serverAttrs);
         
         Server entryGot = prov.get(Provisioning.ServerBy.id, entry.getId());
         verifySameEntry(entry, entryGot);
-        entryGot = prov.get(Provisioning.ServerBy.name, serverName);
+        entryGot = prov.get(Provisioning.ServerBy.name, SERVER_NAME);
         verifySameEntry(entry, entryGot);
         
         Server localeServer = prov.getLocalServer();
-        ensure(localeServer != null);
+        assertNotNull(localeServer);
         
         List list = prov.getAllServers();
         verifyEntries(list, new NamedEntry[]{localeServer, entry}, false);
@@ -251,14 +240,14 @@ public class TestProvisioning {
         return entry;
     }
     
-    private Zimlet testZimlet() throws ServiceException {
+    private Zimlet zimletTest() throws Exception {
         System.out.println("Testing zimlet");
         
         Map<String, Object> zimletAttrs = new HashMap<String, Object>();
         zimletAttrs.put(Provisioning.A_zimbraZimletVersion, "1.0");
-        Zimlet entry = prov.createZimlet(zimletName, zimletAttrs);
+        Zimlet entry = prov.createZimlet(ZIMLET_NAME, zimletAttrs);
         
-        Zimlet entryGot = prov.getZimlet(zimletName);
+        Zimlet entryGot = prov.getZimlet(ZIMLET_NAME);
         verifySameEntry(entry, entryGot);
         
         List list = prov.getObjectTypes();
@@ -270,22 +259,22 @@ public class TestProvisioning {
         return entry;
     }
 
-    private void testAuth(Account account) throws ServiceException  {
+    private void authTest(Account account) throws Exception  {
         System.out.println("Testing auth");
         
-        prov.authAccount(account, password, null);
+        prov.authAccount(account, PASSWORD, null);
          
         HashMap<String,String> params = new HashMap<String,String>();
         String authBy = "name";
         long timestamp = System.currentTimeMillis();
         long expires = 0;
-        params.put("account", acctEmail);
+        params.put("account", ACCT_EMAIL);
         params.put("by", authBy);
         params.put("timestamp", timestamp+"");
         params.put("expires", expires+"");
-        String preAuth = PreAuthKey.computePreAuth(params, preAuthKey);
+        String preAuth = PreAuthKey.computePreAuth(params, PRE_AUTH_KEY);
         prov.preAuthAccount(account, 
-                            acctEmail,     // account name 
+                            ACCT_EMAIL,     // account name 
                             authBy,        // by
                             timestamp,     // timestamp
                             0,             // expires
@@ -293,13 +282,13 @@ public class TestProvisioning {
            
     }
     
-    private Account testAdminAccount() throws ServiceException {
+    private Account adminAccountTest() throws Exception {
         System.out.println("Testing admin account");
         
-        Account entry = prov.get(Provisioning.AccountBy.adminName, defaultAdminUser);
-        ensure(entry != null);
-        entry = prov.get(Provisioning.AccountBy.name, adminUser);
-        ensure(entry != null);
+        Account entry = prov.get(Provisioning.AccountBy.adminName, DEFAULT_ADMIN_USER);
+        assertNotNull(entry);
+        entry = prov.get(Provisioning.AccountBy.name, ADMIN_USER);
+        assertNotNull(entry);
         
         List list = prov.getAllAdminAccounts();
         verifyEntries(list, new NamedEntry[]{entry}, true);
@@ -308,19 +297,19 @@ public class TestProvisioning {
     }
     
     // account and account aliases
-    private Account testAccount(Cos cos, Domain domain) throws ServiceException {
+    private Account accountTest(Cos cos, Domain domain) throws Exception {
         System.out.println("Testing account");
         
         Map<String, Object> acctAttrs = new HashMap<String, Object>();
         acctAttrs.put(Provisioning.A_zimbraCOSId, cos.getId());
-        Account entry = prov.createAccount(acctEmail, password, acctAttrs);
-        prov.addAlias(entry, acctAliasEmail);
+        Account entry = prov.createAccount(ACCT_EMAIL, PASSWORD, acctAttrs);
+        prov.addAlias(entry, ACCT_ALIAS_EMAIL);
         
         Account entryGot = prov.get(Provisioning.AccountBy.id, entry.getId());
         verifySameEntry(entry, entryGot);
-        entryGot = prov.get(Provisioning.AccountBy.name, acctEmail);
+        entryGot = prov.get(Provisioning.AccountBy.name, ACCT_EMAIL);
         verifySameEntry(entry, entryGot);
-        entryGot = prov.get(Provisioning.AccountBy.name, acctAliasEmail);
+        entryGot = prov.get(Provisioning.AccountBy.name, ACCT_ALIAS_EMAIL);
         verifySameEntry(entry, entryGot);
                 
         List list = prov.getAllAccounts(domain);
@@ -329,40 +318,40 @@ public class TestProvisioning {
         prov.modifyAccountStatus(entry, "maintenance");
         prov.modifyAccountStatus(entry, "active");
 
-        prov.removeAlias(entry, acctAliasEmail);
+        prov.removeAlias(entry, ACCT_ALIAS_EMAIL);
 
-        prov.renameAccount(entry.getId(), newEmail);
-        prov.renameAccount(entry.getId(), acctEmail);
+        prov.renameAccount(entry.getId(), NEW_EMAIL);
+        prov.renameAccount(entry.getId(), ACCT_EMAIL);
         
         prov.setCOS(entry, cos);
                 
         return entry;
     }
     
-    private void testPassword(Account account) throws ServiceException {
+    private void passwordTest(Account account) throws Exception {
         System.out.println("Testing password");
         
-        prov.changePassword(account, password, password);
-        prov.checkPasswordStrength(account, password);
-        prov.setPassword(account, password);
+        prov.changePassword(account, PASSWORD, PASSWORD);
+        prov.checkPasswordStrength(account, PASSWORD);
+        prov.setPassword(account, PASSWORD);
     }
     
     // calendar resource and calendar resource alias
-    private CalendarResource testCalendarResource(Cos cos, Domain domain) throws ServiceException {
+    private CalendarResource calendarResourceTest(Cos cos, Domain domain) throws Exception {
         System.out.println("Testing calendar resource");
         
         Map<String, Object> crAttrs = new HashMap<String, Object>();
-        crAttrs.put(Provisioning.A_displayName, crUser);
+        crAttrs.put(Provisioning.A_displayName, CR_USER);
         crAttrs.put(Provisioning.A_zimbraCalResType, "Equipment");
         crAttrs.put(Provisioning.A_zimbraCOSId, cos.getId());
-        CalendarResource entry = prov.createCalendarResource(crEmail, password, crAttrs);
-        prov.addAlias(entry, crAliasEmail);
+        CalendarResource entry = prov.createCalendarResource(CR_EMAIL, PASSWORD, crAttrs);
+        prov.addAlias(entry, CR_ALIAS_EMAIL);
         
         CalendarResource entryGot = prov.get(Provisioning.CalendarResourceBy.id, entry.getId());
         verifySameEntry(entry, entryGot);
-        entryGot = prov.get(Provisioning.CalendarResourceBy.name, crEmail);
+        entryGot = prov.get(Provisioning.CalendarResourceBy.name, CR_EMAIL);
         verifySameEntry(entry, entryGot);
-        entryGot = prov.get(Provisioning.CalendarResourceBy.name, crAliasEmail);
+        entryGot = prov.get(Provisioning.CalendarResourceBy.name, CR_ALIAS_EMAIL);
         verifySameEntry(entry, entryGot);
         
         List list = prov.getAllCalendarResources(domain);
@@ -370,64 +359,64 @@ public class TestProvisioning {
         prov.getAllCalendarResources(domain, visitor);
         verifyEntries(list, new NamedEntry[]{entry}, true);
         
-        prov.renameCalendarResource(entry.getId(), newEmail);
-        prov.renameCalendarResource(entry.getId(), crEmail);
+        prov.renameCalendarResource(entry.getId(), NEW_EMAIL);
+        prov.renameCalendarResource(entry.getId(), CR_EMAIL);
 
         return entry;
     }
     
     // distribution list and distribution list alias
-    private DistributionList[] testDistributionList(Domain domain) throws ServiceException {
+    private DistributionList[] distributionListTest(Domain domain) throws Exception {
         System.out.println("Testing distribution list");
         
-        DistributionList entry = prov.createDistributionList(dlEmail, new HashMap<String, Object>());
-        prov.addAlias(entry, dlAliasEmail);
+        DistributionList entry = prov.createDistributionList(DL_EMAIL, new HashMap<String, Object>());
+        prov.addAlias(entry, DL_ALIAS_EMAIL);
                 
         DistributionList entryGot = prov.get(Provisioning.DistributionListBy.id, entry.getId());
         verifySameEntry(entry, entryGot);
-        entryGot = prov.get(Provisioning.DistributionListBy.name, dlEmail);
+        entryGot = prov.get(Provisioning.DistributionListBy.name, DL_EMAIL);
         verifySameEntry(entry, entryGot);
-        entryGot = prov.get(Provisioning.DistributionListBy.name, dlAliasEmail);
+        entryGot = prov.get(Provisioning.DistributionListBy.name, DL_ALIAS_EMAIL);
         verifySameEntry(entry, entryGot);
         
-        DistributionList dlNested = prov.createDistributionList(dlNestedEmail, new HashMap<String, Object>());
-        prov.addAlias(dlNested, dlNestedAliasEmail);
+        DistributionList dlNested = prov.createDistributionList(DL_NESTED_EMAIL, new HashMap<String, Object>());
+        prov.addAlias(dlNested, DL_NESTED_ALIAS_EMAIL);
         
-        prov.addMembers(entry, new String[]{dlNestedEmail});
-        prov.addMembers(dlNested, new String[]{acctEmail});
+        prov.addMembers(entry, new String[]{DL_NESTED_EMAIL});
+        prov.addMembers(dlNested, new String[]{ACCT_EMAIL});
         
         List list = prov.getAllDistributionLists(domain);
         verifyEntries(list, new NamedEntry[]{entry, dlNested}, true);
         
-        Account account = prov.get(Provisioning.AccountBy.name, acctEmail);
+        Account account = prov.get(Provisioning.AccountBy.name, ACCT_EMAIL);
         Set<String> set = prov.getDistributionLists(account);
-        ensure(set.size() == 2);
-        ensure(set.contains(entry.getId()));
-        ensure(set.contains(dlNested.getId()));
+        assertEquals(set.size(), 2);
+        assertTrue(set.contains(entry.getId()));
+        assertTrue(set.contains(dlNested.getId()));
         
         Map<String, String> via = new HashMap<String, String>();
         list = prov.getDistributionLists(account, false, via);
         verifyEntries(list, new NamedEntry[]{entry, dlNested}, true);
-        ensure(via.size()==1);
-        ensure(via.get(entry.getName()).equals(dlNested.getName()));
+        assertEquals(via.size(), 1);
+        assertEquals(via.get(entry.getName()), dlNested.getName());
         
         list = prov.getDistributionLists(account, true, null);
         verifyEntries(list, new NamedEntry[]{dlNested}, true);
         
         boolean inList = prov.inDistributionList(account, entry.getId());
-        ensure(inList);
+        assertTrue(inList);
                 
-        prov.removeAlias(entry, dlAliasEmail);
+        prov.removeAlias(entry, DL_ALIAS_EMAIL);
         
         prov.removeMembers(entry, new String[]{dlNested.getName()});
 
-        prov.renameDistributionList(entry.getId(), newEmail);
-        prov.renameDistributionList(entry.getId(), dlEmail);
+        prov.renameDistributionList(entry.getId(), NEW_EMAIL);
+        prov.renameDistributionList(entry.getId(), DL_EMAIL);
                                 
         return new DistributionList[]{entry, dlNested};
     }
     
-    private DataSource testDataSource(Account account) throws ServiceException {
+    private DataSource dataSourceTest(Account account) throws Exception {
         System.out.println("Testing data source");
         
         Map<String, Object> dsAttrs = new HashMap<String, Object>();
@@ -436,14 +425,14 @@ public class TestProvisioning {
         dsAttrs.put(Provisioning.A_zimbraDataSourceFolderId, "inbox");
         dsAttrs.put(Provisioning.A_zimbraDataSourceHost, "google.com");
         dsAttrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer, "TRUE");
-        dsAttrs.put(Provisioning.A_zimbraDataSourcePassword, password);
+        dsAttrs.put(Provisioning.A_zimbraDataSourcePassword, PASSWORD);
         dsAttrs.put(Provisioning.A_zimbraDataSourcePort, "9999");
         dsAttrs.put(Provisioning.A_zimbraDataSourceUsername, "whatever");
-        DataSource entry = prov.createDataSource(account, DataSource.Type.pop3, dataSourceName, dsAttrs);
+        DataSource entry = prov.createDataSource(account, DataSource.Type.pop3, DATA_SOURCE_NAME, dsAttrs);
 
         DataSource entryGot = prov.get(account, Provisioning.DataSourceBy.id, entry.getId());
         verifySameEntry(entry, entryGot);
-        entryGot = prov.get(account, Provisioning.DataSourceBy.name, dataSourceName);
+        entryGot = prov.get(account, Provisioning.DataSourceBy.name, DATA_SOURCE_NAME);
         verifySameEntry(entry, entryGot);
         
         List list = prov.getAllDataSources(account);
@@ -456,15 +445,15 @@ public class TestProvisioning {
         return entry;
     }
     
-    private Identity testIdentity(Account account) throws ServiceException {
+    private Identity identityTest(Account account) throws Exception {
         System.out.println("Testing identity");
         
         Map<String, Object> identityAttrs = new HashMap<String, Object>();
-        Identity entry = prov.createIdentity(account, identityName, identityAttrs);
+        Identity entry = prov.createIdentity(account, IDENTITY_NAME, identityAttrs);
         
         Identity entryGot = prov.get(account, Provisioning.IdentityBy.id, entry.getId());
         verifySameEntry(entry, entryGot);
-        entryGot = prov.get(account, Provisioning.IdentityBy.name, identityName);
+        entryGot = prov.get(account, Provisioning.IdentityBy.name, IDENTITY_NAME);
         verifySameEntry(entry, entryGot);
         Identity defaultIdentity = prov.get(account, Provisioning.IdentityBy.name, Provisioning.DEFAULT_IDENTITY_NAME);
         verifySameEntry(account, defaultIdentity);
@@ -474,12 +463,12 @@ public class TestProvisioning {
         
         Map attrsToMod = new HashMap<String, Object>();
         attrsToMod.put(Provisioning.A_zimbraPrefBccAddress, "whatever");
-        prov.modifyIdentity(account, identityName, attrsToMod);
+        prov.modifyIdentity(account, IDENTITY_NAME, attrsToMod);
 
         return entry;
     }
     
-    private void testEntry(NamedEntry entry) throws ServiceException  {
+    private void entryTest(NamedEntry entry) throws Exception  {
         System.out.println("Testing entry");
         
         Map attrsToMod = new HashMap<String, Object>();
@@ -487,23 +476,23 @@ public class TestProvisioning {
     
         try {
             prov.modifyAttrs(entry, attrsToMod, true);
-            ensure(false); // should not come to here
+            fail("ServiceException.INVALID_REQUEST not thrown"); // should not come to here
         } catch (ServiceException e) {
-            ensure(e.getCode().equals(ServiceException.INVALID_REQUEST));
+            assertEquals(e.getCode(), ServiceException.INVALID_REQUEST);
         }
     
         attrsToMod.clear();
-        attrsToMod.put(Provisioning.A_displayName, acctFullName);
+        attrsToMod.put(Provisioning.A_displayName, ACCT_FULL_NAME);
         prov.modifyAttrs(entry, attrsToMod, true, true);
         
         prov.reload(entry);
     }
     
-    private void testGal(Domain domain) throws ServiceException {
+    private void galTest(Domain domain) throws Exception {
         System.out.println("Testing gal");
         
-        String query = acctEmail.substring(0, 3);
-        Account acct = prov.get(Provisioning.AccountBy.name, acctEmail);
+        String query = ACCT_EMAIL.substring(0, 3);
+        Account acct = prov.get(Provisioning.AccountBy.name, ACCT_EMAIL);
         
         Provisioning.SearchGalResult galResult = prov.autoCompleteGal(domain, 
                                                                       query,
@@ -511,25 +500,25 @@ public class TestProvisioning {
                                                                       100);
 
         List<GalContact> matches = galResult.matches;
-        ensure(matches.size() == 1);
-        ensure(matches.get(0).getAttrs().get("fullName").equals(acctFullName));
+        assertEquals(matches.size(), 1);
+        assertEquals(matches.get(0).getAttrs().get("fullName"), ACCT_FULL_NAME);
         
         galResult = prov.searchGal(domain, 
                                    query,
                                    Provisioning.GAL_SEARCH_TYPE.ALL, 
                                    null);
         matches = galResult.matches;
-        ensure(matches.size() == 1);
-        ensure(matches.get(0).getAttrs().get("fullName").equals(acctFullName));
+        assertEquals(matches.size(), 1);
+        assertEquals(matches.get(0).getAttrs().get("fullName"), ACCT_FULL_NAME);
     }
     
-    private void testSearch(Domain domain) throws ServiceException {
+    private void searchTest(Domain domain) throws Exception {
         System.out.println("Testing search");
         
-        Account acct = prov.get(Provisioning.AccountBy.name, acctEmail);
-        Account cr = prov.get(Provisioning.AccountBy.name, crEmail);
+        Account acct = prov.get(Provisioning.AccountBy.name, ACCT_EMAIL);
+        Account cr = prov.get(Provisioning.AccountBy.name, CR_EMAIL);
         
-        String query = "(" + Provisioning.A_zimbraMailDeliveryAddress + "=" + acctEmail + ")";
+        String query = "(" + Provisioning.A_zimbraMailDeliveryAddress + "=" + ACCT_EMAIL + ")";
         List list = prov.searchAccounts(query, 
                                         new String[]{Provisioning.A_zimbraMailDeliveryAddress}, 
                                         Provisioning.A_zimbraMailDeliveryAddress, 
@@ -547,7 +536,7 @@ public class TestProvisioning {
         EntrySearchFilter.Term term = new EntrySearchFilter.Single(false, 
                                                                    Provisioning.A_zimbraMailDeliveryAddress, 
                                                                    EntrySearchFilter.Operator.eq,
-                                                                   crEmail);
+                                                                   CR_EMAIL);
         EntrySearchFilter filter = new EntrySearchFilter(term);
         list = prov.searchCalendarResources(filter,
                                             new String[]{Provisioning.A_zimbraMailDeliveryAddress}, 
@@ -567,31 +556,30 @@ public class TestProvisioning {
         options.setQuery(query);
         list = prov.searchDirectory(options);
         verifyEntries(list, new NamedEntry[]{acct}, true);
-        
     }
     
-    public String execute() throws ServiceException, IOException {
+    private String execute() throws Exception {
         
-        testHealth();
-        Config config = testConfig();
-        Cos cos = testCos();
-        Domain domain = testDomain();
-        testMime();
-        Server server = testServer();
-        Zimlet zimlet = testZimlet();    
+        healthTest();
+        Config config = configTest();
+        Cos cos = cosTest();
+        Domain domain = domainTest();
+        mimeTest();
+        Server server = serverTest();
+        Zimlet zimlet = zimletTest();    
         
-        Account adminAccount = testAdminAccount();
-        Account account = testAccount(cos, domain);
-        testAuth(account);
-        testPassword(account);
-        CalendarResource calendarResource = testCalendarResource(cos, domain);
-        DistributionList[] distributionLists = testDistributionList(domain);
-        DataSource dataSource = testDataSource(account);
-        Identity identity = testIdentity(account);
+        Account adminAccount = adminAccountTest();
+        Account account = accountTest(cos, domain);
+        authTest(account);
+        passwordTest(account);
+        CalendarResource calendarResource = calendarResourceTest(cos, domain);
+        DistributionList[] distributionLists = distributionListTest(domain);
+        DataSource dataSource = dataSourceTest(account);
+        Identity identity = identityTest(account);
         
-        testEntry(account);
-        testGal(domain);
-        testSearch(domain);
+        entryTest(account);
+        galTest(domain);
+        searchTest(domain);
 
         // ========================================================================
         System.out.println("\nPress enter to delete entries created by the test");
@@ -599,9 +587,9 @@ public class TestProvisioning {
         String line = (new BufferedReader(new InputStreamReader(System.in))).readLine();
         System.out.println("\nDeleting entries");
         
-        prov.deleteZimlet(zimletName);
+        prov.deleteZimlet(ZIMLET_NAME);
         prov.deleteServer(server.getId());
-        prov.deleteIdentity(account, identityName);
+        prov.deleteIdentity(account, IDENTITY_NAME);
         prov.deleteDataSource(account, dataSource.getId());
         prov.deleteDistributionList(distributionLists[1].getId());
         prov.deleteDistributionList(distributionLists[0].getId());
@@ -610,23 +598,29 @@ public class TestProvisioning {
         prov.deleteDomain(domain.getId());
         prov.deleteCos(cos.getId());
         
-        return testId;
+        return TEST_ID;
     }
     
-    public static void main(String[] args) throws IOException {
-        String testId = (args.length > 0)? args[0] : null;
-        
+    
+    public void testProvisioning() throws Exception {
         try {
-            TestProvisioning provTest = new TestProvisioning(testId);
-            testId = provTest.execute();
-            System.out.println("\nTest " + testId + " done!");
+            execute();
+            System.out.println("\nTest " + TEST_ID + " done!");
         } catch (ServiceException e) {
             Throwable cause = e.getCause();
             System.out.println("ERROR: " + e.getCode() + " (" + e.getMessage() + ")" + 
-                    (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")"));
+                               (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")"));
             e.printStackTrace(System.out);
-            System.out.println("\nTest " + testId + " failed!");
-        } 
+            System.out.println("\nTest " + TEST_ID + " failed!");
+        } catch (AssertionFailedError e) {
+            System.out.println("\n===== assertion failed =====");
+            System.out.println(e.getMessage());
+            e.printStackTrace(System.out);
+        }
         
+    }
+   
+    public static void main(String[] args) throws Exception {
+        TestUtil.runTest(new TestSuite(TestProvisioning.class));
     }
 }
