@@ -46,10 +46,10 @@ import com.zimbra.cs.stats.ZimbraPerf;
  */
 public final class MemoryStats implements RealtimeStatsCallback {
 
-    private static final String MEMPOOL_PREFIX = "mempool_";
+    private static final String MEMPOOL_PREFIX = "mpool_";
     private static final String USED_SUFFIX = "_used";
     private static final String FREE_SUFFIX = "_free";
-    private static final String GC_PREFIX = "gcollector_";
+    private static final String GC_PREFIX = "gc_";
     private static final String COUNT_SUFFIX = "_count";
     private static final String TIME_SUFFIX = "_time";
     private static final String MINOR = "minor";

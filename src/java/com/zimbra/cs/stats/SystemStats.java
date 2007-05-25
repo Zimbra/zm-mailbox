@@ -24,22 +24,17 @@
  */
 package com.zimbra.cs.stats;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Returns system-level statistics, such as Java VM heap size.
+ * Returns system-level statistics.
  * 
  * @author bburtin
  */
 class SystemStats implements RealtimeStatsCallback {
 
     public Map<String, Object> getStatData() {
-        Map<String, Object> data = new HashMap<String, Object>();
-        Runtime rt = Runtime.getRuntime();
-        double heapSize = (double) (rt.totalMemory() - rt.freeMemory()) / 1024.0 / 1024.0;
-        data.put(ZimbraPerf.RTS_JAVA_HEAP_MB, String.format("%.3f", heapSize));
-        return data;
+        return null;
     }
 
 }
