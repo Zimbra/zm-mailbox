@@ -39,6 +39,7 @@ import org.mortbay.util.ajax.WaitingContinuation;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -56,14 +57,18 @@ public class NoOp extends MailDocumentHandler  {
         if (wait) {
             HttpServletRequest servletRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
             Continuation continuation = ContinuationSupport.getContinuation(servletRequest, zsc);
+            ZimbraLog.session.debug("NoOp got continuation: %s resumed=%s", continuation.toString(), continuation.isResumed() ? "RESUMED" : "not_resumed");
+            if (continuation instanceof WaitingContinuation) {
+                // workaround for a Jetty bug: Jetty currently (in bio mode) re-uses the Continuation object, but doesn't
+                // clear it's state correctly...and unfortunately there's no way to re-set the mutex once it is already set.  Fortunately,
+                // in blocking mode it doesn't matter if we create a brand-new Continuation here since the Continuation
+                // object is just a wrapper around normal java wait/notify.
+                continuation = new WaitingContinuation(zsc);
+                ZimbraLog.session.debug("NoOp replacing with our own WaitingContinuation: %s", continuation.toString());
+            }
+            
+            assert(!(continuation instanceof WaitingContinuation) || !continuation.isResumed());
             if (!continuation.isResumed()) {
-                if (continuation instanceof WaitingContinuation && (((WaitingContinuation)continuation).getMutex() != zsc)) {
-                    // workaround for a Jetty bug: Jetty currently (in bio mode) re-uses the Continuation object, but doesn't
-                    // clear the mutex...and unfortunately there's no way to re-set the mutex once it is already set.  Fortunately,
-                    // in blocking mode it doesn't matter if we create a brand-new Continuation here since the Continuation
-                    // object is just a wrapper around normal java wait/notify.
-                    continuation = new WaitingContinuation(zsc);
-                }
                 if (zsc.beginWaitForNotifications(continuation)) {
                     synchronized(zsc) {
                         if (zsc.waitingForNotifications()) {
