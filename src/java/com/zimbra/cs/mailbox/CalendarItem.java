@@ -221,8 +221,9 @@ public abstract class CalendarItem extends MailItem {
                 Invite cur = (Invite) iter.next();
                 
                 if (cur != firstInv) {
-                    
-                    if (cur.getMethod().equals(ICalTok.REQUEST.toString()) || (cur.getMethod().equals(ICalTok.PUBLISH.toString()))) {
+                    String method = cur.getMethod();
+                    if (method.equals(ICalTok.REQUEST.toString()) ||
+                        method.equals(ICalTok.PUBLISH.toString())) {
                         assert (cur.hasRecurId());
                         
                         if (cur.hasRecurId() && cur.getStartTime() != null) {
@@ -243,7 +244,7 @@ public abstract class CalendarItem extends MailItem {
                         } else {
                             sLog.debug("Got second invite with no RecurID: " + cur.toString());
                         }
-                    } else if (cur.getMethod().equals(ICalTok.CANCEL.toString())) {
+                    } else if (cur.isCancel()) {
                         assert(cur.hasRecurId());
                         if (cur.hasRecurId()) {
                             Recurrence.CancellationRule cancelRule =   
@@ -597,10 +598,14 @@ public abstract class CalendarItem extends MailItem {
             //saveMetadata();
         }
         String method = invite.getMethod();
-        if (method.equals(ICalTok.REQUEST.toString()) || method.equals(ICalTok.CANCEL.toString()) || method.equals(ICalTok.PUBLISH.toString())) {
+        if (method.equals(ICalTok.REQUEST.toString()) ||
+            method.equals(ICalTok.CANCEL.toString()) ||
+            method.equals(ICalTok.PUBLISH.toString())) {
             processNewInviteRequestOrCancel(originalOrganizer, pm, invite, force, folderId, volumeId);
         } else if (method.equals("REPLY")) {
             processNewInviteReply(invite, force);
+        } else {
+            ZimbraLog.calendar.warn("Unsupported METHOD " + method);
         }
     }
     
@@ -793,9 +798,9 @@ public abstract class CalendarItem extends MailItem {
         boolean hasRequests = false;
         for (Iterator iter = mInvites.iterator(); iter.hasNext();) {
             Invite cur = (Invite)iter.next();
-            if (cur.getMethod().equals(ICalTok.REQUEST.toString()) ||
-                    cur.getMethod().equals(ICalTok.PUBLISH.toString())) 
-            {
+            String method = cur.getMethod();
+            if (method.equals(ICalTok.REQUEST.toString()) ||
+                method.equals(ICalTok.PUBLISH.toString())) {
                 hasRequests = true;
                 break;
             }

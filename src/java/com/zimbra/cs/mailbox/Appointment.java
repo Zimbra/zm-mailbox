@@ -255,7 +255,7 @@ public class Appointment extends CalendarItem {
         boolean needResourceAutoReply =
             redoProvider.isMaster() &&
             (player == null || redoProvider.getRedoLogManager().getInCrashRecovery()) &&
-            !ICalTok.CANCEL.toString().equals(invite.getMethod()) &&
+            !invite.isCancel() &&
             !invite.isTodo();
 
         if (invite.thisAcctIsOrganizer(account)) {
