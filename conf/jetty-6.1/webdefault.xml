@@ -371,7 +371,6 @@
         <mime-type>audio/x-mpegurl</mime-type>
     </mime-mapping>
     <mime-mapping>
-    <mime-mapping>
         <extension>mp1</extension>
         <mime-type>audio/x-mpeg</mime-type>
     </mime-mapping>
