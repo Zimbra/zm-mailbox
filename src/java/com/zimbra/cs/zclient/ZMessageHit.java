@@ -50,6 +50,7 @@ public class ZMessageHit implements ZSearchHit {
     private boolean mContentMatched;
     private List<String> mMimePartHits;
     private ZEmailAddress mSender;
+    private List<ZEmailAddress> mAddresses;
     private ZMessage mMessage;
     private boolean mIsInvite;
 
@@ -78,6 +79,10 @@ public class ZMessageHit implements ZSearchHit {
                 mSender = new ZEmailAddress(emailEl);
                 break;
             }
+        }
+        mAddresses = new ArrayList<ZEmailAddress>();
+        for (Element emailEl : e.listElements(MailConstants.E_EMAIL)) {
+            mAddresses.add(new ZEmailAddress(emailEl));
         }
 
         Element mp = e.getOptionalElement(MailConstants.E_MIMEPART);
@@ -114,6 +119,7 @@ public class ZMessageHit implements ZSearchHit {
         sb.add("sortField", mSortField);
         sb.add("score", mScore);
         sb.add("mimePartHits", mMimePartHits, true, false);
+        sb.add("addresses", mAddresses, false, true);
         if (mMessage != null) sb.addStruct("message", mMessage.toString());
         sb.endStruct();
         return sb.toString();
@@ -157,6 +163,10 @@ public class ZMessageHit implements ZSearchHit {
 
     public float getScore() {
         return mScore;
+    }
+
+    public List<ZEmailAddress> getAddresses() {
+        return mAddresses;
     }
 
     public ZEmailAddress getSender() {
