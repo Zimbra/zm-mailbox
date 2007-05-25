@@ -76,13 +76,17 @@ public class CalendarObject extends MailItemResource {
 	private Invite[] mInvites;
 	private TimeZoneMap mTzmap;
 	
-	private static String getCalendarPath(CalendarItem calItem) throws ServiceException {
+	protected static String getCalendarPath(CalendarItem calItem) throws ServiceException {
+		return getCalendarPath(calItem.getPath(), calItem.getUid());
+	}
+	
+	protected static String getCalendarPath(String itemPath, String uid) {
 		// escape uid
 		StringBuilder path = new StringBuilder();
-		path.append(calItem.getPath());
+		path.append(itemPath);
 		if (path.charAt(path.length()-1) != '/')
 			path.append("/");
-		path.append(calItem.getUid());
+		path.append(uid);
 		path.append(CAL_EXTENSION);
 		return path.toString();
 	}

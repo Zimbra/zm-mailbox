@@ -316,10 +316,7 @@ public class UrlNamespace {
 				} catch (MailServiceException.NoSuchItemException e) {
 				}
 			}
-			if (f != null && 
-					(f.getDefaultView() == MailItem.TYPE_APPOINTMENT ||
-                     f.getDefaultView() == MailItem.TYPE_TASK) && 
-					path.endsWith(CalendarObject.CAL_EXTENSION)) {
+			if (f != null && path.endsWith(CalendarObject.CAL_EXTENSION)) {
 				String uid = path.substring(index + 1, path.length() - CalendarObject.CAL_EXTENSION.length());
 				return mbox.getCalendarItemByUid(octxt, uid);
 			}

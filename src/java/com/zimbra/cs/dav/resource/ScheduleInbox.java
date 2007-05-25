@@ -48,15 +48,12 @@ public class ScheduleInbox extends CalendarCollection {
 		addResourceType(DavElements.E_SCHEDULE_INBOX);
 	}
 	public Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
-		return Collections.emptyList();
-/*
 		try {
 			return getScheduleMessages(ctxt);
 		} catch (ServiceException se) {
 			ZimbraLog.dav.error("can't get schedule messages in folder "+getId(), se);
 			return Collections.emptyList();
 		}
-*/
 	}
 
 	protected static final byte[] SEARCH_TYPES = new byte[] { MailItem.TYPE_MESSAGE };

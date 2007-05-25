@@ -57,7 +57,6 @@ public class DavContext {
 	private String mUri;
 	private String mUser;
 	private String mPath;
-	private int mItemId;
 	private int mStatus;
 	private Document mRequestMsg;
 	private byte[] mRequestData;
@@ -72,11 +71,6 @@ public class DavContext {
 		if (index != -1) {
 			mUser = mUri.substring(1, index);
 			mPath = mUri.substring(index);
-		}
-		if (req.getQueryString() != null) {
-			String id = req.getParameter("id");
-			if (id != null)
-				mItemId = Integer.parseInt(id);
 		}
 		mStatus = HttpServletResponse.SC_OK;
 		mAuthAccount = authUser;
@@ -239,11 +233,7 @@ public class DavContext {
 	}
 	
 	public DavResource getRequestedResource() throws DavException, ServiceException {
-		if (mRequestedResource != null)
-			return mRequestedResource;
-		if (mItemId != 0)
-			mRequestedResource = UrlNamespace.getResourceByItemId(this, mUser, mItemId);
-		else
+		if (mRequestedResource == null)
 			mRequestedResource = UrlNamespace.getResourceAt(this, mUser, mPath);
 		return mRequestedResource;
 	}

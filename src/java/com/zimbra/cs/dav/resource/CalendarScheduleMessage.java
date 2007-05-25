@@ -10,7 +10,7 @@ import com.zimbra.cs.mailbox.Message;
 public class CalendarScheduleMessage extends CalendarObject {
 
 	public CalendarScheduleMessage(DavContext ctxt, Message msg) throws ServiceException, DavException {
-		super(ctxt, getPath(msg), getAssociatedCalendarItem(ctxt, msg));
+		super(ctxt, getPath(ctxt, msg), getAssociatedCalendarItem(ctxt, msg));
 	}
 
 	private static CalendarItem getAssociatedCalendarItem(DavContext ctxt, Message msg) throws ServiceException, DavException {
@@ -19,7 +19,8 @@ public class CalendarScheduleMessage extends CalendarObject {
 		return mbox.getCalendarItemById(null, calItemInfo.getCalendarItemId());
 	}
 	
-	private static String getPath(Message msg) throws ServiceException {
-		return msg.getPath() + "?id=" + msg.getId();  // XXX query string for id is not a good WebDAV URL.
+	private static String getPath(DavContext ctxt, Message msg) throws ServiceException, DavException {
+		CalendarItem calItem = getAssociatedCalendarItem(ctxt, msg);
+		return getCalendarPath(msg.getPath(), calItem.getUid());
 	}
 }
