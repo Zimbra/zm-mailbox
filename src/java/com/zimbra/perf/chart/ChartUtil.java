@@ -492,11 +492,13 @@ public class ChartUtil {
             }
 
             if (noData.size() > 0) {
-                writer
-                        .write("<h3>No data available for the following charts:</h3>\n");
-                writer.write("<p>"
-                        + StringUtil.escapeHtml(StringUtil.join(", ", noData))
-                        + "<p>\n");
+                writer.write("<h3>No data available for the following charts:</h3>\n");
+                writer.write("<p>\n");
+                for (String str : noData) {
+                    writer.write(StringUtil.escapeHtml(str));
+                    writer.write("\n");
+                }
+                writer.write("<p>\n");
             }
 
             if (!mSkipSummary)
