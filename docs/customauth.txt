@@ -1,0 +1,71 @@
+================
+SOAP AuthRequest
+================
+Currently the AuthRequest SOAP API can identify the account by name, id, or
+foreignPrincipal.  For custom authentication, client can identify an account by
+foreignPrincipal if the subject requested by the UI is not the email address.  
+For example, it can be a phone number.  In that case the phone number will be
+populated in the zimbraForeignPrincipal LDAP attribute of the account; Zimbra
+server will locate the account by the zimbraForeignPrincipal attribute.
+
+e.g.
+
+ <AuthRequest xmlns="urn:zimbraAccount">
+   <account by="foreignPrincipal">6502127767</account>]
+   <password>test123</password>]
+   ...
+ </AuthRequest>
+
+
+============================================================
+Interface for registering the custom authentication handler
+============================================================
+public abstract class ZimbraCustomAuth {
+
+    /*
+     * Register custom authentication handler
+     */
+    public static register(String handlerId, ZimbraCustomAuth handler);
+    
+    /*
+     * Returning from authenticate indicates the authentication is successful.
+     * An Exception should be thrown if the authentication failed.
+     */
+    public abstract void authenticate(Account acct, String password) throws Exception;
+}
+
+A custom authentication handler must extend the ZimbraCustomAuth class
+and implement the authenticate method.  The custom handler should
+be implemented and hooked to the Zimbra server using the Zimbra extension
+framework.  The ZimbraExtension.init() method of the extension must invoke
+ZimbraCustomAuth.register() to register the authentication handler.
+
+e.g.
+
+public class FooAuthExtension implements ZimbraExtension {
+    public void init() {
+        /*
+         * FooCustomAuth must extend ZimbraCustomAuth
+         */
+        ZimbraCustomAuth.register("foo", new FooCustomAuth());
+    }
+}
+
+public class FooCustomAuth extends ZimbraCustomAuth {
+
+    public void authenticate(Account account, String password) throws Exception {
+        // implementation of the custom auth
+        // all the attributes of the account can be retrieved via the account object.
+    }
+} 
+
+
+==================================
+Preparing a domain for custom auth
+==================================
+zmprov> modifyDomain {domain|id} zimbraAuthMech custom:{custom-auth-hanlder-name}
+
+{custom-auth-hanlder-name}: name under which the custom authentication handler is registered.
+
+e.g.  zmprov> modifyDomain mydomain.com zimbraAuthMech custom:foo
+
