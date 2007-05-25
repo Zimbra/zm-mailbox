@@ -1,11 +1,9 @@
-package com.zimbra.cs.account;
+package com.zimbra.qa.unittest;
 
-import java.lang.AssertionError;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,11 +12,10 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.PreAuthKey;
-import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.*;
 import com.zimbra.cs.mime.MimeTypeInfo;
 
-public class ProvisioningTest {
+public class TestProvisioning {
     
     private Provisioning prov;
     private TestVisitor visitor;
@@ -63,7 +60,7 @@ public class ProvisioningTest {
     private String identityName;
 
     
-    ProvisioningTest(String tid) throws ServiceException {
+    TestProvisioning(String tid) throws ServiceException {
         prov = Provisioning.getInstance();
         visitor = new TestVisitor();
         
@@ -620,7 +617,7 @@ public class ProvisioningTest {
         String testId = (args.length > 0)? args[0] : null;
         
         try {
-            ProvisioningTest provTest = new ProvisioningTest(testId);
+            TestProvisioning provTest = new TestProvisioning(testId);
             testId = provTest.execute();
             System.out.println("\nTest " + testId + " done!");
         } catch (ServiceException e) {
