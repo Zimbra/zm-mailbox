@@ -195,20 +195,6 @@ public class ParseMailboxID
                 mHostName = acct.getAttr(Provisioning.A_zimbraMailHost);
             }
             
-        } else if (idStr.indexOf('-') >= 0) {
-            // UID
-            acct = Provisioning.getInstance().get(AccountBy.id, idStr);
-            if (acct == null)
-                throw AccountServiceException.NO_SUCH_ACCOUNT(idStr);
-
-            if (!forceRemote && Provisioning.onLocalServer(acct)) {
-                mIsLocal = true;
-                mMailbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId());
-                mMailboxId = mMailbox.getId();
-            } else {
-                mHostName = acct.getAttr(Provisioning.A_zimbraMailHost);
-            }
-            
         } else if (idStr.indexOf('/') >= 0) {
             /* /server/mailboxid */
             
@@ -245,6 +231,20 @@ public class ParseMailboxID
                     mMailbox = MailboxManager.getInstance().getMailboxById(mMailboxId);
                 }
             }
+        }  else if (idStr.indexOf('-') >= 0) {
+            // UID
+            acct = Provisioning.getInstance().get(AccountBy.id, idStr);
+            if (acct == null)
+                throw AccountServiceException.NO_SUCH_ACCOUNT(idStr);
+
+            if (!forceRemote && Provisioning.onLocalServer(acct)) {
+                mIsLocal = true;
+                mMailbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId());
+                mMailboxId = mMailbox.getId();
+            } else {
+                mHostName = acct.getAttr(Provisioning.A_zimbraMailHost);
+            }
+            
         } else {
             if (idStr.equals("*")) {
                 mHostName = "*";
