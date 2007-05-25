@@ -860,6 +860,6 @@ public class LC {
 
         zmstat_interval = new KnownKey("zmstat_interval");
         zmstat_interval.setDefault("30");
-        zmstat_interval.setDoc("how often samples are taken by zmstat (seconds)")
+        zmstat_interval.setDoc("how often samples are taken by zmstat (seconds)");
     }
 }
