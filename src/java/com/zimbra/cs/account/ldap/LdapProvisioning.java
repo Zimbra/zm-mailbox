@@ -2531,7 +2531,6 @@ public class LdapProvisioning extends Provisioning {
      * authAccount does all the status/mustChange checks, this just takes the
      * password and auths the user
      */
-
     private void verifyPasswordInternal(Account acct, String password, AuthMechanism authMech) throws ServiceException {
         String encodedPassword = acct.getAttr(Provisioning.A_userPassword);
         
@@ -2539,19 +2538,44 @@ public class LdapProvisioning extends Provisioning {
         
         Domain d = Provisioning.getInstance().getDomain(acct);
         
-        if (authMechType == AuthMechanism.AuthMechType.AMT_LDAP) {
-            boolean allowFallback = 
+        boolean allowFallback = true;
+        if (!authMech.isZimbraAuth())
+            allowFallback = 
                 d.getBooleanAttr(Provisioning.A_zimbraAuthFallbackToLocal, false) ||
                 acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false) ||
-                acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);                
+                acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false); 
+        
+        if (authMechType == AuthMechanism.AuthMechType.AMT_LDAP) {
             try {
-                externalLdapAuth(d, authMech.getMethod(), acct, password);
+                externalLdapAuth(d, authMech.getHandler(), acct, password);
                 return;
             } catch (ServiceException e) {
                 if (!allowFallback) 
                     throw e;
+                ZimbraLog.account.warn(authMech.getHandler() + " auth for domain " +
+                                       d.getName() + " failed, falling back to default mech");
             }
-        } 
+        } else if (authMechType == AuthMechanism.AuthMechType.AMT_CUSTOM) {
+            String handlerName = authMech.getHandler();
+            ZimbraCustomAuth handler = ZimbraCustomAuth.getHandler(handlerName);
+            if (handler == null) {
+                String msg = "handler " + handlerName + " for custom auth for domain " + d.getName() + " not found";
+                if (!allowFallback) 
+                    throw AccountServiceException.AUTH_FAILED(acct.getName(), new Exception(msg));
+                ZimbraLog.account.warn(msg + "falling back to default mech");
+            } else {
+                try {
+                    handler.authenticate(acct, password);
+                    return;
+                } catch (Exception e) {
+                    if (!allowFallback) 
+                        throw AccountServiceException.AUTH_FAILED(acct.getName(), e);
+                    
+                    ZimbraLog.account.warn("custom auth " + authMech.getHandler() + " for domain " +
+                                           d.getName() + " failed, falling back to default mech");
+                }
+            }
+        }
 
         // fall back to zimbra
         if (encodedPassword == null)

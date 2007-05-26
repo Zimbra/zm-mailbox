@@ -99,7 +99,14 @@ public abstract class Provisioning {
      * zimbraAuthMech type of "ad" means use configured LDAP attrs
      * (zimbraAuthLdapURL, zimbraAuthLdapBindDn) for use with ActiveDirectory
      */
-    public static final String AM_AD = "ad";    
+    public static final String AM_AD = "ad";
+    
+    /**
+     * zimbraAuthMech type of "custom:{handler}" means use registered extension
+     * of ZimbraCustomAuth.authenticate() method 
+     * see customauth.txt
+     */
+    public static final String AM_CUSTOM = "custom:";  
     
     /**
      * the account is active, and allows logins, etc.
@@ -302,7 +309,7 @@ public abstract class Provisioning {
     public static final String A_zimbraAuthTokenKey = "zimbraAuthTokenKey";
 
     /**
-     * auth mech to use. should be AM_ZIMBRA or AM_LDAP. 
+     * auth mech to use. 
      */
     public static final String A_zimbraAuthMech = "zimbraAuthMech";
 

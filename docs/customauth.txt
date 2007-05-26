@@ -25,11 +25,17 @@ public abstract class ZimbraCustomAuth {
     /*
      * Register custom authentication handler
      */
-    public static register(String handlerId, ZimbraCustomAuth handler);
+    public synchronized static void register(String handlerName, ZimbraCustomAuth handler);
     
     /*
-     * Returning from authenticate indicates the authentication is successful.
+     * Method invoked for custom auth.
+     * 
+     * Returning from the authenticate method indicates a successful authtication.
      * An Exception should be thrown if the authentication failed.
+     * 
+     * For any registered handler name, the authenticate method is going to be invoked 
+     * on the same resistered handler object.  It is the implementor's resposibility 
+     * to ensure thread safety of the method.
      */
     public abstract void authenticate(Account acct, String password) throws Exception;
 }
@@ -37,7 +43,9 @@ public abstract class ZimbraCustomAuth {
 A custom authentication handler must extend the ZimbraCustomAuth class
 and implement the authenticate method.  The custom handler should
 be implemented and hooked to the Zimbra server using the Zimbra extension
-framework.  The ZimbraExtension.init() method of the extension must invoke
+framework.   Please refer to extensions.txt for the Zimbra extension framework. 
+
+The ZimbraExtension.init() method of the extension must invoke
 ZimbraCustomAuth.register() to register the authentication handler.
 
 e.g.

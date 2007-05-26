@@ -1,3 +1,28 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1
+ * 
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 ("License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.zimbra.com/license
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+ * the License for the specific language governing rights and limitations
+ * under the License.
+ * 
+ * The Original Code is: Zimbra Collaboration Suite Server.
+ * 
+ * The Initial Developer of the Original Code is Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2004, 2005, 2006 Zimbra, Inc.
+ * All Rights Reserved.
+ * 
+ * Contributor(s): 
+ * 
+ * ***** END LICENSE BLOCK *****
+ */
+
 package com.zimbra.cs.account.ldap;
 
 import com.zimbra.cs.account.Account;
@@ -21,7 +46,7 @@ public class AuthMechanism {
      * For AMT_ZIMBRA and AMT_LDAP, the same value as mAuthMech
      * For AMT_CUSTOM, the handler name afte the : in mAuthMech
      */ 
-    private String mAuthMethod; 
+    private String mAuthHandler; 
     
     AuthMechanism(Account acct) throws ServiceException {
         
@@ -38,20 +63,29 @@ public class AuthMechanism {
         
         if (mAuthMech.equals(Provisioning.AM_ZIMBRA)) {
             mType = AuthMechType.AMT_ZIMBRA;
-            mAuthMethod = mAuthMech;
+            mAuthHandler = mAuthMech;
+            
         } else if (mAuthMech.equals(Provisioning.AM_LDAP) || mAuthMech.equals(Provisioning.AM_AD)) {
             mType = AuthMechType.AMT_LDAP;
-            mAuthMethod = mAuthMech;
-        } else if (mAuthMech.startsWith("custom:")) {
-            mType = AuthMechType.AMT_CUSTOM;
-            mAuthMethod = mAuthMech; // TODO parse for the method
-        } else {
+            mAuthHandler = mAuthMech;
+            
+        } else if (mAuthMech.startsWith(Provisioning.AM_CUSTOM)) {
+            // the value is in the format of custom:{handler}
+            int idx = mAuthMech.indexOf(':');
+            if (idx != -1) {
+                mType = AuthMechType.AMT_CUSTOM;
+                mAuthHandler = mAuthMech.substring(idx+1);
+            }
+        }
+     
+        if (mType == null) {
+            // we didn't have a valid value, fallback to zimbra default
             ZimbraLog.account.warn("unknown value for "+Provisioning.A_zimbraAuthMech+": "+
                                    mAuthMech+", falling back to default mech");
-            // fallback to zimbra
+
             mAuthMech = Provisioning.AM_ZIMBRA;
             mType = AuthMechType.AMT_ZIMBRA;
-            mAuthMethod = mAuthMech;
+            mAuthHandler = mAuthMech;
         }
     }
     
@@ -59,8 +93,8 @@ public class AuthMechanism {
         return mType;
     }
     
-    public String getMethod() {
-        return mAuthMethod;
+    public String getHandler() {
+        return mAuthHandler;
     }
     
     public boolean isZimbraAuth() {
