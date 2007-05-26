@@ -128,6 +128,9 @@ IMGatewayList - gateways to external IM services
 connectedState is one of:
    bad_auth               -- auth is bad, will not try to reconnect
    intentionally_offline  -- user's local im presence is "offline" so not connected
+   disabled               -- the user's account has been disabled, we will not try to reconnect
+                               (this is probably b/c we detected the user logged into the service
+                                directly from another location)
    online
    shutdown               -- shutting down
    start                  -- just created, will attempt first connect soon
@@ -138,7 +141,7 @@ IMGatewayRegister
 -----------------
 <IMGatewayRegister op="reg" service="SERVICE_NAME" name="remoteName" password="remotePassword"/>
 <IMGatewayRegister op="unreg" service="SERVICE_NAME"/>
-<IMGatewayRegister op="reconnect" service="SERVICE_NAME"/> // tell the service to try a reconnect right now
+<IMGatewayRegister op="reconnect" service="SERVICE_NAME"/> // tell the service to try a reconnect right now, also re-enable if the service was in the disabled state
 
 <IMGatewayRegisterResponse result="0|1"/>
 
@@ -208,7 +211,10 @@ IM NOTIFICATIONS
                 // interop gateway has succeeded/failed to connect us, see <IMGatewayListResponse> above for more info
                   <n type="gwStatus" service="GATEWAY_SERVICE_NAME" state="connectedState SEE ABOVE" [timeUntilNextConnect="msec_until_next_connect_attempt"/> ] />
                 ]*
-                
+                [
+                // your account has connected to the interop service from another location
+                  <n type="otherLocation" service="GATEWAY_SERVICE_NAME" username="REMOTE_SERVICE_USERNAME"/>
+                ]
              </im>]
           ]?     
         </notify>]

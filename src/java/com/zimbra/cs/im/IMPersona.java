@@ -510,6 +510,12 @@ public class IMPersona extends ClassLogger {
         // is it a gateway notification?  If so, then stop processing it here
         Element xe = msg.getChildElement("x", "zimbra:interop");
         if (xe != null) {
+            String username = null;
+            Element usernameElt = xe.element("username");
+            if (usernameElt != null) {
+                username = usernameElt.getText();
+            }
+            
             String serviceName = msg.getFrom().toBareJID();
             String[] splits = serviceName.split("\\.");
             if (splits.length > 0)
@@ -522,7 +528,14 @@ public class IMPersona extends ClassLogger {
                 IMGatewayStateNotification not = 
                     new IMGatewayStateNotification(serviceName, state, delay);
                 postIMNotification(not);
-                return;
+                // return; FIXME Tim: leave the text message until the client supports the notifications
+            }
+            Element otherLocation = xe.element("otherLocation");
+            if (otherLocation != null) {
+                IMOtherLocationNotification not = 
+                    new IMOtherLocationNotification(serviceName,username);
+                postIMNotification(not);
+                // return; FIXME Tim: leave the text message until the client supports the notifications
             }
         }
         
