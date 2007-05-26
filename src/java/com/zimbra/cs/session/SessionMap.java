@@ -176,7 +176,7 @@ final class SessionMap {
     synchronized private void updateAccessTime(Session session) {
         HashSet<Session> set = getSessionAccessSet(session.getSessionIdleLifetime());
         set.remove(session);
-        session.updateAccessTime();
+        session.sessionCacheSetLastAccessTime();
         set.add(session);
     }
 

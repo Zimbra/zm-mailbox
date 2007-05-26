@@ -107,8 +107,7 @@ public abstract class Session {
         mTargetAccountId = targetId == null ? authId : targetId;
         mSessionType = type;
         mCreationTime = System.currentTimeMillis();
-
-        updateAccessTime();
+        mLastAccessed = mCreationTime;
     }
 
     /** Registers the session as a listener on the target mailbox and adds
@@ -292,8 +291,22 @@ public abstract class Session {
         return mCreationTime; 
     }
 
+    /**
+     * Public API for updating the access time of a session
+     */
     public void updateAccessTime() {
-        mLastAccessed = System.currentTimeMillis();
+        // go through the session cache so that the session cache's
+        // time-ordered access list stays correct
+        // see bug 16242
+        SessionCache.lookup(mSessionId, mAuthenticatedAccountId);
+    }
+    
+    /**
+     * This API must only be called by the SessionCache,
+     * all other callers should use updateAccessTime()
+     */
+    void sessionCacheSetLastAccessTime() {
+        mLastAccessed = System.currentTimeMillis();     
     }
 
     public boolean accessedAfter(long otherTime) {
