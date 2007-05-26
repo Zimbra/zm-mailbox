@@ -85,7 +85,7 @@ public abstract class Session {
             mMailbox = null;  mPersona = null;
         }
 
-        updateAccessTime();
+        mLastAccessed = System.currentTimeMillis();
     }
 
     public static class RecentOperation {
@@ -200,8 +200,22 @@ public abstract class Session {
 
     abstract protected void cleanup();
 
+    /**
+     * Public API for updating the access time of a session
+     */
     public void updateAccessTime() {
-        mLastAccessed = System.currentTimeMillis();
+    	// go through the session cache so that the session cache's
+    	// time-ordered access list stays correct
+    	// see bug 16242
+       	 SessionCache.lookup(mSessionId, mAccountId);
+    }
+    
+    /**
+     * This API must only be called by the SessionCache,
+     * all other callers should use updateAccessTime()
+     */
+    void sessionCacheSetLastAccessTime() {
+		mLastAccessed = System.currentTimeMillis();    	
     }
 
     public boolean accessedAfter(long otherTime) {

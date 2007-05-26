@@ -214,7 +214,7 @@ public final class SessionCache {
             // even though sLRUMap was constructed as insertion-order linked
             // hash map.
             sLRUMap.remove(sessionId);
-            session.updateAccessTime();
+            session.sessionCacheSetLastAccessTime();
             sLRUMap.put(sessionId, session);
         }
     }
