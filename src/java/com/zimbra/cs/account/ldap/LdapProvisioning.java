@@ -2404,9 +2404,11 @@ public class LdapProvisioning extends Provisioning {
      */
     private void authAccount(Account acct, String password, boolean checkPasswordPolicy) throws ServiceException {
         checkAccountStatus(acct);
-        verifyPassword(acct, password);
+        
+        AuthMechanism authMech = new AuthMechanism(acct);
+        verifyPassword(acct, password, authMech);
 
-        if (!checkPasswordPolicy)
+        if (!checkPasswordPolicy || !authMech.isZimbraAuth())
             return;
 
         // below this point, the only fault that may be thrown is CHANGE_PASSWORD
@@ -2506,14 +2508,15 @@ public class LdapProvisioning extends Provisioning {
         throw ServiceException.FAILURE(msg, null);
     }
 
-    private void verifyPassword(Account acct, String password) throws ServiceException {
+    private void verifyPassword(Account acct, String password, AuthMechanism authMech) throws ServiceException {
+        
         LdapLockoutPolicy lockoutPolicy = new LdapLockoutPolicy(this, acct);
         try {
             if (lockoutPolicy.isLockedOut())
                 throw AccountServiceException.AUTH_FAILED(acct.getName());
 
             // attempt to verify the password
-            verifyPasswordInternal(acct, password);
+            verifyPasswordInternal(acct, password, authMech);
 
             lockoutPolicy.successfulLogin();
         } catch (AccountServiceException e) {
@@ -2529,36 +2532,26 @@ public class LdapProvisioning extends Provisioning {
      * password and auths the user
      */
 
-    private void verifyPasswordInternal(Account acct, String password) throws ServiceException {
+    private void verifyPasswordInternal(Account acct, String password, AuthMechanism authMech) throws ServiceException {
         String encodedPassword = acct.getAttr(Provisioning.A_userPassword);
         
-        String authMech = Provisioning.AM_ZIMBRA;        
-
-        Provisioning prov = Provisioning.getInstance();
-        Domain d = prov.getDomain(acct);
-        // see if it specifies an alternate auth
-        if (d != null) {
-            String am = d.getAttr(Provisioning.A_zimbraAuthMech);
-            if (am != null)
-                authMech = am;
-        }
+        AuthMechanism.AuthMechType authMechType = authMech.getType();
         
-        if (authMech.equals(Provisioning.AM_LDAP) || authMech.equals(Provisioning.AM_AD)) {
+        Domain d = Provisioning.getInstance().getDomain(acct);
+        
+        if (authMechType == AuthMechanism.AuthMechType.AMT_LDAP) {
             boolean allowFallback = 
                 d.getBooleanAttr(Provisioning.A_zimbraAuthFallbackToLocal, false) ||
                 acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false) ||
                 acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);                
             try {
-                externalLdapAuth(d, authMech, acct, password);
+                externalLdapAuth(d, authMech.getMethod(), acct, password);
                 return;
             } catch (ServiceException e) {
-                if (!allowFallback) throw e;
+                if (!allowFallback) 
+                    throw e;
             }
-        } else if (!authMech.equals(Provisioning.AM_ZIMBRA)) {
-            ZimbraLog.account.warn("unknown value for "+Provisioning.A_zimbraAuthMech+": "+
-                    authMech+", falling back to default mech");
-            // fallback to zimbra
-        }
+        } 
 
         // fall back to zimbra
         if (encodedPassword == null)
