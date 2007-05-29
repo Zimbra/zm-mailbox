@@ -114,6 +114,20 @@ public class AttributeInfo {
         }
     }
     
+    private static Long parseLong(String attrName, String propName, String value, long defaultValue) {
+        if (!StringUtil.isNullOrEmpty(value)) {
+            try {
+                return Long.parseLong(value);
+            } catch (NumberFormatException e) {
+                ZimbraLog.misc.warn("Invalid value '%s' for property %s of attribute %s.  Defaulting to %d.",
+                        value, propName, attrName, defaultValue);
+                return defaultValue;
+            }
+        } else
+            return defaultValue; 
+    }
+
+    
     AttributeInfo (String attrName, int id, String parentId, int groupId, AttributeCallback callback, AttributeType type,
                    AttributeOrder order, String value, boolean immutable, String min, String max, 
                    AttributeCardinality cardinality, Set<AttributeClass> requiredIn, 
@@ -136,6 +150,9 @@ public class AttributeInfo {
         mGlobalConfigValues = globalConfigValues;
         mDefaultCOSValues = defaultCOSValues;
         mDescription = description;
+        
+        mMin = parseLong(attrName, AttributeManager.A_MIN, min, Long.MIN_VALUE);
+        mMax = parseLong(attrName, AttributeManager.A_MAX, max, Long.MAX_VALUE);
         
         switch (mType) {
         case TYPE_INTEGER:
