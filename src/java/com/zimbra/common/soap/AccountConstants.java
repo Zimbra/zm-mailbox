@@ -60,8 +60,8 @@ public class AccountConstants {
     public static final QName MODIFY_PROPERTIES_RESPONSE = QName.get("ModifyPropertiesResponse", NAMESPACE);
     public static final QName GET_ALL_LOCALES_REQUEST = QName.get("GetAllLocalesRequest", NAMESPACE);
     public static final QName GET_ALL_LOCALES_RESPONSE = QName.get("GetAllLocalesResponse", NAMESPACE);
-    public static final QName GET_LOCALES_REQUEST = QName.get("GetLocalesRequest", NAMESPACE);
-    public static final QName GET_LOCALES_RESPONSE = QName.get("GetLocalesResponse", NAMESPACE);
+    public static final QName GET_AVAILABLE_LOCALES_REQUEST = QName.get("GetAvailableLocalesRequest", NAMESPACE);
+    public static final QName GET_AVAILABLE_LOCALES_RESPONSE = QName.get("GetAvailableLocalesResponse", NAMESPACE);
     public static final QName GET_AVAILABLE_SKINS_REQUEST = QName.get("GetAvailableSkinsRequest", NAMESPACE);
     public static final QName GET_AVAILABLE_SKINS_RESPONSE = QName.get("GetAvailableSkinsResponse", NAMESPACE);
 
