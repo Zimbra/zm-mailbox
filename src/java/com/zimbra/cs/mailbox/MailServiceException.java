@@ -365,6 +365,10 @@ public class MailServiceException extends ServiceException {
         return new MailServiceException("Couldn't parse address", ADDRESS_PARSE_ERROR, SENDERS_FAULT, t);
     }
 
+    public static MailServiceException ADDRESS_PARSE_ERROR(String msg, Throwable t) {
+        return new MailServiceException("Couldn't parse address: " + msg, ADDRESS_PARSE_ERROR, SENDERS_FAULT, t);
+    }
+
     public static MailServiceException ICALENDAR_PARSE_ERROR(String s, Throwable t) {
         return new MailServiceException("Couldn't parse iCalendar information: "+s, ICALENDAR_PARSE_ERROR, SENDERS_FAULT, t);
     }

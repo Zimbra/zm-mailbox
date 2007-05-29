@@ -133,12 +133,15 @@ public abstract class CalendarUser {
     public InternetAddress getFriendlyAddress() throws MailServiceException {
         InternetAddress addr;
         try {
+            String address = getAddress();
+            if (address == null || address.length() < 1)
+                throw MailServiceException.ADDRESS_PARSE_ERROR("No address value", null);
             if (hasCn())
-                addr = new InternetAddress(getAddress(),
+                addr = new InternetAddress(address,
                                            getCn(),
                                            Mime.P_CHARSET_UTF8);
             else
-                addr = new InternetAddress(getAddress());
+                addr = new InternetAddress(address);
             return addr;
         } catch (UnsupportedEncodingException e) {
             throw MailServiceException.ADDRESS_PARSE_ERROR(e);
