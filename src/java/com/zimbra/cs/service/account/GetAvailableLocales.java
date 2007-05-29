@@ -40,7 +40,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class GetLocales extends AccountDocumentHandler {
+public class GetAvailableLocales extends AccountDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
@@ -48,7 +48,7 @@ public class GetLocales extends AccountDocumentHandler {
         
         Locale displayLocale = getDisplayLocale(acct, context);
         Locale locales[] = L10nUtil.getLocalesSorted(displayLocale);
-        Element response = lc.createElement(AccountConstants.GET_LOCALES_RESPONSE);
+        Element response = lc.createElement(AccountConstants.GET_AVAILABLE_LOCALES_RESPONSE);
         for (Locale locale : locales) {
             ToXML.encodeLocale(response, locale, displayLocale);
         }

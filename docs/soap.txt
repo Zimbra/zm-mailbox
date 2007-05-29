@@ -2021,15 +2021,15 @@ java.util.Locale.getAvailableLocales(), sorted by display name (name attribute).
 
 ---------------------------
 
-<GetLocalesRequest/>
+<GetAvailableLocalesRequest/>
 
-<GetLocalesResponse>
+<GetAvailableLocalesResponse>
   <locale id="{locale-id}" name="{locale-name-in-preferred-locale}"/>
   ...
-</GetLocalesResponse>
+</GetAvailableLocalesResponse>
 
-Returns all translated locales installed on the system.  The locale list in the response is 
-sorted by display name (name attribute).
+Returns intersection of all translated locales installed on the server and the list specified in zimbraAvailableLocale.  
+The locale list in the response is sorted by display name (name attribute).
 
 {locale-id} : lcoale id. e.g. en_US
 {locale-name-in-preferred-locale} : locale name in the preferred locale
