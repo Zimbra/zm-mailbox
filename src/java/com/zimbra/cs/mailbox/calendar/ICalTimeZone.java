@@ -955,7 +955,7 @@ public class ICalTimeZone extends SimpleTimeZone {
 
             int toRet = 0;
             try {
-                if (len - offset % 2 == 0) {
+                if ((len - offset) % 2 == 0) {
                     toRet += Integer.parseInt(utcOffset.substring(offset, offset + 2)) *
                              MSEC_PER_HOUR;
                     offset += 2;
