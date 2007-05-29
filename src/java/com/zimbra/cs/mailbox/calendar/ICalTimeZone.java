@@ -915,37 +915,85 @@ public class ICalTimeZone extends SimpleTimeZone {
     /**
      * Input: TZOFFSETTO: [+-]HHMM(SS)?
      * Output: msec offset from GMT
+     * 
+     * The sign character is required and each time component must be specified wth 2 digits,
+     * but this method relaxes the rules a bit to accept data from buggy systems.  Omitted
+     * sign means positive offset, and hour can be specified as a single digit.
+     * 
      * @param utcOffset
      * @return
      */
     private static int tzOffsetToTime(String utcOffset)
     throws ServiceException {
-        int len = utcOffset != null ? utcOffset.length() : 0;
-        if (len != 5 && len != 7)
-            throw ServiceException.INVALID_REQUEST(
-                    "Invalid " +
-                    ICalTok.TZOFFSETFROM + "/" + ICalTok.TZOFFSETTO +
-                    " value \"" + utcOffset +
-                    "\"; must have format \"+/-hhmm[ss]\"", null);
-
-        int toRet = 0;
         try {
-            toRet += (Integer.parseInt(utcOffset.substring(1,3)) * MSEC_PER_HOUR);
-            toRet += (Integer.parseInt(utcOffset.substring(3,5)) * MSEC_PER_MIN);
-            if (len == 7) {
-                toRet += (Integer.parseInt(utcOffset.substring(5,7)) * MSEC_PER_SEC);
+            int len = utcOffset != null ? utcOffset.length() : 0;
+            if (len < 1) {
+                throw ServiceException.INVALID_REQUEST(
+                        "Invalid " +
+                        ICalTok.TZOFFSETFROM + "/" + ICalTok.TZOFFSETTO +
+                        " value \"" + utcOffset +
+                        "\"; must have format \"+/-hhmm[ss]\"", null);
             }
+
+            int offset;
+            char signChar = utcOffset.charAt(0);
+            int sign;
+            if (signChar == '-') {
+                sign = -1;
+                offset = 1;
+            } else {
+                sign = 1;
+                if (signChar == '+') {
+                    offset = 1;
+                } else {
+                    // The first character should be '+' or '-' and so this case
+                    // is invalid, but let's relax the rules a bit and allow omitting
+                    // the sign.
+                    offset = 0;
+                }
+            }
+
+            int toRet = 0;
+            try {
+                if (len - offset % 2 == 0) {
+                    toRet += Integer.parseInt(utcOffset.substring(offset, offset + 2)) *
+                             MSEC_PER_HOUR;
+                    offset += 2;
+                } else {
+                    // Single-digit hour is invalid, but there are systems that
+                    // do this, notably WebEx.
+                    toRet += Integer.parseInt(utcOffset.substring(offset, offset + 1)) *
+                             MSEC_PER_HOUR;
+                    offset++;
+                }
+                toRet += Integer.parseInt(utcOffset.substring(offset, offset + 2)) *
+                         MSEC_PER_MIN;
+                offset += 2;
+                if (len - offset >= 2)
+                    toRet += Integer.parseInt(utcOffset.substring(offset, offset + 2)) *
+                             MSEC_PER_SEC;
+            } catch (NumberFormatException e) {
+                throw ServiceException.INVALID_REQUEST(
+                        "Invalid " +
+                        ICalTok.TZOFFSETFROM + "/" + ICalTok.TZOFFSETTO +
+                        " value \"" + utcOffset +
+                        "\"; must have format \"+/-hhmm[ss]\"", e);
+            }
+            toRet *= sign;
+            return toRet;
         } catch (NumberFormatException e) {
             throw ServiceException.INVALID_REQUEST(
                     "Invalid " +
                     ICalTok.TZOFFSETFROM + "/" + ICalTok.TZOFFSETTO +
                     " value \"" + utcOffset +
                     "\"; must have format \"+/-hhmm[ss]\"", e);
+        } catch (IndexOutOfBoundsException e) {
+            throw ServiceException.INVALID_REQUEST(
+                    "Invalid " +
+                    ICalTok.TZOFFSETFROM + "/" + ICalTok.TZOFFSETTO +
+                    " value \"" + utcOffset +
+                    "\"; must have format \"+/-hhmm[ss]\"", e);
         }
-        if (utcOffset.charAt(0) == '-') {
-            toRet *= -1;
-        }
-        return toRet;
     }
     
     /**
