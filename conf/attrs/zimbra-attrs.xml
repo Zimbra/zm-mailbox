@@ -2143,6 +2143,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="470" name="zimbraPrefDeleteInviteOnReply" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether meeting invite emails are moved to Trash folder upon accept/decline</desc>
+</attr>
+
+<attr id="471" name="zimbraPrefShowSelectionCheckbox" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>show selection checkbox for selecting email, contact, voicemial items in a list view for batch operations</desc>
 </attr>  
 
 </attrs>

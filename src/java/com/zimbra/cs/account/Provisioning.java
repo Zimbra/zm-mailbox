@@ -586,12 +586,15 @@ public abstract class Provisioning {
     public static final String A_zimbraPrefShowSearchString = "zimbraPrefShowSearchString";
 
     public static final String A_zimbraPrefShowFragments = "zimbraPrefShowFragments";
+    
+    public static final String A_zimbraPrefShowSelectionCheckbox = "zimbraPrefShowSelectionCheckbox";
 
     public static final String A_zimbraPrefMessageViewHtmlPreferred = "zimbraPrefMessageViewHtmlPreferred";
 
     public static final String A_zimbraPrefAutoAddAddressEnabled = "zimbraPrefAutoAddAddressEnabled";
 
-    public static final String A_zimbraPrefContactsPerPage = "zimbraPrefContactsPerPage";    
+    public static final String A_zimbraPrefContactsPerPage = "zimbraPrefContactsPerPage";   
+    
 
 
     /**
