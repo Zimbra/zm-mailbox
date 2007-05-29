@@ -15,8 +15,10 @@ import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.*;
+import com.zimbra.cs.account.ldap.ZimbraCustomAuth;
 import com.zimbra.cs.mime.MimeTypeInfo;
 
 public class TestProvisioning extends TestCase {
@@ -82,7 +84,7 @@ public class TestProvisioning extends TestCase {
         NEW_NAME = "newname";
         NEW_EMAIL = NEW_NAME + "-" + TEST_ID + "@" + DOMAIN_NAME;
         
-        DEFAULT_ADMIN_USER = "zimbra";
+        DEFAULT_ADMIN_USER = LC.zimbra_ldap_user.value();
         ADMIN_USER =  "admin";
         ADMIN_EMAIL = ADMIN_USER + "@" + DOMAIN_NAME;
         ACCT_USER = "acct-1";
@@ -113,6 +115,25 @@ public class TestProvisioning extends TestCase {
     private class TestVisitor implements NamedEntry.Visitor {
         public void visit(com.zimbra.cs.account.NamedEntry entry) throws ServiceException {
             // do nothing  
+        }
+    }
+    
+    public static class TestCustomAuth extends ZimbraCustomAuth{
+        
+        Account mTheOnlyAcctThatCanAuth;
+        String  mTheOnlyPasswordIKnowAbout;
+        
+        TestCustomAuth(Account account, String password) {
+            mTheOnlyAcctThatCanAuth = account;
+            mTheOnlyPasswordIKnowAbout = password;
+        }
+        
+        public void authenticate(Account acct, String password) throws Exception {
+            if (acct.getName().equals(mTheOnlyAcctThatCanAuth.getName()) && 
+                password.equals(mTheOnlyPasswordIKnowAbout))
+                return;
+            else
+                throw new Exception("auth failed by TestCustomAuth for " + acct.getName() + " password " + password);
         }
     }
     
@@ -262,8 +283,44 @@ public class TestProvisioning extends TestCase {
     private void authTest(Account account) throws Exception  {
         System.out.println("Testing auth");
         
-        prov.authAccount(account, PASSWORD, null);
+        // zimbra auth
+        prov.authAccount(account, PASSWORD, "unittest");
+        
+        // ldap auth, test using our own ldap
+        Domain domain = prov.getDomain(account);
+        Map attrsToMod = new HashMap<String, Object>();
+        attrsToMod.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_LDAP);
+        attrsToMod.put(Provisioning.A_zimbraAuthLdapURL, "ldap://localhost:389");
+        attrsToMod.put(Provisioning.A_zimbraAuthLdapSearchFilter, "(zimbraMailDeliveryAddress=%n)");
+        attrsToMod.put(Provisioning.A_zimbraAuthLdapSearchBindPassword, LC.zimbra_ldap_password.value());
+        attrsToMod.put(Provisioning.A_zimbraAuthLdapSearchBindDn, LC.zimbra_ldap_userdn.value());
+        prov.modifyAttrs(domain, attrsToMod, true);
+        prov.authAccount(account, PASSWORD, "unittest");
+        
+        // ad auth
+        // need an AD, can't test
+        
+        // custom auth
+        attrsToMod.clear();
+        String customAuthHandlerName = "test";
+        attrsToMod.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_CUSTOM + customAuthHandlerName);
+        prov.modifyAttrs(domain, attrsToMod, true);
+        ZimbraCustomAuth.register(customAuthHandlerName, new TestCustomAuth(account, PASSWORD));
+        prov.authAccount(account, PASSWORD, "unittest");
+        
+        // try an auth failure
+        try {
+            prov.authAccount(account, PASSWORD + "-not", "unittest");
+            fail("AccountServiceException.AUTH_FAILED not thrown"); // should not come to here
+        } catch (ServiceException e) {
+            assertEquals(e.getCode(), AccountServiceException.AUTH_FAILED);
+        }
+        
+        // done testing auth mech, set auth meth back
+        attrsToMod.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_ZIMBRA);
+        prov.modifyAttrs(domain, attrsToMod, true);
          
+        // preauth
         HashMap<String,String> params = new HashMap<String,String>();
         String authBy = "name";
         long timestamp = System.currentTimeMillis();
@@ -274,12 +331,12 @@ public class TestProvisioning extends TestCase {
         params.put("expires", expires+"");
         String preAuth = PreAuthKey.computePreAuth(params, PRE_AUTH_KEY);
         prov.preAuthAccount(account, 
-                            ACCT_EMAIL,     // account name 
-                            authBy,        // by
-                            timestamp,     // timestamp
-                            0,             // expires
+                            ACCT_EMAIL, // account name 
+                            authBy,     // by
+                            timestamp,  // timestamp
+                            0,          // expires
                             preAuth);   // preauth key
-           
+        
     }
     
     private Account adminAccountTest() throws Exception {

@@ -678,32 +678,7 @@ public class LdapUtil {
         return sb.toString();
     }
 
-    /**
-     * Given a dn like "uid=foo,ou=people,dc=widgets,dc=com", return the string "foo@widgets.com".
-     * 
-     * @param dn
-     * @return
-     */
-    public static String dnToEmail(String dn) {
-        String [] parts = dn.split(",");
-        StringBuffer domain = new StringBuffer(dn.length());
-        String uid = null;
-        for (int i = 0; i < parts.length; i++) {
-            if (parts[i].startsWith("dc=")) {
-                if (domain.length() > 0)
-                    domain.append(".");
-                domain.append(unescapeRDNValue(parts[i].substring(3)));
-            } else if (parts[i].startsWith("uid=")) {
-                uid = unescapeRDNValue(parts[i].substring(4));
-            }
-        }
-        if (uid == null)
-            return null; // TODO should this be an exception
-        if (domain.length() == 0)
-            return uid;
-        return new StringBuffer(uid).append('@').append(domain).toString();
-    }
-    
+        
     /**
      * Given a dn like "uid=zimbra,cn=admins,cn=zimbra", return the string "zimbra".
      * @param dn

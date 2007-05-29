@@ -34,11 +34,11 @@ import com.zimbra.cs.account.Provisioning;
 class LdapAlias extends Alias implements LdapEntry {
     private String mDn;
 
-    LdapAlias(String dn, Attributes attrs) throws NamingException
+    LdapAlias(String dn, String email, Attributes attrs) throws NamingException
     {
-        super(LdapUtil.dnToEmail(dn),
-                LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId), 
-                LdapUtil.getAttrs(attrs));
+        super(email,
+              LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId), 
+              LdapUtil.getAttrs(attrs));
         mDn = dn;
     }
 

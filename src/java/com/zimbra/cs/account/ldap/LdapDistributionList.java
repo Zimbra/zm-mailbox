@@ -47,10 +47,10 @@ import com.zimbra.common.util.EmailUtil;
 class LdapDistributionList extends DistributionList implements LdapEntry {
     private String mDn;
 
-    LdapDistributionList(String dn, Attributes attrs) throws NamingException {
-        super(LdapUtil.dnToEmail(dn),
-                LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId), 
-                LdapUtil.getAttrs(attrs));
+    LdapDistributionList(String dn, String email, Attributes attrs) throws NamingException {
+        super(email,
+              LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId), 
+              LdapUtil.getAttrs(attrs));
         mDn = dn;
     }
     

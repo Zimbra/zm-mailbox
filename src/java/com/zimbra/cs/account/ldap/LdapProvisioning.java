@@ -41,6 +41,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Account.CalendarUserType;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.CalendarResource;
@@ -513,7 +514,7 @@ public class LdapProvisioning extends Provisioning {
             name = LdapUtil.escapeSearchFilterArg(name);
             a = getAccountByQuery(
                     mDIT.adminBaseDN(),
-                    "(&(uid="+name+")" +
+                    "(&(" + mDIT.adminNamingRdnAttr() + "=" + name + ")" +
                     FILTER_ACCOUNT_OBJECTCLASS + ")",
                     null);
             sAccountCache.put(a);
@@ -958,8 +959,8 @@ public class LdapProvisioning extends Provisioning {
                         Attributes attrs = sr.getAttributes();
                         Attribute objectclass = attrs.get("objectclass");
                         if (objectclass == null || objectclass.contains(C_zimbraAccount)) visitor.visit(makeAccount(dn, attrs, this));
-                        else if (objectclass.contains(C_zimbraAlias)) visitor.visit(new LdapAlias(dn, attrs));
-                        else if (objectclass.contains(C_zimbraMailList)) visitor.visit(new LdapDistributionList(dn, attrs));
+                        else if (objectclass.contains(C_zimbraAlias)) visitor.visit(makeAlias(dn, attrs, this));
+                        else if (objectclass.contains(C_zimbraMailList)) visitor.visit(makeDistributionList(dn, attrs, this));
                         else if (objectclass.contains(C_zimbraDomain)) visitor.visit(new LdapDomain(dn, attrs, getConfig().getDomainDefaults()));                        
                     }
                     cookie = getCookie(lctxt);
@@ -1127,7 +1128,7 @@ public class LdapProvisioning extends Provisioning {
                  * and create a new one.
                  */
                 Attributes attrs = LdapUtil.getAttributes(ctxt, aliasDn);
-                LdapAlias aliasEntry = new LdapAlias(aliasDn, attrs);
+                Alias aliasEntry = makeAlias(aliasDn, attrs, this);
                 if (aliasEntry.isDangling()) {
                     // remove the dangling alias 
                     removeAliasInternal(null, alias, null);
@@ -1300,8 +1301,18 @@ public class LdapProvisioning extends Provisioning {
                 LdapUtil.modifyAttributes(ctxt, dn, DirContext.REPLACE_ATTRIBUTE, attrs);
             }
             
-            LdapUtil.simpleCreate(ctxt, mDIT.domainDNToAccountBaseDN(dn), "organizationalRole",
-                    new String[] { A_ou, "people", A_cn, "people"});
+            String acctBaseDn = mDIT.domainDNToAccountBaseDN(dn);
+            if (!acctBaseDn.equals(dn)) {
+                // create the account base dn entry only if if is not the same as the domain dn
+                //
+                // TODO, the objectclass and attrs for the account base dn entry is still hardcoded,
+                // it should be parameterized in LdapDIT according the BASE_RDN_ACCOUNT.
+                // This is actually a design decision depending on how far we want to allow the 
+                // DIT to be customized.
+                LdapUtil.simpleCreate(ctxt, mDIT.domainDNToAccountBaseDN(dn), 
+                                      "organizationalRole",
+                                      new String[] { A_ou, "people", A_cn, "people"});
+            }
             
             Domain domain = getDomainById(zimbraIdStr, ctxt);
             
@@ -2133,7 +2144,7 @@ public class LdapProvisioning extends Provisioning {
         return getDistributionLists(addrs, directOnly, via, false);
     }
 
-    private LdapDistributionList getDistributionListByQuery(String base, String query, DirContext initCtxt) throws ServiceException {
+    private DistributionList getDistributionListByQuery(String base, String query, DirContext initCtxt) throws ServiceException {
         DirContext ctxt = initCtxt;
         try {
             if (ctxt == null)
@@ -2142,7 +2153,7 @@ public class LdapProvisioning extends Provisioning {
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 ne.close();
-                return new LdapDistributionList(sr.getNameInNamespace(), sr.getAttributes());
+                return makeDistributionList(sr.getNameInNamespace(), sr.getAttributes(), this);
             }
         } catch (NameNotFoundException e) {
             return null;
@@ -3114,7 +3125,7 @@ public class LdapProvisioning extends Provisioning {
         
         String emailAddress = LdapUtil.getAttrString(attrs, Provisioning.A_zimbraMailDeliveryAddress);
         if (emailAddress == null)
-            emailAddress = LdapUtil.dnToEmail(dn);
+            emailAddress = mDIT.dnToEmail(dn);
         
         Account acct = (isAccount) ? new LdapAccount(dn, emailAddress, attrs, null) : new LdapCalendarResource(dn, emailAddress, attrs, null);
         Cos cos = getCOS(acct);
@@ -3122,6 +3133,23 @@ public class LdapProvisioning extends Provisioning {
         return acct;
     }
     
+    private Alias makeAlias(String dn, Attributes attrs, LdapProvisioning prov) throws NamingException, ServiceException {
+        String emailAddress = mDIT.dnToEmail(dn);
+        
+        Alias alias = new LdapAlias(dn, emailAddress, attrs);
+        
+        return alias;
+    }
+    
+    private DistributionList makeDistributionList(String dn, Attributes attrs, LdapProvisioning prov) throws NamingException, ServiceException {
+        String emailAddress = LdapUtil.getAttrString(attrs, Provisioning.A_mail);
+        if (emailAddress == null)
+            emailAddress = mDIT.dnToEmail(dn);
+        
+        DistributionList alias = new LdapDistributionList(dn, emailAddress, attrs);
+        
+        return alias;
+    }
 
 
     /**

@@ -670,7 +670,8 @@ public class AttributeManager {
         pw.println("# LDAP entry that contains initial default Zimbra global config.");
         pw.println("# " + buildVersion()); 
         
-        pw.println("dn: cn=config,cn=zimbra");
+        String baseDn = getBaseDn("config");
+        pw.println("dn: cn=config," + baseDn);
         pw.println("objectclass: organizationalRole");
         pw.println("cn: config");
         pw.println("objectclass: zimbraGlobalConfig");
@@ -696,7 +697,8 @@ public class AttributeManager {
         pw.println("# LDAP entry for the default Zimbra COS.");
         pw.println("# " + buildVersion()); 
 
-        pw.println("dn: cn=default,cn=cos,cn=zimbra");
+        String baseDn = getBaseDn("cos");
+        pw.println("dn: cn=default,cn=cos," + baseDn);
         pw.println("cn: default");
         pw.println("objectclass: zimbraCOS");
         pw.println("zimbraId: e00428a1-0c00-11d9-836a-000d93afea2a");
@@ -946,6 +948,14 @@ public class AttributeManager {
     	    return "unknown";
         }
         return version;
+    }
+    
+    private String getBaseDn(String entry) {
+        String baseDn = System.getProperty(entry + ".basedn");
+        if (baseDn == null) {
+            return "cn=zimbra";
+        }
+        return baseDn;
     }
     
     private static String sortCSL(String in) {

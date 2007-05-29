@@ -22,7 +22,7 @@ public class LdapDIT {
      * 
      *         BASE_RDN : A relative RDN under that entries of the same kind reside.
      * DEFAULT_BASE_RDN : A hardcoded BASE_RDN that cannot be changed in subclasses.
-     *  NAMING_RDN_ATTR : The attribute for the left-most RDN of an entry.
+     *  NAMING_RDN_ATTR : The attribute for the left-most RDN of an entry. each entry type must have a NAMING_RDN_ATTR.
      *          BASE_DN : An absolute DN under that a left-most RDN resides.
      */
     
@@ -30,68 +30,88 @@ public class LdapDIT {
      * Defaults tht can be used in subclasses but cannot be changed in subclasses.
      * If a subclass need to use different values it has to define it's own variables.
      */
+    protected final String DEFAULT_CONFIG_BASE_DN        = "cn=zimbra";
+    
     protected final String DEFAULT_BASE_RDN_ADMIN        = "cn=admins";
+    protected final String DEFAULT_BASE_RDN_ACCOUNT      = "ou=people";
     protected final String DEFAULT_BASE_RDN_COS          = "cn=cos";
-    protected final String DEFAULT_BASE_RDN_GLOBALCONFIG = "cn=config";
     protected final String DEFAULT_BASE_RDN_MIME         = "cn=mime";
     protected final String DEFAULT_BASE_RDN_SERVER       = "cn=servers";
     protected final String DEFAULT_BASE_RDN_ZIMLET       = "cn=zimlets";
+    
+    protected final String DEFAULT_NAMING_RDN_ATTR_ACCOUNT       = "uid";
+    protected final String DEFAULT_NAMING_RDN_ATTR_ADMIN         = "uid";
+    protected final String DEFAULT_NAMING_RDN_ATTR_COS           = "cn";
+    protected final String DEFAULT_NAMING_RDN_ATTR_GLOBALCONFIG  = "cn";
+    protected final String DEFAULT_NAMING_RDN_ATTR_MIME          = "cn";
+    protected final String DEFAULT_NAMING_RDN_ATTR_SERVER        = "cn";
+    protected final String DEFAULT_NAMING_RDN_ATTR_ZIMLET        = "cn";
     
     /*
      * Variables that has to be set in the init method
      */
     protected String BASE_RDN_ACCOUNT;
     
-    protected String NAMING_RDN_ATTR_ACCOUNT;
-    protected String NAMING_RDN_ATTR_COS;
-    protected String NAMING_RDN_ATTR_MIME;
-    protected String NAMING_RDN_ATTR_SERVER;
-    protected String NAMING_RDN_ATTR_ZIMLET;
-    
     protected String BASE_DN_ADMIN;
+    protected String BASE_DN_ACCOUNT;
     protected String BASE_DN_COS; 
-    protected String BASE_DN_GLOBALCONFIG;     
     protected String BASE_DN_MIME;
     protected String BASE_DN_SERVER;
     protected String BASE_DN_ZIMLET;
-    
+     
+    protected String NAMING_RDN_ATTR_ACCOUNT;
+    protected String NAMING_RDN_ATTR_ADMIN;
+    protected String NAMING_RDN_ATTR_COS;
+    protected String NAMING_RDN_ATTR_GLOBALCONFIG;
+    protected String NAMING_RDN_ATTR_MIME;
+    protected String NAMING_RDN_ATTR_SERVER;
+    protected String NAMING_RDN_ATTR_ZIMLET;
+
+    protected String DN_GLOBALCONFIG;
+
+
     public LdapDIT() {
         init();
         verify();
     }
     
     protected void init() {
-        BASE_RDN_ACCOUNT = "ou=people";
+        String configBase = DEFAULT_CONFIG_BASE_DN;
 
-        NAMING_RDN_ATTR_ACCOUNT = "uid";
-        NAMING_RDN_ATTR_COS     = "cn";
-        NAMING_RDN_ATTR_MIME    = "cn";
-        NAMING_RDN_ATTR_SERVER  = "cn";
-        NAMING_RDN_ATTR_ZIMLET  = "cn";
+        BASE_RDN_ACCOUNT  = DEFAULT_BASE_RDN_ACCOUNT;
+
+        NAMING_RDN_ATTR_ACCOUNT       = DEFAULT_NAMING_RDN_ATTR_ACCOUNT;
+        NAMING_RDN_ATTR_ADMIN         = DEFAULT_NAMING_RDN_ATTR_ADMIN;
+        NAMING_RDN_ATTR_COS           = DEFAULT_NAMING_RDN_ATTR_COS;
+        NAMING_RDN_ATTR_GLOBALCONFIG  = DEFAULT_NAMING_RDN_ATTR_GLOBALCONFIG;
+        NAMING_RDN_ATTR_MIME          = DEFAULT_NAMING_RDN_ATTR_MIME;
+        NAMING_RDN_ATTR_SERVER        = DEFAULT_NAMING_RDN_ATTR_SERVER;
+        NAMING_RDN_ATTR_ZIMLET        = DEFAULT_NAMING_RDN_ATTR_ZIMLET;
         
-        String configBase = "cn=zimbra";
+        DN_GLOBALCONFIG      = NAMING_RDN_ATTR_GLOBALCONFIG + "=config" + "," + configBase; 
        
-        BASE_DN_ADMIN        = DEFAULT_BASE_RDN_ADMIN        + "," + configBase;
-        BASE_DN_COS          = DEFAULT_BASE_RDN_COS          + "," + configBase; 
-        BASE_DN_GLOBALCONFIG = DEFAULT_BASE_RDN_GLOBALCONFIG + "," + configBase;     
-        BASE_DN_MIME         = DEFAULT_BASE_RDN_MIME         + "," + BASE_DN_GLOBALCONFIG;
-        BASE_DN_SERVER       = DEFAULT_BASE_RDN_SERVER       + "," + configBase;
-        BASE_DN_ZIMLET       = DEFAULT_BASE_RDN_ZIMLET       + "," + configBase;
+        BASE_DN_ADMIN        = DEFAULT_BASE_RDN_ADMIN       + "," + configBase;
+        BASE_DN_COS          = DEFAULT_BASE_RDN_COS         + "," + configBase; 
+        BASE_DN_MIME         = DEFAULT_BASE_RDN_MIME        + "," + DN_GLOBALCONFIG;
+        BASE_DN_SERVER       = DEFAULT_BASE_RDN_SERVER      + "," + configBase;
+        BASE_DN_ZIMLET       = DEFAULT_BASE_RDN_ZIMLET      + "," + configBase;
     }
     
     private final void verify() {
         if (BASE_RDN_ACCOUNT == null ||
             NAMING_RDN_ATTR_ACCOUNT == null ||
+            NAMING_RDN_ATTR_ADMIN == null ||
             NAMING_RDN_ATTR_COS == null ||
+            NAMING_RDN_ATTR_GLOBALCONFIG == null ||
             NAMING_RDN_ATTR_MIME == null ||
             NAMING_RDN_ATTR_SERVER == null ||
             NAMING_RDN_ATTR_ZIMLET == null ||
             BASE_DN_ADMIN == null ||
             BASE_DN_COS == null ||
-            BASE_DN_GLOBALCONFIG == null ||  
             BASE_DN_MIME == null ||
             BASE_DN_SERVER == null ||
-            BASE_DN_ZIMLET == null)
+            BASE_DN_ZIMLET == null ||
+            DN_GLOBALCONFIG == null)
             Zimbra.halt("Unable to initialize LDAP DIT");
     }
     
@@ -100,6 +120,9 @@ public class LdapDIT {
      *   account
      * ===========
      */
+    public String accountNamingRdnAttr() {
+        return NAMING_RDN_ATTR_ACCOUNT;
+    }
 
     // TODO deprecate and fix all call points that still use it
     public String emailToDN(String localPart, String domain) {
@@ -133,12 +156,42 @@ public class LdapDIT {
      *   admin account
      * =================
      */
+    public String adminNamingRdnAttr() {
+        return NAMING_RDN_ATTR_ADMIN;
+    }
+    
     public String adminBaseDN() {
         return BASE_DN_ADMIN;
     }
     
     public String adminNameToDN(String name) {
         return NAMING_RDN_ATTR_ACCOUNT + "=" + LdapUtil.escapeRDNValue(name) + "," + BASE_DN_ADMIN;
+    }
+    
+    /**
+     * Given a dn like "uid=foo,ou=people,dc=widgets,dc=com", return the string "foo@widgets.com".
+     * 
+     * @param dn
+     * @return
+     */
+    public String dnToEmail(String dn) {
+        String [] parts = dn.split(",");
+        StringBuffer domain = new StringBuffer(dn.length());
+        String uid = null;
+        for (int i = 0; i < parts.length; i++) {
+            if (parts[i].startsWith("dc=")) {
+                if (domain.length() > 0)
+                    domain.append(".");
+                domain.append(LdapUtil.unescapeRDNValue(parts[i].substring(3)));
+            } else if (parts[i].startsWith("uid=")) {
+                uid = LdapUtil.unescapeRDNValue(parts[i].substring(4));
+            }
+        }
+        if (uid == null)
+            return null; // TODO should this be an exception
+        if (domain.length() == 0)
+            return uid;
+        return new StringBuffer(uid).append('@').append(domain).toString();
     }
     
     
@@ -179,17 +232,26 @@ public class LdapDIT {
      */
     // TODO deprecate and fix all call points that still use it
     public String domainToAccountBaseDN(String domain) {
-        return BASE_RDN_ACCOUNT + "," + LdapUtil.domainToDN(domain);
+        if (BASE_RDN_ACCOUNT.length()==0)
+            return LdapUtil.domainToDN(domain);
+        else
+            return BASE_RDN_ACCOUNT + "," + LdapUtil.domainToDN(domain);
     }
 
     // TODO deprecate and fix all call points that still use it
     public String domainToAccountBaseDN(LdapDomain domain) {
-        return BASE_RDN_ACCOUNT + "," + domain.getDN();
+        if (BASE_RDN_ACCOUNT.length()==0)
+            return domain.getDN();
+        else
+            return BASE_RDN_ACCOUNT + "," + domain.getDN();
     }
 
     // TODO deprecate and fix all call points that still use it
     public String domainDNToAccountBaseDN(String domainDN) {
-        return BASE_RDN_ACCOUNT + "," + domainDN;
+        if (BASE_RDN_ACCOUNT.length()==0)
+            return domainDN;
+        else
+            return BASE_RDN_ACCOUNT + "," + domainDN;
     }
     
     
@@ -199,7 +261,7 @@ public class LdapDIT {
      * ==============
      */
     public String configDN() {
-        return BASE_DN_GLOBALCONFIG;
+        return DN_GLOBALCONFIG;
     }
 
    
