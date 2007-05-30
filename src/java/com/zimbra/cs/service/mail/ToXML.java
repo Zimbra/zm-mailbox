@@ -36,7 +36,6 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
@@ -1129,30 +1128,24 @@ public class ToXML {
 
         e.addAttribute(MailConstants.A_CAL_RSVP, invite.getRsvp());
         
-        Account acct = calItem.getMailbox().getAccount();
         if (allFields) {
             boolean isRecurring = false;
-            try {
-                e.addAttribute("x_uid", invite.getUid());
-                e.addAttribute(MailConstants.A_CAL_SEQUENCE, invite.getSeqNo());
+            e.addAttribute("x_uid", invite.getUid());
+            e.addAttribute(MailConstants.A_CAL_SEQUENCE, invite.getSeqNo());
 
-                String itemId = ifmt.formatItemId(calItem);
-                e.addAttribute(MailConstants.A_CAL_ID, itemId);
-                if (invite.isEvent())
-                    e.addAttribute(MailConstants.A_APPT_ID_DEPRECATE_ME, itemId);  // for backward compat
+            String itemId = ifmt.formatItemId(calItem);
+            e.addAttribute(MailConstants.A_CAL_ID, itemId);
+            if (invite.isEvent())
+                e.addAttribute(MailConstants.A_APPT_ID_DEPRECATE_ME, itemId);  // for backward compat
 
-                if (invite.thisAcctIsOrganizer(acct)) {
-                    e.addAttribute(MailConstants.A_CAL_ISORG, true);
-                }
+            if (invite.isOrganizer())
+                e.addAttribute(MailConstants.A_CAL_ISORG, true);
 
-                Recurrence.IRecurrence recur = invite.getRecurrence();
-                if (recur != null) {
-                    isRecurring = true;
-                    Element recurElt = e.addElement(MailConstants.E_CAL_RECUR);
-                    recur.toXml(recurElt);
-                }
-            } catch(ServiceException ex) {
-                ex.printStackTrace();
+            Recurrence.IRecurrence recur = invite.getRecurrence();
+            if (recur != null) {
+                isRecurring = true;
+                Element recurElt = e.addElement(MailConstants.E_CAL_RECUR);
+                recur.toXml(recurElt);
             }
 
             e.addAttribute(MailConstants.A_CAL_STATUS, invite.getStatus());

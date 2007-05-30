@@ -48,7 +48,6 @@ import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.redolog.op.CreateCalendarItemPlayer;
 import com.zimbra.cs.redolog.op.CreateCalendarItemRecorder;
@@ -95,7 +94,7 @@ public class Appointment extends CalendarItem {
     public String getEffectiveFreeBusyActual(Invite inv, Instance inst) throws ServiceException {
         Account acct = getMailbox().getAccount();
         ZAttendee at = getReplyList().getEffectiveAttendee(acct, inv, inst);
-        if (at == null || inv.isOrganizer(at)) {
+        if (at == null || inv.isOrganizer()) {
             return inv.getFreeBusyActual();
         }
 
@@ -258,7 +257,7 @@ public class Appointment extends CalendarItem {
             !invite.isCancel() &&
             !invite.isTodo();
 
-        if (invite.thisAcctIsOrganizer(account)) {
+        if (invite.isOrganizer()) {
             // Organizer always accepts.
             partStat = IcalXmlStrMap.PARTSTAT_ACCEPTED;
         } else if (account instanceof CalendarResource && needResourceAutoReply) {

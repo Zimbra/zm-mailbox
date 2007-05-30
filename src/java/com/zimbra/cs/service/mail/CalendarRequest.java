@@ -262,7 +262,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
     throws ServiceException {
         synchronized (mbox) {
             if (csd.mInvite.hasOrganizer()) {
-                boolean isOrganizer = csd.mInvite.thisAcctIsOrganizer(acct);
+                boolean isOrganizer = csd.mInvite.isOrganizer();
                 ICalTok method = ICalTok.lookup(csd.mInvite.getMethod());
                 switch (method) {
                 case REQUEST:
@@ -406,7 +406,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             CalendarItem calItem, Invite inv,
             List<ZAttendee> toCancel)
     throws ServiceException {
-        if (!inv.thisAcctIsOrganizer(acct)) {
+        if (!inv.isOrganizer()) {
             // we ONLY should update the removed attendees if we are the organizer!
             return;
         }

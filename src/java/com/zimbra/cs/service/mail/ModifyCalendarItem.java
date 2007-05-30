@@ -119,9 +119,9 @@ public class ModifyCalendarItem extends CalendarRequest {
         ModifyCalendarItemParser parser = new ModifyCalendarItemParser(mbox, inv);
         
         CalSendData dat = handleMsgElement(zsc, msgElem, acct, mbox, parser);
-        
+
         // If we are sending this update to other people, then we MUST be the organizer!
-        if (!inv.thisAcctIsOrganizer(acct)) {
+        if (!inv.isOrganizer()) {
             try {
                 Address[] rcpts = dat.mMm.getAllRecipients();
                 if (rcpts != null && rcpts.length > 0) {

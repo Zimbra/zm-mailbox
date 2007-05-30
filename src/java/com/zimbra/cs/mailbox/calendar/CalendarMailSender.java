@@ -409,7 +409,8 @@ public class CalendarMailSender {
         Invite reply =
             new Invite(oldInv.getItemType(), ICalTok.REPLY.toString(),
                        new TimeZoneMap(
-                               ICalTimeZone.getAccountTimeZone(onBehalfOf ? authAcct : acct)));
+                               ICalTimeZone.getAccountTimeZone(onBehalfOf ? authAcct : acct)),
+                       oldInv.isOrganizer());
 
         reply.getTimeZoneMap().add(oldInv.getTimeZoneMap());
 

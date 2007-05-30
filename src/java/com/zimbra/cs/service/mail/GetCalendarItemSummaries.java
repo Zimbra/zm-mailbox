@@ -115,7 +115,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
             if (defDuration != null && defaultInvite.getStartTime() != null)
                 defDurationMsecs = defDuration.getDurationAsMsecs(defaultInvite.getStartTime().getDate());
             
-            boolean defIsOrg = defaultInvite.thisAcctIsOrganizer(acct);
+            boolean defIsOrg = defaultInvite.isOrganizer();
             
             String defaultFba = null;
             if (calItem instanceof Appointment)
@@ -219,7 +219,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                                 }
                             }
 
-                            boolean thisInvIsOrg = inv.thisAcctIsOrganizer(acct);
+                            boolean thisInvIsOrg = inv.isOrganizer();
                             if (thisInvIsOrg!= defIsOrg) {
                                 instElt.addAttribute(MailConstants.A_CAL_ISORG, thisInvIsOrg);
                             }

@@ -104,7 +104,7 @@ public abstract class CalendarItem extends MailItem {
     private TimeZoneMap mTzMap;
 
     private List<Invite> mInvites;
-    
+
     private ReplyList mReplyList;
     protected ReplyList getReplyList() { return mReplyList; }
 
@@ -281,7 +281,9 @@ public abstract class CalendarItem extends MailItem {
         data.tags     = tags;
         data.sender   = sender;
         data.subject = subject;
-        data.metadata = encodeMetadata(DEFAULT_COLOR, uid, startTime, endTime, recur, invites, firstInvite.getTimeZoneMap(), new ReplyList());
+        data.metadata = encodeMetadata(DEFAULT_COLOR, uid, startTime, endTime,
+                                       recur, invites, firstInvite.getTimeZoneMap(),
+                                       new ReplyList());
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 
@@ -415,14 +417,21 @@ public abstract class CalendarItem extends MailItem {
     }
 
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mUid, mStartTime, mEndTime, mRecurrence, mInvites, mTzMap, mReplyList);
+        return encodeMetadata(meta, mColor, mUid, mStartTime, mEndTime,
+                              mRecurrence, mInvites, mTzMap, mReplyList);
     }
     private static String encodeMetadata(byte color, String uid, long startTime, long endTime,
-                                         Recurrence.IRecurrence recur, List /*Invite */ invs, TimeZoneMap tzmap, ReplyList replyList) {
-        return encodeMetadata(new Metadata(), color, uid, startTime, endTime, recur, invs, tzmap, replyList).toString();
+                                         Recurrence.IRecurrence recur,
+                                         List /*Invite */ invs, TimeZoneMap tzmap,
+                                         ReplyList replyList) {
+        return encodeMetadata(new Metadata(), color, uid, startTime, endTime, recur, invs, tzmap,
+                              replyList).toString();
     }
-    static Metadata encodeMetadata(Metadata meta, byte color, String uid, long startTime, long endTime,
-                                   Recurrence.IRecurrence recur, List /*Invite */ invs, TimeZoneMap tzmap, ReplyList replyList) {
+    static Metadata encodeMetadata(Metadata meta, byte color, String uid,
+                                   long startTime, long endTime,
+                                   Recurrence.IRecurrence recur,
+                                   List /*Invite */ invs, TimeZoneMap tzmap,
+                                   ReplyList replyList) {
         meta.put(Metadata.FN_TZMAP, tzmap.encodeAsMetadata());
         meta.put(Metadata.FN_UID, uid);
         meta.put(Metadata.FN_CALITEM_START, startTime);
@@ -430,7 +439,7 @@ public abstract class CalendarItem extends MailItem {
         meta.put(Metadata.FN_NUM_COMPONENTS, invs.size());
         
         meta.put(Metadata.FN_REPLY_LIST, replyList.encodeAsMetadata());
-        
+
         int num = 0;
         for (Iterator iter = invs.iterator(); iter.hasNext();) {
             Invite comp = (Invite) iter.next();
@@ -720,47 +729,21 @@ public abstract class CalendarItem extends MailItem {
     }
     
     private boolean processNewInviteRequestOrCancel(ZOrganizer originalOrganizer,
-                                                 ParsedMessage pm,
-                                                 Invite newInvite,
-                                                 boolean force,
-                                                 int folderId,
-                                                 short volumeId)
+                                                    ParsedMessage pm,
+                                                    Invite newInvite,
+                                                    boolean force,
+                                                    int folderId,
+                                                    short volumeId)
     throws ServiceException {
 
-        // Remove everyone that is made obselete by this request
+        // Remove everyone that is made obsolete by this request
         boolean addNewOne = true;
         boolean isCancel = newInvite.isCancel();
 
         if (!canAccess(isCancel ? ACL.RIGHT_DELETE : ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this appointment/task");
 
-        // Look for potentially malicious change in organizer.
-        if (newInvite.hasOrganizer()) {
-            String newOrgAddr = newInvite.getOrganizer().getAddress();
-            if (originalOrganizer == null) {
-                // If organizer was previously unset, it means the appointment/task
-                // had no attendee, i.e. a personal event.  When attendees are
-                // added to a personal event, organizer must be set and only
-                // to self.
-                if (!newInvite.thisAcctIsOrganizer(getAccount()))
-                    throw ServiceException.INVALID_REQUEST(
-                            "Changing organizer of an appointment/task to another user is not allowed: old=(unspecified), new=" + newOrgAddr, null);
-            } else {
-                // Both old and new organizers are set.  They must be the
-                // same address.
-                String origOrgAddr = originalOrganizer.getAddress();
-                if (!newOrgAddr.equalsIgnoreCase(origOrgAddr))
-                    throw ServiceException.INVALID_REQUEST(
-                            "Changing organizer of an appointment/task is not allowed: old=" + origOrgAddr + ", new=" + newOrgAddr, null);
-            }
-        } else {
-            // Allow unsetting organizer only when previously set organizer
-            // is self.
-            if (originalOrganizer != null &&
-                !AccountUtil.addressMatchesAccount(getAccount(), originalOrganizer.getAddress()))
-                throw ServiceException.INVALID_REQUEST(
-                        "Removing organizer of an appointment/task is not allowed", null);
-        }
+        organizerChangeCheck(newInvite);
 
         // If modifying recurrence series (rather than an instance) and the
         // start time (HH:MM:SS) is changing, we need to update the time
@@ -847,7 +830,7 @@ public abstract class CalendarItem extends MailItem {
             newInvite.setCalendarItem(this);
             Account account = getMailbox().getAccount();
             boolean thisAcctIsOrganizer =
-                newInvite.thisAcctIsOrganizer(account);
+                newInvite.isOrganizer();
             if (prev!=null && !thisAcctIsOrganizer && newInvite.sentByMe()) {
                 // A non-organizer attendee is modifying data on his/her
                 // appointment/task.  Any information that is tracked in
@@ -951,7 +934,85 @@ public abstract class CalendarItem extends MailItem {
             }
         }
     }
-    
+
+    /**
+     * Check to make sure the new invite doesn't change the organizer in a disallowed way.
+     * @param newInvite
+     * @throws ServiceException
+     */
+    private void organizerChangeCheck(Invite newInvite) throws ServiceException {
+        Invite originalInvite = null;
+        if (!newInvite.hasRecurId()) {
+            // New invite is not for an exception.
+            originalInvite = getDefaultInviteOrNull();
+        } else {
+            // New invite is for an exception.
+            boolean found = false;
+            RecurId newRid = newInvite.getRecurId();
+            for (Invite inv : mInvites) {
+                if (inv.hasRecurId() && newRid.equals(inv.getRecurId())) {
+                    originalInvite = inv;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                // If no invite with matching RECURRENCE-ID was found, use the default invite.
+                originalInvite = getDefaultInviteOrNull();
+            }
+        }
+        if (originalInvite == null) {
+            // If no "default" invite was found, use the first one.
+            if (mInvites.size() > 0)
+                originalInvite = mInvites.get(0);
+            if (originalInvite == null) {
+                // Still no invite.  Something is seriously wrong.  Return without any further
+                // checks in this method.
+                return;
+            }
+        }
+
+        ZOrganizer originalOrganizer = originalInvite.getOrganizer();
+        if (!originalInvite.isOrganizer()) {
+            // This account WAS NOT the organizer.  Prevent organizer change.
+            if (newInvite.hasOrganizer()) {
+                String newOrgAddr = newInvite.getOrganizer().getAddress();
+                if (originalOrganizer == null) {
+                    throw ServiceException.INVALID_REQUEST(
+                            "Changing organizer of an appointment/task to another user is not allowed: old=(unspecified), new=" + newOrgAddr, null);
+                } else {
+                    // Both old and new organizers are set.  They must be the
+                    // same address.
+                    String origOrgAddr = originalOrganizer.getAddress();
+                    if (!newOrgAddr.equalsIgnoreCase(origOrgAddr))
+                        throw ServiceException.INVALID_REQUEST(
+                                "Changing organizer of an appointment/task is not allowed: old=" + origOrgAddr + ", new=" + newOrgAddr, null);
+                }
+            } else if (originalOrganizer != null) {
+                throw ServiceException.INVALID_REQUEST(
+                        "Removing organizer of an appointment/task is not allowed", null);
+            }
+        } else {
+            // Even for the organizer account, don't allow changing the organizer field
+            // to an arbitrary address.
+            if (newInvite.hasOrganizer()) {
+                if (!newInvite.isOrganizer()) {
+                    String newOrgAddr = newInvite.getOrganizer().getAddress();
+                    if (originalOrganizer != null) {
+                        String origOrgAddr = originalOrganizer.getAddress();
+                        throw ServiceException.INVALID_REQUEST(
+                                "Changing organizer of an appointment/task to another user is not allowed: old=" +
+                                origOrgAddr + ", new=" + newOrgAddr, null);
+                    } else {
+                        throw ServiceException.INVALID_REQUEST(
+                                "Changing organizer of an appointment/task to another user is not allowed: old=(unspecified), new=" +
+                                newOrgAddr, null);
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * ParsedMessage DataSource -- for writing a ParsedMessage (new invite)
      * into our combined multipart/alternative Appointment store
@@ -1541,7 +1602,7 @@ public abstract class CalendarItem extends MailItem {
     public String getEffectivePartStat(Invite inv, Instance inst) throws ServiceException {
         Account acct = getMailbox().getAccount();
         ZAttendee at = mReplyList.getEffectiveAttendee(acct, inv, inst);
-        if (at == null || inv.isOrganizer(at)) {
+        if (at == null || inv.isOrganizer()) {
             return inv.getPartStat();
         }
 

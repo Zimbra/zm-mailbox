@@ -161,7 +161,7 @@ public class CancelCalendarItem extends CalendarRequest {
                     calItem, cancelInvite, text, iCal);
         }
         
-        if (!defaultInv.thisAcctIsOrganizer(acct)) {
+        if (!defaultInv.isOrganizer()) {
             try {
                 Address[] rcpts = dat.mMm.getAllRecipients();
                 if (rcpts != null && rcpts.length > 0) {
@@ -212,7 +212,7 @@ public class CancelCalendarItem extends CalendarRequest {
             csd.mMm = CalendarMailSender.createCancelMessage(acct, rcpts, onBehalfOf, authAcct, calItem, inv, text, iCal);
         }
         
-        if (!inv.thisAcctIsOrganizer(acct)) {
+        if (!inv.isOrganizer()) {
             try {
                 Address[] rcpts = csd.mMm.getAllRecipients();
                 if (rcpts != null && rcpts.length > 0) {

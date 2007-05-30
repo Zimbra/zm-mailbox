@@ -115,7 +115,7 @@ public class CalendarUtils {
         if (tzMap == null) {
             tzMap = new TimeZoneMap(ICalTimeZone.getAccountTimeZone(account));
         }
-        Invite create = new Invite(ICalTok.PUBLISH.toString(), tzMap);
+        Invite create = new Invite(ICalTok.PUBLISH.toString(), tzMap, false);
 
         CalendarUtils.parseInviteElementCommon(
                 account, itemType, inviteElem, create, recurrenceIdAllowed, recurAllowed);
@@ -156,8 +156,7 @@ public class CalendarUtils {
             Account account, byte itemType, Element inviteElem, Invite oldInv,
             List<ZAttendee> attendeesToCancel, boolean recurAllowed)
             throws ServiceException {
-        Invite mod = new Invite(ICalTok.PUBLISH.toString(), oldInv
-                .getTimeZoneMap());
+        Invite mod = new Invite(ICalTok.PUBLISH.toString(), oldInv.getTimeZoneMap(), false);
 
         CalendarUtils.parseInviteElementCommon(
                 account, itemType, inviteElem, mod, oldInv.hasRecurId(), recurAllowed);
@@ -200,7 +199,7 @@ public class CalendarUtils {
         if (tzMap == null) {
             tzMap = new TimeZoneMap(ICalTimeZone.getAccountTimeZone(account));
         }
-        Invite cancel = new Invite(ICalTok.CANCEL.toString(), tzMap);
+        Invite cancel = new Invite(ICalTok.CANCEL.toString(), tzMap, false);
 
         CalendarUtils.parseInviteElementCommon(
                 account, itemType, inviteElem, cancel, recurrenceIdAllowed, recurAllowed);
@@ -833,6 +832,10 @@ public class CalendarUtils {
             newInv.setOrganizer(org);
         }
 
+        // Once we have organizer and attendee information, we can tell if this account is the
+        // organizer in this invite or not.
+        newInv.setIsOrganizer(account);
+
         // RECUR
         Element recur = element.getOptionalElement(MailConstants.A_CAL_RECUR);
         if (recur != null) {
@@ -959,7 +962,7 @@ public class CalendarUtils {
             boolean incrementSeq)
     throws ServiceException {
         Invite cancel = new Invite(inv.getItemType(), ICalTok.CANCEL.toString(),
-                                   inv.getTimeZoneMap());
+                                   inv.getTimeZoneMap(), inv.isOrganizer());
 
         // ORGANIZER
         if (inv.hasOrganizer()) {
@@ -1011,7 +1014,7 @@ public class CalendarUtils {
             // Increment only if this account is the organizer.  If this
             // account is a non-organizer attendee, leave the sequence at
             // present value.  (bug 8465)
-            if (acct != null && inv.thisAcctIsOrganizer(acct))
+            if (acct != null && inv.isOrganizer())
                 seq++;
         }
         cancel.setSeqNo(seq);
