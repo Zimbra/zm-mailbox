@@ -1210,14 +1210,27 @@ public abstract class Provisioning {
     public static final String A_zimbraPrefIMNotifyPresence = "zimbraPrefIMNotifyPresence";
     public static final String A_zimbraPrefIMNotifyStatus   = "zimbraPrefIMNotifyStatus";
     
-
     /*
      * spam report headers
      */
     public static final String A_zimbraSpamReportSenderHeader = "zimbraSpamReportSenderHeader";
     public static final String A_zimbraSpamReportTypeHeader   = "zimbraSpamReportTypeHeader";
     public static final String A_zimbraSpamReportTypeSpam     = "zimbraSpamReportTypeSpam";
-    public static final String A_zimbraSpamReportTypeHam     = "zimbraSpamReportTypeHam";
+    public static final String A_zimbraSpamReportTypeHam      = "zimbraSpamReportTypeHam";
+    
+    /*
+     * proxy
+     */
+    public static final String A_zimbraProxyMailHostQuery        = "zimbraProxyMailHostQuery";
+    public static final String A_zimbraProxyMailHostSearchBase   = "zimbraProxyMailHostSearchBase";
+    public static final String A_zimbraProxyMailHostAttribute    = "zimbraProxyMailHostAttribute";
+    public static final String A_zimbraProxyPortQuery            = "zimbraProxyPortQuery";
+    public static final String A_zimbraProxyPortSearchBase       = "zimbraProxyPortSearchBase";
+    public static final String A_zimbraProxyPop3PortAttribute    = "zimbraProxyPop3PortAttribute";
+    public static final String A_zimbraProxyPop3SSLPortAttribute = "zimbraProxyPop3SSLPortAttribute";
+    public static final String A_zimbraProxyImapPortAttribute    = "zimbraProxyImapPortAttribute";
+    public static final String A_zimbraProxyImapSSLPortAttribute = "zimbraProxyImapSSLPortAttribute";
+
     
     private static Provisioning sProvisioning;
 

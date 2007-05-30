@@ -2150,4 +2150,47 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>show selection checkbox for selecting email, contact, voicemial items in a list view for batch operations</desc>
 </attr>  
 
+<attr id="472" name="zimbraProxyMailHostQuery" type="string" cardinality="single" optionalIn="globalConfig">
+  <globalConfigValue>(|(zimbraMailDeliveryAddress=${USER})(zimbraMailAlias=${USER}))</globalConfigValue>
+  <desc>LDAP query to find a user</desc>
+</attr>
+
+<attr id="473" name="zimbraProxyMailHostSearchBase" type="string" cardinality="single" optionalIn="globalConfig">
+  <desc>search base for zimbraProxyMailHostQuery</desc>
+</attr>
+
+<attr id="474" name="zimbraProxyMailHostAttribute" type="string" cardinality="single" optionalIn="globalConfig">
+  <globalConfigValue>zimbraMailHost</globalConfigValue>
+  <desc>LDAP attribute that contains mailhost for the user</desc>
+</attr>
+
+<attr id="475" name="zimbraProxyPortQuery" type="string" cardinality="single" optionalIn="globalConfig">
+  <globalConfigValue>(&amp;(zimbraServiceHostname=${MAILHOST})(objectClass=zimbraServer))</globalConfigValue>
+  <desc>LDAP query to find server object</desc>
+</attr>
+
+<attr id="476" name="zimbraProxyPortSearchBase" type="string" cardinality="single" optionalIn="globalConfig">
+  <desc>search base for zimbraProxyPortQuery</desc>
+</attr>
+
+<attr id="477" name="zimbraProxyPop3PortAttribute" type="string" cardinality="single" optionalIn="globalConfig">
+  <globalConfigValue>zimbraPop3BindPort</globalConfigValue>
+  <desc>attribute that contains pop3 bind port</desc>
+</attr>
+
+<attr id="478" name="zimbraProxyPop3SSLPortAttribute" type="string" cardinality="single" optionalIn="globalConfig">
+  <globalConfigValue>zimbraPop3SSLBindPort</globalConfigValue>
+  <desc>attribute that contains pop3 bind port for SSL</desc>
+</attr>
+
+<attr id="479" name="zimbraProxyImapPortAttribute" type="string" cardinality="single" optionalIn="globalConfig">
+  <globalConfigValue>zimbraImapBindPort</globalConfigValue>
+  <desc>attribute that contains imap bind port</desc>
+</attr>
+
+<attr id="480" name="zimbraProxyImapSSLPortAttribute" type="string" cardinality="single" optionalIn="globalConfig">
+  <globalConfigValue>zimbraImapSSLBindPort</globalConfigValue>
+  <desc>attribute that contains imap bind port for SSL</desc>
+</attr>
+
 </attrs>
