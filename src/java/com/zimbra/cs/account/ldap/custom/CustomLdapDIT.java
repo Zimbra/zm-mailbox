@@ -27,7 +27,7 @@ public class CustomLdapDIT extends LdapDIT {
          * "" dn, it can do so by setting the ldap_config_base_dn to empty.
          * The default value in LC for this known key is "cn=zimbra"
          */
-       String configBase = LC.get("ldap_config_base_dn");
+        BASE_DN_CONFIG_BRANCH = LC.get("ldap_config_base_dn");
 
         /*
          * If a LDAP design does not need a base rdn for accounts, the ldap_account_base_rdn
@@ -37,20 +37,19 @@ public class CustomLdapDIT extends LdapDIT {
         BASE_RDN_ACCOUNT  = LC.get("ldap_account_base_rdn");
 
         NAMING_RDN_ATTR_ACCOUNT       = getLC("ldap_account_naming_rdn_attr",      DEFAULT_NAMING_RDN_ATTR_ACCOUNT);
-        NAMING_RDN_ATTR_ADMIN         = getLC("ldap_admin_naming_rdn_attr",        DEFAULT_NAMING_RDN_ATTR_ADMIN);
         NAMING_RDN_ATTR_COS           = getLC("ldap_cos_naming_rdn_attr",          DEFAULT_NAMING_RDN_ATTR_COS);
         NAMING_RDN_ATTR_GLOBALCONFIG  = getLC("ldap_globalconfig_naming_rdn_attr", DEFAULT_NAMING_RDN_ATTR_GLOBALCONFIG);
         NAMING_RDN_ATTR_MIME          = getLC("ldap_mime_naming_rdn_attr",         DEFAULT_NAMING_RDN_ATTR_MIME);
         NAMING_RDN_ATTR_SERVER        = getLC("ldap_server_naming_rdn_attr",       DEFAULT_NAMING_RDN_ATTR_SERVER);
         NAMING_RDN_ATTR_ZIMLET        = getLC("ldap_zimlet_naming_rdn_attr",       DEFAULT_NAMING_RDN_ATTR_ZIMLET);
        
-        DN_GLOBALCONFIG   = NAMING_RDN_ATTR_GLOBALCONFIG + "=config" + "," + configBase; 
+        DN_GLOBALCONFIG   = NAMING_RDN_ATTR_GLOBALCONFIG + "=config" + "," + BASE_DN_CONFIG_BRANCH; 
 
-        BASE_DN_ADMIN        = getLC("ldap_admin_base_dn",  DEFAULT_BASE_RDN_ADMIN  + "," + configBase);
-        BASE_DN_COS          = getLC("ldap_cos_base_dn",    DEFAULT_BASE_RDN_COS    + "," + configBase); 
+        BASE_DN_ADMIN        = getLC("ldap_admin_base_dn",  DEFAULT_BASE_RDN_ADMIN  + "," + BASE_DN_CONFIG_BRANCH);
+        BASE_DN_COS          = getLC("ldap_cos_base_dn",    DEFAULT_BASE_RDN_COS    + "," + BASE_DN_CONFIG_BRANCH); 
         BASE_DN_MIME         = getLC("ldap_mime_base_dn",   DEFAULT_BASE_RDN_MIME   + "," + DN_GLOBALCONFIG);
-        BASE_DN_SERVER       = getLC("ldap_server_base_dn", DEFAULT_BASE_RDN_SERVER + "," + configBase);
-        BASE_DN_ZIMLET       = getLC("ldap_zimlet_base_dn", DEFAULT_BASE_RDN_ZIMLET + "," + configBase);
+        BASE_DN_SERVER       = getLC("ldap_server_base_dn", DEFAULT_BASE_RDN_SERVER + "," + BASE_DN_CONFIG_BRANCH);
+        BASE_DN_ZIMLET       = getLC("ldap_zimlet_base_dn", DEFAULT_BASE_RDN_ZIMLET + "," + BASE_DN_CONFIG_BRANCH);
     }
     
     /*
@@ -68,7 +67,6 @@ public class CustomLdapDIT extends LdapDIT {
         if (attrs != null) {
             specialAttrs.handleZimbraId(attrs);
             specialAttrs.handleLdapBaseDn(attrs);
-            specialAttrs.handleLdapRdnAttr(attrs);
         }
         return specialAttrs;
     }

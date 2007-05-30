@@ -727,7 +727,7 @@
 	<target name="zmprov-commands" depends="build-init">
 	    <antcall target="generate-zmprov-commands">
                 <param name="defaultdomain" value="${zimbra.server.hostname}"/>
-            </antcall>
+        </antcall>
 	</target>
     
     <target name="generate-zmprov-commands">

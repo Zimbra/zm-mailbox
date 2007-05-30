@@ -12,15 +12,12 @@ public class SpecialAttrs {
     
     // pseudo attrs
     private static final String PA_ldapBase    = "ldap.baseDn";
-    private static final String PA_ldapRdnAttr = "ldap.rdnAttr";
     
     private String mZimbraId;
     private String mLdapBaseDn;
-    private String mLdapRdnAttr;
     
     public String getZimbraId()     { return mZimbraId; }
     public String getLdapBaseDn()   { return mLdapBaseDn; }
-    public String getLdapRdnAttr()  { return mLdapRdnAttr; }
     
     private String getSingleValuedAttr(Map<String, Object> attrs, String attr) throws ServiceException {
         Object value = attrs.get(attr);
@@ -70,14 +67,5 @@ public class SpecialAttrs {
             mLdapBaseDn = baseDn;
         }
     }
-    
-    public void handleLdapRdnAttr(Map<String, Object> attrs) throws ServiceException {
-        String rdnAttr = getSingleValuedAttr(attrs, PA_ldapRdnAttr);
-        if (rdnAttr != null) {
-            attrs.remove(PA_ldapRdnAttr);
-            mLdapRdnAttr = rdnAttr;
-        }
-    }
-    
 
 }

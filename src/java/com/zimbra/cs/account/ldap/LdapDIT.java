@@ -10,6 +10,16 @@ import com.zimbra.common.util.EmailUtil;
 import com.zimbra.cs.util.Zimbra;
 
 public class LdapDIT {
+    /*
+     * This is out default ldap DIT.  All DNs/RDNs location is hardcoded to avoid 
+     * mis-configuration.  
+     * 
+     * To customize the DIT to a different layout, set the zimbra_class_provisioning
+     * localconfig key to com.zimbra.cs.account.ldap.custom.CustomLdapProvisioning, 
+     * which will use the CustomLdapDIT class that can be customized by a set of
+     * localconfig keys.
+     * 
+     */
     
     /*
      * Vatiable Naming Conventions:
@@ -40,7 +50,6 @@ public class LdapDIT {
     protected final String DEFAULT_BASE_RDN_ZIMLET       = "cn=zimlets";
     
     protected final String DEFAULT_NAMING_RDN_ATTR_ACCOUNT       = "uid";
-    protected final String DEFAULT_NAMING_RDN_ATTR_ADMIN         = "uid";
     protected final String DEFAULT_NAMING_RDN_ATTR_COS           = "cn";
     protected final String DEFAULT_NAMING_RDN_ATTR_GLOBALCONFIG  = "cn";
     protected final String DEFAULT_NAMING_RDN_ATTR_MIME          = "cn";
@@ -50,6 +59,7 @@ public class LdapDIT {
     /*
      * Variables that has to be set in the init method
      */
+    protected String BASE_DN_CONFIG_BRANCH;
     protected String BASE_RDN_ACCOUNT;
     
     protected String BASE_DN_ADMIN;
@@ -60,7 +70,6 @@ public class LdapDIT {
     protected String BASE_DN_ZIMLET;
      
     protected String NAMING_RDN_ATTR_ACCOUNT;
-    protected String NAMING_RDN_ATTR_ADMIN;
     protected String NAMING_RDN_ATTR_COS;
     protected String NAMING_RDN_ATTR_GLOBALCONFIG;
     protected String NAMING_RDN_ATTR_MIME;
@@ -76,31 +85,30 @@ public class LdapDIT {
     }
     
     protected void init() {
-        String configBase = DEFAULT_CONFIG_BASE_DN;
+        BASE_DN_CONFIG_BRANCH = DEFAULT_CONFIG_BASE_DN;
 
         BASE_RDN_ACCOUNT  = DEFAULT_BASE_RDN_ACCOUNT;
 
         NAMING_RDN_ATTR_ACCOUNT       = DEFAULT_NAMING_RDN_ATTR_ACCOUNT;
-        NAMING_RDN_ATTR_ADMIN         = DEFAULT_NAMING_RDN_ATTR_ADMIN;
         NAMING_RDN_ATTR_COS           = DEFAULT_NAMING_RDN_ATTR_COS;
         NAMING_RDN_ATTR_GLOBALCONFIG  = DEFAULT_NAMING_RDN_ATTR_GLOBALCONFIG;
         NAMING_RDN_ATTR_MIME          = DEFAULT_NAMING_RDN_ATTR_MIME;
         NAMING_RDN_ATTR_SERVER        = DEFAULT_NAMING_RDN_ATTR_SERVER;
         NAMING_RDN_ATTR_ZIMLET        = DEFAULT_NAMING_RDN_ATTR_ZIMLET;
         
-        DN_GLOBALCONFIG      = NAMING_RDN_ATTR_GLOBALCONFIG + "=config" + "," + configBase; 
+        DN_GLOBALCONFIG      = NAMING_RDN_ATTR_GLOBALCONFIG + "=config" + "," + BASE_DN_CONFIG_BRANCH; 
        
-        BASE_DN_ADMIN        = DEFAULT_BASE_RDN_ADMIN       + "," + configBase;
-        BASE_DN_COS          = DEFAULT_BASE_RDN_COS         + "," + configBase; 
+        BASE_DN_ADMIN        = DEFAULT_BASE_RDN_ADMIN       + "," + BASE_DN_CONFIG_BRANCH;
+        BASE_DN_COS          = DEFAULT_BASE_RDN_COS         + "," + BASE_DN_CONFIG_BRANCH; 
         BASE_DN_MIME         = DEFAULT_BASE_RDN_MIME        + "," + DN_GLOBALCONFIG;
-        BASE_DN_SERVER       = DEFAULT_BASE_RDN_SERVER      + "," + configBase;
-        BASE_DN_ZIMLET       = DEFAULT_BASE_RDN_ZIMLET      + "," + configBase;
+        BASE_DN_SERVER       = DEFAULT_BASE_RDN_SERVER      + "," + BASE_DN_CONFIG_BRANCH;
+        BASE_DN_ZIMLET       = DEFAULT_BASE_RDN_ZIMLET      + "," + BASE_DN_CONFIG_BRANCH;
     }
     
     private final void verify() {
-        if (BASE_RDN_ACCOUNT == null ||
+        if (BASE_DN_CONFIG_BRANCH == null ||
+            BASE_RDN_ACCOUNT == null ||
             NAMING_RDN_ATTR_ACCOUNT == null ||
-            NAMING_RDN_ATTR_ADMIN == null ||
             NAMING_RDN_ATTR_COS == null ||
             NAMING_RDN_ATTR_GLOBALCONFIG == null ||
             NAMING_RDN_ATTR_MIME == null ||
@@ -113,6 +121,13 @@ public class LdapDIT {
             BASE_DN_ZIMLET == null ||
             DN_GLOBALCONFIG == null)
             Zimbra.halt("Unable to initialize LDAP DIT");
+    }
+    
+    /*
+     * config branch
+     */
+    public String configBranchBaseDn() {
+        return BASE_DN_CONFIG_BRANCH;
     }
     
     /*
@@ -135,12 +150,11 @@ public class LdapDIT {
         return emailToDN(parts[0], parts[1]);
     }
     
-    public String accountDN(String baseDn, String rdnAttr, Attributes attrs, String domain) throws ServiceException, NamingException {
+    public String accountDN(String baseDn, Attributes attrs, String domain) throws ServiceException, NamingException {
         if (baseDn == null)
             baseDn = domainToAccountBaseDN(domain);
         
-        if (rdnAttr == null)
-            rdnAttr = NAMING_RDN_ATTR_ACCOUNT;
+        String rdnAttr = NAMING_RDN_ATTR_ACCOUNT;
         
         String rdnValue = LdapUtil.getAttrString(attrs, rdnAttr);
         
@@ -150,16 +164,41 @@ public class LdapDIT {
         return rdnAttr + "=" + LdapUtil.escapeRDNValue(rdnValue) + "," + baseDn;
     }
     
+    /**
+     * Given a dn like "uid=foo,ou=people,dc=widgets,dc=com", return the string "foo@widgets.com".
+     * 
+     * @param dn
+     * @return
+     */
+    public String dnToEmail(String dn) throws ServiceException {
+        String [] parts = dn.split(",");
+        StringBuffer domain = new StringBuffer(dn.length());
+        
+        String namingAttr = accountNamingRdnAttr() + "=";
+        String namingAttrValue = null;
+        
+        for (int i = 0; i < parts.length; i++) {
+            if (parts[i].startsWith("dc=")) {
+                if (domain.length() > 0)
+                    domain.append(".");
+                domain.append(LdapUtil.unescapeRDNValue(parts[i].substring(3)));
+            } else if (i==0 && parts[i].startsWith(namingAttr)) {
+                namingAttrValue = LdapUtil.unescapeRDNValue(parts[i].substring(namingAttr.length()));
+            }
+        }
+        if (namingAttrValue == null)
+            throw ServiceException.FAILURE("unable to map dn [" + dn + "] to email", null);
+        if (domain.length() == 0)
+            return namingAttrValue;
+        return new StringBuffer(namingAttrValue).append('@').append(domain).toString();
+    }
+    
    
     /*
      * =================
      *   admin account
      * =================
      */
-    public String adminNamingRdnAttr() {
-        return NAMING_RDN_ATTR_ADMIN;
-    }
-    
     public String adminBaseDN() {
         return BASE_DN_ADMIN;
     }
@@ -167,33 +206,7 @@ public class LdapDIT {
     public String adminNameToDN(String name) {
         return NAMING_RDN_ATTR_ACCOUNT + "=" + LdapUtil.escapeRDNValue(name) + "," + BASE_DN_ADMIN;
     }
-    
-    /**
-     * Given a dn like "uid=foo,ou=people,dc=widgets,dc=com", return the string "foo@widgets.com".
-     * 
-     * @param dn
-     * @return
-     */
-    public String dnToEmail(String dn) {
-        String [] parts = dn.split(",");
-        StringBuffer domain = new StringBuffer(dn.length());
-        String uid = null;
-        for (int i = 0; i < parts.length; i++) {
-            if (parts[i].startsWith("dc=")) {
-                if (domain.length() > 0)
-                    domain.append(".");
-                domain.append(LdapUtil.unescapeRDNValue(parts[i].substring(3)));
-            } else if (parts[i].startsWith("uid=")) {
-                uid = LdapUtil.unescapeRDNValue(parts[i].substring(4));
-            }
-        }
-        if (uid == null)
-            return null; // TODO should this be an exception
-        if (domain.length() == 0)
-            return uid;
-        return new StringBuffer(uid).append('@').append(domain).toString();
-    }
-    
+  
     
     /*
      * ==========
@@ -223,7 +236,6 @@ public class LdapDIT {
      *   distribution list 
      * =====================
      */
-    
     
     /*
      * ==========

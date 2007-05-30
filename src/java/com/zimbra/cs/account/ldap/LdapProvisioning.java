@@ -514,7 +514,7 @@ public class LdapProvisioning extends Provisioning {
             name = LdapUtil.escapeSearchFilterArg(name);
             a = getAccountByQuery(
                     mDIT.adminBaseDN(),
-                    "(&(" + mDIT.adminNamingRdnAttr() + "=" + name + ")" +
+                    "(&(" + mDIT.accountNamingRdnAttr() + "=" + name + ")" +
                     FILTER_ACCOUNT_OBJECTCLASS + ")",
                     null);
             sAccountCache.put(a);
@@ -593,7 +593,6 @@ public class LdapProvisioning extends Provisioning {
         
         String uuid = specialAttrs.getZimbraId();
         String baseDn = specialAttrs.getLdapBaseDn();
-        String rdnAttr = specialAttrs.getLdapRdnAttr();
         
     	validate("createAccount", emailAddress);
         emailAddress = emailAddress.toLowerCase().trim();
@@ -724,7 +723,7 @@ public class LdapProvisioning extends Provisioning {
 
             setInitialPassword(cos, attrs, password);
             
-            dn = mDIT.accountDN(baseDn, rdnAttr, attrs, domain);
+            dn = mDIT.accountDN(baseDn, attrs, domain);
             
             LdapUtil.createEntry(ctxt, dn, attrs, "createAccount");
             Account acct = getAccountById(zimbraIdStr, ctxt);
@@ -733,7 +732,7 @@ public class LdapProvisioning extends Provisioning {
             return acct;
         } catch (NameAlreadyBoundException nabe) {
             String info = "";
-            if (rdnAttr != null || baseDn != null)
+            if (baseDn != null)
                 info = "(entry["+dn+"] already bound)";
             throw AccountServiceException.ACCOUNT_EXISTS(emailAddress+info);
         } catch (NamingException e) {
@@ -944,6 +943,7 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = null;
 
             int total = 0;
+            String configBranchBaseDn = mDIT.configBranchBaseDn();
             try {
                 do {
                     lctxt.setRequestControls(new Control[]{new PagedResultsControl(pageSize, cookie, Control.CRITICAL)});
@@ -955,7 +955,7 @@ public class LdapProvisioning extends Provisioning {
                         SearchResult sr = (SearchResult) ne.nextElement();
                         String dn = sr.getNameInNamespace();
                         // skip admin accounts
-                        if (dn.endsWith("cn=zimbra")) continue;
+                        if (dn.endsWith(configBranchBaseDn)) continue;
                         Attributes attrs = sr.getAttributes();
                         Attribute objectclass = attrs.get("objectclass");
                         if (objectclass == null || objectclass.contains(C_zimbraAccount)) visitor.visit(makeAccount(dn, attrs, this));
@@ -2123,7 +2123,10 @@ public class LdapProvisioning extends Provisioning {
                 attrs.put(A_cn, a.get());
             }
             
+            attrs.put(A_uid, list);
+            
             String dn = mDIT.emailToDN(list, domain);
+            
             LdapUtil.createEntry(ctxt, dn, attrs, "createDistributionList");
 
             DistributionList dlist = getDistributionListById(zimbraIdStr, ctxt);
@@ -3135,20 +3138,14 @@ public class LdapProvisioning extends Provisioning {
     
     private Alias makeAlias(String dn, Attributes attrs, LdapProvisioning prov) throws NamingException, ServiceException {
         String emailAddress = mDIT.dnToEmail(dn);
-        
         Alias alias = new LdapAlias(dn, emailAddress, attrs);
-        
         return alias;
     }
     
     private DistributionList makeDistributionList(String dn, Attributes attrs, LdapProvisioning prov) throws NamingException, ServiceException {
-        String emailAddress = LdapUtil.getAttrString(attrs, Provisioning.A_mail);
-        if (emailAddress == null)
-            emailAddress = mDIT.dnToEmail(dn);
-        
-        DistributionList alias = new LdapDistributionList(dn, emailAddress, attrs);
-        
-        return alias;
+        String emailAddress = mDIT.dnToEmail(dn);
+        DistributionList dl = new LdapDistributionList(dn, emailAddress, attrs);
+        return dl;
     }
 
 
