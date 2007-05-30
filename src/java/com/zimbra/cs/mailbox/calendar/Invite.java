@@ -100,6 +100,7 @@ public class Invite {
             ParsedDateTime end,
             ParsedDuration duration,
             Recurrence.IRecurrence recurrence,
+            boolean isOrganizer,
             ZOrganizer org,
             List<ZAttendee> attendees,
             String name, 
@@ -133,6 +134,7 @@ public class Invite {
         mEnd = end;
         mDuration = duration;
         mRecurrence = recurrence;
+        mIsOrganizer = isOrganizer;
         mOrganizer = org;
         mAttendees = attendees;
         mName = name != null ? name : "";
@@ -205,6 +207,7 @@ public class Invite {
             ParsedDuration durationOrNull,
             RecurId recurId,
             Recurrence.IRecurrence recurrenceOrNull,
+            boolean isOrganizer,
             ZOrganizer organizer,
             List<ZAttendee> attendees,
             String name,
@@ -233,6 +236,7 @@ public class Invite {
                 dtEndOrNull,
                 durationOrNull,
                 recurrenceOrNull,
+                isOrganizer,
                 organizer,
                 attendees,
                 name,
@@ -287,6 +291,7 @@ public class Invite {
     private static final String FN_NUM_ATTENDEES   = "numAt";
     private static final String FN_NUM_XPROPS_OR_XPARAMS = "numX";
     private static final String FN_ORGANIZER       = "org";
+    private static final String FN_IS_ORGANIZER    = "isOrg";
     private static final String FN_PARTSTAT        = "ptst";
     private static final String FN_RSVP            = "rsvp";
     private static final String FN_RECURRENCE = "recurrence";
@@ -353,6 +358,7 @@ public class Invite {
         if (inv.hasOrganizer()) {
             meta.put(FN_ORGANIZER, inv.getOrganizer().encodeMetadata());
         }
+        meta.put(FN_IS_ORGANIZER, inv.isOrganizer());
 
         List ats = inv.getAttendees();
         meta.put(FN_NUM_ATTENDEES, String.valueOf(ats.size()));
@@ -513,7 +519,7 @@ public class Invite {
         boolean rsvp = meta.getBool(FN_RSVP, true);
         long dtstamp = meta.getLong(FN_DTSTAMP, 0);
         int seqno = (int) meta.getLong(FN_SEQ_NO, 0);
-        
+
         ZOrganizer org = null;
         try {
             Metadata metaOrg = meta.getMap(FN_ORGANIZER, true);
@@ -523,7 +529,7 @@ public class Invite {
                     + calItem!=null ? Integer.toString(calItem.getId()) : "(null)"
                     + " invite "+mailItemId+"-" + componentNum);
         }
-        
+
         long numAts = meta.getLong(FN_NUM_ATTENDEES, 0);
         ArrayList<ZAttendee> attendees = new ArrayList<ZAttendee>((int) numAts);
         for (int i = 0; i < numAts; i++) {
@@ -538,12 +544,28 @@ public class Invite {
             }
         }
 
+        boolean isOrganizer = false;
+        if (meta.containsKey(FN_IS_ORGANIZER)) {
+            isOrganizer = meta.getBool(FN_IS_ORGANIZER);
+        } else {
+            // backward compat for invites created before FN_IS_ORGANIZER was introduced
+            if (org != null) {
+                String orgAddr = org.getAddress();
+                isOrganizer = AccountUtil.addressMatchesAccount(calItem.getAccount(), orgAddr);
+            } else {
+                // If there are other attendees, it's an Outlook POP/IMAP bug.  If not,
+                // it's a properly formatted single-user event.  See isOrganizer()
+                // method for more info.
+                isOrganizer = numAts < 1;
+            }
+        }
+
         String priority = meta.get(FN_PRIORITY, null);
         String pctComplete = meta.get(FN_PCT_COMPLETE, null);
 
         Invite invite = new Invite(itemType, methodStr, tzMap, calItem, uid, status,
                 priority, pctComplete, completed, freebusy, transp,
-                dtStart, dtEnd, duration, recurrence, org, attendees,
+                dtStart, dtEnd, duration, recurrence, isOrganizer, org, attendees,
                 name, comment, loc, flags, partStat, rsvp,
                 recurrenceId, dtstamp, seqno,
                 mailboxId, mailItemId, componentNum, sentByMe, null, fragment);
@@ -707,8 +729,7 @@ public class Invite {
      */
     public void updateMyPartStat(Account acct, String partStat)
     throws ServiceException {
-        boolean iAmOrganizer = thisAcctIsOrganizer(acct);
-        if (iAmOrganizer) {
+        if (mIsOrganizer) {
             setPartStat(IcalXmlStrMap.PARTSTAT_ACCEPTED);
             setRsvp(false);
         } else {
@@ -1002,6 +1023,7 @@ public class Invite {
 
     private List<ZAttendee> mAttendees = new ArrayList<ZAttendee>();
     private ZOrganizer mOrganizer;
+    private boolean mIsOrganizer;
 //    private ArrayList /* VAlarm */ mAlarms = new ArrayList();
 
     private String mPriority;         // 0 .. 9
@@ -1014,21 +1036,23 @@ public class Invite {
 
     private List<ZProperty> mXProps = new ArrayList<ZProperty>();
 
-    public Invite(String method, TimeZoneMap tzMap) {
+    public Invite(String method, TimeZoneMap tzMap, boolean isOrganizer) {
         setItemType(MailItem.TYPE_APPOINTMENT);
         mMethod = lookupMethod(method);
         if (ICalTok.CANCEL.equals(mMethod))
             mStatus = IcalXmlStrMap.STATUS_CANCELLED;
         mTzMap = tzMap;
+        mIsOrganizer = isOrganizer;
         mFragment = "";
     }
 
-    public Invite(byte itemType, String method, TimeZoneMap tzMap) {
+    public Invite(byte itemType, String method, TimeZoneMap tzMap, boolean isOrganizer) {
         setItemType(itemType);
         mMethod = lookupMethod(method);
         if (ICalTok.CANCEL.equals(mMethod))
             mStatus = IcalXmlStrMap.STATUS_CANCELLED;
         mTzMap = tzMap;
+        mIsOrganizer = isOrganizer;
         mFragment = "";
     }
     
@@ -1044,7 +1068,7 @@ public class Invite {
      * @return TRUE if this account is the "organizer" of the Event
      * @throws ServiceException
      */
-    public boolean thisAcctIsOrganizer(Account acct) throws ServiceException {
+    private boolean thisAcctIsOrganizer(Account acct) throws ServiceException {
         if (hasOrganizer()) {
             String addr = getOrganizer().getAddress();
             return AccountUtil.addressMatchesAccount(acct, addr);
@@ -1055,7 +1079,7 @@ public class Invite {
             return !hasOtherAttendees();
         }
     }
-    
+
     /**
      * Find the (first) Attendee in our list that matches the passed-in account
      * 
@@ -1198,6 +1222,8 @@ public class Invite {
      */
     public Account getOrganizerAccount() throws ServiceException {
         Account account = null;
+        if (mIsOrganizer && mCalItem != null)
+            return mCalItem.getAccount();
         if (hasOrganizer()) {
             String address = getOrganizer().getAddress();
             if (address != null) {
@@ -1209,23 +1235,15 @@ public class Invite {
         return account;
     }
 
-    public boolean isOrganizer(ZAttendee attendee) {
-        if (hasOrganizer())
-            return attendee.addressMatches(getOrganizer().getAddress());
-        else {
-            // According to RFC2445 a non-group event (e.g. a single user's
-            // event with no other attendee) MUST NOT have an organizer.  That
-            // means we should return true in this method.  However, an Outlook
-            // bug prevents us from doing so.  Outlook running in POP/IMAP mode
-            // omits ORGANIZER line from the iCalendar part when forwarding an
-            // email that is a previous invitation to another user.  In light of
-            // this behavior, we have to adjust the logic a bit.  If there's no
-            // organizer and no attendee, assume it's a properly formatted
-            // single-user event.  If organizer is missing but there are
-            // attendees, assume it's an instance of Outlook bug, which means
-            // the current attendee is not the organizer.
-            return !hasOtherAttendees();
-        }
+    /**
+     * Returns whether the invite was created for the organizer account.
+     * @return
+     */
+    public boolean isOrganizer() {
+        return mIsOrganizer;
+    }
+    public void setIsOrganizer(Account acct) throws ServiceException {
+        mIsOrganizer = thisAcctIsOrganizer(acct);
     }
 
     public boolean isEvent()  { return mItemType == MailItem.TYPE_APPOINTMENT; }
@@ -1311,7 +1329,7 @@ public class Invite {
                 boolean isEvent = ICalTok.VEVENT.equals(compTypeTok);
                 boolean isTodo = ICalTok.VTODO.equals(compTypeTok);
                 try {
-                    Invite newInv = new Invite(type, methodStr, tzmap);
+                    Invite newInv = new Invite(type, methodStr, tzmap, false);
 
                     toRet.add(newInv);
 
@@ -1468,6 +1486,8 @@ public class Invite {
                             break;
                         }
                     }
+
+                    newInv.setIsOrganizer(account);
 
                     newInv.validateDuration();
 

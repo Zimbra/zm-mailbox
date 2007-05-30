@@ -1036,30 +1036,24 @@ public class ToXML {
 
         e.addAttribute(MailService.A_CAL_RSVP, invite.getRsvp());
 
-        Account acct = calItem.getMailbox().getAccount();
         if (allFields) {
             boolean isRecurring = false;
-            try {
-                e.addAttribute("x_uid", invite.getUid());
-                e.addAttribute(MailService.A_CAL_SEQUENCE, invite.getSeqNo());
+            e.addAttribute("x_uid", invite.getUid());
+            e.addAttribute(MailService.A_CAL_SEQUENCE, invite.getSeqNo());
 
-                String itemId = lc.formatItemId(calItem);
-                e.addAttribute(MailService.A_CAL_ID, itemId);
-                if (invite.isEvent())
-                    e.addAttribute(MailService.A_APPT_ID_DEPRECATE_ME, itemId);  // for backward compat
+            String itemId = lc.formatItemId(calItem);
+            e.addAttribute(MailService.A_CAL_ID, itemId);
+            if (invite.isEvent())
+                e.addAttribute(MailService.A_APPT_ID_DEPRECATE_ME, itemId);  // for backward compat
 
-                if (invite.thisAcctIsOrganizer(acct)) {
-                    e.addAttribute(MailService.A_CAL_ISORG, true);
-                }
+            if (invite.isOrganizer())
+                e.addAttribute(MailService.A_CAL_ISORG, true);
 
-                Recurrence.IRecurrence recur = invite.getRecurrence();
-                if (recur != null) {
-                    isRecurring = true;
-                    Element recurElt = e.addElement(MailService.E_CAL_RECUR);
-                    recur.toXml(recurElt);
-                }
-            } catch(ServiceException ex) {
-                ex.printStackTrace();
+            Recurrence.IRecurrence recur = invite.getRecurrence();
+            if (recur != null) {
+                isRecurring = true;
+                Element recurElt = e.addElement(MailService.E_CAL_RECUR);
+                recur.toXml(recurElt);
             }
 
             e.addAttribute(MailService.A_CAL_STATUS, invite.getStatus());

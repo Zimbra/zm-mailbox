@@ -123,7 +123,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                 if (defDuration != null && defaultInvite.getStartTime() != null)
                     defDurationMsecs = defDuration.getDurationAsMsecs(defaultInvite.getStartTime().getDate());
                 
-                boolean defIsOrg = defaultInvite.thisAcctIsOrganizer(acct);
+                boolean defIsOrg = defaultInvite.isOrganizer();
                 
                 String defaultFba =
                     isAppointment ? ((Appointment) calItem).getEffectiveFreeBusyActual(defaultInvite, null)
@@ -193,7 +193,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                                 }
                             }
                             
-                            boolean thisInvIsOrg = inv.thisAcctIsOrganizer(acct);
+                            boolean thisInvIsOrg = inv.isOrganizer();
                             if (thisInvIsOrg!= defIsOrg) {
                                 instElt.addAttribute(MailService.A_CAL_ISORG, thisInvIsOrg);
                             }
