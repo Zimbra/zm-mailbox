@@ -4276,5 +4276,39 @@ public class LdapProvisioning extends Provisioning {
         }
         return numAccounts;
     }
+    
+    public String getNamingRdnAttr(Entry entry) throws ServiceException {
+        return mDIT.getNamingRdnAttr(entry);
+    }
+    
+    /*
+     * only called from TestProvisioning for unittest
+     */
+    public String getDN(Entry entry) throws ServiceException {
+        if (entry instanceof LdapMimeType)
+            return ((LdapMimeType)entry).getDN();
+        else if (entry instanceof LdapCalendarResource)
+            return ((LdapCalendarResource)entry).getDN();
+        else if (entry instanceof LdapAccount)
+            return ((LdapAccount)entry).getDN();
+        else if (entry instanceof LdapAlias)
+            return ((LdapAlias)entry).getDN();
+        else if (entry instanceof LdapCos)
+            return ((LdapCos)entry).getDN();
+        else if (entry instanceof LdapDataSource)
+            return ((LdapDataSource)entry).getDN();
+        else if (entry instanceof LdapDistributionList)
+            return ((LdapDistributionList)entry).getDN();
+        else if (entry instanceof LdapDomain)
+            return ((LdapDomain)entry).getDN();
+        else if (entry instanceof LdapIdentity)
+            return ((LdapIdentity)entry).getDN();
+        else if (entry instanceof LdapServer)
+            return ((LdapServer)entry).getDN();
+        else if (entry instanceof LdapZimlet)
+            return ((LdapZimlet)entry).getDN();
+        else
+            throw ServiceException.FAILURE("not a ldap entry", null);
+    }
 
 }

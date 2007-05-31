@@ -33,6 +33,7 @@ import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
  
 public class DisplayName implements AttributeCallback {
 
@@ -50,9 +51,21 @@ public class DisplayName implements AttributeCallback {
         
         String displayName = (String) value;
 
-        if (!attrsToModify.containsKey(Provisioning.A_cn)) {
-            attrsToModify.put(Provisioning.A_cn, displayName);
+        String namingRdnAttr = null;
+        Provisioning prov = Provisioning.getInstance();
+        if (prov instanceof LdapProvisioning) {
+            LdapProvisioning ldapProv = (LdapProvisioning)prov;
+            namingRdnAttr = ldapProv.getNamingRdnAttr(entry);
         }
+        
+        // update cn only if it is not the naming attr
+        if (namingRdnAttr == null ||   // non LdapProvisioning, pass thru
+            !namingRdnAttr.equals(Provisioning.A_cn)) {
+            if (!attrsToModify.containsKey(Provisioning.A_cn)) {
+                attrsToModify.put(Provisioning.A_cn, displayName);
+            }
+        }
+
     }
 
     /**

@@ -7,11 +7,23 @@ import javax.naming.directory.Attributes;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Alias;
+import com.zimbra.cs.account.Cos;
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.Identity;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.util.Zimbra;
 
 public class LdapDIT {
     /*
-     * This is out default ldap DIT.  All DNs/RDNs location is hardcoded to avoid 
+     * This is our default ldap DIT.  All DNs/RDNs location is hardcoded to avoid 
      * mis-configuration.  
      * 
      * To customize the DIT to a different layout, set the zimbra_class_provisioning
@@ -312,6 +324,9 @@ public class LdapDIT {
     }
     
     
+    /*
+     * ========================================================================================
+     */
     protected SpecialAttrs handleSpecialAttrs(Map<String, Object> attrs) throws ServiceException {
         SpecialAttrs specialAttrs = new SpecialAttrs();
         if (attrs != null) {
@@ -323,6 +338,29 @@ public class LdapDIT {
 
         }
         return specialAttrs;
+    }
+    
+    public String getNamingRdnAttr(Entry entry) throws ServiceException {
+        if (entry instanceof Account ||
+            entry instanceof DistributionList ||
+            entry instanceof Alias)
+            return NAMING_RDN_ATTR_ACCOUNT;
+        else if (entry instanceof Cos)
+            return NAMING_RDN_ATTR_COS;
+        else if (entry instanceof Config) 
+            return NAMING_RDN_ATTR_GLOBALCONFIG;
+        else if (entry instanceof DataSource)
+            return Provisioning.A_zimbraDataSourceName;
+        else if (entry instanceof Domain)   
+            return Provisioning.A_dc;
+        else if (entry instanceof Identity)
+            return Provisioning.A_zimbraPrefIdentityName;   
+        else if (entry instanceof Server)
+            return NAMING_RDN_ATTR_SERVER;
+        else if (entry instanceof Zimlet)
+            return NAMING_RDN_ATTR_ZIMLET;
+        else
+            throw ServiceException.FAILURE("entry type " + entry.getClass().getCanonicalName() + " is not supported by getNamingRdnAttr", null);
     }
 
 }
