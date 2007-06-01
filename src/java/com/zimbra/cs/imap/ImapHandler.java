@@ -2477,6 +2477,13 @@ public abstract class ImapHandler extends ProtocolHandler {
             }
         }
 
+        synchronized (mbox) {
+            if (mSelectedFolder.areTagsDirty()) {
+                sendUntagged("FLAGS (" + StringUtil.join(" ", mSelectedFolder.getFlagList(false)) + ')');
+                mSelectedFolder.cleanTags();
+            }
+        }
+
         for (ImapMessage i4msg : i4set) {
             OutputStream os = getFetchOutputStream();
             ByteArrayOutputStream baosDebug = ZimbraLog.imap.isDebugEnabled() ? new ByteArrayOutputStream() : null;
@@ -2629,6 +2636,11 @@ public abstract class ImapHandler extends ProtocolHandler {
                         i4flag = mSelectedFolder.getTagset().createTag(getContext(), name, newTags);
                     if (i4flag != null)
                         i4flags.add(i4flag);
+                }
+
+                if (mSelectedFolder.areTagsDirty()) {
+                    sendUntagged("FLAGS (" + StringUtil.join(" ", mSelectedFolder.getFlagList(false)) + ')');
+                    mSelectedFolder.cleanTags();
                 }
             }
 
@@ -2936,6 +2948,11 @@ public abstract class ImapHandler extends ProtocolHandler {
         // is this the right thing to synchronize on?
         synchronized (mSelectedFolder.getMailbox()) {
             // FIXME: notify untagged NO if close to quota limit
+
+            if (mSelectedFolder.areTagsDirty()) {
+                sendUntagged("FLAGS (" + StringUtil.join(" ", mSelectedFolder.getFlagList(false)) + ')');
+                mSelectedFolder.cleanTags();
+            }
 
             boolean removed = false, received = mSelectedFolder.checkpointSize();
             if (notifyExpunges) {

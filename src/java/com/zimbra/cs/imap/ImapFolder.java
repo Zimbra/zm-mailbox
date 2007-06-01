@@ -94,6 +94,7 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
     private ImapHandler     mHandler;
     private boolean         mNotificationsSuspended;
     private ImapMessageSet  mSavedSearchResults;
+    private boolean         mTagsAreDirty;
     private Map<Integer, DirtyMessage> mDirtyMessages = new TreeMap<Integer, DirtyMessage>();
 
     /** Initializes an ImapFolder from a {@link Folder}, specified by path.
@@ -500,10 +501,19 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
     }
 
 
+    boolean areTagsDirty() {
+        return mTagsAreDirty;
+    }
+
+    void cleanTags() {
+        mTagsAreDirty = false;
+    }
+
     ImapFlag cacheTag(Tag ltag) {
         assert(!(ltag instanceof Flag));
         if (ltag instanceof Flag)
             return null;
+        mTagsAreDirty = true;
         return mTags.cache(new ImapFlag(ltag.getName(), ltag, true));
     }
 
