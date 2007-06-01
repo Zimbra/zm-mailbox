@@ -39,6 +39,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -144,6 +146,14 @@ public class ExtensionDispatcherServlet extends ZimbraServlet {
         ExtensionHttpHandler handler = getHandler(extPath);
         if (handler == null)
             throw ServiceException.FAILURE("Extension HTTP handler not found at " + extPath, null);
+        if (handler.hideFromDefaultPorts()) {
+        	Server server = Provisioning.getInstance().getLocalServer();
+        	int port = req.getLocalPort();
+        	int mailPort = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
+        	int mailSslPort = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
+        	if (port == mailPort || port == mailSslPort)
+        		throw ServiceException.FAILURE("extension not supported on this port", null);
+        }
         return handler;
     }
 }

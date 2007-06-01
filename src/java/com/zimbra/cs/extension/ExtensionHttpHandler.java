@@ -106,4 +106,11 @@ public abstract class ExtensionHttpHandler {
         
     }
 
+    /**
+     * Hides the extension for requests sent to the default mail port and
+     * mail SSL port.
+     */
+    public boolean hideFromDefaultPorts() {
+    	return false;
+    }
 }
