@@ -598,34 +598,26 @@ public abstract class CalendarItem extends MailItem {
                           boolean force, int folderId, short volumeId,
                           boolean replaceExistingInvites)
     throws ServiceException {
-        ZOrganizer originalOrganizer = null;
-        Invite defInv = getDefaultInviteOrNull();
-        if (defInv != null)
-            originalOrganizer = defInv.getOrganizer();
-        if (replaceExistingInvites) {
-            mInvites.clear();
-            //saveMetadata();
-        }
         String method = invite.getMethod();
         if (method.equals(ICalTok.REQUEST.toString()) ||
             method.equals(ICalTok.CANCEL.toString()) ||
             method.equals(ICalTok.PUBLISH.toString())) {
-            processNewInviteRequestOrCancel(originalOrganizer, pm, invite, force, folderId, volumeId);
+            processNewInviteRequestOrCancel(pm, invite, force, folderId, volumeId,
+                                            replaceExistingInvites);
         } else if (method.equals("REPLY")) {
             processNewInviteReply(invite, force);
-        } else {
-            ZimbraLog.calendar.warn("Unsupported METHOD " + method);
         }
-    }
-    
-    private void processNewInviteRequestOrCancel(ZOrganizer originalOrganizer,
-                                                    ParsedMessage pm,
-                                                    Invite newInvite,
-                                                    boolean force,
-                                                    int folderId,
-                                                    short volumeId)
-    throws ServiceException {
 
+        ZimbraLog.calendar.warn("Unsupported METHOD " + method);
+    }
+
+    private void processNewInviteRequestOrCancel(ParsedMessage pm,
+                                                 Invite newInvite,
+                                                 boolean force,
+                                                 int folderId,
+                                                 short volumeId,
+                                                 boolean replaceExistingInvites)
+    throws ServiceException {
         // Remove everyone that is made obsolete by this request
         boolean addNewOne = true;
         boolean isCancel = newInvite.isCancel();
@@ -642,7 +634,7 @@ public abstract class CalendarItem extends MailItem {
         ParsedDateTime oldDtStart = null;
         ParsedDuration dtStartMovedBy = null;
         ArrayList<Invite> toUpdate = new ArrayList<Invite>();
-        if (!isCancel && newInvite.isRecurrence()) {
+        if (!replaceExistingInvites && !isCancel && newInvite.isRecurrence()) {
             Invite defInv = getDefaultInviteOrNull();
             if (defInv != null) {
                 oldDtStart = defInv.getStartTime();
@@ -670,11 +662,12 @@ public abstract class CalendarItem extends MailItem {
             //
             // See RFC2446: 2.1.5 Message Sequencing
             //
-            if ((cur.getRecurId() != null && cur.getRecurId().equals(newInvite.getRecurId())) ||
-                    (cur.getRecurId() == null && newInvite.getRecurId() == null)) {
-                if (force ||
-                        (cur.getSeqNo() < newInvite.getSeqNo()) ||
-                        (cur.getSeqNo() == newInvite.getSeqNo() && cur.getDTStamp() <= newInvite.getDTStamp())) 
+            if (replaceExistingInvites ||
+                (cur.getRecurId() != null && cur.getRecurId().equals(newInvite.getRecurId())) ||
+                (cur.getRecurId() == null && newInvite.getRecurId() == null)) {
+                if (replaceExistingInvites || force ||
+                    (cur.getSeqNo() < newInvite.getSeqNo()) ||
+                    (cur.getSeqNo() == newInvite.getSeqNo() && cur.getDTStamp() <= newInvite.getDTStamp())) 
                 {
                     Invite inf = mInvites.get(i);
                     toRemove.add(inf);
@@ -683,7 +676,7 @@ public abstract class CalendarItem extends MailItem {
                     // that way the numbers all match up as the list contracts!
                     idxsToRemove.add(0, new Integer(i));
                     
-                    // clean up any old REPLYs that have been made obscelete by this new invite
+                    // clean up any old REPLYs that have been made obsolete by this new invite
                     mReplyList.removeObsceleteEntries(newInvite.getRecurId(), newInvite.getSeqNo(), newInvite.getDTStamp());
                     
                     prev = cur;
@@ -696,7 +689,7 @@ public abstract class CalendarItem extends MailItem {
                     // the passed-in one!
                     addNewOne = false;
                 }
-//              break; // don't stop here!  new Invite *could* obscelete multiple existing ones! 
+//              break; // don't stop here!  new Invite *could* obsolete multiple existing ones! 
             } else if (needRecurrenceIdUpdate) {
                 RecurId rid = cur.getRecurId();
                 // Translate the date/time in RECURRENCE-ID to the timezone in
@@ -718,10 +711,7 @@ public abstract class CalendarItem extends MailItem {
         boolean callProcessPartStat = false;
         if (addNewOne) {
             newInvite.setCalendarItem(this);
-            Account account = getMailbox().getAccount();
-            boolean thisAcctIsOrganizer =
-                newInvite.isOrganizer();
-            if (prev!=null && !thisAcctIsOrganizer && newInvite.sentByMe()) {
+            if (prev!=null && !newInvite.isOrganizer() && newInvite.sentByMe()) {
                 // A non-organizer attendee is modifying data on his/her
                 // appointment/task.  Any information that is tracked in
                 // metadata rather than in the iCal MIME part must be
@@ -760,10 +750,10 @@ public abstract class CalendarItem extends MailItem {
                 }
             }
 
-            modifyBlob(toRemove, toUpdate, pm, newInvite, volumeId);
+            modifyBlob(toRemove, replaceExistingInvites, toUpdate, pm, newInvite, volumeId);
             modifiedCalItem = true;
         } else {
-            modifyBlob(toRemove, toUpdate, null, null, volumeId);
+            modifyBlob(toRemove, replaceExistingInvites, toUpdate, null, null, volumeId);
         }
         
         // now remove the inviteid's from our list  
@@ -790,13 +780,13 @@ public abstract class CalendarItem extends MailItem {
         }
         
         if (!hasRequests) {
-            this.delete(); // delete this appointment/task from the table, it
-                            // doesn't have anymore REQUESTs!
+            delete();  // delete this appointment/task from the table,
+                       // it doesn't have anymore REQUESTs!
         } else {
             if (modifiedCalItem) {
                 if (!updateRecurrence()) {
                     // no default invite!  This appointment/task no longer valid
-                    this.delete();
+                    delete();
                 } else {
                     if (callProcessPartStat) {
                         // processPartStat() must be called after
@@ -806,7 +796,7 @@ public abstract class CalendarItem extends MailItem {
                                         false,
                                         newInvite.getPartStat());
                     }
-                    this.saveMetadata();
+                    saveMetadata();
                 }
             }
         }
@@ -993,6 +983,8 @@ public abstract class CalendarItem extends MailItem {
      * new invite had no ParsedMessage: IE because it didn't actually come in via an RFC822 msg
      * 
      * @param toRemove
+     * @param removeAllExistingInvites if true, all existing invites are removed regardless of
+     *                                 what's passed in toRemove list
      * @param toUpdate
      * @param invPm
      * @param newInv
@@ -1000,6 +992,7 @@ public abstract class CalendarItem extends MailItem {
      * @throws ServiceException
      */
     private void modifyBlob(List<Invite> toRemove,
+                            boolean removeAllExistingInvites,
                             List<Invite> toUpdate,
                             ParsedMessage invPm,
                             Invite newInv,
@@ -1029,29 +1022,40 @@ public abstract class CalendarItem extends MailItem {
             boolean updated = false;
 
             // remove invites
-            for (Invite inv: toRemove) {
-                int matchedIdx;
-                do {
-                    // find the matching parts...
-                    int numParts = mmp.getCount();
-                    matchedIdx = -1;
-                    for (int i = 0; i < numParts; i++) {
-                        MimeBodyPart mbp = (MimeBodyPart)mmp.getBodyPart(i);
-                        String[] hdrs = mbp.getHeader("invId");
-                        if (hdrs == null || hdrs.length == 0) {
-                            matchedIdx = i;
-                            break;
-                        }
-                        if (hdrs != null && hdrs.length > 0 && (Integer.parseInt(hdrs[0])==inv.getMailItemId())) {
-                            matchedIdx = i;
-                            break;
-                        }
+            if (removeAllExistingInvites) {
+                int numParts = mmp.getCount();
+                if (numParts > 0) {
+                    for (int i = numParts - 1; i >= 0; i--) {
+                        mmp.removeBodyPart(i);
                     }
-                    if (matchedIdx > -1) {
-                        mmp.removeBodyPart(matchedIdx);
-                        updated = true;
-                    }
-                } while(matchedIdx > -1);
+                    updated = true;
+                }
+            } else {
+                // Remove specific invites.
+                for (Invite inv: toRemove) {
+                    int matchedIdx;
+                    do {
+                        // find the matching parts...
+                        int numParts = mmp.getCount();
+                        matchedIdx = -1;
+                        for (int i = 0; i < numParts; i++) {
+                            MimeBodyPart mbp = (MimeBodyPart)mmp.getBodyPart(i);
+                            String[] hdrs = mbp.getHeader("invId");
+                            if (hdrs == null || hdrs.length == 0) {
+                                matchedIdx = i;
+                                break;
+                            }
+                            if (hdrs != null && hdrs.length > 0 && (Integer.parseInt(hdrs[0])==inv.getMailItemId())) {
+                                matchedIdx = i;
+                                break;
+                            }
+                        }
+                        if (matchedIdx > -1) {
+                            mmp.removeBodyPart(matchedIdx);
+                            updated = true;
+                        }
+                    } while(matchedIdx > -1);
+                }
             }
 
             // Update some invites.
