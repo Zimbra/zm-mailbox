@@ -1035,6 +1035,9 @@ public abstract class ImapHandler extends ProtocolHandler {
         try {
             Object mboxobj = path.getOwnerMailbox();
             if (mboxobj instanceof Mailbox) {
+                // don't want the DELETE to cause *this* connection to drop if the deleted folder is currently selected
+                if (mSelectedFolder != null && path.isEquivalent(mSelectedFolder.getPath()))
+                    unsetSelectedFolder();
                 ImapDeleteOperation op = new ImapDeleteOperation(mSelectedFolder, getContext(), (Mailbox) mboxobj, path);
                 op.schedule();
             } else if (mboxobj instanceof ZMailbox) {
@@ -1050,9 +1053,6 @@ public abstract class ImapHandler extends ProtocolHandler {
             } else {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(path.getOwner());
             }
-
-            if (mSelectedFolder != null && path.isEquivalent(mSelectedFolder.getPath()))
-                unsetSelectedFolder();
         } catch (ServiceException e) {
             if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER))
                 ZimbraLog.imap.info("DELETE failed: no such folder: " + path);
