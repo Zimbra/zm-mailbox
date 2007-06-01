@@ -1143,6 +1143,7 @@ public abstract class Provisioning {
     public static final String A_zimbraNotebookFolderCacheSize = "zimbraNotebookFolderCacheSize";
     public static final String A_zimbraNotebookMaxCachedTemplatesPerFolder = "zimbraNotebookMaxCachedTemplatesPerFolder";
     public static final String A_zimbraIsSystemResource        = "zimbraIsSystemResource";
+    public static final String A_zimbraNotebookMaxNumRevisions = "zimbraNotebookMaxNumRevisions";
     
     /*
      * data sources

@@ -35,6 +35,7 @@ import java.util.List;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.MetadataList;
+import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.store.StoreManager;
@@ -203,7 +204,19 @@ public class Document extends MailItem {
         }
     }
 
+    /* delete all the old revisions */
+    PendingDelete getDeletionInfo() throws ServiceException {
+    	purgeOldRevisions(1);
+    	return super.getDeletionInfo();
+    }
+    
+    /* don't delete current blob after every save */
+    void markBlobForDeletion() {
+    }
+    
     public synchronized void purgeOldRevisions(int revToKeep) throws ServiceException {
+    	if (revToKeep == 0)
+    		return;
         int last = mRevisionList.size() - revToKeep;
         StoreManager sm = StoreManager.getInstance();
         while (last > 0) {
