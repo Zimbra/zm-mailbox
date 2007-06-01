@@ -1089,7 +1089,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                 int folderId = mbox.getFolderByPath(getContext(), oldPath.asZimbraPath()).getId();
                 if (folderId == Mailbox.ID_FOLDER_INBOX)
                     throw ImapServiceException.CANT_RENAME_INBOX();
-                mbox.rename(getContext(), folderId, MailItem.TYPE_FOLDER, newPath.asZimbraPath());
+                mbox.rename(getContext(), folderId, MailItem.TYPE_FOLDER, "/" + newPath.asZimbraPath());
             } else if (mboxobj instanceof ZMailbox) {
                 ZMailbox zmbx = (ZMailbox) mboxobj;
                 ZFolder zfolder = zmbx.getFolderByPath(oldPath.asZimbraPath());
