@@ -43,6 +43,7 @@ import java.util.TreeMap;
 import com.zimbra.cs.imap.ImapCredentials.ActivatedExtension;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
+import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
@@ -62,6 +63,7 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -197,26 +199,20 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
      * @param octxt   Encapsulation of the authenticated user.
      * @param search  The search folder being exposed. */
     private List<ImapMessage> loadVirtualFolder(OperationContext octxt, SearchFolder search) throws ServiceException {
+        SearchParams params = new SearchParams();
+        params.setQueryStr(mQuery);
+        params.setTypes(ImapHandler.ITEM_TYPES);
+        params.setSortBy(MailboxIndex.SortBy.DATE_ASCENDING);
+        params.setChunkSize(1000);
+        params.setMode(Mailbox.SearchResultMode.IMAP);
+
         Mailbox mbox = search.getMailbox();
         List<ImapMessage> i4list = new ArrayList<ImapMessage>();
         try {
-            ZimbraQueryResults zqr = mbox.search(octxt, mQuery, ImapHandler.ITEM_TYPES, MailboxIndex.SortBy.DATE_ASCENDING, 1000);
-            int i = 0, hitIds[] = new int[100];
-            Arrays.fill(hitIds, Mailbox.ID_AUTO_INCREMENT);
+            ZimbraQueryResults zqr = mbox.search(SoapProtocol.Soap12, octxt, params);
             try {
-                for (ZimbraHit hit = zqr.getFirstHit(); hit != null || i > 0; ) {
-                    if (hit == null || i == 100) {
-                        for (MailItem item : mbox.getItemById(octxt, hitIds, MailItem.TYPE_MESSAGE))
-                            if (item != null)
-                                i4list.add(new ImapMessage(item));
-                        Arrays.fill(hitIds, Mailbox.ID_AUTO_INCREMENT);
-                        i = 0;
-                    }
-                    if (hit != null) {
-                        hitIds[i++] = hit.getItemId();
-                        hit = zqr.getNext();
-                    }
-                }
+                for (ZimbraHit hit = zqr.getNext(); hit != null; hit = zqr.getNext())
+                    i4list.add(hit.getImapMessage());
             } finally {
                 zqr.doneWithSearchResults();
             }
