@@ -2193,4 +2193,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>attribute that contains imap bind port for SSL</desc>
 </attr>
 
+<attr id="481" name="zimbraFeatureGroupCalendarEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>group calendar features.  if set to FALSE, calendar works as a personal calendar and attendees and scheduling etc are turned off in web UI</desc>
+</attr>
+
+
 </attrs>
