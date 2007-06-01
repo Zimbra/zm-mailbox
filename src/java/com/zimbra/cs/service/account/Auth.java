@@ -67,7 +67,7 @@ public class Auth extends AccountDocumentHandler {
     }
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
         Element authTokenEl = request.getOptionalElement(AccountConstants.E_AUTH_TOKEN);
@@ -81,12 +81,11 @@ public class Auth extends AccountDocumentHandler {
                 Account acct = Provisioning.getInstance().get(AccountBy.id, at.getAccountId());
                 if (acct == null || !acct.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
                     throw ServiceException.AUTH_EXPIRED();
-                return doResponse(request, at, lc, acct);
+                return doResponse(request, at, zsc, acct);
             } catch (AuthTokenException e) {
                 throw ServiceException.AUTH_REQUIRED();
             }
         } else {
-
             Element acctEl = request.getElement(AccountConstants.E_ACCOUNT);
             String value = acctEl.getText();
             String byStr = acctEl.getAttribute(AccountConstants.A_BY, AccountBy.name.name());
@@ -124,11 +123,11 @@ public class Auth extends AccountDocumentHandler {
             }
 
             AuthToken at = expires ==  0 ? new AuthToken(acct) : new AuthToken(acct, expires);
-            return doResponse(request, at, lc, acct);
+            return doResponse(request, at, zsc, acct);
         }
     }
 
-    private Element doResponse(Element request, AuthToken at, ZimbraSoapContext lc, Account acct) throws ServiceException {
+    private Element doResponse(Element request, AuthToken at, ZimbraSoapContext zsc, Account acct) throws ServiceException {
         String token;
         try {
             token = at.getEncoded();
@@ -136,14 +135,14 @@ public class Auth extends AccountDocumentHandler {
             throw  ServiceException.FAILURE("unable to encode auth token", e);
         }
 
-        Element response = lc.createElement(AccountConstants.AUTH_RESPONSE);
+        Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
         response.addAttribute(AccountConstants.E_AUTH_TOKEN, token, Element.Disposition.CONTENT);
         response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
         boolean isCorrectHost = Provisioning.onLocalServer(acct);
         if (isCorrectHost) {
-            Session session = lc.getNewSession(acct.getId(), Session.Type.SOAP);
+            Session session = updateAuthenticatedAccount(zsc, acct.getId(), true);
             if (session != null)
-                ZimbraSoapContext.encodeSession(response, session, true);
+                ZimbraSoapContext.encodeSession(response, session.getSessionId(), session.getSessionType(), true);
         }
         if (!isCorrectHost || LC.zimbra_auth_always_send_refer.booleanValue()) {
             response.addAttribute(AccountConstants.E_REFERRAL, acct.getAttr(Provisioning.A_zimbraMailHost), Element.Disposition.CONTENT);

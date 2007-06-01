@@ -43,8 +43,8 @@ public abstract class IMDocumentHandler extends DocumentHandler {
     
     @Override
     public Object preHandle(Element request, Map<String, Object> context) throws ServiceException { 
-        Session session = getSession(context);
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Session session = getSession(zsc);
         Mailbox.OperationContext octxt = zsc.getOperationContext();
         Mailbox mbox = getRequestedMailbox(zsc);
         return BlockingOperation.schedule(request.getName(), session, octxt, mbox, Requester.SOAP, getSchedulerPriority(), 1);   

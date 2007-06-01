@@ -59,7 +59,7 @@ public class Auth extends AdminDocumentHandler {
     }
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
         String name = request.getAttribute(AdminConstants.E_NAME);
 		String password = request.getAttribute(AdminConstants.E_PASSWORD);
@@ -108,7 +108,7 @@ public class Auth extends AdminDocumentHandler {
             throw se;
         }
 
-        Element response = lc.createElement(AdminConstants.AUTH_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.AUTH_RESPONSE);
         String token;
         AuthToken at = new AuthToken(acct, true);
         try {
@@ -119,9 +119,9 @@ public class Auth extends AdminDocumentHandler {
         response.addAttribute(AdminConstants.E_AUTH_TOKEN, token, Element.Disposition.CONTENT);
         response.addAttribute(AdminConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
         response.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, Provisioning.A_zimbraIsDomainAdminAccount).setText(isDomainAdmin+"");
-        Session session = lc.getNewSession(acct.getId(), Session.Type.ADMIN);
+        Session session = updateAuthenticatedAccount(zsc, acct.getId(), true);
         if (session != null)
-            ZimbraSoapContext.encodeSession(response, session, true);
+            ZimbraSoapContext.encodeSession(response, session.getSessionId(), session.getSessionType(), true);
 		return response;
 	}
 

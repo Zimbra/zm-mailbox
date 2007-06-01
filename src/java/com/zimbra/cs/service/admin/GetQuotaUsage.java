@@ -55,8 +55,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
         
     
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
         int limit = (int) request.getAttributeLong(AdminConstants.A_LIMIT, Integer.MAX_VALUE);
@@ -71,11 +70,11 @@ public class GetQuotaUsage extends AdminDocumentHandler {
             throw ServiceException.INVALID_REQUEST("sortBy must be percentUsed or totalUsed", null);
 
         // if we are a domain admin only, restrict to domain
-        if (isDomainAdminOnly(lc)) {
+        if (isDomainAdminOnly(zsc)) {
             if (domain == null) {
-                domain = getAuthTokenAccountDomain(lc).getName();
+                domain = getAuthTokenAccountDomain(zsc).getName();
             } else {
-                if (!canAccessDomain(lc, domain)) 
+                if (!canAccessDomain(zsc, domain)) 
                     throw ServiceException.PERM_DENIED("can not access domain"); 
             }
         }
@@ -92,7 +91,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
 
         ArrayList<AccountQuota> quotas = params.doSearch();
        
-        AdminSession session = (AdminSession) lc.getSession(Session.Type.ADMIN);
+        AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);
         if (session != null) {
             QuotaUsageParams cachedParams = (QuotaUsageParams) session.getData("GetQuotaUsage");
             if (cachedParams == null || !cachedParams.equals(params)) {
@@ -105,7 +104,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
             quotas = params.doSearch();
         }
 
-        Element response = lc.createElement(AdminConstants.GET_QUOTA_USAGE_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.GET_QUOTA_USAGE_RESPONSE);
         int i, limitMax = offset+limit;
         for (i=offset; i < limitMax && i < quotas.size(); i++) {
             AccountQuota quota = quotas.get(i);

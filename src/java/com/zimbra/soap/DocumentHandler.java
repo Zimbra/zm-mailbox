@@ -38,13 +38,19 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.soap.ZimbraSoapContext.SessionInfo;
+
 import org.dom4j.QName;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -96,6 +102,15 @@ public abstract class DocumentHandler {
 
     public static ZimbraSoapContext getZimbraSoapContext(Map<String, Object> context) {
         return (ZimbraSoapContext) context.get(SoapEngine.ZIMBRA_CONTEXT);
+    }
+
+    public static Account getAuthenticatedAccount(ZimbraSoapContext zsc) throws ServiceException {
+        String id = zsc.getRequestedAccountId();
+
+        Account acct = Provisioning.getInstance().get(AccountBy.id, id);
+        if (acct == null)
+            throw ServiceException.AUTH_EXPIRED();
+        return acct;
     }
 
     public static Account getRequestedAccount(ZimbraSoapContext zsc) throws ServiceException {
@@ -178,8 +193,8 @@ public abstract class DocumentHandler {
         return false;
     }
 
-    /** @return Returns <code>true</code> if the operation is read-only, or
-     *  <code>false</code> if the operation causes backend state change. */
+    /** @return Returns <tt>true</tt> if the operation is read-only, or
+     *  <tt>false</tt> if the operation causes backend state change. */
     public boolean isReadOnly() {
         return true;
     }
@@ -192,32 +207,89 @@ public abstract class DocumentHandler {
         return "127.0.0.1".equals(peerIP);
     }
 
+    /** Updates the {@link ZimbraSoapContext} to treat the specified account
+     *  as the request's authenticated account.  If the new account differs
+     *  from the previously authenticated account, we forget about all other
+     *  {@link Session}s.  (Those sessions are not deleted from the cache,
+     *  though perhaps that's the right thing to do...)  If requested, also
+     *  creates a new Session object associated with the given account.
+     * 
+     * @param accountId   The account ID to create the new session for.
+     * @param stype       One of the types defined in the {@link SessionCache} class.
+     * @param getSession  Whether to try to generate a new Session.
+     * @return A new Session object of the appropriate type, or <tt>null</tt>. */
+    public Session updateAuthenticatedAccount(ZimbraSoapContext zsc, String accountId, boolean getSession) {
+        String oldAccountId = zsc.getAuthtokenAccountId();
+        if (accountId != null && !accountId.equals(oldAccountId))
+            zsc.getReferencedSessions().clear();
+        zsc.setAuthenticatedAccountId(accountId);
+
+        return (getSession ? getSession(zsc) : null);
+    }
+
     /** Fetches the in-memory {@link Session} object appropriate for this
      *  request.  If none already exists, one is created if possible.
      * 
-     * @param context  The Map containing context information for this SOAP
-     *                 request.
-     * @return A {@link com.zimbra.cs.session.SoapSession}, or
-     *         <code>null</code>. */
-    public Session getSession(Map<String, Object> context) {
-        return getSession(context, Session.Type.SOAP);
+     * @param zsc The encapsulation of the SOAP request's <tt>&lt;context</tt>
+     *            element.
+     * @return A {@link com.zimbra.cs.session.SoapSession}, or <tt>null</tt>. */
+    public Session getSession(ZimbraSoapContext zsc) {
+        return getSession(zsc, Session.Type.SOAP);
     }
 
     /** Fetches a {@link Session} object to persist and manage state between
      *  SOAP requests.  If no appropriate session already exists, a new one
      *  is created if possible.
      * 
-     * @param context      The Map containing context information for this
-     *                     SOAP request.
-     * @param sessionType  The type of session needed.
+     * @param zsc The encapsulation of the SOAP request's <tt>&lt;context</tt>
+     *            element.
+     * @param stype  The type of session needed.
      * @return An in-memory {@link Session} object of the specified type,
-     *         fetched from the request's {@link ZimbraSoapContext} object, or
-     *         <code>null</code>.
+     *         referenced by the request's {@link ZimbraSoapContext} object,
+     *         or <tt>null</tt>.
      * @see SessionCache#SESSION_SOAP
      * @see SessionCache#SESSION_ADMIN */
-    protected Session getSession(Map<String, Object> context, Session.Type sessionType) {
-        ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        return (zsc == null ? null : zsc.getSession(sessionType));
+    protected Session getSession(ZimbraSoapContext zsc, Session.Type stype) {
+        if (zsc == null || stype == null || !zsc.isNotificationEnabled())
+            return null;
+        String authAccountId = zsc.getAuthtokenAccountId();
+        if (authAccountId == null)
+            return null;
+
+        Session s = null;
+
+        // if the caller referenced a session of this type, fetch it from the session cache
+        List<SessionInfo> sessions = zsc.getReferencedSessions();
+        for (Iterator<SessionInfo> it = sessions.iterator(); it.hasNext(); ) {
+            // touch all the sessions referenced by the request
+            SessionInfo sinfo = it.next();
+            s = SessionCache.lookup(sinfo.sessionId, authAccountId);
+            if (s == null) {
+                // purge dangling references from the context's list of referenced sessions
+                ZimbraLog.session.info("requested session no longer exists: " + sinfo.sessionId);
+                it.remove();
+            } else if (s.getSessionType() != stype) {
+                // only want a session of the appropriate type
+                s = null;
+            }
+        }
+
+        // if there's no valid referenced session, create a new session of the requested type
+        if (s == null) {
+            try {
+                if (stype == Session.Type.SOAP) {
+                    s = new SoapSession(authAccountId, zsc.getRequestedAccountId()).register();
+                } else if (stype == Session.Type.ADMIN) {
+                    s = new AdminSession(authAccountId).register();
+                }
+            } catch (ServiceException e) { 
+                ZimbraLog.session.info("ZimbraSoapContext - exception while creating session: ", e);
+            }
+            if (s != null)
+                sessions.add(zsc.new SessionInfo(s.getSessionId(), 0, true));
+        }
+
+        return s;
     }
 
 
@@ -225,11 +297,12 @@ public abstract class DocumentHandler {
      *  is homed.  This is similar to {@link Provisioning#getServer(Account),
      *  except that the account is specified by ID and exceptions are thrown
      *  on failure rather than returning null.
+     *  
      * @param acctId  The Zimbra ID of the account.
      * @throws ServiceException  The following error codes are possible:<ul>
-     *    <li><code>account.NO_SUCH_ACCOUNT</code> - if there is no Account
+     *    <li><tt>account.NO_SUCH_ACCOUNT</tt> - if there is no Account
      *        with the specified ID
-     *    <li><code>account.PROXY_ERROR</code> - if the Server associated
+     *    <li><tt>account.PROXY_ERROR</tt> - if the Server associated
      *        with the Account does not exist</ul> */
     protected static Server getServer(String acctId) throws ServiceException {
         Account acct = Provisioning.getInstance().get(AccountBy.id, acctId);

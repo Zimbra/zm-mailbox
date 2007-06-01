@@ -79,7 +79,7 @@ public class SendInviteReply extends CalendarRequest {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         Account acct = getRequestedAccount(zsc);
-        Account authAcct = zsc.getAuthtokenAccount();
+        Account authAcct = getAuthenticatedAccount(zsc);
         OperationContext octxt = zsc.getOperationContext();
 
         boolean onBehalfOf = zsc.isDelegatedRequest();

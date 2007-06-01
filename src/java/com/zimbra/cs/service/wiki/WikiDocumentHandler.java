@@ -47,26 +47,25 @@ public abstract class WikiDocumentHandler extends MailDocumentHandler {
     }
     protected boolean checkMountpointProxy(Element request)  { return true; }
 
-	protected String getAuthor(ZimbraSoapContext lc) throws ServiceException {
-		return lc.getAuthtokenAccount().getName();
+	protected String getAuthor(ZimbraSoapContext zsc) throws ServiceException {
+		return getAuthenticatedAccount(zsc).getName();
 	}
 	
-	protected ItemId getRequestedFolder(Element request, ZimbraSoapContext lc) throws ServiceException {
+	protected ItemId getRequestedFolder(Element request, ZimbraSoapContext zsc) throws ServiceException {
 		for (Element elem : request.listElements()) {
 	        String fid = elem.getAttribute(MailConstants.A_FOLDER, null);
 	        if (fid != null) {
-	        	return new ItemId(fid, lc);
+	        	return new ItemId(fid, zsc);
 	        }
 		}
 		return null;
 	}
 	
-	protected Wiki getRequestedWikiNotebook(Element request, ZimbraSoapContext lc) throws ServiceException {
-		ItemId fid = getRequestedFolder(request, lc);
-		Account requestedAccount = Provisioning.getInstance().get(AccountBy.id,
-																	lc.getRequestedAccountId());
+	protected Wiki getRequestedWikiNotebook(Element request, ZimbraSoapContext zsc) throws ServiceException {
+		ItemId fid = getRequestedFolder(request, zsc);
+		Account requestedAccount = Provisioning.getInstance().get(AccountBy.id, zsc.getRequestedAccountId());
 		String accountId = requestedAccount.getId();
-		WikiContext ctxt = new WikiContext(lc.getOperationContext(), lc.getRawAuthToken());
+		WikiContext ctxt = new WikiContext(zsc.getOperationContext(), zsc.getRawAuthToken());
 		if (fid == null) {
 			return Wiki.getInstance(ctxt, accountId);
 		} else if (!fid.belongsTo(requestedAccount)) {
@@ -75,9 +74,8 @@ public abstract class WikiDocumentHandler extends MailDocumentHandler {
 		return Wiki.getInstance(ctxt, accountId, fid.getId());
 	}
 	
-	protected void checkEnabled(ZimbraSoapContext lc) throws ServiceException {
-		Account requestedAccount = Provisioning.getInstance().get(AccountBy.id,
-				lc.getRequestedAccountId());
+	protected void checkEnabled(ZimbraSoapContext zsc) throws ServiceException {
+		Account requestedAccount = getRequestedAccount(zsc);
 		if (!requestedAccount.getBooleanAttr("zimbraFeatureNotebookEnabled", false))
 			throw WikiServiceException.NOT_ENABLED();
 	}

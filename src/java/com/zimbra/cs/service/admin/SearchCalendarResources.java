@@ -60,7 +60,7 @@ public class SearchCalendarResources extends AdminDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context)
     throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
         int limit = (int) request.getAttributeLong(AdminConstants.A_LIMIT,
@@ -77,11 +77,11 @@ public class SearchCalendarResources extends AdminDocumentHandler {
         EntrySearchFilter filter = com.zimbra.cs.service.account.SearchCalendarResources.parseSearchFilter(request);
 
         // if we are a domain admin only, restrict to domain
-        if (isDomainAdminOnly(lc)) {
+        if (isDomainAdminOnly(zsc)) {
             if (domain == null) {
-                domain = getAuthTokenAccountDomain(lc).getName();
+                domain = getAuthTokenAccountDomain(zsc).getName();
             } else {
-                if (!canAccessDomain(lc, domain)) 
+                if (!canAccessDomain(zsc, domain)) 
                     throw ServiceException.PERM_DENIED("cannot access domain");
             }
         }
@@ -94,7 +94,7 @@ public class SearchCalendarResources extends AdminDocumentHandler {
         }
 
         List resources;
-        AdminSession session = (AdminSession) lc.getSession(Session.Type.ADMIN);
+        AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);
         if (session != null) {
             resources = session.searchCalendarResources(d, filter, attrs, sortBy, sortAscending, offset);
         } else {
@@ -105,7 +105,7 @@ public class SearchCalendarResources extends AdminDocumentHandler {
             }
         }
 
-        Element response = lc.createElement(AdminConstants.SEARCH_CALENDAR_RESOURCES_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.SEARCH_CALENDAR_RESOURCES_RESPONSE);
         int i, limitMax = offset+limit;
         for (i=offset; i < limitMax && i < resources.size(); i++) {
             NamedEntry entry = (NamedEntry) resources.get(i);

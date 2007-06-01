@@ -41,27 +41,27 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class WikiAction extends ItemAction {
     
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
         Element action = request.getElement(MailConstants.E_ACTION);
         String operation = action.getAttribute(MailConstants.A_OPERATION).toLowerCase();
 
         String successes;
         if (operation.equals(OP_RENAME)) {
-    		Account author = lc.getAuthtokenAccount();
+    		Account author = getAuthenticatedAccount(zsc);
     		String id = action.getAttribute(MailConstants.A_ID);
     		if (id.indexOf(",") > 0)
     			throw WikiServiceException.ERROR("cannot use more than one id for rename");
     		String name = action.getAttribute(MailConstants.A_NAME);
-    		WikiContext ctxt = new WikiContext(lc.getOperationContext(), lc.getRawAuthToken());
-    		Wiki wiki = Wiki.getInstance(ctxt, lc.getRequestedAccountId());
+    		WikiContext ctxt = new WikiContext(zsc.getOperationContext(), zsc.getRawAuthToken());
+    		Wiki wiki = Wiki.getInstance(ctxt, zsc.getRequestedAccountId());
     		wiki.renameDocument(ctxt, Integer.parseInt(id), name, author.getName());
     		successes = id;
         } else {
         	successes = handleCommon(context, request, operation, MailItem.TYPE_WIKI);
         }
         
-        Element response = lc.createElement(MailConstants.WIKI_ACTION_RESPONSE);
+        Element response = zsc.createElement(MailConstants.WIKI_ACTION_RESPONSE);
         Element act = response.addUniqueElement(MailConstants.E_ACTION);
         act.addAttribute(MailConstants.A_ID, successes);
         act.addAttribute(MailConstants.A_OPERATION, operation);

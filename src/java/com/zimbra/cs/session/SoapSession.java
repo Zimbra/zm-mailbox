@@ -145,7 +145,7 @@ public class SoapSession extends Session {
         public void close();
         public int getLastKnownSeqNo();
         public ZimbraSoapContext getSoapContext();
-        public void notificationsReady(SoapSession session) throws ServiceException; 
+        public void notificationsReady() throws ServiceException; 
     }
     
     public static enum RegisterNotificationResult {
@@ -183,7 +183,7 @@ public class SoapSession extends Session {
                 int lastSeqNo = sc.getLastKnownSeqNo();
                 boolean isEmpty = mSentChanges.isEmpty();
                 if (notifying || (mChanges.getSequence() > lastSeqNo + 1 && !isEmpty)) {
-                    sc.notificationsReady(this);  
+                    sc.notificationsReady();  
                     return RegisterNotificationResult.DATA_READY;
                 } else {
                     mPushChannel = sc;
@@ -219,7 +219,7 @@ public class SoapSession extends Session {
                     mChanges.add(pms);
                     
                     if (mPushChannel != null) {
-                        mPushChannel.notificationsReady(this);
+                        mPushChannel.notificationsReady();
                         mPushChannel = null;
                     }
                 }
@@ -242,10 +242,9 @@ public class SoapSession extends Session {
      *  
      *  This API implicitly clears all cached notifications and therefore 
      *  should only been used during session creation.
-     *  
-     * @param ctxt  An existing SOAP header <context> element 
-     * @param zsc    The SOAP request's encapsulated context */
-    public void putRefresh(Element ctxt, ZimbraSoapContext zsc) throws ServiceException {
+     * @param zsc    The SOAP request's encapsulated context 
+     * @param ctxt  An existing SOAP header <context> element */
+    public void putRefresh(ZimbraSoapContext zsc, Element ctxt) throws ServiceException {
         synchronized (this) {
             if (!mNotify || mMailbox == null)
                 return;

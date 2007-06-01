@@ -29,7 +29,6 @@
 package com.zimbra.soap;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -37,18 +36,21 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.util.ZimbraLog;
 
 import org.dom4j.QName;
 import org.mortbay.util.ajax.Continuation;
 
-import com.zimbra.cs.account.*;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.session.SoapSession.PushChannel;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.soap.Element;
@@ -64,24 +66,35 @@ import com.zimbra.common.soap.SoapProtocol;
  */
 public class ZimbraSoapContext {
 
-    private final class SessionInfo {
-        Session session;
+    final class SessionInfo {
+        String sessionId;
+        int sequence;
         boolean created;
 
-        SessionInfo(Session s) {
-            this(s, false);
+        SessionInfo(String id, int seqNo) {
+            this(id, seqNo, false);
         }
-        SessionInfo(Session s, boolean newSession) {
-            session = s;
+        SessionInfo(String id, int seqNo, boolean newSession) {
+            sessionId = id;
+            sequence = seqNo;
             created = newSession;
         }
 
-        void clearSession() {
-            SessionCache.clearSession(session);
-            session = null;
+        public String toString()  { return sessionId; }
+
+
+        private class SoapPushChannel implements SoapSession.PushChannel {
+            public void close() {  
+                signalNotification(); // don't allow there to be more than one NoOp hanging on a particular account
+            }
+            public int getLastKnownSeqNo()            { return sequence; }
+            public ZimbraSoapContext getSoapContext() { return ZimbraSoapContext.this; }
+            public void notificationsReady()          { signalNotification(); }
         }
 
-        public String toString()  { return session.getSessionId(); }
+        public PushChannel getPushChannel() {
+            return new SoapPushChannel();
+        }
     }
 
     private static Log sLog = LogFactory.getLog(ZimbraSoapContext.class);
@@ -98,8 +111,6 @@ public class ZimbraSoapContext {
 
     private boolean mChangeConstraintType = OperationContext.CHECK_MODIFIED;
     private int     mMaximumChangeId = -1;
-
-    private int mNotificationSeqNo = -1;
 
     private List<SessionInfo> mSessionInfo = new ArrayList<SessionInfo>();
     private boolean mSessionSuppressed; // don't create a new session for this request
@@ -132,8 +143,8 @@ public class ZimbraSoapContext {
     	mSessionSuppressed = true;
     }
     
-    /** Creates a <tt>ZimbraSoapContext</tt> from another existing
-     *  <tt>ZimbraSoapContext</tt> for use in proxying. */
+    /** Creates a <code>ZimbraSoapContext</code> from another existing
+     *  <code>ZimbraSoapContext</code> for use in proxying. */
     public ZimbraSoapContext(ZimbraSoapContext lc, String targetAccountId) throws ServiceException {
         mRawAuthToken = lc.mRawAuthToken;
         mAuthToken = lc.mAuthToken;
@@ -152,7 +163,7 @@ public class ZimbraSoapContext {
         mMountpointTraversed = lc.mMountpointTraversed;
     }
 
-    /** Creates a <tt>ZimbraSoapContext</tt> from the <tt>&lt;context></tt>
+    /** Creates a <code>ZimbraSoapContext</code> from the <tt>&lt;context></tt>
      *  {@link Element} from the SOAP header.
      *  
      * @param ctxt     The <tt>&lt;context></tt> Element (can be null if not
@@ -225,12 +236,6 @@ public class ZimbraSoapContext {
             }
         }
 
-        // look for the notification sequence id, for notification reliability
-        // <notify seq="nn">
-        Element notify = (ctxt == null ? null : ctxt.getOptionalElement(HeaderConstants.E_NOTIFY));
-        if (notify != null) 
-            mNotificationSeqNo = (int) notify.getAttributeLong(HeaderConstants.A_SEQNO, 0);
-
         // constrain operations if we know the max change number the client knows about
         Element change = (ctxt == null ? null : ctxt.getOptionalElement(HeaderConstants.E_CHANGE));
         if (change != null) {
@@ -259,15 +264,28 @@ public class ZimbraSoapContext {
             }
         }
 
+        // look for the notification sequence id, for notification reliability
+        //   <notify seq="nn">
+        int seqNo = -1;
+        Element notify = (ctxt == null ? null : ctxt.getOptionalElement(HeaderConstants.E_NOTIFY));
+        if (notify != null) 
+            seqNo = (int) notify.getAttributeLong(HeaderConstants.A_SEQNO, 0);
+
         // record session-related info and validate any specified sessions
         //   (don't create new sessions yet)
         if (ctxt != null) {
             mHaltNotifications = ctxt.getOptionalElement(HeaderConstants.E_NO_NOTIFY) != null;
-            for (Iterator it = ctxt.elementIterator(HeaderConstants.E_SESSION_ID); it.hasNext(); ) {
-                // they specified it, so create a SessionInfo and thereby ping the session as a keepalive
-                parseSessionElement((Element) it.next());
-            }
             mSessionSuppressed = ctxt.getOptionalElement(HeaderConstants.E_NO_SESSION) != null;
+            // if sessions are enabled, create a SessionInfo to encapsulate (will fetch the Session object during the request)
+            if (!mHaltNotifications && !mSessionSuppressed) {
+                for (Element session : ctxt.listElements(HeaderConstants.E_SESSION_ID)) {
+                    String sessionId = null;
+                    if ("".equals(sessionId = session.getTextTrim()))
+                        sessionId = session.getAttribute(HeaderConstants.A_ID, null);
+                    if (sessionId != null)
+                        mSessionInfo.add(new SessionInfo(sessionId, (int) session.getAttributeLong(HeaderConstants.A_SEQNO, seqNo)));
+                }
+            }
         }
 
         // temporary hack: don't qualify item ids in reponses, if so requested
@@ -289,39 +307,6 @@ public class ZimbraSoapContext {
         mRequestIP = (String)context.get(SoapEngine.REQUEST_IP);
     }
 
-    /** Parses a <code>&lt;sessionId></code> {@link Element} from the SOAP Header.<p>
-     * 
-     *  If the XML specifies a valid {@link Session} owned by the authenticted user,
-     *  a {@link SessionInfo} object wrapping the appropriate Session is added to the
-     *  {@link #mSessionInfo} list.
-     * 
-     * @param elt  The <code>&lt;sessionId></code> Element. */
-    private void parseSessionElement(Element elt) {
-        if (elt == null)
-            return;
-
-        String sessionId = null;
-        if ("".equals(sessionId = elt.getTextTrim()))
-            sessionId = elt.getAttribute(HeaderConstants.A_ID, null);
-        if (sessionId == null)
-            return;
-
-        // actually fetch the session from the cache
-        Session session = SessionCache.lookup(sessionId, getAuthtokenAccountId());
-        if (session == null) {
-            sLog.info("requested session no longer exists: " + sessionId);
-            return;
-        }
-        try {
-            // turn off notifications if so directed
-            if (session.getSessionType() == Session.Type.SOAP)
-                if (mHaltNotifications || !elt.getAttributeBool(HeaderConstants.A_NOTIFY, true))
-                    ((SoapSession) session).haltNotifications();
-        } catch (ServiceException e) { }
-
-        mSessionInfo.add(new SessionInfo(session));
-    }
-
     /** Records in this context that we've traversed a mountpoint to get here.
      *  Enforces the "cannot mount a mountpoint" rule forbidding one link from
      *  pointing to another link.  The rationale for this limitation is that
@@ -331,7 +316,7 @@ public class ZimbraSoapContext {
      *  things are just simpler this way.
      * 
      * @throws ServiceException   The following error codes are possible:<ul>
-     *    <li><code>service.PERM_DENIED</code> - if you try to traverse two
+     *    <li><tt>service.PERM_DENIED</tt> - if you try to traverse two
      *        mountpoints in the course of a single proxy</ul> */
     public void recordMountpointTraversal() throws ServiceException {
         if (mMountpointTraversed)
@@ -347,7 +332,7 @@ public class ZimbraSoapContext {
     }
 
     /** Generates a new {@link com.zimbra.cs.mailbox.Mailbox.OperationContext}
-     *  object reflecting the constraints serialized in the <code>&lt;context></code>
+     *  object reflecting the constraints serialized in the <tt>&lt;context></tt>
      *  element in the SOAP header.<p>
      * 
      *  These optional constraints include:<ul>
@@ -378,11 +363,10 @@ public class ZimbraSoapContext {
         return mAuthTokenAccountId;
     }
 
-    /** Returns the account of the auth token. 
-     * @throws ServiceException 
-     */
-    public Account getAuthtokenAccount() throws ServiceException {
-        return Provisioning.getInstance().get(AccountBy.id, mAuthTokenAccountId);
+    /** Sets the id of the authenticated account.  This should only be called
+     *  in the course of some flavor of <tt>Auth</tt> request. */
+    void setAuthenticatedAccountId(String accountId) {
+        mAuthTokenAccountId = accountId;
     }
 
     /** Returns whether the authenticated user is the same as the user whose
@@ -391,84 +375,17 @@ public class ZimbraSoapContext {
         return !mAuthTokenAccountId.equalsIgnoreCase(getRequestedAccountId());
     }
 
-    /** Gets an existing valid {@link SessionInfo} item of the specified type.
-     *  SessionInfo objects correspond to either:<ul>
-     *  <li>existing, unexpired sessions specified in a <code>&lt;sessionId></code>
-     *      element in the <code>&lt;context></code> SOAP header block, or</li>
-     *  <li>new sessions created during the course of the SOAP call</li></ul>
-     * 
-     * @param type  One of the types defined in the {@link SessionCache} class.
-     * @return A matching SessionInfo object or <code>null</code>. */
-    private SessionInfo findSessionInfo(Session.Type type) {
-        for (SessionInfo sinfo : mSessionInfo) {
-            if (sinfo.session.getSessionType() == type)
-                return sinfo;
-        }
-        return null;
+    public boolean isNotificationEnabled() {
+        return !mHaltNotifications && !mSessionSuppressed;
     }
 
-    /** Creates a new {@link Session} object associated with the given account.<p>
-     * 
-     *  As a side effect, the specfied account is considered to be authenticated.
-     *  If that causes the "authenticated id" to change, we forget about all other
-     *  sessions.  Those sessions are not deleted from the cache, though perhaps
-     *  that's the right thing to do...
-     * 
-     * @param accountId  The account ID to create the new session for.
-     * @param type       One of the types defined in the {@link SessionCache} class.
-     * @return A new Session object of the appropriate type. */
-    public Session getNewSession(String accountId, Session.Type type) {
-        if (accountId != null && !accountId.equals(mAuthTokenAccountId))
-            mSessionInfo.clear();
-        mAuthTokenAccountId = accountId;
-        return getSession(type);
-    }
-
-    /** Gets a {@link Session} object of the specified type.<p>
-     * 
-     *  If such a Session was mentioned in a <code>sessionId</code> element
-     *  of the <code>context</code> SOAP header, the first matching one is
-     *  returned.  Otherwise, we create a new Session and return it.  However,
-     *  if <code>&lt;nosession></code> was specified in the <code>&lt;context></code>
-     *  SOAP header, new Sessions are not created.
-     * 
-     * @param type  One of the types defined in the {@link SessionCache} class.
-     * @return A new or existing Session object, or <code>null</code> if
-     *         <code>&lt;nosession></code> was specified. */
-    public Session getSession(Session.Type type) {
-        Session s = null;
-        SessionInfo sinfo = findSessionInfo(type);
-        if (sinfo != null)
-            s = sinfo.session;
-        if (s == null && !mSessionSuppressed && mAuthTokenAccountId != null) {
-            try {
-                if (type == Session.Type.SOAP && mAuthTokenAccountId.equalsIgnoreCase(getRequestedAccountId())) {
-                    // not permitting delegated notification yet...
-//                    s = new SoapSession(mAuthTokenAccountId, mRequestedAccountId);
-                    s = new SoapSession(mAuthTokenAccountId).register();
-                } else if (type == Session.Type.ADMIN) {
-                    s = new AdminSession(mAuthTokenAccountId).register();
-                }
-            } catch (ServiceException e) { 
-                ZimbraLog.session.info("ZimbraSoapContext - exception while creating session: ", e);
-            }
-            if (s != null)
-                mSessionInfo.add(sinfo = new SessionInfo(s, true));
-        }
-        if (s instanceof SoapSession && mHaltNotifications)
-            ((SoapSession) s).haltNotifications();
-        return s;
-    }
-
-    private class SoapPushChannel implements SoapSession.PushChannel {
-        public void close() {  
-            signalNotification(); // don't allow there to be more than one NoOp hanging on a particular account
-        }
-        public int getLastKnownSeqNo() { return mNotificationSeqNo; }
-        public ZimbraSoapContext getSoapContext() { return ZimbraSoapContext.this; }
-        public void notificationsReady(SoapSession session) {
-            signalNotification();
-        }
+    /** Returns a list of the {@link SessionInfo} items associated with this
+     *  SOAP request.  SessionInfo objects correspond to either:<ul>
+     *  <li>sessions specified in a <tt>&lt;sessionId></tt> element in the 
+     *      <tt>&lt;context></tt> SOAP header block, or</li>
+     *  <li>new sessions created during the course of the SOAP call</li></ul> */
+    List<SessionInfo> getReferencedSessions() {
+        return mSessionInfo;
     }
 
     public boolean beginWaitForNotifications(Continuation continuation) throws ServiceException {
@@ -479,9 +396,10 @@ public class ZimbraSoapContext {
         
         // synchronized against 
         for (SessionInfo sinfo : mSessionInfo) {
-            if (sinfo.session instanceof SoapSession) {
-                SoapSession ss = (SoapSession) sinfo.session;
-                SoapSession.RegisterNotificationResult result = ss.registerNotificationConnection(new SoapPushChannel());
+            Session session = SessionCache.lookup(sinfo.sessionId, mAuthTokenAccountId);
+            if (session instanceof SoapSession) {
+                SoapSession ss = (SoapSession) session;
+                SoapSession.RegisterNotificationResult result = ss.registerNotificationConnection(sinfo.getPushChannel());
                 switch (result) {
                     case NO_NOTIFY: break;
                     case DATA_READY: someReady = true; break;
@@ -489,12 +407,8 @@ public class ZimbraSoapContext {
                 }
             }
         }
-        
-        if (someBlocked && !someReady) {
-            return true;
-        } else { 
-            return false;
-        }
+
+        return (someBlocked && !someReady);
     }
 
     /**
@@ -507,42 +421,6 @@ public class ZimbraSoapContext {
     
     synchronized public boolean waitingForNotifications() {
         return mWaitForNotifications;
-    }
-
-    /** Creates a <code>&lt;context></code> element for the SOAP Header containing
-     *  session information and change notifications.<p>
-     * 
-     *  Sessions -- those passed in the SOAP request <code>&lt;context></code>
-     *  block and those created during the course of processing the request -- are
-     *  listed:<p>
-     *     <code>&lt;sessionId [type="admin"] id="12">12&lt;/sessionId></code>
-     * 
-     * @return A new <code>&lt;context></code> {@link Element}, or <code>null</code>
-     *         if there is no relevant information to encapsulate. */
-    Element generateResponseHeader() {
-        Element ctxt = null;
-        try {
-            for (SessionInfo sinfo : mSessionInfo) {
-                Session session = sinfo.session;
-                if (ctxt == null)
-                    ctxt = createElement(HeaderConstants.CONTEXT);
-
-                // session ID is valid, so ping it back to the client:
-                encodeSession(ctxt, session, false);
-                // put <refresh> blocks back for any newly-created SoapSession objects
-                if (sinfo.created && session instanceof SoapSession)
-                    ((SoapSession) session).putRefresh(ctxt, this);
-                // put <notify> blocks back for any SoapSession objects
-                if (session instanceof SoapSession)
-                    ((SoapSession) session).putNotifications(this, ctxt, mNotificationSeqNo);
-            }
-//          if (ctxt != null && mAuthToken != null)
-//          ctxt.addAttribute(E_AUTH_TOKEN, mAuthToken.toString(), Element.DISP_CONTENT);
-            return ctxt;
-        } catch (ServiceException e) {
-            sLog.info("ServiceException while putting soap session refresh data", e);
-            return null;
-        }
     }
 
     /** Serializes this object for use in a proxied SOAP request.  The
@@ -575,22 +453,20 @@ public class ZimbraSoapContext {
 
     /** Serializes a {@link Session} object to return it to a client.  The serialized
      *  XML representation of a Session is:<p>
-     *      <code>&lt;sessionId [type="admin"] id="12">12&lt;/sessionId></code>
+     *      <tt>&lt;sessionId [type="admin"] id="12">12&lt;/sessionId></tt>
      * 
      * @param parent   The {@link Element} to add the serialized Session to.
-     * @param session  The Session object to be serialized.
+     * @param sessionId TODO
+     * @param sessionType TODO
      * @param unique   Whether there can be more than one Session serialized to the
-     *                 <code>parent</code> Element.
-     * @return The created <code>&lt;sessionId></code> Element. */
-    public static Element encodeSession(Element parent, Session session, boolean unique) {
-        String sessionType = null;
-        if (session.getSessionType() == Session.Type.ADMIN)
-            sessionType = HeaderConstants.SESSION_ADMIN;
+     *                 <tt>parent</tt> Element.
+     * @return The created <tt>&lt;sessionId></tt> Element. */
+    public static Element encodeSession(Element parent, String sessionId, Session.Type sessionType, boolean unique) {
+        String typeStr = (sessionType == Session.Type.ADMIN ? HeaderConstants.SESSION_ADMIN : null);
 
-        Element eSession = unique ? parent.addUniqueElement(HeaderConstants.E_SESSION_ID) : parent.addElement(HeaderConstants.E_SESSION_ID);
-        eSession.addAttribute(HeaderConstants.A_TYPE, sessionType).addAttribute(HeaderConstants.A_ID, session.getSessionId())
-        .setText(session.getSessionId());
-        return eSession;
+        Element elt = unique ? parent.addUniqueElement(HeaderConstants.E_SESSION_ID) : parent.addElement(HeaderConstants.E_SESSION_ID);
+        elt.addAttribute(HeaderConstants.A_TYPE, typeStr).addAttribute(HeaderConstants.A_ID, sessionId).setText(sessionId);
+        return elt;
     }
 
     public SoapProtocol getRequestProtocol()   { return mRequestProtocol; }
@@ -600,14 +476,14 @@ public class ZimbraSoapContext {
 
     /** Returns the parsed {@link AuthToken} for this SOAP request.  This can
      *  come either from an HTTP cookie attached to the SOAP request or from
-     *  an <code>&lt;authToken></code> element in the SOAP Header. */
+     *  an <tt>&lt;authToken></tt> element in the SOAP Header. */
     public AuthToken getAuthToken() {
         return mAuthToken;
     }
 
     /** Returns the raw, encoded {@link AuthToken} for this SOAP request.
      *  This can come either from an HTTP cookie attached to the SOAP request
-     *  or from an <code>&lt;authToken></code> element in the SOAP Header. */
+     *  or from an <tt>&lt;authToken></tt> element in the SOAP Header. */
     public String getRawAuthToken() {
         return mRawAuthToken;
     }

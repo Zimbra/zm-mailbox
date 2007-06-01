@@ -25,10 +25,9 @@ urn:zimbra  -- top-level namespace for global attributes/elements
     <context xmlns="urn:zimbra">
        <authToken>...</authToken>
        [<nosession/>]
-       [<sessionId id="{returned-from-server-in-last-response}"/>]
+       [<sessionId id="{returned-from-server-in-last-response}" seq="{highest_notification_received}"/>]
        [<account by="name|id">{account-name-or-id}</account>]
        [<change token="{change-id}" [type="mod|new"]/>]
-       [<notify seq="{highest_notification_received}">]
        [<nonotify/>]
        [<targetServer>{proxy-target-server-id}</targetServer>]
        [<userAgent name="{client-name}" [version="{client-version}"]/>]

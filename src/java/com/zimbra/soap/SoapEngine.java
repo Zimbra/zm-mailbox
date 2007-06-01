@@ -49,8 +49,12 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.service.admin.AdminDocumentHandler;
+import com.zimbra.cs.session.Session;
+import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.soap.ZimbraSoapContext.SessionInfo;
 
 /**
  * The soap engine.
@@ -68,7 +72,7 @@ public class SoapEngine {
     public static final String REQUEST_IP = "request.ip";
     
 	private static Log mLog = LogFactory.getLog(SoapEngine.class);
-	
+
 	private DocumentDispatcher mDispatcher;
 	
     public SoapEngine() {
@@ -131,7 +135,7 @@ public class SoapEngine {
             return soapProto.soapEnvelope(soapProto.soapFault(e));
         }
         SoapProtocol responseProto = zsc.getResponseProtocol();
-        
+
         String rid = zsc.getRequestedAccountId();
         if (rid != null) {
             Account.addAccountToLogContext(rid, ZimbraLog.C_NAME, ZimbraLog.C_ID);
@@ -150,12 +154,8 @@ public class SoapEngine {
         // Global SOAP logging happens before the context is determined.  If we
         // haven't already logged the message and need to log it for the current
         // user, do it here.
-        if (!loggedRequest && ZimbraLog.soap.isDebugEnabled()) {
+        if (!loggedRequest && ZimbraLog.soap.isDebugEnabled())
             ZimbraLog.soap.debug("SOAP request:\n" + envelope.prettyPrint());
-        } else {
-            int i = 0;
-            i++;
-        }
 
         context.put(ZIMBRA_CONTEXT, zsc);
         context.put(ZIMBRA_ENGINE, this);
@@ -217,7 +217,7 @@ public class SoapEngine {
         }
 
         // put notifications (new sessions and incremental change notifications)
-        Element responseHeader = zsc.generateResponseHeader();
+        Element responseHeader = generateResponseHeader(zsc);
 
         Element response = responseProto.soapEnvelope(responseBody, responseHeader);
 
@@ -298,7 +298,7 @@ public class SoapEngine {
         Element response = null;
         try {
             // fault in a session for this handler (if necessary) before executing the command
-            handler.getSession(context);
+            handler.getSession(zsc);
             // try to proxy the request if necesary (don't proxy commands that don't require auth)
             if (needsAuth || needsAdminAuth)
                 response = handler.proxyIfNecessary(request, context);
@@ -341,10 +341,49 @@ public class SoapEngine {
         return response;
     }
     
-	/**
-	 * @return
-	 */
 	public DocumentDispatcher getDocumentDispatcher() {
 		return mDispatcher;
 	}
+
+    /** Creates a <tt>&lt;context></tt> element for the SOAP Header containing
+     *  session information and change notifications.<p>
+     * 
+     *  Sessions -- those passed in the SOAP request <tt>&lt;context></tt>
+     *  block and those created during the course of processing the request -- are
+     *  listed:<p>
+     *     <tt>&lt;sessionId [type="admin"] id="12">12&lt;/sessionId></tt>
+     * 
+     * @return A new <tt>&lt;context></tt> {@link Element}, or <tt>null</tt>
+     *         if there is no relevant information to encapsulate. */
+    private Element generateResponseHeader(ZimbraSoapContext zsc) {
+        String authAccountId = zsc.getAuthtokenAccountId();
+        Element ctxt = null;
+        try {
+            for (SessionInfo sinfo : zsc.getReferencedSessions()) {
+                Session session = SessionCache.lookup(sinfo.sessionId, authAccountId);
+                if (session == null)
+                    continue;
+
+                // session ID is valid, so ping it back to the client:
+                if (ctxt == null)
+                    ctxt = zsc.createElement(HeaderConstants.CONTEXT);
+                ZimbraSoapContext.encodeSession(ctxt, session.getSessionId(), session.getSessionType(), false);
+
+                if (session instanceof SoapSession) {
+                    // put <refresh> blocks back for any newly-created SoapSession objects
+                    if (sinfo.created)
+                        ((SoapSession) session).putRefresh(zsc, ctxt);
+                    // put <notify> blocks back for any SoapSession objects
+                    ((SoapSession) session).putNotifications(zsc, ctxt, sinfo.sequence);
+                }
+            }
+//          if (ctxt != null && mAuthToken != null)
+//              ctxt.addAttribute(E_AUTH_TOKEN, mAuthToken.toString(), Element.DISP_CONTENT);
+            return ctxt;
+        } catch (ServiceException e) {
+            ZimbraLog.session.info("ServiceException while putting soap session refresh data", e);
+            return null;
+        }
+    }
+
 }

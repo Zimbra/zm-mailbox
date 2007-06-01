@@ -63,8 +63,7 @@ public class SearchAccounts extends AdminDocumentHandler {
     }
     
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
         String query = request.getAttribute(AdminConstants.E_QUERY);
@@ -85,14 +84,14 @@ public class SearchAccounts extends AdminDocumentHandler {
         String[] attrs = attrsStr == null ? null : attrsStr.split(",");
 
         // if we are a domain admin only, restrict to domain
-        if (isDomainAdminOnly(lc)) {
+        if (isDomainAdminOnly(zsc)) {
             if ((flags & Provisioning.SA_DOMAIN_FLAG) == Provisioning.SA_DOMAIN_FLAG)
                 throw ServiceException.PERM_DENIED("can not search for domains");
 
             if (domain == null) {
-                domain = getAuthTokenAccountDomain(lc).getName();
+                domain = getAuthTokenAccountDomain(zsc).getName();
             } else {
-                if (!canAccessDomain(lc, domain)) 
+                if (!canAccessDomain(zsc, domain)) 
                     throw ServiceException.PERM_DENIED("can not access domain"); 
             }
         }
@@ -105,7 +104,7 @@ public class SearchAccounts extends AdminDocumentHandler {
         }
 
         List accounts;
-        AdminSession session = (AdminSession) lc.getSession(Session.Type.ADMIN);
+        AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);
         if (session != null) {
             accounts = session.searchAccounts(d, query, attrs, sortBy, sortAscending, flags, offset, 0);
         } else {
@@ -116,7 +115,7 @@ public class SearchAccounts extends AdminDocumentHandler {
             }
         }
 
-        Element response = lc.createElement(AdminConstants.SEARCH_ACCOUNTS_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.SEARCH_ACCOUNTS_RESPONSE);
         int i, limitMax = offset+limit;
         for (i=offset; i < limitMax && i < accounts.size(); i++) {
             NamedEntry entry = (NamedEntry) accounts.get(i);

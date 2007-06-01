@@ -49,8 +49,8 @@ public class GetSessions extends AdminDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Element response = lc.createElement(AdminConstants.GET_SESSIONS_RESPONSE);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Element response = zsc.createElement(AdminConstants.GET_SESSIONS_RESPONSE);
 
         String typeStr = request.getAttribute(AdminConstants.A_TYPE);
         Type type;
@@ -65,7 +65,7 @@ public class GetSessions extends AdminDocumentHandler {
         long limit = request.getAttributeLong(AdminConstants.A_LIMIT, Integer.MAX_VALUE);
         boolean refresh = request.getAttributeBool(AdminConstants.A_REFRESH, false);
 
-        AdminSession adminSession = (AdminSession) lc.getSession(Session.Type.ADMIN);
+        AdminSession adminSession = (AdminSession) getSession(zsc, Session.Type.ADMIN);
         CachedResult result = getResult(adminSession, type, refresh, sortBy);
         List<SessionInfo> sessions = result.sessions;
 

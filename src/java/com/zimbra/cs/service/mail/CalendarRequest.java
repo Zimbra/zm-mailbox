@@ -412,7 +412,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         }
 
         boolean onBehalfOf = zsc.isDelegatedRequest();
-        Account authAcct = zsc.getAuthtokenAccount();
+        Account authAcct = getAuthenticatedAccount(zsc);
         Locale locale = !onBehalfOf ? acct.getLocale() : authAcct.getLocale();
 
         CalSendData dat = new CalSendData();
