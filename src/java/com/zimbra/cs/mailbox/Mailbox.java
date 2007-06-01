@@ -3041,6 +3041,8 @@ public class Mailbox {
         public Invite mInv;
         public boolean mForce;
         public ParsedMessage mPm;
+        
+        public List<Invite> mReplies; //FIXME: zdsync only, but do we need to serialize for redo?
 
         public String toString() {
             StringBuilder toRet = new StringBuilder();
@@ -3105,11 +3107,25 @@ public class Mailbox {
             }
 
             redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId(), volumeId);
+            
+            //zdsync: process parsed replies
+            if (defaultInv.mReplies != null) {
+            	for (Invite reply : defaultInv.mReplies) {
+            		calItem.processNewInviteReply(reply, true);
+            	}
+            }
 
             // handle the exceptions!
             if (exceptions != null) {
-                for (SetCalendarItemData sad : exceptions)
+                for (SetCalendarItemData sad : exceptions) {
                     calItem.processNewInvite(sad.mPm, sad.mInv, sad.mForce, folderId, volumeId);
+                    //zdsync: process parsed replies
+                    if (sad.mReplies != null) {
+                    	for (Invite reply : sad.mReplies) {
+                    		calItem.processNewInviteReply(reply, true);
+                    	}
+                    }
+                }
             }
             
             if (calItem != null)
