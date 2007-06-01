@@ -34,6 +34,7 @@ import javax.mail.internet.MimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -42,6 +43,8 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.RecurId;
+import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.mail.ParseMimeMessage.InviteParserResult;
@@ -55,14 +58,17 @@ public class SetCalendarItem extends CalendarRequest {
     protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
     protected boolean checkMountpointProxy(Element request)  { return true; }
 
-    protected class SetCalendarItemInviteParser extends ParseMimeMessage.InviteParser {
+    static class SetCalendarItemInviteParser extends ParseMimeMessage.InviteParser {
         
         private boolean mExceptOk = false;
         private boolean mForCancel = false;
         
-        SetCalendarItemInviteParser(boolean exceptOk, boolean forCancel) {
+        private byte mItemType;
+        
+        SetCalendarItemInviteParser(boolean exceptOk, boolean forCancel, byte itemType) {
             mExceptOk = exceptOk;
             mForCancel = forCancel;
+            mItemType = itemType;
         }
 
         public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraSoapContext zc, Account account, Element inviteElem) throws ServiceException 
@@ -74,11 +80,11 @@ public class SetCalendarItem extends CalendarRequest {
             } else {
                 if (mForCancel)
                     return CalendarUtils.parseInviteForCancel(
-                            account, getItemType(), inviteElem, null,
+                            account, mItemType, inviteElem, null,
                             mExceptOk, CalendarUtils.RECUR_ALLOWED);
                 else
                     return CalendarUtils.parseInviteForCreate(
-                            account, getItemType(), inviteElem, null, null,
+                            account, mItemType, inviteElem, null, null,
                             mExceptOk, CalendarUtils.RECUR_ALLOWED);
             }
         }
@@ -87,7 +93,6 @@ public class SetCalendarItem extends CalendarRequest {
     
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Account acct = getRequestedAccount(zsc);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = zsc.getOperationContext();
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
@@ -98,53 +103,24 @@ public class SetCalendarItem extends CalendarRequest {
         String tagsStr = request.getAttribute(MailConstants.A_TAGS, null);
         long tags = tagsStr != null ? Tag.tagsToBitmask(tagsStr) : 0;
         
-        SetCalendarItemData defaultData;
-        ArrayList<SetCalendarItemData> exceptions = new ArrayList<SetCalendarItemData>();
-        
         synchronized (mbox) {
-            // First, the <default>
-            {
-                Element e = request.getElement(MailConstants.A_DEFAULT);
-                defaultData = getSetCalendarItemData(zsc, acct, mbox, e, new SetCalendarItemInviteParser(false, false));
-            }
-            
-            // for each <except>
-            for (Iterator iter = request.elementIterator(MailConstants.E_CAL_EXCEPT);
-                 iter.hasNext(); ) {
-                Element e = (Element) iter.next();
-                SetCalendarItemData exDat = getSetCalendarItemData(
-                        zsc, acct, mbox, e,
-                        new SetCalendarItemInviteParser(true, false));
-                exceptions.add(exDat);
-            }
-
-            // for each <cancel>
-            for (Iterator iter = request.elementIterator(MailConstants.E_CAL_CANCEL);
-                 iter.hasNext(); ) {
-                Element e = (Element) iter.next();
-                SetCalendarItemData exDat = getSetCalendarItemData(
-                        zsc, acct, mbox, e,
-                        new SetCalendarItemInviteParser(true, true));
-                exceptions.add(exDat);
-            }
-
-            SetCalendarItemData[] exceptArray = null;
-            if (exceptions.size() > 0) {
-                exceptArray = new SetCalendarItemData[exceptions.size()];
-                exceptions.toArray(exceptArray);
-            }
-            
-            int calItemId = mbox.setCalendarItem(octxt, iidFolder.getId(), flags, tags, defaultData, exceptArray);
+        	
+        	Pair<SetCalendarItemData, SetCalendarItemData[]> parsed = parseSetAppointmentRequest(request, zsc, getItemType(), false);
+            SetCalendarItemData defaultData = parsed.getFirst();
+            SetCalendarItemData[] exceptData = parsed.getSecond();
+        	
+            int calItemId = mbox.setCalendarItem(octxt, iidFolder.getId(), flags, tags, defaultData, exceptData);
             
             Element response = getResponseElement(zsc);
             
             response.addElement(MailConstants.A_DEFAULT).addAttribute(MailConstants.A_ID, ifmt.formatItemId(defaultData.mInv.getMailItemId()));
             
-            for (Iterator iter = exceptions.iterator(); iter.hasNext();) {
-                SetCalendarItemData cur = (SetCalendarItemData) iter.next();
-                Element e = response.addElement(MailConstants.E_CAL_EXCEPT);
-                e.addAttribute(MailConstants.A_CAL_RECURRENCE_ID, cur.mInv.getRecurId().toString());
-                e.addAttribute(MailConstants.A_ID, ifmt.formatItemId(cur.mInv.getMailItemId()));
+            if (exceptData != null) {
+	            for (SetCalendarItemData cur : exceptData) {
+	                Element e = response.addElement(MailConstants.E_CAL_EXCEPT);
+	                e.addAttribute(MailConstants.A_CAL_RECURRENCE_ID, cur.mInv.getRecurId().toString());
+	                e.addAttribute(MailConstants.A_ID, ifmt.formatItemId(cur.mInv.getMailItemId()));
+	            }
             }
             String itemId = ifmt.formatItemId(calItemId);
             response.addAttribute(MailConstants.A_CAL_ID, itemId);
@@ -180,8 +156,12 @@ public class SetCalendarItem extends CalendarRequest {
             ipr = parser.getResult();
         }
 
-        if (ipr == null && msgElem.getOptionalElement(MailConstants.E_INVITE) != null)
-            ipr = parser.parse(zc, mbox.getAccount(), msgElem.getElement(MailConstants.E_INVITE));
+        Element invElement = msgElem.getOptionalElement(MailConstants.E_INVITE);
+        Element repliesElement = null;
+        if (ipr == null && invElement != null) {
+            ipr = parser.parse(zc, mbox.getAccount(), invElement);
+            repliesElement = invElement.getOptionalElement(MailConstants.E_CAL_REPLIES); //zdsync
+        }
 
         ParsedMessage pm = new ParsedMessage(mm, mbox.attachmentsIndexingEnabled());
         pm.analyze();
@@ -200,6 +180,78 @@ public class SetCalendarItem extends CalendarRequest {
         sadata.mInv = inv;
         sadata.mPm = pm;
         sadata.mForce = true;
+        
+    	//zdsync: process replies if any
+    	if (repliesElement != null) {
+    		sadata.mReplies = new ArrayList<Invite>();
+    		
+    		for (Iterator<Element> iter = repliesElement.elementIterator(MailConstants.E_CAL_REPLY); iter.hasNext();) {
+    			Element replyElement = iter.next();
+    			ZAttendee attendee = new ZAttendee(replyElement.getAttribute(MailConstants.A_CAL_ATTENDEE));
+    			Invite reply = new Invite("REPLY", inv.getTimeZoneMap(), false);
+    			String partStat = replyElement.getAttribute(MailConstants.A_CAL_PARTSTAT, null);
+    			if (partStat != null) {
+    				attendee.setPartStat(partStat);
+    				reply.setPartStat(partStat);
+    			}
+    			String sentBy = replyElement.getAttribute(MailConstants.A_CAL_SENTBY, null);
+    			if (sentBy != null) {
+    				attendee.setSentBy(sentBy);
+    			}
+    			reply.addAttendee(attendee);
+    			reply.setDtStamp(Long.parseLong(replyElement.getAttribute(MailConstants.A_DATE)));
+    			RecurId recurId = RecurId.fromXml(replyElement, inv.getTimeZoneMap());
+    			if (recurId != null) {
+    				reply.setRecurId(recurId);
+    			}
+    			sadata.mReplies.add(reply);
+    		}
+    	}
+        
         return sadata;
+    }
+    
+    public static Pair<SetCalendarItemData, SetCalendarItemData[]> parseSetAppointmentRequest(Element request, ZimbraSoapContext zsc, byte itemType, boolean parseIds)
+    		throws ServiceException {
+    	
+        Account acct = getRequestedAccount(zsc);
+        Mailbox mbox = getRequestedMailbox(zsc);
+    	
+        SetCalendarItemData defaultData;
+        ArrayList<SetCalendarItemData> exceptions = new ArrayList<SetCalendarItemData>();
+    	
+        // First, the <default>
+        {
+            Element e = request.getElement(MailConstants.A_DEFAULT);
+            defaultData = getSetCalendarItemData(zsc, acct, mbox, e, new SetCalendarItemInviteParser(false, false, itemType));
+        }
+        
+        // for each <except>
+        for (Iterator iter = request.elementIterator(MailConstants.E_CAL_EXCEPT);
+             iter.hasNext(); ) {
+            Element e = (Element) iter.next();
+            SetCalendarItemData exDat = getSetCalendarItemData(
+                    zsc, acct, mbox, e,
+                    new SetCalendarItemInviteParser(true, false, itemType));
+            exceptions.add(exDat);
+        }
+
+        // for each <cancel>
+        for (Iterator iter = request.elementIterator(MailConstants.E_CAL_CANCEL);
+             iter.hasNext(); ) {
+            Element e = (Element) iter.next();
+            SetCalendarItemData exDat = getSetCalendarItemData(
+                    zsc, acct, mbox, e,
+                    new SetCalendarItemInviteParser(true, true, itemType));
+            exceptions.add(exDat);
+        }
+
+        SetCalendarItemData[] exceptArray = null;
+        if (exceptions.size() > 0) {
+            exceptArray = new SetCalendarItemData[exceptions.size()];
+            exceptions.toArray(exceptArray);
+        }
+    	
+    	return new Pair<SetCalendarItemData, SetCalendarItemData[]>(defaultData, exceptArray);
     }
 }

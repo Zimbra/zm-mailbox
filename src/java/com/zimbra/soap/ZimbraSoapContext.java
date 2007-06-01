@@ -116,6 +116,22 @@ public class ZimbraSoapContext {
     private String      mUserAgent;
     private String      mRequestIP;
 
+    //zdsync: for parsing locally constructed soap requests
+    public ZimbraSoapContext(AuthToken authToken, String accountId, SoapProtocol reqProtocol, SoapProtocol respProtocol) throws ServiceException {
+    	mAuthToken = authToken;
+    	try {
+    		mRawAuthToken = authToken.getEncoded();
+    	} catch (AuthTokenException x) {
+    		throw ServiceException.FAILURE("AuthTokenExcepiton", x);
+    	}
+    	mAuthTokenAccountId = authToken.getAccountId();
+    	mRequestedAccountId = accountId;
+    	mRequestProtocol = reqProtocol;
+    	mResponseProtocol = respProtocol;
+    	
+    	mSessionSuppressed = true;
+    }
+    
     /** Creates a <tt>ZimbraSoapContext</tt> from another existing
      *  <tt>ZimbraSoapContext</tt> for use in proxying. */
     public ZimbraSoapContext(ZimbraSoapContext lc, String targetAccountId) throws ServiceException {

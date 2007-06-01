@@ -1040,7 +1040,9 @@ public class UserServlet extends ZimbraServlet {
     	} catch (IOException x) {
     		throw ServiceException.FAILURE("Can't read response body " + url, x);
     	} finally {
-            get.releaseConnection();
+    		if (get != null) {
+    			get.releaseConnection();
+    		}
         }
     }
     

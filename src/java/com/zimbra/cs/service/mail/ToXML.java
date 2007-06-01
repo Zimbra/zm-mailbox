@@ -771,6 +771,8 @@ public class ToXML {
         encodeTimeZoneMap(ie, cal.getTimeZoneMap());
 
         ie.addAttribute(MailConstants.A_CAL_SEQUENCE, inv.getSeqNo());
+        ie.addAttribute(MailConstants.A_CAL_DATETIME, inv.getDTStamp());
+        
         encodeReplies(ie, cal, inv);
 
         ie.addAttribute(MailConstants.A_ID, ifmt.formatItemId(inv.getMailItemId()));
@@ -1130,23 +1132,23 @@ public class ToXML {
         
         if (allFields) {
             boolean isRecurring = false;
-            e.addAttribute("x_uid", invite.getUid());
-            e.addAttribute(MailConstants.A_CAL_SEQUENCE, invite.getSeqNo());
+                e.addAttribute("x_uid", invite.getUid());
+                e.addAttribute(MailConstants.A_CAL_SEQUENCE, invite.getSeqNo());
 
-            String itemId = ifmt.formatItemId(calItem);
-            e.addAttribute(MailConstants.A_CAL_ID, itemId);
-            if (invite.isEvent())
-                e.addAttribute(MailConstants.A_APPT_ID_DEPRECATE_ME, itemId);  // for backward compat
+                String itemId = ifmt.formatItemId(calItem);
+                e.addAttribute(MailConstants.A_CAL_ID, itemId);
+                if (invite.isEvent())
+                    e.addAttribute(MailConstants.A_APPT_ID_DEPRECATE_ME, itemId);  // for backward compat
 
             if (invite.isOrganizer())
-                e.addAttribute(MailConstants.A_CAL_ISORG, true);
+                    e.addAttribute(MailConstants.A_CAL_ISORG, true);
 
-            Recurrence.IRecurrence recur = invite.getRecurrence();
-            if (recur != null) {
-                isRecurring = true;
-                Element recurElt = e.addElement(MailConstants.E_CAL_RECUR);
-                recur.toXml(recurElt);
-            }
+                Recurrence.IRecurrence recur = invite.getRecurrence();
+                if (recur != null) {
+                    isRecurring = true;
+                    Element recurElt = e.addElement(MailConstants.E_CAL_RECUR);
+                    recur.toXml(recurElt);
+                }
 
             e.addAttribute(MailConstants.A_CAL_STATUS, invite.getStatus());
 

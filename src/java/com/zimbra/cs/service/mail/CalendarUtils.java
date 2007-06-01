@@ -121,7 +121,9 @@ public class CalendarUtils {
                 account, itemType, inviteElem, create, recurrenceIdAllowed, recurAllowed);
 
         // DTSTAMP
-        create.setDtStamp(new Date().getTime());
+        if (create.getDTStamp() == 0) { //zdsync
+        	create.setDtStamp(new Date().getTime());
+        }
 
         // UID
         if (uid != null && uid.length() > 0)
@@ -633,6 +635,10 @@ public class CalendarUtils {
             boolean recurrenceIdAllowed, boolean recurAllowed)
     throws ServiceException {
 
+    	//zdsync: only present if zdsync
+    	String invId = element.getAttribute(MailConstants.A_ID, null);
+    	String dts = element.getAttribute(MailConstants.A_CAL_DATETIME, null);
+    	
     	Element compElem = element.getOptionalElement(MailConstants.E_INVITE_COMPONENT);
     	if (compElem != null)
     		element = compElem;
@@ -645,7 +651,7 @@ public class CalendarUtils {
         // UID
         String uid = element.getAttribute(MailConstants.A_UID, null);
         if (uid == null || uid.length() == 0)
-            uid = LdapUtil.generateUUID();
+        		uid = LdapUtil.generateUUID();
         newInv.setUid(uid);
 
         // RECURRENCE-ID
@@ -861,6 +867,14 @@ public class CalendarUtils {
             newInv.addXProp(prop);
 
         newInv.validateDuration();
+    	
+        //zdsync: must set this only after recur is processed
+    	if (invId != null) {
+    		newInv.setInviteId(Integer.parseInt(invId));
+    	}
+    	if (dts != null) {
+    		newInv.setDtStamp(Long.parseLong(dts));
+    	}
     }
 
     private static List<ZProperty> parseXProps(Element element)
@@ -1027,6 +1041,9 @@ public class CalendarUtils {
 
         // SUMMARY
         cancel.setName("CANCELLED: " + inv.getName());
+        
+        //zdsync
+        cancel.setInviteId(inv.getMailItemId());
 
         return cancel;
     }
