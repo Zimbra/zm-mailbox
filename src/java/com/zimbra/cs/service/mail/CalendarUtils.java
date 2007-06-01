@@ -129,9 +129,6 @@ public class CalendarUtils {
         if (uid != null && uid.length() > 0)
             create.setUid(uid);
 
-        // SEQUENCE
-        create.setSeqNo(0);
-
         ZVCalendar iCal = create.newToICalendar();
 
         String summaryStr = create.getName() != null ? create.getName() : "";

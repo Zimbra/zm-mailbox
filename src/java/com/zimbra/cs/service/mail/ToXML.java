@@ -771,7 +771,7 @@ public class ToXML {
         encodeTimeZoneMap(ie, cal.getTimeZoneMap());
 
         ie.addAttribute(MailConstants.A_CAL_SEQUENCE, inv.getSeqNo());
-        ie.addAttribute(MailConstants.A_CAL_DATETIME, inv.getDTStamp());
+        ie.addAttribute(MailConstants.A_CAL_DATETIME, inv.getDTStamp()); //zdsync
         
         encodeReplies(ie, cal, inv);
 
