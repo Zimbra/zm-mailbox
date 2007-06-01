@@ -437,7 +437,6 @@
 		<copy todir="${dist.dir}/bin" overwrite="true"><fileset dir="${src.dir}/bin" excludes="*.production,zmmailboxdctl,jetty,tomcat"/></copy>
 		<copy todir="${dist.dir}/libexec" overwrite="true"><fileset dir="${src.dir}/libexec" excludes="*.production"/></copy>
 		<if><isset property="is-production"/><then>
-		    <copy tofile="${dist.dir}/bin/${webserver.name}" file="${src.dir}/bin/${webserver.name}" overwrite="true"/>
 		    <copy tofile="${dist.dir}/bin/zmmailboxdctl" file="${src.dir}/bin/zmmailboxdctl" overwrite="true"/>
 		</then><else>
 		    <copy tofile="${dist.dir}/bin/${webserver.name}" file="${src.dir}/bin/${webserver.name}" overwrite="true"/>
