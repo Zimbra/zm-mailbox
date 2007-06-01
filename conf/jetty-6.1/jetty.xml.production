@@ -33,7 +33,7 @@
     <!-- HTTPBEGIN -->
     <Call name="addConnector">
       <Arg>
-          <New id="http" class="org.mortbay.jetty.bio.SocketConnector">
+          <New id="http" class="org.mortbay.jetty.nio.SelectChannelConnector">
             <Set name="port"><SystemProperty name="jetty.port" default="%%zimbraMailPort%%"/></Set>
             <Set name="maxIdleTime">30000</Set>
 	    <Set name="lowResourceMaxIdleTime">1000</Set>
@@ -48,7 +48,7 @@
     <!-- HTTPSBEGIN
     <Call name="addConnector">
       <Arg>
-        <New id="ssl" class="org.mortbay.jetty.security.SslSocketConnector">
+        <New id="ssl" class="org.mortbay.jetty.security.SslSelectChannelConnector">
           <Set name="Port">%%zimbraMailSSLPort%%</Set>
           <Set name="maxIdleTime">30000</Set> 
 	  <Set name="lowResourceMaxIdleTime">1000</Set>
@@ -65,7 +65,7 @@
     <!-- =============================================================== -->
     <Call name="addConnector">
       <Arg>
-        <New id="admin" class="org.mortbay.jetty.security.SslSocketConnector">
+        <New id="admin" class="org.mortbay.jetty.security.SslSelectChannelConnector">
           <Set name="Port">7071</Set>
           <Set name="maxIdleTime">30000</Set>
 	  <Set name="lowResourceMaxIdleTime">1000</Set>

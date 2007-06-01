@@ -45,23 +45,12 @@
     -->    
     <Call name="addConnector">
       <Arg>
-          <New id="http" class="org.mortbay.jetty.bio.SocketConnector">
+          <New id="http" class="org.mortbay.jetty.nio.SelectChannelConnector">
             <Set name="port"><SystemProperty name="jetty.port" default="7070"/></Set>
             <Set name="maxIdleTime">30000</Set>
 	    <Set name="lowResourceMaxIdleTime">1000</Set>
             <Set name="Acceptors">2</Set>
             <Set name="confidentialPort">7071</Set>
-          </New>
-      </Arg>
-    </Call>
-
-    <!-- Use this connector if NIO is not available.
-    <Call name="addConnector">
-      <Arg>
-          <New class="org.mortbay.jetty.bio.SocketConnector">
-            <Set name="port">7071</Set>
-            <Set name="maxIdleTime">50000</Set>
-            <Set name="lowResourceMaxIdleTime">1500</Set>
           </New>
       </Arg>
     </Call>
@@ -72,7 +61,7 @@
     <!-- =============================================================== -->
     <Call name="addConnector">
       <Arg>
-        <New id="ssl" class="org.mortbay.jetty.security.SslSocketConnector">
+        <New id="ssl" class="org.mortbay.jetty.security.SslSelectChannelConnector">
           <Set name="Port">7071</Set>
           <Set name="maxIdleTime">30000</Set>
 	  <Set name="lowResourceMaxIdleTime">1000</Set>
@@ -88,7 +77,7 @@
     <!-- =============================================================== -->
     <Call name="addConnector">
       <Arg>
-        <New id="ext" class="org.mortbay.jetty.bio.SocketConnector">
+        <New id="ext" class="org.mortbay.jetty.nio.SelectChannelConnector">
           <Set name="Port">7072</Set>
           <Set name="maxIdleTime">30000</Set>
           <Set name="lowResourceMaxIdleTime">1000</Set>
