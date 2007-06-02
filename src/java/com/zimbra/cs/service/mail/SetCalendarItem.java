@@ -156,12 +156,8 @@ public class SetCalendarItem extends CalendarRequest {
             ipr = parser.getResult();
         }
 
-        Element invElement = msgElem.getOptionalElement(MailConstants.E_INVITE);
-        Element repliesElement = null;
-        if (ipr == null && invElement != null) {
-            ipr = parser.parse(zc, mbox.getAccount(), invElement);
-            repliesElement = invElement.getOptionalElement(MailConstants.E_CAL_REPLIES); //zdsync
-        }
+        if (ipr == null && msgElem.getOptionalElement(MailConstants.E_INVITE) != null)
+            ipr = parser.parse(zc, mbox.getAccount(), msgElem.getElement(MailConstants.E_INVITE));
 
         ParsedMessage pm = new ParsedMessage(mm, mbox.attachmentsIndexingEnabled());
         pm.analyze();
@@ -180,34 +176,6 @@ public class SetCalendarItem extends CalendarRequest {
         sadata.mInv = inv;
         sadata.mPm = pm;
         sadata.mForce = true;
-        
-    	//zdsync: process replies if any
-    	if (repliesElement != null) {
-    		sadata.mReplies = new ArrayList<Invite>();
-    		
-    		for (Iterator<Element> iter = repliesElement.elementIterator(MailConstants.E_CAL_REPLY); iter.hasNext();) {
-    			Element replyElement = iter.next();
-    			ZAttendee attendee = new ZAttendee(replyElement.getAttribute(MailConstants.A_CAL_ATTENDEE));
-    			Invite reply = new Invite("REPLY", inv.getTimeZoneMap(), false);
-    			String partStat = replyElement.getAttribute(MailConstants.A_CAL_PARTSTAT, null);
-    			if (partStat != null) {
-    				attendee.setPartStat(partStat);
-    				reply.setPartStat(partStat);
-    			}
-    			String sentBy = replyElement.getAttribute(MailConstants.A_CAL_SENTBY, null);
-    			if (sentBy != null) {
-    				attendee.setSentBy(sentBy);
-    			}
-    			reply.addAttendee(attendee);
-    			reply.setDtStamp(Long.parseLong(replyElement.getAttribute(MailConstants.A_DATE)));
-    			RecurId recurId = RecurId.fromXml(replyElement, inv.getTimeZoneMap());
-    			if (recurId != null) {
-    				reply.setRecurId(recurId);
-    			}
-    			sadata.mReplies.add(reply);
-    		}
-    	}
-        
         return sadata;
     }
     
