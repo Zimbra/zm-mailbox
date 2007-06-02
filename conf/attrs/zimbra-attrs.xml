@@ -2198,5 +2198,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>group calendar features.  if set to FALSE, calendar works as a personal calendar and attendees and scheduling etc are turned off in web UI</desc>
 </attr>
 
+<attr id="482" name="zimbraNotebookMaxRevisions" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>0</defaultCOSValue>
+  <desc>maximum number of revisions to keep for wiki pages and documents. 0 means unlimited.</desc>
+</attr>
 
 </attrs>
