@@ -1033,18 +1033,33 @@ public abstract class ImapHandler extends ProtocolHandler {
             return CONTINUE_PROCESSING;
 
         try {
+            if (!path.isVisible())
+                throw ImapServiceException.FOLDER_NOT_VISIBLE(path.asZimbraPath());
+
             Object mboxobj = path.getOwnerMailbox();
             if (mboxobj instanceof Mailbox) {
+                Mailbox mbox = (Mailbox) mboxobj;
+                Folder folder = (Folder) path.getFolder();
+                if (!folder.isDeletable())
+                    throw ImapServiceException.CANNOT_DELETE_SYSTEM_FOLDER(folder.getPath());
+
                 // don't want the DELETE to cause *this* connection to drop if the deleted folder is currently selected
                 if (mSelectedFolder != null && path.isEquivalent(mSelectedFolder.getPath()))
                     unsetSelectedFolder();
-                ImapDeleteOperation op = new ImapDeleteOperation(mSelectedFolder, getContext(), (Mailbox) mboxobj, path);
-                op.schedule();
+
+                if (!folder.hasSubfolders()) {
+                    mbox.delete(getContext(), folder.getId(), MailItem.TYPE_FOLDER);
+                } else {
+                    // 6.3.4: "It is permitted to delete a name that has inferior hierarchical
+                    //         names and does not have the \Noselect mailbox name attribute.
+                    //         In this case, all messages in that mailbox are removed, and the
+                    //         name will acquire the \Noselect mailbox name attribute."
+                    mbox.emptyFolder(getContext(), folder.getId(), false);
+                    // FIXME: add \Deleted flag to folder
+                }
             } else if (mboxobj instanceof ZMailbox) {
                 ZMailbox zmbx = (ZMailbox) mboxobj;
-                ZFolder zfolder = zmbx.getFolderByPath(path.asZimbraPath());
-                if (zfolder == null)
-                    throw MailServiceException.NO_SUCH_FOLDER(path.asImapPath());
+                ZFolder zfolder = (ZFolder) path.getFolder();
 
                 if (zfolder.getSubFolders().isEmpty())
                     zmbx.deleteFolder(zfolder.getId());
