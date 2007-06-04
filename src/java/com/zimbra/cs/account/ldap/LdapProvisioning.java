@@ -595,6 +595,8 @@ public class LdapProvisioning extends Provisioning {
                                   Map<String, Object> acctAttrs,
                                   String[] additionalObjectClasses)
     throws ServiceException {
+        validEmailAddress(emailAddress);
+        
     	validate("createAccount", emailAddress);
         emailAddress = emailAddress.toLowerCase().trim();
 
@@ -1083,7 +1085,10 @@ public class LdapProvisioning extends Provisioning {
     }
 
     private void addAliasInternal(NamedEntry entry, String alias) throws ServiceException {
-    	assert(entry instanceof Account || entry instanceof DistributionList);
+    	
+        validEmailAddress(alias);
+        
+        assert(entry instanceof Account || entry instanceof DistributionList);
         alias = alias.toLowerCase().trim();
         int loc = alias.indexOf("@"); 
         if (loc == -1)
@@ -1612,6 +1617,8 @@ public class LdapProvisioning extends Provisioning {
      */
     public void renameAccount(String zimbraId, String newName) throws ServiceException {
         
+        validEmailAddress(newName);
+        
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(true);
@@ -1955,6 +1962,8 @@ public class LdapProvisioning extends Provisioning {
 
     public DistributionList createDistributionList(String listAddress, Map<String, Object> listAttrs) throws ServiceException {
 
+        validEmailAddress(listAddress);
+        
         listAddress = listAddress.toLowerCase().trim();
 
         HashMap attrManagerContext = new HashMap();
@@ -2044,6 +2053,9 @@ public class LdapProvisioning extends Provisioning {
     }
 
     public void renameDistributionList(String zimbraId, String newEmail) throws ServiceException {
+        
+        validEmailAddress(newEmail);
+        
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(true);
@@ -2189,7 +2201,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             InternetAddress ia = new InternetAddress(addr, true);
             // is this even needed?
-            ia.validate();
+            // ia.validate();
             if (ia.getPersonal() != null && !ia.getPersonal().equals(""))
                 throw ServiceException.INVALID_REQUEST("invalid email address", null);
         } catch (AddressException e) {
