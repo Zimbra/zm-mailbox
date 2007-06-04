@@ -470,6 +470,7 @@ OR
         <inv>
 		  [<tz>...</tz>]*
           <comp
+                d="{date}"
                 uid="{UID}"
                 seq="{sequence}"  // must be incremented from original sequence
                 [name="{name}]
@@ -627,9 +628,10 @@ OR
      <su>{subject}</su>
      <f>{fragment}</f>
 
-     <inv type="appt|task">
+     <inv type="appt|task" id="{invId}">
        [
        <comp status="TENT|CONF|CANC"
+            d="{date}"
        		fb="F|B|T|U"
        		fba="F|B|T|U" // Your current status -- what is returned in FreeBusy for you TODO
        		transp="O|T"
@@ -853,6 +855,7 @@ OR
     [<inv id="invite-original-mail-item-id" compNum="component-number" seq="num">
       [<replies>
         [<reply d="TIMESTAMP_OF_REPLY"
+                seq="num"
                 at="foo@bar.com"
                 ptst="AC|DE|TE|NE"
                 rangeType="1"
