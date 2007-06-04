@@ -1234,10 +1234,8 @@ public class ProvUtil implements DebugListener {
     private void doImport(String username, String fromDir, String toFolder, WikiUtil wu) throws ServiceException {
     	try {
     		wu.startImport(username, toFolder, new java.io.File(fromDir));
-    	} catch (Exception e) {
-    		System.err.println("Cannot import Wiki documents from " + fromDir);
-    		e.printStackTrace();
-    		return;
+    	} catch (IOException e) {
+    		throw ServiceException.FAILURE("Cannot import Wiki documents from "+fromDir, e);
     	}
     }
     
