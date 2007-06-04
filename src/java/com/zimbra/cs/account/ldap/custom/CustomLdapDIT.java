@@ -160,7 +160,7 @@ import com.zimbra.cs.account.ldap.SpecialAttrs;
 
 
 public class CustomLdapDIT extends LdapDIT {
-    zimbra12
+    
     public CustomLdapDIT(LdapProvisioning prov) {
         super(prov);
     }
