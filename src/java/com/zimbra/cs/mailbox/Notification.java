@@ -28,6 +28,7 @@ package com.zimbra.cs.mailbox;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.mail.MessagingException;
 import javax.mail.Transport;
@@ -35,24 +36,26 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import com.sun.mail.smtp.SMTPMessage;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.EmailUtil;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbOutOfOffice;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.lmtpserver.LmtpCallback;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.EmailUtil;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.util.StringUtil;
-import com.sun.mail.smtp.SMTPMessage;
 
-public class Notification {
-
+public class Notification
+implements LmtpCallback {
+    
     /**
      * Do not send someone an out of office reply within this number of days.
      */
@@ -65,14 +68,44 @@ public class Notification {
      * the user's addresses to guard against messages with a large number
      * of addresses in to,cc.
      */
-    public static final int OUT_OF_OFFICE_DIRECT_CHECK_NUM_RECIPIENTS = 10; // M x N, so limit it.
+    private static final int OUT_OF_OFFICE_DIRECT_CHECK_NUM_RECIPIENTS = 10; // M x N, so limit it.
+    
+    private static final Notification sInstance = new Notification();
+
+    private Notification() {
+    }
+    
+    public void afterDelivery(Account account, Mailbox mbox, ParsedMessage parsedMessage,
+                              String envelopeSender, String recipientEmail, Message newMessage) {
+        // If notification fails, log a warning and continue so that message delivery
+        // isn't affected
+        try {
+            notifyIfNecessary(account, newMessage, recipientEmail, parsedMessage);
+        } catch (MessagingException e) {
+            ZimbraLog.mailbox.warn("Unable to send new mail notification", e);
+        }
+        
+        try {
+            outOfOfficeIfNecessary(account, mbox, newMessage,
+                recipientEmail, envelopeSender, parsedMessage);
+        } catch (MessagingException e) {
+            ZimbraLog.mailbox.warn("Unable to send out-of-office reply", e);
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.warn("Unable to send out-of-office reply", e);
+        }
+    }
+
+    public static Notification getInstance() {
+        return sInstance;
+    }
 
     /**
      * If the recipient's account requires out of office notification,
      * send it out.  We send these out based on users' setting, and
      * the incoming message meeting certain criteria.
      */
-    public static void outOfOfficeIfNecessary(Account account, Mailbox mbox, Message msg, String rcpt, String envSenderString, ParsedMessage pm)
+    private void outOfOfficeIfNecessary(Account account, Mailbox mbox, Message msg,
+                                               String rcpt, String envSenderString, ParsedMessage pm)
         throws ServiceException, MessagingException
     {
         String destination = null;
@@ -277,7 +310,7 @@ public class Notification {
      * If the recipient's account is set up for email notification, sends a notification
      * message to the user's notification address.
      */
-    public static void notifyIfNecessary(Account account, Message msg, String rcpt, ParsedMessage pm)
+    private void notifyIfNecessary(Account account, Message msg, String rcpt, ParsedMessage pm)
         throws MessagingException
     {
         // Does user have new mail notification turned on
@@ -350,7 +383,7 @@ public class Notification {
         }
         String recipientDomain = EmailUtil.getLocalPartAndDomain(rcpt)[1];
 
-        HashMap vars = new HashMap();
+        Map<String, String> vars = new HashMap<String, String>();
         vars.put("SENDER_ADDRESS", pm.getSender());
         vars.put("RECIPIENT_ADDRESS", rcpt);
         vars.put("RECIPIENT_DOMAIN", recipientDomain);

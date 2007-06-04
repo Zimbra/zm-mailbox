@@ -347,11 +347,11 @@ public class TestUtil {
      */
     static void cliSetup()
     throws ServiceException {
+        CliUtil.toolSetup();
         SoapProvisioning sp = new SoapProvisioning();
         sp.soapSetURI("https://localhost:7071" + ZimbraServlet.ADMIN_SERVICE_URI);
         sp.soapZimbraAdminAuthenticate();
         Provisioning.setInstance(sp);
-        CliUtil.toolSetup();
     }
 
     /**

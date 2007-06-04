@@ -1161,6 +1161,12 @@ public abstract class Provisioning {
     public static final String A_zimbraDataSourceLeaveOnServer = "zimbraDataSourceLeaveOnServer";
     public static final String A_zimbraDataSourcePollingInterval = "zimbraDataSourcePollingInterval";
     
+    // Quota warning
+    public static final String A_zimbraQuotaWarnPercent = "zimbraQuotaWarnPercent";
+    public static final String A_zimbraQuotaLastWarnTime = "zimbraQuotaLastWarnTime";
+    public static final String A_zimbraQuotaWarnInterval = "zimbraQuotaWarnInterval";
+    public static final String A_zimbraQuotaWarnMessage = "zimbraQuotaWarnMessage";
+    
     // Server/globalconfig
     public static final String A_zimbraDataSourceNumThreads = "zimbraDataSourceNumThreads";
 

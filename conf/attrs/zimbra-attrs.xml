@@ -85,7 +85,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     string......currently just checks max length if specified
     astring.....IA5 string (almost ascii)
     cstring.....case sensitive string
-    ostring.....octect string defined in LDAP
+    ostring.....octet string defined in LDAP
 
   value: used with enum and regex
 
@@ -2201,6 +2201,23 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="482" name="zimbraNotebookMaxRevisions" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>0</defaultCOSValue>
   <desc>maximum number of revisions to keep for wiki pages and documents. 0 means unlimited.</desc>
+
+<attr id="483" name="zimbraQuotaWarnPercent" type="integer" min="0" max="100" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>90</defaultCOSValue>
+  <desc>Threshold for quota warning messages.</desc>
 </attr>
+
+<attr id="484" name="zimbraQuotaLastWarnTime" type="gentime" cardinality="single" optionalIn="account">
+  <desc>Last time a quota warning was sent.</desc>
+</attr>
+
+<attr id="485" name="zimbraQuotaWarnInterval" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>1d</defaultCOSValue>
+  <desc>Minimum duration of time between quota warnings.</desc>
+</attr>
+
+<attr id="486" name="zimbraQuotaWarnMessage" type="string" max="10000" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>From: Postmaster &lt;postmaster@${RECIPIENT_DOMAIN}&gt;${NEWLINE}To: ${RECIPIENT_NAME} &lt;${RECIPIENT_ADDRESS}&gt;${NEWLINE}Subject: Quota warning${NEWLINE}Date: ${DATE}${NEWLINE}Content-Type: text/plain${NEWLINE}${NEWLINE}Your mailbox size has reached ${MBOX_SIZE_MB}MB, which is over ${WARN_PERCENT}% of your ${QUOTA_MB}MB quota.${NEWLINE}Please delete some messages to avoid exceeding your quota.${NEWLINE}</defaultCOSValue>
+  <desc>Quota warning message template.</desc></attr>
 
 </attrs>

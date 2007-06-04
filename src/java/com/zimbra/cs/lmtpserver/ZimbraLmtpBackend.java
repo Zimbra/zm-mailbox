@@ -25,9 +25,20 @@
 
 package com.zimbra.cs.lmtpserver;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import javax.mail.MessagingException;
+
+import org.apache.commons.collections.map.LRUMap;
+
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -40,35 +51,43 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Notification;
+import com.zimbra.cs.mailbox.QuotaWarning;
 import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ThreadLocalData;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
-import org.apache.commons.collections.map.LRUMap;
-
-import javax.mail.MessagingException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import com.zimbra.cs.util.Zimbra;
 
 public class ZimbraLmtpBackend implements LmtpBackend {
-	private static Log mLog = LogFactory.getLog(ZimbraLmtpBackend.class);
-
+    
+    private static List<LmtpCallback> sCallbacks = new CopyOnWriteArrayList<LmtpCallback>(); 
 	private static LRUMap sReceivedMessageIDs = null;
-        static {
-            try {
-                int cacheSize = Provisioning.getInstance().getConfig().getIntAttr(Provisioning.A_zimbraMessageIdDedupeCacheSize, 0);
-                if (cacheSize > 0)
-                    sReceivedMessageIDs = new LRUMap(cacheSize);
-            } catch (ServiceException e) {
-                ZimbraLog.lmtp.error("could not read zimbraMessageIdDedupeCacheSize; no deduping will be performed", e);
-            }
+
+    /**
+     * Adds an instance of an LMTP callback class that will be triggered
+     * before and after a message is added to a user mailbox. 
+     */
+	public static void addCallback(LmtpCallback callback) {
+        if (callback == null) {
+            ZimbraLog.lmtp.error("", new IllegalStateException("LmtpCallback cannot be null"));
+            return;
         }
+        ZimbraLog.lmtp.info("Adding LMTP callback: %s", callback.getClass().getName());
+        sCallbacks.add(callback);
+    }
+    
+	static {
+	    try {
+	        int cacheSize = Provisioning.getInstance().getConfig().getIntAttr(Provisioning.A_zimbraMessageIdDedupeCacheSize, 0);
+	        if (cacheSize > 0)
+	            sReceivedMessageIDs = new LRUMap(cacheSize);
+	    } catch (ServiceException e) {
+	        ZimbraLog.lmtp.error("could not read zimbraMessageIdDedupeCacheSize; no deduping will be performed", e);
+	    }
+        addCallback(Notification.getInstance());
+        addCallback(QuotaWarning.getInstance());
+	}
 
 	public LmtpStatus getAddressStatus(LmtpAddress address) {
         String addr = address.getEmailAddress();
@@ -76,23 +95,23 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         try {
 		    Account acct = Provisioning.getInstance().get(AccountBy.name, addr);
 		    if (acct == null) {
-		    	mLog.info("rejecting address " + addr + ": no account");
+		    	ZimbraLog.lmtp.info("rejecting address " + addr + ": no account");
 		    	return LmtpStatus.REJECT;
 		    }
 		    
 		    String acctStatus = acct.getAccountStatus();
 		    if (acctStatus == null) {
-		    	mLog.warn("rejecting address " + addr + ": no account status");
+		    	ZimbraLog.lmtp.warn("rejecting address " + addr + ": no account status");
 		    	return LmtpStatus.REJECT;
 		    }
 
             if (acctStatus.equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE)) {
-                mLog.info("try again for address " + addr + ": account status maintenance");
+                ZimbraLog.lmtp.info("try again for address " + addr + ": account status maintenance");
                 return LmtpStatus.TRYAGAIN;
             }
 
             if (acctStatus.equals(Provisioning.ACCOUNT_STATUS_CLOSED)) {
-                mLog.info("rejecting address " + addr + ": account status closed");
+                ZimbraLog.lmtp.info("rejecting address " + addr + ": account status closed");
                 return LmtpStatus.REJECT;
             }
             
@@ -103,15 +122,15 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 		        return LmtpStatus.ACCEPT;
 		    }
 
-		    mLog.info("rejecting address " + addr + ": unknown account status " + acctStatus);
+		    ZimbraLog.lmtp.info("rejecting address " + addr + ": unknown account status " + acctStatus);
 		    return LmtpStatus.REJECT;
 		
 		} catch (ServiceException e) {
             if (e.isReceiversFault()) {
-                mLog.warn("try again for address " + addr + ": exception occurred", e);
+                ZimbraLog.lmtp.warn("try again for address " + addr + ": exception occurred", e);
                 return LmtpStatus.TRYAGAIN;
             } else {
-                mLog.warn("rejecting address " + addr + ": exception occurred", e);
+                ZimbraLog.lmtp.warn("rejecting address " + addr + ": exception occurred", e);
                 return LmtpStatus.REJECT;
             }
 		}
@@ -121,10 +140,10 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         try {
             deliverMessageToLocalMailboxes(data, env.getRecipients(), env.getSender().getEmailAddress());
         } catch (MessagingException me) {
-            mLog.warn("Exception delivering mail (permanent failure)", me);
+            ZimbraLog.lmtp.warn("Exception delivering mail (permanent failure)", me);
             setDeliveryStatuses(env.getRecipients(), LmtpStatus.REJECT);
         } catch (ServiceException e) {
-            mLog.warn("Exception delivering mail (temporary failure)", e);
+            ZimbraLog.lmtp.warn("Exception delivering mail (temporary failure)", e);
             setDeliveryStatuses(env.getRecipients(), LmtpStatus.TRYAGAIN);
         }
     }
@@ -223,7 +242,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                         continue;
                     }
                     if (account.getBooleanAttr(Provisioning.A_zimbraPrefMailLocalDeliveryDisabled, false)) {
-                        if (mLog.isDebugEnabled()) mLog.debug("Local delivery disabled for account " + rcptEmail);
+                        ZimbraLog.lmtp.debug("Local delivery disabled for account %s", rcptEmail);
                         rcptMap.put(recipient, new RecipientDetail(null, null, null, false, DeliveryAction.discard));
                         continue;
                     }
@@ -294,7 +313,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                         if (rd != null) {
                             switch (rd.action) {
                             case discard:
-                                mLog.info("accepted and discarded message for " + rcptEmail + ": local delivery is disabled");
+                                ZimbraLog.lmtp.info("accepted and discarded message for " + rcptEmail + ": local delivery is disabled");
                                 status = LmtpStatus.ACCEPT;
                                 break;
                             case deliver:
@@ -316,7 +335,22 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                 }
                                 if (msg != null) {
                                     recordReceipt(pm, mbox);
-                                    notify(account, mbox, msg, rcptEmail, envSender, pm);
+                                    
+                                    // Execute callbacks
+                                    for (LmtpCallback callback : sCallbacks) {
+                                        if (ZimbraLog.lmtp.isDebugEnabled()) {
+                                            ZimbraLog.lmtp.debug("Executing callback %s", callback.getClass().getName());
+                                        }
+                                        try {
+                                            callback.afterDelivery(account, mbox, pm, envSender, rcptEmail, msg);
+                                        } catch (Throwable t) {
+                                            if (t instanceof OutOfMemoryError) {
+                                                Zimbra.halt("LMTP callback failed", t);
+                                            } else {
+                                                ZimbraLog.lmtp.warn("LMTP callback threw an exception", t);
+                                            }
+                                        }
+                                    }
                                 }
                                 status = LmtpStatus.ACCEPT;
                                 break;
@@ -324,32 +358,32 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                 // Delivery to mailbox skipped.  Let MTA retry again later.
                                 // This case happens for shared delivery to a mailbox in
                                 // backup mode.
-                                mLog.info("try again for message " + rcptEmail + ": mailbox skipped");
+                                ZimbraLog.lmtp.info("try again for message " + rcptEmail + ": mailbox skipped");
                                 status = LmtpStatus.TRYAGAIN;
                                 break;
                             }
                         } else {
                             // Account or mailbox not found.
-                            mLog.info("rejecting message " + rcptEmail + ": account or mailbox not found");
+                            ZimbraLog.lmtp.info("rejecting message " + rcptEmail + ": account or mailbox not found");
                         	status = LmtpStatus.REJECT;
                         }
                     } catch (IOException ioe) {
                         status = LmtpStatus.TRYAGAIN;
-                        mLog.info("try again for " + rcptEmail + ": exception occurred", ioe);
+                        ZimbraLog.lmtp.info("try again for " + rcptEmail + ": exception occurred", ioe);
                     } catch (ServiceException se) {
                         if (se.getCode().equals(MailServiceException.QUOTA_EXCEEDED)) {
-                            mLog.info("rejecting message " + rcptEmail + ": overquota");
+                            ZimbraLog.lmtp.info("rejecting message " + rcptEmail + ": overquota");
                             status = LmtpStatus.OVERQUOTA;
                         } else if (se.isReceiversFault()) {
-                            mLog.info("try again for message " + rcptEmail + ": exception occurred", se);
+                            ZimbraLog.lmtp.info("try again for message " + rcptEmail + ": exception occurred", se);
                             status = LmtpStatus.TRYAGAIN;
                         } else {
-                            mLog.info("rejecting message " + rcptEmail + ": exception occurred", se);
+                            ZimbraLog.lmtp.info("rejecting message " + rcptEmail + ": exception occurred", se);
                             status = LmtpStatus.REJECT;
                         }
                     } catch (Exception e) {
                         status = LmtpStatus.TRYAGAIN;
-                        mLog.info("try again for message " + rcptEmail + ": exception occurred", e);
+                        ZimbraLog.lmtp.info("try again for message " + rcptEmail + ": exception occurred", e);
                     } finally {
                         ZimbraLog.clearContext();
                         recipient.setDeliveryStatus(status);
@@ -367,7 +401,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                         try {
                             StoreManager.getInstance().delete(sharedBlob);
                         } catch (IOException e) {
-                            mLog.warn("Unable to delete temporary incoming blob after delivery: " + sharedBlob.toString(), e);
+                            ZimbraLog.lmtp.warn("Unable to delete temporary incoming blob after delivery: " + sharedBlob.toString(), e);
                         }
                     }
                 }
@@ -385,27 +419,6 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         }
     }
 
-    /**
-     * Sends any necessary notifications for the specified message.
-     */
-    private void notify(Account account, Mailbox mbox, Message msg, String rcptEmail, String envSender, ParsedMessage pm) {
-        // If notification fails, log a warning and continue so that message delivery
-        // isn't affected
-        try {
-            Notification.notifyIfNecessary(account, msg, rcptEmail, pm);
-        } catch (MessagingException e) {
-            ZimbraLog.mailbox.warn("Unable to send new mail notification", e);
-        }
-        
-        try {
-            Notification.outOfOfficeIfNecessary(account, mbox, msg, rcptEmail, envSender, pm);
-        } catch (MessagingException e) {
-            ZimbraLog.mailbox.warn("Unable to send out-of-office reply", e);
-        } catch (ServiceException e) {
-            ZimbraLog.mailbox.warn("Unable to send out-of-office reply", e);
-        }
-    }
-    
     private void setDeliveryStatuses(List<LmtpAddress> recipients, LmtpStatus status) {
         for (LmtpAddress recipient : recipients)
             recipient.setDeliveryStatus(status);
