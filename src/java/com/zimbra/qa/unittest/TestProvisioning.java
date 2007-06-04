@@ -36,8 +36,12 @@ public class TestProvisioning extends TestCase {
     private String PRE_AUTH_KEY;
     private String PASSWORD;
     
+    private String SPECIAL_CHARS_ALLOWED_IN_DOMAIN;
+    private String SPECIAL_CHARS_ALLOWED_IN_USER_PART;
+    
     private String COS_NAME;
     private String DOMAIN_NAME;
+    private String DOMAIN_NAME_SPECIAL_CHARS;
     private String OTHER_DOMAIN_NAME;
     private String SERVER_NAME;
     private String ZIMLET_NAME;
@@ -51,6 +55,8 @@ public class TestProvisioning extends TestCase {
     private String ADMIN_EMAIL;
     private String ACCT_USER;
     private String ACCT_EMAIL;
+    private String ACCT_USER_SPECIAL_CHARS;
+    private String ACCT_EMAIL_SPECIAL_CHARS;
     private String ACCT_ALIAS_USER;
     private String ACCT_ALIAS_EMAIL;
     private String ACCT_ALIAS_AFTER_ACCOUNT_RENAME_TO_OTHER_DMAIN_EMAIL;
@@ -74,6 +80,8 @@ public class TestProvisioning extends TestCase {
     
     private String DL_USER;
     private String DL_EMAIL;
+    private String DL_USER_SPECIAL_CHARS;
+    private String DL_EMAIL_SPECIAL_CHARS;
     private String DL_ALIAS_USER;
     private String DL_ALIAS_EMAIL;
     private String DL_NESTED_USER;
@@ -169,8 +177,12 @@ public class TestProvisioning extends TestCase {
         PRE_AUTH_KEY = PreAuthKey.generateRandomPreAuthKey();
         PASSWORD = "test123";
         
+        SPECIAL_CHARS_ALLOWED_IN_DOMAIN = "/";
+        SPECIAL_CHARS_ALLOWED_IN_USER_PART = "/";
+        
         COS_NAME = "cos-" + TEST_ID;
         DOMAIN_NAME = "domain-" + TEST_ID + ".ldap-test-domain";
+        DOMAIN_NAME_SPECIAL_CHARS = "domain-" + SPECIAL_CHARS_ALLOWED_IN_DOMAIN + "-" + TEST_ID + ".ldap-test-domain";
         OTHER_DOMAIN_NAME = "other-" + DOMAIN_NAME;
         SERVER_NAME = "server-" + TEST_ID;
         ZIMLET_NAME = "zimlet-" + TEST_ID;
@@ -184,6 +196,8 @@ public class TestProvisioning extends TestCase {
         ADMIN_EMAIL = ADMIN_USER + "@" + DOMAIN_NAME;
         ACCT_USER = "acct-1";
         ACCT_EMAIL = ACCT_USER + "@" + DOMAIN_NAME;
+        ACCT_USER_SPECIAL_CHARS = "acct-special-chars-" + SPECIAL_CHARS_ALLOWED_IN_USER_PART;
+        ACCT_EMAIL_SPECIAL_CHARS = ACCT_USER_SPECIAL_CHARS + "@" + DOMAIN_NAME_SPECIAL_CHARS;
         ACCT_ALIAS_USER = "alias-of-" + ACCT_USER;
         ACCT_ALIAS_EMAIL = ACCT_ALIAS_USER + "@" + DOMAIN_NAME;
         ACCT_ALIAS_AFTER_ACCOUNT_RENAME_TO_OTHER_DMAIN_EMAIL = ACCT_ALIAS_USER + "@" + OTHER_DOMAIN_NAME;
@@ -206,6 +220,8 @@ public class TestProvisioning extends TestCase {
         
         DL_USER = "dl-1";
         DL_EMAIL = DL_USER + "@" + DOMAIN_NAME;
+        DL_USER_SPECIAL_CHARS = "dl-special-chars-" + SPECIAL_CHARS_ALLOWED_IN_USER_PART;
+        DL_EMAIL_SPECIAL_CHARS = DL_USER_SPECIAL_CHARS + "@" + DOMAIN_NAME_SPECIAL_CHARS;
         DL_ALIAS_USER = "alias-of" + DL_USER;
         DL_ALIAS_EMAIL = DL_ALIAS_USER + "@" + DOMAIN_NAME;
         DL_NESTED_USER = "dl-nested";
@@ -411,16 +427,17 @@ public class TestProvisioning extends TestCase {
         verifySameEntry(entry, entryGot);
         
         Domain otherEntry = mProv.createDomain(OTHER_DOMAIN_NAME, attrs);
+        Domain specialCharEntry = mProv.createDomain(DOMAIN_NAME_SPECIAL_CHARS, attrs);
                 
         List list = mProv.getAllDomains();
-        verifyEntries(list, new NamedEntry[]{entry, otherEntry}, false);
+        verifyEntries(list, new NamedEntry[]{entry, otherEntry, specialCharEntry}, false);
         
         // set our domain as the default domain
         Map<String, Object> confAttrs = new HashMap<String, Object>();
         confAttrs.put(Provisioning.A_zimbraDefaultDomainName, DOMAIN_NAME);
         mProv.modifyAttrs(mProv.getConfig(), confAttrs, true);
                 
-        return new Domain[]{entry, otherEntry};
+        return new Domain[]{entry, otherEntry, specialCharEntry};
     }
     
     private void mimeTest() throws Exception {
@@ -576,7 +593,7 @@ public class TestProvisioning extends TestCase {
     
     
     // account and account aliases
-    private Account accountTest(Account adminAcct, Cos cos, Domain domain, Domain otherDomain) throws Exception {
+    private Account[] accountTest(Account adminAcct, Cos cos, Domain domain, Domain otherDomain) throws Exception {
         System.out.println("Testing account");
         
         // create an account
@@ -588,6 +605,17 @@ public class TestProvisioning extends TestCase {
         String entryId = entry.getId();
         String acctDn = ACCT_NAMING_ATTR + "=" + ACCT_NAMING_ATTR_VALUE + "," + ACCT_BASE_DN;
         mCustomProvTester.verifyDn(entry, acctDn);
+        
+        // create an account with special chars
+        Map<String, Object> acctAttrsSpecialChars = new HashMap<String, Object>();
+        mCustomProvTester.addAttr(acctAttrsSpecialChars, "ldap.baseDn", ACCT_BASE_DN);
+        mCustomProvTester.addAttr(acctAttrsSpecialChars, ACCT_NAMING_ATTR, ACCT_USER_SPECIAL_CHARS + ".mailuser");
+        acctAttrs.put(Provisioning.A_zimbraCOSId, cos.getId());
+        Account entrySpecialChars = mProv.createAccount(ACCT_EMAIL_SPECIAL_CHARS, PASSWORD, acctAttrs);
+        String acctSpecialCharsDn = ACCT_NAMING_ATTR + "=" + ACCT_USER_SPECIAL_CHARS + ".mailuser" + "," + ACCT_BASE_DN;
+        mCustomProvTester.verifyDn(entrySpecialChars, acctSpecialCharsDn);
+        Account entryGot = mProv.get(Provisioning.AccountBy.name, ACCT_EMAIL_SPECIAL_CHARS);
+        verifySameEntry(entrySpecialChars, entryGot);
         
         // add an alias in the same domain
         mProv.addAlias(entry, ACCT_ALIAS_EMAIL);
@@ -604,7 +632,7 @@ public class TestProvisioning extends TestCase {
         assertTrue(correct);
         
         // get account by id
-        Account entryGot = mProv.get(Provisioning.AccountBy.id, entry.getId());
+        entryGot = mProv.get(Provisioning.AccountBy.id, entry.getId());
         verifySameEntry(entry, entryGot);
         
         // get account by name(i.e. email)
@@ -730,7 +758,7 @@ public class TestProvisioning extends TestCase {
         // set cos
         mProv.setCOS(entry, cos);
                 
-        return entry;
+        return new Account[]{entry,entrySpecialChars};
     }
     
     private void passwordTest(Account account) throws Exception {
@@ -798,6 +826,14 @@ public class TestProvisioning extends TestCase {
         DistributionList dlNested = mProv.createDistributionList(DL_NESTED_EMAIL, dlNestedAttrs);
         mProv.addAlias(dlNested, DL_NESTED_ALIAS_EMAIL);
         
+        // dl with special chars
+        Map<String, Object> dlAttrsSpecialChars = new HashMap<String, Object>();
+        mCustomProvTester.addAttr(dlAttrsSpecialChars, "ldap.baseDn", ACCT_BASE_DN);
+        mCustomProvTester.addAttr(dlAttrsSpecialChars, ACCT_NAMING_ATTR, DL_USER_SPECIAL_CHARS + ".mailuser");
+        DistributionList dlSpecilaChars = mProv.createDistributionList(DL_EMAIL_SPECIAL_CHARS, dlNestedAttrs);
+        entryGot = mProv.get(Provisioning.DistributionListBy.name, DL_EMAIL_SPECIAL_CHARS);
+        verifySameEntry(dlSpecilaChars, entryGot);
+        
         mProv.addMembers(entry, new String[]{DL_NESTED_EMAIL});
         mProv.addMembers(dlNested, new String[]{ACCT_EMAIL});
         
@@ -829,7 +865,7 @@ public class TestProvisioning extends TestCase {
         mProv.renameDistributionList(entry.getId(), NEW_EMAIL);
         mProv.renameDistributionList(entry.getId(), DL_EMAIL);
                                 
-        return new DistributionList[]{entry, dlNested};
+        return new DistributionList[]{entry, dlNested, dlSpecilaChars};
     }
     
     private DataSource dataSourceTest(Account account) throws Exception {
@@ -994,17 +1030,18 @@ public class TestProvisioning extends TestCase {
         Domain[] domains = domainTest();
         Domain domain = domains[0];
         Domain otherDomain = domains[1];
+        Domain specialCharDomain = domains[2];
         mimeTest();
         Server server = serverTest();
         Zimlet zimlet = zimletTest();    
         
         Account adminAccount = adminAccountTest();
-        Account account = accountTest(adminAccount, cos, domain, otherDomain);
+        Account accounts[] = accountTest(adminAccount, cos, domain, otherDomain);
+        Account account = accounts[0];
         authTest(account);
         passwordTest(account);
         CalendarResource calendarResource = calendarResourceTest(cos, domain);
         
-        // TODO, skip DL for custom for now
         DistributionList[] distributionLists = distributionListTest(domain);
         DataSource dataSource = dataSourceTest(account);
         Identity identity = identityTest(account);
@@ -1023,13 +1060,27 @@ public class TestProvisioning extends TestCase {
         mProv.deleteServer(server.getId());
         mProv.deleteIdentity(account, IDENTITY_NAME);
         mProv.deleteDataSource(account, dataSource.getId());
+        
+        // delete DLs
+        for (DistributionList dl : distributionLists)
+            mProv.deleteDistributionList(dl.getId());
+        /*
+        mProv.deleteDistributionList(distributionLists[2].getId());
         mProv.deleteDistributionList(distributionLists[1].getId());
         mProv.deleteDistributionList(distributionLists[0].getId());
+        */
+        
         mProv.deleteCalendarResource(calendarResource.getId());
-        mProv.deleteAccount(account.getId());
+        
+        for (Account acct : accounts)
+            mProv.deleteAccount(acct.getId());
+        // mProv.deleteAccount(account.getId());
+        
         mProv.deleteAccount(adminAccount.getId());
+        
         mProv.deleteDomain(domain.getId());
         mProv.deleteDomain(otherDomain.getId());
+        mProv.deleteDomain(specialCharDomain.getId());
         mProv.deleteCos(cos.getId());
         
         return TEST_ID;
