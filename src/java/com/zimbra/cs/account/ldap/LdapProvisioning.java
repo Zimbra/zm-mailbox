@@ -1200,8 +1200,7 @@ public class LdapProvisioning extends Provisioning {
     public Domain createDomain(String name, Map<String, Object> domainAttrs) throws ServiceException {
         name = name.toLowerCase().trim();
         
-        if (!EmailUtil.validDomain(name))
-            throw ServiceException.INVALID_REQUEST("invalid domain name: " + name, null);
+        validDomainName(name);
         
         DirContext ctxt = null;
         try {
@@ -2206,6 +2205,15 @@ public class LdapProvisioning extends Provisioning {
                 throw ServiceException.INVALID_REQUEST("invalid email address", null);
         } catch (AddressException e) {
             throw ServiceException.INVALID_REQUEST("invalid email address", e);
+        }
+    }
+    
+    private static void validDomainName(String domain) throws ServiceException {
+        String email = "test" + "@" + domain;
+        try {
+            validEmailAddress(email);
+        } catch (ServiceException e) {
+            throw ServiceException.INVALID_REQUEST("invalid domain name " + domain, null);
         }
     }
     
