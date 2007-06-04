@@ -2387,7 +2387,11 @@ public class LdapProvisioning extends Provisioning {
     
     private static void validDomainName(String domain) throws ServiceException {
         String email = "test" + "@" + domain;
-        validEmailAddress(email);
+        try {
+            validEmailAddress(email);
+        } catch (ServiceException e) {
+            throw ServiceException.INVALID_REQUEST("invalid domain name " + domain, null);
+        }
     }
     
     public static final long TIMESTAMP_WINDOW = Constants.MILLIS_PER_MINUTE * 5; 
