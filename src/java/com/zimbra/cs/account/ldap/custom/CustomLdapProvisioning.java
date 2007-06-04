@@ -21,7 +21,7 @@ import com.zimbra.cs.account.ldap.LdapUtil;
 public class CustomLdapProvisioning extends LdapProvisioning {
     
     protected void setDIT() {
-        mDIT = new CustomLdapDIT();
+        mDIT = new CustomLdapDIT(this);
     }
     
     /*
@@ -31,6 +31,7 @@ public class CustomLdapProvisioning extends LdapProvisioning {
      * distribution lists.  The account entry and all its aliases will remain at the same DIT 
      * location.
      */
+    /*
     public void renameAccount(String zimbraId, String newName) throws ServiceException {
         DirContext ctxt = null;
         try {
@@ -84,6 +85,7 @@ public class CustomLdapProvisioning extends LdapProvisioning {
                 LdapUtil.closeContext(ctxt);
             }
     }
+    */
          
 
 }

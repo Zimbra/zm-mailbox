@@ -28,9 +28,20 @@ package com.zimbra.cs.account;
 import java.util.Map;
 
 public class DistributionList extends NamedEntry {
+    
+    private String mDomain;
 
     protected DistributionList(String name, String id, Map<String, Object> attrs) {
         super(name, id, attrs, null);
+        int index = name.indexOf('@');
+        if (index != -1) mDomain = name.substring(index+1);
+    }
+    
+    /**
+     * @return the domain name for this DL (foo.com) 
+     */
+    public String getDomainName() {
+        return mDomain;
     }
 
     public String[] getAllMembers() {

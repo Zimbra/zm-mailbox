@@ -34,6 +34,11 @@ public class LdapDIT {
      */
     
     /*
+     * the provisioning instance that uses thie DIT
+     */
+    protected Provisioning mProv;
+    
+    /*
      * Vatiable Naming Conventions:
      * 
      *              RDN : {attr-name}={attr-value}
@@ -91,7 +96,10 @@ public class LdapDIT {
     protected String DN_GLOBALCONFIG;
 
 
-    public LdapDIT() {
+    public LdapDIT(LdapProvisioning prov) {
+        // our Provisioning instance
+        mProv = prov;  
+        
         init();
         verify();
     }
@@ -151,38 +159,33 @@ public class LdapDIT {
         return NAMING_RDN_ATTR_ACCOUNT;
     }
 
-    // TODO deprecate and fix all call points that still use it
-    public String emailToDN(String localPart, String domain) {
+    private String emailToDN(String localPart, String domain) throws ServiceException {
         return NAMING_RDN_ATTR_ACCOUNT + "=" + LdapUtil.escapeRDNValue(localPart) + "," + domainToAccountBaseDN(domain);
     }
     
-    // TODO deprecate and fix all call points that still use it
-    public String emailToDN(String email) {
+    private String emailToDN(String email) throws ServiceException {
         String[] parts = EmailUtil.getLocalPartAndDomain(email);
         return emailToDN(parts[0], parts[1]);
     }
     
-    public String accountDN(String baseDn, Attributes attrs, String domain) throws ServiceException, NamingException {
-        if (baseDn == null)
-            baseDn = domainToAccountBaseDN(domain);
-        
-        String rdnAttr = NAMING_RDN_ATTR_ACCOUNT;
-        
-        String rdnValue = LdapUtil.getAttrString(attrs, rdnAttr);
-        
-        if (rdnValue == null)
-            throw ServiceException.FAILURE("missing rdn attribute" + rdnAttr, null);
+    public String accountDNCreate(String baseDn, Attributes attrs, String localPart, String domain) throws ServiceException, NamingException {
+        // sanity check, the default DIT does not support a supplied base
+        if (baseDn != null)
+            throw ServiceException.INVALID_REQUEST("base dn is not supported in DIT impl " + getClass().getCanonicalName(), null);
 
-        return rdnAttr + "=" + LdapUtil.escapeRDNValue(rdnValue) + "," + baseDn;
+        return emailToDN(localPart, domain);
     }
     
-    /**
+    public String accountDNRename(String oldDn, String newLocalPart, String newDomain) throws ServiceException, NamingException {
+        return emailToDN(newLocalPart, newDomain);
+    }
+    
+    /*
      * Given a dn like "uid=foo,ou=people,dc=widgets,dc=com", return the string "foo@widgets.com".
      * 
-     * @param dn
-     * @return
+     * Param attrs is not used in this implementation of DIT
      */
-    public String dnToEmail(String dn) throws ServiceException {
+    public String dnToEmail(String dn, Attributes attrs) throws ServiceException, NamingException {
         String [] parts = dn.split(",");
         StringBuffer domain = new StringBuffer(dn.length());
         
@@ -225,8 +228,12 @@ public class LdapDIT {
      *   alias
      * ==========
      */
-    public String aliasDN(String targetEntryDn, String aliasLocalPart, String aliasDomain) {
+    public String aliasDN(String targetDn, String targetDomain, String aliasLocalPart, String aliasDomain) throws ServiceException {
         return emailToDN(aliasLocalPart, aliasDomain);
+    }
+    
+    public String aliasDNRename(String targetNewDn, String targetNewDomain, String newAliasEmail) throws ServiceException {
+        return emailToDN(newAliasEmail);
     }
    
     
@@ -248,36 +255,47 @@ public class LdapDIT {
      *   distribution list 
      * =====================
      */
+    public String distributionListDNCreate(String baseDn, Attributes attrs, String localPart, String domain) throws ServiceException, NamingException {
+        // sanity check, the default DIT does not support a supplied base
+        if (baseDn != null)
+            throw ServiceException.INVALID_REQUEST("base dn is not supported in DIT impl " + getClass().getCanonicalName(), null);
+
+        return emailToDN(localPart, domain);
+    }
+    
+    public String distributionListDNRename(String oldDn, String newLocalPart, String newDomain) throws ServiceException, NamingException {
+        return emailToDN(newLocalPart, newDomain);
+    }
+
     
     /*
      * ==========
      *   domain
      * ==========
      */
-    // TODO deprecate and fix all call points that still use it
-    public String domainToAccountBaseDN(String domain) {
-        if (BASE_RDN_ACCOUNT.length()==0)
-            return LdapUtil.domainToDN(domain);
-        else
-            return BASE_RDN_ACCOUNT + "," + LdapUtil.domainToDN(domain);
+    // account base search dn
+    public String domainToAccountSearchDN(String domain) throws ServiceException {
+        return domainDNToAccountBaseDN(LdapUtil.domainToDN(domain));
     }
-
-    // TODO deprecate and fix all call points that still use it
-    public String domainToAccountBaseDN(LdapDomain domain) {
-        if (BASE_RDN_ACCOUNT.length()==0)
-            return domain.getDN();
-        else
-            return BASE_RDN_ACCOUNT + "," + domain.getDN();
+    
+    // account base search dn
+    public String domainDNToAccountSearchDN(String domainDN) throws ServiceException {
+        return domainDNToAccountBaseDN(domainDN);
     }
-
-    // TODO deprecate and fix all call points that still use it
-    public String domainDNToAccountBaseDN(String domainDN) {
+    
+    // only used internally 
+    private String domainToAccountBaseDN(String domain) throws ServiceException {
+        return domainDNToAccountBaseDN(LdapUtil.domainToDN(domain));
+    }
+    
+    // account base dn for create/delete domain
+    public String domainDNToAccountBaseDN(String domainDN) throws ServiceException {
         if (BASE_RDN_ACCOUNT.length()==0)
             return domainDN;
         else
             return BASE_RDN_ACCOUNT + "," + domainDN;
     }
-    
+
     
     /*
      * ==============

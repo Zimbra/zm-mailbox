@@ -8,10 +8,10 @@ import com.zimbra.cs.account.Provisioning;
 public class SpecialAttrs {
     
     // special Zimbra attrs
-    private static final String SA_zimbraId  = Provisioning.A_zimbraId;
+    public static final String SA_zimbraId  = Provisioning.A_zimbraId;
     
     // pseudo attrs
-    private static final String PA_ldapBase    = "ldap.baseDn";
+    public static final String PA_ldapBase    = "ldap.baseDn";
     
     private String mZimbraId;
     private String mLdapBaseDn;
@@ -19,7 +19,7 @@ public class SpecialAttrs {
     public String getZimbraId()     { return mZimbraId; }
     public String getLdapBaseDn()   { return mLdapBaseDn; }
     
-    private String getSingleValuedAttr(Map<String, Object> attrs, String attr) throws ServiceException {
+    public static String getSingleValuedAttr(Map<String, Object> attrs, String attr) throws ServiceException {
         Object value = attrs.get(attr);
         if (value == null)
             return null;

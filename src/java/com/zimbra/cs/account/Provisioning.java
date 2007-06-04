@@ -1829,13 +1829,14 @@ public abstract class Provisioning {
 
     public static class SearchOptions {
         private Domain mDomain;
+        private String mBase;
         private String mQuery;
         private String mReturnAttrs[];
         private String mSortAttr;
         private boolean mSortAscending;
         private int mFlags;
         private int mMaxResults;
-
+        
 
         public Domain getDomain() {
             return mDomain;
@@ -1843,6 +1844,14 @@ public abstract class Provisioning {
 
         public void setDomain(Domain domain) {
             mDomain = domain;
+        }
+        
+        public String getBase() {
+            return mBase;
+        }
+
+        public void setBase(String base) {
+            mBase = base;
         }
 
         public String getQuery() {

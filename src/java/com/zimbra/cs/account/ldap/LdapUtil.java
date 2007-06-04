@@ -718,7 +718,7 @@ public class LdapUtil {
      * [1] = ou=people,dc=widgets,dc=com
      * 
      * if the dn cannot be split into rdn and dn:
-     * [0] = ""
+     * [0] = the input dn
      * [1] = the input dn
      * 
      * @param dn
@@ -732,12 +732,13 @@ public class LdapUtil {
             values[0] = dn.substring(0, baseDnIdx);
             values[1] = dn.substring(baseDnIdx+1);
         } else {
-            values[0] = "";
+            values[0] = dn;
             values[1] = dn;
         }
         
         return values;
     }
+
 
     static String[] removeMultiValue(String values[], String value) {
         List<String> list = new ArrayList<String>(Arrays.asList(values));
