@@ -211,6 +211,9 @@ public class CalendarUtils {
             cancelInvite(account, null, false, cancel, cancel.getComment(),
                          cancel.getAttendees(), cancel.getRecurId(),
                          false);
+        
+        sanitized.setInviteId(cancel.getMailItemId()); //zdsync
+        sanitized.setDtStamp(cancel.getDTStamp()); //zdsync
 
         ZVCalendar iCal = sanitized.newToICalendar();
 
@@ -632,13 +635,13 @@ public class CalendarUtils {
             boolean recurrenceIdAllowed, boolean recurAllowed)
     throws ServiceException {
 
-    	//zdsync: only present if zdsync
-    	String invId = element.getAttribute(MailConstants.A_ID, null);
-    	String dts = element.getAttribute(MailConstants.A_CAL_DATETIME, null);
+    	String invId = element.getAttribute(MailConstants.A_ID, null); //zdsync
     	
     	Element compElem = element.getOptionalElement(MailConstants.E_INVITE_COMPONENT);
     	if (compElem != null)
     		element = compElem;
+
+    	String dts = element.getAttribute(MailConstants.A_CAL_DATETIME, null); //zdsync
 
     	TimeZoneMap tzMap = newInv.getTimeZoneMap();
         parseTimeZones(element.getParent(), tzMap);
@@ -1038,9 +1041,6 @@ public class CalendarUtils {
 
         // SUMMARY
         cancel.setName("CANCELLED: " + inv.getName());
-        
-        //zdsync
-        cancel.setInviteId(inv.getMailItemId());
 
         return cancel;
     }

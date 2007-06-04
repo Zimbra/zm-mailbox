@@ -771,7 +771,6 @@ public class ToXML {
         encodeTimeZoneMap(ie, cal.getTimeZoneMap());
 
         ie.addAttribute(MailConstants.A_CAL_SEQUENCE, inv.getSeqNo());
-        ie.addAttribute(MailConstants.A_CAL_DATETIME, inv.getDTStamp()); //zdsync
         
         encodeReplies(ie, cal, inv);
 
@@ -820,7 +819,7 @@ public class ToXML {
     }
 
     private static void encodeReplies(Element parent, CalendarItem calItem, Invite inv) {
-        Element repliesElt = parent.addElement(MailConstants.E_CAL_REPLIES);
+         Element repliesElt = parent.addElement(MailConstants.E_CAL_REPLIES);
 
         List /*CalendarItem.ReplyInfo */ replies = calItem.getReplyInfo(inv);
         for (Iterator iter = replies.iterator(); iter.hasNext(); ) {
@@ -834,6 +833,7 @@ public class ToXML {
             if (attendee.hasPartStat()) {
                 curElt.addAttribute(MailConstants.A_CAL_PARTSTAT, attendee.getPartStat());
             }
+            curElt.addAttribute(MailConstants.A_SEQ, repInfo.mSeqNo); //zdsync
             curElt.addAttribute(MailConstants.A_DATE, repInfo.mDtStamp);
             curElt.addAttribute(MailConstants.A_CAL_ATTENDEE, attendee.getAddress());
             if (attendee.hasSentBy())
@@ -1134,6 +1134,7 @@ public class ToXML {
             boolean isRecurring = false;
                 e.addAttribute("x_uid", invite.getUid());
                 e.addAttribute(MailConstants.A_CAL_SEQUENCE, invite.getSeqNo());
+                e.addAttribute(MailConstants.A_CAL_DATETIME, invite.getDTStamp()); //zdsync
 
                 String itemId = ifmt.formatItemId(calItem);
                 e.addAttribute(MailConstants.A_CAL_ID, itemId);

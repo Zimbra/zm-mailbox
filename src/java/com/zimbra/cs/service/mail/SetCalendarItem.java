@@ -163,12 +163,18 @@ public class SetCalendarItem extends CalendarRequest {
         pm.analyze();
 
         Invite inv = (ipr == null ? null : ipr.mInvite);
-        if (inv == null) {
+        if (inv == null || inv.getDTStamp() == -1) { //zdsync if -1 for 4.5 back compat
             ZVCalendar cal = pm.getiCalendar();
             if (cal == null)
                 throw ServiceException.FAILURE("SetCalendarItem could not build an iCalendar object", null);
             boolean sentByMe = false; // not applicable in the SetCalendarItem case
-            inv = Invite.createFromCalendar(acct, pm.getFragment(), cal, sentByMe).get(0);
+            Invite iCalInv = Invite.createFromCalendar(acct, pm.getFragment(), cal, sentByMe).get(0);
+            
+            if (inv == null) {
+            	inv = iCalInv;
+            } else {
+            	inv.setDtStamp(iCalInv.getDTStamp()); //zdsync
+            }
         }
         inv.setPartStat(partStatStr);
 
