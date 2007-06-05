@@ -27,6 +27,7 @@ package com.zimbra.cs.service.account;
 
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -47,10 +48,27 @@ public class GetAvailableLocales extends AccountDocumentHandler {
         Account acct = getRequestedAccount(lc);
         
         Locale displayLocale = getDisplayLocale(acct, context);
-        Locale locales[] = L10nUtil.getLocalesSorted(displayLocale);
+        
+        // get installed locales, sorted
+        Locale installedLocales[] = L10nUtil.getLocalesSorted(displayLocale);
+        
+        // get avail locales for this account/COS
+        Set<String> allowedLocales = acct.getMultiAttrSet(Provisioning.A_zimbraAvailableLocale);
+        
+        Locale[] availLocales = null;
+        if (allowedLocales.size() > 0)
+            availLocales = computeAvailLocales(installedLocales, allowedLocales);
+        else
+            availLocales = installedLocales; 
+        
         Element response = lc.createElement(AccountConstants.GET_AVAILABLE_LOCALES_RESPONSE);
-        for (Locale locale : locales) {
-            ToXML.encodeLocale(response, locale, displayLocale);
+        
+        
+        for (Locale locale : availLocales) {
+            if (locale != null)
+                ToXML.encodeLocale(response, locale, displayLocale);
+            else
+                break;
         }
         return response;
     }
@@ -73,5 +91,40 @@ public class GetAvailableLocales extends AccountDocumentHandler {
             return Provisioning.getInstance().getLocale(acct);
         else
             return L10nUtil.lookupLocale(locale);
+    }
+    
+    private Locale[] computeAvailLocales(Locale[] installedLocales, Set<String> allowedLocales) {
+        /*
+         * available locales is the intersection of installedLocales and allowedLocales
+         * 
+         * for a locale in allowedLocales, we include all the sub locales, but not the more "generic" locales in the family
+         * e.g. - if allowedLocales is fr, all the fr_* in installedLocales will be included
+         *      - if allowedLocales is fr_CA, all the fr_CA_* in installedLocales will be included, 
+         *        but not any of the fr_[non CA] or fr.
+         */
+    
+        Locale[] availLocales = new Locale[installedLocales.length];
+        int i = 0;
+        for (Locale locale : installedLocales) {
+            // locale ids are in language[_country[_variant]] format 
+            // include it if it allows a more generic locale in the family
+            String localeId = locale.toString();
+            String language = locale.getLanguage();
+            String country = locale.getCountry();
+            String variant = locale.getVariant();
+                
+            if (!StringUtil.isNullOrEmpty(variant)) {
+                if (allowedLocales.contains(language) || allowedLocales.contains(language+"_"+country) || allowedLocales.contains(localeId))
+                    availLocales[i++] = locale;
+            } else if (!StringUtil.isNullOrEmpty(country)) {
+                if (allowedLocales.contains(language) || allowedLocales.contains(localeId))
+                    availLocales[i++] = locale;
+            } else {
+                if (allowedLocales.contains(localeId))
+                    availLocales[i++] = locale;
+            }
+        }
+        
+        return availLocales;
     }
 }

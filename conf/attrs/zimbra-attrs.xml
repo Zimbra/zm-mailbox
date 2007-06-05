@@ -2222,4 +2222,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Quota warning message template.</desc>
 </attr>
 
+<attr id="487" name="zimbraAvailableLocale" type="string" max="80" cardinality="multi" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <desc>Locales available for this account</desc>
+</attr>
+
 </attrs>

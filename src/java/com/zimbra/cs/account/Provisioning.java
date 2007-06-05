@@ -381,6 +381,8 @@ public abstract class Provisioning {
     
     public static final String A_zimbraPrefLocale = "zimbraPrefLocale";
     
+    public static final String A_zimbraAvailableLocale = "zimbraAvailableLocale";
+    
     /**
      * compat mode for calendar
      */

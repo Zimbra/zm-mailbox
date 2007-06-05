@@ -188,7 +188,7 @@ public class ToXML {
 
     public static Element encodeLocale(Element parent, Locale locale, Locale inLocale) {
         Element e = parent.addElement(AccountConstants.E_LOCALE);
-        // Always use US English for locale's display name.
+        // use inLocale for locale's display name.
         e.addAttribute(AccountConstants.A_NAME, locale.getDisplayName(inLocale));
         e.addAttribute(AccountConstants.A_ID, locale.toString());
         return e;
