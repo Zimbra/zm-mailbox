@@ -1775,6 +1775,19 @@ in soap-waitset.txt
 
   Removes a custom logger from the given account.
 
+<GetAllAccountLoggersRequest/>
+
+<GetAllAccountLoggersResponse>
+  <accountLogger>
+    <account name="{name}" id="{id}"/>
+    <logger category="{category-name} level="debug|info|warn|error"/>
+  </accountLogger>
+  ...
+</GetAllAccountLoggersResponse>
+
+  Returns all account loggers that have been created since the last server
+  start.
+  
 -----------------------------
 
 # Check existence of one or more directories and optionally create them.
