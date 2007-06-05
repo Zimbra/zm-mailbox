@@ -263,6 +263,16 @@ global soap/system errors used with zimbra:Error/Code:
  service.PERM_DENIED      - permission denied
  service.AUTH_REQUIRED    - an authtoken is required
  service.AUTH_EXPIRED     - authentication creds have expired
+ service.WRONG_HOST       - operation is sent to a wrong host
+ service.PROXY_ERROR      - unable to proxy operation 
+ service.TOO_MANY_HOPS    - operation was proxied too many times
+ service.INTERRUPTED      - index operation was interrupted
+ service.NOT_IN_PROGRESS  - attempt to stop index operation when it was not in progress
+ service.ALREADY_IN_PROGRESS     - attempt to start index operation when it was already in progress
+ service.NO_SPELL_CHECK_URL      - spellcheck is not available
+ service.RESOURCE_UNREACHABLE    - unable to reach the remote resource
+ service.TEMPORARILY_UNAVAILABLE - resource is temporarily unavailable
+ service.NON_READONLY_OPERATION_DENIED - 
 
 -----------------------------
  urn:zimbraAccount
@@ -274,11 +284,36 @@ global soap/system errors used with zimbra:Error/Code:
    account.PASSWORD_LOCKED      - password can't be changed
    account.PASSWORD_CHANGE_TOO_SOON = password can't be changed yet
    account.PASSWORD_RECENTLY_USED = can't use the same password again
-   account.NO_SUCH_ACCOUNT      - no such account
    account.INVALID_PASSWORD     - new password does not meet the system's rules (length, content, etc.)
-   account.INVALID_PREF_NAME    - the specified preference name is invalid
-   account.INVALID_PREF_VALUE   - the specified preference value is invalid
+   account.INVALID_ATTR_NAME    - the specified attribute name is invalid
+   account.INVALID_ATTR_VALUE   - the specified attribute value is invalid
    account.MULTIPLE_ACCOUNTS_MATCHED - when auth by foreignPrincipal matches multiple accounts with the same foreignPrincipal
+   account.NO_SUCH_ACCOUNT
+   account.NO_SUCH_ALIAS
+   account.NO_SUCH_DOMAIN
+   account.NO_SUCH_COS
+   account.NO_SUCH_IDENTITY
+   account.NO_SUCH_DATA_SOURCE
+   account.NO_SUCH_SERVER
+   account.NO_SUCH_ZIMLET
+   account.NO_SUCH_DISTRIBUTION_LIST
+   account.NO_SUCH_CALENDAR_RESOURCE
+   account.NO_SUCH_MEMBER
+   account.MEMBER_EXISTS
+   account.ACCOUNT_EXISTS
+   account.DOMAIN_EXISTS
+   account.COS_EXISTS
+   account.SERVER_EXISTS
+   account.DISTRIBUTION_LIST_EXISTS
+   account.IDENTITY_EXISTS
+   account.DATA_SOURCE_EXISTS
+   account.DOMAIN_NOT_EMPTY
+   account.MAINTENANCE_MODE
+   account.ACCOUNT_INACTIVE
+   account.TOO_MANY_ACCOUNTS
+   account.TOO_MANY_IDENTITIES
+   account.TOO_MANY_DATA_SOURCES
+   account.TOO_MANY_SEARCH_RESULTS
    
  <AuthRequest xmlns="urn:zimbraAccount">
    [<account by="name|id|foreignPrincipal">...</account>]
@@ -643,14 +678,64 @@ urn:zimbraMail
 
  mail error/codes: (includes service.*):
  
+   mail.MAINTENANCE        - in maintenance
+   mail.NO_SUCH_MBOX       - no such mailbox
+   mail.NO_SUCH_ITEM       - no such item
    mail.NO_SUCH_CONV       - no such converstation
    mail.NO_SUCH_MSG        - no such message
    mail.NO_SUCH_PART       - no such message part
    mail.NO_SUCH_FOLDER     - no such folder
    mail.NO_SUCH_TAG        - no such tag
+   mail.NO_SUCH_CONTACT    - no such contact
+   mail.NO_SUCH_NOTE       - no such note
+   mail.NO_SUCH_CALITEM    - no such calendar item
+   mail.NO_SUCH_APPT       - no such appointment
+   mail.NO_SUCH_TASK       - no such task
+   mail.NO_SUCH_DOC        - no such doc
+   mail.NO_SUCH_UPLOAD     - no such upload
+   mail.NO_SUCH_WAITSET    - no such waitset
    mail.QUERY_PARSE_ERROR  - couldn't parse search query
    mail.NO_SUCH_CONTACT      - the specified contact id did not exist
    mail.MODIFY_CONFLICT      - if the modified date on a contact is different then one in the request
+   mail.ALREADY_EXISTS
+   mail.INVALID_ID
+   mail.INVALID_SYNC_TOKEN
+   mail.INVALID_NAME
+   mail.INVALID_TYPE
+   mail.INVALID_CONTENT_TYPE
+   mail.IS_NOT_CHILD
+   mail.CANNOT_CONTAIN
+   mail.CANNOT_COPY
+   mail.CANNT_TAG
+   mail.CANNOT_PARENT
+   mail.CANNOT_RENAME
+   mail.CANNOT_SUBSCRIBE
+   mail.IMMUTABLE_OBJECT
+   mail.WRONG_MAILBOX
+   mail.MODIFY_CONFLICT
+   mail.TRY_AGAIN
+   mail.SCAN_ERROR
+   mail.UPLOAD_REJECTED
+   mail.TOO_MANY_TAGS
+   mail.TOO_MANY_UPLOADS
+   mail.TOO_MANY_CONTACTS
+   mail.UNABLE_TO_IMPORT_CONTACTS
+   mail.UNABLE_TO_IMPORT_APPOINTMENTS
+   mail.QUOTA_EXCEEDED
+   mail.QUERY_PARSE_ERROR
+   mail.MESSAGE_PARSE_ERROR
+   mail.ADDRESS_PARSE_ERROR
+   mail.ICALENDAR_PARSE_ERROR
+   mail.MUST_BE_ORGANIZER
+   mail.CANNOT_CANCEL_INSTANCE_OF_EXCEPTION
+   mail.INVITE_OUT_OF_DATE
+   mail.SEND_ABORTED_ADDRESS_FAILURE
+   mail.SEND_PARTIAL_ADDRESS_FAILURE
+   mail.SEND_FAILURE
+   mail.TOO_MANY_QUERY_TERMS_EXPANDED
+   mail.INVALID_COMMIT_ID
+   mail.TOO_MANY_WAITSETS_FOR_THIS_ACCOUNT
+
 <!-- 
 
 defaults aren't normally included in the response, they may
