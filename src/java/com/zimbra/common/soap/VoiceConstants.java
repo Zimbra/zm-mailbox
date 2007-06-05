@@ -23,7 +23,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.service.voice;
+package com.zimbra.common.soap;
 
 import org.dom4j.QName;
 import org.dom4j.Namespace;
