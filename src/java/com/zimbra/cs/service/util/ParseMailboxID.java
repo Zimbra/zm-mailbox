@@ -72,6 +72,21 @@ public class ParseMailboxID
     /** 
      * Parse the ID from a string
      * 
+     * @param acc
+     * @return
+     * @throws ServiceException
+     */
+    public static ParseMailboxID parse(Account acc) throws ServiceException {
+        try {
+            return new ParseMailboxID(acc, false);
+        } catch (IllegalArgumentException e) {
+            throw ServiceException.FAILURE("Error creating ParseMailboxID from Account specifier ", e);
+        }
+    }
+
+    /** 
+     * Parse the ID from a string
+     * 
      * @param idStr
      * @return
      * @throws ServiceException
@@ -85,6 +100,20 @@ public class ParseMailboxID
     }
     
     
+    /** 
+     * Parse the ID from a string
+     * 
+     * @param acc
+     * @return
+     * @throws ServiceException
+     */
+    public static ParseMailboxID parseForceRemote(Account acc) throws ServiceException {
+        try {
+            return new ParseMailboxID(acc, true);
+        } catch (IllegalArgumentException e) {
+        	 throw ServiceException.FAILURE("Error creating ParseMailboxID from Account specifier ", e);
+        }
+    }    
     /**
      * Create an ID which represents ALL mailboxes on a specified server
      * (same as the string "/serverid/*")
@@ -176,6 +205,20 @@ public class ParseMailboxID
     protected boolean mAllServers = false;
     protected String mInitialString;
     
+    protected ParseMailboxID(Account account, boolean forceRemote) throws ServiceException, IllegalArgumentException {
+        this.initFromAccount(account,forceRemote);
+    }
+    
+    protected void initFromAccount(Account account, boolean forceRemote) throws ServiceException, IllegalArgumentException {
+        if (!forceRemote &&  Provisioning.onLocalServer(account)) {
+            mIsLocal = true;
+            mMailbox = MailboxManager.getInstance().getMailboxByAccountId(account.getId());
+            mMailboxId = mMailbox.getId();
+        } else {
+            mHostName = account.getAttr(Provisioning.A_zimbraMailHost);
+        }
+    }
+    
     protected ParseMailboxID(String idStr, boolean forceRemote) throws ServiceException, IllegalArgumentException {
         mInitialString = idStr;
         
@@ -187,13 +230,7 @@ public class ParseMailboxID
                 throw AccountServiceException.NO_SUCH_ACCOUNT(idStr);
             }
             
-            if (!forceRemote &&  Provisioning.onLocalServer(acct)) {
-                mIsLocal = true;
-                mMailbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId());
-                mMailboxId = mMailbox.getId();
-            } else {
-                mHostName = acct.getAttr(Provisioning.A_zimbraMailHost);
-            }
+            this.initFromAccount(acct,forceRemote);
             
         } else if (idStr.indexOf('/') >= 0) {
             /* /server/mailboxid */
@@ -237,13 +274,7 @@ public class ParseMailboxID
             if (acct == null)
                 throw AccountServiceException.NO_SUCH_ACCOUNT(idStr);
 
-            if (!forceRemote && Provisioning.onLocalServer(acct)) {
-                mIsLocal = true;
-                mMailbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId());
-                mMailboxId = mMailbox.getId();
-            } else {
-                mHostName = acct.getAttr(Provisioning.A_zimbraMailHost);
-            }
+            this.initFromAccount(acct,forceRemote);
             
         }  else {
             if (idStr.equals("*")) {
