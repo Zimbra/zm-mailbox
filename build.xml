@@ -241,6 +241,11 @@
 				<isset property="${zimbra.buildinfo.version}" />
 			</not>
 		</condition>
+		<condition property="zimbra.buildinfo.type" value="">
+			<not>
+				<isset property="${zimbra.buildinfo.type}" />
+			</not>
+		</condition>
 		<condition property="zimbra.buildinfo.release" value="${user.name}">
 			<not>
 				<isset property="${zimbra.buildinfo.release}" />
@@ -256,7 +261,7 @@
 				<isset property="${zimbra.buildinfo.host}" />
 			</not>
 		</condition>
-		<property name="zimbra.buildinfo.all" value="Version: ${zimbra.buildinfo.version}; Release: ${zimbra.buildinfo.release}; Built: ${zimbra.buildinfo.date}; Host: ${zimbra.buildinfo.host}"/>
+		<property name="zimbra.buildinfo.all" value="Version: ${zimbra.buildinfo.version}; Type: ${zimbra.buildinfo.type}; Release: ${zimbra.buildinfo.release}; Built: ${zimbra.buildinfo.date}; Host: ${zimbra.buildinfo.host}"/>
 		<echo>Version: ${zimbra.buildinfo.version}</echo>
 	</target>
 
@@ -266,6 +271,7 @@
 			package com.zimbra.cs.util;
 			class BuildInfoGenerated {
 				public static final String VERSION = "${zimbra.buildinfo.version}";
+				public static final String TYPE = "${zimbra.buildinfo.type}";
 				public static final String RELEASE = "${zimbra.buildinfo.release}";
 				public static final String DATE = "${DSTAMP}-${TSTAMP}";
 				public static final String HOST = "${zimbra.buildinfo.host}";

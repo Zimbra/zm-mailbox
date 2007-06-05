@@ -28,6 +28,7 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
 import com.zimbra.cs.util.BuildInfo;
@@ -40,7 +41,12 @@ public class GetVersionInfo extends AdminDocumentHandler {
 
         Element response = lc.createElement(AdminConstants.GET_VERSION_INFO_RESPONSE);
         Element infoEl = response.addElement(AdminConstants.A_VERSION_INFO_INFO);
-        infoEl.addAttribute(AdminConstants.A_VERSION_INFO_VERSION, BuildInfo.VERSION);
+        
+        String fullVersionInfo = BuildInfo.VERSION;
+        if (!StringUtil.isNullOrEmpty(BuildInfo.TYPE))
+            fullVersionInfo = fullVersionInfo + "." + BuildInfo.TYPE;
+            
+        infoEl.addAttribute(AdminConstants.A_VERSION_INFO_VERSION, fullVersionInfo);
         infoEl.addAttribute(AdminConstants.A_VERSION_INFO_RELEASE, BuildInfo.RELEASE);
         infoEl.addAttribute(AdminConstants.A_VERSION_INFO_DATE, BuildInfo.DATE);
         infoEl.addAttribute(AdminConstants.A_VERSION_INFO_HOST, BuildInfo.HOST);

@@ -30,18 +30,21 @@ import com.zimbra.cs.db.Versions;
 public class BuildInfo {
     
     public static final String VERSION;
+    public static final String TYPE;
     public static final String RELEASE;
     public static final String DATE;
     public static final String HOST;
 
     static {
         String version = "unknown";
+        String type = "unknown";
         String release = "unknown";
         String date = "unknown";
         String host = "unknown";
         try {
             Class clz = Class.forName("com.zimbra.cs.util.BuildInfoGenerated");
             version = (String) clz.getField("VERSION").get(null);
+            type = (String) clz.getField("TYPE").get(null);
             release = (String) clz.getField("RELEASE").get(null);
             date = (String) clz.getField("DATE").get(null);
             host = (String) clz.getField("HOST").get(null);
@@ -50,6 +53,7 @@ public class BuildInfo {
             e.printStackTrace();
         }
         VERSION = version;
+        TYPE = type;
         RELEASE = release;
         DATE = date;
         HOST = host;
