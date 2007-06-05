@@ -1268,6 +1268,11 @@ public class ToXML {
 
             // x-prop
             encodeXProps(e, invite.xpropsIterator());
+            
+            String fragment = invite.getFragment();
+            if (fragment != null && fragment.length() > 0) {
+            	e.addAttribute(MailConstants.E_FRAG, fragment, Element.Disposition.CONTENT);
+            }
         }
 
         return e;

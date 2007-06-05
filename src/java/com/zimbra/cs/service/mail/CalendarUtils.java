@@ -875,6 +875,10 @@ public class CalendarUtils {
     	if (dts != null) {
     		newInv.setDtStamp(Long.parseLong(dts));
     	}
+    	Element fragment = element.getOptionalElement(MailConstants.E_FRAG);
+    	if (fragment != null) {
+    		newInv.setFragment(fragment.getText());
+    	}
     }
 
     private static List<ZProperty> parseXProps(Element element)

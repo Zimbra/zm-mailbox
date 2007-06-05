@@ -174,6 +174,7 @@ public class SetCalendarItem extends CalendarRequest {
             	inv = iCalInv;
             } else {
             	inv.setDtStamp(iCalInv.getDTStamp()); //zdsync
+            	inv.setFragment(iCalInv.getFragment()); //zdsync
             }
         }
         inv.setPartStat(partStatStr);
