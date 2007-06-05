@@ -13,7 +13,8 @@ WaitSet: scalable mechanism for listening for changes to one or more accounts
 INTEREST_TYPES: comma-separated list.  Currently:
    c: contacts
    m: msgs (and subclasses)
-   a: all
+   a: appointments
+   all: all types (equiv to "c,m,a")
 
 
 *************************************
