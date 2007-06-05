@@ -287,6 +287,8 @@ public class AdminConstants {
     public static final QName ADD_ACCOUNT_LOGGER_RESPONSE = QName.get("AddAccountLoggerResponse", NAMESPACE);
     public static final QName REMOVE_ACCOUNT_LOGGER_REQUEST = QName.get("RemoveAccountLoggerRequest", NAMESPACE);
     public static final QName REMOVE_ACCOUNT_LOGGER_RESPONSE = QName.get("RemoveAccountLoggerResponse", NAMESPACE);
+    public static final QName GET_ALL_ACCOUNT_LOGGERS_REQUEST = QName.get("GetAllAccountLoggersRequest", NAMESPACE);
+    public static final QName GET_ALL_ACCOUNT_LOGGERS_RESPONSE = QName.get("GetAllAccountLoggersResponse", NAMESPACE);
 
     // DumpSessions
     public static final String E_SESSION = "session";
@@ -455,7 +457,7 @@ public class AdminConstants {
     
     // Account loggers
     public static final String E_LOGGER = "logger";
+    public static final String E_ACCOUNT_LOGGER = "accountLogger";
     public static final String A_CATEGORY = "category";
     public static final String A_LEVEL = "level";
-
 }

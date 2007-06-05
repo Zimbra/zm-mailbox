@@ -24,10 +24,11 @@
  */
 package com.zimbra.common.util;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.Priority;
@@ -45,12 +46,20 @@ public class Log {
     
     private static final Map<Level, org.apache.log4j.Level> ZIMBRA_TO_LOG4J =
         new HashMap<Level, org.apache.log4j.Level>();
+    private static final Map<org.apache.log4j.Level, Level> LOG4J_TO_ZIMBRA =
+        new HashMap<org.apache.log4j.Level, Level>();
     
     static {
         ZIMBRA_TO_LOG4J.put(Level.error, org.apache.log4j.Level.ERROR);
         ZIMBRA_TO_LOG4J.put(Level.warn, org.apache.log4j.Level.WARN);
         ZIMBRA_TO_LOG4J.put(Level.info, org.apache.log4j.Level.INFO);
         ZIMBRA_TO_LOG4J.put(Level.debug, org.apache.log4j.Level.DEBUG);
+        
+        LOG4J_TO_ZIMBRA.put(org.apache.log4j.Level.FATAL, Level.error);
+        LOG4J_TO_ZIMBRA.put(org.apache.log4j.Level.ERROR, Level.error);
+        LOG4J_TO_ZIMBRA.put(org.apache.log4j.Level.WARN, Level.warn);
+        LOG4J_TO_ZIMBRA.put(org.apache.log4j.Level.INFO, Level.info);
+        LOG4J_TO_ZIMBRA.put(org.apache.log4j.Level.DEBUG, Level.debug);
     }
     
     public enum Level {
@@ -305,6 +314,24 @@ public class Log {
     
     public void setLevel(Level level) {
         mLogger.setLevel(ZIMBRA_TO_LOG4J.get(level));
+    }
+    
+    String getCategory() {
+        return mLogger.getName();
+    }
+    
+    List<AccountLogger> getAccountLoggers() {
+        if (mAccountLoggers == null) {
+            return null;
+        }
+        List<AccountLogger> accountLoggers = new ArrayList<AccountLogger>();
+        for (String accountName : mAccountLoggers.keySet()) {
+            Logger log4jLogger = mAccountLoggers.get(accountName);
+            AccountLogger al = new AccountLogger(mLogger.getName(), accountName,
+                LOG4J_TO_ZIMBRA.get(log4jLogger.getLevel()));
+            accountLoggers.add(al);
+        }
+        return accountLoggers;
     }
     
     /**
