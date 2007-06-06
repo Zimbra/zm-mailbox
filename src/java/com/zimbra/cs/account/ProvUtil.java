@@ -27,6 +27,7 @@ package com.zimbra.cs.account;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.AccountLogger;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.soap.Element;
@@ -156,6 +157,7 @@ public class ProvUtil implements DebugListener {
     public enum Command {
         
         ADD_ACCOUNT_ALIAS("addAccountAlias", "aaa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
+        ADD_ACCOUNT_LOGGER("addAccountLogger", "aal", "{name@domain|id} {logging-category} {debug|info|warn|error}", Category.MISC, 3, 3),
         ADD_DISTRIBUTION_LIST_ALIAS("addDistributionListAlias", "adla", "{list@domain|id} {alias@domain}", Category.LIST, 2, 2),
         ADD_DISTRIBUTION_LIST_MEMBER("addDistributionListMember", "adlm", "{list@domain|id} {member@domain}+", Category.LIST, 2, Integer.MAX_VALUE),
         AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{domain} {name}", Category.SEARCH, 2, 2),
@@ -186,6 +188,8 @@ public class ProvUtil implements DebugListener {
         GET_IDENTITIES("getIdentities", "gid", "{name@domain|id} [arg1 [arg...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),        
         GET_ACCOUNT_MEMBERSHIP("getAccountMembership", "gam", "{name@domain|id}", Category.ACCOUNT, 1, 2),
         GET_ALL_ACCOUNTS("getAllAccounts","gaa", "[-v] [{domain}]", Category.ACCOUNT, 0, 2),
+        GET_ACCOUNT_LOGGERS("getAccountLoggers", "gal", "{name@domain|id}", Category.MISC, 1, 1),
+        GET_ALL_ACCOUNT_LOGGERS("getAllAccountLoggers", "gaal", "{server}", Category.MISC, 1, 1),
         GET_ALL_ADMIN_ACCOUNTS("getAllAdminAccounts", "gaaa", "[-v]", Category.ACCOUNT, 0, 1),
         GET_ALL_CALENDAR_RESOURCES("getAllCalendarResources", "gacr", "[-v] [{domain}]", Category.CALENDAR, 0, 2),
         GET_ALL_CONFIG("getAllConfig", "gacf", "[attr1 [attr2...]]", Category.CONFIG, 0, Integer.MAX_VALUE),
@@ -217,6 +221,7 @@ public class ProvUtil implements DebugListener {
         MODIFY_IDENTITY("modifyIdentity", "mid", "{name@domain|id} {identity-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),        
         MODIFY_SERVER("modifyServer", "ms", "{name|id} [attr1 value1 [attr2 value2...]]", Category.SERVER, 3, Integer.MAX_VALUE),
         REMOVE_ACCOUNT_ALIAS("removeAccountAlias", "raa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
+        REMOVE_ACCOUNT_LOGGER("removeAccountLogger", "ral", "{name@domain|id} {logging-category}", Category.MISC, 2, 2),
         REMOVE_DISTRIBUTION_LIST_ALIAS("removeDistributionListAlias", "rdla", "{list@domain|id} {alias@domain}", Category.LIST, 2, 2),
         REMOVE_DISTRIBUTION_LIST_MEMBER("removeDistributionListMember", "rdlm", "{list@domain|id} {member@domain}", Category.LIST, 2, Integer.MAX_VALUE),
         RENAME_ACCOUNT("renameAccount", "ra", "{name@domain|id} {newName@domain}", Category.ACCOUNT, 2, 2),
@@ -332,6 +337,9 @@ public class ProvUtil implements DebugListener {
         case ADD_ACCOUNT_ALIAS:
             mProv.addAlias(lookupAccount(args[1]), args[2]);
             break;
+        case ADD_ACCOUNT_LOGGER:
+            doAddAccountLogger(args);
+            break;
         case AUTO_COMPLETE_GAL:
             doAutoCompleteGal(args); 
             break;            
@@ -373,7 +381,13 @@ public class ProvUtil implements DebugListener {
             break;            
         case GET_DATA_SOURCES:
             doGetAccountDataSources(args);
-            break;                        
+            break;
+        case GET_ACCOUNT_LOGGERS:
+            doGetAccountLoggers(args);
+            break;
+        case GET_ALL_ACCOUNT_LOGGERS:
+            doGetAllAccountLoggers(args);
+            break;
         case GET_ALL_ACCOUNTS:
             doGetAllAccounts(args); 
             break;            
@@ -451,6 +465,9 @@ public class ProvUtil implements DebugListener {
             break;
         case REMOVE_ACCOUNT_ALIAS:
             mProv.removeAlias(lookupAccount(args[1], false), args[2]);
+            break;
+        case REMOVE_ACCOUNT_LOGGER:
+            doRemoveAccountLogger(args);
             break;
         case RENAME_ACCOUNT:
             mProv.renameAccount(lookupAccount(args[1]).getId(), args[2]);            
@@ -605,6 +622,46 @@ public class ProvUtil implements DebugListener {
         Account acct = lookupAccount(args[1]);
         MailboxInfo info = sp.getMailbox(acct);
         System.out.printf("mailboxId: %s\nquotaUsed: %d\n", info.getMailboxId(), info.getUsed());
+    }
+    
+    private void doAddAccountLogger(String[] args) throws ServiceException {
+        if (!(mProv instanceof SoapProvisioning))
+            throw ServiceException.INVALID_REQUEST("can only be used via SOAP", null);
+        SoapProvisioning sp = (SoapProvisioning) mProv;
+        Account acct = lookupAccount(args[1]);
+        sp.addAccountLogger(acct, args[2], args[3]);
+    }
+    
+    private void doGetAccountLoggers(String[] args) throws ServiceException {
+        if (!(mProv instanceof SoapProvisioning))
+            throw ServiceException.INVALID_REQUEST("can only be used via SOAP", null);
+        SoapProvisioning sp = (SoapProvisioning) mProv;
+        Account acct = lookupAccount(args[1]);
+        for (AccountLogger accountLogger : sp.getAccountLoggers(acct)) {
+            System.out.printf("%s=%s\n", accountLogger.getCategory(), accountLogger.getLevel());
+        }
+    }
+    
+    private void doGetAllAccountLoggers(String[] args) throws ServiceException {
+        if (!(mProv instanceof SoapProvisioning))
+            throw ServiceException.INVALID_REQUEST("can only be used via SOAP", null);
+        SoapProvisioning sp = (SoapProvisioning) mProv;
+        
+        Map<String, List<AccountLogger>> allLoggers = sp.getAllAccountLoggers(args[1]);
+        for (String accountName : allLoggers.keySet()) {
+            System.out.printf("# name %s\n", accountName);
+            for (AccountLogger logger : allLoggers.get(accountName)) {
+                System.out.printf("%s=%s\n", logger.getCategory(), logger.getLevel());
+            }
+        }
+    }
+    
+    private void doRemoveAccountLogger(String[] args) throws ServiceException {
+        if (!(mProv instanceof SoapProvisioning))
+            throw ServiceException.INVALID_REQUEST("can only be used via SOAP", null);
+        SoapProvisioning sp = (SoapProvisioning) mProv;
+        Account acct = lookupAccount(args[1]);
+        sp.removeAccountLogger(acct, args[2]);
     }
     
     private void doCreateAccountsBulk(String[] args) throws ServiceException {

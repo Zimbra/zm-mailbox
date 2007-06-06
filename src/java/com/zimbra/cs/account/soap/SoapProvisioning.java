@@ -47,7 +47,9 @@ import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
+import com.zimbra.common.util.AccountLogger;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.Log.Level;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.CalendarResource;
@@ -524,13 +526,79 @@ public class SoapProvisioning extends Provisioning {
     }
 
     public List<QuotaUsage> getQuotaUsage(String server) throws ServiceException {
-            ArrayList<QuotaUsage> result = new ArrayList<QuotaUsage>();
+        ArrayList<QuotaUsage> result = new ArrayList<QuotaUsage>();
         XMLElement req = new XMLElement(AdminConstants.GET_QUOTA_USAGE_REQUEST);
         Element resp = invoke(req, server);
         for (Element a: resp.listElements(AdminConstants.E_ACCOUNT)) {
             result.add(new QuotaUsage(a));
         }
         return result;        
+    }
+    
+    public void addAccountLogger(Account account, String category, String level)
+    throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.ADD_ACCOUNT_LOGGER_REQUEST);
+        
+        Element eId = req.addElement(AdminConstants.E_ID);
+        eId.setText(account.getId());
+        
+        Element eLogger = req.addElement(AdminConstants.E_LOGGER);
+        eLogger.addAttribute(AdminConstants.A_CATEGORY, category);
+        eLogger.addAttribute(AdminConstants.A_LEVEL, level);
+        
+        invoke(req, getServer(account).getName());
+    }
+    
+    public List<AccountLogger> getAccountLoggers(Account account) throws ServiceException {
+        List<AccountLogger> result = new ArrayList<AccountLogger>();
+        XMLElement req = new XMLElement(AdminConstants.GET_ACCOUNT_LOGGERS_REQUEST);
+        Element eId = req.addElement(AdminConstants.E_ID);
+        eId.setText(account.getId());
+        Element resp = invoke(req, getServer(account).getName());
+        
+        for (Element eLogger : resp.listElements(AdminConstants.E_LOGGER)) {
+            String category = eLogger.getAttribute(AdminConstants.A_CATEGORY);
+            Level level = Level.valueOf(eLogger.getAttribute(AdminConstants.A_LEVEL));
+            result.add(new AccountLogger(category, account.getName(), level));
+        }
+        return result;
+    }
+    
+    /**
+     * Returns all account loggers for the given server.  The <tt>Map</tt>'s key is
+     * the account name, and values are all the <tt>AccountLogger</tt> objects for
+     * that account.
+     */
+    public Map<String, List<AccountLogger>> getAllAccountLoggers(String server) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.GET_ALL_ACCOUNT_LOGGERS_REQUEST);
+        Element resp = invoke(req, server);
+        Map<String, List<AccountLogger>> result = new HashMap<String, List<AccountLogger>>();
+        
+        for (Element eAccountLogger : resp.listElements(AdminConstants.E_ACCOUNT_LOGGER)) {
+            Element eLogger = eAccountLogger.getElement(AdminConstants.E_LOGGER);
+            
+            String accountName = eAccountLogger.getAttribute(AdminConstants.A_NAME);
+            String category = eLogger.getAttribute(AdminConstants.A_CATEGORY);
+            Level level = Level.valueOf(eLogger.getAttribute(AdminConstants.A_LEVEL));
+            
+            if (!result.containsKey(accountName)) {
+                result.put(accountName, new ArrayList<AccountLogger>());
+            }
+            result.get(accountName).add(new AccountLogger(category, accountName, level));
+        }
+        return result;
+    }
+    
+    public void removeAccountLogger(Account account, String category) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.REMOVE_ACCOUNT_LOGGER_REQUEST);
+        
+        Element eId = req.addElement(AdminConstants.E_ID);
+        eId.setText(account.getId());
+        
+        Element eLogger = req.addElement(AdminConstants.E_LOGGER);
+        eLogger.addAttribute(AdminConstants.A_CATEGORY, category);
+        
+        invoke(req, getServer(account).getName());
     }
 
     public static class MailboxInfo {
