@@ -129,7 +129,7 @@ public class SendInviteReply extends CalendarRequest {
                 oldInv = calItem.getInvite(inviteMsgId, compNum);  
             }
             if (oldInv == null)
-            	throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
+                throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
             
             if ((mbox.getEffectivePermissions(octxt, calItemId, MailItem.TYPE_UNKNOWN) & ACL.RIGHT_ACTION) == 0)
                 throw ServiceException.PERM_DENIED("You do not have ACTION rights for CalendarItem "+calItemId);
