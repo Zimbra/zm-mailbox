@@ -2234,4 +2234,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Locales available for this account</desc>
 </attr>
 
+<attr id="488" name="zimbraPrefIMAutoLogin" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether to login to the IM client automatically</desc>
+</attr>
+
 </attrs>
