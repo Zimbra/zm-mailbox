@@ -116,6 +116,17 @@ public class VoiceConstants {
     // we output unknown to our client instead of throwing 
     // an exception
 
+    public static final String DEFAULT_VOICE_VIEW = "voice";
 
+    public static final int FID_VOICEMAILINBOX = 1024;
+    public static final int FID_MISSEDCALLS = 1025;
+    public static final int FID_ANSWEREDCALLS = 1026;
+    public static final int FID_PLACEDCALLS = 1027;
+    public static final int FID_TRASH = 1028;
 
+    public static final String FNAME_VOICEMAILINBOX = "Voicemail Inbox";
+    public static final String FNAME_MISSEDCALLS = "Missed Calls";
+    public static final String FNAME_ANSWEREDCALLS = "Answered Calls";
+    public static final String FNAME_PLACEDCALLS = "Placed Calls";
+    public static final String FNAME_TRASH = "Trash";
  }
