@@ -34,6 +34,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.Provisioning.CosBy;
+import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
@@ -175,7 +176,7 @@ public class ProvUtil implements DebugListener {
         DELETE_ACCOUNT("deleteAccount", "da", "{name@domain|id}", Category.ACCOUNT, 1, 1),
         DELETE_CALENDAR_RESOURCE("deleteCalendarResource",  "dcr", "{name@domain|id}", Category.CALENDAR, 1, 1),
         DELETE_COS("deleteCos", "dc", "{name|id}", Category.COS, 1, 1),
-        DELETE_DATA_SOURCE("deleteDataSource", "dds", "{name@domain|id} {ds-id}", Category.ACCOUNT, 2, 2),                        
+        DELETE_DATA_SOURCE("deleteDataSource", "dds", "{name@domain|id} {ds-name|ds-id}", Category.ACCOUNT, 2, 2),                        
         DELETE_DISTRIBUTION_LIST("deleteDistributionList", "ddl", "{list@domain|id}", Category.LIST, 1, 1),
         DELETE_DOMAIN("deleteDomain", "dd", "{domain|id}", Category.DOMAIN, 1, 1),
         DELETE_IDENTITY("deleteIdentity", "did", "{name@domain|id} {identity-name}", Category.ACCOUNT, 2, 2),                
@@ -215,7 +216,7 @@ public class ProvUtil implements DebugListener {
         MODIFY_CALENDAR_RESOURCE("modifyCalendarResource",  "mcr", "{name@domain|id} [attr1 value1 [attr2 value2...]]", Category.CALENDAR, 3, Integer.MAX_VALUE),
         MODIFY_CONFIG("modifyConfig", "mcf", "attr1 value1 [attr2 value2...]", Category.CONFIG, 2, Integer.MAX_VALUE),
         MODIFY_COS("modifyCos", "mc", "{name|id} [attr1 value1 [attr2 value2...]]", Category.COS, 3, Integer.MAX_VALUE),
-        MODIFY_DATA_SOURCE("modifyDataSource", "mds", "{name@domain|id} {ds-id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),                
+        MODIFY_DATA_SOURCE("modifyDataSource", "mds", "{name@domain|id} {ds-name|ds-id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),                
         MODIFY_DISTRIBUTION_LIST("modifyDistributionList", "mdl", "{list@domain|id} attr1 value1 [attr2 value2...]", Category.LIST, 3, Integer.MAX_VALUE),
         MODIFY_DOMAIN("modifyDomain", "md", "{domain|id} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 3, Integer.MAX_VALUE),
         MODIFY_IDENTITY("modifyIdentity", "mid", "{name@domain|id} {identity-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),        
@@ -322,6 +323,7 @@ public class ProvUtil implements DebugListener {
     
     private boolean execute(String args[]) throws ServiceException, ArgException, IOException {
         String [] members;
+        Account account;
         
         mCommand = lookupCommand(args[0]);
         
@@ -428,7 +430,8 @@ public class ProvUtil implements DebugListener {
             mProv.modifyAttrs(lookupAccount(args[1]), getMap(args,2), true);
             break;            
         case MODIFY_DATA_SOURCE:
-            mProv.modifyDataSource(lookupAccount(args[1]), args[2], getMap(args,3));
+            account = lookupAccount(args[1]);
+            mProv.modifyDataSource(account, lookupDataSourceId(account, args[2]), getMap(args,3));
             break;
         case MODIFY_IDENTITY:
             mProv.modifyIdentity(lookupAccount(args[1]), args[2], getMap(args,3));
@@ -458,7 +461,8 @@ public class ProvUtil implements DebugListener {
             mProv.deleteIdentity(lookupAccount(args[1]), args[2]);
             break;                        
         case DELETE_DATA_SOURCE:
-            mProv.deleteDataSource(lookupAccount(args[1]), args[2]);
+            account = lookupAccount(args[1]);
+            mProv.deleteDataSource(account, lookupDataSourceId(account, args[2]));
             break;                        
         case DELETE_SERVER:
             mProv.deleteServer(lookupServer(args[1]).getId());
@@ -1343,6 +1347,17 @@ public class ProvUtil implements DebugListener {
         else
             return s;
     }
+    
+    private String lookupDataSourceId(Account account, String key) throws ServiceException {
+        if (isUUID(key)) {
+            return key;
+        }
+        DataSource ds = mProv.get(account, DataSourceBy.name, key);
+        if (ds == null)
+            throw AccountServiceException.NO_SUCH_DATA_SOURCE(key);
+        else
+            return ds.getId();
+    }
 
     private DistributionList lookupDistributionList(String key, boolean mustFind) throws ServiceException {
         DistributionList dl = mProv.get(guessDistributionListBy(key), key);
@@ -1377,7 +1392,7 @@ public class ProvUtil implements DebugListener {
             return CosBy.id;
         return CosBy.name;
     }
-
+    
     public static DomainBy guessDomainBy(String value) {
         if (isUUID(value))
             return DomainBy.id;
