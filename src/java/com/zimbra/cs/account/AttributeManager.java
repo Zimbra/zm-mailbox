@@ -87,6 +87,7 @@ public class AttributeManager {
     private static final String A_REQUIRED_IN = "requiredIn";
     private static final String A_OPTIONAL_IN = "optionalIn";
     private static final String A_FLAGS = "flags";
+    private static final String A_DEPRECATED_SINCE = "deprecatedSince";
 
     private static final String E_DESCRIPTION = "desc";
     private static final String E_GLOBAL_CONFIG_VALUE = "globalConfigValue";
@@ -227,6 +228,8 @@ public class AttributeManager {
             }
             canonicalName = name.toLowerCase();
 
+            String deprecatedSince = null;
+            
             for (Iterator attrIter = eattr.attributeIterator(); attrIter.hasNext();) {
                 Attribute attr = (Attribute) attrIter.next();
                 String aname = attr.getName();
@@ -279,6 +282,8 @@ public class AttributeManager {
                 	} catch (IllegalArgumentException iae) {
                         error(name, file, aname + " is not valid: " + attr.getValue());
                 	}
+                } else if (aname.equals(A_DEPRECATED_SINCE)) {  
+                    deprecatedSince = attr.getValue();
                 } else {
                     error(name, file, "unknown <attr> attr: " + aname);
                 }
@@ -295,12 +300,20 @@ public class AttributeManager {
                     defaultCOSValues.add(elem.getText());
                 } else if (elem.getName().equals(E_DESCRIPTION)) {
                     if (description != null) {
-                        error(name, file, "more than one description");
+                        error(name, file, "more than one " + E_DESCRIPTION);
                     }
                     description = elem.getText();
                 } else {
                     error(name, file, "unknown element: " + elem.getName());
                 }
+            }
+            
+            if (deprecatedSince != null) {
+                String deprecatedInfo = "Deprecated since: " + deprecatedSince; 
+                if (description == null)
+                    description = deprecatedInfo;
+                else
+                    description = deprecatedInfo + ".  " + description;
             }
 
             // Check that if id is specified, then cardinality is specified.
@@ -337,7 +350,9 @@ public class AttributeManager {
                 }
             }
 
-            AttributeInfo info = new AttributeInfo(name, id, parentOid, groupId, callback, type, order, value, immutable, min, max, cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues, description);
+            AttributeInfo info = new AttributeInfo(name, id, parentOid, groupId, callback, type, order, value, immutable, min, max, 
+                                                   cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues, 
+                                                   description);
             if (mAttrs.get(canonicalName) != null) {
                 error(name, file, "duplicate definiton");
             }
