@@ -287,6 +287,8 @@ public class AdminConstants {
     public static final QName ADD_ACCOUNT_LOGGER_RESPONSE = QName.get("AddAccountLoggerResponse", NAMESPACE);
     public static final QName REMOVE_ACCOUNT_LOGGER_REQUEST = QName.get("RemoveAccountLoggerRequest", NAMESPACE);
     public static final QName REMOVE_ACCOUNT_LOGGER_RESPONSE = QName.get("RemoveAccountLoggerResponse", NAMESPACE);
+    public static final QName GET_ACCOUNT_LOGGERS_REQUEST = QName.get("GetAccountLoggersRequest", NAMESPACE);
+    public static final QName GET_ACCOUNT_LOGGERS_RESPONSE = QName.get("GetAccountLoggersResponse", NAMESPACE);
     public static final QName GET_ALL_ACCOUNT_LOGGERS_REQUEST = QName.get("GetAllAccountLoggersRequest", NAMESPACE);
     public static final QName GET_ALL_ACCOUNT_LOGGERS_RESPONSE = QName.get("GetAllAccountLoggersResponse", NAMESPACE);
 

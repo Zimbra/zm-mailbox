@@ -34,7 +34,7 @@ public class AccountLogger {
     private String mCategory;
     private Level mLevel;
     
-    AccountLogger(String category, String accountName, Level level) {
+    public AccountLogger(String category, String accountName, Level level) {
         mCategory = category;
         mAccountName = accountName;
         mLevel = level;
