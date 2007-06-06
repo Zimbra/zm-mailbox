@@ -153,9 +153,23 @@ public class WikiFormatter extends Formatter {
 		out.print(contextPath);
 		out.println("/css/wiki.css'>");
 		/***/
+		String defaultFontFamily = context.targetAccount.getAttr("zimbraPrefHtmlEditorDefaultFontFamily");
+		String defaultFontColor = context.targetAccount.getAttr("zimbraPrefHtmlEditorDefaultFontColor");
+		String defaultFontSize = context.targetAccount.getAttr("zimbraPrefHtmlEditorDefaultFontSize");
+		
 		// REVISIT: Can we assume that the context path for the wiki.css
 		//          file will be "/zimbra"?
 		out.print("<LINK rel='stylesheet' type='text/css' href='/zimbra/css/wiki.css'>");
+		
+		if(defaultFontFamily !=null){
+		out.print("<style>");
+		out.print("body { ");
+		out.print("font-family:"+defaultFontFamily+";");
+		out.print("color:"+defaultFontColor+";");
+		out.print("font-size:"+defaultFontSize+";");
+		out.print("}");
+		out.print("</style>");
+		}
 		/***/
 		out.println("</HEAD>");
 		out.println("<BODY style='margin:0px'>");
