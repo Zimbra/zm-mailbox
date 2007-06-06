@@ -44,6 +44,10 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class RemoveAccountLogger extends AdminDocumentHandler {
 
+    // Support for proxying if the account isn't on this server 
+    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminConstants.E_ID };
+    protected String[] getProxiedAccountPath()  { return TARGET_ACCOUNT_PATH; }
+
     @Override
     public Element handle(Element request, Map<String, Object> context)
     throws ServiceException {
@@ -51,12 +55,10 @@ public class RemoveAccountLogger extends AdminDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
         
         // Look up account
-        Element eAccount = request.getElement(AdminConstants.E_ACCOUNT);
-        String key = eAccount.getAttribute(AdminConstants.A_BY);
-        String value = eAccount.getText();
-        Account account = prov.get(AccountBy.fromString(key), value);
+        String id = request.getElement(AdminConstants.E_ID).getText();
+        Account account = prov.get(AccountBy.id, id);
         if (account == null) {
-            throw AccountServiceException.NO_SUCH_ACCOUNT(value);
+            throw AccountServiceException.NO_SUCH_ACCOUNT(id);
         }
         
         // Remove logger

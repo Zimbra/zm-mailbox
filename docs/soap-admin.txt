@@ -1757,7 +1757,7 @@ in soap-waitset.txt
 # Changes logging settings on a per-account basis.
 
 <AddAccountLoggerRequest>
-  <account by="id|name">...</account>
+  <id>{account-id}</id>
   <logger category="{category-name}" level="debug|info|warn|error"/>
 </AddAccountLoggerRequest>
 
@@ -1765,28 +1765,51 @@ in soap-waitset.txt
 
   Adds a custom logger for the given account and log category.  The logger
   stays in effect only during the lifetime of the current server instance.
+  If the request is sent to a server other than the one that the account
+  resides on, it is proxied to the correct server.
+
 
 <RemoveAccountLoggerRequest>
-  <account by="id|name">...</account>
+  <id>{account-id}</id>
   <logger category="{category-name}"/>
 </RemoveAccountLoggerRequest>
 
 <RemoveAccountLoggerResponse/>
 
-  Removes a custom logger from the given account.
+  Removes a custom logger from the given account.  If the request is sent
+  to a server other than the one that the account resides on, it is proxied
+  to the correct server.
+  
+
+
+<GetAccountLoggersRequest>
+  <id>{account-id}</id>
+</GetAccountLoggersRequest>
+
+<GetAccountLoggersResponse>
+  [<logger category="{category-name} level="debug|info|warn|error"/>]
+  ...
+</GetAccountLoggersResponse>
+
+  Returns custom loggers created for the given account since the
+  last server start.  If the request is sent to a server other than the
+  one that the account resides on, it is proxied to the correct server.
+
 
 <GetAllAccountLoggersRequest/>
 
 <GetAllAccountLoggersResponse>
-  <accountLogger>
-    <account name="{name}" id="{id}"/>
+[
+  <accountLogger id="{account-id}" name="{account-name}">
     <logger category="{category-name} level="debug|info|warn|error"/>
+    ...
   </accountLogger>
+]
   ...
 </GetAllAccountLoggersResponse>
 
-  Returns all account loggers that have been created since the last server
-  start.
+  Returns all account loggers that have been created on the given server
+  since the last server start.
   
 -----------------------------
 

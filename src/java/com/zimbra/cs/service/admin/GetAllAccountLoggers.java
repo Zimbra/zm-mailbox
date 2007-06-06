@@ -24,6 +24,7 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -43,6 +44,7 @@ public class GetAllAccountLoggers extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
+        Map<String, Element> accountElements = new HashMap<String, Element>();
         
         Element response = zsc.createElement(AdminConstants.GET_ALL_ACCOUNT_LOGGERS_RESPONSE);
         for (AccountLogger al : LogFactory.getAllAccountLoggers()) {
@@ -55,18 +57,19 @@ public class GetAllAccountLoggers extends AdminDocumentHandler {
             }
             
             // Add elements
-            Element alElement = response.addElement(AdminConstants.E_ACCOUNT_LOGGER);
+            Element eAccountLogger = accountElements.get(account.getId());
+            if (eAccountLogger == null) {
+                eAccountLogger = response.addElement(AdminConstants.E_ACCOUNT_LOGGER);
+                accountElements.put(account.getId(), eAccountLogger);
+            }
+            eAccountLogger.addAttribute(AdminConstants.A_ID, account.getId());
+            eAccountLogger.addAttribute(AdminConstants.A_NAME, account.getName());
             
-            Element accountElement = alElement.addElement(AdminConstants.E_ACCOUNT);
-            accountElement.addAttribute(AdminConstants.A_ID, account.getId());
-            accountElement.addAttribute(AdminConstants.A_NAME, account.getName());
-            
-            Element loggerElement = alElement.addElement(AdminConstants.E_LOGGER);
-            loggerElement.addAttribute(AdminConstants.A_CATEGORY, al.getCategory());
-            loggerElement.addAttribute(AdminConstants.A_LEVEL, al.getLevel().toString());
+            Element eLogger = eAccountLogger.addElement(AdminConstants.E_LOGGER);
+            eLogger.addAttribute(AdminConstants.A_CATEGORY, al.getCategory());
+            eLogger.addAttribute(AdminConstants.A_LEVEL, al.getLevel().toString());
         }
         
         return response;
     }
-
 }

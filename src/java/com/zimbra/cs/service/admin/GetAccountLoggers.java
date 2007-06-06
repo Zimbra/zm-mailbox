@@ -29,29 +29,22 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.util.Log.Level;
+import com.zimbra.common.util.AccountLogger;
+import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.soap.ZimbraSoapContext;
 
-/**
- * Creates a custom logger for the given account.
- * 
- * @author bburtin
- */
-public class AddAccountLogger extends AdminDocumentHandler {
+public class GetAccountLoggers extends AdminDocumentHandler {
 
     // Support for proxying if the account isn't on this server 
     private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminConstants.E_ID };
     protected String[] getProxiedAccountPath()  { return TARGET_ACCOUNT_PATH; }
 
     @Override
-    public Element handle(Element request, Map<String, Object> context)
-    throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         
@@ -62,23 +55,15 @@ public class AddAccountLogger extends AdminDocumentHandler {
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
         }
         
-        // Add logger
-        Element eLogger = request.getElement(AdminConstants.E_LOGGER);
-        String category = eLogger.getAttribute(AdminConstants.A_CATEGORY);
-        String sLevel = eLogger.getAttribute(AdminConstants.A_LEVEL);
-        Level level = null;
-        try {
-            level = Level.valueOf(sLevel);
-        } catch (IllegalArgumentException e) {
-            throw ServiceException.INVALID_REQUEST("Invalid value for level: " + sLevel, null);
+        Element response = zsc.createElement(AdminConstants.GET_ACCOUNT_LOGGERS_RESPONSE);
+        for (AccountLogger al : LogFactory.getAllAccountLoggers()) {
+            if (al.getAccountName().equals(account.getName())) {
+                Element eLogger = response.addElement(AdminConstants.E_LOGGER);
+                eLogger.addAttribute(AdminConstants.A_CATEGORY, al.getCategory());
+                eLogger.addAttribute(AdminConstants.A_LEVEL, al.getLevel().toString());
+            }
         }
-        ZimbraLog.misc.info("Adding custom logger: account=%s, category=%s, level=%s",
-            account.getName(), category, level);
-        Log.addAccountLogger(category, account.getName(), level);
-
-        // Send response
-        Element response = zsc.createElement(AdminConstants.ADD_ACCOUNT_LOGGER_RESPONSE);
+        
         return response;
     }
-    
 }
