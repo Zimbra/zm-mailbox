@@ -153,7 +153,8 @@ public class ZFolder implements ZItem, Comparable {
         document,
         message,
         wiki,
-        task;
+        task,
+        voice;
 
         public static View fromString(String s) throws ServiceException {
             try {
@@ -208,7 +209,7 @@ public class ZFolder implements ZItem, Comparable {
         // sub folders
         for (Element child : e.listElements(MailConstants.E_FOLDER))
             mSubFolders.add(new ZFolder(child, this));
-        
+
         // search
         for (Element s : e.listElements(MailConstants.E_SEARCH))
             mSubFolders.add(new ZSearchFolder(s, this));

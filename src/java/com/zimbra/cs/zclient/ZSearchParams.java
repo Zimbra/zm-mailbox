@@ -38,6 +38,8 @@ public class ZSearchParams {
     
     public static final String TYPE_CONTACT = "contact";
     
+    public static final String TYPE_VOICE_MAIL = "voicemail";
+    
     public static final String TYPE_APPOINTMENT = "appointment";
 
     public static final String TYPE_TASK = "task";
@@ -45,7 +47,7 @@ public class ZSearchParams {
     public static final String TYPE_DOCUMENT = "document";
     
     public static final String TYPE_WIKI = "wiki";
-    
+
     public static String getCanonicalTypes(String list) throws ServiceException  {
         if (list == null || list.length() == 0) return "";
 

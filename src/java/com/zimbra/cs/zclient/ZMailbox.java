@@ -35,6 +35,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapTransport;
+import com.zimbra.common.soap.VoiceConstants;
 import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.EasySSLProtocolSocketFactory;
@@ -85,6 +86,7 @@ import org.apache.commons.httpclient.methods.multipart.ByteArrayPartSource;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
+import org.dom4j.QName;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
@@ -2197,7 +2199,15 @@ public class ZMailbox {
     // ------------------------
 
     private synchronized ZSearchResult internalSearch(String convId, ZSearchParams params, boolean nest) throws ServiceException {
-        XMLElement req = new XMLElement(convId == null ? MailConstants.SEARCH_REQUEST : MailConstants.SEARCH_CONV_REQUEST);
+        QName name;
+        if (convId != null) {
+        	name = MailConstants.SEARCH_CONV_REQUEST;
+        } else if (params.getTypes().equals(ZSearchParams.TYPE_VOICE_MAIL)) {
+        	name = VoiceConstants.SEARCH_VOICE_REQUEST;
+        } else {
+        	name = MailConstants.SEARCH_REQUEST;
+        }
+		XMLElement req = new XMLElement(name);
 
         req.addAttribute(MailConstants.A_CONV_ID, convId);
         if (nest) req.addAttribute(MailConstants.A_NEST_MESSAGES, true);
@@ -3208,5 +3218,32 @@ public class ZMailbox {
     	Element content = req.addElement(MailConstants.E_CONTENT);
     	content.addAttribute(MailConstants.A_ATTACHMENT_ID, attachmentId);
     	return new ZImportAppointmentsResult(invoke(req).getElement(MailConstants.E_APPOINTMENT));
+    }
+
+    public List<ZPhoneAccount> getAllPhoneAccounts() throws ServiceException {
+        XMLElement req = new XMLElement(VoiceConstants.GET_VOICE_FOLDER_REQUEST);
+        Element response = invoke(req);
+        List<Element> phoneElements = response.listElements(VoiceConstants.E_PHONE);
+        List<ZPhoneAccount> result = new ArrayList<ZPhoneAccount>();
+        for (Element element : phoneElements) {
+             result.add(new ZPhoneAccount(element));
+        }
+        return result;
+    }
+
+    public ZActionResult trashVoiceMail(String phone, String id) throws ServiceException {
+        return doAction(voiceAction("move", phone, id, VoiceConstants.FID_TRASH));
+    }
+
+    private Element voiceAction(String op, String phone, String id, int folderId) {
+        XMLElement req = new XMLElement(VoiceConstants.VOICE_MSG_ACTION_REQUEST);
+        Element actionEl = req.addElement(MailConstants.E_ACTION);
+        actionEl.addAttribute(MailConstants.A_ID, id);
+        actionEl.addAttribute(MailConstants.A_OPERATION, op);
+        actionEl.addAttribute(VoiceConstants.A_PHONE, phone);
+        if (folderId != 0) {
+            actionEl.addAttribute(MailConstants.A_FOLDER, Integer.toString(folderId) + '-' + phone);
+        }
+        return actionEl;
     }
 }

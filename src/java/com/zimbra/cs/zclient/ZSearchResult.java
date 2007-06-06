@@ -26,10 +26,11 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.cs.zclient.event.ZModifyEvent;
-import com.zimbra.cs.zclient.event.ZModifyConversationEvent;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.VoiceConstants;
+import com.zimbra.cs.zclient.event.ZModifyConversationEvent;
+import com.zimbra.cs.zclient.event.ZModifyEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -89,7 +90,9 @@ public class ZSearchResult {
                 mHits.add(new ZDocumentHit(h));
             } else if (h.getName().equals(MailConstants.E_WIKIWORD)) {
                 mHits.add(new ZDocumentHit(h));
-            }
+	        } else if (h.getName().equals(VoiceConstants.E_VOICEMSG)) {
+	        	mHits.add(new ZVoiceMailItemHit(h));
+	        }
         }
     }
 
