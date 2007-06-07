@@ -100,6 +100,7 @@ public class LC {
     public static final KnownKey zimbra_zmprov_default_soap_server;
     public static final KnownKey localized_msgs_directory;
     public static final KnownKey localized_client_msgs_directory;
+    public static final KnownKey skins_directory;
 
     public static final KnownKey zimbra_store_sweeper_max_age;
 
@@ -369,7 +370,11 @@ public class LC {
         localized_client_msgs_directory = new KnownKey("localized_client_msgs_directory");
         localized_client_msgs_directory.setDefault("${mailboxd_directory}" + FS + "webapps" + FS + "zimbra" + FS + "WEB-INF" + FS + "classes" + FS + "msgs");
         localized_client_msgs_directory.setDoc("Directory for localized client message files.");
-       
+
+        skins_directory = new KnownKey("skins_directory");
+        skins_directory.setDefault("${mailboxd_directory}" + FS + "webapps" + FS + "zimbra" + FS + "skins");
+        skins_directory.setDoc("Directory for skins.");
+        
         zimbra_store_sweeper_max_age = new KnownKey("zimbra_store_sweeper_max_age");
         zimbra_store_sweeper_max_age.setDefault("480");  // 480 mins = 8 hours
         zimbra_store_sweeper_max_age.setDoc("Files older than this many minutes are auto-deleted from store incoming directory.");
