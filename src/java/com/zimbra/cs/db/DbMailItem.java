@@ -104,6 +104,7 @@ public class DbMailItem {
     public static final int MAX_SENDER_LENGTH  = 128;
     public static final int MAX_SUBJECT_LENGTH = 1024;
     public static final int MAX_TEXT_LENGTH    = 65534;
+    public static final int MAX_MEDIUMTEXT_LENGTH = 16777216;
 
     public static final String IN_THIS_MAILBOX_AND = "mailbox_id = ? AND ";
     
@@ -163,7 +164,7 @@ public class DbMailItem {
             stmt.setString(pos++, checkSenderLength(data.sender));
             stmt.setString(pos++, checkSubjectLength(data.subject));
             stmt.setString(pos++, data.name);
-            stmt.setString(pos++, checkTextLength(data.metadata));
+            stmt.setString(pos++, checkMetadataLength(data.metadata));
             stmt.setInt(pos++, data.modMetadata);
             stmt.setInt(pos++, data.dateChanged);
             stmt.setInt(pos++, data.modContent);
@@ -254,7 +255,7 @@ public class DbMailItem {
                 stmt.setShort(pos++, volumeId);                // VOLUME_ID specified by caller
             else
                 stmt.setNull(pos++, Types.TINYINT);            //   or, no VOLUME_ID
-            stmt.setString(pos++, checkTextLength(metadata));  // METADATA
+            stmt.setString(pos++, checkMetadataLength(metadata));  // METADATA
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_METADATA
             stmt.setInt(pos++, mbox.getOperationTimestamp());  // CHANGE_DATE
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_CONTENT
@@ -547,7 +548,7 @@ public class DbMailItem {
             int pos = 1;
             stmt.setInt(pos++, (int) (item.getDate() / 1000));
             stmt.setInt(pos++, item.getSize());
-            stmt.setString(pos++, checkTextLength(metadata));
+            stmt.setString(pos++, checkMetadataLength(metadata));
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             stmt.setInt(pos++, item.getSavedSequence());
@@ -573,7 +574,7 @@ public class DbMailItem {
             int pos = 1;
             stmt.setInt(pos++, item.getSize());
             stmt.setInt(pos++, item.getUnreadCount());
-            stmt.setString(pos++, checkTextLength(metadata));
+            stmt.setString(pos++, checkMetadataLength(metadata));
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             stmt.setInt(pos++, item.getSavedSequence());
@@ -685,7 +686,7 @@ public class DbMailItem {
             stmt.setString(pos++, checkSenderLength(sender));
             stmt.setString(pos++, checkSubjectLength(subject));
             stmt.setString(pos++, name);
-            stmt.setString(pos++, checkTextLength(metadata));
+            stmt.setString(pos++, checkMetadataLength(metadata));
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             stmt.setInt(pos++, item.getSavedSequence());
@@ -3360,23 +3361,26 @@ public class DbMailItem {
     }
 
     /** Makes sure that the argument won't overflow the maximum length of a
-     *  MySQL TEXT column (65536 bytes) after conversion to UTF-8.
+     *  MySQL MEDIUMTEXT column (16,777,216 bytes) after conversion to UTF-8.
      * 
      * @param metadata  The string to check (can be null).
      * @return The passed-in String.
      * @throws ServiceException <code>service.FAILURE</code> if the
      *         parameter would be silently truncated when inserted. */
-    static String checkTextLength(String metadata) throws ServiceException {
+    static String checkMetadataLength(String metadata) throws ServiceException {
         if (metadata == null)
             return null;
-        if (StringUtil.isAsciiString(metadata)) {
-            if (metadata.length() > MAX_TEXT_LENGTH)
-                throw ServiceException.FAILURE("metadata too long", null);
-        } else {
-            try {
-                if (metadata.getBytes("utf-8").length > MAX_TEXT_LENGTH)
+        int len = metadata.length();
+        if (len > MAX_MEDIUMTEXT_LENGTH / 4) {  // every char uses 4 bytes in worst case
+            if (StringUtil.isAsciiString(metadata)) {
+                if (len > MAX_MEDIUMTEXT_LENGTH)
                     throw ServiceException.FAILURE("metadata too long", null);
-            } catch (UnsupportedEncodingException uee) { }
+            } else {
+                try {
+                    if (metadata.getBytes("utf-8").length > MAX_MEDIUMTEXT_LENGTH)
+                        throw ServiceException.FAILURE("metadata too long", null);
+                } catch (UnsupportedEncodingException uee) { }
+            }
         }
         return metadata;
     }
