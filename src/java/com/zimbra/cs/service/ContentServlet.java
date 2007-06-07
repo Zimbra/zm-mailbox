@@ -234,7 +234,7 @@ public class ContentServlet extends ZimbraServlet {
         } catch (NoSuchItemException e) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND, "no such item");
         } catch (ServiceException e) {
-            throw new ServletException(e);
+        	returnError(resp, e);
 		} finally {
             ZimbraLog.clearContext();      
         }
@@ -276,12 +276,18 @@ public class ContentServlet extends ZimbraServlet {
 
             FileUploadServlet.deleteUpload(up);
         } catch (ServiceException e) {
-            throw new ServletException(e);
+        	returnError(resp, e);
         } catch (AuthTokenException e) {
             resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
+    private void returnError(HttpServletResponse resp, ServiceException e) {
+    	resp.setHeader("X-Zimbra-Fault-Code", e.getCode());
+    	resp.setHeader("X-Zimbra-Fault-Message", e.getMessage());
+    	resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+    }
+    
     /**
      * @param accountId
      * @return
