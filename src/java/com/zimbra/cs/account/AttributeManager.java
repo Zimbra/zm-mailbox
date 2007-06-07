@@ -90,6 +90,7 @@ public class AttributeManager {
     private static final String A_DEPRECATED_SINCE = "deprecatedSince";
 
     private static final String E_DESCRIPTION = "desc";
+    private static final String E_DEPRECATE_DESC = "deprecateDesc";
     private static final String E_GLOBAL_CONFIG_VALUE = "globalConfigValue";
     private static final String E_DEFAULT_COS_VALUE = "defaultCOSValue";
     
@@ -292,6 +293,7 @@ public class AttributeManager {
             List<String> globalConfigValues = new LinkedList<String>();
             List<String> defaultCOSValues = new LinkedList<String>();
             String description = null;
+            String deprecateDesc = null;
             for (Iterator elemIter = eattr.elementIterator(); elemIter.hasNext();) {
                 Element elem = (Element)elemIter.next();
                 if (elem.getName().equals(E_GLOBAL_CONFIG_VALUE)) {
@@ -303,17 +305,27 @@ public class AttributeManager {
                         error(name, file, "more than one " + E_DESCRIPTION);
                     }
                     description = elem.getText();
+                } else if (elem.getName().equals(E_DEPRECATE_DESC)) {
+                    if (deprecateDesc != null) {
+                        error(name, file, "more than one " + E_DEPRECATE_DESC);
+                    }
+                    deprecateDesc = elem.getText();
                 } else {
                     error(name, file, "unknown element: " + elem.getName());
                 }
             }
             
+            if (deprecatedSince != null && deprecateDesc == null)
+                error(name, file, "missing attr " + A_DEPRECATED_SINCE);
+            else if (deprecatedSince == null && deprecateDesc != null)
+                error(name, file, "missing element " + E_DEPRECATE_DESC);
+            
             if (deprecatedSince != null) {
-                String deprecatedInfo = "Deprecated since: " + deprecatedSince; 
+                String deprecateInfo = "Deprecated since: " + deprecatedSince + ".  " + deprecateDesc; 
                 if (description == null)
-                    description = deprecatedInfo;
+                    description = deprecateInfo;
                 else
-                    description = deprecatedInfo + ".  " + description;
+                    description = deprecateInfo + ".  Orig desc: " + description;
             }
 
             // Check that if id is specified, then cardinality is specified.
