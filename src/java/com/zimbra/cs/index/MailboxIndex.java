@@ -678,11 +678,10 @@ public final class MailboxIndex
     private IndexWriter mIndexWriter;
     private ReentrantLock mIndexWriterMutex = new ReentrantLock();
     
-    private static LinkedHashMap<MailboxIndex, Object> sOpenIndexWriters = 
-        new LinkedHashMap<MailboxIndex, Object>();
+    private static LinkedHashMap<MailboxIndex, MailboxIndex> sOpenIndexWriters =
+        new LinkedHashMap<MailboxIndex, MailboxIndex>(200, 0.75f, true);
     private static int sReservedWriterSlots = 0;
     private static IndexWritersSweeper sSweeper = null;
-    
     
 
     public static void startup() {
@@ -730,8 +729,8 @@ public final class MailboxIndex
             return;
         
         synchronized(sOpenIndexWriters) {
-            LinkedHashMap<MailboxIndex, Object> tmp = sOpenIndexWriters;
-            sOpenIndexWriters = new LinkedHashMap<MailboxIndex, Object>();
+            LinkedHashMap<MailboxIndex, MailboxIndex> tmp = sOpenIndexWriters;
+            sOpenIndexWriters = new LinkedHashMap<MailboxIndex, MailboxIndex>();
             for (MailboxIndex idx : tmp.keySet()) {
                 idx.closeIndexWriter();
             }
@@ -822,11 +821,19 @@ public final class MailboxIndex
     private void closeIndexWriter() 
     {
         assert(!mIndexWriterMutex.isHeldByCurrentThread());
+        int sizeAfter = -1;
         synchronized (sOpenIndexWriters) {
             sReservedWriterSlots++;
             mIndexWriterMutex.lock();
-            sOpenIndexWriters.remove(this);
+            if (sOpenIndexWriters.remove(this) != null) {
+                sizeAfter = sOpenIndexWriters.size();
+            }
         }
+        
+        // only need to do a log output if we actually removed one
+        if (sLog.isDebugEnabled() && sizeAfter > -1)
+            sLog.debug("closeIndexWriter: map size after close = " + sizeAfter);
+        
         try {
             closeIndexWriterAfterRemove();
         } finally {
@@ -855,9 +862,7 @@ public final class MailboxIndex
         boolean success = true;
         try {
             // Flush all changes to file system before committing redos.
-//          sLog.info("MI"+this.toString()+ " Start Close IndexWriter "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
             writer.close();
-//          sLog.info("MI"+this.toString()+ " Closed IndexWriter "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
         } catch (IOException e) {
             success = false;
             sLog.error("Caught Exception " + e + " in MailboxIndex.closeIndexWriter", e);
@@ -923,27 +928,23 @@ public final class MailboxIndex
         
         // uncache the IndexReader if it is cached
         sIndexReadersCache.removeIndexReader(this);
-        
+
+        //
         // First, get a 'slot' in the cache, closing some other Writer
         // if necessary to do it...
-        
         boolean haveReservedSlot = false;
         boolean mustSleep = false;
-        
         do {
-            // We should enter this loop at most twice:
-            //    First time:
+            // Entry cases:
             //       - We might get a slot (or already be in cache) and be done
             //
-            //       - Or, we might reserve a slot and go down to close a Writer
-            //
-            //    Second time:
-            //       - We must've just closed a writer, but we reserved a spot
-            //         so we know there will be room this time.
+            //       - We might reserve a slot and go down to close a Writer
             //
             //       - We couldn't find anything to close, so we just did a sleep
             //         and hope to retry again
-            
+            //
+            //       - We just closed a writer, and we reserved a spot
+            //         so we know there will be room this time.
             MailboxIndex toClose;
             synchronized(sOpenIndexWriters) {
                 toClose = null;
@@ -1001,17 +1002,17 @@ public final class MailboxIndex
         try {
             if (mIndexWriter == null) {
                 try {
-//                  sLog.info("MI"+this.toString()+" Opening IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
+//                  sLog.debug("MI"+this.toString()+" Opening IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
                     mIndexWriter = new IndexWriter(mIdxDirectory, getAnalyzer(), false);
-//                  sLog.info("MI"+this.toString()+" Opened IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
+//                  sLog.debug("MI"+this.toString()+" Opened IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
 
                 } catch (IOException e1) {
-                    //mLog.info("****Creating new index in " + mIdxPath + " for mailbox " + mMailboxId);
+//                    mLog.debug("****Creating new index in " + mIdxPath + " for mailbox " + mMailboxId);
                     File indexDir  = mIdxDirectory.getFile();
                     if (indexDirIsEmpty(indexDir)) {
-//                      sLog.info("MI"+this.toString()+" Opening IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
+//                      sLog.debug("MI"+this.toString()+" Opening IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
                         mIndexWriter = new IndexWriter(mIdxDirectory, getAnalyzer(), true);
-//                      sLog.info("MI"+this.toString()+" Opened IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
+//                      sLog.debug("MI"+this.toString()+" Opened IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
                         if (mIndexWriter == null) 
                             throw new IOException("Failed to open IndexWriter in directory "+indexDir.getAbsolutePath());
                     } else {
@@ -1067,6 +1068,9 @@ public final class MailboxIndex
 
                 mIndexWriter.setMaxBufferedDocs(33); // we expect 11 index fragment files
 
+                // tim: this might seem bad, since an index in steady-state-of-writes will never get flushed, 
+                // however we also track the number of uncomitted-operations on the index, and will force a 
+                // flush if the index has had a lot written to it without a flush.
                 updateLastWriteTime();
             }
         } finally {
