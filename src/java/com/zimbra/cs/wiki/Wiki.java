@@ -335,23 +335,10 @@ public abstract class Wiki {
 		}
 		
 		public synchronized void renameDocument(WikiContext ctxt, int id, String newName, String author) throws ServiceException {
-			WikiPage p = lookupWiki(ctxt, newName);
-			if (p != null)
-				throw MailServiceException.MODIFY_CONFLICT(new Argument(MailConstants.A_NAME, newName, Argument.Type.STR));
-
-            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mWikiAccount);
-            mbox.rename(ctxt.octxt, id, MailItem.TYPE_DOCUMENT, newName);
-
-            Document doc = (Document) mbox.getItemById(ctxt.octxt, id, MailItem.TYPE_DOCUMENT);
-			byte[] contents;
-        	try {
-        		contents = ByteUtil.getContent(doc.getRawDocument(), 0);
-        	} catch (IOException ioe) {
-        		ZimbraLog.wiki.error("cannot read the item body", ioe);
-        		throw WikiServiceException.CANNOT_READ(doc.getName());
-        	}
-        	mbox.addDocumentRevision(ctxt.octxt, doc.getId(), doc.getType(), contents, author);
-        	Wiki.remove(mWikiAccount, Integer.toString(mFolderId));
+			// rename the page, then flush the cache.
+			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mWikiAccount);
+			mbox.rename(ctxt.octxt, id, MailItem.TYPE_DOCUMENT, newName);
+			Wiki.remove(mWikiAccount, Integer.toString(mFolderId));
 		}
 		
 		public int getWikiFolderId() {
