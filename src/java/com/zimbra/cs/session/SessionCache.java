@@ -137,7 +137,9 @@ public final class SessionCache {
         for (SessionMap sessionMap : sSessionMaps) {
             List<Session> list = sessionMap.pruneSessionsByTime(Long.MAX_VALUE);
             
-            // Call deadlock-prone Session.doCleanup() after releasing lock on sLRUMap.
+            // IMPORTANT: Clean up sessions *after* releasing lock on Session Map
+            // If Session.doCleanup() is called with the SessionMap locked, it can lead
+            // to deadlock. (bug 7866)
             for (Session s : list) {
                 assert(!Thread.holdsLock(sessionMap));
                 s.doCleanup();
@@ -154,10 +156,6 @@ public final class SessionCache {
 
     static Log sLog = LogFactory.getLog(SessionCache.class);
 
-    /** The cache of all active {@link Session}s.  The keys of the Map are session IDs
-     *  and the values are the Sessions themselves. */
-//    private static LinkedHashMap<String, Session> sLRUMap = new LinkedHashMap<String, Session>(500);
-    
     private static final Session.Type getSessionTypeFromId(String sessionId) {
         if (sessionId.length() < 2)
             return Session.Type.NULL; // invalid session id
@@ -277,7 +275,7 @@ public final class SessionCache {
                     if (ZimbraLog.session.isDebugEnabled())
                         ZimbraLog.session.debug("Removing cached session: " + s);
                     assert(!Thread.holdsLock(sessionMap));
-                    // IMPORTANT: Clean up sessions *after* releasing lock on sLRUMap.
+                    // IMPORTANT: Clean up sessions *after* releasing lock on Session Map
                     // If Session.doCleanup() is called with sLRUMap locked, it can lead
                     // to deadlock. (bug 7866)
                     s.doCleanup();

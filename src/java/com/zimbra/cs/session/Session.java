@@ -109,6 +109,10 @@ public abstract class Session {
         mCreationTime = System.currentTimeMillis();
         mLastAccessed = mCreationTime;
     }
+    
+    public Type getType() {
+        return mSessionType;
+    }
 
     /** Registers the session as a listener on the target mailbox and adds
      *  it to the session cache.  When a session is added to the cache, its
