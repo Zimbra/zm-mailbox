@@ -750,10 +750,10 @@ public abstract class CalendarItem extends MailItem {
                 }
             }
 
-            modifyBlob(toRemove, replaceExistingInvites, toUpdate, pm, newInvite, volumeId);
+            modifyBlob(toRemove, replaceExistingInvites, toUpdate, pm, newInvite, volumeId, isCancel);
             modifiedCalItem = true;
         } else {
-            modifyBlob(toRemove, replaceExistingInvites, toUpdate, null, null, volumeId);
+            modifyBlob(toRemove, replaceExistingInvites, toUpdate, null, null, volumeId, isCancel);
         }
         
         // now remove the inviteid's from our list  
@@ -780,6 +780,10 @@ public abstract class CalendarItem extends MailItem {
         }
         
         if (!hasRequests) {
+            if (!isCancel)
+                ZimbraLog.calendar.warn(
+                        "Invalid state: deleting calendar item " + getId() +
+                        " in mailbox " + getMailboxId() + " while processing a non-cancel request");
             delete();  // delete this appointment/task from the table,
                        // it doesn't have anymore REQUESTs!
         } else {
@@ -927,7 +931,12 @@ public abstract class CalendarItem extends MailItem {
     throws ServiceException, IOException {
         ParsedMessage pm = new ParsedMessage(mm, true);
         try {
-            setContent(pm.getRawData(), pm.getRawDigest(), volumeId, pm);
+            byte[] data = pm.getRawData();
+            if (data == null)
+                ZimbraLog.calendar.warn(
+                        "Invalid state: updating blob with null data for calendar item " + getId() +
+                        " in mailbox " + getMailboxId());
+            setContent(data, pm.getRawDigest(), volumeId, pm);
         } catch (MessagingException me) {
             throw MailServiceException.MESSAGE_PARSE_ERROR(me);
         }
@@ -989,6 +998,7 @@ public abstract class CalendarItem extends MailItem {
      * @param invPm
      * @param newInv
      * @param volumeId
+     * @param isCancel if the method is being called while processing a cancel request
      * @throws ServiceException
      */
     private void modifyBlob(List<Invite> toRemove,
@@ -996,7 +1006,8 @@ public abstract class CalendarItem extends MailItem {
                             List<Invite> toUpdate,
                             ParsedMessage invPm,
                             Invite newInv,
-                            short volumeId)
+                            short volumeId,
+                            boolean isCancel)
     throws ServiceException
     {
         // TODO - as an optimization, should check to see if the invite's MM is already in here! (ie
@@ -1008,6 +1019,8 @@ public abstract class CalendarItem extends MailItem {
             try {
                 mm = new MimeMessage(getMimeMessage());
             } catch (ServiceException e) {
+                ZimbraLog.calendar.error("Error reading blob for calendar item " + getId() +
+                                         " in mailbox " + getMailboxId(), e);
                 if (newInv != null) {
                     // if the blob isn't already there, and we're going to add one, then
                     // just go into create
@@ -1119,6 +1132,10 @@ public abstract class CalendarItem extends MailItem {
                 return;
             
             if (mmp.getCount() == 0) {
+                if (!isCancel)
+                    ZimbraLog.calendar.warn(
+                            "Invalid state: deleting blob for calendar item " + getId() +
+                            " in mailbox " + getMailboxId() + " while processing a non-cancel request");
                 StoreManager sm = StoreManager.getInstance();
                 sm.delete(getBlob());
             } else {

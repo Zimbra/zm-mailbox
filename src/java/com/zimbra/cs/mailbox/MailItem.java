@@ -1034,11 +1034,11 @@ public abstract class MailItem implements Comparable<MailItem> {
             return null;
 
         // delete the old blob *unless* we've already rewritten it in this transaction
+        PendingDelete info = null;
         if (getSavedSequence() != mMailbox.getOperationChangeID()) {
             // mark the old blob as ready for deletion
-            PendingDelete info = getDeletionInfo();
+            info = getDeletionInfo();
             info.itemIds.clear();  info.unreadIds.clear();  info.indexIds.clear();
-            mMailbox.markOtherItemDirty(info);
         }
 
         // remove the content from the cache
@@ -1071,6 +1071,10 @@ public abstract class MailItem implements Comparable<MailItem> {
         Blob blob = sm.storeIncoming(data, digest, null, volumeId);
         MailboxBlob mb = sm.renameTo(blob, mMailbox, mId, getSavedSequence(), volumeId);
         mMailbox.markOtherItemDirty(mb);
+
+        // delete the old blob
+        if (info != null)
+            mMailbox.markOtherItemDirty(info);
 
         return blob;
     }

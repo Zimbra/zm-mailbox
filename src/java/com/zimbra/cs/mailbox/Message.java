@@ -398,31 +398,44 @@ public class Message extends MailItem {
         boolean updatedMetadata = false;
 
         for (Invite cur : invites) {
-            CalendarItem calItem = mMailbox.getCalendarItemByUid(cur.getUid());
-            if (createCalItem) {
-                if (calItem == null) { 
-                    // ONLY create a calendar item if this is a REQUEST method...otherwise don't.
-                    if (method.equals(ICalTok.REQUEST.toString())) {
-                        calItem = mMailbox.createCalendarItem(Mailbox.ID_FOLDER_CALENDAR, volumeId, "", cur.getUid(), pm, cur);
+            CalendarItem calItem = null;
+            boolean success = false;
+            try {
+                calItem = mMailbox.getCalendarItemByUid(cur.getUid());
+                if (createCalItem) {
+                    if (calItem == null) { 
+                        // ONLY create a calendar item if this is a REQUEST method...otherwise don't.
+                        if (method.equals(ICalTok.REQUEST.toString())) {
+                            calItem = mMailbox.createCalendarItem(Mailbox.ID_FOLDER_CALENDAR, volumeId, "", cur.getUid(), pm, cur);
+                        } else {
+                            sLog.info("Mailbox " + getMailboxId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c no CalendarItem could be found");
+                            success = true;
+                            continue; // for now, just ignore this Invitation
+                        }
                     } else {
-                        sLog.info("Mailbox " + getMailboxId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c no CalendarItem could be found");
-                        return; // for now, just ignore this Invitation
+                        // When updating an existing calendar item, ignore the
+                        // passed-in folderId which will usually be Inbox.  Leave
+                        // the calendar item in the folder it's currently in.
+                        calItem.processNewInvite(pm, cur, false, calItem.getFolderId(), volumeId);
                     }
-                } else {
-                    // When updating an existing calendar item, ignore the
-                    // passed-in folderId which will usually be Inbox.  Leave
-                    // the calendar item in the folder it's currently in.
-                    calItem.processNewInvite(pm, cur, false, calItem.getFolderId(), volumeId);
                 }
-            }
-
-            if (calItem != null) {
-                CalendarItemInfo info = new CalendarItemInfo(calItem.getId(), cur.getComponentNum());
-                if (mCalendarItemInfos == null) {
-                    mCalendarItemInfos = new ArrayList<CalendarItemInfo>();
+                
+                if (calItem != null) {
+                    CalendarItemInfo info = new CalendarItemInfo(calItem.getId(), cur.getComponentNum());
+                    if (mCalendarItemInfos == null) {
+                        mCalendarItemInfos = new ArrayList<CalendarItemInfo>();
+                    }
+                    mCalendarItemInfos.add(info);
+                    updatedMetadata = true;
                 }
-                mCalendarItemInfos.add(info);
-                updatedMetadata = true;
+                success = true;
+            } finally {
+                if (!success && calItem != null) {
+                    // Error occurred and the calItem in memory may be out of sync with
+                    // the database.  Uncache it here, because the error will be ignore
+                    // by this method's caller.
+                    getMailbox().uncache(calItem);
+                }
             }
         }
         
