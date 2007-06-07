@@ -73,6 +73,7 @@ import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.BrowseResult.DomainItem;
+import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
@@ -3046,16 +3047,16 @@ public class Mailbox {
             StringBuilder toRet = new StringBuilder();
             toRet.append("inv:").append(mInv.toString()).append("\n");
             toRet.append("force:").append(mForce ? "true\n" : "false\n");
-            toRet.append("pm:").append(mPm.getFragment()).append("\n");
             return toRet.toString();
         }
     }
 
     public synchronized int setCalendarItem(OperationContext octxt, int folderId,
                                             SetCalendarItemData defaultInv,
-                                            SetCalendarItemData exceptions[])
+                                            SetCalendarItemData exceptions[],
+                                            List<ReplyInfo> replies)
     throws ServiceException {
-        return setCalendarItem(octxt, folderId, 0, 0, defaultInv, exceptions);
+        return setCalendarItem(octxt, folderId, 0, 0, defaultInv, exceptions, replies);
     }
 
     /**
@@ -3064,8 +3065,10 @@ public class Mailbox {
      * @return calendar item ID 
      * @throws ServiceException
      */
-    public synchronized int setCalendarItem(OperationContext octxt, int folderId, int flags, long tags, SetCalendarItemData defaultInv,
-                                            SetCalendarItemData exceptions[])
+    public synchronized int setCalendarItem(OperationContext octxt, int folderId, int flags, long tags,
+                                            SetCalendarItemData defaultInv,
+                                            SetCalendarItemData exceptions[],
+                                            List<ReplyInfo> replies)
     throws ServiceException {
         flags = (flags & ~Flag.FLAG_SYSTEM);
         SetCalendarItem redoRecorder = new SetCalendarItem(getId(), attachmentsIndexingEnabled(), flags, tags);
@@ -3084,7 +3087,7 @@ public class Mailbox {
                         sad.mInv.setMailItemId(getNextItemId(Mailbox.ID_AUTO_INCREMENT));
                 }
             }
-            redoRecorder.setData(defaultInv, exceptions);
+            redoRecorder.setData(defaultInv, exceptions, replies);
 
             short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
 
@@ -3111,9 +3114,14 @@ public class Mailbox {
                 for (SetCalendarItemData sad : exceptions)
                     calItem.processNewInvite(sad.mPm, sad.mInv, sad.mForce, folderId, volumeId);
                 }
-            
-            if (calItem != null)
-                queueForIndexing(calItem, !calItemIsNew, null);
+
+            // Override replies list if one is provided.
+            // Null list means keep existing replies.  Empty list means to clear existing replies.
+            // List with one or more replies means replacing exisitng replies.
+            if (replies != null)
+                calItem.setReplies(replies);
+
+            queueForIndexing(calItem, !calItemIsNew, null);
 
             success = true;
             return calItem.getId();

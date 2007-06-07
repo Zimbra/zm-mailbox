@@ -112,15 +112,6 @@
             [completed="yyyyMMddThhmmssZ"]  // VTODO COMPLETED DATE-TIME
         >
 
-           [<replies>
-              [<reply d="TIMESTAMP_OF_REPLY"
-                      at="foo@bar.com"
-                      ptst="AC|DE|TE|NE"
-                      rangeType="1"
-                      recurId="YYMMDD[THHMMSS[Z]]"
-                      tz="timezonename"/>]*
-           </replies>] // one or more replies which we have sent out
-           
            <s DATETIME> // Start date-time (required)
 
            (
@@ -486,6 +477,22 @@ OR
         All others are ignored.
      </m>
   </cancel>]*
+
+  // List of replies received from attendees.  If SetAppointmenRequest doesn't contain <replies>
+  // block, existing replies will be kept.  If <replies/> element is provided with no <reply>
+  // elements inside, existing replies will be removed, replaced with an empty set.  If <replies>
+  // contains one or more <reply> elements, existing replies are replaced with the ones provided.
+  [<replies>
+     [<reply d="TIMESTAMP_OF_REPLY"
+             at="foo@bar.com"        // address of attendee who replied
+             ptst="AC|DE|TE|NE"      // accepted, declined, etc.
+             [  // present if reply is to an instance in a recurrence
+              recurId="YYMMDD[THHMMSS[Z]]"
+              [tz="timezonename"]
+             ]
+     />]*
+  </replies>] // one or more replies which we have sent out
+           
 </SetAppointmentRequest>
 
 <SetAppointmentResponse calItemId="appointment_id">
@@ -866,6 +873,20 @@ OR
         ---See <inv> part of GetMsgResponse---
       ...    
     </inv>]+
+
+  // List of replies received from attendees.
+  [<replies>
+     [<reply d="TIMESTAMP_OF_REPLY"
+             at="foo@bar.com"        // address of attendee who replied
+             ptst="AC|DE|TE|NE"      // accepted, declined, etc.
+             [  // present if reply is to an instance in a recurrence
+              recurId="YYMMDD[THHMMSS[Z]]"
+              [tz="timezonename"]
+              rangeType="1"          // always 1
+             ]
+     />]*
+  </replies>] // one or more replies which we have sent out
+
   </appt>
 </GetAppointmentResponse>
 

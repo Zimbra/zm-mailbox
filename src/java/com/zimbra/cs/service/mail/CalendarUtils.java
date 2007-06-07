@@ -30,6 +30,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
 import com.zimbra.cs.mailbox.calendar.Alarm;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
@@ -902,6 +903,29 @@ public class CalendarUtils {
             props.add(xprop);
         }
         return props;
+    }
+
+    public static List<ReplyInfo> parseReplyList(Element element, TimeZoneMap tzMap)
+    throws ServiceException {
+        List<ReplyInfo> list = new ArrayList<ReplyInfo>();
+        for (Iterator<Element> iter = element.elementIterator(MailConstants.E_CAL_REPLY);
+             iter.hasNext(); ) {
+            Element riElem = iter.next();
+            String addr = riElem.getAttribute(MailConstants.A_CAL_ATTENDEE);
+            ZAttendee at = new ZAttendee(addr);
+            String sentBy = riElem.getAttribute(MailConstants.A_CAL_SENTBY, null);
+            if (sentBy != null)
+                at.setSentBy(sentBy);
+            String partStat = riElem.getAttribute(MailConstants.A_CAL_PARTSTAT, null);
+            if (partStat != null)
+                at.setPartStat(partStat);
+            int seq = (int) riElem.getAttributeLong(MailConstants.A_SEQ);
+            long dtStamp = riElem.getAttributeLong(MailConstants.A_DATE);
+            RecurId recurId = RecurId.fromXml(riElem, tzMap);
+            ReplyInfo ri = new ReplyInfo(at, seq, dtStamp, recurId);
+            list.add(ri);
+        }
+        return list;
     }
 
     private static void validateAttr(IcalXmlStrMap map, String attrName,

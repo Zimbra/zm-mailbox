@@ -213,11 +213,13 @@ public class RecurId
     public static RecurId fromXml(Element e, TimeZoneMap tzMap) throws ServiceException {
     	String recurrenceId = e.getAttribute(MailConstants.A_CAL_RECURRENCE_ID, null);
     	if (recurrenceId == null) return null;
-    	String tz = e.getAttribute(MailConstants.A_CAL_TIMEZONE);
-    	String rangeType = e.getAttribute(MailConstants.A_CAL_RECURRENCE_RANGE_TYPE);
+    	String rangeType = e.getAttribute(MailConstants.A_CAL_RECURRENCE_RANGE_TYPE, null);
     	try {
     		ParsedDateTime dt = ParsedDateTime.parse(recurrenceId, tzMap);
-    		return new RecurId(dt, rangeType);
+            if (rangeType != null)
+        		return new RecurId(dt, rangeType);
+            else
+                return new RecurId(dt, RANGE_NONE);
     	} catch (ParseException x) {
     		throw ServiceException.FAILURE("recurId=" + recurrenceId, x);
     	}

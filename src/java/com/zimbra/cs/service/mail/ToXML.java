@@ -55,6 +55,7 @@ import com.zimbra.cs.mailbox.calendar.Alarm;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
+import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
@@ -760,6 +761,7 @@ public class ToXML {
         }
 
         if (needToOutput(fields, Change.MODIFIED_CONTENT) && encodeInvites) {
+            encodeReplies(calItemElem, calItem, null);
             for (int i = 0; i < calItem.numInvites(); i++)
                 encodeInvite(calItemElem, ifmt, calItem, calItem.getInvite(i));
         }
@@ -771,15 +773,12 @@ public class ToXML {
         encodeTimeZoneMap(ie, cal.getTimeZoneMap());
 
         ie.addAttribute(MailConstants.A_CAL_SEQUENCE, inv.getSeqNo());
-        
-        encodeReplies(ie, cal, inv);
-
         ie.addAttribute(MailConstants.A_ID, ifmt.formatItemId(inv.getMailItemId()));
         ie.addAttribute(MailConstants.A_CAL_COMPONENT_NUM, inv.getComponentNum());
         if (inv.hasRecurId())
             ie.addAttribute(MailConstants.A_CAL_RECURRENCE_ID, inv.getRecurId().toString());
 
-        encodeInviteComponent(ie, ifmt, cal, inv, NOTIFY_FIELDS, false);
+        encodeInviteComponent(ie, ifmt, cal, inv, NOTIFY_FIELDS);
 
         return ie;
     }
@@ -819,25 +818,21 @@ public class ToXML {
     }
 
     private static void encodeReplies(Element parent, CalendarItem calItem, Invite inv) {
-         Element repliesElt = parent.addElement(MailConstants.E_CAL_REPLIES);
-
-        List /*CalendarItem.ReplyInfo */ replies = calItem.getReplyInfo(inv);
-        for (Iterator iter = replies.iterator(); iter.hasNext(); ) {
-            CalendarItem.ReplyInfo repInfo = (CalendarItem.ReplyInfo) iter.next();
-            ZAttendee attendee = repInfo.mAttendee;
-
+        Element repliesElt = parent.addElement(MailConstants.E_CAL_REPLIES);
+        List<CalendarItem.ReplyInfo> replies = calItem.getReplyInfo(inv);
+        for (CalendarItem.ReplyInfo repInfo : replies) {
             Element curElt = repliesElt.addElement(MailConstants.E_CAL_REPLY);
-            if (repInfo.mRecurId != null) {
-                repInfo.mRecurId.toXml(curElt);
-            }
-            if (attendee.hasPartStat()) {
-                curElt.addAttribute(MailConstants.A_CAL_PARTSTAT, attendee.getPartStat());
-            }
-            curElt.addAttribute(MailConstants.A_SEQ, repInfo.mSeqNo); //zdsync
-            curElt.addAttribute(MailConstants.A_DATE, repInfo.mDtStamp);
+            curElt.addAttribute(MailConstants.A_SEQ, repInfo.getSeq()); //zdsync
+            curElt.addAttribute(MailConstants.A_DATE, repInfo.getDtStamp());
+            ZAttendee attendee = repInfo.getAttendee();
             curElt.addAttribute(MailConstants.A_CAL_ATTENDEE, attendee.getAddress());
             if (attendee.hasSentBy())
                 curElt.addAttribute(MailConstants.A_CAL_SENTBY, attendee.getSentBy());
+            if (attendee.hasPartStat())
+                curElt.addAttribute(MailConstants.A_CAL_PARTSTAT, attendee.getPartStat());
+            RecurId rid = repInfo.getRecurId();
+            if (rid != null)
+                rid.toXml(curElt);
         }
     }
 
@@ -865,8 +860,6 @@ public class ToXML {
     throws ServiceException {
         int invId = iid.getSubpartId();
         boolean wholeMessage = (part == null || part.trim().equals(""));
-
-        boolean repliesWithInvites = true;
 
         Element m;
         if (wholeMessage) {
@@ -927,8 +920,12 @@ public class ToXML {
             Element invElt = m.addElement(MailConstants.E_INVITE);
             setCalendarItemType(invElt, calItem);
             encodeTimeZoneMap(invElt, calItem.getTimeZoneMap());
-            for (Invite inv : calItem.getInvites(invId))
-                encodeInviteComponent(invElt, ifmt, calItem, inv, NOTIFY_FIELDS, repliesWithInvites);
+            Invite[] invites = calItem.getInvites(invId);
+            if (invites.length > 0) {
+                encodeReplies(invElt, calItem, invites[0]);
+                for (Invite inv : invites)
+                    encodeInviteComponent(invElt, ifmt, calItem, inv, NOTIFY_FIELDS);
+            }
 
             if (headers != null) {
                 for (String name : headers) {
@@ -1113,7 +1110,8 @@ public class ToXML {
         }
     }
 
-    public static Element encodeInviteComponent(Element parent, ItemIdFormatter ifmt, CalendarItem calItem, Invite invite, int fields, boolean includeReplies)
+    public static Element encodeInviteComponent(
+            Element parent, ItemIdFormatter ifmt, CalendarItem calItem, Invite invite, int fields)
     throws ServiceException {
         boolean allFields = true;
 
@@ -1170,9 +1168,6 @@ public class ToXML {
                 e.addAttribute(MailConstants.A_APPT_TRANSPARENCY, invite.getTransparency());
     
             }
-
-            if (includeReplies)
-                encodeReplies(e, calItem, invite);
 
             boolean isException = invite.hasRecurId();
             if (isException)
@@ -1336,7 +1331,7 @@ public class ToXML {
                         addedMethod = true;
                     }
                     encodeTimeZoneMap(ie, calItem.getTimeZoneMap());
-                    encodeInviteComponent(ie, ifmt, calItem, inv, fields, false);
+                    encodeInviteComponent(ie, ifmt, calItem, inv, fields);
                 } else {
                     // invite not in this appointment anymore
                 }

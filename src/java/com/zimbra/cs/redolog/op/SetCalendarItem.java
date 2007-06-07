@@ -30,6 +30,8 @@ package com.zimbra.cs.redolog.op;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -38,9 +40,11 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 
@@ -60,11 +64,13 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
     private long mTags;
     private Mailbox.SetCalendarItemData mDefaultInvite;
     private Mailbox.SetCalendarItemData mExceptions[];
+    private List<ReplyInfo> mReplies;
     private short mVolumeId = -1;
 
     public SetCalendarItem() {}
     
-    static void serializeSetCalendarItemData(RedoLogOutput out, Mailbox.SetCalendarItemData data) throws IOException, MessagingException {
+    private static void serializeSetCalendarItemData(RedoLogOutput out, Mailbox.SetCalendarItemData data)
+    throws IOException, MessagingException {
         out.writeBoolean(data.mForce);
         
         ICalTimeZone localTz = data.mInv.getTimeZoneMap().getLocalTimeZone();
@@ -80,7 +86,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
             out.write(pmData);
         }
     }
-    
+
     private Mailbox.SetCalendarItemData deserializeSetCalendarItemData(
             RedoLogInput in, boolean attachmentIndexingEnabled)
     throws IOException, MessagingException {
@@ -146,6 +152,21 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
                 }
             }
         }
+
+        if (getVersion().atLeast(1, 15)) {
+            if (mReplies == null) {
+                // special case: -1 means there was no replies list.  This is distinct from there
+                // being a non-null list with 0 replies.  No list means to leave current replies
+                // alone; 0-length list means to clear current list.
+                out.writeInt(-1);
+            } else {
+                int num = mReplies.size();
+                out.writeInt(num);
+                for (ReplyInfo ri : mReplies) {
+                    out.writeUTF(ri.encodeAsMetadata().toString());
+                }
+            }
+        }
     }
 
     protected void deserializeData(RedoLogInput in) throws IOException {
@@ -179,6 +200,29 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
             ex.printStackTrace();
             throw new IOException("Cannot read serialized entry for SetCalendarItem"+ex.toString());
         }
+
+        if (getVersion().atLeast(1, 15)) {
+            int num = in.readInt();
+            if (num < 0) {
+                // no replies list
+                mReplies = null;
+            } else {
+                mReplies = new ArrayList<ReplyInfo>(num);
+                TimeZoneMap tzMap = mDefaultInvite.mInv.getTimeZoneMap();
+                for (int i = 0; i < num; i++) {
+                    String data = in.readUTF();
+                    try {
+                        Metadata md = new Metadata(data);
+                        ReplyInfo reply = ReplyInfo.decodeFromMetadata(md, tzMap);
+                        mReplies.add(reply);
+                    } catch (ServiceException e) {
+                        IOException ioe = new IOException("Cannot read serialized entry for ReplyInfo");
+                        ioe.initCause(e);
+                        throw ioe;
+                    }
+                }
+            }
+        }
     }
 
     public SetCalendarItem(int mailboxId, boolean attachmentIndexingEnabled,
@@ -190,9 +234,12 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         mTags = tags;
     }
     
-    public void setData(Mailbox.SetCalendarItemData defaultInvite, Mailbox.SetCalendarItemData exceptions[]) {
+    public void setData(Mailbox.SetCalendarItemData defaultInvite,
+                        Mailbox.SetCalendarItemData exceptions[],
+                        List<ReplyInfo> replies) {
         mDefaultInvite = defaultInvite;
         mExceptions = exceptions;
+        mReplies = replies;
     }
     
     public Mailbox.SetCalendarItemData getDefaultData() {
@@ -209,7 +256,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
     public Mailbox.SetCalendarItemData getExceptionData(int exceptionNum) {
         return mExceptions[exceptionNum];
     }
-    
+
     public void setCalendarItemAttrs(int calItemId, int folderId, short volumeId) {
         mCalendarItemId = calItemId;
         mFolderId = folderId;
@@ -248,7 +295,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
         
         mbox.setCalendarItem(getOperationContext(), mFolderId, mFlags, mTags,
-                             mDefaultInvite, mExceptions);
+                             mDefaultInvite, mExceptions, mReplies);
     }
 
     protected String getPrintableData() {
@@ -266,6 +313,13 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         if (mExceptions != null) {
             for (int i = 0; i < mExceptions.length; i++) {
                 toRet.append("Exception").append(i).append("=").append(mExceptions[i].toString()).append("\n");
+            }
+        }
+        if (mReplies != null) {
+            int i = 0;
+            for (ReplyInfo ri : mReplies) {
+                toRet.append("Reply").append(i).append("=").append(ri.toString()).append("\n");
+                i++;
             }
         }
         return toRet.toString();

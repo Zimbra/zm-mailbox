@@ -1288,17 +1288,29 @@ public abstract class CalendarItem extends MailItem {
     }
 
     public static class ReplyInfo {
-        public RecurId mRecurId;
-        public int mSeqNo;
-        public long mDtStamp;
-        public ZAttendee mAttendee; // attendee record w/ PartStat
-        
+        private ZAttendee mAttendee; // attendee record w/ PartStat
+        private int mSeqNo;
+        private long mDtStamp;
+        private RecurId mRecurId;
+
         private static final String FN_RECURID = "r";
         private static final String FN_SEQNO = "s";
         private static final String FN_DTSTAMP = "d";
         private static final String FN_ATTENDEE = "at";
-        
-        Metadata encodeAsMetadata() {
+
+        public ReplyInfo(ZAttendee at, int seq, long dtstamp, RecurId recurId) {
+            mAttendee = at;
+            mSeqNo = seq;
+            mDtStamp = dtstamp;
+            mRecurId = recurId;
+        }
+
+        public ZAttendee getAttendee() { return mAttendee; }
+        public int getSeq() { return mSeqNo; }
+        public long getDtStamp() { return mDtStamp; }
+        public RecurId getRecurId() { return mRecurId; }
+
+        public Metadata encodeAsMetadata() {
             Metadata meta = new Metadata();
             
             if (mRecurId != null) {
@@ -1312,20 +1324,20 @@ public abstract class CalendarItem extends MailItem {
             return meta;
         }
         
-        static ReplyInfo decodeFromMetadata(Metadata md, TimeZoneMap tzMap) throws ServiceException {
-            ReplyInfo toRet = new ReplyInfo();
-            
+        public static ReplyInfo decodeFromMetadata(Metadata md, TimeZoneMap tzMap)
+        throws ServiceException {
+            RecurId recurId;
             if (md.containsKey(FN_RECURID)) {
-                toRet.mRecurId = RecurId.decodeMetadata(md.getMap(FN_RECURID), tzMap);
+                recurId = RecurId.decodeMetadata(md.getMap(FN_RECURID), tzMap);
             } else {
-                toRet.mRecurId = null;
+                recurId = null;
             }
-            toRet.mSeqNo = (int)md.getLong(FN_SEQNO);
-            toRet.mDtStamp = md.getLong(FN_DTSTAMP);
+            int seq = (int) md.getLong(FN_SEQNO);
+            long dtstamp = md.getLong(FN_DTSTAMP);
             Metadata metaAttendee = md.getMap(FN_ATTENDEE);
-            toRet.mAttendee = metaAttendee != null ? new ZAttendee(metaAttendee) : null;
-            
-            return toRet;
+            ZAttendee at = metaAttendee != null ? new ZAttendee(metaAttendee) : null;
+            ReplyInfo ri = new ReplyInfo(at, seq, dtstamp, recurId);
+            return ri;
         }
 
         public String toString() {
@@ -1342,7 +1354,7 @@ public abstract class CalendarItem extends MailItem {
     /**
      * @author tim
      * 
-     * Internal class for storing replies 
+     * Internal class for storing replies
      *
      */
     protected static class ReplyList {
@@ -1363,7 +1375,11 @@ public abstract class CalendarItem extends MailItem {
         public ReplyList() {
             mReplies = new ArrayList<ReplyInfo>();
         }
-        
+
+        public ReplyList(List<ReplyInfo> list) {
+            mReplies = list;
+        }
+
         private static final String FN_NUM_REPLY_INFO = "n";
         private static final String FN_REPLY_INFO = "i";
         
@@ -1411,15 +1427,9 @@ public abstract class CalendarItem extends MailItem {
                         if (inv.getSeqNo() >= cur.mSeqNo) {
                             if (inv.getDTStamp() >= cur.mDtStamp) {
                                 iter.remove();
-                                
-                                ReplyInfo toAdd = new ReplyInfo();
-                                toAdd.mRecurId = inv.getRecurId();
-                                toAdd.mSeqNo = inv.getSeqNo();
-                                toAdd.mDtStamp = inv.getDTStamp();
-                                toAdd.mAttendee = at;
-                                
+                                ReplyInfo toAdd = new ReplyInfo(
+                                        at, inv.getSeqNo(), inv.getDTStamp(), inv.getRecurId());
                                 mReplies.add(toAdd);
-
                                 return true;
                             }
                         }
@@ -1427,16 +1437,10 @@ public abstract class CalendarItem extends MailItem {
                     }
                 } // attendee check
             }
-            
+
             // if we get here, we didn't find one at all.  add a new one...
-            ReplyInfo toAdd = new ReplyInfo();
-            toAdd.mRecurId = inv.getRecurId();
-            toAdd.mSeqNo = inv.getSeqNo();
-            toAdd.mDtStamp = inv.getDTStamp();
-            toAdd.mAttendee = at;
-            
-            mReplies.add(toAdd);
-            
+            ReplyInfo toAdd = new ReplyInfo(at, inv.getSeqNo(), inv.getDTStamp(), inv.getRecurId());
+            mReplies.add(toAdd);            
             return true;
         }
         
@@ -1488,15 +1492,12 @@ public abstract class CalendarItem extends MailItem {
             }
             
             // no existing partstat for this instance...add a new one 
-            ReplyInfo inf = new ReplyInfo();
-            inf.mAttendee =
+            ZAttendee at =
                 new ZAttendee(addressStr, cnStr, null, null, null,
                               cutypeStr, roleStr, partStatStr, needsReply,
                               null, null, null);
-            inf.mRecurId = recurId;
-            inf.mDtStamp = dtStamp;
-            inf.mSeqNo = seqNo;
-            mReplies.add(inf);
+            ReplyInfo ri = new ReplyInfo(at, seqNo, dtStamp, recurId);
+            mReplies.add(ri);
         }
         
         boolean recurMatches(RecurId lhs, RecurId rhs) {
@@ -1557,57 +1558,43 @@ public abstract class CalendarItem extends MailItem {
         }
         
         List<ReplyInfo> getReplyInfo(Invite inv) {
-            int mboxId = -1;
-            int calItemId = -1;
-            int invId = -1;
-            if (inv != null) {
-                mboxId = inv.getMailboxId();
-                invId = inv.getMailItemId();
-                try {
-                    CalendarItem citem = inv.getCalendarItem();
-                    if (citem != null)
-                        calItemId = citem.getId();
-                } catch (ServiceException e) {}
-            }
-
             List<ReplyInfo> toRet = new ArrayList<ReplyInfo>();
 
-            int outdated = 0;
-            for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
-                ReplyInfo cur = (ReplyInfo)iter.next();
-
-                if (inv == null || 
-                        ((inv.getSeqNo() <= cur.mSeqNo) 
-                                && (inv.getDTStamp() <= cur.mDtStamp) 
-                                && (
-                                        (inv.getRecurId() == null && cur.mRecurId == null) 
-                                        || ((inv.getRecurId() != null) && (inv.getRecurId().equals(cur.mRecurId)))))) {
-                    toRet.add(cur);
-                } else {
-                    outdated++;
-                    if (ZimbraLog.calendar.isDebugEnabled())
-                        ZimbraLog.calendar.debug(
-                                "ReplyList of appt/task " + calItemId +
-                                ", inv " + invId +
-                                " in mailbox " + mboxId +
-                                " has outdated entries:\n" + toString());
+            if (inv == null) {
+                // all replies requested
+                toRet.addAll(mReplies);
+            } else {
+                long invDtStart = -1;
+                ParsedDateTime dtStart = inv.getStartTime();
+                if (dtStart != null)
+                    invDtStart = dtStart.getUtcTime();
+                // Look for an exact match first.
+                for (ReplyInfo reply : mReplies) {
+                    // Ignore reply to series and replies to outdated invites.
+                    if (reply.mRecurId != null &&
+                        inv.getSeqNo() <= reply.mSeqNo && inv.getDTStamp() <= reply.mDtStamp) {
+                        ParsedDateTime dt = reply.mRecurId.getDt();
+                        if (dt != null) {
+                            if (dt.getUtcTime() == invDtStart)
+                                toRet.add(reply);
+                        }
+                    }
+                }
+                if (toRet.size() < 1) {
+                    // No specific match.  Use the series reply, if any.
+                    for (ReplyInfo reply : mReplies) {
+                        if (inv.getSeqNo() <= reply.mSeqNo && inv.getDTStamp() <= reply.mDtStamp &&
+                            reply.mRecurId == null)
+                            toRet.add(reply);
+                    }
                 }
             }
-            if (ZimbraLog.calendar.isDebugEnabled())
-                ZimbraLog.calendar.debug(
-                        "Found " + toRet.size() + " ReplyList entries for appt/task " +
-                        calItemId + ", inv " + invId + " in mailbox " + mboxId);
-            if (outdated > 0)
-                ZimbraLog.calendar.warn(
-                        "Found " + outdated + " outdated ReplyInfo entries for appt/task " +
-                        calItemId + ", inv " + invId + " in mailbox " + mboxId);
             return toRet;
         }
-
     } // class ReplyList
             
     /**
-     * Get all of the Reply data corresponding to this invite
+     * Get all of the Reply data corresponding to this invite.  Pass null to get all replies.
      * 
      * @param inv
      * @return
@@ -1616,7 +1603,16 @@ public abstract class CalendarItem extends MailItem {
     public List<ReplyInfo> getReplyInfo(Invite inv) {
         return mReplyList.getReplyInfo(inv);
     }
-    
+
+    /**
+     * Set the replies list to the given list.  Existing list is replaced.
+     * @param replies
+     */
+    public void setReplies(List<ReplyInfo> replies) throws ServiceException {
+        mReplyList = new ReplyList(replies);
+        saveMetadata();
+    }
+
     /**
      * Returns the effective PartStat given the Invite and Instance.
      * 
