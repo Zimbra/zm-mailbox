@@ -32,6 +32,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.mail.internet.MimeMessage;
 
@@ -335,7 +337,7 @@ public final class MailboxIndex
      */
     public void flush() {
         synchronized(getLock()) {
-            if (mIndexWriter != null)
+            if (isIndexWriterOpen()) 
                 closeIndexWriter();
             else
                 sIndexReadersCache.removeIndexReader(this);
@@ -352,10 +354,7 @@ public final class MailboxIndex
      */
     public int[] deleteDocuments(int itemIds[]) throws IOException {
         synchronized(getLock()) {
-            
-//            RefCountedIndexReader reader = getCountedIndexReader();
             openIndexWriter();
-            
             try {
                 for (int i = 0; i < itemIds.length; i++) {
                     try {
@@ -377,7 +376,7 @@ public final class MailboxIndex
                     }
                 }
             } finally {
-//                reader.release();
+                mIndexWriterMutex.unlock();
             }
             return itemIds; // success
         }
@@ -390,57 +389,59 @@ public final class MailboxIndex
     
     private void addDocument(IndexItem redoOp, Document[] docs, int indexId, long receivedDate, 
         MailItem mi, boolean deleteFirst) throws IOException {
+        long start = 0;
         synchronized(getLock()) {        
-            long start = 0;
             if (sLog.isDebugEnabled())
                 start = System.currentTimeMillis();
             
             openIndexWriter();
-            assert(mIndexWriter != null);
-            assert(sIndexWritersCache.contains(this));
+            try {
+                assert(mIndexWriterMutex.isHeldByCurrentThread());
+                assert(mIndexWriter != null);
 
-            for (Document doc : docs) {
-                // doc can be shared by multiple threads if multiple mailboxes
-                // are referenced in a single email
-                synchronized (doc) {
-                    doc.removeFields(LuceneFields.L_SORT_SUBJECT);
-                    doc.removeFields(LuceneFields.L_SORT_NAME);
-                    //                                                                                                  store, index, tokenize
-                    doc.add(new Field(LuceneFields.L_SORT_SUBJECT, mi.getSortSubject(), Field.Store.NO, Field.Index.UN_TOKENIZED));
-                    doc.add(new Field(LuceneFields.L_SORT_NAME,    mi.getSortSender(), Field.Store.NO, Field.Index.UN_TOKENIZED));
-                    
-                    doc.removeFields(LuceneFields.L_MAILBOX_BLOB_ID);
-                    doc.add(new Field(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(indexId), Field.Store.YES, Field.Index.UN_TOKENIZED));
-
-                    // If this doc is shared by mult threads, then the date might just be wrong,
-                    // so remove and re-add the date here to make sure the right one gets written!
-                    doc.removeFields(LuceneFields.L_SORT_DATE);
-                    String dateString = DateField.timeToString(receivedDate);
-                    doc.add(new Field(LuceneFields.L_SORT_DATE, dateString, Field.Store.YES, Field.Index.UN_TOKENIZED));
-
-                    if (null == doc.get(LuceneFields.L_ALL)) {
-                        doc.add(new Field(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE, Field.Store.NO, Field.Index.NO_NORMS, Field.TermVector.NO));
+                for (Document doc : docs) {
+                    // doc can be shared by multiple threads if multiple mailboxes
+                    // are referenced in a single email
+                    synchronized (doc) {
+                        doc.removeFields(LuceneFields.L_SORT_SUBJECT);
+                        doc.removeFields(LuceneFields.L_SORT_NAME);
+                        //                                                                                                  store, index, tokenize
+                        doc.add(new Field(LuceneFields.L_SORT_SUBJECT, mi.getSortSubject(), Field.Store.NO, Field.Index.UN_TOKENIZED));
+                        doc.add(new Field(LuceneFields.L_SORT_NAME,    mi.getSortSender(), Field.Store.NO, Field.Index.UN_TOKENIZED));
+                        
+                        doc.removeFields(LuceneFields.L_MAILBOX_BLOB_ID);
+                        doc.add(new Field(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(indexId), Field.Store.YES, Field.Index.UN_TOKENIZED));
+                        
+                        // If this doc is shared by mult threads, then the date might just be wrong,
+                        // so remove and re-add the date here to make sure the right one gets written!
+                        doc.removeFields(LuceneFields.L_SORT_DATE);
+                        String dateString = DateField.timeToString(receivedDate);
+                        doc.add(new Field(LuceneFields.L_SORT_DATE, dateString, Field.Store.YES, Field.Index.UN_TOKENIZED));
+                        
+                        if (null == doc.get(LuceneFields.L_ALL)) {
+                            doc.add(new Field(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE, Field.Store.NO, Field.Index.NO_NORMS, Field.TermVector.NO));
+                        }
+                        
+                        if (deleteFirst) {
+                            String itemIdStr = Integer.toString(indexId);
+                            Term toDelete = new Term(LuceneFields.L_MAILBOX_BLOB_ID, itemIdStr);
+                            mIndexWriter.updateDocument(toDelete, doc);
+                        } else {
+                            mIndexWriter.addDocument(doc);
+                        }
+                        
+                        if (redoOp != null)
+                            mUncommittedRedoOps.add(redoOp);
                     }
-                    
-                    if (deleteFirst) {
-                        String itemIdStr = Integer.toString(indexId);
-                        Term toDelete = new Term(LuceneFields.L_MAILBOX_BLOB_ID, itemIdStr);
-                        mIndexWriter.updateDocument(toDelete, doc);
-                    } else {
-                        mIndexWriter.addDocument(doc);
-                    }
-                    
-                    if (redoOp != null)
-                        mUncommittedRedoOps.add(redoOp);
                 }
+                
+                // tim: this might seem bad, since an index in steady-state-of-writes will never get flushed, 
+                // however we also track the number of uncomitted-operations on the index, and will force a 
+                // flush if the index has had a lot written to it without a flush.
+                updateLastWriteTime();
+            } finally {
+                mIndexWriterMutex.unlock();
             }
-
-            //
-            // tim: this might seem bad, since an index in steady-state-of-writes will never get flushed, 
-            // however we also track the number of uncomitted-operations on the index, and will force a 
-            // flush if the index has had a lot written to it without a flush.
-            //
-            updateLastWriteTime();
 
             if (mUncommittedRedoOps.size() > sMaxUncommittedOps) {
                 if (sLog.isDebugEnabled()) {
@@ -448,12 +449,12 @@ public final class MailboxIndex
                 }
                 flush();
             }
-            
-            if (sLog.isDebugEnabled()) {
-                long end = System.currentTimeMillis();
-                long elapsed = end - start;
-                sLog.debug("MailboxIndex.addDocument took " + elapsed + " msec");
-            }
+        }
+        
+        if (sLog.isDebugEnabled()) {
+            long end = System.currentTimeMillis();
+            long elapsed = end - start;
+            sLog.debug("MailboxIndex.addDocument took " + elapsed + " msec");
         }
     }
 
@@ -583,7 +584,6 @@ public final class MailboxIndex
         int mailboxId = mbox.getId();
         
         mIndexWriter = null;
-        assert(!sIndexWritersCache.contains(this));
         mMailboxId = mailboxId;
         mMailbox = mbox;
 
@@ -676,13 +676,21 @@ public final class MailboxIndex
     }
     
     private IndexWriter mIndexWriter;
+    private ReentrantLock mIndexWriterMutex = new ReentrantLock();
+    
+    private static LinkedHashMap<MailboxIndex, Object> sOpenIndexWriters = 
+        new LinkedHashMap<MailboxIndex, Object>();
+    private static int sReservedWriterSlots = 0;
+    private static IndexWritersSweeper sSweeper = null;
+    
+    
 
     public static void startup() {
         if (DebugConfig.disableIndexing)
             return;
 
         // In case startup is called twice in a row without shutdown in between
-        if (sIndexWritersCache != null && sIndexWritersCache.isAlive()) {
+        if (sSweeper != null && sSweeper.isAlive()) {
             shutdown();
         }
         
@@ -690,9 +698,9 @@ public final class MailboxIndex
         sLRUSize = LC.zimbra_index_lru_size.intValue();
         if (sLRUSize < 10) sLRUSize = 10;
         sIdleWriterFlushTimeMS = 1000 * LC.zimbra_index_idle_flush_time.intValue();
-        sIndexWritersCache =
-            new IndexWritersCache(sSweepIntervalMS, sIdleWriterFlushTimeMS, sLRUSize);
-        sIndexWritersCache.start();
+        
+        sSweeper = new IndexWritersSweeper();
+        sSweeper.start();
         
         sIndexReadersCache = new IndexReadersCache(LC.zimbra_index_reader_lru_size.intValue(), 
             LC.zimbra_index_reader_idle_flush_time.longValue() * 1000, 
@@ -704,9 +712,9 @@ public final class MailboxIndex
         if (DebugConfig.disableIndexing)
             return;
 
-        sIndexWritersCache.signalShutdown();
+        sSweeper.signalShutdown();
         try {
-            sIndexWritersCache.join();
+            sSweeper.join();
         } catch (InterruptedException e) {}
         
         sIndexReadersCache.signalShutdown();
@@ -721,7 +729,14 @@ public final class MailboxIndex
         if (DebugConfig.disableIndexing)
             return;
         
-        sIndexWritersCache.flushAllIndexWriters();
+        synchronized(sOpenIndexWriters) {
+            LinkedHashMap<MailboxIndex, Object> tmp = sOpenIndexWriters;
+            sOpenIndexWriters = new LinkedHashMap<MailboxIndex, Object>();
+            for (MailboxIndex idx : tmp.keySet()) {
+                idx.closeIndexWriter();
+            }
+            sOpenIndexWriters.clear();
+        }
     }
 
     /**
@@ -749,8 +764,7 @@ public final class MailboxIndex
      * sLRUSize) 
      */
     private static long sIdleWriterFlushTimeMS;
-    private static long sSweepIntervalMS = 60 * 1000;
-    private static IndexWritersCache sIndexWritersCache;
+    private static long sSweepIntervalMS = 30 * 1000;
     private static IndexReadersCache sIndexReadersCache;
 
     
@@ -760,6 +774,9 @@ public final class MailboxIndex
     long getLastWriteTime() { return mLastWriteTime; }
     private void updateLastWriteTime() { mLastWriteTime = System.currentTimeMillis(); };
 
+    boolean curThreadHoldsLock() {
+        return Thread.holdsLock(getLock());
+    }
 
     /**
      * Load the Analyzer for this index, using the default Zimbra analyzer or a custom user-provided
@@ -788,6 +805,15 @@ public final class MailboxIndex
             return mAnalyzer;
         }
     }
+    
+    private boolean isIndexWriterOpen() {
+        mIndexWriterMutex.lock();
+        try {
+            return mIndexWriter != null;
+        } finally {
+            mIndexWriterMutex.unlock();
+        }
+    }
 
     /**
      * Close the index writer and write commit/abort entries for all
@@ -795,55 +821,69 @@ public final class MailboxIndex
      */
     private void closeIndexWriter() 
     {
-        synchronized(getLock()) {        
-            if (mIndexWriter == null) {
-                assert(!sIndexWritersCache.contains(this));
-                return;
+        assert(!mIndexWriterMutex.isHeldByCurrentThread());
+        synchronized (sOpenIndexWriters) {
+            sReservedWriterSlots++;
+            mIndexWriterMutex.lock();
+            sOpenIndexWriters.remove(this);
+        }
+        try {
+            closeIndexWriterAfterRemove();
+        } finally {
+            synchronized(sOpenIndexWriters) {
+                sReservedWriterSlots--;
+                assert(mIndexWriterMutex.isHeldByCurrentThread());
+                assert(mIndexWriter == null);
+                mIndexWriterMutex.unlock();
             }
+        }
+    }
+    
+    private void closeIndexWriterAfterRemove() {
+        assert(mIndexWriterMutex.isHeldByCurrentThread());
 
-            if (sLog.isDebugEnabled())
-                sLog.debug("Closing IndexWriter " + mIndexWriter + " for " + this);
-            
-            assert(sIndexWritersCache.contains(this));
-            sIndexWritersCache.removeIndexWriter(this);
-            IndexWriter writer = mIndexWriter;
-            mIndexWriter = null;
-            assert(!sIndexWritersCache.contains(this));
-            
-            boolean success = true;
-            try {
-                // Flush all changes to file system before committing redos.
-                // TODO: Are the changes fsynced to disk when close() returns?
-//                sLog.info("MI"+this.toString()+ " Start Close IndexWriter "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-                writer.close();
-//                sLog.info("MI"+this.toString()+ " Closed IndexWriter "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-            } catch (IOException e) {
-                success = false;
-                sLog.error("Caught Exception " + e + " in MailboxIndex.closeIndexWriter", e);
-                // TODO: Is it okay to eat up the exception?
-            } finally {
-                // Write commit entries to redo log for all IndexItem entries
-                // whose changes were written to disk by mIndexWriter.close()
-                // above.
-                for (Iterator iter = mUncommittedRedoOps.iterator(); iter.hasNext();) {
-                    IndexItem op = (IndexItem)iter.next();
-                    if (success) {
-                        if (op.commitAllowed())
-                            op.commit();
-                        else {
-                            if (sLog.isDebugEnabled()) {
-                                sLog.debug("IndexItem (" + op +
-                                ") not allowed to commit yet; attaching to parent operation");
-                            }
-                            op.attachToParent();
+        if (mIndexWriter == null) {
+            return;
+        }
+
+        if (sLog.isDebugEnabled())
+            sLog.debug("Closing IndexWriter " + mIndexWriter + " for " + this);
+
+        IndexWriter writer = mIndexWriter;
+        mIndexWriter = null;
+
+        boolean success = true;
+        try {
+            // Flush all changes to file system before committing redos.
+//          sLog.info("MI"+this.toString()+ " Start Close IndexWriter "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
+            writer.close();
+//          sLog.info("MI"+this.toString()+ " Closed IndexWriter "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
+        } catch (IOException e) {
+            success = false;
+            sLog.error("Caught Exception " + e + " in MailboxIndex.closeIndexWriter", e);
+            // TODO: Is it okay to eat up the exception?
+        } finally {
+            // Write commit entries to redo log for all IndexItem entries
+            // whose changes were written to disk by mIndexWriter.close()
+            // above.
+            for (Iterator iter = mUncommittedRedoOps.iterator(); iter.hasNext();) {
+                IndexItem op = (IndexItem)iter.next();
+                if (success) {
+                    if (op.commitAllowed())
+                        op.commit();
+                    else {
+                        if (sLog.isDebugEnabled()) {
+                            sLog.debug("IndexItem (" + op +
+                            ") not allowed to commit yet; attaching to parent operation");
                         }
-                    } else
-                        op.abort();
-                    iter.remove();
-                }
-                assert(mUncommittedRedoOps.size() == 0);
+                        op.attachToParent();
+                    }
+                } else
+                    op.abort();
+                iter.remove();
             }
-        }        
+            assert(mUncommittedRedoOps.size() == 0);
+        }
     }
     
     /**
@@ -875,97 +915,169 @@ public final class MailboxIndex
         }
         return (numFiles <= 0);
     }
-
+    
     private void openIndexWriter() throws IOException
     {
-        synchronized(getLock()) {        
-            if (mIndexWriter != null) {
-                assert(sIndexWritersCache.contains(this));
-                assert(!sIndexReadersCache.containsKey(this));
-                return;
-            }
+        assert(Thread.holdsLock(getLock()));
+        assert(!mIndexWriterMutex.isHeldByCurrentThread());
+        
+        // uncache the IndexReader if it is cached
+        sIndexReadersCache.removeIndexReader(this);
+        
+        // First, get a 'slot' in the cache, closing some other Writer
+        // if necessary to do it...
+        
+        boolean haveReservedSlot = false;
+        boolean mustSleep = false;
+        
+        do {
+            // We should enter this loop at most twice:
+            //    First time:
+            //       - We might get a slot (or already be in cache) and be done
+            //
+            //       - Or, we might reserve a slot and go down to close a Writer
+            //
+            //    Second time:
+            //       - We must've just closed a writer, but we reserved a spot
+            //         so we know there will be room this time.
+            //
+            //       - We couldn't find anything to close, so we just did a sleep
+            //         and hope to retry again
             
-            IndexWriter writer = null;
-
-            // uncache the IndexReader if it is cached
-            sIndexReadersCache.removeIndexReader(this);
-            
-            try {
-//                sLog.info("MI"+this.toString()+" Opening IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-                writer = new IndexWriter(mIdxDirectory, getAnalyzer(), false);
-//                sLog.info("MI"+this.toString()+" Opened IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
+            MailboxIndex toClose;
+            synchronized(sOpenIndexWriters) {
+                toClose = null;
+                mustSleep = false;
                 
-            } catch (IOException e1) {
-                //mLog.info("****Creating new index in " + mIdxPath + " for mailbox " + mMailboxId);
-                File indexDir  = mIdxDirectory.getFile();
-                if (indexDirIsEmpty(indexDir)) {
-//                    sLog.info("MI"+this.toString()+" Opening IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-                    writer = new IndexWriter(mIdxDirectory, getAnalyzer(), true);
-//                    sLog.info("MI"+this.toString()+" Opened IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-                    if (writer == null) 
-                        throw new IOException("Failed to open IndexWriter in directory "+indexDir.getAbsolutePath());
-                } else {
-                    IOException ioe = new IOException("Could not create index " + mIdxDirectory.toString() + " (directory already exists)");
-                    ioe.initCause(e1);
-                    throw ioe;
+                if (haveReservedSlot) {
+                    sReservedWriterSlots--;
+                    haveReservedSlot = false;
+                    assert(sOpenIndexWriters.size() + sReservedWriterSlots < sLRUSize);
                 }
+
+                if (sOpenIndexWriters.containsKey(this)) {
+                    mIndexWriterMutex.lock(); // maintain order in the LinkedHashMap
+                    sOpenIndexWriters.remove(this);
+                    sOpenIndexWriters.put(this, this);
+                } else if (sOpenIndexWriters.size() + sReservedWriterSlots < sLRUSize) {
+                    mIndexWriterMutex.lock();
+                    sOpenIndexWriters.put(this, this);
+                } else {
+                    if (!sOpenIndexWriters.isEmpty()) {
+                        // find the oldest (first when iterating) entry to remove
+                        toClose = sOpenIndexWriters.keySet().iterator().next();
+                        sReservedWriterSlots++;
+                        haveReservedSlot = true;
+                        sOpenIndexWriters.remove(toClose);
+                        toClose.mIndexWriterMutex.lock();
+                    } else {
+                        sLog.info("MI"+this.toString()+"LRU empty and all slots reserved...retrying");
+                        mustSleep = true;
+                    }
+                }
+            } // synchronized(mOpenIndexWriters)
+            
+            if (toClose != null) {
+                assert(toClose.mIndexWriterMutex.isHeldByCurrentThread());
+                assert(!mIndexWriterMutex.isHeldByCurrentThread());
+                try {
+                    toClose.closeIndexWriterAfterRemove();
+                } finally {
+                    toClose.mIndexWriterMutex.unlock();
+                }
+            } else if (mustSleep) {
+                assert(!mIndexWriterMutex.isHeldByCurrentThread());
+                try { Thread.sleep(100); } catch (Exception e) {};
             }
-            
-            
-            ///////////////////////////////////////////////////
-            //
-            // mergeFactor and minMergeDocs are VERY poorly explained.  Here's the deal:
-            //
-            // The data is in a tree.  It starts out empty.
-            //
-            // 1) Whenever docs are added, they are merged into the the smallest node (or a new node) until its 
-            //    size reaches "mergeFactor"
-            //
-            // 2) When we have enough "mergeFactor" sized small nodes so that the total size is "minMergeDocs", then
-            //    we combine them into one "minMergeDocs" sized big node.
-            //
-            // 3) Rule (2) repeats recursively: every time we get "mergeFactor" small nodes, we combine them.
-            //
-            // 4) This means that every segment (beyond the first "level") is therefore always of size:
-            //       minMergeDocs * mergeFactor^N, where N is the # times it has been merged
-            //
-            // 5) Be careful, (2) implies that we will have (minMergeDocs / mergeFactor) small files!
-            //
-            // NOTE - usually with lucene, the 1st row of the tree is stored in memory, because you keep 
-            // the IndexWriter open for a long time: this dramatically changes the way it performs 
-            // because you can make mergeFactor a lot bigger without worrying about the overhead of 
-            // re-writing the smallest node over and over again. 
-            //
-            // In our case, mergeFactor is intentionally chosen to be very small: since we add one document
-            // then close the index, if mergeFactor were large it would mean we copied every document
-            // (mergeFactor/2) times (start w/ 1 doc, adding the second copies the first b/c it re-writes the
-            // file...adding the 3rd copies 1+2....etc)
-            //
-            // ...in an ideal world, we'd have a separate parameter to control the size of the 1st file and the
-            // mergeFactor: then we could have the 1st file be 1 entry and still have a high merge factor.  Doing
-            // this we could potentially lower the indexing IO by as much as 70% for our expected usage pattern...  
-            // 
-            /////////////////////////////////////////////////////
+        } while (haveReservedSlot || mustSleep);
+        
+        assert(mIndexWriterMutex.isHeldByCurrentThread());
+        
+        //
+        // at this point, we've put ourselves into the writer cache
+        // and we have the Write Mutex....so open the file if
+        // necessary and return
+        //
+        try {
+            if (mIndexWriter == null) {
+                try {
+//                  sLog.info("MI"+this.toString()+" Opening IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
+                    mIndexWriter = new IndexWriter(mIdxDirectory, getAnalyzer(), false);
+//                  sLog.info("MI"+this.toString()+" Opened IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
+
+                } catch (IOException e1) {
+                    //mLog.info("****Creating new index in " + mIdxPath + " for mailbox " + mMailboxId);
+                    File indexDir  = mIdxDirectory.getFile();
+                    if (indexDirIsEmpty(indexDir)) {
+//                      sLog.info("MI"+this.toString()+" Opening IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
+                        mIndexWriter = new IndexWriter(mIdxDirectory, getAnalyzer(), true);
+//                      sLog.info("MI"+this.toString()+" Opened IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
+                        if (mIndexWriter == null) 
+                            throw new IOException("Failed to open IndexWriter in directory "+indexDir.getAbsolutePath());
+                    } else {
+                        mIndexWriter = null;
+                        IOException ioe = new IOException("Could not create index " + mIdxDirectory.toString() + " (directory already exists)");
+                        ioe.initCause(e1);
+                        throw ioe;
+                    }
+                }
+
+                ///////////////////////////////////////////////////
+                //
+                // mergeFactor and minMergeDocs are VERY poorly explained.  Here's the deal:
+                //
+                // The data is in a tree.  It starts out empty.
+                //
+                // 1) Whenever docs are added, they are merged into the the smallest node (or a new node) until its 
+                //    size reaches "mergeFactor"
+                //
+                // 2) When we have enough "mergeFactor" sized small nodes so that the total size is "minMergeDocs", then
+                //    we combine them into one "minMergeDocs" sized big node.
+                //
+                // 3) Rule (2) repeats recursively: every time we get "mergeFactor" small nodes, we combine them.
+                //
+                // 4) This means that every segment (beyond the first "level") is therefore always of size:
+                //       minMergeDocs * mergeFactor^N, where N is the # times it has been merged
+                //
+                // 5) Be careful, (2) implies that we will have (minMergeDocs / mergeFactor) small files!
+                //
+                // NOTE - usually with lucene, the 1st row of the tree is stored in memory, because you keep 
+                // the IndexWriter open for a long time: this dramatically changes the way it performs 
+                // because you can make mergeFactor a lot bigger without worrying about the overhead of 
+                // re-writing the smallest node over and over again. 
+                //
+                // In our case, mergeFactor is intentionally chosen to be very small: since we add one document
+                // then close the index, if mergeFactor were large it would mean we copied every document
+                // (mergeFactor/2) times (start w/ 1 doc, adding the second copies the first b/c it re-writes the
+                // file...adding the 3rd copies 1+2....etc)
+                //
+                // ...in an ideal world, we'd have a separate parameter to control the size of the 1st file and the
+                // mergeFactor: then we could have the 1st file be 1 entry and still have a high merge factor.  Doing
+                // this we could potentially lower the indexing IO by as much as 70% for our expected usage pattern...  
+                // 
+                /////////////////////////////////////////////////////
 
 
-            // tim: these are set based on an expectation of ~25k msgs/mbox and assuming that
-            // 11 fragment files are OK.  25k msgs with these settings (mf=3, mmd=33) means that
-            // each message gets written 9 times to disk...as opposed to 12.5 times with the default
-            // lucene settings of 10 and 100....
-            writer.setMergeFactor(3);// should be > 1, otherwise segment sizes are effectively limited to
-            // minMergeDocs documents: and this is probably bad (too many files!)
+                // tim: these are set based on an expectation of ~25k msgs/mbox and assuming that
+                // 11 fragment files are OK.  25k msgs with these settings (mf=3, mmd=33) means that
+                // each message gets written 9 times to disk...as opposed to 12.5 times with the default
+                // lucene settings of 10 and 100....
+                mIndexWriter.setMergeFactor(3);// should be > 1, otherwise segment sizes are effectively limited to
+                // minMergeDocs documents: and this is probably bad (too many files!)
 
-            writer.setMaxBufferedDocs(33); // we expect 11 index fragment files
+                mIndexWriter.setMaxBufferedDocs(33); // we expect 11 index fragment files
 
-            sIndexWritersCache.putIndexWriter(this);
-            mIndexWriter = writer;
-            assert(mIndexWriter != null);
-            assert(sIndexWritersCache.contains(this));
-            
-            updateLastWriteTime();
+                updateLastWriteTime();
+            }
+        } finally {
+            if (mIndexWriter == null) {
+                mIndexWriterMutex.unlock();
+                assert(!mIndexWriterMutex.isHeldByCurrentThread());
+                throw new IOException("Uknown error opening IndexWriter");
+            }
         }
     }
-
+    
     /**
      * @return A refcounted IndexReader for this index.  Caller is responsible for 
      *            calling IndexReader.release() on the index before allowing it to go
@@ -984,7 +1096,8 @@ public final class MailboxIndex
             
             IndexReader reader = null;
             try {
-                closeIndexWriter();
+                if (isIndexWriterOpen())
+                    closeIndexWriter();
                 reader = IndexReader.open(mIdxDirectory);
             } catch(IOException e) {
                 // Handle the special case of trying to open a not-yet-created
@@ -993,6 +1106,7 @@ public final class MailboxIndex
                 File indexDir = mIdxDirectory.getFile();
                 if (indexDirIsEmpty(indexDir)) {
                     openIndexWriter();
+                    mIndexWriterMutex.unlock();
                     closeIndexWriter();
                     try {
                         reader = IndexReader.open(mIdxDirectory);
@@ -1865,5 +1979,93 @@ public final class MailboxIndex
         else
             return this;
     }
+    
+    private static final class IndexWritersSweeper extends Thread {
+        
+        private boolean mShutdown = false;
 
+        /**
+         * Shutdown the sweeper thread
+         */
+        synchronized void signalShutdown() {
+            mShutdown = true;
+            notify();
+        }
+        
+        /**
+         * Main loop for the Sweeper thread.  This thread does a sweep automatically
+         * every (mSweepIntervalMS) ms, or it will run a sweep when woken up
+         * bia the wakeupSweeperThread() API
+         */
+        public void run() {
+            sLog.info(getName() + " thread starting");
+
+            boolean shutdown = false;
+            long startTime = System.currentTimeMillis();
+
+            while (!shutdown) {
+                // Sleep until next scheduled wake-up time, or until notified.
+                synchronized (this) {
+                    if (!mShutdown) {  // Don't go into wait() if shutting down.  (bug 1962)
+                        long now = System.currentTimeMillis();
+                        long until = startTime + sSweepIntervalMS;
+                        if (until > now) {
+                            try {
+                                wait(until - now);
+                            } catch (InterruptedException e) {}
+                        }
+                    }
+                    shutdown = mShutdown;
+                }
+
+                startTime = System.currentTimeMillis();
+                
+
+                // Flush out index writers that have been idle too long.
+                MailboxIndex toRemove;
+                int removed = 0;
+                int sizeAfter = 0;
+                int sizeBefore = -1;
+                do {
+                    synchronized (sOpenIndexWriters) {
+                        if (sizeBefore == -1)
+                            sizeBefore = sOpenIndexWriters.size();
+                        toRemove = null;
+                        long cutoffTime = startTime - sIdleWriterFlushTimeMS;
+                        for (Iterator it = sOpenIndexWriters.entrySet().iterator(); toRemove==null && it.hasNext(); ) {
+                            Map.Entry entry = (Map.Entry) it.next();
+                            MailboxIndex mi = (MailboxIndex) entry.getKey();
+                            if (mi.getLastWriteTime() < cutoffTime) {
+                                removed++;
+                                toRemove = mi;
+                                it.remove();
+                                toRemove.mIndexWriterMutex.lock();
+                            }
+                        }
+                        sizeAfter = sOpenIndexWriters.size();
+                    }
+                    if (toRemove != null) {
+                        try {
+                            toRemove.closeIndexWriterAfterRemove();
+                        } finally {
+                            toRemove.mIndexWriterMutex.unlock();
+                        }
+                    }
+                    synchronized(this) {
+                        if (mShutdown)
+                            shutdown = true;
+                    }
+                } while (!shutdown && toRemove != null);
+                
+                long elapsed = System.currentTimeMillis() - startTime;
+                
+                if (removed > 0 || sizeAfter > 0)
+                    sLog.info("open index writers sweep: before=" + sizeBefore +
+                                ", closed=" + removed +
+                                ", after=" + sizeAfter + " (" + elapsed + "ms)");
+            }
+
+            sLog.info(getName() + " thread exiting");
+        }
+    }
 }
