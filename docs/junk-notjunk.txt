@@ -99,7 +99,7 @@ server restarts.
 Format of Feedback Message
 --------------------------
 
-The feeback message has a text-plain part and a message/rfc822
+The feedback message has a text-plain part and a message/rfc822
 attachment which is the original message. In the example below, the
 (1) is the envelope of the feedback message, (2) is a spam report
 detailing who classified the message as junk or not junk, and (3) is
