@@ -92,6 +92,8 @@ public class ZSearchResult {
                 mHits.add(new ZDocumentHit(h));
 	        } else if (h.getName().equals(VoiceConstants.E_VOICEMSG)) {
 	        	mHits.add(new ZVoiceMailItemHit(h));
+	        } else if (h.getName().equals(VoiceConstants.E_CALLLOG)) {
+	        	mHits.add(new ZCallHit(h));
 	        }
         }
     }

@@ -2202,7 +2202,8 @@ public class ZMailbox {
         QName name;
         if (convId != null) {
         	name = MailConstants.SEARCH_CONV_REQUEST;
-        } else if (params.getTypes().equals(ZSearchParams.TYPE_VOICE_MAIL)) {
+        } else if (params.getTypes().equals(ZSearchParams.TYPE_VOICE_MAIL) ||
+                   params.getTypes().equals(ZSearchParams.TYPE_CALL)) {
         	name = VoiceConstants.SEARCH_VOICE_REQUEST;
         } else {
         	name = MailConstants.SEARCH_REQUEST;
