@@ -163,7 +163,7 @@ public class WikiFormatter extends Formatter {
 		
 		if(defaultFontFamily !=null){
 		out.print("<style>");
-		out.print("body { ");
+		out.print("body, table{ ");
 		out.print("font-family:"+defaultFontFamily+";");
 		out.print("color:"+defaultFontColor+";");
 		out.print("font-size:"+defaultFontSize+";");
