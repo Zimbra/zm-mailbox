@@ -247,27 +247,4 @@
     <Set name="sendServerVersion">false</Set>
     <Set name="sendDateHeader">true</Set>
 
-    <!-- =========================================================== -->
-    <!-- start connectors                                            -->
-    <!-- =========================================================== -->
-    <Ref id="pool">
-      <Call name="start"/>
-    </Ref>
-    
-    <!-- HTTPBEGIN -->
-    <Ref id="http">
-      <Call name="start"/>
-    </Ref>
-    <!-- HTTPEND -->
-    
-    <!-- HTTPSBEGIN
-    <Ref id="ssl">
-      <Call name="start"/>
-    </Ref>
-    HTTPSEND -->
-    
-    <Ref id="admin">
-      <Call name="start"/>
-    </Ref>
-
 </Configure>
