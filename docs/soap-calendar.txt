@@ -855,7 +855,11 @@ OR
 // sometimes, however the invite is a standard mail-message it can be deleted by the user at
 // any time!
 //
-<GetAppointmentRequest id="appointment_id" [sync="1"]/>
+<GetAppointmentRequest
+    id="appointment_id"
+    [sync="1"]
+    [includeContent="0|1"]   // if 1, MIME parts for body content are returned; default 0
+/>
 
 <GetAppointmentResponse>
   <appt uid="UID" id="appointment_id" [f="{flags}"] [t="{tags}"] s="{size}" d="{date}" l="{folder}">
@@ -863,6 +867,8 @@ OR
       ...
         ---See <inv> part of GetMsgResponse---
       ...    
+
+      [<mp> ... </mp>]  // body content, if includeContent="1" was specified in the request
     </inv>]+
 
   // List of replies received from attendees.

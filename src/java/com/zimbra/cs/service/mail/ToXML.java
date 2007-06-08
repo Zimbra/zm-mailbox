@@ -720,7 +720,7 @@ public class ToXML {
             List<MPartInfo> parts = Mime.getParts(mm);
             if (parts != null && !parts.isEmpty()) {
                 Set<MPartInfo> bodies = Mime.getBody(parts, wantHTML);
-                addParts(m, parts.get(0), bodies, part, neuter);
+                addParts(m, parts.get(0), bodies, part, neuter, false);
             }
         } catch (IOException ex) {
             throw ServiceException.FAILURE(ex.getMessage(), ex);
@@ -739,7 +739,12 @@ public class ToXML {
      * @param fields
      * @throws ServiceException
      */
-    public static void setCalendarItemFields(Element calItemElem, ItemIdFormatter ifmt, CalendarItem calItem, int fields, boolean encodeInvites)
+    public static void setCalendarItemFields(Element calItemElem,
+                                             ItemIdFormatter ifmt,
+                                             CalendarItem calItem,
+                                             int fields,
+                                             boolean encodeInvites,
+                                             boolean includeContent)
     throws ServiceException {
         recordItemTags(calItemElem, calItem, fields);
 
@@ -761,13 +766,35 @@ public class ToXML {
         }
 
         if (needToOutput(fields, Change.MODIFIED_CONTENT) && encodeInvites) {
-            encodeReplies(calItemElem, calItem, null);
             for (int i = 0; i < calItem.numInvites(); i++)
-                encodeInvite(calItemElem, ifmt, calItem, calItem.getInvite(i));
+                encodeInvite(calItemElem, ifmt, calItem, calItem.getInvite(i), includeContent);
+            encodeReplies(calItemElem, calItem, null);
         }
     }
 
-    public static Element encodeInvite(Element parent, ItemIdFormatter ifmt, CalendarItem cal, Invite inv) throws ServiceException {
+    public static void setCalendarItemFields(Element calItemElem,
+                                             ItemIdFormatter ifmt,
+                                             CalendarItem calItem,
+                                             int fields,
+                                             boolean encodeInvites)
+    throws ServiceException {
+        setCalendarItemFields(calItemElem, ifmt, calItem, fields, encodeInvites, false);
+    }
+
+    public static Element encodeInvite(Element parent,
+                                       ItemIdFormatter ifmt,
+                                       CalendarItem cal,
+                                       Invite inv)
+    throws ServiceException {
+        return encodeInvite(parent, ifmt, cal, inv, false);
+    }
+
+    public static Element encodeInvite(Element parent,
+                                       ItemIdFormatter ifmt,
+                                       CalendarItem cal,
+                                       Invite inv,
+                                       boolean includeContent)
+    throws ServiceException {
         Element ie = parent.addElement(MailConstants.E_INVITE);
         setCalendarItemType(ie, cal);
         encodeTimeZoneMap(ie, cal.getTimeZoneMap());
@@ -779,6 +806,25 @@ public class ToXML {
             ie.addAttribute(MailConstants.A_CAL_RECURRENCE_ID, inv.getRecurId().toString());
 
         encodeInviteComponent(ie, ifmt, cal, inv, NOTIFY_FIELDS);
+
+        if (includeContent) {
+            int invId = inv.getMailItemId();
+            MimeMessage mm = cal.getSubpartMessage(invId);
+            if (mm == null)
+                throw MailServiceException.INVITE_OUT_OF_DATE(
+                        "Invite id=" +
+                        ifmt.formatItemId(cal.getId(), invId));
+            List<MPartInfo> parts;
+            try {
+                parts = Mime.getParts(mm);
+            } catch (IOException ex) {
+                throw ServiceException.FAILURE(ex.getMessage(), ex);
+            } catch (MessagingException ex) {
+                throw ServiceException.FAILURE(ex.getMessage(), ex);
+            }
+            if (parts != null && !parts.isEmpty())
+                addParts(ie, parts.get(0), null, "", false, true);
+        }
 
         return ie;
     }
@@ -804,7 +850,12 @@ public class ToXML {
      * 
      * @return
      */
-    public static Element encodeCalendarItemSummary(Element parent, ItemIdFormatter ifmt, CalendarItem calItem, int fields, boolean includeInvites)
+    public static Element encodeCalendarItemSummary(Element parent,
+                                                    ItemIdFormatter ifmt,
+                                                    CalendarItem calItem,
+                                                    int fields,
+                                                    boolean includeInvites,
+                                                    boolean includeContent)
     throws ServiceException {
         Element calItemElem;
         if (calItem instanceof Appointment)
@@ -812,9 +863,20 @@ public class ToXML {
         else
             calItemElem = parent.addElement(MailConstants.E_TASK);
         
-        setCalendarItemFields(calItemElem, ifmt, calItem, fields, includeInvites);
+        setCalendarItemFields(calItemElem, ifmt, calItem, fields,
+                              includeInvites, includeContent);
         
         return calItemElem;
+    }
+
+    public static Element encodeCalendarItemSummary(Element parent,
+            ItemIdFormatter ifmt,
+            CalendarItem calItem,
+            int fields,
+            boolean includeInvites)
+    throws ServiceException {
+        return encodeCalendarItemSummary(parent, ifmt, calItem, fields,
+                                         includeInvites, false);
     }
 
     private static void encodeReplies(Element parent, CalendarItem calItem, Invite inv) {
@@ -900,16 +962,6 @@ public class ToXML {
             if (messageID != null && !messageID.trim().equals(""))
                 m.addAttribute(MailConstants.E_MSG_ID_HDR, StringUtil.stripControlCharacters(messageID), Element.Disposition.CONTENT);
 
-//          if (wholeMessage && msg.isDraft()) {
-//              if (msg.getDraftOrigId() > 0)
-//                  m.addAttribute(MailService.A_ORIG_ID, msg.getDraftOrigId());
-//              if (!msg.getDraftReplyType().equals(""))
-//                  m.addAttribute(MailService.A_REPLY_TYPE, msg.getDraftReplyType());
-//              String inReplyTo = mm.getHeader("In-Reply-To", null);
-//              if (inReplyTo != null && !inReplyTo.equals(""))
-//                  m.addAttribute(MailService.E_IN_REPLY_TO, StringUtil.stripControlCharacters(inReplyTo), Element.Disposition.CONTENT);
-//          }
-
             if (!wholeMessage)
                 m.addAttribute(MailConstants.A_SIZE, mm.getSize());
 
@@ -940,7 +992,7 @@ public class ToXML {
             List<MPartInfo> parts = Mime.getParts(mm);
             if (parts != null && !parts.isEmpty()) {
                 Set<MPartInfo> bodies = Mime.getBody(parts, wantHTML);
-                addParts(m, parts.get(0), bodies, part, neuter);
+                addParts(m, parts.get(0), bodies, part, neuter, true);
             }
         } catch (IOException ex) {
             throw ServiceException.FAILURE(ex.getMessage(), ex);
@@ -1110,8 +1162,11 @@ public class ToXML {
         }
     }
 
-    public static Element encodeInviteComponent(
-            Element parent, ItemIdFormatter ifmt, CalendarItem calItem, Invite invite, int fields)
+    public static Element encodeInviteComponent(Element parent,
+                                                ItemIdFormatter ifmt,
+                                                CalendarItem calItem,
+                                                Invite invite,
+                                                int fields)
     throws ServiceException {
         boolean allFields = true;
 
@@ -1345,7 +1400,18 @@ public class ToXML {
     }
 
 
-    private static void addParts(Element parent, MPartInfo mpi, Set<MPartInfo> bodies, String prefix, boolean neuter) {
+    private static void addParts(Element parent,
+                                 MPartInfo mpi,
+                                 Set<MPartInfo> bodies,
+                                 String prefix,
+                                 boolean neuter,
+                                 boolean excludeCalendarParts) {
+        if (excludeCalendarParts) {
+            String ct = mpi.getContentType();
+            if (Mime.CT_TEXT_CALENDAR.compareToIgnoreCase(ct) == 0)
+                return;
+        }
+
         Element elem = parent.addElement(MailConstants.E_MIMEPART);
         MimePart mp = mpi.getMimePart();
 
@@ -1372,8 +1438,11 @@ public class ToXML {
         // figure out attachment size
         try {
             int size = mp.getSize();
-            if ("base64".equalsIgnoreCase(mp.getEncoding()))
-                size = (int) ((size * 0.75) - (size / 76));
+            if (size >= 0) {
+                if ("base64".equalsIgnoreCase(mp.getEncoding()))
+                    size = (int) ((size * 0.75) - (size / 76));
+            } else
+                size = 0;  // sometimes size can be -1; force to 0
             elem.addAttribute(MailConstants.A_SIZE, size);
         } catch (MessagingException me) {
             // don't put out size if we get exception
@@ -1420,9 +1489,11 @@ public class ToXML {
                 elem.addAttribute(MailConstants.A_CONTENT_LOCATION, StringUtil.stripControlCharacters(cl));
         } catch (MessagingException me) { }
 
-        // include the part's content if this is the displayable "memo part"
-        if (bodies != null && bodies.contains(mpi)) {
-            elem.addAttribute(MailConstants.A_BODY, true);
+        // include the part's content if this is the displayable "memo part",
+        // or if it was requested to include all parts
+        if (bodies == null || bodies.contains(mpi)) {
+            if (bodies != null)
+                elem.addAttribute(MailConstants.A_BODY, true);
             try {
                 addContent(elem, mpi, neuter);
             } catch (IOException ioe) {
@@ -1436,7 +1507,7 @@ public class ToXML {
         if (mpi.hasChildren()) {
             for (Iterator it = mpi.getChildren().iterator(); it.hasNext();) {
                 MPartInfo cp = (MPartInfo) it.next();
-                addParts(elem, cp, bodies, prefix, neuter);
+                addParts(elem, cp, bodies, prefix, neuter, excludeCalendarParts);
             }
         }
     }

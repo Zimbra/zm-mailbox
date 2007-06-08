@@ -60,6 +60,7 @@ public class GetCalendarItem extends CalendarRequest {
         ItemIdFormatter ifmt = new ItemIdFormatter(lc);
 
         boolean sync = request.getAttributeBool(MailConstants.A_SYNC, false);
+        boolean includeContent = request.getAttributeBool(MailConstants.A_CAL_INCLUDE_CONTENT, false);
         ItemId iid = new ItemId(request.getAttribute("id"), lc);
         sLog.info("<GetCalendarItem id=" + iid.getId() + "> " + lc);
 
@@ -71,7 +72,8 @@ public class GetCalendarItem extends CalendarRequest {
         Element response = getResponseElement(lc);
         synchronized(mbox) {
             CalendarItem appointment = mbox.getCalendarItemById(octxt, iid.getId());
-            ToXML.encodeCalendarItemSummary(response, ifmt, appointment, fields, true);
+            ToXML.encodeCalendarItemSummary(response, ifmt, appointment,
+                                            fields, true, includeContent);
         }
 
         return response;
