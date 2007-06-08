@@ -77,6 +77,7 @@ import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.service.im.IMGatewayRegister;
+import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.Volume;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
@@ -827,6 +828,7 @@ public final class MailboxIndex
             mIndexWriterMutex.lock();
             if (sOpenIndexWriters.remove(this) != null) {
                 sizeAfter = sOpenIndexWriters.size();
+                ZimbraPerf.COUNTER_IDX_WRT.increment(sizeAfter);                
             }
         }
         
@@ -841,8 +843,8 @@ public final class MailboxIndex
                 sReservedWriterSlots--;
                 assert(mIndexWriterMutex.isHeldByCurrentThread());
                 assert(mIndexWriter == null);
-                mIndexWriterMutex.unlock();
             }
+            mIndexWriterMutex.unlock();
         }
     }
     
@@ -976,6 +978,7 @@ public final class MailboxIndex
                         mustSleep = true;
                     }
                 }
+                ZimbraPerf.COUNTER_IDX_WRT.increment(sOpenIndexWriters.size());
             } // synchronized(mOpenIndexWriters)
             
             if (toClose != null) {
@@ -2044,14 +2047,21 @@ public final class MailboxIndex
                                 toRemove = mi;
                                 it.remove();
                                 toRemove.mIndexWriterMutex.lock();
+                                sReservedWriterSlots++;
                             }
                         }
                         sizeAfter = sOpenIndexWriters.size();
+                        ZimbraPerf.COUNTER_IDX_WRT.increment(sizeAfter);
                     }
                     if (toRemove != null) {
                         try {
                             toRemove.closeIndexWriterAfterRemove();
                         } finally {
+                            synchronized(sOpenIndexWriters) {
+                                sReservedWriterSlots--;
+                                assert(toRemove.mIndexWriterMutex.isHeldByCurrentThread());
+                                assert(toRemove.mIndexWriter == null);
+                            }
                             toRemove.mIndexWriterMutex.unlock();
                         }
                     }
