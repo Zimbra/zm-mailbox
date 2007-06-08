@@ -925,6 +925,8 @@ public final class MailboxIndex
     
     private void openIndexWriter() throws IOException
     {
+        ZimbraPerf.COUNTER_IDX_WRT_OPENED.increment();
+        
         assert(Thread.holdsLock(getLock()));
         assert(!mIndexWriterMutex.isHeldByCurrentThread());
         
@@ -1070,12 +1072,13 @@ public final class MailboxIndex
                 // minMergeDocs documents: and this is probably bad (too many files!)
 
                 mIndexWriter.setMaxBufferedDocs(33); // we expect 11 index fragment files
-
-                // tim: this might seem bad, since an index in steady-state-of-writes will never get flushed, 
-                // however we also track the number of uncomitted-operations on the index, and will force a 
-                // flush if the index has had a lot written to it without a flush.
-                updateLastWriteTime();
+            } else {
+                ZimbraPerf.COUNTER_IDX_WRT_OPENED_CACHE_HIT.increment();
             }
+            // tim: this might seem bad, since an index in steady-state-of-writes will never get flushed, 
+            // however we also track the number of uncomitted-operations on the index, and will force a 
+            // flush if the index has had a lot written to it without a flush.
+            updateLastWriteTime();
         } finally {
             if (mIndexWriter == null) {
                 mIndexWriterMutex.unlock();

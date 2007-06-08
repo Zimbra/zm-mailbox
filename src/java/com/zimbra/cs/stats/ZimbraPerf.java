@@ -92,6 +92,8 @@ public class ZimbraPerf {
     public static StopWatch STOPWATCH_IMAP = new StopWatch("imap");
     public static StopWatch STOPWATCH_POP = new StopWatch("pop");
     public static Counter COUNTER_IDX_WRT = new Counter("idx_wrt");
+    public static Counter COUNTER_IDX_WRT_OPENED = new Counter("idx_wrt_opened");
+    public static Counter COUNTER_IDX_WRT_OPENED_CACHE_HIT = new Counter("idx_wrt_opened_cache_hit");
     
     private static RealtimeStats sRealtimeStats = 
         new RealtimeStats(new String[] {
@@ -115,6 +117,8 @@ public class ZimbraPerf {
                         STOPWATCH_IMAP,
                         STOPWATCH_POP,
                         COUNTER_IDX_WRT,
+                        COUNTER_IDX_WRT_OPENED,
+                        COUNTER_IDX_WRT_OPENED_CACHE_HIT,        
                         sRealtimeStats
                     }
         );
