@@ -79,6 +79,9 @@ public class ZimbraServlet extends HttpServlet {
 
     protected static final String WWW_AUTHENTICATE_HEADER = "WWW-Authenticate";
     protected String getRealmHeader()  { return "BASIC realm=\"Zimbra\""; }
+    
+    protected static final String ZIMBRA_FAULT_CODE_HEADER    = "X-Zimbra-Fault-Code";
+    protected static final String ZIMBRA_FAULT_MESSAGE_HEADER = "X-Zimbra-Fault-Message";
 
     private static final int MAX_PROXY_HOPCOUNT = 3;
 
@@ -450,5 +453,10 @@ public class ZimbraServlet extends HttpServlet {
         url.append(service);
 
         return url.toString();
+    }
+    protected void returnError(HttpServletResponse resp, ServiceException e) {
+    	resp.setHeader(ZIMBRA_FAULT_CODE_HEADER, e.getCode());
+    	resp.setHeader(ZIMBRA_FAULT_MESSAGE_HEADER, e.getMessage());
+    	resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
 }

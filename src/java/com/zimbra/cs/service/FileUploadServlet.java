@@ -331,40 +331,41 @@ public class FileUploadServlet extends ZimbraServlet {
             return;
         }
 
-        if (!isAdminRequest) {
-            try {
-                // make sure we're on the right host; proxy if we're not...
-                Provisioning prov = Provisioning.getInstance();
-                Account acct = prov.get(AccountBy.id, at.getAccountId());
-                if (acct == null)
-                    throw AccountServiceException.NO_SUCH_ACCOUNT(at.getAccountId());
-                ZimbraLog.addAccountNameToContext(acct.getName());
-                if (!Provisioning.onLocalServer(acct)) {
-                    proxyServletRequest(req, resp, prov.getServer(acct), null);
-                    return;
-                }
-                // make sure the authenticated account is active
-                if (acct.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE))
-                    throw AccountServiceException.MAINTENANCE_MODE();
-                else if (!acct.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
-                    throw AccountServiceException.ACCOUNT_INACTIVE(acct.getName());
-                // fetching the mailbox will except if it's in maintenance mode
-                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId(), false);
-                if (mbox != null)
-                    ZimbraLog.addMboxToContext(mbox.getId());
-            } catch (ServiceException e) {
-                throw new ServletException(e);
-            }
-        }
+        try {
+        	if (!isAdminRequest) {
+        		// make sure we're on the right host; proxy if we're not...
+        		Provisioning prov = Provisioning.getInstance();
+        		Account acct = prov.get(AccountBy.id, at.getAccountId());
+        		if (acct == null)
+        			throw AccountServiceException.NO_SUCH_ACCOUNT(at.getAccountId());
+        		ZimbraLog.addAccountNameToContext(acct.getName());
+        		if (!Provisioning.onLocalServer(acct)) {
+        			proxyServletRequest(req, resp, prov.getServer(acct), null);
+        			return;
+        		}
+        		// make sure the authenticated account is active
+        		if (acct.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE))
+        			throw AccountServiceException.MAINTENANCE_MODE();
+        		else if (!acct.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+        			throw AccountServiceException.ACCOUNT_INACTIVE(acct.getName());
+        		// fetching the mailbox will except if it's in maintenance mode
+        		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId(), false);
+        		if (mbox != null)
+        			ZimbraLog.addMboxToContext(mbox.getId());
+        	}
 
-        // file upload requires multipart enctype
-        if (FileUploadBase.isMultipartContent(req))
-            handleMultipartUpload(req, resp, fmt, at.getAccountId());
-        else
-            handlePlainUpload(req, resp, fmt, at.getAccountId());
+        	// file upload requires multipart enctype
+        	if (FileUploadBase.isMultipartContent(req))
+        		handleMultipartUpload(req, resp, fmt, at.getAccountId());
+        	else
+        		handlePlainUpload(req, resp, fmt, at.getAccountId());
+        } catch (ServiceException e) {
+            mLog.info("File upload failed", e);
+        	returnError(resp, e);
+        }
     }
 
-    private void handleMultipartUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, String accountId) throws IOException {
+    private void handleMultipartUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, String accountId) throws IOException, ServiceException {
         int status = HttpServletResponse.SC_OK;
         List<FileItem> items = null;
         String attachmentId = null, reqId = null;
@@ -426,28 +427,23 @@ public class FileUploadServlet extends ZimbraServlet {
         }
 
         // cache the uploaded files in the hash and construct the list of upload IDs
-        try {
-            for (FileItem fi : items) {
-                String name = filenames.get(fi);
-                if (name == null || name.trim().equals(""))
-                    name = fi.getName();
-                Upload up = new Upload(accountId, fi, name);
+        for (FileItem fi : items) {
+        	String name = filenames.get(fi);
+        	if (name == null || name.trim().equals(""))
+        		name = fi.getName();
+        	Upload up = new Upload(accountId, fi, name);
 
-                ZimbraLog.mailbox.info("FileUploadServlet received %s", up);
-                synchronized (mPending) {
-                    mPending.put(up.uuid, up);
-                }
-                attachmentId = (attachmentId == null ? up.uuid : attachmentId + UPLOAD_DELIMITER + up.uuid);
-            }
-        } catch (ServiceException e) {
-            status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
-            mLog.info("File upload failed", e);
+        	ZimbraLog.mailbox.info("FileUploadServlet received %s", up);
+        	synchronized (mPending) {
+        		mPending.put(up.uuid, up);
+        	}
+        	attachmentId = (attachmentId == null ? up.uuid : attachmentId + UPLOAD_DELIMITER + up.uuid);
         }
 
         sendResponse(req, resp, status, fmt, reqId, attachmentId, items);
     }
 
-    private void handlePlainUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, String accountId) throws IOException {
+    private void handlePlainUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, String accountId) throws IOException, ServiceException {
         // metadata is encoded in the response's HTTP headers
         ContentType ctype = new ContentType(req.getContentType());
         String contentType = ctype.getValue(), filename = ctype.getParameter("name");
@@ -481,15 +477,10 @@ public class FileUploadServlet extends ZimbraServlet {
 
         int status = HttpServletResponse.SC_OK;
         String attachmentId = null;
-        try {
-            Upload up = new Upload(accountId, fi, filename);
-            ZimbraLog.mailbox.info("FileUploadServlet received " + up);
-            synchronized (mPending) {
-                mPending.put(attachmentId = up.uuid, up);
-            }
-        } catch (ServiceException e) {
-            status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
-            mLog.info("File upload failed", e);
+        Upload up = new Upload(accountId, fi, filename);
+        ZimbraLog.mailbox.info("FileUploadServlet received " + up);
+        synchronized (mPending) {
+        	mPending.put(attachmentId = up.uuid, up);
         }
 
         sendResponse(req, resp, status, fmt, null, attachmentId, items);

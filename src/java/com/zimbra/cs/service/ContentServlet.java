@@ -282,12 +282,6 @@ public class ContentServlet extends ZimbraServlet {
         }
     }
 
-    private void returnError(HttpServletResponse resp, ServiceException e) {
-    	resp.setHeader("X-Zimbra-Fault-Code", e.getCode());
-    	resp.setHeader("X-Zimbra-Fault-Message", e.getMessage());
-    	resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-    }
-    
     /**
      * @param accountId
      * @return
