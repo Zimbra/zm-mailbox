@@ -11,7 +11,7 @@ public class SpecialAttrs {
     public static final String SA_zimbraId  = Provisioning.A_zimbraId;
     
     // pseudo attrs
-    public static final String PA_ldapBase    = "ldap.baseDn";
+    public static final String PA_ldapBase    = "ldap.baseDN";
     
     private String mZimbraId;
     private String mLdapBaseDn;

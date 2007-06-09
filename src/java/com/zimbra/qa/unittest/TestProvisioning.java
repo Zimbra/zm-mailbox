@@ -71,7 +71,7 @@ public class TestProvisioning extends TestCase {
      */ 
     private String ACCT_NAMING_ATTR;
     private String ACCT_NAMING_ATTR_VALUE;
-    private String ACCT_BASE_DN;  // for testing pseudo attr ldap.baseDn
+    private String ACCT_BASE_DN;  // for testing pseudo attr ldap.baseDN
     
     private String CR_USER;
     private String CR_EMAIL;
@@ -132,6 +132,12 @@ public class TestProvisioning extends TestCase {
                     throw new Exception("unexpected entry type: " + entry.getClass().getCanonicalName());
             }
             
+            // search again, this time we search for everything and it should not contain any entry
+            flags = 0xFF;
+            options.setFlags(flags);
+            list = mProv.searchDirectory(options);
+            assertEquals(0, list.size());
+            
         }
         
         public boolean isCustom() {
@@ -149,7 +155,7 @@ public class TestProvisioning extends TestCase {
             if (!mIsCustomProv)
                 return;
             
-            assertEquals(mLdapProv.getDN(entry), dn);
+            assertEquals(dn, mLdapProv.getDN(entry));
         }
         
         public boolean verifyCountForDomainBasedSearch() {
@@ -206,7 +212,7 @@ public class TestProvisioning extends TestCase {
         ACCT_ALIAS_IN_OTHER_DOMAIN_AFTER_ACCOUNT_RENAME_TO_ORIG_DOMAIN_EMAIL = ACCT_ALIAS_IN_OTHER_DOMAIN_USER + "@" + DOMAIN_NAME;
         ACCT_FULL_NAME = "Phoebe Shao";
         
-        ACCT_NAMING_ATTR = LC.get("ldap_account_naming_rdn_attr");
+        ACCT_NAMING_ATTR = LC.get("ldap_user_naming_rdn_attr");
         if (StringUtil.isNullOrEmpty(ACCT_NAMING_ATTR))
             ACCT_NAMING_ATTR = "uid";
         ACCT_NAMING_ATTR_VALUE = ACCT_USER + ".mailuser";
@@ -356,7 +362,7 @@ public class TestProvisioning extends TestCase {
     private void verifyEntries(Set<String> list, String[] names, boolean checkCount) throws Exception {
         try {
             if (checkCount)
-                assertEquals(list.size(), names.length);
+                assertEquals(names.length, list.size());
             
             for (String name : names)
                 assertTrue(list.contains(name));
@@ -376,6 +382,17 @@ public class TestProvisioning extends TestCase {
             throw e;
         }
     }
+    
+    private void setDefaultDomain(String domain) throws Exception {
+        Map<String, Object> confAttrs = new HashMap<String, Object>();
+        confAttrs.put(Provisioning.A_zimbraDefaultDomainName, domain);
+        mProv.modifyAttrs(mProv.getConfig(), confAttrs, true);
+    } 
+    
+    /* =====================
+     * end of util functions
+     * =====================
+     */
 
         
     private void healthTest() throws Exception {
@@ -433,9 +450,7 @@ public class TestProvisioning extends TestCase {
         verifyEntries(list, new NamedEntry[]{entry, otherEntry, specialCharEntry}, false);
         
         // set our domain as the default domain
-        Map<String, Object> confAttrs = new HashMap<String, Object>();
-        confAttrs.put(Provisioning.A_zimbraDefaultDomainName, DOMAIN_NAME);
-        mProv.modifyAttrs(mProv.getConfig(), confAttrs, true);
+        setDefaultDomain(DOMAIN_NAME);
                 
         return new Domain[]{entry, otherEntry, specialCharEntry};
     }
@@ -526,7 +541,7 @@ public class TestProvisioning extends TestCase {
             mProv.authAccount(account, PASSWORD + "-not", "unittest");
             fail("AccountServiceException.AUTH_FAILED not thrown"); // should not come to here
         } catch (ServiceException e) {
-            assertEquals(e.getCode(), AccountServiceException.AUTH_FAILED);
+            assertEquals(AccountServiceException.AUTH_FAILED, e.getCode());
         }
         
         // done testing auth mech, set auth meth back
@@ -566,11 +581,11 @@ public class TestProvisioning extends TestCase {
          * for custom provisionig, it appends the defaultdomain to form the address so the 
          * below assertion will fail, which is fine.
          */
-        // assertEquals(entry.getName(), DEFAULT_LDAP_ADMIN_USER); 
+        // assertEquals(DEFAULT_LDAP_ADMIN_USER, entry.getName()); 
         
         // create an admin account
         Map<String, Object> acctAttrs = new HashMap<String, Object>();
-        mCustomProvTester.addAttr(acctAttrs, "ldap.baseDn", ACCT_BASE_DN);
+        mCustomProvTester.addAttr(acctAttrs, "ldap.baseDN", ACCT_BASE_DN);
         mCustomProvTester.addAttr(acctAttrs, ACCT_NAMING_ATTR, ADMIN_USER + ".mailuser");
         acctAttrs.put(Provisioning.A_zimbraIsAdminAccount, "TRUE");
         entry = mProv.createAccount(ADMIN_EMAIL, PASSWORD, acctAttrs);
@@ -598,7 +613,7 @@ public class TestProvisioning extends TestCase {
         
         // create an account
         Map<String, Object> acctAttrs = new HashMap<String, Object>();
-        mCustomProvTester.addAttr(acctAttrs, "ldap.baseDn", ACCT_BASE_DN);
+        mCustomProvTester.addAttr(acctAttrs, "ldap.baseDN", ACCT_BASE_DN);
         mCustomProvTester.addAttr(acctAttrs, ACCT_NAMING_ATTR, ACCT_NAMING_ATTR_VALUE);
         acctAttrs.put(Provisioning.A_zimbraCOSId, cos.getId());
         Account entry = mProv.createAccount(ACCT_EMAIL, PASSWORD, acctAttrs);
@@ -608,10 +623,10 @@ public class TestProvisioning extends TestCase {
         
         // create an account with special chars
         Map<String, Object> acctAttrsSpecialChars = new HashMap<String, Object>();
-        mCustomProvTester.addAttr(acctAttrsSpecialChars, "ldap.baseDn", ACCT_BASE_DN);
+        mCustomProvTester.addAttr(acctAttrsSpecialChars, "ldap.baseDN", ACCT_BASE_DN);
         mCustomProvTester.addAttr(acctAttrsSpecialChars, ACCT_NAMING_ATTR, ACCT_USER_SPECIAL_CHARS + ".mailuser");
         acctAttrs.put(Provisioning.A_zimbraCOSId, cos.getId());
-        Account entrySpecialChars = mProv.createAccount(ACCT_EMAIL_SPECIAL_CHARS, PASSWORD, acctAttrs);
+        Account entrySpecialChars = mProv.createAccount(ACCT_EMAIL_SPECIAL_CHARS, PASSWORD, acctAttrsSpecialChars);
         String acctSpecialCharsDn = ACCT_NAMING_ATTR + "=" + ACCT_USER_SPECIAL_CHARS + ".mailuser" + "," + ACCT_BASE_DN;
         mCustomProvTester.verifyDn(entrySpecialChars, acctSpecialCharsDn);
         Account entryGot = mProv.get(Provisioning.AccountBy.name, ACCT_EMAIL_SPECIAL_CHARS);
@@ -646,7 +661,7 @@ public class TestProvisioning extends TestCase {
         // get account by alias
         entryGot = mProv.get(Provisioning.AccountBy.name, ACCT_ALIAS_IN_OTHER_DOMAIN_EMAIL);
         if (mCustomProvTester.isCustom())
-            assertEquals(entryGot, null);
+            assertEquals(null, entryGot);
         else
             verifySameEntry(entry, entryGot);        
                 
@@ -712,7 +727,7 @@ public class TestProvisioning extends TestCase {
             verifyEntriesByName(list, new String[]{NEW_EMAIL_IN_OTHER_DOMAIN}, true);
             // make sure the alias is now moved to the other domain and there shouldn't be any let in the old domain
             list = searchAliasesInDomain(domain);
-            assertEquals(list.size(), 0);
+            assertEquals(0, list.size());
             // make sure both aliases are now in the other doamin
             list = searchAliasesInDomain(otherDomain);
             verifyEntriesByName(list, new String[]{ACCT_ALIAS_AFTER_ACCOUNT_RENAME_TO_OTHER_DMAIN_EMAIL,
@@ -737,7 +752,7 @@ public class TestProvisioning extends TestCase {
         } else {
             // now, both aliases should be moved to the orig domain
             list = searchAliasesInDomain(otherDomain);
-            assertEquals(list.size(), 0);
+            assertEquals(0, list.size());
             list = searchAliasesInDomain(domain);
             verifyEntriesByName(list, new String[]{ACCT_ALIAS_EMAIL,
                                 ACCT_ALIAS_IN_OTHER_DOMAIN_AFTER_ACCOUNT_RENAME_TO_ORIG_DOMAIN_EMAIL}, true);
@@ -751,9 +766,9 @@ public class TestProvisioning extends TestCase {
             mProv.removeAlias(entry, ACCT_ALIAS_IN_OTHER_DOMAIN_AFTER_ACCOUNT_RENAME_TO_ORIG_DOMAIN_EMAIL);
         }
         list = searchAliasesInDomain(domain);
-        assertEquals(list.size(), 0);
+        assertEquals(0, list.size());
         list = searchAliasesInDomain(otherDomain);
-        assertEquals(list.size(), 0);
+        assertEquals(0, list.size());
         
         // set cos
         mProv.setCOS(entry, cos);
@@ -774,7 +789,7 @@ public class TestProvisioning extends TestCase {
         System.out.println("Testing calendar resource");
         
         Map<String, Object> crAttrs = new HashMap<String, Object>();
-        mCustomProvTester.addAttr(crAttrs, "ldap.baseDn", ACCT_BASE_DN);
+        mCustomProvTester.addAttr(crAttrs, "ldap.baseDN", ACCT_BASE_DN);
         mCustomProvTester.addAttr(crAttrs, ACCT_NAMING_ATTR, CR_USER + ".mailuser");
         crAttrs.put(Provisioning.A_displayName, CR_USER);
         crAttrs.put(Provisioning.A_zimbraCalResType, "Equipment");
@@ -807,7 +822,7 @@ public class TestProvisioning extends TestCase {
         System.out.println("Testing distribution list");
         
         Map<String, Object> dlAttrs = new HashMap<String, Object>();
-        mCustomProvTester.addAttr(dlAttrs, "ldap.baseDn", ACCT_BASE_DN);
+        mCustomProvTester.addAttr(dlAttrs, "ldap.baseDN", ACCT_BASE_DN);
         mCustomProvTester.addAttr(dlAttrs, ACCT_NAMING_ATTR, DL_USER + ".mailuser");
         DistributionList entry = mProv.createDistributionList(DL_EMAIL, dlAttrs);
         
@@ -821,36 +836,46 @@ public class TestProvisioning extends TestCase {
         verifySameEntry(entry, entryGot);
         
         Map<String, Object> dlNestedAttrs = new HashMap<String, Object>();
-        mCustomProvTester.addAttr(dlNestedAttrs, "ldap.baseDn", ACCT_BASE_DN);
+        mCustomProvTester.addAttr(dlNestedAttrs, "ldap.baseDN", ACCT_BASE_DN);
         mCustomProvTester.addAttr(dlNestedAttrs, ACCT_NAMING_ATTR, DL_NESTED_USER + ".mailuser");
         DistributionList dlNested = mProv.createDistributionList(DL_NESTED_EMAIL, dlNestedAttrs);
         mProv.addAlias(dlNested, DL_NESTED_ALIAS_EMAIL);
         
-        // dl with special chars
+        /*
+         * dl with special chars
+         */ 
+        // first, temporarily set the default domain to the special char domain if we are
+        // custom DIT.
+        String curDefaultDomain = mProv.getConfig().getAttr(Provisioning.A_zimbraDefaultDomainName);
+        if (mCustomProvTester.isCustom())
+            setDefaultDomain(DOMAIN_NAME_SPECIAL_CHARS);
         Map<String, Object> dlAttrsSpecialChars = new HashMap<String, Object>();
-        mCustomProvTester.addAttr(dlAttrsSpecialChars, "ldap.baseDn", ACCT_BASE_DN);
+        mCustomProvTester.addAttr(dlAttrsSpecialChars, "ldap.baseDN", ACCT_BASE_DN);
         mCustomProvTester.addAttr(dlAttrsSpecialChars, ACCT_NAMING_ATTR, DL_USER_SPECIAL_CHARS + ".mailuser");
-        DistributionList dlSpecilaChars = mProv.createDistributionList(DL_EMAIL_SPECIAL_CHARS, dlNestedAttrs);
+        DistributionList dlSpecilaChars = mProv.createDistributionList(DL_EMAIL_SPECIAL_CHARS, dlAttrsSpecialChars);
         entryGot = mProv.get(Provisioning.DistributionListBy.name, DL_EMAIL_SPECIAL_CHARS);
         verifySameEntry(dlSpecilaChars, entryGot);
+        // set back the orig default domain
+        if (mCustomProvTester.isCustom())
+            setDefaultDomain(curDefaultDomain);
         
         mProv.addMembers(entry, new String[]{DL_NESTED_EMAIL});
         mProv.addMembers(dlNested, new String[]{ACCT_EMAIL});
         
         List list = mProv.getAllDistributionLists(domain);
-        verifyEntries(list, new NamedEntry[]{entry, dlNested}, true);
+        verifyEntries(list, new NamedEntry[]{entry, dlNested, dlSpecilaChars}, true);
         
         Account account = mProv.get(Provisioning.AccountBy.name, ACCT_EMAIL);
         Set<String> set = mProv.getDistributionLists(account);
-        assertEquals(set.size(), 2);
+        assertEquals(2, set.size());
         assertTrue(set.contains(entry.getId()));
         assertTrue(set.contains(dlNested.getId()));
         
         Map<String, String> via = new HashMap<String, String>();
         list = mProv.getDistributionLists(account, false, via);
         verifyEntries(list, new NamedEntry[]{entry, dlNested}, true);
-        assertEquals(via.size(), 1);
-        assertEquals(via.get(entry.getName()), dlNested.getName());
+        assertEquals(1, via.size());
+        assertEquals(dlNested.getName(), via.get(entry.getName()));
         
         list = mProv.getDistributionLists(account, true, null);
         verifyEntries(list, new NamedEntry[]{dlNested}, true);
@@ -909,7 +934,7 @@ public class TestProvisioning extends TestCase {
         verifySameEntry(entry, entryGot);
         Identity defaultIdentity = mProv.get(account, Provisioning.IdentityBy.name, Provisioning.DEFAULT_IDENTITY_NAME);
         verifySameId(account, defaultIdentity);
-        assertEquals(defaultIdentity.getName(), Provisioning.DEFAULT_IDENTITY_NAME);
+        assertEquals(Provisioning.DEFAULT_IDENTITY_NAME, defaultIdentity.getName());
         
         List list = mProv.getAllIdentities(account);
         verifyEntries(list, new NamedEntry[]{defaultIdentity, entry}, true);
@@ -931,7 +956,7 @@ public class TestProvisioning extends TestCase {
             mProv.modifyAttrs(entry, attrsToMod, true);
             fail("ServiceException.INVALID_REQUEST not thrown"); // should not come to here
         } catch (ServiceException e) {
-            assertEquals(e.getCode(), ServiceException.INVALID_REQUEST);
+            assertEquals(ServiceException.INVALID_REQUEST, e.getCode());
         }
     
         attrsToMod.clear();
@@ -943,7 +968,7 @@ public class TestProvisioning extends TestCase {
             String namingAttr = mLdapProv.getNamingRdnAttr(entry);
             if (!namingAttr.equals(Provisioning.A_cn)) {
                 String cnValue = entry.getAttr(Provisioning.A_cn);
-                assertEquals(cnValue, ACCT_FULL_NAME);
+                assertEquals(ACCT_FULL_NAME, cnValue);
             }
         }
         
@@ -953,25 +978,27 @@ public class TestProvisioning extends TestCase {
     private void galTest(Domain domain) throws Exception {
         System.out.println("Testing gal");
         
-        String query = ACCT_EMAIL.substring(0, 3);
+        String query = ACCT_USER;
         Account acct = mProv.get(Provisioning.AccountBy.name, ACCT_EMAIL);
         
+        // auto complete Gal
         Provisioning.SearchGalResult galResult = mProv.autoCompleteGal(domain, 
-                                                                      query,
-                                                                      Provisioning.GAL_SEARCH_TYPE.ALL, 
-                                                                      100);
+                                                                       query,
+                                                                       Provisioning.GAL_SEARCH_TYPE.ALL, 
+                                                                       100);
 
         List<GalContact> matches = galResult.matches;
-        assertEquals(matches.size(), 1);
-        assertEquals(matches.get(0).getAttrs().get("fullName"), ACCT_FULL_NAME);
+        assertEquals(1, matches.size());
+        assertEquals(ACCT_FULL_NAME, matches.get(0).getAttrs().get("fullName"));
         
+        // search  gal
         galResult = mProv.searchGal(domain, 
-                                   query,
-                                   Provisioning.GAL_SEARCH_TYPE.ALL, 
-                                   null);
+                                    query,
+                                    Provisioning.GAL_SEARCH_TYPE.ALL, 
+                                    null);
         matches = galResult.matches;
-        assertEquals(matches.size(), 1);
-        assertEquals(matches.get(0).getAttrs().get("fullName"), ACCT_FULL_NAME);
+        assertEquals(1, matches.size());
+        assertEquals(ACCT_FULL_NAME, matches.get(0).getAttrs().get("fullName"));
     }
     
     private void searchTest(Domain domain) throws Exception {
@@ -1062,13 +1089,20 @@ public class TestProvisioning extends TestCase {
         mProv.deleteDataSource(account, dataSource.getId());
         
         // delete DLs
-        for (DistributionList dl : distributionLists)
+        for (DistributionList dl : distributionLists) {
+            // so much trouble for DL if the domain is not the default doamin
+            // we temporarily changed the default domain to the special char 
+            // domain  in diestributionListTest so that it can be created.
+            // now we have to do the same hack to it can be removed!!!
+            String defaultDomain = mProv.getConfig().getAttr(Provisioning.A_zimbraDefaultDomainName);
+            if (mCustomProvTester.isCustom() && dl.getDomainName().equals(DOMAIN_NAME_SPECIAL_CHARS))
+                setDefaultDomain(DOMAIN_NAME_SPECIAL_CHARS);
+            
             mProv.deleteDistributionList(dl.getId());
-        /*
-        mProv.deleteDistributionList(distributionLists[2].getId());
-        mProv.deleteDistributionList(distributionLists[1].getId());
-        mProv.deleteDistributionList(distributionLists[0].getId());
-        */
+            
+            if (mCustomProvTester.isCustom() && dl.getDomainName().equals(DOMAIN_NAME_SPECIAL_CHARS))
+                setDefaultDomain(defaultDomain);
+        }
         
         mProv.deleteCalendarResource(calendarResource.getId());
         

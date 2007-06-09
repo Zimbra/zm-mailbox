@@ -66,7 +66,7 @@ public class LdapDIT {
     protected final String DEFAULT_BASE_RDN_SERVER       = "cn=servers";
     protected final String DEFAULT_BASE_RDN_ZIMLET       = "cn=zimlets";
     
-    protected final String DEFAULT_NAMING_RDN_ATTR_ACCOUNT       = "uid";
+    protected final String DEFAULT_NAMING_RDN_ATTR_USER      = "uid";
     protected final String DEFAULT_NAMING_RDN_ATTR_COS           = "cn";
     protected final String DEFAULT_NAMING_RDN_ATTR_GLOBALCONFIG  = "cn";
     protected final String DEFAULT_NAMING_RDN_ATTR_MIME          = "cn";
@@ -86,7 +86,7 @@ public class LdapDIT {
     protected String BASE_DN_SERVER;
     protected String BASE_DN_ZIMLET;
      
-    protected String NAMING_RDN_ATTR_ACCOUNT;
+    protected String NAMING_RDN_ATTR_USER;
     protected String NAMING_RDN_ATTR_COS;
     protected String NAMING_RDN_ATTR_GLOBALCONFIG;
     protected String NAMING_RDN_ATTR_MIME;
@@ -109,7 +109,7 @@ public class LdapDIT {
 
         BASE_RDN_ACCOUNT  = DEFAULT_BASE_RDN_ACCOUNT;
 
-        NAMING_RDN_ATTR_ACCOUNT       = DEFAULT_NAMING_RDN_ATTR_ACCOUNT;
+        NAMING_RDN_ATTR_USER      = DEFAULT_NAMING_RDN_ATTR_USER;
         NAMING_RDN_ATTR_COS           = DEFAULT_NAMING_RDN_ATTR_COS;
         NAMING_RDN_ATTR_GLOBALCONFIG  = DEFAULT_NAMING_RDN_ATTR_GLOBALCONFIG;
         NAMING_RDN_ATTR_MIME          = DEFAULT_NAMING_RDN_ATTR_MIME;
@@ -128,7 +128,7 @@ public class LdapDIT {
     private final void verify() {
         if (BASE_DN_CONFIG_BRANCH == null ||
             BASE_RDN_ACCOUNT == null ||
-            NAMING_RDN_ATTR_ACCOUNT == null ||
+            NAMING_RDN_ATTR_USER == null ||
             NAMING_RDN_ATTR_COS == null ||
             NAMING_RDN_ATTR_GLOBALCONFIG == null ||
             NAMING_RDN_ATTR_MIME == null ||
@@ -156,11 +156,11 @@ public class LdapDIT {
      * ===========
      */
     public String accountNamingRdnAttr() {
-        return NAMING_RDN_ATTR_ACCOUNT;
+        return NAMING_RDN_ATTR_USER;
     }
 
     private String emailToDN(String localPart, String domain) throws ServiceException {
-        return NAMING_RDN_ATTR_ACCOUNT + "=" + LdapUtil.escapeRDNValue(localPart) + "," + domainToAccountBaseDN(domain);
+        return NAMING_RDN_ATTR_USER + "=" + LdapUtil.escapeRDNValue(localPart) + "," + domainToAccountBaseDN(domain);
     }
     
     private String emailToDN(String email) throws ServiceException {
@@ -219,7 +219,7 @@ public class LdapDIT {
     }
     
     public String adminNameToDN(String name) {
-        return NAMING_RDN_ATTR_ACCOUNT + "=" + LdapUtil.escapeRDNValue(name) + "," + BASE_DN_ADMIN;
+        return NAMING_RDN_ATTR_USER + "=" + LdapUtil.escapeRDNValue(name) + "," + BASE_DN_ADMIN;
     }
   
     
@@ -273,6 +273,28 @@ public class LdapDIT {
      *   domain
      * ==========
      */
+    /**
+     * Given a domain like foo.com, return an array of dns that work their way up the tree:
+     *    [0] = dc=foo,dc=com
+     *    [1] = dc=com
+     * 
+     * @return the array of DNs
+     */
+    public String[] domainToDNs(String[] parts) {
+        return domainToDNsInternal(parts, null);
+    }
+    
+    protected String[] domainToDNsInternal(String[] parts, String base) {
+        String dns[] = new String[parts.length];
+        for (int i=parts.length-1; i >= 0; i--) {
+            dns[i] = LdapUtil.domainToDN(parts, i);
+            if (base != null)
+                dns[i] = dns[i] + "," + base;
+        }
+        return dns;
+    }
+    
+    
     // account base search dn
     public String domainToAccountSearchDN(String domain) throws ServiceException {
         return domainDNToAccountBaseDN(LdapUtil.domainToDN(domain));
@@ -295,7 +317,7 @@ public class LdapDIT {
         else
             return BASE_RDN_ACCOUNT + "," + domainDN;
     }
-
+    
     
     /*
      * ==============
@@ -362,7 +384,7 @@ public class LdapDIT {
         if (entry instanceof Account ||
             entry instanceof DistributionList ||
             entry instanceof Alias)
-            return NAMING_RDN_ATTR_ACCOUNT;
+            return NAMING_RDN_ATTR_USER;
         else if (entry instanceof Cos)
             return NAMING_RDN_ATTR_COS;
         else if (entry instanceof Config) 

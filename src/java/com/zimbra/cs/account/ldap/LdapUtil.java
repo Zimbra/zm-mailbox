@@ -626,7 +626,7 @@ public class LdapUtil {
         }
     }
 
-    private static String domainToDN(String parts[], int offset) {
+    public static String domainToDN(String parts[], int offset) {
         StringBuffer sb = new StringBuffer(128);
         for (int i=offset; i < parts.length; i++) {
             if (i-offset > 0) sb.append(",");
@@ -694,21 +694,6 @@ public class LdapUtil {
             }
         }
         return uid;
-    }
-    
-    /**
-     * Given a domain like foo.com, return an array of dns that work their way up the tree:
-     *    [0] = dc=foo,dc=com
-     *    [1] = dc=com
-     * 
-     * @return the array of DNs
-     */
-    public static String[] domainToDNs(String[] parts) {
-        String dns[] = new String[parts.length];
-        for (int i=parts.length-1; i >= 0; i--) {
-            dns[i] = domainToDN(parts, i);
-        }
-        return dns;
     }
     
     

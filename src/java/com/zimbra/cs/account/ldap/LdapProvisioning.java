@@ -1287,7 +1287,7 @@ public class LdapProvisioning extends Provisioning {
             domainAttrs.put(A_zimbraDomainType, domainType);
             
             String parts[] = name.split("\\.");        
-            String dns[] = LdapUtil.domainToDNs(parts);
+            String dns[] = mDIT.domainToDNs(parts);
             createParentDomains(ctxt, parts, dns);
             
             Attributes attrs = new BasicAttributes(true);
