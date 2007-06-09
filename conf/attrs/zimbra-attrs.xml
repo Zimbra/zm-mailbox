@@ -2241,4 +2241,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether to login to the IM client automatically</desc>
 </attr>
 
+<attr id="489" name="zimbraFeatureMailEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>email features enabled</desc>
+</attr>
+
+
 </attrs>

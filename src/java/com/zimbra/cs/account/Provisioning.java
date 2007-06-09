@@ -651,6 +651,8 @@ public abstract class Provisioning {
     public static final String A_zimbraAllowAnyFromAddress = "zimbraAllowAnyFromAddress";
 
     public static final String A_zimbraAllowFromAddress = "zimbraAllowFromAddress";
+    
+    public static final String A_zimbraFeatureMailEnabled = "zimbraFeatureMailEnabled";
 
     public static final String A_zimbraFeatureContactsEnabled = "zimbraFeatureContactsEnabled";
 
