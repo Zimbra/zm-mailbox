@@ -729,14 +729,16 @@ public final class MailboxIndex
         if (DebugConfig.disableIndexing)
             return;
         
+        List<MailboxIndex> toFlush;
         synchronized(sOpenIndexWriters) {
-            LinkedHashMap<MailboxIndex, MailboxIndex> tmp = sOpenIndexWriters;
-            sOpenIndexWriters = new LinkedHashMap<MailboxIndex, MailboxIndex>();
-            for (MailboxIndex idx : tmp.keySet()) {
-                idx.closeIndexWriter();
-            }
-            sOpenIndexWriters.clear();
+        	toFlush = new ArrayList<MailboxIndex>(sOpenIndexWriters.size());
+        	toFlush.addAll(sOpenIndexWriters.keySet());
         }
+        
+        for (MailboxIndex idx : toFlush) {
+        	idx.closeIndexWriter();	
+        }
+        
     }
 
     /**
