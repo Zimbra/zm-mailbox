@@ -148,9 +148,6 @@ public class LC {
     public static final KnownKey ldap_cache_zimlet_maxsize;
     public static final KnownKey ldap_cache_zimlet_maxage;
     
-    public static final KnownKey ldap_config_base_dn;
-    public static final KnownKey ldap_account_base_rdn;
-
     public static final KnownKey mysql_directory;
     public static final KnownKey mysql_data_directory;
     public static final KnownKey mysql_socket;
@@ -526,14 +523,6 @@ public class LC {
         ldap_cache_zimlet_maxage = 
             new KnownKey("ldap_cache_zimlet_maxage", "15", "Maximum age (in minutes) of zimlet objects in cache.");        
 
-        ldap_config_base_dn = new KnownKey("ldap_config_base_dn");
-        ldap_config_base_dn.setDefault("cn=zimbra");
-        ldap_config_base_dn.setDoc("LDAP base dn for the config branch");
-        
-        ldap_account_base_rdn = new KnownKey("ldap_account_base_rdn");
-        ldap_account_base_rdn.setDefault("ou=people");
-        ldap_account_base_rdn.setDoc("LDAP base RDN for accounts");
-        
         mysql_directory = new KnownKey("mysql_directory");
         mysql_directory.setDefault("${zimbra_home}" + FS + "mysql");
         mysql_directory.setDoc("Location of MySQL installation.");
