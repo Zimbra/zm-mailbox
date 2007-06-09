@@ -689,20 +689,22 @@ public final class MailboxIndex
 
         flushAllWriters();
     }
+    
 
     public static void flushAllWriters() {
         if (DebugConfig.disableIndexing)
             return;
-
+        
         sLog.info("Flushing all open index writers");
         
+        List<MailboxIndex> toFlush;
         synchronized(sOpenIndexWriters) {
-            LinkedHashMap<MailboxIndex, MailboxIndex> tmp = sOpenIndexWriters;
-            sOpenIndexWriters = new LinkedHashMap<MailboxIndex, MailboxIndex>();
-            for (MailboxIndex idx : tmp.keySet()) {
-                idx.closeIndexWriter();
-            }
-            sOpenIndexWriters.clear();
+        	toFlush = new ArrayList<MailboxIndex>(sOpenIndexWriters.size());
+        	toFlush.addAll(sOpenIndexWriters.keySet());
+        }
+        
+        for (MailboxIndex idx : toFlush) {
+        	idx.closeIndexWriter();	
         }
     }
 
