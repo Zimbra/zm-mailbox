@@ -47,6 +47,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.service.admin.AdminDocumentHandler;
 import com.zimbra.cs.session.Session;
@@ -358,6 +359,8 @@ public class SoapEngine {
     private Element generateResponseHeader(ZimbraSoapContext zsc) {
         String authAccountId = zsc.getAuthtokenAccountId();
         Element ctxt = null;
+        ctxt = zsc.createElement(HeaderConstants.CONTEXT);
+        boolean foundSessionForRequestedAccount = false;
         try {
             for (SessionInfo sinfo : zsc.getReferencedSessions()) {
                 Session session = SessionCache.lookup(sinfo.sessionId, authAccountId);
@@ -365,17 +368,32 @@ public class SoapEngine {
                     continue;
 
                 // session ID is valid, so ping it back to the client:
-                if (ctxt == null)
-                    ctxt = zsc.createElement(HeaderConstants.CONTEXT);
                 ZimbraSoapContext.encodeSession(ctxt, session.getSessionId(), session.getSessionType(), false);
 
                 if (session instanceof SoapSession) {
+                    if (session.getMailbox().getAccountId().equals(zsc.getRequestedAccountId()))
+                        foundSessionForRequestedAccount = true;
                     // put <refresh> blocks back for any newly-created SoapSession objects
                     if (sinfo.created)
                         ((SoapSession) session).putRefresh(zsc, ctxt);
                     // put <notify> blocks back for any SoapSession objects
                     ((SoapSession) session).putNotifications(zsc, ctxt, sinfo.sequence);
                 }
+            }
+            
+            // bug: 17481 if <nosession> is specified, then the SessionInfo list will be empty...but
+            // we still want to encode the <change> element at least for the directly-requested accountId...
+            // so encode it here as a last resort
+            if (!foundSessionForRequestedAccount && zsc.getRequestedAccountId()!=null) {
+                String explicitAcct = zsc.getRequestedAccountId().equals(zsc.getAuthtokenAccountId()) ? 
+                    null : zsc.getRequestedAccountId();
+                // send the <change> block
+                // <change token="555" [acct="4f778920-1a84-11da-b804-6b188d2a20c4"]/>
+                Mailbox mbox = DocumentHandler.getRequestedMailbox(zsc);
+                if (mbox != null)
+                    ctxt.addUniqueElement(HeaderConstants.E_CHANGE)
+                    .addAttribute(HeaderConstants.A_CHANGE_ID, mbox.getLastChangeID())
+                    .addAttribute(HeaderConstants.A_ACCOUNT_ID, explicitAcct);
             }
 //          if (ctxt != null && mAuthToken != null)
 //              ctxt.addAttribute(E_AUTH_TOKEN, mAuthToken.toString(), Element.DISP_CONTENT);
