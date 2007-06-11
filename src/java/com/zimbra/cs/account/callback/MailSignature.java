@@ -33,6 +33,7 @@ import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Signature;
  
 public class MailSignature implements AttributeCallback {
 
@@ -45,13 +46,16 @@ public class MailSignature implements AttributeCallback {
         if (!(value instanceof String))
             throw ServiceException.INVALID_REQUEST(Provisioning.A_zimbraPrefMailSignature + " is a single-valued attribute", null);
         
-        if (!((entry instanceof Account)||(entry instanceof Identity))) return;
+        if (!((entry instanceof Account)||(entry instanceof Identity)||(entry instanceof Signature))) 
+            return;
         
         Account account;
         if (entry instanceof Account)
             account = (Account)entry;
         else if (entry instanceof Identity)
             account = ((Identity)entry).getAccount();
+        else if (entry instanceof Signature)
+            account = ((Signature)entry).getAccount();
         else
             return;
             

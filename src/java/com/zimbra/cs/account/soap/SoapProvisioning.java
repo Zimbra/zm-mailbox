@@ -64,6 +64,7 @@ import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.httpclient.URLUtil;
@@ -1271,6 +1272,44 @@ public class SoapProvisioning extends Provisioning {
         addAttrElementsMailService(identity, attrs);
         invokeOnTargetAccount(req, account.getId());
     }
+    
+    @Override
+    public Signature createSignature(Account account, String signatureName, Map<String, Object> attrs) throws ServiceException {
+        XMLElement req = new XMLElement(AccountConstants.CREATE_SIGNATURE_REQUEST);
+        Element signature = req.addElement(AccountConstants.E_SIGNATURE);
+        signature.addAttribute(AccountConstants.A_NAME, signatureName);
+        addAttrElementsMailService(signature, attrs);
+        Element response = invokeOnTargetAccount(req, account.getId()).getElement(AccountConstants.E_SIGNATURE);
+        return new SoapSignature(account, response);
+    }
+    
+    @Override
+    public void modifySignature(Account account, String signatureName, Map<String, Object> attrs) throws ServiceException {
+        XMLElement req = new XMLElement(AccountConstants.MODIFY_SIGNATURE_REQUEST);
+        Element signature = req.addElement(AccountConstants.E_SIGNATURE);
+        signature.addAttribute(AccountConstants.A_NAME, signatureName);
+        addAttrElementsMailService(signature, attrs);
+        invokeOnTargetAccount(req, account.getId());
+    }
+    
+    @Override
+    public void deleteSignature(Account account, String signatureName) throws ServiceException {
+        XMLElement req = new XMLElement(AccountConstants.DELETE_SIGNATURE_REQUEST);
+        Element signature = req.addElement(AccountConstants.E_SIGNATURE);
+        signature.addAttribute(AccountConstants.A_NAME, signatureName);
+        invokeOnTargetAccount(req, account.getId());
+    }
+
+    @Override
+    public List<Signature> getAllSignatures(Account account) throws ServiceException {
+        List<Signature> result = new ArrayList<Signature>();
+        XMLElement req = new XMLElement(AccountConstants.GET_SIGNATURES_REQUEST);
+        Element resp = invokeOnTargetAccount(req, account.getId());
+        for (Element signature: resp.listElements(AccountConstants.E_SIGNATURE)) {
+            result.add(new SoapSignature(account, signature));
+        }
+        return result;
+    }
 
     @Override
     public DataSource createDataSource(Account account, DataSource.Type dsType, String dsName, Map<String, Object> attrs) throws ServiceException {
@@ -1353,6 +1392,26 @@ public class SoapProvisioning extends Provisioning {
             for (Identity identity : getAllIdentities(account))
                 if (identity.getId().equalsIgnoreCase(key)) 
                     return identity;
+            return null;            
+        default: 
+            return null;
+            
+        }
+    }
+    
+    @Override
+    public Signature get(Account account, SignatureBy keyType, String key) throws ServiceException {
+        // TOOD: more efficient version and/or caching on account?
+        switch (keyType) {
+        case name:
+            for (Signature signature : getAllSignatures(account))
+                if (signature.getName().equalsIgnoreCase(key)) 
+                    return signature;
+            return null;
+        case id:
+            for (Signature signature : getAllSignatures(account))
+                if (signature.getId().equalsIgnoreCase(key)) 
+                    return signature;
             return null;            
         default: 
             return null;

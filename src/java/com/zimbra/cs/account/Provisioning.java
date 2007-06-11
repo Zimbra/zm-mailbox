@@ -699,6 +699,8 @@ public abstract class Provisioning {
     public static final String A_zimbraFeatureNewMailNotificationEnabled = "zimbraFeatureNewMailNotificationEnabled";
 
     public static final String A_zimbraFeatureIdentitiesEnabled = "zimbraFeatureIdentitiesEnabled";
+    
+    public static final String A_zimbraFeatureSignaturesEnabled = "zimbraFeatureSignaturesEnabled";
 
     public static final String A_zimbraFeaturePop3DataSourceEnabled = "zimbraFeaturePop3DataSourceEnabled";
     
@@ -899,7 +901,11 @@ public abstract class Provisioning {
     public static final String A_zimbraPrefIdentityId = "zimbraPrefIdentityId";
     public static final String A_zimbraPrefIdentityName = "zimbraPrefIdentityName";
     
+    public static final String A_zimbraPrefSignatureId = "zimbraPrefSignatureId";
+    public static final String A_zimbraPrefSignatureName = "zimbraPrefSignatureName";
+    
     public static final String DEFAULT_IDENTITY_NAME = "DEFAULT";
+    public static final String DEFAULT_SIGNATURE_NAME = "DEFAULT";
     
     /**
      * delete appointment invite (from our inbox) when we've replied to it?
@@ -983,7 +989,8 @@ public abstract class Provisioning {
     public static final String A_zimbraMailSpamLifetime = "zimbraMailSpamLifetime";
     public static final String A_zimbraMailMessageLifetime = "zimbraMailMessageLifetime";
     public static final String A_zimbraContactMaxNumEntries = "zimbraContactMaxNumEntries";
-    public static final String A_zimbraIdentityMaxNumEntries = "zimbraIdentityMaxNumEntries";    
+    public static final String A_zimbraIdentityMaxNumEntries = "zimbraIdentityMaxNumEntries";
+    public static final String A_zimbraSignatureMaxNumEntries = "zimbraSignatureMaxNumEntries";
     public static final String A_zimbraAuthTokenLifetime = "zimbraAuthTokenLifetime";
     public static final String A_zimbraAdminAuthTokenLifetime = "zimbraAdminAuthTokenLifetime";
     public static final String A_zimbraMailMinPollingInterval =  "zimbraMailMinPollingInterval";
@@ -2030,7 +2037,7 @@ public abstract class Provisioning {
     }
     
     public abstract Identity createIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException;
-    
+
     public abstract void modifyIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException;
     
     public abstract void deleteIdentity(Account account, String identityName) throws ServiceException;
@@ -2038,6 +2045,46 @@ public abstract class Provisioning {
     public abstract List<Identity> getAllIdentities(Account account) throws ServiceException;
     
     public abstract Identity get(Account account, IdentityBy keyType, String key) throws ServiceException;
+    
+    // signatures
+    public static enum SignatureBy {
+        
+        id, name;
+        
+        public static SignatureBy fromString(String s) throws ServiceException {
+            try {
+                return SignatureBy.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
+            }
+        }
+    }
+    
+    public Signature getDefaultSignature(Account account) throws ServiceException {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        Set<String> signatureAttrs = AttributeManager.getInstance().getAttrsInClass(AttributeClass.signature);
+        
+        for (String name : signatureAttrs) {
+            String value = account.getAttr(name, null);
+            if (value != null) attrs.put(name, value);            
+        }
+        if (attrs.get(A_zimbraPrefSignatureName) == null)
+            attrs.put(A_zimbraPrefSignatureName, DEFAULT_SIGNATURE_NAME);
+
+        attrs.put(A_zimbraPrefSignatureId, account.getId());
+        
+        return new Signature(account, DEFAULT_SIGNATURE_NAME, account.getId(), attrs);        
+    }
+    
+    public abstract Signature createSignature(Account account, String signatureName, Map<String, Object> attrs) throws ServiceException;
+    
+    public abstract void modifySignature(Account account, String signatureName, Map<String, Object> attrs) throws ServiceException;
+    
+    public abstract void deleteSignature(Account account, String signatureName) throws ServiceException;
+    
+    public abstract List<Signature> getAllSignatures(Account account) throws ServiceException;
+    
+    public abstract Signature get(Account account, SignatureBy keyType, String key) throws ServiceException;
     
     // data sources
     public static enum DataSourceBy {
@@ -2063,7 +2110,7 @@ public abstract class Provisioning {
     public abstract List<DataSource> getAllDataSources(Account account) throws ServiceException;
     
     /**
-     * Looks up an identity by the specified key.
+     * Looks up a data source by the specified key.
      * 
      * @return the <code>DataSource</code>, or <code>null</code> if no <code>DataSource</code>
      * with the given key exists.

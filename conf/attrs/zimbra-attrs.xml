@@ -1044,7 +1044,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether or not to compose in html or text.</desc>
 </attr>
 
-<attr id="218" name="zimbraPrefForwardReplyInOriginalFormat" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="218" name="zimbraPrefForwardReplyInOriginalFormat" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" deprecatedSince="4.5">
+  <deprecateDesc>Deprecated in favor of zimbraPrefForwardReplyFormat</deprecateDesc>
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether or not to use same format (text or html) of message we are replying to</desc>
 </attr>
@@ -2266,5 +2267,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>account default mail signature</desc>
 </attr>    
     
+<attr id="493" name="zimbraSignatureMaxNumEntries" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <defaultCOSValue>20</defaultCOSValue>
+  <desc>maximum number of signatures allowed on an account</desc>
+</attr>
+
+<attr id="494" name="zimbraFeatureSignaturesEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether to allow use of signature feature</desc>
+</attr>
     
 </attrs>

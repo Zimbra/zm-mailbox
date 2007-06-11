@@ -73,6 +73,12 @@ public class AccountService implements DocumentService {
         dispatcher.registerHandler(AccountConstants.MODIFY_IDENTITY_REQUEST, new ModifyIdentity());
         dispatcher.registerHandler(AccountConstants.DELETE_IDENTITY_REQUEST, new DeleteIdentity());
         dispatcher.registerHandler(AccountConstants.GET_IDENTITIES_REQUEST, new GetIdentities());
+        
+        // signature
+        dispatcher.registerHandler(AccountConstants.CREATE_SIGNATURE_REQUEST, new CreateSignature());
+        dispatcher.registerHandler(AccountConstants.MODIFY_SIGNATURE_REQUEST, new ModifySignature());
+        dispatcher.registerHandler(AccountConstants.DELETE_SIGNATURE_REQUEST, new DeleteSignature());
+        dispatcher.registerHandler(AccountConstants.GET_SIGNATURES_REQUEST, new GetSignatures());
 
     }
 

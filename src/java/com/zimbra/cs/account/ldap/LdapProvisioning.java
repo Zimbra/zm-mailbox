@@ -60,6 +60,7 @@ import com.zimbra.cs.account.NamedEntryCache;
 import com.zimbra.cs.account.PreAuthKey;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
@@ -1747,7 +1748,7 @@ public class LdapProvisioning extends Provisioning {
             if (dnChanged) {
                 LdapUtil.createEntry(ctxt, newDn, attributes, "createAccount");         
 
-                // MOVE OVER the account and all identities/sources/etc. doesn't throw an exception, just logs
+                // MOVE OVER the account and all identities/sources/signatures etc. doesn't throw an exception, just logs
                 LdapUtil.moveChildren(ctxt, oldDn, newDn);
             }
             
@@ -3968,6 +3969,239 @@ public class LdapProvisioning extends Provisioning {
         }
     }
     
+    private List<Signature> getSignaturesByQuery(Account acct, LdapEntry entry, String query, DirContext initCtxt) throws ServiceException {
+        DirContext ctxt = initCtxt;
+        List<Signature> result = new ArrayList<Signature>();
+        try {
+            if (ctxt == null)
+                ctxt = LdapUtil.getDirContext();
+            String base = entry.getDN();
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, base, query, sSubtreeSC);
+            while(ne.hasMore()) {
+                SearchResult sr = (SearchResult) ne.next();
+                result.add(new LdapSignature(acct, sr.getNameInNamespace(), sr.getAttributes()));
+            }
+            ne.close();            
+        } catch (NameNotFoundException e) {
+            return null;
+        } catch (InvalidNameException e) {
+            return null;                        
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to lookup signature via query: "+query+ " message: "+e.getMessage(), e);
+        } finally {
+            if (initCtxt == null)
+                LdapUtil.closeContext(ctxt);
+        }
+        return result;
+    }
+
+    private Signature getSignatureByName(Account acct, LdapEntry entry, String name,  DirContext ctxt) throws ServiceException {
+        name = LdapUtil.escapeSearchFilterArg(name);
+        List<Signature> result = getSignaturesByQuery(acct, entry, "(&(zimbraPrefSignatureName="+name+")(objectclass=zimbraSignature))", ctxt); 
+        return result.isEmpty() ? null : result.get(0);
+    }
+
+    private String getSignatureDn(LdapEntry entry, String name) {
+        return A_zimbraPrefSignatureName + "=" + LdapUtil.escapeRDNValue(name) + "," + entry.getDN();    
+    }
+
+    private void validateSignatureAttrs(Map<String, Object> attrs) throws ServiceException {
+        Set<String> validAttrs = AttributeManager.getInstance().getLowerCaseAttrsInClass(AttributeClass.signature);
+        for (String key : attrs.keySet()) {
+            if (!validAttrs.contains(key.toLowerCase())) {
+                throw ServiceException.INVALID_REQUEST("unable to modify attr: "+key, null);
+            }
+        }        
+    }
+    
+    private static final String SIGNATURE_LIST_CACHE_KEY = "LdapProvisioning.SIGNATURE_CACHE";
+
+    @Override
+    public Signature createSignature(Account account, String signatureName, Map<String, Object> signatureAttrs) throws ServiceException {
+        removeAttrIgnoreCase("objectclass", signatureAttrs);        
+        validateSignatureAttrs(signatureAttrs);
+
+        LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
+        
+        if (ldapEntry == null) 
+            throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
+        
+        if (signatureName.equalsIgnoreCase(DEFAULT_SIGNATURE_NAME))
+            throw AccountServiceException.SIGNATURE_EXISTS(signatureName);
+        
+        List<Signature> existing = getAllSignatures(account);
+        if (existing.size() >= account.getLongAttr(A_zimbraSignatureMaxNumEntries, 20))
+            throw AccountServiceException.TOO_MANY_SIGNATURES();
+        
+        account.setCachedData(SIGNATURE_LIST_CACHE_KEY, null);
+        
+        HashMap attrManagerContext = new HashMap();
+        AttributeManager.getInstance().preModify(signatureAttrs, null, attrManagerContext, true, true);
+
+        DirContext ctxt = null;
+        try {
+            ctxt = LdapUtil.getDirContext(true);
+
+            String dn = getSignatureDn(ldapEntry, signatureName);
+            
+            Attributes attrs = new BasicAttributes(true);
+            LdapUtil.mapToAttrs(signatureAttrs, attrs);
+            Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, "zimbraSignature");
+
+            String signatureId = LdapUtil.getAttrString(attrs, A_zimbraPrefSignatureId);
+            if (signatureId == null) {
+                signatureId = LdapUtil.generateUUID();
+                attrs.put(A_zimbraPrefSignatureId, signatureId);
+            }
+            
+            LdapUtil.createEntry(ctxt, dn, attrs, "createSignature");
+
+            Signature signature = getSignatureByName(account, ldapEntry, signatureName, ctxt);
+            AttributeManager.getInstance().postModify(signatureAttrs, signature, attrManagerContext, true);
+
+            return signature;
+        } catch (NameAlreadyBoundException nabe) {
+            throw AccountServiceException.SIGNATURE_EXISTS(signatureName);
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to create signature", e);            
+        } finally {
+            LdapUtil.closeContext(ctxt);
+        }
+    }
+
+    @Override
+    public void modifySignature(Account account, String signatureName, Map<String, Object> signatureAttrs) throws ServiceException {
+        removeAttrIgnoreCase("objectclass", signatureAttrs);
+
+        validateSignatureAttrs(signatureAttrs);
+
+        LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
+
+        if (ldapEntry == null) 
+            throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
+
+        // clear cache 
+        account.setCachedData(SIGNATURE_LIST_CACHE_KEY, null);
+        
+        if (signatureName.equalsIgnoreCase(DEFAULT_SIGNATURE_NAME)) {
+            modifyAttrs(account, signatureAttrs);
+        } else {
+            
+            LdapSignature signature = (LdapSignature) getSignatureByName(account, ldapEntry, signatureName, null);
+            if (signature == null)
+                throw AccountServiceException.NO_SUCH_SIGNATURE(signatureName);   
+        
+            String name = (String) signatureAttrs.get(A_zimbraPrefSignatureName);
+            boolean newName = (name != null && !name.equals(signatureName));
+            if (newName) signatureAttrs.remove(A_zimbraPrefSignatureName);
+
+            modifyAttrs(signature, signatureAttrs, true);
+            if (newName) renameSignature(ldapEntry, signature, name);
+            
+        }
+    }
+
+    private void renameSignature(LdapEntry entry, LdapSignature signature, String newSignatureName) throws ServiceException {
+        
+        if (signature.getName().equalsIgnoreCase(DEFAULT_SIGNATURE_NAME))
+            throw ServiceException.INVALID_REQUEST("can't rename default signature", null);        
+        
+        DirContext ctxt = null;
+        try {
+            ctxt = LdapUtil.getDirContext(true);
+            String newDn = getSignatureDn(entry, newSignatureName);            
+            LdapUtil.renameEntry(ctxt, signature.getDN(), newDn);
+        } catch (InvalidNameException e) {
+            throw ServiceException.INVALID_REQUEST("invalid signature name: "+newSignatureName, e);
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to rename signature: "+newSignatureName, e);
+        } finally {
+            LdapUtil.closeContext(ctxt);
+        }
+    }
+
+    @Override
+    public void deleteSignature(Account account, String signatureName) throws ServiceException {
+        LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
+        if (ldapEntry == null) 
+            throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
+
+        if (signatureName.equalsIgnoreCase(DEFAULT_SIGNATURE_NAME))
+            throw ServiceException.INVALID_REQUEST("can't delete default signature", null);
+        
+        account.setCachedData(SIGNATURE_LIST_CACHE_KEY, null);
+        
+        DirContext ctxt = null;
+        try {
+            ctxt = LdapUtil.getDirContext(true);
+            Signature signature = getSignatureByName(account, ldapEntry, signatureName, ctxt);
+            if (signature == null)
+                throw AccountServiceException.NO_SUCH_SIGNATURE(signatureName);
+            String dn = getSignatureDn(ldapEntry, signatureName);            
+            LdapUtil.unbindEntry(ctxt, dn);
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to delete signarure: "+signatureName, e);
+        } finally {
+            LdapUtil.closeContext(ctxt);
+        }
+    }
+    
+    @Override
+    public List<Signature> getAllSignatures(Account account) throws ServiceException {
+        LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
+        if (ldapEntry == null) 
+            throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
+
+        @SuppressWarnings("unchecked")        
+        List<Signature> result = (List<Signature>) account.getCachedData(SIGNATURE_LIST_CACHE_KEY);
+        
+        if (result != null) {
+            return result;
+        }
+        
+        result = getSignaturesByQuery(account, ldapEntry, "(objectclass=zimbraSignature)", null);
+        for (Signature signature: result) {
+            // gross hack for 4.5beta. should be able to remove post 4.5
+            if (signature.getId() == null) {
+                String id = LdapUtil.generateUUID();
+                signature.setId(id);
+                Map<String, Object> newAttrs = new HashMap<String, Object>();
+                newAttrs.put(Provisioning.A_zimbraPrefSignatureId, id);
+                try {
+                    modifySignature(account, signature.getName(), newAttrs);
+                } catch (ServiceException se) {
+                    ZimbraLog.account.warn("error updating signature: "+account.getName()+" "+signature.getName()+" "+se.getMessage(), se);
+                }
+            }
+        }
+        result.add(getDefaultSignature(account));
+        result = Collections.unmodifiableList(result);
+        account.setCachedData(SIGNATURE_LIST_CACHE_KEY, result);
+        return result;
+    }
+
+    @Override
+    public Signature get(Account account, SignatureBy keyType, String key) throws ServiceException {
+        LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
+        if (ldapEntry == null) 
+            throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
+
+        // this assumes getAllSignatures is cached and number of signatures is reasaonble. 
+        // might want a per-signature cache (i.e., use "SIGNATURE_BY_ID_"+id as a key, etc) 
+        switch(keyType) {
+            case id: 
+                for (Signature signature : getAllSignatures(account)) 
+                    if (signature.getId().equals(key)) return signature;
+                return null;
+            case name: 
+                for (Signature signature : getAllSignatures(account)) 
+                    if (signature.getName().equalsIgnoreCase(key)) return signature;
+                return null;             
+            default:
+                return null;
+        }
+    }
+    
     private static final String DATA_SOURCE_LIST_CACHE_KEY = "LdapProvisioning.DATA_SOURCE_CACHE";
     
     private List<DataSource> getDataSourcesByQuery(LdapEntry entry, String query, DirContext initCtxt) throws ServiceException {
@@ -4363,6 +4597,8 @@ public class LdapProvisioning extends Provisioning {
             return ((LdapDomain)entry).getDN();
         else if (entry instanceof LdapIdentity)
             return ((LdapIdentity)entry).getDN();
+        else if (entry instanceof LdapSignature)
+            return ((LdapSignature)entry).getDN();
         else if (entry instanceof LdapServer)
             return ((LdapServer)entry).getDN();
         else if (entry instanceof LdapZimlet)

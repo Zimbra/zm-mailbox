@@ -46,6 +46,8 @@ public class TestProvisioning extends TestCase {
     private String SERVER_NAME;
     private String ZIMLET_NAME;
     
+    private String BASE_DN_PSEUDO_ATTR = "ldap.baseDN";
+    
     private String NEW_NAME;  // for testing rename
     private String NEW_EMAIL; // for testing rename
     private String NEW_EMAIL_IN_OTHER_DOMAIN; // for testing rename to different domain
@@ -64,7 +66,7 @@ public class TestProvisioning extends TestCase {
     private String ACCT_ALIAS_IN_OTHER_DOMAIN_EMAIL;
     private String ACCT_ALIAS_IN_OTHER_DOMAIN_AFTER_ACCOUNT_RENAME_TO_ORIG_DOMAIN_EMAIL;
     private String ACCT_FULL_NAME;
-    
+        
     /*
      * for testing CustomLdapProvisioning where naming rdn attr
      * for account is configured
@@ -91,6 +93,86 @@ public class TestProvisioning extends TestCase {
     
     private String DATA_SOURCE_NAME;
     private String IDENTITY_NAME;
+    private String SIGNATURE_NAME;
+    private String SIGNATURE_VALUE;
+    private String SIGNATURE_VALUE_MODIFIED;
+    
+    public void setUp() throws Exception {
+        mProv = Provisioning.getInstance();
+        
+        // if we are a ldapProvisioning, cast the prov obj and save it once here
+        // ldapProv is used for several LDAP specific tests
+        if (mProv instanceof LdapProvisioning)
+            mLdapProv = (LdapProvisioning)mProv;
+        
+        mCustomProvTester = new CustomProvTester(mProv);
+        
+        Date date = new Date();
+        SimpleDateFormat fmt =  new SimpleDateFormat("yyyyMMdd-HHmmss");
+        TEST_ID = fmt.format(date);
+        
+        PRE_AUTH_KEY = PreAuthKey.generateRandomPreAuthKey();
+        PASSWORD = "test123";
+        
+        SPECIAL_CHARS_ALLOWED_IN_DOMAIN = "/";
+        SPECIAL_CHARS_ALLOWED_IN_USER_PART = "/";
+        
+        COS_NAME = "cos-" + TEST_ID;
+        DOMAIN_NAME = "domain-" + TEST_ID + ".ldap-test-domain";
+        DOMAIN_NAME_SPECIAL_CHARS = "domain-" + SPECIAL_CHARS_ALLOWED_IN_DOMAIN + "-" + TEST_ID + ".ldap-test-domain";
+        OTHER_DOMAIN_NAME = "other-" + DOMAIN_NAME;
+        SERVER_NAME = "server-" + TEST_ID;
+        ZIMLET_NAME = "zimlet-" + TEST_ID;
+        
+        NEW_NAME = "newname";
+        NEW_EMAIL = NEW_NAME + "-" + TEST_ID + "@" + DOMAIN_NAME;
+        NEW_EMAIL_IN_OTHER_DOMAIN = NEW_NAME + "-" + TEST_ID + "@" + OTHER_DOMAIN_NAME;
+        
+        DEFAULT_LDAP_ADMIN_USER = LC.zimbra_ldap_user.value();
+        ADMIN_USER =  "admin";
+        ADMIN_EMAIL = ADMIN_USER + "@" + DOMAIN_NAME;
+        ACCT_USER = "acct-1";
+        ACCT_EMAIL = ACCT_USER + "@" + DOMAIN_NAME;
+        ACCT_USER_SPECIAL_CHARS = "acct-special-chars-" + SPECIAL_CHARS_ALLOWED_IN_USER_PART;
+        ACCT_EMAIL_SPECIAL_CHARS = ACCT_USER_SPECIAL_CHARS + "@" + DOMAIN_NAME_SPECIAL_CHARS;
+        ACCT_ALIAS_USER = "alias-of-" + ACCT_USER;
+        ACCT_ALIAS_EMAIL = ACCT_ALIAS_USER + "@" + DOMAIN_NAME;
+        ACCT_ALIAS_AFTER_ACCOUNT_RENAME_TO_OTHER_DMAIN_EMAIL = ACCT_ALIAS_USER + "@" + OTHER_DOMAIN_NAME;
+        ACCT_ALIAS_IN_OTHER_DOMAIN_USER = ACCT_ALIAS_USER + "-in-other-domain";
+        ACCT_ALIAS_IN_OTHER_DOMAIN_EMAIL = ACCT_ALIAS_IN_OTHER_DOMAIN_USER + "@" + OTHER_DOMAIN_NAME;
+        ACCT_ALIAS_IN_OTHER_DOMAIN_AFTER_ACCOUNT_RENAME_TO_ORIG_DOMAIN_EMAIL = ACCT_ALIAS_IN_OTHER_DOMAIN_USER + "@" + DOMAIN_NAME;
+        ACCT_FULL_NAME = "Phoebe Shao";
+        
+        ACCT_NAMING_ATTR = LC.get("ldap_user_naming_rdn_attr");
+        if (StringUtil.isNullOrEmpty(ACCT_NAMING_ATTR))
+            ACCT_NAMING_ATTR = "uid";
+        ACCT_NAMING_ATTR_VALUE = namingAttrValue(ACCT_USER);
+        
+        ACCT_BASE_DN = "ou=grp1,ou=mail,o=Comcast";
+        
+        CR_USER = "cr-1";
+        CR_EMAIL = CR_USER + "@" + DOMAIN_NAME;
+        CR_ALIAS_USER = "alias-of-" + CR_USER;
+        CR_ALIAS_EMAIL = CR_ALIAS_USER + "@" + DOMAIN_NAME;
+        
+        DL_USER = "dl-1";
+        DL_EMAIL = DL_USER + "@" + DOMAIN_NAME;
+        DL_USER_SPECIAL_CHARS = "dl-special-chars-" + SPECIAL_CHARS_ALLOWED_IN_USER_PART;
+        DL_EMAIL_SPECIAL_CHARS = DL_USER_SPECIAL_CHARS + "@" + DOMAIN_NAME_SPECIAL_CHARS;
+        DL_ALIAS_USER = "alias-of" + DL_USER;
+        DL_ALIAS_EMAIL = DL_ALIAS_USER + "@" + DOMAIN_NAME;
+        DL_NESTED_USER = "dl-nested";
+        DL_NESTED_EMAIL = DL_NESTED_USER + "@" + DOMAIN_NAME;
+        DL_NESTED_ALIAS_USER = "alias-of-" + DL_NESTED_USER;
+        DL_NESTED_ALIAS_EMAIL = DL_NESTED_ALIAS_USER+ "@" + DOMAIN_NAME;
+        
+        DATA_SOURCE_NAME = "datasource-1";
+        IDENTITY_NAME ="identity-1";
+        SIGNATURE_NAME ="signature-1";
+         
+        SIGNATURE_VALUE = "this is my signature";
+        SIGNATURE_VALUE_MODIFIED = "this is my signature MODIFIED";
+    }
     
     class CustomProvTester {
         Provisioning mProv;
@@ -166,80 +248,7 @@ public class TestProvisioning extends TestCase {
         }
     }
 
-    public void setUp() throws Exception {
-        mProv = Provisioning.getInstance();
         
-        // if we are a ldapProvisioning, cast the prov obj and save it once here
-        // ldapProv is used for several LDAP specific tests
-        if (mProv instanceof LdapProvisioning)
-            mLdapProv = (LdapProvisioning)mProv;
-        
-        mCustomProvTester = new CustomProvTester(mProv);
-        
-        Date date = new Date();
-        SimpleDateFormat fmt =  new SimpleDateFormat("yyyyMMdd-HHmmss");
-        TEST_ID = fmt.format(date);
-        
-        PRE_AUTH_KEY = PreAuthKey.generateRandomPreAuthKey();
-        PASSWORD = "test123";
-        
-        SPECIAL_CHARS_ALLOWED_IN_DOMAIN = "/";
-        SPECIAL_CHARS_ALLOWED_IN_USER_PART = "/";
-        
-        COS_NAME = "cos-" + TEST_ID;
-        DOMAIN_NAME = "domain-" + TEST_ID + ".ldap-test-domain";
-        DOMAIN_NAME_SPECIAL_CHARS = "domain-" + SPECIAL_CHARS_ALLOWED_IN_DOMAIN + "-" + TEST_ID + ".ldap-test-domain";
-        OTHER_DOMAIN_NAME = "other-" + DOMAIN_NAME;
-        SERVER_NAME = "server-" + TEST_ID;
-        ZIMLET_NAME = "zimlet-" + TEST_ID;
-        
-        NEW_NAME = "newname";
-        NEW_EMAIL = NEW_NAME + "-" + TEST_ID + "@" + DOMAIN_NAME;
-        NEW_EMAIL_IN_OTHER_DOMAIN = NEW_NAME + "-" + TEST_ID + "@" + OTHER_DOMAIN_NAME;
-        
-        DEFAULT_LDAP_ADMIN_USER = LC.zimbra_ldap_user.value();
-        ADMIN_USER =  "admin";
-        ADMIN_EMAIL = ADMIN_USER + "@" + DOMAIN_NAME;
-        ACCT_USER = "acct-1";
-        ACCT_EMAIL = ACCT_USER + "@" + DOMAIN_NAME;
-        ACCT_USER_SPECIAL_CHARS = "acct-special-chars-" + SPECIAL_CHARS_ALLOWED_IN_USER_PART;
-        ACCT_EMAIL_SPECIAL_CHARS = ACCT_USER_SPECIAL_CHARS + "@" + DOMAIN_NAME_SPECIAL_CHARS;
-        ACCT_ALIAS_USER = "alias-of-" + ACCT_USER;
-        ACCT_ALIAS_EMAIL = ACCT_ALIAS_USER + "@" + DOMAIN_NAME;
-        ACCT_ALIAS_AFTER_ACCOUNT_RENAME_TO_OTHER_DMAIN_EMAIL = ACCT_ALIAS_USER + "@" + OTHER_DOMAIN_NAME;
-        ACCT_ALIAS_IN_OTHER_DOMAIN_USER = ACCT_ALIAS_USER + "-in-other-domain";
-        ACCT_ALIAS_IN_OTHER_DOMAIN_EMAIL = ACCT_ALIAS_IN_OTHER_DOMAIN_USER + "@" + OTHER_DOMAIN_NAME;
-        ACCT_ALIAS_IN_OTHER_DOMAIN_AFTER_ACCOUNT_RENAME_TO_ORIG_DOMAIN_EMAIL = ACCT_ALIAS_IN_OTHER_DOMAIN_USER + "@" + DOMAIN_NAME;
-        ACCT_FULL_NAME = "Phoebe Shao";
-        
-        ACCT_NAMING_ATTR = LC.get("ldap_user_naming_rdn_attr");
-        if (StringUtil.isNullOrEmpty(ACCT_NAMING_ATTR))
-            ACCT_NAMING_ATTR = "uid";
-        ACCT_NAMING_ATTR_VALUE = ACCT_USER + ".mailuser";
-        
-        ACCT_BASE_DN = "ou=grp1,ou=mail,o=Comcast";
-        
-        CR_USER = "cr-1";
-        CR_EMAIL = CR_USER + "@" + DOMAIN_NAME;
-        CR_ALIAS_USER = "alias-of-" + CR_USER;
-        CR_ALIAS_EMAIL = CR_ALIAS_USER + "@" + DOMAIN_NAME;
-        
-        DL_USER = "dl-1";
-        DL_EMAIL = DL_USER + "@" + DOMAIN_NAME;
-        DL_USER_SPECIAL_CHARS = "dl-special-chars-" + SPECIAL_CHARS_ALLOWED_IN_USER_PART;
-        DL_EMAIL_SPECIAL_CHARS = DL_USER_SPECIAL_CHARS + "@" + DOMAIN_NAME_SPECIAL_CHARS;
-        DL_ALIAS_USER = "alias-of" + DL_USER;
-        DL_ALIAS_EMAIL = DL_ALIAS_USER + "@" + DOMAIN_NAME;
-        DL_NESTED_USER = "dl-nested";
-        DL_NESTED_EMAIL = DL_NESTED_USER + "@" + DOMAIN_NAME;
-        DL_NESTED_ALIAS_USER = "alias-of-" + DL_NESTED_USER;
-        DL_NESTED_ALIAS_EMAIL = DL_NESTED_ALIAS_USER+ "@" + DOMAIN_NAME;
-        
-        DATA_SOURCE_NAME = "datasource-1";
-        IDENTITY_NAME ="identity-1";
-        
-    }
-    
     private class TestVisitor implements NamedEntry.Visitor {
         
         List<NamedEntry> mVisited = new ArrayList<NamedEntry>();
@@ -388,6 +397,10 @@ public class TestProvisioning extends TestCase {
         confAttrs.put(Provisioning.A_zimbraDefaultDomainName, domain);
         mProv.modifyAttrs(mProv.getConfig(), confAttrs, true);
     } 
+    
+    private String namingAttrValue(String name) {
+        return name + ".mailuser";
+    }
     
     /* =====================
      * end of util functions
@@ -585,8 +598,8 @@ public class TestProvisioning extends TestCase {
         
         // create an admin account
         Map<String, Object> acctAttrs = new HashMap<String, Object>();
-        mCustomProvTester.addAttr(acctAttrs, "ldap.baseDN", ACCT_BASE_DN);
-        mCustomProvTester.addAttr(acctAttrs, ACCT_NAMING_ATTR, ADMIN_USER + ".mailuser");
+        mCustomProvTester.addAttr(acctAttrs, BASE_DN_PSEUDO_ATTR, ACCT_BASE_DN);
+        mCustomProvTester.addAttr(acctAttrs, ACCT_NAMING_ATTR, namingAttrValue(ADMIN_USER));
         acctAttrs.put(Provisioning.A_zimbraIsAdminAccount, "TRUE");
         entry = mProv.createAccount(ADMIN_EMAIL, PASSWORD, acctAttrs);
         
@@ -613,7 +626,7 @@ public class TestProvisioning extends TestCase {
         
         // create an account
         Map<String, Object> acctAttrs = new HashMap<String, Object>();
-        mCustomProvTester.addAttr(acctAttrs, "ldap.baseDN", ACCT_BASE_DN);
+        mCustomProvTester.addAttr(acctAttrs, BASE_DN_PSEUDO_ATTR, ACCT_BASE_DN);
         mCustomProvTester.addAttr(acctAttrs, ACCT_NAMING_ATTR, ACCT_NAMING_ATTR_VALUE);
         acctAttrs.put(Provisioning.A_zimbraCOSId, cos.getId());
         Account entry = mProv.createAccount(ACCT_EMAIL, PASSWORD, acctAttrs);
@@ -623,11 +636,11 @@ public class TestProvisioning extends TestCase {
         
         // create an account with special chars
         Map<String, Object> acctAttrsSpecialChars = new HashMap<String, Object>();
-        mCustomProvTester.addAttr(acctAttrsSpecialChars, "ldap.baseDN", ACCT_BASE_DN);
-        mCustomProvTester.addAttr(acctAttrsSpecialChars, ACCT_NAMING_ATTR, ACCT_USER_SPECIAL_CHARS + ".mailuser");
+        mCustomProvTester.addAttr(acctAttrsSpecialChars, BASE_DN_PSEUDO_ATTR, ACCT_BASE_DN);
+        mCustomProvTester.addAttr(acctAttrsSpecialChars, ACCT_NAMING_ATTR, namingAttrValue(ACCT_USER_SPECIAL_CHARS));
         acctAttrs.put(Provisioning.A_zimbraCOSId, cos.getId());
         Account entrySpecialChars = mProv.createAccount(ACCT_EMAIL_SPECIAL_CHARS, PASSWORD, acctAttrsSpecialChars);
-        String acctSpecialCharsDn = ACCT_NAMING_ATTR + "=" + ACCT_USER_SPECIAL_CHARS + ".mailuser" + "," + ACCT_BASE_DN;
+        String acctSpecialCharsDn = ACCT_NAMING_ATTR + "=" + namingAttrValue(ACCT_USER_SPECIAL_CHARS) + "," + ACCT_BASE_DN;
         mCustomProvTester.verifyDn(entrySpecialChars, acctSpecialCharsDn);
         Account entryGot = mProv.get(Provisioning.AccountBy.name, ACCT_EMAIL_SPECIAL_CHARS);
         verifySameEntry(entrySpecialChars, entryGot);
@@ -789,8 +802,8 @@ public class TestProvisioning extends TestCase {
         System.out.println("Testing calendar resource");
         
         Map<String, Object> crAttrs = new HashMap<String, Object>();
-        mCustomProvTester.addAttr(crAttrs, "ldap.baseDN", ACCT_BASE_DN);
-        mCustomProvTester.addAttr(crAttrs, ACCT_NAMING_ATTR, CR_USER + ".mailuser");
+        mCustomProvTester.addAttr(crAttrs, BASE_DN_PSEUDO_ATTR, ACCT_BASE_DN);
+        mCustomProvTester.addAttr(crAttrs, ACCT_NAMING_ATTR, namingAttrValue(CR_USER));
         crAttrs.put(Provisioning.A_displayName, CR_USER);
         crAttrs.put(Provisioning.A_zimbraCalResType, "Equipment");
         crAttrs.put(Provisioning.A_zimbraCOSId, cos.getId());
@@ -822,8 +835,8 @@ public class TestProvisioning extends TestCase {
         System.out.println("Testing distribution list");
         
         Map<String, Object> dlAttrs = new HashMap<String, Object>();
-        mCustomProvTester.addAttr(dlAttrs, "ldap.baseDN", ACCT_BASE_DN);
-        mCustomProvTester.addAttr(dlAttrs, ACCT_NAMING_ATTR, DL_USER + ".mailuser");
+        mCustomProvTester.addAttr(dlAttrs, BASE_DN_PSEUDO_ATTR, ACCT_BASE_DN);
+        mCustomProvTester.addAttr(dlAttrs, ACCT_NAMING_ATTR, namingAttrValue(DL_USER));
         DistributionList entry = mProv.createDistributionList(DL_EMAIL, dlAttrs);
         
         mProv.addAlias(entry, DL_ALIAS_EMAIL);
@@ -836,8 +849,8 @@ public class TestProvisioning extends TestCase {
         verifySameEntry(entry, entryGot);
         
         Map<String, Object> dlNestedAttrs = new HashMap<String, Object>();
-        mCustomProvTester.addAttr(dlNestedAttrs, "ldap.baseDN", ACCT_BASE_DN);
-        mCustomProvTester.addAttr(dlNestedAttrs, ACCT_NAMING_ATTR, DL_NESTED_USER + ".mailuser");
+        mCustomProvTester.addAttr(dlNestedAttrs, BASE_DN_PSEUDO_ATTR, ACCT_BASE_DN);
+        mCustomProvTester.addAttr(dlNestedAttrs, ACCT_NAMING_ATTR, namingAttrValue(DL_NESTED_USER));
         DistributionList dlNested = mProv.createDistributionList(DL_NESTED_EMAIL, dlNestedAttrs);
         mProv.addAlias(dlNested, DL_NESTED_ALIAS_EMAIL);
         
@@ -850,8 +863,8 @@ public class TestProvisioning extends TestCase {
         if (mCustomProvTester.isCustom())
             setDefaultDomain(DOMAIN_NAME_SPECIAL_CHARS);
         Map<String, Object> dlAttrsSpecialChars = new HashMap<String, Object>();
-        mCustomProvTester.addAttr(dlAttrsSpecialChars, "ldap.baseDN", ACCT_BASE_DN);
-        mCustomProvTester.addAttr(dlAttrsSpecialChars, ACCT_NAMING_ATTR, DL_USER_SPECIAL_CHARS + ".mailuser");
+        mCustomProvTester.addAttr(dlAttrsSpecialChars, BASE_DN_PSEUDO_ATTR, ACCT_BASE_DN);
+        mCustomProvTester.addAttr(dlAttrsSpecialChars, ACCT_NAMING_ATTR, namingAttrValue(DL_USER_SPECIAL_CHARS));
         DistributionList dlSpecilaChars = mProv.createDistributionList(DL_EMAIL_SPECIAL_CHARS, dlAttrsSpecialChars);
         entryGot = mProv.get(Provisioning.DistributionListBy.name, DL_EMAIL_SPECIAL_CHARS);
         verifySameEntry(dlSpecilaChars, entryGot);
@@ -863,7 +876,7 @@ public class TestProvisioning extends TestCase {
         mProv.addMembers(dlNested, new String[]{ACCT_EMAIL});
         
         List list = mProv.getAllDistributionLists(domain);
-        verifyEntries(list, new NamedEntry[]{entry, dlNested, dlSpecilaChars}, true);
+        verifyEntries(list, new NamedEntry[]{entry, dlNested}, true);
         
         Account account = mProv.get(Provisioning.AccountBy.name, ACCT_EMAIL);
         Set<String> set = mProv.getDistributionLists(account);
@@ -942,6 +955,35 @@ public class TestProvisioning extends TestCase {
         Map attrsToMod = new HashMap<String, Object>();
         attrsToMod.put(Provisioning.A_zimbraPrefBccAddress, "whatever");
         mProv.modifyIdentity(account, IDENTITY_NAME, attrsToMod);
+
+        return entry;
+    }
+    
+    private Signature signatureTest(Account account) throws Exception {
+        System.out.println("Testing signature");
+        
+        Map<String, Object> signatureAttrs = new HashMap<String, Object>();
+        signatureAttrs.put(Provisioning.A_zimbraPrefMailSignature, SIGNATURE_VALUE);
+        Signature entry = mProv.createSignature(account, SIGNATURE_NAME, signatureAttrs);
+        
+        Signature entryGot = mProv.get(account, Provisioning.SignatureBy.id, entry.getId());
+        verifySameEntry(entry, entryGot);
+        entryGot = mProv.get(account, Provisioning.SignatureBy.name, SIGNATURE_NAME);
+        verifySameEntry(entry, entryGot);
+        Signature defaultSignature = mProv.get(account, Provisioning.SignatureBy.name, Provisioning.DEFAULT_SIGNATURE_NAME);
+        verifySameId(account, defaultSignature);
+        assertEquals(Provisioning.DEFAULT_SIGNATURE_NAME, defaultSignature.getName());
+        
+        List list = mProv.getAllSignatures(account);
+        verifyEntries(list, new NamedEntry[]{defaultSignature, entry}, true);
+        
+        Map attrsToMod = new HashMap<String, Object>();
+        attrsToMod.put(Provisioning.A_zimbraPrefMailSignature, SIGNATURE_VALUE_MODIFIED);
+        mProv.modifySignature(account, SIGNATURE_NAME, attrsToMod);
+        
+        // make sure we get the modified value back
+        entryGot = mProv.get(account, Provisioning.SignatureBy.id, entry.getId());
+        assertEquals(SIGNATURE_VALUE_MODIFIED, entryGot.getAttr(Provisioning.A_zimbraPrefMailSignature));
 
         return entry;
     }
@@ -1072,6 +1114,7 @@ public class TestProvisioning extends TestCase {
         DistributionList[] distributionLists = distributionListTest(domain);
         DataSource dataSource = dataSourceTest(account);
         Identity identity = identityTest(account);
+        Signature signature = signatureTest(account);
         
         entryTest(account);
         galTest(domain);
@@ -1086,6 +1129,7 @@ public class TestProvisioning extends TestCase {
         mProv.deleteZimlet(ZIMLET_NAME);
         mProv.deleteServer(server.getId());
         mProv.deleteIdentity(account, IDENTITY_NAME);
+        mProv.deleteSignature(account, SIGNATURE_NAME);
         mProv.deleteDataSource(account, dataSource.getId());
         
         // delete DLs

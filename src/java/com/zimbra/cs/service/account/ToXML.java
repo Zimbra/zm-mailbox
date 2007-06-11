@@ -36,6 +36,7 @@ import com.zimbra.cs.account.EntrySearchFilter.Single;
 import com.zimbra.cs.account.EntrySearchFilter.Visitor;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Signature;
 
 import java.util.Iterator;
 import java.util.Locale;
@@ -199,6 +200,14 @@ public class ToXML {
         e.addAttribute(AccountConstants.A_NAME, identity.getName());
         e.addAttribute(AccountConstants.A_ID, identity.getId());
         addAccountAttrs(e, identity.getAttrs(), AccountConstants.A_NAME);
+        return e;
+    }
+    
+    public static Element encodeSignature(Element parent, Signature signature) {
+        Element e = parent.addElement(AccountConstants.E_SIGNATURE);
+        e.addAttribute(AccountConstants.A_NAME, signature.getName());
+        e.addAttribute(AccountConstants.A_ID, signature.getId());
+        addAccountAttrs(e, signature.getAttrs(), AccountConstants.A_NAME);
         return e;
     }
 

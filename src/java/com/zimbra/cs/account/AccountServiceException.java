@@ -52,7 +52,8 @@ public class AccountServiceException extends ServiceException {
     public static final String NO_SUCH_ALIAS      = "account.NO_SUCH_ALIAS";
     public static final String NO_SUCH_DOMAIN     = "account.NO_SUCH_DOMAIN";    
     public static final String NO_SUCH_COS        = "account.NO_SUCH_COS";        
-    public static final String NO_SUCH_IDENTITY   = "account.NO_SUCH_IDENTITY";            
+    public static final String NO_SUCH_IDENTITY   = "account.NO_SUCH_IDENTITY";
+    public static final String NO_SUCH_SIGNATURE   = "account.NO_SUCH_SIGNATURE";
     public static final String NO_SUCH_DATA_SOURCE = "account.NO_SUCH_DATA_SOURCE";
     public static final String NO_SUCH_SERVER     = "account.NO_SUCH_SERVER";        
     public static final String NO_SUCH_ZIMLET     = "account.NO_SUCH_ZIMLET";        
@@ -68,8 +69,10 @@ public class AccountServiceException extends ServiceException {
     public static final String DISTRIBUTION_LIST_EXISTS = "account.DISTRIBUTION_LIST_EXISTS";
     public static final String MAINTENANCE_MODE   = "account.MAINTENANCE_MODE";
     public static final String ACCOUNT_INACTIVE   = "account.ACCOUNT_INACTIVE";
-    public static final String IDENTITY_EXISTS = "account.IDENTITY_EXISTS";    
+    public static final String IDENTITY_EXISTS     = "account.IDENTITY_EXISTS";    
     public static final String TOO_MANY_IDENTITIES = "account.TOO_MANY_IDENTITIES";
+    public static final String SIGNATURE_EXISTS = "account.SIGNATURE_EXISTS";    
+    public static final String TOO_MANY_SIGNATURES = "account.TOO_MANY_SIGNATURES";
     public static final String DATA_SOURCE_EXISTS = "account.DATA_SOURCE_EXISTS";        
     public static final String TOO_MANY_DATA_SOURCES = "account.TOO_MANY_DATA_SOURCES";
     public static final String TOO_MANY_ACCOUNTS = "account.TOO_MANY_ACCOUNTS";
@@ -145,7 +148,11 @@ public class AccountServiceException extends ServiceException {
 
     public static AccountServiceException NO_SUCH_IDENTITY(String name) {
         return new AccountServiceException("no such identity: "+name, NO_SUCH_IDENTITY, SENDERS_FAULT, null);
-    }    
+    }
+    
+    public static AccountServiceException NO_SUCH_SIGNATURE(String name) {
+        return new AccountServiceException("no such signature: "+name, NO_SUCH_SIGNATURE, SENDERS_FAULT, null);
+    }  
     
     public static AccountServiceException NO_SUCH_DATA_SOURCE(String id) {
         return new AccountServiceException("no such data source: "+id, NO_SUCH_DATA_SOURCE, SENDERS_FAULT, null);
@@ -195,7 +202,15 @@ public class AccountServiceException extends ServiceException {
     
     public static AccountServiceException TOO_MANY_IDENTITIES() {
         return new AccountServiceException("too many identities. can't create any more", TOO_MANY_IDENTITIES, SENDERS_FAULT, null);
-    }    
+    }
+    
+    public static AccountServiceException SIGNATURE_EXISTS(String name) {
+        return new AccountServiceException("signature already exists: " + name, SIGNATURE_EXISTS, SENDERS_FAULT, null);
+    }
+    
+    public static AccountServiceException TOO_MANY_SIGNATURES() {
+        return new AccountServiceException("too many signatures. can't create any more", TOO_MANY_SIGNATURES, SENDERS_FAULT, null);
+    } 
 
     public static AccountServiceException DATA_SOURCE_EXISTS(String name) {
         return new AccountServiceException("data source already exists: " + name, DATA_SOURCE_EXISTS, SENDERS_FAULT, null);

@@ -173,20 +173,23 @@ public class ProvUtil implements DebugListener {
         CREATE_DOMAIN("createDomain", "cd", "{domain} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE),
         CREATE_SERVER("createServer", "cs", "{name} [attr1 value1 [attr2 value2...]]", Category.SERVER, 1, Integer.MAX_VALUE),
         CREATE_IDENTITY("createIdentity", "cid", "{name@domain} {identity-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),        
+        CREATE_SIGNATURE("createSignature", "csig", "{name@domain} {signature-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),        
         DELETE_ACCOUNT("deleteAccount", "da", "{name@domain|id}", Category.ACCOUNT, 1, 1),
         DELETE_CALENDAR_RESOURCE("deleteCalendarResource",  "dcr", "{name@domain|id}", Category.CALENDAR, 1, 1),
         DELETE_COS("deleteCos", "dc", "{name|id}", Category.COS, 1, 1),
         DELETE_DATA_SOURCE("deleteDataSource", "dds", "{name@domain|id} {ds-name|ds-id}", Category.ACCOUNT, 2, 2),                        
         DELETE_DISTRIBUTION_LIST("deleteDistributionList", "ddl", "{list@domain|id}", Category.LIST, 1, 1),
         DELETE_DOMAIN("deleteDomain", "dd", "{domain|id}", Category.DOMAIN, 1, 1),
-        DELETE_IDENTITY("deleteIdentity", "did", "{name@domain|id} {identity-name}", Category.ACCOUNT, 2, 2),                
+        DELETE_IDENTITY("deleteIdentity", "did", "{name@domain|id} {identity-name}", Category.ACCOUNT, 2, 2),
+        DELETE_SIGNATURE("deleteSignature", "dsig", "{name@domain|id} {signature-name}", Category.ACCOUNT, 2, 2),
         DELETE_SERVER("deleteServer", "ds", "{name|id}", Category.SERVER, 1, 1),
         EXIT("exit", "quit", "", Category.MISC, 0, 0),
         GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa", "{domain|id} {name} {name|id|foreignPrincipal} {timestamp|0} {expires|0}", Category.MISC, 5, 5),
         GENERATE_DOMAIN_PRE_AUTH_KEY("generateDomainPreAuthKey", "gdpak", "{domain|id}", Category.MISC, 1, 1),
         GET_ACCOUNT("getAccount", "ga", "{name@domain|id} [attr1 [attr2...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
         GET_DATA_SOURCES("getDataSources", "gds", "{name@domain|id} [arg1 [arg2...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),                
-        GET_IDENTITIES("getIdentities", "gid", "{name@domain|id} [arg1 [arg...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),        
+        GET_IDENTITIES("getIdentities", "gid", "{name@domain|id} [arg1 [arg...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
+        GET_SIGNATURES("getSingatures", "gsig", "{name@domain|id} [arg1 [arg...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
         GET_ACCOUNT_MEMBERSHIP("getAccountMembership", "gam", "{name@domain|id}", Category.ACCOUNT, 1, 2),
         GET_ALL_ACCOUNTS("getAllAccounts","gaa", "[-v] [{domain}]", Category.ACCOUNT, 0, 2),
         GET_ACCOUNT_LOGGERS("getAccountLoggers", "gal", "{name@domain|id}", Category.MISC, 1, 1),
@@ -219,7 +222,8 @@ public class ProvUtil implements DebugListener {
         MODIFY_DATA_SOURCE("modifyDataSource", "mds", "{name@domain|id} {ds-name|ds-id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),                
         MODIFY_DISTRIBUTION_LIST("modifyDistributionList", "mdl", "{list@domain|id} attr1 value1 [attr2 value2...]", Category.LIST, 3, Integer.MAX_VALUE),
         MODIFY_DOMAIN("modifyDomain", "md", "{domain|id} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 3, Integer.MAX_VALUE),
-        MODIFY_IDENTITY("modifyIdentity", "mid", "{name@domain|id} {identity-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),        
+        MODIFY_IDENTITY("modifyIdentity", "mid", "{name@domain|id} {identity-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),
+        MODIFY_SIGNATURE("modifySignature", "msig", "{name@domain|id} {signature-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),
         MODIFY_SERVER("modifyServer", "ms", "{name|id} [attr1 value1 [attr2 value2...]]", Category.SERVER, 3, Integer.MAX_VALUE),
         REMOVE_ACCOUNT_ALIAS("removeAccountAlias", "raa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
         REMOVE_ACCOUNT_LOGGER("removeAccountLogger", "ral", "{name@domain|id} {logging-category}", Category.MISC, 2, 2),
@@ -356,7 +360,10 @@ public class ProvUtil implements DebugListener {
             break;
         case CREATE_IDENTITY:
             mProv.createIdentity(lookupAccount(args[1]), args[2], getMap(args, 3));
-            break;                                    
+            break;
+        case CREATE_SIGNATURE:
+            mProv.createSignature(lookupAccount(args[1]), args[2], getMap(args, 3));
+            break;      
         case CREATE_DATA_SOURCE:
             System.out.println(mProv.createDataSource(lookupAccount(args[1]), DataSource.Type.fromString(args[2]), args[3], getMap(args, 4)).getId());
             break;                                                
@@ -380,7 +387,10 @@ public class ProvUtil implements DebugListener {
             break;
         case GET_IDENTITIES:
             doGetAccountIdentities(args);
-            break;            
+            break;
+        case GET_SIGNATURES:
+            doGetAccountSignatures(args);
+            break;      
         case GET_DATA_SOURCES:
             doGetAccountDataSources(args);
             break;
@@ -435,7 +445,10 @@ public class ProvUtil implements DebugListener {
             break;
         case MODIFY_IDENTITY:
             mProv.modifyIdentity(lookupAccount(args[1]), args[2], getMap(args,3));
-            break;                        
+            break; 
+        case MODIFY_SIGNATURE:
+            mProv.modifySignature(lookupAccount(args[1]), args[2], getMap(args,3));
+            break;    
         case MODIFY_COS:
             mProv.modifyAttrs(lookupCos(args[1]), getMap(args, 2), true);            
             break;            
@@ -459,7 +472,10 @@ public class ProvUtil implements DebugListener {
             break;
         case DELETE_IDENTITY:
             mProv.deleteIdentity(lookupAccount(args[1]), args[2]);
-            break;                        
+            break;
+        case DELETE_SIGNATURE:
+            mProv.deleteSignature(lookupAccount(args[1]), args[2]);
+            break;     
         case DELETE_DATA_SOURCE:
             account = lookupAccount(args[1]);
             mProv.deleteDataSource(account, lookupDataSourceId(account, args[2]));
@@ -725,11 +741,20 @@ public class ProvUtil implements DebugListener {
         }
 
     }
+    
     private void doGetAccountIdentities(String[] args) throws ServiceException {
         Account account = lookupAccount(args[1]);
         Set<String> argNameSet = getArgNameSet(args, 2);
         for (Identity identity : mProv.getAllIdentities(account)) {
             dumpIdentity(identity, argNameSet);
+        }    
+    }
+    
+    private void doGetAccountSignatures(String[] args) throws ServiceException {
+        Account account = lookupAccount(args[1]);
+        Set<String> argNameSet = getArgNameSet(args, 2);
+        for (Signature signature : mProv.getAllSignatures(account)) {
+            dumpSignature(signature, argNameSet);
         }    
     }
     
@@ -1104,6 +1129,13 @@ public class ProvUtil implements DebugListener {
     private void dumpIdentity(Identity identity, Set<String> attrNameSet) throws ServiceException {
         System.out.println("# name "+identity.getName());
         Map<String, Object> attrs = identity.getAttrs();
+        dumpAttrs(attrs, attrNameSet);
+        System.out.println();
+    }
+    
+    private void dumpSignature(Signature signature, Set<String> attrNameSet) throws ServiceException {
+        System.out.println("# name "+signature.getName());
+        Map<String, Object> attrs = signature.getAttrs();
         dumpAttrs(attrs, attrNameSet);
         System.out.println();
     }
