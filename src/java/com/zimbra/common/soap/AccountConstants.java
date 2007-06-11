@@ -74,6 +74,19 @@ public class AccountConstants {
     public static final QName MODIFY_IDENTITY_RESPONSE = QName.get("ModifyIdentityResponse", NAMESPACE);
     public static final QName DELETE_IDENTITY_REQUEST = QName.get("DeleteIdentityRequest", NAMESPACE);
     public static final QName DELETE_IDENTITY_RESPONSE = QName.get("DeleteIdentityResponse", NAMESPACE);
+    
+    // signatures
+    public static final QName CREATE_SIGNATURE_REQUEST = QName.get("CreateSignatureRequest", NAMESPACE);
+    public static final QName CREATE_SIGNATURE_RESPONSE = QName.get("CreateSignatureResponse", NAMESPACE);
+    public static final QName GET_SIGNATURES_REQUEST = QName.get("GetSignaturesRequest", NAMESPACE);
+    public static final QName GET_SIGNATURES_RESPONSE = QName.get("GetSignaturesResponse", NAMESPACE);
+    public static final QName MODIFY_SIGNATURE_REQUEST = QName.get("ModifySignatureRequest", NAMESPACE);
+    public static final QName MODIFY_SIGNATURE_RESPONSE = QName.get("ModifySignatureResponse", NAMESPACE);
+    public static final QName DELETE_SIGNATURE_REQUEST = QName.get("DeleteSignatureRequest", NAMESPACE);
+    public static final QName DELETE_SIGNATURE_RESPONSE = QName.get("DeleteSignatureResponse", NAMESPACE);
+     
+    
+    
     public static final String E_ACTION = "action";
     public static final String E_AUTH_TOKEN = "authToken";
     public static final String E_REFERRAL = "refer";
