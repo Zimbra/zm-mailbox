@@ -126,12 +126,13 @@ public class DbPool {
             } finally {
                 // Connection is being returned to the pool.  Decrement its stack
                 // trace counter.  Null check is required for the stack trace in
-                // case this is a maintenance/logger connection, or if sqltrace
+                // case this is a maintenance/logger connection, or if dbconn
                 // debug logging was turned on between the getConnection() and
                 // close() calls.
-                if (mStackTrace != null && ZimbraLog.sqltrace.isDebugEnabled()) {
+                if (mStackTrace != null && ZimbraLog.dbconn.isDebugEnabled()) {
+                    String stackTrace = SystemUtil.getStackTrace(mStackTrace);
                     synchronized(sConnectionStackCounter) {
-                        sConnectionStackCounter.decrement(SystemUtil.getStackTrace(mStackTrace));
+                        sConnectionStackCounter.decrement(stackTrace);
                     }
                 }
             }
@@ -242,12 +243,13 @@ public class DbPool {
         Connection zimbraConn = new Connection(conn);
 
         // If we're debugging, update the counter with the current stack trace
-        if (ZimbraLog.sqltrace.isDebugEnabled()) {
+        if (ZimbraLog.dbconn.isDebugEnabled()) {
             Throwable t = new Throwable();
             zimbraConn.setStackTrace(t);
 
+            String stackTrace = SystemUtil.getStackTrace(t);
             synchronized (sConnectionStackCounter) {
-                sConnectionStackCounter.increment(SystemUtil.getStackTrace(t));
+                sConnectionStackCounter.increment(stackTrace);
             }
         }
 
@@ -262,8 +264,8 @@ public class DbPool {
         if (numActive <= maxActive * 0.75)
             return;
 
-        String stackTraceMsg = "Turn on debug logging for zimbra.sqltrace to see stack traces of connections not returned to the pool.";
-        if (ZimbraLog.sqltrace.isDebugEnabled()) {
+        String stackTraceMsg = "Turn on debug logging for zimbra.dbconn to see stack traces of connections not returned to the pool.";
+        if (ZimbraLog.dbconn.isDebugEnabled()) {
             StringBuilder buf = new StringBuilder();
             synchronized (sConnectionStackCounter) {
                 Iterator i = sConnectionStackCounter.iterator();
@@ -279,8 +281,9 @@ public class DbPool {
             }
             stackTraceMsg = buf.toString();
         }
-        ZimbraLog.sqltrace.warn("Connection pool is 75% utilized (" + numActive +
-                                " connections out of a maximum of " + maxActive + " in use); " + stackTraceMsg);
+        ZimbraLog.dbconn.warn(
+            "Connection pool is 75% utilized (%d connections out of a maximum of %d in use).  %s",
+            numActive, maxActive, stackTraceMsg);
     }
 
     /**
