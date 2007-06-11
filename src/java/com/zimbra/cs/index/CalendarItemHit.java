@@ -39,10 +39,6 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
- * @author tim
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
  */
 public class CalendarItemHit extends ZimbraHit {
     
@@ -82,6 +78,22 @@ public class CalendarItemHit extends ZimbraHit {
             mType = ud.type;
         }
     }
+    
+    /**
+     * @param results
+     * @param mbx
+     * @param id
+     * @param score
+     */
+    public CalendarItemHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id,
+        Document d, float score, CalendarItem calItem, byte type) throws ServiceException {
+        super(results, mbx, score);
+
+        mId = id;
+        mCalItem = calItem;
+        mType = type;
+    }
+    
     
     public MailItem getMailItem() throws ServiceException { return getCalendarItem(); }
     

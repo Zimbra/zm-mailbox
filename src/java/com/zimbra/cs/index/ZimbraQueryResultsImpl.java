@@ -47,11 +47,6 @@ import java.util.*;
 import org.apache.lucene.document.*;
 
 /**
- * @author tim
- * 
- * Really, this class should be renamed to ZimbraQueryResultsImpl, and the 
- * SuperInterface should be ZimbraQueryResultsImpl -- will fix this as soon as I 
- * get some free time.
  */
 abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
 {
@@ -144,7 +139,7 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
         return hit;
     }
 
-    protected CalendarItemHit getCalendarItemHit(Mailbox mbx, int mailItemId, Document d, float score, MailItem.UnderlyingData ud) throws ServiceException {
+    protected CalendarItemHit getAppointmentHit(Mailbox mbx, int mailItemId, Document d, float score, MailItem.UnderlyingData ud) throws ServiceException {
         CalendarItemHit hit = mCalItemHits.get(mailItemId);
         if (hit == null) {
             if (d != null) {
@@ -159,6 +154,17 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
         return hit;
     }
 
+    protected CalendarItemHit getTaskHit(Mailbox mbx, int mailItemId, Document d, float score, MailItem.UnderlyingData ud) throws ServiceException {
+        CalendarItemHit hit = mCalItemHits.get(mailItemId);
+        if (hit == null) {
+            hit = TaskHit.create(this, mbx, mailItemId, d, score, ud);
+            mCalItemHits.put(mailItemId, hit);
+        } else {
+            hit.updateScore(score);
+        }
+        return hit;
+    }
+    
     protected MessageHit getMessageHit(Mailbox mbx, int mailItemId, Document d, float score, MailItem.UnderlyingData underlyingData) throws ServiceException {
         MessageHit hit = mMessageHits.get(mailItemId);
         if (hit == null) {
@@ -238,8 +244,10 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
                 toRet = getNoteHit(mbox, sr.id, null, score, ud);
                 break;
             case MailItem.TYPE_APPOINTMENT:
+                toRet = getAppointmentHit(mbox, sr.id, null, score, ud);
+                break;
             case MailItem.TYPE_TASK:
-                toRet = getCalendarItemHit(mbox, sr.id, null, score, ud);
+                toRet = getTaskHit(mbox, sr.id, null, score, ud);
                 break;
             case MailItem.TYPE_DOCUMENT:
             case MailItem.TYPE_WIKI:

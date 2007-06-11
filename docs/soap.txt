@@ -999,7 +999,12 @@ if recip="1" is specified
         **NOTE: only ONE of message, conversation may be set. If
                 both are set, the first is used.
 
-  {sort-by}  = dateDesc|dateAsc|subjDesc|subjAsc|nameDesc|nameAsc(default is "dateDesc")
+  {sort-by}  = default is "dateDesc"
+               Valid choices:
+                    dateDesc|dateAsc|subjDesc|subjAsc|nameDesc|nameAsc
+               SPECIAL SORTING FOR TASKS, valid only if types="task" (and task alone):
+                    taskDueAsc|taskDueDesc|taskStatusAsc|taskStatusDesc|taskPercCompletedAsc|taskPercCompletedDesc
+                    
   {more-flag} = 1 if there are more search results remaining. 
   {content-matched} = 1 if the content of the message matched
   <mp> elements will be set for the first response if fetch=1

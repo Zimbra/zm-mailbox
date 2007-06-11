@@ -32,7 +32,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.mail.internet.MimeMessage;
@@ -111,10 +110,46 @@ public final class MailboxIndex
             return new EmptyQueryResults(params.getTypes(), params.getSortBy(), params.getMode());
         }
         
+        // handle special-case Task-only sorts: convert them to a "normal sort"
+        //     and then re-sort them at the end
+        boolean isTaskSort = false;
+        SortBy originalSort = params.getSortBy();
+        switch (originalSort) {
+            case TASK_DUE_ASCENDING:
+                isTaskSort = true;
+                params.setSortBy(SortBy.DATE_DESCENDING);
+                break;
+            case TASK_DUE_DESCENDING:
+                isTaskSort = true;
+                params.setSortBy(SortBy.DATE_DESCENDING);
+                break;
+            case TASK_STATUS_ASCENDING:
+                isTaskSort = true;
+                params.setSortBy(SortBy.DATE_DESCENDING);
+                break;
+            case TASK_STATUS_DESCENDING:
+                isTaskSort = true;
+                params.setSortBy(SortBy.DATE_DESCENDING);
+                break;
+            case TASK_PERCENT_COMPLETE_ASCENDING:
+                isTaskSort = true;
+                params.setSortBy(SortBy.DATE_DESCENDING);
+                break;
+            case TASK_PERCENT_COMPLETE_DESCENDING:
+                isTaskSort = true;
+                params.setSortBy(SortBy.DATE_DESCENDING);
+                break;
+        }
+        
         ZimbraQuery zq = new ZimbraQuery(mbox, params, includeTrashByDefault, includeSpamByDefault);
         try {
             zq.executeRemoteOps(proto, octxt);
-            ZimbraQueryResults results = zq.execute(); 
+            ZimbraQueryResults results = zq.execute();
+            
+            if (isTaskSort) {
+                results = new TaskSortingQueryResults(results, originalSort);
+            }
+            
             return results;
         } catch (IOException e) {
             zq.doneWithQuery();
@@ -1196,7 +1231,16 @@ public final class MailboxIndex
         SUBJ_DESCENDING ("subjDesc", (byte) (DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_DESCENDING)),
         NAME_ASCENDING  ("nameAsc",  (byte) (DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_ASCENDING)),
         NAME_DESCENDING ("nameDesc", (byte) (DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_DESCENDING)),
-        SCORE_DESCENDING("score",    (byte) 0);
+        SCORE_DESCENDING("score",    (byte) 0),
+
+        // special TASK-only sorts
+        TASK_DUE_ASCENDING("taskDueAsc", (byte)0),
+        TASK_DUE_DESCENDING("taskDueDesc", (byte)0),
+        TASK_STATUS_ASCENDING("taskStatusAsc", (byte)0),
+        TASK_STATUS_DESCENDING("taskStatusDesc", (byte)0),
+        TASK_PERCENT_COMPLETE_ASCENDING("taskPercCompletedAsc", (byte)0),
+        TASK_PERCENT_COMPLETE_DESCENDING("taskPercCompletedDesc", (byte)0),
+        ;
 
         static HashMap<String, SortBy> sNameMap = new HashMap<String, SortBy>();
 

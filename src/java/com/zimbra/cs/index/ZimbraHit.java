@@ -84,7 +84,7 @@ public abstract class ZimbraHit
 	    return toRet.toString();
 	}
     
-    public final Object getSortField(SortBy sortOrder) throws ServiceException {
+    public Object getSortField(SortBy sortOrder) throws ServiceException {
 		switch (sortOrder) {
 		case DATE_ASCENDING:
 		case DATE_DESCENDING: /* 5...4...3...*/
@@ -97,7 +97,14 @@ public abstract class ZimbraHit
 			return getName().toUpperCase();
 		case SCORE_DESCENDING:
 			return getScore();
-		default:
+        case TASK_DUE_ASCENDING:
+        case TASK_DUE_DESCENDING:
+        case TASK_STATUS_ASCENDING:
+        case TASK_STATUS_DESCENDING:
+        case TASK_PERCENT_COMPLETE_ASCENDING:
+        case TASK_PERCENT_COMPLETE_DESCENDING:
+            throw new IllegalArgumentException("Wrong hit type for hit "+this.toString()+" with sort order: "+sortOrder);
+        default:
 			throw new IllegalArgumentException("Unknown sort order: "+sortOrder);
 		}
 	}
@@ -154,7 +161,7 @@ public abstract class ZimbraHit
 	 * @return <0 if "this" is BEFORE other, 0 if EQUAL, >0 if this AFTER other
 	 * @throws ServiceException
 	 */
-	final int compareBySortField(MailboxIndex.SortBy sortOrder, ZimbraHit other) throws ServiceException {
+	int compareBySortField(MailboxIndex.SortBy sortOrder, ZimbraHit other) throws ServiceException {
 	    long retVal = 0;
 	    final boolean dumpComp = false;
 	    
