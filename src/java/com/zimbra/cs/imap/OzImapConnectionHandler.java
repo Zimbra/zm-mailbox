@@ -199,7 +199,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         try {
             if (mSession != null) {
                 logPushedUsername = mSession.getUsername();
-                ZimbraLog.pushbackContext(ZimbraLog.C_NAME, logPushedUsername);
+                ZimbraLog.addToContext(ZimbraLog.C_NAME, logPushedUsername);
             }
             
             // check account status before executing command
@@ -228,7 +228,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                 sendBAD(ipe.mTag, ipe.getMessage());
         } finally {
             if (logPushedUsername != null)
-                ZimbraLog.popbackContext(ZimbraLog.C_NAME, logPushedUsername);
+                ZimbraLog.removeFromContext(ZimbraLog.C_NAME, logPushedUsername);
         }
 
         return keepGoing;
