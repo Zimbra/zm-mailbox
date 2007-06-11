@@ -32,7 +32,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.Map.Entry;
 
-import org.apache.log4j.NDC;
+import org.apache.log4j.MDC;
 import org.apache.log4j.PropertyConfigurator;
 
 
@@ -290,15 +290,9 @@ public class ZimbraLog {
     private static void addAccountForThread(String accountName) {
         getAccountNamesForThread().add(accountName);
     }
-    
-    public static String getContext() {
-        return NDC.peek();
-    }
 
     /**
-     * adds key/value to context. Doesn't check to see if already in context.
-     * @param key
-     * @param value
+     * Adds a key/value pair to the current thread's logging context.
      */
     public static void addToContext(String key, String value) {
         if (key == null)
@@ -306,87 +300,95 @@ public class ZimbraLog {
         if (key.equals(C_NAME) || key.equals(C_ANAME)) {
             addAccountForThread(value);
         }
-        String ndc = NDC.pop();
-        if (checkContext(ndc, key))
-        	NDC.push(key+"="+value+";"+ndc);
-        else
-            NDC.push(ndc);
+        if (StringUtil.isNullOrEmpty(value)) {
+            MDC.remove(key);
+        } else {
+            MDC.put(key, value);
+        }
+    }
+
+    /**
+     * Adds a <tt>MailItem</tt> id to the current thread's
+     * logging context.
+     */
+    public static void addItemToContext(int itemId) {
+    	addToContext("item", Integer.toString(itemId));
+    }
+
+    /**
+     * Removes a key/value pair from the current thread's logging context.
+     */
+    public static void removeFromContext(String key, String value) {
+        if (key != null) {
+            MDC.remove(key);
+        }
     }
     
     /**
-     * push key/value to end of context.
-     * @param key
-     * @param value
+     * Removes a <tt>MailItem</tt> id from the current thread's
+     * logging context.
      */
-    public static void pushbackContext(String key, String value) {
-        if (key == null) return;
-        String ndc = NDC.pop();
-        String ctxt = key + "=" + value + ";";
-        if (!ndc.endsWith(ctxt)) {
-        	ndc += ctxt;
-        }
-        NDC.push(ndc);
-    }
-    
-    public static void pushbackItemId(int itemId) {
-    	pushbackContext("item", Integer.toString(itemId));
+    public static void removeItemFromContext(int itemId) {
+    	removeFromContext("item", Integer.toString(itemId));
     }
     
     /**
-     * pop key/value from end of context.
-     * @param key
-     * @param value
+     * Adds account name to the current thread's logging context.
      */
-    public static void popbackContext(String key, String value) {
-        if (key == null) return;
-        String ndc = NDC.pop();
-        String ctxt = key + "=" + value + ";";
-        if (ndc.endsWith(ctxt)) {
-        	ndc = ndc.substring(0, ndc.length() - ctxt.length());
-        }
-        NDC.push(ndc);
-    }
-    
-    public static void popbackItemId(int itemId) {
-    	popbackContext("item", Integer.toString(itemId));
-    }
-    
     public static void addAccountNameToContext(String accountName) {
         ZimbraLog.addToContext(C_NAME, accountName);
     }
     
+    /**
+     * Adds ip to the current thread's logging context.
+     */
     public static void addIpToContext(String ipAddress) {
         ZimbraLog.addToContext(C_IP, ipAddress);
     }  
     
+    /**
+     * Adds connection id to the current thread's logging context.
+     */
     public static void addConnectionIdToContext(String connectionId) {
         ZimbraLog.addToContext(C_CONNECTIONID, connectionId);
     }
     
+    /**
+     * Adds mailbox id to the current thread's logging context.
+     */
     public static void addMboxToContext(int mboxId) {
         addToContext(C_MID, Integer.toString(mboxId));
     }
     
+    /**
+     * Adds message id to the current thread's logging context.
+     */
     public static void addMsgIdToContext(String messageId) {
         addToContext(C_MSG_ID, messageId);
     }
     
+    /**
+     * Adds data source name to the current thread's logging context.
+     */
     public static void addDataSourceNameToContext(String dataSourceName) {
         ZimbraLog.addToContext(C_DATA_SOURCE_NAME, dataSourceName);
     }
     
+    /**
+     * Adds port to the current thread's logging context.
+     */
     public static void addPortToContext(int port) {
         ZimbraLog.addToContext(C_PORT, Integer.toString(port));
     }
     
-    private static boolean checkContext(String context, String key) {
-        if (context == null || key == null)
-            return false;
-        return (!context.startsWith(key + "=") && context.indexOf(";" + key + "=") == -1);
-    }
-
+    /**
+     * Clears the current thread's logging context.
+     *
+     */
     public static void clearContext() {
-        NDC.clear();
+        if (MDC.getContext() != null) {
+            MDC.getContext().clear();
+        }
         getAccountNamesForThread().clear();
     }
 
@@ -435,7 +437,7 @@ public class ZimbraLog {
     }
 
     
-    private static void encodeArg(StringBuffer sb, String name, String value) {
+    public static void encodeArg(StringBuffer sb, String name, String value) {
         if (value == null) value = "";
         if (value.indexOf(';') != -1) value = value.replaceAll(";", ";;");
         // replace returns ref to original string if char to replace doesn't exist
