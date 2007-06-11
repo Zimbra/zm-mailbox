@@ -1353,8 +1353,12 @@ public class ZMailboxUtil implements DebugListener {
 
         byte[] data = ByteUtil.getContent(file);
         try {
-            if (date == -1)
-                date = new MimeMessage(mSession, new ByteArrayInputStream(data)).getSentDate().getTime();
+            if (date == -1) {
+                MimeMessage mm = new MimeMessage(mSession, new ByteArrayInputStream(data));
+                Date d = mm.getSentDate();
+                if (d != null) date = d.getTime();
+                else date = 0;
+            }
         } catch (MessagingException e) {
             date = 0;
         }
