@@ -293,6 +293,7 @@ global soap/system errors used with zimbra:Error/Code:
    account.NO_SUCH_DOMAIN
    account.NO_SUCH_COS
    account.NO_SUCH_IDENTITY
+   account.NO_SUCH_SIGNATURE
    account.NO_SUCH_DATA_SOURCE
    account.NO_SUCH_SERVER
    account.NO_SUCH_ZIMLET
@@ -306,12 +307,14 @@ global soap/system errors used with zimbra:Error/Code:
    account.SERVER_EXISTS
    account.DISTRIBUTION_LIST_EXISTS
    account.IDENTITY_EXISTS
+   account.SIGNATURE_EXISTS
    account.DATA_SOURCE_EXISTS
    account.DOMAIN_NOT_EMPTY
    account.MAINTENANCE_MODE
    account.ACCOUNT_INACTIVE
    account.TOO_MANY_ACCOUNTS
    account.TOO_MANY_IDENTITIES
+   account.TOO_MANY_SIGNATURES
    account.TOO_MANY_DATA_SOURCES
    account.TOO_MANY_SEARCH_RESULTS
    
@@ -423,6 +426,13 @@ an authToken can be passed instead of account/password/preauth to validate an ex
        <a name="{name}">{value}</a>
      </identity>*
    </identities>
+   <signatures>
+     <signature name={signature-name} id="...">
+       <a name="{name}">{value}</a>
+       ...
+       <a name="{name}">{value}</a>
+     </signature>*
+   </signatures>
    <dataSources>
      <pop3 id="{id}" name="My POP3 Account" isEnabled="0|1" host="pop3.myisp.com" port="110"
         username="mylogin" l="{folder-id}" [pollingInterval="10m"]/>
@@ -486,9 +496,11 @@ an authToken can be passed instead of account/password/preauth to validate an ex
   <skin name="{skin-name}"/>+
 </GetAvailableSkinsResponse>
 
-Returns zimbraAvailableSkin skin values set on an account (or its
-CoS).  If none is set, it returns zimbraInstalledSkin values from
-global config.
+Returns intersection of installed skins on the server and the list 
+specified in the zimbraAvailableSkin on an account (or its
+CoS).  If none is set in zimbraAvailableSkin, it returns the 
+entire list of installed skins.  The installed skin list is obtained 
+by a directory scan of the designated location of skins on a server.   
 
 ----------------------------
 
@@ -620,7 +632,7 @@ Allowed attributes (see objectclass zimbraIdentity in zimbra.schema)
     zimbraPrefForwardReplyPrefixChar
     zimbraPrefFromAddress
     zimbraPrefFromDisplay
-    zimbraPrefMailSignature
+	zimbraPrefMailSignature
     zimbraPrefMailSignatureEnabled
     zimbraPrefMailSignatureStyle
     zimbraPrefReplyIncludeOriginalText
@@ -635,7 +647,7 @@ Allowed attributes (see objectclass zimbraIdentity in zimbra.schema)
     zimbraPrefWhenSentToAddresses
     zimbraPrefWhenSentToEnabled
 
-
+    
 ---------
 
 <GetIdentitiesRequest/>
@@ -669,6 +681,63 @@ Allowed attributes (see objectclass zimbraIdentity in zimbra.schema)
 </DeleteIdentityRequest>
 
 <DeleteIdentityResponse/>
+
+<-- must specify either 'name' or 'id' -->
+
+---------
+
+<CreateSignatureRequest>
+  <signature name="{signature-name}">
+    <a name="{name}">{value}</a>
+    ...
+    <a name="{name}">{value}</a>
+  </signature>
+</CreateSignatureRequest>
+
+<CreateSignatureResponse>
+  <signature name="{signature-name}" id="{signature-id}">
+   ....
+  </signature>
+</CreateSignatureResponse>
+
+
+Allowed attributes (see objectclass zimbraSignature in zimbra.schema)
+
+	zimbraPrefMailSignature
+        
+---------
+
+<GetSignaturesRequest/>
+
+<GetSignaturesResponse>
+  <signature name="{signature-name}" id="{signature-id}">
+    <a name="{name}">{value}</a>
+    ...
+    <a name="{name}">{value}</a>
+  </signature>+
+</GetSignaturesResponse>
+
+---------
+
+<ModifySignatureRequest>
+  <signature [name="{signature-name}" | id="{signature-id}"]>
+    <a name="{name}">{value}</a>
+    ...
+    <a name="{name}">{value}</a>
+  </signature>
+</ModifySignatureRequest>
+
+<ModifySignatureResponse/>
+
+<-- must specify either 'name' or 'id' -->
+
+---------
+
+<DeleteSignatureRequest>
+  <signature [name="{signature-name}" | id="{signature-id}"]/>
+</DeleteSignatureRequest>
+
+<DeleteSignatureResponse/>
 
 <-- must specify either 'name' or 'id' -->
 

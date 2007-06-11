@@ -44,6 +44,7 @@ import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.zimlet.ZimletProperty;
@@ -86,6 +87,8 @@ public class GetInfo extends AccountDocumentHandler  {
         doProperties(props, acct);
         Element ids = response.addUniqueElement(AccountConstants.E_IDENTITIES);
         doIdentities(ids, acct);
+        Element sigs = response.addUniqueElement(AccountConstants.E_SIGNATURES);
+        doSignatures(sigs, acct);
         Element ds = response.addUniqueElement(AccountConstants.E_DATA_SOURCES);
         doDataSources(ds, acct, lc);
         Element ca = response.addUniqueElement(AccountConstants.E_CHILD_ACCOUNTS);
@@ -155,6 +158,16 @@ public class GetInfo extends AccountDocumentHandler  {
     	} catch (ServiceException se) {
     		ZimbraLog.account.error("can't get identities", se);
     	}
+    }
+    
+    private static void doSignatures(Element response, Account acct) {
+        try {
+            List<Signature> signatures = Provisioning.getInstance().getAllSignatures(acct);
+            for (Signature s : signatures)
+                ToXML.encodeSignature(response, s);
+        } catch (ServiceException se) {
+            ZimbraLog.account.error("can't get signatures", se);
+        }
     }
     
     private static void doDataSources(Element response, Account acct, ZimbraSoapContext zsc) {
