@@ -181,6 +181,11 @@ public class ZimbraLog {
      * the "zimbra.sqltrace" logger. For tracing SQL statements sent to the database
      */
     public static final Log sqltrace = LogFactory.getLog("zimbra.sqltrace");
+    
+    /**
+     * the "zimbra.dbconn" logger. For tracing database connections
+     */
+    public static final Log dbconn = LogFactory.getLog("zimbra.dbconn");
 
     /**
      * the "zimbra.perf" logger. For logging performance statistics
