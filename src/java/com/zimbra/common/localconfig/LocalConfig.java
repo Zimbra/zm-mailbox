@@ -54,20 +54,18 @@ public class LocalConfig {
     private String mConfigFile;
     
     private String defaultConfigFile() {
-    	String zimbra_config = System.getProperty("zimbra.config");
-    	if (zimbra_config == null) {
-    		final String FS = File.separator;
-    		zimbra_config = FS + "opt" + FS + "zimbra" + FS + "conf" + FS + "localconfig.xml";
-    	}
-    	return zimbra_config;
+        String zmHome = System.getProperty("zimbra.home");
+        if (zmHome == null) {
+            zmHome = File.separator + "opt" + File.separator + "zimbra";
+        }
+        return zmHome + File.separator + "conf" + File.separator + "localconfig.xml";
     }
         
     String getConfigFile() {
         return mConfigFile;
     }
 
-    private Map<String, String> mConfiguredKeys = new HashMap<String, String>();
-    private Map<String, String> mExpanded = new HashMap<String, String>();
+    private Map<String, String> mConfiguredKeys = new HashMap<String, String>(); 
 
     void set(String key, String value) 
     {
@@ -116,10 +114,7 @@ public class LocalConfig {
         return true;
     }
 
-    String expand(String key, String rawValue) throws ConfigException {
-        if (rawValue == null)
-            return null;
-
+    private String expand(String key, String rawValue) throws ConfigException {
         Set<String> seenKeys = new HashSet<String>();
         seenKeys.add(key);
         StringBuffer result = new StringBuffer(rawValue);
@@ -128,13 +123,10 @@ public class LocalConfig {
     }
 
     String get(String key) throws ConfigException {
-        if (mExpanded.containsKey(key)) {
-            return mExpanded.get(key);
-        }
-        if (KnownKey.isKnown(key)) {
-            return KnownKey.getValue(key);
-        }
-        return null;
+        String raw = getRaw(key);
+        if (raw == null)
+            return null;
+        return expand(key, raw);
     }
     
     //
@@ -182,7 +174,7 @@ public class LocalConfig {
         } else {
             Logging.warn("local config file `" + cf + "' is not readable");
         }
-        expandAll();
+        verify();
     }
 
     boolean isSet(String key) {
@@ -329,13 +321,18 @@ public class LocalConfig {
     }
 
     //
-    // Expand and cache all keys
+    // Verify
     //
-    private void expandAll() throws ConfigException {
-    	KnownKey.expandAll(this);
-    	for (String key : mConfiguredKeys.keySet()) {
-    		mExpanded.put(key, expand(key, mConfiguredKeys.get(key)));
-    	}
+    private void verify() throws ConfigException {
+        String[] keys = KnownKey.getAll();
+        for (int i = 0; i < keys.length; i++) {
+            String key = keys[i];
+            String value = KnownKey.getDefaultValue(key);
+            value = expand(key, value);
+        }
+
+        for (String key : mConfiguredKeys.keySet())
+            get(key);
     }
 
     //

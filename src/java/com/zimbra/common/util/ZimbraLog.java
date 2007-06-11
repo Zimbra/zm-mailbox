@@ -25,11 +25,9 @@
 package com.zimbra.common.util;
 
 import java.io.File;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 import java.util.Map.Entry;
 
 import org.apache.log4j.MDC;
@@ -87,22 +85,6 @@ public class ZimbraLog {
     public static final String C_USER_AGENT = "ua";
     
     /**
-     * "msgid" key for context.  The Message-ID header of the message being
-     * operated on.
-     */
-    private static final String C_MSG_ID = "msgid";
-    
-    /**
-     * "ds" key for context.  The name of the Data Source being operated on.
-     */
-    private static final String C_DATA_SOURCE_NAME = "ds";
-    
-    /**
-     * "port" key for context.  The server port to which the client connected.  
-     */
-    private static final String C_PORT = "port";
-    
-    /**
      * the "zimbra.misc" logger. For all events that don't have a specific-catagory.
      */
     public static final Log misc = LogFactory.getLog("zimbra.misc");
@@ -122,16 +104,6 @@ public class ZimbraLog {
      */
     public static final Log lmtp = LogFactory.getLog("zimbra.lmtp");
     
-    /**
-     * the "zimbra.smtp" logger. For SMTP-related events.
-     */
-    public static final Log smtp = LogFactory.getLog("zimbra.smtp");
-
-    /**
-     * the "zimbra.nio" logger. For NIO-related events.
-     */
-    public static final Log nio = LogFactory.getLog("zimbra.nio");
-
     /**
      * the "zimbra.imap" logger. For IMAP-related events.
      */
@@ -153,7 +125,7 @@ public class ZimbraLog {
     public static final Log calendar = LogFactory.getLog("zimbra.calendar");
     
     /**
-     * the "zimbra.im" logger. For instant messaging-related events.
+     * the "zimbra.calendar" logger. For calendar-related events.
      */
     public static final Log im = LogFactory.getLog("zimbra.im");
     
@@ -171,7 +143,7 @@ public class ZimbraLog {
      * the "zimbra.soap" logger. For soap-related events
      */
     public static final Log soap = LogFactory.getLog("zimbra.soap");
-    
+
     /**
      * the "zimbra.test" logger. For testing-related events
      */
@@ -263,33 +235,9 @@ public class ZimbraLog {
     public static final Log io = LogFactory.getLog("zimbra.io");
 
     /**
-     * the "zimbra.datasource" logger.  Logs data source operations.
-     */
-    public static final Log datasource = LogFactory.getLog("zimbra.datasource");
-
-    /**
      * remote management.
      */
     public static final Log rmgmt = LogFactory.getLog("zimbra.rmgmt");
-    
-    /**
-     * Keeps track of the account associated with the current thread, for
-     * per-user logging settings. 
-     */
-    private static ThreadLocal<Set<String>> sAccountNames = new ThreadLocal<Set<String>>();
-
-    static Set<String> getAccountNamesForThread() {
-        Set<String> accountNames = sAccountNames.get();
-        if (accountNames == null) {
-            accountNames = new HashSet<String>();
-            sAccountNames.set(accountNames);
-        }
-        return accountNames;
-    }
-    
-    private static void addAccountForThread(String accountName) {
-        getAccountNamesForThread().add(accountName);
-    }
 
     /**
      * Adds a key/value pair to the current thread's logging context.
@@ -297,9 +245,6 @@ public class ZimbraLog {
     public static void addToContext(String key, String value) {
         if (key == null)
             return;
-        if (key.equals(C_NAME) || key.equals(C_ANAME)) {
-            addAccountForThread(value);
-        }
         if (StringUtil.isNullOrEmpty(value)) {
             MDC.remove(key);
         } else {
@@ -363,24 +308,12 @@ public class ZimbraLog {
     /**
      * Adds message id to the current thread's logging context.
      */
-    public static void addMsgIdToContext(String messageId) {
-        addToContext(C_MSG_ID, messageId);
-    }
-    
     /**
      * Adds data source name to the current thread's logging context.
      */
-    public static void addDataSourceNameToContext(String dataSourceName) {
-        ZimbraLog.addToContext(C_DATA_SOURCE_NAME, dataSourceName);
-    }
-    
     /**
      * Adds port to the current thread's logging context.
      */
-    public static void addPortToContext(int port) {
-        ZimbraLog.addToContext(C_PORT, Integer.toString(port));
-    }
-    
     /**
      * Clears the current thread's logging context.
      *
@@ -389,7 +322,6 @@ public class ZimbraLog {
         if (MDC.getContext() != null) {
             MDC.getContext().clear();
         }
-        getAccountNamesForThread().clear();
     }
 
     /**
@@ -497,4 +429,5 @@ public class ZimbraLog {
         }
         return sb.toString();
     }
+
 }

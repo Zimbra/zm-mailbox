@@ -24,9 +24,7 @@
  */
 package com.zimbra.common.util;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -71,20 +69,4 @@ public class LogFactory {
         return log;
     }
     
-    /**
-     * Returns all account loggers that have been created since the last server start, or
-     * an empty <tt>List</tt>.
-     */
-    public static List<AccountLogger> getAllAccountLoggers() {
-        List<AccountLogger> accountLoggers = new ArrayList<AccountLogger>(); 
-        synchronized (sLogsByName) {
-            for (Log log : sLogsByName.values()) {
-                List<AccountLogger> alForCategory = log.getAccountLoggers();
-                if (alForCategory != null) {
-                    accountLoggers.addAll(alForCategory);
-                }
-            } 
-        }
-        return accountLoggers;
-    }
 }
