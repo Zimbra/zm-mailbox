@@ -111,6 +111,7 @@ public class LC {
     public static final KnownKey zimbra_index_max_uncommitted_operations;
     public static final KnownKey zimbra_index_lru_size;
     public static final KnownKey zimbra_index_idle_flush_time;
+    public static final KnownKey zimbra_index_sweep_frequency;
     
     public static final KnownKey zimbra_index_reader_lru_size;
     public static final KnownKey zimbra_index_reader_idle_flush_time;
@@ -119,6 +120,9 @@ public class LC {
     public static final KnownKey zimbra_spam_report_queue_size;
 
     public static final KnownKey zimbra_throttle_op_concurrency;
+    
+    public static final KnownKey zimbra_im_chat_flush_time;
+    public static final KnownKey zimbra_im_chat_close_time;
 
     public static final KnownKey stats_img_folder;
 
@@ -402,6 +406,9 @@ public class LC {
         zimbra_index_idle_flush_time.setDoc("If idle for longer than this value (in seconds), flush" +
                     " uncommitted indexing ops in mailbox.");
         
+        zimbra_index_sweep_frequency = new KnownKey("zimbra_index_sweep_frequency", "30", 
+              "How often (seconds) do we sweep the Index Writer Cache looking for idle IndexWriters to close");
+        
         zimbra_index_reader_lru_size  = new KnownKey("zimbra_index_reader_lru_size");
         zimbra_index_reader_lru_size.setDefault("20");
         zimbra_index_reader_lru_size.setDoc("Maximum number of IndexReaders cached open by the search subsystem");
@@ -413,7 +420,6 @@ public class LC {
         zimbra_index_reader_idle_sweep_frequency = new KnownKey("zimbra_index_reader_idle_sweep_frequency");
         zimbra_index_reader_idle_sweep_frequency.setDefault("30");
         zimbra_index_reader_idle_sweep_frequency.setDoc("Frequency (seconds) the index reader LRU is swept for idle readers");
-        
 
         zimbra_spam_report_queue_size = new KnownKey("zimbra_spam_report_queue_size");
         zimbra_spam_report_queue_size.setDefault("100");
@@ -424,6 +430,11 @@ public class LC {
         zimbra_throttle_op_concurrency.setDefault("1000,1000,1000,1000,1000");
         zimbra_throttle_op_concurrency.setDoc("Comma-Separated list of concurrency values for each of the 5 priority levels " +
                     "in order from highest priority to lowest priority");
+        
+        zimbra_im_chat_flush_time = new KnownKey("zimbra_im_chat_flush_time", "300",
+             "How frequently (seconds) are open IM chats written to the store");
+        zimbra_im_chat_close_time = new KnownKey("zimbra_im_chat_close_time", "3600", 
+             "How long (seconds) will the server wait to close idle IM chat sessions");
 
         stats_img_folder = new KnownKey("stats_img_folder");
         stats_img_folder.setDefault("${zimbra_home}" + FS + "logger" + FS + "db" + FS + "work");

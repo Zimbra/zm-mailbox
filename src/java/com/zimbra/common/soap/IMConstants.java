@@ -72,6 +72,7 @@ public class IMConstants {
     public static final String A_STATE          = "state";
     public static final String A_TIME_UNTIL_NEXT_CONNECT = "timeUntilNextConnect";
     public static final String A_USERNAME       = "username";
+    public static final String A_ERROR          = "error";
 
     public static final String E_MESSAGES       = "messages";
     public static final String E_MESSAGE        = "message";
