@@ -97,9 +97,9 @@ public class Collection extends MailItemResource {
 			mDavCompliance.add(Compliance.access_control);
 			mDavCompliance.add(Compliance.calendar_access);
 			mDavCompliance.add(Compliance.calendar_schedule);
-			addProperty(CalDavProperty.getCalendarHomeSet(UrlNamespace.getHomeUrl(this.getOwner()) + f.getPath()));
-			addProperty(CalDavProperty.getScheduleInboxURL(UrlNamespace.getHomeUrl(this.getOwner()) + "/Inbox/"));
-			addProperty(CalDavProperty.getScheduleOutboxURL(UrlNamespace.getHomeUrl(this.getOwner()) + "/Sent/"));
+			addProperty(CalDavProperty.getCalendarHomeSet(UrlNamespace.getResourceUrl(this.getOwner(), f.getPath())));
+			addProperty(CalDavProperty.getScheduleInboxURL(UrlNamespace.getResourceUrl(this.getOwner(), "/Inbox/")));
+			addProperty(CalDavProperty.getScheduleOutboxURL(UrlNamespace.getResourceUrl(this.getOwner(), "/Sent/")));
 			ArrayList<String> addrs = new ArrayList<String>();
 			addrs.add(f.getAccount().getAttr(Provisioning.A_zimbraMailDeliveryAddress));
 			addProperty(CalDavProperty.getCalendarUserAddressSet(addrs));

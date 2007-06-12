@@ -24,15 +24,11 @@
  */
 package com.zimbra.cs.dav.resource;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.StringTokenizer;
 
 import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.httpclient.HttpURL;
-import org.apache.commons.httpclient.HttpsURL;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.HttpUtil;
@@ -133,19 +129,8 @@ public class UrlNamespace {
 	}
 	
 	/* Returns the root URL of the user. */
-	public static String getHomeUrl(String user) throws DavException {
-		try {
-			String url = DavServlet.getDavUrl(user);
-            if (url.startsWith("https"))
-                url = new HttpsURL(url).toString();
-            else
-                url = new HttpURL(url).toString();
-            return url;
-		} catch (IOException e) {
-			throw new DavException("cannot create URL for user "+user, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
-		} catch (ServiceException e) {
-			throw new DavException("cannot create URL for user "+user, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
-		}
+	public static String getHomeUrl(String user) throws ServiceException, DavException {
+		return getResourceUrl(user, "");
 	}
 	
 	public static final String ACL_USER   = "/acl/user";
@@ -169,10 +154,32 @@ public class UrlNamespace {
 	}
 
 	/* Returns URL to the resource. */
-	public static String getResourceUrl(DavResource rs) throws DavException {
-		return getHomeUrl(rs.getOwner()) + rs.getUri();
+	public static String getResourceUrl(DavResource rs) throws ServiceException, DavException {
+		return getResourceUrl(rs.getOwner(), rs.getUri());
 	}
 
+	public static String getResourceUrl(String user, String resourcePath) throws ServiceException, DavException {
+		return urlEscape(DavServlet.getDavUrl(user) + resourcePath);
+	}
+	
+	private static String urlEscape(String str) {
+		// rfc 2396 url escape.
+		// currently escaping ' and " only
+		if (str.indexOf(' ') == -1 && str.indexOf('\'') == -1 && str.indexOf('"') == -1)
+			return str;
+		StringBuilder buf = new StringBuilder();
+		for (char c : str.toCharArray()) {
+			if (c == ' ')
+				buf.append("%20");
+			else if (c == '"')
+				buf.append("%22");
+			else if (c == '\'')
+				buf.append("%27");
+			else buf.append(c);
+		}
+		return buf.toString();
+	}
+	
 	/* Returns DavResource for the MailItem. */
 	public static MailItemResource getResourceFromMailItem(DavContext ctxt, MailItem item) throws DavException {
 		MailItemResource resource = null;

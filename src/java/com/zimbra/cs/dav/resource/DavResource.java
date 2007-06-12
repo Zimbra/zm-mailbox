@@ -88,7 +88,7 @@ public abstract class DavResource {
 		href.setProtected(true);
 		try {
 			href.setStringValue(UrlNamespace.getResourceUrl(this));
-		} catch (DavException e) {
+		} catch (Exception e) {
 			ZimbraLog.dav.error("can't generate href", e);
 		}
 		addProperty(href);
