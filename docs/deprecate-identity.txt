@@ -65,11 +65,11 @@ attrs currently do not appear in any UI field
 	
 New attributes:
 ---------------
-	zimbraPrefSignatureId           requiredIn="signature"    desc="signature id"           (migrated from zimbraPrefIdentityId)
-    zimbraPrefSignatureName         requiredIn="signature"    desc="signature name"         (migrated from zimbraPrefIdentityName)
-    zimbraPrefDefaultSignature      optionalIn="account"      desc="default signature name" (initial value is empty)
-    zimbraSignatureMaxNumEntries    optionalIn="account,cos"  <desc>maximum number of signatures allowed on an account</desc> (COS default is 20)
-    zimbraFeatureSignaturesEnabled  optionalIn="account,cos"  <desc>whether to allow use of signature feature</desc> (COS default is TRUE)
+	zimbraPrefSignatureId           requiredIn="signature"                           desc="signature id"           (migrated from zimbraPrefIdentityId)
+    zimbraPrefSignatureName         requiredIn="signature" optionalIn="dataSource"   desc="signature name"         (migrated from zimbraPrefIdentityName)
+    zimbraPrefDefaultSignature      optionalIn="account"                             desc="default signature name" (initial value is empty)
+    zimbraSignatureMaxNumEntries    optionalIn="account,cos"                         desc="maximum number of signatures allowed on an account" (COS default is 20)
+    zimbraFeatureSignaturesEnabled  optionalIn="account,cos"                         desc="whether to allow use of signature feature" (COS default is TRUE)
 
 Changed attributes:                        current                              after
 ----------------------------------------------------------------------------------------------------------
@@ -122,6 +122,10 @@ Deprecated attributes (just set the deprecateSince flag for documentation purpos
        if {account.zimbraFeatureIdentitiesEnabled}  
            account.zimbraFeatureSignaturesEnabled = account.zimbraFeatureIdentitiesEnabled (set to)
    
+       For each dataSource of the account (
+           // TODO
+       )
+   
        For each identity of the account (
            1. Create a singnature entry, as follows:
                   dn: zimbraPrefSignatureName={identity.zimbraPrefIdentityName},{account-DN}
@@ -139,12 +143,3 @@ Deprecated attributes (just set the deprecateSince flag for documentation purpos
            4. Delete the identity entry
        )
     )       
-
-
-        
-    
-    
-
-
-
-
