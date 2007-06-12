@@ -26,8 +26,11 @@ IMSubscribe -- subscribe to someone's presence / modify subscription
 -----------
 <IMSubscribeRequest addr="foo@bar.com" [name="friendly name"] [groups="group,group..."] [op="add|remove"]/>
 
-<IMSubscribeResponse/>
-
+// If the user specified an alias, the server will resolve the alias
+// to a canonical address -- and add the canonical address to the
+// Buddy List.  The addr returned might be different than the
+// requested addr
+<IMSubscribeResponse addr="might-be-different@domain.com"/>
 
 
 IMAuthorizeSubscribe -- used to OK another user adding you to their buddy list

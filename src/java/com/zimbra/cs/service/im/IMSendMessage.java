@@ -34,6 +34,7 @@ import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.cs.im.IMAddr;
 import com.zimbra.cs.im.IMMessage;
 import com.zimbra.cs.im.IMPersona;
+import com.zimbra.cs.im.IMUtils;
 import com.zimbra.cs.im.IMMessage.TextPart;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -48,7 +49,7 @@ public class IMSendMessage extends IMDocumentHandler {
         Element msgElt = request.getElement(IMConstants.E_MESSAGE);
         
         String threadId = msgElt.getAttribute(IMConstants.A_THREAD_ID, null);
-        String addr = msgElt.getAttribute(IMConstants.A_ADDRESS);
+        String addr = IMUtils.resolveAddress(msgElt.getAttribute(IMConstants.A_ADDRESS));
         
         String subject = null;
         String body = null;
