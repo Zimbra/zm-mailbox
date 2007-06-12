@@ -17,7 +17,7 @@ log4j.appender.LOGFILE.File=/opt/zimbra/log/mailbox.log
 log4j.appender.LOGFILE.DatePattern='.'yyyy-MM-dd
 log4j.appender.LOGFILE.Append=true
 log4j.appender.LOGFILE.layout=com.zimbra.common.util.ZimbraPatternLayout
-log4j.appender.LOGFILE.layout.ConversionPattern=%d %-5p [%t] [%X] %c{1} - %m%n
+log4j.appender.LOGFILE.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
 
 # Appender AUDIT writes to the file "audit.log".
 log4j.appender.AUDIT=org.apache.log4j.DailyRollingFileAppender
@@ -25,7 +25,7 @@ log4j.appender.AUDIT.File=/opt/zimbra/log/audit.log
 log4j.appender.AUDIT.DatePattern='.'yyyy-MM-dd
 log4j.appender.AUDIT.Append=true
 log4j.appender.AUDIT.layout=com.zimbra.common.util.ZimbraPatternLayout
-log4j.appender.AUDIT.layout.ConversionPattern=%d %-5p [%t] [%X] %c{1} - %m%n
+log4j.appender.AUDIT.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
 
 # Save zimbra.security to AUDIT appender 
 log4j.additivity.zimbra.security=false
@@ -48,7 +48,7 @@ log4j.appender.SYSLOG=org.apache.log4j.net.SyslogAppender
 log4j.appender.SYSLOG.SyslogHost=localhost
 log4j.appender.SYSLOG.Facility=LOCAL0
 log4j.appender.SYSLOG.layout=com.zimbra.common.util.ZimbraPatternLayout
-log4j.appender.SYSLOG.layout.ConversionPattern=%d %-5p [%t] [%X] %c{1} - %m%n
+log4j.appender.SYSLOG.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
 
 # Appender SYNC writes to the file "sync.log".
 log4j.appender.SYNC=org.apache.log4j.DailyRollingFileAppender
@@ -56,7 +56,7 @@ log4j.appender.SYNC.File=/opt/zimbra/log/sync.log
 log4j.appender.SYNC.DatePattern='.'yyyy-MM-dd
 log4j.appender.SYNC.Append=true
 log4j.appender.SYNC.layout=com.zimbra.common.util.ZimbraPatternLayout
-log4j.appender.SYNC.layout.ConversionPattern=%d %-5p [%t] [%X] %c{1} - %m%n
+log4j.appender.SYNC.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
 
 # Appender SYNCTRACE writes to the file "synctrace.log".
 log4j.appender.SYNCTRACE=org.apache.log4j.DailyRollingFileAppender
@@ -64,7 +64,7 @@ log4j.appender.SYNCTRACE.File=/opt/zimbra/log/synctrace.log
 log4j.appender.SYNCTRACE.DatePattern='.'yyyy-MM-dd
 log4j.appender.SYNCTRACE.Append=true
 log4j.appender.SYNCTRACE.layout=com.zimbra.common.util.ZimbraPatternLayout
-log4j.appender.SYNCTRACE.layout.ConversionPattern=%d %-5p [%t] [%X] %c{1} - %m%n
+log4j.appender.SYNCTRACE.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
 
 # Appender SYNCSTATE writes to the file "syncstate.log".
 log4j.appender.SYNCSTATE=org.apache.log4j.DailyRollingFileAppender
@@ -72,7 +72,7 @@ log4j.appender.SYNCSTATE.File=/opt/zimbra/log/syncstate.log
 log4j.appender.SYNCSTATE.DatePattern='.'yyyy-MM-dd
 log4j.appender.SYNCSTATE.Append=true
 log4j.appender.SYNCSTATE.layout=com.zimbra.common.util.ZimbraPatternLayout
-log4j.appender.SYNCSTATE.layout.ConversionPattern=%d %-5p [%t] [%X] %c{1} - %m%n
+log4j.appender.SYNCSTATE.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
 
 # Appender WBXML writes to the file "wbxml.log".
 log4j.appender.WBXML=org.apache.log4j.DailyRollingFileAppender
@@ -80,7 +80,7 @@ log4j.appender.WBXML.File=/opt/zimbra/log/wbxml.log
 log4j.appender.WBXML.DatePattern='.'yyyy-MM-dd
 log4j.appender.WBXML.Append=true
 log4j.appender.WBXML.layout=com.zimbra.common.util.ZimbraPatternLayout
-log4j.appender.WBXML.layout.ConversionPattern=%d %-5p [%t] [%X] %c{1} - %m%n
+log4j.appender.WBXML.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
 
 log4j.additivity.zimbra.sync=false
 log4j.logger.zimbra.sync=DEBUG,SYNC
