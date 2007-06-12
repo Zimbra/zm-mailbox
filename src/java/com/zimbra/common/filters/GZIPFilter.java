@@ -26,6 +26,7 @@ public class GZIPFilter implements Filter {
 
     private static final String P_COMPRESSABLE_MIME_TYPES = "compressableMimeTypes";
     private static final String P_NO_COMPRESSION_USER_AGENTS = "noCompressionUserAgents";
+    private static final String P_USER_AGENT_CACHE_SIZE = "userAgentCacheSize";
 
     /*
       compression="on"
@@ -49,8 +50,12 @@ public class GZIPFilter implements Filter {
                 mNoCompressionUserAgents.add(Pattern.compile(ua, Pattern.CASE_INSENSITIVE));
             }
         }
-        
-        mUAMap = new LRUMap(20);
+
+        int cacheSize = 20;
+        String cacheSizeStr = filterConfig.getInitParameter(P_USER_AGENT_CACHE_SIZE);
+        if (cacheSizeStr != null)
+        	cacheSize = Integer.parseInt(cacheSizeStr);
+        mUAMap = new LRUMap(cacheSize);
     }
 
     public void destroy() { }
