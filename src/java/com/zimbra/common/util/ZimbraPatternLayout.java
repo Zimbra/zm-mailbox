@@ -24,9 +24,6 @@
  */
 package com.zimbra.common.util;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
-
 import org.apache.log4j.Category;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Layout;
@@ -43,16 +40,12 @@ import org.apache.log4j.helpers.PatternParser;
  */
 public class ZimbraPatternLayout extends PatternLayout {
 
-    private Set<String> mMdcKeyOrder;
-    
     public ZimbraPatternLayout() {
         this(DEFAULT_CONVERSION_PATTERN);
-        setMdcKeyOrder("name,aname,mid,ip");
     }
 
     public ZimbraPatternLayout(String pattern) {
         super(pattern);
-        setMdcKeyOrder("name,aname,mid,ip");
     }
 
     public PatternParser createPatternParser(String pattern) {
@@ -62,25 +55,6 @@ public class ZimbraPatternLayout extends PatternLayout {
         return new ZimbraPatternParser(pattern, this);
     }
     
-    /**
-     * Sets the order of keys printed in the context section.  These keys
-     * are printed in the specied order, before any other keys.  Keys not
-     * in the context are not printed.
-     *   
-     * @param order a comma-separated list of MDC keys
-     */
-    public void setMdcKeyOrder(String order) {
-        if (StringUtil.isNullOrEmpty(order)) {
-            return;
-        }
-        mMdcKeyOrder = new LinkedHashSet<String>();
-        for (String key : order.split(",")) {
-            mMdcKeyOrder.add(key);
-        }
-    }
-    
-    Set<String> getMdcKeyOrder() { return mMdcKeyOrder; }
-
     public static void main(String[] args) {
         Layout layout = new ZimbraPatternLayout("[%X] - %m%n");
         Category cat = Category.getInstance("some.cat");
