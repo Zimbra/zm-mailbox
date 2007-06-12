@@ -152,7 +152,6 @@ public class LdapProvisioning extends Provisioning {
     };
 
     private static final String FILTER_ACCOUNT_OBJECTCLASS =
-        //"(objectclass=zimbraAccount)(!(objectclass=zimbraCalendarResource))";
         "(objectclass=zimbraAccount)";
     private static final String FILTER_CALENDAR_RESOURCE_OBJECTCLASS =
         "(objectclass=zimbraCalendarResource)";
@@ -2349,12 +2348,6 @@ public class LdapProvisioning extends Provisioning {
                                           null);
     }
     
-    /*
-    "(&(|(zimbraMailDeliveryAddress=" + emailAddress +
-    ")(zimbraMailAlias=" + emailAddress + "))" +
-    FILTER_ACCOUNT_OBJECTCLASS + ")",
-    */
-    
     public Server getLocalServer() throws ServiceException {
         String hostname = LC.zimbra_server_hostname.value();
         if (hostname == null) {
@@ -3398,36 +3391,40 @@ public class LdapProvisioning extends Provisioning {
     
     @Override
     public List getAllAccounts(Domain d) throws ServiceException {
-        return searchAccounts(d, "(objectclass=zimbraAccount)", null, null, true, Provisioning.SA_ACCOUNT_FLAG);
-        // return searchAccounts(d, "(&(objectclass=zimbraAccount)(zimbraMailDeliveryAddress=*@" + d.getName() + "))", null, null, true, Provisioning.SA_ACCOUNT_FLAG);
+        return searchAccounts(d, mDIT.filterAccountsByDomain(d, false), null, null, true, Provisioning.SA_ACCOUNT_FLAG);
     }
     
     @Override
     public void getAllAccounts(Domain d, NamedEntry.Visitor visitor) throws ServiceException {
         LdapDomain ld = (LdapDomain) d;
-        searchObjects("(objectclass=zimbraAccount)", null, mDIT.domainDNToAccountSearchDN(ld.getDN()), Provisioning.SA_ACCOUNT_FLAG, visitor, 0);
+        searchObjects(mDIT.filterAccountsByDomain(d, false), null, mDIT.domainDNToAccountSearchDN(ld.getDN()), Provisioning.SA_ACCOUNT_FLAG, visitor, 0);
     }
 
     @Override
     public List getAllCalendarResources(Domain d) throws ServiceException {
+        return searchAccounts(d, mDIT.filterCalendarResourcesByDomain(d, false), 
+                              null, null, true, Provisioning.SA_CALENDAR_RESOURCE_FLAG);
+        /*
         return searchCalendarResources(d, 
                 LdapEntrySearchFilter.sCalendarResourcesFilter,
                 null, null, true);
+        */        
     }
     
     @Override
     public void getAllCalendarResources(Domain d, NamedEntry.Visitor visitor)
     throws ServiceException {
         LdapDomain ld = (LdapDomain) d;        
-        searchObjects("(objectclass=zimbraCalendarResource)",
-                             null, mDIT.domainDNToAccountSearchDN(ld.getDN()),
-                             Provisioning.SA_CALENDAR_RESOURCE_FLAG,
-                             visitor, 0);
+        searchObjects(mDIT.filterCalendarResourcesByDomain(d, false),
+                      null, mDIT.domainDNToAccountSearchDN(ld.getDN()),
+                      Provisioning.SA_CALENDAR_RESOURCE_FLAG,
+                      visitor, 0);
     }
 
     @Override
     public List getAllDistributionLists(Domain d) throws ServiceException {
-        return searchAccounts(d, FILTER_DISTRIBUTION_LIST_OBJECTCLASS, null, null, true, Provisioning.SA_DISTRIBUTION_LIST_FLAG);
+        return searchAccounts(d, mDIT.filterDistributionListsByDomain(d, false), 
+                              null, null, true, Provisioning.SA_DISTRIBUTION_LIST_FLAG);
     }
 
     @Override

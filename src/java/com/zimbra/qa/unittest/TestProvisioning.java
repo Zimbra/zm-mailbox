@@ -240,7 +240,14 @@ public class TestProvisioning extends TestCase {
             assertEquals(dn, mLdapProv.getDN(entry));
         }
         
-        public boolean verifyCountForDomainBasedSearch() {
+        public boolean verifyAccountCountForDomainBasedSearch() {
+            if (!mIsCustomProv)
+                return true;
+            else
+                return true;
+        }
+        
+        public boolean verifyDLCountForDomainBasedSearch() {
             if (!mIsCustomProv)
                 return true;
             else
@@ -680,12 +687,12 @@ public class TestProvisioning extends TestCase {
                 
         // get all accounts in a domain
         List list = mProv.getAllAccounts(domain);
-        verifyEntries(list, new NamedEntry[]{entry, adminAcct}, mCustomProvTester.verifyCountForDomainBasedSearch());
+        verifyEntries(list, new NamedEntry[]{entry, adminAcct}, mCustomProvTester.verifyAccountCountForDomainBasedSearch());
         
         // get all accounts in a domain, visitor version
         TestVisitor visitor = new TestVisitor();
         mProv.getAllAccounts(domain, visitor);
-        verifyEntries(visitor.visited(), new NamedEntry[]{entry, adminAcct}, mCustomProvTester.verifyCountForDomainBasedSearch());
+        verifyEntries(visitor.visited(), new NamedEntry[]{entry, adminAcct}, mCustomProvTester.verifyAccountCountForDomainBasedSearch());
         
         // modify account status
         mProv.modifyAccountStatus(entry, "maintenance");
@@ -817,12 +824,12 @@ public class TestProvisioning extends TestCase {
         entryGot = mProv.get(Provisioning.CalendarResourceBy.name, CR_ALIAS_EMAIL);
         verifySameEntry(entry, entryGot);
         
-        List list = mProv.getAllCalendarResources(domain);
-        verifyEntries(list, new NamedEntry[]{entry}, mCustomProvTester.verifyCountForDomainBasedSearch());
+        List list = mProv.getAllCalendarResources(domain); 
+        verifyEntries(list, new NamedEntry[]{entry}, mCustomProvTester.verifyAccountCountForDomainBasedSearch());
         
         TestVisitor visitor = new TestVisitor();
         mProv.getAllCalendarResources(domain, visitor);
-        verifyEntries(visitor.visited(), new NamedEntry[]{entry}, mCustomProvTester.verifyCountForDomainBasedSearch());
+        verifyEntries(visitor.visited(), new NamedEntry[]{entry}, mCustomProvTester.verifyAccountCountForDomainBasedSearch());
         
         mProv.renameCalendarResource(entry.getId(), NEW_EMAIL);
         mProv.renameCalendarResource(entry.getId(), CR_EMAIL);
@@ -876,7 +883,7 @@ public class TestProvisioning extends TestCase {
         mProv.addMembers(dlNested, new String[]{ACCT_EMAIL});
         
         List list = mProv.getAllDistributionLists(domain);
-        verifyEntries(list, new NamedEntry[]{entry, dlNested}, true);
+        verifyEntries(list, new NamedEntry[]{entry, dlNested}, mCustomProvTester.verifyDLCountForDomainBasedSearch());
         
         Account account = mProv.get(Provisioning.AccountBy.name, ACCT_EMAIL);
         Set<String> set = mProv.getDistributionLists(account);

@@ -8,6 +8,7 @@ import javax.naming.directory.Attributes;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapDIT;
@@ -141,6 +142,15 @@ public class CustomLdapDIT extends LdapDIT {
                 
         return localPart + "@" + defaultDomain();
     }
+    
+    public String filterAccountsByDomain(Domain domain, boolean includeObjectClass) {
+        String filter = "(zimbraMailDeliveryAddress=*@" + domain.getName() + ")";
+        
+        if (includeObjectClass)
+            return "(&(objectclass=zimbraAccount)" + filter + ")";
+        else
+            return filter;
+    }
 
     
     /*
@@ -194,6 +204,18 @@ public class CustomLdapDIT extends LdapDIT {
         return targetNewDn;
     }
     
+    /* =================
+     * calendar resource
+     * =================
+     */
+    public String filterCalendarResourcesByDomain(Domain domain, boolean includeObjectClass) {
+        String filter = "(zimbraMailDeliveryAddress=*@" + domain.getName() + ")";
+        
+        if (includeObjectClass)
+            return "(&(objectclass=zimbraCalendarResource)" + filter + ")";
+        else
+            return filter;
+    }
     
     /*
      * =====================
@@ -217,6 +239,25 @@ public class CustomLdapDIT extends LdapDIT {
     public String distributionListDNRename(String oldDn, String newLocalPart, String newDomain) throws ServiceException, NamingException {
         return oldDn;
     }
+    
+    /* too bad we can't do anything about DL, we can't tell by mail or zimbraNailAlias
+     * which one is an alias and which one is the main email of DL
+     * 
+     * The one in default DIT is used for DL, that means for custom DIT the getAllDistrubutionLists 
+     * function will return DLs in all domains if there are any (although the broken logic 
+     * that DL can only belong to the single default domain kind of restricted, but it will 
+     * break once the default domain changed)!
+     * 
+     * mayby we should throw an UNSUPPORTED here.
+    public String filterDistributionListsByDomain(Domain domain, boolean includeObjectClass) {
+        String filter = "(zimbraMailDeliveryAddress=*@" + domain.getName() + ")";
+        
+        if (includeObjectClass)
+            return "(&(objectclass=zimbraDistributionList)" + filter + ")";
+        else
+            return filter;
+    }
+    */
     
     
     /*
