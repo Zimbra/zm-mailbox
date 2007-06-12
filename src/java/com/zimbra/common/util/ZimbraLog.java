@@ -25,14 +25,15 @@
 package com.zimbra.common.util;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Map.Entry;
 
-import org.apache.log4j.MDC;
 import org.apache.log4j.PropertyConfigurator;
 
 
@@ -296,8 +297,26 @@ public class ZimbraLog {
         getAccountNamesForThread().add(accountName);
     }
 
+    private static final ThreadLocal<Map<String, String>> sContextMap = new ThreadLocal<Map<String, String>>();
+    private static final ThreadLocal<String> sContextString = new ThreadLocal<String>();
+    
+    private static final Set<String> CONTEXT_KEY_ORDER = new LinkedHashSet<String>();
+    
+    static {
+        CONTEXT_KEY_ORDER.add(C_NAME);
+        CONTEXT_KEY_ORDER.add(C_ANAME);
+        CONTEXT_KEY_ORDER.add(C_MID);
+        CONTEXT_KEY_ORDER.add(C_IP);
+    }
+    
+    static String getContextString() {
+        return sContextString.get();
+    }
+    
     /**
-     * Adds a key/value pair to the current thread's logging context.
+     * Adds a key/value pair to the current thread's logging context.  If
+     * <tt>key</tt> is null, does nothing.  If <tt>value</tt> is null,
+     * removes the context entry.
      */
     public static void addToContext(String key, String value) {
         if (key == null)
@@ -305,13 +324,68 @@ public class ZimbraLog {
         if (key.equals(C_NAME) || key.equals(C_ANAME)) {
             addAccountForThread(value);
         }
+
+        Map<String, String> contextMap = sContextMap.get();
+        boolean contextChanged = false;
+
         if (StringUtil.isNullOrEmpty(value)) {
-            MDC.remove(key);
+            // Remove
+            if (contextMap != null) {
+                String oldValue = contextMap.remove(key);
+                if (oldValue != null) {
+                    contextChanged = true;
+                }
+            }
         } else {
-            MDC.put(key, value);
+            // Add
+            if (contextMap == null) {
+                contextMap = new HashMap<String, String>();
+                sContextMap.set(contextMap);
+            }
+            String oldValue = contextMap.put(key, value);
+            if (!StringUtil.equal(oldValue, value)) {
+                contextChanged = true;
+            }
+        }
+        if (contextChanged) {
+            updateContextString();
         }
     }
 
+    /**
+     * Updates the context string with the latest
+     * data in {@link #sContextMap}.
+     */
+    private static void updateContextString() {
+        Map<String, String> contextMap = sContextMap.get();
+        if (contextMap == null || contextMap.size() == 0) {
+            sContextString.set(null);
+            return;
+        }
+
+        StringBuffer sb = new StringBuffer();
+
+        // Append ordered keys first
+        for (String key : CONTEXT_KEY_ORDER) {
+            String value = contextMap.get(key);
+            if (value != null) {
+                encodeArg(sb, key, value);
+            }
+        }
+
+        // Append the rest
+        for (String key : contextMap.keySet()) {
+            if (!CONTEXT_KEY_ORDER.contains(key)) {
+                String value = contextMap.get(key);
+                if (key != null && value != null) {
+                    encodeArg(sb, key, value);
+                }
+            }
+        }
+        
+        sContextString.set(sb.toString());
+    }
+    
     /**
      * Adds a <tt>MailItem</tt> id to the current thread's
      * logging context.
@@ -325,7 +399,7 @@ public class ZimbraLog {
      */
     public static void removeFromContext(String key, String value) {
         if (key != null) {
-            MDC.remove(key);
+            addToContext(key, null);
         }
     }
     
@@ -391,8 +465,9 @@ public class ZimbraLog {
      *
      */
     public static void clearContext() {
-        if (MDC.getContext() != null) {
-            MDC.getContext().clear();
+        Map<String, String> contextMap = sContextMap.get();
+        if (contextMap != null) {
+            contextMap.clear();
         }
         getAccountNamesForThread().clear();
     }
@@ -442,7 +517,7 @@ public class ZimbraLog {
     }
 
     
-    public static void encodeArg(StringBuffer sb, String name, String value) {
+    private static void encodeArg(StringBuffer sb, String name, String value) {
         if (value == null) value = "";
         if (value.indexOf(';') != -1) value = value.replaceAll(";", ";;");
         // replace returns ref to original string if char to replace doesn't exist

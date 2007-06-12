@@ -24,18 +24,14 @@
  */
 package com.zimbra.common.util;
 
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.log4j.MDC;
 import org.apache.log4j.helpers.FormattingInfo;
 import org.apache.log4j.helpers.PatternConverter;
 import org.apache.log4j.helpers.PatternParser;
 import org.apache.log4j.spi.LoggingEvent;
 
 /**
- * Formats the <tt>%X</tt> pattern without braces as all the keys
- * and values in the {@link MDC}.
+ * Formats the <tt>%z</tt> pattern as all the keys and values passed
+ * to {@link ZimbraLog#addToContext}.
  *  
  * @author bburtin
  */
@@ -50,7 +46,7 @@ extends PatternParser {
     }
       
     public void finalizeConverter(char c) {
-        if (c == 'X' && (i >= patternLength || (pattern.charAt(i) != '{'))) {
+        if (c == 'z') {
             addConverter(new ZimbraPatternConverter(formattingInfo));
             currentLiteral.setLength(0);
         } else {
@@ -64,35 +60,7 @@ extends PatternParser {
         }
 
         public String convert(LoggingEvent event) {
-            Map context = MDC.getContext();
-            if (context == null || context.size() == 0) {
-                return "";
-            }
-            StringBuffer sb = new StringBuffer();
-            Set<String> keyOrder = mLayout.getMdcKeyOrder();
-            
-            // Append ordered keys first
-            if (keyOrder != null) {
-                for (String key : keyOrder) {
-                    Object value = context.get(key);
-                    if (key != null && value != null) {
-                        ZimbraLog.encodeArg(sb, key, value.toString());
-                    }
-                }
-            }
-            
-            // Append the rest
-            for (Object key : context.keySet()) {
-                if (keyOrder == null ||
-                    (keyOrder != null && !keyOrder.contains(key))) {
-                    Object value = context.get(key);
-                    if (key != null && value != null) {
-                        ZimbraLog.encodeArg(sb, key.toString(), value.toString());
-                    }
-                }
-            }
-            
-            return sb.toString();
+            return ZimbraLog.getContextString();
         }
     }  
 }
