@@ -745,8 +745,18 @@ Allowed attributes (see objectclass zimbraSignature in zimbra.schema)
 
 urn:zimbraMail
 
- mail error/codes: (includes service.*):
- 
+ mail error/codes: (includes service.*)
+
+ Error code parameters:
+       -  Error results have data parameters encoded in the
+          soap:detail for the  error, in <a> elements:
+          
+          [<a n="name">VALUE</a>]* // error information (arguments,
+               e.g. ID that was bad, or whatever)
+
+       - See SOAP 1.1 or SOAP 1.2 section above.         
+
+ List of error codes:
    mail.MAINTENANCE        - in maintenance
    mail.NO_SUCH_MBOX       - no such mailbox
    mail.NO_SUCH_ITEM       - no such item
@@ -803,7 +813,7 @@ urn:zimbraMail
    mail.SEND_FAILURE
    mail.TOO_MANY_QUERY_TERMS_EXPANDED
    mail.INVALID_COMMIT_ID
-   mail.TOO_MANY_WAITSETS_FOR_THIS_ACCOUNT
+   mail.TOO_MANY_WAITSETS_FOR_THIS_ACCOUNT(ACCOUNT(STR)="accountId", [EXISTING_WAITSET(STR)=WaitSetId]+)
 
 <!-- 
 
