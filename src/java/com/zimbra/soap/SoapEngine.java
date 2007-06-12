@@ -385,15 +385,19 @@ public class SoapEngine {
             // we still want to encode the <change> element at least for the directly-requested accountId...
             // so encode it here as a last resort
             if (!foundSessionForRequestedAccount && zsc.getRequestedAccountId()!=null) {
-                String explicitAcct = zsc.getRequestedAccountId().equals(zsc.getAuthtokenAccountId()) ? 
-                    null : zsc.getRequestedAccountId();
-                // send the <change> block
-                // <change token="555" [acct="4f778920-1a84-11da-b804-6b188d2a20c4"]/>
-                Mailbox mbox = DocumentHandler.getRequestedMailbox(zsc);
-                if (mbox != null)
-                    ctxt.addUniqueElement(HeaderConstants.E_CHANGE)
-                    .addAttribute(HeaderConstants.A_CHANGE_ID, mbox.getLastChangeID())
-                    .addAttribute(HeaderConstants.A_ACCOUNT_ID, explicitAcct);
+                try {
+                    String explicitAcct = zsc.getRequestedAccountId().equals(zsc.getAuthtokenAccountId()) ? 
+                        null : zsc.getRequestedAccountId();
+                    // send the <change> block
+                    // <change token="555" [acct="4f778920-1a84-11da-b804-6b188d2a20c4"]/>
+                    Mailbox mbox = DocumentHandler.getRequestedMailbox(zsc);
+                    if (mbox != null)
+                        ctxt.addUniqueElement(HeaderConstants.E_CHANGE)
+                        .addAttribute(HeaderConstants.A_CHANGE_ID, mbox.getLastChangeID())
+                        .addAttribute(HeaderConstants.A_ACCOUNT_ID, explicitAcct);
+                } catch (ServiceException e) {
+                    // eat error for right now
+                }
             }
 //          if (ctxt != null && mAuthToken != null)
 //              ctxt.addAttribute(E_AUTH_TOKEN, mAuthToken.toString(), Element.DISP_CONTENT);
