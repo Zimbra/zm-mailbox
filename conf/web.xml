@@ -40,6 +40,11 @@
       <param-name>noCompressionUserAgents</param-name>
       <param-value>.*MSIE 6.*</param-value>
     </init-param>
+
+    <init-param>
+      <param-name>userAgentCacheSize</param-name>
+      <param-value>20</param-value>
+    </init-param>
   </filter>
 
   <filter-mapping>
