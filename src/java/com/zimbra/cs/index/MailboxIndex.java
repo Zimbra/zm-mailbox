@@ -36,6 +36,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import javax.mail.internet.MimeMessage;
 
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import org.apache.lucene.analysis.Analyzer;
@@ -719,6 +720,11 @@ public final class MailboxIndex
     private static int sReservedWriterSlots = 0;
     private static IndexWritersSweeper sSweeper = null;
     
+    /**
+     * How often do we walk the list of open IndexWriters looking for idle writers
+     * to close.  On very busy systems, the default time might be too long.
+     */
+    private static long sSweeperFrequencyMs = 30 * Constants.MILLIS_PER_SECOND;
 
     public static void startup() {
         if (DebugConfig.disableIndexing)
@@ -733,6 +739,10 @@ public final class MailboxIndex
         sLRUSize = LC.zimbra_index_lru_size.intValue();
         if (sLRUSize < 10) sLRUSize = 10;
         sIdleWriterFlushTimeMS = 1000 * LC.zimbra_index_idle_flush_time.intValue();
+        
+        sSweeperFrequencyMs = Constants.MILLIS_PER_SECOND * LC.zimbra_index_sweep_frequency.longValue();
+        if (sSweeperFrequencyMs <= 0)
+            sSweeperFrequencyMs = Constants.MILLIS_PER_SECOND;
         
         sSweeper = new IndexWritersSweeper();
         sSweeper.start();
@@ -801,7 +811,6 @@ public final class MailboxIndex
      * sLRUSize) 
      */
     private static long sIdleWriterFlushTimeMS;
-    private static long sSweepIntervalMS = 30 * 1000;
     private static IndexReadersCache sIndexReadersCache;
 
     
@@ -2064,7 +2073,7 @@ public final class MailboxIndex
                 synchronized (this) {
                     if (!mShutdown) {  // Don't go into wait() if shutting down.  (bug 1962)
                         long now = System.currentTimeMillis();
-                        long until = startTime + sSweepIntervalMS;
+                        long until = startTime + sSweeperFrequencyMs;
                         if (until > now) {
                             try {
                                 wait(until - now);

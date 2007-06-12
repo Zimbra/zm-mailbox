@@ -53,6 +53,10 @@ IMGetChat -- return the chat history (param = num messages)
 ---------
 <IMGetChatRequest thread="threadID" [seq="1st-sequence-to-retrieve"]/>
 
+// chat unknown (server restart?  server flushed it due to idleness?)
+<IMGetChatResponse thread="threadID" error="not_found"/>
+
+// chat known:
 <IMGetChatResponse>
    <chat thread="threadID">
       <pcps> // like email-element-cache -- only valid for this single message!
@@ -99,6 +103,13 @@ IMModifyChat -- add/remove users from multi-user chat, adjust save preferences, 
 ------------
 <IMModifyChatRequest thread="threadId" op="close"/>
 <IMModifyChatRequest thread="threadId" op="adduser" addr="address>INVITATION_MESSAGE</IMModifyChatRequest>
+
+// chat unknown (server restart?  server flushed it due to idleness?)
+<IMModifyChatResponse thread="threadID" error="not_found"/>
+
+// successful
+<IMModifyChatResponse thread="threadId"/>
+
 
 
 IMJoinChat -- join a multi-user chat you have been invited to

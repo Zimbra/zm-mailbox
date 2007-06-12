@@ -122,8 +122,11 @@ public class IMRouter {
         PostPacket(Packet packet) { mPacket = packet; }
         public void run() { 
             XMPPServer server = XMPPServer.getInstance();
-            PacketRouter router = server.getPacketRouter();
-            router.route(mPacket);
+            if (server != null){
+                PacketRouter router = server.getPacketRouter();
+                if (router != null)
+                    router.route(mPacket);
+            }
         }
     }
     

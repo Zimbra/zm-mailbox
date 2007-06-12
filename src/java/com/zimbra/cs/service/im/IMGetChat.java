@@ -53,11 +53,10 @@ public class IMGetChat extends IMDocumentHandler {
             IMPersona persona = super.getRequestedPersona(lc, lock);
             
             IMChat chat = persona.getChat(threadId);
-            
-            if (chat == null)
-                throw ServiceException.FAILURE("Unknown thread: "+threadId, null);
-            
-            response = chatToXml(chat, response);
+            if (chat != null)
+                response = chatToXml(chat, response);
+            else
+                response.addAttribute(IMConstants.A_ERROR, "not_found");
         }
         
         response.addAttribute(IMConstants.A_THREAD_ID, threadId);

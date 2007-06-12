@@ -48,6 +48,7 @@ public class IMModifyChat extends IMDocumentHandler
         Element response = lc.createElement(IMConstants.IM_MODIFY_CHAT_RESPONSE);
         
         String threadId = request.getAttribute(IMConstants.A_THREAD_ID);
+        response.addAttribute(IMConstants.A_THREAD_ID, threadId);
         
         Object lock = super.getLock(lc);
         
@@ -57,7 +58,7 @@ public class IMModifyChat extends IMDocumentHandler
             IMChat chat = persona.getChat(threadId);
             
             if (chat == null) {
-                throw ServiceException.FAILURE("Unknown thread: "+threadId, null);
+                response.addAttribute(IMConstants.A_ERROR, "not_found");
             } else {
                 String opStr = request.getAttribute(IMConstants.A_OPERATION);
                 Op op = Op.valueOf(opStr.toUpperCase());

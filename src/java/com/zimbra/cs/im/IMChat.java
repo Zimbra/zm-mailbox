@@ -41,8 +41,10 @@ import org.xmpp.muc.LeaveRoom;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Presence;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ClassLogger;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.im.IMMessage.Lang;
 import com.zimbra.cs.im.IMMessage.TextPart;
@@ -125,8 +127,20 @@ public class IMChat extends ClassLogger {
 
     private TIMER_STATE mTimerState = TIMER_STATE.NONE;
     private FlushTask mTimer = null;
-    static final int sSaveTimerMs =  10 * 60 * 1000; // 1 min
-    static final int sCloseTimerMs = 10 * 60 * 1000; // 10 min
+    
+    private final long getCloseTimeout() {
+        long tmp = LC.zimbra_im_chat_close_time.longValue() * Constants.MILLIS_PER_SECOND;
+        if (tmp <= Constants.MILLIS_PER_MINUTE)
+            tmp = Constants.MILLIS_PER_MINUTE;
+        return tmp;
+    }
+    
+    private final long getSaveTimeout() {
+        long tmp = LC.zimbra_im_chat_flush_time.longValue() * Constants.MILLIS_PER_SECOND;
+        if (tmp <= Constants.MILLIS_PER_SECOND)
+            tmp = Constants.MILLIS_PER_SECOND;
+        return tmp;
+    }
     
     boolean isMUC() { return mIsMUC; }
     
@@ -702,7 +716,7 @@ public class IMChat extends ClassLogger {
             mTimer.cancel();
         }
         mTimer = new FlushTask();
-        Zimbra.sTimer.schedule(mTimer, sSaveTimerMs);
+        Zimbra.sTimer.schedule(mTimer, getSaveTimeout());
     }
 
     private void startCloseTimer() {
@@ -711,7 +725,7 @@ public class IMChat extends ClassLogger {
             mTimer.cancel();
         }
         mTimer = new FlushTask();
-        Zimbra.sTimer.schedule(mTimer, sCloseTimerMs);
+        Zimbra.sTimer.schedule(mTimer, getCloseTimeout());
     }
 
 
