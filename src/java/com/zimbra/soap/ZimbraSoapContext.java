@@ -42,6 +42,7 @@ import org.dom4j.QName;
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
@@ -467,11 +468,11 @@ public class ZimbraSoapContext {
      *         if there is no relevant information to encapsulate. */
     Element generateResponseHeader() {
         Element ctxt = null;
+        ctxt = createElement(CONTEXT);
+        boolean foundSessionForRequestedAccount = false;
         try {
             for (SessionInfo sinfo : mSessionInfo) {
                 Session session = sinfo.session;
-                if (ctxt == null)
-                    ctxt = createElement(CONTEXT);
 
                 // session ID is valid, so ping it back to the client:
                 encodeSession(ctxt, session, false);
@@ -479,9 +480,31 @@ public class ZimbraSoapContext {
                 if (sinfo.created && session instanceof SoapSession)
                     ((SoapSession) session).putRefresh(ctxt, this);
                 // put <notify> blocks back for any SoapSession objects
-                if (session instanceof SoapSession)
+                if (session instanceof SoapSession) {
+                    if (session.getMailbox().getAccountId().equals(getRequestedAccountId()))
+                        foundSessionForRequestedAccount = true;
                     ((SoapSession) session).putNotifications(this, ctxt, mNotificationSeqNo);
+                }
             }
+
+            // bug: 17481 if <nosession> is specified, then the SessionInfo list will be empty...but
+            // we still want to encode the <change> element at least for the directly-requested accountId...
+            // so encode it here as a last resort
+            if (!foundSessionForRequestedAccount && getRequestedAccountId()!=null) {
+                try {
+                    String explicitAcct = getRequestedAccountId().equals(getAuthtokenAccountId()) ? 
+                        null : getRequestedAccountId();
+                    // send the <change> block
+                    // <change token="555" [acct="4f778920-1a84-11da-b804-6b188d2a20c4"]/>
+                    Mailbox mbox = DocumentHandler.getRequestedMailbox(this);
+                    if (mbox != null)
+                    	ctxt.addUniqueElement(E_CHANGE)
+                        .addAttribute(A_CHANGE_ID, mbox.getLastChangeID())
+                        .addAttribute(A_ACCOUNT_ID, explicitAcct);
+                } catch (ServiceException e) {
+                    // eat error for right now
+                }
+            }            
 //            if (ctxt != null && mAuthToken != null)
 //                ctxt.addAttribute(E_AUTH_TOKEN, mAuthToken.toString(), Element.DISP_CONTENT);
             return ctxt;
