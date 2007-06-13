@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -46,6 +47,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.common.service.ServiceException;
@@ -94,6 +96,16 @@ public class ZipFormatter extends Formatter {
 
             // create the ZIP file
             out = new ZipOutputStream(context.resp.getOutputStream());
+            String zlv = context.params.get(UserServlet.QP_ZLV);
+            if (zlv != null && zlv.length() > 0) {
+            	try {
+            		int level = Integer.parseInt(zlv);
+            		if (level >= 0 && level <=9) {
+            			out.setLevel(level);
+            		}
+            	} catch (NumberFormatException x) {}
+            }
+            
             Set<String> usedNames = new HashSet<String>();
 
             while (iterator.hasNext()) {

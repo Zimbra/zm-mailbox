@@ -115,7 +115,9 @@ public class UserServlet extends ZimbraServlet {
     public static final String SERVLET_PATH = "/home";
 
     public static final String QP_FMT = "fmt"; // format query param
-
+    
+    public static final String QP_ZLV = "zlv"; // zip level query param
+    
     public static final String QP_ID = "id"; // id query param
     
     public static final String QP_LIST = "list"; // list query param
