@@ -885,10 +885,10 @@ public final class MailboxIndex
         try {
             closeIndexWriterAfterRemove();
         } finally {
+            assert(mIndexWriterMutex.isHeldByCurrentThread());
             mIndexWriterMutex.unlock();
             synchronized(sOpenIndexWriters) {
                 sReservedWriterSlots--;
-                assert(mIndexWriterMutex.isHeldByCurrentThread());
                 assert(mIndexWriter == null);
             }
         }
@@ -2123,9 +2123,9 @@ public final class MailboxIndex
                                 toRemove.closeIndexWriterAfterRemove();
                             } finally {
                                 toRemove.mIndexWriterMutex.unlock();
+                                assert(!toRemove.mIndexWriterMutex.isHeldByCurrentThread());
                                 synchronized(sOpenIndexWriters) {
                                     sReservedWriterSlots--;
-                                    assert(toRemove.mIndexWriterMutex.isHeldByCurrentThread());
                                     assert(toRemove.mIndexWriter == null);
                                 }
                             }
