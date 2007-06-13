@@ -266,6 +266,7 @@ public class ZMailbox {
     private ZFilterRules mRules;
     private ZAuthResult mAuthResult;
     private ZContactAutoCompleteCache mAutoCompleteCache;
+    private List<ZPhoneAccount> mPhoneAccounts;
 
     private long mSize;
 
@@ -3221,15 +3222,26 @@ public class ZMailbox {
     	return new ZImportAppointmentsResult(invoke(req).getElement(MailConstants.E_APPOINTMENT));
     }
 
-    public List<ZPhoneAccount> getAllPhoneAccounts() throws ServiceException {
-        XMLElement req = new XMLElement(VoiceConstants.GET_VOICE_FOLDER_REQUEST);
-        Element response = invoke(req);
-        List<Element> phoneElements = response.listElements(VoiceConstants.E_PHONE);
-        List<ZPhoneAccount> result = new ArrayList<ZPhoneAccount>();
-        for (Element element : phoneElements) {
-             result.add(new ZPhoneAccount(element));
+    public synchronized List<ZPhoneAccount> getAllPhoneAccounts() throws ServiceException {
+        if (mPhoneAccounts == null) {
+            mPhoneAccounts = new ArrayList<ZPhoneAccount>();
+            XMLElement req = new XMLElement(VoiceConstants.GET_VOICE_FOLDER_REQUEST);
+            Element response = invoke(req);
+            List<Element> phoneElements = response.listElements(VoiceConstants.E_PHONE);
+            for (Element element : phoneElements) {
+                 mPhoneAccounts.add(new ZPhoneAccount(element));
+            }
         }
-        return result;
+        return mPhoneAccounts;
+    }
+
+    public String uploadVoiceMail(String phone, String id) throws ServiceException {
+        XMLElement req = new XMLElement(VoiceConstants.UPLOAD_VOICE_MAIL_REQUEST);
+        Element actionEl = req.addElement(VoiceConstants.E_VOICEMSG);
+        actionEl.addAttribute(MailConstants.A_ID, id);
+        actionEl.addAttribute(VoiceConstants.A_PHONE, phone);
+        Element response = invoke(req);
+        return response.getElement(VoiceConstants.E_UPLOAD).getAttribute(MailConstants.A_ID);
     }
 
     public ZActionResult trashVoiceMail(String phone, String id) throws ServiceException {
