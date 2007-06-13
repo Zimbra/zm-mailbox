@@ -89,7 +89,10 @@ public class ZPrefs {
 
     public boolean getAutoAddAddressEnabled() { return getBool(Provisioning.A_zimbraPrefAutoAddAddressEnabled); }
 
+    public String getShortcuts() { return get(Provisioning.A_zimbraPrefShortcuts); }
+
     public boolean getUseKeyboardShortcuts() { return getBool(Provisioning.A_zimbraPrefUseKeyboardShortcuts); }
+
 
     public String getGroupMailBy() { return get(Provisioning.A_zimbraPrefGroupMailBy); }
 

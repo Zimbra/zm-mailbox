@@ -29,15 +29,6 @@
  */
 package com.zimbra.cs.account;
 
-import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
-import javax.mail.internet.InternetAddress;
-
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -45,6 +36,14 @@ import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.L10nUtil;
+
+import javax.mail.internet.InternetAddress;
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author schemers
@@ -635,6 +634,8 @@ public abstract class Provisioning {
     public static final String A_zimbraPrefReplyToAddress = "zimbraPrefReplyToAddress";
 
     public static final String A_zimbraPrefReadingPaneEnabled = "zimbraPrefReadingPaneEnabled";
+
+    public static final String A_zimbraPrefShortcuts = "zimbraPrefShortcuts";
 
     public static final String A_zimbraPrefUseKeyboardShortcuts = "zimbraPrefUseKeyboardShortcuts";
 
