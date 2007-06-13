@@ -996,7 +996,7 @@
 		</java>
 	</target>
 	
-	<target name="family-inject" depends="compile">
+	<target name="inject-account" depends="compile">
 		<echo>Inserting contacts for ${accountToInject}</echo>
 		<java classname="com.zimbra.common.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
 			<sysproperty key="SAMPLE_USER" value="${accountToInject}"/>
@@ -1016,10 +1016,12 @@
 			<arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r ${accountToInject} -s ho@example.zimbra.com -d" />
 			<arg path="data/TestMailRaw" />
 		</java>
+		<!--
 		<echo>Importing Wiki documents for ${accountToInject}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-l impn ${accountToInject} data/wiki/user1 /" />
+			<arg line="impn ${accountToInject} data/wiki/user1 /" />
 		</java>
+		-->
 	</target>
 	
 	<target name="family-init" depends="compile">
@@ -1037,7 +1039,7 @@
 		<!-- inject test data for family parent and child -->
 		<for list="family-parent,family-child1-visible" param="accountName">
 			<sequential>
-				<antcall target="family-inject">
+				<antcall target="inject-account">
 					<param name="accountToInject" value="@{accountName}@${zimbra.server.hostname}"/>
 				</antcall>	
 			</sequential>	
