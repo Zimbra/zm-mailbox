@@ -1823,6 +1823,8 @@ public final class MailboxIndex
         switch (itemType) {
             case MailItem.TYPE_APPOINTMENT:
             case MailItem.TYPE_TASK:
+                CalendarItem ci = (CalendarItem)item;
+                ci.reindex(redo, deleteFirst, null);
                 break;
             case MailItem.TYPE_DOCUMENT:
             case MailItem.TYPE_WIKI:
@@ -2087,39 +2089,47 @@ public final class MailboxIndex
                 
 
                 // Flush out index writers that have been idle too long.
-                MailboxIndex toRemove;
+                MailboxIndex toRemove = null;
                 int removed = 0;
                 int sizeAfter = 0;
                 int sizeBefore = -1;
                 do {
-                    synchronized (sOpenIndexWriters) {
-                        if (sizeBefore == -1)
-                            sizeBefore = sOpenIndexWriters.size();
-                        toRemove = null;
-                        long cutoffTime = startTime - sIdleWriterFlushTimeMS;
-                        for (Iterator it = sOpenIndexWriters.entrySet().iterator(); toRemove==null && it.hasNext(); ) {
-                            Map.Entry entry = (Map.Entry) it.next();
-                            MailboxIndex mi = (MailboxIndex) entry.getKey();
-                            if (mi.getLastWriteTime() < cutoffTime) {
-                                removed++;
-                                toRemove = mi;
-                                it.remove();
-                                toRemove.mIndexWriterMutex.lock();
-                                sReservedWriterSlots++;
+                    try {
+                        synchronized (sOpenIndexWriters) {
+                            if (sizeBefore == -1)
+                                sizeBefore = sOpenIndexWriters.size();
+                            toRemove = null;
+                            long cutoffTime = startTime - sIdleWriterFlushTimeMS;
+                            for (Iterator it = sOpenIndexWriters.entrySet().iterator(); toRemove==null && it.hasNext(); ) {
+                                Map.Entry entry = (Map.Entry) it.next();
+                                MailboxIndex mi = (MailboxIndex) entry.getKey();
+                                if (mi.getLastWriteTime() < cutoffTime) {
+                                    removed++;
+                                    toRemove = mi;
+                                    it.remove();
+                                    toRemove.mIndexWriterMutex.lock();
+                                    sReservedWriterSlots++;
+                                }
+                            }
+                            sizeAfter = sOpenIndexWriters.size();
+                            ZimbraPerf.COUNTER_IDX_WRT.increment(sizeAfter);
+                        }
+                        if (toRemove != null) {
+                            try {
+                                toRemove.closeIndexWriterAfterRemove();
+                            } finally {
+                                synchronized(sOpenIndexWriters) {
+                                    sReservedWriterSlots--;
+                                    assert(toRemove.mIndexWriterMutex.isHeldByCurrentThread());
+                                    assert(toRemove.mIndexWriter == null);
+                                }
+                                toRemove.mIndexWriterMutex.unlock();
                             }
                         }
-                        sizeAfter = sOpenIndexWriters.size();
-                        ZimbraPerf.COUNTER_IDX_WRT.increment(sizeAfter);
-                    }
-                    if (toRemove != null) {
-                        try {
-                            toRemove.closeIndexWriterAfterRemove();
-                        } finally {
-                            synchronized(sOpenIndexWriters) {
-                                sReservedWriterSlots--;
-                                assert(toRemove.mIndexWriterMutex.isHeldByCurrentThread());
-                                assert(toRemove.mIndexWriter == null);
-                            }
+                    } finally {
+                        if (toRemove != null && toRemove.mIndexWriterMutex.isHeldByCurrentThread()) {
+                            sLog.error("Error: sweeper still holding mutex for %s at end of cycle!", toRemove.mIndexWriter);
+                            assert(false);
                             toRemove.mIndexWriterMutex.unlock();
                         }
                     }
