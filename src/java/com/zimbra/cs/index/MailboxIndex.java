@@ -797,12 +797,12 @@ public final class MailboxIndex
     	try {
     		closeIndexWriterAfterRemove();
     	} finally {
+    		mIndexWriterMutex.unlock();
     		synchronized(sOpenIndexWriters) {
     			sReservedWriterSlots--;
     			assert(mIndexWriterMutex.isHeldByCurrentThread());
     			assert(mIndexWriter == null);
     		}
-    		mIndexWriterMutex.unlock();
     	}    	
     }
     
@@ -2008,6 +2008,10 @@ public final class MailboxIndex
     private static final class IndexWritersSweeper extends Thread {
         
         private boolean mShutdown = false;
+        
+        public IndexWritersSweeper() {
+        	super("IndexWritersSweeperThread");
+        }        
 
         /**
          * Shutdown the sweeper thread
@@ -2075,12 +2079,12 @@ public final class MailboxIndex
                         try {
                         	toRemove.closeIndexWriterAfterRemove();
                         } finally {
+                            toRemove.mIndexWriterMutex.unlock();
                         	synchronized(sOpenIndexWriters) {
                         		sReservedWriterSlots--;
                         		assert(toRemove.mIndexWriterMutex.isHeldByCurrentThread());
                         		assert(toRemove.mIndexWriter == null);
                         	}                        	
-                            toRemove.mIndexWriterMutex.unlock();
                         }
                     }
                     synchronized(this) {
