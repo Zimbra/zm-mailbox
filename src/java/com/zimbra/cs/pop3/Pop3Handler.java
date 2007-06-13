@@ -98,8 +98,10 @@ public class Pop3Handler extends ProtocolHandler {
      * @see com.zimbra.cs.tcpserver.ProtocolHandler#setupConnection(java.net.Socket)
      */
     protected boolean setupConnection(Socket connection) throws IOException {
-        // TODO Auto-generated method stub
         mRemoteAddress = connection.getInetAddress().getHostAddress();
+
+        ZimbraLog.clearContext();
+        ZimbraLog.addIpToContext(mRemoteAddress);
         ZimbraLog.pop.info("connected");
 
         mInputStream = new TcpServerInputStream(connection.getInputStream());
@@ -131,12 +133,10 @@ public class Pop3Handler extends ProtocolHandler {
      */
     protected boolean processCommand() throws IOException {
         // TODO: catch IOException too?
-        ZimbraLog.clearContext();
         long start = ZimbraPerf.STOPWATCH_POP.start();
         
         try {
             if (mAccountName != null) ZimbraLog.addAccountNameToContext(mAccountName);
-            ZimbraLog.addIpToContext(mRemoteAddress);
             boolean result = processCommandInternal();
             ZimbraPerf.STOPWATCH_POP.stop(start);
             return result;
