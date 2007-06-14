@@ -137,8 +137,9 @@ public class Mailbox {
     public static final int ID_FOLDER_AUTO_CONTACTS = 13;
     public static final int ID_FOLDER_IM_LOGS   = 14;
     public static final int ID_FOLDER_TASKS     = 15;
+    public static final int ID_FOLDER_BRIEFCASE = 16;
 
-    public static final int HIGHEST_SYSTEM_ID = 15;
+    public static final int HIGHEST_SYSTEM_ID = 16;
     public static final int FIRST_USER_ID     = 256;
 
     static final String MD_CONFIG_VERSION = "ver";
@@ -1123,6 +1124,7 @@ public class Mailbox {
         Folder.create(ID_FOLDER_TASKS,    this, userRoot, "Tasks",    system, MailItem.TYPE_TASK,        Flag.BITMASK_CHECKED, MailItem.DEFAULT_COLOR, null);
         Folder.create(ID_FOLDER_AUTO_CONTACTS, this, userRoot, "Emailed Contacts", system, MailItem.TYPE_CONTACT, 0, MailItem.DEFAULT_COLOR, null);
         Folder.create(ID_FOLDER_IM_LOGS,  this, userRoot, "Chats",    system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR, null);
+        Folder.create(ID_FOLDER_BRIEFCASE, this, userRoot, "Briefcase", system, MailItem.TYPE_DOCUMENT, 0, MailItem.DEFAULT_COLOR, null);
         
 
         mCurrentChange.itemId = getInitialItemId();
