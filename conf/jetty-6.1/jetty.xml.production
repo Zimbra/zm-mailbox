@@ -143,15 +143,17 @@
       <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
     </New>
 
-    <New id="zimbraAdmin" class="org.mortbay.jetty.webapp.WebAppContext">
+
+    <New id="%%zimbraAdminURL%%" class="org.mortbay.jetty.webapp.WebAppContext">
       <Arg><Ref id="Contexts"/></Arg>
-      <Arg><SystemProperty name="jetty.home" default="."/>/webapps/zimbraAdmin</Arg>
-      <Arg>/zimbraAdmin</Arg>
+      <Arg><SystemProperty name="jetty.home" default="."/>/webapps%%zimbraAdminURL%%/</Arg>
+      <Arg>%%zimbraAdminURL%%</Arg>
       <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
-      <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/zimbraAdmin</Set>
+      <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work%%zimbraAdminURL%%/</Set>
       <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
     </New>
-    
+
+
     <!-- =========================================================== -->
     <!-- Configure the context deployer                              -->
     <!-- A context deployer will deploy contexts described in        -->
