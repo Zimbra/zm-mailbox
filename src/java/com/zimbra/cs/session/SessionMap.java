@@ -143,10 +143,11 @@ final class SessionMap {
             long leastRecent = Long.MAX_VALUE;
             String leastRecentId = null;
             
-            for (Session s : acctMap.values()) {
+            for (Map.Entry<String, Session> entry : acctMap.entrySet()) {
+                Session s = entry.getValue();
                 if (s.getLastAccessTime() < leastRecent) {
                     leastRecent = s.getLastAccessTime();
-                    leastRecentId = s.getSessionId();
+                    leastRecentId = entry.getKey();
                 }
             }
             assert(leastRecentId != null);
@@ -163,12 +164,12 @@ final class SessionMap {
             assert(acctMap.size() < prevSize);
             
             if (acctMap.size() > maxSessionsPerAcct || acctMap.size() >= prevSize) {
-                ZimbraLog.session.warn("Problem in SessionMap.putAndPrune(%d): accountId: %s session: %s  maxPerAcct: %d prevSize: %d finishSize: %d leastRecentId: %s removed: %s",
-                    iterations, accountId, sessionId, maxSessionsPerAcct, prevSize, acctMap.size(), leastRecentId, removed);
+                ZimbraLog.session.warn("Problem in SessionMap.putAndPrune(%d): accountId: %s session: %s  maxPerAcct: %d prevSize: %d finishSize: %d leastRecentTime: %d leastRecentId: %s removed: %s",
+                    iterations, accountId, sessionId, maxSessionsPerAcct, prevSize, acctMap.size(), leastRecent, leastRecentId, removed);
                 StringBuilder sb = new StringBuilder("SessionMap for account ");
                 sb.append(accountId).append(" contains: ");
                 for (Map.Entry<String, Session> entry : acctMap.entrySet()) {
-                    sb.append("(").append(entry.getKey()).append(",").append(entry.getValue().toString()).append(") ");
+                    sb.append("(").append(entry.getKey()).append(",").append(entry.getValue().toString()).append(" time=").append(entry.getValue().getLastAccessTime()).append(") ");
                 }
                 ZimbraLog.session.warn(sb.toString());
             }
