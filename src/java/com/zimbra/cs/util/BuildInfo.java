@@ -34,6 +34,8 @@ public class BuildInfo {
     public static final String DATE;
     public static final String HOST;
 
+    public static final String FULL_VERSION;
+
     static {
         String version = "unknown";
         String release = "unknown";
@@ -53,6 +55,8 @@ public class BuildInfo {
         RELEASE = release;
         DATE = date;
         HOST = host;
+
+        FULL_VERSION = VERSION + " " + RELEASE + " " + DATE;
     }
 
     public static void main(String[] args) {
