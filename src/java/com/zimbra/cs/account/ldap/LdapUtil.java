@@ -306,8 +306,9 @@ public class LdapUtil {
         byte[] buff = Base64.decodeBase64(encodedBuff);
         if (buff.length <= SALT_LEN)
             return false;
-        byte[] salt = new byte[SALT_LEN];
-        System.arraycopy(buff, buff.length-SALT_LEN, salt, 0, SALT_LEN);
+        int slen = (buff.length == 28) ? 8 : SALT_LEN;
+        byte[] salt = new byte[slen];
+        System.arraycopy(buff, buff.length-slen, salt, 0, slen);
         String generated = generateSSHA(password, salt);
         return generated.equals(encodedPassword);
     }
@@ -319,9 +320,7 @@ public class LdapUtil {
                 salt = new byte[SALT_LEN];
                 SecureRandom sr = new SecureRandom();
                 sr.nextBytes(salt);
-            } else if (salt.length != SALT_LEN) {
-                throw new RuntimeException("invalid salt length, must be 4 bytes: "+salt.length);
-            }
+            } 
             md.update(password.getBytes());
             md.update(salt);
             byte[] digest = md.digest();
@@ -946,7 +945,11 @@ public class LdapUtil {
     
 
     public static void main(String args[]) throws NamingException, ServiceException {
-        changeActiveDirectoryPassword(new String[] {"ldaps://host/"}, "email", "old", "new");
+//        changeActiveDirectoryPassword(new String[] {"ldaps://host/"}, "email", "old", "new");
+
+        System.out.println(verifySSHA("{SSHA}igJikWhEzFPLvXp4TNY1NADGOQPNjjWJ","test123"));
+        System.out.println(verifySSHA("{SSHA}t14kg+LsEEtb6/3xj+PPYGHv+496XwslfHaxUQ==","welcome123!"));
+        
 /*
         Date now = new Date();
         String gts = generalizedTime(now);
