@@ -39,6 +39,7 @@ import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.cs.account.Provisioning.SignatureBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.MailboxInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning.QuotaUsage;
@@ -447,7 +448,8 @@ public class ProvUtil implements DebugListener {
             mProv.modifyIdentity(lookupAccount(args[1]), args[2], getMap(args,3));
             break; 
         case MODIFY_SIGNATURE:
-            mProv.modifySignature(lookupAccount(args[1]), args[2], getMap(args,3));
+            account = lookupAccount(args[1]);
+            mProv.modifySignature(account, lookupSignatureName(account, args[2]), getMap(args,3));
             break;    
         case MODIFY_COS:
             mProv.modifyAttrs(lookupCos(args[1]), getMap(args, 2), true);            
@@ -474,7 +476,8 @@ public class ProvUtil implements DebugListener {
             mProv.deleteIdentity(lookupAccount(args[1]), args[2]);
             break;
         case DELETE_SIGNATURE:
-            mProv.deleteSignature(lookupAccount(args[1]), args[2]);
+            account = lookupAccount(args[1]);
+            mProv.deleteSignature(account, lookupSignatureName(account, args[2]));
             break;     
         case DELETE_DATA_SOURCE:
             account = lookupAccount(args[1]);
@@ -1390,6 +1393,17 @@ public class ProvUtil implements DebugListener {
         else
             return ds.getId();
     }
+    
+    private String lookupSignatureName(Account account, String key) throws ServiceException {
+        if (isUUID(key)) {
+            Signature sig = mProv.get(account, SignatureBy.id, key);
+            if (sig == null)
+                throw AccountServiceException.NO_SUCH_SIGNATURE(key);
+            else
+                return sig.getName();
+        } else
+            return key;
+    }
 
     private DistributionList lookupDistributionList(String key, boolean mustFind) throws ServiceException {
         DistributionList dl = mProv.get(guessDistributionListBy(key), key);
@@ -1447,6 +1461,12 @@ public class ProvUtil implements DebugListener {
         if (isUUID(value))
             return DistributionListBy.id;
         return DistributionListBy.name;
+    }
+    
+    public static SignatureBy guessSignatureBy(String value) {
+        if (isUUID(value))
+            return SignatureBy.id;
+        return SignatureBy.name;
     }
     
     

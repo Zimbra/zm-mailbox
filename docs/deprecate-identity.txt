@@ -51,12 +51,13 @@ Select this identity when
   Prefix included messages with (drop down list)  zimbraPrefForwardReplyPrefixChar       No          gone(use global account setting)
     
     
-=============================================    
-attrs currently do not appear in any UI field
-============================================= 
-                                                  zimbraPrefBccAddress                   No          gone(not used)
-                                                  zimbraPrefSaveToSent                   No          gone(not used)
-                                                  zimbraPrefSentMailFolder               No          gone(not used)
+=============================================
+attrs currently do not appear in any UI field 
+but are present in zimbraIdentity objectclass
+=============================================
+                                                  zimbraPrefBccAddress                   No          gone(not used in identity anyway)
+                                                  zimbraPrefSaveToSent                   No          gone(not used in identity anyway)
+                                                  zimbraPrefSentMailFolder               No          gone(not used in identity anyway)
 
 
 
@@ -70,6 +71,7 @@ New attributes:
     zimbraPrefDefaultSignature      optionalIn="account"                             desc="default signature name" (initial value is empty)
     zimbraSignatureMaxNumEntries    optionalIn="account,cos"                         desc="maximum number of signatures allowed on an account" (COS default is 20)
     zimbraFeatureSignaturesEnabled  optionalIn="account,cos"                         desc="whether to allow use of signature feature" (COS default is TRUE)
+    
 
 Changed attributes:                        current                              after
 ----------------------------------------------------------------------------------------------------------
@@ -87,6 +89,8 @@ Changed attributes:                        current                              
     
 Deprecated attributes (just set the deprecateSince flag for documentation purpose,
                        they are still in the schema):
+    zimbraIdentityMaxNumEntries            deprecatedSince="5.0"       	
+    zimbraFeatureIdentitiesEnabled         deprecatedSince="5.0"         	
     zimbraPrefIdentityName                 deprecatedSince="5.0" 
     zimbraPrefIdentityId                   deprecatedSince="5.0" 
     zimbraPrefFromDisplay                  deprecatedSince="5.0" 
@@ -97,10 +101,16 @@ Deprecated attributes (just set the deprecateSince flag for documentation purpos
     zimbraPrefWhenInFolderIds              deprecatedSince="5.0"
     
     
-4. SOAP/zmprov changes
-======================
-    - delete Get/Modity/DeleteIdentities
-    - add Get/Modity/DeleteSignatures 
+4. Server API changes 
+=====================
+   (1) SOAP/zmprov command changes
+       - delete Create/Modity/Delete/GetAll identity SOAP/zmprov commands
+       - add Create/Modity/Delete/GetAll signature SOAP/zmprov commands
+       
+   (2) Changes in GetInfo command
+       - delete <identities> tag
+       - add <sigtnatures> tag 
+   
     
     
 5. LDAP migration tasks
@@ -108,38 +118,45 @@ Deprecated attributes (just set the deprecateSince flag for documentation purpos
    5.1 Migrate schema
    
    5.2 Migrate data
-   For each account entry (
+   For each account entry {
        
-       if {account.zimbraPrefFromDisplay is present && account.zimbraPrefFromAddress is present}
-           account.zimbraPrefFromAddress = {account.zimbraPrefFromDisplay} <{account.zimbraPrefFromAddress}>  (set to)
+       if (account.zimbraPrefFromDisplay is present && account.zimbraPrefFromAddress is present)
+           account.zimbraPrefFromAddress = account.zimbraPrefFromDisplay <account.zimbraPrefFromAddress>
            
-       if {account.zimbraPrefReplyToDisplay is present && account.zimbraPrefReplyToAddress is present}
-           account.zimbraPrefReplyToAddress = {account.zimbraPrefReplyToDisplay} <{account.zimbraPrefReplyToAddress}>    (set to)
+       if (account.zimbraPrefReplyToDisplay is present && account.zimbraPrefReplyToAddress is present)
+           account.zimbraPrefReplyToAddress = account.zimbraPrefReplyToDisplay <account.zimbraPrefReplyToAddress>
        
-       if {account.zimbraIdentityMaxNumEntries is preset}
-           account.zimbraSignatureMaxNumEntries = account.zimbraIdentityMaxNumEntries (set to)
+       if (account.zimbraIdentityMaxNumEntries is preset)
+           account.zimbraSignatureMaxNumEntries = account.zimbraIdentityMaxNumEntries
            
-       if {account.zimbraFeatureIdentitiesEnabled}  
-           account.zimbraFeatureSignaturesEnabled = account.zimbraFeatureIdentitiesEnabled (set to)
+       if (account.zimbraFeatureIdentitiesEnabled) 
+           account.zimbraFeatureSignaturesEnabled = account.zimbraFeatureIdentitiesEnabled
    
-       For each dataSource of the account (
+       For each dataSource of the account {
+           // migrate the designated identity association for the data source
            // TODO
-       )
+           For each identity of the account {
+               if (identity.zimbraPrefWhenSentToEnabled == TRUE && )   TO BE CONTINUED...
+           }
+       }
    
-       For each identity of the account (
+       For each identity of the account {
            1. Create a singnature entry, as follows:
                   dn: zimbraPrefSignatureName={identity.zimbraPrefIdentityName},{account-DN}
                   objectClass: zimbraSignature
                   zimbraPrefSignatureId: {identity.zimbraPrefIdentityId}
                   zimbraPrefSignatureName: {identity.zimbraPrefIdentityName}
                   zimbraPrefMailSignature: {identity.zimbraPrefMailSignature}
-        
-           2. if {identity.zimbraPrefFromDisplay is set && identity.zimbraPrefFromAddress is set}
-                  account.zimbraPrefFromAddress += {identity.zimbraPrefFromDisplay} <{identity.zimbraPrefFromAddress}>  (add a value)
                   
-           3. if {identity.zimbraPrefReplyToDisplay is set && identity.zimbraPrefReplyToAddress is set}
-                  account.zimbraPrefReplyToAddress += {identity.zimbraPrefReplyToDisplay} <{identity.zimbraPrefReplyToAddress}>  (add a value)
+                  or 
+                  zmprov csig {account.zimbraMailDeliveryAddress} {identity.zimbraPrefIdentityName} zimbraPrefSignatureId {identity.zimbraPrefIdentityId} zimbraPrefMailSignature {identity.zimbraPrefMailSignature}
+        
+           2. if (identity.zimbraPrefFromDisplay is present && identity.zimbraPrefFromAddress is present)
+                  account.zimbraPrefFromAddress += identity.zimbraPrefFromDisplay <identity.zimbraPrefFromAddress>  (add a value)
+                  
+           3. if (identity.zimbraPrefReplyToDisplay is present && identity.zimbraPrefReplyToAddress is present)
+                  account.zimbraPrefReplyToAddress += identity.zimbraPrefReplyToDisplay <identity.zimbraPrefReplyToAddress>  (add a value)
            
            4. Delete the identity entry
-       )
-    )       
+       }
+   }       

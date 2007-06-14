@@ -965,7 +965,8 @@ public class TestProvisioning extends TestCase {
 
         return entry;
     }
-    
+
+    /*
     private Signature signatureTest(Account account) throws Exception {
         System.out.println("Testing signature");
         
@@ -977,6 +978,7 @@ public class TestProvisioning extends TestCase {
         verifySameEntry(entry, entryGot);
         entryGot = mProv.get(account, Provisioning.SignatureBy.name, SIGNATURE_NAME);
         verifySameEntry(entry, entryGot);
+        
         Signature defaultSignature = mProv.get(account, Provisioning.SignatureBy.name, Provisioning.DEFAULT_SIGNATURE_NAME);
         verifySameId(account, defaultSignature);
         assertEquals(Provisioning.DEFAULT_SIGNATURE_NAME, defaultSignature.getName());
@@ -994,6 +996,7 @@ public class TestProvisioning extends TestCase {
 
         return entry;
     }
+    */
     
     private void entryTest(NamedEntry entry) throws Exception  {
         System.out.println("Testing entry");
@@ -1121,7 +1124,7 @@ public class TestProvisioning extends TestCase {
         DistributionList[] distributionLists = distributionListTest(domain);
         DataSource dataSource = dataSourceTest(account);
         Identity identity = identityTest(account);
-        Signature signature = signatureTest(account);
+        // Signature signature = signatureTest(account);
         
         entryTest(account);
         galTest(domain);

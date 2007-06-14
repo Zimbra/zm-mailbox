@@ -258,13 +258,11 @@ public class LdapProvisioning extends Provisioning {
     public void modifyAttrs(Entry e, Map<String, ? extends Object> attrs, boolean checkImmutable, boolean allowCallback)
             throws ServiceException {
         HashMap context = new HashMap();
-        AttributeManager.getInstance().preModify(attrs, e, context, false,
-                checkImmutable, allowCallback);
+        AttributeManager.getInstance().preModify(attrs, e, context, false, checkImmutable, allowCallback);
         modifyAttrsInternal(e, null, attrs);
-        AttributeManager.getInstance().postModify(attrs, e, context, false,
-                allowCallback);
+        AttributeManager.getInstance().postModify(attrs, e, context, false, allowCallback);
     }
-
+    
     /**
      * should only be called internally.
      * 
@@ -4011,6 +4009,82 @@ public class LdapProvisioning extends Provisioning {
         }        
     }
     
+    /*
+     * Account entry "hold" a signature "slot".  This is because most of the accounts have only 
+     * one signature and we don't want to create an ldap signature entry for that.
+     */ 
+    private boolean isAccountSignature(Account acct, String signatureName) {
+        String acctSigName = acct.getAttr(Provisioning.A_zimbraPrefSignatureName);
+        if (acctSigName != null && signatureName.equals(acctSigName))
+            return true;
+        else
+            return false;
+    }
+    
+    private boolean isDefaultSignature(Account acct, String signatureName) throws ServiceException {
+        String defaultSigName = getDefaultSignature(acct);
+        /*
+        if (defaultSigName == null) {
+            Signature acctSig = getAccountSignature(acct);
+            if (acctSig != null)
+                defaultSigName = acctSig.getName();
+        }
+        */
+        return (defaultSigName != null && signatureName.equals(defaultSigName));
+    }
+    
+    private String getDefaultSignature(Account acct) throws ServiceException {
+        return acct.getAttr(Provisioning.A_zimbraPrefDefaultSignature);
+    }
+    
+    private void setDefaultSignature(Account acct, String signatureName) throws ServiceException {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraPrefDefaultSignature, signatureName);
+        modifyAttrs(acct, attrs);
+    }
+    
+    private boolean hasAccountSignature(Account acct) {
+        return (acct.getAttr(Provisioning.A_zimbraPrefSignatureName) != null);
+    }
+    
+    private Signature getAccountSignature(Account acct) throws ServiceException {
+        if (!hasAccountSignature(acct))
+            return null;
+        
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        Set<String> signatureAttrs = AttributeManager.getInstance().getAttrsInClass(AttributeClass.signature);
+        
+        for (String name : signatureAttrs) {
+            String value = acct.getAttr(name, null);
+            if (value != null) attrs.put(name, value);            
+        }
+        
+        String sigName = acct.getAttr(Provisioning.A_zimbraPrefSignatureName);
+        attrs.put(A_zimbraPrefSignatureId, acct.getId());
+        
+        return new Signature(acct, sigName, acct.getId(), attrs);        
+    }
+    
+    private void modifyAccountSignature(Account acct, Map<String, Object>signatureAttrs, boolean setAsDefault) throws ServiceException {
+        String acctSigName = (String)signatureAttrs.get(Provisioning.A_zimbraPrefSignatureName);
+        if (setAsDefault)
+            signatureAttrs.put(Provisioning.A_zimbraPrefDefaultSignature, acctSigName);
+        
+        modifyAttrs(acct, signatureAttrs);
+    }
+
+    private void deleteAccountSignature(Account acct) throws ServiceException {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        Set<String> signatureAttrs = AttributeManager.getInstance().getAttrsInClass(AttributeClass.signature);
+        
+        for (String name : signatureAttrs) {
+            String value = acct.getAttr(name, null);
+            if (value != null) attrs.put("-" + name, value);            
+        }
+        
+        modifyAttrs(acct, attrs);
+    }
+    
     private static final String SIGNATURE_LIST_CACHE_KEY = "LdapProvisioning.SIGNATURE_CACHE";
 
     @Override
@@ -4023,18 +4097,37 @@ public class LdapProvisioning extends Provisioning {
         if (ldapEntry == null) 
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
         
-        if (signatureName.equalsIgnoreCase(DEFAULT_SIGNATURE_NAME))
+        /*
+         * check if the signature already exists
+         * 
+         * We check if the signatureName is the same as the signature on the account.  
+         * For signatures that are in the signature LDAP entries, JNDI will throw 
+         * NameAlreadyBoundException for duplicate names.
+         * 
+         */ 
+        if (isAccountSignature(account, signatureName))
             throw AccountServiceException.SIGNATURE_EXISTS(signatureName);
         
+        boolean setAsDefault = false;
         List<Signature> existing = getAllSignatures(account);
-        if (existing.size() >= account.getLongAttr(A_zimbraSignatureMaxNumEntries, 20))
+        int numSigs = existing.size();
+        if (numSigs >= account.getLongAttr(A_zimbraSignatureMaxNumEntries, 20))
             throw AccountServiceException.TOO_MANY_SIGNATURES();
+        else if (numSigs == 0)
+            setAsDefault = true;
         
         account.setCachedData(SIGNATURE_LIST_CACHE_KEY, null);
         
         HashMap attrManagerContext = new HashMap();
         AttributeManager.getInstance().preModify(signatureAttrs, null, attrManagerContext, true, true);
 
+        if (!hasAccountSignature(account)) {
+            // the slot on the account does not exist, use it
+            signatureAttrs.put(Provisioning.A_zimbraPrefSignatureName, signatureName);
+            modifyAccountSignature(account, signatureAttrs, setAsDefault);
+            return getAccountSignature(account);
+        }
+        
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(true);
@@ -4056,6 +4149,9 @@ public class LdapProvisioning extends Provisioning {
             Signature signature = getSignatureByName(account, ldapEntry, signatureName, ctxt);
             AttributeManager.getInstance().postModify(signatureAttrs, signature, attrManagerContext, true);
 
+            if (setAsDefault)
+                setDefaultSignature(account, signatureName);
+                
             return signature;
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.SIGNATURE_EXISTS(signatureName);
@@ -4080,8 +4176,14 @@ public class LdapProvisioning extends Provisioning {
         // clear cache 
         account.setCachedData(SIGNATURE_LIST_CACHE_KEY, null);
         
-        if (signatureName.equalsIgnoreCase(DEFAULT_SIGNATURE_NAME)) {
-            modifyAttrs(account, signatureAttrs);
+        if (isAccountSignature(account, signatureName)) {
+            boolean setAsDefault = false;
+            /*
+             * if it the default signature, update the default signature attr of the account
+             */
+            if (isDefaultSignature(account, signatureName))
+                setAsDefault = true;
+            modifyAccountSignature(account, signatureAttrs, setAsDefault);
         } else {
             
             LdapSignature signature = (LdapSignature) getSignatureByName(account, ldapEntry, signatureName, null);
@@ -4093,15 +4195,16 @@ public class LdapProvisioning extends Provisioning {
             if (newName) signatureAttrs.remove(A_zimbraPrefSignatureName);
 
             modifyAttrs(signature, signatureAttrs, true);
-            if (newName) renameSignature(ldapEntry, signature, name);
+            if (newName) {
+                renameSignature(ldapEntry, signature, name);
+                if (isDefaultSignature(account, signatureName))
+                    setDefaultSignature(account, name);
+            }
             
         }
     }
 
     private void renameSignature(LdapEntry entry, LdapSignature signature, String newSignatureName) throws ServiceException {
-        
-        if (signature.getName().equalsIgnoreCase(DEFAULT_SIGNATURE_NAME))
-            throw ServiceException.INVALID_REQUEST("can't rename default signature", null);        
         
         DirContext ctxt = null;
         try {
@@ -4123,10 +4226,15 @@ public class LdapProvisioning extends Provisioning {
         if (ldapEntry == null) 
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
 
-        if (signatureName.equalsIgnoreCase(DEFAULT_SIGNATURE_NAME))
+        if (isDefaultSignature(account, signatureName))
             throw ServiceException.INVALID_REQUEST("can't delete default signature", null);
         
         account.setCachedData(SIGNATURE_LIST_CACHE_KEY, null);
+        
+        if (isAccountSignature(account, signatureName)) {
+            deleteAccountSignature(account);
+            return;
+        }
         
         DirContext ctxt = null;
         try {
@@ -4171,7 +4279,11 @@ public class LdapProvisioning extends Provisioning {
                 }
             }
         }
-        result.add(getDefaultSignature(account));
+        
+        Signature acctSig = getAccountSignature(account);
+        if (acctSig != null)
+            result.add(acctSig);
+        
         result = Collections.unmodifiableList(result);
         account.setCachedData(SIGNATURE_LIST_CACHE_KEY, result);
         return result;

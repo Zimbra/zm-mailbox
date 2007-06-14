@@ -700,10 +700,13 @@ Allowed attributes (see objectclass zimbraIdentity in zimbra.schema)
   </signature>
 </CreateSignatureResponse>
 
+CreateSignature will set account default signature to the signature being created 
+if there is no default signature for the account.
 
 Allowed attributes (see objectclass zimbraSignature in zimbra.schema)
 
 	zimbraPrefMailSignature
+	zimbraPrefReplyToAddress
         
 ---------
 
