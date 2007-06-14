@@ -201,7 +201,7 @@ public class SoapServlet extends ZimbraServlet {
         new StatsFile("perf_soap", new String[] { "response" }, true);
     
     public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        long startTime = ZimbraPerf.STOPWATCH_SOAP.start();
+        long startTime = ZimbraPerf.STOPWATCH_SOAP.start();  
         
         // Performance
         if (ZimbraLog.perf.isDebugEnabled()) {
@@ -210,20 +210,20 @@ public class SoapServlet extends ZimbraServlet {
 
         int len = req.getContentLength();
         byte[] buffer;
-        
+
         // resuming from a Jetty Continuation does *not* reset the HttpRequest's input stream -
         // therefore we store the read buffer in the Continuation, and use the stored buffer
         // if we're resuming
-        Continuation continuation = ContinuationSupport.getContinuation(req, null);
-        if (continuation.isResumed()) {
-            buffer = (byte[])continuation.getObject(); 
-        } else if (len == -1) {
-            buffer = readUntilEOF(req.getInputStream());
-        } else {
-            buffer = new byte[len];
-            readFully(req.getInputStream(), buffer, 0, len);             
+        buffer = (byte[])req.getAttribute("com.zimbra.request.buffer");
+        if (buffer == null) {
+            if (len == -1) {
+                buffer = readUntilEOF(req.getInputStream());
+            } else {
+                buffer = new byte[len];
+                readFully(req.getInputStream(), buffer, 0, len);             
+            }
+            req.setAttribute("com.zimbra.request.buffer", buffer);
         }
-        continuation.setObject(buffer);
 
         ZimbraLog.clearContext();
         
