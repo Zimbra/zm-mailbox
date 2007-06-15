@@ -218,18 +218,7 @@ A Detailed Example:
 
 <!-- client syncs to a3 -->
 
-<WaitSetRequest waitSet="foo" seq="2" block="1"/>
-<!-- This is an example of a programming bug, the client has synched
-     to a3, but has not updated the last known token state with the server!
-     Immediately we are re-notified for a3, b/c the server still thinks client is at
-     syncToken 100 -->
-<WaitSetResponse waitSet="foo" seq="3">
-  <n id="a3"/>
-</WaitSetResponse>
-
-<!-- client syncs to a3 -->
-
-<WaitSetRequest waitSet="foo" seq="3" block="1">
+<WaitSetRequest waitSet="foo" seq="2" block="1">
   <update>
     <a id="a3" token="107"/>
   </update>  
