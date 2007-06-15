@@ -32,6 +32,7 @@ import junit.framework.Test;
 import junit.framework.TestResult;
 import junit.framework.TestSuite;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.index.TestSearch;
 
@@ -53,7 +54,20 @@ public class ZimbraSuite extends TestSuite
             sAdditionalTests.add(test);
         }
     }
-    
+
+    public static TestResult runUserTests(Element response, List<String> tests) throws ServiceException {
+        TestSuite suite = new TestSuite();
+        
+        for (String test : tests) {
+            try {
+                suite.addTest(new TestSuite(Class.forName(test)));
+            } catch (Exception e) {
+                throw ServiceException.FAILURE("Error instantiating test "+test, e);
+            }
+        }
+
+        return TestUtil.runTest(suite, response);
+    }
     /**
      * Runs the entire test suite and writes the output to the specified
      * <code>OutputStream</code>.
@@ -88,7 +102,7 @@ public class ZimbraSuite extends TestSuite
         suite.addTest(new TestSuite(TestSendAndReceive.class));
         suite.addTest(new TestSuite(TestConnectionPool.class));
         suite.addTest(new TestSuite(TestLmtp.class));
-
+        
         // xxx bburtin: Commenting out IMAP tests, since the new schema hasn't been
         // checked in
         // suite.addTest(new TestSuite(TestImapImport.class));

@@ -757,11 +757,16 @@ significantly since the last table maintenance.
 
 Runs the server-side unit test suite.
 
-<UnitTesstRequest/>
+If <test>'s are specified, then run the requested tests (instead of
+the standard test suite).  Otherwise the standard test suite is run.
 
-<UnitTestsResponse numExecuted="{n}" numFailed="{n}">
+<RunUnitTestsRequest>
+   [<test>classname super junit.framework.Test</test>]*
+</RunUnitTestsRequest>
+
+<RunUnitTestsResponse numExecuted="{n}" numFailed="{n}">
     { Summary of test execution times and success/failure status }
-</UnitTestsResponse>
+</RunUnitTestsResponse>
 
 -----------------------------
 All the Check* SOAP calls potentially return the following two things:

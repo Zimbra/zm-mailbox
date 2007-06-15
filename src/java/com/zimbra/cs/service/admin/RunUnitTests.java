@@ -26,12 +26,16 @@
 package com.zimbra.cs.service.admin;
 
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import junit.framework.TestResult;
 
 import com.zimbra.qa.unittest.ZimbraSuite;
 import com.zimbra.soap.DocumentHandler;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.common.soap.AdminConstants;
@@ -41,13 +45,26 @@ import com.zimbra.common.soap.AdminConstants;
  */
 public class RunUnitTests extends DocumentHandler {
 
-    public Element handle(Element request, Map<String, Object> context) {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Element response = lc.createElement(AdminConstants.RUN_UNIT_TESTS_RESPONSE);
         
-        TestResult result = ZimbraSuite.runTestSuite(response);
+        List<String> testNames = null;
+        for (Iterator iter = request.elementIterator(AdminConstants.E_TEST); iter.hasNext();) {
+            if (testNames == null)
+                testNames = new ArrayList<String>();
+            Element e = (Element)iter.next();
+            testNames.add(e.getText());
+        }
+        
+        TestResult result;         
+        if (testNames == null) 
+            result = ZimbraSuite.runTestSuite(response);
+        else 
+            result = ZimbraSuite.runUserTests(response, testNames);
+            
         
         response.addAttribute(AdminConstants.A_NUM_EXECUTED, Integer.toString(result.runCount()));
         response.addAttribute(AdminConstants.A_NUM_FAILED,
