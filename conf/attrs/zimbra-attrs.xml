@@ -238,11 +238,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="17" name="zimbraPrefMailSignature" type="string" cardinality="single" optionalIn="account,identity,signature" flags="domainAdminModifiable" callback="MailSignature">
-  <desc>mail signature</desc>
+  <desc>mail signature (deprecatedSince 5.0 in identity)</desc>
 </attr>
 
-<attr id="18" name="zimbraPrefMailSignatureEnabled" type="boolean" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable">
-    <desc>mail signature enabled</desc>
+<attr id="18" name="zimbraPrefMailSignatureEnabled" type="boolean" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable" deprecatedSince="5.0">
+  <deprecateDesc>no longer used in account or identity</deprecateDesc>
+  <desc>mail signature enabled</desc>
 </attr>
 
 <attr id="19" name="zimbraDomainName" type="string" max="256" immutable="1" cardinality="single" requiredIn="domain">
@@ -259,7 +260,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="22" name="zimbraPrefSaveToSent" type="boolean" cardinality="single" optionalIn="account,cos,identity" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>TRUE</defaultCOSValue>
-  <desc>whether or not to save outgoing mail</desc>
+  <desc>whether or not to save outgoing mail (deprecatedSince 5.0 in identity)</desc>
 </attr>
 
 <attr id="23" name="zimbraLmtpAdvertisedName" type="string" max="128" cardinality="single" optionalIn="server">
@@ -414,8 +415,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether or not out of office reply is enabled</desc>
 </attr>
 
-<attr id="60" name="zimbraPrefReplyToAddress" type="string" max="256" cardinality="single" optionalIn="account,identity,signature" flags="domainAdminModifiable">
-  <desc>email address and optional display name to put in reply-to header</desc>
+<attr id="60" name="zimbraPrefReplyToAddress" type="string" max="256" cardinality="single" optionalIn="account,identity,dataSource" flags="domainAdminModifiable">
+  <desc>address to put in reply-to header</desc>
 </attr>
 
 <attr id="61" name="zimbraPrefUseKeyboardShortcuts" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
@@ -504,7 +505,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="103" name="zimbraPrefSentMailFolder" type="string" max="256" cardinality="single" optionalIn="account,cos,identity" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>sent</defaultCOSValue>
-  <desc>name of folder to save sent mail in)</desc>
+  <desc>name of folder to save sent mail in (deprecatedSince 5.0 in identity)</desc>
 </attr>
 
 <attr id="104" name="zimbraMailTrashLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
@@ -586,7 +587,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="130" name="zimbraPrefForwardReplyPrefixChar" type="astring" max="1" cardinality="single" optionalIn="account,cos,identity" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>&gt;</defaultCOSValue>
-  <desc>prefix character to use during forward/reply</desc>
+  <desc>prefix character to use during forward/reply (deprecatedSince 5.0 in identity)</desc>
 </attr>
 
 <attr id="131" name="zimbraPrefAutoAddAddressEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
@@ -600,12 +601,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="133" name="zimbraPrefReplyIncludeOriginalText" type="enum" value="includeAsAttachment,includeBody,includeBodyWithPrefix,includeNone,includeSmart" cardinality="single" optionalIn="account,cos,identity" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>includeBody</defaultCOSValue>
-  <desc>what part of the original message to include during replies</desc>
+  <desc>what part of the original message to include during replies (deprecatedSince 5.0 in identity)</desc>
 </attr>
 
 <attr id="134" name="zimbraPrefForwardIncludeOriginalText" type="enum" value="includeAsAttachment,includeBody,includeBodyWithPrefix" cardinality="single" optionalIn="account,cos,identity" flags="accountInherited,domainAdminModifiable"> 
   <defaultCOSValue>includeBody</defaultCOSValue>
-  <desc>what part of the original message to include during forwards</desc>
+  <desc>what part of the original message to include during forwards (deprecatedSince 5.0 in identity)</desc>
 </attr>
 
 <attr id="135" name="zimbraFeatureContactsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
@@ -736,7 +737,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="156" name="zimbraPrefMailSignatureStyle" type="enum" value="outlook,internet" cardinality="single" optionalIn="account,cos,identity" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>outlook</defaultCOSValue>
-  <desc>mail signature style outlook|internet</desc>
+  <desc>mail signature style outlook|internet (deprecatedSince 5.0 in identity)</desc>
 </attr>
 
 <attr id="157" name="zimbraMimeType" type="string" cardinality="single" requiredIn="mimeEntry">
@@ -1814,17 +1815,15 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>maximum number of accounts allowed in a domain</desc>
 </attr>
 
-<attr id="402" name="zimbraPrefFromDisplay" type="string" max="256" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable">
+<attr id="402" name="zimbraPrefFromDisplay" type="string" max="256" cardinality="single" optionalIn="account,identity,dataSource" flags="domainAdminModifiable">
   <desc>personal part of email address put in from header</desc>
 </attr>
 
-<attr id="403" name="zimbraPrefFromAddress" type="string" max="256" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable" deprecatedSince="5.0">
-  <deprecateDesc>from address is going to be automatically selected by the system</deprecateDesc>
+<attr id="403" name="zimbraPrefFromAddress" type="string" max="256" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable">
   <desc>email address to put in from header</desc>
 </attr>
 
-<attr id="404" name="zimbraPrefReplyToDisplay" type="string" max="256" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable" deprecatedSince="5.0">
-    <deprecateDesc>Deprecated in favor of the signature entry/mechanism, display name for reply-to header is now stored in zimbraPrefReplyToAddress as the display part</deprecateDesc> 
+<attr id="404" name="zimbraPrefReplyToDisplay" type="string" max="256" cardinality="single" optionalIn="account,identity,dataSource" flags="domainAdminModifiable">
     <desc>personal part of email address put in reply-to header</desc>
 </attr>
 
@@ -1832,53 +1831,47 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>TRUE if we should set a reply-to header</desc>
 </attr>
 
-<attr id="406" name="zimbraPrefWhenSentToEnabled" type="boolean" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable" deprecatedSince="5.0">
-  <deprecateDesc>Deprecated in favor of the signature entry/mechanism, signature selection is now computed using data on data sources</deprecateDesc>
-  <desc>TRUE if we should look at zimbraPrefWhenSentToAddresses</desc>
+<attr id="406" name="zimbraPrefWhenSentToEnabled" type="boolean" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable">
+  <desc>TRUE if we should look at zimbraPrefWhenSentToAddresses (deprecatedSince 5.0 in account)</desc>
 </attr>
 
-<attr id="407" name="zimbraPrefWhenSentToAddresses" type="string" max="2048" cardinality="multi" optionalIn="account,identity" flags="domainAdminModifiable" deprecatedSince="5.0">
-    <deprecateDesc>Deprecated in favor of the signature entry/mechanism, signature selection is now computed using data on data sources</deprecateDesc> 
-    <desc>addresses that we will look at to see if we should use an identity</desc>
+<attr id="407" name="zimbraPrefWhenSentToAddresses" type="string" max="2048" cardinality="multi" optionalIn="account,identity" flags="domainAdminModifiable">
+    <desc>addresses that we will look at to see if we should use an identity (deprecatedSince 5.0 in account)</desc>
 </attr>
 
-<attr id="408" name="zimbraPrefWhenInFoldersEnabled" type="boolean" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable" deprecatedSince="5.0">
-  <deprecateDesc>Deprecated in favor of the signature entry/mechanism, signature selection is now computed using data on data sources</deprecateDesc>  
-  <desc>TRUE if we should look at zimbraPrefWhenInFolderIds</desc>
+<attr id="408" name="zimbraPrefWhenInFoldersEnabled" type="boolean" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable">
+  <desc>TRUE if we should look at zimbraPrefWhenInFolderIds (deprecatedSince 5.0 in account)</desc>
 </attr>
 
-<attr id="409" name="zimbraPrefWhenInFolderIds" type="string" max="512" cardinality="multi" optionalIn="account,identity" flags="domainAdminModifiable" deprecatedSince="5.0">
-    <deprecateDesc>Deprecated in favor of the signature entry/mechanism, signature selection is now computed using data on data sources</deprecateDesc>
-    <desc>if replying/forwarding a message in this folder, use this identity</desc>
+<attr id="409" name="zimbraPrefWhenInFolderIds" type="string" max="512" cardinality="multi" optionalIn="account,identity" flags="domainAdminModifiable">
+    <desc>if replying/forwarding a message in this folder, use this identity (deprecatedSince 5.0 in account)</desc>
 </attr>
 
-<attr id="410" name="zimbraPrefUseDefaultIdentitySettings" type="boolean" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable">
-  <desc>TRUE if we this identity should get settings from the default identity</desc>
+<attr id="410" name="zimbraPrefUseDefaultIdentitySettings" type="boolean" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable" deprecatedSince="5.0">
+    <deprecateDesc>no longer used in account or identity</deprecateDesc>deprecateDesc>
+    <desc>TRUE if we this identity should get settings from the default identity</desc>
 </attr>
 
 <attr id="411" name="zimbraPrefBccAddress" type="string" max="2048" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable">
-  <desc>address that we will bcc when using sending mail with this identity</desc>
+  <desc>address that we will bcc when using sending mail with this identity (deprecatedSince 5.0 in identity)</desc>
 </attr>
 
-<attr id="412" name="zimbraPrefIdentityName" type="string" max="128" cardinality="single" requiredIn="identity" optionalIn="account" flags="domainAdminModifiable" deprecatedSince="5.0">
-    <deprecateDesc>Deprecated in favor of the signature entry/mechanism</deprecateDesc>
+<attr id="412" name="zimbraPrefIdentityName" type="string" max="128" cardinality="single" requiredIn="identity" optionalIn="account" flags="domainAdminModifiable">
     <desc>name of the identity</desc>
 </attr>
 
 <attr id="413" name="zimbraPrefForwardReplyFormat" type="enum" value="text,html,same" cardinality="single" optionalIn="cos,account,identity" flags="domainAdminModifiable">
   <defaultCOSValue>text</defaultCOSValue>
-  <desc>what format we reply/forward messages in.</desc>
+  <desc>what format we reply/forward messages in (deprecatedSince 5.0 in identity)</desc>
 </attr>
 
-<attr id="414" name="zimbraIdentityMaxNumEntries" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" deprecatedSince="5.0">
+<attr id="414" name="zimbraIdentityMaxNumEntries" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
   <defaultCOSValue>20</defaultCOSValue>
-  <deprecateDesc>Deprecated in favor of the signature entry/mechanism</deprecateDesc>
   <desc>maximum number of identities allowed on an account</desc>
 </attr>
 
-<attr id="415" name="zimbraFeatureIdentitiesEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" deprecatedSince="5.0">
+<attr id="415" name="zimbraFeatureIdentitiesEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
   <defaultCOSValue>TRUE</defaultCOSValue>
-  <deprecateDesc>Deprecated in favor of the signature entry/mechanism</deprecateDesc>
   <desc>whether to allow use of identities feature</desc>
 </attr>
 
@@ -1973,8 +1966,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="433" name="zimbraPrefIdentityId" type="id" cardinality="single" optionalIn="identity" deprecatedSince="5.0">
-    <deprecateDesc>Deprecated in favor of the signature entry/mechanism</deprecateDesc>
+<attr id="433" name="zimbraPrefIdentityId" type="id" cardinality="single" optionalIn="identity">
     <desc>Unique ID for an identity</desc>
 </attr>
 
@@ -2261,9 +2253,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     <desc>Unique ID for an signature</desc>
 </attr>
     
-<attr id="491" name="zimbraPrefSignatureName" type="string" max="128" cardinality="single" requiredIn="signature" optionalIn="account,dataSource" flags="domainAdminModifiable">
+<attr id="491" name="zimbraPrefSignatureName" type="string" max="128" cardinality="single" requiredIn="signature" optionalIn="account,identity,dataSource" flags="domainAdminModifiable">
     <desc>for signature: name of the signature  
-          for dataSource: name of the signature to use when replying to a message sent to the email address of the data source </desc>
+          for identity and dataSource: name of the signature to use when forward/reply messages sent to the email address of the identity/dataSource </desc>
 </attr>
     
 <attr id="492" name="zimbraPrefDefaultSignature" type="string" cardinality="single" optionalIn="account" flags="domainAdminModifiable" callback="DefaultSignature">
@@ -2280,11 +2272,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether to allow use of signature feature</desc>
 </attr>
 
-<attr id="495" name="zimbraDataSourceEmailAddress" type="string" max="128" cardinality="single" requiredIn="dataSource" flags="domainAdminModifiable">
+<attr id="495" name="zimbraDataSourceEmailAddress" type="string" max="128" cardinality="single" optionalIn="dataSource" flags="domainAdminModifiable">
   <desc>email address for the data source</desc>
 </attr>
 
-<attr id="496" name="zimbraDataSourceUseAddressForOutgoingMessages" type="boolean" cardinality="single" optionalIn="dataSource" flags="domainAdminModifiable">
+<attr id="496" name="zimbraDataSourceUseAddressForForwardReply" type="boolean" cardinality="single" optionalIn="dataSource" flags="domainAdminModifiable">
   <desc>when forwarding or replying to messages sent to this data source, whether or not to use the email address of the data source 
         for the from address and the designated signature/replyTo of the data source for the outgoing message.
   </desc>

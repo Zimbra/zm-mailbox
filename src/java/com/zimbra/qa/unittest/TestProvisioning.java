@@ -920,11 +920,17 @@ public class TestProvisioning extends TestCase {
         dsAttrs.put(Provisioning.A_zimbraDataSourceEnabled, "TRUE");
         dsAttrs.put(Provisioning.A_zimbraDataSourceConnectionType, "ssl");
         dsAttrs.put(Provisioning.A_zimbraDataSourceFolderId, "inbox");
-        dsAttrs.put(Provisioning.A_zimbraDataSourceHost, "google.com");
+        dsAttrs.put(Provisioning.A_zimbraDataSourceHost, "pop.google.com");
         dsAttrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer, "TRUE");
         dsAttrs.put(Provisioning.A_zimbraDataSourcePassword, PASSWORD);
         dsAttrs.put(Provisioning.A_zimbraDataSourcePort, "9999");
-        dsAttrs.put(Provisioning.A_zimbraDataSourceUsername, "whatever");
+        dsAttrs.put(Provisioning.A_zimbraDataSourceUsername, "mickymouse");
+        dsAttrs.put(Provisioning.A_zimbraDataSourceEmailAddress, "micky@google.com");
+        dsAttrs.put(Provisioning.A_zimbraPrefSignatureName, "sig-business");
+        dsAttrs.put(Provisioning.A_zimbraPrefFromDisplay, "Micky Mouse");
+        dsAttrs.put(Provisioning.A_zimbraPrefReplyToAddress, "goofy@yahoo.com");
+        dsAttrs.put(Provisioning.A_zimbraPrefReplyToDisplay, "Micky");
+        
         DataSource entry = mProv.createDataSource(account, DataSource.Type.pop3, DATA_SOURCE_NAME, dsAttrs);
 
         DataSource entryGot = mProv.get(account, Provisioning.DataSourceBy.id, entry.getId());
@@ -946,6 +952,12 @@ public class TestProvisioning extends TestCase {
         System.out.println("Testing identity");
         
         Map<String, Object> identityAttrs = new HashMap<String, Object>();
+        identityAttrs.put(Provisioning.A_zimbraPrefSignatureName, "sig-business");
+        identityAttrs.put(Provisioning.A_zimbraPrefFromAddress, "micky.mouse@zimbra,com");
+        identityAttrs.put(Provisioning.A_zimbraPrefFromDisplay, "Micky Mouse");
+        identityAttrs.put(Provisioning.A_zimbraPrefReplyToEnabled, "TRUE");
+        identityAttrs.put(Provisioning.A_zimbraPrefReplyToAddress, "goofy@yahoo.com");
+        identityAttrs.put(Provisioning.A_zimbraPrefReplyToDisplay, "Micky");
         Identity entry = mProv.createIdentity(account, IDENTITY_NAME, identityAttrs);
         
         Identity entryGot = mProv.get(account, Provisioning.IdentityBy.id, entry.getId());
@@ -959,15 +971,34 @@ public class TestProvisioning extends TestCase {
         List list = mProv.getAllIdentities(account);
         verifyEntries(list, new NamedEntry[]{defaultIdentity, entry}, true);
         
+        // modify
         Map attrsToMod = new HashMap<String, Object>();
-        attrsToMod.put(Provisioning.A_zimbraPrefBccAddress, "whatever");
+        attrsToMod.put(Provisioning.A_zimbraPrefReplyToDisplay, "MM");
         mProv.modifyIdentity(account, IDENTITY_NAME, attrsToMod);
-
+        
+        // rename
+        String newName = "identity-new-name";
+        attrsToMod.clear();
+        attrsToMod.put(Provisioning.A_zimbraPrefIdentityName, newName);
+        mProv.modifyIdentity(account, IDENTITY_NAME, attrsToMod);
+        
+        // get by new name
+        entryGot = mProv.get(account, Provisioning.IdentityBy.name, newName);
+        entry = mProv.get(account, Provisioning.IdentityBy.id, entry.getId());
+        verifySameEntry(entry, entryGot);
+        
+        // rename back
+        attrsToMod.clear();
+        attrsToMod.put(Provisioning.A_zimbraPrefIdentityName, IDENTITY_NAME);
+        mProv.modifyIdentity(account, newName, attrsToMod);
+        
+        // refresh the entry to return
+        entry = mProv.get(account, Provisioning.IdentityBy.id, entry.getId());
+        
         return entry;
     }
 
-    /*
-    private Signature signatureTest(Account account) throws Exception {
+    private void signatureTest(Account account) throws Exception {
         System.out.println("Testing signature");
         
         Map<String, Object> signatureAttrs = new HashMap<String, Object>();
@@ -979,12 +1010,12 @@ public class TestProvisioning extends TestCase {
         entryGot = mProv.get(account, Provisioning.SignatureBy.name, SIGNATURE_NAME);
         verifySameEntry(entry, entryGot);
         
-        Signature defaultSignature = mProv.get(account, Provisioning.SignatureBy.name, Provisioning.DEFAULT_SIGNATURE_NAME);
-        verifySameId(account, defaultSignature);
-        assertEquals(Provisioning.DEFAULT_SIGNATURE_NAME, defaultSignature.getName());
-        
         List list = mProv.getAllSignatures(account);
-        verifyEntries(list, new NamedEntry[]{defaultSignature, entry}, true);
+        verifyEntries(list, new NamedEntry[]{entry}, true);
+        
+        // since this is the only signature, it should be automatically set as the default signature of the account
+        String defaultSigName = account.getAttr(Provisioning.A_zimbraPrefDefaultSignature);
+        assertEquals(SIGNATURE_NAME, defaultSigName);
         
         Map attrsToMod = new HashMap<String, Object>();
         attrsToMod.put(Provisioning.A_zimbraPrefMailSignature, SIGNATURE_VALUE_MODIFIED);
@@ -993,10 +1024,48 @@ public class TestProvisioning extends TestCase {
         // make sure we get the modified value back
         entryGot = mProv.get(account, Provisioning.SignatureBy.id, entry.getId());
         assertEquals(SIGNATURE_VALUE_MODIFIED, entryGot.getAttr(Provisioning.A_zimbraPrefMailSignature));
-
-        return entry;
+        
+        // try to delete the signature, since it is the default signature (because it is the only one)
+        // it should not be allowed
+        try {
+            mProv.deleteSignature(account, SIGNATURE_NAME);
+            fail("ServiceException.INVALID_REQUEST not thrown"); // should not come to here
+        } catch (ServiceException e) {
+            assertEquals(ServiceException.INVALID_REQUEST, e.getCode());
+        }
+        
+        // create a second signature and set it as the default 
+        String secondSigName = "second-sig";
+        signatureAttrs.clear();
+        Signature secondEntry = mProv.createSignature(account, secondSigName, signatureAttrs);
+        Map<String, Object> acctAttrs = new HashMap<String, Object>();
+        acctAttrs.put(Provisioning.A_zimbraPrefDefaultSignature, secondSigName);
+        mProv.modifyAttrs(account, acctAttrs);
+        
+        // now we can delete the first sig
+        mProv.deleteSignature(account, SIGNATURE_NAME);
+        
+        // rename the defaulf sig, make sure A_zimbraPrefDefaultSignature is changed accordingly
+        String secondSigNameNew = "second-sig-new-name";
+        signatureAttrs.clear();
+        signatureAttrs.put(Provisioning.A_zimbraPrefSignatureName, secondSigNameNew);
+        mProv.modifySignature(account, secondSigName, signatureAttrs);
+        defaultSigName = account.getAttr(Provisioning.A_zimbraPrefDefaultSignature);
+        assertEquals(secondSigNameNew, defaultSigName);
+        // refresh the entry, since it was moved
+        secondEntry = mProv.get(account, Provisioning.SignatureBy.name, secondSigNameNew);
+        
+        // create a third signature, it should sit on the account entry
+        String thirdSigName = "third-sig";
+        signatureAttrs.clear();
+        Signature thirdEntry = mProv.createSignature(account, thirdSigName, signatureAttrs);
+        String acctSigName = account.getAttr(Provisioning.A_zimbraPrefSignatureName);
+        assertEquals(thirdSigName, acctSigName);
+        
+        list = mProv.getAllSignatures(account);
+        verifyEntries(list, new NamedEntry[]{secondEntry, thirdEntry}, true);
+        
     }
-    */
     
     private void entryTest(NamedEntry entry) throws Exception  {
         System.out.println("Testing entry");
@@ -1124,7 +1193,7 @@ public class TestProvisioning extends TestCase {
         DistributionList[] distributionLists = distributionListTest(domain);
         DataSource dataSource = dataSourceTest(account);
         Identity identity = identityTest(account);
-        // Signature signature = signatureTest(account);
+        signatureTest(account);
         
         entryTest(account);
         galTest(domain);
@@ -1139,7 +1208,6 @@ public class TestProvisioning extends TestCase {
         mProv.deleteZimlet(ZIMLET_NAME);
         mProv.deleteServer(server.getId());
         mProv.deleteIdentity(account, IDENTITY_NAME);
-        mProv.deleteSignature(account, SIGNATURE_NAME);
         mProv.deleteDataSource(account, dataSource.getId());
         
         // delete DLs
@@ -1162,8 +1230,6 @@ public class TestProvisioning extends TestCase {
         
         for (Account acct : accounts)
             mProv.deleteAccount(acct.getId());
-        // mProv.deleteAccount(account.getId());
-        
         mProv.deleteAccount(adminAccount.getId());
         
         mProv.deleteDomain(domain.getId());

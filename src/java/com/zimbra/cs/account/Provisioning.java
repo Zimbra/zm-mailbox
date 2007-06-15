@@ -1177,6 +1177,7 @@ public abstract class Provisioning {
     public static final String A_zimbraDataSourceMaxNumEntries = "zimbraDataSourceMaxNumEntries";    
     public static final String A_zimbraDataSourceLeaveOnServer = "zimbraDataSourceLeaveOnServer";
     public static final String A_zimbraDataSourcePollingInterval = "zimbraDataSourcePollingInterval";
+    public static final String A_zimbraDataSourceEmailAddress = "zimbraDataSourceEmailAddress";
     
     // Quota warning
     public static final String A_zimbraQuotaWarnPercent = "zimbraQuotaWarnPercent";

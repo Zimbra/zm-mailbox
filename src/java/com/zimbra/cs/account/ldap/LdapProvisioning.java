@@ -4176,12 +4176,15 @@ public class LdapProvisioning extends Provisioning {
         // clear cache 
         account.setCachedData(SIGNATURE_LIST_CACHE_KEY, null);
         
+        String newName = (String) signatureAttrs.get(A_zimbraPrefSignatureName);
+        boolean nameChanged = (newName != null && !newName.equals(signatureName));
+        
         if (isAccountSignature(account, signatureName)) {
             boolean setAsDefault = false;
             /*
-             * if it the default signature, update the default signature attr of the account
+             * if it the default signature and name changed, update the default signature attr of the account
              */
-            if (isDefaultSignature(account, signatureName))
+            if (nameChanged && isDefaultSignature(account, signatureName))
                 setAsDefault = true;
             modifyAccountSignature(account, signatureAttrs, setAsDefault);
         } else {
@@ -4190,15 +4193,13 @@ public class LdapProvisioning extends Provisioning {
             if (signature == null)
                 throw AccountServiceException.NO_SUCH_SIGNATURE(signatureName);   
         
-            String name = (String) signatureAttrs.get(A_zimbraPrefSignatureName);
-            boolean newName = (name != null && !name.equals(signatureName));
-            if (newName) signatureAttrs.remove(A_zimbraPrefSignatureName);
+            if (nameChanged) signatureAttrs.remove(A_zimbraPrefSignatureName);
 
             modifyAttrs(signature, signatureAttrs, true);
-            if (newName) {
-                renameSignature(ldapEntry, signature, name);
+            if (nameChanged) {
+                renameSignature(ldapEntry, signature, newName);
                 if (isDefaultSignature(account, signatureName))
-                    setDefaultSignature(account, name);
+                    setDefaultSignature(account, newName);
             }
             
         }
