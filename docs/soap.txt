@@ -2137,7 +2137,7 @@ EXAMPLE:
 
 -----------------------
 
- <NoOpRequest [wait='1']/>
+ <NoOpRequest [wait='1'] [timeout="msecs to wait"/>
 
  <NoOpResponse/>
 
@@ -2146,8 +2146,15 @@ any pending notifications.
 
 If "wait" is set, and if the current session allows them, this request will block until there are
 new notifications for the client.  Note that the soap envelope must reference an existing session
-that has notifications enabled, and the notification sequencing number should be specified.
+that has notifications enabled, and the notification sequencing number
+should be specified.
 
+The client may specifiy a custom timeout-length for their request if
+they know something about the particular underlying network.  The
+server may or may not honor this request (depending on server
+configured max/min values: see LocalConfig variables
+zimbra_noop_default_timeout, zimbra_noop_min_timeout and
+zimbra_noop_max_timeout)
 
 ---------------------------
 

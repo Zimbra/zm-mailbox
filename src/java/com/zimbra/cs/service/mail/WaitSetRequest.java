@@ -29,6 +29,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
+import org.mortbay.util.ajax.Continuation;
+import org.mortbay.util.ajax.ContinuationSupport;
+
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -42,12 +48,48 @@ import com.zimbra.cs.session.WaitSetAccount;
 import com.zimbra.cs.session.WaitSetCallback;
 import com.zimbra.cs.session.WaitSetError;
 import com.zimbra.cs.session.WaitSetMgr;
+import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * 
  */
 public class WaitSetRequest extends MailDocumentHandler {
+    
+    private static final long DEFAULT_TIMEOUT;
+    private static final long MIN_TIMEOUT;
+    private static final long MAX_TIMEOUT;
+    private static final long DEFAULT_ADMIN_TIMEOUT;
+    private static final long MIN_ADMIN_TIMEOUT;
+    private static final long MAX_ADMIN_TIMEOUT;
+    
+    static {
+        DEFAULT_TIMEOUT = LC.zimbra_waitset_default_request_timeout.longValue() * 1000;
+        MIN_TIMEOUT = LC.zimbra_waitset_min_request_timeout.longValue() * 1000;
+        MAX_TIMEOUT = LC.zimbra_waitset_max_request_timeout.longValue() * 1000;
+        
+        DEFAULT_ADMIN_TIMEOUT = LC.zimbra_admin_waitset_default_request_timeout.longValue() * 1000;
+        MIN_ADMIN_TIMEOUT = LC.zimbra_admin_waitset_min_request_timeout.longValue() * 1000;
+        MAX_ADMIN_TIMEOUT = LC.zimbra_admin_waitset_max_request_timeout.longValue() * 1000;
+    }
+    
+    private static long getTimeout(Element request, boolean isAdminRequest) throws ServiceException {
+        if (!isAdminRequest) {
+            long to = request.getAttributeLong(MailConstants.A_TIMEOUT, DEFAULT_TIMEOUT);
+            if (to < MIN_TIMEOUT)
+                to = MIN_TIMEOUT;
+            if (to > MAX_TIMEOUT)
+                to = MAX_TIMEOUT;
+            return to;
+        } else {
+            long to = request.getAttributeLong(MailConstants.A_TIMEOUT, DEFAULT_ADMIN_TIMEOUT);
+            if (to < MIN_ADMIN_TIMEOUT)
+                to = MIN_ADMIN_TIMEOUT;
+            if (to > MAX_ADMIN_TIMEOUT)
+                to = MAX_ADMIN_TIMEOUT;
+            return to;
+        }
+    }
     
     /*
 <!--*************************************
@@ -84,83 +126,100 @@ public class WaitSetRequest extends MailDocumentHandler {
   [ <error ...something.../>]*
 </WaitMultipleAccountsResponse>
      */
-
+    
+    
+    private static final String VARS_ATTR_NAME = WaitSetRequest.class.getName()+".vars";
+    
     /* (non-Javadoc)
      * @see com.zimbra.soap.DocumentHandler#handle(com.zimbra.common.soap.Element, java.util.Map)
      */
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+    
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        HttpServletRequest servletRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+        Continuation continuation;
+
         String waitSetId = request.getAttribute(MailConstants.A_WAITSET_ID);
         String lastKnownSeqNo = request.getAttribute(MailConstants.A_SEQ);
         boolean block = request.getAttributeBool(MailConstants.A_BLOCK, false);
         
         boolean adminAllowed = zsc.getAuthToken().isAdmin(); 
         
-        String defInterestStr = null;
-        IWaitSet ws = null;
+        Callback cb;
         
-        if (waitSetId.startsWith(WaitSetMgr.ALL_ACCOUNTS_ID_PREFIX)) {
-            
-            if (!adminAllowed) 
-                throw MailServiceException.PERM_DENIED("Non-Admin accounts may not wait on other accounts");
-            
-            // default interest types required for "All" waitsets
-            defInterestStr = request.getAttribute(MailConstants.A_DEFTYPES);
-            int defaultInterests = WaitSetRequest.parseInterestStr(defInterestStr, 0);
-            ws = WaitSetMgr.lookupOrCreateForAllAccts(zsc.getAuthtokenAccountId(), waitSetId, defaultInterests, lastKnownSeqNo);
+        if (context.containsKey(SoapServlet.IS_RESUMED_REQUEST)) {
+            cb  = (Callback)servletRequest.getAttribute(VARS_ATTR_NAME);
+            // load variables here
+            continuation = ContinuationSupport.getContinuation(servletRequest, cb);
         } else {
-            ws = WaitSetMgr.lookup(waitSetId);
-        }
-        
-        if (ws == null) {
-            throw AdminServiceException.NO_SUCH_WAITSET(waitSetId);
-        }
-        
-        if (!ws.getOwnerAccountId().equals(zsc.getAuthtokenAccountId())) {
-            throw ServiceException.PERM_DENIED("Not owner of waitset");
-        }
-        
-        List<String> allowedAccountIds = null;
-        if (!adminAllowed) {
-            allowedAccountIds = new ArrayList<String>(1);
-            allowedAccountIds.add(zsc.getAuthtokenAccountId());
-        }
-        
-        List<WaitSetAccount> add = parseAddUpdateAccounts(
-            request.getOptionalElement(MailConstants.E_WAITSET_ADD), ws.getDefaultInterest(), allowedAccountIds);
-        List<WaitSetAccount> update = parseAddUpdateAccounts(
-            request.getOptionalElement(MailConstants.E_WAITSET_UPDATE), ws.getDefaultInterest(), allowedAccountIds);
-        List<String> remove = parseRemoveAccounts(request.getOptionalElement(MailConstants.E_WAITSET_REMOVE), allowedAccountIds);
-        
-        Callback cb = new Callback();
-
-        List<WaitSetError> errors  = null;
-
-        // Force the client to wait briefly before processing -- this will stop 'bad' clients from polling 
-        // the server in a very fast loop (they should be using the 'block' mode)
-        try { Thread.sleep(1000); } catch (InterruptedException ex) {} 
-        
-        synchronized(cb) {
-            errors = ws.doWait(cb, lastKnownSeqNo, add, update, remove);
-            // after this point, the ws has a pointer to the cb and so we *MUST NOT* lock
-            // the ws until we release the cb lock!
+            cb = new Callback(null);
+            continuation = ContinuationSupport.getContinuation(servletRequest, cb);
+            cb.continuation = continuation;
+            servletRequest.setAttribute(VARS_ATTR_NAME, cb);
             
-            if (block && !cb.completed) { // don't wait if it completed right away
-                
-                // No data after initial check...wait a few extra seconds
-                // before going into the notification wait...basically we're just 
-                // trying to let the server coalesce notification data a little 
-                // bit.
-                try { Thread.sleep(3000); } catch (InterruptedException ex) {} 
+            String defInterestStr = null;
+            if (waitSetId.startsWith(WaitSetMgr.ALL_ACCOUNTS_ID_PREFIX)) {
+                if (!adminAllowed) 
+                    throw MailServiceException.PERM_DENIED("Non-Admin accounts may not wait on other accounts");
+                // default interest types required for "All" waitsets
+                defInterestStr = request.getAttribute(MailConstants.A_DEFTYPES);
+                int defaultInterests = WaitSetRequest.parseInterestStr(defInterestStr, 0);
+                cb.ws = WaitSetMgr.lookupOrCreateForAllAccts(zsc.getAuthtokenAccountId(), waitSetId, defaultInterests, lastKnownSeqNo);
+            } else {
+                cb.ws = WaitSetMgr.lookup(waitSetId);
+            }
+            
+            if (cb.ws == null)
+                throw AdminServiceException.NO_SUCH_WAITSET(waitSetId);
+            
+            if (!cb.ws.getOwnerAccountId().equals(zsc.getAuthtokenAccountId()))
+                throw ServiceException.PERM_DENIED("Not owner of waitset");
+            
+            List<String> allowedAccountIds = null;
+            if (!adminAllowed) {
+                allowedAccountIds = new ArrayList<String>(1);
+                allowedAccountIds.add(zsc.getAuthtokenAccountId());
+            }
+            
+            List<WaitSetAccount> add = parseAddUpdateAccounts(
+                request.getOptionalElement(MailConstants.E_WAITSET_ADD), cb.ws.getDefaultInterest(), allowedAccountIds);
+            List<WaitSetAccount> update = parseAddUpdateAccounts(
+                request.getOptionalElement(MailConstants.E_WAITSET_UPDATE), cb.ws.getDefaultInterest(), allowedAccountIds);
+            List<String> remove = parseRemoveAccounts(request.getOptionalElement(MailConstants.E_WAITSET_REMOVE), allowedAccountIds);
+            
+            if (!block) {
+                // Force the client to wait briefly before processing -- this will stop 'bad' clients from polling 
+                // the server in a very fast loop (they should be using the 'block' mode)
+                try { Thread.sleep(1000); } catch (InterruptedException ex) {}
+            }
 
-                try { 
-                    cb.wait(1000 * 60 * 5); // timeout after 5 minutes
-                } catch (InterruptedException ex) {}
+            synchronized(cb) {
+                cb.errors = cb.ws.doWait(cb, lastKnownSeqNo, add, update, remove);
+                // after this point, the ws has a pointer to the cb and so we *MUST NOT* lock
+                // the ws until we release the cb lock!
+                
+                if (block && !cb.completed) { // don't wait if it completed right away
+                    
+                    // No data after initial check...wait a few extra seconds
+                    // before going into the notification wait...basically we're just 
+                    // trying to let the server coalesce notification data a little 
+                    // bit.
+                    try { Thread.sleep(3000); } catch (InterruptedException ex) {} 
+
+                    continuation.suspend(getTimeout(request, adminAllowed));
+//                    try { 
+//                        vars.wait(getTimeout(request, adminAllowed));
+//                    } catch (InterruptedException ex) {}
+                }
             }
         }
         
-        ws.doneWaiting();
+        // if we got here, then we did *not* execute a jetty RetryContinuation,
+        // soooo, we'll fall through and finish up at the bottom
+        
+        // clear the 
+        cb.ws.doneWaiting();
         
         Element response = zsc.createElement(MailConstants.WAIT_SET_RESPONSE);
         response.addAttribute(MailConstants.A_WAITSET_ID, waitSetId);
@@ -178,7 +237,7 @@ public class WaitSetRequest extends MailDocumentHandler {
             response.addAttribute(MailConstants.A_SEQ, lastKnownSeqNo);
         }
         
-        encodeErrors(response, errors);
+        encodeErrors(response, cb.errors);
         
         return response;
     }
@@ -224,6 +283,9 @@ public class WaitSetRequest extends MailDocumentHandler {
     }
     
     public static class Callback implements WaitSetCallback {
+        Callback(Continuation continuation) {
+            this.continuation = continuation;
+        }
         public void dataReady(IWaitSet ws, String seqNo, boolean canceled, String[] signalledAccounts) {
             synchronized(this) {
                 ZimbraLog.session.info("Called WaitMultiplAccounts WaitSetCallback.dataReady()!");
@@ -232,7 +294,7 @@ public class WaitSetRequest extends MailDocumentHandler {
                 this.signalledAccounts = signalledAccounts;
                 this.seqNo = seqNo;
                 this.completed = true;
-                this.notifyAll();
+                continuation.resume();
             }
         }
 
@@ -241,6 +303,9 @@ public class WaitSetRequest extends MailDocumentHandler {
         public String[] signalledAccounts;
         public IWaitSet waitSet;
         public String seqNo;
+        public IWaitSet ws;
+        public List<WaitSetError> errors;
+        public Continuation continuation;
     }
     
     public static enum TypeEnum {

@@ -68,6 +68,8 @@ public class SoapServlet extends ZimbraServlet {
     public static final String ZIMBRA_AUTH_TOKEN = "zimbra.authToken";    
     /** context name of servlet HTTP request */
     public static final String SERVLET_REQUEST = "servlet.request";
+    /** If this is set, then this a RESUMED servlet request (Jetty Continuation) */
+    public static final String IS_RESUMED_REQUEST = "zimbra.resumedRequest";
 
     // Used by sExtraServices
     private static Factory sListFactory = new Factory() {
@@ -210,12 +212,14 @@ public class SoapServlet extends ZimbraServlet {
 
         int len = req.getContentLength();
         byte[] buffer;
+        boolean isResumed = true;
 
         // resuming from a Jetty Continuation does *not* reset the HttpRequest's input stream -
         // therefore we store the read buffer in the Continuation, and use the stored buffer
         // if we're resuming
         buffer = (byte[])req.getAttribute("com.zimbra.request.buffer");
         if (buffer == null) {
+            isResumed = false;
             if (len == -1) {
                 buffer = readUntilEOF(req.getInputStream());
             } else {
@@ -237,6 +241,8 @@ public class SoapServlet extends ZimbraServlet {
         context.put(SERVLET_REQUEST, req);
         context.put(SoapEngine.REQUEST_IP, req.getRemoteAddr());            
         //checkAuthToken(req.getCookies(), context);
+        if (isResumed) 
+            context.put(IS_RESUMED_REQUEST, "1");
 
         Element envelope = null;
         try {

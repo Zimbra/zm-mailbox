@@ -36,6 +36,7 @@ import org.mortbay.util.ajax.Continuation;
 import org.mortbay.util.ajax.ContinuationSupport;
 import org.mortbay.util.ajax.WaitingContinuation;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
@@ -44,16 +45,38 @@ import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
- * @author schemers
+ * Do nothing. The main intent of this Soap call is for the client
+ * to fetch new notifications (which are automatically added onto the empty 
+ * response). 
+ * 
+ * The caller may set wait=1 for this request in which case the request will
+ * block until there are new notifications.
  */
 public class NoOp extends MailDocumentHandler  {
     
-    private static final long NOP_TIMEOUT = 5 * 60 * 1000; // 5 minutes per Zimbra Desktop (NAT issues), TODO perhaps allow client to specify a timeout?
-
+    private static final long DEFAULT_TIMEOUT;
+    private static final long MIN_TIMEOUT;
+    private static final long MAX_TIMEOUT;
+    
+    static {
+        DEFAULT_TIMEOUT = LC.zimbra_noop_default_timeout.longValue() * 1000;
+        MIN_TIMEOUT = LC.zimbra_noop_min_timeout.longValue() * 1000;
+        MAX_TIMEOUT = LC.zimbra_noop_max_timeout.longValue() * 1000;
+    }
+    
+    private static long parseTimeout(Element request) throws ServiceException {
+        long timeout = request.getAttributeLong(MailConstants.A_TIMEOUT, DEFAULT_TIMEOUT);
+        if (timeout < MIN_TIMEOUT)
+            timeout = MIN_TIMEOUT;
+        if (timeout > MAX_TIMEOUT)
+            timeout = MAX_TIMEOUT;
+        return timeout;
+    }
+    
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         
-        boolean wait = request.getAttributeBool("wait", false);
+        boolean wait = request.getAttributeBool(MailConstants.A_WAIT, false);
         if (wait) {
             HttpServletRequest servletRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
             Continuation continuation = ContinuationSupport.getContinuation(servletRequest, zsc);
@@ -73,7 +96,7 @@ public class NoOp extends MailDocumentHandler  {
                     synchronized(zsc) {
                         if (zsc.waitingForNotifications()) {
                             assert (!(continuation instanceof WaitingContinuation) || ((WaitingContinuation)continuation).getMutex()==zsc); 
-                            continuation.suspend(NOP_TIMEOUT);
+                            continuation.suspend(parseTimeout(request));
                         }
                     }
                 }
