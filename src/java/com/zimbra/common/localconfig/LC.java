@@ -243,6 +243,18 @@ public class LC {
     public static final KnownKey zmstat_log_directory;
     public static final KnownKey zmstat_interval;
     
+    public static final KnownKey zimbra_noop_default_timeout;
+    public static final KnownKey zimbra_noop_min_timeout;
+    public static final KnownKey zimbra_noop_max_timeout;
+    
+    public static final KnownKey zimbra_waitset_default_request_timeout;
+    public static final KnownKey zimbra_waitset_min_request_timeout;
+    public static final KnownKey zimbra_waitset_max_request_timeout;
+
+    public static final KnownKey zimbra_admin_waitset_default_request_timeout;
+    public static final KnownKey zimbra_admin_waitset_min_request_timeout;
+    public static final KnownKey zimbra_admin_waitset_max_request_timeout;
+    
     static {
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
                 "Changing this setting does not immediately reflect in MySQL server.  " +
@@ -877,5 +889,25 @@ public class LC {
         zmstat_interval = new KnownKey("zmstat_interval");
         zmstat_interval.setDefault("30");
         zmstat_interval.setDoc("how often samples are taken by zmstat (seconds)");
+        
+        zimbra_noop_default_timeout = new KnownKey("zimbra_noop_default_timeout", "300", 
+        "Time (seconds) the server will allow a NoOpRequest to block if wait=1 is specified by the client");  
+        zimbra_noop_min_timeout = new KnownKey("zimbra_noop_min_timeout", "30", 
+        "Minimum allowable timeout (seconds) specified to NoOpRequest");  
+        zimbra_noop_max_timeout = new KnownKey("zimbra_noop_max_timeout", "1200", 
+        "Maximum allowable timeout (seconds) specified to NoOpRequest");
+        
+        zimbra_waitset_default_request_timeout = new KnownKey("zimbra_waitset_default_request_timeout", "300",
+        "Default Timeout (seconds) a non-admin WaitSetRequest will block");
+        zimbra_waitset_min_request_timeout = new KnownKey("zimbra_waitset_min_request_timeout", "30",
+        "Minimum Timeout (seconds) a non-admin WaitSetRequest will block");
+        zimbra_waitset_max_request_timeout = new KnownKey("zimbra_waitset_max_request_timeout", "1200",
+        "Maximum Timeout (seconds) a non-admin WaitSetRequest will block");
+        zimbra_admin_waitset_default_request_timeout = new KnownKey("zimbra_admin_waitset_default_request_timeout", "300",
+        "Default Timeout (seconds) an admin WaitSetRequest will block");
+        zimbra_admin_waitset_min_request_timeout = new KnownKey("zimbra_admin_waitset_min_request_timeout", "0", 
+        "Minimum Timeout (seconds) an admin WaitSetRequest will block");
+        zimbra_admin_waitset_max_request_timeout = new KnownKey("zimbra_admin_waitset_max_request_timeout", "3600",
+        "Maximum Timeout (seconds) an admin WaitSetRequest will block");
     }
 }
