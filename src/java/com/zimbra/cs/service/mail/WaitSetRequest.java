@@ -142,7 +142,9 @@ public class WaitSetRequest extends MailDocumentHandler {
         try { Thread.sleep(1000); } catch (InterruptedException ex) {} 
         
         synchronized(cb) {
-            errors = ws.doWait(cb, lastKnownSeqNo, block, add, update, remove);
+            errors = ws.doWait(cb, lastKnownSeqNo, add, update, remove);
+            // after this point, the ws has a pointer to the cb and so we *MUST NOT* lock
+            // the ws until we release the cb lock!
             
             if (block && !cb.completed) { // don't wait if it completed right away
                 
@@ -155,9 +157,10 @@ public class WaitSetRequest extends MailDocumentHandler {
                 try { 
                     cb.wait(1000 * 60 * 5); // timeout after 5 minutes
                 } catch (InterruptedException ex) {}
-                
             }
         }
+        
+        ws.doneWaiting();
         
         Element response = zsc.createElement(MailConstants.WAIT_SET_RESPONSE);
         response.addAttribute(MailConstants.A_WAITSET_ID, waitSetId);

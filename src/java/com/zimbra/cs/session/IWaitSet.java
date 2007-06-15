@@ -50,6 +50,8 @@ public interface IWaitSet {
      * is based on change since last Wait (or change since <add> if this
      * is the first time Wait has been called with the account)
      * 
+     * IMPORTANT NOTE: Caller *must* call doneWaiting() when done waiting for the callback 
+     * 
      * @param cb
      * @param lastKnownSeqNo
      * @param block
@@ -59,9 +61,11 @@ public interface IWaitSet {
      * @return
      * @throws ServiceException
      */
-    public List<WaitSetError> doWait(WaitSetCallback cb, String lastKnownSeqNo, boolean block,
+    public List<WaitSetError> doWait(WaitSetCallback cb, String lastKnownSeqNo, 
         List<WaitSetAccount> addAccounts, List<WaitSetAccount> updateAccounts, 
         List<String> removeAccounts) throws ServiceException;
+    
+    public void doneWaiting();
         
     /**
      * Just a helper: the 'default interest' is set when the WaitSet is created,

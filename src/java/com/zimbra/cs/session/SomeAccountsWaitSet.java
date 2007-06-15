@@ -53,7 +53,7 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
     }
 
     /* @see com.zimbra.cs.session.IWaitSet#doWait(com.zimbra.cs.session.WaitSetCallback, java.lang.String, boolean, java.util.List, java.util.List, java.util.List) */
-    public synchronized List<WaitSetError> doWait(WaitSetCallback cb, String lastKnownSeqNo, boolean block,   
+    public synchronized List<WaitSetError> doWait(WaitSetCallback cb, String lastKnownSeqNo,    
         List<WaitSetAccount> addAccounts, List<WaitSetAccount> updateAccounts, 
         List<String> removeAccounts) throws ServiceException {
         
@@ -244,6 +244,19 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
             }
         }
         return errors;
+    }
+    
+    /**
+     * Called by the WaitSetSession to revoke a signal...this happens when we get a 
+     * sync token <update> with a higher sync token for this account than the account's
+     * current highest
+     * 
+     * @param session
+     */
+    synchronized void unsignalDataReady(WaitSetSession session) {
+        if (mSessions.containsKey(session.getAuthenticatedAccountId())) { // ...false if waitset is shutting down...
+            mCurrentSignalledSessions.remove(session.getAuthenticatedAccountId());
+        }
     }
     
     /**

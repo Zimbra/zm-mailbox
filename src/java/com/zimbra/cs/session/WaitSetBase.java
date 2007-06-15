@@ -75,6 +75,12 @@ public abstract class WaitSetBase implements IWaitSet {
         }
     }
     
+    public synchronized void doneWaiting() {
+        mCb = null;
+        mLastAccessedTime = System.currentTimeMillis();
+    }
+    
+    
     protected WaitSetBase(String ownerAccountId, String waitSetId, int defaultInterest) {
         mOwnerAccountId = ownerAccountId;
         mWaitSetId = waitSetId;

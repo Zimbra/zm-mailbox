@@ -124,7 +124,7 @@ public final class AllAccountsWaitSet extends WaitSetBase {
     }
     
     /* @see com.zimbra.cs.session.IWaitSet#doWait(com.zimbra.cs.session.WaitSetCallback, java.lang.String, boolean, java.util.List, java.util.List, java.util.List) */
-    public List<WaitSetError> doWait(WaitSetCallback cb, String lastKnownSeqNo, boolean block,
+    public List<WaitSetError> doWait(WaitSetCallback cb, String lastKnownSeqNo, 
         List<WaitSetAccount> addAccounts, List<WaitSetAccount> updateAccounts, List<String> removeAccounts)
         throws ServiceException {
         

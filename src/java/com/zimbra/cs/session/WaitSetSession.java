@@ -60,13 +60,19 @@ public class WaitSetSession extends Session {
         mInterestMask = interestMask;
         mSyncToken = lastKnownSyncToken;
         if (mSyncToken != null) {
-            // must now check to see if sync token was old, might
-            // need to notify the mailbox right here
+            // if the sync token is non-null, then we want
+            // to signal IFF the passed-in changeId is after the current
+            // synctoken...and we want to cancel the existing signalling
+            // if the new synctoken is up to date with the mailbox
             Mailbox mbox = this.getMailbox();
             synchronized(mbox) {
-                // if the sync token is non-null, then we want
-                // to signal IFF the passed-in changeId is after the synctoken
-                notifyPendingChanges(mbox.getLastChangeID(), null);
+                int mboxHighestChange = mbox.getLastChangeID();
+                if (mboxHighestChange > mHighestChangeId)
+                    mHighestChangeId = mboxHighestChange;
+                if (mSyncToken.after(mHighestChangeId))
+                    mWs.unsignalDataReady(this);
+                else 
+                    mWs.signalDataReady(this);
             }
         }
     }
@@ -87,8 +93,7 @@ public class WaitSetSession extends Session {
         if (mSyncToken != null && mSyncToken.after(mHighestChangeId))
             return; // don't signal, sync token stopped us
 
-        // pns will be == null if we're calling from initialSyncTokenCheck
-        if (pns == null || (mInterestMask & pns.changedTypes) != 0)
+        if ((mInterestMask & pns.changedTypes) != 0)
             mWs.signalDataReady(this);
     }
 }
