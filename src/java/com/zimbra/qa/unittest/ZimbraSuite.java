@@ -99,7 +99,7 @@ public class ZimbraSuite extends TestSuite
                 if (test.indexOf('.') < 0) {
                     // short name...check the suite
                     for (Class c : ZimbraSuite.classes) {
-                        if (tests.contains(c.getSimpleName()))
+                        if (test.equals(c.getSimpleName()))
                             suite.addTest(new TestSuite(c));
                     }
                 } else {
