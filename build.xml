@@ -494,6 +494,7 @@
 			<copy tofile="${dist.dir}/jetty/etc/jettyrc" file="${config.dir}/jetty-6.1/jettyrc" overwrite="true"/>
 			<copy tofile="${dist.dir}/jetty/etc/jetty.xml" file="${config.dir}/jetty-6.1/jetty.xml" overwrite="true"/>
 			<copy tofile="${dist.dir}/jetty/etc/start.config" file="${config.dir}/jetty-6.1/start.config" overwrite="true"/>
+			<copy tofile="${dist.dir}/jetty/etc/webdefault.xml" file="${config.dir}/jetty-6.1/webdefault.xml" overwrite="true"/>
 			<copy todir="${dist.dir}/jetty/common/lib" overwrite="true"><fileset dir="${common.jars.dir}" includes="${ical4j.jar},mail.jar,activation.jar,zimbra-native.jar,zimbra-charset.jar"/></copy>
 		</then></if>
 		
