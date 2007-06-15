@@ -153,7 +153,7 @@ public class WaitSetRequest extends MailDocumentHandler {
             // load variables here
             continuation = ContinuationSupport.getContinuation(servletRequest, cb);
         } else {
-            cb = new Callback(null);
+            cb = new Callback();
             continuation = ContinuationSupport.getContinuation(servletRequest, cb);
             cb.continuation = continuation;
             servletRequest.setAttribute(VARS_ATTR_NAME, cb);
@@ -283,9 +283,6 @@ public class WaitSetRequest extends MailDocumentHandler {
     }
     
     public static class Callback implements WaitSetCallback {
-        Callback(Continuation continuation) {
-            this.continuation = continuation;
-        }
         public void dataReady(IWaitSet ws, String seqNo, boolean canceled, String[] signalledAccounts) {
             synchronized(this) {
                 ZimbraLog.session.info("Called WaitMultiplAccounts WaitSetCallback.dataReady()!");
