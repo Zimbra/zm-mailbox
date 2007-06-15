@@ -52,7 +52,7 @@
 
   <context-param>
     <param-name>org.mortbay.jetty.webapp.NoTLDJarPattern</param-name>
-    <param-value>start.jar|ant-.*\.jar|dojo-.*\.jar|jetty-.*\.jar|jsp-api-.*\.jar|junit-.*\.jar|servlet-api-.*\.jar|dnsns\.jar|rt\.jar|jsse\.jar|tools\.jar|sunpkcs11\.jar|sunjce_provider\.jar|xerces.*\.jar|</param-value>
+    <param-value>start.jar|ant-.*\.jar|dojo-.*\.jar|jetty-.*\.jar|jsp-api-.*\.jar|junit-.*\.jar|servlet-api-.*\.jar|dnsns\.jar|rt\.jar|jsse\.jar|tools\.jar|sunpkcs11\.jar|sunjce_provider\.jar|xerces.*\.jar</param-value>
   </context-param>
             
 
@@ -93,6 +93,18 @@
   <!--                                                                      -->
   <!--  cacheControl      If set, all static content will have this value   -->
   <!--                    set as the cache-control header.                  -->
+  <!--                                                                      -->
+  <!--  maxCacheSize      Maximum size of the static resource cache         -->
+  <!--                                                                      -->
+  <!--  maxCachedFileSize Maximum size of any single file in the cache      -->
+  <!--                                                                      -->
+  <!--  maxCachedFiles    Maximum number of files in the cache              -->
+  <!--                                                                      -->
+  <!--  cacheType         "nio", "bio" or "both" to determine the type(s)   -->
+  <!--                    of resource cache. A bio cached buffer may be used-->
+  <!--                    by nio but is not as efficient as a nio buffer.   -->
+  <!--                    An nio cached buffer may not be used by bio.      -->
+  <!--                                                                      -->
   <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  -->
   <servlet>
     <servlet-name>default</servlet-name>
@@ -111,7 +123,7 @@
     </init-param>
     <init-param>
       <param-name>maxCacheSize</param-name>
-      <param-value>2000000</param-value>
+      <param-value>4000000</param-value>
     </init-param>
     <init-param>
       <param-name>maxCachedFileSize</param-name>
@@ -122,12 +134,16 @@
       <param-value>1000</param-value>
     </init-param>
     <init-param>
+      <param-name>cacheType</param-name>
+      <param-value>both</param-value>
+    </init-param>
+    <init-param>
       <param-name>gzip</param-name>
       <param-value>true</param-value>
     </init-param>
     <init-param>
       <param-name>useFileMappedBuffer</param-name>
-      <param-value>false</param-value>
+      <param-value>true</param-value>
     </init-param>  
     <!--
     <init-param>
@@ -326,126 +342,6 @@
     <mime-type>mymime/type</mime-type>
   </mime-mapping>
   -->
-    <mime-mapping>
-        <extension>art</extension>
-        <mime-type>image/x-jg</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>aim</extension>
-        <mime-type>application/x-aim</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>abs</extension>
-        <mime-type>audio/x-mpeg</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>avx</extension>
-        <mime-type>video/x-rad-screenplay</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>body</extension>
-        <mime-type>text/html</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>dib</extension>
-        <mime-type>image/bmp</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>htc</extension>
-        <mime-type>text/x-component</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>jad</extension>
-        <mime-type>text/vnd.sun.j2me.app-descriptor</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>jsf</extension>
-        <mime-type>text/plain</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>jspf</extension>
-        <mime-type>text/plain</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>m3u</extension>
-        <mime-type>audio/x-mpegurl</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>mp1</extension>
-        <mime-type>audio/x-mpeg</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>mpega</extension>
-        <mime-type>audio/x-mpeg</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>mpv2</extension>
-        <mime-type>video/mpeg2</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>pct</extension>
-        <mime-type>image/pict</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>pict</extension>
-        <mime-type>image/pict</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>pls</extension>
-        <mime-type>audio/x-scpls</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>pnt</extension>
-        <mime-type>image/x-macpaint</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>pps</extension>
-        <mime-type>application/vnd.ms-powerpoint</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>psd</extension>
-        <mime-type>image/x-photoshop</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>qti</extension>
-        <mime-type>image/x-quicktime</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>qtif</extension>
-        <mime-type>image/x-quicktime</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>shtml</extension>
-        <mime-type>text/x-server-parsed-html</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>smf</extension>
-        <mime-type>audio/x-midi</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>svgz</extension>
-        <mime-type>image/svg</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>ulw</extension>
-        <mime-type>audio/basic</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>vsd</extension>
-        <mime-type>application/x-visio</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>Z</extension>
-        <mime-type>application/x-compress</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>zgz</extension>
-        <mime-type>text/javascript</mime-type>
-    </mime-mapping>
-    <mime-mapping>
-        <extension>dmg</extension>
-        <mime-type>application/octet-stream</mime-type>
-    </mime-mapping>
 
   <!-- ==================================================================== -->
   <welcome-file-list>
@@ -497,7 +393,14 @@
     <locale-encoding-mapping><locale>zh_TW</locale><encoding>Big5</encoding></locale-encoding-mapping>   
   </locale-encoding-mapping-list>
 
-  
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>Disable TRACE</web-resource-name>
+      <url-pattern>/</url-pattern>
+      <http-method>TRACE</http-method>
+    </web-resource-collection>
+    <auth-constraint/>
+  </security-constraint>
   
 </web-app>
 
