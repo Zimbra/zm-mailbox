@@ -1240,11 +1240,13 @@
           <property name="jetty_run_base" location="/opt/zimbra"/>
 
           <path id="jetty.plugin.classpath">
-            <fileset dir="../ThirdParty/jetty/jetty-${jetty.version}/lib">
+            <fileset dir="/opt/zimbra/jetty-${jetty.version}/lib">
               <include name="*.jar" />
               <include name="plus/*.jar" />
               <include name="naming/*.jar" />
               <include name="jsp-2.1/*.jar" />
+            </fileset>
+            <fileset dir="../ThirdParty/jetty/jetty-${jetty.version}/lib">
               <include name="ant/jetty-ant-${jetty.version}.jar" />
             </fileset>
           </path>
