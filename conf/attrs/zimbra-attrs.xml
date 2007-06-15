@@ -2294,5 +2294,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>/zimbraAdmin</globalConfigValue>
   <desc>URL prefix for where the zimbraAdmin app resides on this server</desc>
 </attr>
+
+<attr id="498" name="zimbraFeatureBriefcasesEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether to allow use of briefcase feature</desc>
+</attr>
     
 </attrs>
