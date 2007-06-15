@@ -265,7 +265,7 @@ ArchiveMaxFileSize 100M
 
 # Mark encrypted archives as viruses (Encrypted.Zip, Encrypted.RAR).
 # Default: disabled
-%%comment VAR:!zimbraVirusBlockEncryptedArchive%% ArchiveBlockEncrypted
+%%comment VAR:!zimbraVirusBlockEncryptedArchive%%ArchiveBlockEncrypted
 
 # Mark archives as viruses (e.g. RAR.ExceededFileSize, Zip.ExceededFilesLimit)
 # if ArchiveMaxFiles, ArchiveMaxFileSize, or ArchiveMaxRecursion limit is
