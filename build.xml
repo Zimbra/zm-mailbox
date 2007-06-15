@@ -1218,7 +1218,7 @@
 	
 	<target name="restart-webserver" depends="stop-webserver,start-webserver"/>
 	
-        <!-- jetty-ant-plugin stuff -->
+        <!-- jetty-ant-plugin stuff
         <property name="jetty_webapps" location="build/jetty/webapps"/>
 
         <target name="jetty.webinf">
@@ -1240,13 +1240,11 @@
           <property name="jetty_run_base" location="/opt/zimbra"/>
 
           <path id="jetty.plugin.classpath">
-            <fileset dir="/opt/zimbra/jetty-${jetty.version}/lib">
+            <fileset dir="../ThirdParty/jetty/jetty-${jetty.version}/lib">
               <include name="*.jar" />
               <include name="plus/*.jar" />
               <include name="naming/*.jar" />
               <include name="jsp-2.1/*.jar" />
-            </fileset>
-            <fileset dir="../ThirdParty/jetty/jetty-${jetty.version}/lib">
               <include name="ant/jetty-ant-${jetty.version}.jar" />
             </fileset>
           </path>
@@ -1282,7 +1280,7 @@
             </jetty>
           </target>
 
-        <!-- jetty-ant-plugin stuff -->
+        jetty-ant-plugin stuff -->
 
 	<target name="empty" />
 </project>
