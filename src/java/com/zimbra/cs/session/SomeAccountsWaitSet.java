@@ -102,10 +102,12 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
     }
     
     private synchronized WaitSetError initializeWaitSetSession(WaitSetAccount wsa) {
-        WaitSetSession ws = new WaitSetSession(this, wsa.accountId, wsa.interests, wsa.lastKnownSyncToken);
+        WaitSetSession wsSession = new WaitSetSession(this, wsa.accountId, wsa.interests, wsa.lastKnownSyncToken);
         try {
-            ws.register();
-            wsa.ref = new SoftReference<WaitSetSession>(ws);
+            wsSession.register();
+            wsa.ref = new SoftReference<WaitSetSession>(wsSession);
+            // must force update here so that initial sync token is checked against current mbox state
+            wsSession.update(wsa.interests, wsa.lastKnownSyncToken);
         } catch (MailServiceException e) {
             if (e.getCode().equals(MailServiceException.MAINTENANCE)) {
                 return new WaitSetError(wsa.accountId, WaitSetError.Type.MAINTENANCE_MODE);
@@ -127,21 +129,21 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
         return Long.toString(mCurrentSeqNo);
     }
     
-    private synchronized List<WaitSetError> updateAccounts(List<WaitSetAccount> wsas) {
+    private synchronized List<WaitSetError> updateAccounts(List<WaitSetAccount> updates) {
         List<WaitSetError> errors = new ArrayList<WaitSetError>();
         
-        for (WaitSetAccount wsa : wsas) {
-            WaitSetAccount existing = mSessions.get(wsa.accountId);
+        for (WaitSetAccount update : updates) {
+            WaitSetAccount existing = mSessions.get(update.accountId);
             if (existing != null) {
-                existing.interests = wsa.interests;
-                existing.lastKnownSyncToken = existing.lastKnownSyncToken;
+                existing.interests = update.interests;
+                existing.lastKnownSyncToken = update.lastKnownSyncToken;
                 WaitSetSession session = existing.getSession();
                 if (session != null) {
                     session.update(existing.interests, existing.lastKnownSyncToken);
                     // update it!
                 }
             } else {
-                errors.add(new WaitSetError(wsa.accountId, WaitSetError.Type.NOT_IN_SET_DURING_UPDATE));
+                errors.add(new WaitSetError(update.accountId, WaitSetError.Type.NOT_IN_SET_DURING_UPDATE));
             }
         }
         return errors;
@@ -155,8 +157,15 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
                 // add the account to our session list  
                 mSessions.put(wsa.accountId, wsa);
                 
+                // create the Session, if necessary, to listen to the requested mailbox
                 try {
-                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(wsa.accountId, MailboxManager.FetchMode.ONLY_IF_CACHED);
+                    // if there is a sync token, then we need to check to see if the 
+                    // token is up-to-date...which means we have to fetch the mailbox.  Otherwise,
+                    // we don't have to fetch the mailbox.
+                    MailboxManager.FetchMode fetchMode = MailboxManager.FetchMode.AUTOCREATE;
+                    if (wsa.lastKnownSyncToken == null)
+                        fetchMode = MailboxManager.FetchMode.ONLY_IF_CACHED;
+                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(wsa.accountId, fetchMode);
                     if (mbox != null) {
                         WaitSetError error = initializeWaitSetSession(wsa);
                         if (error != null) { 

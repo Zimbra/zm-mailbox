@@ -24,6 +24,7 @@
  */
 package com.zimbra.cs.session;
 
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.util.SyncToken;
 
 /**
@@ -35,6 +36,7 @@ import com.zimbra.cs.service.util.SyncToken;
 public class WaitSetSession extends Session {
     SomeAccountsWaitSet mWs = null;
     int mInterestMask;
+    int mHighestChangeId;
     SyncToken mSyncToken;
 
     WaitSetSession(SomeAccountsWaitSet ws, String accountId, int interestMask, SyncToken lastKnownSyncToken) {
@@ -53,10 +55,20 @@ public class WaitSetSession extends Session {
     protected boolean isRegisteredInCache() {
         return false;
     }
-
+    
     void update(int interestMask, SyncToken lastKnownSyncToken) {
         mInterestMask = interestMask;
         mSyncToken = lastKnownSyncToken;
+        if (mSyncToken != null) {
+            // must now check to see if sync token was old, might
+            // need to notify the mailbox right here
+            Mailbox mbox = this.getMailbox();
+            synchronized(mbox) {
+                // if the sync token is non-null, then we want
+                // to signal IFF the passed-in changeId is after the synctoken
+                notifyPendingChanges(mbox.getLastChangeID(), null);
+            }
+        }
     }
 
     @Override
@@ -69,10 +81,14 @@ public class WaitSetSession extends Session {
 
     @Override
     public void notifyPendingChanges(int changeId, PendingModifications pns) {
-        if (mSyncToken != null && mSyncToken.after(changeId))
+        if (changeId > mHighestChangeId)
+            mHighestChangeId = changeId;
+        
+        if (mSyncToken != null && mSyncToken.after(mHighestChangeId))
             return; // don't signal, sync token stopped us
 
-        if ((mInterestMask & pns.changedTypes) != 0)
+        // pns will be == null if we're calling from initialSyncTokenCheck
+        if (pns == null || (mInterestMask & pns.changedTypes) != 0)
             mWs.signalDataReady(this);
     }
 }
