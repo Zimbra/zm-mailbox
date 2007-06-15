@@ -55,12 +55,57 @@ public class ZimbraSuite extends TestSuite
         }
     }
 
+    static final Class[] classes = {
+        TestWaitSet.class,
+        TestUtilCode.class,
+        TestEmailUtil.class,
+        TestOutOfOffice.class,
+        TestDbUtil.class,
+        TestTableMaintenance.class,
+        TestUnread.class,
+        TestTags.class,
+        TestItemCache.class,
+        TestFolders.class,
+        TestSpellCheck.class,
+        TestAuthentication.class,
+        TestAccount.class,
+        TestConversion.class,
+        TestMailItem.class,
+        TestConcurrency.class,
+        TestFolderFilterRules.class,
+        TestTagFilterRules.class,
+        TestPop3Import.class,
+        TestFilter.class,
+        TestPop3ImapAuth.class,
+        TestContacts.class,
+        TestTaskScheduler.class,
+        TestSearch.class,
+        TestSendAndReceive.class,
+        TestConnectionPool.class,
+        TestLmtp.class,
+        
+        // xxx bburtin: Commenting out IMAP tests, since the new schema hasn't been
+        // checked in
+        // TestImapImport.class,
+        // TestImapImport.TearDown.class,
+        
+    };
+    
     public static TestResult runUserTests(Element response, List<String> tests) throws ServiceException {
         TestSuite suite = new TestSuite();
         
         for (String test : tests) {
             try {
-                suite.addTest(new TestSuite(Class.forName(test)));
+                if (test.indexOf('.') < 0) {
+                    // short name...check the suite
+                    for (Class c : ZimbraSuite.classes) {
+                        if (tests.contains(c.getSimpleName()))
+                            suite.addTest(new TestSuite(c));
+                    }
+                } else {
+                    // look it up by the full name
+                    suite.addTest(new TestSuite(Class.forName(test)));
+                }
             } catch (Exception e) {
                 throw ServiceException.FAILURE("Error instantiating test "+test, e);
             }
@@ -68,46 +113,17 @@ public class ZimbraSuite extends TestSuite
 
         return TestUtil.runTest(suite, response);
     }
+    
     /**
      * Runs the entire test suite and writes the output to the specified
      * <code>OutputStream</code>.
      */
     public static TestResult runTestSuite(Element response) {
         TestSuite suite = new TestSuite();
-
-        suite.addTest(new TestSuite(TestWaitSet.class));
-        suite.addTest(new TestSuite(TestUtilCode.class));
-        suite.addTest(new TestSuite(TestEmailUtil.class));
-        suite.addTest(new TestSuite(TestOutOfOffice.class));
-        suite.addTest(new TestSuite(TestDbUtil.class));
-        suite.addTest(new TestSuite(TestTableMaintenance.class));
-        suite.addTest(new TestSuite(TestUnread.class));
-        suite.addTest(new TestSuite(TestTags.class));
-        suite.addTest(new TestSuite(TestItemCache.class));
-        suite.addTest(new TestSuite(TestFolders.class));
-        suite.addTest(new TestSuite(TestSpellCheck.class));
-        suite.addTest(new TestSuite(TestAuthentication.class));
-        suite.addTest(new TestSuite(TestAccount.class));
-        suite.addTest(new TestSuite(TestConversion.class));
-        suite.addTest(new TestSuite(TestMailItem.class));
-        suite.addTest(new TestSuite(TestConcurrency.class));
-        suite.addTest(new TestSuite(TestFolderFilterRules.class));
-        suite.addTest(new TestSuite(TestTagFilterRules.class));
-        suite.addTest(new TestSuite(TestPop3Import.class));
-        suite.addTest(new TestSuite(TestFilter.class));
-        suite.addTest(new TestSuite(TestPop3ImapAuth.class));
-        suite.addTest(new TestSuite(TestContacts.class));
-        suite.addTest(new TestSuite(TestTaskScheduler.class));
-        suite.addTest(new TestSuite(TestSearch.class));
-        suite.addTest(new TestSuite(TestSendAndReceive.class));
-        suite.addTest(new TestSuite(TestConnectionPool.class));
-        suite.addTest(new TestSuite(TestLmtp.class));
         
-        // xxx bburtin: Commenting out IMAP tests, since the new schema hasn't been
-        // checked in
-        // suite.addTest(new TestSuite(TestImapImport.class));
-        // suite.addTest(new TestSuite(TestImapImport.TearDown.class));
-
+        for (Class c : ZimbraSuite.classes) {
+            suite.addTest(new TestSuite(c));
+        }
         synchronized (sAdditionalTests) {
             for (Test additional : sAdditionalTests) {
                 suite.addTest(additional);
