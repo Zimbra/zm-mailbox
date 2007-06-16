@@ -3,7 +3,7 @@ there's a build time switch.  Stop jetty if running.  Set env var
 ZIMBRA_USE_TOMCAT=1 and reset-the-world.
 
 0. Here we assume you have previously been using tomcat and have setup
-   /opt/zimbra with ldap etc.  If not, follow steps in INSTALL*.txt.
+   /opt/zimbra with mysql, ldap, etc.  If not, follow steps in INSTALL*.txt.
 
 1. untargz ThirdParty/jetty/jetty-{latest-version}.tar.gz to
    /opt/zimbra and symlink 
@@ -99,17 +99,22 @@ There's another radically different way to run and debug jetty with
 jetty-ant plugin.  Basically you run jetty as an ant task.  We use
 Eclipse remote debugging with jetty-ant plugin.
 
-To run jetty, go to ZimbraServer directory and run 'ant jetty.run'.
-This task assumes that you have already deployed the webapp wars to
-/opt/zimbra/jetty/webapps.  If you want to run jetty without even
-deploying, you can do so by modifying the location of the war files.
+To use jetty-ant, first you need to setup a shell for service webapp.
+Go to ZimbraServer directory and run
+ant -buildfile jetty-ant.xml jetty.webinf
+
+You'll only need to do this once unless either you clean the build directory
+or changes things such as web.xml.
+
+To launch jetty, run the following:
+ant -buildfile jetty-ant.xml jetty.run
+
+Note that due to a jetty-ant-plugin bug you need to set this env var:
+ANT_OPTS="-Djava.library.path=~/zimbra/zdesktop/lib"
 
 To debug, run the jetty.run target with ANT_OPTS like this:
 
-ANT_OPTS="-Xdebug -Xnoagent -Djava.compiler=NONE -Djava.library.path=/opt/zimbra/lib -Xrunjdwp:transport=dt_socket,address=4000,server=y,suspend=y" ant jetty.run
-
-On Windows you can make a bat file to set ANT_OPTS and then run 'ant
-jetty.run'.
+ANT_OPTS="-Xdebug -Xnoagent -Djava.compiler=NONE -Djava.library.path=/opt/zimbra/lib -Xrunjdwp:transport=dt_socket,address=4000,server=y,suspend=y" ant -buildfile jetty-ant.xml jetty.run
 
 This will start jetty-ant plugin but blocks on listening on port 4000.
 
