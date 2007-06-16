@@ -34,7 +34,7 @@
 
     <init-param>
       <param-name>compressableMimeTypes</param-name>
-      <param-value>text/javascript</param-value>
+      <param-value>text/javascript,text/xml,application/soap+xml</param-value>
     </init-param>
 
     <init-param>
