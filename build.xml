@@ -340,7 +340,7 @@
 		<isset property="use-tomcat"/>
 	</condition>
 	<!-- jetty has its own log4j and naming stuff, so don't include ldap.jar and commons-logging.jar -->
-	<condition property="war.exclude" value="${ical4j.jar},servlet-api.jar,jsp-api.jar,mail.jar,activation.jar,zimbra-native.jar,KeyView.jar,ldap.jar,jetty-util-*.jar">
+	<condition property="war.exclude" value="${ical4j.jar},servlet-api.jar,jsp-api.jar,mail.jar,activation.jar,zimbra-native.jar,KeyView.jar,ldap.jar,jetty-util-*.jar,log4j*.jar,*slf4j*.jar">
 		<isset property="use-jetty"/>
 	</condition>
 
@@ -496,6 +496,9 @@
 			<copy tofile="${dist.dir}/jetty/etc/start.config" file="${config.dir}/jetty-6.1/start.config" overwrite="true"/>
 			<copy tofile="${dist.dir}/jetty/etc/webdefault.xml" file="${config.dir}/jetty-6.1/webdefault.xml" overwrite="true"/>
 			<copy todir="${dist.dir}/jetty/common/lib" overwrite="true"><fileset dir="${common.jars.dir}" includes="${ical4j.jar},mail.jar,activation.jar,zimbra-native.jar,zimbra-charset.jar"/></copy>
+			<copy todir="${dist.dir}/jetty/lib" overwrite="true">
+			    <fileset dir="${common.jars.dir}" includes="log4j*.jar"/>
+			</copy>
 		</then></if>
 		
 		<!-- openldap -->
