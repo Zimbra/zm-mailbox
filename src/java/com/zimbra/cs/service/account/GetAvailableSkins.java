@@ -34,7 +34,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -44,14 +44,10 @@ public class GetAvailableSkins extends DocumentHandler  {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(lc);
 
-        String[] skins = acct.getMultiAttr(Provisioning.A_zimbraAvailableSkin);
-        if (skins.length == 0) {
-            Provisioning prov = Provisioning.getInstance();
-            skins = prov.getConfig().getMultiAttr(Provisioning.A_zimbraInstalledSkin);
-        }
-
+        String[] availSkins = SkinUtil.getSkins(acct);
+            
         Element response = lc.createElement(AccountConstants.GET_AVAILABLE_SKINS_RESPONSE);
-        for (String skin : skins) {
+        for (String skin : availSkins) {
             Element skinElem = response.addElement(AccountConstants.E_SKIN);
             skinElem.addAttribute(AccountConstants.A_NAME, skin);
         }

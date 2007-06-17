@@ -33,10 +33,13 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ClassLoaderUtil;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 
 public class SkinUtil {
 
@@ -44,7 +47,7 @@ public class SkinUtil {
     private static String[] sSkins;
 
     // returns all installed skins 
-    public synchronized static String[] getAllSkinsSorted() throws ServiceException {
+    private synchronized static String[] getAllInstalledSkinsSorted() throws ServiceException {
         if (sSkins == null) {
             sSkins = loadSkins();
         }
@@ -98,6 +101,25 @@ public class SkinUtil {
         Arrays.sort(sortedSkins);
         
         return sortedSkins;
+    }
+    
+    public static String[] getSkins(Account acct) throws ServiceException {
+        String[] installedSkins = getAllInstalledSkinsSorted();
+        Set<String> allowedSkins = acct.getMultiAttrSet(Provisioning.A_zimbraAvailableSkin);
+    
+        String[] availSkins = null;
+        if (allowedSkins.size() == 0)
+            availSkins = installedSkins;
+        else {
+            List<String> skins = new ArrayList<String>();
+            // take intersection of the two, loop thru installedSkins because it is sorted
+            for (String skin : installedSkins) {
+                if (allowedSkins.contains(skin))
+                    skins.add(skin);
+            }
+            availSkins = skins.toArray(new String[skins.size()]);
+        }
+        return availSkins;
     }
         
     
