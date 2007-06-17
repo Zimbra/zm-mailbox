@@ -264,10 +264,13 @@
       <Call name="start"/>
     </Ref>
     <Ref id="http">
-      <Call name="start"/>
+      <Call name="open"/>
     </Ref>
     <Ref id="ssl">
-      <Call name="start"/>
+      <Call name="open"/>
+    </Ref>
+    <Ref id="ext">
+      <Call name="open"/>
     </Ref>
 
 </Configure>
