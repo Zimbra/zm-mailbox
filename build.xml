@@ -95,6 +95,8 @@
 	<condition property="use-tomcat"><isset property="env.ZIMBRA_USE_TOMCAT"/></condition>
 	<condition property="use-jetty"><not><isset property="use-tomcat"/></not></condition>
 	
+	<condition property="jetty-no-service"><isset property="env.ZIMBRA_JETTY_NO_SERVICE"/></condition>
+	
 	<condition property="webserver.name" value="jetty"><isset property="use-jetty"/></condition>
 	<condition property="webserver.name" value="tomcat"><isset property="use-tomcat"/></condition>
 
@@ -1142,10 +1144,14 @@
 	</target>
 		
 	<target name="start-jetty-windows" if="is-windows">
-		<exec executable="net">
-			<arg value="start" />
-			<arg value="jetty" />
-		</exec>
+	    <if><isset property="jetty-no-service"/><then>
+	    	<antcall target="start-jetty-java"/>
+	    </then><else>
+	        <exec executable="net">
+	              <arg value="start" />
+	              <arg value="jetty" />
+	        </exec>
+	    </else></if>
 	</target>
 		
 	<target name="start-jetty-unix" if="is-unix">
@@ -1157,15 +1163,19 @@
 	<target name="start-jetty" depends="start-jetty-windows,start-jetty-unix" if="use-jetty">
 		<echo>Waiting for jetty to start</echo>
 		<waitfor checkevery="5" checkeveryunit="second" maxwait="60" maxwaitunit="second">
-			<http url="http://${deploy.host}:${deploy.port}/" />
+			<http url="http://${deploy.host}:${deploy.port}/service/soap" errorsBeginAt="500"/>
 		</waitfor>
 	</target>
 	
 	<target name="stop-jetty-windows" if="is-windows">
-		<exec executable="net">
-			<arg value="stop" />
-			<arg value="jetty" />
-		</exec>
+	    <if><isset property="jetty-no-service"/><then>
+	    	<antcall target="stop-jetty-java"/>
+	    </then><else>
+	    	<exec executable="net">
+	    		<arg value="stop" />
+	    		<arg value="jetty" />
+	    	</exec>
+	    </else></if>
 	</target>
 	
 	<target name="stop-jetty-unix" if="is-unix">
@@ -1184,7 +1194,7 @@
 	</target>
 	
 	<target name="start-jetty-java" if="use-jetty">
-		<java dir="${jetty.home.dir}" jar="${jetty.home.dir}/start.jar" fork="true" failonerror="true">
+		<java dir="${jetty.home.dir}" jar="${jetty.home.dir}/start.jar" fork="true" spawn="true">
 			<sysproperty key="java.library.path" value="${zimbra.home.dir}/lib"/>
 			<sysproperty key="START" value="${jetty.home.dir}/etc/start.config"/>
 			<sysproperty key="STOP.PORT" value="7867"/>
