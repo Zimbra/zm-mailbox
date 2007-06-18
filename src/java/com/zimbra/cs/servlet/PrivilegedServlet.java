@@ -25,7 +25,17 @@
 
 package com.zimbra.cs.servlet;
 
+import java.io.BufferedOutputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.naming.directory.DirContext;
 import javax.servlet.http.HttpServlet;
@@ -163,11 +173,51 @@ public class PrivilegedServlet extends HttpServlet {
                 mInitialized = true;
                 mInitializedCondition.notifyAll();
             }
+
+            /* This should be done after privileges are dropped... */
+            setupStdoutStderrRotation();
         } catch (Throwable t) {
             Util.halt("PrivilegedServlet init failed", t);
         }
     }
-    
+
+    private static void setupStdoutStderrRotation() throws FileNotFoundException, SecurityException, IOException {
+        PrintStream oldOut = System.out;
+        PrintStream oldErr = System.err;
+        
+        GregorianCalendar now = new GregorianCalendar();
+        long millisSinceEpoch = now.getTimeInMillis(); 
+        long dstOffset = now.get(Calendar.DST_OFFSET);
+        long zoneOffset = now.get(Calendar.ZONE_OFFSET);
+        long millisSinceEpochLocal = millisSinceEpoch + dstOffset + zoneOffset;
+        long configMillis = LC.mailboxd_output_rotate_interval.intValue() * 1000;
+        long firstRotateInMillis = configMillis - (millisSinceEpochLocal % configMillis);
+        
+        TimerTask task = new TimerTask() {
+            public void run() {
+                Date now = new Date();
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
+                String suffix = sdf.format(now);
+                String path = LC.mailboxd_output_file.value() + "." + suffix;
+                try {
+                    FileOutputStream fos = new FileOutputStream(path, /* append */ true);
+                    PrintStream ps = new PrintStream(new BufferedOutputStream(fos), /* autoflush */ true);
+                    PrintStream oldOut = System.out;
+                    PrintStream oldErr = System.err;
+                    System.setOut(ps);
+                    System.setErr(ps);
+                    oldOut.close();
+                    oldErr.close();
+                } catch (FileNotFoundException e) {
+                    System.err.println("WARN: stdout/stderr rotate could not open output file: " + path);
+                    e.printStackTrace();
+                }
+            }
+        };
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(task, firstRotateInMillis, configMillis);
+    }
+
     private static boolean mInitialized = false;
 
     private static Object mInitializedCondition = new Object(); 
