@@ -207,7 +207,9 @@ public class LC {
     public static final KnownKey mailboxd_java_home;
     public static final KnownKey mailboxd_pidfile;
     public static final KnownKey mailboxd_keystore;
-
+    public static final KnownKey mailboxd_output_file;
+    public static final KnownKey mailboxd_output_rotate_interval;
+    
     public static final KnownKey ssl_allow_untrusted_certs;
 
     public static final KnownKey zimlet_directory;
@@ -772,6 +774,14 @@ public class LC {
         mailboxd_keystore.setDefault("${mailboxd_directory}" + FS + "etc" + FS + "keystore");
         mailboxd_keystore.setDoc("Location of keystore data file.");
 
+        mailboxd_output_file = new KnownKey("mailboxd_output_file");
+        mailboxd_output_file.setDefault("${zimbra_log_directory}" + FS + "zmmailboxd.out");
+        mailboxd_output_file.setDoc("File to redirect stdout and stderr of server to.");
+        
+        mailboxd_output_rotate_interval = new KnownKey("mailboxd_output_rotate_interval");
+        mailboxd_output_rotate_interval.setDefault("86400");
+        mailboxd_output_rotate_interval.setDoc("Period, in seconds, at which mailboxd output file is rotated");
+        
         ssl_allow_untrusted_certs = new KnownKey("ssl_allow_untrusted_certs");
         ssl_allow_untrusted_certs.setDefault("false");
         ssl_allow_untrusted_certs.setDoc("If true, allow self-signed SSL certificates.");
