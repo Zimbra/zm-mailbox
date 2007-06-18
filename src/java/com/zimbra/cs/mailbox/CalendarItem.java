@@ -221,13 +221,19 @@ public abstract class CalendarItem extends MailItem {
             // now, go through the list of invites and find all the exceptions
             for (Iterator iter = mInvites.iterator(); iter.hasNext();) {
                 Invite cur = (Invite) iter.next();
-                
                 if (cur != firstInv) {
                     String method = cur.getMethod();
-                    if (method.equals(ICalTok.REQUEST.toString()) ||
-                        method.equals(ICalTok.PUBLISH.toString())) {
+                    if (cur.isCancel()) {
+                        assert(cur.hasRecurId());
+                        if (cur.hasRecurId()) {
+                            Recurrence.CancellationRule cancelRule =   
+                                new Recurrence.CancellationRule(cur.getRecurId());
+                            
+                            ((Recurrence.RecurrenceRule) mRecurrence).addException(cancelRule);
+                        }
+                    } else if (method.equals(ICalTok.REQUEST.toString()) ||
+                               method.equals(ICalTok.PUBLISH.toString())) {
                         assert (cur.hasRecurId());
-                        
                         if (cur.hasRecurId() && cur.getStartTime() != null) {
                             Recurrence.ExceptionRule exceptRule = (Recurrence.ExceptionRule) cur.getRecurrence();
                             if (exceptRule == null) {
@@ -245,14 +251,6 @@ public abstract class CalendarItem extends MailItem {
                             ((Recurrence.RecurrenceRule) mRecurrence).addException(exceptRule);
                         } else {
                             sLog.debug("Got second invite with no RecurID: " + cur.toString());
-                        }
-                    } else if (cur.isCancel()) {
-                        assert(cur.hasRecurId());
-                        if (cur.hasRecurId()) {
-                            Recurrence.CancellationRule cancelRule =   
-                                new Recurrence.CancellationRule(cur.getRecurId());
-                            
-                            ((Recurrence.RecurrenceRule) mRecurrence).addException(cancelRule);
                         }
                     }
                 }
@@ -606,9 +604,9 @@ public abstract class CalendarItem extends MailItem {
                                             replaceExistingInvites);
         } else if (method.equals("REPLY")) {
             processNewInviteReply(invite, force);
+        } else {
+            ZimbraLog.calendar.warn("Unsupported METHOD " + method);
         }
-
-        ZimbraLog.calendar.warn("Unsupported METHOD " + method);
     }
 
     private void processNewInviteRequestOrCancel(ParsedMessage pm,
