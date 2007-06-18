@@ -566,6 +566,10 @@
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="impn user1@${zimbra.server.hostname} data/wiki/user1 /" />
 		</java>
+		<echo>Importing files into Briefcase for user1</echo>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="impn user1@${zimbra.server.hostname} data/briefcase/user1 Briefcase" />
+		</java>
 	</target>
 
 	<target name="inject-npscontacts" depends="compile">
