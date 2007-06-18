@@ -708,6 +708,8 @@ public abstract class Provisioning {
     public static final String A_zimbraFeatureShortcutAliasesEnabled = "zimbraFeatureShortcutAliasesEnabled";
     
     public static final String A_zimbraFeatureBriefcasesEnabled = "zimbraFeatureBriefcasesEnabled";
+    
+    public static final String A_zimbraFeatureFlaggingEnabled = "zimbraFeatureFlaggingEnabled";
 
     /**
      * administrative notes for an entry.
