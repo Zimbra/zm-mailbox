@@ -52,6 +52,7 @@ public class ZGetInfoResult {
     private ZFeatures mFeatures;
     private List<ZIdentity> mIdentities;
     private List<ZDataSource> mDataSources;
+    private List<ZSignature> mSignatures;
     private List<String> mMailURLs;
     private Set<String> mEmailAddresses;
     
@@ -103,8 +104,21 @@ public class ZGetInfoResult {
                     mDataSources.add(new ZPop3DataSource(source));
             }
         }
+        mSignatures = new ArrayList<ZSignature>();
+        Element sigs = e.getOptionalElement(AccountConstants.E_SIGNATURES);
+        if (sigs != null) {
+            for (Element sig: sigs.listElements()) {
+                if (sig.getName().equals(MailConstants.E_SIGNATURE))
+                    mSignatures.add(new ZSignature(sig));
+            }
+        }
+
     }
 
+    public List<ZSignature> getSignatures() {
+        return mSignatures;
+    }
+    
     public List<ZIdentity> getIdentities() {
         return mIdentities;
     }

@@ -3259,4 +3259,32 @@ public class ZMailbox {
         }
         return actionEl;
     }
+
+    public String createSignature(ZSignature signature) throws ServiceException {
+        XMLElement req = new XMLElement(AccountConstants.CREATE_SIGNATURE_REQUEST);
+        signature.toElement(req);
+        return invoke(req).getElement(AccountConstants.E_SIGNATURE).getAttribute(AccountConstants.A_ID);
+    }
+
+    public List<ZSignature> getSignatures() throws ServiceException {
+        XMLElement req = new XMLElement(AccountConstants.GET_SIGNATURES_REQUEST);
+        Element resp = invoke(req);
+        List<ZSignature> result = new ArrayList<ZSignature>();
+        for (Element signature : resp.listElements(AccountConstants.E_SIGNATURE)) {
+            result.add(new ZSignature(signature));
+        }
+        return result;
+    }
+
+    public void deleteSignature(String id) throws ServiceException {
+        XMLElement req = new XMLElement(AccountConstants.DELETE_SIGNATURE_REQUEST);
+        req.addElement(AccountConstants.E_SIGNATURE).addAttribute(AccountConstants.A_ID, id);
+        invoke(req);
+    }
+
+    public void modifySiganture(ZSignature signature) throws ServiceException {
+        XMLElement req = new XMLElement(AccountConstants.MODIFY_SIGNATURE_REQUEST);
+        signature.toElement(req);
+        invoke(req);
+    }
 }

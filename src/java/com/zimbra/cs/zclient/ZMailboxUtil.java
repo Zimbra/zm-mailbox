@@ -39,6 +39,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.soap.SoapAccountInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -320,6 +321,7 @@ public class ZMailboxUtil implements DebugListener {
         CREATE_IDENTITY("createIdentity", "cid", "{identity-name} [attr1 value1 [attr2 value2...]]", "create identity", Category.ACCOUNT, 1, Integer.MAX_VALUE),
         CREATE_MOUNTPOINT("createMountpoint", "cm", "{folder-name} {owner-id-or-name} {remote-item-id-or-path}", "create mountpoint", Category.FOLDER, 3, 3, O_VIEW, O_COLOR, O_FLAGS),
         CREATE_SEARCH_FOLDER("createSearchFolder", "csf", "{folder-name} {query}", "create search folder", Category.FOLDER, 2, 2, O_SORT, O_TYPES, O_COLOR),
+        CREATE_SIGNATURE("createSignature", "csig", "{signature-name} [signature-value}", "create signature", Category.ACCOUNT, 2, 2),
         CREATE_TAG("createTag", "ct", "{tag-name}", "create tag", Category.TAG, 1, 1, O_COLOR),
         DELETE_CONTACT("deleteContact", "dct", "{contact-ids}", "hard delete contact(s)", Category.CONTACT, 1, 1),
         DELETE_CONVERSATION("deleteConversation", "dc", "{conv-ids}", "hard delete conversastion(s)", Category.CONVERSATION, 1, 1),
@@ -328,6 +330,7 @@ public class ZMailboxUtil implements DebugListener {
         DELETE_FILTER_RULE("deleteFilterRule", "dfrl", "{name}", "add filter rule", Category.FILTER,  1, 1),        
         DELETE_FOLDER("deleteFolder", "df", "{folder-path}", "hard delete a folder (and subfolders)", Category.FOLDER, 1, 1),
         DELETE_MESSAGE("deleteMessage", "dm", "{msg-ids}", "hard delete message(s)", Category.MESSAGE, 1, 1),
+        DELETE_SIGNATURE("deleteSignature", "dsig", "{signature-name|signature-id}", "delete signature", Category.ACCOUNT, 1, 1),
         DELETE_TAG("deleteTag", "dt", "{tag-name}", "delete a tag", Category.TAG, 1, 1),
         EMPTY_FOLDER("emptyFolder", "ef", "{folder-path}", "empty all the items in a folder (including subfolders)", Category.FOLDER, 1, 1),
         EXIT("exit", "quit", "", "exit program", Category.MISC, 0, 0),
@@ -348,6 +351,7 @@ public class ZMailboxUtil implements DebugListener {
         GET_MESSAGE("getMessage", "gm", "{msg-id}", "get a message", Category.MESSAGE, 1, 1, O_VERBOSE),
         GET_MAILBOX_SIZE("getMailboxSize", "gms", "", "get mailbox size", Category.MISC, 0, 0, O_VERBOSE),
         GET_REST_URL("getRestURL", "gru", "{relative-path}", "do a GET on a REST URL relative to the mailbox", Category.MISC, 1, 1, O_OUTPUT_FILE),
+        GET_SIGNATURES("getSignatures", "gsig", "", "get all signatures", Category.ACCOUNT, 0, 0, O_VERBOSE),
         HELP("help", "?", "commands", "return help on a group of commands, or all commands. Use -v for detailed help.", Category.MISC, 0, 1, O_VERBOSE),
         IMPORT_URL_INTO_FOLDER("importURLIntoFolder", "iuif", "{folder-path} {url}", "add the contents to the remote feed at {target-url} to the folder", Category.FOLDER, 2, 2),
         MARK_CONVERSATION_READ("markConversationRead", "mcr", "{conv-ids} [0|1*]", "mark conversation(s) as read/unread", Category.CONVERSATION, 1, 2),
@@ -364,6 +368,7 @@ public class ZMailboxUtil implements DebugListener {
         MODIFY_FOLDER_EXCLUDE_FREE_BUSY("modifyFolderExcludeFreeBusy", "mfefb", "{folder-path} [0|1*]", "change whether folder is excluded from free-busy", Category.FOLDER, 1, 2),
         MODIFY_FOLDER_GRANT("modifyFolderGrant", "mfg", "{folder-path} {account {name}|group {name}|domain {name}|all|public|guest {email} {password}] {permissions|none}}", "add/remove a grant to a folder", Category.FOLDER, 3, 5),
         MODIFY_FOLDER_URL("modifyFolderURL", "mfu", "{folder-path} {url}", "modify a folder's URL", Category.FOLDER, 2, 2),
+        MODIFY_SIGNATURE("modifySignature", "msig", "{signature-name|signature-id} {value}", "modify signature value", Category.ACCOUNT, 2, 2),
         MODIFY_IDENTITY("modifyIdentity", "mid", "{identity-name} [attr1 value1 [attr2 value2...]]", "modify an identity", Category.ACCOUNT, 1, Integer.MAX_VALUE),
         MODIFY_TAG_COLOR("modifyTagColor", "mtc", "{tag-name} {tag-color}", "modify a tag's color", Category.TAG, 2, 2),
         MOVE_CONTACT("moveContact", "mct", "{contact-ids} {dest-folder-path}", "move contact(s) to a new folder", Category.CONTACT, 2, 2),
@@ -373,6 +378,7 @@ public class ZMailboxUtil implements DebugListener {
         NOOP("noOp", "no", "", "do a NoOp SOAP call to the server", Category.MISC, 0, 1),
         POST_REST_URL("postRestURL", "pru", "{relative-path} {file-name}", "do a POST on a REST URL relative to the mailbox", Category.MISC, 2, 2, O_CONTENT_TYPE),
         RENAME_FOLDER("renameFolder", "rf", "{folder-path} {new-folder-path}", "rename folder", Category.FOLDER, 2, 2),
+        RENAME_SIGNATURE("renameSignature", "rsig", "{signature-name|signature-id} {new-name}", "rename signature", Category.ACCOUNT, 2, 2),
         RENAME_TAG("renameTag", "rt", "{tag-name} {new-tag-name}", "rename tag", Category.TAG, 2, 2),
         SEARCH("search", "s", "{query}", "perform search", Category.SEARCH, 0, 1, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS),
         SEARCH_CONVERSATION("searchConv", "sc", "{conv-id} {query}", "perform search on conversation", Category.SEARCH, 0, 2, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS),
@@ -597,6 +603,16 @@ public class ZMailboxUtil implements DebugListener {
         if (tag == null) tag = mMbox.getTagById(idOrName);
         if (tag == null) throw ZClientException.CLIENT_ERROR("unknown tag: "+idOrName, null);
         return tag;
+    }
+
+    private static boolean isUUID(String value) {
+        if (value.length() == 36 &&
+            value.charAt(8) == '-' &&
+            value.charAt(13) == '-' &&
+            value.charAt(18) == '-' &&
+            value.charAt(23) == '-')
+            return true;
+        return false;
     }
 
     /**
@@ -852,6 +868,9 @@ public class ZMailboxUtil implements DebugListener {
         case CREATE_SEARCH_FOLDER:
             doCreateSearchFolder(args);
             break;
+        case CREATE_SIGNATURE:
+            doCreateSignature(args);
+            break;
         case CREATE_TAG:
             ZTag ct = mMbox.createTag(args[0], tagColorOpt());
             System.out.println(ct.getId());
@@ -876,6 +895,9 @@ public class ZMailboxUtil implements DebugListener {
             break;
         case DELETE_MESSAGE:
             mMbox.deleteMessage(id(args[0]));
+            break;
+        case DELETE_SIGNATURE:
+            mMbox.deleteSignature(lookupSignatureId(args[0]));
             break;
         case DELETE_TAG:
             mMbox.deleteTag(lookupTag(args[0]).getId());
@@ -906,6 +928,9 @@ public class ZMailboxUtil implements DebugListener {
             break;
         case GET_IDENTITIES:
             doGetIdentities(args);
+            break;
+            case GET_SIGNATURES:
+            doGetSignatures(args);
             break;
         case GET_ALL_FOLDERS:
             doGetAllFolders(args);
@@ -989,6 +1014,9 @@ public class ZMailboxUtil implements DebugListener {
         case MODIFY_IDENTITY:
             mMbox.modifyIdentity(new ZIdentity(args[0], getMultiMap(args, 1)));
             break;
+        case MODIFY_SIGNATURE:
+            doModifySignature(args);
+            break;
         case MODIFY_TAG_COLOR:
             mMbox.modifyTagColor(lookupTag(args[0]).getId(), Color.fromString(args[1]));
             break;
@@ -1012,6 +1040,9 @@ public class ZMailboxUtil implements DebugListener {
             break;
         case RENAME_FOLDER:
             mMbox.renameFolder(lookupFolderId(args[0]), args[1]);
+            break;
+        case RENAME_SIGNATURE:
+            doRenameSignature(args);
             break;
         case RENAME_TAG:
             mMbox.renameTag(lookupTag(args[0]).getId(), args[1]);
@@ -1405,6 +1436,49 @@ public class ZMailboxUtil implements DebugListener {
         System.out.println(cf.getId());
     }
 
+    private void doCreateSignature(String args[]) throws ServiceException {
+        Map<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailSignature, args[1]);
+        ZSignature sig = new ZSignature(args[0], attrs);
+        System.out.println(mMbox.createSignature(sig));
+    }
+
+    private void doModifySignature(String args[]) throws ServiceException {
+        ZSignature sig = lookupSignature(args[0]);
+        Map<String,Object> attrs  = sig.getAttrs();
+        attrs.put(Provisioning.A_zimbraPrefMailSignature, args[1]);
+        ZSignature modSig = new ZSignature(sig.getName(), attrs);
+        mMbox.modifySiganture(modSig);
+    }
+
+    private void doRenameSignature(String args[]) throws ServiceException {
+        ZSignature sig = lookupSignature(args[0]);
+        Map<String,Object> attrs  = sig.getAttrs();
+        attrs.put(Provisioning.A_zimbraPrefSignatureName, args[1]);
+        ZSignature modSig = new ZSignature(sig.getName(), attrs);
+        mMbox.modifySiganture(modSig);
+    }
+
+    private ZSignature lookupSignature(String idOrName) throws ServiceException {
+        for (ZSignature sig : mMbox.getSignatures()) {
+            if (sig.getName().equalsIgnoreCase(idOrName) || sig.getId().equalsIgnoreCase(idOrName))
+                return sig;
+        }
+        throw ZClientException.CLIENT_ERROR("unknown signature: "+idOrName, null);
+    }
+
+    private String lookupSignatureId(String idOrName) throws ServiceException {
+        if (isUUID(idOrName)) {
+            return idOrName;
+        } else {
+            for (ZSignature sig : mMbox.getSignatures()) {
+                if (sig.getName().equalsIgnoreCase(idOrName))
+                    return sig.getId();
+            }
+            throw ZClientException.CLIENT_ERROR("unknown signature: "+idOrName, null);
+        }
+    }
+
     private void doCreateSearchFolder(String args[]) throws ServiceException {
 
         ZSearchFolder csf = mMbox.createSearchFolder(
@@ -1788,7 +1862,23 @@ public class ZMailboxUtil implements DebugListener {
     private void doGetIdentities(String[] args) throws ServiceException {
         dumpIdentities(mMbox.getIdentities());
     }
-    
+
+    private void dumpSignatures(List<ZSignature> signatures) throws ServiceException {
+        if (verboseOpt()) {
+            System.out.println(signatures);
+        } else {
+            if (signatures.size() == 0) return;
+            for (ZSignature sig : signatures) {
+                System.out.println(sig.getName());
+            }
+        }
+    }
+
+    private void doGetSignatures(String[] args) throws ServiceException {
+        dumpSignatures(mMbox.getSignatures());
+    }
+
+
     private void dumpContacts(List<ZContact> contacts) throws ServiceException {
         if (verboseOpt()) {
             System.out.println(contacts);
