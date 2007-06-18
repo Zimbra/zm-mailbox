@@ -1750,6 +1750,9 @@ u attribute is present iff count > 0
 +  add="1" on recipient email address means to add to caller's address book (no duplicate checking!)
 +  supports (f)rom, (t)o, (b)cc, (c)c, (r)eply-to "type" on <e> elements
 +  only allowed one top-level <mp> but can nest <mp>s within if multipart/*
++    a leaf <mp> can have inlined content (<mp ct="{content-type}"><content>...</content></mp>)
++    a leaf <mp> can have referenced content (<mp><attach ...></mp>)
++    any <mp> can have a Content-ID header attached to it
 +  on reply/forward, set origid on <m> element and set rt to "r" or "w", respectively
 +  can optionally set identity-id to specify the identity being used to compose the message
 +  if noSave="1", a copy will *not* be saved to sent regardless of account/identity settings
@@ -1760,7 +1763,7 @@ u attribute is present iff count > 0
     <e t="{type}" a="{email-address}" p="{personal-name}" [add="1"]/>+
     <su>{subject}</su>*
     [<irt>{Message-ID header for message being replied to}</irt>]
-    <mp ct="{content-type}">
+    <mp ct="{content-type}" [ci="{content-id}"]>
       <content>...</content>
     </mp>
     <attach [aid="{attach-upload-id}"]>
