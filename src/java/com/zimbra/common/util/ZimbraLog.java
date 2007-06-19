@@ -46,7 +46,7 @@ public class ZimbraLog {
     /**
      * "ip" key for context. IP of request
      */
-    public static final String C_IP = "ip";
+    private static final String C_IP = "ip";
     
     /**
      * "id" key for context. Id of the target account
@@ -85,7 +85,7 @@ public class ZimbraLog {
     /**
      * "ua" key for context.  The name of the client application. 
      */
-    public static final String C_USER_AGENT = "ua";
+    private static final String C_USER_AGENT = "ua";
     
     /**
      * "msgid" key for context.  The Message-ID header of the message being
@@ -458,6 +458,13 @@ public class ZimbraLog {
      */
     public static void addPortToContext(int port) {
         ZimbraLog.addToContext(C_PORT, Integer.toString(port));
+    }
+    
+    /**
+     * Adds user agent to the current thread's logging context.
+     */
+    public static void addUserAgentToContext(String ua) {
+        ZimbraLog.addToContext(C_USER_AGENT, ua);
     }
     
     /**
