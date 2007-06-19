@@ -37,7 +37,10 @@ public class IO {
         throws IOException;
 
     private static native void chmod0(byte[] path, long mode)
-	throws IOException;
+        throws IOException;
+    
+    private static native void setStdoutStderrTo0(byte[] path)
+        throws IOException;
 
     private static native int S_IRUSR();
     private static native int S_IWUSR();
@@ -103,5 +106,12 @@ public class IO {
         } else {
             return 1;
         }
+    }
+
+    public static void setStdoutStderrTo(String path) throws IOException {
+        if (!Util.haveNativeCode()) {
+            return;
+        }
+        setStdoutStderrTo0(path.getBytes());
     }
 }

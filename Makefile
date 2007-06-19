@@ -9,7 +9,7 @@ SHARED := -shared
 JAVAINC := -I/usr/local/java/include -I/usr/local/java/include/linux
 SHARED_EXT := so
 PUSHED_EXT := so.Linux.i386
-CF := -fPIC
+CF := -fPIC -g
 
 ifeq ($(BUILD_PLATFORM), MACOSX)
 JAVAINC := -I/System/Library/Frameworks/JavaVM.framework/Headers
