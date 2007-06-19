@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -40,11 +41,13 @@ import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MessageHit;
+import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Mailbox.SearchResultMode;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 
@@ -60,6 +63,8 @@ public class SearchWrapper extends PhantomResource {
 	protected static final long DAY_IN_MS = 24 * 60 * 60 * 1000;
 	protected static final long WEEK_IN_MS = 7 * DAY_IN_MS;
 	protected static final long MONTH_IN_MS = 4 * WEEK_IN_MS;
+	
+	protected static final int SEARCH_LIMIT = 100;
 	
 	private String mContentType;
 	private StringBuilder mQuery;
@@ -135,7 +140,15 @@ public class SearchWrapper extends PhantomResource {
 		try {
 			Account account = prov.get(AccountBy.name, user);
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-			zqr = mbox.search(ctxt.getOperationContext(), mQuery.toString(), SEARCH_TYPES, MailboxIndex.SortBy.NAME_ASCENDING, 100);
+			SearchParams params = new SearchParams();
+			params.setQueryStr(mQuery.toString());
+			params.setTypes(SEARCH_TYPES);
+			params.setSortBy(MailboxIndex.SortBy.NAME_ASCENDING);
+			params.setMode(SearchResultMode.NORMAL);
+			params.setPrefetch(true);
+			params.setChunkSize(SEARCH_LIMIT);
+			params.setLimit(SEARCH_LIMIT);
+			zqr = mbox.search(SoapProtocol.Soap12, ctxt.getOperationContext(), params);
 			while (zqr.hasNext()) {
                 ZimbraHit hit = zqr.getNext();
                 if (hit instanceof MessageHit)
