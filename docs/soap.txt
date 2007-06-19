@@ -441,9 +441,6 @@ an authToken can be passed instead of account/password/preauth to validate an ex
    <childAccounts>
      <childAccount name="{child-account-name}" visible="0|1" id="{child-account-id}"></childAccount>*
    </childAccounts>
-   <skins>
-     <skin name="{skin-name}"/>+
-   </skins>
    [<license status="inGracePeriod|bad"/>]
 </GetInfoResponse>
  

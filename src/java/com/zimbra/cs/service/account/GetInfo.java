@@ -47,7 +47,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.util.BuildInfo;
-import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.cs.zimlet.ZimletProperty;
 import com.zimbra.cs.zimlet.ZimletUserProperties;
 import com.zimbra.cs.zimlet.ZimletUtil;
@@ -94,8 +93,6 @@ public class GetInfo extends AccountDocumentHandler  {
         doDataSources(ds, acct, lc);
         Element ca = response.addUniqueElement(AccountConstants.E_CHILD_ACCOUNTS);
         doChildAccounts(ca, acct);
-        Element skins = response.addUniqueElement(AccountConstants.E_SKINS);
-        doSkins(skins, acct);
         
         GetAccountInfo.addUrls(response, acct);
         return response;
@@ -237,13 +234,5 @@ public class GetInfo extends AccountDocumentHandler  {
         }
     }
     
-    private static void doSkins(Element response, Account acct) throws ServiceException {
-        
-        String[] availSkins = SkinUtil.getSkins(acct);
-        
-        for (String skin : availSkins) {
-            Element skinElem = response.addElement(AccountConstants.E_SKIN);
-            skinElem.addAttribute(AccountConstants.A_NAME, skin);
-        }
-    }
+
 }
