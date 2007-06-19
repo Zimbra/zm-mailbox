@@ -1261,6 +1261,10 @@ public abstract class Provisioning {
     public static final String A_zimbraProxyImapPortAttribute    = "zimbraProxyImapPortAttribute";
     public static final String A_zimbraProxyImapSSLPortAttribute = "zimbraProxyImapSSLPortAttribute";
 
+    /*
+     * Cross mailbox search
+     */
+    public static final String A_zimbraExcludeFromCMBSearch = "zimbraExcludeFromCMBSearch";  
     
     private static Provisioning sProvisioning;
 

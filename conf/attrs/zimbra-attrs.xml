@@ -2302,4 +2302,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether or not the client opens a new msg/conv in a new window (via dbl-click)</desc>
 </attr>
 
+<attr id="501" name="zimbraExcludeFromCMBSearch" type="boolean" cardinality="single" optionalIn="account">
+  <desc>Indicates the account should be excluded from Crossmailbox searchers.</desc>
+</attr>
 </attrs>

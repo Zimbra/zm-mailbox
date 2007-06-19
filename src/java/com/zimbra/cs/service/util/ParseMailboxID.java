@@ -216,6 +216,7 @@ public class ParseMailboxID
             mMailboxId = mMailbox.getId();
         } else {
             mHostName = account.getAttr(Provisioning.A_zimbraMailHost);
+            mInitialString = account.getId();            
         }
     }
     
