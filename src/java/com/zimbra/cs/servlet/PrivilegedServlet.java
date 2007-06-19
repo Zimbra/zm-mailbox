@@ -25,11 +25,9 @@
 
 package com.zimbra.cs.servlet;
 
-import java.io.BufferedOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -49,6 +47,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.NetUtil;
+import com.zimbra.znative.IO;
 import com.zimbra.znative.Process;
 import com.zimbra.znative.Util;
 
@@ -183,47 +182,34 @@ public class PrivilegedServlet extends HttpServlet {
 
     private static Timer sOutputRotationTimer = new Timer();
     
-    private static class CloseOldOutputs extends TimerTask {
-        private PrintStream mOut;
-        private PrintStream mErr;
-        
-        public CloseOldOutputs(PrintStream out, PrintStream err) {
-            mOut = out;
-            mErr = err;
-        }
-        
-        public void run() {
-            mOut.close();
-            mErr.close();
-        }
-    }
-    
-    private static class OpenNewOutputs extends TimerTask {
-        public void run() {
-            Date now = new Date();
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
-            String suffix = sdf.format(now);
-            String path = LC.mailboxd_output_file.value() + "." + suffix;
-            try {
-                FileOutputStream fos = new FileOutputStream(path, /* append */ true);
-                PrintStream ps = new PrintStream(new BufferedOutputStream(fos), /* autoflush */ true);
-                PrintStream oldOut = System.out;
-                PrintStream oldErr = System.err;
-                System.setOut(ps);
-                System.setErr(ps);
-                /* Close old streams after a little wile in case any one is still trying to write to them */
-                long configMillis = LC.mailboxd_output_rotate_interval.intValue() * 1000;
-                sOutputRotationTimer.schedule(new CloseOldOutputs(oldOut, oldErr), configMillis);
-            } catch (FileNotFoundException e) {
-                System.err.println("WARN: stdout/stderr rotate could not open output file: " + path);
-                e.printStackTrace();
-            }
+    private static void doOutputRotation() {
+        Date now = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
+        String suffix = sdf.format(now);
+        String current = LC.mailboxd_output_file.value();
+        String rotateTo = current + "." + suffix;
+        try {
+            new File(current).renameTo(new File(rotateTo));
+            IO.setStdoutStderrTo(current);
+        } catch (IOException ioe) {
+            System.err.println("WARN: rotate stdout stderr failed: " + ioe);
+            ioe.printStackTrace();
         }
     }
     
     private static void setupOutputRotation() throws FileNotFoundException, SecurityException, IOException {
         long configMillis = LC.mailboxd_output_rotate_interval.intValue() * 1000;
-        sOutputRotationTimer.scheduleAtFixedRate(new OpenNewOutputs(), 0, configMillis);
+        if (configMillis <= 0) {
+            return;
+        }
+        GregorianCalendar now = new GregorianCalendar();
+        long millisSinceEpoch = now.getTimeInMillis(); 
+        long dstOffset = now.get(Calendar.DST_OFFSET);
+        long zoneOffset = now.get(Calendar.ZONE_OFFSET);
+        long millisSinceEpochLocal = millisSinceEpoch + dstOffset + zoneOffset;
+        long firstRotateInMillis = configMillis - (millisSinceEpochLocal % configMillis);
+        TimerTask tt = new TimerTask() { public void run() { doOutputRotation(); } };
+        sOutputRotationTimer.scheduleAtFixedRate(tt, firstRotateInMillis, configMillis);
     }
 
     private static boolean mInitialized = false;
