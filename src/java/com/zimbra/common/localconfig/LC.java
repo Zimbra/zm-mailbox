@@ -780,7 +780,7 @@ public class LC {
         
         mailboxd_output_rotate_interval = new KnownKey("mailboxd_output_rotate_interval");
         mailboxd_output_rotate_interval.setDefault("86400");
-        mailboxd_output_rotate_interval.setDoc("Period, in seconds, at which mailboxd output file is rotated");
+        mailboxd_output_rotate_interval.setDoc("Period, in seconds, at which mailboxd output file is rotated.  If <= 0, no rotation is performed.");
         
         ssl_allow_untrusted_certs = new KnownKey("ssl_allow_untrusted_certs");
         ssl_allow_untrusted_certs.setDefault("false");
