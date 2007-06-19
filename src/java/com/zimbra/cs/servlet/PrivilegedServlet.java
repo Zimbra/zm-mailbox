@@ -175,47 +175,55 @@ public class PrivilegedServlet extends HttpServlet {
             }
 
             /* This should be done after privileges are dropped... */
-            setupStdoutStderrRotation();
+            setupOutputRotation();
         } catch (Throwable t) {
             Util.halt("PrivilegedServlet init failed", t);
         }
     }
 
-    private static void setupStdoutStderrRotation() throws FileNotFoundException, SecurityException, IOException {
-        PrintStream oldOut = System.out;
-        PrintStream oldErr = System.err;
+    private static Timer sOutputRotationTimer = new Timer();
+    
+    private static class CloseOldOutputs extends TimerTask {
+        private PrintStream mOut;
+        private PrintStream mErr;
         
-        GregorianCalendar now = new GregorianCalendar();
-        long millisSinceEpoch = now.getTimeInMillis(); 
-        long dstOffset = now.get(Calendar.DST_OFFSET);
-        long zoneOffset = now.get(Calendar.ZONE_OFFSET);
-        long millisSinceEpochLocal = millisSinceEpoch + dstOffset + zoneOffset;
-        long configMillis = LC.mailboxd_output_rotate_interval.intValue() * 1000;
-        long firstRotateInMillis = configMillis - (millisSinceEpochLocal % configMillis);
+        public CloseOldOutputs(PrintStream out, PrintStream err) {
+            mOut = out;
+            mErr = err;
+        }
         
-        TimerTask task = new TimerTask() {
-            public void run() {
-                Date now = new Date();
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
-                String suffix = sdf.format(now);
-                String path = LC.mailboxd_output_file.value() + "." + suffix;
-                try {
-                    FileOutputStream fos = new FileOutputStream(path, /* append */ true);
-                    PrintStream ps = new PrintStream(new BufferedOutputStream(fos), /* autoflush */ true);
-                    PrintStream oldOut = System.out;
-                    PrintStream oldErr = System.err;
-                    System.setOut(ps);
-                    System.setErr(ps);
-                    oldOut.close();
-                    oldErr.close();
-                } catch (FileNotFoundException e) {
-                    System.err.println("WARN: stdout/stderr rotate could not open output file: " + path);
-                    e.printStackTrace();
-                }
+        public void run() {
+            mOut.close();
+            mErr.close();
+        }
+    }
+    
+    private static class OpenNewOutputs extends TimerTask {
+        public void run() {
+            Date now = new Date();
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
+            String suffix = sdf.format(now);
+            String path = LC.mailboxd_output_file.value() + "." + suffix;
+            try {
+                FileOutputStream fos = new FileOutputStream(path, /* append */ true);
+                PrintStream ps = new PrintStream(new BufferedOutputStream(fos), /* autoflush */ true);
+                PrintStream oldOut = System.out;
+                PrintStream oldErr = System.err;
+                System.setOut(ps);
+                System.setErr(ps);
+                /* Close old streams after a little wile in case any one is still trying to write to them */
+                long configMillis = LC.mailboxd_output_rotate_interval.intValue() * 1000;
+                sOutputRotationTimer.schedule(new CloseOldOutputs(oldOut, oldErr), configMillis);
+            } catch (FileNotFoundException e) {
+                System.err.println("WARN: stdout/stderr rotate could not open output file: " + path);
+                e.printStackTrace();
             }
-        };
-        Timer timer = new Timer();
-        timer.scheduleAtFixedRate(task, firstRotateInMillis, configMillis);
+        }
+    }
+    
+    private static void setupOutputRotation() throws FileNotFoundException, SecurityException, IOException {
+        long configMillis = LC.mailboxd_output_rotate_interval.intValue() * 1000;
+        sOutputRotationTimer.scheduleAtFixedRate(new OpenNewOutputs(), 0, configMillis);
     }
 
     private static boolean mInitialized = false;
