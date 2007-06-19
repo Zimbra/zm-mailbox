@@ -249,7 +249,11 @@ public class Notification {
             String body = account.getAttr(Provisioning.A_zimbraPrefOutOfOfficeReply, "");
             out.setText(body, Mime.P_CHARSET_UTF8);
             
-            out.setEnvelopeFrom("<>");
+            if (Provisioning.getInstance().getConfig().getBooleanAttr(Provisioning.A_zimbraAutoSubmittedNullReturnPath, true)) {
+                out.setEnvelopeFrom("<>");
+            } else {
+                out.setEnvelopeFrom(account.getName());
+            }
 
             Transport.send(out);
             
@@ -372,7 +376,18 @@ public class Notification {
             out.setRecipient(javax.mail.Message.RecipientType.TO, address);
             out.setSubject(subject);
             out.setText(body, Mime.P_CHARSET_UTF8);
-            out.setEnvelopeFrom("<>");
+
+            String envFrom = "<>";
+            Provisioning prov;
+            try {
+                if (!Provisioning.getInstance().getConfig().getBooleanAttr(Provisioning.A_zimbraAutoSubmittedNullReturnPath, true)) {
+                    envFrom = account.getName();
+                }
+            } catch (ServiceException se) {
+                ZimbraLog.mailbox.warn("error encoutered looking up return path configuration, using null return path instead", se);
+            }
+            out.setEnvelopeFrom(envFrom);
+            
             Transport.send(out);
             ZimbraLog.mailbox.info("notification sent dest='" + destination + "' rcpt='" + rcpt + "' mid=" + msg.getId());
         } catch (MessagingException me) {
