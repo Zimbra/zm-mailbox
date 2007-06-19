@@ -148,9 +148,9 @@ public class SoapEngine {
         }
         String ip = (String) context.get(REQUEST_IP);
         if (ip != null)
-            ZimbraLog.addToContext(ZimbraLog.C_IP, ip);
+            ZimbraLog.addIpToContext(ip);
         if (zsc.getUserAgent() != null)
-            ZimbraLog.addToContext(ZimbraLog.C_USER_AGENT, zsc.getUserAgent());
+            ZimbraLog.addUserAgentToContext(zsc.getUserAgent());
 
         // Global SOAP logging happens before the context is determined.  If we
         // haven't already logged the message and need to log it for the current

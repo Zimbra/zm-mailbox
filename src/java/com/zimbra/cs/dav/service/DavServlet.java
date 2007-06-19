@@ -95,6 +95,10 @@ public class DavServlet extends ZimbraServlet {
 	
 	public void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		
+		ZimbraLog.clearContext();
+		ZimbraLog.addIpToContext(req.getRemoteAddr());
+		ZimbraLog.addUserAgentToContext(req.getHeader(DavProtocol.HEADER_USER_AGENT));
+		
 		if (!isRequestOnAllowedPort(req)) {
 			resp.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE);
 			return;
@@ -105,6 +109,7 @@ public class DavServlet extends ZimbraServlet {
 			Account authUser = basicAuthRequest(req, resp, true);
 			if (authUser == null)
 				return;
+			ZimbraLog.addToContext(ZimbraLog.C_ANAME, authUser.getName());
 			ctxt = new DavContext(req, resp, authUser);
 		} catch (ServiceException e) {
 			ZimbraLog.dav.error("error getting authenticated user", e);

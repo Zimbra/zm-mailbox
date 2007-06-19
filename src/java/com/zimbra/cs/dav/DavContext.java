@@ -233,8 +233,11 @@ public class DavContext {
 	}
 	
 	public DavResource getRequestedResource() throws DavException, ServiceException {
-		if (mRequestedResource == null)
+		if (mRequestedResource == null) {
 			mRequestedResource = UrlNamespace.getResourceAt(this, mUser, mPath);
+			if (mRequestedResource != null)
+				ZimbraLog.addToContext(ZimbraLog.C_NAME, mRequestedResource.getOwner());
+		}
 		return mRequestedResource;
 	}
 	
