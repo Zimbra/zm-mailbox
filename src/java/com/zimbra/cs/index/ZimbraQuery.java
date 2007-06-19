@@ -1555,8 +1555,11 @@ public final class ZimbraQuery {
             
             // okay, quite a bit of hackery here....basically, if they're doing a contact:
             // search AND they haven't manually specified a phrase query (expands to more than one term)
-            // then lets hack their search and make it a * search.  
-            if (qType == ZimbraQueryParser.CONTACT && mTokens.size() <= 1 && text.length() > 0 && text.charAt(text.length()-1)!='*') {
+            // then lets hack their search and make it a * search.
+            // for bug:17232 -- if the search string is ".", don't auto-wildcard it, because . is
+            // supposed to match everything by default.
+            if (qType == ZimbraQueryParser.CONTACT && mTokens.size() <= 1 && text.length() > 0 
+                        && text.charAt(text.length()-1)!='*' && !text.equals(".")) {
                 text = text+'*';
             }
             
