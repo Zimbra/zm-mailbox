@@ -392,7 +392,7 @@ public abstract class Element {
         String content = null;
         for (Iterator it = d4root.elementIterator(); it.hasNext(); ) {
             org.dom4j.Element d4elt = (org.dom4j.Element) it.next();
-            if (XHTML_NS_URI.equals(d4elt.getNamespaceURI()))
+            if (XHTML_NS_URI.equals(d4elt.getNamespaceURI()) && !d4elt.elements().isEmpty())
                 content = (content == null ? d4elt.asXML() : content + d4elt.asXML());
             else
                 elt.addElement(convertDOM(d4elt, factory));
