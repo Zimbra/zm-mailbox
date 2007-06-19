@@ -1262,6 +1262,12 @@ public abstract class Provisioning {
     public static final String A_zimbraProxyImapSSLPortAttribute = "zimbraProxyImapSSLPortAttribute";
 
     /*
+     * whether to use <> or account's real address for out of office 
+     * and new mail notifications 
+     */
+    public static final String A_zimbraAutoSubmittedNullReturnPath = "zimbraAutoSubmittedNullReturnPath";    
+
+    /*
      * Cross mailbox search
      */
     public static final String A_zimbraExcludeFromCMBSearch = "zimbraExcludeFromCMBSearch";  
