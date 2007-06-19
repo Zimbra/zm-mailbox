@@ -116,7 +116,6 @@ public class AccountConstants {
     public static final String E_ENTRY_SEARCH_FILTER_SINGLECOND = "cond";
     public static final String E_LOCALE = "locale";
     public static final String E_VIRTUAL_HOST = "virtualHost";
-    public static final String E_SKINS = "skins";
     public static final String E_SKIN = "skin";
     public static final String E_LICENSE = "license";
     public static final String E_IDENTITIES = "identities";
