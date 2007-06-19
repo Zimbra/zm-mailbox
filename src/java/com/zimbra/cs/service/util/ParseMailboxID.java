@@ -30,12 +30,18 @@
 package com.zimbra.cs.service.util;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.soap.Element;
+import com.zimbra.soap.Element.XMLElement;
 
 /**
  * @author tim
@@ -216,6 +222,7 @@ public class ParseMailboxID
             mMailboxId = mMailbox.getId();
         } else {
             mHostName = account.getAttr(Provisioning.A_zimbraMailHost);
+            mInitialString = account.getId();
         }
     }
     

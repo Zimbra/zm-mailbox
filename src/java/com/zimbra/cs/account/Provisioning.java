@@ -1158,6 +1158,11 @@ public abstract class Provisioning {
     public static final String A_zimbraBackupReportEmailSender = "zimbraBackupReportEmailSender";
     public static final String A_zimbraBackupReportEmailSubjectPrefix = "zimbraBackupReportEmailSubjectPrefix";
 
+    /*
+     * Cross mailbox search
+     */
+    public static final String A_zimbraExcludeFromCMBSearch = "zimbraExcludeFromCMBSearch";
+    
     private static Provisioning sProvisioning;
 
     public synchronized static Provisioning getInstance() {
