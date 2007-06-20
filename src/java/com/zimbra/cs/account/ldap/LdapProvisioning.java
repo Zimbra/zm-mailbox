@@ -385,7 +385,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             ctxt = LdapUtil.getDirContext();
             mimeType = LdapUtil.escapeSearchFilterArg(mimeType);
-            NamingEnumeration ne = LdapUtil.searchDir(ctxt, "cn=mime," + mDIT.configDN(), "(" + Provisioning.A_zimbraMimeType + "=" + mimeType + ")", sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, mDIT.mimeBaseDN(), "(" + Provisioning.A_zimbraMimeType + "=" + mimeType + ")", sSubtreeSC);
             List<MimeTypeInfo> mimeTypes = new ArrayList<MimeTypeInfo>();
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
@@ -410,7 +410,7 @@ public class LdapProvisioning extends Provisioning {
             ctxt = LdapUtil.getDirContext();
             ext = LdapUtil.escapeSearchFilterArg(ext);
             List<MimeTypeInfo> mimeTypes = new ArrayList<MimeTypeInfo>();
-            NamingEnumeration ne = LdapUtil.searchDir(ctxt, "cn=mime," + mDIT.configDN(), "(" + Provisioning.A_zimbraMimeFileExtension + "=" + ext + ")", sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, mDIT.mimeBaseDN(), "(" + Provisioning.A_zimbraMimeFileExtension + "=" + ext + ")", sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 mimeTypes.add(new LdapMimeType(sr.getNameInNamespace(), sr.getAttributes()));

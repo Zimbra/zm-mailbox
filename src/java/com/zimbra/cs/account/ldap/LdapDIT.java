@@ -371,9 +371,15 @@ public class LdapDIT {
      *   mime
      * ========
      */
+    /*
     public String mimeConfigToDN(String name) {
         name = LdapUtil.escapeRDNValue(name);
         return NAMING_RDN_ATTR_MIME + "=" + name + "," + BASE_DN_MIME;
+    }
+    */
+    
+    public String mimeBaseDN() {
+        return BASE_DN_MIME;
     }
     
     
