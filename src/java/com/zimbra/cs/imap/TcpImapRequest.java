@@ -55,7 +55,7 @@ public class TcpImapRequest extends ImapRequest {
         mStream  = tsis;
     }
 
-    TcpImapRequest rewind()  { mIndex = mOffset = 0;  mTag = null;  return this; }
+    TcpImapRequest rewind()  { mIndex = mOffset = 0;  return this; }
 
     private void incrementSize(long increment) throws ImapParseException {
         mSize += increment;
@@ -102,12 +102,15 @@ public class TcpImapRequest extends ImapRequest {
         if (line.endsWith("+}") && extensionEnabled("LITERAL+")) {
             int openBrace = line.lastIndexOf('{', line.length() - 3);
             if (openBrace > 0) {
+                long size = -1;
                 try {
-                    long size = Long.parseLong(line.substring(openBrace + 1, line.length() - 2));
+                    size = Long.parseLong(line.substring(openBrace + 1, line.length() - 2));
+                } catch (NumberFormatException nfe) { }
+                if (size >= 0) {
                     incrementSize(size);
                     mLiteral = (int) size;
                     continuation();
-                } catch (NumberFormatException nfe) {
+                } else {
                     if (mTag == null && mIndex == 0 && mOffset == 0) {
                         mTag = readTag();  rewind();
                     }
