@@ -279,6 +279,11 @@ public class ZimbraLog {
     public static final Log rmgmt = LogFactory.getLog("zimbra.rmgmt");
     
     /**
+     * the "zimbra.webclient" logger. Logs ZimbraWebClient servlet and jsp operations.
+     */
+    public static final Log webclient = LogFactory.getLog("zimbra.webclient");
+    
+    /**
      * Keeps track of the account associated with the current thread, for
      * per-user logging settings. 
      */
