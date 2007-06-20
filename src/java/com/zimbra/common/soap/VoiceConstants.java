@@ -118,6 +118,18 @@ public class VoiceConstants {
 
     public static final String DEFAULT_VOICE_VIEW = "voice";
 
+    public static final String E_PREF                          = "pref";
+    public static final String A_vmPrefEmailNotifAddress       = "vmPrefEmailNotifAddress";
+    public static final String A_vmPrefPin                     = "vmPrefPin";
+    public static final String A_vmPrefTimezone                = "vmPrefTimezone";
+    public static final String A_vmPrefPlayDateAndTimeInMsgEnv = "vmPrefPlayDateAndTimeInMsgEnv";
+    public static final String A_vmPrefAutoPlayNewMsgs         = "vmPrefAutoPlayNewMsgs";
+    public static final String A_vmPrefPromptLevel             = "vmPrefPromptLevel";
+    public static final String A_vmPrefPlayCallerNameInMsgEnv  = "vmPrefPlayCallerNameInMsgEnv";
+    public static final String A_vmPrefSkipPinEntry            = "vmPrefSkipPinEntry";
+    public static final String A_vmPrefUserLocale              = "vmPrefUserLocale";
+    public static final String A_vmPrefAnsweringLocale         = "vmPrefAnsweringLocale";
+
     public static final int FID_VOICEMAILINBOX = 1024;
     public static final int FID_MISSEDCALLS = 1025;
     public static final int FID_ANSWEREDCALLS = 1026;
