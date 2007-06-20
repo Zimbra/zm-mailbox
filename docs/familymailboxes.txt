@@ -1,0 +1,36 @@
+Provisioning
+============
+
+There is no SOAP or zmprov API for creating family accounts.  Provisioning-wise, family accounts are just 
+regular accounts with two additional multi-valued LDAP attributes: zimbraChildAccount and zimbraChildVisibleAccount,  
+which link a primary(parent) account to its secondary(child) accounts.
+
+There are two types of secondary accounts: visible and invisible.  Visible secondary accounts are those shown 
+in the account accordion UI when a primary logs in.  Invisible secondary accounts are not shown in the accordion, 
+but they work the same in all other aspects as visible secondary accounts.
+
+A primary account can see and manage preferences and mail items on all its secondary accounts.  
+
+Attribute zimbraFeatureOptionsEnabled controls if an account can see and change any account preferences.
+zimbraFeatureOptionsEnabled should be set to FALSE on secondary accounts if secondary accounts are not allowed 
+to see/manage their preferences.
+
+
+Examples:
+=========
+- Create secondary accounts:
+    zmprov createAccount child-1@zimbra.com test123 zimbraFeatureOptionsEnabled FALSE {other attr/value pairs}
+    zmprov createAccount child-2@zimbra.com test123 zimbraFeatureOptionsEnabled FALSE {other attr/value pairs}
+
+- Create a primary account and link secondary accounts to it:
+    zmprov createAccount parent@zimbra.com test123 zimbraChildAccount {id-of-child-1} zimbraChildAccount {id-of-child-2} zimbraChildVisibleAccount {id-of-child-1}
+    
+    or can do in two steps:
+    zmprov createAccount parent@zimbra.com test123
+    zmprov modifyAccount parent@zimbra.com zimbraChildAccount {id-of-child-1} zimbraChildAccount {id-of-child-2} zimbraChildVisibleAccount {id-of-child-1}
+    
+    The above example adds child-1@zimbra.com and child-2@zimbra.com as secondary accounts of parent@zimbra.com; 
+    child-1@zimbra.com is visible, child-2@zimbra.com is not visible.
+    Note: for visible secondary accounts, they have to appear in both zimbraChildAccount and zimbraChildVisibleAccount attributes.
+    
+
