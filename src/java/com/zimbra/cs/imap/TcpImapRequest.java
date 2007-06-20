@@ -42,7 +42,7 @@ public class TcpImapRequest extends ImapRequest {
 
     private TcpServerInputStream mStream;
     private int mLiteral = -1;
-    private int mSize;
+    private long mSize;
     private boolean mUnlogged;
 
     TcpImapRequest(String line, ImapHandler handler) {
