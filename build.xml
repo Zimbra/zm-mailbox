@@ -87,8 +87,6 @@
 	
 	<property name="ical4j.jar" value="ical4j-0.9.16-patched.jar" />
 
-	<property name="wiki.user.default" value="wiki" /><!-- global wiki account -->
-
 	<condition property="is-windows"><os family="windows"/></condition>
 	<condition property="is-unix"><not><os family="windows"/></not></condition>
 	
@@ -135,6 +133,9 @@
 
 	<condition property="ldapdelete" value="${zimbra.home.dir}/openldap/ldapdelete"><isset property="is-windows" /></condition>
 	<condition property="ldapdelete" value="${zimbra.home.dir}/openldap/bin/ldapdelete"><isset property="is-unix" /></condition>
+
+	<property name="defaultdomain.name" value="${zimbra.server.hostname}"/>
+	<property name="wiki.user.default" value="wiki@${defaultdomain.name}" /><!-- global wiki account -->
 
 	<taskdef resource="net/sf/antcontrib/antlib.xml">
 		<classpath>
@@ -538,37 +539,41 @@
 
 	<target name="reset-the-world-stage1" depends="clean,jar,init" description="Run when tomcat is stopped." />
 	
-	<target name="reset-the-world-stage2" depends="service-deploy,import-wiki-templates,inject" description="Run when tomcat is running." />
+	<target name="reset-the-world-stage2" depends="service-deploy,import-wiki-templates" description="Run when tomcat is running.">
+		<antcall target="inject">
+			<param name="account-to-inject.email" value="user1@${defaultdomain.name}"/>
+		</antcall>
+	</target>    
 
 	<target name="init" depends="stop-servers,db-init,dir-init,init-opt-zimbra,start-ldap,ldap-load" />
 
 	<target name="inject" depends="compile">
-		<echo>Inserting default contacts: user1@${zimbra.server.hostname}</echo>
+		<echo>Inserting default contacts: ${account-to-inject.email}</echo>
 		<java classname="com.zimbra.common.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
-			<sysproperty key="SAMPLE_USER" value="user1"/>
+			<sysproperty key="SAMPLE_USER" value="${account-to-inject.email}"/>
 			<arg line="-s -f data/soap/samplecontacts.xml" />
 		</java>
-		<echo>Creating default search folders: user1@${zimbra.server.hostname}</echo>
+		<echo>Creating default search folders: ${account-to-inject.email}</echo>
 		<java classname="com.zimbra.common.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
-			<sysproperty key="SAMPLE_USER" value="user1"/>
+			<sysproperty key="SAMPLE_USER" value="${account-to-inject.email}"/>
 			<arg line="-s -f data/soap/samplesearchfolders.xml" />
 		</java>
 		<echo message="Wait for lmtp host=${lmtp.host} port=${lmtp.port}" />
 		<waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
 			<socket server="${lmtp.host}" port="${lmtp.port}" />
 		</waitfor>
-		<echo>LmtpInject messages</echo>
+		<echo>LmtpInject messages for ${account-to-inject.email}</echo>
 		<java classname="com.zimbra.cs.lmtpserver.utils.LmtpInject" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r user1@${zimbra.server.hostname} -s ho@example.zimbra.com -d" />
+			<arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r ${account-to-inject.email} -s ho@example.zimbra.com -d" />
 			<arg path="data/TestMailRaw" />
 		</java>
-		<echo>Importing Wiki documents for user1</echo>
+		<echo>Importing Wiki documents for ${account-to-inject.email}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="impn user1@${zimbra.server.hostname} data/wiki/user1 /" />
+			<arg line="impn ${account-to-inject.email} data/wiki/user1 /" />
 		</java>
-		<echo>Importing files into Briefcase for user1</echo>
+		<echo>Importing files into Briefcase for ${account-to-inject.email}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="impn user1@${zimbra.server.hostname} data/briefcase/user1 Briefcase" />
+			<arg line="impn ${account-to-inject.email} data/briefcase/user1 Briefcase" />
 		</java>
 	</target>
 
@@ -582,14 +587,14 @@
 	<target name="import-wiki-templates" depends="init-wiki">
 		<echo>Importing Wiki templates from ${data.wiki.dir}/Template</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="impn wiki@${zimbra.server.hostname} data/wiki/Template Template" />
+			<arg line="impn ${wiki.user.default} data/wiki/Template Template" />
 		</java>
 	</target>
 
 	<target name="init-wiki">
 		<echo>Initializing wiki@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="in ${wiki.user.default}@${zimbra.server.hostname}" />
+			<arg line="in ${wiki.user.default}" />
 		</java>
 	</target>
 
@@ -740,9 +745,7 @@
 	</target>
 	
 	<target name="zmprov-commands" depends="build-init">
-	    <antcall target="generate-zmprov-commands">
-                <param name="defaultdomain" value="${zimbra.server.hostname}"/>
-        </antcall>
+	    <antcall target="generate-zmprov-commands"/>
 	</target>
     
     <target name="generate-zmprov-commands">
@@ -752,13 +755,13 @@
                zimbra.user
                zimbra.smtp.host
                zimbra.prefGroupMailBy
-               defaultdomain
+               defaultdomain.name
         -->    
 		<echo file="${build.zmprov}">		
 		ModifyConfig zimbraLogHostname ${zimbra.server.hostname}
 		ModifyConfig zimbraRemoteManagementUser ${zimbra.user}
-		ModifyConfig zimbraBackupReportEmailRecipients '"Backup Admin" &lt;user2@${defaultdomain}&gt;'
-		ModifyConfig zimbraBackupReportEmailSender '"Backup Daemon" &lt;admin@${defaultdomain}&gt;'
+		ModifyConfig zimbraBackupReportEmailRecipients '"Backup Admin" &lt;user2@${defaultdomain.name}&gt;'
+		ModifyConfig zimbraBackupReportEmailSender '"Backup Daemon" &lt;admin@${defaultdomain.name}&gt;'
 		CreateServer ${zimbra.server.hostname} \
 			zimbraSmtpHostname ${zimbra.smtp.host} \
 			zimbraMailPort 7070 \
@@ -772,17 +775,17 @@
 			zimbraServiceEnabled ldap \
 			zimbraServiceEnabled mta \
 			zimbraServiceEnabled mailbox
-		cd ${defaultdomain}
-		mcf zimbraDefaultDomainName ${defaultdomain}
+		cd ${defaultdomain.name}
+		mcf zimbradefaultdomain.nameName ${defaultdomain.name}
 		mc default zimbraFeatureIMEnabled FALSE
-		ca admin@${defaultdomain} test123 \
+		ca admin@${defaultdomain.name} test123 \
 			zimbraMailHost ${zimbra.server.hostname} \
 			cn 'Administrator' displayName 'Administrator' \
 			zimbraIsAdminAccount TRUE \
 			zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
 			zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
 			telephoneNumber '+1 650 555 0000'
-		ca user1@${defaultdomain} test123 \
+		ca user1@${defaultdomain.name} test123 \
 			zimbraMailHost ${zimbra.server.hostname} \
 			cn 'Demo User One' \
 			displayName 'Demo User One' \
@@ -791,7 +794,7 @@
 			zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
             zimbraPrefMailPollingInterval 12h \
 			telephoneNumber '+1 650 555 1111'
-		ca user2@${defaultdomain} test123 \
+		ca user2@${defaultdomain.name} test123 \
 			zimbraMailHost ${zimbra.server.hostname} \
 			cn 'Demo User Two' \
 			displayName 'Demo User Two' \
@@ -799,7 +802,7 @@
 			zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
             zimbraPrefMailPollingInterval 12h \
 			telephoneNumber '+1 650 555 2222'
-		ca user3@${defaultdomain} test123 \
+		ca user3@${defaultdomain.name} test123 \
 			zimbraMailHost ${zimbra.server.hostname} \
 			cn 'Demo User Three' \
 			displayName 'Demo User Three' \
@@ -807,7 +810,7 @@
 			zimbraPrefTimeZoneId '(GMT-05.00) Eastern Time (US &amp; Canada)' \
 			zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
 			telephoneNumber '+1 650 555 3333'
-		ca user4@${defaultdomain} test123 \
+		ca user4@${defaultdomain.name} test123 \
 			zimbraMailHost ${zimbra.server.hostname} \
 			cn 'Demo User Four' \
 			displayName 'Demo User Four' \
@@ -815,7 +818,7 @@
 			zimbraPrefTimeZoneId '(GMT-07.00) Arizona' \
 			zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
 			telephoneNumber '+1 650 555 4444'
-		ca user5@${defaultdomain} test123 \
+		ca user5@${defaultdomain.name} test123 \
 			zimbraMailHost ${zimbra.server.hostname} \
 			cn 'Demo User Five' \
 			displayName 'Demo User Five' \
@@ -859,19 +862,19 @@
 			zimbraPrefSkin velodrome2 \
             zimbraPortalName velodrome2 \
             telephoneNumber '+1 650 555 5555'
-		ca spam-sink@${defaultdomain} test123 \
+		ca spam-sink@${defaultdomain.name} test123 \
 			zimbraMailHost ${zimbra.server.hostname} \
 			zimbraAttachmentsIndexingEnabled FALSE \
 			zimbraMailQuota 0 \
 			zimbraHideInGal TRUE
-		mcf zimbraSpamIsSpamAccount spam-sink@${defaultdomain}
-		ca ham-sink@${defaultdomain} test123 \
+		mcf zimbraSpamIsSpamAccount spam-sink@${defaultdomain.name}
+		ca ham-sink@${defaultdomain.name} test123 \
 			zimbraMailHost ${zimbra.server.hostname} \
 			zimbraAttachmentsIndexingEnabled FALSE \
 			zimbraMailQuota 0 \
 			zimbraHideInGal TRUE
-		mcf zimbraSpamIsNotSpamAccount ham-sink@${defaultdomain}
-		ccr room-mississippi@${defaultdomain} test123 \
+		mcf zimbraSpamIsNotSpamAccount ham-sink@${defaultdomain.name}
+		ccr room-mississippi@${defaultdomain.name} test123 \
 					       displayName 'Mississippi Conference Room' \
 						   description 'Projector, DVD' \
 						   zimbraNotes 'The door squeaks.' \
@@ -886,7 +889,7 @@
 						   zimbraCalResRoom 1101 \
 						   zimbraCalResCapacity 10 \
 						   zimbraCalResContactName 'Administrator' \
-						   zimbraCalResContactEmail admin@${defaultdomain} \
+						   zimbraCalResContactEmail admin@${defaultdomain.name} \
 						   zimbraCalResContactPhone '(650)555-1212' \
 						   street '1500 Fashion Island Blvd., Suite 100' \
 						   l 'San Mateo' \
@@ -895,7 +898,7 @@
 						   co USA \
 					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
 					       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
-		ccr room-amazon@${defaultdomain} test123 \
+		ccr room-amazon@${defaultdomain.name} test123 \
 					       displayName 'Amazon Conference Room' \
 						   description 'TV, VCR; room is always available' \
 					       zimbraNotes 'A/C not working well' \
@@ -910,11 +913,11 @@
 						   zimbraCalResRoom 1202 \
 						   zimbraCalResCapacity 20 \
 						   zimbraCalResContactName 'Administrator' \
-						   zimbraCalResContactEmail admin@${defaultdomain} \
+						   zimbraCalResContactEmail admin@${defaultdomain.name} \
 						   zimbraCalResContactPhone '(650)555-1212' \
 					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
 					       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
-		ccr room-nile@${defaultdomain} test123 \
+		ccr room-nile@${defaultdomain.name} test123 \
 					       displayName 'Nile Conference Room' \
 						   description 'Projector; for single meetings only' \
 						   zimbraNotes 'need to get some more chairs in here' \
@@ -929,11 +932,11 @@
 						   zimbraCalResRoom B201 \
 						   zimbraCalResCapacity 100 \
 						   zimbraCalResContactName 'Administrator' \
-						   zimbraCalResContactEmail admin@${defaultdomain} \
+						   zimbraCalResContactEmail admin@${defaultdomain.name} \
 						   zimbraCalResContactPhone '(650)555-1212' \
 					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
 					       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
-		ccr projector1@${defaultdomain} test123 \
+		ccr projector1@${defaultdomain.name} test123 \
 					       displayName 'Projector' \
 						   description '800x600 max resolution' \
 						   zimbraNotes 'usually works okay' \
@@ -947,11 +950,11 @@
 						   zimbraCalResFloor B2 \
 						   zimbraCalResRoom B201 \
 						   zimbraCalResContactName 'Administrator' \
-						   zimbraCalResContactEmail admin@${defaultdomain} \
+						   zimbraCalResContactEmail admin@${defaultdomain.name} \
 						   zimbraCalResContactPhone '(650)555-1212' \
 					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
 					       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
-		ccr pencil1@${defaultdomain} test123 \
+		ccr pencil1@${defaultdomain.name} test123 \
 					       displayName '#2 pencil' \
 						   description 'a writing tool' \
 					       zimbraNotes 'must occasionally be sharpened' \
@@ -965,11 +968,11 @@
 					       postalCode 94404 \
 					       co USA \
 						   zimbraCalResContactName 'Administrator' \
-						   zimbraCalResContactEmail admin@${defaultdomain} \
+						   zimbraCalResContactEmail admin@${defaultdomain.name} \
 						   zimbraCalResContactPhone '(650)555-1212' \
 					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
 					       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
-		ca wiki@${defaultdomain} test123 \
+		ca wiki@${defaultdomain.name} test123 \
 			zimbraMailHost ${zimbra.server.hostname} \
 			zimbraMailQuota 0
 		</echo>
@@ -985,53 +988,25 @@
 		<!-- child accounts -->
 		<for list="1,2,3" param="idx">
 			<sequential>
-				<echo file="${family.delete}" append="true">da family-child@{idx}-visible@${zimbra.server.hostname}
+				<echo file="${family.delete}" append="true">da family-child@{idx}-visible@${defaultdomain.name}
 				</echo>
 			</sequential>	
 		</for>
 		<for list="4,5,6" param="idx">
 			<sequential>
-				<echo file="${family.delete}" append="true">da family-child@{idx}-invisible@${zimbra.server.hostname}
+				<echo file="${family.delete}" append="true">da family-child@{idx}-invisible@${defaultdomain.name}
 				</echo>
 			</sequential>	
 		</for>
 			
 		<!-- parent account -->
 		<echo file="${family.delete}" append="true">
-			da family-parent@${zimbra.server.hostname}
+			da family-parent@${defaultdomain.name}
 		</echo>
 			
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true" output="${family.delete.out}">
 			<arg line="-l -f ${family.delete}" />
 		</java>
-	</target>
-	
-	<target name="inject-account" depends="compile">
-		<echo>Inserting contacts for ${accountToInject}</echo>
-		<java classname="com.zimbra.common.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
-			<sysproperty key="SAMPLE_USER" value="${accountToInject}"/>
-			<arg line="-s -f data/soap/samplecontacts.xml" />
-		</java>
-		<echo>Creating search folders for ${accountToInject}</echo>
-		<java classname="com.zimbra.common.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
-			<sysproperty key="SAMPLE_USER" value="${accountToInject}"/>
-			<arg line="-s -f data/soap/samplesearchfolders.xml" />
-		</java>
-		<echo message="Wait for lmtp host=${lmtp.host} port=${lmtp.port}" />
-		<waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
-			<socket server="${lmtp.host}" port="${lmtp.port}" />
-		</waitfor>
-		<echo>LmtpInject messages for ${accountToInject}</echo>
-		<java classname="com.zimbra.cs.lmtpserver.utils.LmtpInject" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r ${accountToInject} -s ho@example.zimbra.com -d" />
-			<arg path="data/TestMailRaw" />
-		</java>
-		<!--
-		<echo>Importing Wiki documents for ${accountToInject}</echo>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="impn ${accountToInject} data/wiki/user1 /" />
-		</java>
-		-->
 	</target>
 	
 	<target name="family-init" depends="compile">
@@ -1040,8 +1015,8 @@
 		
 		<echo>Creating family accounts</echo>
 		<java classname="com.zimbra.common.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
-			<sysproperty key="DOMAIN_NAME" value="${zimbra.server.hostname}"/>
-			<sysproperty key="ADMIN_USER" value="admin@${zimbra.server.hostname}"/>
+			<sysproperty key="DOMAIN_NAME" value="${defaultdomain.name}"/>
+			<sysproperty key="ADMIN_USER" value="admin@${defaultdomain.name}"/>
 			<sysproperty key="ADMIN_PASSWORD" value="test123"/>
 			<arg line="-s -d -f data/soap/samplefamilyaccounts.xml"/>
 		</java>
@@ -1049,8 +1024,8 @@
 		<!-- inject test data for family parent and child -->
 		<for list="family-parent,family-child1-visible" param="accountName">
 			<sequential>
-				<antcall target="inject-account">
-					<param name="accountToInject" value="@{accountName}@${zimbra.server.hostname}"/>
+				<antcall target="inject">
+					<param name="account-to-inject.email" value="@{accountName}@${defaultdomain.name}"/>
 				</antcall>	
 			</sequential>	
 		</for>
