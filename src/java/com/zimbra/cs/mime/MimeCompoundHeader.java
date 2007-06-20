@@ -165,10 +165,10 @@ public class MimeCompoundHeader {
                 if (c == ';') {
                     rfc2231.saveParameter(mParams);
                     rfc2231.setState(RFC2231State.PARAM);
-                } if (c == '"') {
+                } else if (c == '"') {
                     escaped = false;
                     rfc2231.setState(RFC2231State.QVALUE);
-                } else {
+                } else if (c != ' ' && c != '\t') {
                     rfc2231.addValueChar(c);
                     rfc2231.setState(RFC2231State.VALUE);
                 }
@@ -374,6 +374,8 @@ public class MimeCompoundHeader {
     public static void main(String[] args) {
         MimeCompoundHeader mch;
         mch = new ContentType("text/plain; charset=US-ASCII;\r\n\tFormat=Flowed   DelSp=Yes\r\n");
+        System.out.println(mch.toString("Content-Type"));
+        mch = new ContentType("multipart/mixed; boundary = b3fc527b43a7956f5ee764f45e37c7490\r\n");
         System.out.println(mch.toString("Content-Type"));
 
         mch = new ContentDisposition("   \n  INline;\n filename=\"=?utf-8?Q?=E3=82=BD=E3=83=AB=E3=83=86=E3=82=A3=E3=83=AC=E3=82=A4.rtf?=\"\n  \n ", false);
