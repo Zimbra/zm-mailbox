@@ -724,7 +724,7 @@ public class SoapProvisioning extends Provisioning {
      * unsuported
      */
     @Override
-    public MimeTypeInfo getMimeType(String name) throws ServiceException {
+    public List<MimeTypeInfo> getMimeTypes(String name) throws ServiceException {
         throw new UnsupportedOperationException();
     }
 
@@ -732,7 +732,7 @@ public class SoapProvisioning extends Provisioning {
      * unsuported
      */
     @Override
-    public MimeTypeInfo getMimeTypeByExtension(String ext)
+    public List<MimeTypeInfo> getMimeTypesByExtension(String ext)
             throws ServiceException {
         throw new UnsupportedOperationException();
     }

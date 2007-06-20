@@ -29,19 +29,13 @@
  */
 package com.zimbra.cs.mime;
 
-/**
- * @author kchen
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
 public interface MimeTypeInfo {
     
     /**
-     * Gets the mime type
+     * Gets the associated MIME types.
      * @return
      */
-    public String getType();
+    public String[] getTypes();
     
     /**
      * Gets the name of the extension where the handler class is defined.
@@ -75,4 +69,9 @@ public interface MimeTypeInfo {
      */
     public String[] getFileExtensions();
 
+    /**
+     * Gets the priority.  In the case where multiple <tt>MimeTypeInfo</tt>s
+     * match a search, the one with the highest priority wins.
+     */
+    public int getPriority();
 }

@@ -36,57 +36,31 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mime.MimeTypeInfo;
 
-/**
- * @author kchen
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
 class LdapMimeType extends Entry implements LdapEntry, MimeTypeInfo {
 
     private String mDn;
     
-    /**
-     * @param dn
-     * @param attrs
-     * @throws NamingException 
-     */
     LdapMimeType(String dn, Attributes attrs) throws NamingException {
         super(LdapUtil.getAttrs(attrs), null);
         mDn = dn;
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.mime.MimeTypeInfo#getMimeType()
-     */
-    public String getType() {
-        return super.getAttr(Provisioning.A_zimbraMimeType);
+    public String[] getTypes() {
+        return super.getMultiAttr(Provisioning.A_zimbraMimeType);
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.mime.MimeTypeInfo#getHandlerClass()
-     */
     public String getHandlerClass() {
         return super.getAttr(Provisioning.A_zimbraMimeHandlerClass, null);
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.mime.MimeTypeInfo#isIndexingEnabled()
-     */
     public boolean isIndexingEnabled() {
         return super.getBooleanAttr(Provisioning.A_zimbraMimeIndexingEnabled, true);
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.mime.MimeTypeInfo#getDescription()
-     */
     public String getDescription() {
         return super.getAttr(Provisioning.A_description, "");
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.mime.MimeTypeInfo#getFileExtensions()
-     */
     public String[] getFileExtensions() {
         return super.getMultiAttr(Provisioning.A_zimbraMimeFileExtension);
     }
@@ -99,4 +73,7 @@ class LdapMimeType extends Entry implements LdapEntry, MimeTypeInfo {
         return mDn;
     }
 
+    public int getPriority() {
+        return super.getIntAttr(Provisioning.A_zimbraMimePriority, 0);
+    }
 }

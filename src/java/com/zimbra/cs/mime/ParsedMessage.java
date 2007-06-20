@@ -42,6 +42,7 @@ import javax.mail.internet.MailDateFormat;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeUtility;
 
+import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import org.apache.lucene.document.Document;
@@ -622,7 +623,7 @@ public class ParsedMessage {
         if (ctype.startsWith(Mime.CT_MULTIPART_PREFIX))
             return;
 
-        MimeHandler handler = MimeHandler.getMimeHandler(ctype);
+        MimeHandler handler = MimeHandlerManager.getMimeHandler(ctype, mpi.getFilename());
         assert(handler != null);
 
         Mime.repairTransferEncoding(mpi.getMimePart());

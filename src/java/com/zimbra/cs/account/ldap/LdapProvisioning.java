@@ -380,35 +380,43 @@ public class LdapProvisioning extends Provisioning {
         return sConfig;
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Provisioning#getMimeType(java.lang.String)
-     */
-    public synchronized MimeTypeInfo getMimeType(String name) throws ServiceException {
+    public synchronized List<MimeTypeInfo> getMimeTypes(String mimeType) throws ServiceException {
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
-            String dn = mDIT.mimeConfigToDN(name);
-            Attributes attrs = LdapUtil.getAttributes(ctxt, dn);
-            return new LdapMimeType(dn, attrs);
-        } catch (NamingException e) {
+            mimeType = LdapUtil.escapeSearchFilterArg(mimeType);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, "cn=mime," + mDIT.configDN(), "(" + Provisioning.A_zimbraMimeType + "=" + mimeType + ")", sSubtreeSC);
+            List<MimeTypeInfo> mimeTypes = new ArrayList<MimeTypeInfo>();
+            while (ne.hasMore()) {
+                SearchResult sr = (SearchResult) ne.next();
+                mimeTypes.add(new LdapMimeType(sr.getNameInNamespace(), sr.getAttributes()));
+            }
+            ne.close();
+            return mimeTypes;
+        } catch (NameNotFoundException e) {
             return null;
+        } catch (InvalidNameException e) {
+            return null;                        
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to get mime types for " + mimeType, e);
         } finally {
             LdapUtil.closeContext(ctxt);
         }
     }
     
-    public synchronized MimeTypeInfo getMimeTypeByExtension(String ext) throws ServiceException {
+    public synchronized List<MimeTypeInfo> getMimeTypesByExtension(String ext) throws ServiceException {
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
             ext = LdapUtil.escapeSearchFilterArg(ext);
+            List<MimeTypeInfo> mimeTypes = new ArrayList<MimeTypeInfo>();
             NamingEnumeration ne = LdapUtil.searchDir(ctxt, "cn=mime," + mDIT.configDN(), "(" + Provisioning.A_zimbraMimeFileExtension + "=" + ext + ")", sSubtreeSC);
-            if (ne.hasMore()) {
+            while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                ne.close();
-                return new LdapMimeType(sr.getNameInNamespace(), sr.getAttributes());
+                mimeTypes.add(new LdapMimeType(sr.getNameInNamespace(), sr.getAttributes()));
             }
-            return null;
+            ne.close();
+            return mimeTypes;
         } catch (NameNotFoundException e) {
             return null;
         } catch (InvalidNameException e) {
@@ -421,9 +429,6 @@ public class LdapProvisioning extends Provisioning {
         
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Provisioning#getObjectType(java.lang.String)
-     */
     public synchronized List<Zimlet> getObjectTypes() throws ServiceException {
     	return listAllZimlets();
     }

@@ -740,7 +740,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>mail signature style outlook|internet (deprecatedSince 5.0 in identity)</desc>
 </attr>
 
-<attr id="157" name="zimbraMimeType" type="string" cardinality="single" requiredIn="mimeEntry">
+<attr id="157" name="zimbraMimeType" type="string" cardinality="multi" requiredIn="mimeEntry">
   <desc>the MIME type (type/substype)</desc>
 </attr>
 
@@ -2309,6 +2309,13 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="502" name="zimbraAutoSubmittedNullReturnPath" type="boolean" cardinality="single" optionalIn="globalConfig">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Use null return path for envelope MAIL FROM when sending out of office and new mail notifications.  If false, use account address for envelope</desc>
+</attr>
+
+<attr id="503" name="zimbraMimePriority" type="integer" min="0" cardinality="single" optionalIn="mimeEntry">
+  <desc>
+      The priority that this MIME type will be chosen, in the case that more than one
+      MIME type object matches a given type or filename extension.
+  </desc>
 </attr>
 
 </attrs>

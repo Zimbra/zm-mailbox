@@ -478,14 +478,13 @@ public class TestProvisioning extends TestCase {
     private void mimeTest() throws Exception {
         System.out.println("Testing mime");
         
-        MimeTypeInfo mime = mProv.getMimeType("all"); 
-        assertNotNull(mime);
+        List<MimeTypeInfo> mime = mProv.getMimeTypes("all"); 
+        assertEquals(1, mime.size());
         
-        mime = mProv.getMimeTypeByExtension("text");
-        assertNotNull(mime);
+        mime = mProv.getMimeTypesByExtension("text");
+        assertEquals(1, mime.size());
     }
 
-    
     private Server serverTest() throws Exception {
         System.out.println("Testing server");
         

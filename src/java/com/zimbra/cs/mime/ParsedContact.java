@@ -47,6 +47,7 @@ import org.apache.lucene.document.Field;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.convert.ConversionException;
@@ -322,7 +323,7 @@ public class ParsedContact {
     private void analyzeAttachment(Attachment attach, StringBuilder contentText, boolean indexAttachments)
     throws MimeHandlerException, ObjectHandlerException, ServiceException {
         String ctype = attach.getContentType();
-        MimeHandler handler = MimeHandler.getMimeHandler(ctype);
+        MimeHandler handler = MimeHandlerManager.getMimeHandler(ctype, attach.getFilename());
         assert(handler != null);
 
         if (handler.isIndexingEnabled()) {

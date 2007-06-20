@@ -38,6 +38,7 @@ import org.apache.lucene.document.Field;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.FileUtil;
 import com.zimbra.cs.index.Fragment;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.object.ObjectHandlerException;
@@ -74,7 +75,7 @@ public class ParsedDocument {
         mCreator = creator;
 
         try {
-            MimeHandler handler = MimeHandler.getMimeHandler(ctype);
+            MimeHandler handler = MimeHandlerManager.getMimeHandler(ctype, filename);
             assert(handler != null);
 
             if (handler.isIndexingEnabled())

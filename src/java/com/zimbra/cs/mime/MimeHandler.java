@@ -31,33 +31,26 @@ package com.zimbra.cs.mime;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.activation.DataSource;
 
-import org.apache.commons.collections.map.LRUMap;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
-import com.zimbra.cs.account.Provisioning;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.BlobMetaData;
 import com.zimbra.cs.convert.AttachmentInfo;
 import com.zimbra.cs.convert.ConversionException;
-import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.object.MatchedObject;
 import com.zimbra.cs.object.ObjectHandler;
 import com.zimbra.cs.object.ObjectHandlerException;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.BlobMetaData;
-import com.zimbra.common.util.ZimbraLog;
 
 /**
  * @author schemers
@@ -71,109 +64,16 @@ public abstract class MimeHandler {
      * 
      */
     public static final String ARCHIVE_SEQUENCE = "archseq";
-
     public static final String CATCH_ALL_TYPE = "all";
 
-    private static Map<String,HandlerInfo> mHandlers = new HashMap<String,HandlerInfo>();
-
-    /**
-     * maps file extension to its mime type
-     */
-    static final int MAX_EXT_CACHE = 100;
-    private static Map<String,String> mExtToType;
-    static {
-        mExtToType = Collections.synchronizedMap(new LRUMap(MAX_EXT_CACHE));
-    }
-
     protected MimeTypeInfo mMimeTypeInfo;
-
     private String mMessageDigest;
+    private String mFilename;
+    private DataSource mDataSource;
+    private String mContentType;
 
     /** dotted-number part name */
     private String mPartName;
-
-    private String mFilename;
-
-    private DataSource mDataSource;
-
-    /**
-     * Gets a handler based on the specified mime type. If no handler is found, 
-     * then the text/plain handler is returned for text mime types, or the unknown
-     * type handler is returned for other mime types.
-     * 
-     * @param mimeType
-     * @return
-     * @throws MimeHandlerException
-     */
-    public static MimeHandler getMimeHandler(String mimeType)
-    throws MimeHandlerException {
-        MimeHandler handler = null;
-        mimeType = Mime.getContentType(mimeType);
-        HandlerInfo handlerInfo = mHandlers.get(mimeType);
-        if (handlerInfo == null)
-            handlerInfo = loadHandler(mimeType);
-
-        handler = handlerInfo.getInstance();
-        return handler;
-    }
-
-    /**
-     * To be overridden by "catch-all" mime handlers to set the real content type.
-     * @param mimeType
-     */
-    protected void setContentType(String mimeType) {
-        // do nothing
-    }
-
-    /**
-     * @param mimeType
-     * @return
-     */
-    private static synchronized HandlerInfo loadHandler(String mimeType) {
-        HandlerInfo handlerInfo = null;
-        try {
-            MimeTypeInfo mt = Provisioning.getInstance().getMimeType(mimeType);
-            if (mt == null || mt.getHandlerClass() == null) {
-                boolean isTextType = mimeType.matches(Mime.CT_TEXT_WILD) ||
-                mimeType.equalsIgnoreCase(Mime.CT_MESSAGE_RFC822);
-                // All unhandled text types default to text/plain handler.
-                if (isTextType) {
-                    mt = Provisioning.getInstance().getMimeType(Mime.CT_DEFAULT);
-                    ZimbraLog.index.debug("falling back to " + Mime.CT_DEFAULT + " for: " + mimeType);
-                }
-                if (mt == null || mt.getHandlerClass() == null) {
-                    mt = Provisioning.getInstance().getMimeType(CATCH_ALL_TYPE);
-                    assert(mt != null);
-                    if (ZimbraLog.index.isDebugEnabled())
-                        ZimbraLog.index.debug("falling back to catch-all handler (" + 
-                            CATCH_ALL_TYPE + ") for unknown mime type: " + mimeType);
-                }
-            }
-
-            if (mt == null || mt.getHandlerClass() == null) {
-                ZimbraLog.index.warn("no catch-all MIME handler (" + CATCH_ALL_TYPE + ") found");
-            } else {
-                String clazz = mt.getHandlerClass();
-                assert(clazz != null);
-                if (clazz.indexOf('.') == -1)
-                    clazz = "com.zimbra.cs.mime.handler." + clazz;
-                try {
-                    handlerInfo = new HandlerInfo();
-                    handlerInfo.mClass = ExtensionUtil.loadClass(mt.getExtension(), clazz);
-                    handlerInfo.mMimeType = mt;
-                    handlerInfo.mRealMimeType = mimeType;
-                    mHandlers.put(mimeType, handlerInfo);
-                } catch (Exception e) {
-                    if (ZimbraLog.index.isWarnEnabled())
-                        ZimbraLog.index.warn("loadHandler caught exception", e);
-                }
-            }
-        } catch (ServiceException e) {
-            if (ZimbraLog.index.isErrorEnabled())
-                ZimbraLog.index.error("loadHandler caught SQLException", e);
-        } 
-        return handlerInfo;
-    } 
 
     /** Returns <tt>true</tt> if a request for the handler to perform text
      *  extraction or HTML conversion will result in an RPC to an external
@@ -181,8 +81,12 @@ public abstract class MimeHandler {
      *  in-process. */
     protected abstract boolean runsExternally();
 
-    public String getContentType() {
-        return mMimeTypeInfo.getType();
+    protected String getContentType() {
+        return mContentType;
+    }
+    
+    protected void setContentType(String contentType) {
+        mContentType = contentType;
     }
 
     public String getDescription() {
@@ -196,11 +100,10 @@ public abstract class MimeHandler {
     /**
      * Initializes the data source for text extraction.
      * 
-     * @param source
-     * @throws MimeHandlerException
      * @see #getContentImpl()
      * @see #addFields(Document)
      */
+    @SuppressWarnings("unused")
     public void init(DataSource source) throws MimeHandlerException {
         mDataSource = source;
     }
@@ -240,7 +143,7 @@ public abstract class MimeHandler {
      * @param doc
      * @throws MimeHandlerException
      */
-    public abstract void addFields(Document doc) throws MimeHandlerException;
+    protected abstract void addFields(Document doc) throws MimeHandlerException;
 
     /**
      * Gets the text content of the document.
@@ -276,6 +179,7 @@ public abstract class MimeHandler {
 
     protected abstract String getContentImpl() throws MimeHandlerException;
 
+    @SuppressWarnings("unused")
     public ZVCalendar getICalendar() throws MimeHandlerException {
         return null;
     }
@@ -292,7 +196,7 @@ public abstract class MimeHandler {
     public abstract String convert(AttachmentInfo doc, String baseURL) throws IOException, ConversionException;
 
     /**
-     * Deterimines if this handler can process archive files (zip, tar, etc.).
+     * Determines if this handler can process archive files (zip, tar, etc.).
      * 
      * @return true if the handler can handle archive, false otherwise.
      */
@@ -307,13 +211,6 @@ public abstract class MimeHandler {
      */
     public abstract boolean doConversion();
 
-    /**
-     * 
-     * @param doc
-     * @param source
-     * @throws ObjectHandlerException
-     * @throws ServiceException
-     */
     public Document getDocument() throws MimeHandlerException, ObjectHandlerException, ServiceException {
 
         /*
@@ -384,56 +281,8 @@ public abstract class MimeHandler {
             doc.add(new Field(LuceneFields.L_OBJECTS, l_objects.toString(), Field.Store.NO, Field.Index.TOKENIZED));
     }
 
-    private static class HandlerInfo {
-        MimeTypeInfo mMimeType;
-        Class mClass;
-        String mRealMimeType;
-
-        /**
-         * @return
-         */
-        public MimeHandler getInstance() throws MimeHandlerException {
-            MimeHandler handler;
-            try {
-                handler = (MimeHandler) mClass.newInstance();
-            } catch (InstantiationException e) {
-                throw new MimeHandlerException(e);
-            } catch (IllegalAccessException e) {
-                throw new MimeHandlerException(e);
-            }
-            handler.setContentType(mRealMimeType);
-            handler.mMimeTypeInfo = mMimeType;
-            return handler;
-        }
-    }
-
-    /**
-     * @param in
-     * @param seq
-     * @return
-     */
+    @SuppressWarnings("unused")
     public AttachmentInfo getDocInfoFromArchive(AttachmentInfo archiveDocInfo, String seq) throws IOException {
         return null;
-    }
-
-    /**
-     * Returns the content type corresponding to the extension.
-     * 
-     * @param ext
-     * @return
-     */
-    public static String getContentTypeByExtension(String ext) {
-        try {
-            String t = mExtToType.get(ext.toLowerCase());
-            if (t != null)
-                return t;
-            MimeTypeInfo mt = Provisioning.getInstance().getMimeTypeByExtension(ext);
-            t = (mt == null ? CATCH_ALL_TYPE : mt.getType());
-            mExtToType.put(ext.toLowerCase(), t);
-            return t;
-        } catch (ServiceException e) {
-            ZimbraLog.index.error("Cannot get mime type for extension " + ext);
-            return CATCH_ALL_TYPE;
-        }
     }
 }

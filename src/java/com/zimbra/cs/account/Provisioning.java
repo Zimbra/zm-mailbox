@@ -1061,6 +1061,7 @@ public abstract class Provisioning {
     public static final String A_zimbraMimeHandlerClass         = "zimbraMimeHandlerClass";
     public static final String A_zimbraMimeHandlerExtension     = "zimbraMimeHandlerExtension";
     public static final String A_zimbraMimeFileExtension        = "zimbraMimeFileExtension";
+    public static final String A_zimbraMimePriority             = "zimbraMimePriority";
     
     /**
      * Attributes for object type handlers.
@@ -1421,9 +1422,9 @@ public abstract class Provisioning {
 
     public abstract Config getConfig() throws ServiceException;
     
-    public abstract MimeTypeInfo getMimeType(String name) throws ServiceException;
+    public abstract List<MimeTypeInfo> getMimeTypes(String mimeType) throws ServiceException;
     
-    public abstract MimeTypeInfo getMimeTypeByExtension(String ext) throws ServiceException;
+    public abstract List<MimeTypeInfo> getMimeTypesByExtension(String ext) throws ServiceException;
     
     public abstract List<Zimlet> getObjectTypes() throws ServiceException;
     

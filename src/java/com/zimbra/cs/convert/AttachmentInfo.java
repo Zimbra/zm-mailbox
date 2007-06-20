@@ -45,17 +45,17 @@ public class AttachmentInfo {
     private InputStream mInstream;
     private String mContentType;
     private String mPart;
-    private List mSeqInArchive;
+    private List<String> mSeqInArchive;
     private String mDigest;
     private String mFilename;
     
-    public AttachmentInfo(InputStream in, String digest, String ct, String p, String filename, List seq) {
+    public AttachmentInfo(InputStream in, String digest, String ct, String p, String filename, List<String> seq) {
         mInstream = in;
         mDigest = digest;
         mContentType = ct;
         mPart = p;
         mFilename = filename;
-        mSeqInArchive = new ArrayList(seq.size());
+        mSeqInArchive = new ArrayList<String>(seq.size());
         mSeqInArchive.addAll(seq);
     }
     
@@ -70,8 +70,8 @@ public class AttachmentInfo {
     /**
      * @return Returns the Seq ID of a piece of content in the Archive.
      */
-    public List getSeqInArchive() {
-        return new ArrayList(mSeqInArchive);
+    public List<String> getSeqInArchive() {
+        return new ArrayList<String>(mSeqInArchive);
     }
 
     /**
@@ -116,7 +116,7 @@ public class AttachmentInfo {
         buf.append(mPart);
         for (int i = 0; i < mSeqInArchive.size(); i++) {
             buf.append(File.separator);
-            buf.append((String) mSeqInArchive.get(i));
+            buf.append(mSeqInArchive.get(i));
         }
         buf.append(".html");
         return buf.toString();
