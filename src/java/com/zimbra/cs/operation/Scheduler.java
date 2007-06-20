@@ -549,7 +549,7 @@ public class Scheduler {
         
         for (int i = 0; i < Priority.NUM_PRIORITIES; i++)
         {
-            ZimbraLog.op.warn("\t\tPRIORITY "+i+" ==> " + mMaxSimultaneousOperations[i]);
+            ZimbraLog.op.info("\t\tPRIORITY "+i+" ==> " + mMaxSimultaneousOperations[i]);
         }
     }
     
