@@ -449,7 +449,7 @@ public class LmtpHandler extends ProtocolHandler {
                 numDelivered++;
     			sendResponse("250 2.1.5 OK");
     		} else if (status == LmtpStatus.OVERQUOTA) {
-                sendResponse("552 5.2.2 Over quota");
+                sendResponse("452 4.2.2 Over quota");
             } else if (status == LmtpStatus.TRYAGAIN) {
                 sendResponse("451 4.0.0 Temporary message delivery failure try again");
             } else {
