@@ -104,6 +104,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -267,7 +269,7 @@ public class ZMailbox {
     private ZAuthResult mAuthResult;
     private ZContactAutoCompleteCache mAutoCompleteCache;
     private List<ZPhoneAccount> mPhoneAccounts;
-
+    private Map<String, ZPhoneAccount> mPhoneAccountMap;
     private long mSize;
 
     private List<ZEventHandler> mHandlers = new ArrayList<ZEventHandler>();
@@ -3225,14 +3227,22 @@ public class ZMailbox {
     public synchronized List<ZPhoneAccount> getAllPhoneAccounts() throws ServiceException {
         if (mPhoneAccounts == null) {
             mPhoneAccounts = new ArrayList<ZPhoneAccount>();
-            XMLElement req = new XMLElement(VoiceConstants.GET_VOICE_FOLDER_REQUEST);
+            mPhoneAccountMap = new HashMap<String, ZPhoneAccount>(); 
+            XMLElement req = new XMLElement(VoiceConstants.GET_VOICE_INFO_REQUEST);
             Element response = invoke(req);
             List<Element> phoneElements = response.listElements(VoiceConstants.E_PHONE);
             for (Element element : phoneElements) {
-                 mPhoneAccounts.add(new ZPhoneAccount(element));
+                ZPhoneAccount account = new ZPhoneAccount(element, this);
+                mPhoneAccounts.add(account);
+                mPhoneAccountMap.put(account.getPhone().getName(), account);
             }
         }
         return mPhoneAccounts;
+    }
+
+    public ZPhoneAccount getPhoneAccount(String name) throws ServiceException {
+        getAllPhoneAccounts(); // Make sure they're loaded.
+        return mPhoneAccountMap.get(name);
     }
 
     public String uploadVoiceMail(String phone, String id) throws ServiceException {
@@ -3242,6 +3252,87 @@ public class ZMailbox {
         actionEl.addAttribute(VoiceConstants.A_PHONE, phone);
         Element response = invoke(req);
         return response.getElement(VoiceConstants.E_UPLOAD).getAttribute(MailConstants.A_ID);
+    }
+
+    public void loadCallFeatures(ZCallFeatures features) throws ServiceException {
+        XMLElement req = new XMLElement(VoiceConstants.GET_VOICE_FEATURES_REQUEST);
+        Element phoneEl = req.addElement(VoiceConstants.E_PHONE);
+        phoneEl.addAttribute(MailConstants.A_NAME, features.getPhone().getName());
+        String[] allNames = features.getCallFeatureNames();
+        for (String name : allNames) {
+            ZCallFeature feature = features.findCallFeature(name);
+            if (feature.getIsSubscribed()) {
+                phoneEl.addElement(name);
+            }
+        }
+        Element response = invoke(req);
+
+        phoneEl = response.getElement(VoiceConstants.E_PHONE);
+        for (String name : allNames) {
+            Element element = phoneEl.getElement(name);
+            if (VoiceConstants.E_VOICE_MAIL_PREFS.equals(name)) {
+                List<Element> voicePrefs = element.listElements(VoiceConstants.E_PREF);
+                for (Element voicePref : voicePrefs) {
+                    String voicePrefName = voicePref.getAttribute(MailConstants.A_NAME);
+                    ZCallFeature feature = features.findCallFeature(voicePrefName);
+                    if (feature != null) {
+                        feature.setText(voicePref.getText());
+                    }
+                }
+            } else {
+                ZCallFeature feature = features.findCallFeature(name);
+                Iterator<Element.Attribute> iter = element.attributeIterator();
+                while (iter.hasNext()) {
+                    Element.Attribute attribute = iter.next();
+                    String key = attribute.getKey();
+                    String value = attribute.getValue();
+                    if (VoiceConstants.A_ACTIVE.equals(key)) {
+                        feature.setIsActive(Element.parseBool(key, value));
+                    } else {
+                        feature.setData(key, value);
+                    }
+                }
+            }
+        }
+    }
+
+    public void saveCallFeatures(ZCallFeatures newFeatures) throws ServiceException {
+        // Build up the soap request.
+        XMLElement req = new XMLElement(VoiceConstants.MODIFY_VOICE_FEATURES_REQUEST);
+        Element phoneEl = req.addElement(VoiceConstants.E_PHONE);
+        phoneEl.addAttribute(MailConstants.A_NAME, newFeatures.getPhone().getName());
+        Collection<ZCallFeature> list = newFeatures.getFeatureList();
+        Element voiceMailPrefsNode = null;
+        for (ZCallFeature newFeature : list) {
+            if (newFeature.getIsVoiceMailPref()) {
+                if (voiceMailPrefsNode == null) {
+                    voiceMailPrefsNode = phoneEl.addElement(VoiceConstants.E_VOICE_MAIL_PREFS);
+                }
+                Element element = voiceMailPrefsNode.addElement(VoiceConstants.E_PREF);
+                element.setText(newFeature.getText());
+                element.addAttribute(MailConstants.A_NAME, newFeature.getName());
+            } else {
+                Element element = phoneEl.addElement(newFeature.getName());
+                element.addAttribute(VoiceConstants.A_SUBSCRIBED, true);
+                element.addAttribute(VoiceConstants.A_ACTIVE, newFeature.getIsActive());
+                Map<String, String> data = newFeature.getData();
+                for (String key : data.keySet()) {
+                    Element subEl = element.addElement(key);
+                    subEl.setText(newFeature.getData(key));
+                }
+            }
+        }
+        invoke(req);
+
+        // Update succeeded...copy new data into cache.
+        ZPhoneAccount account = getPhoneAccount(newFeatures.getPhone().getName());
+        ZCallFeatures oldFeatures = account.getCallFeatures();
+        synchronized (oldFeatures) {
+            for (ZCallFeature newFeature : list) {
+                ZCallFeature oldFeature = oldFeatures.getCallFeature(newFeature.getName());
+                oldFeature.assignFrom(newFeature);
+            }
+        }
     }
 
     public ZActionResult trashVoiceMail(String phone, String id) throws ServiceException {

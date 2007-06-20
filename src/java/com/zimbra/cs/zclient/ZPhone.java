@@ -40,26 +40,41 @@ public class ZPhone {
 	}
 
 	public String getDisplay() {
+		return ZPhone.getDisplay(mName);
+	}
+	
+	public static String getDisplay(String name) {
         // Handles familiar usa-style numbers only for now...
         int offset = 0;
         boolean doIt = false;
-        if (mName.length() == 10) {
+        if (name.length() == 10) {
             doIt = true;
-        } else if ((mName.length() == 11) && (mName.charAt(0) == '1')) {
+        } else if ((name.length() == 11) && (name.charAt(0) == '1')) {
             doIt = true;
             offset = 1;
         }
         if (doIt) {
             StringBuilder builder = new StringBuilder();
             builder.append('(');
-            builder.append(mName, offset, offset + 3);
+            builder.append(name, offset, offset + 3);
             builder.append(") ");
-            builder.append(mName, offset + 3, offset + 6);
+            builder.append(name, offset + 3, offset + 6);
             builder.append('-');
-            builder.append(mName, offset + 6, offset + 10);
+            builder.append(name, offset + 6, offset + 10);
             return builder.toString();
         } else {
-            return mName;
+            return name;
         }
 	}
+
+    public static String getName(String display) {
+        StringBuilder builder = new StringBuilder(display.length());
+        for (int i = 0, count = display.length(); i < count; i++) {
+            char ch = display.charAt(i);
+            if (Character.isDigit(ch)) {
+                builder.append(ch);
+            }
+        }
+        return builder.toString();
+    }
 }
