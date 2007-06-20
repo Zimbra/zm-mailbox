@@ -128,11 +128,11 @@ public class MimeCompoundHeader {
             } else if (rfc2231.state == RFC2231State.QVALUE) {
                 if (!escaped && c == '\\') {
                     escaped = true;
-                } else if (escaped || c != '"') {
-                    rfc2231.addValueChar(c);  escaped = false;
-                } else if (c != '\n' && c != '\r') {
+                } else if (!escaped && c == '"') {
                     rfc2231.saveParameter(mParams);
                     rfc2231.setState(RFC2231State.SLOP);
+                } else if (c != '\n' && c != '\r') {
+                    rfc2231.addValueChar(c);  escaped = false;
                 }
             } else if (c == '\r' || c == '\n') {
                 if (!mParams.isEmpty() || rfc2231.value.length() > 0) {
@@ -383,6 +383,9 @@ public class MimeCompoundHeader {
         mch = new ContentDisposition("   \n  gropp;\n filename*=UTF-8''%E3%82%BD%E3%83%AB%E3%83%86%E3%82%A3%E3%83%AC%E3%82%A4.rtf\n  \n ", true);
         System.out.println(mch.toString("Content-Disposition"));
         mch = new ContentDisposition(mch.toString());
+        System.out.println(mch.toString("Content-Disposition"));
+
+        mch = new ContentDisposition("attachment; filename=\"Ramkumar Venkatesan (resume\n  #21730).DOC\"\n");
         System.out.println(mch.toString("Content-Disposition"));
 
         mch = new ContentType("application/x-stuff; title*0*=us-ascii'en'This%20is%20even%20more%20; title*1*=%2A%2A%2Afun%2A%2A%2A%20; title*2=\"isn't it!\"\n");
