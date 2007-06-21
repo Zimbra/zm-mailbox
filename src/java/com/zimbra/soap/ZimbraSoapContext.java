@@ -471,8 +471,12 @@ public class ZimbraSoapContext {
 
     public SoapProtocol getRequestProtocol()   { return mRequestProtocol; }
     public SoapProtocol getResponseProtocol()  { return mResponseProtocol; }
+
     public Element createElement(String name)  { return mResponseProtocol.getFactory().createElement(name); }
     public Element createElement(QName qname)  { return mResponseProtocol.getFactory().createElement(qname); }
+
+    public Element createRequestElement(String name)  { return mRequestProtocol.getFactory().createElement(name); }
+    public Element createRequestElement(QName qname)  { return mRequestProtocol.getFactory().createElement(qname); }
 
     /** Returns the parsed {@link AuthToken} for this SOAP request.  This can
      *  come either from an HTTP cookie attached to the SOAP request or from

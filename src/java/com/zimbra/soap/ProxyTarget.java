@@ -97,10 +97,11 @@ public class ProxyTarget {
     }
 
     public Element dispatch(Element request) throws ServiceException {
+        SoapProtocol proto = request instanceof Element.JSONElement ? SoapProtocol.SoapJS : SoapProtocol.Soap12;
         SoapHttpTransport transport = new SoapHttpTransport(mURL);
         try {
             transport.setAuthToken(mAuthToken);
-            transport.setSoapProtocol(request instanceof Element.JSONElement ? SoapProtocol.SoapJS : SoapProtocol.Soap12);
+            transport.setSoapProtocol(proto);
             return transport.invokeWithoutSession(request);
         } catch (IOException e) {
             throw ServiceException.PROXY_ERROR(e, mURL);
@@ -109,15 +110,19 @@ public class ProxyTarget {
         }
     }
 
-    public Element dispatch(Element request, ZimbraSoapContext lc) throws ServiceException {
-        if (lc == null)
+    public Element dispatch(Element request, ZimbraSoapContext zsc) throws ServiceException {
+        if (zsc == null)
             return dispatch(request);
+
+        SoapProtocol proto = request instanceof Element.JSONElement ? SoapProtocol.SoapJS : SoapProtocol.Soap12;
+        if (proto == SoapProtocol.Soap12 && zsc.getRequestProtocol() == SoapProtocol.Soap11)
+            proto = SoapProtocol.Soap11;
+        Element envelope = proto.soapEnvelope(request, zsc.toProxyCtxt());
 
         Element response = null;
         SoapHttpTransport transport = null;
         try {
             transport = new SoapHttpTransport(mURL);
-            Element envelope = lc.getRequestProtocol().soapEnvelope(request, lc.toProxyCtxt());
             response = transport.invokeRaw(envelope);
             response = transport.extractBodyElement(response);
         } catch (IOException e) {

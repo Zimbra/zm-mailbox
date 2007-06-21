@@ -44,7 +44,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
-import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -59,17 +58,17 @@ public class CreateMountpoint extends MailDocumentHandler {
     protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
-        Mailbox.OperationContext octxt = lc.getOperationContext();
-        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zsc);
+        Mailbox.OperationContext octxt = zsc.getOperationContext();
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         Element t = request.getElement(MailConstants.E_MOUNT);
         String name = t.getAttribute(MailConstants.A_NAME);
         String view = t.getAttribute(MailConstants.A_DEFAULT_VIEW, null);
         String flags = t.getAttribute(MailConstants.A_FLAGS, null);
         byte color = (byte) t.getAttributeLong(MailConstants.A_COLOR, MailItem.DEFAULT_COLOR);
-        ItemId iidParent = new ItemId(t.getAttribute(MailConstants.A_FOLDER), lc);
+        ItemId iidParent = new ItemId(t.getAttribute(MailConstants.A_FOLDER), zsc);
         boolean fetchIfExists = t.getAttributeBool(MailConstants.A_FETCH_IF_EXISTS, false);
 
         Account target = null;
@@ -85,7 +84,7 @@ public class CreateMountpoint extends MailDocumentHandler {
         int remoteId  = (int) t.getAttributeLong(MailConstants.A_REMOTE_ID, -1);
         if (remoteId == -1) {
             String remotePath = t.getAttribute(MailConstants.A_PATH);
-            remoteId = resolveRemotePath(lc, context, ownerId, remotePath).getId();
+            remoteId = resolveRemotePath(zsc, context, ownerId, remotePath).getId();
             if (remoteId == -1)
                 throw MailServiceException.NO_SUCH_FOLDER(remotePath);
         }
@@ -105,18 +104,18 @@ public class CreateMountpoint extends MailDocumentHandler {
                 throw se;
         }
 
-        Element response = lc.createElement(MailConstants.CREATE_MOUNTPOINT_RESPONSE);
+        Element response = zsc.createElement(MailConstants.CREATE_MOUNTPOINT_RESPONSE);
         if (mpt != null)
             ToXML.encodeMountpoint(response, ifmt, mpt);
         return response;
     }
 
-    private ItemId resolveRemotePath(ZimbraSoapContext lc, Map<String, Object> context, String ownerId, String remotePath) throws ServiceException {
-        Element request = lc.createElement(MailConstants.GET_FOLDER_REQUEST);
+    private ItemId resolveRemotePath(ZimbraSoapContext zsc, Map<String, Object> context, String ownerId, String remotePath) throws ServiceException {
+        Element request = zsc.createRequestElement(MailConstants.GET_FOLDER_REQUEST);
         request.addElement(MailConstants.E_FOLDER).addAttribute(MailConstants.A_PATH, remotePath);
 
         Element response = proxyRequest(request, context, ownerId);
         String id = response.getElement(MailConstants.E_FOLDER).getAttribute(MailConstants.A_ID);
-        return new ItemId(id, lc);
+        return new ItemId(id, zsc);
     }
 }
