@@ -62,9 +62,11 @@ import com.zimbra.common.util.HttpUtil;
 public class NativeFormatter extends Formatter {
     
     private static final String CONVERSION_PATH = "/extension/convertd";
-    public static final String ATTR_MIMEPART   = "mimepart";
+    public static final String ATTR_INPUTSTREAM = "inputstream";
     public static final String ATTR_MSGDIGEST  = "msgdigest";
+    public static final String ATTR_FILENAME  = "filename";
     public static final String ATTR_CONTENTURL = "contenturl";
+    public static final String ATTR_CONTENTTYPE = "contenttype";
 
     public static final String FMT_NATIVE = "native";
 
@@ -144,6 +146,8 @@ public class NativeFormatter extends Formatter {
         }
     }
 
+    private static final String HTML_VIEW = "html";
+    
     private void handleMessagePart(Context context, MimePart mp, MailItem item) throws IOException, MessagingException, ServletException {
         if (mp == null) {
             context.resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "part not found");
@@ -152,25 +156,33 @@ public class NativeFormatter extends Formatter {
             if (contentType == null)
                 contentType = Mime.CT_APPLICATION_OCTET_STREAM;
             boolean html = checkGlobalOverride(Provisioning.A_zimbraAttachmentsViewInHtmlOnly, context.authAccount) ||
-                            (context.hasView() && context.getView().equals("html"));
+                            (context.hasView() && context.getView().equals(HTML_VIEW));
             if (!html) {
-                sendbackOriginalDoc(mp, contentType, context.req, context.resp);
+            	sendbackOriginalDoc(mp, contentType, context.req, context.resp);
             } else {
-                context.req.setAttribute(ATTR_MIMEPART, mp);
-                context.req.setAttribute(ATTR_MSGDIGEST, item.getDigest());
-                context.req.setAttribute(ATTR_CONTENTURL, context.req.getRequestURL().toString());
-                RequestDispatcher dispatcher = context.req.getRequestDispatcher(CONVERSION_PATH);
-                dispatcher.forward(context.req, context.resp);
+            	handleConversion(context, mp.getInputStream(), Mime.getFilename(mp), mp.getContentType(), item.getDigest());
             }
-//            sendbackOriginalDoc(mp, contentType, context.req, context.resp);
-            return;
         }
     }
     
-    private void handleDocument(Context context, Document doc) throws IOException, ServiceException {
+    private void handleDocument(Context context, Document doc) throws IOException, ServiceException, ServletException {
+    	if (HTML_VIEW.equals(context.getView())) {
+    		handleConversion(context, doc.getRawDocument(), doc.getName(), doc.getContentType(), doc.getDigest());
+    		return;
+    	}
     	context.resp.setContentType(doc.getContentType());
     	InputStream is = doc.getLastRevision().getContent();
     	ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
+    }
+    
+    private void handleConversion(Context ctxt, InputStream is, String filename, String ct, String digest) throws IOException, ServletException {
+        ctxt.req.setAttribute(ATTR_INPUTSTREAM, is);
+        ctxt.req.setAttribute(ATTR_MSGDIGEST, digest);
+        ctxt.req.setAttribute(ATTR_FILENAME, filename);
+        ctxt.req.setAttribute(ATTR_CONTENTTYPE, ct);
+        ctxt.req.setAttribute(ATTR_CONTENTURL, ctxt.req.getRequestURL().toString());
+        RequestDispatcher dispatcher = ctxt.req.getRequestDispatcher(CONVERSION_PATH);
+        dispatcher.forward(ctxt.req, ctxt.resp);
     }
     
     public static MimePart getMimePart(CalendarItem calItem, String part) throws IOException, MessagingException, ServiceException {
