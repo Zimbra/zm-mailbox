@@ -1322,7 +1322,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             return CONTINUE_PROCESSING;
 
         try {
-            long quota = mMailbox.getAccount().getIntAttr(Provisioning.A_zimbraMailQuota, 0);
+            long quota = mMailbox.getAccount().getLongAttr(Provisioning.A_zimbraMailQuota, 0);
             if (qroot == null || !qroot.equals("") || quota <= 0) {
                 ZimbraLog.imap.info("GETQUOTA failed: unknown quota root: %s", qroot);
                 sendNO(tag, "GETQUOTA failed: unknown quota root");
