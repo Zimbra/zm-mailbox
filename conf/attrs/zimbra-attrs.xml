@@ -2319,11 +2319,13 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
     
-<attr id="504" name="zimbraReverseProxyLookupTarget" type="boolean" cardinality="single" optionalIn="server">
+<attr id="504" name="zimbraReverseProxyLookupTarget" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether this server is a reverse proxy lookup target</desc>
 </attr>
     
-<attr id="505" name="zimbraMtaAuthTarget" type="boolean" cardinality="single" optionalIn="server">
+<attr id="505" name="zimbraMtaAuthTarget" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether this server is a mta auth target</desc>
 </attr>   
      
