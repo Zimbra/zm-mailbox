@@ -46,8 +46,10 @@ public class ZVoiceMailItemHit implements ZSearchHit {
         mSortField = e.getAttribute(MailConstants.A_SORT_FIELD, null);
         mScore = (float) e.getAttributeDouble(MailConstants.A_SCORE, 0);
         mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
-        Element content = e.getElement(MailConstants.E_CONTENT);
-        mSoundUrl = content.getAttribute(MailConstants.A_URL);
+        Element content = e.getOptionalElement(MailConstants.E_CONTENT);
+        if (content != null) {
+            mSoundUrl = content.getAttribute(MailConstants.A_URL);
+        }
         mDate = e.getAttributeLong(MailConstants.A_DATE);
         mDuration = e.getAttributeLong(VoiceConstants.A_VMSG_DURATION) * 1000;
         for (Element el : e.listElements(VoiceConstants.E_CALLPARTY)) {
