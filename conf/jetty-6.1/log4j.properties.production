@@ -11,5 +11,5 @@ log4j.appender.LOGFILE.File=/opt/zimbra/log/mailbox.log
 log4j.appender.LOGFILE.DatePattern='.'yyyy-MM-dd
 log4j.appender.LOGFILE.Append=true
 log4j.appender.LOGFILE.layout=org.apache.log4j.PatternLayout
-log4j.appender.LOGFILE.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
+log4j.appender.LOGFILE.layout.ConversionPattern=%d %-5p [%t] %c{1} - %m%n
 
