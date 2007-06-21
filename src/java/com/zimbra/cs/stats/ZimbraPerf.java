@@ -61,11 +61,6 @@ public class ZimbraPerf {
     private static TaskScheduler<Void> sTaskScheduler = new TaskScheduler<Void>("ZimbraStats", 1, 1);
 
     public static final String RTS_DB_POOL_SIZE = "db_pool_size";
-    public static final String RTS_MYSQL_OPENED_TABLES = "mysql_opened_tables";
-    public static final String RTS_MYSQL_SLOW_QUERIES = "mysql_slow_queries";
-    public static final String RTS_MYSQL_THREADS_CONNECTED = "mysql_threads_connected";
-    public static final String RTS_INNODB_PAGES_READ = "innodb_pages_read";
-    public static final String RTS_INNODB_PAGES_WRITTEN = "innodb_pages_written";
     public static final String RTS_INNODB_BP_HIT_RATE = "innodb_bp_hit_rate";
     
     public static final String RTS_POP_CONN = "pop_conn";
@@ -97,9 +92,7 @@ public class ZimbraPerf {
     
     private static RealtimeStats sRealtimeStats = 
         new RealtimeStats(new String[] {
-            RTS_DB_POOL_SIZE,
-            RTS_MYSQL_OPENED_TABLES, RTS_MYSQL_SLOW_QUERIES, RTS_MYSQL_THREADS_CONNECTED,
-            RTS_INNODB_PAGES_READ, RTS_INNODB_PAGES_WRITTEN, RTS_INNODB_BP_HIT_RATE,
+            RTS_DB_POOL_SIZE, RTS_INNODB_BP_HIT_RATE,
             RTS_POP_CONN, RTS_POP_SSL_CONN, RTS_IMAP_CONN, RTS_IMAP_SSL_CONN 
             }
         );

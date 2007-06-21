@@ -33,21 +33,16 @@ import java.util.regex.Pattern;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.stats.RealtimeStatsCallback;
 import com.zimbra.cs.stats.ZimbraPerf;
 
 /**
  * Callback <code>Accumulator</code> that returns current values for important
  * database statistics.
- *
  */
 class DbStats implements RealtimeStatsCallback {
 
     private static Log sLog = LogFactory.getLog(DbStats.class);
-    private static final Pattern PATTERN_PAGES_RW =
-        Pattern.compile("Pages read (\\d+).*written (\\d+)");
     private static final Pattern PATTERN_BP_HIT_RATE = Pattern.compile("hit rate (\\d+)");
     
     public Map<String, Object> getStatData() {
@@ -55,24 +50,15 @@ class DbStats implements RealtimeStatsCallback {
 
         try {
             data.put(ZimbraPerf.RTS_DB_POOL_SIZE, DbPool.getSize());
-            data.put(ZimbraPerf.RTS_MYSQL_OPENED_TABLES, getStatus("opened_tables"));
-            data.put(ZimbraPerf.RTS_MYSQL_SLOW_QUERIES, getStatus("slow_queries"));
-            data.put(ZimbraPerf.RTS_MYSQL_THREADS_CONNECTED, getStatus("threads_connected"));
             
             // Parse innodb status output
             DbResults results = DbUtil.executeQuery("SHOW INNODB STATUS");
             BufferedReader r = new BufferedReader(new StringReader(results.getString(1)));
             String line = null;
             while ((line = r.readLine()) != null) {
-                Matcher m = PATTERN_PAGES_RW.matcher(line);
-                if (m.matches()) {
-                    data.put(ZimbraPerf.RTS_INNODB_PAGES_READ, m.group(1));
-                    data.put(ZimbraPerf.RTS_INNODB_PAGES_WRITTEN, m.group(2));
-                } else {
-                    m = PATTERN_BP_HIT_RATE.matcher(line);
-                    if (m.find()) {
-                        data.put(ZimbraPerf.RTS_INNODB_BP_HIT_RATE, m.group(1));
-                    }
+                Matcher m = PATTERN_BP_HIT_RATE.matcher(line);
+                if (m.find()) {
+                    data.put(ZimbraPerf.RTS_INNODB_BP_HIT_RATE, m.group(1));
                 }
             }
         } catch (Exception e) {
@@ -80,11 +66,5 @@ class DbStats implements RealtimeStatsCallback {
         }
         
         return data;
-    }
-
-    private String getStatus(String variable)
-    throws ServiceException {
-        DbResults results = DbUtil.executeQuery("SHOW GLOBAL STATUS LIKE '" + variable + "'");
-        return results.getString(2);
     }
 }
