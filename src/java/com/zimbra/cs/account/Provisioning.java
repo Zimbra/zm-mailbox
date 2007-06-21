@@ -543,6 +543,7 @@ public abstract class Provisioning {
     
     public static final String A_zimbraMessageIdDedupeCacheSize = "zimbraMessageIdDedupeCacheSize";
 
+    public static final String A_zimbraMtaAuthTarget = "zimbraMtaAuthTarget";
     public static final String A_zimbraMtaAuthEnabled = "zimbraMtaAuthEnabled";
     public static final String A_zimbraMtaAuthHost = "zimbraMtaAuthHost";
     public static final String A_zimbraMtaAuthURL = "zimbraMtaAuthURL";
@@ -1252,15 +1253,18 @@ public abstract class Provisioning {
     /*
      * proxy
      */
-    public static final String A_zimbraProxyMailHostQuery        = "zimbraProxyMailHostQuery";
-    public static final String A_zimbraProxyMailHostSearchBase   = "zimbraProxyMailHostSearchBase";
-    public static final String A_zimbraProxyMailHostAttribute    = "zimbraProxyMailHostAttribute";
-    public static final String A_zimbraProxyPortQuery            = "zimbraProxyPortQuery";
-    public static final String A_zimbraProxyPortSearchBase       = "zimbraProxyPortSearchBase";
-    public static final String A_zimbraProxyPop3PortAttribute    = "zimbraProxyPop3PortAttribute";
-    public static final String A_zimbraProxyPop3SSLPortAttribute = "zimbraProxyPop3SSLPortAttribute";
-    public static final String A_zimbraProxyImapPortAttribute    = "zimbraProxyImapPortAttribute";
-    public static final String A_zimbraProxyImapSSLPortAttribute = "zimbraProxyImapSSLPortAttribute";
+    
+    public static final String A_zimbraReverseProxyLookupTarget         = "zimbraReverseProxyLookupTarget";
+    
+    public static final String A_zimbraReverseProxyMailHostQuery        = "zimbraReverseProxyMailHostQuery";
+    public static final String A_zimbraReverseProxyMailHostSearchBase   = "zimbraReverseProxyMailHostSearchBase";
+    public static final String A_zimbraReverseProxyMailHostAttribute    = "zimbraReverseProxyMailHostAttribute";
+    public static final String A_zimbraReverseProxyPortQuery            = "zimbraReverseProxyPortQuery";
+    public static final String A_zimbraReverseProxyPortSearchBase       = "zimbraReverseProxyPortSearchBase";
+    public static final String A_zimbraReverseProxyPop3PortAttribute    = "zimbraReverseProxyPop3PortAttribute";
+    public static final String A_zimbraReverseProxyPop3SSLPortAttribute = "zimbraReverseProxyPop3SSLPortAttribute";
+    public static final String A_zimbraReverseProxyImapPortAttribute    = "zimbraReverseProxyImapPortAttribute";
+    public static final String A_zimbraReverseProxyImapSSLPortAttribute = "zimbraReverseProxyImapSSLPortAttribute";
 
     /*
      * whether to use <> or account's real address for out of office 

@@ -43,6 +43,8 @@ import com.zimbra.cs.account.Provisioning.SignatureBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.MailboxInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning.QuotaUsage;
+import com.zimbra.cs.extension.ExtensionDispatcherServlet;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.wiki.WikiUtil;
 import com.zimbra.cs.zclient.ZClientException;
@@ -240,6 +242,8 @@ public class ProvUtil implements DebugListener {
         SELECT_MAILBOX("selectMailbox", "sm", "{account-name} [{zmmailbox commands}]", Category.MISC, 1, Integer.MAX_VALUE),        
         SET_ACCOUNT_COS("setAccountCos", "sac", "{name@domain|id} {cos-name|cos-id}", Category.ACCOUNT, 2, 2),
         SET_PASSWORD("setPassword", "sp", "{name@domain|id} {password}", Category.ACCOUNT, 2, 2),
+        GET_ALL_REVERSE_PROXY_URLS("getAllReverseProxyURLs", "garpu", "", Category.SERVER, 0, 0),
+        GET_ALL_MTA_AUTH_URLS("getAllMtaAuthURLs", "gamau", "", Category.SERVER, 0, 0),
         SOAP(".soap", ".s"),
         SYNC_GAL("syncGal", "syg");
 
@@ -610,6 +614,12 @@ public class ProvUtil implements DebugListener {
              } else {
                  throw ZClientException.CLIENT_ERROR("command only valid in interactive mode or with arguments", null);
              }
+            break;
+        case GET_ALL_REVERSE_PROXY_URLS:
+            doGetAllReverseProxyURLs(args);
+            break;
+        case GET_ALL_MTA_AUTH_URLS:
+            doGetAllMtaAuthURLs(args);
             break;
         case SOAP:
             // HACK FOR NOW
@@ -1621,6 +1631,32 @@ public class ProvUtil implements DebugListener {
         params.put("timestamp", timestamp+"");
         params.put("expires", expires+"");
         System.out.printf("account: %s\nby: %s\ntimestamp: %s\nexpires: %s\npreAuth: %s\n", name, by, timestamp, expires,PreAuthKey.computePreAuth(params, preAuthKey));
+    }
+    
+    private void doGetAllReverseProxyURLs(String[] args) throws ServiceException {
+        String REVERSE_PROXY_PROTO = "http://";
+        int REVERSE_PROXY_PORT = 7072;
+        // String REVERSE_PROXY_PATH = "/service/extension/nginx-lookup";
+        String REVERSE_PROXY_PATH = ExtensionDispatcherServlet.EXTENSION_PATH + "/nginx-lookup";
+        
+        List<Server> servers = mProv.getAllServers();
+        for (Server server : servers ) {
+            boolean isTarget = server.getBooleanAttr(Provisioning.A_zimbraReverseProxyLookupTarget, true);
+            if (isTarget) {
+                String serviceName = server.getAttr(Provisioning.A_zimbraServiceHostname, null);
+                System.out.println(REVERSE_PROXY_PROTO + serviceName + ":" + REVERSE_PROXY_PORT + REVERSE_PROXY_PATH);
+            }
+        }
+    }
+    
+    private void doGetAllMtaAuthURLs(String[] args) throws ServiceException {
+        List<Server> servers = mProv.getAllServers();
+        for (Server server : servers ) {
+            boolean isTarget = server.getBooleanAttr(Provisioning.A_zimbraMtaAuthTarget, true);
+            if (isTarget) {
+                System.out.println(URLUtil.getAdminURL(server));
+            }
+        }
     }
 
     private void doHelp(String[] args) {
