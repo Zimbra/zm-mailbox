@@ -44,7 +44,7 @@ The raw output looks like this:
 You can also instruct the server to send back detailed structured javascript by adding fmt=extended to the target url.
 The extended output looks like this:
 
-	<html><head></head><body onload="window.parent._uploadManager.loaded(200,'null',[{"aid":"ee5bc514-7b77-46d6-abc3-b64311086bfa:6e77c556-be42-444a-a87d-5f79dd8db559","filename":"image.jpeg","ct":"image/jpeg"}]);"></body></html>
+	<html><head></head><body onload="window.parent._uploadManager.loaded(200,'client_token',[{"aid":"server_token","filename":"image.jpeg","ct":"image/jpeg"}]);"></body></html>
 
 
 
