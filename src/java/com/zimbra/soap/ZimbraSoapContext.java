@@ -481,8 +481,8 @@ public class ZimbraSoapContext {
                     ((SoapSession) session).putRefresh(ctxt, this);
                 // put <notify> blocks back for any SoapSession objects
                 if (session instanceof SoapSession) {
-                	if (session.getAccountId() != null && session.getMailbox().getAccountId().equals(getRequestedAccountId()))
-                        foundSessionForRequestedAccount = true;
+                	if (session.getMailbox() != null && session.getMailbox().getAccountId().equals(getRequestedAccountId()))
+                		foundSessionForRequestedAccount = true;
                     ((SoapSession) session).putNotifications(this, ctxt, mNotificationSeqNo);
                 }
             }
