@@ -777,7 +777,7 @@
 			zimbraServiceEnabled mta \
 			zimbraServiceEnabled mailbox
 		cd ${defaultdomain.name}
-		mcf zimbradefaultdomain.nameName ${defaultdomain.name}
+		mcf zimbraDefaultDomainName ${defaultdomain.name}
 		mc default zimbraFeatureIMEnabled FALSE
 		ca admin@${defaultdomain.name} test123 \
 			zimbraMailHost ${zimbra.server.hostname} \
