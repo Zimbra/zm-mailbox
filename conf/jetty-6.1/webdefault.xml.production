@@ -143,7 +143,7 @@
     </init-param>
     <init-param>
       <param-name>useFileMappedBuffer</param-name>
-      <param-value>false</param-value>
+      <param-value>true</param-value>
     </init-param>  
     <!--
     <init-param>
