@@ -371,7 +371,7 @@ public class SoapEngine {
                 ZimbraSoapContext.encodeSession(ctxt, session.getSessionId(), session.getSessionType(), false);
 
                 if (session instanceof SoapSession) {
-                    if (session.getMailbox().getAccountId().equals(zsc.getRequestedAccountId()))
+                    if (session.getMailbox() != null && session.getMailbox().getAccountId().equals(zsc.getRequestedAccountId()))
                         foundSessionForRequestedAccount = true;
                     // put <refresh> blocks back for any newly-created SoapSession objects
                     if (sinfo.created)
