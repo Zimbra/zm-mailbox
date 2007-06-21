@@ -3339,6 +3339,11 @@ public class ZMailbox {
         return doAction(voiceAction("move", phone, id, VoiceConstants.FID_TRASH));
     }
 
+    public ZActionResult markVoiceMailHeard(String phone, String id, boolean heard) throws ServiceException {
+        String op = heard ? "read" : "!read";
+        return doAction(voiceAction(op, phone, id, 0));
+    }
+
     private Element voiceAction(String op, String phone, String id, int folderId) {
         XMLElement req = new XMLElement(VoiceConstants.VOICE_MSG_ACTION_REQUEST);
         Element actionEl = req.addElement(MailConstants.E_ACTION);
