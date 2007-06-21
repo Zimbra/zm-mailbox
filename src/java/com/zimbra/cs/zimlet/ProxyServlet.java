@@ -28,7 +28,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
@@ -247,10 +249,10 @@ public class ProxyServlet extends ZimbraServlet {
                 if (filename == null || filename.equals(""))
                     filename = "unknown";
 
-                String attachmentId = null;
+                List<Upload> uploads = null;
                 try {
                     Upload up = FileUploadServlet.saveUpload(method.getResponseBodyAsStream(), filename, contentType, authToken.getAccountId());
-                    attachmentId = up.getId();
+                    uploads = Arrays.asList(up);
                 } catch (ServiceException e) {
                     if (e.getCode().equals(MailServiceException.UPLOAD_REJECTED))
                         status = HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE;
@@ -258,7 +260,7 @@ public class ProxyServlet extends ZimbraServlet {
                         status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
                 }
                 resp.setStatus(status);
-                FileUploadServlet.sendResponse(req, resp, status, req.getParameter(FORMAT_PARAM), null, attachmentId, null);
+                FileUploadServlet.sendResponse(resp, status, req.getParameter(FORMAT_PARAM), null, uploads, null);
             } else {
                 resp.setStatus(status);
                 resp.setContentType(contentType);

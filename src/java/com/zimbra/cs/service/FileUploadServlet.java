@@ -33,6 +33,7 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -73,6 +74,8 @@ import com.zimbra.cs.mime.MimeCompoundHeader.ContentDisposition;
 import com.zimbra.cs.mime.MimeCompoundHeader.ContentType;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.FileUtil;
@@ -327,7 +330,7 @@ public class FileUploadServlet extends ZimbraServlet {
         boolean isAdminRequest = (req.getLocalPort() == adminPort);
         AuthToken at = isAdminRequest ? getAdminAuthTokenFromCookie(req, resp, true) : getAuthTokenFromCookie(req, resp, true);
         if (at == null) {
-            sendResponse(req, resp, HttpServletResponse.SC_UNAUTHORIZED, fmt, null, null, null);
+            sendResponse(resp, HttpServletResponse.SC_UNAUTHORIZED, fmt, null, null, null);
             return;
         }
 
@@ -366,9 +369,8 @@ public class FileUploadServlet extends ZimbraServlet {
     }
 
     private void handleMultipartUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, String accountId) throws IOException, ServiceException {
-        int status = HttpServletResponse.SC_OK;
         List<FileItem> items = null;
-        String attachmentId = null, reqId = null;
+        String reqId = null;
 
         DiskFileUpload upload = getUploader();
         try {
@@ -376,17 +378,17 @@ public class FileUploadServlet extends ZimbraServlet {
         } catch (FileUploadBase.SizeLimitExceededException e) {
             // at least one file was over max allowed size
             mLog.info("Exceeded maximum upload size of " + upload.getSizeMax() + " bytes: " + e);
-            sendResponse(req, resp, HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE, fmt, reqId, attachmentId, items);
+            sendResponse(resp, HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE, fmt, reqId, null, items);
             return;
         } catch (FileUploadBase.InvalidContentTypeException e) {
             // at least one file was of a type not allowed
             mLog.info("File upload failed", e);
-            sendResponse(req, resp, HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE, fmt, reqId, attachmentId, items);
+            sendResponse(resp, HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE, fmt, reqId, null, items);
             return;
         } catch (FileUploadException e) {
             // parse of request failed for some other reason
             mLog.info("File upload failed", e);
-            sendResponse(req, resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, fmt, reqId, attachmentId, items);
+            sendResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, fmt, reqId, null, items);
             return;
         }
 
@@ -422,11 +424,12 @@ public class FileUploadServlet extends ZimbraServlet {
 
         // empty upload is not a "success"
         if (items == null || items.isEmpty()) {
-            sendResponse(req, resp, HttpServletResponse.SC_NO_CONTENT, fmt, reqId, attachmentId, items);
+            sendResponse(resp, HttpServletResponse.SC_NO_CONTENT, fmt, reqId, null, items);
             return;
         }
 
         // cache the uploaded files in the hash and construct the list of upload IDs
+        List<Upload> uploads = new ArrayList<Upload>(items.size());
         for (FileItem fi : items) {
         	String name = filenames.get(fi);
         	if (name == null || name.trim().equals(""))
@@ -437,10 +440,10 @@ public class FileUploadServlet extends ZimbraServlet {
         	synchronized (mPending) {
         		mPending.put(up.uuid, up);
         	}
-        	attachmentId = (attachmentId == null ? up.uuid : attachmentId + UPLOAD_DELIMITER + up.uuid);
+        	uploads.add(up);
         }
 
-        sendResponse(req, resp, status, fmt, reqId, attachmentId, items);
+        sendResponse(resp, HttpServletResponse.SC_OK, fmt, reqId, uploads, items);
     }
 
     private void handlePlainUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, String accountId) throws IOException, ServiceException {
@@ -451,7 +454,7 @@ public class FileUploadServlet extends ZimbraServlet {
             filename = new ContentDisposition(req.getHeader("Content-Disposition")).getParameter("filename");
 
         if (filename == null || filename.trim().equals("")) {
-            sendResponse(req, resp, HttpServletResponse.SC_NO_CONTENT, fmt, null, null, null);
+            sendResponse(resp, HttpServletResponse.SC_NO_CONTENT, fmt, null, null, null);
             return;
         }
 
@@ -464,39 +467,62 @@ public class FileUploadServlet extends ZimbraServlet {
             if (size > upload.getSizeMax()) {
                 fi.delete();
                 mLog.info("Exceeded maximum upload size of " + upload.getSizeMax() + " bytes: " + accountId);
-                sendResponse(req, resp, HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE, fmt, null, null, null);
+                sendResponse(resp, HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE, fmt, null, null, null);
                 return;
             }
         } catch (IOException ioe) {
             fi.delete();
-            sendResponse(req, resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, fmt, null, null, null);
+            sendResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, fmt, null, null, null);
             return;
         }
         List<FileItem> items = new ArrayList<FileItem>(1);
         items.add(fi);
 
-        int status = HttpServletResponse.SC_OK;
-        String attachmentId = null;
         Upload up = new Upload(accountId, fi, filename);
         ZimbraLog.mailbox.info("FileUploadServlet received " + up);
         synchronized (mPending) {
-        	mPending.put(attachmentId = up.uuid, up);
+        	mPending.put(up.uuid, up);
         }
 
-        sendResponse(req, resp, status, fmt, null, attachmentId, items);
+        sendResponse(resp, HttpServletResponse.SC_OK, fmt, null, Arrays.asList(up), items);
     }
 
-    public static void sendResponse(HttpServletRequest req, HttpServletResponse resp, int status, String fmt, String reqId, String attachmentId, List<FileItem> items)
+    public static void sendResponse(HttpServletResponse resp, int status, String fmt, String reqId, List<Upload> uploads, List<FileItem> items)
     throws IOException {
+        boolean raw = ContentServlet.FORMAT_RAW.equals(fmt);
+        boolean extended = "extended".equals(fmt);
+
         StringBuffer results = new StringBuffer();
         results.append(status).append(",'").append(reqId != null ? reqId : "null").append('\'');
-        if (status == HttpServletResponse.SC_OK)
-            results.append(",'").append(attachmentId).append('\'');
+        if (status == HttpServletResponse.SC_OK) {
+            boolean first = true;
+            if (extended) {
+                // serialize as a list of JSON objects, one per upload
+                results.append(",[");
+                for (Upload up : uploads) {
+                    Element.JSONElement elt = new Element.JSONElement("ignored");
+                    elt.addAttribute(MailConstants.A_ATTACHMENT_ID, up.uuid);
+                    elt.addAttribute(MailConstants.A_CONTENT_TYPE, up.getContentType());
+                    elt.addAttribute(MailConstants.A_CONTENT_FILENAME, up.name);
+                    results.append(first ? "" : ",").append(elt.toString());
+                    first = false;
+                }
+                results.append(']');
+            } else {
+                // serialize as a string containing the comma-separated upload IDs
+                results.append(",'");
+                for (Upload up : uploads) {
+                    results.append(first ? "" : UPLOAD_DELIMITER).append(up.uuid);
+                    first = false;
+                }
+                results.append('\'');
+            }
+        }
 
-        resp.setContentType("text/html");
+        resp.setContentType("text/html; charset=utf-8");
         PrintWriter out = resp.getWriter();
 
-        if (ContentServlet.FORMAT_RAW.equals(fmt)) {
+        if (raw) {
             out.println(results);
         } else {          
             out.println("<html><head></head><body onload=\"window.parent._uploadManager.loaded(" + results + ");\">");
