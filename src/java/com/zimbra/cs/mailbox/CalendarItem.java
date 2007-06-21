@@ -981,7 +981,7 @@ public abstract class CalendarItem extends MailItem {
                     // Both old and new organizers are set.  They must be the
                     // same address.
                     String origOrgAddr = originalOrganizer.getAddress();
-                    if (!newOrgAddr.equalsIgnoreCase(origOrgAddr))
+                    if (newOrgAddr == null || !newOrgAddr.equalsIgnoreCase(origOrgAddr))
                         throw ServiceException.INVALID_REQUEST(
                                 "Changing organizer of an appointment/task is not allowed: old=" + origOrgAddr + ", new=" + newOrgAddr, null);
                 }
