@@ -37,7 +37,8 @@ public abstract class ZimbraCustomAuth {
     private static Map<String, ZimbraCustomAuth> mHandlers;
 
     /*
-     * Register custom authentication handler
+     * Register a custom auth handler.
+     * It should be invoked from the init() method of ZimbraExtension.
      */
     public synchronized static void register(String handlerName, ZimbraCustomAuth handler) {
         
@@ -63,14 +64,19 @@ public abstract class ZimbraCustomAuth {
     }
     
     /*
-     * Method invoked for custom auth.
+     * Method invoked by the framework to handle authentication requests.
+     * A custom auth implementation must implement this abstract method.
      * 
-     * Returning from the authenticate method indicates a successful authtication.
-     * An Exception should be thrown if the authentication failed.
+     * Implementor must ensure thread safety during the life span in this method.
      * 
-     * For any registered handler name, the authenticate method is going to be invoked 
-     * on the same resistered handler object.  It is the implementor's resposibility 
-     * to ensure thread safety of the method.
+     * @param account: The account object of the principle to be authenticated
+     *                 all attributes of the account can be retrieved from this object.
+     *                   
+     * @param password: Clear-text password, usually entered by user and colected by an UI. 
+     * 
+     * @return Returning from this function indicating the authentication has succeeded. 
+     *  
+     * @throws Exception.  If authentication failed, an Exception should be thrown.
      */
     public abstract void authenticate(Account acct, String password) throws Exception;
 }
