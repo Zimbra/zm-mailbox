@@ -111,6 +111,6 @@ public class ZFeatures {
 
     public boolean getPop3DataSource() { return getBool(Provisioning.A_zimbraFeaturePop3DataSourceEnabled); }
     
-
+    public boolean getGroupcalendarEnabled() { return getBool(Provisioning.A_zimbraFeatureGroupCalendarEnabled); }
 }
 
