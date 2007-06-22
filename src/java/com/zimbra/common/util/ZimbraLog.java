@@ -92,6 +92,11 @@ public class ZimbraLog {
      * operated on.
      */
     private static final String C_MSG_ID = "msgid";
+
+    /**
+     * "item" key for context.
+     */
+    private static final String C_ITEM = "item";
     
     /**
      * "ds" key for context.  The name of the Data Source being operated on.
@@ -396,13 +401,13 @@ public class ZimbraLog {
      * logging context.
      */
     public static void addItemToContext(int itemId) {
-    	addToContext("item", Integer.toString(itemId));
+    	addToContext(C_ITEM, Integer.toString(itemId));
     }
 
     /**
      * Removes a key/value pair from the current thread's logging context.
      */
-    public static void removeFromContext(String key, String value) {
+    public static void removeFromContext(String key) {
         if (key != null) {
             addToContext(key, null);
         }
@@ -413,7 +418,7 @@ public class ZimbraLog {
      * logging context.
      */
     public static void removeItemFromContext(int itemId) {
-    	removeFromContext("item", Integer.toString(itemId));
+    	removeFromContext(C_ITEM);
     }
     
     /**
