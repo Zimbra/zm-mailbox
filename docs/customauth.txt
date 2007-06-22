@@ -64,6 +64,15 @@ public class FooCustomAuth extends ZimbraCustomAuth {
     public void authenticate(Account account, String password) throws Exception {
         // implementation of the custom auth
         // all the attributes of the account can be retrieved via the account object.
+        
+        /*
+         * mock logic to demostrate returning for success auth and throwing exception
+         * for unsuccessful auth.
+         */ 
+        if (!password.equals("test123"))
+           throw Exception("Invalid password!!");
+           
+        // returning indicating the auth has succeeded
     }
 } 
 
