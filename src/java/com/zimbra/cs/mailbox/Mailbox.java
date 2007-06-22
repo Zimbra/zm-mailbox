@@ -101,7 +101,6 @@ import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.cs.stats.StatsFile;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
@@ -5580,9 +5579,6 @@ public class Mailbox {
         return getAccount().getBooleanAttr(Provisioning.A_zimbraAttachmentsIndexingEnabled, true);
     }
 
-    private static final StatsFile STATS_FILE =
-        new StatsFile("perf_item_cache", new String[] { "id", "type", "hit" }, false);
-
     private void logCacheActivity(Integer key, byte type, MailItem item) {
         // The global item cache counter always gets updated
         if (!isCachedType(type)) {
@@ -5591,12 +5587,11 @@ public class Mailbox {
 
         // The per-access log only gets updated when cache or perf debug logging
         // is on
-        if (!ZimbraLog.cache.isDebugEnabled() && !ZimbraLog.perf.isDebugEnabled())
+        if (!ZimbraLog.cache.isDebugEnabled())
             return;
 
         if (item == null) {
             ZimbraLog.cache.debug("Cache miss for item " + key + " in mailbox " + getId());
-            ZimbraPerf.writeStats(STATS_FILE, key, type, "0");
             return;
         }
 
@@ -5605,7 +5600,6 @@ public class Mailbox {
         if (isCachedType(type))
             return;
         ZimbraLog.cache.debug("Cache hit for " + MailItem.getNameForType(type) + " " + key + " in mailbox " + getId());
-        ZimbraPerf.writeStats(STATS_FILE, key, type, "1");
     }
 
     private static final String CN_ID         = "id";

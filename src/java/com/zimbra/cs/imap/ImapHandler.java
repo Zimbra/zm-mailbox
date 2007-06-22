@@ -92,7 +92,6 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.mail.FolderAction;
 import com.zimbra.cs.service.mail.ItemActionHelper;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.stats.StatsFile;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.BuildInfo;
@@ -181,8 +180,6 @@ public abstract class ImapHandler extends ProtocolHandler {
 
     static final boolean STOP_PROCESSING = false, CONTINUE_PROCESSING = true;
     
-    static StatsFile STATS_FILE = new StatsFile("perf_imap", new String[] { "command" }, true);
-
     void checkEOF(String tag, ImapRequest req) throws ImapParseException {
         if (!req.eof())
             throw new ImapParseException(tag, "excess characters at end of command");

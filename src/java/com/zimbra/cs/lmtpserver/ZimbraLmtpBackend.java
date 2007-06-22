@@ -54,7 +54,6 @@ import com.zimbra.cs.mailbox.Notification;
 import com.zimbra.cs.mailbox.QuotaWarning;
 import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.service.util.ThreadLocalData;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.Zimbra;
@@ -301,10 +300,6 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             // We now know which addresses are valid and which ParsedMessage
             // version each recipient needs.  Deliver!
             try {
-                // Performance
-                if (ZimbraLog.perf.isDebugEnabled())
-                    ThreadLocalData.reset();
-
                 for (LmtpAddress recipient : recipients) {
                     String rcptEmail = recipient.getEmailAddress();
                     LmtpStatus status = LmtpStatus.TRYAGAIN;

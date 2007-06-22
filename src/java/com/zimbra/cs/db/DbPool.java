@@ -237,7 +237,7 @@ public class DbPool {
             throw ServiceException.FAILURE("getting database connection", e);
         }
 
-        if (ZimbraLog.sqltrace.isDebugEnabled() || ZimbraLog.perf.isDebugEnabled())
+        if (ZimbraLog.sqltrace.isDebugEnabled())
             conn = new DebugConnection(conn);
 
         Connection zimbraConn = new Connection(conn);

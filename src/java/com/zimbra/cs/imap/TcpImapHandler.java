@@ -43,7 +43,6 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.service.util.ThreadLocalData;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.TcpServerInputStream;
@@ -128,8 +127,6 @@ public class TcpImapHandler extends ImapHandler {
         TcpImapRequest req = null;
         boolean keepGoing = CONTINUE_PROCESSING;
         ZimbraLog.clearContext();
-        if (ZimbraPerf.isPerfEnabled())
-            ThreadLocalData.reset();
 
         try {
             // FIXME: throw an exception instead?
@@ -184,8 +181,6 @@ public class TcpImapHandler extends ImapHandler {
             setIdle(false);
             mIncompleteRequest = null;
 
-            if (ZimbraPerf.isPerfEnabled())
-                ZimbraPerf.writeStats(STATS_FILE, mLastCommand);
             ZimbraPerf.STOPWATCH_IMAP.stop(start);
         } catch (TcpImapRequest.ImapContinuationException ice) {
             mIncompleteRequest = req.rewind();

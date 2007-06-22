@@ -50,9 +50,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.service.util.ThreadLocalData;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.stats.StatsFile;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.Zimbra;
 
@@ -199,17 +197,9 @@ public class SoapServlet extends ZimbraServlet {
         service.registerHandlers(mEngine.getDocumentDispatcher());
     }
     
-    private static final StatsFile STATS_FILE =
-        new StatsFile("perf_soap", new String[] { "response" }, true);
-    
     public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         long startTime = ZimbraPerf.STOPWATCH_SOAP.start();  
         
-        // Performance
-        if (ZimbraLog.perf.isDebugEnabled()) {
-            ThreadLocalData.reset();
-        }
-
         int len = req.getContentLength();
         byte[] buffer;
         boolean isResumed = true;
@@ -275,12 +265,6 @@ public class SoapServlet extends ZimbraServlet {
         resp.getOutputStream().write(soapBytes);
         
         ZimbraLog.clearContext();
-
-        // If perf logging is enabled, track server response times
-        if (ZimbraPerf.isPerfEnabled()) {
-            String responseName = soapProto.getBodyElement(envelope).getName();
-            ZimbraPerf.writeStats(STATS_FILE, responseName);
-        }
 
         ZimbraPerf.STOPWATCH_SOAP.stop(startTime);
     }

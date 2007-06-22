@@ -113,7 +113,6 @@ class DebugPreparedStatement implements PreparedStatement {
         long time = System.currentTimeMillis() - mStartTime;
         String sql = getSql();
         ZimbraLog.sqltrace.debug(sql + " - " + time + "ms" + getHashCodeString());
-        ZimbraPerf.updateDbStats(sql, (int) time);
     }
     
     private void logException(SQLException e) {
