@@ -159,7 +159,7 @@ public class OzImapConnectionHandler extends ImapHandler implements OzConnection
                 sendBAD(ipe.mTag, ipe.getMessage());
         } finally {
             if (logPushedUsername != null)
-                ZimbraLog.removeFromContext(ZimbraLog.C_NAME, logPushedUsername);
+                ZimbraLog.removeFromContext(ZimbraLog.C_NAME);
         }
 
         return keepGoing;
