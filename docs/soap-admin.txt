@@ -431,9 +431,31 @@ Notes:
 
 {apply-config} = 0|1 (1 is default)
 
- if {apply-config} is 1, then certain unset attrs on an account will get their value from the global config.
+ if {apply-config} is 1, then certain unset attrs on a domain will get their value from the global config.
 
- if {apply-config} is 0, then only attributes directly set on the server will be returned
+ if {apply-config} is 0, then only attributes directly set on the domain will be returned
+
+-----------------------------
+
+<GetDomainInfoRequest [applyConfig="{apply-config}"]>
+  <domain by="id|name|virtualHostname">...</domain> 
+</GetDomainInfoRequest>
+
+<GetDomainInfoResponse>
+  <domain name="..." id="...">
+    <a n="...">...</a>+
+  </domain>
+</GetDomainInfoResponse>
+
+This call does *not* require an auth token.  It returuns attributes that are pertinent to domain settings 
+for cases when the user is not authenticated.  For example, URL to direct the user to upon loggin out or when 
+auth token is expired.
+
+{apply-config} = 0|1 (1 is default)
+
+ if {apply-config} is 1, then certain unset attrs on a domain will get their value from the global config.
+
+ if {apply-config} is 0, then only attributes directly set on the domain will be returned
 
 -----------------------------
 

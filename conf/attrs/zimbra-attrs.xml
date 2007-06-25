@@ -115,6 +115,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
   flags:
     accountInfo............returned as part of the GetInfo call
+    domainInfo.............returned as part of the GetDomainInfo call
     domainAdminModifiable..modifiable by a domain admin
     accountInherited.......if not set on account, inherit from COS
     domainInherited........if not set on domain, inherit from global config
@@ -2329,5 +2330,13 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether this server is a mta auth target</desc>
 </attr>   
      
+<attr id="506" name="zimbraWebClientLoginURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo">
+  <desc>login URL for web client to send the user to upon failed login, auth expired, or no/invalid auth</desc>
+</attr>
+
+<attr id="507" name="zimbraWebClientLogoutURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo">
+  <desc>logout URL for web client to send the user to upon explicit loggin out</desc>
+</attr>
+
     
 </attrs>
