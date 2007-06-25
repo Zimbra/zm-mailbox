@@ -105,7 +105,7 @@ public abstract class DocumentHandler {
     }
 
     public static Account getAuthenticatedAccount(ZimbraSoapContext zsc) throws ServiceException {
-        String id = zsc.getRequestedAccountId();
+        String id = zsc.getAuthtokenAccountId();
 
         Account acct = Provisioning.getInstance().get(AccountBy.id, id);
         if (acct == null)
