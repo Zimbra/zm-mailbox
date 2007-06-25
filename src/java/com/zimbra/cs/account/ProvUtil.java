@@ -42,6 +42,8 @@ import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Provisioning.SignatureBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.MailboxInfo;
+import com.zimbra.cs.account.soap.SoapProvisioning.ReIndexBy;
+import com.zimbra.cs.account.soap.SoapProvisioning.ReIndexInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning.QuotaUsage;
 import com.zimbra.cs.extension.ExtensionDispatcherServlet;
 import com.zimbra.cs.httpclient.URLUtil;
@@ -144,7 +146,8 @@ public class ProvUtil implements DebugListener {
         COS("help on COS-related commands"), 
         DOMAIN("help on domain-related commands"), 
         LIST("help on distribution list-related commands"), 
-        MISC("help on misc commands"), 
+        MISC("help on misc commands"),
+        MAILBOX("help on mailbox-related commands"),
         NOTEBOOK("help on notebook-related commands"), 
         SEARCH("help on search-related commands"), 
         SERVER("help on server-related commands");
@@ -210,8 +213,8 @@ public class ProvUtil implements DebugListener {
         GET_DISTRIBUTION_LIST("getDistributionList", "gdl", "{list@domain|id} [attr1 [attr2...]]", Category.LIST, 1, Integer.MAX_VALUE),
         GET_DISTRIBUTION_LIST_MEMBERSHIP("getDistributionListMembership", "gdlm", "{name@domain|id}", Category.LIST, 1, 1),
         GET_DOMAIN("getDomain", "gd", "{domain|id} [attr1 [attr2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE), 
-        GET_MAILBOX_INFO("getMailboxInfo", "gmi", "{account}", Category.MISC, 1, 1),
-        GET_QUOTA_USAGE("getQuotaUsage", "gqu", "{server}", Category.MISC, 1, 1),        
+        GET_MAILBOX_INFO("getMailboxInfo", "gmi", "{account}", Category.MAILBOX, 1, 1),
+        GET_QUOTA_USAGE("getQuotaUsage", "gqu", "{server}", Category.MAILBOX, 1, 1),        
         GET_SERVER("getServer", "gs", "{name|id} [attr1 [attr2...]]", Category.SERVER, 1, Integer.MAX_VALUE), 
         HELP("help", "?", "commands", Category.MISC, 0, 1),
         IMPORT_NOTEBOOK("importNotebook", "impn", "{name@domain} {directory} {folder}", Category.NOTEBOOK),
@@ -236,10 +239,11 @@ public class ProvUtil implements DebugListener {
         RENAME_CALENDAR_RESOURCE("renameCalendarResource",  "rcr", "{name@domain|id} {newName@domain}", Category.CALENDAR, 2, 2),
         RENAME_COS("renameCos", "rc", "{name|id} {newName}", Category.COS, 2, 2),
         RENAME_DISTRIBUTION_LIST("renameDistributionList", "rdl", "{list@domain|id} {newName@domain}", Category.LIST, 2, 2),
+        REINDEX_MAILBOX("reIndexMailbox", "rim", "{name@domain|id} {action} [{reindex-by} {value1} [value2...]]", Category.MAILBOX, 2, Integer.MAX_VALUE),
         SEARCH_ACCOUNTS("searchAccounts", "sa", "[-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [attrs {a1,a2...}] [sortAscending 0|1*] [domain {domain}]", Category.SEARCH, 1, Integer.MAX_VALUE),
         SEARCH_CALENDAR_RESOURCES("searchCalendarResources", "scr", "[-v] domain attr op value [attr op value...]", Category.SEARCH),
         SEARCH_GAL("searchGal", "sg", "{domain} {name}", Category.SEARCH, 2, 2),
-        SELECT_MAILBOX("selectMailbox", "sm", "{account-name} [{zmmailbox commands}]", Category.MISC, 1, Integer.MAX_VALUE),        
+        SELECT_MAILBOX("selectMailbox", "sm", "{account-name} [{zmmailbox commands}]", Category.MAILBOX, 1, Integer.MAX_VALUE),        
         SET_ACCOUNT_COS("setAccountCos", "sac", "{name@domain|id} {cos-name|cos-id}", Category.ACCOUNT, 2, 2),
         SET_PASSWORD("setPassword", "sp", "{name@domain|id} {password}", Category.ACCOUNT, 2, 2),
         GET_ALL_REVERSE_PROXY_URLS("getAllReverseProxyURLs", "garpu", "", Category.SERVER, 0, 0),
@@ -596,6 +600,9 @@ public class ProvUtil implements DebugListener {
         case GET_MAILBOX_INFO:
             doGetMailboxInfo(args);
             break;
+        case REINDEX_MAILBOX:
+            doReIndexMailbox(args);
+            break;
         case SELECT_MAILBOX:
             if (!(mProv instanceof SoapProvisioning))
                 throw ServiceException.INVALID_REQUEST("can only be used via SOAP", null);
@@ -656,6 +663,34 @@ public class ProvUtil implements DebugListener {
         MailboxInfo info = sp.getMailbox(acct);
         System.out.printf("mailboxId: %s\nquotaUsed: %d\n", info.getMailboxId(), info.getUsed());
     }
+    
+    private void doReIndexMailbox(String[] args) throws ServiceException {
+        if (!(mProv instanceof SoapProvisioning))
+            throw ServiceException.INVALID_REQUEST("can only be used via SOAP", null);
+        SoapProvisioning sp = (SoapProvisioning) mProv;
+        Account acct = lookupAccount(args[1]);
+        ReIndexBy by = null;
+        String[] values = null;
+        if (args.length > 3) {
+            try {
+                by = ReIndexBy.valueOf(args[3]);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("invalid reindex-by", null);
+            }
+            if (args.length > 4) {
+                values = new String[args.length - 4];
+                System.arraycopy(args, 4, values, 0, args.length - 4);
+            } else
+                throw ServiceException.INVALID_REQUEST("missing reindex-by values", null);
+        }
+        ReIndexInfo info = sp.reIndex(acct, args[2], by, values);
+        ReIndexInfo.Progress progress = info.getProgress();
+        System.out.printf("status: %s\n", info.getStatus());
+        if (progress != null)
+            System.out.printf("progress: numSucceeded=%d, numFailed=%d, numRemaining=%d\n",
+                              progress.getNumSucceeded(), progress.getNumFailed(), progress.getNumRemaining());
+    }
+    
     
     private void doAddAccountLogger(String[] args) throws ServiceException {
         if (!(mProv instanceof SoapProvisioning))

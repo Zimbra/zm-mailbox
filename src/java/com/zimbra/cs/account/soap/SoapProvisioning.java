@@ -626,6 +626,66 @@ public class SoapProvisioning extends Provisioning {
                 mbox.getAttribute(AdminConstants.A_MAILBOXID),
                 mbox.getAttributeLong(AdminConstants.A_SIZE));
     }
+    
+    public static enum ReIndexBy {
+        types, ids;
+    }
+    
+    public static class ReIndexInfo {
+        private String mStatus;
+        private Progress mProgress;
+        
+        public String getStatus()     { return mStatus; }
+        public Progress getProgress() { return mProgress; }
+        
+        ReIndexInfo(String status, Progress progress) {
+            mStatus = status;
+            mProgress = progress;
+        }
+        
+        public static class Progress {
+            private long mNumSucceeded;
+            private long mNumFailed;
+            private long mNumRemaining;
+            
+            public long getNumSucceeded() { return mNumSucceeded; }
+            public long getNumFailed()    { return mNumFailed; }
+            public long getNumRemaining() { return mNumRemaining; } 
+            
+            Progress() {}
+
+            Progress(long numSucceeded, long numFailed, long numRemaining) {
+                mNumSucceeded = numSucceeded;
+                mNumFailed = numFailed;
+                mNumRemaining = numRemaining;
+            }
+        }
+    }
+    
+    public ReIndexInfo reIndex(Account acct, String action, ReIndexBy by, String[] values) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.REINDEX_REQUEST);
+        req.addAttribute(MailConstants.E_ACTION, action);
+        Element mboxReq = req.addElement(AdminConstants.E_MAILBOX);
+        mboxReq.addAttribute(AdminConstants.A_ID, acct.getId());
+        if (by != null) {
+            String vals = StringUtil.join(",", values);
+            if (by == ReIndexBy.types)
+                mboxReq.addAttribute(MailConstants.A_SEARCH_TYPES, vals);
+            else
+                mboxReq.addAttribute(MailConstants.A_IDS, vals);
+        }
+        
+        Server server = getServer(acct);
+        String serviceHost = server.getAttr(A_zimbraServiceHostname);
+        Element resp = invoke(req, serviceHost);
+        ReIndexInfo.Progress progress = null;
+        Element progressElem = resp.getOptionalElement(AdminConstants.E_PROGRESS);
+        if (progressElem != null)
+            progress = new ReIndexInfo.Progress(progressElem.getAttributeLong(AdminConstants.A_NUM_SUCCEEDED),
+                                                progressElem.getAttributeLong(AdminConstants.A_NUM_FAILED),
+                                                progressElem.getAttributeLong(AdminConstants.A_NUM_REMAINING));
+        return new ReIndexInfo(resp.getAttribute(AdminConstants.A_STATUS), progress);
+    }
 
     @Override
     public List<Server> getAllServers(String service) throws ServiceException {
