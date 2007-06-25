@@ -122,6 +122,29 @@ public class SoapUtil {
         return ctxt;
     }
 
+    /**
+     * Adds change token to <code>&lt;context></code> {@link com.zimbra.common.soap.Element}
+     * @param ctxt       A <code>&lt;context></code> Element as created by toCtxt.
+     * @param token      Change number to check for modify conflict.
+     * @param type       "mod" or "new".  Refer to soap.txt for the use.
+     * @return The passed-in <code>&lt;context></code> Element.
+     * @throws IllegalArgumentException if the given Element's name is not <code>context</code>
+     * @see #toCtxt
+     */
+    public static Element addChangeTokenToCtxt(Element ctxt, String token, String type) {
+    	if (StringUtil.isNullOrEmpty(token))
+    		return ctxt;
+    	String elementName = ctxt.getName();
+    	if (!elementName.equalsIgnoreCase(HeaderConstants.E_CONTEXT))
+    		throw new IllegalArgumentException("Invalid element: " + elementName);
+
+    	Element eChange = ctxt.addElement(HeaderConstants.E_CHANGE);
+    	eChange.addAttribute(HeaderConstants.A_CHANGE_ID, token);
+    	if (!StringUtil.isNullOrEmpty(type))
+    		eChange.addAttribute(HeaderConstants.A_TYPE, type);
+    	return ctxt;
+    }
+    
     /** Creates a SOAP request <code>&lt;context></code> {@link com.zimbra.common.soap.Element} with
      *  an associated session.  (All requests except Auth and a few others must
      *  specify an auth token.)

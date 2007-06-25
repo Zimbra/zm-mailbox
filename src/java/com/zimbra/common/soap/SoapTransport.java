@@ -148,7 +148,7 @@ public abstract class SoapTransport {
         return mSoapProto;
     }
 
-    protected String generateSoapMessage(Element document, boolean raw, boolean noSession, boolean noNotify, String requestedAccountId) {
+    protected String generateSoapMessage(Element document, boolean raw, boolean noSession, boolean noNotify, String requestedAccountId, String changeToken, String tokenType) {
     	if (raw) {
             if (mDebugListener != null) mDebugListener.sendSoapMessage(document);
     		return SoapProtocol.toString(document, mPrettyPrint);
@@ -156,6 +156,7 @@ public abstract class SoapTransport {
         
         Element context = SoapUtil.toCtxt(mSoapProto, mAuthToken, mTargetAcctId, mTargetAcctName, noSession);
         SoapUtil.addSessionToCtxt(context, mSessionId, noNotify);
+        SoapUtil.addChangeTokenToCtxt(context, changeToken, tokenType);
         if (mUserAgentName != null) {
             SoapUtil.addUserAgentToCtxt(context, mUserAgentName, mUserAgentVersion);
         }
@@ -272,9 +273,20 @@ public abstract class SoapTransport {
      * 
      * If <code>noNotify</code> is true, response omits change notification block.
      */
-    public abstract Element invoke(Element document, boolean raw, boolean noSession, boolean noNotify, String requestedAccountId) 
-    	throws SoapFaultException, IOException;
+    public final Element invoke(Element document, boolean raw, boolean noSession, boolean noNotify, String requestedAccountId) 
+    	throws SoapFaultException, IOException {
+    	return invoke(document, raw, noSession, noNotify, requestedAccountId, null, null);
+    }
 
+    /**
+     * Sends the specified document as a Soap message
+     * and parses the response as a Soap message. <p /> 
+     * 
+     * If <code>changeToken</code> is non-null, it's used in the soap context to
+     * detect modify conflict.
+     */
+    public abstract Element invoke(Element document, boolean raw, boolean noSession, boolean noNotify, String requestedAccountId, String changeToken, String tokenType) 
+    	throws SoapFaultException, IOException;
 }
 
 /*
