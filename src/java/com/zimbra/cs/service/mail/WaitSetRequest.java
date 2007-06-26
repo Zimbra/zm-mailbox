@@ -38,6 +38,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -62,15 +63,20 @@ public class WaitSetRequest extends MailDocumentHandler {
     private static final long DEFAULT_ADMIN_TIMEOUT;
     private static final long MIN_ADMIN_TIMEOUT;
     private static final long MAX_ADMIN_TIMEOUT;
+    private static final long INITIAL_SLEEP_TIME;
+    private static final long NODATA_SLEEP_TIME;
     
     static {
-        DEFAULT_TIMEOUT = LC.zimbra_waitset_default_request_timeout.longValue() * 1000;
-        MIN_TIMEOUT = LC.zimbra_waitset_min_request_timeout.longValue() * 1000;
-        MAX_TIMEOUT = LC.zimbra_waitset_max_request_timeout.longValue() * 1000;
+        DEFAULT_TIMEOUT = LC.zimbra_waitset_default_request_timeout.longValueWithinRange(0, Constants.SECONDS_PER_DAY) * 1000;
+        MIN_TIMEOUT = LC.zimbra_waitset_min_request_timeout.longValueWithinRange(0, Constants.SECONDS_PER_DAY) * 1000;
+        MAX_TIMEOUT = LC.zimbra_waitset_max_request_timeout.longValueWithinRange(0, Constants.SECONDS_PER_DAY) * 1000;
         
-        DEFAULT_ADMIN_TIMEOUT = LC.zimbra_admin_waitset_default_request_timeout.longValue() * 1000;
-        MIN_ADMIN_TIMEOUT = LC.zimbra_admin_waitset_min_request_timeout.longValue() * 1000;
-        MAX_ADMIN_TIMEOUT = LC.zimbra_admin_waitset_max_request_timeout.longValue() * 1000;
+        DEFAULT_ADMIN_TIMEOUT = LC.zimbra_admin_waitset_default_request_timeout.longValueWithinRange(0, Constants.SECONDS_PER_DAY) * 1000;
+        MIN_ADMIN_TIMEOUT = LC.zimbra_admin_waitset_min_request_timeout.longValueWithinRange(0, Constants.SECONDS_PER_DAY) * 1000;
+        MAX_ADMIN_TIMEOUT = LC.zimbra_admin_waitset_max_request_timeout.longValueWithinRange(0, Constants.SECONDS_PER_DAY) * 1000;
+        
+        INITIAL_SLEEP_TIME = LC.zimbra_waitset_initial_sleep_time.longValueWithinRange(0,5*Constants.SECONDS_PER_MINUTE) * 1000;
+        NODATA_SLEEP_TIME = LC.zimbra_waitset_nodata_sleep_time.longValueWithinRange(0,5*Constants.SECONDS_PER_MINUTE) * 1000;
     }
     
     private static long getTimeout(Element request, boolean isAdminRequest) throws ServiceException {
@@ -188,29 +194,29 @@ public class WaitSetRequest extends MailDocumentHandler {
                 request.getOptionalElement(MailConstants.E_WAITSET_UPDATE), cb.ws.getDefaultInterest(), allowedAccountIds);
             List<String> remove = parseRemoveAccounts(request.getOptionalElement(MailConstants.E_WAITSET_REMOVE), allowedAccountIds);
             
-            if (!block) {
-                // Force the client to wait briefly before processing -- this will stop 'bad' clients from polling 
-                // the server in a very fast loop (they should be using the 'block' mode)
-                try { Thread.sleep(1000); } catch (InterruptedException ex) {}
-            }
+            // Force the client to wait briefly before processing -- this will stop 'bad' clients from polling 
+            // the server in a very fast loop (they should be using the 'block' mode)
+            try { Thread.sleep(INITIAL_SLEEP_TIME); } catch (InterruptedException ex) {}
 
             synchronized(cb) {
                 cb.errors = cb.ws.doWait(cb, lastKnownSeqNo, add, update, remove);
                 // after this point, the ws has a pointer to the cb and so we *MUST NOT* lock
                 // the ws until we release the cb lock!
+                if (cb.completed)
+                    block = false;
+            }
+            
+            if (block) {
+                // No data after initial check...wait a few extra seconds
+                // before going into the notification wait...basically we're just 
+                // trying to let the server coalesce notification data a little 
+                // bit.
+                try { Thread.sleep(NODATA_SLEEP_TIME); } catch (InterruptedException ex) {}
                 
-                if (block && !cb.completed) { // don't wait if it completed right away
-                    
-                    // No data after initial check...wait a few extra seconds
-                    // before going into the notification wait...basically we're just 
-                    // trying to let the server coalesce notification data a little 
-                    // bit.
-                    try { Thread.sleep(3000); } catch (InterruptedException ex) {} 
-
-                    continuation.suspend(getTimeout(request, adminAllowed));
-//                    try { 
-//                        vars.wait(getTimeout(request, adminAllowed));
-//                    } catch (InterruptedException ex) {}
+                synchronized (cb) {
+                    if (!cb.completed) { // don't wait if it completed right away
+                        continuation.suspend(getTimeout(request, adminAllowed));
+                    }
                 }
             }
         }
@@ -285,7 +291,7 @@ public class WaitSetRequest extends MailDocumentHandler {
     public static class Callback implements WaitSetCallback {
         public void dataReady(IWaitSet ws, String seqNo, boolean canceled, String[] signalledAccounts) {
             synchronized(this) {
-                ZimbraLog.session.info("Called WaitMultiplAccounts WaitSetCallback.dataReady()!");
+                ZimbraLog.session.debug("WaitSet: Called WaitSetCallback.dataReady()!");
                 this.waitSet = ws;
                 this.canceled = canceled;
                 this.signalledAccounts = signalledAccounts;
