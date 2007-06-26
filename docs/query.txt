@@ -20,6 +20,8 @@ Tim's short-short summary of the query grammar as of now (updated)
        "unreplied"|"forwarded"|"unforwarded"|"invite"|
        "solo"|  // no other messages in conversation
        "tome"|"fromme"|"ccme"|"tofromme"|"fromccme"|"tofromccme"  // to, from cc me, including my aliases
+       "local" - matches all folders in the local mailbox (that the user has READ access to)
+       "remote" - matches all remotely mounted folders (that the user has READ access to)
        } 
    date:[>,<,>=,<={DATE}
    appt-start:[>,<,>=,<={DATE} 
