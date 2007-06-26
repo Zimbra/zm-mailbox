@@ -2477,7 +2477,9 @@ public class Mailbox {
                             }
                             unmatched.append(segments[j]);
                         }
-                        if (unmatched.length() > 0) {
+                        if (unmatched.length() > 0 && !(curFolder instanceof Mountpoint)) {
+                            // We have an unmatched part, but the last matched folder wasn't a mountpoint,
+                            // so throw an exception
                             throw MailServiceException.NO_SUCH_FOLDER(startingFolder.getPath()+"/"+path);
                         }
                         return new Pair<Folder, String>(curFolder, unmatched.toString());
