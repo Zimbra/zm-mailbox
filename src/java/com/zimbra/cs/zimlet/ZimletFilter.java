@@ -121,7 +121,8 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
         // get list of zimlets for request
         List<String> zimletNames = new LinkedList<String>();
         String uri = req.getRequestURI();
-        if (uri.startsWith(ZIMLET_RES_URL_PREFIX)) {
+		boolean isZimletRes = uri.startsWith(ZIMLET_RES_URL_PREFIX);
+		if (isZimletRes) {
             for (Object zimletName : allowedZimletNames) {
                 zimletNames.add(String.valueOf(zimletName));
             }
@@ -165,6 +166,17 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
                 iter.remove();
             }
         }
+
+		if (!isZimletRes) {
+			Matcher matcher = mPattern.matcher(uri);
+			if (matcher.matches()) {
+				String zimletName = matcher.group(1);
+				if (!zimletNames.contains(zimletName)) {
+					resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+					return;
+				}
+			}
+		}
 
         // process request
         req.setAttribute(ZimletFilter.ALLOWED_ZIMLETS, zimletNames);
