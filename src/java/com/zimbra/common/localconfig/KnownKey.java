@@ -126,12 +126,44 @@ public class KnownKey {
         return Integer.parseInt(s);
     }
     
+    /**
+     * Returns the value of this KnownKey as an int, but forces it to be within
+     * the range of minValue <= RETURN <= maxValue
+     * 
+     * @param minValue
+     * @param maxValue
+     */
+    public int intValueWithinRange(int minValue, int maxValue) {
+        int toRet = intValue();
+        if (toRet < minValue) 
+            toRet = minValue;
+        if (toRet > maxValue)
+            toRet = maxValue;
+        return toRet;
+    }
+    
     public long longValue() {
         String s = LC.get(mKey);
         if (s == null || s.length() == 0) {
             throw new IllegalStateException("'" + mKey + "' is not defined in LocalConfig");
         }
         return Long.parseLong(s);
+    }
+    
+    /**
+     * Returns the value of this KnownKey as a long, but forces it to be within
+     * the range of minValue <= RETURN <= maxValue
+     * 
+     * @param minValue
+     * @param maxValue
+     */
+    public long longValueWithinRange(long minValue, long maxValue) {
+        long toRet = longValue();
+        if (toRet < minValue) 
+            toRet = minValue;
+        if (toRet > maxValue)
+            toRet = maxValue;
+        return toRet;
     }
     
     public String key() {

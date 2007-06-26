@@ -259,6 +259,9 @@ public class LC {
     public static final KnownKey zimbra_admin_waitset_min_request_timeout;
     public static final KnownKey zimbra_admin_waitset_max_request_timeout;
     
+    public static final KnownKey zimbra_waitset_initial_sleep_time;
+    public static final KnownKey zimbra_waitset_nodata_sleep_time;
+    
     static {
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
                 "Changing this setting does not immediately reflect in MySQL server.  " +
@@ -929,5 +932,10 @@ public class LC {
         "Minimum Timeout (seconds) an admin WaitSetRequest will block");
         zimbra_admin_waitset_max_request_timeout = new KnownKey("zimbra_admin_waitset_max_request_timeout", "3600",
         "Maximum Timeout (seconds) an admin WaitSetRequest will block");
+        
+        zimbra_waitset_initial_sleep_time  = new KnownKey("zimbra_waitset_initial_sleep_time", "1", 
+            "Initial timeout (seconds) to wait before processing any WaitSetRequest");
+        zimbra_waitset_nodata_sleep_time = new KnownKey("zimbra_waitset_nodata_sleep_time", "3",
+        "Time (seconds) to sleep handling a WaitSetRequest if there is no data after initial check");
     }
 }
