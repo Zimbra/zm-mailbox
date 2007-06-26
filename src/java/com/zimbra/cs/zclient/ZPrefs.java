@@ -156,4 +156,25 @@ public class ZPrefs {
         }
         return mCachedTimeZone;
     }
+
+    public String getReplyIncludeOriginalText() { return get(Provisioning.A_zimbraPrefReplyIncludeOriginalText); }
+
+    public boolean getReplyIncludeAsAttachment() { return "includeAsAttachment".equals(getReplyIncludeOriginalText()); }
+    public boolean getReplyIncludeBody() { return "includeBody".equals(getReplyIncludeOriginalText()); }
+    public boolean getReplyIncludeBodyWithPrefx() { return "includeBodyWithPrefix".equals(getReplyIncludeOriginalText()); }
+    public boolean getReplyIncludeNone() { return "includeNone".equals(getReplyIncludeOriginalText()); }
+    public boolean getReplyIncludeSmart() { return "includeSmart".equals(getReplyIncludeOriginalText()); }
+    
+    public String getForwardIncludeOriginalText() { return get(Provisioning.A_zimbraPrefForwardIncludeOriginalText); }
+    public boolean getForwardIncludeAsAttachment() { return "includeAsAttachment".equals(getForwardIncludeOriginalText()); }
+    public boolean getForwardIncludeBody() { return "includeBody".equals(getForwardIncludeOriginalText()); }
+    public boolean getForwardIncludeBodyWithPrefx() { return "includeBodyWithPrefix".equals(getForwardIncludeOriginalText()); }
+    
+    public String getForwardReplyFormat() { return get(Provisioning.A_zimbraPrefForwardReplyFormat); }
+    public boolean getForwardReplyTextFormat() { return "text".equals(getForwardReplyFormat()); }
+    public boolean getForwardReplyHtmlFormat() { return "html".equals(getForwardReplyFormat()); }
+    public boolean getForwardReplySameFormat() { return "same".equals(getForwardReplyFormat()); }
+
+    public String getForwardReplyPrefixChar() { return get(Provisioning.A_zimbraPrefForwardReplyPrefixChar); }
+    
 }
