@@ -207,6 +207,8 @@ public class LC {
     public static final KnownKey mailboxd_java_home;
     public static final KnownKey mailboxd_pidfile;
     public static final KnownKey mailboxd_keystore;
+    public static final KnownKey mailboxd_keystore_password;
+    public static final KnownKey mailboxd_truststore_password;
     public static final KnownKey mailboxd_output_file;
     public static final KnownKey mailboxd_output_rotate_interval;
     
@@ -773,6 +775,14 @@ public class LC {
         mailboxd_keystore = new KnownKey("mailboxd_keystore");
         mailboxd_keystore.setDefault("${mailboxd_directory}" + FS + "etc" + FS + "keystore");
         mailboxd_keystore.setDoc("Location of keystore data file.");
+        
+        mailboxd_keystore_password = new KnownKey("mailboxd_keystore_password");
+        mailboxd_keystore_password.setDefault("zimbra");
+        mailboxd_keystore_password.setDoc("Password to be used with the KeyManager keystore.");
+        
+        mailboxd_truststore_password = new KnownKey("mailboxd_truststore_password");
+        mailboxd_truststore_password.setDefault("changeit");
+        mailboxd_truststore_password.setDoc("Password to be used with the TrustManager keystore.");
 
         mailboxd_output_file = new KnownKey("mailboxd_output_file");
         mailboxd_output_file.setDefault("${zimbra_log_directory}" + FS + "zmmailboxd.out");
