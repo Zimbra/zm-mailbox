@@ -35,9 +35,9 @@ for the domain.  If it is set to custom auth, system will invoke the registered
 custom auth handler to authenticate the user.
 
 
-===================================
-Where does the custom handler live?
-===================================
+================================================
+Where does the custom handler reside at runtime?
+================================================
 It has to be implemented and deployed as defined by the Zimbra extension framework
 Please refer to ZimbrServer/docs/extensions.txt for developing and deploying 
 server extensions.
@@ -122,6 +122,21 @@ register() method) of ZimbraCustomAuth object is invoked for all auth requests t
 need to go through this custom auth handler.  It is the implementor's resposibility 
 to ensure thread safety during the life span of ZimbraCustomAuth.authenticate().
  
+The authenticate method should do one of the following to indicate to the framework 
+the result of the auth.
+
+- auth succeeded: return
+     If the method returns, it indicates the authentication has succeeded.
+     
+- auth failed: throw Exception
+     If an Exception is thrown, it indicates the authtication has failed.
+     (1) if the Exception is an instance of com.zimbra.common.service.ServiceException, 
+         the same exception instance will be re-thrown by the framework to the SOAP 
+         AuthRequest.
+     (2) if the Exception is not an instance of com.zimbra.common.service.ServiceException,
+     	 the framework will catch the Exception and throw AccountServiceException.AUTH_FAILED 
+     	 exception to the SOAP AuthRequest.
+     
  
 The ZimbraCustomAuth class and relavent methods for implementors:
 -----------------------------------------------------------------
@@ -152,8 +167,12 @@ public class SampleCustomAuth extends ZimbraCustomAuth {
          * mock logic to demostrate 
          *     - usage of the parameters
          *     - returning for success auth 
-         *     - throwing exception for unsuccessful auth.
+         *     - throwing Zimbra ServiceException for unsuccessful auth.
+         *     - throwing non ServiceException for unsuccessful auth.
          */ 
+        if (!password.equals("too-old"))
+           throw AccountServiceException.CHANGE_PASSWORD();
+         
         if (!password.equals("test123"))
            throw MyException("Invalid password!!");
            

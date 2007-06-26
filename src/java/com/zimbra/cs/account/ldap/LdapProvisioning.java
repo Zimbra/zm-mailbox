@@ -37,6 +37,7 @@ import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Account.CalendarUserType;
@@ -2622,8 +2623,18 @@ public class LdapProvisioning extends Provisioning {
                     handler.authenticate(acct, password);
                     return;
                 } catch (Exception e) {
-                    if (!allowFallback) 
-                        throw AccountServiceException.AUTH_FAILED(acct.getName(), e);
+                    if (!allowFallback) {
+                        if (e instanceof ServiceException) {
+                            throw (ServiceException)e;
+                        } else {   
+                            String msg = e.getMessage();
+                            if (StringUtil.isNullOrEmpty(msg))
+                                msg = "";
+                            else
+                                msg = " (" + msg + ")";
+                            throw AccountServiceException.AUTH_FAILED(acct.getName() + msg , e);
+                        }
+                    }
                     
                     ZimbraLog.account.warn("custom auth " + authMech.getHandler() + " for domain " +
                                            d.getName() + " failed, falling back to default mech");
