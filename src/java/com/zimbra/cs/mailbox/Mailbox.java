@@ -2012,7 +2012,6 @@ public class Mailbox {
                 if (comp != null)
                     Collections.sort(result, comp);
                 success = true;
-                return result;
             } else if (type == MailItem.TYPE_FOLDER || type == MailItem.TYPE_SEARCHFOLDER || type == MailItem.TYPE_MOUNTPOINT) {
                 for (Folder subfolder : mFolderCache.values())
                     if (subfolder.getType() == type)
@@ -2022,21 +2021,23 @@ public class Mailbox {
                 if (comp != null)
                     Collections.sort(result, comp);
                 success = true;
-                return result;
+            } else {
+            	List<MailItem.UnderlyingData> dataList = null;
+            	if (folder != null)
+            		dataList = DbMailItem.getByFolder(folder, type, sort);
+            	else
+            		dataList = DbMailItem.getByType(this, type, sort);
+            	if (dataList == null)
+            		return Collections.emptyList();
+            	for (MailItem.UnderlyingData data : dataList)
+            		if (data != null)
+            			result.add(getItem(data));
+            	// except for sort == SORT_BY_NAME_NAT,
+            	// sort was already done by the DbMailItem call...
+            	if ((sort & DbMailItem.SORT_BY_NAME_NATURAL_ORDER) > 0)
+                    Collections.sort(result, MailItem.getComparator(sort));
+            	success = true;
             }
-
-            List<MailItem.UnderlyingData> dataList = null;
-            if (folder != null)
-                dataList = DbMailItem.getByFolder(folder, type, sort);
-            else
-                dataList = DbMailItem.getByType(this, type, sort);
-            if (dataList == null)
-                return Collections.emptyList();
-            for (MailItem.UnderlyingData data : dataList)
-                if (data != null)
-                    result.add(getItem(data));
-            // sort was already done by the DbMailItem call...
-            success = true;
         } finally {
             endTransaction(success);
         }

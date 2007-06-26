@@ -883,12 +883,95 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
     }
 
+    public static abstract class SortNameNaturalOrder implements Comparator<MailItem> {
+    	private static class Name {
+    		public char[] buf;
+    		public int    pos;
+    		public int    len;
+    		public Name(String n) {
+    			buf = n.toCharArray();
+    			pos = 0;
+    			len = buf.length;
+    		}
+    		public char getChar() {
+    			if (pos < len)
+    				return buf[pos];
+    			return 0;
+    		}
+    		public Name next() {
+    			if (pos < len)
+    				pos++;
+    			return this;
+    		}
+    	}
+        public int compare(MailItem m1, MailItem m2) {
+        	if (m1.getName() == null)
+        		return returnResult(1);
+        	else if (m2.getName() == null)
+        		return returnResult(-1);
+        	return compareString(new Name(m1.getName()), new Name(m2.getName()));
+        }
+        public int compareString(Name n1, Name n2) {
+        	char first = n1.getChar();
+        	char second = n2.getChar();
+        	
+        	if (isDigit(first) && isDigit(second))
+        		return compareNumeric(n1, n2);
+        	else if (first != second)
+        		return returnResult(first - second);
+        	else if (first == 0 && second == 0)
+        		return 0;
+
+        	return compareString(n1.next(), n2.next());
+        }
+        public int compareNumeric(Name n1, Name n2) {
+        	int firstNum = readInt(n1);
+        	int secondNum = readInt(n2);
+
+        	if (firstNum != secondNum)
+        		return returnResult(firstNum - secondNum);
+        	
+        	return compareString(n1.next(), n2.next());
+        }
+        public int readInt(Name n) {
+        	int start = n.pos;
+        	int end = 0;
+        	while (isDigit(n.getChar()))
+        		n.next();
+        	end = n.pos;
+        	if (end == start)
+        		return 0;
+        	try {
+        		return Integer.parseInt(new String(n.buf, start, end - start));
+        	} catch (NumberFormatException e) {
+        		return 0;
+        	}
+        }
+        public boolean isDigit(char c) {
+        	return Character.isDigit(c);
+        }
+        protected abstract int returnResult(int result);
+    }
+
+    public static final class SortNameNaturalOrderAscending extends SortNameNaturalOrder {
+    	protected int returnResult(int result) {
+    		return result;
+    	}
+    }
+    
+    public static final class SortNameNaturalOrderDescending extends SortNameNaturalOrder {
+    	protected int returnResult(int result) {
+    		return -result;
+    	}
+    }
+    
     static Comparator<MailItem> getComparator(byte sort) {
         boolean ascending = (sort & DbMailItem.SORT_DIRECTION_MASK) == DbMailItem.SORT_ASCENDING;
         switch (sort & DbMailItem.SORT_FIELD_MASK) {
             case DbMailItem.SORT_BY_ID:       return ascending ? new SortIdAscending() : new SortIdDescending();
             case DbMailItem.SORT_BY_DATE:     return ascending ? new SortDateAscending() : new SortDateDescending();
             case DbMailItem.SORT_BY_SUBJECT:  return ascending ? new SortSubjectAscending() : new SortSubjectDescending();
+            case DbMailItem.SORT_BY_NAME_NATURAL_ORDER: return ascending ? new SortNameNaturalOrderAscending() : new SortNameNaturalOrderDescending();
         }
         return null;
     }

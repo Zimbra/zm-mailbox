@@ -1397,11 +1397,12 @@ public class DbMailItem {
     public static final byte SORT_BY_ID      = 0x08;
     public static final byte SORT_NONE       = 0x10;
     public static final byte SORT_BY_NAME    = 0x20;
+    public static final byte SORT_BY_NAME_NATURAL_ORDER = 0x40;  // natural order.  see MailItem.java for implementation
 
     public static final byte DEFAULT_SORT_ORDER = SORT_BY_DATE | SORT_DESCENDING;
 
     public static final byte SORT_DIRECTION_MASK = 0x01;
-    public static final byte SORT_FIELD_MASK     = 0x4E;
+    public static final byte SORT_FIELD_MASK     = 0x6E;
     
     // alias the sort column b/c of ambiguity problems (the sort column is included twice in the 
     // result set, and MySQL chokes on the ORDER BY when we do a UNION query (doesn't know
@@ -1414,6 +1415,7 @@ public class DbMailItem {
         switch (sort & SORT_FIELD_MASK) {
             case SORT_BY_SENDER:   str = "mi.sender";   stringVal = true;  break;
             case SORT_BY_SUBJECT:  str = "mi.subject";  stringVal = true;  break;
+            case SORT_BY_NAME_NATURAL_ORDER:
             case SORT_BY_NAME:     str = "mi.name";     stringVal = true;  break;
             case SORT_BY_ID:       str = "mi.id";    break;
             case SORT_NONE:        str = "NULL";     break;
@@ -2306,6 +2308,7 @@ public class DbMailItem {
                 case SORT_BY_SUBJECT:
                 case SORT_BY_SENDER:
                 case SORT_BY_NAME:
+                case SORT_BY_NAME_NATURAL_ORDER:
                     result.sortkey = rs.getString(COLUMN_SORTKEY);
                     break;
                 default:
