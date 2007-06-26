@@ -1016,7 +1016,9 @@ public abstract class Provisioning {
     public static final String A_zimbraAttachmentsScanEnabled = "zimbraAttachmentsScanEnabled";
     public static final String A_zimbraAttachmentsScanClass = "zimbraAttachmentsScanClass";
     public static final String A_zimbraAttachmentsScanURL = "zimbraAttachmentsScanURL";
-    
+
+    public static final String A_zimbraClusterType = "zimbraClusterType";
+
     public static final String A_zimbraServiceHostname = "zimbraServiceHostname";
 
     public static final String A_zimbraRedoLogEnabled            = "zimbraRedoLogEnabled";

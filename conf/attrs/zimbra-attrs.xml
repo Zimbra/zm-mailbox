@@ -2319,17 +2319,17 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
       MIME type object matches a given type or filename extension.
   </desc>
 </attr>
-    
+
 <attr id="504" name="zimbraReverseProxyLookupTarget" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether this server is a reverse proxy lookup target</desc>
 </attr>
-    
+
 <attr id="505" name="zimbraMtaAuthTarget" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether this server is a mta auth target</desc>
-</attr>   
-     
+</attr>
+
 <attr id="506" name="zimbraWebClientLoginURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo">
   <desc>login URL for web client to send the user to upon failed login, auth expired, or no/invalid auth</desc>
 </attr>
@@ -2338,5 +2338,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>logout URL for web client to send the user to upon explicit loggin out</desc>
 </attr>
 
-    
+<attr id="508" name="zimbraClusterType" type="enum" value="none,RedHat,Veritas" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>none</globalConfigValue>
+  <desc>
+    Type of HA cluster software in use; "none" by default, "RedHat" for Red Hat cluster
+    or "Veritas" for Veritas Cluster Server from Symantec
+  </desc>
+</attr>
+
 </attrs>
