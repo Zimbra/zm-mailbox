@@ -2346,4 +2346,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
+<attr id="509" name="zimbraMtaMyHostname" type="astring" max="256" cardinality="single" optionalIn="globalConfig">
+  <desc>value of postfix myhostname</desc>
+</attr>
+
+<attr id="510" name="zimbraMtaMyOrigin" type="astring" max="256" cardinality="single" optionalIn="globalConfig">
+  <desc>value of postfix myorigin</desc>
+</attr>
+
+origin
+
 </attrs>
