@@ -114,7 +114,7 @@ public class Flag extends Tag {
             
     public static final int ID_FLAG_INVITE = -24;
     public static final int BITMASK_INVITE = 1 << getIndex(ID_FLAG_INVITE); // 8388608
-    static { FLAG_REP[getIndex(ID_FLAG_NO_INHERIT)] = 'v'; }
+    static { FLAG_REP[getIndex(ID_FLAG_INVITE)] = 'v'; }
 
 
     static final String UNREAD_FLAG_ONLY = getAbbreviation(ID_FLAG_UNREAD) + "";
