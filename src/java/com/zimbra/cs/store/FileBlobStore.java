@@ -28,13 +28,16 @@
  */
 package com.zimbra.cs.store;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -302,14 +305,13 @@ public class FileBlobStore extends StoreManager {
     public InputStream getContent(Blob blob) throws IOException {
         if (blob == null)
             return null;
-        byte[] data = ByteUtil.getContent(blob.getFile());
-        if (data != null) {
-            if (ByteUtil.isGzipped(data))
-                data = ByteUtil.uncompress(data);
-            ByteArrayInputStream bais = new ByteArrayInputStream(data);
-            return bais;
-        }
-        return null;
+        InputStream is = new BufferedInputStream(new FileInputStream(blob.getFile()));
+        is.mark(2);
+        int header = is.read() | (is.read() << 8);
+        is.reset();
+        if (header == GZIPInputStream.GZIP_MAGIC)
+        	is = new GZIPInputStream(is);
+        return is;
     }
 
     /* (non-Javadoc)
