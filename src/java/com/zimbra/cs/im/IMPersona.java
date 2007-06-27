@@ -686,24 +686,29 @@ public class IMPersona extends ClassLogger {
                 for (Roster.Item item : roster.getItems()) {
                     IMAddr buddyAddr = IMAddr.fromJID(item.getJID());
                     Roster.Subscription subscript = item.getSubscription();
-                    IMSubscribedNotification not = IMSubscribedNotification
-                                .create(
-                                            buddyAddr,
-                                            item.getName(),
-                                            item.getGroups(),
-                                            (subscript == Roster.Subscription.both || subscript == Roster.Subscription.to),
-                                            item.getAsk());
-                    if (rosterNot != null) {
-                        rosterNot.addEntry(not);
-                    } else {
-                        postIMNotification(not);
-                    }
-                    if (doProbe) {
-                        if (item.getJID().getNode() != null) {
-                            if (!Interop.getInstance().isInteropJid(item.getJID())) {
-                                Presence probe = new Presence(Presence.Type.probe);
-                                probe.setTo(item.getJID());
-                                xmppRoute(probe);
+                    
+                    // do we need to tell the client about FROM subs?  We do need to tell the
+                    // client if the sub is unsubscribed, but not in the case of a roster SET
+                    if (subscript == Roster.Subscription.both || subscript == Roster.Subscription.to) {
+                        IMSubscribedNotification not = IMSubscribedNotification
+                        .create(
+                            buddyAddr,
+                            item.getName(),
+                            item.getGroups(),
+                            (subscript == Roster.Subscription.both || subscript == Roster.Subscription.to),
+                            item.getAsk());
+                        if (rosterNot != null) {
+                            rosterNot.addEntry(not);
+                        } else {
+                            postIMNotification(not);
+                        }
+                        if (doProbe) {
+                            if (item.getJID().getNode() != null) {
+                                if (!Interop.getInstance().isInteropJid(item.getJID())) {
+                                    Presence probe = new Presence(Presence.Type.probe);
+                                    probe.setTo(item.getJID());
+                                    xmppRoute(probe);
+                                }
                             }
                         }
                     }
