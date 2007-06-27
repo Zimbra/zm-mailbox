@@ -387,6 +387,19 @@ public class ZimbraSoapContext {
     List<SessionInfo> getReferencedSessions() {
         return mSessionInfo;
     }
+    
+    /**
+     * @return TRUE if any of our referenced sessions are brand-new.  This special-case API
+     *         is used to short-circuit blocking handlers so that they return immediately
+     *         to send a <refresh> block if one is necessary.
+     */
+    public boolean hasCreatedSession() {
+        for (SessionInfo sinfo : getReferencedSessions()) {
+            if (sinfo.created)
+                return true;
+        }
+        return false;
+    }
 
     public boolean beginWaitForNotifications(Continuation continuation) throws ServiceException {
         boolean someBlocked = false;

@@ -74,9 +74,14 @@ public class NoOp extends MailDocumentHandler  {
     }
     
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        
+	    ZimbraSoapContext zsc = getZimbraSoapContext(context);
         boolean wait = request.getAttributeBool(MailConstants.A_WAIT, false);
+
+        // See bug 16494 - if a session is new, we should return from the NoOp immediately so the client
+        // gets the <refresh> block 
+        if (zsc.hasCreatedSession())
+            wait = false;
+        
         if (wait) {
             HttpServletRequest servletRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
             Continuation continuation = ContinuationSupport.getContinuation(servletRequest, zsc);
