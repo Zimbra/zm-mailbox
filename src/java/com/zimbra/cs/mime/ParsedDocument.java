@@ -38,10 +38,11 @@ import org.apache.lucene.document.Field;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.FileUtil;
 import com.zimbra.cs.index.Fragment;
 import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.object.ObjectHandlerException;
+import com.zimbra.cs.store.StoreManager;
 
 public class ParsedDocument {
     private byte[] mContent;
@@ -54,9 +55,9 @@ public class ParsedDocument {
     private String mFragment;
     private long mCreatedDate;
 
-    public ParsedDocument(File file, String filename, String ctype, long createdDate, String creator)
+    public ParsedDocument(MailboxBlob blob, String filename, String ctype, long createdDate, String creator)
     throws ServiceException, IOException {
-        init(ByteUtil.getContent(file), filename, ctype, createdDate, creator);
+        init(ByteUtil.getContent(StoreManager.getInstance().getContent(blob), 0), filename, ctype, createdDate, creator);
     }
 
     public ParsedDocument(byte[] rawData, String filename, String ctype, long createdDate, String creator)
@@ -115,27 +116,4 @@ public class ParsedDocument {
 
     public String getCreator()      { return mCreator; }
     public long getCreatedDate()    { return mCreatedDate; }
-
-
-    public static void main(String[] args) throws Throwable {
-        ParsedDocument pd;
-        long timer, time;
-        String creator = "test@zimbra.com";
-        for (int i = 0; i < 5; i++) {
-            timer = System.currentTimeMillis();
-            pd = new ParsedDocument(new File("C:\\tmp\\todo.txt"), "todo.txt", "text/plain", timer, creator);
-            time = (System.currentTimeMillis() - timer);
-            System.out.println(pd.getFilename() + " (" + pd.getSize() + "b) {" + time + "us} [" + pd.getDigest() + "]: " + pd.getFragment());
-
-            timer = System.currentTimeMillis();
-            pd = new ParsedDocument(new File("C:\\tmp\\SOLTYREI.html"), "SOLTYREI.html", "text/html", timer, creator);
-            time = (System.currentTimeMillis() - timer);
-            System.out.println(pd.getFilename() + " (" + pd.getSize() + "b) {" + time + "us} [" + pd.getDigest() + "]: " + pd.getFragment());
-
-            timer = System.currentTimeMillis();
-            pd = new ParsedDocument(new File("C:\\tmp\\postgresql-8.2.1-US.pdf"), "postgresql-8.2.1-US.pdf", "application/pdf", timer, creator);
-            time = (System.currentTimeMillis() - timer);
-            System.out.println(pd.getFilename() + " (" + pd.getSize() + "b) {" + time + "us} [" + pd.getDigest() + "]: " + pd.getFragment());
-        }
-    }
 }

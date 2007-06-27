@@ -1830,7 +1830,7 @@ public final class MailboxIndex
             case MailItem.TYPE_WIKI:
                 try {
                     com.zimbra.cs.mailbox.Document document = (com.zimbra.cs.mailbox.Document) item;
-                    ParsedDocument pd = new ParsedDocument(document.getBlob().getBlob().getFile(),
+                    ParsedDocument pd = new ParsedDocument(document.getBlob(),
                                 document.getName(), 
                                 document.getContentType(),
                                 timestamp,
