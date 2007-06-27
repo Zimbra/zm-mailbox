@@ -176,6 +176,7 @@ public class MessageCache {
         }
 
         if (!cacheHit) {
+        	InputStream is = null;
             try {
                 // wasn't cached; fetch the content and create the MimeMessage
                 int size = item.getSize();
@@ -184,7 +185,7 @@ public class MessageCache {
                     cnode = new CacheNode(size, cnOrig.mMessage, ConvertedState.BOTH);
                 } else {
                     // use the raw byte array to construct the MimeMessage if possible, else read from disk
-                    InputStream is = (cnOrig == null || cnOrig.mContent == null ? fetchFromStore(item) : new ByteArrayInputStream(cnOrig.mContent));
+                    is = (cnOrig == null || cnOrig.mContent == null ? fetchFromStore(item) : new ByteArrayInputStream(cnOrig.mContent));
                     cnode = new CacheNode(size, new Mime.FixedMimeMessage(JMSession.getSession(), is), expand ? ConvertedState.BOTH : ConvertedState.RAW);
                     is.close();
                 }
@@ -199,7 +200,7 @@ public class MessageCache {
                         // if the conversion bombs for any reason, revert to the original
                         ZimbraLog.mailbox.warn("MIME converter failed for message " + item.getId(), e);
 
-                        InputStream is = (cnOrig == null || cnOrig.mContent == null ? fetchFromStore(item) : new ByteArrayInputStream(cnOrig.mContent));
+                        is = (cnOrig == null || cnOrig.mContent == null ? fetchFromStore(item) : new ByteArrayInputStream(cnOrig.mContent));
                         cnode = new CacheNode(size, new MimeMessage(JMSession.getSession(), is), ConvertedState.BOTH);
                         is.close();
                     }
@@ -211,6 +212,11 @@ public class MessageCache {
                 throw ServiceException.FAILURE("IOException while retrieving content for item " + item.getId(), e);
             } catch (MessagingException e) {
                 throw ServiceException.FAILURE("MessagingException while creating MimeMessage for item " + item.getId(), e);
+            } finally {
+            	if (is != null)
+            		try {
+            			is.close();
+            		} catch (IOException e) {}
             }
         } else {
             if (ZimbraLog.cache.isDebugEnabled())
