@@ -38,11 +38,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.Config;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.common.service.ServiceException;
@@ -111,6 +107,16 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
         try {
             account = prov.get(AccountBy.id, authToken.getAccountId());
             allowedZimletNames = prov.getCOS(account).getMultiAttrSet(Provisioning.A_zimbraZimletAvailableZimlets);
+
+			// add the admin zimlets
+			if (authToken.isAdmin() || authToken.isDomainAdmin()) {
+				List<Zimlet> allZimlets = prov.listAllZimlets();
+				for (Zimlet zimlet : allZimlets) {
+					if (zimlet.isExtension()) {
+						allowedZimletNames.add(zimlet.getName());
+					}
+				}
+			}
         }
         catch (ServiceException e) {
             ZimbraLog.zimlet.info("unable to get list of zimlets");
@@ -153,12 +159,6 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
                     ZimbraLog.zimlet.info("unauthorized request to zimlet "+zimletName+" from user "+authToken.getAccountId());
                     iter.remove();
                     continue;
-                }
-
-                boolean isAdmin = (authToken.isAdmin() || authToken.isDomainAdmin());
-                if (zimlet.isExtension() && !isAdmin) {
-                    ZimbraLog.zimlet.info("unauthorized request to zimlet "+zimletName+" from non admin user "+authToken.getAccountId());
-                    iter.remove();
                 }
             }
             catch (ServiceException se) {
