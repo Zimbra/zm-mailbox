@@ -34,6 +34,7 @@ import java.io.StringReader;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -97,7 +98,9 @@ public class DbMailbox {
         public int groupId;
     }
 
-    public synchronized static NewMboxId createMailbox(Connection conn, int mailboxId, String accountId, String comment) throws ServiceException {
+    public synchronized static NewMboxId createMailbox(
+            Connection conn, int mailboxId, String accountId, String comment, int lastBackupAt)
+    throws ServiceException {
         if (comment != null && comment.length() > MAX_COMMENT_LENGTH)
             comment = comment.substring(0, MAX_COMMENT_LENGTH);
 
@@ -109,13 +112,17 @@ public class DbMailbox {
             String idSource = (explicitId ? "?" : "next_mailbox_id");
             String limitClause = Db.supports(Db.Capability.LIMIT_CLAUSE) ? " ORDER BY index_volume_id LIMIT 1" : "";
             stmt = conn.prepareStatement("INSERT INTO mailbox" +
-                    "(account_id, id, group_id, index_volume_id, item_id_checkpoint, comment)" +
-                    " SELECT ?, " + idSource + ", 0, index_volume_id, " + (Mailbox.FIRST_USER_ID - 1) + ", ?" +
+                    "(account_id, id, group_id, index_volume_id, item_id_checkpoint, last_backup_at, comment)" +
+                    " SELECT ?, " + idSource + ", 0, index_volume_id, " + (Mailbox.FIRST_USER_ID - 1) + ", ?, ?" +
                     " FROM current_volumes" + limitClause);
             int attr = 1;
             stmt.setString(attr++, accountId);
             if (explicitId)
                 stmt.setInt(attr++, mailboxId);
+            if (lastBackupAt >= 0)
+                stmt.setInt(attr++, lastBackupAt);
+            else
+                stmt.setNull(attr++, Types.INTEGER);
             stmt.setString(attr++, comment);
             stmt.executeUpdate();
             stmt.close();

@@ -2359,4 +2359,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether to display external images in HTML mail</desc>
 </attr>
 
+<attr id="512" name="zimbraBackupAutoGroupedDays" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>7</globalConfigValue>
+  <desc>number of days to auto-group backups over</desc>
+</attr>
+
 </attrs>

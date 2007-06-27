@@ -563,6 +563,17 @@ public class MailboxManager {
     }
 
 
+    /**
+     * Returns the total number of mailboxes on this host.
+     * @return
+     */
+    public int getMailboxCount() {
+        synchronized (this) {
+            return mMailboxIds.size();
+        }
+    }
+
+
     /** Returns an array of all the mailbox IDs on this host.  Note that
      *  <code>Mailbox</code>es are lazily created, so this is not the same
      *  as the set of mailboxes for accounts whose <code>zimbraMailHost</code>
@@ -661,7 +672,7 @@ public class MailboxManager {
                 CreateMailbox redoPlayer = (octxt == null ? null : (CreateMailbox) octxt.getPlayer());
                 int id = (redoPlayer == null ? Mailbox.ID_AUTO_INCREMENT : redoPlayer.getMailboxId());
 
-                NewMboxId newMboxId = DbMailbox.createMailbox(conn, id, data.accountId, account.getName());
+                NewMboxId newMboxId = DbMailbox.createMailbox(conn, id, data.accountId, account.getName(), -1);
                 data.id = newMboxId.id;
                 data.schemaGroupId = newMboxId.groupId;
                 DbMailbox.createMailboxDatabase(conn, data.id, data.schemaGroupId);
