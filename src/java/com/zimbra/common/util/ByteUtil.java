@@ -244,18 +244,13 @@ public class ByteUtil {
 
 	/**
 	 * Determines if the data contained in the buffer is gzipped
-	 * by matching the first 2 bytes with GZIP magic number 0x1f, 0x8b.
+	 * by matching the first 2 bytes with GZIP magic GZIP_MAGIC (0x8b1f).
 	 * @param data
 	 * @return
 	 */
 	public static boolean isGzipped(byte[] data) {
-		if (data != null && data.length >= 2) {
-			// convert unsigned bytes to shorts
-			int first = data[0] & 0x00ff;
-			int second = data[1] & 0x00ff;
-			return first == 0x1f && second == 0x8b;
-		}
-		return false;
+		return data != null && data.length > 2 &&
+			((data[0] | (data[1] << 8)) == GZIPInputStream.GZIP_MAGIC);
 	}
 
     private static String encodeFSSafeBase64(byte[] data) {
