@@ -1448,7 +1448,7 @@ public class ZMailboxUtil implements DebugListener {
         Map<String,Object> attrs  = sig.getAttrs();
         attrs.put(Provisioning.A_zimbraPrefMailSignature, args[1]);
         ZSignature modSig = new ZSignature(sig.getName(), attrs);
-        mMbox.modifySiganture(modSig);
+        mMbox.modifySignature(modSig);
     }
 
     private void doRenameSignature(String args[]) throws ServiceException {
@@ -1456,7 +1456,7 @@ public class ZMailboxUtil implements DebugListener {
         Map<String,Object> attrs  = sig.getAttrs();
         attrs.put(Provisioning.A_zimbraPrefSignatureName, args[1]);
         ZSignature modSig = new ZSignature(sig.getName(), attrs);
-        mMbox.modifySiganture(modSig);
+        mMbox.modifySignature(modSig);
     }
 
     private ZSignature lookupSignature(String idOrName) throws ServiceException {

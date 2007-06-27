@@ -101,11 +101,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
-import java.util.Iterator;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -3356,10 +3355,21 @@ public class ZMailbox {
         return actionEl;
     }
 
-    public String createSignature(ZSignature signature) throws ServiceException {
+    private void updateSigs() {
+        try {
+            if (mGetInfoResult != null)
+                mGetInfoResult.setSignatures(getSignatures());
+        } catch (ServiceException e) {
+            /* ignore */
+        }
+    }
+
+    public synchronized String createSignature(ZSignature signature) throws ServiceException {
         XMLElement req = new XMLElement(AccountConstants.CREATE_SIGNATURE_REQUEST);
         signature.toElement(req);
-        return invoke(req).getElement(AccountConstants.E_SIGNATURE).getAttribute(AccountConstants.A_ID);
+        String id = invoke(req).getElement(AccountConstants.E_SIGNATURE).getAttribute(AccountConstants.A_ID);
+        updateSigs();
+        return id;
     }
 
     public List<ZSignature> getSignatures() throws ServiceException {
@@ -3372,15 +3382,17 @@ public class ZMailbox {
         return result;
     }
 
-    public void deleteSignature(String id) throws ServiceException {
+    public synchronized void deleteSignature(String id) throws ServiceException {
         XMLElement req = new XMLElement(AccountConstants.DELETE_SIGNATURE_REQUEST);
         req.addElement(AccountConstants.E_SIGNATURE).addAttribute(AccountConstants.A_ID, id);
         invoke(req);
+        updateSigs();
     }
 
-    public void modifySiganture(ZSignature signature) throws ServiceException {
+    public synchronized void modifySignature(ZSignature signature) throws ServiceException {
         XMLElement req = new XMLElement(AccountConstants.MODIFY_SIGNATURE_REQUEST);
         signature.toElement(req);
         invoke(req);
+        updateSigs();
     }
 }

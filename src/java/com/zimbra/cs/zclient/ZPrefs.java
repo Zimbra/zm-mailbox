@@ -69,6 +69,8 @@ public class ZPrefs {
 
     public boolean getReadingPaneEnabled() { return getBool(Provisioning.A_zimbraPrefReadingPaneEnabled); }
 
+    public boolean getMailSignatureEnabled() { return getBool(Provisioning.A_zimbraPrefMailSignatureEnabled); }
+
     public boolean getIncludeSpamInSearch() { return getBool(Provisioning.A_zimbraPrefIncludeSpamInSearch); }
 
     public boolean getIncludeTrashInSearch() { return getBool(Provisioning.A_zimbraPrefIncludeTrashInSearch); }
@@ -93,6 +95,9 @@ public class ZPrefs {
 
     public boolean getUseKeyboardShortcuts() { return getBool(Provisioning.A_zimbraPrefUseKeyboardShortcuts); }
 
+    public String getSignatureStyle() { return get(Provisioning.A_zimbraPrefMailSignatureStyle); }
+    public boolean getSignatureStyleTop() { return "outlook".equals(getSignatureStyle()); }
+    public boolean getSignatureStyleBottom() { return "internet".equals(getSignatureStyle()); }
 
     public String getGroupMailBy() { return get(Provisioning.A_zimbraPrefGroupMailBy); }
 

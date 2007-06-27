@@ -27,8 +27,8 @@ package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Provisioning;
 
 import java.util.ArrayList;
@@ -115,6 +115,10 @@ public class ZGetInfoResult {
 
     }
 
+    void setSignatures(List<ZSignature> sigs) {
+        mSignatures = sigs;
+    }
+    
     public List<ZSignature> getSignatures() {
         return mSignatures;
     }
