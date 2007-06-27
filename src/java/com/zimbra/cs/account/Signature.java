@@ -28,4 +28,8 @@ public class Signature extends NamedEntry implements Comparable {
     public Account getAccount() throws ServiceException {
         return Provisioning.getInstance().get(Provisioning.AccountBy.id, mAcctId);
     }
+    
+    public String getValue() { 
+        return getAttr(Provisioning.A_zimbraPrefMailSignature); 
+    }
 }

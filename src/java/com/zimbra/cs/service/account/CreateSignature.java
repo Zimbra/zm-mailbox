@@ -24,16 +24,19 @@
  */
 package com.zimbra.cs.service.account;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.DocumentHandler;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.SoapFaultException;
+
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class CreateSignature extends DocumentHandler {
@@ -43,13 +46,20 @@ public class CreateSignature extends DocumentHandler {
         
         canModifyOptions(zsc, account);
         
-        Element signatureEl = request.getElement(AccountConstants.E_SIGNATURE);
-        String name = signatureEl.getAttribute(AccountConstants.A_NAME);
-        Map<String,Object> attrs = AccountService.getAttrs(signatureEl, AccountConstants.A_NAME);
+        Element eReqSignature = request.getElement(AccountConstants.E_SIGNATURE);
+        String name = eReqSignature.getAttribute(AccountConstants.A_NAME);
+        
+        Map<String,Object> attrs = new HashMap<String, Object>();
+        String value = eReqSignature.getAttribute(AccountConstants.A_VALUE, null);
+        if (!StringUtil.isNullOrEmpty(value))
+            attrs.put(Provisioning.A_zimbraPrefMailSignature, value);
+        
         Signature signature = Provisioning.getInstance().createSignature(account, name, attrs);
         
         Element response = zsc.createElement(AccountConstants.CREATE_SIGNATURE_RESPONSE);
-        ToXML.encodeSignature(response, signature);
+        Element eRespSignature = response.addElement(AccountConstants.E_SIGNATURE);
+        eRespSignature.addAttribute(AccountConstants.A_ID, signature.getId());
         return response;
     }
 }
+

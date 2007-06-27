@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.AttributeCallback;
@@ -46,8 +47,11 @@ public class DefaultSignature implements AttributeCallback {
 
         if (!(value instanceof String))
             throw ServiceException.INVALID_REQUEST(Provisioning.A_zimbraPrefDefaultSignature + " is a single-valued attribute", null);
-        
+
         String defaultSigName = (String)value;
+        
+        if (StringUtil.isNullOrEmpty(defaultSigName))
+            return;
         
         if (entry == null) {
             // we are creating an accout

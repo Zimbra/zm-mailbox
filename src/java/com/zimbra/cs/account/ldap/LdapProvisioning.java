@@ -4063,9 +4063,12 @@ public class LdapProvisioning extends Provisioning {
      * We also need to check for presence of A_zimbraPrefSignatureName, because in the new scheme
      * a signature can have a name but not a value.
      * 
-     * The account signature is considered present i either A_zimbraPrefMailSignature or 
+     * The account signature is considered present if either A_zimbraPrefMailSignature or 
      * A_zimbraPrefSignatureName on the account is set.  If A_zimbraPrefSignatureName is not set,
      * getAccountSignature uses the account's name for the signature name.
+     * 
+     * Note: we do not set/writeback to LDAP the default signature to the account signature even 
+     * if it is the only signature.  The upgrade script should do that.
      * 
      */
     private boolean hasAccountSignature(Account acct) {
@@ -4219,6 +4222,11 @@ public class LdapProvisioning extends Provisioning {
         account.setCachedData(SIGNATURE_LIST_CACHE_KEY, null);
         
         String newName = (String) signatureAttrs.get(A_zimbraPrefSignatureName);
+        
+        // do not allow name to be wiped
+        if (newName!= null && newName.length()==0)
+            throw ServiceException.INVALID_REQUEST("empty signature name is not allowed", null);
+            
         boolean nameChanged = (newName != null && !newName.equals(signatureName));
         
         if (isAccountSignature(account, signatureName)) {
@@ -4270,9 +4278,6 @@ public class LdapProvisioning extends Provisioning {
         if (ldapEntry == null) 
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
 
-        if (isDefaultSignature(account, signatureName))
-            throw ServiceException.INVALID_REQUEST("can't delete default signature", null);
-        
         account.setCachedData(SIGNATURE_LIST_CACHE_KEY, null);
         
         if (isAccountSignature(account, signatureName)) {

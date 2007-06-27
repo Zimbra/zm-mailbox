@@ -687,52 +687,34 @@ Allowed attributes (see objectclass zimbraIdentity in zimbra.schema)
 ---------
 
 <CreateSignatureRequest>
-  <signature name="{signature-name}">
-    <a name="{name}">{value}</a>
-    ...
-    <a name="{name}">{value}</a>
-  </signature>
-</CreateSignatureRequest>
+  <signature name="{signature-name}" [value="{signature-value}]"/>
+</CreateSignatureRequest> 
 
 <CreateSignatureResponse>
-  <signature name="{signature-name}" id="{signature-id}">
-   ....
-  </signature>
+  <signature id="{id}"/>
 </CreateSignatureResponse>
 
 CreateSignature will set account default signature to the signature being created 
 if there is no default signature for the account.
-
-Allowed attributes (see objectclass zimbraSignature in zimbra.schema)
-
-	zimbraPrefMailSignature
-	zimbraPrefReplyToAddress
         
 ---------
 
 <GetSignaturesRequest/>
 
 <GetSignaturesResponse>
-  <signature name="{signature-name}" id="{signature-id}">
-    <a name="{name}">{value}</a>
-    ...
-    <a name="{name}">{value}</a>
-  </signature>+
+  <signature name="{signature-name}" id="{identity-id}" [value="{signature-value}"]/>+
 </GetSignaturesResponse>
 
 ---------
 
 <ModifySignatureRequest>
-  <signature [name="{signature-name}" | id="{signature-id}"]>
-    <a name="{name}">{value}</a>
-    ...
-    <a name="{name}">{value}</a>
-  </signature>
+  <signature id="{signature-id}" [name="{signature-name}"] [value="..."]/>
 </ModifySignatureRequest>
 
 <ModifySignatureResponse/>
 
-<-- must specify either 'name' or 'id' -->
+Changes attributes of the given signature.  Only the attributes specified in the request
+are modified.  If the name attribute is changed, the signatured is renamed.
 
 ---------
 

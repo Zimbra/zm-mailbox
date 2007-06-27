@@ -1036,14 +1036,18 @@ public class TestProvisioning extends TestCase {
         entryGot = mProv.get(account, Provisioning.SignatureBy.id, entry.getId());
         assertEquals(SIGNATURE_VALUE_MODIFIED, entryGot.getAttr(Provisioning.A_zimbraPrefMailSignature));
         
+        /*
         // try to delete the signature, since it is the default signature (because it is the only one)
         // it should not be allowed
+        // -- the above is no longer true, we now allow deleting default signature 
         try {
             mProv.deleteSignature(account, SIGNATURE_NAME);
             fail("ServiceException.INVALID_REQUEST not thrown"); // should not come to here
         } catch (ServiceException e) {
             assertEquals(ServiceException.INVALID_REQUEST, e.getCode());
         }
+        */
+        
         
         // create a second signature and set it as the default 
         String secondSigName = "second-sig";

@@ -24,7 +24,7 @@
  */
 package com.zimbra.cs.service.account;
 
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -49,26 +49,24 @@ public class ModifySignature extends DocumentHandler {
         Provisioning prov = Provisioning.getInstance();
 
         Element eSignature = request.getElement(AccountConstants.E_SIGNATURE);
-        Map<String,Object> attrs = AccountService.getAttrs(eSignature, AccountConstants.A_NAME);
         
-        // remove anything that doesn't start with zimbraPref. ldap will also do additional checks
-        for (Iterator<String> it = attrs.keySet().iterator(); it.hasNext(); )
-            if (!it.next().toLowerCase().startsWith("zimbrapref")) // if this changes, make sure we don't let them ever change objectclass
-                it.remove();
-
         Signature signature = null;
-        String key, id = eSignature.getAttribute(AccountConstants.A_ID, null);
-        if (id != null) {
-            signature = prov.get(account, SignatureBy.id, key = id);
-        } else {
-            signature = prov.get(account, SignatureBy.name, key = eSignature.getAttribute(AccountConstants.A_NAME));
-        }
+        String id = eSignature.getAttribute(AccountConstants.A_ID);
+        signature = prov.get(account, SignatureBy.id, id);
         if (signature == null)
-            throw AccountServiceException.NO_SUCH_SIGNATURE(key);
-
+            throw AccountServiceException.NO_SUCH_SIGNATURE(id);
+        
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        String value = eSignature.getAttribute(AccountConstants.A_VALUE, null);
+        if (value != null)
+            attrs.put(Provisioning.A_zimbraPrefMailSignature, value);
+        String name = eSignature.getAttribute(AccountConstants.A_NAME, null);
+        if (name != null)
+            attrs.put(Provisioning.A_zimbraPrefSignatureName, name);
         prov.modifySignature(account, signature.getName(), attrs);
         
         Element response = zsc.createElement(AccountConstants.MODIFY_SIGNATURE_RESPONSE);
         return response;
     }
 }
+
