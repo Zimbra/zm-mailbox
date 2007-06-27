@@ -272,20 +272,17 @@ public class ZimbraMailAdapter implements MailAdapter
                     // redirect mail to another address
                     ActionRedirect redirect = (ActionRedirect) action;
                     String addr = redirect.getAddress();
-                    ZimbraLog.filter.info("Redirecting message to " + addr);
+                    ZimbraLog.filter.info("Redirecting message to %s", addr);
                     MimeMessage mm = mParsedMessage.getMimeMessage();
                     try {
                         InternetAddress iaddr = new InternetAddress(addr);
                         Address[] raddr = new Address[1];
                         raddr[0] = iaddr;
                         Transport.send(mm, raddr);
-                    } catch (AddressException e) {
-                        throw MailServiceException.PARSE_ERROR("malformed address: " + addr, e);
-                    } catch (SendFailedException e) {
-                        SafeSendFailedException ssfe = new SafeSendFailedException(e);
-                        throw MailServiceException.SEND_FAILURE("redirect to " + addr + " failed", ssfe, ssfe.getInvalidAddresses(), ssfe.getValidUnsentAddresses());
+                    } catch (MessagingException e) {
+                        ZimbraLog.filter.warn("Redirect to %s failed.  Saving message to INBOX.  %s", addr, e.toString());
+                        addMessage(Mailbox.ID_FOLDER_INBOX);
                     }
-                    
                 } else {
                     throw new SieveException("unknown action " + action);
                 }
@@ -297,10 +294,7 @@ public class ZimbraMailAdapter implements MailAdapter
             throw new ZimbraSieveException(e);
         } catch (IOException e) {
             throw new ZimbraSieveException(e);
-        } catch (MessagingException e) {
-            throw new ZimbraSieveException(e);
         }
-
     }
 
     private List<Action> getDeliveryActions() {
