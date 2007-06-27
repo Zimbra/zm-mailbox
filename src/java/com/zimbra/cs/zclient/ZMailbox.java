@@ -3257,41 +3257,17 @@ public class ZMailbox {
         XMLElement req = new XMLElement(VoiceConstants.GET_VOICE_FEATURES_REQUEST);
         Element phoneEl = req.addElement(VoiceConstants.E_PHONE);
         phoneEl.addAttribute(MailConstants.A_NAME, features.getPhone().getName());
-        String[] allNames = features.getCallFeatureNames();
-        for (String name : allNames) {
-            ZCallFeature feature = features.findCallFeature(name);
-            if (feature.getIsSubscribed()) {
-                phoneEl.addElement(name);
-            }
+        Collection<ZCallFeature> featureList = features.getSubscribedFeatures();
+        for (ZCallFeature feature : featureList) {
+            phoneEl.addElement(feature.getName());
         }
         Element response = invoke(req);
 
         phoneEl = response.getElement(VoiceConstants.E_PHONE);
-        for (String name : allNames) {
+        for (ZCallFeature feature : featureList) {
+            String name = feature.getName();
             Element element = phoneEl.getElement(name);
-            if (VoiceConstants.E_VOICE_MAIL_PREFS.equals(name)) {
-                List<Element> voicePrefs = element.listElements(VoiceConstants.E_PREF);
-                for (Element voicePref : voicePrefs) {
-                    String voicePrefName = voicePref.getAttribute(MailConstants.A_NAME);
-                    ZCallFeature feature = features.findCallFeature(voicePrefName);
-                    if (feature != null) {
-                        feature.setText(voicePref.getText());
-                    }
-                }
-            } else {
-                ZCallFeature feature = features.findCallFeature(name);
-                Iterator<Element.Attribute> iter = element.attributeIterator();
-                while (iter.hasNext()) {
-                    Element.Attribute attribute = iter.next();
-                    String key = attribute.getKey();
-                    String value = attribute.getValue();
-                    if (VoiceConstants.A_ACTIVE.equals(key)) {
-                        feature.setIsActive(Element.parseBool(key, value));
-                    } else {
-                        feature.setData(key, value);
-                    }
-                }
-            }
+            feature.fromElement(element);
         }
     }
 
@@ -3300,37 +3276,19 @@ public class ZMailbox {
         XMLElement req = new XMLElement(VoiceConstants.MODIFY_VOICE_FEATURES_REQUEST);
         Element phoneEl = req.addElement(VoiceConstants.E_PHONE);
         phoneEl.addAttribute(MailConstants.A_NAME, newFeatures.getPhone().getName());
-        Collection<ZCallFeature> list = newFeatures.getFeatureList();
-        Element voiceMailPrefsNode = null;
+        Collection<ZCallFeature> list = newFeatures.getAllFeatures();
         for (ZCallFeature newFeature : list) {
-            if (newFeature.getIsVoiceMailPref()) {
-                if (voiceMailPrefsNode == null) {
-                    voiceMailPrefsNode = phoneEl.addElement(VoiceConstants.E_VOICE_MAIL_PREFS);
-                }
-                Element element = voiceMailPrefsNode.addElement(VoiceConstants.E_PREF);
-                element.setText(newFeature.getText());
-                element.addAttribute(MailConstants.A_NAME, newFeature.getName());
-            } else {
-                Element element = phoneEl.addElement(newFeature.getName());
-                element.addAttribute(VoiceConstants.A_SUBSCRIBED, true);
-                element.addAttribute(VoiceConstants.A_ACTIVE, newFeature.getIsActive());
-                Map<String, String> data = newFeature.getData();
-                for (String key : data.keySet()) {
-                    Element subEl = element.addElement(key);
-                    subEl.setText(newFeature.getData(key));
-                }
-            }
+            Element element = phoneEl.addElement(newFeature.getName());
+            newFeature.toElement(element);
         }
         invoke(req);
 
-        // Update succeeded...copy new data into cache.
+        // Copy new data into cache.
         ZPhoneAccount account = getPhoneAccount(newFeatures.getPhone().getName());
         ZCallFeatures oldFeatures = account.getCallFeatures();
-        synchronized (oldFeatures) {
-            for (ZCallFeature newFeature : list) {
-                ZCallFeature oldFeature = oldFeatures.getCallFeature(newFeature.getName());
-                oldFeature.assignFrom(newFeature);
-            }
+        for (ZCallFeature newFeature : list) {
+            ZCallFeature oldFeature = oldFeatures.getFeature(newFeature.getName());
+            oldFeature.assignFrom(newFeature);
         }
     }
 

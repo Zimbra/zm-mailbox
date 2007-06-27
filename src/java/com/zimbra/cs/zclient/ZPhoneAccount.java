@@ -49,7 +49,8 @@ public class ZPhoneAccount {
         return mPhone;
     }
 
-    public ZCallFeatures getCallFeatures() {
+    public ZCallFeatures getCallFeatures() throws ServiceException {
+        mCallFeatures.loadCallFeatures();
         return mCallFeatures;
     }
 }

@@ -33,30 +33,30 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Collection;
+import java.util.ArrayList;
 
 public class ZCallFeatures {
+
     private ZMailbox mMbox;
     private ZPhone mPhone;
     private Map<String, ZCallFeature> mCallFeatures;
-    private boolean mCallFeaturesDefined;
+    private boolean mCallFeaturesLoaded;
 
     public ZCallFeatures(ZMailbox mbox, ZPhone phone) {
         mMbox = mbox;
         mPhone = phone;
         mCallFeatures = new HashMap<String, ZCallFeature>();
-        mCallFeaturesDefined = false;
+        mCallFeaturesLoaded = false;
     }
 
     public ZCallFeatures(ZMailbox mbox, ZPhone phone, Element e) throws ServiceException {
         this(mbox, phone);
-        String[] names = getCallFeatureNames();
-        for (String name : names) {
-            mCallFeatures.put(name, new ZCallFeature(name, false));
-        }
-        names = getVoiceMailFeatureNames();
-        for (String name : names) {
-            mCallFeatures.put(name, new ZCallFeature(name, true));
-        }
+
+        this.addFeature(VoiceConstants.E_ANON_CALL_REJECTION);
+        this.addFeature(VoiceConstants.E_CALL_FORWARD);
+        this.addFeature(VoiceConstants.E_SELECTIVE_CALL_FORWARD);
+        this.addFeature(VoiceConstants.E_VOICE_MAIL_PREFS);
+
         List<Element> elements = e.listElements(VoiceConstants.E_CALL_FEATURE);
         for (Element element : elements) {
             String name = element.getAttribute(MailConstants.A_NAME);
@@ -66,36 +66,45 @@ public class ZCallFeatures {
             }
         }
     }
-
     public ZPhone getPhone() { return mPhone; }
 
-    public synchronized Map<String, ZCallFeature> getCallFeatures(ZMailbox mbox) throws ServiceException {
-        if (!mCallFeaturesDefined) {
-            mCallFeaturesDefined = true;
-            mbox.loadCallFeatures(this);
+    public void loadCallFeatures() throws ServiceException {
+        if (!mCallFeaturesLoaded) {
+            mCallFeaturesLoaded = true;
+            mMbox.loadCallFeatures(this);
         }
-        return mCallFeatures;
     }
 
-    public ZCallFeature getCallFeature(String name) throws ServiceException {
-        return getCallFeatures(mMbox).get(name);
+    public synchronized ZCallFeature getFeature(String name) {
+        ZCallFeature result = mCallFeatures.get(name);
+        if (result == null) {
+            result = addFeature(name);
+        }
+        return result;
     }
 
-    public ZCallFeature findCallFeature(String name) {
-        return mCallFeatures.get(name);
+    public ZSelectiveCallForwarding getSelectiveCallForwarding() {
+        return (ZSelectiveCallForwarding) getFeature(VoiceConstants.E_SELECTIVE_CALL_FORWARD);
     }
 
-    public ZCallFeature addCallFeature(String name, boolean isVoiceMailPref) {
-        ZCallFeature result = new ZCallFeature(name, isVoiceMailPref);
+    public ZVoiceMailPrefs getVoiceMailPrefs() {
+        return (ZVoiceMailPrefs) getFeature(VoiceConstants.E_VOICE_MAIL_PREFS);
+    }
+
+    public synchronized ZCallFeature addFeature(String name) {
+        ZCallFeature result;
+        if (VoiceConstants.E_SELECTIVE_CALL_FORWARD.equals(name)) {
+            result = new ZSelectiveCallForwarding(name);
+        } else if (VoiceConstants.E_VOICE_MAIL_PREFS.equals(name)) {
+            result = new ZVoiceMailPrefs(name);
+        } else {
+            result = new ZCallFeature(name);
+        }
         mCallFeatures.put(name, result);
         return result;
     }
 
-    public void removeCallFeature(String name) {
-        mCallFeatures.remove(name);
-    }
-
-    public Collection<ZCallFeature> getFeatureList() {
+    public Collection<ZCallFeature> getAllFeatures() {
         return mCallFeatures.values();
     }
 
@@ -103,14 +112,14 @@ public class ZCallFeatures {
         return mCallFeatures.isEmpty();
     }
 
-    public String[] getCallFeatureNames() {
-        return new String[] {
-            VoiceConstants.E_ANON_CALL_REJECTION, VoiceConstants.E_CALL_FORWARD,
-            VoiceConstants.E_SELECTIVE_CALL_FORWARD, VoiceConstants.E_VOICE_MAIL_PREFS
-        };
-    }
-
-    public String[] getVoiceMailFeatureNames() {
-        return new String[] { VoiceConstants.A_vmPrefEmailNotifAddress };
+    public List<ZCallFeature> getSubscribedFeatures() {
+        Collection<ZCallFeature> allFeatures = mCallFeatures.values();
+        List<ZCallFeature> result = new ArrayList<ZCallFeature>();
+        for (ZCallFeature feature : allFeatures) {
+            if (feature.getIsSubscribed()) {
+                result.add(feature);
+            }
+        }
+        return result;
     }
 }
