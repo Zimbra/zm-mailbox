@@ -4025,18 +4025,6 @@ public class LdapProvisioning extends Provisioning {
         }        
     }
     
-    /*
-     * Account entry "hold" a signature "slot".  This is because most of the accounts have only 
-     * one signature and we don't want to create an ldap signature entry for that.
-     */ 
-    private boolean isAccountSignature(Account acct, String signatureName) {
-        String acctSigName = acct.getAttr(Provisioning.A_zimbraPrefSignatureName);
-        if (acctSigName != null && signatureName.equals(acctSigName))
-            return true;
-        else
-            return false;
-    }
-    
     private boolean isDefaultSignature(Account acct, String signatureName) throws ServiceException {
         String defaultSigName = getDefaultSignature(acct);
         /*
@@ -4059,8 +4047,38 @@ public class LdapProvisioning extends Provisioning {
         modifyAttrs(acct, attrs);
     }
     
+    /*
+     * Account entry "holds" a signature "slot".  This is because most of the accounts have only 
+     * one signature and we don't want to create an ldap signature entry for that.
+     */ 
+    private boolean isAccountSignature(Account acct, String signatureName) {
+        String acctSigName = getAccountSignatureName(acct);
+        return (acctSigName.equals(signatureName));
+    }
+    
+    /*
+     * For backward compatibility (in the case when upgrade script is not run) to preserve the 
+     * signature on the account, we need to check for presence of A_zimbraPrefMailSignature.
+     * 
+     * We also need to check for presence of A_zimbraPrefSignatureName, because in the new scheme
+     * a signature can have a name but not a value.
+     * 
+     * The account signature is considered present i either A_zimbraPrefMailSignature or 
+     * A_zimbraPrefSignatureName on the account is set.  If A_zimbraPrefSignatureName is not set,
+     * getAccountSignature uses the account's name for the signature name.
+     * 
+     */
     private boolean hasAccountSignature(Account acct) {
-        return (acct.getAttr(Provisioning.A_zimbraPrefSignatureName) != null);
+        return (acct.getAttr(Provisioning.A_zimbraPrefMailSignature) != null || 
+                acct.getAttr(Provisioning.A_zimbraPrefSignatureName) != null);
+    }
+    
+    private String getAccountSignatureName(Account acct) {
+        String sigName = acct.getAttr(Provisioning.A_zimbraPrefSignatureName);
+        if (sigName == null)
+            sigName = acct.getName();
+        
+        return sigName;
     }
     
     private Signature getAccountSignature(Account acct) throws ServiceException {
@@ -4075,14 +4093,22 @@ public class LdapProvisioning extends Provisioning {
             if (value != null) attrs.put(name, value);            
         }
         
-        String sigName = acct.getAttr(Provisioning.A_zimbraPrefSignatureName);
+        String sigName = getAccountSignatureName(acct);
+       
         attrs.put(A_zimbraPrefSignatureId, acct.getId());
         
         return new Signature(acct, sigName, acct.getId(), attrs);        
     }
     
     private void modifyAccountSignature(Account acct, Map<String, Object>signatureAttrs, boolean setAsDefault) throws ServiceException {
+        
+        // if we are creating or renaming an account signature, the new name is in signatureAttrs, use that
         String acctSigName = (String)signatureAttrs.get(Provisioning.A_zimbraPrefSignatureName);
+        if (acctSigName == null) {
+            // we are just modifying other attrs of the signature, use the existing name
+            acctSigName = getAccountSignatureName(acct);
+        }
+        
         if (setAsDefault)
             signatureAttrs.put(Provisioning.A_zimbraPrefDefaultSignature, acctSigName);
         
@@ -4138,7 +4164,7 @@ public class LdapProvisioning extends Provisioning {
         AttributeManager.getInstance().preModify(signatureAttrs, null, attrManagerContext, true, true);
 
         if (!hasAccountSignature(account)) {
-            // the slot on the account does not exist, use it
+            // the slot on the account is not occupied, use it
             signatureAttrs.put(Provisioning.A_zimbraPrefSignatureName, signatureName);
             modifyAccountSignature(account, signatureAttrs, setAsDefault);
             return getAccountSignature(account);
@@ -4209,7 +4235,8 @@ public class LdapProvisioning extends Provisioning {
             if (signature == null)
                 throw AccountServiceException.NO_SUCH_SIGNATURE(signatureName);   
         
-            if (nameChanged) signatureAttrs.remove(A_zimbraPrefSignatureName);
+            if (nameChanged) 
+                signatureAttrs.remove(A_zimbraPrefSignatureName);
 
             modifyAttrs(signature, signatureAttrs, true);
             if (nameChanged) {
