@@ -212,7 +212,8 @@ public class ProvUtil implements DebugListener {
         GET_COS("getCos", "gc", "{name|id} [attr1 [attr2...]]", Category.COS, 1, Integer.MAX_VALUE),
         GET_DISTRIBUTION_LIST("getDistributionList", "gdl", "{list@domain|id} [attr1 [attr2...]]", Category.LIST, 1, Integer.MAX_VALUE),
         GET_DISTRIBUTION_LIST_MEMBERSHIP("getDistributionListMembership", "gdlm", "{name@domain|id}", Category.LIST, 1, 1),
-        GET_DOMAIN("getDomain", "gd", "{domain|id} [attr1 [attr2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE), 
+        GET_DOMAIN("getDomain", "gd", "{domain|id} [attr1 [attr2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE),
+        GET_DOMAIN_INFO("getDomainInfo", "gdi", "name|id|virtualHostname {value} [attr1 [attr2...]]", Category.DOMAIN, 2, Integer.MAX_VALUE), 
         GET_MAILBOX_INFO("getMailboxInfo", "gmi", "{account}", Category.MAILBOX, 1, 1),
         GET_QUOTA_USAGE("getQuotaUsage", "gqu", "{server}", Category.MAILBOX, 1, 1),        
         GET_SERVER("getServer", "gs", "{name|id} [attr1 [attr2...]]", Category.SERVER, 1, Integer.MAX_VALUE), 
@@ -438,7 +439,10 @@ public class ProvUtil implements DebugListener {
             break;            
         case GET_DOMAIN:
             dumpDomain(lookupDomain(args[1]), getArgNameSet(args, 2));
-            break;                        
+            break;
+        case GET_DOMAIN_INFO:
+            doGetDomainInfo(args);
+            break;
         case GET_SERVER:
             dumpServer(lookupServer(args[1]), getArgNameSet(args, 2));
             break;
@@ -643,6 +647,14 @@ public class ProvUtil implements DebugListener {
             return false;
         }
         return true;
+    }
+
+    private void doGetDomainInfo(String[] args) throws ServiceException {
+        if (!(mProv instanceof SoapProvisioning))
+            throw ServiceException.INVALID_REQUEST("can only be used via SOAP", null);
+        SoapProvisioning sp = (SoapProvisioning) mProv;
+        DomainBy by = DomainBy.fromString(args[1]);
+        dumpDomain(sp.getDomainInfo(by, args[2]), getArgNameSet(args, 3));
     }
 
     private void doGetQuotaUsage(String[] args) throws ServiceException {
