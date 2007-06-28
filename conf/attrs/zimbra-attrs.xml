@@ -2369,4 +2369,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>number of days to auto-group backups over</desc>
 </attr>
 
+<attr id="514" name="zimbraBackupAutoGroupedThrottled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>if true, limit the number of mailboxes in auto-grouped backup to total mailboxes divided by auto-group days</desc>
+</attr>
+
 </attrs>

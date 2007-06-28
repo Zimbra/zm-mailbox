@@ -1237,6 +1237,7 @@ public abstract class Provisioning {
     public static final String A_zimbraBackupReportEmailSubjectPrefix = "zimbraBackupReportEmailSubjectPrefix";
     public static final String A_zimbraBackupMode = "zimbraBackupMode";
     public static final String A_zimbraBackupAutoGroupedDays = "zimbraBackupAutoGroupedDays";
+    public static final String A_zimbraBackupAutoGroupedThrottled = "zimbraBackupAutoGroupedThrottled";
 
     /*
      * IM
