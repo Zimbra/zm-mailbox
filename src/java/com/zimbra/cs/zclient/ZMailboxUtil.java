@@ -39,7 +39,6 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.soap.SoapAccountInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -1437,25 +1436,19 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private void doCreateSignature(String args[]) throws ServiceException {
-        Map<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefMailSignature, args[1]);
-        ZSignature sig = new ZSignature(args[0], attrs);
+        ZSignature sig = new ZSignature(args[0], args[1]);
         System.out.println(mMbox.createSignature(sig));
     }
 
     private void doModifySignature(String args[]) throws ServiceException {
         ZSignature sig = lookupSignature(args[0]);
-        Map<String,Object> attrs  = sig.getAttrs();
-        attrs.put(Provisioning.A_zimbraPrefMailSignature, args[1]);
-        ZSignature modSig = new ZSignature(sig.getName(), attrs);
+        ZSignature modSig = new ZSignature(sig.getName(), args[1]);
         mMbox.modifySignature(modSig);
     }
 
     private void doRenameSignature(String args[]) throws ServiceException {
         ZSignature sig = lookupSignature(args[0]);
-        Map<String,Object> attrs  = sig.getAttrs();
-        attrs.put(Provisioning.A_zimbraPrefSignatureName, args[1]);
-        ZSignature modSig = new ZSignature(sig.getName(), attrs);
+        ZSignature modSig = new ZSignature(sig.getId(), args[1], sig.getValue());
         mMbox.modifySignature(modSig);
     }
 
