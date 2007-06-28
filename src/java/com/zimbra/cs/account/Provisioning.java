@@ -1236,7 +1236,8 @@ public abstract class Provisioning {
     public static final String A_zimbraBackupReportEmailSender = "zimbraBackupReportEmailSender";
     public static final String A_zimbraBackupReportEmailSubjectPrefix = "zimbraBackupReportEmailSubjectPrefix";
     public static final String A_zimbraBackupMode = "zimbraBackupMode";
-    public static final String A_zimbraBackupAutoGroupedDays = "zimbraBackupAutoGroupedDays";
+    public static final String A_zimbraBackupAutoGroupedInterval = "zimbraBackupAutoGroupedInterval";
+    public static final String A_zimbraBackupAutoGroupedNumIntervals = "zimbraBackupAutoGroupedNumIntervals";
     public static final String A_zimbraBackupAutoGroupedThrottled = "zimbraBackupAutoGroupedThrottled";
 
     /*
