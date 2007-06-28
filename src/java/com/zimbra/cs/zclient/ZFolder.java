@@ -208,7 +208,7 @@ public class ZFolder implements ZItem, Comparable {
 
         // sub folders
         for (Element child : e.listElements(MailConstants.E_FOLDER))
-            mSubFolders.add(new ZFolder(child, this));
+            mSubFolders.add(createSubFolder(child));
 
         // search
         for (Element s : e.listElements(MailConstants.E_SEARCH))
@@ -217,6 +217,10 @@ public class ZFolder implements ZItem, Comparable {
         // link
         for (Element l : e.listElements(MailConstants.E_MOUNT))
             mSubFolders.add(new ZMountpoint(l, this));
+    }
+
+    protected ZFolder createSubFolder(Element element) throws ServiceException {
+        return new ZFolder(element, this);
     }
 
     synchronized void addChild(ZFolder folder) {

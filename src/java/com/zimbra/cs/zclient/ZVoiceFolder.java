@@ -26,31 +26,38 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.VoiceConstants;
 import com.zimbra.common.service.ServiceException;
 
-public class ZPhoneAccount {
-    private ZFolder mFolder;
-    private ZPhone mPhone;
-    private ZCallFeatures mCallFeatures;
+import java.util.Map;
+import java.util.HashMap;
 
-    public ZPhoneAccount(Element e, ZMailbox mbox) throws ServiceException {
-        mPhone = new ZPhone(e.getAttribute(MailConstants.A_NAME));
-        mFolder = new ZVoiceFolder(e.getElement(MailConstants.E_FOLDER), null);
-        mCallFeatures = new ZCallFeatures(mbox, mPhone, e.getElement(VoiceConstants.E_CALL_FEATURES));
+public class ZVoiceFolder extends ZFolder {
+
+    private static Map<String, Integer> mSortMap;
+    static {
+        mSortMap = new HashMap<String, Integer>();
+        mSortMap.put(VoiceConstants.FNAME_PLACEDCALLS, 5);
+        mSortMap.put(VoiceConstants.FNAME_ANSWEREDCALLS, 4);
+        mSortMap.put(VoiceConstants.FNAME_MISSEDCALLS, 3);
+        mSortMap.put(VoiceConstants.FNAME_VOICEMAILINBOX, 1);
+        mSortMap.put(VoiceConstants.FNAME_TRASH, 2);
     }
 
-    public ZFolder getRootFolder() {
-        return mFolder;
+    public ZVoiceFolder(Element e, ZFolder parent) throws ServiceException {
+        super(e, parent);
     }
 
-    public ZPhone getPhone() {
-        return mPhone;
+    protected ZFolder createSubFolder(Element element) throws ServiceException {
+        return new ZVoiceFolder(element, this);
     }
 
-    public ZCallFeatures getCallFeatures() throws ServiceException {
-        mCallFeatures.loadCallFeatures();
-        return mCallFeatures;
+    public int compareTo(Object obj) {
+        if (!(obj instanceof ZVoiceFolder))
+            return 0;
+        ZFolder other = (ZFolder) obj;
+        int valueA = mSortMap.get(getName());
+        int valueB = mSortMap.get(other.getName());
+        return valueA - valueB;
     }
 }
