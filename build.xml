@@ -343,7 +343,7 @@
 		<isset property="use-tomcat"/>
 	</condition>
 	<!-- jetty loads jetty-util*.jar, log4j*.jar and slf4j*.jar, and ldap.jar conflicts with jetty naming stuff  -->
-	<condition property="war.exclude" value="${ical4j.jar},servlet-api.jar,jsp-api.jar,mail.jar,activation.jar,zimbra-native.jar,KeyView.jar,ldap.jar,jetty-util-*.jar,log4j*.jar,*slf4j*.jar">
+	<condition property="war.exclude" value="${ical4j.jar},servlet-api.jar,jsp-api.jar,mail.jar,activation.jar,zimbra-native.jar,KeyView.jar,ldap.jar,jetty-util-*.jar,log4j*.jar">
 		<isset property="use-jetty"/>
 	</condition>
 
