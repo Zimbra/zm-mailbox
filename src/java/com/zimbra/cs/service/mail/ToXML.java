@@ -1550,8 +1550,9 @@ public class ToXML {
             } else {
                 InputStream is = null;
                 try {
-                    is = mp.getInputStream();
-                    data = HtmlDefang.defang(is, neuter);
+                	is = mp.getInputStream();
+                	data = new String(ByteUtil.getContent(is, 0));
+                	data = HtmlDefang.defang(data, neuter);
                 } finally {
                     if (is != null) is.close();
                 }
