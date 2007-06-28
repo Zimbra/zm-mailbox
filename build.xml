@@ -417,13 +417,11 @@
 	</target>
 
     <target name="enable-im">
-      <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
-           classpathref="class.path" onerror="abort" src="${im.dir}/src/db/wildfireInit.sql" />
-      <copy overwrite="true" todir="${zimbra.home.dir}/conf/msgs">
-        <fileset dir="${im.dir}/src/i18n"/>
-      </copy>
       <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
         <arg line="-l -v mcf zimbraXMPPEnabled TRUE" />
+      </java>
+      <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+        <arg line="-l -v mc default zimbraFeatureIMEnabled TRUE" />
       </java>
       <antcall target="stop-webserver"/>
       <antcall target="start-webserver"/>
@@ -431,8 +429,13 @@
 
     <target name="disable-im">
       <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+        <arg line="-l -v mc default zimbraFeatureIMEnabled FALSE" />
+      </java>
+      <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
         <arg line="-l -v mcf zimbraXMPPEnabled FALSE" />
       </java>
+      <antcall target="stop-webserver"/>
+      <antcall target="start-webserver"/>
     </target>
 
     <target name="reset-im" depends="disable-im">
@@ -470,6 +473,7 @@
 		<copy tofile="${dist.dir}/conf/log4j.properties" file="${config.dir}/log4j.properties${production.suffix}" overwrite="true"/>
 		<copy tofile="${dist.dir}/conf/timezones.ics" file="${config.dir}/timezones.ics" overwrite="true"/>
 		<copy todir="${dist.dir}/conf/msgs" overwrite="true"><fileset dir="${config.dir}/msgs"/></copy>
+        <copy todir="${dist.dir}/conf/msgs" overwrite="true"><fileset dir="${im.dir}/src/i18n"/></copy>
 		<copy todir="${dist.dir}/conf/attrs" overwrite="true"><fileset dir="${build.dir}/attrs"/></copy>
 		<fixcrlf srcdir="${dist.dir}/conf" eol="unix" includes="**" />
 
