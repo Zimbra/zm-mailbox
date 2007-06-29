@@ -103,6 +103,8 @@ public class AccountConstants {
     public static final String E_ATTR = "attr";
     public static final String E_ATTRS = "attrs";
     public static final String E_QUOTA_USED = "used";
+    public static final String E_LAST_ACCESS = "accessed";
+    public static final String E_RECENT_MSGS = "recent";
     public static final String E_ZIMLET = "zimlet";
     public static final String E_ZIMLETS = "zimlets";
     public static final String E_ZIMLET_CONTEXT = "zimletContext";
