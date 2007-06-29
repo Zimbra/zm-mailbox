@@ -48,8 +48,8 @@ public class SaveWiki extends WikiDocumentHandler {
     
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        OperationContext octxt = lc.getOperationContext();
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        OperationContext octxt = getOperationContext(zsc, context);
 
         Element msgElem = request.getElement(MailConstants.E_WIKIWORD);
         String subject = msgElem.getAttribute(MailConstants.A_NAME, null);
@@ -59,7 +59,7 @@ public class SaveWiki extends WikiDocumentHandler {
         if (id == null) {
         	itemId = 0;
         } else {
-        	ItemId iid = new ItemId(id, lc);
+        	ItemId iid = new ItemId(id, zsc);
         	itemId = iid.getId();
         }
 
@@ -69,14 +69,14 @@ public class SaveWiki extends WikiDocumentHandler {
         } catch (IOException ioe) {
         	throw ServiceException.FAILURE("cannot convert", ioe);
         }
-        WikiContext ctxt = new WikiContext(octxt, lc.getRawAuthToken());
-        WikiPage page = WikiPage.create(subject, getAuthor(lc), rawData);
-        Wiki.addPage(ctxt, page, itemId, ver, getRequestedFolder(request, lc));
+        WikiContext ctxt = new WikiContext(octxt, zsc.getRawAuthToken());
+        WikiPage page = WikiPage.create(subject, getAuthor(zsc), rawData);
+        Wiki.addPage(ctxt, page, itemId, ver, getRequestedFolder(request, zsc));
         Document wikiItem = page.getWikiItem(ctxt);
         
-        Element response = lc.createElement(MailConstants.SAVE_WIKI_RESPONSE);
+        Element response = zsc.createElement(MailConstants.SAVE_WIKI_RESPONSE);
         Element m = response.addElement(MailConstants.E_WIKIWORD);
-        m.addAttribute(MailConstants.A_ID, new ItemIdFormatter(lc).formatItemId(wikiItem));
+        m.addAttribute(MailConstants.A_ID, new ItemIdFormatter(zsc).formatItemId(wikiItem));
         m.addAttribute(MailConstants.A_VERSION, wikiItem.getVersion());
         return response;
 	}

@@ -331,24 +331,6 @@ public class ZimbraSoapContext {
         return "LC(mbox=" + mAuthTokenAccountId + sessionPart + ")";
     }
 
-    /** Generates a new {@link com.zimbra.cs.mailbox.Mailbox.OperationContext}
-     *  object reflecting the constraints serialized in the <tt>&lt;context></tt>
-     *  element in the SOAP header.<p>
-     * 
-     *  These optional constraints include:<ul>
-     *  <li>the account ID from the auth token</li>
-     *  <li>the highest change number the client knows about</li>
-     *  <li>how stringently to check accessed items against the known change
-     *      highwater mark</li></ul>
-     * 
-     * @return A new OperationContext object */
-    public OperationContext getOperationContext() throws ServiceException {
-        OperationContext octxt = new OperationContext(mAuthTokenAccountId, mAuthToken != null && (mAuthToken.isAdmin() || mAuthToken.isDomainAdmin()));
-        octxt.setChangeConstraint(mChangeConstraintType, mMaximumChangeId);
-        octxt.setRequestIP(mRequestIP);
-        return octxt;
-    }
-
     /** Returns the account id the request is supposed to operate on.  This
      *  can be explicitly specified in the supplied context; it defaults to
      *  the account id in the auth token. */
@@ -517,6 +499,18 @@ public class ZimbraSoapContext {
      *  request, in the format "name/version". s*/
     public String getUserAgent() {
         return mUserAgent;
+    }
+
+    public String getRequestIP() {
+        return mRequestIP;
+    }
+
+    boolean getChangeConstraintType() {
+        return mChangeConstraintType;
+    }
+
+    int getChangeConstraintLimit() {
+        return mMaximumChangeId;
     }
 
     public boolean wantsUnqualifiedIds() {

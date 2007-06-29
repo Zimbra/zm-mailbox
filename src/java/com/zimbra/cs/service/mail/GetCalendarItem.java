@@ -54,22 +54,22 @@ public class GetCalendarItem extends CalendarRequest {
     protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
-        OperationContext octxt = lc.getOperationContext();
-        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zsc);
+        OperationContext octxt = getOperationContext(zsc, context);
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         boolean sync = request.getAttributeBool(MailConstants.A_SYNC, false);
         boolean includeContent = request.getAttributeBool(MailConstants.A_CAL_INCLUDE_CONTENT, false);
-        ItemId iid = new ItemId(request.getAttribute("id"), lc);
-        sLog.info("<GetCalendarItem id=" + iid.getId() + "> " + lc);
+        ItemId iid = new ItemId(request.getAttribute("id"), zsc);
+        sLog.info("<GetCalendarItem id=" + iid.getId() + "> " + zsc);
 
         // want to return modified date only on sync-related requests
         int fields = ToXML.NOTIFY_FIELDS;
         if (sync)
             fields |= Change.MODIFIED_CONFLICT;
 
-        Element response = getResponseElement(lc);
+        Element response = getResponseElement(zsc);
         synchronized(mbox) {
             CalendarItem appointment = mbox.getCalendarItemById(octxt, iid.getId());
             ToXML.encodeCalendarItemSummary(response, ifmt, appointment,

@@ -127,10 +127,10 @@ public class ParseMimeMessage {
      *
      */
     static abstract class InviteParser {
-        abstract protected InviteParserResult parseInviteElement(ZimbraSoapContext zsc, Account account, Element invElement) throws ServiceException;
+        abstract protected InviteParserResult parseInviteElement(ZimbraSoapContext zsc, OperationContext octxt, Account account, Element invElement) throws ServiceException;
 
-        public final InviteParserResult parse(ZimbraSoapContext zsc, Account account, Element invElement) throws ServiceException {
-            mResult = parseInviteElement(zsc, account, invElement);
+        public final InviteParserResult parse(ZimbraSoapContext zsc, OperationContext octxt, Account account, Element invElement) throws ServiceException {
+            mResult = parseInviteElement(zsc, octxt, account, invElement);
             return mResult;
         }
 
@@ -147,7 +147,7 @@ public class ParseMimeMessage {
 
     // by default, no invite allowed
     static InviteParser NO_INV_ALLOWED_PARSER = new InviteParser() {
-        public InviteParserResult parseInviteElement(ZimbraSoapContext zsc, Account account, Element inviteElem)
+        public InviteParserResult parseInviteElement(ZimbraSoapContext zsc, OperationContext octxt, Account account, Element inviteElem)
         throws ServiceException {
             throw ServiceException.INVALID_REQUEST("No <inv> element allowed for this request", null);
         }
@@ -163,10 +163,10 @@ public class ParseMimeMessage {
         public String iCalUUID = null;         // NULL unless there is an iCal part
     }
 
-    public static MimeMessage parseMimeMsgSoap(ZimbraSoapContext zsc, Mailbox mbox, Element msgElem,
-                                               MimeBodyPart[] additionalParts, MimeMessageData out)
+    public static MimeMessage parseMimeMsgSoap(ZimbraSoapContext zsc, OperationContext octxt, Mailbox mbox,
+                                               Element msgElem, MimeBodyPart[] additionalParts, MimeMessageData out)
     throws ServiceException {
-        return parseMimeMsgSoap(zsc, mbox, msgElem, additionalParts, NO_INV_ALLOWED_PARSER, out);
+        return parseMimeMsgSoap(zsc, octxt, mbox, msgElem, additionalParts, NO_INV_ALLOWED_PARSER, out);
     }
 
     // Recursively find and return the content of the first text/plain part.
@@ -194,6 +194,7 @@ public class ParseMimeMessage {
     private static class ParseMessageContext {
         MimeMessageData out;
         ZimbraSoapContext zsc;
+        OperationContext octxt;
         Mailbox mbox;
         boolean use2231;
         String defaultCharset;
@@ -204,17 +205,17 @@ public class ParseMimeMessage {
      * and also fill in the MimeMessageData structure with information we parsed out of it (e.g. contained 
      * Invite, msgids, etc etc)
      * @param zsc TODO
+     * @param octxt TODO
      * @param mbox
      * @param msgElem the <m> element
      * @param additionalParts - MimeBodyParts that we want to have added to the MimeMessage (ie things the server is adding onto the message)
      * @param inviteParser Callback which handles <inv> embedded invite components
      * @param out Holds info about things we parsed out of the message that the caller might want to know about
-     *  
      * @return
      * @throws ServiceException
      */
-    public static MimeMessage parseMimeMsgSoap(ZimbraSoapContext zsc, Mailbox mbox, Element msgElem, MimeBodyPart[] additionalParts,
-                                               InviteParser inviteParser, MimeMessageData out)
+    public static MimeMessage parseMimeMsgSoap(ZimbraSoapContext zsc, OperationContext octxt, Mailbox mbox, Element msgElem,
+                                               MimeBodyPart[] additionalParts, InviteParser inviteParser, MimeMessageData out)
     throws ServiceException {
         /* msgElem == "<m>" E_MSG */
         assert(msgElem.getName().equals(MailConstants.E_MSG));
@@ -223,6 +224,7 @@ public class ParseMimeMessage {
         ParseMessageContext ctxt = new ParseMessageContext();
         ctxt.out = out;
         ctxt.zsc = zsc;
+        ctxt.octxt = octxt;
         ctxt.mbox = mbox;
         ctxt.use2231 = target.getBooleanAttr(Provisioning.A_zimbraPrefUseRfc2231, false);
         ctxt.defaultCharset = target.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, Mime.P_CHARSET_UTF8);
@@ -255,7 +257,7 @@ public class ParseMimeMessage {
                 int curAltPart = 0;
 
                 // goes into the "content" subpart
-                InviteParserResult result = inviteParser.parse(zsc, mbox.getAccount(), inviteElem);
+                InviteParserResult result = inviteParser.parse(zsc, octxt, mbox.getAccount(), inviteElem);
                 if (partElem != null && result.mCal != null) {
                     // If textual content is provided and there's an invite,
                     // set the text as DESCRIPTION of the iCalendar.  This helps
@@ -378,16 +380,15 @@ public class ParseMimeMessage {
                 ctxt.out.uploads.addAll(uploads);
         }
 
-        OperationContext octxt = ctxt.zsc.getOperationContext();
         for (Element elem : attachElem.listElements()) {
             String eName = elem.getName();
             if (eName.equals(MailConstants.E_MIMEPART)) {
                 ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_MESSAGE_ID), (String) null);
                 String part = elem.getAttribute(MailConstants.A_PART);
                 if (!iid.hasSubpart()) {
-                    attachPart(mmp, ctxt.mbox.getMessageById(octxt, iid.getId()), part, contentID, ctxt);
+                    attachPart(mmp, ctxt.mbox.getMessageById(ctxt.octxt, iid.getId()), part, contentID, ctxt);
                 } else {
-                    CalendarItem calItem = ctxt.mbox.getCalendarItemById(octxt, iid.getId());
+                    CalendarItem calItem = ctxt.mbox.getCalendarItemById(ctxt.octxt, iid.getId());
                     MimeMessage calMm = calItem.getSubpartMessage(iid.getSubpartId());
                     MimePart calMp = Mime.getMimePart(calMm, part);
                     if (calMp == null)
@@ -396,10 +397,10 @@ public class ParseMimeMessage {
                 }
             } else if (eName.equals(MailConstants.E_MSG)) {
                 int messageId = (int) elem.getAttributeLong(MailConstants.A_ID);
-                attachMessage(mmp, ctxt.mbox.getMessageById(octxt, messageId), contentID);
+                attachMessage(mmp, ctxt.mbox.getMessageById(ctxt.octxt, messageId), contentID);
             } else if (eName.equals(MailConstants.E_CONTACT)) {
                 int contactId = (int) elem.getAttributeLong(MailConstants.A_ID);
-                attachContact(mmp, ctxt.mbox.getContactById(octxt, contactId), contentID, ctxt);
+                attachContact(mmp, ctxt.mbox.getContactById(ctxt.octxt, contactId), contentID, ctxt);
             }
         }
     }
@@ -802,8 +803,9 @@ public class ParseMimeMessage {
         HashMap<String, Object> context = new HashMap<String, Object>();
         context.put(com.zimbra.soap.SoapServlet.ZIMBRA_AUTH_TOKEN, new com.zimbra.cs.account.AuthToken(acct).getEncoded());
         ZimbraSoapContext zsc = new ZimbraSoapContext(null, context, com.zimbra.common.soap.SoapProtocol.SoapJS);
+        OperationContext octxt = new OperationContext(acct);
 
-        MimeMessage mm = parseMimeMsgSoap(zsc, null, m, null, new MimeMessageData());
+        MimeMessage mm = parseMimeMsgSoap(zsc, octxt, null, m, null, new MimeMessageData());
         mm.writeTo(System.out);
     }
 }

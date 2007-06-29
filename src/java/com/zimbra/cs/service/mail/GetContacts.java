@@ -58,7 +58,7 @@ public class GetContacts extends MailDocumentHandler  {
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext zsc = getZimbraSoapContext(context);
 		Mailbox mbox = getRequestedMailbox(zsc);
-		Mailbox.OperationContext octxt = zsc.getOperationContext();
+		Mailbox.OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
 		boolean sync = request.getAttributeBool(MailConstants.A_SYNC, false);
@@ -82,7 +82,7 @@ public class GetContacts extends MailDocumentHandler  {
 		ArrayList<String> attrs = null;
 		ArrayList<ItemId> ids = null;
 
-		for (Element e : request.listElements())
+		for (Element e : request.listElements()) {
 			if (e.getName().equals(MailConstants.E_ATTRIBUTE)) {
 				String name = e.getAttribute(MailConstants.A_ATTRIBUTE_NAME);
 				if (attrs == null)
@@ -101,6 +101,7 @@ public class GetContacts extends MailDocumentHandler  {
 				// remove it from the request, so we can re-use the request for proxying below
 				e.detach();
 			}
+        }
 
 		Element response = zsc.createElement(MailConstants.GET_CONTACTS_RESPONSE);
 

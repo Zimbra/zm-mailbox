@@ -43,7 +43,6 @@ import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.redolog.RedoCommitCallback;
 import com.zimbra.cs.redolog.RedoException;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
@@ -51,7 +50,6 @@ import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.util.JMSession;
-
 
 /**
  * @author jhahm
@@ -199,9 +197,7 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
         mConvFirstMsgId = convFirstMsgId;
     }
 
-    public void setCalendarItemAttrs(int calItemId,
-                int folderId,
-                short volumeId) {
+    public void setCalendarItemAttrs(int calItemId, int folderId, short volumeId) {
         mCalendarItemId = calItemId;
         mFolderId = folderId;
         mVolumeId = volumeId;
@@ -223,11 +219,11 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
         return mFolderId;
     }
     
-    protected int getFlags() { 
+    public int getFlags() { 
         return mFlags;
     }
     
-    protected String getTags() {
+    public String getTags() {
         return mTags;
     }        
 

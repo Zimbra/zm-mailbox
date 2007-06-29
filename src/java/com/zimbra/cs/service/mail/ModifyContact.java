@@ -57,7 +57,7 @@ public class ModifyContact extends MailDocumentHandler  {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
-        OperationContext octxt = zsc.getOperationContext();
+        OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         boolean replace = request.getAttributeBool(MailConstants.A_REPLACE, false);

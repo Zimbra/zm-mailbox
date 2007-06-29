@@ -45,9 +45,9 @@ public class ICalReply extends MailDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context)
             throws ServiceException, SoapFaultException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
-        OperationContext octxt = lc.getOperationContext();
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zsc);
+        OperationContext octxt = getOperationContext(zsc, context);
 
         Element icalElem = request.getElement(MailConstants.E_CAL_ICAL);
         String icalStr = icalElem.getText();
@@ -74,7 +74,7 @@ public class ICalReply extends MailDocumentHandler {
             mbox.processICalReply(octxt, inv);
         }
 
-        Element response = getResponseElement(lc);
+        Element response = getResponseElement(zsc);
         return response;
     }
 }

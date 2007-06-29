@@ -67,7 +67,7 @@ public class AdminSession extends Session {
     public Object getData(String key) { return mData.get(key); }
     public void setData(String key, Object data) { mData.put(key, data); }
 
-    @Override public void notifyPendingChanges(int changeId, PendingModifications pns) { }
+    @Override public void notifyPendingChanges(PendingModifications pns, int changeId, Session source) { }
 
     @Override protected void cleanup() { }
 

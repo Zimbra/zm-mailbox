@@ -50,15 +50,15 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class GetTag extends MailDocumentHandler  {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-		ZimbraSoapContext lc = getZimbraSoapContext(context);
-		Mailbox mbox = getRequestedMailbox(lc);
-		OperationContext octxt = lc.getOperationContext();
-        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
+		ZimbraSoapContext zsc = getZimbraSoapContext(context);
+		Mailbox mbox = getRequestedMailbox(zsc);
+		OperationContext octxt = getOperationContext(zsc, context);
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
         
 		List<? extends MailItem> tags = mbox.getItemList(octxt, MailItem.TYPE_TAG, -1, DbMailItem.SORT_NONE);
         
 
-		Element response = lc.createElement(MailConstants.GET_TAG_RESPONSE);
+		Element response = zsc.createElement(MailConstants.GET_TAG_RESPONSE);
 		if (tags != null) {
 			for (Iterator it = tags.iterator(); it.hasNext(); ) {
 				Tag tag = (Tag) it.next();

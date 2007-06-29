@@ -53,13 +53,13 @@ public class CreateNote extends MailDocumentHandler {
     protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-		ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
-        Mailbox.OperationContext octxt = lc.getOperationContext();
-        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
+		ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zsc);
+        Mailbox.OperationContext octxt = getOperationContext(zsc, context);
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         Element t = request.getElement(MailConstants.E_NOTE);
-        ItemId iidFolder = new ItemId(t.getAttribute(MailConstants.A_FOLDER), lc);
+        ItemId iidFolder = new ItemId(t.getAttribute(MailConstants.A_FOLDER), zsc);
         String content = t.getAttribute(MailConstants.E_CONTENT);
         byte color = (byte) t.getAttributeLong(MailConstants.A_COLOR, MailItem.DEFAULT_COLOR);
         String strBounds = t.getAttribute(MailConstants.A_BOUNDS, null);
@@ -67,7 +67,7 @@ public class CreateNote extends MailDocumentHandler {
 
         Note note = mbox.createNote(octxt, content, bounds, color, iidFolder.getId());
 
-        Element response = lc.createElement(MailConstants.CREATE_NOTE_RESPONSE);
+        Element response = zsc.createElement(MailConstants.CREATE_NOTE_RESPONSE);
         if (note != null)
         	ToXML.encodeNote(response, ifmt, note);
         return response;

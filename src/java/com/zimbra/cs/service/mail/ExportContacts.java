@@ -49,12 +49,12 @@ public class ExportContacts extends MailDocumentHandler  {
     protected boolean checkMountpointProxy(Element request)  { return true; }
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
-        OperationContext octxt = lc.getOperationContext();
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zsc);
+        OperationContext octxt = getOperationContext(zsc, context);
 
         String folder = request.getAttribute(MailConstants.A_FOLDER, null);
-        ItemId iidFolder = folder == null ? null : new ItemId(folder, lc);
+        ItemId iidFolder = folder == null ? null : new ItemId(folder, zsc);
 
         String ct = request.getAttribute(MailConstants.A_CONTENT_TYPE);
         if (!ct.equals("csv"))
@@ -68,7 +68,7 @@ public class ExportContacts extends MailDocumentHandler  {
         
         ContactCSV.toCSV(contacts, sb);
 
-        Element response = lc.createElement(MailConstants.EXPORT_CONTACTS_RESPONSE);
+        Element response = zsc.createElement(MailConstants.EXPORT_CONTACTS_RESPONSE);
         Element content = response.addElement(MailConstants.E_CONTENT);
         content.setText(sb.toString());
 

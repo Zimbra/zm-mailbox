@@ -86,7 +86,7 @@ public class WaitSetSession extends Session {
     protected long getSessionIdleLifetime() { return 0; }
 
     @Override
-    public void notifyPendingChanges(int changeId, PendingModifications pns) {
+    public void notifyPendingChanges(PendingModifications pns, int changeId, Session source) {
         if (changeId > mHighestChangeId)
             mHighestChangeId = changeId;
         

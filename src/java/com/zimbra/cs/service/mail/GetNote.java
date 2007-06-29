@@ -45,10 +45,10 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class GetNote extends MailDocumentHandler {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-		ZimbraSoapContext lc = getZimbraSoapContext(context);
-		Mailbox mbox = getRequestedMailbox(lc);
-		Mailbox.OperationContext octxt = lc.getOperationContext();
-        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
+		ZimbraSoapContext zsc = getZimbraSoapContext(context);
+		Mailbox mbox = getRequestedMailbox(zsc);
+		Mailbox.OperationContext octxt = getOperationContext(zsc, context);
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 		
 		Element enote = request.getElement(MailConstants.E_NOTE);
 		int noteId = (int) enote.getAttributeLong(MailConstants.A_ID);
@@ -58,7 +58,7 @@ public class GetNote extends MailDocumentHandler {
 		if (note == null)
 			throw MailServiceException.NO_SUCH_NOTE(noteId);
 		
-		Element response = lc.createElement(MailConstants.GET_NOTE_RESPONSE);
+		Element response = zsc.createElement(MailConstants.GET_NOTE_RESPONSE);
 		ToXML.encodeNote(response, ifmt, note);
 		return response;
 	}

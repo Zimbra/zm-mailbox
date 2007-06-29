@@ -386,9 +386,9 @@ public class GetCalendarItemSummaries extends CalendarRequest {
     }
     
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
-        Account acct = getRequestedAccount(lc);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zsc);
+        Account acct = getRequestedAccount(zsc);
         
         long rangeStart = request.getAttributeLong(MailConstants.A_CAL_START_TIME);
         long rangeEnd = request.getAttributeLong(MailConstants.A_CAL_END_TIME);
@@ -403,21 +403,18 @@ public class GetCalendarItemSummaries extends CalendarRequest {
         }
         
         
-        ItemId iidFolder = new ItemId(request.getAttribute(MailConstants.A_FOLDER, DEFAULT_FOLDER), lc);
+        ItemId iidFolder = new ItemId(request.getAttribute(MailConstants.A_FOLDER, DEFAULT_FOLDER), zsc);
         
-        Collection calItems = mbox.getCalendarItemsForRange(
-                getItemType(),
-                lc.getOperationContext(), rangeStart, rangeEnd,
-                iidFolder.getId(), null);
-        
-        Element response = getResponseElement(lc);
+        Collection calItems = mbox.getCalendarItemsForRange(getItemType(), getOperationContext(zsc, context), rangeStart, rangeEnd, iidFolder.getId(), null);
+
+        Element response = getResponseElement(zsc);
         
         int totalInstancesExpanded = 0;
         
         for (Iterator aptIter = calItems.iterator(); aptIter.hasNext(); ) {
             CalendarItem calItem = (CalendarItem) aptIter.next();
             
-            EncodeCalendarItemResult encoded = encodeCalendarItemInstances(lc, calItem, acct, rangeStart, rangeEnd, false);
+            EncodeCalendarItemResult encoded = encodeCalendarItemInstances(zsc, calItem, acct, rangeStart, rangeEnd, false);
 //            assert(encoded.element != null || encoded.numInstancesExpanded==0);
             if (encoded.element != null)
                 response.addElement(encoded.element);

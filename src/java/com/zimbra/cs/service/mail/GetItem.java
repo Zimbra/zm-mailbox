@@ -54,7 +54,7 @@ public class GetItem extends MailDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
-        OperationContext octxt = zsc.getOperationContext();
+        OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         Element target = request.getElement(MailConstants.E_ITEM);

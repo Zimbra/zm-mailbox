@@ -80,7 +80,7 @@ public class SendInviteReply extends CalendarRequest {
         Mailbox mbox = getRequestedMailbox(zsc);
         Account acct = getRequestedAccount(zsc);
         Account authAcct = getAuthenticatedAccount(zsc);
-        OperationContext octxt = zsc.getOperationContext();
+        OperationContext octxt = getOperationContext(zsc, context);
 
         boolean onBehalfOf = zsc.isDelegatedRequest();
 
@@ -182,8 +182,8 @@ public class SendInviteReply extends CalendarRequest {
                     // the <inv> element is *NOT* allowed -- we always build it manually
                     // based on the params to the <SendInviteReply> and stick it in the 
                     // mbps (additionalParts) parameter...
-                    csd.mMm = ParseMimeMessage.parseMimeMsgSoap(zsc, mbox, msgElem, mbps, 
-                        ParseMimeMessage.NO_INV_ALLOWED_PARSER, parsedMessageData);
+                    csd.mMm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem, 
+                        mbps, ParseMimeMessage.NO_INV_ALLOWED_PARSER, parsedMessageData);
                 } else {
                     // build a default "Accepted" response
                     csd.mMm = CalendarMailSender.createDefaultReply(

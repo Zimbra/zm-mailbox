@@ -30,6 +30,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.mail.MailDocumentHandler;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.wiki.Wiki;
@@ -61,11 +62,11 @@ public abstract class WikiDocumentHandler extends MailDocumentHandler {
 		return null;
 	}
 	
-	protected Wiki getRequestedWikiNotebook(Element request, ZimbraSoapContext zsc) throws ServiceException {
+	protected Wiki getRequestedWikiNotebook(Element request, ZimbraSoapContext zsc, OperationContext octxt) throws ServiceException {
 		ItemId fid = getRequestedFolder(request, zsc);
 		Account requestedAccount = Provisioning.getInstance().get(AccountBy.id, zsc.getRequestedAccountId());
 		String accountId = requestedAccount.getId();
-		WikiContext ctxt = new WikiContext(zsc.getOperationContext(), zsc.getRawAuthToken());
+		WikiContext ctxt = new WikiContext(octxt, zsc.getRawAuthToken());
 		if (fid == null) {
 			return Wiki.getInstance(ctxt, accountId);
 		} else if (!fid.belongsTo(requestedAccount)) {

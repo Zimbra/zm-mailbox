@@ -63,13 +63,13 @@ public class ImportContacts extends MailDocumentHandler  {
     String DEFAULT_FOLDER_ID = Mailbox.ID_FOLDER_CONTACTS + "";
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
-        OperationContext octxt = lc.getOperationContext();
-        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zsc);
+        OperationContext octxt = getOperationContext(zsc, context);
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         String folder = request.getAttribute(MailConstants.A_FOLDER, DEFAULT_FOLDER_ID);
-        ItemId iidFolder = new ItemId(folder, lc);
+        ItemId iidFolder = new ItemId(folder, zsc);
 
         String ct = request.getAttribute(MailConstants.A_CONTENT_TYPE);
         if (!ct.equals("csv"))
@@ -84,7 +84,7 @@ public class ImportContacts extends MailDocumentHandler  {
             if (attachment == null)
                 reader = new BufferedReader(new StringReader(content.getText()));
             else
-                reader = parseUploadedContent(lc, attachment, uploads = new ArrayList<Upload>());
+                reader = parseUploadedContent(zsc, attachment, uploads = new ArrayList<Upload>());
             
             contacts = ContactCSV.getContacts(reader);
             reader.close();
@@ -110,7 +110,7 @@ public class ImportContacts extends MailDocumentHandler  {
             ids.append(iid.toString(ifmt));
         }
 
-        Element response = lc.createElement(MailConstants.IMPORT_CONTACTS_RESPONSE);
+        Element response = zsc.createElement(MailConstants.IMPORT_CONTACTS_RESPONSE);
         Element cn = response.addElement(MailConstants.E_CONTACT);
         cn.addAttribute(MailConstants.A_IDS, ids.toString());
         cn.addAttribute(MailConstants.A_NUM, contacts.size());

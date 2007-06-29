@@ -123,7 +123,7 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
 
         mMailbox.beginTrackingImap();
 
-        OperationContext octxt = mCredentials.getContext();
+        OperationContext octxt = mCredentials.getContext().setSession(this);
         Folder folder = mMailbox.getFolderByPath(octxt, mPath.asZimbraPath());
         mFolderId = folder.getId();
 
@@ -136,7 +136,7 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
 
         // initialize the flag and tag caches
         mFlags = ImapFlagCache.getSystemFlags(mMailbox);
-        mTags = new ImapFlagCache(mMailbox, mCredentials.getContext());
+        mTags = new ImapFlagCache(mMailbox, octxt);
         return this;
     }
 
@@ -236,7 +236,7 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
         if (isVirtual())
             throw ServiceException.INVALID_REQUEST("cannot reopen virtual folders", null);
 
-        OperationContext octxt = mCredentials.getContext();
+        OperationContext octxt = mCredentials.getContext().setSession(this);
         Folder folder = mMailbox.getFolderByPath(octxt, mPath.asZimbraPath());
         if (!mPath.isSelectable())
             throw ServiceException.PERM_DENIED("cannot select folder: " + mPath);
@@ -774,7 +774,7 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
         void sort()  { Collections.sort(numbered);  Collections.sort(unnumbered); }
     }
 
-    public void notifyPendingChanges(int changeId, PendingModifications pns) {
+    public void notifyPendingChanges(PendingModifications pns, int changeId, Session source) {
         if (!pns.hasNotifications())
             return;
 
@@ -818,7 +818,7 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
                 try {
                     if (debug)  ZimbraLog.imap.debug(chglog);
                     // notification will take care of adding to mailbox
-                    getMailbox().resetImapUid(mCredentials.getContext(), renumber);
+                    getMailbox().resetImapUid(mCredentials.getContext().setSession(this), renumber);
                 } catch (ServiceException e) {
                     if (debug)  ZimbraLog.imap.debug("  ** moved; imap uid change failed; msg hidden (ntfn): " + renumber);
                 }

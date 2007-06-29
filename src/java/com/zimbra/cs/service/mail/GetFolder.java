@@ -60,10 +60,10 @@ public class GetFolder extends MailDocumentHandler {
     static final String DEFAULT_FOLDER_ID = "" + Mailbox.ID_FOLDER_USER_ROOT;
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
-		ZimbraSoapContext lc = getZimbraSoapContext(context);
-		Mailbox mbox = getRequestedMailbox(lc);
-		Mailbox.OperationContext octxt = lc.getOperationContext();
-        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
+		ZimbraSoapContext zsc = getZimbraSoapContext(context);
+		Mailbox mbox = getRequestedMailbox(zsc);
+		OperationContext octxt = getOperationContext(zsc, context);
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
 		String parentId = DEFAULT_FOLDER_ID;
 		Element eFolder = request.getOptionalElement(MailConstants.E_FOLDER);
@@ -74,13 +74,13 @@ public class GetFolder extends MailDocumentHandler {
             else
                 parentId = eFolder.getAttribute(MailConstants.A_FOLDER, DEFAULT_FOLDER_ID);
         }
-		ItemId iid = new ItemId(parentId, lc);
+		ItemId iid = new ItemId(parentId, zsc);
 
         boolean visible = request.getAttributeBool(MailConstants.A_VISIBLE, false);
 		
         FolderNode rootnode = getFolderTree(octxt, mbox, iid, visible);
 
-		Element response = lc.createElement(MailConstants.GET_FOLDER_RESPONSE);
+		Element response = zsc.createElement(MailConstants.GET_FOLDER_RESPONSE);
         if (rootnode != null) {
     		Element folderRoot = encodeFolderNode(ifmt, octxt, response, rootnode);
     		if (rootnode.mFolder != null && rootnode.mFolder instanceof Mountpoint)

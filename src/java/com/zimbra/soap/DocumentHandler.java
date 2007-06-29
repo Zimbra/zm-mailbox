@@ -38,6 +38,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
@@ -102,6 +103,29 @@ public abstract class DocumentHandler {
 
     public static ZimbraSoapContext getZimbraSoapContext(Map<String, Object> context) {
         return (ZimbraSoapContext) context.get(SoapEngine.ZIMBRA_CONTEXT);
+    }
+
+    /** Generates a new {@link com.zimbra.cs.mailbox.Mailbox.OperationContext}
+     *  object reflecting the constraints serialized in the <tt>&lt;context></tt>
+     *  element in the SOAP header.<p>
+     * 
+     *  These optional constraints include:<ul>
+     *  <li>the account ID from the auth token</li>
+     *  <li>the highest change number the client knows about</li>
+     *  <li>how stringently to check accessed items against the known change
+     *      highwater mark</li></ul>
+     * 
+     * @return A new OperationContext object */
+    public static OperationContext getOperationContext(ZimbraSoapContext zsc, Map<String, Object> context) throws ServiceException {
+        return getOperationContext(zsc, context == null ? null : (Session) context.get(SoapEngine.ZIMBRA_SESSION));
+    }
+
+    public static OperationContext getOperationContext(ZimbraSoapContext zsc, Session session) throws ServiceException {
+        AuthToken at = zsc.getAuthToken();
+        OperationContext octxt = new OperationContext(zsc.getAuthtokenAccountId(), at != null && (at.isAdmin() || at.isDomainAdmin()));
+        octxt.setChangeConstraint(zsc.getChangeConstraintType(), zsc.getChangeConstraintLimit());
+        octxt.setRequestIP(zsc.getRequestIP()).setSession(session);
+        return octxt;
     }
 
     public static Account getAuthenticatedAccount(ZimbraSoapContext zsc) throws ServiceException {

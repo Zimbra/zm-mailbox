@@ -57,7 +57,8 @@ public class Sync extends MailDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
-        Mailbox.OperationContext octxt = zsc.getOperationContext();
+        OperationContext octxt = getOperationContext(zsc, context);
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         String token = request.getAttribute(MailConstants.A_TOKEN, "0");
 
@@ -93,13 +94,13 @@ public class Sync extends MailDocumentHandler {
                 } catch (MailServiceException.NoSuchItemException nsie) { }
 
                 Set<Folder> visible = mbox.getVisibleFolders(octxt);
-                boolean anyFolders = folderSync(zsc, response, mbox, root, visible, SyncPhase.INITIAL);
+                boolean anyFolders = folderSync(response, octxt, ifmt, mbox, root, visible, SyncPhase.INITIAL);
                 // if no folders are visible, add an empty "<folder/>" as a hint
                 if (!anyFolders)
                     response.addElement(MailConstants.E_FOLDER);
             } else {
                 boolean typedDeletes = request.getAttributeBool(MailConstants.A_TYPED_DELETES, false);
-                String newToken = deltaSync(zsc, response, mbox, tokenInt, typedDeletes, itemCutoff);
+                String newToken = deltaSync(response, octxt, ifmt, mbox, tokenInt, typedDeletes, itemCutoff);
                 response.addAttribute(MailConstants.A_TOKEN, newToken);
             }
         }
@@ -110,7 +111,7 @@ public class Sync extends MailDocumentHandler {
     private static final int DEFAULT_FOLDER_ID = Mailbox.ID_FOLDER_ROOT;
     private static enum SyncPhase { INITIAL, DELTA };
 
-    private static boolean folderSync(ZimbraSoapContext zsc, Element response, Mailbox mbox, Folder folder, Set<Folder> visible, SyncPhase phase)
+    private static boolean folderSync(Element response, OperationContext octxt, ItemIdFormatter ifmt, Mailbox mbox, Folder folder, Set<Folder> visible, SyncPhase phase)
     throws ServiceException {
         if (folder == null)
             return false;
@@ -124,9 +125,6 @@ public class Sync extends MailDocumentHandler {
             return false;
 
         // write this folder's data to the response
-        OperationContext octxt = zsc.getOperationContext();
-        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
-
         boolean initial = phase == SyncPhase.INITIAL;
         Element f = ToXML.encodeFolder(response, ifmt, octxt, folder, Change.ALL_FIELDS);
         if (initial && isVisible) {
@@ -134,7 +132,7 @@ public class Sync extends MailDocumentHandler {
             boolean isSearch = folder instanceof SearchFolder;
             if (!isSearch) {
                 if (folder.getId() == Mailbox.ID_FOLDER_TAGS) {
-                    initialTagSync(zsc, f, mbox);
+                    initialTagSync(f, octxt, ifmt, mbox);
                 } else {
                     initialItemSync(f, MailConstants.E_MSG, mbox.listItemIds(octxt, MailItem.TYPE_MESSAGE, folder.getId()));
                     initialItemSync(f, MailConstants.E_CHAT, mbox.listItemIds(octxt, MailItem.TYPE_CHAT, folder.getId()));
@@ -154,7 +152,7 @@ public class Sync extends MailDocumentHandler {
         // write the subfolders' data to the response
         for (Folder subfolder : subfolders) {
             if (subfolder != null)
-                isVisible |= folderSync(zsc, f, mbox, subfolder, visible, phase);
+                isVisible |= folderSync(f, octxt, ifmt, mbox, subfolder, visible, phase);
         }
 
         // if this folder and all its subfolders are not visible (oops!), remove them from the response
@@ -164,9 +162,8 @@ public class Sync extends MailDocumentHandler {
         return isVisible;
     }
 
-    private static void initialTagSync(ZimbraSoapContext zsc, Element response, Mailbox mbox) throws ServiceException {
-        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
-        for (Tag tag : mbox.getTagList(zsc.getOperationContext())) {
+    private static void initialTagSync(Element response, OperationContext octxt, ItemIdFormatter ifmt, Mailbox mbox) throws ServiceException {
+        for (Tag tag : mbox.getTagList(octxt)) {
             if (tag != null && !(tag instanceof Flag))
                 ToXML.encodeTag(response, ifmt, tag, Change.ALL_FIELDS);
         }
@@ -191,26 +188,23 @@ public class Sync extends MailDocumentHandler {
                                               Change.MODIFIED_COLOR  | Change.MODIFIED_POSITION |
                                               Change.MODIFIED_DATE;
 
-    private static String deltaSync(final ZimbraSoapContext zsc, final Element response, final Mailbox mbox, final int begin, final boolean typedDeletes, int itemCutoff)
+    private static String deltaSync(Element response, OperationContext octxt, ItemIdFormatter ifmt, Mailbox mbox, int begin, boolean typedDeletes, int itemCutoff)
     throws ServiceException {
         String newToken = mbox.getLastChangeID() + "";
         if (begin >= mbox.getLastChangeID())
             return newToken;
-
-        OperationContext octxt = zsc.getOperationContext();
-        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         // first, fetch deleted items
         MailItem.TypedIdList tombstones = mbox.getTombstoneSet(begin);
         Element eDeleted = response.addElement(MailConstants.E_DELETED);
 
         // then, handle created/modified folders
-        if (zsc.isDelegatedRequest()) {
+        if (octxt.isDelegatedRequest(mbox)) {
             // first, make sure that something changed...
             if (!mbox.getModifiedFolders(begin).isEmpty()) {
                 // special-case the folder hierarchy for delegated delta sync
                 Set<Folder> visible = mbox.getVisibleFolders(octxt);
-                boolean anyFolders = folderSync(zsc, response, mbox, mbox.getFolderById(null, DEFAULT_FOLDER_ID), visible, SyncPhase.DELTA);
+                boolean anyFolders = folderSync(response, octxt, ifmt, mbox, mbox.getFolderById(null, DEFAULT_FOLDER_ID), visible, SyncPhase.DELTA);
                 // if no folders are visible, add an empty "<folder/>" as a hint
                 if (!anyFolders)
                     response.addElement(MailConstants.E_FOLDER);

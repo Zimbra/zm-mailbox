@@ -52,10 +52,10 @@ public class IMAuthorizeSubscribe extends IMDocumentHandler {
         else
             groups = new String[0];
 
-        OperationContext oc = zsc.getOperationContext();
+        OperationContext oc = getOperationContext(zsc, context);
         Object lock = super.getLock(zsc);
         synchronized (lock) {
-            IMPersona persona = super.getRequestedPersona(zsc, lock);
+            IMPersona persona = super.getRequestedPersona(zsc, context, lock);
             persona.authorizeSubscribe(oc, addr, authorized, add, name, groups);
         }
         return response;

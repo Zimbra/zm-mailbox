@@ -45,10 +45,10 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class CreateTag extends MailDocumentHandler  {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-		ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
-        Mailbox.OperationContext octxt = lc.getOperationContext();
-        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
+		ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zsc);
+        Mailbox.OperationContext octxt = getOperationContext(zsc, context);
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         Element t = request.getElement(MailConstants.E_TAG);
         String name = t.getAttribute(MailConstants.A_NAME);
@@ -56,7 +56,7 @@ public class CreateTag extends MailDocumentHandler  {
         
         Tag tag = mbox.createTag(octxt, name, color);
         
-        Element response = lc.createElement(MailConstants.CREATE_TAG_RESPONSE);
+        Element response = zsc.createElement(MailConstants.CREATE_TAG_RESPONSE);
         if (tag != null)
         	ToXML.encodeTag(response, ifmt, tag);
         return response;

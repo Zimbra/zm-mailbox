@@ -55,9 +55,9 @@ public class GetICal extends MailDocumentHandler {
      * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
      */
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Mailbox mbx = getRequestedMailbox(lc);
-        OperationContext octxt = lc.getOperationContext();
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox mbx = getRequestedMailbox(zsc);
+        OperationContext octxt = getOperationContext(zsc, context);
 
         String iidStr = request.getAttribute(MailConstants.A_ID, null);
         long rangeStart = request.getAttributeLong(MailConstants.A_CAL_START_TIME, -1);
@@ -66,12 +66,12 @@ public class GetICal extends MailDocumentHandler {
 //        int compNum = (int)request.getAttributeLong(MailService.A_CAL_COMPONENT_NUM);
         int compNum = 0;
 
-        Browser browser = HttpUtil.guessBrowser(lc.getUserAgent());
+        Browser browser = HttpUtil.guessBrowser(zsc.getUserAgent());
         boolean useOutlookCompatMode = Browser.IE.equals(browser);
         try {
             try {
                 ZVCalendar cal = null;
-                ItemId iid = iidStr != null ? new ItemId(iidStr, lc) : null;
+                ItemId iid = iidStr != null ? new ItemId(iidStr, zsc) : null;
                 if (iid != null) {
                     CalendarItem calItem = mbx.getCalendarItemById(octxt, iid.getId());
                     if (calItem == null) {
@@ -92,12 +92,12 @@ public class GetICal extends MailDocumentHandler {
                     cal.toICalendar(wout);
                     wout.flush();
                     
-                    Element response = getResponseElement(lc);
+                    Element response = getResponseElement(zsc);
                     
                     Element icalElt = response.addElement(MailConstants.E_CAL_ICAL);
 
                     if (iid != null)
-                        icalElt.addAttribute(MailConstants.A_ID, new ItemIdFormatter(lc).formatItemId(iid));
+                        icalElt.addAttribute(MailConstants.A_ID, new ItemIdFormatter(zsc).formatItemId(iid));
                     
                     icalElt.addText(buf.toString());
                     

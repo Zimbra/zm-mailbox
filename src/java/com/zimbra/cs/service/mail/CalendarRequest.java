@@ -88,6 +88,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
      * parses an <m> element using the passed-in InviteParser
      * 
      * @param zsc
+     * @param octxt TODO
      * @param msgElem
      * @param acct
      * @param mbox
@@ -95,8 +96,8 @@ public abstract class CalendarRequest extends MailDocumentHandler {
      * @return
      * @throws ServiceException
      */
-    protected static CalSendData handleMsgElement(ZimbraSoapContext zsc, Element msgElem, Account acct,
-                                                  Mailbox mbox, ParseMimeMessage.InviteParser inviteParser)
+    protected static CalSendData handleMsgElement(ZimbraSoapContext zsc, OperationContext octxt, Element msgElem,
+                                                  Account acct, Mailbox mbox, ParseMimeMessage.InviteParser inviteParser)
     throws ServiceException {
         CalSendData csd = new CalSendData();
 
@@ -109,7 +110,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         csd.mIdentityId = msgElem.getAttribute(MailConstants.A_IDENTITY_ID, null);
 
         // parse the data
-        csd.mMm = ParseMimeMessage.parseMimeMsgSoap(zsc, mbox, msgElem, null, inviteParser, csd);
+        csd.mMm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem, null, inviteParser, csd);
         
         // FIXME FIXME FIXME -- need to figure out a way to get the FRAGMENT data out of the initial
         // message here, so that we can copy it into the DESCRIPTION field in the iCalendar data that
@@ -401,10 +402,8 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         return sb.toString();
     }
 
-    protected static void updateRemovedInvitees(
-            ZimbraSoapContext zsc, Account acct, Mailbox mbox,
-            CalendarItem calItem, Invite inv,
-            List<ZAttendee> toCancel)
+    protected static void updateRemovedInvitees(ZimbraSoapContext zsc, OperationContext octxt, Account acct,
+            Mailbox mbox, CalendarItem calItem, Invite inv, List<ZAttendee> toCancel)
     throws ServiceException {
         if (!inv.isOrganizer()) {
             // we ONLY should update the removed attendees if we are the organizer!
@@ -433,7 +432,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             dat.mInvite = CalendarUtils.buildCancelInviteCalendar(acct, authAcct.getName(), onBehalfOf, inv, text, toCancel);
             ZVCalendar cal = dat.mInvite.newToICalendar();
             dat.mMm = CalendarMailSender.createCancelMessage(acct, rcpts, onBehalfOf, authAcct, calItem, inv, text, cal);
-            sendCalendarCancelMessage(zsc, zsc.getOperationContext(), calItem.getFolderId(), acct, mbox, dat, false);
+            sendCalendarCancelMessage(zsc, octxt, calItem.getFolderId(), acct, mbox, dat, false);
         } catch (ServiceException ex) {
             String to = getAttendeesAddressList(toCancel);
             ZimbraLog.calendar.debug("Could not inform attendees ("+to+") that they were removed from meeting "+inv.toString()+" b/c of exception: "+ex.toString());

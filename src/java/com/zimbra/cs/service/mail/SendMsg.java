@@ -93,7 +93,7 @@ public class SendMsg extends MailDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
-        OperationContext octxt = zsc.getOperationContext();
+        OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         sLog.info("<SendMsg> " + zsc.toString());
@@ -147,7 +147,7 @@ public class SendMsg extends MailDocumentHandler {
                 if (attachId != null) {
                     mm = parseUploadedMessage(zsc, attachId, mimeData);
                 } else {
-                    mm = ParseMimeMessage.parseMimeMsgSoap(zsc, mbox, msgElem, null, mimeData);
+                    mm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem, null, mimeData);
                 }
 
                 savedMsgId = doSendMessage(octxt, mbox, mm, mimeData.newContacts, mimeData.uploads,origId,

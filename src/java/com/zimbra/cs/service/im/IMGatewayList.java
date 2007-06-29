@@ -22,7 +22,7 @@ public class IMGatewayList extends IMDocumentHandler {
         
         Object lock = super.getLock(lc);
         synchronized (lock) {
-            IMPersona persona = getRequestedPersona(lc, lock);
+            IMPersona persona = getRequestedPersona(lc, context, lock);
             
             List<Pair<ServiceName, UserStatus>> types = persona.getAvailableGateways();
             String domain = persona.getDomain();

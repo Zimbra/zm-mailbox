@@ -44,7 +44,7 @@ public class IMJoinChatRequest extends IMDocumentHandler {
         Object lock = super.getLock(lc);
         
         synchronized(lock) {
-            IMPersona persona = super.getRequestedPersona(lc, lock);
+            IMPersona persona = super.getRequestedPersona(lc, context, lock);
             persona.joinChat(threadId);
         }
         return response;

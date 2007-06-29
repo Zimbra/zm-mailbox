@@ -77,7 +77,7 @@ public class CreateContact extends MailDocumentHandler  {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
-        Mailbox.OperationContext octxt = zsc.getOperationContext();
+        OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         boolean verbose = request.getAttributeBool(MailConstants.A_VERBOSE, true);
@@ -90,7 +90,7 @@ public class CreateContact extends MailDocumentHandler  {
 
         List<ParsedContact> pclist;
         if (vcard != null) {
-            pclist = parseAttachedVCard(zsc, mbox, vcard);
+            pclist = parseAttachedVCard(zsc, octxt, mbox, vcard);
         } else {
             pclist = new ArrayList<ParsedContact>(1);
             Pair<Map<String,String>, List<Attachment>> cdata = parseContact(zsc, cn);
@@ -147,7 +147,7 @@ public class CreateContact extends MailDocumentHandler  {
         return null;
     }
 
-    private static List<ParsedContact> parseAttachedVCard(ZimbraSoapContext zsc, Mailbox mbox, Element vcard)
+    private static List<ParsedContact> parseAttachedVCard(ZimbraSoapContext zsc, OperationContext octxt, Mailbox mbox, Element vcard)
     throws ServiceException {
         String text = null;
         String messageId = vcard.getAttribute(MailConstants.A_MESSAGE_ID, null);
@@ -173,7 +173,7 @@ public class CreateContact extends MailDocumentHandler  {
                     // fetch from local store
                     if (!mbox.getAccountId().equals(iid.getAccountId()))
                         mbox = MailboxManager.getInstance().getMailboxByAccountId(iid.getAccountId());
-                    Message msg = mbox.getMessageById(zsc.getOperationContext(), iid.getId());
+                    Message msg = mbox.getMessageById(octxt, iid.getId());
                     MimePart mp = Mime.getMimePart(msg.getMimeMessage(), part);
                     ContentType ctype = new ContentType(mp.getContentType());
                     if (!ctype.match(Mime.CT_TEXT_PLAIN) && !ctype.match(Mime.CT_TEXT_VCARD))

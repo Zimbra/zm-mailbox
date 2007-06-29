@@ -394,7 +394,10 @@ an authToken can be passed instead of account/password/preauth to validate an ex
    <id>{account-id}</id>
    <name>{account-name}</name>
    <lifetime>...</lifetime>   
-   <used>{used}</used>*
+   [<used>{used}</used>
+    <accessed>{last-SOAP-access}</accessed>
+    <recent>{recent-messages}</recent>
+   ]
    <attrs>
     <attr name="{name}">{value}</a>
      ...
@@ -447,7 +450,12 @@ an authToken can be passed instead of account/password/preauth to validate an ex
   {version} = server version: <major>[.<minor>[.<maintenance>]][build] <release> <date>[ <type>]
   {account-name} = email address (user@domain)
   {life-time} = number of milliseconds until auth token expires
-  {used} = mailbox quota used in bytes
+
+  returned only if the command successfully executes on the target user's home mail server:
+    {used} = mailbox quota used in bytes
+    {last-SOAP-access} = time (in millis) of last write op from this session, or from *any* SOAP session if we don't have one
+    {recent-messages} = number of messages received since the previous soap session, or since the last SOAP write op if we don't have a session
+
   prefs = user-settable preferences
   attrs = account attrs that aren't user-settable, but the front-end needs. 
           Only attributes listed in zimbraAccountClientAttrs will be returned.

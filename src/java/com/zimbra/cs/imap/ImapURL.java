@@ -201,7 +201,7 @@ class ImapURL {
             if (acct == null)
                 throw new ImapUrlException(tag, mURL, "cannot find user: " + mUsername);
 
-            OperationContext octxt = creds.getContext();
+            OperationContext octxt = creds.getContext().setSession(handler.getSelectedFolder());
             byte[] content = null;
             // special-case the situation where the relevant folder is already SELECTed
             if (state == ImapHandler.State.SELECTED) {

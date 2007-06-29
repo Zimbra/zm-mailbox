@@ -56,10 +56,10 @@ public class CreateFolder extends MailDocumentHandler {
     protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
-        Mailbox.OperationContext octxt = lc.getOperationContext();
-        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zsc);
+        Mailbox.OperationContext octxt = getOperationContext(zsc, context);
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         Element t = request.getElement(MailConstants.E_FOLDER);
         String name      = t.getAttribute(MailConstants.A_NAME);
@@ -68,7 +68,7 @@ public class CreateFolder extends MailDocumentHandler {
         byte color       = (byte) t.getAttributeLong(MailConstants.A_COLOR, MailItem.DEFAULT_COLOR);
         String url       = t.getAttribute(MailConstants.A_URL, null);
         String folderId  = t.getAttribute(MailConstants.A_FOLDER, null);
-        ItemId iidParent = folderId != null ? new ItemId(folderId, lc) : null;
+        ItemId iidParent = folderId != null ? new ItemId(folderId, zsc) : null;
         boolean fetchIfExists = t.getAttributeBool(MailConstants.A_FETCH_IF_EXISTS, false);
         ACL acl          = FolderAction.parseACL(t.getOptionalElement(MailConstants.E_ACL));
 
@@ -118,7 +118,7 @@ public class CreateFolder extends MailDocumentHandler {
             }
         }
 
-        Element response = lc.createElement(MailConstants.CREATE_FOLDER_RESPONSE);
+        Element response = zsc.createElement(MailConstants.CREATE_FOLDER_RESPONSE);
         if (folder != null)
             ToXML.encodeFolder(response, ifmt, octxt, folder);
         return response;

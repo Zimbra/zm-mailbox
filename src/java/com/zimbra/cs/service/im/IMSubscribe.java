@@ -33,16 +33,15 @@ import com.zimbra.cs.im.IMAddr;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.im.IMUtils;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class IMSubscribe extends IMDocumentHandler {
 
     @Override
-    public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException
-    {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        OperationContext octxt = getOperationContext(zsc, context);
+
         String op = request.getAttribute(IMConstants.A_OPERATION);
         boolean add = true;
         if (op.equalsIgnoreCase("remove")) 
@@ -50,9 +49,9 @@ public class IMSubscribe extends IMDocumentHandler {
 
         IMAddr addr = new IMAddr(IMUtils.resolveAddress(request.getAttribute(IMConstants.A_ADDRESS)));
 
-        Element response = lc.createElement(IMConstants.IM_SUBSCRIBE_RESPONSE);
+        Element response = zsc.createElement(IMConstants.IM_SUBSCRIBE_RESPONSE);
         response.addAttribute(IMConstants.A_ADDRESS, addr.toString());
-        
+
         String name = request.getAttribute(IMConstants.A_NAME, "");
         String groupStr = request.getAttribute(IMConstants.A_GROUPS, null);
         String[] groups;
@@ -61,16 +60,15 @@ public class IMSubscribe extends IMDocumentHandler {
         else
             groups = new String[0];
 
-        OperationContext oc = lc.getOperationContext();
-        Object lock = super.getLock(lc);
+        Object lock = super.getLock(zsc);
         synchronized (lock) {
-            IMPersona persona = super.getRequestedPersona(lc, lock);
+            IMPersona persona = super.getRequestedPersona(zsc, context, lock);
             if (add) 
-                persona.addOutgoingSubscription(oc, addr, name, groups);
+                persona.addOutgoingSubscription(octxt, addr, name, groups);
             else
-                persona.removeOutgoingSubscription(oc, addr, name, groups);
+                persona.removeOutgoingSubscription(octxt, addr, name, groups);
         }
-        
+
         return response;
     }
     

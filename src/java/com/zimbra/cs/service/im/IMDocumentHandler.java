@@ -45,31 +45,31 @@ public abstract class IMDocumentHandler extends DocumentHandler {
     public Object preHandle(Element request, Map<String, Object> context) throws ServiceException { 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Session session = getSession(zsc);
-        Mailbox.OperationContext octxt = zsc.getOperationContext();
+        Mailbox.OperationContext octxt = getOperationContext(zsc, context);
         Mailbox mbox = getRequestedMailbox(zsc);
         return BlockingOperation.schedule(request.getName(), session, octxt, mbox, Requester.SOAP, getSchedulerPriority(), 1);   
     }
-    
+
     @Override
     public void postHandle(Object userObj) { 
-        ((BlockingOperation)userObj).finish();
+        ((BlockingOperation) userObj).finish();
     }
-    
+
     protected Priority getSchedulerPriority() {
         return Priority.INTERACTIVE_HIGH;
     }
-    
 
-    Object getLock(ZimbraSoapContext zc) throws ServiceException {
-        return super.getRequestedMailbox(zc);
+
+    Object getLock(ZimbraSoapContext zsc) throws ServiceException {
+        return super.getRequestedMailbox(zsc);
     }
-    
-    static IMPersona getRequestedPersona(ZimbraSoapContext zc, Object lock) throws ServiceException {
-        return IMRouter.getInstance().findPersona(zc.getOperationContext(), (Mailbox)lock);
+
+    static IMPersona getRequestedPersona(ZimbraSoapContext zsc, Map<String, Object> context, Object lock) throws ServiceException {
+        return getRequestedPersona(getOperationContext(zsc, context), lock);
     }
-    
-    static IMPersona getRequestedPersona(OperationContext oc, Object lock) throws ServiceException {
-        return IMRouter.getInstance().findPersona(oc, (Mailbox)lock);
+
+    static IMPersona getRequestedPersona(OperationContext octxt, Object lock) throws ServiceException {
+        return IMRouter.getInstance().findPersona(octxt, (Mailbox) lock);
     }
     
 }

@@ -46,10 +46,14 @@ import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.session.Session;
+import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.zimlet.ZimletProperty;
 import com.zimbra.cs.zimlet.ZimletUserProperties;
 import com.zimbra.cs.zimlet.ZimletUtil;
+import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -58,23 +62,38 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class GetInfo extends AccountDocumentHandler  {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-		ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Account acct = getRequestedAccount(lc);
+		ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Account acct = getRequestedAccount(zsc);
 		
-        Element response = lc.createElement(AccountConstants.GET_INFO_RESPONSE);
+        Element response = zsc.createElement(AccountConstants.GET_INFO_RESPONSE);
         response.addAttribute(AccountConstants.E_VERSION, BuildInfo.FULL_VERSION, Element.Disposition.CONTENT);
         response.addAttribute(AccountConstants.E_ID, acct.getId(), Element.Disposition.CONTENT);
         response.addAttribute(AccountConstants.E_NAME, acct.getName(), Element.Disposition.CONTENT);
-        long lifetime = lc.getAuthToken().getExpires() - System.currentTimeMillis();
+        long lifetime = zsc.getAuthToken().getExpires() - System.currentTimeMillis();
         response.addAttribute(AccountConstants.E_LIFETIME, lifetime, Element.Disposition.CONTENT);
-        try {
-            response.addAttribute(AccountConstants.E_QUOTA_USED, getRequestedMailbox(lc).getSize(), Element.Disposition.CONTENT);
-        } catch (ServiceException e) { }
+
+        if (Provisioning.onLocalServer(acct)) {
+            try {
+                Mailbox mbox = getRequestedMailbox(zsc);
+                response.addAttribute(AccountConstants.E_QUOTA_USED, mbox.getSize(), Element.Disposition.CONTENT);
+
+                Session s = (Session) context.get(SoapEngine.ZIMBRA_SESSION);
+                if (s instanceof SoapSession) {
+                    // we have a valid session; get the stats on this session
+                    response.addAttribute(AccountConstants.E_LAST_ACCESS, ((SoapSession) s).getLastAccessTime());
+                    response.addAttribute(AccountConstants.E_RECENT_MSGS, ((SoapSession) s).getRecentMessageCount());
+                } else {
+                    // we have no session; calculate the stats from the mailbox and the other SOAP sessions
+                    long lastAccess = mbox.getLastSoapAccessTime();
+                    for (Session soap : mbox.getListeners(Session.Type.SOAP))
+                        lastAccess = Math.max(lastAccess, soap.getLastAccessTime());
+                    response.addAttribute(AccountConstants.E_LAST_ACCESS, lastAccess);
+                    response.addAttribute(AccountConstants.E_RECENT_MSGS, mbox.getRecentMessageCount());
+                }
+            } catch (ServiceException e) { }
+        }
 
         Map<String, Object> attrMap = acct.getAttrs();
-        // take this out when client is updated
-        //doPrefs(response, attrMap);
-        
         Locale locale = Provisioning.getInstance().getLocale(acct);
         
         Element prefs = response.addUniqueElement(AccountConstants.E_PREFS);
@@ -90,7 +109,7 @@ public class GetInfo extends AccountDocumentHandler  {
         Element sigs = response.addUniqueElement(AccountConstants.E_SIGNATURES);
         doSignatures(sigs, acct);
         Element ds = response.addUniqueElement(AccountConstants.E_DATA_SOURCES);
-        doDataSources(ds, acct, lc);
+        doDataSources(ds, acct, zsc);
         Element ca = response.addUniqueElement(AccountConstants.E_CHILD_ACCOUNTS);
         doChildAccounts(ca, acct);
         

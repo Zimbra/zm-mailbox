@@ -670,7 +670,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     private OperationContext getContext() throws ServiceException {
         if (mCredentials == null)
             throw ServiceException.AUTH_REQUIRED();
-        return mCredentials.getContext();
+        return mCredentials.getContext().setSession(mSelectedFolder);
     }
 
 

@@ -67,7 +67,8 @@ public class SoapEngine {
     public static final String A_REQUEST_CORRELATOR = "requestId";
 
     public static final String ZIMBRA_CONTEXT = "zimbra.context";
-    public static final String ZIMBRA_ENGINE = "zimbra.engine";
+    public static final String ZIMBRA_ENGINE  = "zimbra.engine";
+    public static final String ZIMBRA_SESSION = "zimbra.session";
 
     /** context name of request IP */
     public static final String REQUEST_IP = "request.ip";
@@ -299,7 +300,7 @@ public class SoapEngine {
         Element response = null;
         try {
             // fault in a session for this handler (if necessary) before executing the command
-            handler.getSession(zsc);
+            context.put(ZIMBRA_SESSION, handler.getSession(zsc));
             // try to proxy the request if necesary (don't proxy commands that don't require auth)
             if (needsAuth || needsAdminAuth)
                 response = handler.proxyIfNecessary(request, context);
@@ -375,9 +376,9 @@ public class SoapEngine {
                         foundSessionForRequestedAccount = true;
                     // put <refresh> blocks back for any newly-created SoapSession objects
                     if (sinfo.created)
-                        ((SoapSession) session).putRefresh(zsc, ctxt);
+                        ((SoapSession) session).putRefresh(ctxt, zsc);
                     // put <notify> blocks back for any SoapSession objects
-                    ((SoapSession) session).putNotifications(zsc, ctxt, sinfo.sequence);
+                    ((SoapSession) session).putNotifications(ctxt, zsc, sinfo.sequence);
                 }
             }
             
@@ -393,8 +394,8 @@ public class SoapEngine {
                     Mailbox mbox = DocumentHandler.getRequestedMailbox(zsc);
                     if (mbox != null)
                         ctxt.addUniqueElement(HeaderConstants.E_CHANGE)
-                        .addAttribute(HeaderConstants.A_CHANGE_ID, mbox.getLastChangeID())
-                        .addAttribute(HeaderConstants.A_ACCOUNT_ID, explicitAcct);
+                            .addAttribute(HeaderConstants.A_CHANGE_ID, mbox.getLastChangeID())
+                            .addAttribute(HeaderConstants.A_ACCOUNT_ID, explicitAcct);
                 } catch (ServiceException e) {
                     // eat error for right now
                 }

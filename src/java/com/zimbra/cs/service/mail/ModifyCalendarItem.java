@@ -67,7 +67,7 @@ public class ModifyCalendarItem extends CalendarRequest {
             mInv = inv;
         }
         
-        public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraSoapContext lc, Account account, Element inviteElem)
+        public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraSoapContext lc, OperationContext octxt, Account account, Element inviteElem)
         throws ServiceException {
             List<ZAttendee> atsToCancel = new ArrayList<ZAttendee>();
 
@@ -76,7 +76,7 @@ public class ModifyCalendarItem extends CalendarRequest {
 
             // send cancellations to any invitees who have been removed...
             if (atsToCancel.size() > 0)
-                updateRemovedInvitees(lc, account, mmbox, mInv.getCalendarItem(), mInv, atsToCancel);
+                updateRemovedInvitees(lc, octxt, account, mmbox, mInv.getCalendarItem(), mInv, atsToCancel);
             
             return toRet;
         }
@@ -87,7 +87,7 @@ public class ModifyCalendarItem extends CalendarRequest {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(zsc);
         Mailbox mbox = getRequestedMailbox(zsc);
-        OperationContext octxt = zsc.getOperationContext();
+        OperationContext octxt = getOperationContext(zsc, context);
         
         ItemId iid = new ItemId(request.getAttribute(MailConstants.A_ID), zsc);
         int compNum = (int) request.getAttributeLong(MailConstants.E_INVITE_COMPONENT, 0);
@@ -118,7 +118,7 @@ public class ModifyCalendarItem extends CalendarRequest {
         
         ModifyCalendarItemParser parser = new ModifyCalendarItemParser(mbox, inv);
         
-        CalSendData dat = handleMsgElement(zsc, msgElem, acct, mbox, parser);
+        CalSendData dat = handleMsgElement(zsc, octxt, msgElem, acct, mbox, parser);
 
         // If we are sending this update to other people, then we MUST be the organizer!
         if (!inv.isOrganizer()) {

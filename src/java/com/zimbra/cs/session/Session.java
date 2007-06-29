@@ -254,10 +254,10 @@ public abstract class Session {
      *  on the Mailbox.
      *  <p>
      *  *All* changes are currently cached, regardless of the client's state/views.
-     *
      * @param changeId The sync-token change Id of the change 
+     * @param source TODO
      * @param pms   A set of new change notifications from our Mailbox  */
-    public abstract void notifyPendingChanges(int changeId, PendingModifications pns);
+    public abstract void notifyPendingChanges(PendingModifications pns, int changeId, Session source);
     
     /** Notify this session that an IM event has occured. */
     public void notifyIM(IMNotification imn) {

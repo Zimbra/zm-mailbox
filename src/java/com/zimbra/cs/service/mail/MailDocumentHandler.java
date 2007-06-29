@@ -33,6 +33,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.operation.BlockingOperation;
 import com.zimbra.cs.operation.Requester;
 import com.zimbra.cs.operation.Scheduler.Priority;
@@ -49,7 +50,7 @@ public abstract class MailDocumentHandler extends DocumentHandler {
     public Object preHandle(Element request, Map<String, Object> context) throws ServiceException { 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Session session = getSession(zsc);
-        Mailbox.OperationContext octxt = zsc.getOperationContext();
+        Mailbox.OperationContext octxt = getOperationContext(zsc, context);
         Mailbox mbox = getRequestedMailbox(zsc);
         return BlockingOperation.schedule(request.getName(), session, octxt, mbox, Requester.SOAP, getSchedulerPriority(), 1);   
     }
@@ -74,11 +75,12 @@ public abstract class MailDocumentHandler extends DocumentHandler {
         String id = (xpath != null ? getXPath(request, xpath) : null);
 
         if (id != null) {
-            ZimbraSoapContext lc = getZimbraSoapContext(context);
-            ItemId iid = new ItemId(id, lc);
+            ZimbraSoapContext zsc = getZimbraSoapContext(context);
+            OperationContext octxt = getOperationContext(zsc, context);
+            ItemId iid = new ItemId(id, zsc);
     
             // if the "target item" is remote, proxy.
-            ItemId iidTarget = getProxyTarget(lc, iid, checkMountpointProxy(request));
+            ItemId iidTarget = getProxyTarget(zsc, octxt, iid, checkMountpointProxy(request));
             if (iidTarget != null)
                 return proxyRequest(request, context, iid, iidTarget);
         }
@@ -86,17 +88,17 @@ public abstract class MailDocumentHandler extends DocumentHandler {
         return super.proxyIfNecessary(request, context);
     }
 
-    protected static ItemId getProxyTarget(ZimbraSoapContext lc, ItemId iid, boolean checkMountpoint) throws ServiceException {
-        if (lc == null || iid == null)
+    protected static ItemId getProxyTarget(ZimbraSoapContext zsc, OperationContext octxt, ItemId iid, boolean checkMountpoint) throws ServiceException {
+        if (zsc == null || iid == null)
             return null;
-        Account acct = getRequestedAccount(lc);
+        Account acct = getRequestedAccount(zsc);
         if (!iid.belongsTo(acct))
             return iid;
 
         if (!checkMountpoint || !Provisioning.onLocalServer(acct))
             return null;
-        Mailbox mbox = getRequestedMailbox(lc);
-        MailItem item = mbox.getItemById(lc.getOperationContext(), iid.getId(), MailItem.TYPE_UNKNOWN);
+        Mailbox mbox = getRequestedMailbox(zsc);
+        MailItem item = mbox.getItemById(octxt, iid.getId(), MailItem.TYPE_UNKNOWN);
         if (!(item instanceof Mountpoint))
             return null;
         Mountpoint mpt = (Mountpoint) item;
@@ -129,21 +131,21 @@ public abstract class MailDocumentHandler extends DocumentHandler {
         Element response = proxyRequest(request, context, iidResolved.getAccountId(), mountpoint);
 
         // translate remote folder IDs back into local mountpoint IDs
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         String[] xpathResponse = getResponseItemPath();
         if (mountpoint && xpathResponse != null) 
-            insertMountpointReferences(response, xpathResponse, iidRequested, iidResolved, lc);
+            insertMountpointReferences(response, xpathResponse, iidRequested, iidResolved, zsc);
         return response;
     }
 
     private static Element proxyRequest(Element request, Map<String, Object> context, String acctId, boolean mountpoint)
     throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         // new context for proxied request has a different "requested account"
-        ZimbraSoapContext lcTarget = new ZimbraSoapContext(lc, acctId);
+        ZimbraSoapContext zscTarget = new ZimbraSoapContext(zsc, acctId);
         if (mountpoint)
-            lcTarget.recordMountpointTraversal();
+            zscTarget.recordMountpointTraversal();
 
-        return proxyRequest(request, context, getServer(acctId), lcTarget);
+        return proxyRequest(request, context, getServer(acctId), zscTarget);
     }
 }

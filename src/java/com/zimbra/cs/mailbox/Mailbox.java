@@ -36,6 +36,7 @@ import java.util.*;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.collections.list.UnmodifiableList;
 import org.apache.commons.collections.map.LRUMap;
 
 import com.zimbra.common.localconfig.LC;
@@ -100,6 +101,7 @@ import com.zimbra.cs.session.AllAccountsRedoCommitCallback;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.Blob;
@@ -154,6 +156,8 @@ public class Mailbox {
         public int     lastItemId;
         public int     lastChangeId;
         public long    lastChangeDate;
+        public int     lastWriteDate;
+        public int     recentMessages;
         public int     trackSync;
         public boolean trackImap;
         public Set<String> configKeys;
@@ -172,12 +176,14 @@ public class Mailbox {
         OperationContext octxt = null;
         TargetConstraint tcon  = null;
 
-        Integer  sync     = null;
-        Boolean  imap     = null;
-        long     size     = NO_CHANGE;
-        int      itemId   = NO_CHANGE;
-        int      changeId = NO_CHANGE;
-        int      contacts = NO_CHANGE;
+        Integer sync     = null;
+        Boolean imap     = null;
+        long    size     = NO_CHANGE;
+        int     itemId   = NO_CHANGE;
+        int     changeId = NO_CHANGE;
+        int     contacts = NO_CHANGE;
+        int     accessed = NO_CHANGE;
+        int     recent  = NO_CHANGE;
         Pair<String,Metadata> config = null;
 
         PendingModifications mDirty = new PendingModifications();
@@ -195,9 +201,10 @@ public class Mailbox {
                 recorder = op;
                 if (ZimbraLog.mailbox.isDebugEnabled())
                     ZimbraLog.mailbox.debug("beginning operation: " + caller);
-            } else
+            } else {
                 if (ZimbraLog.mailbox.isDebugEnabled())
                     ZimbraLog.mailbox.debug("  increasing stack depth to " + depth + " (" + caller + ')');
+            }
         }
         boolean endChange() {
             if (ZimbraLog.mailbox.isDebugEnabled()) {
@@ -244,7 +251,7 @@ public class Mailbox {
             active = false;
             conn = null;  octxt = null;  tcon = null;
             depth = 0;
-            size = changeId = itemId = contacts = NO_CHANGE;
+            size = changeId = itemId = contacts = accessed = recent = NO_CHANGE;
             sync = null;  config = null;
             itemCache = null;  indexItems.clear();
             mDirty.clear();  mOtherDirtyStuff.clear();
@@ -258,6 +265,7 @@ public class Mailbox {
 
         private Account    authuser;
         private boolean    isAdmin;
+        private Session    session;
         private RedoableOp player;
         private String     requestIP;
         
@@ -286,7 +294,7 @@ public class Mailbox {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
         }
         public OperationContext(OperationContext octxt) {
-            player     = octxt.player;
+            player     = octxt.player;      session = octxt.session;
             authuser   = octxt.authuser;    isAdmin = octxt.isAdmin;
             changetype = octxt.changetype;  change  = octxt.change;
         }
@@ -296,6 +304,13 @@ public class Mailbox {
         }
         public OperationContext unsetChangeConstraint() {
             changetype = CHECK_CREATED;  change = -1;  return this;
+        }
+
+        public OperationContext setSession(Session s) {
+            session = s;  return this;
+        }
+        Session getSession() {
+            return session;
         }
 
         public RedoableOp getPlayer() {
@@ -321,8 +336,8 @@ public class Mailbox {
             return authuser != null && !authuser.getId().equalsIgnoreCase(mbox.getAccountId());
         }
         
-        public void setRequestIP(String addr) {
-            requestIP = addr;
+        public OperationContext setRequestIP(String addr) {
+            requestIP = addr;  return this;
         }
         public String getRequestIP() {
             return requestIP;
@@ -479,6 +494,24 @@ public class Mailbox {
 
         if (ZimbraLog.mailbox.isDebugEnabled())
             ZimbraLog.mailbox.debug("clearing listener: " + session);
+    }
+
+    /** Returns the list of all {@link Session}s listening on the Mailbox. */
+    public synchronized List<Session> getListeners() {
+        return new ArrayList<Session>(mListeners);
+    }
+
+    /** Returns the list of all {@link Session}s of a given {@link Session.Type}
+     *  listening on the Mailbox. */
+    public synchronized List<Session> getListeners(Session.Type stype) {
+        if (mListeners.isEmpty())
+            return Collections.emptyList();
+
+        List<Session> matches = new ArrayList<Session>(mListeners.size());
+        for (Session session : mListeners)
+            if (session.getType() == stype)
+                matches.add(session);
+        return matches;
     }
 
     /** Cleans up and disconnects all {@link Session}s listening for
@@ -717,7 +750,38 @@ public class Mailbox {
             throw MailServiceException.QUOTA_EXCEEDED(quota);
     }
 
-    /** Returns the numer of contacts currently in the mailbox.
+    /** Returns the last time that the mailbox had a write op caused by a SOAP
+     *  session.  This value is written both right after the session's first
+     *  write op as well as right after the session expires.
+     * 
+     * @see #recordLastSoapAccessTime(long) */
+    public long getLastSoapAccessTime() {
+        return (mCurrentChange.accessed == MailboxChange.NO_CHANGE ? mData.lastWriteDate : mCurrentChange.accessed) * 1000L;
+    }
+
+    public void recordLastSoapAccessTime(long time) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("recordLastSoapAccessTime", null);
+            if (time > getLastSoapAccessTime()) {
+                mCurrentChange.accessed = (int) (time / 1000);
+                DbMailbox.recordLastSoapAccess(this);
+            }
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    /** Returns the number of "recent" messages in the mailbox.  A message is
+     *  considered "recent" if (a) it's not a draft or a sent message, and
+     *  (b) it was added since the last write operation associated with any
+     *  SOAP session. */
+    public int getRecentMessageCount() {
+        return (mCurrentChange.recent == MailboxChange.NO_CHANGE ? mData.recentMessages : mCurrentChange.recent);
+    }
+
+    /** Returns the number of contacts currently in the mailbox.
      * 
      * @see #updateContactCount(int) */
     public int getContactCount() {
@@ -5369,8 +5433,21 @@ public class Mailbox {
         }
     }
 
+    public static final int NON_DELIVERY_FLAGS = Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME;
+
     void snapshotCounts() throws ServiceException {
-        if (mCurrentChange.size != MailboxChange.NO_CHANGE || mCurrentChange.contacts != MailboxChange.NO_CHANGE)
+        // for write ops, update the "new messages" count in the DB appropriately
+        RedoableOp recorder = mCurrentChange.recorder;
+        if (recorder != null && mCurrentChange.getRedoPlayer() == null) {
+            boolean isNewMessage = recorder.getOpCode() == RedoableOp.OP_CREATE_MESSAGE && (((CreateMessage) recorder).getFlags() & NON_DELIVERY_FLAGS) == 0;
+            boolean isSoapRequest = mCurrentChange.octxt != null && mCurrentChange.octxt.getSession() instanceof SoapSession;
+            if (isNewMessage)
+                mCurrentChange.recent = mData.recentMessages + 1;
+            else if (isSoapRequest && mData.recentMessages != 0)
+                mCurrentChange.recent = 0;
+        }
+
+        if (mCurrentChange.recent != MailboxChange.NO_CHANGE || mCurrentChange.size != MailboxChange.NO_CHANGE || mCurrentChange.contacts != MailboxChange.NO_CHANGE)
             DbMailbox.updateMailboxStats(this);
 
         if (mCurrentChange.mDirty != null && mCurrentChange.mDirty.hasNotifications()) {
@@ -5406,6 +5483,8 @@ public class Mailbox {
             change.mDirty = new PendingModifications();
         }
 
+        Session source = mCurrentChange.octxt == null ? null : mCurrentChange.octxt.getSession();
+
         try {
             // the mailbox data has changed, so commit the changes
             if (change.sync != null)
@@ -5422,6 +5501,10 @@ public class Mailbox {
                 mData.lastChangeId   = change.changeId;
                 mData.lastChangeDate = change.timestamp;
             }
+            if (change.accessed != MailboxChange.NO_CHANGE)
+                mData.lastWriteDate = change.accessed;
+            if (change.recent != MailboxChange.NO_CHANGE)
+                mData.recentMessages = change.recent;
             if (change.config != null) {
                 if (change.config.getSecond() == null) {
                     if (mData.configKeys != null)
@@ -5477,7 +5560,7 @@ public class Mailbox {
         if (!mListeners.isEmpty() && dirty != null && dirty.hasNotifications()) {
             for (Session session : new ArrayList<Session>(mListeners)) {
                 try {
-                    session.notifyPendingChanges(mData.lastChangeId, dirty);
+                    session.notifyPendingChanges(dirty, mData.lastChangeId, source);
                 } catch (RuntimeException e) {
                     ZimbraLog.mailbox.error("ignoring error during notification", e);
                 }

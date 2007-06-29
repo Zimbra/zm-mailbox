@@ -121,7 +121,7 @@ public class FolderAction extends ItemAction {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
-        OperationContext octxt = zsc.getOperationContext();
+        OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
         ItemId iid = new ItemId(action.getAttribute(MailConstants.A_ID), zsc);
 

@@ -50,13 +50,13 @@ public class ModifySearchFolder extends MailDocumentHandler  {
     protected boolean checkMountpointProxy(Element request)  { return false; }
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-		ZimbraSoapContext lc = getZimbraSoapContext(context);
-		Mailbox mbox = getRequestedMailbox(lc);
-		OperationContext octxt = lc.getOperationContext();
-        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
+		ZimbraSoapContext zsc = getZimbraSoapContext(context);
+		Mailbox mbox = getRequestedMailbox(zsc);
+		OperationContext octxt = getOperationContext(zsc, context);
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 		
         Element t = request.getElement(MailConstants.E_SEARCH);
-        ItemId iid = new ItemId(t.getAttribute(MailConstants.A_ID), lc);
+        ItemId iid = new ItemId(t.getAttribute(MailConstants.A_ID), zsc);
         String query = t.getAttribute(MailConstants.A_QUERY);
         String types = t.getAttribute(MailConstants.A_SEARCH_TYPES, null);
         String sort = t.getAttribute(MailConstants.A_SORTBY, null);
@@ -64,7 +64,7 @@ public class ModifySearchFolder extends MailDocumentHandler  {
         mbox.modifySearchFolder(octxt, iid.getId(), query, types, sort);
         SearchFolder search = mbox.getSearchFolderById(octxt, iid.getId());
         
-        Element response = lc.createElement(MailConstants.MODIFY_SEARCH_FOLDER_RESPONSE);
+        Element response = zsc.createElement(MailConstants.MODIFY_SEARCH_FOLDER_RESPONSE);
     	ToXML.encodeSearchFolder(response, ifmt, search);
         return response;
 	}

@@ -106,7 +106,7 @@ public class ItemAction extends MailDocumentHandler {
         StringBuffer successes = proxyRemoteItems(action, remote, request, context);
 
         if (!local.isEmpty()) {
-            OperationContext octxt = zsc.getOperationContext();
+            OperationContext octxt = getOperationContext(zsc, context);
         	String constraint = action.getAttribute(MailConstants.A_TARGET_CONSTRAINT, null);
         	TargetConstraint tcon = TargetConstraint.parseConstraint(mbox, constraint);
         	

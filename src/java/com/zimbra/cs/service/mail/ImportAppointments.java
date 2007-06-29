@@ -38,7 +38,6 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.ZimbraSoapContext;
 
 import java.io.BufferedReader;
@@ -61,15 +60,12 @@ public class ImportAppointments extends MailDocumentHandler  {
     String DEFAULT_FOLDER_ID = Mailbox.ID_FOLDER_CALENDAR + "";
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-
-        Mailbox mbox = getRequestedMailbox(lc);
-
-        OperationContext octxt = lc.getOperationContext();
-        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zsc);
+        OperationContext octxt = getOperationContext(zsc, context);
 
         String folder = request.getAttribute(MailConstants.A_FOLDER, DEFAULT_FOLDER_ID);
-        ItemId iidFolder = new ItemId(folder, lc);
+        ItemId iidFolder = new ItemId(folder, zsc);
 
         String ct = request.getAttribute(MailConstants.A_CONTENT_TYPE);
         if (!ct.equals("ics"))
@@ -83,7 +79,7 @@ public class ImportAppointments extends MailDocumentHandler  {
             if (attachment == null)
                 reader = new BufferedReader(new StringReader(content.getText()));
             else
-                reader = parseUploadedContent(lc, attachment, uploads = new ArrayList<Upload>());
+                reader = parseUploadedContent(zsc, attachment, uploads = new ArrayList<Upload>());
 
             List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(reader);
             reader.close();
@@ -102,7 +98,7 @@ public class ImportAppointments extends MailDocumentHandler  {
                 ids.append(invIds[0]).append("-").append(invIds[1]);
             }
             
-            Element response = lc.createElement(MailConstants.IMPORT_APPOINTMENTS_RESPONSE);
+            Element response = zsc.createElement(MailConstants.IMPORT_APPOINTMENTS_RESPONSE);
             Element cn = response.addElement(MailConstants.E_APPOINTMENT);
             cn.addAttribute(MailConstants.A_IDS, ids.toString());
             cn.addAttribute(MailConstants.A_NUM, invites.size());

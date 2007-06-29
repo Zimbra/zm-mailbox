@@ -114,7 +114,7 @@ public class SaveDocument extends WikiDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
         Element docElem = request.getElement(MailConstants.E_DOC);
-        OperationContext octxt = zsc.getOperationContext();
+        OperationContext octxt = getOperationContext(zsc, context);
 
         Doc doc;
         Element attElem = docElem.getOptionalElement(MailConstants.E_UPLOAD);

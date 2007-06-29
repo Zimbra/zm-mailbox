@@ -34,26 +34,28 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.im.IMAddr;
 import com.zimbra.cs.im.IMChat;
 import com.zimbra.cs.im.IMPersona;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class IMModifyChat extends IMDocumentHandler 
-{
+public class IMModifyChat extends IMDocumentHandler {
+
     static enum Op {
         CLOSE, ADDUSER;
     }
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        OperationContext octxt = getOperationContext(zsc, context);
 
-        Element response = lc.createElement(IMConstants.IM_MODIFY_CHAT_RESPONSE);
-        
+        Element response = zsc.createElement(IMConstants.IM_MODIFY_CHAT_RESPONSE);
+
         String threadId = request.getAttribute(IMConstants.A_THREAD_ID);
         response.addAttribute(IMConstants.A_THREAD_ID, threadId);
         
-        Object lock = super.getLock(lc);
+        Object lock = super.getLock(zsc);
         
         synchronized(lock) {
-            IMPersona persona = super.getRequestedPersona(lc, lock);
+            IMPersona persona = super.getRequestedPersona(zsc, context, lock);
             
             IMChat chat = persona.getChat(threadId);
             
@@ -63,17 +65,16 @@ public class IMModifyChat extends IMDocumentHandler
                 String opStr = request.getAttribute(IMConstants.A_OPERATION);
                 Op op = Op.valueOf(opStr.toUpperCase());
                 
-                switch(op) {
+                switch (op) {
                     case CLOSE:
-                        persona.closeChat(lc.getOperationContext(), chat);
+                        persona.closeChat(octxt, chat);
                         break;
-                    case ADDUSER:
-                    {
+                    case ADDUSER: {
                         String newUser = request.getAttribute(IMConstants.A_ADDRESS);
                         String inviteMessage = request.getText();
                         if (inviteMessage == null || inviteMessage.length() == 0)
                             inviteMessage = "Please join my chat";
-                        persona.addUserToChat(lc.getOperationContext(), chat, new IMAddr(newUser), inviteMessage);
+                        persona.addUserToChat(octxt, chat, new IMAddr(newUser), inviteMessage);
                     }
                     break;
                 }

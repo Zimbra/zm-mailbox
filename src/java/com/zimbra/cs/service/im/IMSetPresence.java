@@ -39,28 +39,28 @@ public class IMSetPresence extends IMDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        OperationContext octxt = getOperationContext(zsc, context);
 
-        Element response = lc.createElement(IMConstants.IM_SET_PRESENCE_RESPONSE);
-        
+        Element response = zsc.createElement(IMConstants.IM_SET_PRESENCE_RESPONSE);
+
         Element e = request.getElement(IMConstants.E_PRESENCE);
-        
+
         String showStr = e.getAttribute(IMConstants.A_SHOW, IMPresence.Show.ONLINE.toString());
         String statusStr = null;
         Element status = e.getOptionalElement(IMConstants.E_STATUS);
         if (status != null) {
             statusStr = status.getText();
         }
-        
+
         IMPresence presence = new IMPresence(IMPresence.Show.valueOf(showStr.toUpperCase()), (byte)1, statusStr);
-        
-        OperationContext oc = lc.getOperationContext();
-        Object lock = super.getLock(lc);
+
+        Object lock = super.getLock(zsc);
         synchronized (lock) {
-            IMPersona persona = super.getRequestedPersona(lc, lock);
-            persona.setMyPresence(oc, presence);
+            IMPersona persona = super.getRequestedPersona(zsc, context, lock);
+            persona.setMyPresence(octxt, presence);
         }
-        
+
         return response;
     }
 }

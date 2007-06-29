@@ -50,7 +50,7 @@ public class IMGetChat extends IMDocumentHandler {
         
         Object lock = super.getLock(lc);
         synchronized (lock) {
-            IMPersona persona = super.getRequestedPersona(lc, lock);
+            IMPersona persona = super.getRequestedPersona(lc, context, lock);
             
             IMChat chat = persona.getChat(threadId);
             if (chat != null)

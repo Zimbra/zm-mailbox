@@ -60,13 +60,13 @@ public class GetMsg extends MailDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
-        OperationContext octxt = lc.getOperationContext();
-        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zsc);
+        OperationContext octxt = getOperationContext(zsc, context);
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         Element eMsg = request.getElement(MailConstants.E_MSG);
-        ItemId iid = new ItemId(eMsg.getAttribute(MailConstants.A_ID), lc);
+        ItemId iid = new ItemId(eMsg.getAttribute(MailConstants.A_ID), zsc);
         boolean raw = eMsg.getAttributeBool(MailConstants.A_RAW, false);
         boolean read = eMsg.getAttributeBool(MailConstants.A_MARK_READ, false);
         boolean neuter = eMsg.getAttributeBool(MailConstants.A_NEUTER, true);
@@ -80,7 +80,7 @@ public class GetMsg extends MailDocumentHandler {
             headers.add(eHdr.getAttribute(MailConstants.A_ATTRIBUTE_NAME));
         }
 
-        Element response = lc.createElement(MailConstants.GET_MSG_RESPONSE);
+        Element response = zsc.createElement(MailConstants.GET_MSG_RESPONSE);
         if (iid.hasSubpart()) {
             // calendar item
             CalendarItem calItem = getCalendarItem(octxt, mbox, iid);

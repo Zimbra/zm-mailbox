@@ -59,7 +59,7 @@ public class ReIndex extends AdminDocumentHandler {
     }
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext zc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
         String action = request.getAttribute(MailConstants.E_ACTION);
 
@@ -69,14 +69,14 @@ public class ReIndex extends AdminDocumentHandler {
         Account account = Provisioning.getInstance().get(AccountBy.id, accountId);
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
-        if (!canAccessAccount(zc, account))
+        if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(accountId, false);
         if (mbox == null)
             throw ServiceException.FAILURE("mailbox not found for account " + accountId, null);
 
-        Element response = zc.createElement(AdminConstants.REINDEX_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.REINDEX_RESPONSE);
 
         if (action.equalsIgnoreCase(ACTION_START)) {
             if (mbox.isReIndexInProgress()) {
@@ -98,7 +98,7 @@ public class ReIndex extends AdminDocumentHandler {
                     itemIds.add(Integer.parseInt(target));
             }
 
-            ReIndexThread thread = new ReIndexThread(mbox, zc.getOperationContext(), types, itemIds);
+            ReIndexThread thread = new ReIndexThread(mbox, getOperationContext(zsc, context), types, itemIds);
             thread.start();
 
             response.addAttribute(AdminConstants.A_STATUS, "started");
@@ -138,8 +138,7 @@ public class ReIndex extends AdminDocumentHandler {
         prog.addAttribute(AdminConstants.A_NUM_REMAINING, (status.mNumToProcess-status.mNumProcessed));
     }
 
-    public static class ReIndexThread extends Thread
-    {
+    public static class ReIndexThread extends Thread {
         private Mailbox mMbox;
         private OperationContext mOctxt;
         private Set<Byte> mTypes = null;

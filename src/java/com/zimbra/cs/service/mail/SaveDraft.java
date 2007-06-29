@@ -70,7 +70,7 @@ public class SaveDraft extends MailDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
-        OperationContext octxt = zsc.getOperationContext();
+        OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         Element msgElem = request.getElement(MailConstants.E_MSG);
@@ -99,7 +99,7 @@ public class SaveDraft extends MailDocumentHandler {
         if (attachment != null)
             mm = SendMsg.parseUploadedMessage(zsc, attachment, mimeData);
         else
-            mm = ParseMimeMessage.parseMimeMsgSoap(zsc, mbox, msgElem, null, mimeData);
+            mm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem, null, mimeData);
 
         long date = System.currentTimeMillis();
         try {

@@ -47,8 +47,8 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class Browse extends MailDocumentHandler  {
     
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext zc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(zc);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zsc);
         
         String browseBy = request.getAttribute("browseby", null);
         if (browseBy == null)
@@ -56,12 +56,12 @@ public class Browse extends MailDocumentHandler  {
         
         BrowseResult browse;
         try {
-            browse = mbox.browse(zc.getOperationContext(), browseBy);
+            browse = mbox.browse(getOperationContext(zsc, context), browseBy);
         } catch (IOException e) {
             throw ServiceException.FAILURE("IO error", e);
         }
         
-        Element response = zc.createElement(MailConstants.BROWSE_RESPONSE);
+        Element response = zsc.createElement(MailConstants.BROWSE_RESPONSE);
         
         List result = browse.getResult();
         if (result != null) {

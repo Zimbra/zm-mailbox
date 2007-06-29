@@ -29,7 +29,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
@@ -59,12 +58,11 @@ public class CompleteTaskInstance extends CalendarRequest {
     protected boolean checkMountpointProxy(Element request)  { return false; }
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Account acct = getRequestedAccount(lc);
-        Mailbox mbox = getRequestedMailbox(lc);
-        OperationContext octxt = lc.getOperationContext();
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zsc);
+        OperationContext octxt = getOperationContext(zsc, context);
 
-        ItemId iid = new ItemId(request.getAttribute(MailConstants.A_ID), lc);
+        ItemId iid = new ItemId(request.getAttribute(MailConstants.A_ID), zsc);
         Element exceptElem = request.getElement(MailConstants.E_CAL_EXCEPTION_ID);
 
         synchronized (mbox) {
@@ -138,7 +136,7 @@ public class CompleteTaskInstance extends CalendarRequest {
         }
 
         // response
-        Element response = getResponseElement(lc);
+        Element response = getResponseElement(zsc);
         return response;
     }
 

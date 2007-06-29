@@ -42,46 +42,44 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class IMSendMessage extends IMDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        OperationContext octxt = getOperationContext(zsc, context);
 
-        Element response = lc.createElement(IMConstants.IM_SEND_MESSAGE_RESPONSE);
+        Element response = zsc.createElement(IMConstants.IM_SEND_MESSAGE_RESPONSE);
 
         Element msgElt = request.getElement(IMConstants.E_MESSAGE);
-        
+
         String threadId = msgElt.getAttribute(IMConstants.A_THREAD_ID, null);
         String addr = IMUtils.resolveAddress(msgElt.getAttribute(IMConstants.A_ADDRESS));
-        
+
         String subject = null;
         String body = null;
-        
+
         Element subjElt = msgElt.getOptionalElement(IMConstants.E_SUBJECT);
         if (subjElt != null) {
             subject = subjElt.getText();
         }
-        
+
         Element bodyElt = msgElt.getOptionalElement(IMConstants.E_BODY);
         if (bodyElt != null) {
             body = bodyElt.getText();
         }
-        
+
         boolean isTyping = false;
         if (msgElt.getOptionalElement(IMConstants.E_TYPING) != null)
             isTyping = true;
-        
+
         IMMessage msg = new IMMessage(subject==null?null:new TextPart(subject),
                 body==null?null:new TextPart(body), isTyping);
-                
-        OperationContext oc = lc.getOperationContext();
-        
-        Object lock = super.getLock(lc);
+
+        Object lock = super.getLock(zsc);
         synchronized(lock) {
-            IMPersona persona = super.getRequestedPersona(lc, lock);
-            
-            persona.sendMessage(oc, new IMAddr(addr), threadId, msg);
+            IMPersona persona = super.getRequestedPersona(zsc, context, lock);
+            persona.sendMessage(octxt, new IMAddr(addr), threadId, msg);
         }
-        
+
         response.addAttribute(IMConstants.A_THREAD_ID, threadId);
-        
+
         return response;        
     }
 }

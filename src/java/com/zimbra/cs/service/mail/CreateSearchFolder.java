@@ -51,10 +51,10 @@ public class CreateSearchFolder extends MailDocumentHandler  {
     protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-		ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
-        Mailbox.OperationContext octxt = lc.getOperationContext();
-        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
+		ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zsc);
+        Mailbox.OperationContext octxt = getOperationContext(zsc, context);
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         Element t = request.getElement(MailConstants.E_SEARCH);
         String name      = t.getAttribute(MailConstants.A_NAME);
@@ -62,11 +62,11 @@ public class CreateSearchFolder extends MailDocumentHandler  {
         String types     = t.getAttribute(MailConstants.A_SEARCH_TYPES, null);
         String sort      = t.getAttribute(MailConstants.A_SORTBY, null);
         byte color       = (byte) t.getAttributeLong(MailConstants.A_COLOR, MailItem.DEFAULT_COLOR);
-        ItemId iidParent = new ItemId(t.getAttribute(MailConstants.A_FOLDER), lc);
+        ItemId iidParent = new ItemId(t.getAttribute(MailConstants.A_FOLDER), zsc);
 
         SearchFolder search = mbox.createSearchFolder(octxt, iidParent.getId(), name, query, types, sort, color);
 
-        Element response = lc.createElement(MailConstants.CREATE_SEARCH_FOLDER_RESPONSE);
+        Element response = zsc.createElement(MailConstants.CREATE_SEARCH_FOLDER_RESPONSE);
         if (search != null)
         	ToXML.encodeSearchFolder(response, ifmt, search);
         return response;

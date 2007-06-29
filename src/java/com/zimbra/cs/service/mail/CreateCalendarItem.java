@@ -38,6 +38,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -58,7 +59,7 @@ public class CreateCalendarItem extends CalendarRequest {
 
     // very simple: generate a new UID and send a REQUEST
     protected class CreateCalendarItemInviteParser extends ParseMimeMessage.InviteParser { 
-        public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraSoapContext lc, Account account, Element inviteElem) throws ServiceException 
+        public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraSoapContext lc, OperationContext octxt, Account account, Element inviteElem) throws ServiceException 
         {
             return CalendarUtils.parseInviteForCreate(account, getItemType(), inviteElem, null, null, false, CalendarUtils.RECUR_ALLOWED);
         }
@@ -68,7 +69,8 @@ public class CreateCalendarItem extends CalendarRequest {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(zsc);
         Mailbox mbox = getRequestedMailbox(zsc);
-        
+        OperationContext octxt = getOperationContext(zsc, context);
+
         // <M>
         Element msgElem = request.getElement(MailConstants.E_MSG);
         
@@ -78,9 +80,9 @@ public class CreateCalendarItem extends CalendarRequest {
         sLog.info("<CreateCalendarItem folder=" + iidFolder.getId() + "> " + zsc.toString());
         
         CreateCalendarItemInviteParser parser = new CreateCalendarItemInviteParser();
-        CalSendData dat = handleMsgElement(zsc, msgElem, acct, mbox, parser);
+        CalSendData dat = handleMsgElement(zsc, octxt, msgElem, acct, mbox, parser);
         
         Element response = getResponseElement(zsc);
-        return sendCalendarMessage(zsc, zsc.getOperationContext(), iidFolder.getId(), acct, mbox, dat, response, false);
+        return sendCalendarMessage(zsc, octxt, iidFolder.getId(), acct, mbox, dat, response, false);
     }
 }

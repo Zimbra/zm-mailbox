@@ -33,20 +33,18 @@ import com.zimbra.cs.im.IMChat;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.im.IMChat.Participant;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class IMGetRoster extends IMDocumentHandler {
 
-    public Element handle(Element request, Map<String, Object> context) throws ServiceException,
-                SoapFaultException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
-        Element response = lc.createElement(IMConstants.IM_GET_ROSTER_RESPONSE);
+        Element response = zsc.createElement(IMConstants.IM_GET_ROSTER_RESPONSE);
 
-        Object lock = super.getLock(lc);
+        Object lock = super.getLock(zsc);
         synchronized (lock) {
-            IMPersona persona = super.getRequestedPersona(lc, lock);
+            IMPersona persona = super.getRequestedPersona(zsc, context, lock);
 
             Element pres = response.addUniqueElement(IMConstants.E_PRESENCE);
             persona.getEffectivePresence().toXml(pres);
@@ -64,7 +62,7 @@ public class IMGetRoster extends IMDocumentHandler {
                 }
             }
 
-            persona.getRoster(lc.getOperationContext());
+            persona.getRoster(getOperationContext(zsc, context));
         }
 
         ZimbraLog.im.debug("GET ROSTER RESPONSE:\n" + response.toXML().asXML());

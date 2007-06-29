@@ -59,7 +59,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
         Mailbox mbox = null;
 
         if (zsc.getAuthToken() != null)
-            octxt = zsc.getOperationContext();
+            octxt = getOperationContext(zsc, context);
         return BlockingOperation.schedule(request.getName(), session, octxt, mbox, Requester.ADMIN, getSchedulerPriority(), 1);   
     }
 

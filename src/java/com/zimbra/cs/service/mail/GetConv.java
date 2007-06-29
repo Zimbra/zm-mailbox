@@ -57,7 +57,7 @@ public class GetConv extends MailDocumentHandler  {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
-        Mailbox.OperationContext octxt = zsc.getOperationContext();
+        Mailbox.OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         Element econv = request.getElement(MailConstants.E_CONV);
@@ -81,7 +81,7 @@ public class GetConv extends MailDocumentHandler  {
         if (conv == null)
             throw MailServiceException.NO_SUCH_CONV(iid.getId());
 
-        List<Message> msgs = mbox.getMessagesByConversation(zsc.getOperationContext(), conv.getId(), Conversation.SORT_DATE_ASCENDING);
+        List<Message> msgs = mbox.getMessagesByConversation(octxt, conv.getId(), Conversation.SORT_DATE_ASCENDING);
         if (msgs.isEmpty() && zsc.isDelegatedRequest())
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
 

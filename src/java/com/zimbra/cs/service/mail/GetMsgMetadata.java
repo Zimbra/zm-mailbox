@@ -48,7 +48,7 @@ public class GetMsgMetadata extends MailDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
-        Mailbox.OperationContext octxt = zsc.getOperationContext();
+        Mailbox.OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         String ids = request.getElement(MailConstants.E_MSG).getAttribute(MailConstants.A_IDS);

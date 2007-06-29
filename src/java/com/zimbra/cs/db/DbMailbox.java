@@ -278,22 +278,39 @@ public class DbMailbox {
         }
     }
 
+    public static void recordLastSoapAccess(Mailbox mbox) throws ServiceException {
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement("UPDATE mailbox SET last_soap_access = ? WHERE id = ?");
+            stmt.setInt(1, (int) (mbox.getLastSoapAccessTime() / 1000));
+            stmt.setInt(2, mbox.getId());
+            int num = stmt.executeUpdate();
+            assert(num == 1);
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("updating last SOAP access time for mailbox " + mbox.getId(), e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
     public static void updateMailboxStats(Mailbox mbox) throws ServiceException {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("UPDATE mailbox" +
-                    " SET item_id_checkpoint = ?, contact_count = ?, change_checkpoint = ?, size_checkpoint = ?" +
+                    " SET item_id_checkpoint = ?, contact_count = ?, change_checkpoint = ?, size_checkpoint = ?, new_messages = ?" +
                     " WHERE id = ?");
             stmt.setInt(1, mbox.getLastItemId());
             stmt.setInt(2, mbox.getContactCount());
             stmt.setInt(3, mbox.getLastChangeID());
             stmt.setLong(4, mbox.getSize());
-            stmt.setInt(5, mbox.getId());
+            stmt.setInt(5, mbox.getRecentMessageCount());
+            stmt.setInt(6, mbox.getId());
             int num = stmt.executeUpdate();
             assert(num == 1);
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("updating item ID highwater mark for mailbox " + mbox.getId(), e);
+            throw ServiceException.FAILURE("updating mailbox statistics for mailbox " + mbox.getId(), e);
         } finally {
             DbPool.closeStatement(stmt);
         }
@@ -446,7 +463,7 @@ public class DbMailbox {
             stmt = conn.prepareStatement(
                     "SELECT account_id, group_id," +
                     " size_checkpoint, contact_count, item_id_checkpoint, change_checkpoint, tracking_sync," +
-                    " tracking_imap, index_volume_id " +
+                    " tracking_imap, index_volume_id, last_soap_access, new_messages " +
                     "FROM mailbox WHERE id = ?");
             stmt.setInt(1, mailboxId);
             rs = stmt.executeQuery();
@@ -469,6 +486,8 @@ public class DbMailbox {
             mbd.trackSync     = rs.getInt(pos++);
             mbd.trackImap     = rs.getBoolean(pos++);
             mbd.indexVolumeId = rs.getShort(pos++);
+            mbd.lastWriteDate = rs.getInt(pos++);
+            mbd.recentMessages = rs.getInt(pos++);
 
             // round lastItemId and lastChangeId up so that they get written on the next change
             long rounding = mbd.lastItemId % ITEM_CHECKPOINT_INCREMENT;

@@ -88,10 +88,10 @@ public class NoteAction extends ItemAction {
     private String handleNote(Map<String, Object> context, Element request, String operation) throws ServiceException {
         Element action = request.getElement(MailConstants.E_ACTION);
 
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
-        OperationContext octxt = lc.getOperationContext();
-        ItemId iid = new ItemId(action.getAttribute(MailConstants.A_ID), lc);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zsc);
+        OperationContext octxt = getOperationContext(zsc, context);
+        ItemId iid = new ItemId(action.getAttribute(MailConstants.A_ID), zsc);
 
         if (operation.equals(OP_EDIT)) {
             String content = action.getAttribute(MailConstants.E_CONTENT);
@@ -102,6 +102,6 @@ public class NoteAction extends ItemAction {
         } else
             throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
 
-        return new ItemIdFormatter(lc).formatItemId(iid);
+        return new ItemIdFormatter(zsc).formatItemId(iid);
     }
 }

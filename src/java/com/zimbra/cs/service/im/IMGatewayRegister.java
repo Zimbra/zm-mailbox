@@ -15,10 +15,11 @@ public class IMGatewayRegister extends IMDocumentHandler
 {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        OperationContext octxt = getOperationContext(zsc, context);
         
-        Element response = lc.createElement(IMConstants.IM_GATEWAY_REGISTER_RESPONSE);
-        Object lock = super.getLock(lc);
+        Element response = zsc.createElement(IMConstants.IM_GATEWAY_REGISTER_RESPONSE);
+        Object lock = super.getLock(zsc);
         
         String op = request.getAttribute("op");
         String serviceStr = request.getAttribute("service");
@@ -26,11 +27,11 @@ public class IMGatewayRegister extends IMDocumentHandler
         if ("reg".equals(op)) {
             String nameStr = request.getAttribute("name");
             String pwStr = request.getAttribute("password");
-            result = register((Mailbox)lock, lc.getOperationContext(), ServiceName.valueOf(serviceStr), nameStr, pwStr);
+            result = register((Mailbox) lock, octxt, ServiceName.valueOf(serviceStr), nameStr, pwStr);
         } else if ("reconnect".equals(op)) {
-            reconnect((Mailbox)lock, lc.getOperationContext(), ServiceName.valueOf(serviceStr));
+            reconnect((Mailbox) lock, octxt, ServiceName.valueOf(serviceStr));
         } else {
-            unregister((Mailbox)lock, lc.getOperationContext(), ServiceName.valueOf(serviceStr));
+            unregister((Mailbox) lock, octxt, ServiceName.valueOf(serviceStr));
         }
         response.addAttribute("result", result);
         

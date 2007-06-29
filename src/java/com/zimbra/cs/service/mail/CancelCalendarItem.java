@@ -68,7 +68,7 @@ public class CancelCalendarItem extends CalendarRequest {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(zsc);
         Mailbox mbox = getRequestedMailbox(zsc);
-        OperationContext octxt = zsc.getOperationContext();
+        OperationContext octxt = getOperationContext(zsc, context);
         
         ItemId iid = new ItemId(request.getAttribute(MailConstants.A_ID), zsc);
         int compNum = (int) request.getAttributeLong(MailConstants.E_INVITE_COMPONENT);
@@ -151,8 +151,8 @@ public class CancelCalendarItem extends CalendarRequest {
             // the <inv> element is *NOT* allowed -- we always build it manually
             // based on the params to the <CancelCalendarItem> and stick it in the 
             // mbps (additionalParts) parameter...
-            dat.mMm = ParseMimeMessage.parseMimeMsgSoap(zsc, mbox, msgElem, mbps, 
-                    ParseMimeMessage.NO_INV_ALLOWED_PARSER, dat);
+            dat.mMm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem, 
+                    mbps, ParseMimeMessage.NO_INV_ALLOWED_PARSER, dat);
             
         } else {
             List<Address> rcpts = CalendarMailSender.toListFromAttendees(defaultInv.getAttendees());
@@ -205,7 +205,7 @@ public class CancelCalendarItem extends CalendarRequest {
             // the <inv> element is *NOT* allowed -- we always build it manually
             // based on the params to the <CancelCalendarItem> and stick it in the 
             // mbps (additionalParts) parameter...
-            csd.mMm = ParseMimeMessage.parseMimeMsgSoap(zsc, mbox, msgElem, mbps, ParseMimeMessage.NO_INV_ALLOWED_PARSER, csd);
+            csd.mMm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem, mbps, ParseMimeMessage.NO_INV_ALLOWED_PARSER, csd);
             
         } else {
             List<Address> rcpts = CalendarMailSender.toListFromAttendees(inv.getAttendees());

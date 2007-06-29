@@ -51,10 +51,10 @@ public class GetWiki extends WikiDocumentHandler {
 
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-		ZimbraSoapContext lc = getZimbraSoapContext(context);
-		checkEnabled(lc);
-        OperationContext octxt = lc.getOperationContext();
-        ItemIdFormatter ifmt = new ItemIdFormatter(lc);
+		ZimbraSoapContext zsc = getZimbraSoapContext(context);
+		checkEnabled(zsc);
+        OperationContext octxt = getOperationContext(zsc, context);
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         Element wElem = request.getElement(MailConstants.E_WIKIWORD);
         String word = wElem.getAttribute(MailConstants.A_NAME, null);
@@ -63,16 +63,16 @@ public class GetWiki extends WikiDocumentHandler {
         int rev = (int) wElem.getAttributeLong(MailConstants.A_VERSION, -1);
         int count = (int) wElem.getAttributeLong(MailConstants.A_COUNT, -1);
 
-        Element response = lc.createElement(MailConstants.GET_WIKI_RESPONSE);
+        Element response = zsc.createElement(MailConstants.GET_WIKI_RESPONSE);
 
         WikiItem wikiItem;
 
         if (word != null) {
-        	ItemId fid = getRequestedFolder(request, lc);
+        	ItemId fid = getRequestedFolder(request, zsc);
         	if (fid == null)
         		fid = new ItemId("", Mailbox.ID_FOLDER_USER_ROOT);
-        	WikiContext wctxt = new WikiContext(octxt, lc.getRawAuthToken());
-        	WikiPage wikiPage = Wiki.findWikiPageByPath(wctxt, lc.getRequestedAccountId(), fid.getId(), word, traverse == 1);
+        	WikiContext wctxt = new WikiContext(octxt, zsc.getRawAuthToken());
+        	WikiPage wikiPage = Wiki.findWikiPageByPath(wctxt, zsc.getRequestedAccountId(), fid.getId(), word, traverse == 1);
         	try {
         		Document doc = wikiPage.getWikiItem(wctxt);
             	if (doc.getType() != MailItem.TYPE_WIKI) {
@@ -91,8 +91,8 @@ public class GetWiki extends WikiDocumentHandler {
         		return response;
         	}
         } else if (id != null) {
-        	ItemId iid = new ItemId(id, lc);
-        	Mailbox mbox = getRequestedMailbox(lc);
+        	ItemId iid = new ItemId(id, zsc);
+        	Mailbox mbox = getRequestedMailbox(zsc);
         	wikiItem = mbox.getWikiById(octxt, iid.getId());
         } else {
         	throw ServiceException.FAILURE("missing attribute w or id", null);
