@@ -1770,7 +1770,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             }
 
             // see if there's any quota on the account
-            long quota = mCredentials.getAccount().getIntAttr(Provisioning.A_zimbraMailQuota, 0);
+            long quota = mCredentials.getAccount().getLongAttr(Provisioning.A_zimbraMailQuota, 0);
             sendUntagged("QUOTAROOT " + qroot.asUtf7String() + (quota > 0 ? " \"\"" : ""));
             if (quota > 0)
                 sendUntagged("QUOTA \"\" (STORAGE " + (mCredentials.getMailbox().getSize() / 1024) + ' ' + (quota / 1024) + ')');
