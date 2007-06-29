@@ -372,7 +372,7 @@ public class ProvUtil implements DebugListener {
             mProv.createIdentity(lookupAccount(args[1]), args[2], getMap(args, 3));
             break;
         case CREATE_SIGNATURE:
-            mProv.createSignature(lookupAccount(args[1]), args[2], getMap(args, 3));
+            System.out.println(mProv.createSignature(lookupAccount(args[1]), args[2], getMap(args, 3)).getId());
             break;      
         case CREATE_DATA_SOURCE:
             System.out.println(mProv.createDataSource(lookupAccount(args[1]), DataSource.Type.fromString(args[2]), args[3], getMap(args, 4)).getId());
@@ -1452,14 +1452,11 @@ public class ProvUtil implements DebugListener {
     }
     
     private String lookupSignatureId(Account account, String key) throws ServiceException {
-        if (isUUID(key)) {
-            Signature sig = mProv.get(account, SignatureBy.id, key);
-            if (sig == null)
-                throw AccountServiceException.NO_SUCH_SIGNATURE(key);
-            else
-                return sig.getId();
-        } else
-            return key;
+        Signature sig = mProv.get(account, guessSignatureBy(key), key);
+        if (sig == null)
+            throw AccountServiceException.NO_SUCH_SIGNATURE(key);
+        else
+            return sig.getId();
     }
 
     private DistributionList lookupDistributionList(String key, boolean mustFind) throws ServiceException {

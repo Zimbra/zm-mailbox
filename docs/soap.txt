@@ -701,7 +701,7 @@ Allowed attributes (see objectclass zimbraIdentity in zimbra.schema)
 </CreateSignatureRequest> 
 
 <CreateSignatureResponse>
-  <signature id="{id}"/>
+  <signature id="{id}" name="{signature-name}"/>
 </CreateSignatureResponse>
 
 - If an id is provided it will be honored as the id for the signature.

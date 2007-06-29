@@ -1350,20 +1350,26 @@ public class SoapProvisioning extends Provisioning {
     
     @Override
     public Signature createSignature(Account account, String signatureName, Map<String, Object> attrs) throws ServiceException {
+        if (attrs.get(Provisioning.A_zimbraSignatureName) != null)
+            throw ZClientException.CLIENT_ERROR("invalid attr: "+Provisioning.A_zimbraSignatureName, null);
+        
         XMLElement req = new XMLElement(AccountConstants.CREATE_SIGNATURE_REQUEST);
         Element signature = req.addElement(AccountConstants.E_SIGNATURE);
         signature.addAttribute(AccountConstants.A_NAME, signatureName);
-        addAttrElementsMailService(signature, attrs);
+        SoapSignature.toXML(signature, attrs);
         Element response = invokeOnTargetAccount(req, account.getId()).getElement(AccountConstants.E_SIGNATURE);
         return new SoapSignature(account, response);
     }
     
     @Override
     public void modifySignature(Account account, String signatureId, Map<String, Object> attrs) throws ServiceException {
+        if (attrs.get(Provisioning.A_zimbraSignatureId) != null)
+            throw ZClientException.CLIENT_ERROR("invalid attr: "+Provisioning.A_zimbraSignatureId, null);
+        
         XMLElement req = new XMLElement(AccountConstants.MODIFY_SIGNATURE_REQUEST);
         Element signature = req.addElement(AccountConstants.E_SIGNATURE);
         signature.addAttribute(AccountConstants.A_ID, signatureId);
-        addAttrElementsMailService(signature, attrs);
+        SoapSignature.toXML(signature, attrs);
         invokeOnTargetAccount(req, account.getId());
     }
     

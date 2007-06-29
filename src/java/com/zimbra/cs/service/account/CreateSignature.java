@@ -55,7 +55,7 @@ public class CreateSignature extends DocumentHandler {
         Map<String,Object> attrs = new HashMap<String, Object>();
         for (Element eContent : contents) {
             String type = eContent.getAttribute(AccountConstants.A_TYPE);
-            String attr = Signature.mimeTypeToAttr(type);
+            String attr = Signature.mimeTypeToAttrName(type);
             if (attr == null)
                 throw ServiceException.INVALID_REQUEST("invalid type "+type, null);
             if (attrs.get(attr) != null)
@@ -74,6 +74,7 @@ public class CreateSignature extends DocumentHandler {
         Element response = zsc.createElement(AccountConstants.CREATE_SIGNATURE_RESPONSE);
         Element eRespSignature = response.addElement(AccountConstants.E_SIGNATURE);
         eRespSignature.addAttribute(AccountConstants.A_ID, signature.getId());
+        eRespSignature.addAttribute(AccountConstants.A_NAME, signature.getName());
         return response;
     }
 }

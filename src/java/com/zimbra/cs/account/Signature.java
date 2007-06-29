@@ -67,8 +67,12 @@ public class Signature extends NamedEntry implements Comparable {
         return contents;
     }
     
-    public static String mimeTypeToAttr(String mimeType) {
+    public static String mimeTypeToAttrName(String mimeType) {
         return (String)sAttrTypeMap.getKey(mimeType);
+    }
+    
+    public static String attrNameToMimeType(String attrName) {
+        return (String)sAttrTypeMap.get(attrName);
     }
 
 }
