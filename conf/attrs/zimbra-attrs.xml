@@ -2399,4 +2399,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>number of https handler threads</desc>
 </attr>
 
+<attr id="520" name="zimbraLogToSyslog" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>whether mailbox server should log to syslog</desc>
+</attr>
+
 </attrs>
