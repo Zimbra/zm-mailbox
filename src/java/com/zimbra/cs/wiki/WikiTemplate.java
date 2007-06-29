@@ -37,6 +37,7 @@ import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -378,6 +379,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			addWiklet(new IconWiklet());
 			addWiklet(new NameWiklet());
 			addWiklet(new CreatorWiklet());
+			addWiklet(new TagsWiklet());
 			addWiklet(new ModifierWiklet());
 			addWiklet(new CreateDateWiklet());
 			addWiklet(new ModifyDateWiklet());
@@ -691,6 +693,43 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
            return "";
 		}
 	}
+
+	public static class TagsWiklet extends Wiklet {
+		public String getName() {
+			return "Tags";
+		}
+		public String getPattern() {
+			return "TAGS";
+		}
+		public WikiTemplate findInclusion(Context ctxt) {
+			return null;
+		}
+		public String apply(Context ctxt) throws ServiceException {
+			if (ctxt.item instanceof Folder) {
+				return "";        
+			}
+			else if (ctxt.item instanceof Document) {
+				Document doc = (Document) ctxt.item;
+				List<Tag> tags = doc.getTagList();
+				StringBuffer names= new StringBuffer();				
+				int count = 0;
+				int size = tags.size();
+				if(size>0){
+					names.append("<span class='zmwiki-tagsTitle'>Tags: </span>");
+				}
+				for (Tag tag : tags) {
+					count++;
+					names.append("<span class='zmwiki-tags'>");
+					names.append(tag.getName()+((size==count)?" ":", "));
+					names.append(" </span>");
+				}
+				return names.toString();        	   
+			}
+
+			return "";
+		}
+	}
+
 	public static class ModifierWiklet extends Wiklet {
 		public String getName() {
 			return "Modifier";
