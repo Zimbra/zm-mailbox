@@ -79,8 +79,8 @@ public class PrivilegedServlet extends HttpServlet {
                 EasySSLProtocolSocketFactory.init();
 
             System.setProperty("javax.net.ssl.keyStore", LC.tomcat_keystore.value());
-            System.setProperty("javax.net.ssl.keyStorePassword", "zimbra");
-            System.setProperty("javax.net.ssl.trustStorePassword", "changeit");
+            System.setProperty("javax.net.ssl.keyStorePassword", LC.tomcat_keystore_password.value());
+            System.setProperty("javax.net.ssl.trustStorePassword", LC.tomcat_truststore_password.value());
 
             if (Provisioning.getInstance() instanceof LdapProvisioning)
                 checkLDAP();
