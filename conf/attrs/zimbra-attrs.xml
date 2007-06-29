@@ -2386,5 +2386,17 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Enable instant notifications</desc>
 </attr>
+    
+<attr id="518" name="zimbraHttpNumThreads" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" deprecatedSince="5.0">
+  <globalConfigValue>100</globalConfigValue>
+  <deprecateDesc>not applicable for jetty</deprecateDesc>
+  <desc>number of http handler threads</desc>
+</attr>
+
+<attr id="519" name="zimbraHttpSSLNumThreads" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" deprecatedSince="5.0">
+  <globalConfigValue>50</globalConfigValue>
+  <deprecateDesc>not applicable for jetty</deprecateDesc>
+  <desc>number of https handler threads</desc>
+</attr>
 
 </attrs>
