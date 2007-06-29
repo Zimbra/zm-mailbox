@@ -136,7 +136,7 @@ public class IMPersona extends ClassLogger {
     // I have saved in the DB, and the second is a flag if I am online or
     // offline
     private IMPresence mMyPresence = new IMPresence(Show.ONLINE, (byte) 1, null);
-    private HashSet<String> mSharedGroups = new HashSet<String>();
+//    private HashSet<String> mSharedGroups = new HashSet<String>();
     private ClientSession mXMPPSession;
     private HashMap<String /*ServiceName*/, Map<String, String>> mInteropRegistrationData;
 
@@ -412,22 +412,22 @@ public class IMPersona extends ClassLogger {
         return mAddr + "/zcs";
     }
 
-    /**
-     * Finds an existing group
-     * 
-     * @param create
-     *        if TRUE will create the group if one doesn't exist
-     * @param name
-     * @return
-     */
-    private IMGroup getGroup(boolean create, String name) {
-        IMGroup toRet = mGroups.get(name);
-        if (toRet == null && create) {
-            toRet = new IMGroup(name);
-            mGroups.put(name, toRet);
-        }
-        return toRet;
-    }
+//    /**
+//     * Finds an existing group
+//     * 
+//     * @param create
+//     *        if TRUE will create the group if one doesn't exist
+//     * @param name
+//     * @return
+//     */
+//    private IMGroup getGroup(boolean create, String name) {
+//        IMGroup toRet = mGroups.get(name);
+//        if (toRet == null && create) {
+//            toRet = new IMGroup(name);
+//            mGroups.put(name, toRet);
+//        }
+//        return toRet;
+//    }
     
     Map<String, String> getIMGatewayRegistration(Interop.ServiceName service) {
         synchronized(getLock()) {
@@ -607,13 +607,13 @@ public class IMPersona extends ClassLogger {
                         IMSubscribeNotification notify = new IMSubscribeNotification(
                                     IMAddr.fromJID(pres.getFrom()));
                         postIMNotification(notify);
-                        if (true) { // TODO REMOVETHIS!
-                            // auto-accept for now
-                            reply = new Presence();
-                            reply.setType(Presence.Type.subscribed);
-                            reply.setTo(pres.getFrom());
-                            xmppRoute(reply);
-                        }
+//                        if (false) { // TODO REMOVETHIS!
+//                            // auto-accept for now
+//                            reply = new Presence();
+//                            reply.setType(Presence.Type.subscribed);
+//                            reply.setTo(pres.getFrom());
+//                            xmppRoute(reply);
+//                        }
                     }
                     break;
                     case subscribed: {
@@ -758,9 +758,9 @@ public class IMPersona extends ClassLogger {
         }
     }
 
-    public boolean inSharedGroup(String name) {
-        return mSharedGroups.contains(name);
-    }
+//    public boolean inSharedGroup(String name) {
+//        return mSharedGroups.contains(name);
+//    }
 
     public void joinChat(String threadId) throws ServiceException {
         IMChat chat = mChats.get(threadId);
@@ -835,15 +835,15 @@ public class IMPersona extends ClassLogger {
         }
     }
 
-    public void providerGroupAdd(String name) throws ServiceException {
-        if (mSharedGroups.add(name))
-            flush(null);
-    }
-
-    public void providerGroupRemove(String name) throws ServiceException {
-        if (mSharedGroups.remove(name))
-            flush(null);
-    }
+//    public void providerGroupAdd(String name) throws ServiceException {
+//        if (mSharedGroups.add(name))
+//            flush(null);
+//    }
+//
+//    public void providerGroupRemove(String name) throws ServiceException {
+//        if (mSharedGroups.remove(name))
+//            flush(null);
+//    }
 
     private void pushMyPresence() throws ServiceException {
         pushMyPresence(null);

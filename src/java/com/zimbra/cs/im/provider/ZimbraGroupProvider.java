@@ -53,13 +53,14 @@ public class ZimbraGroupProvider implements GroupProvider {
     }
 
     public void addMember(String groupName, JID user, boolean administrator) throws UnsupportedOperationException {
-        try {
-            IMPersona persona = IMRouter.getInstance().findPersona(null, new IMAddr(user));
-            if (persona != null) {
-                persona.providerGroupAdd(groupName);
-            }
-        } catch (ServiceException ex) {
-        }
+        throw new UnsupportedOperationException();
+//        try {
+//            IMPersona persona = IMRouter.getInstance().findPersona(null, new IMAddr(user));
+//            if (persona != null) {
+//                persona.providerGroupAdd(groupName);
+//            }
+//        } catch (ServiceException ex) {
+//        }
     }
 
     public Group createGroup(String name) throws UnsupportedOperationException, GroupAlreadyExistsException {
@@ -71,13 +72,14 @@ public class ZimbraGroupProvider implements GroupProvider {
     }
 
     public void deleteMember(String groupName, JID user) throws UnsupportedOperationException {
-        try {
-            IMPersona persona = IMRouter.getInstance().findPersona(null, new IMAddr(user));
-            if (persona != null) {
-                persona.providerGroupRemove(groupName);
-            }
-        } catch (ServiceException ex) {
-        }
+        throw new UnsupportedOperationException();
+//        try {
+//            IMPersona persona = IMRouter.getInstance().findPersona(null, new IMAddr(user));
+//            if (persona != null) {
+//                persona.providerGroupRemove(groupName);
+//            }
+//        } catch (ServiceException ex) {
+//        }
     }
 
     public Group getGroup(String name) throws GroupNotFoundException 
@@ -153,27 +155,27 @@ public class ZimbraGroupProvider implements GroupProvider {
      * return the set of groups that this user belongs to
      */
     public Collection<String> getGroupNames(JID user) {
-        try {
-            ArrayList<String> toRet = new ArrayList<String>();
-            if (false) {
-            Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.name,  user.toBareJID().toString());
-            IMPersona persona = IMRouter.getInstance().findPersona(null, new IMAddr(user));
-            if (persona != null) {
-                if (acct != null) {
-                    Set<String> distLists = Provisioning.getInstance().getDistributionLists(acct);
-                    for (String id: distLists) {
-                        DistributionList dl = Provisioning.getInstance().get(Provisioning.DistributionListBy.id, id);
-                        if (persona.inSharedGroup(dl.getName())) {
-                            toRet.add(dl.getName());
-                        }
-                    }
-                }
-            }
-            }
-            return toRet;
-        } catch (ServiceException ex) {
-            ZimbraLog.im.debug("Caught ServiceException "+ex, ex);
-        } 
+//        try {
+//            ArrayList<String> toRet = new ArrayList<String>();
+//            if (false) {
+//            Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.name,  user.toBareJID().toString());
+//            IMPersona persona = IMRouter.getInstance().findPersona(null, new IMAddr(user));
+//            if (persona != null) {
+//                if (acct != null) {
+//                    Set<String> distLists = Provisioning.getInstance().getDistributionLists(acct);
+//                    for (String id: distLists) {
+//                        DistributionList dl = Provisioning.getInstance().get(Provisioning.DistributionListBy.id, id);
+//                        if (persona.inSharedGroup(dl.getName())) {
+//                            toRet.add(dl.getName());
+//                        }
+//                    }
+//                }
+//            }
+//            }
+//            return toRet;
+//        } catch (ServiceException ex) {
+//            ZimbraLog.im.debug("Caught ServiceException "+ex, ex);
+//        } 
         return new ArrayList<String>();
      }
 
