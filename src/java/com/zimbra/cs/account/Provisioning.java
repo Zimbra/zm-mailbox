@@ -874,6 +874,7 @@ public abstract class Provisioning {
      * the mail .signature value
      */
     public static final String A_zimbraPrefMailSignature = "zimbraPrefMailSignature";
+    public static final String A_zimbraPrefMailSignatureHTML = "zimbraPrefMailSignatureHTML";
     public static final String A_zimbraMailSignatureMaxLength = "zimbraMailSignatureMaxLength";
     
     /**
@@ -907,9 +908,9 @@ public abstract class Provisioning {
     public static final String A_zimbraPrefIdentityId = "zimbraPrefIdentityId";
     public static final String A_zimbraPrefIdentityName = "zimbraPrefIdentityName";
     
-    public static final String A_zimbraPrefDefaultSignature = "zimbraPrefDefaultSignature";
-    public static final String A_zimbraPrefSignatureId = "zimbraPrefSignatureId";
-    public static final String A_zimbraPrefSignatureName = "zimbraPrefSignatureName";
+    public static final String A_zimbraPrefDefaultSignatureId = "zimbraPrefDefaultSignatureId";
+    public static final String A_zimbraSignatureId = "zimbraSignatureId";
+    public static final String A_zimbraSignatureName = "zimbraSignatureName";
     
     public static final String DEFAULT_IDENTITY_NAME = "DEFAULT";
     // public static final String DEFAULT_SIGNATURE_NAME = "DEFAULT";
@@ -2090,9 +2091,9 @@ public abstract class Provisioning {
     
     public abstract Signature createSignature(Account account, String signatureName, Map<String, Object> attrs) throws ServiceException;
     
-    public abstract void modifySignature(Account account, String signatureName, Map<String, Object> attrs) throws ServiceException;
+    public abstract void modifySignature(Account account, String signatureId, Map<String, Object> attrs) throws ServiceException;
     
-    public abstract void deleteSignature(Account account, String signatureName) throws ServiceException;
+    public abstract void deleteSignature(Account account, String signatureId) throws ServiceException;
     
     public abstract List<Signature> getAllSignatures(Account account) throws ServiceException;
     

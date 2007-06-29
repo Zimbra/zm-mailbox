@@ -1359,19 +1359,19 @@ public class SoapProvisioning extends Provisioning {
     }
     
     @Override
-    public void modifySignature(Account account, String signatureName, Map<String, Object> attrs) throws ServiceException {
+    public void modifySignature(Account account, String signatureId, Map<String, Object> attrs) throws ServiceException {
         XMLElement req = new XMLElement(AccountConstants.MODIFY_SIGNATURE_REQUEST);
         Element signature = req.addElement(AccountConstants.E_SIGNATURE);
-        signature.addAttribute(AccountConstants.A_NAME, signatureName);
+        signature.addAttribute(AccountConstants.A_ID, signatureId);
         addAttrElementsMailService(signature, attrs);
         invokeOnTargetAccount(req, account.getId());
     }
     
     @Override
-    public void deleteSignature(Account account, String signatureName) throws ServiceException {
+    public void deleteSignature(Account account, String signatureId) throws ServiceException {
         XMLElement req = new XMLElement(AccountConstants.DELETE_SIGNATURE_REQUEST);
         Element signature = req.addElement(AccountConstants.E_SIGNATURE);
-        signature.addAttribute(AccountConstants.A_NAME, signatureName);
+        signature.addAttribute(AccountConstants.A_ID, signatureId);
         invokeOnTargetAccount(req, account.getId());
     }
 

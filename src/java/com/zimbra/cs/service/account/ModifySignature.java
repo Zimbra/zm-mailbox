@@ -25,6 +25,7 @@
 package com.zimbra.cs.service.account;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -55,15 +56,26 @@ public class ModifySignature extends DocumentHandler {
         signature = prov.get(account, SignatureBy.id, id);
         if (signature == null)
             throw AccountServiceException.NO_SUCH_SIGNATURE(id);
+
+        List<Element> contents = eSignature.listElements(AccountConstants.E_CONTENT);
+        Map<String,Object> attrs = new HashMap<String, Object>();
+        for (Element eContent : contents) {
+            String type = eContent.getAttribute(AccountConstants.A_TYPE);
+            String attr = Signature.mimeTypeToAttr(type);
+            if (attr == null)
+                throw ServiceException.INVALID_REQUEST("invalid type "+type, null);
+            if (attrs.get(attr) != null)
+                throw ServiceException.INVALID_REQUEST("only one "+type+" content is allowed", null);
+            
+            String content = eContent.getText();
+            if (content != null)
+                attrs.put(attr, content);
+        }
         
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        String value = eSignature.getAttribute(AccountConstants.A_VALUE, null);
-        if (value != null)
-            attrs.put(Provisioning.A_zimbraPrefMailSignature, value);
         String name = eSignature.getAttribute(AccountConstants.A_NAME, null);
         if (name != null)
-            attrs.put(Provisioning.A_zimbraPrefSignatureName, name);
-        prov.modifySignature(account, signature.getName(), attrs);
+            attrs.put(Provisioning.A_zimbraSignatureName, name);
+        prov.modifySignature(account, signature.getId(), attrs);
         
         Element response = zsc.createElement(AccountConstants.MODIFY_SIGNATURE_RESPONSE);
         return response;

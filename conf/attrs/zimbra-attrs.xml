@@ -239,7 +239,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="17" name="zimbraPrefMailSignature" type="string" cardinality="single" optionalIn="account,identity,signature" flags="domainAdminModifiable" callback="MailSignature">
-  <desc>mail signature (deprecatedSince 5.0 in identity)</desc>
+  <desc>mail text signature (deprecatedSince 5.0 in identity)</desc>
 </attr>
 
 <attr id="18" name="zimbraPrefMailSignatureEnabled" type="boolean" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable" deprecatedSince="5.0">
@@ -2251,16 +2251,15 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>email features enabled</desc>
 </attr>
 
-<attr id="490" name="zimbraPrefSignatureId" type="id" cardinality="single" requiredIn="signature">
+<attr id="490" name="zimbraSignatureId" type="id" cardinality="single" requiredIn="signature" optionalIn="account,identity,dataSource">
     <desc>Unique ID for an signature</desc>
 </attr>
     
-<attr id="491" name="zimbraPrefSignatureName" type="string" max="128" cardinality="single" requiredIn="signature" optionalIn="account,identity,dataSource" flags="domainAdminModifiable">
-    <desc>for signature: name of the signature  
-          for identity and dataSource: name of the signature to use when forward/reply messages sent to the email address of the identity/dataSource </desc>
+<attr id="491" name="zimbraSignatureName" type="string" max="128" cardinality="single" requiredIn="signature" optionalIn="account" flags="domainAdminModifiable">
+    <desc>name of the signature</desc>
 </attr>
     
-<attr id="492" name="zimbraPrefDefaultSignature" type="string" cardinality="single" optionalIn="account" flags="domainAdminModifiable" callback="DefaultSignature">
+<attr id="492" name="zimbraPrefDefaultSignatureId" type="string" cardinality="single" optionalIn="account" flags="domainAdminModifiable">
   <desc>account default mail signature</desc>
 </attr>    
     
@@ -2377,6 +2376,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="515" name="zimbraBackupAutoGroupedThrottled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>if true, limit the number of mailboxes in auto-grouped backup to total mailboxes divided by auto-group days</desc>
+</attr>
+
+<attr id="516" name="zimbraPrefMailSignatureHTML" type="string" cardinality="single" optionalIn="account,signature" flags="domainAdminModifiable" callback="MailSignature">
+  <desc>mail html signature</desc>
 </attr>
 
 </attrs>

@@ -21,6 +21,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraCustomAuth;
 import com.zimbra.cs.account.ldap.custom.CustomLdapProvisioning;
 import com.zimbra.cs.mime.MimeTypeInfo;
@@ -931,7 +932,7 @@ public class TestProvisioning extends TestCase {
         dsAttrs.put(Provisioning.A_zimbraDataSourcePort, "9999");
         dsAttrs.put(Provisioning.A_zimbraDataSourceUsername, "mickymouse");
         dsAttrs.put(Provisioning.A_zimbraDataSourceEmailAddress, "micky@google.com");
-        dsAttrs.put(Provisioning.A_zimbraPrefSignatureName, "sig-business");
+        dsAttrs.put(Provisioning.A_zimbraSignatureId, LdapUtil.generateUUID()); // just some random id, not used anywhere
         dsAttrs.put(Provisioning.A_zimbraPrefFromDisplay, "Micky Mouse");
         dsAttrs.put(Provisioning.A_zimbraPrefReplyToAddress, "goofy@yahoo.com");
         dsAttrs.put(Provisioning.A_zimbraPrefReplyToDisplay, "Micky");
@@ -957,7 +958,7 @@ public class TestProvisioning extends TestCase {
         System.out.println("Testing identity");
         
         Map<String, Object> identityAttrs = new HashMap<String, Object>();
-        identityAttrs.put(Provisioning.A_zimbraPrefSignatureName, "sig-business");
+        identityAttrs.put(Provisioning.A_zimbraSignatureId, LdapUtil.generateUUID());  // just some random id, not used anywhere
         identityAttrs.put(Provisioning.A_zimbraPrefFromAddress, "micky.mouse@zimbra,com");
         identityAttrs.put(Provisioning.A_zimbraPrefFromDisplay, "Micky Mouse");
         identityAttrs.put(Provisioning.A_zimbraPrefReplyToEnabled, "TRUE");
@@ -1024,13 +1025,13 @@ public class TestProvisioning extends TestCase {
         verifyEntries(list, new NamedEntry[]{entry}, true);
         
         // since this is the only signature, it should be automatically set as the default signature of the account
-        String defaultSigName = account.getAttr(Provisioning.A_zimbraPrefDefaultSignature);
-        assertEquals(SIGNATURE_NAME, defaultSigName);
+        String defaultSigId = account.getAttr(Provisioning.A_zimbraPrefDefaultSignatureId);
+        assertEquals(entry.getId(), defaultSigId);
         
         // modify the signature value
         Map attrsToMod = new HashMap<String, Object>();
         attrsToMod.put(Provisioning.A_zimbraPrefMailSignature, SIGNATURE_VALUE_MODIFIED);
-        mProv.modifySignature(account, SIGNATURE_NAME, attrsToMod);
+        mProv.modifySignature(account, entry.getId(), attrsToMod);
         
         // make sure we get the modified value back
         entryGot = mProv.get(account, Provisioning.SignatureBy.id, entry.getId());
@@ -1054,19 +1055,19 @@ public class TestProvisioning extends TestCase {
         signatureAttrs.clear();
         Signature secondEntry = mProv.createSignature(account, secondSigName, signatureAttrs);
         Map<String, Object> acctAttrs = new HashMap<String, Object>();
-        acctAttrs.put(Provisioning.A_zimbraPrefDefaultSignature, secondSigName);
+        acctAttrs.put(Provisioning.A_zimbraPrefDefaultSignatureId, secondEntry.getId());
         mProv.modifyAttrs(account, acctAttrs);
         
         // now we can delete the first signature
-        mProv.deleteSignature(account, SIGNATURE_NAME);
+        mProv.deleteSignature(account, entry.getId());
         
-        // rename the defaulf signature, make sure A_zimbraPrefDefaultSignature is changed accordingly
+        // rename the defaulf signature, default signature id should reman the same
         String secondSigNameNew = "second-sig-new-name";
         signatureAttrs.clear();
-        signatureAttrs.put(Provisioning.A_zimbraPrefSignatureName, secondSigNameNew);
-        mProv.modifySignature(account, secondSigName, signatureAttrs);
-        defaultSigName = account.getAttr(Provisioning.A_zimbraPrefDefaultSignature);
-        assertEquals(secondSigNameNew, defaultSigName);
+        signatureAttrs.put(Provisioning.A_zimbraSignatureName, secondSigNameNew);
+        mProv.modifySignature(account, secondEntry.getId(), signatureAttrs);
+        defaultSigId = account.getAttr(Provisioning.A_zimbraPrefDefaultSignatureId);
+        assertEquals(secondEntry.getId(), defaultSigId);
         // refresh the entry, since it was moved
         secondEntry = mProv.get(account, Provisioning.SignatureBy.name, secondSigNameNew);
         
@@ -1074,7 +1075,7 @@ public class TestProvisioning extends TestCase {
         String thirdSigName = "third-sig";
         signatureAttrs.clear();
         Signature thirdEntry = mProv.createSignature(account, thirdSigName, signatureAttrs);
-        String acctSigName = account.getAttr(Provisioning.A_zimbraPrefSignatureName);
+        String acctSigName = account.getAttr(Provisioning.A_zimbraSignatureName);
         assertEquals(thirdSigName, acctSigName);
         
         list = mProv.getAllSignatures(account);
@@ -1082,9 +1083,9 @@ public class TestProvisioning extends TestCase {
         
         // now, verify that if A_zimbraPrefMailSignature is present on the account and if 
         // A_zimbraPrefSignatureName is not present on the account, system should return 
-        // it as a signature using the account's name
+        // it as a signature using the account's name, and generate an id for it
         // first, we delete the third sig, just to clear the account signature entry
-        mProv.deleteSignature(account, thirdSigName);
+        mProv.deleteSignature(account, thirdEntry.getId());
         
         // manually set the A_zimbraPrefMailSignature on the aqccount
         String aSigValueOnAccount = "a signature value on account";
@@ -1094,53 +1095,57 @@ public class TestProvisioning extends TestCase {
         mProv.modifyAttrs(account, acctAttrs);
         
         // get the account signature, by its name, which is the account's name
-        entryGot = mProv.get(account, Provisioning.SignatureBy.name, accountSigName);
-        verifySameEntry(account, entryGot);
-        assertEquals(entryGot.getAttr(Provisioning.A_zimbraPrefMailSignature), aSigValueOnAccount);
+        Signature acctSig = mProv.get(account, Provisioning.SignatureBy.name, accountSigName);
+        assertEquals(account.getName(), acctSig.getName());
+        assertNotSame(account.getId(), acctSig.getId());
+        assertEquals(acctSig.getAttr(Provisioning.A_zimbraPrefMailSignature), aSigValueOnAccount);
         
-        // get the account signature, by it's id, which is the account's id
-        entryGot = mProv.get(account, Provisioning.SignatureBy.id, account.getId());
-        verifySameEntry(account, entryGot);
-        assertEquals(entryGot.getAttr(Provisioning.A_zimbraPrefMailSignature), aSigValueOnAccount);
+        // get the account signature, by it's id
+        acctSig = mProv.get(account, Provisioning.SignatureBy.id, acctSig.getId());
+        assertNotSame(account.getId(), acctSig.getId());
+        assertEquals(acctSig.getAttr(Provisioning.A_zimbraPrefMailSignature), aSigValueOnAccount);
         
         // get all signatures, the account entry should be included
         list = mProv.getAllSignatures(account);
-        verifyEntries(list, new NamedEntry[]{account, secondEntry}, true);
+        verifyEntries(list, new NamedEntry[]{acctSig, secondEntry}, true);
         
         // delete it
-        mProv.deleteSignature(account, accountSigName);
+        mProv.deleteSignature(account, acctSig.getId());
         
         // set it(un-named account signature, with just a sig value) up again, for testing rename
         acctAttrs.clear();
         acctAttrs.put(Provisioning.A_zimbraPrefMailSignature, aSigValueOnAccount);
         mProv.modifyAttrs(account, acctAttrs);
         
+        // get the account signature, by its name, which is the account's name
+        acctSig = mProv.get(account, Provisioning.SignatureBy.name, accountSigName);
         // set it to the default signature
         acctAttrs.clear();
-        acctAttrs.put(Provisioning.A_zimbraPrefDefaultSignature, accountSigName);
+        acctAttrs.put(Provisioning.A_zimbraPrefDefaultSignatureId, acctSig.getId());
         mProv.modifyAttrs(account, acctAttrs);
-        // get the account signature, by its name, which is the account's name
-        entryGot = mProv.get(account, Provisioning.SignatureBy.name, accountSigName);
-        verifySameEntry(account, entryGot);
-        assertEquals(entryGot.getAttr(Provisioning.A_zimbraPrefMailSignature), aSigValueOnAccount);
+        assertEquals(acctSig.getAttr(Provisioning.A_zimbraPrefMailSignature), aSigValueOnAccount);
         
         // rename it!
         String accountSigNameNew = "account-sig-new-name";
         signatureAttrs.clear();
-        signatureAttrs.put(Provisioning.A_zimbraPrefSignatureName, accountSigNameNew);
-        mProv.modifySignature(account, accountSigName, signatureAttrs);
+        signatureAttrs.put(Provisioning.A_zimbraSignatureName, accountSigNameNew);
+        mProv.modifySignature(account, acctSig.getId(), signatureAttrs);
         
-        // make sure the default sig is changed to the new name
-        defaultSigName = account.getAttr(Provisioning.A_zimbraPrefDefaultSignature);
-        assertEquals(accountSigNameNew, defaultSigName);
+        // make sure we can get it by the new name
+        Signature renamedAcctSig = mProv.get(account, Provisioning.SignatureBy.name, accountSigNameNew);
+        assertEquals(renamedAcctSig.getId(), acctSig.getId());
+        
+        // make sure the default sig id is not changed
+        defaultSigId = account.getAttr(Provisioning.A_zimbraPrefDefaultSignatureId);
+        assertEquals(acctSig.getId(), defaultSigId);
         
         // change the default signature to something else
         acctAttrs.clear();
-        acctAttrs.put(Provisioning.A_zimbraPrefDefaultSignature, secondEntry.getName());
+        acctAttrs.put(Provisioning.A_zimbraPrefDefaultSignatureId, secondEntry.getName());
         mProv.modifyAttrs(account, acctAttrs);
         
         // now delete it!
-        mProv.deleteSignature(account, accountSigNameNew);
+        mProv.deleteSignature(account, renamedAcctSig.getId());
 
     }
     

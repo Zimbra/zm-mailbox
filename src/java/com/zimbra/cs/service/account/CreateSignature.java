@@ -25,6 +25,7 @@
 package com.zimbra.cs.service.account;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -48,11 +49,25 @@ public class CreateSignature extends DocumentHandler {
         
         Element eReqSignature = request.getElement(AccountConstants.E_SIGNATURE);
         String name = eReqSignature.getAttribute(AccountConstants.A_NAME);
+        String id = eReqSignature.getAttribute(AccountConstants.A_ID, null);
         
+        List<Element> contents = eReqSignature.listElements(AccountConstants.E_CONTENT);
         Map<String,Object> attrs = new HashMap<String, Object>();
-        String value = eReqSignature.getAttribute(AccountConstants.A_VALUE, null);
-        if (!StringUtil.isNullOrEmpty(value))
-            attrs.put(Provisioning.A_zimbraPrefMailSignature, value);
+        for (Element eContent : contents) {
+            String type = eContent.getAttribute(AccountConstants.A_TYPE);
+            String attr = Signature.mimeTypeToAttr(type);
+            if (attr == null)
+                throw ServiceException.INVALID_REQUEST("invalid type "+type, null);
+            if (attrs.get(attr) != null)
+                throw ServiceException.INVALID_REQUEST("only one "+type+" content is allowed", null);
+            
+            String content = eContent.getText();
+            if (!StringUtil.isNullOrEmpty(content))
+                attrs.put(attr, content);
+        }
+        
+        if (id != null)
+            attrs.put(Provisioning.A_zimbraSignatureId, id);
         
         Signature signature = Provisioning.getInstance().createSignature(account, name, attrs);
         

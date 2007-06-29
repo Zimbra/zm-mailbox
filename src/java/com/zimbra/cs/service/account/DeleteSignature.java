@@ -58,7 +58,7 @@ public class DeleteSignature extends DocumentHandler {
             signature = prov.get(account, SignatureBy.name, eSignature.getAttribute(AccountConstants.A_NAME));
 
         if (signature != null)
-            Provisioning.getInstance().deleteSignature(account, signature.getName());
+            Provisioning.getInstance().deleteSignature(account, signature.getId());
 
         Element response = zsc.createElement(AccountConstants.DELETE_SIGNATURE_RESPONSE);
         return response;

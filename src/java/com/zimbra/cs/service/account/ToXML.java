@@ -34,6 +34,7 @@ import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.EntrySearchFilter.Multi;
 import com.zimbra.cs.account.EntrySearchFilter.Single;
 import com.zimbra.cs.account.EntrySearchFilter.Visitor;
+import com.zimbra.cs.account.Signature.SignatureContent;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Signature;
@@ -41,6 +42,7 @@ import com.zimbra.cs.account.Signature;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.Map.Entry;
 import java.util.Stack;
 
@@ -207,7 +209,11 @@ public class ToXML {
         Element e = parent.addElement(AccountConstants.E_SIGNATURE);
         e.addAttribute(AccountConstants.A_NAME, signature.getName());
         e.addAttribute(AccountConstants.A_ID, signature.getId());
-        addAccountAttrs(e, signature.getAttrs(), AccountConstants.A_NAME);
+        
+        Set<SignatureContent> contents = signature.getContents();
+        for (SignatureContent c : contents) {
+            e.addElement(AccountConstants.E_CONTENT).addAttribute(AccountConstants.A_TYPE, c.getMimeType()).addText(c.getContent());
+        }
         return e;
     }
 

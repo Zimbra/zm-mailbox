@@ -461,7 +461,7 @@ public class ProvUtil implements DebugListener {
             break; 
         case MODIFY_SIGNATURE:
             account = lookupAccount(args[1]);
-            mProv.modifySignature(account, lookupSignatureName(account, args[2]), getMap(args,3));
+            mProv.modifySignature(account, lookupSignatureId(account, args[2]), getMap(args,3));
             break;    
         case MODIFY_COS:
             mProv.modifyAttrs(lookupCos(args[1]), getMap(args, 2), true);            
@@ -489,7 +489,7 @@ public class ProvUtil implements DebugListener {
             break;
         case DELETE_SIGNATURE:
             account = lookupAccount(args[1]);
-            mProv.deleteSignature(account, lookupSignatureName(account, args[2]));
+            mProv.deleteSignature(account, lookupSignatureId(account, args[2]));
             break;     
         case DELETE_DATA_SOURCE:
             account = lookupAccount(args[1]);
@@ -1451,13 +1451,13 @@ public class ProvUtil implements DebugListener {
             return ds.getId();
     }
     
-    private String lookupSignatureName(Account account, String key) throws ServiceException {
+    private String lookupSignatureId(Account account, String key) throws ServiceException {
         if (isUUID(key)) {
             Signature sig = mProv.get(account, SignatureBy.id, key);
             if (sig == null)
                 throw AccountServiceException.NO_SUCH_SIGNATURE(key);
             else
-                return sig.getName();
+                return sig.getId();
         } else
             return key;
     }
