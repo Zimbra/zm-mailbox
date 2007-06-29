@@ -2368,9 +2368,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>length of each interval in auto-grouped backup</desc>
 </attr>
 
-<attr id="514" name="zimbraBackupAutoGroupedNumIntervals" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="514" name="zimbraBackupAutoGroupedNumGroups" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
   <globalConfigValue>7</globalConfigValue>
-  <desc>number of intervals to auto-group backups over</desc>
+  <desc>number of groups to auto-group backups over</desc>
 </attr>
 
 <attr id="515" name="zimbraBackupAutoGroupedThrottled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
@@ -2380,6 +2380,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="516" name="zimbraPrefMailSignatureHTML" type="string" cardinality="single" optionalIn="account,signature" flags="domainAdminModifiable" callback="MailSignature">
   <desc>mail html signature</desc>
+</attr>
+
+<attr id="517" name="zimbraBackupAutoGroupedWeekStartDay" type="enum" value="SUNDAY,MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY,SATURDAY" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>SUNDAY</globalConfigValue>
+  <desc>week start day for computing weekly auto-grouped backup intervals</desc>
 </attr>
 
 </attrs>
