@@ -126,6 +126,7 @@ public class AccountConstants {
     public static final String E_DATA_SOURCE = "dataSource";
     public static final String E_CHILD_ACCOUNTS = "childAccounts";
     public static final String E_CHILD_ACCOUNT = "childAccount";
+    public static final String E_CONTENT = "content";
     public static final String A_N = "n";
     public static final String A_NAME = "name";
     public static final String A_ID = "id";
@@ -142,7 +143,6 @@ public class AccountConstants {
     public static final String A_ATTRS = "attrs";
     public static final String A_SORT_BY = "sortBy";
     public static final String A_SORT_ASCENDING = "sortAscending";
-    public static final String A_VALUE = "value";
     public static final String A_VISIBLE = "visible";
     
     // calendar resource search
