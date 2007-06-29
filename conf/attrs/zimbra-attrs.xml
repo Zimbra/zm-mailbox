@@ -2382,9 +2382,4 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>mail html signature</desc>
 </attr>
 
-<attr id="517" name="zimbraBackupAutoGroupedWeekStartDay" type="enum" value="SUNDAY,MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY,SATURDAY" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
-  <globalConfigValue>SUNDAY</globalConfigValue>
-  <desc>week start day for computing weekly auto-grouped backup intervals</desc>
-</attr>
-
 </attrs>
