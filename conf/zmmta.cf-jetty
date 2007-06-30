@@ -109,6 +109,8 @@ RESTART mailboxd
 SECTION mailbox
 	VAR zimbraMailPort
 	VAR zimbraMailSSLPort
+  VAR zimbraLogToSyslog
+  REWRITE conf/log4j.properties.in conf/log4j.properties
 	REWRITE mailboxd/etc/jetty.xml.in mailboxd/etc/jetty.xml
 RESTART mailboxd
 
