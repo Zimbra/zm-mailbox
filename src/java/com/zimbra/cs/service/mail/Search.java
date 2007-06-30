@@ -141,7 +141,7 @@ public class Search extends MailDocumentHandler  {
     protected final boolean INCLUDE_MAILBOX_INFO = true;
     protected final boolean DONT_INCLUDE_MAILBOX_INFO = false;
 
-    private Element putHits(ZimbraSoapContext zsc, OperationContext octxt, Element response, ResultsPager pager, boolean includeMailbox, SearchParams params)
+    protected Element putHits(ZimbraSoapContext zsc, OperationContext octxt, Element response, ResultsPager pager, boolean includeMailbox, SearchParams params)
     throws ServiceException {
         int offset = params.getOffset();
         int limit  = params.getLimit();
