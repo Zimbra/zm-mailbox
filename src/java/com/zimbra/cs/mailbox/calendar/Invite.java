@@ -49,6 +49,7 @@ import com.zimbra.cs.index.Fragment;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
 import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
@@ -563,7 +564,8 @@ public class Invite {
             // backward compat for invites created before FN_IS_ORGANIZER was introduced
             if (org != null) {
                 String orgAddr = org.getAddress();
-                isOrganizer = AccountUtil.addressMatchesAccount(calItem.getAccount(), orgAddr);
+                Account account = MailboxManager.getInstance().getMailboxById(mailboxId).getAccount();
+                isOrganizer = AccountUtil.addressMatchesAccount(account, orgAddr);
             } else {
                 // If there are other attendees, it's an Outlook POP/IMAP bug.  If not,
                 // it's a properly formatted single-user event.  See isOrganizer()
