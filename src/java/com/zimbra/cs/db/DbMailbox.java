@@ -66,7 +66,10 @@ public class DbMailbox {
     public static final int CI_CHANGE_CHECKPOINT;
     public static final int CI_TRACKING_SYNC;
     public static final int CI_TRACKING_IMAP;
+    public static final int CI_LAST_BACKUP_AT;
     public static final int CI_COMMENT;
+    public static final int CI_LAST_SOAP_ACCESS;
+    public static final int CI_NEW_MESSAGES;
 
     static {
         int pos = 1;
@@ -82,7 +85,10 @@ public class DbMailbox {
         CI_CHANGE_CHECKPOINT = pos++;
         CI_TRACKING_SYNC = pos++;
         CI_TRACKING_IMAP = pos++;
+        CI_LAST_BACKUP_AT = pos++;
         CI_COMMENT = pos++;
+        CI_LAST_SOAP_ACCESS = pos++;
+        CI_NEW_MESSAGES = pos++;
     }
 
     public static final int CI_METADATA_MAILBOX_ID = 1;
