@@ -1,0 +1,43 @@
+
+#user  nobody;
+worker_processes  1;
+
+#error_log  logs/error.log;
+#error_log  logs/error.log  notice;
+#error_log  logs/error.log  info;
+
+#pid        logs/nginx.pid;
+
+
+events {
+    worker_connections  1024;
+}
+
+mail {
+
+#   Memcache configuration
+    memcache_servers localhost:11211;
+
+#   http authentication configuration
+    auth_http localhost:7072/service/extension/nginx-lookup;
+
+#   TLS configuration
+    starttls on;
+    ssl_prefer_server_ciphers on;
+    ssl_certificate             /opt/zimbra/conf/nginx.crt;
+    ssl_certificate_key         /opt/zimbra/conf/nginx.key;
+
+#   POP proxy config
+    server {
+        listen 1110;
+        protocol pop3;
+        proxy on;
+    }
+
+#   IMAP proxy config
+    server {
+        listen 1143;
+        protocol imap;
+        proxy on;
+    }
+}
