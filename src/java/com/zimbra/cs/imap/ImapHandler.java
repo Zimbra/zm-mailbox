@@ -1360,7 +1360,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             }
 
             // see if there's any quota on the account
-            long quota = mMailbox.getAccount().getIntAttr(Provisioning.A_zimbraMailQuota, 0);
+            long quota = mMailbox.getAccount().getLongAttr(Provisioning.A_zimbraMailQuota, 0);
             sendUntagged("QUOTAROOT " + ImapFolder.formatPath(path, mSession) + (quota > 0 ? " \"\"" : ""));
             if (quota > 0)
                 sendUntagged("QUOTA \"\" (STORAGE " + (mMailbox.getSize() / 1024) + ' ' + (quota / 1024) + ')');
