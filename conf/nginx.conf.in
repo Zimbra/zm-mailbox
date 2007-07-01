@@ -6,7 +6,7 @@ worker_processes  1;
 #error_log  logs/error.log  info;
 
 pid        /opt/zimbra/log/nginx.pid;
-error_log  /opt/zimbra/log/nginx.log debug;
+error_log  /opt/zimbra/log/nginx.log info;
 
 
 events {
