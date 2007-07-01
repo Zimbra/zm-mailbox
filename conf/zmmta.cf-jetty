@@ -114,8 +114,11 @@ SECTION mailbox
 	REWRITE mailboxd/etc/jetty.xml.in mailboxd/etc/jetty.xml
 RESTART mailboxd
 
-SECTION perdition
+SECTION imapproxy
 	LOCAL ldap_url
-	REWRITE conf/perdition.conf.in conf/perdition.conf
-RESTART perdition
-
+	VAR zimbraImapProxyBindPort
+	VAR zimbraPop3ProxyBindPort
+	VAR zimbraImapSSLProxyBindPort
+	VAR zimbraPop3SSLProxyBindPort
+	REWRITE conf/nginx.conf.in conf/nginx.conf
+RESTART imapproxy
