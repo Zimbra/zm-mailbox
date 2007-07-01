@@ -1,5 +1,4 @@
-
-#user  nobody;
+user zimbra zimbra;
 worker_processes  1;
 
 #error_log  logs/error.log;
