@@ -40,6 +40,7 @@ mail {
         listen %%zimbraPop3SSLProxyBindPort%%;
         protocol pop3;
         proxy on;
+		ssl on;
     }
 
 #   IMAP proxy config
@@ -53,5 +54,6 @@ mail {
         listen %%zimbraImapSSLProxyBindPort%%;
         protocol imap;
         proxy on;
+		ssl on;
     }
 }
