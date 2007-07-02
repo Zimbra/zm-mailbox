@@ -134,7 +134,11 @@ public class SoapSession extends Session {
         return mRecentMessages;
     }
 
-    public long getLastSoapAccessTime() {
+    public long getPreviousSessionTime() { 
+        return mPreviousAccess;
+    }
+
+    public long getLastWriteAccessTime() {
         return mLastWrite == -1 ? mPreviousAccess : mLastWrite;
     }
 

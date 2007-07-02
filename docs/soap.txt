@@ -395,6 +395,7 @@ an authToken can be passed instead of account/password/preauth to validate an ex
    <name>{account-name}</name>
    <lifetime>...</lifetime>   
    [<used>{used}</used>
+    <prevSession>{previous-SOAP-session}</prevSession>
     <accessed>{last-SOAP-access}</accessed>
     <recent>{recent-messages}</recent>
    ]
@@ -454,6 +455,8 @@ an authToken can be passed instead of account/password/preauth to validate an ex
   returned only if the command successfully executes on the target user's home mail server:
     {used} = mailbox quota used in bytes
     {last-SOAP-access} = time (in millis) of last write op from this session, or from *any* SOAP session if we don't have one
+    {previous-SOAP-session} = time (in millis) of last write op from any SOAP session before this session was initiated,
+                              or same as {last-SOAP-access} if we don't have one
     {recent-messages} = number of messages received since the previous soap session, or since the last SOAP write op if we don't have a session
 
   prefs = user-settable preferences
