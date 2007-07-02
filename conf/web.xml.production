@@ -69,6 +69,11 @@
     <servlet-name>ExtensionDispatcherServlet</servlet-name>
     <servlet-class>com.zimbra.cs.extension.ExtensionDispatcherServlet</servlet-class>
     <load-on-startup>2</load-on-startup>
+	<init-param>
+	<param-name>allowed.ports</param-name>
+	<param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, 7070, 7071, 7072, 7443</param-value>
+	</init-param>
+
   </servlet>
   
   <servlet>
