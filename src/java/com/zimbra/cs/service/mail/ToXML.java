@@ -1730,6 +1730,14 @@ public class ToXML {
             m.addAttribute(MailConstants.A_DS_POLLING_INTERVAL,
                 ds.getAttr(Provisioning.A_zimbraDataSourcePollingInterval));
         }
+        
+        m.addAttribute(MailConstants.A_DS_EMAIL_ADDRESS, ds.getEmailAddress());
+        m.addAttribute(MailConstants.A_DS_USE_ADDRESS_FOR_FORWARD_REPLY, ds.useAddressForForwardReply());
+        m.addAttribute(MailConstants.A_DS_DEFAULT_SIGNATURE, ds.getDefaultSignature());
+        m.addAttribute(MailConstants.A_DS_FROM_DISPLAY, ds.getFromDisplay());
+        m.addAttribute(MailConstants.A_DS_REPLYTO_ADDRESS, ds.getReplyToAddress());
+        m.addAttribute(MailConstants.A_DS_REPLYTO_DISPLAY, ds.getReplyToDisplay());
+
         return m;
     }
 

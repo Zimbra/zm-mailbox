@@ -157,6 +157,30 @@ public class DataSource extends NamedEntry implements Comparable {
         return getBooleanAttr(Provisioning.A_zimbraDataSourceLeaveOnServer, true);
     }
     
+    public String getEmailAddress() {
+        return getAttr(Provisioning.A_zimbraDataSourceEmailAddress);
+    }
+    
+    public boolean useAddressForForwardReply() {
+        return getBooleanAttr(Provisioning.A_zimbraDataSourceUseAddressForForwardReply, false);
+    }
+    
+    public String getDefaultSignature() {
+        return getAttr(Provisioning.A_zimbraPrefDefaultSignatureId);
+    }
+    
+    public String getFromDisplay() {
+        return getAttr(Provisioning.A_zimbraPrefFromDisplay);
+    }  
+    
+    public String getReplyToAddress() {
+        return getAttr(Provisioning.A_zimbraPrefReplyToAddress);
+    } 
+    
+    public String getReplyToDisplay() {
+        return getAttr(Provisioning.A_zimbraPrefReplyToDisplay);
+    } 
+    
     private static byte[] randomSalt() {
         SecureRandom random = new SecureRandom();
         byte[] pad = new byte[SALT_SIZE_BYTES];

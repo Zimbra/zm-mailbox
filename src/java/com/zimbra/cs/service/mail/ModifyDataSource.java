@@ -122,6 +122,8 @@ public class ModifyDataSource extends MailDocumentHandler {
             dsAttrs.put(Provisioning.A_zimbraDataSourcePollingInterval, value);
         }
         
+        processCommonOptionalAttrs(dsAttrs, eDataSource);
+        
         prov.modifyDataSource(account, id, dsAttrs);
         
         if (wipeOutOldData) {
@@ -136,5 +138,35 @@ public class ModifyDataSource extends MailDocumentHandler {
         Element response = zsc.createElement(MailConstants.MODIFY_DATA_SOURCE_RESPONSE);
 
         return response;
+    }
+    
+    
+    public static void processCommonOptionalAttrs(Map<String, Object> dsAttrs, Element eDataSource) throws ServiceException {
+        String value;
+        
+        value = eDataSource.getAttribute(MailConstants.A_DS_EMAIL_ADDRESS, null);
+        if (value != null)
+            dsAttrs.put(Provisioning.A_zimbraDataSourceEmailAddress, value);
+        
+        value = eDataSource.getAttribute(MailConstants.A_DS_USE_ADDRESS_FOR_FORWARD_REPLY, null);
+        if (value != null)
+            dsAttrs.put(Provisioning.A_zimbraDataSourceUseAddressForForwardReply,
+                    LdapUtil.getBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_USE_ADDRESS_FOR_FORWARD_REPLY, false)));
+        
+        value = eDataSource.getAttribute(MailConstants.A_DS_DEFAULT_SIGNATURE, null);
+        if (value != null)
+            dsAttrs.put(Provisioning.A_zimbraPrefDefaultSignatureId, value);
+        
+        value = eDataSource.getAttribute(MailConstants.A_DS_FROM_DISPLAY, null);
+        if (value != null)
+            dsAttrs.put(Provisioning.A_zimbraPrefFromDisplay, value);
+  
+        value = eDataSource.getAttribute(MailConstants.A_DS_REPLYTO_ADDRESS, null);
+        if (value != null)
+            dsAttrs.put(Provisioning.A_zimbraPrefReplyToAddress, value);
+        
+        value = eDataSource.getAttribute(MailConstants.A_DS_REPLYTO_DISPLAY, null);
+        if (value != null)
+            dsAttrs.put(Provisioning.A_zimbraPrefReplyToDisplay, value);
     }
 }

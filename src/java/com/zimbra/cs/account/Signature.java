@@ -30,7 +30,7 @@ public class Signature extends NamedEntry implements Comparable {
      */
     public void setId(String id) {
         mId = id;
-        getRawAttrs().put(Provisioning.A_zimbraPrefIdentityId, id);
+        getRawAttrs().put(Provisioning.A_zimbraSignatureId, id);
     }
     
     /*

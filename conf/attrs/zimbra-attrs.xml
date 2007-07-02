@@ -2251,7 +2251,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>email features enabled</desc>
 </attr>
 
-<attr id="490" name="zimbraSignatureId" type="id" cardinality="single" requiredIn="signature" optionalIn="account,identity,dataSource">
+<attr id="490" name="zimbraSignatureId" type="id" cardinality="single" requiredIn="signature" optionalIn="account">
     <desc>Unique ID for an signature</desc>
 </attr>
     
@@ -2259,8 +2259,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     <desc>name of the signature</desc>
 </attr>
     
-<attr id="492" name="zimbraPrefDefaultSignatureId" type="string" cardinality="single" optionalIn="account" flags="domainAdminModifiable">
-  <desc>account default mail signature</desc>
+<attr id="492" name="zimbraPrefDefaultSignatureId" type="string" cardinality="single" optionalIn="account,identity,dataSource" flags="domainAdminModifiable">
+  <desc>default mail signature for account/identity/dataSource</desc>
 </attr>    
     
 <attr id="493" name="zimbraSignatureMaxNumEntries" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">

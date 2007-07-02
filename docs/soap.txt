@@ -2264,16 +2264,36 @@ instead of the saved values.
 
 ---------------------------
 
+===================
+emailAddress="changed-phoebe@google.com"
+                    useAddressForForwardReply="false"
+                    defaultSignature="95915d7a-1809-4a73-a50f-c465214fae62"
+                    fromDisplay="changed-from-display"
+                    replyToAddress="changed-replay-to-addr@google.com"
+                    replyToDisplay="changed-replyto-display"/>
+==================
 <CreateDataSourceRequest/>
   <pop3 name="My POP3 Account" isEnabled="0|1" host="pop.myisp.com" port="110"
     connectionType="cleartext|ssl" username="mylogin" password="mypassword" l="{folder-id}"
-    leaveOnServer="0|1" [pollingInterval="10m"]/>
+    leaveOnServer="0|1" [pollingInterval="10m"] 
+    [emailAddress="{email-address}"] 
+    [useAddressForForwardReply="0|1"]
+    [defaultSignature="{default-signature-id}"]
+    [fromDisplay="{from-display}"]
+    [replyToAddress="{replyto-address}"]
+    [replyToDisplay="{replyto-display}"]/>
     
   or
   
   <imap name="My IMAP Account" isEnabled="0|1" host="imap.myisp.com" port="143"
     connectionType="cleartext|ssl" username="mylogin" password="mypassword" l="{folder-id}"
-    [pollingInterval="10m"]/>
+    [pollingInterval="10m"] 
+    [emailAddress="{email-address}"] 
+    [useAddressForForwardReply="0|1"]
+    [defaultSignature="{default-signature-id}"]
+    [fromDisplay="{from-display}"]
+    [replyToAddress="{replyto-address}"]
+    [replyToDisplay="{replyto-display}"]/>
 </CreateDataSourceRequest>
 
 <CreateDataSourceResponse>
@@ -2289,9 +2309,21 @@ the POP3 or IMAP protocol.  Only one data source is allowed per request.
 
 <GetDataSourcesResponse>
   *[<pop3 id="{id}" name="My POP3 Account" isEnabled="0|1" host="pop3.myisp.com" port="110"
-    username="mylogin" l="{folder-id}" leaveOnServer="0|1" [pollingInterval="10m"]/>]
+    username="mylogin" l="{folder-id}" leaveOnServer="0|1" [pollingInterval="10m"] 
+    [emailAddress="{email-address}"] 
+    [useAddressForForwardReply="0|1"]
+    [defaultSignature="{default-signature-id}"]
+    [fromDisplay="{from-display}"]
+    [replyToAddress="{replyto-address}"]
+    [replyToDisplay="{replyto-display}"]/>
   *[<imap name="My IMAP Account" isEnabled="0|1" host="imap.myisp.com" port="143"
-    connectionType="cleartext|ssl" username="mylogin" l="{folder-id}" [pollingInterval="10m"]/>]
+    connectionType="cleartext|ssl" username="mylogin" l="{folder-id}" [pollingInterval="10m"]
+    [emailAddress="{email-address}"] 
+    [useAddressForForwardReply="0|1"]
+    [defaultSignature="{default-signature-id}"]
+    [fromDisplay="{from-display}"]
+    [replyToAddress="{replyto-address}"]
+    [replyToDisplay="{replyto-display}"]/>
   ...
 </GetDataSourcesResponse>
 
@@ -2304,10 +2336,22 @@ every attribute value is returned except password.
   *[<pop3 id="{id}" [name="My POP3 Account"] [isEnabled="0|1"] [host="pop3.myisp.com"]
     [port="110"] [connectionType="cleartext|ssl"] [username="mylogin"]
     [password="mypassword"] [l="{folder-id}"] [leaveOnServer="0|1"] 
-    [pollingInterval="10m"]/>]
+    [pollingInterval="10m"]
+    [emailAddress="{email-address}"] 
+    [useAddressForForwardReply="0|1"]
+    [defaultSignature="{default-signature-id}"]
+    [fromDisplay="{from-display}"]
+    [replyToAddress="{replyto-address}"]
+    [replyToDisplay="{replyto-display}"]/>
   *[<imap name="My IMAP Account" isEnabled="0|1" host="imap.myisp.com" port="143"
     connectionType="cleartext|ssl" username="mylogin" password="mypassword" l="{folder-id}"
-    [pollingInterval="10m"]/>]
+    [pollingInterval="10m"]
+    [emailAddress="{email-address}"] 
+    [useAddressForForwardReply="0|1"]
+    [defaultSignature="{default-signature-id}"]
+    [fromDisplay="{from-display}"]
+    [replyToAddress="{replyto-address}"]
+    [replyToDisplay="{replyto-display}"]/>
 </ModifyDataSourceRequest>
 
 <ModifyDataSourceResponse/>
