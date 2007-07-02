@@ -1137,7 +1137,7 @@ public class ZimletUtil {
 				mTransport.setAuthToken(mAuth);
 				
 				// upload
-				String uploadUrl = URLUtil.getAdminURL(server, "/service/upload");
+				String uploadUrl = URLUtil.getAdminURL(server, "/service/upload?fmt=raw");
 				mAttachmentId = postAttachment(uploadUrl, zimlet, data, server.getName());
 				
 				// deploy
@@ -1218,13 +1218,19 @@ public class ZimletUtil {
 	    		statusCode = client.executeMethod(post);
 
 	    		if (statusCode == 200) {
-	    			String response = post.getResponseBodyAsString();
-	    			int lastQuote = response.lastIndexOf("'");
-	    			int firstQuote = response.indexOf("','");
-	    			if (lastQuote == -1 || firstQuote == -1) {
-	    				throw ZimletException.CANNOT_DEPLOY("Attachment post failed, unexpected response: " + response, null);
-	    			}
-	    			aid = response.substring(firstQuote+3, lastQuote);
+                    String response = post.getResponseBodyAsString();
+                    // "raw" response should be of the format
+                    //   200,'null','aac04dac-b3c8-4c26-b9c2-c2534f1d6ba1:79d2722f-d4c7-4304-9961-e7bcb146fc32'
+                    String[] responseParts = response.split(",", 3);
+                    if (responseParts.length == 3) {
+                        aid = responseParts[2].trim();
+                        if (aid.startsWith("'") || aid.startsWith("\""))
+                            aid = aid.substring(1);
+                        if (aid.endsWith("'") || aid.endsWith("\""))
+                            aid = aid.substring(0, aid.length() - 1);
+                    }
+                    if (aid == null)
+                        throw ZimletException.CANNOT_DEPLOY("Attachment post failed, unexpected response: " + response, null);
 	    		} else {
     				throw ZimletException.CANNOT_DEPLOY("Attachment post failed, status=" + statusCode, null);
 	    		}
