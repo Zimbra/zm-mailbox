@@ -36,7 +36,6 @@ import java.util.*;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.commons.collections.list.UnmodifiableList;
 import org.apache.commons.collections.map.LRUMap;
 
 import com.zimbra.common.localconfig.LC;
@@ -496,24 +495,6 @@ public class Mailbox {
             ZimbraLog.mailbox.debug("clearing listener: " + session);
     }
 
-    /** Returns the list of all {@link Session}s listening on the Mailbox. */
-    public synchronized List<Session> getListeners() {
-        return new ArrayList<Session>(mListeners);
-    }
-
-    /** Returns the list of all {@link Session}s of a given {@link Session.Type}
-     *  listening on the Mailbox. */
-    public synchronized List<Session> getListeners(Session.Type stype) {
-        if (mListeners.isEmpty())
-            return Collections.emptyList();
-
-        List<Session> matches = new ArrayList<Session>(mListeners.size());
-        for (Session session : mListeners)
-            if (session.getType() == stype)
-                matches.add(session);
-        return matches;
-    }
-
     /** Cleans up and disconnects all {@link Session}s listening for
      *  notifications on this Mailbox.
      * 
@@ -755,11 +736,21 @@ public class Mailbox {
      *  write op as well as right after the session expires.
      * 
      * @see #recordLastSoapAccessTime(long) */
-    public long getLastSoapAccessTime() {
-        return (mCurrentChange.accessed == MailboxChange.NO_CHANGE ? mData.lastWriteDate : mCurrentChange.accessed) * 1000L;
+    public synchronized long getLastSoapAccessTime() {
+        long lastAccess = (mCurrentChange.accessed == MailboxChange.NO_CHANGE ? mData.lastWriteDate : mCurrentChange.accessed) * 1000L;
+        for (Session s : mListeners) {
+            if (s instanceof SoapSession)
+                lastAccess = Math.max(lastAccess, ((SoapSession) s).getLastWriteAccessTime());
+        }
+        return lastAccess;
     }
 
-    public void recordLastSoapAccessTime(long time) throws ServiceException {
+    /** Records the last time that the mailbox had a write op caused by a SOAP
+     *  session.  This value is written both right after the session's first
+     *  write op as well as right after the session expires.
+     * 
+     * @see #getLastSoapAccessTime() */
+    public synchronized void recordLastSoapAccessTime(long time) throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("recordLastSoapAccessTime", null);

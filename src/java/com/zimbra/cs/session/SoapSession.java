@@ -130,14 +130,24 @@ public class SoapSession extends Session {
         return SOAP_SESSION_TIMEOUT_MSEC;
     }
 
+    /** Returns the number of messages added to the Mailbox since the time
+     *  returned by {@link #getPreviousSessionTime()}.  Note that this means
+     *  that messages added to the Mailbox during this session are included
+     *  in the count. */
     public int getRecentMessageCount() {
         return mRecentMessages;
     }
 
+    /** Returns the time (in milliseconds) of last write op from any SOAP
+     *  session <u>before</u> this session was initiated.  This value remains
+     *  constant for the duration of this session. */
     public long getPreviousSessionTime() { 
         return mPreviousAccess;
     }
 
+    /** Returns the time (in milliseconds) of the last write operation
+     *  initiated by this session.  If the session has not done any write ops
+     *  yet, returns {@link #getPreviousSessionTime()}. */
     public long getLastWriteAccessTime() {
         return mLastWrite == -1 ? mPreviousAccess : mLastWrite;
     }

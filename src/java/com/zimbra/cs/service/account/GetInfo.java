@@ -86,8 +86,6 @@ public class GetInfo extends AccountDocumentHandler  {
                 } else {
                     // we have no session; calculate the stats from the mailbox and the other SOAP sessions
                     long lastAccess = mbox.getLastSoapAccessTime();
-                    for (Session soap : mbox.getListeners(Session.Type.SOAP))
-                        lastAccess = Math.max(lastAccess, soap.getLastAccessTime());
                     response.addAttribute(AccountConstants.E_PREVIOUS_SESSION, lastAccess);
                     response.addAttribute(AccountConstants.E_LAST_ACCESS, lastAccess);
                     response.addAttribute(AccountConstants.E_RECENT_MSGS, mbox.getRecentMessageCount());
