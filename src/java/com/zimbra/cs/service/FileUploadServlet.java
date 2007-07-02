@@ -525,8 +525,9 @@ public class FileUploadServlet extends ZimbraServlet {
         if (raw) {
             out.println(results);
         } else {          
-            out.println("<html><head></head><body onload=\"window.parent._uploadManager.loaded(" + results + ");\">");
-            out.println("</body></html>");
+            out.println("<html><head>" +
+                    "<script language='javascript'>\nfunction doit() { window.parent._uploadManager.loaded("+ results + "); }\n</script>" +
+                    "</head><body onload='doit()'></body></html>\n");
         }
         out.close();
 
