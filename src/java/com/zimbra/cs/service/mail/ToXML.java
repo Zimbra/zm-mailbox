@@ -78,9 +78,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 import javax.mail.internet.MimeUtility;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -1544,16 +1542,34 @@ public class ToXML {
         String data = null;
         if (ctype.equals(Mime.CT_TEXT_HTML)) {
             String charset = mpi.getContentTypeParameter(Mime.P_CHARSET);
-            if (!(charset == null || charset.trim().equals(""))) {
-                data = Mime.getStringContent(mp);
-                data = HtmlDefang.defang(data, neuter);                    
-            } else {
-                InputStream is = null;
+            if (charset != null && charset.trim().length() > 0) {
+                InputStream stream = null;
                 try {
-                	is = mp.getInputStream();
-                	data = HtmlDefang.defang(is, neuter);
-                } finally {
-                    if (is != null) is.close();
+                    stream = mp.getInputStream();
+                    Reader reader = new InputStreamReader(stream, charset);
+                    data = HtmlDefang.defang(reader, neuter);
+                }
+                finally {
+                    if (stream != null) {
+                        stream.close();
+                    }
+                }
+            }
+            else {
+                if (mp.getHeader("Content-Transfer-Encoding", null) != null) {
+                    InputStream stream = null;
+                    try {
+                        stream = mp.getInputStream();
+                        data = HtmlDefang.defang(stream, neuter);
+                    } finally {
+                        if (stream != null) {
+                            stream.close();
+                        }
+                    }
+                }
+                else {
+                    data = Mime.getStringContent(mp);
+                    data = HtmlDefang.defang(data, neuter);
                 }
             }
         } else if (ctype.equals(Mime.CT_TEXT_ENRICHED)) {
