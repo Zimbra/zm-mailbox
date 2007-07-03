@@ -31,7 +31,9 @@ import java.io.Reader;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.Collection;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -60,7 +62,7 @@ public class DbUtil {
     public static final int getBooleanIntValue(boolean b) {
         return b ? INTEGER_TRUE : INTEGER_FALSE;
     }
-
+    
     private static final Pattern PAT_ESCAPED_QUOTES1 = Pattern.compile("\\\\'");
     private static final Pattern PAT_ESCAPED_QUOTES2 = Pattern.compile("''");
     private static final Pattern PAT_STRING_CONSTANT = Pattern.compile("'[^']+'");
@@ -70,6 +72,28 @@ public class DbUtil {
     private static final Pattern PAT_TRAILING_SPACE = Pattern.compile("\\s+$");
     private static final Pattern PAT_MULTIPLE_SPACES = Pattern.compile("\\s+");
     private static final Pattern PAT_IN_CLAUSE = Pattern.compile("IN \\([^\\)]+\\)", Pattern.DOTALL);
+
+    /**
+     * Converts a <tt>java.util.Date</tt> to a <tt>java.sql.Timestamp</tt>.
+     * If the date is <tt>null</tt>, returns <tt>null</tt>.
+     */
+    public static Timestamp dateToTimestamp(Date date) {
+        if (date == null) {
+            return null;
+        }
+        return new Timestamp(date.getTime());
+    }
+    
+    /**
+     * Converts a  <tt>java.sql.Timestamp</tt> to a <tt>java.util.Date</tt>.
+     * If the timestamp is <tt>null</tt>, returns <tt>null</tt>.
+     */
+    public static Date timestampToDate(Timestamp timestamp) {
+        if (timestamp == null) {
+            return null;
+        }
+        return new Date(timestamp.getTime());
+    }
 
     /**
      * Converts the given <code>SQL</code> string to a normalized version.

@@ -30,7 +30,6 @@ import java.util.Timer;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.Versions;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.im.IMRouter;
@@ -39,6 +38,7 @@ import com.zimbra.cs.imap.ImapServer;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.lmtpserver.LmtpServer;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.ScheduledTaskManager;
 import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -143,7 +143,7 @@ public class Zimbra {
         
         MemoryStats.startup();
         
-        DataSourceManager.startup();
+        ScheduledTaskManager.startup();
 
         // should be last, so that other subsystems can add dynamic stats counters 
         ZimbraPerf.initialize();

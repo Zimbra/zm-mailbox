@@ -1196,7 +1196,7 @@ public abstract class Provisioning {
     public static final String A_zimbraQuotaWarnMessage = "zimbraQuotaWarnMessage";
     
     // Server/globalconfig
-    public static final String A_zimbraDataSourceNumThreads = "zimbraDataSourceNumThreads";
+    public static final String A_zimbraScheduledTaskNumThreads = "zimbraScheduledTaskNumThreads";
 
     /*
      * Extension Text Analyzer

@@ -66,7 +66,7 @@ public class CreateDataSource extends MailDocumentHandler {
         String name = eDataSource.getAttribute(MailConstants.A_NAME);
         dsAttrs.put(Provisioning.A_zimbraDataSourceFolderId, eDataSource.getAttribute(MailConstants.A_FOLDER));
         dsAttrs.put(Provisioning.A_zimbraDataSourceEnabled,
-        LdapUtil.getBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_IS_ENABLED)));
+            LdapUtil.getBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_IS_ENABLED)));
         dsAttrs.put(Provisioning.A_zimbraDataSourceHost, eDataSource.getAttribute(MailConstants.A_DS_HOST));
         dsAttrs.put(Provisioning.A_zimbraDataSourcePort, eDataSource.getAttribute(MailConstants.A_DS_PORT));
         dsAttrs.put(Provisioning.A_zimbraDataSourceConnectionType, eDataSource.getAttribute(MailConstants.A_DS_CONNECTION_TYPE));
@@ -101,7 +101,7 @@ public class CreateDataSource extends MailDocumentHandler {
     throws ServiceException {
         List<Element> subElements = request.listElements();
         if (subElements.size() != 1) {
-            String msg = String.format("Only 1 data source allowed per request.  Found " + subElements.size());
+            String msg = "Only 1 data source allowed per request.  Found " + subElements.size();
             throw ServiceException.INVALID_REQUEST(msg, null);
         }
         
