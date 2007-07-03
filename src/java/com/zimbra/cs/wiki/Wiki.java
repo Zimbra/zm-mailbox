@@ -174,7 +174,7 @@ public abstract class Wiki {
 			return Wiki.getInstance(ctxt, ownerAccount.getId(), getFolderPath(ctxt, referenceAccount));
 		}
 		public String getFullUrl(WikiContext ctxt, String referenceAccount) throws ServiceException {
-			if (mUrl != null)
+			if (mUrl != null && mUrl.startsWith("http://"))
 				return mUrl;
 			Account ownerAccount = getOwnerAccount(referenceAccount);
 			return UserServlet.getRestUrl(ownerAccount)
