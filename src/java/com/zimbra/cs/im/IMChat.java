@@ -445,7 +445,7 @@ public class IMChat extends ClassLogger {
         }
     }
 
-    void sendMessage(OperationContext octxt, IMAddr toAddr, String threadId, IMMessage message) throws ServiceException 
+    void sendMessage(OperationContext octxt, IMAddr toAddr, String threadId, IMMessage message, IMPersona sender) throws ServiceException 
     {
         IMAddr fromAddr = mPersona.getAddr();
         message.setFrom(fromAddr);
@@ -453,7 +453,7 @@ public class IMChat extends ClassLogger {
         addMessage(true, message);
         
         org.xmpp.packet.Message xmppMsg = new org.xmpp.packet.Message();
-        xmppMsg.setFrom(fromAddr.makeFullJID());
+        xmppMsg.setFrom(fromAddr.makeFullJID(sender.getResource()));
         xmppMsg.setTo(mDestJid);
         if (mIsMUC) {
             xmppMsg.setType(org.xmpp.packet.Message.Type.groupchat);

@@ -24,6 +24,8 @@
  */
 package com.zimbra.cs.im;
 
+import org.xmpp.packet.Presence;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.mailbox.Metadata;
@@ -46,6 +48,35 @@ public class IMPresence {
         mShow = show;
         mPriority = prio;
         mStatus = status;
+    }
+    
+    public IMPresence(Presence pres) {
+        mPriority = (byte)(pres.getPriority());
+        mStatus = pres.getStatus();
+        
+        Presence.Type ptype = pres.getType();
+        if (ptype == null) {
+            Presence.Show pShow = pres.getShow();
+            mShow = IMPresence.Show.ONLINE;
+            if (pShow != null) {
+                switch (pShow) {
+                    case chat:
+                        mShow = Show.CHAT;
+                        break;
+                    case away:
+                        mShow = Show.AWAY;
+                    break;
+                    case xa:
+                        mShow = Show.XA;
+                    break;
+                    case dnd:
+                        mShow = Show.DND;
+                    break;
+                }
+            }
+        } else {
+            mShow = Show.OFFLINE;
+        }
     }
     
     private static final String FN_SHOW = "h";

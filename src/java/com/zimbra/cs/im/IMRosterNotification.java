@@ -15,7 +15,6 @@ public class IMRosterNotification extends IMNotification {
         mNots.add(not);
     }
     
-
     public Element toXml(Element parent) throws ServiceException {
         ZimbraLog.im.info("IMRosterNotification:");
         Element e = this.create(parent, "roster");

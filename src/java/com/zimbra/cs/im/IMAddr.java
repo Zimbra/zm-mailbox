@@ -59,13 +59,13 @@ public class IMAddr {
         }            
     }
     
-    public JID makeFullJID() {
+    public JID makeFullJID(String resource) {
         int domainSplit = mAddr.indexOf('@');
         
         if (domainSplit > 0) {
             String namePart = mAddr.substring(0, domainSplit);
             String domainPart = mAddr.substring(domainSplit+1);
-            return new JID(namePart, domainPart, "zcs");
+            return new JID(namePart, domainPart, resource);
         } else {
             return new JID(mAddr);
         }            

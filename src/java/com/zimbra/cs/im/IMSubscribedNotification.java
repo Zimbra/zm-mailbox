@@ -88,7 +88,7 @@ class IMSubscribedNotification extends IMNotification {
         }
         
         if (mAsk != null) {
-            e.addAttribute("ask", mAsk.name());
+            e.addAttribute(IMConstants.A_ASK, mAsk.name());
         }
         
         if (mGroups != null) {
