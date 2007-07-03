@@ -33,7 +33,7 @@
 
 <-- subsequent sync request -->
 
-<SyncRequest token="403"/>
+<SyncRequest token="403" [l="{root-folder-id}"]/>
 
 <SyncResponse token="500" md="1078054283">
   <-- handle deletes first -->
@@ -52,6 +52,10 @@
 <-- if we're delta syncing on another user's mailbox and any folders have changed: -->
 <--  if there are now no visible folders, you'll get an empty <folder/> element -->
 <--  if there are any visible folders, you'll get the full visible folder hierarchy -->
+
+<-- if a {root-folder-id} other than the mailbox root (folder 1) is requested -->
+<-- or if not all folders are visible when syncing to another user's mailbox, -->
+<-- all changed items in other folders are presented as deletes -->
 
 
 <-- client resolves conflicts and passes back its changes -->

@@ -2328,6 +2328,9 @@ public class Mailbox {
         }
     }
 
+    /** Returns a list of all <code>Folder</code>s the authenticated user has
+     *  {@link ACL#RIGHT_READ} access to.  Returns <tt>null</tt> if the
+     *  authenticated user has read access to the entire Mailbox. */
     public synchronized Set<Folder> getVisibleFolders(OperationContext octxt) throws ServiceException {
         boolean success = false;
         try {
@@ -2340,9 +2343,10 @@ public class Mailbox {
         }
     }
 
-    /** Returns a list of all <tt>Folder</tt>s the authenticated user has
-     *  {@link ACL#RIGHT_READ} access to.  Returns <tt>null</tt> if the
-     *  authenticated user has read access to the entire Mailbox. */
+    /** Returns a list of all <code>Folder</code>s that the authenticated user
+     *  from the current transaction has {@link ACL#RIGHT_READ} access to.
+     *  Returns <tt>null</tt> if the authenticated user has read access to
+     *  the entire Mailbox. */
     Set<Folder> getVisibleFolders() throws ServiceException {
         if (!mCurrentChange.isActive())
             throw ServiceException.FAILURE("cannot get visible hierarchy outside transaction", null);
@@ -2359,6 +2363,10 @@ public class Mailbox {
         return incomplete ? visible : null;
     }
 
+    /** Returns a list of the IDs of all <code>Folder</code>s that the
+     *  current transaction's authenticated user has {@link ACL#RIGHT_READ}
+     *  access on.  Returns <tt>null</tt> if the authenticated user has read
+     *  access on the entire Mailbox. */
     Set<Integer> getVisibleFolderIds() throws ServiceException {
         Set<Folder> folders = getVisibleFolders();
         if (folders == null)

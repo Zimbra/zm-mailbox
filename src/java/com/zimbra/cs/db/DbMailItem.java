@@ -1886,17 +1886,10 @@ public class DbMailItem {
         }
     }
 
-    private static final List<Integer> EMPTY_DATA = Collections.emptyList();
-    private static final MailItem.TypedIdList EMPTY_TYPED_ID_LIST = new MailItem.TypedIdList();
-
     public static Pair<List<Integer>,MailItem.TypedIdList> getModifiedItems(Mailbox mbox, byte type, long lastSync, Set<Integer> visible)
     throws ServiceException {
         if (Mailbox.isCachedType(type))
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
-
-        // figure out what folders are visible and thus also if we can short-circuit this query
-        if (visible != null && visible.isEmpty())
-            return new Pair<List<Integer>,MailItem.TypedIdList>(EMPTY_DATA, EMPTY_TYPED_ID_LIST);
 
         List<Integer> modified = new ArrayList<Integer>();
         MailItem.TypedIdList missed = new MailItem.TypedIdList();

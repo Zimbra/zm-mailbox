@@ -28,6 +28,7 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -64,9 +65,10 @@ public class Sync extends MailDocumentHandler {
 
         Element response = zsc.createElement(MailConstants.SYNC_RESPONSE);
         response.addAttribute(MailConstants.A_CHANGE_DATE, System.currentTimeMillis() / 1000);
-        
-        int tokenInt;
-        int itemCutoff;
+
+        // the sync token is of the form "last fully synced change id" (e.g. "32425") or
+        //   "last fully synced change id-last item synced in next change id" (e.g. "32425-99213")
+        int tokenInt, itemCutoff;
         try {
             int delimiter = token.indexOf('-');
             if (delimiter < 1) {
@@ -79,28 +81,33 @@ public class Sync extends MailDocumentHandler {
         } catch (NumberFormatException nfe) {
             throw ServiceException.INVALID_REQUEST("malformed sync token: " + token, nfe);
         }
-        
+        boolean initialSync = tokenInt <= 0;
+
+        // if the sync is constrained to a folder subset, we need to first figure out what can be seen
+        Folder root = null;
+        try {
+            ItemId iidFolder = new ItemId(request.getAttribute(MailConstants.A_FOLDER, DEFAULT_FOLDER_ID + ""), zsc);
+            OperationContext octxtOwner = new OperationContext(mbox);
+            root = mbox.getFolderById(octxtOwner, iidFolder.getId());
+        } catch (MailServiceException.NoSuchItemException nsie) { }
+
+        Set<Folder> visible = octxt.isDelegatedRequest(mbox) ? mbox.getVisibleFolders(octxt) : null;
+
+        // actually perform the sync
         synchronized (mbox) {
             mbox.beginTrackingSync();
 
-            if (tokenInt <= 0) {
+            if (initialSync) {
                 response.addAttribute(MailConstants.A_TOKEN, mbox.getLastChangeID());
                 response.addAttribute(MailConstants.A_SIZE, mbox.getSize());
-                Folder root = null;
-                try {
-                    ItemId iidFolder = new ItemId(request.getAttribute(MailConstants.A_FOLDER, DEFAULT_FOLDER_ID + ""), zsc);
-                    OperationContext octxtOwner = new OperationContext(mbox.getAccount());
-                    root = mbox.getFolderById(octxtOwner, iidFolder.getId());
-                } catch (MailServiceException.NoSuchItemException nsie) { }
 
-                Set<Folder> visible = mbox.getVisibleFolders(octxt);
                 boolean anyFolders = folderSync(response, octxt, ifmt, mbox, root, visible, SyncPhase.INITIAL);
                 // if no folders are visible, add an empty "<folder/>" as a hint
                 if (!anyFolders)
                     response.addElement(MailConstants.E_FOLDER);
             } else {
                 boolean typedDeletes = request.getAttributeBool(MailConstants.A_TYPED_DELETES, false);
-                String newToken = deltaSync(response, octxt, ifmt, mbox, tokenInt, typedDeletes, itemCutoff);
+                String newToken = deltaSync(response, octxt, ifmt, mbox, tokenInt, itemCutoff, typedDeletes, root, visible);
                 response.addAttribute(MailConstants.A_TOKEN, newToken);
             }
         }
@@ -188,7 +195,11 @@ public class Sync extends MailDocumentHandler {
                                               Change.MODIFIED_COLOR  | Change.MODIFIED_POSITION |
                                               Change.MODIFIED_DATE;
 
-    private static String deltaSync(Element response, OperationContext octxt, ItemIdFormatter ifmt, Mailbox mbox, int begin, boolean typedDeletes, int itemCutoff)
+    private static final int FOLDER_TYPES_BITMASK = MailItem.typeToBitmask(MailItem.TYPE_FOLDER) |
+                                                    MailItem.typeToBitmask(MailItem.TYPE_SEARCHFOLDER) |
+                                                    MailItem.typeToBitmask(MailItem.TYPE_MOUNTPOINT);
+
+    private static String deltaSync(Element response, OperationContext octxt, ItemIdFormatter ifmt, Mailbox mbox, int begin, int itemCutoff, boolean typedDeletes, Folder root, Set<Folder> visible)
     throws ServiceException {
         String newToken = mbox.getLastChangeID() + "";
         if (begin >= mbox.getLastChangeID())
@@ -198,20 +209,30 @@ public class Sync extends MailDocumentHandler {
         MailItem.TypedIdList tombstones = mbox.getTombstoneSet(begin);
         Element eDeleted = response.addElement(MailConstants.E_DELETED);
 
+        // then, put together the requested folder hierarchy in 2 different flavors
+        List<Folder> hierarchy = (root == null || root.getId() == Mailbox.ID_FOLDER_USER_ROOT ? null : root.getSubfolderHierarchy());
+        Set<Integer> targetIds = (root != null && root.getId() == Mailbox.ID_FOLDER_USER_ROOT ? null : new HashSet<Integer>(hierarchy == null ? 0 : hierarchy.size()));
+        if (hierarchy != null)
+            for (Folder folder : hierarchy)
+                targetIds.add(folder.getId());
+
         // then, handle created/modified folders
         if (octxt.isDelegatedRequest(mbox)) {
             // first, make sure that something changed...
-            if (!mbox.getModifiedFolders(begin).isEmpty()) {
+            if (!mbox.getModifiedFolders(begin).isEmpty() || (tombstones != null && (tombstones.getTypesMask() & FOLDER_TYPES_BITMASK) != 0)) {
                 // special-case the folder hierarchy for delegated delta sync
-                Set<Folder> visible = mbox.getVisibleFolders(octxt);
-                boolean anyFolders = folderSync(response, octxt, ifmt, mbox, mbox.getFolderById(null, DEFAULT_FOLDER_ID), visible, SyncPhase.DELTA);
+                boolean anyFolders = folderSync(response, octxt, ifmt, mbox, root, visible, SyncPhase.DELTA);
                 // if no folders are visible, add an empty "<folder/>" as a hint
                 if (!anyFolders)
                     response.addElement(MailConstants.E_FOLDER);
             }
         } else {
-            for (Folder folder : mbox.getModifiedFolders(begin))
-                ToXML.encodeFolder(response, ifmt, octxt, folder, Change.ALL_FIELDS);
+            for (Folder folder : mbox.getModifiedFolders(begin)) {
+                if (targetIds == null || targetIds.contains(folder.getId()))
+                    ToXML.encodeFolder(response, ifmt, octxt, folder, Change.ALL_FIELDS);
+                else
+                    tombstones.add(folder.getType(), folder.getId());
+            }
         }
 
         // next, handle created/modified tags
@@ -220,11 +241,11 @@ public class Sync extends MailDocumentHandler {
 
         // finally, handle created/modified "other items"
         int itemCount = 0;
-        Pair<List<Integer>,MailItem.TypedIdList> changed = mbox.getModifiedItems(octxt, begin);
+        Pair<List<Integer>,MailItem.TypedIdList> changed = mbox.getModifiedItems(octxt, begin, MailItem.TYPE_UNKNOWN, targetIds);
         List<Integer> modified = changed.getFirst();
         delta: while (!modified.isEmpty()) {
-            List batch = modified.subList(0, Math.min(modified.size(), FETCH_BATCH_SIZE));
-            for (MailItem item : mbox.getItemById(octxt, modified, MailItem.TYPE_UNKNOWN)) {
+            List<Integer> batch = modified.subList(0, Math.min(modified.size(), FETCH_BATCH_SIZE));
+            for (MailItem item : mbox.getItemById(octxt, batch, MailItem.TYPE_UNKNOWN)) {
                 // detect interrupted sync and resume from the appropriate place
                 if (item.getModifiedSequence() == begin + 1 && item.getId() < itemCutoff)
                     continue;
