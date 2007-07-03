@@ -99,6 +99,10 @@ public class ZVoiceMailItemHit implements ZSearchHit {
         return hasFlags() && mFlags.indexOf(VoiceConstants.FLAG_HI_PRIORITY) != -1;
     }
 
+    public boolean isPrivate() {
+        return hasFlags() && mFlags.indexOf(VoiceConstants.FLAG_UNFORWARDABLE) != -1;
+    }
+
     public ZPhone getCaller() { return mCaller; }
 
     public String getDisplayCaller() { return mCaller.getDisplay(); }
