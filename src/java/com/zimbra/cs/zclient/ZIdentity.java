@@ -56,8 +56,12 @@ public class ZIdentity  {
         mId = get(Provisioning.A_zimbraPrefIdentityId);
     }
 
-    public String getName() {
+    public String getRawName() {
         return mName;
+    }
+
+    public String getName() {
+        return get(Provisioning.A_zimbraPrefIdentityName);
     }
 
     public String getId() {
@@ -113,6 +117,8 @@ public class ZIdentity  {
     public ZEmailAddress getFromEmailAddress() {
         return new ZEmailAddress(getFromAddress(), null, getFromDisplay(), ZEmailAddress.EMAIL_TYPE_FROM);
     }
+
+    public String getSignatureId() { return get(Provisioning.A_zimbraPrefDefaultSignatureId); }
 
     public String getSignature() { return get(Provisioning.A_zimbraPrefMailSignature); }
 
