@@ -517,6 +517,24 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
         return mTags.cache(new ImapFlag(ltag.getName(), ltag, true));
     }
 
+    void dirtyTag(int id, int modseq) {
+        dirtyTag(id, modseq, false);
+    }
+
+    void dirtyTag(int id, int modseq, boolean removeTag) {
+        mTagsAreDirty = true;
+        if (getSize() == 0)
+            return;
+        long mask = 1L << Tag.getIndex(id);
+        for (ImapMessage i4msg : mSequence) {
+            if (i4msg != null && (i4msg.tags & mask) != 0) {
+                dirtyMessage(i4msg, modseq);
+                if (removeTag)
+                    i4msg.tags &= ~mask;
+            }
+        }
+    }
+
     ImapFlag getFlagByName(String name) {
         ImapFlag i4flag = mFlags.getByName(name);
         return (i4flag != null ? i4flag : mTags.getByName(name));
@@ -539,14 +557,6 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
     void clearTagCache() {
         mTags.clear();
     }
-
-
-    boolean checkpointSize()  { int last = mLastSize;  return last != (mLastSize = getSize()); }
-
-
-    void disableNotifications()  { mNotificationsSuspended = true; }
-    
-    void enableNotifications()   { mNotificationsSuspended = false; }
 
 
     static final class DirtyMessage {
@@ -581,22 +591,11 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
     void clearDirty()  { mDirtyMessages.clear(); }
 
 
-    void dirtyTag(int id, int modseq) {
-        dirtyTag(id, modseq, false);
-    }
+    boolean checkpointSize()  { int last = mLastSize;  return last != (mLastSize = getSize()); }
 
-    void dirtyTag(int id, int modseq, boolean removeTag) {
-        if (getSize() == 0)
-            return;
-        long mask = 1L << Tag.getIndex(id);
-        for (ImapMessage i4msg : mSequence) {
-            if (i4msg != null && (i4msg.tags & mask) != 0) {
-                dirtyMessage(i4msg, modseq);
-                if (removeTag)
-                	i4msg.tags &= ~mask;
-            }
-        }
-    }
+    void disableNotifications()  { mNotificationsSuspended = true; }
+    
+    void enableNotifications()   { mNotificationsSuspended = false; }
 
 
     void saveSearchResults(ImapMessageSet i4set) {
