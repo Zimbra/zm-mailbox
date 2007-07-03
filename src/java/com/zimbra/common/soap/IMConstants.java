@@ -58,6 +58,7 @@ public class IMConstants {
     public static final String A_THREAD_ID      = "thread";
     public static final String A_ADDRESS        = "addr";
     public static final String A_ADD            = "add";
+    public static final String A_ASK            = "ask";
     public static final String A_SEQ            = "seq";
     public static final String A_NAME           = "name";
     public static final String A_SUBSCRIPTION   = "subscription";
