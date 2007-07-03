@@ -289,6 +289,11 @@ public class ZimbraLog {
     public static final Log webclient = LogFactory.getLog("zimbra.webclient");
     
     /**
+     * the "zimbra.scheduler" logger.  Logs scheduled task operations.
+     */
+    public static final Log scheduler = LogFactory.getLog("zimbra.scheduler");
+    
+    /**
      * Keeps track of the account associated with the current thread, for
      * per-user logging settings. 
      */
@@ -450,6 +455,13 @@ public class ZimbraLog {
     }
     
     /**
+     * Removes mailbox id from the current thread's logging context.
+     */
+    public static void removeMboxFromContext(int mboxId) {
+        removeFromContext(C_MID);
+    }
+    
+    /**
      * Adds message id to the current thread's logging context.
      */
     public static void addMsgIdToContext(String messageId) {
@@ -460,7 +472,14 @@ public class ZimbraLog {
      * Adds data source name to the current thread's logging context.
      */
     public static void addDataSourceNameToContext(String dataSourceName) {
-        ZimbraLog.addToContext(C_DATA_SOURCE_NAME, dataSourceName);
+        addToContext(C_DATA_SOURCE_NAME, dataSourceName);
+    }
+    
+    /**
+     * Removes data source name from the current thread's logging context.
+     */
+    public static void removeDataSourceNameFromContext() {
+        removeFromContext(C_DATA_SOURCE_NAME);
     }
     
     /**

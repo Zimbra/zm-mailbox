@@ -24,8 +24,10 @@
  */
 package com.zimbra.common.util;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledFuture;
@@ -42,8 +44,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class TaskScheduler<V> {
     
-    private static Log sLog = LogFactory.getLog(TaskScheduler.class);
-    
     /**
      * A modified version of java.util.concurrent.Executors.DefaultThreadFactory
      * which creates daemon threads instead of user threads.
@@ -51,13 +51,16 @@ public class TaskScheduler<V> {
     static class TaskSchedulerThreadFactory implements ThreadFactory {
         final ThreadGroup mGroup;
         final AtomicInteger mThreadNumber = new AtomicInteger(1);
-        final String mNamePrefix;
+        String mNamePrefix;
 
         TaskSchedulerThreadFactory(String name) {
             SecurityManager s = System.getSecurityManager();
             mGroup = (s != null)? s.getThreadGroup() :
                 Thread.currentThread().getThreadGroup();
-            mNamePrefix = "TaskScheduler-" + name + "-"; 
+            mNamePrefix = "ScheduledTask-";
+            if (!StringUtil.isNullOrEmpty(name)) {
+                mNamePrefix += name + "-"; 
+            }
         }
 
         public Thread newThread(Runnable r) {
@@ -71,6 +74,12 @@ public class TaskScheduler<V> {
         }
     }
 
+    /**
+     * <tt>Callable</tt> wrapper that takes care of catching exceptions and
+     * logging errors that occur while running the task.
+     *
+     * @param <V2> the type returned by the <tt>Callable</tt> task
+     */
     private class TaskRunner<V2>
     implements Callable<V2> {
         Object mId;
@@ -79,47 +88,58 @@ public class TaskScheduler<V> {
         Callable<V2> mTask;
         V2 mLastResult;
         ScheduledFuture<V2> mSchedule;
+        List<ScheduledTaskCallback<V2>> mCallbacks;
         
-        TaskRunner(Object id, Callable<V2> task, boolean recurs, long intervalMillis) {
+        TaskRunner(Object id, Callable<V2> task, boolean recurs, long intervalMillis, List<ScheduledTaskCallback<V2>> callbacks) {
             mTask = task;
             mId = id;
             mRecurs = recurs;
             mIntervalMillis = intervalMillis;
+            mCallbacks = callbacks;
         }
 
         Callable<V2> getTask() { return mTask; }
 
         public V2 call() throws Exception {
             try {
-                sLog.debug("Executing task %s", mId);
+                ZimbraLog.scheduler.debug("Executing task %s", mId);
                 mLastResult = mTask.call();
-                sLog.debug("Task returned value %s", mLastResult);
+                ZimbraLog.scheduler.debug("Task returned result %s", mLastResult);
+                
+                if (mCallbacks != null) {
+                    for (ScheduledTaskCallback callback : mCallbacks) {
+                        callback.afterTaskRun(mTask);
+                    }
+                }
             } catch (Throwable t) {
                 if (t instanceof OutOfMemoryError) {
-                    sLog.error("Shutting down", t);
+                    ZimbraLog.scheduler.fatal("Shutting down", t);
                     System.exit(1);
                 }
-                sLog.warn("Exception during execution of task %s", mId, t);
+                ZimbraLog.scheduler.warn("Exception during execution of task %s", mId, t);
                 mLastResult = null;
             }
             
             // Reschedule if this is a recurring task
             if (mRecurs && !mSchedule.isCancelled()) {
-                sLog.debug("Rescheduling task %s", mId);
+                ZimbraLog.scheduler.debug("Rescheduling task %s", mId);
                 mSchedule = mThreadPool.schedule(this, mIntervalMillis, TimeUnit.MILLISECONDS);
             }
             return mLastResult;
         }
     }
     
-    private Map<Object, TaskRunner<V>> mRunnerMap =
+    private final Map<Object, TaskRunner<V>> mRunnerMap =
         Collections.synchronizedMap(new HashMap<Object, TaskRunner<V>>());
-    
-    private ScheduledThreadPoolExecutor mThreadPool;
+    private final ScheduledThreadPoolExecutor mThreadPool;
+    private final List<ScheduledTaskCallback<V>> mCallbacks =
+        Collections.synchronizedList(new ArrayList<ScheduledTaskCallback<V>>());
 
     /**
-     * Creates a new <tt>TaskScheduler</tt>
-     * @param name the name to use when creating threads that run tasks
+     * Creates a new <tt>TaskScheduler</tt>.  Task threads will be named
+     * <tt>ScheduledTask-[name-]</tt>.
+     * 
+     * @param name the name to use when creating task threads, or <tt>null</tt>
      * @param corePoolSize the minimum number of threads to allocate
      * @param maximumPoolSize the maximum number of threads to allocate
      * 
@@ -151,7 +171,9 @@ public class TaskScheduler<V> {
      * @param delayMillis number of milliseconds to wait before the first execution
      */
     public void schedule(Object taskId, Callable<V> task, boolean recurs, long intervalMillis, long delayMillis) {
-        TaskRunner<V> runner = new TaskRunner<V>(taskId, task, recurs, intervalMillis);
+        ZimbraLog.scheduler.debug("Scheduling task %s", taskId);
+        
+        TaskRunner<V> runner = new TaskRunner<V>(taskId, task, recurs, intervalMillis, mCallbacks);
         runner.mSchedule = mThreadPool.schedule(runner, delayMillis, TimeUnit.MILLISECONDS);
         mRunnerMap.put(taskId, runner);
     }
@@ -179,7 +201,7 @@ public class TaskScheduler<V> {
         if (runner == null) {
             return null;
         }
-        sLog.debug("Cancelling task %s", taskId);
+        ZimbraLog.scheduler.debug("Cancelling task %s", taskId);
         runner.mSchedule.cancel(mayInterruptIfRunning);
         return runner.getTask();
     }
@@ -191,5 +213,9 @@ public class TaskScheduler<V> {
      */
     public void shutdown() {
         mThreadPool.shutdown();
+    }
+    
+    public void addCallback(ScheduledTaskCallback<V> callback) {
+        mCallbacks.add(callback);
     }
 }
