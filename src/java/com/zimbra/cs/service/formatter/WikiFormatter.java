@@ -36,6 +36,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedDocument;
+import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.common.service.ServiceException;
@@ -89,7 +90,8 @@ public class WikiFormatter extends Formatter {
     		template = wt.getComposedPage(ctxt, wiki, CHROME);
     		sCache.addPage(key, template);
     	}
-		printWikiPage(context, template, wiki.getName());
+    	String url = UserServlet.getRestUrl(wiki);
+		printWikiPage(context, template, wiki.getName(),url);
 	}
 
     private static final String TOC = "_Index";
@@ -128,7 +130,8 @@ public class WikiFormatter extends Formatter {
         	template = wt.getComposedPage(ctxt, folder, CHROME);
     		//sCache.addPage(key, template);
     	}
-		printWikiPage(context, template, folder.getName());
+    	String url = UserServlet.getRestUrl(folder);
+		printWikiPage(context, template, folder.getName(),url);
     }
 
 	/**
@@ -136,7 +139,7 @@ public class WikiFormatter extends Formatter {
 	 * This will be revisited when the client relies on the REST
 	 * output for display/browsing functionality.
 	 */
-	private static void printWikiPage(Context context, String s, String title)
+	private static void printWikiPage(Context context, String s, String title, String baseURL)
 	throws IOException {
 		context.resp.setContentType(WikiItem.WIKI_CONTENT_TYPE);
 		javax.servlet.ServletOutputStream out = context.resp.getOutputStream();
@@ -144,7 +147,8 @@ public class WikiFormatter extends Formatter {
 		out.println("<HEAD>");
 		out.println("<TITLE>");
 		out.println(title);
-		out.println("</TITLE>");
+		out.println("</TITLE>");		 
+		out.println("<base href='"+baseURL+"'/>");
 		/***
 		// NOTE: This doesn't work because this servlet is at a different
 		//       context path than the wiki.css file.
