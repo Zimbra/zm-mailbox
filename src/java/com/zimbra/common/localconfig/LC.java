@@ -250,7 +250,7 @@ public class LC {
     public static final KnownKey zimbra_noop_default_timeout;
     public static final KnownKey zimbra_noop_min_timeout;
     public static final KnownKey zimbra_noop_max_timeout;
-    
+
     public static final KnownKey zimbra_waitset_default_request_timeout;
     public static final KnownKey zimbra_waitset_min_request_timeout;
     public static final KnownKey zimbra_waitset_max_request_timeout;
@@ -261,6 +261,8 @@ public class LC {
     
     public static final KnownKey zimbra_waitset_initial_sleep_time;
     public static final KnownKey zimbra_waitset_nodata_sleep_time;
+    
+    public static final KnownKey zimbra_csv_mapping_file;
     
     static {
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
@@ -937,5 +939,9 @@ public class LC {
             "Initial timeout (seconds) to wait before processing any WaitSetRequest");
         zimbra_waitset_nodata_sleep_time = new KnownKey("zimbra_waitset_nodata_sleep_time", "3",
         "Time (seconds) to sleep handling a WaitSetRequest if there is no data after initial check");
+
+        zimbra_csv_mapping_file = new KnownKey("zimbra_csv_mapping_file");
+        zimbra_csv_mapping_file.setDefault("${zimbra_home}" + FS + "conf" + FS + "zimbra-contact-fields.xml");
+        zimbra_csv_mapping_file.setDoc("Contact field mapping for CSV import and export");
     }
 }
