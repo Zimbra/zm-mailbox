@@ -37,6 +37,7 @@ public class ZAuthResult {
     private long mExpires;
     private long mLifetime;
     private String mRefer;
+    private String mSessionId;
     private Map<String, List<String>> mAttrs;
     private Map<String, List<String>> mPrefs;
 
@@ -52,6 +53,14 @@ public class ZAuthResult {
 
     public String getAuthToken() {
         return mAuthToken;
+    }
+
+    public String getSessionId() {
+        return mSessionId;
+    }
+
+    void setSessionId(String id) {
+        mSessionId = id;
     }
     
     public long getExpires() {

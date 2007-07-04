@@ -398,7 +398,9 @@ public class ZMailbox {
         if (options.getVirtualHost() != null)
             req.addElement(AccountConstants.E_VIRTUAL_HOST).setText(options.getVirtualHost());
         addAttrsAndPrefs(req, options);
-        return new ZAuthResult(invoke(req));
+        ZAuthResult r = new ZAuthResult(invoke(req));
+        r.setSessionId(mTransport.getSessionId());
+        return r;
     }
 
     private ZAuthResult authByAuthToken(Options options) throws ServiceException {
@@ -407,7 +409,9 @@ public class ZMailbox {
         Element authTokenEl = req.addElement(AccountConstants.E_AUTH_TOKEN);
         authTokenEl.setText(options.getAuthToken());
         addAttrsAndPrefs(req, options);
-        return new ZAuthResult(invoke(req));
+        ZAuthResult r = new ZAuthResult(invoke(req));
+        r.setSessionId(mTransport.getSessionId());
+        return r;
     }
 
     public ZAuthResult getAuthResult() {
