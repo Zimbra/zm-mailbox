@@ -103,6 +103,7 @@ public class SoapSession extends Session {
 
     @Override
     public Session unregister() {
+        super.unregister();
         // when the session goes away, record the timestamp of the last write op to the database
         if (mLastWrite != -1) {
             try {
