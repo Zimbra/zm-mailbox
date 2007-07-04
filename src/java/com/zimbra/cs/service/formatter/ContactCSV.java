@@ -25,18 +25,29 @@
 
 package com.zimbra.cs.service.formatter;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Contact.Attr;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+
+import org.dom4j.DocumentException;
+import org.dom4j.Element;
+import org.dom4j.QName;
 
 public class ContactCSV {
 
@@ -683,12 +694,176 @@ public class ContactCSV {
                 
     }
 
-    public static void main(String args[]) throws IOException, ParseException {
+    
+    // ---------------------------------------------------------------------- //
+    // mapping file based csv import and export functions
+    
+
+    private static final QName FIELDS = QName.get("fields");
+    private static final QName FIELD  = QName.get("field");
+    private static final QName FORMAT = QName.get("format");
+    private static final QName COLUMN = QName.get("column");
+    
+    private static final String ATTR_NAME  = "name";
+    private static final String ATTR_FIELD = "field";
+    private static final String ATTR_FLAG  = "flag";
+
+    private static Set<String>    mKnownFields;
+    private static Set<CsvFormat> mKnownFormats;
+    
+    private static void populateFields(Element fields) {
+        mKnownFields = new HashSet<String>();
+        
+        for (Iterator elements = fields.elementIterator(FIELD); elements.hasNext(); ) {
+            Element field = (Element) elements.next();
+            mKnownFields.add(field.attributeValue(ATTR_NAME));
+        }
+    }
+
+    private static class CsvColumn {
+        String name;    // column name for this format
+        String field;   // zimbra field that it maps to
+        CsvColumn(Element col) {
+            name  = col.attributeValue(ATTR_NAME);
+            field = col.attributeValue(ATTR_FIELD);
+        }
+    }
+    
+    private static class CsvFormat {
+        String name;
+        String flag;
+        List<CsvColumn> columns;
+        
+        CsvFormat(Element fmt) {
+            name = fmt.attributeValue(ATTR_NAME);
+            flag = fmt.attributeValue(ATTR_FLAG);
+            columns = new ArrayList<CsvColumn>();
+        }
+        void add(Element col) {
+            columns.add(new CsvColumn(col));
+        }
+    }
+    
+    private static void addFormat(Element format) {
+        CsvFormat fmt = new CsvFormat(format);
+        
+        for (Iterator elements = format.elementIterator(COLUMN); elements.hasNext(); ) {
+            Element col = (Element) elements.next();
+            fmt.add(col);
+        }
+        
+        if (mKnownFormats == null)
+            mKnownFormats = new HashSet<CsvFormat>();
+        mKnownFormats.add(fmt);
+    }
+    
+    static {
+        try {
+            readMappingFile(LC.zimbra_csv_mapping_file.value());
+        } catch (Exception e) {
+            ZimbraLog.misc.error("error initializing csv mapping file", e);
+        }
+    }
+    
+    private static void readMappingFile(String mappingFile) throws IOException, DocumentException {
+        readMapping(new FileInputStream(mappingFile));
+    }
+    
+    private static void readMapping(InputStream is) throws IOException, DocumentException {
+        Element root = new org.dom4j.io.SAXReader().read(is).getRootElement();
+        for (Iterator elements = root.elementIterator(); elements.hasNext(); ) {
+            Element elem = (Element) elements.next();
+            if (elem.getQName().equals(FIELDS))
+                populateFields(elem);
+            else if (elem.getQName().equals(FORMAT))
+                addFormat(elem);
+        }
+    }
+
+    public static void toCSV(String format, Iterator contacts, StringBuffer sb) {
+        CsvFormat fmt = null;
+        
+        if (format == null | mKnownFormats == null) {
+            toCSV(contacts, sb);
+            return;
+        }
+        
+        for (CsvFormat f : mKnownFormats)
+            if (f.name.equals(format)) {
+                fmt = f;
+                break;
+            }
+        
+        if (fmt == null) {
+            toCSV(contacts, sb);
+            return;
+        }
+
+        addFieldDef(fmt, sb);
+        
+        while (contacts.hasNext()) {
+            Object c = contacts.next();
+            if (c instanceof Contact)
+                toCSVContact(fmt, ((Contact)c).getFields(), sb);
+        }
+    }
+
+    private static void addFieldValue(Map contact, String name, String field, StringBuffer sb) {
+        String value = (String) contact.get(field);
+        if (value == null) value = "";
+        sb.append('"');
+        sb.append(value.replaceAll("\"", "\"\""));
+        sb.append('"');
+    }
+
+    private static void toCSVContact(CsvFormat fmt, Map contact, StringBuffer sb) {
+        boolean first = true;
+        for (CsvColumn col : fmt.columns) {
+            if (!first)
+                sb.append(',');
+            addFieldValue(contact, col.name, col.field, sb);
+            first = false;
+        }
+        sb.append("\n");
+    }
+    
+    private static void addFieldDef(CsvFormat fmt, StringBuffer sb) {
+        boolean first = true;
+        for (CsvColumn col : fmt.columns) {
+            if (!first)
+                sb.append(',');
+            sb.append('"');
+            sb.append(col.name);
+            sb.append('"');
+            first = false;
+        }
+        sb.append("\n");
+    }
+    
+    private static void writeLine(OutputStream out, String line) throws IOException {
+        out.write(line.getBytes());
+        out.write('\n');
+    }
+    
+    private static void dump(OutputStream out) throws IOException {
+        writeLine(out, "=== Fields ===");
+        for (String f : mKnownFields)
+            writeLine(out, f);
+        for (CsvFormat fmt : mKnownFormats) {
+            writeLine(out, "=== Mapping " + fmt.name + (fmt.flag != null ? " (" + fmt.flag + ")" : "") + " ===");
+            for (CsvColumn col : fmt.columns)
+                writeLine(out, col.name + ": " + col.field);
+        }
+    }
+    
+    public static void main(String args[]) throws IOException, ParseException, DocumentException {
         //doFile("/tmp/a.csv");        
-        doFile("/tmp/b.csv");
+        //doFile("/tmp/b.csv");
         //doFile("/tmp/c.csv");
         //doFile("/tmp/d.csv");
         //doFile("/tmp/e.csv");
+        //String mappingFile = LC.zimbra_csv_mapping_file.value();
+        readMappingFile(args[0]);
+        dump(System.out);
     }
-    
 }

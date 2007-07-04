@@ -151,6 +151,8 @@ public class UserServlet extends ZimbraServlet {
     public static final String QP_DISP = "disp"; // disposition (a = attachment, i = inline)
 
     public static final String QP_NAME = "name"; // filename/path segments, added to pathInfo
+    
+    public static final String QP_CSVFORMAT = "csvfmt"; // csv type (outlook-2003-csv, yahoo-csv, ...)
 
     public static final String AUTH_COOKIE = "co"; // auth by cookie
 

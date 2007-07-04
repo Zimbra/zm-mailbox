@@ -60,13 +60,15 @@ public class ExportContacts extends MailDocumentHandler  {
         if (!ct.equals("csv"))
             throw ServiceException.INVALID_REQUEST("unsupported content type: " + ct, null);
         
+        String format = request.getAttribute(MailConstants.A_CSVFORMAT, null);
+        
         List<Contact> contacts = mbox.getContactList(octxt, iidFolder != null ? iidFolder.getId() : -1);
         
         StringBuffer sb = new StringBuffer();
         if (contacts == null)
         	contacts = new ArrayList<Contact>();
         
-        ContactCSV.toCSV(contacts, sb);
+        ContactCSV.toCSV(format, contacts.iterator(), sb);
 
         Element response = zsc.createElement(MailConstants.EXPORT_CONTACTS_RESPONSE);
         Element content = response.addElement(MailConstants.E_CONTENT);

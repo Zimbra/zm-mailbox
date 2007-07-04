@@ -40,6 +40,7 @@ import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.service.mail.ImportContacts;
@@ -66,7 +67,8 @@ public class CsvFormatter extends Formatter {
         StringBuffer sb = new StringBuffer();
         try {
             iterator = getMailItems(context, -1, -1, Integer.MAX_VALUE);
-            ContactCSV.toCSV(iterator, sb);
+            String format = context.req.getParameter(UserServlet.QP_CSVFORMAT);
+            ContactCSV.toCSV(format, iterator, sb);
         } finally {
             if (iterator instanceof QueryResultIterator)
                 ((QueryResultIterator) iterator).finished();
