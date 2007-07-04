@@ -119,7 +119,6 @@ public class IMPersona extends ClassLogger {
         }
         if (toRet == null)
             toRet = new IMPersona(addr, mbox);
-        toRet.init();
         toRet.mInteropRegistrationData = interopReg;        
         return toRet;
     }
@@ -159,6 +158,7 @@ public class IMPersona extends ClassLogger {
     public void addListener(Session session) {
         if (mListeners.size() == 0) {
             mIsOnline = true;
+            connectToIMServer();
             try {
                 pushMyPresence();
             } catch (ServiceException e) {
@@ -408,8 +408,7 @@ public class IMPersona extends ClassLogger {
         if (mIsOnline)
             return mMyPresence;
         else
-            return new IMPresence(Show.OFFLINE, mMyPresence.getPriority(), mMyPresence
-                        .getStatus());
+            return new IMPresence(Show.OFFLINE, mMyPresence.getPriority(), mMyPresence.getStatus());
     }
 
     public String getFullJidAsString() {
@@ -604,27 +603,6 @@ public class IMPersona extends ClassLogger {
             }
             Presence.Type ptype = pres.getType();
             if (ptype == null) {
-//                Presence.Show pShow = pres.getShow();
-//                IMPresence.Show imShow = IMPresence.Show.ONLINE;
-//                if (pShow != null) {
-//                    switch (pShow) {
-//                        case chat:
-//                            imShow = Show.CHAT;
-//                        break;
-//                        case away:
-//                            imShow = Show.AWAY;
-//                        break;
-//                        case xa:
-//                            imShow = Show.XA;
-//                        break;
-//                        case dnd:
-//                            imShow = Show.DND;
-//                        break;
-//                    }
-//                }
-//                // push presence notification
-//                int prio = pres.getPriority();
-//                IMPresence newPresence = new IMPresence(imShow, (byte) prio, pres.getStatus());
                 IMAddr fromAddr = IMAddr.fromJID(pres.getFrom());
                 IMPresence newPresence = new IMPresence(pres);
                 mBufferedPresence.put(fromAddr, newPresence);
@@ -648,36 +626,10 @@ public class IMPersona extends ClassLogger {
                         IMSubscribeNotification notify = new IMSubscribeNotification(fromAddr);
                         mPendingSubscribes.put(fromAddr, notify);
                         postIMNotification(notify);
-//                        if (false) { // TODO REMOVETHIS!
-//                            // auto-accept for now
-//                            reply = new Presence();
-//                            reply.setType(Presence.Type.subscribed);
-//                            reply.setTo(pres.getFrom());
-//                            xmppRoute(reply);
-//                        }
                     }
                     break;
                     case subscribed: {
                         debug("Presence.subscribed: " + pres.toString());
-                        //IMAddr address = IMAddr.fromJID(pres.getFrom());
-                        // // it could potentially have been deleted, so
-                        // re-create it if necessary
-                        // IMBuddy buddy = getBuddy(true, address,
-                        // address.toString());
-                        // buddy.setAsk(null);
-                        // SubType st = buddy.getSubType();
-                        // if (!st.isOutgoing())
-                        // buddy.setSubType(st.setOutgoing());
-                        // try {
-                        // postIMNotification(IMSubscribedNotification.create(address,
-                        // address.toString(), true, null));
-                        // postIMNotification(new
-                        // IMPresenceUpdateNotification(address,
-                        // buddy.getPresence()));
-                        // } catch(ServiceException ex) {
-                        // ZimbraLog.im.warn("Caught Exception: " +
-                        // ex.toString(), ex);
-                        // }
                     }
                     break;
                     case unsubscribe: // remote user is unsubscribing from us
@@ -712,18 +664,12 @@ public class IMPersona extends ClassLogger {
     }
 
     private void handleRosterPacket(boolean toMe, Roster roster) {
-//        IMRosterNotification rosterNot = null;
-//        boolean doProbe = false;
         boolean isResult = false;
         
         switch (roster.getType()) {
             case result:
                 isResult = true;
-//                rosterNot = new IMRosterNotification();
-//                if (mHaveInitialRoster) 
-//                    doProbe = true;
                 mHaveInitialRoster = true;
-                // mBuddyList.clear();
                 // fall through!
             case set:
                 for (Roster.Item item : roster.getItems()) {
@@ -740,28 +686,12 @@ public class IMPersona extends ClassLogger {
                             item.getGroups(),
                             (subscript == Roster.Subscription.both || subscript == Roster.Subscription.to),
                             item.getAsk());
-//                        if (rosterNot != null) {
-//                            rosterNot.addEntry(not);
-//                        } else {
                         mRoster.put(buddyAddr, not);
                         if (!isResult) {
                             postIMNotification(not);
                         }
-//                        if (doProbe) {
-//                            if (item.getJID().getNode() != null) {
-//                                if (!Interop.getInstance().isInteropJid(item.getJID())) {
-//                                    Presence probe = new Presence(Presence.Type.probe);
-//                                    probe.setTo(item.getJID());
-//                                    xmppRoute(probe);
-//                                }
-//                            }
-//                        }
                     }
                 }
-//                if (doProbe)
-//                    Interop.getInstance().refreshAllPresence(mAddr.makeFullJID(getResource()));
-//                if (rosterNot != null) {
-//                    postIMNotification(rosterNot);
                 if (isResult) {
                     refreshRoster(null);
                 }
@@ -772,20 +702,18 @@ public class IMPersona extends ClassLogger {
     }
 
     /**
-     * Called after State has been loaded from stable storage
+     * Called when we have a listener (persona is online)
      */
-    private void init() {
+    private void connectToIMServer() {
         try {
-            if (Provisioning.getInstance().getLocalServer().getBooleanAttr(
-                        Provisioning.A_zimbraXMPPEnabled, false)) {
+            if (mXMPPSession == null && Provisioning.getInstance().getLocalServer().getBooleanAttr(Provisioning.A_zimbraXMPPEnabled, false)) {
                 mXMPPSession = new ClientSession(Provisioning.getInstance()
-                            .getLocalServer().getName(), new FakeClientConnection(this),
-                            XMPPServer.getInstance().getSessionManager().nextStreamID());
+                    .getLocalServer().getName(), new FakeClientConnection(this),
+                    XMPPServer.getInstance().getSessionManager().nextStreamID());
                 AuthToken at = new AuthToken(mAddr.getAddr());
                 mXMPPSession.setAuthToken(at);
                 try {
-                    mXMPPSession.setAuthToken(at, XMPPServer.getInstance()
-                                .getUserManager(), this.getResource());
+                    mXMPPSession.setAuthToken(at, XMPPServer.getInstance().getUserManager(), this.getResource());
                 } catch (UserNotFoundException ex) {
                     System.out.println(ex.toString());
                     ex.printStackTrace();
@@ -802,6 +730,18 @@ public class IMPersona extends ClassLogger {
         } catch (ServiceException ex) {
             ZimbraLog.im.warn("Caught Exception checking if XMPP enabled "
                         + ex.toString(), ex);
+        }
+    }
+    
+    private void disconnectFromIMServer() {
+        assert(!mIsOnline);
+        if (mXMPPSession != null) {
+            mXMPPSession.getConnection().close();
+            mXMPPSession = null;
+            mHaveInitialRoster = false;
+            mRoster = new HashMap<IMAddr, IMSubscribedNotification>();
+            mPendingSubscribes = new HashMap<IMAddr, IMSubscribeNotification>();
+            mBufferedPresence = new HashMap<IMAddr, IMPresence>();
         }
     }
 
@@ -920,6 +860,7 @@ public class IMPersona extends ClassLogger {
             } catch (ServiceException e) {
                 e.printStackTrace();
             }
+            disconnectFromIMServer();
         }
     }
 
@@ -1033,22 +974,23 @@ public class IMPersona extends ClassLogger {
 
     private void updateXMPPPresence(JID sendTo, IMPresence pres) {
         if (mXMPPSession != null) {
-            Presence xmppPresence;
-            if (pres.getShow() == Show.OFFLINE) {
-                xmppPresence = new Presence(Presence.Type.unavailable);
-            } else {
-                xmppPresence = new Presence();
-                if (pres.getShow() == Show.CHAT)
-                    xmppPresence.setShow(Presence.Show.chat);
-                else if (pres.getShow() == Show.AWAY)
-                    xmppPresence.setShow(Presence.Show.away);
-                else if (pres.getShow() == Show.XA)
-                    xmppPresence.setShow(Presence.Show.xa);
-                else if (pres.getShow() == Show.DND)
-                    xmppPresence.setShow(Presence.Show.dnd);
-            }
-            if (pres.getStatus() != null && pres.getStatus().length() > 0)
-                xmppPresence.setStatus(pres.getStatus());
+            Presence xmppPresence = pres.getXMPPPresence();
+//            if (pres.getShow() == Show.OFFLINE) {
+//                xmppPresence = new Presence(Presence.Type.unavailable);
+//            } else {
+//                xmppPresence = new Presence();
+//                if (pres.getShow() == Show.CHAT)
+//                    xmppPresence.setShow(Presence.Show.chat);
+//                else if (pres.getShow() == Show.AWAY)
+//                    xmppPresence.setShow(Presence.Show.away);
+//                else if (pres.getShow() == Show.XA)
+//                    xmppPresence.setShow(Presence.Show.xa);
+//                else if (pres.getShow() == Show.DND)
+//                    xmppPresence.setShow(Presence.Show.dnd);
+//            }
+//            if (pres.getStatus() != null && pres.getStatus().length() > 0)
+//                xmppPresence.setStatus(pres.getStatus());
+            
             if (sendTo == null) {
                 for (IMChat chat : mChats.values()) {
                     chat.sendPresenceUpdate(xmppPresence);

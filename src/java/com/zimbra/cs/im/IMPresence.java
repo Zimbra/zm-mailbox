@@ -79,6 +79,28 @@ public class IMPresence {
         }
     }
     
+    Presence getXMPPPresence() {
+        Presence xmppPresence;
+
+        if (getShow() == Show.OFFLINE) {
+            xmppPresence = new Presence(Presence.Type.unavailable);
+        } else {
+            xmppPresence = new Presence();
+            if (getShow() == Show.CHAT)
+                xmppPresence.setShow(Presence.Show.chat);
+            else if (getShow() == Show.AWAY)
+                xmppPresence.setShow(Presence.Show.away);
+            else if (getShow() == Show.XA)
+                xmppPresence.setShow(Presence.Show.xa);
+            else if (getShow() == Show.DND)
+                xmppPresence.setShow(Presence.Show.dnd);
+        }
+        if (getStatus() != null && getStatus().length() > 0)
+            xmppPresence.setStatus(getStatus());
+        
+        return xmppPresence;
+    }
+    
     private static final String FN_SHOW = "h";
     private static final String FN_PRIORITY = "p";
     private static final String FN_STATUS = "t";
