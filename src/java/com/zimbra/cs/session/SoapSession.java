@@ -103,16 +103,17 @@ public class SoapSession extends Session {
 
     @Override
     public Session unregister() {
-        super.unregister();
         // when the session goes away, record the timestamp of the last write op to the database
-        if (mLastWrite != -1) {
+        if (mLastWrite != -1 && mMailbox != null) {
             try {
                 mMailbox.recordLastSoapAccessTime(mLastWrite);
-            } catch (ServiceException e) {
-                ZimbraLog.session.warn("exception recording unloaded session's last access time", e);
+            } catch (Throwable t) {
+                ZimbraLog.session.warn("exception recording unloaded session's last access time", t);
             }
         }
-        return this;
+
+        // note that Session.unregister() unsets mMailbox...
+        return super.unregister();
     }
 
     @Override
