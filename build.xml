@@ -460,6 +460,7 @@
 
 		<!-- conf -->
 		<copy tofile="${dist.dir}/conf/localconfig.xml" file="${config.dir}/localconfig.xml${production.suffix}" overwrite="true" />
+		<copy tofile="${dist.dir}/conf/zimbra-contact-fields.xml" file="${config.dir}/contacts/zimbra-contact-fields.xml" overwrite="true" />
 		<if><not><isset property="is-production"/></not><then>
 			<java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
                         	<sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
