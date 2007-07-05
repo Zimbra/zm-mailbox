@@ -96,6 +96,10 @@ public class ZPrefs {
     public boolean getUseKeyboardShortcuts() { return getBool(Provisioning.A_zimbraPrefUseKeyboardShortcuts); }
 
     public boolean getSignatureEnabled() { return getBool(Provisioning.A_zimbraPrefMailSignatureEnabled); }
+
+    public String getClientType() { return get(Provisioning.A_zimbraPrefClientType); }
+    public boolean getIsAdvancedClient() { return "advanced".equals(getClientType()); }
+    public boolean getIsStandardClient() { return "standard".equals(getClientType()); }
     
     public String getSignatureStyle() { return get(Provisioning.A_zimbraPrefMailSignatureStyle); }
     public boolean getSignatureStyleTop() { return "outlook".equals(getSignatureStyle()); }

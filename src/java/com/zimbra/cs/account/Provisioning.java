@@ -571,6 +571,8 @@ public abstract class Provisioning {
 
     public static final String A_zimbraPrefUseRfc2231 = "zimbraPrefUseRfc2231";
 
+    public static final String A_zimbraPrefClientType = "zimbraPrefClientType";
+    
     public static final String A_zimbraPrefCalendarNotifyDelegatedChanges = "zimbraPrefCalendarNotifyDelegatedChanges";
 
     public static final String A_zimbraPrefCalendarFirstDayOfWeek = "zimbraPrefCalendarFirstDayOfWeek";
