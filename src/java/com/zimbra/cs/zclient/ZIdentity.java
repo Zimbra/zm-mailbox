@@ -95,21 +95,6 @@ public class ZIdentity  {
 
     public boolean isDefault() { return mName.equals(Provisioning.DEFAULT_IDENTITY_NAME); }
     
-    public String getBccAddress() { return get(Provisioning.A_zimbraPrefBccAddress); }
-
-    public String getForwardIncludeOriginalText() { return get(Provisioning.A_zimbraPrefForwardIncludeOriginalText); }
-
-    public boolean getForwardIncludeAsAttachment() { return "includeAsAttachment".equals(getForwardIncludeOriginalText()); }
-    public boolean getForwardIncludeBody() { return "includeBody".equals(getForwardIncludeOriginalText()); }
-    public boolean getForwardIncludeBodyWithPrefx() { return "includeBodyWithPrefix".equals(getForwardIncludeOriginalText()); }
-
-    public String getForwardReplyFormat() { return get(Provisioning.A_zimbraPrefForwardReplyFormat); }
-    public boolean getForwardReplyTextFormat() { return "text".equals(getForwardReplyFormat()); }
-    public boolean getForwardReplyHtmlFormat() { return "html".equals(getForwardReplyFormat()); }
-    public boolean getForwardReplySameFormat() { return "same".equals(getForwardReplyFormat()); }
-
-    public String getForwardReplyPrefixChar() { return get(Provisioning.A_zimbraPrefForwardReplyPrefixChar); }
-
     public String getFromAddress() { return get(Provisioning.A_zimbraPrefFromAddress); }
 
     public String getFromDisplay() { return get(Provisioning.A_zimbraPrefFromDisplay); }
@@ -120,23 +105,6 @@ public class ZIdentity  {
 
     public String getSignatureId() { return get(Provisioning.A_zimbraPrefDefaultSignatureId); }
 
-    public String getSignature() { return get(Provisioning.A_zimbraPrefMailSignature); }
-
-    public boolean getSignatureEnabled() { return getBool(Provisioning.A_zimbraPrefMailSignatureEnabled); }
-
-    public String getSignatureStyle() { return get(Provisioning.A_zimbraPrefMailSignatureStyle); }
-    public boolean getSignatureStyleTop() { return "outlook".equals(getSignatureStyle()); }
-    public boolean getSignatureStyleBottom() { return "internet".equals(getSignatureStyle()); }
-
-    public String getReplyIncludeOriginalText() { return get(Provisioning.A_zimbraPrefReplyIncludeOriginalText); }
-
-    public boolean getReplyIncludeAsAttachment() { return "includeAsAttachment".equals(getReplyIncludeOriginalText()); }
-    public boolean getReplyIncludeBody() { return "includeBody".equals(getReplyIncludeOriginalText()); }
-    public boolean getReplyIncludeBodyWithPrefx() { return "includeBodyWithPrefix".equals(getReplyIncludeOriginalText()); }
-    public boolean getReplyIncludeNone() { return "includeNone".equals(getReplyIncludeOriginalText()); }
-    public boolean getReplyIncludeSmart() { return "includeSmart".equals(getReplyIncludeOriginalText()); }
-
-
     public String getReplyToAddress() { return get(Provisioning.A_zimbraPrefReplyToAddress); }
 
     public String getReplyToDisplay() { return get(Provisioning.A_zimbraPrefReplyToDisplay); }
@@ -146,12 +114,6 @@ public class ZIdentity  {
     }
 
     public boolean getReplyToEnabled() { return getBool(Provisioning.A_zimbraPrefReplyToEnabled); }
-
-    public boolean getSaveToSent() { return getBool(Provisioning.A_zimbraPrefSaveToSent); }
-
-    public String getSentMailFolder() { return get(Provisioning.A_zimbraPrefSentMailFolder); }
-
-    public boolean getUseDefaultIdentitySettings() { return getBool(Provisioning.A_zimbraPrefUseDefaultIdentitySettings); }
 
     public String[] getMulti(String name) {
         Object o = mAttrs.get(name);

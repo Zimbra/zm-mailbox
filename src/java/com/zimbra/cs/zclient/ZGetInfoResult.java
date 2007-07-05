@@ -122,6 +122,14 @@ public class ZGetInfoResult {
     public List<ZSignature> getSignatures() {
         return mSignatures;
     }
+
+    public ZSignature getSignature(String id) {
+        for (ZSignature sig : getSignatures()) {
+            if (sig.getId().equals(id))
+                return sig;
+        }
+        return null;
+    }
     
     public List<ZIdentity> getIdentities() {
         return mIdentities;
