@@ -1542,35 +1542,25 @@ public class ToXML {
         String data = null;
         if (ctype.equals(Mime.CT_TEXT_HTML)) {
             String charset = mpi.getContentTypeParameter(Mime.P_CHARSET);
-            if (charset != null && charset.trim().length() > 0) {
-                InputStream stream = null;
-                try {
+            InputStream stream = null;
+            try {
+                if (charset != null && !charset.trim().equals("")) {
                     stream = mp.getInputStream();
                     Reader reader = new InputStreamReader(stream, charset);
                     data = HtmlDefang.defang(reader, neuter);
-                }
-                finally {
-                    if (stream != null) {
-                        stream.close();
-                    }
-                }
-            }
-            else {
-                if (mp.getHeader("Content-Transfer-Encoding", null) != null) {
-                    InputStream stream = null;
-                    try {
+                } else {
+                    String cte = mp.getEncoding();
+                    if (cte != null && !cte.trim().toLowerCase().equals(Mime.ET_7BIT)) {
                         stream = mp.getInputStream();
                         data = HtmlDefang.defang(stream, neuter);
-                    } finally {
-                        if (stream != null) {
-                            stream.close();
-                        }
+                    } else {
+                        data = Mime.getStringContent(mp);
+                        data = HtmlDefang.defang(data, neuter);
                     }
                 }
-                else {
-                    data = Mime.getStringContent(mp);
-                    data = HtmlDefang.defang(data, neuter);
-                }
+            } finally {
+                if (stream != null)
+                    stream.close();
             }
         } else if (ctype.equals(Mime.CT_TEXT_ENRICHED)) {
             data = TextEnrichedHandler.convertToHTML(Mime.getStringContent(mp));
