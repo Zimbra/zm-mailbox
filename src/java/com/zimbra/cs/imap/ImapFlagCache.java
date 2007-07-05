@@ -170,13 +170,13 @@ public class ImapFlagCache implements Iterable<ImapFlagCache.ImapFlag> {
             Tag ltag = mMailbox.createTag(octxt, name, MailItem.DEFAULT_COLOR);
             newTags.add(ltag);
             i4flag = getByName(name);
-            if (i4flag != null)
+            if (i4flag == null)
                 return cache(i4flag = new ImapFlag(name, ltag, true));
         } catch (ServiceException e) {
             if (!e.getCode().equals(ServiceException.PERM_DENIED) && !e.getCode().equals(MailServiceException.TOO_MANY_TAGS))
                 throw e;
         }
-        return null;
+        return i4flag;
     }
 
 
