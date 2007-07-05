@@ -372,6 +372,8 @@
 	
 	<target name="deploy-war-jetty" depends="war" if="use-jetty">
 		<antcall target="stop-jetty"/>
+	    <delete dir="${webserver.root.dir}/webapps/service"/>
+	    <delete file="${webserver.root.dir}/webapps/service.war"/>
 		<copy file="${warfile}" todir="${webserver.root.dir}/webapps"/>
         <mkdir dir='${webserver.root.dir}/webapps/service' />
         <unzip dest="${webserver.root.dir}/webapps/service" src="${webserver.root.dir}/webapps/${warfilename}" />
