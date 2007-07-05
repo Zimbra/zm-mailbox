@@ -197,7 +197,8 @@ public class FeedManager {
     }
 
     private static int getLeadingChar(BufferedInputStream is, StringBuilder charset) throws IOException {
-        is.mark(10);
+        is.mark(128);
+        // check for any BOMs that would override the specified charset
         int ch = is.read();
         switch (ch) {
             case 0xEF:
@@ -217,6 +218,10 @@ public class FeedManager {
                 }
                 break;
         }
+        // skip up to 120 bytes of leading whitespace
+        for (int index = 0; index < 120 && (ch == '\0' || Character.isWhitespace(ch)); index++)
+            ch = is.read();
+        // reset to the original state and return the first non-whtespace character
         is.reset();
         return ch;
     }
