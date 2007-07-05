@@ -41,6 +41,7 @@ import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 /**
@@ -350,6 +351,7 @@ public class Folder extends MailItem {
     Folder findSubfolder(String name) {
         if (name == null || mSubfolders == null)
             return null;
+        name = StringUtil.trimTrailingSpaces(name);
         for (Folder subfolder : mSubfolders)
             if (subfolder != null && name.equalsIgnoreCase(subfolder.getName()))
                 return subfolder;
@@ -543,7 +545,7 @@ public class Folder extends MailItem {
         if (id != Mailbox.ID_FOLDER_ROOT) {
             if (parent == null || !parent.canContain(TYPE_FOLDER))
                 throw MailServiceException.CANNOT_CONTAIN();
-            validateItemName(name);
+            name = validateItemName(name);
             if (parent.findSubfolder(name) != null)
                 throw MailServiceException.ALREADY_EXISTS(name);
             if (!parent.canAccess(ACL.RIGHT_SUBFOLDER))
@@ -725,16 +727,16 @@ public class Folder extends MailItem {
         }
     }
 
-    /** Renames the item and optionally moves it.  Altering an item's
-     *  case (e.g. from <tt>foo</tt> to <tt>FOO</tt>) is allowed.
-     *  If you don't want the item to be moved, you must pass 
-     *  <tt>folder.getFolder()</tt> as the second parameter.
+    /** Renames the item and optionally moves it.  Altering an item's case
+     *  (e.g. from <tt>foo</tt> to <tt>FOO</tt>) is allowed.  Trailing
+     *  whitespace is stripped from the name.  If you don't want the item to be
+     *  moved, you must pass <tt>folder.getFolder()</tt> as the second parameter.
      * 
      * @perms {@link ACL#RIGHT_WRITE} on the folder to rename it,
      *        {@link ACL#RIGHT_DELETE} on the folder and
      *        {@link ACL#RIGHT_INSERT} on the target folder to move it */
     void rename(String name, Folder target) throws ServiceException {
-        validateItemName(name);
+        name = validateItemName(name);
         boolean renamed = !name.equals(mData.name);
         if (!renamed && target == mParent)
             return;

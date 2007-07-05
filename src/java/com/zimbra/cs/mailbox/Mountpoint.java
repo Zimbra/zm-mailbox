@@ -122,7 +122,7 @@ public class Mountpoint extends Folder {
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the parent folder");
         if (parent == null || !parent.canContain(TYPE_MOUNTPOINT))
             throw MailServiceException.CANNOT_CONTAIN();
-        validateItemName(name);
+        name = validateItemName(name);
         if (view != TYPE_UNKNOWN)
             validateType(view);
         if (parent.findSubfolder(name) != null)

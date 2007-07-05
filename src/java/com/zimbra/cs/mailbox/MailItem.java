@@ -492,7 +492,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      *  If not <tt>""</tt>, this name should be unique across all item
      *  types within the parent folder. */
     public String getName() {
-        return mData.name == null ? "" : mData.name;
+        return mData.name == null ? "" : StringUtil.trimTrailingSpaces(mData.name);
     }
 
     /** Returns the ID of the item's parent.  Not all items have parents;
@@ -1719,7 +1719,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      * @see #validateItemName(String)
      * @see #move(Folder) */
     void rename(String name, Folder target) throws ServiceException {
-        validateItemName(name);
+        name = validateItemName(name);
 
         boolean renamed = !name.equals(mData.name);
         boolean moved   = target != getFolder();
@@ -1768,7 +1768,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      *  name. */
     public static final int MAX_NAME_LENGTH = 128;
 
-    /** Returns whether a proposed name is valid.  Names must be less than
+    /** Validates a proposed item name.  Names must be less than
      *  {@link #MAX_NAME_LENGTH} characters long, must contain non-whitespace
      *  characters, and may not contain any characters banned in XML or
      *  contained in {@link #INVALID_NAME_CHARACTERS} (':', '/', '"', '\t',
@@ -1777,13 +1777,17 @@ public abstract class MailItem implements Comparable<MailItem> {
      * @param name  The proposed item name.
      * @throws ServiceException  The following error codes are possible:<ul>
      *    <li><tt>mail.INVALID_NAME</tt> - if the name is not acceptable</ul>
+     * @return the passed-in name with trailing whitespace stripped.
      * @see StringUtil#stripControlCharacters(String) */
     static String validateItemName(String name) throws ServiceException {
-        if (name == null || name != StringUtil.stripControlCharacters(name))
+        // reject invalid characters in the name
+        if (name == null || name != StringUtil.stripControlCharacters(name) || name.matches(INVALID_NAME_PATTERN))
             throw MailServiceException.INVALID_NAME(name);
-        if (name.trim().equals("") || name.length() > MAX_NAME_LENGTH || name.matches(INVALID_NAME_PATTERN))
+        // strip trailing whitespace and validate length of resulting name
+        String trimmed = StringUtil.trimTrailingSpaces(name);
+        if (trimmed.length() == 0 || trimmed.length() > MAX_NAME_LENGTH)
             throw MailServiceException.INVALID_NAME(name);
-        return name;
+        return trimmed;
     }
 
     public static String normalizeItemName(String name) {
@@ -1797,6 +1801,7 @@ public abstract class MailItem implements Comparable<MailItem> {
                 name = name.substring(0, MailItem.MAX_NAME_LENGTH);
             if (name.matches(INVALID_NAME_PATTERN))
                 name = name.replaceAll(INVALID_NAME_CHARACTERS, "");
+            name = StringUtil.trimTrailingSpaces(name);
             if (name.trim().equals(""))
                 name = "item" + System.currentTimeMillis();
             return name;

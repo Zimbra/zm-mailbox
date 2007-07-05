@@ -208,7 +208,7 @@ public class DbMailItem {
             stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, folderId);
             stmt.setInt(pos++, modifiedItemId);
-            stmt.setString(pos++, name.toUpperCase());
+            stmt.setString(pos++, StringUtil.trimTrailingSpaces(name.toUpperCase()));
             rs = stmt.executeQuery();
             if (!rs.next() || rs.getInt(1) > 0)
                 throw MailServiceException.ALREADY_EXISTS(name);

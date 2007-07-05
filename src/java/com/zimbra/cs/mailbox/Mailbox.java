@@ -4292,15 +4292,15 @@ public class Mailbox {
 
             parent = getFolderById(ID_FOLDER_USER_ROOT);
             for (int i = 0; i < parts.length - 1; i++) {
-                MailItem.validateItemName(parts[i]);
+                String name = MailItem.validateItemName(parts[i]);
                 int subfolderId = playerParentIds == null ? ID_AUTO_INCREMENT : playerParentIds[i];
-                Folder subfolder = parent.findSubfolder(parts[i]);
+                Folder subfolder = parent.findSubfolder(name);
                 if (subfolder == null)
-                    subfolder = Folder.create(getNextItemId(subfolderId), this, parent, parts[i]);
+                    subfolder = Folder.create(getNextItemId(subfolderId), this, parent, name);
                 else if (subfolderId != ID_AUTO_INCREMENT && subfolderId != subfolder.getId())
                     throw ServiceException.FAILURE("parent folder id changed since operation was recorded", null);
-                else if (!subfolder.getName().equals(parts[i]) && subfolder.isMutable())
-                    subfolder.rename(parts[i], parent);
+                else if (!subfolder.getName().equals(name) && subfolder.isMutable())
+                    subfolder.rename(name, parent);
                 recorderParentIds[i] = subfolder.getId();
                 parent = subfolder;
             }

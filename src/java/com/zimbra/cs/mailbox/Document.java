@@ -265,7 +265,7 @@ public class Document extends MailItem {
             throw MailServiceException.CANNOT_CONTAIN();
         if (!folder.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
-        validateItemName(name);
+        name = validateItemName(name);
 
         Mailbox mbox = folder.getMailbox();
         MetadataList revisions = new MetadataList();
