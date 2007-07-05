@@ -4964,7 +4964,7 @@ public class Mailbox {
             doc.setContent(pd.getContent(), pd.getDigest(), volumeId, pd);
             queueForIndexing(doc, false, pd);
 
-            int maxNumRevisions = doc.getAccount().getIntAttr(Provisioning.A_zimbraNotebookMaxNumRevisions, 0);
+            int maxNumRevisions = doc.getAccount().getIntAttr(Provisioning.A_zimbraNotebookMaxRevisions, 0);
             doc.purgeOldRevisions(maxNumRevisions);
             success = true;
             return doc;

@@ -236,6 +236,8 @@ public class Document extends MailItem {
     /* don't delete current blob after every save */
     void markBlobForDeletion() {
     }
+    void markBlobForDeletion(MailboxBlob blob) {
+    }
     
     public synchronized void purgeOldRevisions(int revToKeep) throws ServiceException {
     	if (revToKeep == 0)
@@ -252,7 +254,7 @@ public class Document extends MailItem {
             int revid = (int)rev.getLong(Metadata.FN_REV_ID);
             if (revid == 0)
                 break;
-            markBlobForDeletion(sm.getMailboxBlob(getMailbox(), getId(), revid, getVolumeId()));
+            super.markBlobForDeletion(sm.getMailboxBlob(getMailbox(), getId(), revid, getVolumeId()));
             rev.put(Metadata.FN_REV_ID, 0);
             mRevisionList.mList.set(last, rev.mMap);  // rev is a copy.
         }
