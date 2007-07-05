@@ -31,6 +31,7 @@ package com.zimbra.common.soap;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -565,15 +566,12 @@ public abstract class Element {
             Object existing = attrs.mAttributes.get(key);
             KeyValuePair kvp = attrs.new JSONKeyValuePair(key, value);
 
-            if (existing == null) {
+            if (existing == null)
                 attrs.mAttributes.put(key, kvp);
-            } else if (existing instanceof KeyValuePair) {
-                List<KeyValuePair> pairs = new ArrayList<KeyValuePair>();
-                pairs.add((KeyValuePair) existing);  pairs.add(kvp);
-                attrs.mAttributes.put(key, pairs);
-            } else {
+            else if (existing instanceof KeyValuePair)
+                attrs.mAttributes.put(key, Arrays.asList((KeyValuePair) existing, kvp));
+            else
                 ((List<KeyValuePair>) existing).add(kvp);
-            }
             return kvp;
         }
 
@@ -582,9 +580,9 @@ public abstract class Element {
                 return;
             super.detach(elt);
             Object obj = mAttributes.get(elt.getName());
-            if (obj == elt)
+            if (obj == elt) {
                 mAttributes.remove(elt.getName());
-            else if (obj instanceof List) {
+            } else if (obj instanceof List) {
                 ((List) obj).remove(elt);
                 if (((List) obj).size() == 0)
                     mAttributes.remove(elt.getName());
@@ -845,11 +843,11 @@ public abstract class Element {
                     sb.append('"').append(attr.getKey()).append(indent >= 0 ? "\": " : "\":");
 
                     Object value = attr.getValue();
-                    if (value instanceof String)                       sb.append('"').append(StringUtil.jsEncode(value)).append('"');
+                    if (value instanceof String)                 sb.append('"').append(StringUtil.jsEncode(value)).append('"');
                     else if (value instanceof JSONKeyValuePair)  sb.append(value.toString());
                     else if (value instanceof JSONElement)       ((JSONElement) value).toString(sb, indent);
-                    else if (value instanceof Element)                 sb.append('"').append(StringUtil.jsEncode(value)).append('"');
-                    else if (!(value instanceof List))                 sb.append(value);
+                    else if (value instanceof Element)           sb.append('"').append(StringUtil.jsEncode(value)).append('"');
+                    else if (!(value instanceof List))           sb.append(value);
                     else {
                         sb.append('[');
                         if ((lsize = ((List) value).size()) > 0)
@@ -964,7 +962,7 @@ public abstract class Element {
         }
 
         public KeyValuePair addKeyValuePair(String key, String value, String eltname, String attrname) throws ContainerException {
-            return new XMLKeyValuePair(validateName(key), value, eltname == null ? E_ATTRIBUTE : eltname, attrname == null ? A_ATTR_NAME : attrname);
+            return new XMLKeyValuePair(key, value, eltname == null ? E_ATTRIBUTE : validateName(eltname), attrname == null ? A_ATTR_NAME : validateName(attrname));
         }
 
         private String validateName(String name) throws ContainerException  {
@@ -1191,6 +1189,7 @@ public abstract class Element {
         cn.addKeyValuePair("jobTitle", "CEO");
         cn.addKeyValuePair("firstName", "Satish");
         cn.addKeyValuePair("lastName", "Dharmaraj");
+        cn.addKeyValuePair("foo=bar", "baz=whop");
         return parent;
     }
 }
