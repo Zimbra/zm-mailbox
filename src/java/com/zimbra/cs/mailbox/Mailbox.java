@@ -4774,14 +4774,17 @@ public class Mailbox {
             return;
 
         // get the remote data, skipping anything we've already seen (if applicable)
-        Folder.SyncData fsd = subscription ? getFolderById(octxt, folderId).getSyncData() : null;
+        Folder folder = getFolderById(octxt, folderId);
+        Folder.SyncData fsd = subscription ? folder.getSyncData() : null;
         FeedManager.SubscriptionData sdata = FeedManager.retrieveRemoteDatasource(getAccount(), url, fsd);
-        if (sdata.items.isEmpty())
-            return;
 
         // clear out the folder if we're replacing the previous content
-        if (subscription && sdata.items.get(0) instanceof Invite)
+        if (subscription && (folder.getDefaultView() == MailItem.TYPE_APPOINTMENT || folder.getDefaultView() == MailItem.TYPE_TASK))
             emptyFolder(octxt, folderId, false);
+
+        // if there's nothing to add, we can short-circuit here
+        if (sdata.items.isEmpty())
+            return;
 
         // disable modification conflict checks, as we've already wiped the folder and we may hit an appoinment >1 times
         OperationContext octxtNoConflicts = new OperationContext(octxt).unsetChangeConstraint();
