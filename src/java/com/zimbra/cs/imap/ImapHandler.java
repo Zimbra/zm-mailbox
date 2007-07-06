@@ -965,9 +965,8 @@ public abstract class ImapHandler extends ProtocolHandler {
         // note: not sending back a "* OK [UIDNEXT ....]" response for search folders
         //    6.3.1: "If this is missing, the client can not make any assumptions about the
         //            next unique identifier value."
-        // FIXME: hardcoding "* 0 RECENT"
         sendUntagged(mSelectedFolder.getSize() + " EXISTS");
-        sendUntagged(0 + " RECENT");
+        sendUntagged(mSelectedFolder.getRecentCount() + " RECENT");
         if (mSelectedFolder.getFirstUnread() > 0)
         	sendUntagged("OK [UNSEEN " + mSelectedFolder.getFirstUnread() + ']');
         sendUntagged("OK [UIDVALIDITY " + mSelectedFolder.getUIDValidity() + ']');
@@ -1549,7 +1548,9 @@ public abstract class ImapHandler extends ProtocolHandler {
                     if (append.mFlagNames != null && !append.mFlagNames.isEmpty()) {
                         for (String name : append.mFlagNames) {
                             ImapFlag i4flag = flagset.getByName(name);
-                            if (i4flag == null && !name.startsWith("\\"))
+                            if (!i4flag.mListed)
+                                i4flag = null;
+                            else if (i4flag == null && !name.startsWith("\\"))
                                 i4flag = tagset.getByName(name);
                             if (i4flag == null)
                                 i4flag = tagset.createTag(getContext(), name, newTags);
@@ -2644,7 +2645,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             synchronized (mbox) {
                 for (String name : flagNames) {
                     ImapFlag i4flag = mSelectedFolder.getFlagByName(name);
-                    if (i4flag == null)
+                    if (!i4flag.mListed || i4flag == null)
                         i4flag = mSelectedFolder.getTagset().createTag(getContext(), name, newTags);
                     if (i4flag != null)
                         i4flags.add(i4flag);
@@ -2966,6 +2967,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                 mSelectedFolder.cleanTags();
             }
 
+            int oldRecent = mSelectedFolder.getRecentCount();
             boolean removed = false, received = mSelectedFolder.checkpointSize();
             if (notifyExpunges) {
                 for (Integer index : mSelectedFolder.collapseExpunged()) {
@@ -2986,10 +2988,10 @@ public abstract class ImapHandler extends ProtocolHandler {
             }
             mSelectedFolder.clearDirty();
 
-            // FIXME: not handling RECENT
-
             if (received || removed)
                 sendUntagged(mSelectedFolder.getSize() + " EXISTS");
+            if (received || oldRecent != mSelectedFolder.getRecentCount())
+                sendUntagged(mSelectedFolder.getRecentCount() + " RECENT");
 
             if (flush)
                 flushOutput();

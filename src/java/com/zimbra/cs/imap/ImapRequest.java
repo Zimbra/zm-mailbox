@@ -600,7 +600,7 @@ abstract class ImapRequest {
             else if (key.equals("DRAFT"))       child = new FlagSearch("\\Draft");
             else if (key.equals("FLAGGED"))     child = new FlagSearch("\\Flagged");
             else if (key.equals("RECENT"))      child = new FlagSearch("\\Recent");
-            else if (key.equals("NEW"))         child = new AndOperation(new FlagSearch("\\Seen"), new FlagSearch("\\Recent"));
+            else if (key.equals("NEW"))         child = new AndOperation(new FlagSearch("\\Recent"), new NotOperation(new FlagSearch("\\Seen")));
             else if (key.equals("OLD"))         child = new NotOperation(new FlagSearch("\\Recent"));
             else if (key.equals("SEEN"))        child = new FlagSearch("\\Seen");
             else if (key.equals("UNANSWERED"))  child = new NotOperation(new FlagSearch("\\Answered"));

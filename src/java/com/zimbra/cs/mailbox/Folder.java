@@ -74,6 +74,7 @@ public class Folder extends MailItem {
     private SyncData  mSyncData;
     private int       mImapUIDNEXT;
     private int       mImapMODSEQ;
+    private int       mImapRECENT;
 
     Folder(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         super(mbox, ud);
@@ -132,10 +133,24 @@ public class Folder extends MailItem {
         return mSyncData;
     }
 
+    /** Returns the last assigned item ID in the enclosing Mailbox the last
+     *  time the folder was closed via an IMAP session.  This is used to
+     *  calculate the \Recent flag. */
+    public int getImapRECENT() {
+        return mImapRECENT;
+    }
+
+    /** Returns one higher than the IMAP ID of the last item added to the
+     *  folder.  This is used as the UIDNEXT value when returning the folder
+     *  via IMAP. */
     public int getImapUIDNEXT() {
         return mImapUIDNEXT;
     }
 
+    /** Returns the change number of the last time (a) an item was inserted
+     *  into the folder or (b) an item in the folder had its flags or tags
+     *  changed.  This data is used to enable IMAP client synchronization
+     *  via the CONDSTORE extension. */
     public int getImapMODSEQ() {
         return mImapMODSEQ;
     }
@@ -400,9 +415,9 @@ public class Folder extends MailItem {
         return list;
     }
 
-    /** Updates the number of items in the folder.  Only "leaf node" items in
-     *  the folder are summed; items in subfolders are included only in the
-     *  size of the subfolder.
+    /** Updates the number of items in the folder and their total size.  Only
+     *  "leaf node" items in the folder are summed; items in subfolders are
+     *  included only in the size of the subfolder.
      * @param countDelta  The change in item count, negative or positive.
      * @param sizeDelta   The change in total size, negative or positive. */
     void updateSize(int countDelta, long sizeDelta) throws ServiceException {
@@ -418,6 +433,9 @@ public class Folder extends MailItem {
         mTotalSize = Math.max(0, mTotalSize + sizeDelta);
     }
 
+    /** Sets the number of items in the folder and their total size.
+     * @param count      The folder's new item count.
+     * @param totalSize  The folder's new total size. */
     void setSize(int count, long totalSize) throws ServiceException {
         if (!trackSize() || (count == 0 && totalSize == 0))
             return;
@@ -437,9 +455,19 @@ public class Folder extends MailItem {
             updateHighestMODSEQ();
     }
 
+    /** Sets the folder's MODSEQ change ID highwater mark to the Mailbox's
+     *  current change ID. */
     void updateHighestMODSEQ() throws ServiceException {
         markItemModified(Change.MODIFIED_SIZE);
         mImapMODSEQ = mMailbox.getOperationChangeID();
+    }
+
+    /** Sets the folder's RECENT item ID highwater mark to the Mailbox's
+     *  last assigned item ID. */
+    void checkpointRECENT() throws ServiceException {
+        markItemModified(Change.INTERNAL_ONLY);
+        mImapRECENT = mMailbox.getLastItemId();
+        saveMetadata();
     }
 
     @Override boolean isTaggable()       { return false; }
@@ -563,7 +591,7 @@ public class Folder extends MailItem {
         data.flags       = flags & Flag.FLAGS_FOLDER;
         data.name        = name;
         data.subject     = name;
-        data.metadata    = encodeMetadata(color, attributes, view, null, new SyncData(url), id + 1, 0, mbox.getOperationChangeID());
+        data.metadata    = encodeMetadata(color, attributes, view, null, new SyncData(url), id + 1, 0, mbox.getOperationChangeID(), 0);
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 
@@ -1011,6 +1039,7 @@ public class Folder extends MailItem {
         mTotalSize   = meta.getLong(Metadata.FN_TOTAL_SIZE, 0L);
         mImapUIDNEXT = (int) meta.getLong(Metadata.FN_UIDNEXT, 0);
         mImapMODSEQ  = (int) meta.getLong(Metadata.FN_MODSEQ, 0);
+        mImapRECENT  = (int) meta.getLong(Metadata.FN_RECENT, 0);
 
         if (meta.containsKey(Metadata.FN_URL))
             mSyncData = new SyncData(meta.get(Metadata.FN_URL), meta.get(Metadata.FN_SYNC_GUID, null), meta.getLong(Metadata.FN_SYNC_DATE, 0));
@@ -1026,14 +1055,14 @@ public class Folder extends MailItem {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mAttributes, mDefaultView, mRights, mSyncData, mImapUIDNEXT, mTotalSize, mImapMODSEQ);
+        return encodeMetadata(meta, mColor, mAttributes, mDefaultView, mRights, mSyncData, mImapUIDNEXT, mTotalSize, mImapMODSEQ, mImapRECENT);
     }
 
-    private static String encodeMetadata(byte color, byte attributes, byte hint, ACL rights, SyncData fsd, int uidnext, long totalSize, int modseq) {
-        return encodeMetadata(new Metadata(), color, attributes, hint, rights, fsd, uidnext, totalSize, modseq).toString();
+    private static String encodeMetadata(byte color, byte attributes, byte hint, ACL rights, SyncData fsd, int uidnext, long totalSize, int modseq, int imapRecent) {
+        return encodeMetadata(new Metadata(), color, attributes, hint, rights, fsd, uidnext, totalSize, modseq, imapRecent).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, byte color, byte attributes, byte hint, ACL rights, SyncData fsd, int uidnext, long totalSize, int modseq) {
+    static Metadata encodeMetadata(Metadata meta, byte color, byte attributes, byte hint, ACL rights, SyncData fsd, int uidnext, long totalSize, int modseq, int imapRecent) {
         if (hint != TYPE_UNKNOWN)
             meta.put(Metadata.FN_VIEW, hint);
         if (attributes != 0)
@@ -1044,6 +1073,8 @@ public class Folder extends MailItem {
             meta.put(Metadata.FN_UIDNEXT, uidnext);
         if (modseq > 0)
             meta.put(Metadata.FN_MODSEQ, modseq);
+        if (imapRecent > 0)
+            meta.put(Metadata.FN_RECENT, imapRecent);
         if (rights != null)
             meta.put(Metadata.FN_RIGHTS, rights.encode());
         if (fsd != null && fsd.url != null && !fsd.url.equals("")) {

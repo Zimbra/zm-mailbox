@@ -2185,6 +2185,18 @@ public class Mailbox {
         }
     }
 
+    public synchronized void recordImapSession(int folderId) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("recordImapSession", null);
+            getFolderById(folderId).checkpointRECENT();
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+
     public synchronized List<Integer> getTombstones(int lastSync) throws ServiceException {
         if (!isTrackingSync())
             throw ServiceException.FAILURE("not tracking sync", null);

@@ -130,8 +130,7 @@ public class ImapFlagCache implements Iterable<ImapFlagCache.ImapFlag> {
 
 
     ImapFlag getByName(String name) {
-        ImapFlag i4flag = mNames.get(name.toUpperCase());
-        return (i4flag == null || i4flag.mListed == ImapFlag.HIDDEN ? null : i4flag);
+        return mNames.get(name.toUpperCase());
     }
 
     ImapFlag getByMask(long mask) {

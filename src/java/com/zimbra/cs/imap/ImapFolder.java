@@ -51,6 +51,7 @@ import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -80,10 +81,12 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
 
     private List<ImapMessage>         mSequence;
     private Map<Integer, ImapMessage> mMessageIds;
+    private int                       mRecentCount;
 
     private int mUIDValidityValue;
     private int mInitialUIDNEXT = -1;
     private int mInitialMODSEQ = -1;
+    private int mInitialRECENT = -1;
     private int mInitialFirstUnread = -1;
     private int mLastSize = 0;
 
@@ -130,6 +133,7 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
         mUIDValidityValue = getUIDValidity(folder);
         mInitialUIDNEXT = folder.getImapUIDNEXT();
         mInitialMODSEQ = folder.getImapMODSEQ();
+        mInitialRECENT = folder.getImapRECENT();
 
         // load the folder's contents
         loadFolder(octxt, folder);
@@ -138,6 +142,20 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
         mFlags = ImapFlagCache.getSystemFlags(mMailbox);
         mTags = new ImapFlagCache(mMailbox, octxt);
         return this;
+    }
+
+    @Override
+    public Session unregister() {
+        try {
+            if (isWritable())
+                mMailbox.recordImapSession(mFolderId);
+        } catch (MailServiceException.NoSuchItemException nsie) {
+            // don't log if the session expires because the folder was deleted out from under it
+        } catch (Throwable t) {
+            ZimbraLog.session.warn("exception recording unloaded session's RECENT limit", t);
+        }
+
+        return super.unregister();
     }
 
     private void loadFolder(OperationContext octxt, Folder folder) throws ServiceException {
@@ -313,6 +331,13 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
         return mSequence == null ? 0 : mSequence.size();
     }
 
+    /** Returns the number of messages in the folder that are considered
+     *  \Recent.  These are messages that have been deposited in the folder
+     *  since the last IMAP session that opened the folder. */
+    int getRecentCount() {
+        return isVirtual() ? 0 : mRecentCount;
+    }
+
     /** Returns the search folder query associated with this IMAP folder, or
      *  <tt>""</tt> if the SELECTed folder is not a search folder. */
     String getQuery() {
@@ -478,7 +503,12 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
         if (mSequence == null)
             return null;
         // provide the information missing from the DB search
-        i4msg.sflags |= mFolderId == Mailbox.ID_FOLDER_SPAM ? (byte) (ImapMessage.FLAG_SPAM | ImapMessage.FLAG_JUNKRECORDED) : 0;
+        if (mFolderId == Mailbox.ID_FOLDER_SPAM)
+            i4msg.sflags |= ImapMessage.FLAG_SPAM | ImapMessage.FLAG_JUNKRECORDED;
+        if (i4msg.imapUid > mInitialRECENT) {
+            i4msg.sflags |= ImapMessage.FLAG_RECENT;
+            mRecentCount++;
+        }
         // update the folder information
         mSequence.add(i4msg);
         setIndex(i4msg, mSequence.size());

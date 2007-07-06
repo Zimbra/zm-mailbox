@@ -180,6 +180,10 @@ public class ImapMessage implements Comparable<ImapMessage> {
         }
     }
 
+    int getModseq(MailItem item, ImapFlagCache i4cache) {
+        return Math.max(item.getModifiedSequence(), getFlagModseq(i4cache));
+    }
+
     int getFlagModseq(ImapFlagCache i4cache) {
         int modseq = 0;
         long tagBuffer = tags;
@@ -195,8 +199,21 @@ public class ImapMessage implements Comparable<ImapMessage> {
         return modseq;
     }
 
-    int getModseq(MailItem item, ImapFlagCache i4cache) {
-        return Math.max(item.getModifiedSequence(), getFlagModseq(i4cache));
+    void setPermanentFlags(int f, long t, int changeId, ImapFolder parent) {
+        if (t == tags && (f & IMAP_FLAGS) == (flags & IMAP_FLAGS))
+            return;
+        flags = (f & IMAP_FLAGS) | (flags & ~IMAP_FLAGS);
+        tags  = t;
+        if (parent != null)
+            parent.dirtyMessage(this, changeId);
+    }
+
+    void setSessionFlags(short s, ImapFolder parent) {
+        if ((s & MUTABLE_SESSION_FLAGS) == (sflags & MUTABLE_SESSION_FLAGS))
+            return;
+        sflags = (short) ((s & MUTABLE_SESSION_FLAGS) | (sflags & ~MUTABLE_SESSION_FLAGS));
+        if (parent != null)
+            parent.dirtyMessage(this, -1);
     }
 
     private static final String NO_FLAGS = "FLAGS ()";
@@ -247,21 +264,6 @@ public class ImapMessage implements Comparable<ImapMessage> {
             }
         }
         return result.append(')').toString();
-    }
-    void setPermanentFlags(int f, long t, int changeId, ImapFolder parent) {
-        if (t == tags && (f & IMAP_FLAGS) == (flags & IMAP_FLAGS))
-            return;
-        flags = (f & IMAP_FLAGS) | (flags & ~IMAP_FLAGS);
-        tags  = t;
-        if (parent != null)
-            parent.dirtyMessage(this, changeId);
-    }
-    void setSessionFlags(short s, ImapFolder parent) {
-        if ((s & MUTABLE_SESSION_FLAGS) == (sflags & MUTABLE_SESSION_FLAGS))
-            return;
-        sflags = (short) ((s & MUTABLE_SESSION_FLAGS) | (sflags & ~MUTABLE_SESSION_FLAGS));
-        if (parent != null)
-            parent.dirtyMessage(this, -1);
     }
 
     private static final byte[] NIL = { 'N', 'I', 'L' };
