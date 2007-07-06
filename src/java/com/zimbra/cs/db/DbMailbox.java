@@ -109,6 +109,8 @@ public class DbMailbox {
     throws ServiceException {
         if (comment != null && comment.length() > MAX_COMMENT_LENGTH)
             comment = comment.substring(0, MAX_COMMENT_LENGTH);
+        if (comment != null)
+            removeFromDeletedAccount(conn, comment);
 
         NewMboxId ret = new NewMboxId();
         PreparedStatement stmt = null;
@@ -566,19 +568,130 @@ public class DbMailbox {
         return getDatabaseName(id, gid);
     }
 
+    public static void removeFromDeletedAccount(Connection conn, String email)
+    throws ServiceException {
+        PreparedStatement stmt = null;
+        try {
+            // add the mailbox's account to deleted_account table
+            stmt = conn.prepareStatement("DELETE FROM deleted_account WHERE email = ?");
+            stmt.setString(1, email.toLowerCase());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("deleting row for " + email + " from deleted_account table", e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    private static void addToDeletedAccount(Connection conn, Mailbox mbox) throws ServiceException {
+        // Get email address for mailbox by querying the mailbox table.  We can't get it by
+        // calling mbox.getAccount().getName() because the account was already deleted from LDAP.
+        String email = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT comment FROM mailbox WHERE id = ?");
+            stmt.setInt(1, mbox.getId());
+            rs = stmt.executeQuery();
+            if (rs.next())
+                email = rs.getString(1);
+            else
+                throw ServiceException.FAILURE("no email address found for mailbox " + mbox.getId(), null);
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("getting email address for mailbox " + mbox.getId(), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+
+        removeFromDeletedAccount(conn, email);
+
+        try {
+            // add the mailbox's account to deleted_account table
+            stmt = conn.prepareStatement(
+                    "INSERT INTO deleted_account " +
+                    "(email, account_id, mailbox_id, deleted_at) " +
+                    "SELECT ?, account_id, id, ? FROM mailbox WHERE id = ?");
+            stmt.setString(1, email.toLowerCase());
+            stmt.setLong(2, System.currentTimeMillis() / 1000);
+            stmt.setInt(3, mbox.getId());
+            stmt.executeUpdate();
+            stmt.close();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("marking mailbox " + mbox.getId() + " as deleted", e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    /**
+     * Returns a DeletedAccount object for the given email, if the account for the email
+     * address was previously deleted.  Returns null if account for the email was not
+     * deleted.
+     * @param conn
+     * @param email
+     * @return
+     * @throws ServiceException
+     */
+    public static DeletedAccount getDeletedAccount(Connection conn, String email)
+    throws ServiceException {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement(
+                    "SELECT email, account_id, mailbox_id, deleted_at " +
+                    "FROM deleted_account WHERE email = ?");
+            stmt.setString(1, email.toLowerCase());
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                String emailCol = rs.getString(1);
+                String accountId = rs.getString(2);
+                int mailboxId = rs.getInt(3);
+                long deletedAt = rs.getLong(4) * 1000;
+                return new DeletedAccount(emailCol, accountId, mailboxId, deletedAt);
+            } else {
+                return null;
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("checking if account " + email + " is deleted", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    public static class DeletedAccount {
+        private String mEmail;
+        private String mAccountId;
+        private int mMailboxId;
+        private long mDeletedAt;
+
+        public DeletedAccount(String email, String accountId, int mailboxId, long deletedAt) {
+            mEmail = email;
+            mAccountId = accountId;
+            mMailboxId = mailboxId;
+            mDeletedAt = deletedAt;
+        }
+
+        public String getEmail() { return mEmail; }
+        public String getAccountId() { return mAccountId; }
+        public int getMailboxId() { return mMailboxId; }
+        public long getDeletedAt() { return mDeletedAt; }
+    }
+
     /**
      * Deletes the row for the specified mailbox from the <code>mailbox</code> table.
      *  
      * @throws ServiceException if the database operation failed
      */
     public static void deleteMailbox(Connection conn, Mailbox mbox) throws ServiceException {
+        addToDeletedAccount(conn, mbox);
         PreparedStatement stmt = null;
         try {
             // remove entry from mailbox table
             stmt = conn.prepareStatement("DELETE FROM mailbox WHERE id = ?");
             stmt.setInt(1, mbox.getId());
             stmt.executeUpdate();
-            stmt.close();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("deleting mailbox " + mbox.getId(), e);
         } finally {
