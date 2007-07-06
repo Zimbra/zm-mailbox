@@ -86,9 +86,9 @@ log4j.appender.WBXML.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
 log4j.additivity.zimbra.sync=false
 log4j.logger.zimbra.sync=DEBUG,SYNC
 log4j.additivity.zimbra.synctrace=false
-log4j.logger.zimbra.synctrace=TRACE,SYNCTRACE
+log4j.logger.zimbra.synctrace=INFO,SYNCTRACE
 log4j.additivity.zimbra.syncstate=false
-log4j.logger.zimbra.syncstate=DEBUG,SYNCSTATE
+log4j.logger.zimbra.syncstate=INFO,SYNCSTATE
 log4j.additivity.zimbra.wbxml=false
 log4j.logger.zimbra.wbxml=DEBUG,WBXML
 
