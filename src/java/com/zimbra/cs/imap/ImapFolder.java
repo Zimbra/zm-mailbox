@@ -545,8 +545,10 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
     }
 
     List<String> getFlagList(boolean permanentOnly) {
-        List <String> names = mFlags.listNames(permanentOnly);
-        names.addAll(mTags.listNames(permanentOnly));
+        List<String> names = mFlags.listNames(permanentOnly);
+        for (String tagname : mTags.listNames(permanentOnly))
+            if (mFlags.getByName(tagname) == null)
+                names.add(tagname);
         return names;
     }
 

@@ -237,8 +237,12 @@ public class ImapMessage implements Comparable<ImapMessage> {
             long mask = 1L << i;
             if ((tagBuffer & mask) != 0) {
                 ImapFlag i4flag = i4folder.getTagByMask(mask);
-                if (i4flag != null)
-                    result.append(result.length() == empty ? "" : " ").append(i4flag);
+                if (i4flag != null) {
+                    // make sure there's no naming conflict with a system flag like "Forwarded" or "NonJunk"
+                    ImapFlag other = i4folder.getFlagByName(i4flag.mImapName);
+                    if (other == null || other == i4flag)
+                        result.append(result.length() == empty ? "" : " ").append(i4flag);
+                }
                 tagBuffer &= ~mask;
             }
         }

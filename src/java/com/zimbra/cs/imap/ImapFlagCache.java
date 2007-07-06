@@ -25,6 +25,7 @@
 package com.zimbra.cs.imap;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -138,6 +139,9 @@ public class ImapFlagCache implements Iterable<ImapFlagCache.ImapFlag> {
     }
 
     List<String> listNames(boolean permanentOnly) {
+        if (mNames.isEmpty())
+            return Collections.emptyList();
+
         List<String> names = new ArrayList<String>();
         for (Map.Entry<String, ImapFlag> entry : mNames.entrySet()) {
             ImapFlag i4flag = entry.getValue();
