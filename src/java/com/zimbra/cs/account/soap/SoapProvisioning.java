@@ -1401,7 +1401,7 @@ public class SoapProvisioning extends Provisioning {
         ds.addAttribute(AccountConstants.A_TYPE, dsType.name());
         addAttrElements(ds, attrs);
         Element response = invoke(req).getElement(AccountConstants.E_DATA_SOURCE);
-        return new SoapDataSource(response);
+        return new SoapDataSource(account, response);
     }
 
     @Override
@@ -1425,7 +1425,7 @@ public class SoapProvisioning extends Provisioning {
         req.addElement(AdminConstants.E_ID).setText(account.getId());
         Element resp = invoke(req);
         for (Element dataSource: resp.listElements(AccountConstants.E_DATA_SOURCE)) {
-            result.add(new SoapDataSource(dataSource));
+            result.add(new SoapDataSource(account, dataSource));
         }
         return result;        
     }

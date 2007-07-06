@@ -56,6 +56,8 @@ public class DataSource extends NamedEntry implements Comparable {
     private static final String SIMPLE_CLASS_NAME =
         StringUtil.getSimpleClassName(DataSource.class.getName());
     
+    private final String mAcctId;
+    
     public enum Type {
         pop3, imap;
         
@@ -84,9 +86,17 @@ public class DataSource extends NamedEntry implements Comparable {
     
     private Type mType;
 
-    public DataSource(Type type, String name, String id, Map<String, Object> attrs) {
+    public DataSource(Account acct, Type type, String name, String id, Map<String, Object> attrs) {
         super(name, id, attrs, null);
         mType = type;
+        mAcctId = acct.getId();
+    }
+    
+    /*
+     * get account of the data source
+     */
+    public Account getAccount() throws ServiceException {
+        return Provisioning.getInstance().get(Provisioning.AccountBy.id, mAcctId);
     }
     
     public Type getType() {

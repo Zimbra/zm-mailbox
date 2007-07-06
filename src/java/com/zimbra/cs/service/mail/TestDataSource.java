@@ -105,7 +105,7 @@ public class TestDataSource extends MailDocumentHandler {
         testAttrs.put(Provisioning.A_zimbraDataSourcePassword, DataSource.encryptData(testId, password));
         
         // Perform test and assemble response
-        DataSource ds = new DataSource(type, "Test", testId, testAttrs);
+        DataSource ds = new DataSource(account, type, "Test", testId, testAttrs);
         Element response = zsc.createElement(MailConstants.TEST_DATA_SOURCE_RESPONSE);
         if (type == DataSource.Type.imap) {
             eDataSource = response.addElement(MailConstants.E_DS_IMAP);

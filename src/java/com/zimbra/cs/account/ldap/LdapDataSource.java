@@ -26,6 +26,7 @@
 package com.zimbra.cs.account.ldap;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 
@@ -59,11 +60,12 @@ import javax.naming.directory.Attributes;
      
      private String mDn;
 
-    LdapDataSource(String dn, Attributes attrs) throws NamingException, ServiceException {
-        super(getObjectType(attrs),
-                LdapUtil.getAttrString(attrs, Provisioning.A_zimbraDataSourceName),
-                LdapUtil.getAttrString(attrs, Provisioning.A_zimbraDataSourceId),                
-                LdapUtil.getAttrs(attrs));
+    LdapDataSource(Account acct, String dn, Attributes attrs) throws NamingException, ServiceException {
+        super(acct, 
+              getObjectType(attrs),
+              LdapUtil.getAttrString(attrs, Provisioning.A_zimbraDataSourceName),
+              LdapUtil.getAttrString(attrs, Provisioning.A_zimbraDataSourceId),                
+              LdapUtil.getAttrs(attrs));
         mDn = dn;
     }
 
