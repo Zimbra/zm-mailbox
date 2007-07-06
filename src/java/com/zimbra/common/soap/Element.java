@@ -566,12 +566,15 @@ public abstract class Element {
             Object existing = attrs.mAttributes.get(key);
             KeyValuePair kvp = attrs.new JSONKeyValuePair(key, value);
 
-            if (existing == null)
+            if (existing == null) {
                 attrs.mAttributes.put(key, kvp);
-            else if (existing instanceof KeyValuePair)
-                attrs.mAttributes.put(key, Arrays.asList((KeyValuePair) existing, kvp));
-            else
+            } else if (existing instanceof KeyValuePair) {
+                List<KeyValuePair> pairs = new ArrayList<KeyValuePair>();
+                pairs.add((KeyValuePair) existing);  pairs.add(kvp);
+                attrs.mAttributes.put(key, pairs);
+            } else {
                 ((List<KeyValuePair>) existing).add(kvp);
+            }
             return kvp;
         }
 
