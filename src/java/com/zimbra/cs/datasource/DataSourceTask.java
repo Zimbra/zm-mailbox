@@ -24,13 +24,13 @@
  */
 package com.zimbra.cs.datasource;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
-import com.zimbra.cs.db.DbScheduledTask;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.ScheduledTask;
@@ -70,27 +70,32 @@ extends ScheduledTask {
         ZimbraLog.addMboxToContext(getMailboxId());
         ZimbraLog.datasource.debug("Running scheduled import for DataSource %s",
             getDataSourceId());
+        Mailbox mbox = null;
         
-        // Look up mailbox
-        Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-        Account account = mbox.getAccount();
-        
-        // Look up account and data source
-        Provisioning prov = Provisioning.getInstance();
-        DataSource ds = prov.get(account, DataSourceBy.id, getDataSourceId());
-        if (ds == null) {
-            ZimbraLog.datasource.info(
-                "DataSource %s was deleted.  Terminating scheduled import.", getDataSourceId());
-            DbScheduledTask.deleteTask(getClass().getName(), getDataSourceId());
+        try {
+            // Look up mailbox, account and data source
+            mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
+            Account account = mbox.getAccount();
+            Provisioning prov = Provisioning.getInstance();
+            DataSource ds = prov.get(account, DataSourceBy.id, getDataSourceId());
+            if (ds != null) {
+                // Do the work
+                ZimbraLog.addDataSourceNameToContext(ds.getName());
+                DataSourceManager.importData(account, ds);
+            } else {
+                ZimbraLog.datasource.info("DataSource %s was deleted.  Cancelling future tasks.",
+                    getDataSourceId());
+                DataSourceManager.cancelTask(mbox, getDataSourceId());
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.datasource.warn("Scheduled DataSource import failed.  Cancelling future tasks.", e);
+            DataSourceManager.cancelTask(mbox, getDataSourceId());
             return null;
         }
-        ZimbraLog.addDataSourceNameToContext(ds.getName());
-        
-        // Do the work
-        DataSourceManager.importData(account, ds);
         
         ZimbraLog.removeDataSourceNameFromContext();
         ZimbraLog.removeMboxFromContext(getMailboxId());
+
         return null;
     }
 }

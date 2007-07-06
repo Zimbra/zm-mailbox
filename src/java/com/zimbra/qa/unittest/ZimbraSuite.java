@@ -83,7 +83,8 @@ public class ZimbraSuite extends TestSuite
         TestSendAndReceive.class,
         TestConnectionPool.class,
         TestLmtp.class,
-        TestMimeHandler.class
+        TestMimeHandler.class,
+        TestScheduledTaskManager.class
         
         // xxx bburtin: Commenting out IMAP tests, since the new schema hasn't been
         // checked in

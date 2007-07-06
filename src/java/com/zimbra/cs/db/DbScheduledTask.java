@@ -64,11 +64,7 @@ public class DbScheduledTask {
                 "VALUES (?, ?, ?, ?, ?, ?)");
             stmt.setString(1, task.getClass().getName());
             stmt.setString(2, task.getName());
-            if (task.getMailboxId() > 0) {
-                stmt.setInt(3, task.getMailboxId());
-            } else {
-                stmt.setNull(3, Types.INTEGER);
-            }
+            stmt.setInt(3, task.getMailboxId());
             stmt.setTimestamp(4, DbUtil.dateToTimestamp(task.getExecTime()));
             if (task.getIntervalMillis() > 0) {
                 stmt.setLong(5, task.getIntervalMillis());
@@ -180,11 +176,7 @@ public class DbScheduledTask {
                 "UPDATE  " + TABLE_SCHEDULED_TASK  +
                 " SET mailbox_id = ?, exec_time = ?, interval_millis = ?, metadata = ? " +
                 "WHERE class_name = ? AND name = ?");
-            if (task.getMailboxId() > 0) {
-                stmt.setInt(1, task.getMailboxId());
-            } else {
-                stmt.setNull(1, Types.INTEGER);
-            }
+            stmt.setInt(1, task.getMailboxId());
             stmt.setTimestamp(2, DbUtil.dateToTimestamp(task.getExecTime()));
             if (task.getIntervalMillis() > 0) {
                 stmt.setLong(3, task.getIntervalMillis());

@@ -168,5 +168,8 @@ public class ModifyDataSource extends MailDocumentHandler {
         value = eDataSource.getAttribute(MailConstants.A_DS_REPLYTO_DISPLAY, null);
         if (value != null)
             dsAttrs.put(Provisioning.A_zimbraPrefReplyToDisplay, value);
+        value = eDataSource.getAttribute(MailConstants.A_DS_POLLING_INTERVAL, null);
+        if (value != null)
+            dsAttrs.put(Provisioning.A_zimbraDataSourcePollingInterval, value);
     }
 }

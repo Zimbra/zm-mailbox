@@ -35,6 +35,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class DeleteDataSource extends AdminDocumentHandler {
@@ -67,6 +68,8 @@ public class DeleteDataSource extends AdminDocumentHandler {
         String dsId = dsEl.getAttribute(AccountConstants.A_ID);
         Provisioning.getInstance().deleteDataSource(account, dsId);
 
+        DataSourceManager.updateSchedule(account.getId(), dsId);
+        
         Element response = zsc.createElement(AdminConstants.DELETE_DATA_SOURCE_RESPONSE);
         return response;
     }
