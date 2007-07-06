@@ -3615,6 +3615,8 @@ public class Mailbox {
         Blob blob = null;
         MailboxBlob mboxBlob = null;
         boolean success = false;
+        Folder folder = null;
+        
         try {
             beginTransaction("addMessage", octxt, redoRecorder);
             if (isRedo)
@@ -3630,7 +3632,7 @@ public class Mailbox {
             flags &= ~(Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
             flags |= pm.getPriorityBitmask();
 
-            Folder folder  = getFolderById(folderId);
+            folder  = getFolderById(folderId);
             String subject = pm.getNormalizedSubject();
             long   tags    = Tag.tagsToBitmask(tagStr);
 
@@ -3826,8 +3828,11 @@ public class Mailbox {
         if (isSent && checkDuplicates)
             mSentMessageIDs.put(msgidHeader, new Integer(msg.getId()));
 
-        if (msg != null)
-            ZimbraLog.mailbox.info("Added message: id=%d, digest=%s", msg.getId(), digest);
+        if (msg != null) {
+            String folderName = (folder == null ? "undefined" : folder.getName());
+            ZimbraLog.mailbox.info("Added message: id=%d, digest=%s, folderId=%d, folderName=%s",
+                msg.getId(), digest, folderId, folderName);
+        }
         return msg;
     }
 
