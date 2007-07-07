@@ -468,6 +468,19 @@ public class Mailbox {
     }
 
 
+    public synchronized List<Session> getListeners(Session.Type stype) {
+        if (mListeners.isEmpty())
+            return Collections.emptyList();
+        else if (stype == null)
+            return new ArrayList<Session>(mListeners);
+
+        List<Session> sessions = new ArrayList<Session>(mListeners.size());
+        for (Session s : mListeners)
+            if (s.getType() == stype)
+                sessions.add(s);
+        return sessions;
+    }
+
     /** Adds a {@link Session} to the set of listeners notified on Mailbox
      *  changes.
      * 

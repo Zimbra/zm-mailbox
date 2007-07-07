@@ -68,7 +68,7 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 
-class ImapFolder extends Session implements Iterable<ImapMessage> {
+public class ImapFolder extends Session implements Iterable<ImapMessage> {
     public static final long IMAP_IDLE_TIMEOUT_MSEC = 30 * Constants.MILLIS_PER_MINUTE;
 
     static final byte SELECT_READONLY  = 0x01;
@@ -146,6 +146,14 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
 
     @Override
     public Session unregister() {
+        snapshotRECENT();
+        return super.unregister();
+    }
+
+    /** If the folder is selected READ-WRITE, updates its highwater RECENT
+     *  change ID so that subsequent IMAP sessions do not see the loaded
+     *  messages as \Recent. */
+    private void snapshotRECENT() {
         try {
             if (isWritable())
                 mMailbox.recordImapSession(mFolderId);
@@ -154,8 +162,6 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
         } catch (Throwable t) {
             ZimbraLog.session.warn("exception recording unloaded session's RECENT limit", t);
         }
-
-        return super.unregister();
     }
 
     private void loadFolder(OperationContext octxt, Folder folder) throws ServiceException {
@@ -199,7 +205,7 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
             mSequence = new ArrayList<ImapMessage>();
             StringBuilder added = debug ? new StringBuilder("  ** added: ") : null;
             for (ImapMessage i4msg : i4list) {
-                cache(i4msg);
+                cache(i4msg, i4msg.imapUid > mInitialRECENT);
                 if (mInitialFirstUnread == -1 && (i4msg.flags & Flag.BITMASK_UNREAD) != 0)
                     mInitialFirstUnread = i4msg.sequence;
                 if (debug)  added.append(' ').append(i4msg.msgId);
@@ -261,23 +267,33 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
         if (folder.getId() != mFolderId)
             throw ServiceException.INVALID_REQUEST("folder IDs do not match (was " + mFolderId + ", is " + folder.getId() + ')', null);
 
+        snapshotRECENT();
+
         mWritable = (params & SELECT_READONLY) == 0 && mPath.isWritable();
         if ((params & SELECT_CONDSTORE) != 0)
             mCredentials.activateExtension(ActivatedExtension.CONDSTORE);
 
         mUIDValidityValue = getUIDValidity(folder);
         mInitialUIDNEXT = folder.getImapUIDNEXT();
-        mInitialMODSEQ  = folder.getImapMODSEQ();
+        mInitialMODSEQ = folder.getImapMODSEQ();
+        mInitialRECENT = folder.getImapRECENT();
 
         mNotificationsSuspended = false;
         mDirtyMessages.clear();
         collapseExpunged();
 
+        mRecentCount = 0;
         mInitialFirstUnread = -1;
         for (ImapMessage i4msg : mSequence) {
             if (mInitialFirstUnread == -1 && (i4msg.flags & Flag.BITMASK_UNREAD) != 0)
                 mInitialFirstUnread = i4msg.sequence;
             i4msg.setAdded(false);
+            // reset the \Recent flag appropriately
+            if (i4msg.imapUid > mInitialRECENT) {
+                i4msg.sflags |= ImapMessage.FLAG_RECENT;  mRecentCount++;
+            } else {
+                i4msg.sflags &= ~ImapMessage.FLAG_RECENT;
+            }
         }
 
         mLastSize = mSequence.size();
@@ -320,7 +336,7 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
     }
 
     /** Returns the selected folder's zimbra ID. */
-    int getId() {
+    public int getId() {
         return mFolderId;
     }
 
@@ -390,7 +406,7 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
     }
 
     /** Returns whether this folder was opened for write. */
-    boolean isWritable() {
+    public boolean isWritable() {
         return mWritable;
     }
 
@@ -499,15 +515,14 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
      *  the folder's {@link #mSequence} message list and inserted into the
      *  {@link #mMessageIds} hash (if the latter hash has been instantiated).
      * @return the passed-in ImapMessage. */
-    ImapMessage cache(ImapMessage i4msg) {
+    ImapMessage cache(ImapMessage i4msg, boolean recent) {
         if (mSequence == null)
             return null;
         // provide the information missing from the DB search
         if (mFolderId == Mailbox.ID_FOLDER_SPAM)
             i4msg.sflags |= ImapMessage.FLAG_SPAM | ImapMessage.FLAG_JUNKRECORDED;
-        if (i4msg.imapUid > mInitialRECENT) {
-            i4msg.sflags |= ImapMessage.FLAG_RECENT;
-            mRecentCount++;
+        if (recent) {
+            i4msg.sflags |= ImapMessage.FLAG_RECENT;  mRecentCount++;
         }
         // update the folder information
         mSequence.add(i4msg);
@@ -528,6 +543,8 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
         if (mMessageIds != null)
             mMessageIds.remove(new Integer(i4msg.msgId));
         mDirtyMessages.remove(new Integer(i4msg.imapUid));
+        if ((i4msg.sflags & ImapMessage.FLAG_RECENT) != 0)
+            mRecentCount--;
     }
 
 
@@ -822,14 +839,24 @@ class ImapFolder extends Session implements Iterable<ImapMessage> {
 
         // add new messages to the currently selected mailbox
         if (mSequence != null && added != null && !added.isEmpty()) {
-            added.sort();
             boolean debug = ZimbraLog.imap.isDebugEnabled();
+
+            added.sort();
+            boolean recent = true;
+            for (Session s : mMailbox.getListeners(Session.Type.IMAP)) {
+                ImapFolder i4folder = (ImapFolder) s;
+                if (i4folder == this) {
+                    break;
+                } else if (i4folder.isWritable() && i4folder.getId() == mFolderId) {
+                    recent = false;  break;
+                }
+            }
 
             if (!added.numbered.isEmpty()) {
                 // if messages have acceptable UIDs, just add 'em
                 StringBuilder addlog = debug ? new StringBuilder("  ** adding messages (ntfn):") : null;
                 for (ImapMessage i4msg : added.numbered) {
-                    cache(i4msg);
+                    cache(i4msg, recent);
                     if (debug)  addlog.append(' ').append(i4msg.msgId);
                     i4msg.setAdded(true);
                     dirtyMessage(i4msg, changeId);

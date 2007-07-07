@@ -1456,7 +1456,10 @@ public abstract class ImapHandler extends ProtocolHandler {
                 Folder folder = ((Mailbox) mboxobj).getFolderByPath(getContext(), path.asZimbraPath());
 
                 messages = folder.getSize();
-                recent = 0;
+                if (mSelectedFolder != null && path.isEquivalent(mSelectedFolder.getPath()))
+                    recent = mSelectedFolder.getRecentCount();
+                else
+                    recent = 0;
                 uidnext = folder instanceof SearchFolder ? -1 : folder.getImapUIDNEXT();
                 uvv = ImapFolder.getUIDValidity(folder);
                 unread = folder.getUnreadCount();

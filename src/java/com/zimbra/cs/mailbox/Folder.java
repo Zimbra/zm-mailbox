@@ -38,6 +38,8 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.filter.RuleManager;
+import com.zimbra.cs.imap.ImapFolder;
+import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
@@ -134,9 +136,15 @@ public class Folder extends MailItem {
     }
 
     /** Returns the last assigned item ID in the enclosing Mailbox the last
-     *  time the folder was closed via an IMAP session.  This is used to
-     *  calculate the \Recent flag. */
+     *  time the folder was accessed via a read/write IMAP session.  If there
+     *  is such a session already active, returns the last item ID in the
+     *  Mailbox.  This value is used to calculate the \Recent flag. */
     public int getImapRECENT() {
+        for (Session s : mMailbox.getListeners(Session.Type.IMAP)) {
+            ImapFolder i4folder = (ImapFolder) s;
+            if (i4folder.getId() == mId && i4folder.isWritable())
+                return mMailbox.getLastItemId();
+        }
         return mImapRECENT;
     }
 
@@ -465,6 +473,9 @@ public class Folder extends MailItem {
     /** Sets the folder's RECENT item ID highwater mark to the Mailbox's
      *  last assigned item ID. */
     void checkpointRECENT() throws ServiceException {
+        if (mImapRECENT == mMailbox.getLastItemId())
+            return;
+
         markItemModified(Change.INTERNAL_ONLY);
         mImapRECENT = mMailbox.getLastItemId();
         saveMetadata();
