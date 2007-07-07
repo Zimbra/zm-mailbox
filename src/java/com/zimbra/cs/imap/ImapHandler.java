@@ -1658,13 +1658,19 @@ public abstract class ImapHandler extends ProtocolHandler {
                 ParsedMessage pm = append.mDate != null ? new ParsedMessage(append.mContent, append.mDate.getTime(), idxAttach) :
                                                           new ParsedMessage(append.mContent, idxAttach);
                 try {
+                    pm.analyze();
+                } catch (ServiceException e) {
+                    ZimbraLog.imap.warn("could not completely extract text from APPENDed message; continuing", e);
+                }
+
+                try {
                     if (!pm.getSender().equals("")) {
                         InternetAddress ia = new InternetAddress(pm.getSender());
                         if (AccountUtil.addressMatchesAccount(mbox.getAccount(), ia.getAddress()))
                             append.flags |= Flag.BITMASK_FROM_ME;
                     }
                 } catch (Exception e) { }
-    
+
                 Message msg = mbox.addMessage(getContext(), pm, folder.getId(), true, append.flags, Tag.bitmaskToTags(append.tags));
                 if (msg != null && append.sflags != 0 && getState() == ImapHandler.State.SELECTED) {
                     ImapMessage i4msg = getSelectedFolder().getById(msg.getId());
