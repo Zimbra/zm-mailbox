@@ -2240,6 +2240,32 @@ public class DbMailItem {
         }
     }
 
+    public static int countImapRecent(Folder folder) throws ServiceException {
+        Mailbox mbox = folder.getMailbox();
+
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT COUNT(*) FROM " + getMailItemTableName(folder.getMailbox()) +
+                        " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type IN " + IMAP_TYPES +
+                        " AND (imap_id IS NULL OR imap_id = 0 OR imap_id > ?)");
+            int pos = 1;
+            stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, folder.getId());
+            stmt.setInt(pos++, folder.getImapRECENT());
+            rs = stmt.executeQuery();
+
+            return (rs.next() ? rs.getInt(1) : 0);
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("counting IMAP \\Recent messages: " + folder.getPath(), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+
     private static final String POP3_FIELDS = "mi.id, mi.size, mi.blob_digest";
     private static final String POP3_TYPES = "(" + MailItem.TYPE_MESSAGE + ")";
 

@@ -269,14 +269,15 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
 
         snapshotRECENT();
 
-        mWritable = (params & SELECT_READONLY) == 0 && mPath.isWritable();
-        if ((params & SELECT_CONDSTORE) != 0)
-            mCredentials.activateExtension(ActivatedExtension.CONDSTORE);
-
         mUIDValidityValue = getUIDValidity(folder);
         mInitialUIDNEXT = folder.getImapUIDNEXT();
         mInitialMODSEQ = folder.getImapMODSEQ();
         mInitialRECENT = folder.getImapRECENT();
+
+        // in order to avoid screwing up the RECENT value, this must come after snapshotRECENT() and folder.getImapRECENT()
+        mWritable = (params & SELECT_READONLY) == 0 && mPath.isWritable();
+        if ((params & SELECT_CONDSTORE) != 0)
+            mCredentials.activateExtension(ActivatedExtension.CONDSTORE);
 
         mNotificationsSuspended = false;
         mDirtyMessages.clear();

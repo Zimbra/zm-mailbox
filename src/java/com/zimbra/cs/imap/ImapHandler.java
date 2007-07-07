@@ -1453,13 +1453,18 @@ public abstract class ImapHandler extends ProtocolHandler {
             int messages, recent, uidnext, uvv, unread, modseq;
             Object mboxobj = path.getOwnerMailbox();
             if (mboxobj instanceof Mailbox) {
-                Folder folder = ((Mailbox) mboxobj).getFolderByPath(getContext(), path.asZimbraPath());
+                Mailbox mbox = (Mailbox) mboxobj;
+                Folder folder = mbox.getFolderByPath(getContext(), path.asZimbraPath());
 
                 messages = folder.getSize();
-                if (mSelectedFolder != null && path.isEquivalent(mSelectedFolder.getPath()))
+                if ((status & STATUS_RECENT) == 0)
+                    recent = -1;
+                else if (messages == 0)
+                    recent = 0;
+                else if (mSelectedFolder != null && path.isEquivalent(mSelectedFolder.getPath()))
                     recent = mSelectedFolder.getRecentCount();
                 else
-                    recent = 0;
+                    recent = mbox.countImapRecent(getContext(), folder.getId());
                 uidnext = folder instanceof SearchFolder ? -1 : folder.getImapUIDNEXT();
                 uvv = ImapFolder.getUIDValidity(folder);
                 unread = folder.getUnreadCount();
@@ -1481,7 +1486,6 @@ public abstract class ImapHandler extends ProtocolHandler {
 
             if (messages >= 0 && (status & STATUS_MESSAGES) != 0)
                 data.append(data.length() > 0 ? " " : "").append("MESSAGES ").append(messages);
-            // FIXME: hardcoded "RECENT 0"
             if (recent >= 0 && (status & STATUS_RECENT) != 0)
                 data.append(data.length() > 0 ? " " : "").append("RECENT ").append(recent);
             // note: we're not supporting UIDNEXT for search folders; see the comments in selectFolder()

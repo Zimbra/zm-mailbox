@@ -2161,6 +2161,20 @@ public class Mailbox {
         }
     }
 
+    public synchronized int countImapRecent(OperationContext octxt, int folderId) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("openImapFolder", octxt);
+
+            Folder folder = (Folder) checkAccess(getFolderById(folderId));
+            int recent = DbMailItem.countImapRecent(folder);
+            success = true;
+            return recent;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
 
     public synchronized void beginTrackingImap() throws ServiceException {
         if (isTrackingImap())
