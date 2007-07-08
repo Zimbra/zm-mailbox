@@ -1256,9 +1256,12 @@ public abstract class MailItem implements Comparable<MailItem> {
     void setImapUid(int imapId) throws ServiceException {
         if (mData.imapId == imapId)
             return;
+
         markItemModified(Change.MODIFIED_IMAP_UID);
         mData.imapId = imapId;
         DbMailItem.saveImapUid(this);
+
+        getFolder().updateUIDNEXT();
     }
 
     Blob setContent(byte[] data, String digest, short volumeId, Object content)

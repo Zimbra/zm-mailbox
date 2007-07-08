@@ -434,8 +434,7 @@ public class Folder extends MailItem {
         // if we go negative, that's OK!  just pretend we're at 0.
         markItemModified(Change.MODIFIED_SIZE);
         if (countDelta > 0) {
-            mImapUIDNEXT = mMailbox.getLastItemId() + 1;
-            mImapMODSEQ = mMailbox.getOperationChangeID();
+            updateUIDNEXT();  updateHighestMODSEQ();
         }
         mData.size = Math.max(0, mData.size + countDelta);
         mTotalSize = Math.max(0, mTotalSize + sizeDelta);
@@ -449,8 +448,7 @@ public class Folder extends MailItem {
             return;
         markItemModified(Change.MODIFIED_SIZE);
         if (count > mData.size) {
-            mImapUIDNEXT = mMailbox.getLastItemId() + 1;
-            mImapMODSEQ = mMailbox.getOperationChangeID();
+            updateUIDNEXT();  updateHighestMODSEQ();
         }
         mData.size = count;
         mTotalSize = totalSize;
@@ -463,11 +461,24 @@ public class Folder extends MailItem {
             updateHighestMODSEQ();
     }
 
+    /** Sets the folder's UIDNEXT item ID highwater mark to one more than
+     *  the Mailbox's last assigned item ID. */
+    void updateUIDNEXT() {
+        int uidnext = mMailbox.getLastItemId() + 1;
+        if (mImapUIDNEXT < uidnext) {
+            markItemModified(Change.MODIFIED_SIZE);
+            mImapUIDNEXT = uidnext;
+        }
+    }
+
     /** Sets the folder's MODSEQ change ID highwater mark to the Mailbox's
      *  current change ID. */
     void updateHighestMODSEQ() throws ServiceException {
-        markItemModified(Change.MODIFIED_SIZE);
-        mImapMODSEQ = mMailbox.getOperationChangeID();
+        int modseq = mMailbox.getOperationChangeID();
+        if (mImapMODSEQ < modseq) {
+            markItemModified(Change.MODIFIED_SIZE);
+            mImapMODSEQ = modseq;
+        }
     }
 
     /** Sets the folder's RECENT item ID highwater mark to the Mailbox's
