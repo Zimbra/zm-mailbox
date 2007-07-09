@@ -130,13 +130,16 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
         Folder folder = mMailbox.getFolderByPath(octxt, mPath.asZimbraPath());
         mFolderId = folder.getId();
 
+        // need mInitialRecent to be set *before* loading the folder so we can determine what's \Recent
         mUIDValidityValue = getUIDValidity(folder);
-        mInitialUIDNEXT = folder.getImapUIDNEXT();
-        mInitialMODSEQ = folder.getImapMODSEQ();
         mInitialRECENT = folder.getImapRECENT();
 
         // load the folder's contents
         loadFolder(octxt, folder);
+
+        // need these to be set *after* loading the folder because UID renumbering affects them
+        mInitialUIDNEXT = folder.getImapUIDNEXT();
+        mInitialMODSEQ = folder.getImapMODSEQ();
 
         // initialize the flag and tag caches
         mFlags = ImapFlagCache.getSystemFlags(mMailbox);

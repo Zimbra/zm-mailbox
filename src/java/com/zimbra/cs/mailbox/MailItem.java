@@ -1259,9 +1259,12 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         markItemModified(Change.MODIFIED_IMAP_UID);
         mData.imapId = imapId;
+        mData.metadataChanged(mMailbox);
         DbMailItem.saveImapUid(this);
 
-        getFolder().updateUIDNEXT();
+        Folder folder = getFolder();
+        folder.updateUIDNEXT();
+        folder.updateHighestMODSEQ();
     }
 
     Blob setContent(byte[] data, String digest, short volumeId, Object content)
@@ -1829,10 +1832,11 @@ public abstract class MailItem implements Comparable<MailItem> {
      *        hold the item
      *    <li><tt>service.FAILURE</tt> - if there's a database failure
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
-     *        permissions</ul> */
-    void move(Folder target) throws ServiceException {
+     *        permissions</ul>
+     * @return whether anything was actually moved */
+    boolean move(Folder target) throws ServiceException {
         if (mData.folderId == target.getId())
-            return;
+            return false;
         markItemModified(Change.MODIFIED_FOLDER);
         if (!isMovable())
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
@@ -1864,6 +1868,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         DbMailItem.setFolder(this, target);
         folderChanged(target, 0);
+        return true;
     }
 
     /** Records all relevant changes to the in-memory object for when an item

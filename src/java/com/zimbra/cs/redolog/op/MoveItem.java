@@ -48,6 +48,7 @@ public class MoveItem extends RedoableOp {
     private byte mType;
 	private int mDestId;
     private String mConstraint;
+    private int mUIDNEXT = Mailbox.ID_AUTO_INCREMENT;
 
 	public MoveItem() {
         mType = MailItem.TYPE_UNKNOWN;
@@ -63,6 +64,14 @@ public class MoveItem extends RedoableOp {
         mConstraint = (tcon == null ? null : tcon.toString());
 	}
 
+    public void setUIDNEXT(int uidnext) {
+        mUIDNEXT = (uidnext > 0 ? uidnext : Mailbox.ID_AUTO_INCREMENT);
+    }
+
+    public int getUIDNEXT() {
+        return mUIDNEXT;
+    }
+
 	public int getOpCode() {
 		return OP_MOVE_ITEM;
 	}
@@ -73,6 +82,8 @@ public class MoveItem extends RedoableOp {
         sb.append(", dest=").append(mDestId);
         if (mConstraint != null)
             sb.append(", constraint=").append(mConstraint);
+        if (mUIDNEXT != Mailbox.ID_AUTO_INCREMENT)
+            sb.append(", uidnext=").append(mUIDNEXT);
         return sb.toString();
 	}
 
@@ -88,6 +99,8 @@ public class MoveItem extends RedoableOp {
         if (mIds != null)
             for (int i = 0; i < mIds.length; i++)
                 out.writeInt(mIds[i]);
+        if (getVersion().atLeast(1, 16))
+            out.writeInt(mUIDNEXT);
 	}
 
 	protected void deserializeData(RedoLogInput in) throws IOException {
@@ -103,6 +116,8 @@ public class MoveItem extends RedoableOp {
             for (int i = 0; i < mIds.length; i++)
                 mIds[i] = in.readInt();
         }
+        if (getVersion().atLeast(1, 16))
+            mUIDNEXT = in.readInt();
 	}
 
 	public void redo() throws Exception {

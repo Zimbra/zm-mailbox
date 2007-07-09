@@ -4247,12 +4247,49 @@ public class Mailbox {
         }
     }
 
+    /** Moves an item from one folder into another in the same Mailbox.  The
+     *  target folder may not be a {@link Mountpoint} or {@link SearchFolder}.
+     *  To move an item between Mailboxes, you must do the copy by hand, then
+     *  remove the original.
+     *  
+     * @perms {@link ACL#RIGHT_INSERT} on the target folder,
+     *        {@link ACL#RIGHT_DELETE} on the source folder
+     * @param octxt     The context for this request (e.g. auth user id).
+     * @param itemId    The ID of the item to move.
+     * @param type      The type of the item or {@link MailItem#TYPE_UNKNOWN}.
+     * @param targetId  The ID of the target folder for the move. */
     public synchronized void move(OperationContext octxt, int itemId, byte type, int targetId) throws ServiceException {
         move(octxt, new int[] { itemId }, type, targetId, null);
     }
+
+    /** Moves an item from one folder into another in the same Mailbox.  The
+     *  target folder may not be a {@link Mountpoint} or {@link SearchFolder}.
+     *  To move an item between Mailboxes, you must do the copy by hand, then
+     *  remove the original.
+     *  
+     * @perms {@link ACL#RIGHT_INSERT} on the target folder,
+     *        {@link ACL#RIGHT_DELETE} on the source folder
+     * @param octxt     The context for this request (e.g. auth user id).
+     * @param itemId    The ID of the item to move.
+     * @param type      The type of the item or {@link MailItem#TYPE_UNKNOWN}.
+     * @param targetId  The ID of the target folder for the move.
+     * @param tcon      An optional constraint on the item being moved. */
     public synchronized void move(OperationContext octxt, int itemId, byte type, int targetId, TargetConstraint tcon) throws ServiceException {
         move(octxt, new int[] { itemId }, type, targetId, tcon);
     }
+
+    /** Moves a set of items into a given folder in the same Mailbox.  The
+     *  target folder may not be a {@link Mountpoint} or {@link SearchFolder}.
+     *  To move items between Mailboxes, you must do the copy by hand, then
+     *  remove the originals.
+     *  
+     * @perms {@link ACL#RIGHT_INSERT} on the target folder,
+     *        {@link ACL#RIGHT_DELETE} on all the the source folders
+     * @param octxt     The context for this request (e.g. auth user id).
+     * @param itemId    A list of the IDs of the items to move.
+     * @param type      The type of the items or {@link MailItem#TYPE_UNKNOWN}.
+     * @param targetId  The ID of the target folder for the move.
+     * @param tcon      An optional constraint on the items being moved. */
     public synchronized void move(OperationContext octxt, int[] itemIds, byte type, int targetId, TargetConstraint tcon) throws ServiceException {
         MoveItem redoRecorder = new MoveItem(mId, itemIds, type, targetId, tcon);
 
@@ -4267,8 +4304,23 @@ public class Mailbox {
             for (MailItem item : items)
                 checkItemChangeID(item);
 
-            for (MailItem item : items)
-                item.move(target);
+            int oldUIDNEXT = target.getImapUIDNEXT();
+            boolean resetUIDNEXT = false;
+
+            for (MailItem item : items) {
+                // do the move...
+                boolean moved = item.move(target);
+                // ...and determine whether the move needs to cause an UIDNEXT change
+                if (moved && !resetUIDNEXT && isTrackingImap() && (item instanceof Conversation || item instanceof Message || item instanceof Contact))
+                    resetUIDNEXT = true;
+            }
+
+            // if this operation should cause the target folder's UIDNEXT value to change but it hasn't yet, do it here
+            if (resetUIDNEXT && oldUIDNEXT == target.getImapUIDNEXT()) {
+                MoveItem redoPlayer = (MoveItem) mCurrentChange.getRedoPlayer();
+                redoRecorder.setUIDNEXT(getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getUIDNEXT()));
+                target.updateUIDNEXT();
+            }
             success = true;
         } finally {
             endTransaction(success);

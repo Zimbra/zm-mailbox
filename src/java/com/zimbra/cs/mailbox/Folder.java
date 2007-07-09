@@ -802,10 +802,10 @@ public class Folder extends MailItem {
      * @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *        {@link ACL#RIGHT_DELETE} on the folder being moved */
     @Override
-    protected void move(Folder target) throws ServiceException {
+    boolean move(Folder target) throws ServiceException {
         markItemModified(Change.MODIFIED_FOLDER | Change.MODIFIED_PARENT);
         if (mData.folderId == target.getId())
-            return;
+            return false;
         if (!isMovable())
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
         if (!canAccess(ACL.RIGHT_DELETE))
@@ -832,6 +832,8 @@ public class Folder extends MailItem {
         mData.metadataChanged(mMailbox);
         
         RuleManager.getInstance().folderRenamed(getAccount(), originalPath, getPath());
+
+        return true;
     }
 
     @Override

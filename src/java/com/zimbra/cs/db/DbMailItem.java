@@ -798,9 +798,11 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
-                        " SET imap_id = ? WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
+                        " SET imap_id = ?, mod_metadata = ?, change_date = ? WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setInt(pos++, item.getImapUid());
+            stmt.setInt(pos++, mbox.getOperationChangeID());
+            stmt.setInt(pos++, mbox.getOperationTimestamp());
             stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();

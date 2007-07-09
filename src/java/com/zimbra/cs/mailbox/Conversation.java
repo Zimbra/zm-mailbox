@@ -545,7 +545,7 @@ public class Conversation extends MailItem {
      * @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *        {@link ACL#RIGHT_DELETE} on the messages' source folders */
     @Override
-    void move(Folder target) throws ServiceException {
+    boolean move(Folder target) throws ServiceException {
         if (!target.canContain(TYPE_MESSAGE))
             throw MailServiceException.CANNOT_CONTAIN();
         markItemModified(Change.UNMODIFIED);
@@ -612,6 +612,8 @@ public class Conversation extends MailItem {
                 detach();
             DbMailItem.setFolder(moved, target);
         }
+
+        return !moved.isEmpty();
     }
 
     /** please call this *after* adding the child row to the DB */
