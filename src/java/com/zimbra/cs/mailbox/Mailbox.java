@@ -3186,8 +3186,10 @@ public class Mailbox {
 
             // allocate IDs for all of the passed-in invites (and the calendar item!) if necessary
             if (redoPlayer == null || redoPlayer.getCalendarItemId() == 0) {
-                assert(defaultInv.mInv.getMailItemId() == 0);
-                defaultInv.mInv.setInviteId(getNextItemId(Mailbox.ID_AUTO_INCREMENT));
+                if (defaultInv != null) {
+                    assert(defaultInv.mInv.getMailItemId() == 0);
+                    defaultInv.mInv.setInviteId(getNextItemId(Mailbox.ID_AUTO_INCREMENT));
+                }
                 if (exceptions != null) {
                     for (SetCalendarItemData sad : exceptions)
                         sad.mInv.setMailItemId(getNextItemId(Mailbox.ID_AUTO_INCREMENT));
@@ -3197,33 +3199,50 @@ public class Mailbox {
 
             short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
 
-            // handle the DEFAULT calendar item
-            CalendarItem calItem = getCalendarItemByUid(defaultInv.mInv.getUid());
-            boolean calItemIsNew = calItem == null;
-            if (calItemIsNew) {
-                // ONLY create an calendar item if this is a REQUEST method...otherwise don't.
-                if (defaultInv.mInv.getMethod().equals("REQUEST") || defaultInv.mInv.getMethod().equals("PUBLISH")) {
-                    calItem = createCalendarItem(folderId, volumeId, flags, tags, defaultInv.mInv.getUid(), defaultInv.mPm, defaultInv.mInv);
-                } else {
-//                      mLog.info("Mailbox " + getId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c not a REQUEST and no CalendarItem could be found");
-                    return 0; // for now, just ignore this Invitation
+            // Make a single list containing default and exceptions.
+            int scidLen = (defaultInv != null ? 1 : 0) + (exceptions != null ? exceptions.length : 0);
+            List<SetCalendarItemData> scidList = new ArrayList<SetCalendarItemData>(scidLen);
+            if (defaultInv != null)
+                scidList.add(defaultInv);
+            if (exceptions != null) {
+                for (SetCalendarItemData scid : exceptions) {
+                    scidList.add(scid);
                 }
-            } else {
-                calItem.setTags(flags, tags);
-                calItem.processNewInvite(defaultInv.mPm, defaultInv.mInv, defaultInv.mForce, folderId, volumeId, true);
             }
 
-            redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId(), volumeId);
-            
-            // handle the exceptions!
-            if (exceptions != null) {
-                for (SetCalendarItemData sad : exceptions)
-                    calItem.processNewInvite(sad.mPm, sad.mInv, sad.mForce, folderId, volumeId);
+            boolean first = true;
+            CalendarItem calItem = null;
+            boolean calItemIsNew = true;
+            for (SetCalendarItemData scid : scidList) {
+                if (first) {
+                    // usually the default invite
+                    first = false;
+                    calItem = getCalendarItemByUid(scid.mInv.getUid());
+                    calItemIsNew = calItem == null;
+                    if (calItemIsNew) {
+                        // ONLY create an calendar item if this is a REQUEST method...otherwise don't.
+                        String method = scid.mInv.getMethod();
+                        if ("REQUEST".equals(method) || "PUBLISH".equals(method)) {
+                            calItem = createCalendarItem(
+                                    folderId, volumeId, flags, tags,
+                                    scid.mInv.getUid(), scid.mPm, scid.mInv);
+                        } else {
+                            return 0; // for now, just ignore this Invitation
+                        }
+                    } else {
+                        calItem.setTags(flags, tags);
+                        calItem.processNewInvite(scid.mPm, scid.mInv, scid.mForce, folderId, volumeId, true);
+                    }
+                    redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId(), volumeId);
+                } else {
+                    // exceptions
+                    calItem.processNewInvite(scid.mPm, scid.mInv, scid.mForce, folderId, volumeId);
                 }
+            }
 
             // Override replies list if one is provided.
             // Null list means keep existing replies.  Empty list means to clear existing replies.
-            // List with one or more replies means replacing exisitng replies.
+            // List with one or more replies means replacing existing replies.
             if (replies != null)
                 calItem.setReplies(replies);
 

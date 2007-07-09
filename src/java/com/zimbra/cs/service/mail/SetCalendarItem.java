@@ -108,9 +108,10 @@ public class SetCalendarItem extends CalendarRequest {
                     parsed.defaultInv, parsed.exceptions, parsed.replies);
 
             Element response = getResponseElement(zsc);
-            
-            response.addElement(MailConstants.A_DEFAULT).
-                addAttribute(MailConstants.A_ID, ifmt.formatItemId(parsed.defaultInv.mInv.getMailItemId()));
+
+            if (parsed.defaultInv != null)
+                response.addElement(MailConstants.A_DEFAULT).
+                    addAttribute(MailConstants.A_ID, ifmt.formatItemId(parsed.defaultInv.mInv.getMailItemId()));
             
             if (parsed.exceptions != null) {
 	            for (SetCalendarItemData cur : parsed.exceptions) {
@@ -121,7 +122,7 @@ public class SetCalendarItem extends CalendarRequest {
             }
             String itemId = ifmt.formatItemId(calItemId);
             response.addAttribute(MailConstants.A_CAL_ID, itemId);
-            if (parsed.defaultInv.mInv.isEvent())
+            if (parsed.isEvent)
                 response.addAttribute(MailConstants.A_APPT_ID_DEPRECATE_ME, itemId);  // for backward compat
             
             return response;
@@ -187,6 +188,7 @@ public class SetCalendarItem extends CalendarRequest {
         public SetCalendarItemData defaultInv;
         public SetCalendarItemData[] exceptions;
         public List<ReplyInfo> replies;
+        public boolean isEvent;
     }
 
     public static SetCalendarItemParseResult parseSetAppointmentRequest(Element request, ZimbraSoapContext zsc, OperationContext octxt, byte itemType, boolean parseIds)
@@ -196,23 +198,32 @@ public class SetCalendarItem extends CalendarRequest {
 
         SetCalendarItemParseResult result = new SetCalendarItemParseResult();
         ArrayList<SetCalendarItemData> exceptions = new ArrayList<SetCalendarItemData>();
+        Invite defInv = null;
 
         // First, the <default>
         {
-            Element e = request.getElement(MailConstants.A_DEFAULT);
-            result.defaultInv = getSetCalendarItemData(zsc, octxt, acct, mbox, e, new SetCalendarItemInviteParser(false, false, itemType));
+            Element e = request.getOptionalElement(MailConstants.A_DEFAULT);
+            if (e != null) {
+                result.defaultInv = getSetCalendarItemData(zsc, octxt, acct, mbox, e, new SetCalendarItemInviteParser(false, false, itemType));
+                if (defInv == null)
+                    defInv = result.defaultInv.mInv;
+            }
         }
         
         // for each <except>
         for (Element e : request.listElements(MailConstants.E_CAL_EXCEPT)) {
             SetCalendarItemData exDat = getSetCalendarItemData(zsc, octxt, acct, mbox, e, new SetCalendarItemInviteParser(true, false, itemType));
             exceptions.add(exDat);
+            if (defInv == null)
+                defInv = exDat.mInv;
         }
 
         // for each <cancel>
         for (Element e : request.listElements(MailConstants.E_CAL_CANCEL)) {
             SetCalendarItemData exDat = getSetCalendarItemData(zsc, octxt, acct, mbox, e, new SetCalendarItemInviteParser(true, true, itemType));
             exceptions.add(exDat);
+            if (defInv == null)
+                defInv = exDat.mInv;
         }
 
         if (exceptions.size() > 0) {
@@ -223,7 +234,9 @@ public class SetCalendarItem extends CalendarRequest {
         // <replies>
         Element repliesElem = request.getOptionalElement(MailConstants.E_CAL_REPLIES);
         if (repliesElem != null)
-            result.replies = CalendarUtils.parseReplyList(repliesElem, result.defaultInv.mInv.getTimeZoneMap());
+            result.replies = CalendarUtils.parseReplyList(repliesElem, defInv.getTimeZoneMap());
+
+        result.isEvent = defInv.isEvent();
 
         return result;
     }

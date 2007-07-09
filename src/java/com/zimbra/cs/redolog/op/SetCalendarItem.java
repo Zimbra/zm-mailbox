@@ -133,11 +133,16 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
             out.writeInt(mFlags);
             out.writeLong(mTags);
         }
-        
-        try {
-            serializeSetCalendarItemData(out, mDefaultInvite);
-        } catch(MessagingException me) { 
-            throw new IOException("Caught MessagingException trying to serialize Default invite: "+me);
+
+        boolean hasDefaultInvite = mDefaultInvite != null;
+        if (getVersion().atLeast(1, 17))
+            out.writeBoolean(hasDefaultInvite);
+        if (hasDefaultInvite) {
+            try {
+                serializeSetCalendarItemData(out, mDefaultInvite);
+            } catch(MessagingException me) { 
+                throw new IOException("Caught MessagingException trying to serialize Default invite: "+me);
+            }
         }
         
         if (mExceptions == null) {
@@ -184,18 +189,26 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
             mFlags = in.readInt();
             mTags = in.readLong();
         }
-        
+
+        Invite tzmapInv = null;
+        boolean hasDefaultInvite = true;
+        if (getVersion().atLeast(1, 17))
+            hasDefaultInvite = in.readBoolean();
         try {
-            mDefaultInvite = deserializeSetCalendarItemData(in, mAttachmentIndexingEnabled);
-            
+            if (hasDefaultInvite) {
+                mDefaultInvite = deserializeSetCalendarItemData(in, mAttachmentIndexingEnabled);
+                if (tzmapInv == null)
+                    tzmapInv = mDefaultInvite.mInv;
+            }
             int numExceptions = in.readInt();
             if (numExceptions > 0) {
                 mExceptions = new Mailbox.SetCalendarItemData[numExceptions];
                 for (int i = 0; i < numExceptions; i++){
                     mExceptions[i] = deserializeSetCalendarItemData(in, mAttachmentIndexingEnabled);
+                    if (tzmapInv == null)
+                        tzmapInv = mExceptions[i].mInv;
                 }
             }
-        
         } catch (MessagingException ex) {
             ex.printStackTrace();
             throw new IOException("Cannot read serialized entry for SetCalendarItem"+ex.toString());
@@ -208,7 +221,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
                 mReplies = null;
             } else {
                 mReplies = new ArrayList<ReplyInfo>(num);
-                TimeZoneMap tzMap = mDefaultInvite.mInv.getTimeZoneMap();
+                TimeZoneMap tzMap = tzmapInv.getTimeZoneMap();
                 for (int i = 0; i < num; i++) {
                     String data = in.readUTF();
                     try {
@@ -309,7 +322,9 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
             toRet.append(", flags=").append(mFlags);
             toRet.append(", tags=").append(mTags);
         }
-        toRet.append(", default=").append(mDefaultInvite.toString()).append("\n");
+        toRet.append("\n");
+        if (mDefaultInvite != null)
+            toRet.append("Default=").append(mDefaultInvite.toString()).append("\n");
         if (mExceptions != null) {
             for (int i = 0; i < mExceptions.length; i++) {
                 toRet.append("Exception").append(i).append("=").append(mExceptions[i].toString()).append("\n");
