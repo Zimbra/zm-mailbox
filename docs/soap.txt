@@ -2015,7 +2015,7 @@ for op="update", caller can specify any or all of: l="{folder}", t="{tag-list}",
 
 ----------
 
-<ImportContactsRequest ct="{content-type}" [l="{folder-id}"]>
+<ImportContactsRequest ct="{content-type}" [l="{folder-id}"] [csvfmt="{csv-format}"]>
   <content [aid="{attach-upload-id}"]>...</content>
 </ImportContactsRequest>
 
@@ -2027,12 +2027,15 @@ for op="update", caller can specify any or all of: l="{folder}", t="{tag-list}",
 {folder-id} = optional folder id to import contacts into
 
 {attach-upload-id} = attachment id from upload server. If specified, then body of content is ignored.
+{csv-format} = the format of csv being imported.  when it's not defined Zimbra
+               format is assumed.  the supported formats are defined in
+               $ZIMBRA_HOME/conf/zimbra-contact-fields.xml
 
 TODO: should have an option on import that matches email addresses to existing contacts, and updates/ignores them.
 
 ----------
 
-<ExportContactsRequest ct="{content-type}" [l="{folder-id}"]/>
+<ExportContactsRequest ct="{content-type}" [l="{folder-id}"] [csvfmt="{csv-format}"]/>
 
 <ExportContactsResponse>
   <content>...</content>
@@ -2040,6 +2043,8 @@ TODO: should have an option on import that matches email addresses to existing c
 
 {content-type} = currently, the only supported content type is "csv" (comma-separated values)
 {folder-id} = optional folder id to export contacts from
+{csv-format} = optional csv format for exported contacts.  the supported formats
+               are defined in $ZIMBRA_HOME/conf/zimbra-contact-fields.xml
 
 ----------
 

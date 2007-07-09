@@ -450,7 +450,7 @@ public class ContactCSV {
 
     /**
      */
-    private void initFields(BufferedReader reader) throws IOException, ParseException {
+    private void initFields(BufferedReader reader, String fmt) throws IOException, ParseException {
         mFields = new ArrayList<String>();
 
         if (!parseLine(reader, mFields, true))
@@ -459,7 +459,7 @@ public class ContactCSV {
         // create mapping from CSV field name to column
         mFieldCols = new HashMap<String, Integer>(mFields.size());
         for (int i = 0; i < mFields.size(); i++) {
-            String fieldName = mFields.get(i);
+            String fieldName = translateCsvColumnNameToZimbraColumnName(fmt, mFields.get(i));
             if (fieldName == null || fieldName.equals(""))
                 throw new ParseException("missing column name for column " + i);
             mFieldCols.put(fieldName.toLowerCase(), i);
@@ -558,16 +558,9 @@ public class ContactCSV {
         return contact;
     }
 
-    /**
-     * return a list of maps, representing contacts
-     * @param r
-     * @return
-     * @throws ParseException 
-     * @throws IOException 
-     */
-    private List<Map<String, String>> getContactsInternal(BufferedReader reader) throws ParseException {
+    private List<Map<String, String>> getContactsInternal(BufferedReader reader, String fmt) throws ParseException {
         try {
-            initFields(reader);
+            initFields(reader, fmt);
 
             List<Map<String, String>> result = new ArrayList<Map<String, String>>();
             List<String> fields = new ArrayList<String>();
@@ -585,14 +578,15 @@ public class ContactCSV {
 
     /**
      * return a list of maps, representing contacts
-     * @param r
+     * @param reader
+     * @param fmt
      * @return
      * @throws ParseException 
      * @throws IOException 
      */
-    public static List<Map<String, String>> getContacts(BufferedReader reader) throws ParseException {
+    public static List<Map<String, String>> getContacts(BufferedReader reader, String fmt) throws ParseException {
         ContactCSV csv = new ContactCSV();
-        return csv.getContactsInternal(reader);
+        return csv.getContactsInternal(reader, fmt);
     }
     
     private static void addFieldDef(String field, StringBuffer sb) {
@@ -675,7 +669,7 @@ public class ContactCSV {
         BufferedReader reader = new BufferedReader(new FileReader(fileName));
         //ContactCSV csv = new ContactCSV();
         
-        List<Map<String, String>> list = ContactCSV.getContacts(reader);
+        List<Map<String, String>> list = ContactCSV.getContacts(reader, null);
 
         for (int n = 0; n < list.size(); n++) {
             Map<String, String> contact = list.get(n);
@@ -733,14 +727,21 @@ public class ContactCSV {
         String name;
         String flag;
         List<CsvColumn> columns;
+        Map<String,String> forwardMapping;
+        Map<String,String> reverseMapping;
         
         CsvFormat(Element fmt) {
             name = fmt.attributeValue(ATTR_NAME);
             flag = fmt.attributeValue(ATTR_FLAG);
             columns = new ArrayList<CsvColumn>();
+            forwardMapping = new HashMap<String,String>();
+            reverseMapping = new HashMap<String,String>();
         }
         void add(Element col) {
-            columns.add(new CsvColumn(col));
+            CsvColumn newColumn = new CsvColumn(col);
+            columns.add(newColumn);
+            forwardMapping.put(newColumn.name,  newColumn.field);
+            reverseMapping.put(newColumn.field, newColumn.name);
         }
     }
     
@@ -809,7 +810,7 @@ public class ContactCSV {
     }
 
     private static void addFieldValue(Map contact, String name, String field, StringBuffer sb) {
-        String value = (String) contact.get(field);
+        String value = (String) contact.get((field == null) ? name : field);
         if (value == null) value = "";
         sb.append('"');
         sb.append(value.replaceAll("\"", "\"\""));
@@ -838,6 +839,21 @@ public class ContactCSV {
             first = false;
         }
         sb.append("\n");
+    }
+    
+    private String translateCsvColumnNameToZimbraColumnName(String fmt, String csvColumnName) throws ParseException {
+        if (fmt != null && !fmt.equals("")) {
+            for (CsvFormat f : mKnownFormats)
+                if (f.name.equals(fmt)) {
+                    String zimbraColumnName = f.forwardMapping.get(csvColumnName);
+                    if (zimbraColumnName == null)
+                        return csvColumnName;
+                    ZimbraLog.misc.error(csvColumnName + " -> " + zimbraColumnName);
+                    return zimbraColumnName;
+                }
+            throw new ParseException("unknown format: "+fmt);
+        }
+        return csvColumnName;
     }
     
     private static void writeLine(OutputStream out, String line) throws IOException {

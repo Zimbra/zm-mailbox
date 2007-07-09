@@ -92,7 +92,8 @@ public class CsvFormatter extends Formatter {
     public void saveCallback(byte[] body, Context context, String contentType, Folder folder, String filename) throws UserServletException, ServiceException {
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(body), "UTF-8"));
-            List<Map<String, String>> contacts = ContactCSV.getContacts(reader);
+            String format = context.req.getParameter(UserServlet.QP_CSVFORMAT);
+            List<Map<String, String>> contacts = ContactCSV.getContacts(reader, format);
             ItemId iidFolder = new ItemId(folder);
             ImportContacts.ImportCsvContacts(context.opContext, context.targetMailbox, iidFolder, contacts, null);
         } catch (ContactCSV.ParseException e) {

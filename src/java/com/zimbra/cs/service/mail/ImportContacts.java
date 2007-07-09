@@ -75,6 +75,7 @@ public class ImportContacts extends MailDocumentHandler  {
         if (!ct.equals("csv"))
             throw ServiceException.INVALID_REQUEST("unsupported content type: " + ct, null);
         
+        String format = request.getAttribute(MailConstants.A_CSVFORMAT, null);
         Element content = request.getElement(MailConstants.E_CONTENT);
         List<Map<String, String>> contacts = null;
         List<Upload> uploads = null;
@@ -86,7 +87,7 @@ public class ImportContacts extends MailDocumentHandler  {
             else
                 reader = parseUploadedContent(zsc, attachment, uploads = new ArrayList<Upload>());
             
-            contacts = ContactCSV.getContacts(reader);
+            contacts = ContactCSV.getContacts(reader, format);
             reader.close();
         } catch (IOException e) {
             throw MailServiceException.UNABLE_TO_IMPORT_CONTACTS(e.getMessage(), e);
