@@ -102,6 +102,15 @@ public class MimeCompoundHeader {
         }
     }
 
+    /** Printable ASCII characters that must be quoted in parameter values and avoided in parameter names. */
+    private static final boolean[] TSPECIALS = new boolean[128];
+        static {
+            TSPECIALS['('] = TSPECIALS[')'] = TSPECIALS['<'] = TSPECIALS['>']  = true;
+            TSPECIALS[','] = TSPECIALS[';'] = TSPECIALS[':'] = TSPECIALS['\\'] = true;
+            TSPECIALS['/'] = TSPECIALS['['] = TSPECIALS[']'] = TSPECIALS['?']  = true;
+            TSPECIALS['@'] = TSPECIALS['"'] = TSPECIALS['='] = TSPECIALS[' ']  = true;
+        }
+
     private String mValue;
     private Map<String, String> mParams = new LinkedHashMap<String, String>();
     private boolean use2231Encoding;
@@ -151,7 +160,7 @@ public class MimeCompoundHeader {
                 } else if (c == ';') {
                     rfc2231.saveParameter(mParams);
                     rfc2231.setState(RFC2231State.PARAM);
-                } else if (c != ' ' && c != '\t') {
+                } else if (c > 0x20 && c < 0xFF && !TSPECIALS[c]) {
                     rfc2231.addKeyChar(c);
                 }
             } else if (rfc2231.state == RFC2231State.VALUE) {
@@ -218,6 +227,16 @@ public class MimeCompoundHeader {
     public boolean containsParameter(String name)  { return mParams.containsKey(name); }
     public String getParameter(String name)        { return mParams.get(name); }
     public MimeCompoundHeader setParameter(String name, String value) {
+        // massage the parameter name intil it's valid
+        if (name != null) {
+            name = name.trim();
+            for (int i = 0; i < name.length(); i++) {
+                char c = name.charAt(i);
+                if (c <= 0x20 || c >= 0xFF || TSPECIALS[c])
+                    name = name.substring(0, i) + name.substring(i-- + 1);
+            }
+        }
+
         if (value == null)
             mParams.remove(name);
         else
@@ -227,14 +246,6 @@ public class MimeCompoundHeader {
 
     public Iterator<Map.Entry<String, String>> getParameterIterator()  { return mParams.entrySet().iterator(); }
 
-    private static final int LINE_WRAP_LENGTH = 76;
-    private static final boolean[] TSPECIALS = new boolean[128];
-        static {
-            TSPECIALS['('] = TSPECIALS[')'] = TSPECIALS['<'] = TSPECIALS['>']  = true;
-            TSPECIALS[','] = TSPECIALS[';'] = TSPECIALS[':'] = TSPECIALS['\\'] = true;
-            TSPECIALS['/'] = TSPECIALS['['] = TSPECIALS[']'] = TSPECIALS['?']  = true;
-            TSPECIALS['@'] = TSPECIALS['"'] = TSPECIALS['='] = TSPECIALS[' ']  = true;
-        }
     // special subclass of URLCodec that replaces ' ' with "%20" rather than with "+"
     private static class URLEncoder extends URLCodec {
         private static final BitSet WWW_URL = (BitSet) WWW_FORM_URL.clone();
@@ -244,6 +255,8 @@ public class MimeCompoundHeader {
     private static class QEncoder extends QCodec {
         private QEncoder()  { super();  setEncodeBlanks(true); }
     }
+
+    private static final int LINE_WRAP_LENGTH = 76;
 
     public String toString()                   { return toString(null, 0); }
     public String toString(String hdrName)     { return toString(hdrName, 0); }
@@ -385,7 +398,8 @@ public class MimeCompoundHeader {
         mch = new ContentDisposition(mch.toString());
         System.out.println(mch.toString("Content-Disposition"));
 
-        mch = new ContentDisposition("attachment; filename=\"Ramkumar Venkatesan (resume\n  #21730).DOC\"\n");
+        mch = new ContentDisposition("attachment; filename=\"Ramkumar Venkatesan (resume\n  #21730).DOC\";\\nbroken=true\n");
+        mch.setParameter(null, "foo").setParameter("", "foo").setParameter("   ", "foo").setParameter(" [bar \n baz@\n{whop}\t\r", "foo");
         System.out.println(mch.toString("Content-Disposition"));
 
         mch = new ContentType("application/x-stuff; title*0*=us-ascii'en'This%20is%20even%20more%20; title*1*=%2A%2A%2Afun%2A%2A%2A%20; title*2=\"isn't it!\"\n");
