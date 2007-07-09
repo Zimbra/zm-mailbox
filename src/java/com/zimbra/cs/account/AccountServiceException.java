@@ -177,7 +177,7 @@ public class AccountServiceException extends ServiceException {
     }
 
     public static AccountServiceException ACCOUNT_EXISTS(String name) {
-        return new AccountServiceException("account already exists: "+name, ACCOUNT_EXISTS, SENDERS_FAULT, null);
+        return new AccountServiceException("email address already exists: "+name, ACCOUNT_EXISTS, SENDERS_FAULT, null);
     }
 
     public static AccountServiceException DOMAIN_EXISTS(String name) {
@@ -193,7 +193,7 @@ public class AccountServiceException extends ServiceException {
     }
 
     public static AccountServiceException DISTRIBUTION_LIST_EXISTS(String name) {
-        return new AccountServiceException("distribution list already exists: " + name, DISTRIBUTION_LIST_EXISTS, SENDERS_FAULT, null);
+        return new AccountServiceException("email address already exists: " + name, DISTRIBUTION_LIST_EXISTS, SENDERS_FAULT, null);
     }
     
     public static AccountServiceException IDENTITY_EXISTS(String name) {
