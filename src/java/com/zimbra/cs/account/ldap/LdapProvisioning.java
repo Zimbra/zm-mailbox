@@ -1837,6 +1837,137 @@ public class LdapProvisioning extends Provisioning {
         }
     }
     
+    public void renameDomain(String zimbraId, String newName) throws ServiceException {
+        newName = newName.toLowerCase().trim();
+        validDomainName(newName);
+        
+        DirContext ctxt = null;
+        Domain oldDomain = getDomainById(zimbraId, ctxt);
+        if (oldDomain == null)
+           throw AccountServiceException.NO_SUCH_DOMAIN(zimbraId);
+        
+        // 1. Lock the old domain
+        // lockDomain(oldDomain);  TODO
+        
+        // 2. create the new domain
+        //
+        // Get existing domain attributes
+        Map<String, Object> domainAttrs = oldDomain.getAttrs(false);
+        
+        // remove attributes that are not needed for createDomain
+        domainAttrs.remove(A_o);
+        domainAttrs.remove(A_dc);
+        domainAttrs.remove(A_objectClass);
+        domainAttrs.remove(A_zimbraId);  // use a new zimbraId so getDomainById of the old domain will not return this half baked domain
+        domainAttrs.remove(A_zimbraDomainName);
+        domainAttrs.remove(A_zimbraMailStatus);
+        // domainAttrs.remove(A_zimbraDomainStatus); // the new domain is created locked, TODO
+        
+        Domain newDomain = createDomain(newName, domainAttrs);
+        
+        // 3. Disable the new domain until all entries are moved
+        //
+        // lockDomain(newDomain); TODO
+        
+        
+        // 4. move all accounts and DLs over to the new domain
+        //
+        String[] parts;
+        String newLocal;
+        String newEmail;  
+            
+        List dls = getAllDistributionLists(oldDomain);
+        for (Iterator it = dls.iterator(); it.hasNext();) {
+            DistributionList dl = (DistributionList)it.next();
+            parts = EmailUtil.getLocalPartAndDomain(dl.getName());
+            if (parts == null)
+                throw ServiceException.FAILURE("encountered invalid dl name " + dl.getName(), null);
+            newLocal = parts[0];
+            newEmail = newLocal + "@" + newName;   
+            renameAccount(dl.getId(), newEmail);
+         }
+        
+        List accts = getAllAccounts(oldDomain);
+        for (Iterator it=accts.iterator(); it.hasNext(); ) {
+            Account acct = (Account)it.next();
+            parts = EmailUtil.getLocalPartAndDomain(acct.getName());
+            if (parts == null)
+                throw ServiceException.FAILURE("encountered invalid account name " + acct.getName(), null);
+            newLocal = parts[0];
+            newEmail = newLocal + "@" + newName;   
+            renameAccount(acct.getId(), newEmail);
+        }
+        
+        
+        // 5. Delete the old domain
+        deleteDomain(zimbraId);
+        
+        // 6. restore zimbraId to the id of the old domain
+        HashMap<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(A_zimbraId, zimbraId);
+        modifyAttrsInternal(newDomain, ctxt, attrs);
+
+
+        
+        // 7. Unlock the new domain
+        // unlockDomain(newDomain);  TODO
+        
+        
+    }
+    
+    /*
+        
+ public void renameDomain(String zimbraId, String newName) throws ServiceException {
+        DirContext ctxt = null;
+        Domain oldDomain = getDomainById(zimbraId, ctxt);
+         if (oldDomain == null)
+            throw AccountServiceException.NO_SUCH_DOMAIN(zimbraId);
+        
+        // 1. Disable the old domain
+        disableDomain(oldDomain);
+        
+        // 2. create the new domain
+        //
+        // Get existing domain attributes
+        Map<String, Object> domainAttrs = oldDomain.getAttrs(false);
+        
+        // preserve attributes that need to be carried to the new domain
+        String[] keys = domainAttrs.keySet().toArray(new String[0]);
+        for (int i = 0; i < keys.length; i++) {
+            String name = keys[i];
+            if (!name.contains(AP_zimbra) ||
+                (name.equals(A_zimbraId) || name.equals(A_zimbraDomainName) || name.equals(A_zimbraMailStatus)))
+                domainAttrs.remove(name);
+        }
+        Domain newDomain = createDomain(newName, domainAttrs);
+        
+        // 3. Disable the new domain until all entries are moved
+        //
+        disableDomain(newDomain);
+                
+        // 4. move all accounts over to the new domain
+        //
+        List accts = getAllAccounts(oldDomain);
+        for (Iterator ait=accts.iterator(); ait.hasNext(); ) {
+            Account acct = (Account) ait.next();
+            String[] parts = EmailUtil.getLocalPartAndDomain(acct.getName());
+            if (parts == null)
+                throw ServiceException.FAILURE("encountered invalid account name " + acct.getName(), null);
+            String newLocal = parts[0];
+            String newAcctName = newLocal + "@" + newName;   
+            renameAccount(acct.getId(), newAcctName);
+         }
+        
+        // X. Enable the new domain
+        enableDomain(newDomain);
+       
+        throw ServiceException.FAILURE("LDAP renameDomain is not yet fully implemented" + zimbraId, null);
+ 
+    }
+   
+    */  
+    
+    
     public void deleteCos(String zimbraId) throws ServiceException {
         LdapCos c = (LdapCos) get(CosBy.id, zimbraId);
         if (c == null)
