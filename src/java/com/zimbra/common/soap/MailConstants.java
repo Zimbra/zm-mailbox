@@ -452,6 +452,7 @@ public class MailConstants {
     public static final String A_APPT_FREEBUSY = "fb";
     public static final String A_APPT_FREEBUSY_ACTUAL = "fba";
     public static final String A_APPT_TRANSPARENCY = "transp";
+    public static final String A_CAL_CLASS = "class";
     public static final String A_CAL_ALLDAY = "allDay";
     public static final String A_CAL_LOCATION = "loc";
     public static final String A_CAL_NEEDS_REPLY = "needsReply";
