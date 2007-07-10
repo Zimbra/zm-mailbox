@@ -138,7 +138,7 @@ public class TaskHit extends CalendarItemHit {
     
     private static long getDueTime(ZimbraHit zh) throws ServiceException {
         if (zh instanceof ProxiedHit)
-            return ((ProxiedHit)zh).getElement().getAttributeLong(MailConstants.A_CAL_DATETIME);
+            return ((ProxiedHit)zh).getElement().getAttributeLong(MailConstants.A_TASK_DUE_DATE);
         else 
             return ((TaskHit)zh).getDueTime();
     }

@@ -337,6 +337,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                     String pctComplete = defaultInvite.getPercentComplete();
                     if (pctComplete != null)
                         calItemElem.addAttribute(MailConstants.A_TASK_PERCENT_COMPLETE, pctComplete);
+                    calItemElem.addAttribute(MailConstants.A_TASK_DUE_DATE, calItem.getEndTime());
                 }
                 calItemElem.addAttribute(MailConstants.A_CAL_ISORG, defIsOrg);
 

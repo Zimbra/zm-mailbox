@@ -1202,7 +1202,8 @@ appointment result:
        invId="default_invite_mail_item_id" compNum="default_invite_component_number"
        isOrg="default_am_i_organizer_flag"
        [priority="num"]
-       [percentComplete="num"]
+       [percentComplete="num"] // only if a Task
+       [dueDate="num"]         // only if a Task
        [dur="duration"]  // default duration
    >
      [<or d="friendly name" a="address">] // organizer, if available
