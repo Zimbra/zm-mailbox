@@ -145,8 +145,7 @@ public abstract class CalendarItem extends MailItem {
     boolean canHaveChildren()  { return false; }
 
 
-    static CalendarItem create(int id, Folder folder, short volumeId, String tags,
-                               String uid, ParsedMessage pm, Invite firstInvite)
+    static CalendarItem create(int id, Folder folder, short volumeId, long tags, String uid, ParsedMessage pm, Invite firstInvite)
     throws ServiceException {
         if (!folder.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
@@ -186,7 +185,7 @@ public abstract class CalendarItem extends MailItem {
         data.imapId   = id;
         data.volumeId = volumeId;
         data.date     = mbox.getOperationTimestamp();
-        data.tags     = Tag.tagsToBitmask(tags);
+        data.tags     = tags;
         data.sender   = uid;
         data.metadata = encodeMetadata(DEFAULT_COLOR, uid, startTime, endTime,
                                        recur, invites, firstInvite.getTimeZoneMap(),
