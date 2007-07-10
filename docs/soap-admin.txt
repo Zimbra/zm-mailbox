@@ -1858,3 +1858,23 @@ in soap-waitset.txt
 </CheckDirectoryResponse>
 
 -----------------------------
+
+# Flush memory cache for specified LDAP or directory scan type/entries
+
+<FlushCacheRequest>
+  <cache type='skin|locale|account|cos|domain|server|zimlet'>
+    [<entry by={id|name}>value</entry>+]
+  </cache>
+</FlushCacheRequest>
+
+  Directory scan caches(source of data is on local disk of the server):
+      skin|locale
+      
+  LDAP caches(source of data is LDAP):
+      account|cos|domain|server|zimlet
+  	      
+  For LDAP caches, one or more optional <entry> can be given for specific 
+  entries of the type for that its cache entry is to be flushed.  
+  If no <entry> is given, all enties of the type will be flushed from cache.
+
+<FlushCacheResponse/>

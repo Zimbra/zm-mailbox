@@ -239,6 +239,10 @@ public class L10nUtil {
         return LocalizedClientLocales.getLocales(inLocale);
     }
     
+    public static void flushLocaleCache() {
+        LocalizedClientLocales.flushCache();
+    }
+    
     private static class LocalizedClientLocales {
         enum ClientResource {
             I18nMsg,
@@ -250,11 +254,11 @@ public class L10nUtil {
         }
         
         // set of localized(translated) locales
-        static Set<Locale> sLocalizedLocales;
+        static Set<Locale> sLocalizedLocales = null;
         
         // we cache the sorted list per display locale to avoid the array copy
         // and sorting each time for a GetLocale request
-        static Map<Locale, Locale[]> sLocalizedLocalesSorted;
+        static Map<Locale, Locale[]> sLocalizedLocalesSorted = null;
         
         private static void loadBundles() {
             sLocalizedLocales = new HashSet<Locale>();
@@ -296,6 +300,11 @@ public class L10nUtil {
                 sLocalizedLocalesSorted.put(inLocale, sortedLocales);
             }
             return sortedLocales;
+        }
+        
+        public synchronized static void flushCache() {
+            sLocalizedLocales = null;
+            sLocalizedLocalesSorted = null;
         }
     }
 }

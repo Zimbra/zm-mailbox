@@ -43,8 +43,7 @@ import com.zimbra.cs.account.Provisioning;
 
 public class SkinUtil {
 
-    
-    private static String[] sSkins;
+    private static String[] sSkins = null;
 
     // returns all installed skins 
     private synchronized static String[] getAllInstalledSkinsSorted() throws ServiceException {
@@ -52,6 +51,10 @@ public class SkinUtil {
             sSkins = loadSkins();
         }
         return sSkins;
+    }
+    
+    public synchronized static void flushSkinCache() throws ServiceException {
+        sSkins = null;
     }
     
     private static String findSkin(ClassLoader classLoader, File dir) throws ServiceException {
@@ -122,6 +125,6 @@ public class SkinUtil {
         return availSkins;
     }
         
-    
+
     
 }

@@ -1505,4 +1505,29 @@ public class SoapProvisioning extends Provisioning {
         req.addElement(AdminConstants.E_MAILBOX).addAttribute(AdminConstants.A_ACCOUNTID, accountId);
         Element resp = invoke(req);
     }
+    
+    public static enum CacheEntryBy {
+        
+        // case must match protocol
+        id, name;
+    }
+    
+    public static class CacheEntry {
+        public CacheEntry(CacheEntryBy entryBy, String entryIdentity) {
+            mEntryBy = entryBy;
+            mEntryIdentity = entryIdentity;
+        }
+        public CacheEntryBy mEntryBy;
+        public String mEntryIdentity;
+    }
+    
+    public void flushCache(String type, CacheEntry[] entries) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.FLUSH_CACHE_REQUEST);
+        Element eCache = req.addElement(AdminConstants.E_CACHE).addAttribute(AdminConstants.A_TYPE, type);
+
+        for (CacheEntry entry : entries) {
+            eCache.addElement(AdminConstants.E_ENTRY).addAttribute(AdminConstants.A_BY, entry.mEntryBy.name()).addText(entry.mEntryIdentity);
+        }
+        invoke(req);
+    }
 }

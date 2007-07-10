@@ -191,6 +191,7 @@ public class ProvUtil implements DebugListener {
         DELETE_SIGNATURE("deleteSignature", "dsig", "{name@domain|id} {signature-name}", Category.ACCOUNT, 2, 2),
         DELETE_SERVER("deleteServer", "ds", "{name|id}", Category.SERVER, 1, 1),
         EXIT("exit", "quit", "", Category.MISC, 0, 0),
+        FLUSH_CACHE("flushCache", "fc", "", Category.MISC, 1, Integer.MAX_VALUE),
         GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa", "{domain|id} {name} {name|id|foreignPrincipal} {timestamp|0} {expires|0}", Category.MISC, 5, 5),
         GENERATE_DOMAIN_PRE_AUTH_KEY("generateDomainPreAuthKey", "gdpak", "{domain|id}", Category.MISC, 1, 1),
         GET_ACCOUNT("getAccount", "ga", "{name@domain|id} [attr1 [attr2...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
@@ -384,6 +385,9 @@ public class ProvUtil implements DebugListener {
             break;            
         case EXIT:
             System.exit(0);
+            break;
+        case FLUSH_CACHE:
+            doFlushCache(args);
             break;
         case GENERATE_DOMAIN_PRE_AUTH_KEY:
             doGenerateDomainPreAuthKey(args);
@@ -1662,6 +1666,22 @@ public class ProvUtil implements DebugListener {
         }
     }
     
+    private void doFlushCache(String[] args) throws ServiceException {
+        if (!(mProv instanceof SoapProvisioning))
+            throw ServiceException.INVALID_REQUEST("can only be used via SOAP", null);
+        SoapProvisioning sp = (SoapProvisioning)mProv;
+        SoapProvisioning.CacheEntry[] entries = new SoapProvisioning.CacheEntry[args.length - 2];
+        for (int i=2; i<args.length; i++) {
+            SoapProvisioning.CacheEntryBy entryBy;
+            if (isUUID(args[i]))
+                entryBy = SoapProvisioning.CacheEntryBy.id;
+            else
+                entryBy = SoapProvisioning.CacheEntryBy.name;
+                
+            entries[i-2] = new SoapProvisioning.CacheEntry(entryBy, args[i]);
+        }
+        sp.flushCache(args[1], entries);
+    }
 
     private void doGenerateDomainPreAuthKey(String[] args) throws ServiceException {
         String key = args[1];
