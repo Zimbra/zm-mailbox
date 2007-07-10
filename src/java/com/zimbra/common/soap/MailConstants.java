@@ -475,6 +475,7 @@ public class MailConstants {
     public static final String A_CAL_ATTENDEE = "at";
     public static final String A_CAL_PRIORITY = "priority";
     public static final String A_TASK_PERCENT_COMPLETE = "percentComplete";
+    public static final String A_TASK_DUE_DATE = "dueDate";
     public static final String A_TASK_COMPLETED = "completed";
     public static final String A_WAIT = "wait";
     public static final String A_TIMEOUT = "timeout";
