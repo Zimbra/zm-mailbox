@@ -233,6 +233,10 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                                 instElt.addAttribute(MailConstants.A_CAL_STATUS, inv.getStatus());
                             }
 
+                            if (!defaultInvite.getClassProp().equals(inv.getClassProp())) {
+                                instElt.addAttribute(MailConstants.A_CAL_CLASS, inv.getClassProp());
+                            }
+
                             String prio = inv.getPriority();
                             if (prio != null && !prio.equals(defaultInvite.getPriority())) {
                                 instElt.addAttribute(MailConstants.A_CAL_PRIORITY, prio);
@@ -324,6 +328,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                 }
                 
                 calItemElem.addAttribute(MailConstants.A_CAL_STATUS, defaultInvite.getStatus());
+                calItemElem.addAttribute(MailConstants.A_CAL_CLASS, defaultInvite.getClassProp());
                 String defaultPriority = defaultInvite.getPriority();
                 if (defaultPriority != null)
                     calItemElem.addAttribute(MailConstants.A_CAL_PRIORITY, defaultPriority);

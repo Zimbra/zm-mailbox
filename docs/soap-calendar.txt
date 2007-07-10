@@ -102,6 +102,7 @@
                                Free, Busy (default), busy-Tentative, OutOfOffice (busy-unavailable)
             fba="F|B|T|O" // the "actual" free-busy status of this invite (ie what the client should display) -- this is synthesized taking into account our Attendee's PartStat, the Opacity of the appointment, its Status, etc...
             [transp="O|T"]  // transparency: Opaque (default) or Transparent
+            [class="PUB|PRI|CON"]  // class: PUBlic (default), PRIvate, CONfidential
             [allDay="1|0"]
             [name="NAME"]
             [loc="LOCATION"]
@@ -517,6 +518,7 @@ OR
 // ( <appt id="appointment_mail_item_id"
 //      [fba="F|B|T|U"]
 //      [transp="O|T"]
+//      [class="PUB|PRI|CON"]
 //      status="TENT|CONF|CANC"
 //      ptst="NE|TE|AC|DE|DG"
 //      [allDay="1"]             // if set, this is an "all day" appointment
@@ -642,6 +644,7 @@ OR
        		fb="F|B|T|U"
        		fba="F|B|T|U" // Your current status -- what is returned in FreeBusy for you TODO
        		transp="O|T"
+       		[class="PUB|PRI|CON"]
             [ex="1|0]  // 1 if this Invite is an Exception
             [allDay="1|0"] [name="NAME"]
             [loc="LOCATION"]

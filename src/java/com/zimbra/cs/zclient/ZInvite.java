@@ -126,6 +126,7 @@ public class ZInvite {
     public static class ZComponent {
 
         private ZStatus mStatus;
+        private ZClass mClass;
         private ZFreeBusyStatus mFreeBusyStatus;
         private ZFreeBusyStatus mActualFreeBusyStatus;
         private ZTransparency mTransparency;
@@ -149,6 +150,7 @@ public class ZInvite {
 
         public ZComponent() {
             mStatus = ZStatus.CONF;
+            mClass = ZClass.PUB;
             mFreeBusyStatus = ZFreeBusyStatus.B;
             mTransparency = ZTransparency.O;
             mReplies = new ArrayList<ZReply>();
@@ -157,6 +159,7 @@ public class ZInvite {
         
         public ZComponent(Element e) throws ServiceException {
             mStatus = ZStatus.fromString(e.getAttribute(MailConstants.A_CAL_STATUS, ZStatus.CONF.name()));
+            mClass = ZClass.fromString(e.getAttribute(MailConstants.A_CAL_CLASS, ZClass.PUB.name()));
             mFreeBusyStatus = ZFreeBusyStatus.fromString(e.getAttribute(MailConstants.A_APPT_FREEBUSY, ZFreeBusyStatus.B.name()));
             mActualFreeBusyStatus = ZFreeBusyStatus.fromString(e.getAttribute(MailConstants.A_APPT_FREEBUSY_ACTUAL, ZFreeBusyStatus.B.name()));
             mTransparency = ZTransparency.fromString(e.getAttribute(MailConstants.A_APPT_TRANSPARENCY, "O"));
@@ -203,6 +206,7 @@ public class ZInvite {
         public Element toElement(Element parent) {
             Element compEl = parent.addElement(MailConstants.E_INVITE_COMPONENT);
             if (mStatus != null) compEl.addAttribute(MailConstants.A_CAL_STATUS, mStatus.name());
+            if (mClass != null) compEl.addAttribute(MailConstants.A_CAL_CLASS, mClass.name());
             if (mFreeBusyStatus != null) compEl.addAttribute(MailConstants.A_APPT_FREEBUSY, mFreeBusyStatus.name());
             if (mActualFreeBusyStatus != null) compEl.addAttribute(MailConstants.A_APPT_FREEBUSY_ACTUAL, mActualFreeBusyStatus.name());
             if (mTransparency != null) compEl.addAttribute(MailConstants.A_APPT_TRANSPARENCY, mTransparency.name());
@@ -263,6 +267,14 @@ public class ZInvite {
 
         public void setStatus(ZStatus status) {
             mStatus = status;
+        }
+
+        public ZClass getClassProp() {
+            return mClass;
+        }
+
+        public void setClassProp(ZClass cl) {
+            mClass = cl;
         }
 
         public ZFreeBusyStatus getFreeBusyStatus() {
@@ -423,6 +435,7 @@ public class ZInvite {
         ZSoapSB toString(ZSoapSB sb) {
             sb.beginStruct();
             sb.add("status", mStatus.name());
+            sb.add("class", mClass.name());
             sb.add("freeBusyStatus", mFreeBusyStatus.name());
             sb.add("actualFreeBusyStatus", mActualFreeBusyStatus.name());
             sb.add("transparency", mTransparency.name());
@@ -891,6 +904,22 @@ public class ZInvite {
         public boolean isInProgress() { return equals(INPR); }
         public boolean isWaiting() { return equals(WAITING); }
         public boolean isDeferred() { return equals(DEFERRED); }
+    }
+
+    public enum ZClass {
+        PUB, PRI, CON;
+
+        public static ZClass fromString(String s) throws ServiceException {
+            try {
+                return ZClass.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ZClientException.CLIENT_ERROR("invalid class " + s + ", valid values: " + Arrays.asList(ZClass.values()), e);
+            }
+        }
+
+        public boolean isPublic() { return equals(PUB); }
+        public boolean isPrivate() { return equals(PRI); }
+        public boolean isConfidential() { return equals(CON); }
     }
 
     public enum ZFreeBusyStatus {

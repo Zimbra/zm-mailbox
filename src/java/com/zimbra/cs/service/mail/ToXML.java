@@ -1203,6 +1203,7 @@ public class ToXML {
                 }
 
             e.addAttribute(MailConstants.A_CAL_STATUS, invite.getStatus());
+            e.addAttribute(MailConstants.A_CAL_CLASS, invite.getClassProp());
 
             String priority = invite.getPriority();
             if (priority != null)

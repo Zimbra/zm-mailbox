@@ -55,6 +55,10 @@ public class ZAppointmentHit implements ZSearchHit {
     public static final String PSTATUS_DECLINED = "DE";
     public static final String PSTATUS_DELEGATED = "DG";
 
+    public static final String CLASS_PUBLIC = "PUB";
+    public static final String CLASS_PRIVATE = "PRI";
+    public static final String CLASS_CONFIDENTIAL = "CONFI";
+
     public enum Flag {
         flagged('f'),
         attachment('a');
@@ -92,6 +96,7 @@ public class ZAppointmentHit implements ZSearchHit {
     private String mFreeBusyActual;
     private String mTransparency;
     private String mStatus;
+    private String mClass;
     private String mPartStatus;
     private boolean mIsAllDay;
     private boolean mIsOtherAttendees;
@@ -132,6 +137,7 @@ public class ZAppointmentHit implements ZSearchHit {
         String freeBusyActual = e.getAttribute(MailConstants.A_APPT_FREEBUSY_ACTUAL, null);
         String transparency = e.getAttribute(MailConstants.A_APPT_TRANSPARENCY, null);
         String status = e.getAttribute(MailConstants.A_CAL_STATUS, null);
+        String classProp = e.getAttribute(MailConstants.A_CAL_CLASS, null);
         String pstatus = e.getAttribute(MailConstants.A_CAL_PARTSTAT, null);
         boolean isAllDay = e.getAttributeBool(MailConstants.A_CAL_ALLDAY, false);
         boolean otherAtt = e.getAttributeBool(MailConstants.A_CAL_OTHER_ATTENDEES, false);
@@ -192,6 +198,7 @@ public class ZAppointmentHit implements ZSearchHit {
             appt.mFreeBusyActual = inst.getAttribute(MailConstants.A_APPT_FREEBUSY_ACTUAL, freeBusyActual);
             appt.mTransparency = inst.getAttribute(MailConstants.A_APPT_TRANSPARENCY, transparency);
             appt.mStatus = inst.getAttribute(MailConstants.A_CAL_STATUS, status);
+            appt.mClass = inst.getAttribute(MailConstants.A_CAL_CLASS, classProp);
             appt.mPartStatus = inst.getAttribute(MailConstants.A_CAL_PARTSTAT, pstatus);
 
             appt.mIsOtherAttendees = inst.getAttributeBool(MailConstants.A_CAL_OTHER_ATTENDEES, otherAtt);
@@ -280,6 +287,7 @@ public class ZAppointmentHit implements ZSearchHit {
         sb.add("freeBusyActual", mFreeBusyActual);
         sb.add("transparency", mTransparency);
         sb.add("status", mStatus);
+        sb.add("class", mClass);
         sb.add("participantStatus", mPartStatus);
         sb.add("allDay", mIsAllDay);
         sb.add("otherAttendees", mIsOtherAttendees);
@@ -320,6 +328,12 @@ public class ZAppointmentHit implements ZSearchHit {
     public boolean isStatusTentative() { return STATUS_TENTATIVE.equals(mStatus); }
     public boolean isStatusCancelled() { return STATUS_CANCELLED.equals(mStatus); }
     public boolean isStatusConfirmed() { return STATUS_CONFIRMED.equals(mStatus); }
+
+    // class
+    public String getClassProp() { return mClass; }
+    public boolean isClassPublic() { return CLASS_PUBLIC.equals(mClass); }
+    public boolean isClassPrivate() { return CLASS_PRIVATE.equals(mClass); }
+    public boolean isClassConfidential() { return CLASS_CONFIDENTIAL.equals(mClass); }
 
     // ptst
     public String getParticipantStatus() { return mPartStatus; }

@@ -65,6 +65,7 @@ public class IcalXmlStrMap {
     }
 
     public static IcalXmlStrMap sFreqMap = new IcalXmlStrMap("Freq");
+    public static IcalXmlStrMap sClassMap = new IcalXmlStrMap("Class");
     public static IcalXmlStrMap sTranspMap = new IcalXmlStrMap("Transparency");
     public static IcalXmlStrMap sFreeBusyMap = new IcalXmlStrMap("FreeBusy");
     public static IcalXmlStrMap sOutlookFreeBusyMap = new IcalXmlStrMap("OutlookFreeBusy");
@@ -87,6 +88,11 @@ public class IcalXmlStrMap {
     public final static String FREQ_MINUTELY = "MIN";
     public final static String FREQ_HOURLY = "HOU";
     public final static String FREQ_DAILY = "DAI";
+
+    // class
+    public final static String CLASS_PUBLIC = "PUB";
+    public final static String CLASS_PRIVATE = "PRI";
+    public final static String CLASS_CONFIDENTIAL = "CON";
 
     // free-busy
     public final static String FBTYPE_BUSY = "B";
@@ -166,6 +172,10 @@ public class IcalXmlStrMap {
         sPartStatMap.add(ICalTok.TENTATIVE.toString(), PARTSTAT_TENTATIVE);
         sPartStatMap.add(ICalTok.X_ZIMBRA_PARTSTAT_WAITING.toString(), PARTSTAT_ZCO_WAITING);
         sPartStatMap.add(ICalTok.X_ZIMBRA_PARTSTAT_DEFERRED.toString(), PARTSTAT_ZCO_DEFERRED);
+
+        sClassMap.add(ICalTok.PUBLIC.toString(), CLASS_PUBLIC);
+        sClassMap.add(ICalTok.PRIVATE.toString(), CLASS_PRIVATE);
+        sClassMap.add(ICalTok.CONFIDENTIAL.toString(), CLASS_CONFIDENTIAL);
 
         sFreeBusyMap.add(FreeBusy.FBTYPE_FREE, FBTYPE_FREE);
         sFreeBusyMap.add(FreeBusy.FBTYPE_BUSY, FBTYPE_BUSY);

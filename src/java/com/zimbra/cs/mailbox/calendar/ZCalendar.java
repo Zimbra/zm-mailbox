@@ -69,6 +69,9 @@ public class ZCalendar {
         
         // METHOD
         PUBLISH, REQUEST, REPLY, ADD, CANCEL, REFRESH, COUNTER, DECLINECOUNTER,
+
+        // CLASS
+        PUBLIC, PRIVATE, CONFIDENTIAL,
         
         // ROLE
         CHAIR, REQ_PARTICIPANT, OPT_PARTICIPANT, NON_PARTICIPANT,

@@ -769,9 +769,13 @@ public class CalendarUtils {
         // STATUS
         String status = element.getAttribute(MailConstants.A_CAL_STATUS,
                 newInv.isEvent() ? IcalXmlStrMap.STATUS_CONFIRMED : IcalXmlStrMap.STATUS_NEEDS_ACTION);
-        validateAttr(IcalXmlStrMap.sStatusMap, MailConstants.A_CAL_STATUS,
-                status);
+        validateAttr(IcalXmlStrMap.sStatusMap, MailConstants.A_CAL_STATUS, status);
         newInv.setStatus(status);
+
+        // CLASS
+        String classProp = element.getAttribute(MailConstants.A_CAL_CLASS, IcalXmlStrMap.CLASS_PUBLIC);
+        validateAttr(IcalXmlStrMap.sClassMap, MailConstants.A_CAL_CLASS, classProp);
+        newInv.setClassProp(classProp);
 
         // PRIORITY
         String priority = element.getAttribute(MailConstants.A_CAL_PRIORITY, null);
