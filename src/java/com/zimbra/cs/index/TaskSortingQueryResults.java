@@ -25,18 +25,13 @@
 package com.zimbra.cs.index;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
-import com.zimbra.cs.index.TaskHit.Status;
-import com.zimbra.cs.mailbox.Task;
 
 /**
  * 
@@ -147,10 +142,10 @@ public class TaskSortingQueryResults implements ZimbraQueryResults {
                     comp = new DueComparator(false);
                     break;
                 case TASK_STATUS_ASCENDING:
-                    comp = new TaskComparator(true);
+                    comp = new StatusComparator(true);
                     break;
                 case TASK_STATUS_DESCENDING:
-                    comp = new TaskComparator(false);
+                    comp = new StatusComparator(false);
                     break;
                 case TASK_PERCENT_COMPLETE_ASCENDING:
                     comp = new CompletionPercentComparator(true);
@@ -170,17 +165,17 @@ public class TaskSortingQueryResults implements ZimbraQueryResults {
             mAscending = ascending;
         }
         public int compare(Object lhs, Object rhs) {
-            return TaskHit.compareByStatus(mAscending, lhs, rhs);
+            return TaskHit.compareByDueDate(mAscending, lhs, rhs);
         }
         private boolean mAscending;
     }
     
-    private static final class TaskComparator implements Comparator {
-        TaskComparator(boolean ascending) {
+    private static final class StatusComparator implements Comparator {
+        StatusComparator(boolean ascending) {
             mAscending = ascending;
         }
         public int compare(Object lhs, Object rhs) {
-            return TaskHit.compareByDueDate(mAscending, lhs, rhs);
+            return TaskHit.compareByStatus(mAscending, lhs, rhs);
         }
         private boolean mAscending;
     }
