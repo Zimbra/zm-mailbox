@@ -35,6 +35,7 @@ import java.util.*;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.Blob;
@@ -83,7 +84,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     public static final byte TYPE_CHAT         = 16;
 
     public static final byte TYPE_MAX = TYPE_CHAT;
-    
+
     public static final byte TYPE_UNKNOWN = -1;
 
     private static String[] TYPE_NAMES = {
@@ -225,7 +226,10 @@ public abstract class MailItem implements Comparable<MailItem> {
         void metadataChanged(Mailbox mbox) throws ServiceException {
             modMetadata = mbox.getOperationChangeID();
             dateChanged = mbox.getOperationTimestamp();
+            if (ImapMessage.SUPPORTED_TYPES.contains(type))
+                mbox.getFolderById(folderId).updateHighestMODSEQ();
         }
+
         void contentChanged(Mailbox mbox) throws ServiceException {
             metadataChanged(mbox);
             modContent = modMetadata;
@@ -233,17 +237,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     public static final class TypedIdList implements Iterable<Map.Entry<Byte,List<Integer>>> {
-        
         private Map<Byte,List<Integer>> mIds = new HashMap<Byte,List<Integer>>();
-        
-        /** list of types included in this map, see @link{MailItem#typeToBitmask} */
-        public int getTypesMask() {
-            int retVal = 0;
-            for (Byte b : mIds.keySet()) {
-                retVal |= MailItem.typeToBitmask(b);
-            }
-            return retVal;
-        }
         
         public void add(byte type, Integer id) {
             if (id == null)
@@ -287,6 +281,13 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
         public Set<Byte> types() {
             return mIds.keySet();
+        }
+        /** list of types included in this map, see @link{MailItem#typeToBitmask} */
+        public int getTypesMask() {
+            int mask = 0;
+            for (Byte b : types())
+                mask |= MailItem.typeToBitmask(b);
+            return mask;
         }
         public List<Integer> getIds(byte... types) {
             List<Integer> toRet = new ArrayList<Integer>();
@@ -1262,9 +1263,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         mData.metadataChanged(mMailbox);
         DbMailItem.saveImapUid(this);
 
-        Folder folder = getFolder();
-        folder.updateUIDNEXT();
-        folder.updateHighestMODSEQ();
+        getFolder().updateUIDNEXT();
     }
 
     Blob setContent(byte[] data, String digest, short volumeId, Object content)
@@ -1428,9 +1427,6 @@ public abstract class MailItem implements Comparable<MailItem> {
             if (add)  mData.tags |= tag.getBitmask();
             else      mData.tags &= ~tag.getBitmask();
         }
-
-        if (isLeafNode())
-            getFolder().updateHighestMODSEQ();
     }
 
     protected void inheritedTagChanged(Tag tag, boolean add)  { }

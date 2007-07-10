@@ -605,15 +605,15 @@ public class Folder extends MailItem {
             validateType(view);
 
         UnderlyingData data = new UnderlyingData();
-        data.id          = id;
-        data.type        = TYPE_FOLDER;
-        data.folderId    = (id == Mailbox.ID_FOLDER_ROOT ? id : parent.getId());
-        data.parentId    = data.folderId;
-        data.date        = mbox.getOperationTimestamp();
-        data.flags       = flags & Flag.FLAGS_FOLDER;
-        data.name        = name;
-        data.subject     = name;
-        data.metadata    = encodeMetadata(color, attributes, view, null, new SyncData(url), id + 1, 0, mbox.getOperationChangeID(), 0);
+        data.id       = id;
+        data.type     = TYPE_FOLDER;
+        data.folderId = (id == Mailbox.ID_FOLDER_ROOT ? id : parent.getId());
+        data.parentId = data.folderId;
+        data.date     = mbox.getOperationTimestamp();
+        data.flags    = flags & Flag.FLAGS_FOLDER;
+        data.name     = name;
+        data.subject  = name;
+        data.metadata = encodeMetadata(color, attributes, view, null, new SyncData(url), id + 1, 0, mbox.getOperationChangeID(), 0);
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 

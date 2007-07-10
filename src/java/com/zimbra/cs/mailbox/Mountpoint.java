@@ -130,17 +130,16 @@ public class Mountpoint extends Folder {
         Mailbox mbox = parent.getMailbox();
 
         UnderlyingData data = new UnderlyingData();
-        data.id          = id;
-        data.type        = TYPE_MOUNTPOINT;
-        data.folderId    = parent.getId();
-        data.parentId    = data.folderId;
-        data.date        = mbox.getOperationTimestamp();
-        data.flags       = flags & Flag.FLAGS_FOLDER;
-        data.name        = name;
-        data.subject     = name;
-        data.metadata    = encodeMetadata(color, view, ownerId, remoteId);
-        data.modMetadata = mbox.getOperationChangeID();
-        data.modContent  = mbox.getOperationChangeID();
+        data.id       = id;
+        data.type     = TYPE_MOUNTPOINT;
+        data.folderId = parent.getId();
+        data.parentId = data.folderId;
+        data.date     = mbox.getOperationTimestamp();
+        data.flags    = flags & Flag.FLAGS_FOLDER;
+        data.name     = name;
+        data.subject  = name;
+        data.metadata = encodeMetadata(color, view, ownerId, remoteId);
+        data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 
         Mountpoint mpt = new Mountpoint(mbox, data);

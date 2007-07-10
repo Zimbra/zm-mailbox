@@ -2299,7 +2299,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     private static final int RETURN_SAVE  = 0x10;
 
     private static final int LARGEST_FOLDER_BATCH = 600;
-    static final byte[] ITEM_TYPES = new byte[] { MailItem.TYPE_MESSAGE, MailItem.TYPE_CONTACT };
+    public static final byte[] ITEM_TYPES = ArrayUtil.toByteArray(ImapMessage.SUPPORTED_TYPES);
 
     boolean doSEARCH(String tag, ImapSearch i4search, boolean byUID, Integer options) throws IOException, ImapParseException {
         if (!checkState(tag, State.SELECTED))
