@@ -118,6 +118,9 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
         mWritable = (params & SELECT_READONLY) == 0 && mPath.isWritable();
         if ((params & SELECT_CONDSTORE) != 0)
             mCredentials.activateExtension(ActivatedExtension.CONDSTORE);
+
+        // need mInitialRecent to be set *before* loading the folder so we can determine what's \Recent
+        mInitialRECENT = ((Folder) path.getFolder()).getImapRECENT();
     }
 
     @Override
@@ -130,14 +133,11 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
         Folder folder = mMailbox.getFolderByPath(octxt, mPath.asZimbraPath());
         mFolderId = folder.getId();
 
-        // need mInitialRecent to be set *before* loading the folder so we can determine what's \Recent
-        mUIDValidityValue = getUIDValidity(folder);
-        mInitialRECENT = folder.getImapRECENT();
-
         // load the folder's contents
         loadFolder(octxt, folder);
 
         // need these to be set *after* loading the folder because UID renumbering affects them
+        mUIDValidityValue = getUIDValidity(folder);
         mInitialUIDNEXT = folder.getImapUIDNEXT();
         mInitialMODSEQ = folder.getImapMODSEQ();
 
