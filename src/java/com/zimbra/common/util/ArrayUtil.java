@@ -77,6 +77,15 @@ public class ArrayUtil {
         return array;
     }
 
+    /** Converts a {@link Collection} of Bytes into a byte[] array. */
+    public static byte[] toByteArray(Collection<Byte> c) {
+        int pos = 0;
+        byte byteArray[] = new byte[c.size()];
+        for (Byte id : c)
+            byteArray[pos++] = id;
+        return byteArray;
+    }
+
     /** Converts a {@link Collection} of Integers into an int[] array. */
     public static int[] toIntArray(Collection<Integer> c) {
         int intArray[] = new int[c.size()], pos = 0;
