@@ -1188,7 +1188,7 @@ DOCUMENT ME
 appointment result:
 -------------------
 
-<appt id="appointment_mail_item_id"
+<appt|task id="appointment_mail_item_id"
        t="{tags}" f="{flags}" s="{size}" d="{date}" cid="{conv-id}" // standard hit data
        l="{location}" score="..." [mbx="UID"] sf="SORT-FIELD-VALUE" // standard hit data    
        [fba="F|B|T|U"]
@@ -1202,8 +1202,8 @@ appointment result:
        invId="default_invite_mail_item_id" compNum="default_invite_component_number"
        isOrg="default_am_i_organizer_flag"
        [priority="num"]
-       [percentComplete="num"] // only if a Task
-       [dueDate="num"]         // only if a Task
+       [percentComplete="num"] // only if a <task>
+       [dueDate="num"]         // only if a <task>
        [dur="duration"]  // default duration
    >
      [<or d="friendly name" a="address">] // organizer, if available
