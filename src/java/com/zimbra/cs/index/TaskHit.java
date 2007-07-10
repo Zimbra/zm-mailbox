@@ -27,6 +27,7 @@ package com.zimbra.cs.index;
 import org.apache.lucene.document.Document;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -135,11 +136,34 @@ public class TaskHit extends CalendarItemHit {
         }
     }
     
-    static final int compareByDueDate(boolean ascending, Object lhs, Object rhs) {
+    private static long getDueTime(ZimbraHit zh) throws ServiceException {
+        if (zh instanceof ProxiedHit)
+            return ((ProxiedHit)zh).getElement().getAttributeLong(MailConstants.A_CAL_DATETIME);
+        else 
+            return ((TaskHit)zh).getDueTime();
+    }
+    
+    private static Status getStatus(ZimbraHit zh) throws ServiceException {
+        if (zh instanceof ProxiedHit) {
+            String s = ((ProxiedHit)zh).getElement().getAttribute(MailConstants.A_CAL_STATUS);
+            return Status.valueOf(s);
+        } else {
+            return ((TaskHit)zh).getStatus();
+        }
+    }
+    
+    private static int getCompletionPercentage(ZimbraHit zh) throws ServiceException {
+        if (zh instanceof ProxiedHit) 
+            return (int)(((ProxiedHit)zh).getElement().getAttributeLong(MailConstants.A_TASK_PERCENT_COMPLETE));
+        else
+            return ((TaskHit)zh).getCompletionPercentage();
+    }
+    
+    static final int compareByDueDate(boolean ascending, ZimbraHit lhs, ZimbraHit rhs) {
         int retVal = 0;
         try {
-            long left = ((TaskHit)lhs).getDueTime();
-            long right = ((TaskHit)rhs).getDueTime();
+            long left = getDueTime(lhs);
+            long right = getDueTime(rhs);
             long result = right - left;
             if (result > 0)
                 retVal = 1;
@@ -157,11 +181,11 @@ public class TaskHit extends CalendarItemHit {
             return retVal;
     }
 
-    static final int compareByStatus(boolean ascending, Object lhs, Object rhs) {
+    static final int compareByStatus(boolean ascending, ZimbraHit lhs, ZimbraHit rhs) {
         int retVal = 0;
         try {
-            Status left = ((TaskHit)lhs).getStatus();
-            Status right = ((TaskHit)rhs).getStatus();
+            Status left = getStatus(lhs);
+            Status right = getStatus(rhs);
             int result = right.getSortVal() - left.getSortVal();
             if (result > 0)
                 retVal = 1;
@@ -179,11 +203,11 @@ public class TaskHit extends CalendarItemHit {
             return retVal;
     }
     
-    static final int compareByCompletionPercent(boolean ascending, Object lhs, Object rhs) {
+    static final int compareByCompletionPercent(boolean ascending, ZimbraHit lhs, ZimbraHit rhs) {
         int retVal = 0;
         try {
-            int left = ((TaskHit)lhs).getCompletionPercentage();
-            int right = ((TaskHit)rhs).getCompletionPercentage();
+            int left = getCompletionPercentage(lhs);
+            int right = getCompletionPercentage(rhs);
             int result = right - left;
             if (result > 0)
                 retVal = 1;

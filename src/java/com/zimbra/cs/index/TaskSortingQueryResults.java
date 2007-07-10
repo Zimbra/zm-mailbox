@@ -27,7 +27,6 @@ package com.zimbra.cs.index;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
@@ -121,81 +120,70 @@ public class TaskSortingQueryResults implements ZimbraQueryResults {
         mHitBuffer = new ArrayList<ZimbraHit>();
 
         ZimbraHit cur;
-        boolean hitOverflow = false;
         while ((cur = mResults.getNext()) != null) {
             
-            if (!(cur instanceof TaskHit)) {
+            if (!(cur instanceof TaskHit) && !(cur instanceof ProxiedHit)) {
                 throw ServiceException.FAILURE("Invalid hit type, can only task-sort Tasks", null);
             }
             mHitBuffer.add(cur);
             if (mHitBuffer.size() >= MAX_BUFFERED_HITS) {
-                hitOverflow = true;
                 break;
             }
             
-            Comparator comp;
+            Comparator<ZimbraHit> comp;
             switch (mDesiredSort) {
+                default:
                 case TASK_DUE_ASCENDING:
-                    comp = new DueComparator(true);
+                    comp = new Comparator<ZimbraHit>() {
+                        public int compare(ZimbraHit lhs, ZimbraHit rhs) {
+                            return TaskHit.compareByDueDate(true, lhs, rhs);
+                        }
+                    };
                     break;
                 case TASK_DUE_DESCENDING:
-                    comp = new DueComparator(false);
+                    comp = new Comparator<ZimbraHit>() {
+                        public int compare(ZimbraHit lhs, ZimbraHit rhs) {
+                            return TaskHit.compareByDueDate(false, lhs, rhs);
+                        }
+                    };
                     break;
                 case TASK_STATUS_ASCENDING:
-                    comp = new StatusComparator(true);
+                    comp = new Comparator<ZimbraHit>() {
+                        public int compare(ZimbraHit lhs, ZimbraHit rhs) {
+                            return TaskHit.compareByStatus(true, lhs, rhs);
+                        }
+                    };
                     break;
                 case TASK_STATUS_DESCENDING:
-                    comp = new StatusComparator(false);
+                    comp = new Comparator<ZimbraHit>() {
+                        public int compare(ZimbraHit lhs, ZimbraHit rhs) {
+                            return TaskHit.compareByStatus(false, lhs, rhs);
+                        }
+                    };
                     break;
                 case TASK_PERCENT_COMPLETE_ASCENDING:
-                    comp = new CompletionPercentComparator(true);
+                    comp = new Comparator<ZimbraHit>() {
+                        public int compare(ZimbraHit lhs, ZimbraHit rhs) {
+                            return TaskHit.compareByCompletionPercent(true, lhs, rhs);
+                        }
+                    };                        
                     break;
                 case TASK_PERCENT_COMPLETE_DESCENDING:
-                    comp = new CompletionPercentComparator(false);
+                    comp = new Comparator<ZimbraHit>() {
+                        public int compare(ZimbraHit lhs, ZimbraHit rhs) {
+                            return TaskHit.compareByCompletionPercent(false, lhs, rhs);
+                        }
+                    };                        
                     break;
-                default:
-                    comp = new DueComparator(true);
             }
             Collections.sort(mHitBuffer, comp);
         }
     }
     
-    private static final class DueComparator implements Comparator {
-        DueComparator(boolean ascending) {
-            mAscending = ascending;
-        }
-        public int compare(Object lhs, Object rhs) {
-            return TaskHit.compareByDueDate(mAscending, lhs, rhs);
-        }
-        private boolean mAscending;
-    }
-    
-    private static final class StatusComparator implements Comparator {
-        StatusComparator(boolean ascending) {
-            mAscending = ascending;
-        }
-        public int compare(Object lhs, Object rhs) {
-            return TaskHit.compareByStatus(mAscending, lhs, rhs);
-        }
-        private boolean mAscending;
-    }
-    
-    private static final class CompletionPercentComparator implements Comparator {
-        CompletionPercentComparator(boolean ascending) {
-            mAscending = ascending;
-        }
-        public int compare(Object lhs, Object rhs) {
-            return TaskHit.compareByCompletionPercent(mAscending, lhs, rhs);
-        }
-        private boolean mAscending;
-    }
-    
-    
     static final int MAX_BUFFERED_HITS = 5000;
     
-    ZimbraQueryResults mResults;
-    SortBy mDesiredSort;
-    List<ZimbraHit> mHitBuffer = null;
-    Iterator<ZimbraHit>mIterator = null;
-    int mIterOffset = 0;
+    private ZimbraQueryResults mResults;
+    private SortBy mDesiredSort;
+    private List<ZimbraHit> mHitBuffer = null;
+    private int mIterOffset = 0;
 }
