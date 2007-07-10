@@ -531,11 +531,11 @@
 	</target>
 
 	<!-- There are two ways to reset the world:
-  		(a) If your tomcat is a service, use "reset-the-world".
- 		(b) If your tomcat is inside eclipse then do this:
-			1. stop tomcat
+  		(a) If your webserver is a service, use "reset-the-world".
+ 		(b) If your webserver  container  is inside eclipse then do this:
+			1. stop web server (tomcat stop / jetty stop)
 			2. run the target "reset-the-world-stage1"
-			3. start tomcat
+			3. start web server (tomcat start / jetty start )
 			4. run the target "reset-the-world-stage2" -->
 	<target name="reset-the-world" description="Reset the world">
 		<antcall target="reset-the-world-stage1"/>
@@ -545,9 +545,9 @@
 		<antcall target="reset-the-world-stage2"/>
 	</target>
 
-	<target name="reset-the-world-stage1" depends="clean,jar,init" description="Run when tomcat is stopped." />
+	<target name="reset-the-world-stage1" depends="clean,jar,init" description="Run when web server is stopped." />
 	
-	<target name="reset-the-world-stage2" depends="service-deploy,import-wiki-templates" description="Run when tomcat is running.">
+	<target name="reset-the-world-stage2" depends="service-deploy,import-wiki-templates" description="Run when web server is running.">
 		<antcall target="inject">
 			<param name="account-to-inject.email" value="user1@${defaultdomain.name}"/>
 		</antcall>
@@ -642,8 +642,8 @@
 	</target>
 
 	<target name="dir-init">
-		<echo message="If the following deletes fail, wait for your tomcat" />
-		<echo message="to stop (or stop your tomcat as the case may be)" />
+		<echo message="If the following deletes fail, wait for your web server" />
+		<echo message="to stop (or stop jetty/tomcat as the case may be)" />
 		<echo message="and try again later." />
 		<delete failonerror="no">
 			<fileset dir="${zimbra.home.dir}/db" excludes="data/**"/>
