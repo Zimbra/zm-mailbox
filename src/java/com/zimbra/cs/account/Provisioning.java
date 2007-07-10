@@ -1188,6 +1188,7 @@ public abstract class Provisioning {
     public static final String A_zimbraDataSourceMaxNumEntries = "zimbraDataSourceMaxNumEntries";    
     public static final String A_zimbraDataSourceLeaveOnServer = "zimbraDataSourceLeaveOnServer";
     public static final String A_zimbraDataSourcePollingInterval = "zimbraDataSourcePollingInterval";
+    public static final String A_zimbraDataSourceMinPollingInterval = "zimbraDataSourceMinPollingInterval";
     public static final String A_zimbraDataSourceEmailAddress = "zimbraDataSourceEmailAddress";
     public static final String A_zimbraDataSourceUseAddressForForwardReply = "zimbraDataSourceUseAddressForForwardReply";
     
