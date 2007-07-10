@@ -295,14 +295,16 @@ public class ZimbraServlet extends HttpServlet {
         	method.releaseConnection();
         }
     }
+
     protected void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, HttpMethod method, HttpState state)
     throws IOException, ServiceException {
         // create an HTTP client with the same cookies
         javax.servlet.http.Cookie cookies[] = req.getCookies();
         String hostname = method.getURI().getHost();
-        if (cookies != null)
+        if (cookies != null) {
         	for (int i = 0; i < cookies.length; i++)
         		state.addCookie(new Cookie(hostname, cookies[i].getName(), cookies[i].getValue(), "/", null, false));
+        }
         HttpClient client = new HttpClient();
         if (state != null)
         	client.setState(state);
@@ -312,8 +314,8 @@ public class ZimbraServlet extends HttpServlet {
         	String hname = (String) enm.nextElement(), hlc = hname.toLowerCase();
         	if (hlc.equals("x-zimbra-hopcount"))
         		try { hopcount = Math.max(Integer.parseInt(req.getHeader(hname)), 0); } catch (NumberFormatException e) { }
-        		else if (hlc.startsWith("x-") || hlc.startsWith("content-") || hlc.equals("authorization"))
-        			method.addRequestHeader(hname, req.getHeader(hname));
+    		else if (hlc.startsWith("x-") || hlc.startsWith("content-") || hlc.equals("authorization"))
+    			method.addRequestHeader(hname, req.getHeader(hname));
         }
         if (hopcount >= MAX_PROXY_HOPCOUNT)
         	throw ServiceException.TOO_MANY_HOPS();
@@ -326,13 +328,14 @@ public class ZimbraServlet extends HttpServlet {
         		statusCode = client.executeMethod(method);
         	} catch (HttpRecoverableException e) {}
         }
-        if (statusCode >= 300) {
-        	if (statusCode == -1)
-        		resp.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, "retry limit reached");
-        	else
-        		resp.sendError(statusCode, method.getStatusText());
+        if (statusCode == -1) {
+            resp.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, "retry limit reached");
+            return;
+        } else if (statusCode >= 300) {
+    		resp.sendError(statusCode, method.getStatusText());
         	return;
         }
+
         Header[] headers = method.getResponseHeaders();
         for (int i = 0; i < headers.length; i++) {
         	String hname = headers[i].getName(), hlc = hname.toLowerCase();
