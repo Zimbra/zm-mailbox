@@ -254,6 +254,7 @@ public class LC {
     public static final KnownKey zimbra_waitset_default_request_timeout;
     public static final KnownKey zimbra_waitset_min_request_timeout;
     public static final KnownKey zimbra_waitset_max_request_timeout;
+    public static final KnownKey zimbra_waitset_max_per_account;
 
     public static final KnownKey zimbra_admin_waitset_default_request_timeout;
     public static final KnownKey zimbra_admin_waitset_min_request_timeout;
@@ -928,6 +929,9 @@ public class LC {
         "Minimum Timeout (seconds) a non-admin WaitSetRequest will block");
         zimbra_waitset_max_request_timeout = new KnownKey("zimbra_waitset_max_request_timeout", "1200",
         "Maximum Timeout (seconds) a non-admin WaitSetRequest will block");
+        zimbra_waitset_max_per_account = new KnownKey("zimbra_waitset_max_per_account", "5",
+        "Maximum number of non-admin WaitSets a single account may have open");
+        
         zimbra_admin_waitset_default_request_timeout = new KnownKey("zimbra_admin_waitset_default_request_timeout", "300",
         "Default Timeout (seconds) an admin WaitSetRequest will block");
         zimbra_admin_waitset_min_request_timeout = new KnownKey("zimbra_admin_waitset_min_request_timeout", "0", 
