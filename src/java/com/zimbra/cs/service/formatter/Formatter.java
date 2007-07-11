@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 
 import com.zimbra.cs.account.Account;
@@ -51,6 +52,16 @@ import com.zimbra.common.util.ZimbraLog;
 
 public abstract class Formatter {
 
+    private Servlet mServlet;
+    
+    public void setServlet(Servlet s) {
+        mServlet = s;
+    }
+    
+    public Servlet getServlet() {
+        return mServlet;
+    }
+    
     public abstract String getType();
 
     public String[] getDefaultMimeTypes() {

@@ -208,6 +208,7 @@ public class UserServlet extends ZimbraServlet {
         addFormatter(new WikiFormatter());
         addFormatter(new XmlFormatter());
         addFormatter(new JsonFormatter());
+        addFormatter(new HtmlFormatter());
 
         mDefaultFormatters = new HashMap<String, Formatter>();
         for (Formatter fmt : mFormatters.values())
@@ -216,6 +217,7 @@ public class UserServlet extends ZimbraServlet {
     }
 
     private void addFormatter(Formatter f) {
+        f.setServlet(this);
         mFormatters.put(f.getType(), f);
     }
 
