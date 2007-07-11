@@ -1,5 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<!-- 
+
+supported flags:
+
+default: default when format is not specified
+allfields: dump all fields
+noheader: skip the header line
+
+
+supported formats:
+
+zimbra-csv
+yahoo-csv
+thunderbird-csv
+outlook-2000-csv
+outlook-2003-csv
+
+-->
+
 <contacts>
     <fields>
         <!-- list of all well-known fields -->
@@ -60,9 +79,7 @@
         <field name="workURL"/>
     </fields>
 
-    <format name="zimbra-csv" type="csv">
-        <!-- special rule to dump all fields? -->
-        <column name="*" field="*"/>
+    <format name="zimbra-csv" type="csv" flag="allfields,default">
     </format>
 
     <format name="yahoo-csv" type="csv">
@@ -172,23 +189,17 @@
         <column name="Company" field="company"/>
         <column name="Department" field="department"/>
         <column name="Job Title" field="jobTitle"/>
-        <column name="Business Street" field="workStreet"/>
-        <column name="Business Street 2" field="workStreet"/>
-        <column name="Business Street 3" field="workStreet"/>
+        <column name="Business Street,Business Street 2,Business Street 3" field="workStreet" type="multivalue"/>
         <column name="Business City" field="workCity"/>
         <column name="Business State" field="workState"/>
         <column name="Business Postal Code" field="workPostalCode"/>
         <column name="Business Country" field="workCountry"/>
-        <column name="Home Street" field="homeStreet"/>
-        <column name="Home Street 2" field="homeStreet"/>
-        <column name="Home Street 3" field="homeStreet"/>
+        <column name="Home Street,Home Street 2,Home Street 3" field="homeStreet" type="multivalue"/>
         <column name="Home City" field="homeCity"/>
         <column name="Home State" field="homeState"/>
         <column name="Home Postal Code" field="homePostalCode"/>
         <column name="Home Country" field="homeCountry"/>
-        <column name="Other Street" field="otherStreet"/>
-        <column name="Other Street 2" field="otherStreet"/>
-        <column name="Other Street 3" field="otherStreet"/>
+        <column name="Other Street,Other Street 2,Other Street 3" field="otherStreet" type="multivalue"/>
         <column name="Other City" field="otherCity"/>
         <column name="Other State" field="otherState"/>
         <column name="Other Postal Code" field="otherPostalCode"/>
@@ -262,23 +273,17 @@
         <column name="Company" field="company"/>
         <column name="Department" field="department"/>
         <column name="Job Title" field="jobTitle"/>
-        <column name="Business Street" field="workStreet"/>
-        <column name="Business Street 2" field="workStreet"/>
-        <column name="Business Street 3" field="workStreet"/>
+        <column name="Business Street,Business Street 2,Business Street 3" field="workStreet" type="multivalue"/>
         <column name="Business City" field="workCity"/>
         <column name="Business State" field="workState"/>
         <column name="Business Postal Code" field="workPostalCode"/>
         <column name="Business Country" field="workCountry"/>
-        <column name="Home Street" field="homeStreet"/>
-        <column name="Home Street 2" field="homeStreet"/>
-        <column name="Home Street 3" field="homeStreet"/>
+        <column name="Home Street,Home Street 2,Home Street 3" field="homeStreet" type="multivalue"/>
         <column name="Home City" field="homeCity"/>
         <column name="Home State" field="homeState"/>
         <column name="Home Postal Code" field="homePostalCode"/>
         <column name="Home Country" field="homeCountry"/>
-        <column name="Other Street" field="otherStreet"/>
-        <column name="Other Street 2" field="otherStreet"/>
-        <column name="Other Street 3" field="otherStreet"/>
+        <column name="Other Street,Other Street 2,Other Street 3" field="otherStreet" type="multivalue"/>
         <column name="Other City" field="otherCity"/>
         <column name="Other State" field="otherState"/>
         <column name="Other Postal Code" field="otherPostalCode"/>
@@ -307,7 +312,7 @@
         <column name="Assistant's Name"/>
         <column name="Billing Information"/>
         <column name="Birthday" field="birthday"/>
-	<column name="Business Address PO Box"/>
+        <column name="Business Address PO Box"/>
         <column name="Categories"/>
         <column name="Children"/>
         <column name="Directory Server"/>
