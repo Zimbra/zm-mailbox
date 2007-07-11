@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.TimerTask;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
@@ -44,7 +45,7 @@ import com.zimbra.cs.util.Zimbra;
 public class WaitSetMgr {
     public static final String ALL_ACCOUNTS_ID_PREFIX = "AllWaitSet";
 
-    private static final int MAX_WAITSETS_PER_NONADMIN_ACCOUNT = 5;
+    private static final int MAX_WAITSETS_PER_NONADMIN_ACCOUNT = LC.zimbra_waitset_max_per_account.intValueWithinRange(1,Integer.MAX_VALUE);
     private static final TimerTask sSweeper = new TimerTask() { 
         @Override
         public void run() { 
@@ -84,8 +85,18 @@ public class WaitSetMgr {
                 List<String> list = sWaitSetsByAccountId.get(ownerAccountId);
                 if (list != null) {
                     if (list.size() >= MAX_WAITSETS_PER_NONADMIN_ACCOUNT) {
-                        throw MailServiceException.TOO_MANY_WAITSETS_FOR_THIS_ACCOUNT("Too many waitsets already created for account "+ownerAccountId,
-                            ownerAccountId, list);
+                        // find the least-recently-used
+                        long oldestTime = Long.MAX_VALUE;
+                        String oldestId = null;
+                        for (String wsid : list) {
+                            WaitSetBase ws = lookupInternal(wsid);
+                            long time = ws.getLastAccessedTime();
+                            if (time < oldestTime) {
+                                oldestTime = time;
+                                oldestId = wsid;
+                            }
+                        }
+                        destroy(ownerAccountId, oldestId); 
                     }
                 }
             }

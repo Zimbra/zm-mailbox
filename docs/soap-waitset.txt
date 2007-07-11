@@ -23,7 +23,9 @@ and to set its "default interest types"
 
 - Non-Admin requests may only specify their own account ID.
 
-- Non-Admin accounts are restricted to a max of 5 WaitSets.
+- Non-Admin accounts are restricted to a max of 5 (default,
+  overridable via LocalConfig) WaitSets.  Creating more than the max
+  will cause the least-recently-used WaitSet to be destroyed
 
 - If "allAccounts" is set, then all mailboxes on the system will be
 listened to, including any mailboxes which are created on the system

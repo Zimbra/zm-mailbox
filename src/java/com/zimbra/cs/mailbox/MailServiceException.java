@@ -99,8 +99,7 @@ public class MailServiceException extends ServiceException {
 
 
     public static final String INVALID_COMMIT_ID = "mail.INVALID_COMMIT_ID";
-    public static final String TOO_MANY_WAITSETS_FOR_THIS_ACCOUNT = "mail.TOO_MANY_WAITSETS_FOR_THIS_ACCOUNT";
-
+    
     public static final String ID              = "id";
     public static final String TOKEN           = "token";
     public static final String ITEM_ID         = "itemId";
@@ -434,16 +433,6 @@ public class MailServiceException extends ServiceException {
 
     public static MailServiceException INVALID_COMMIT_ID(String commitId) {
         return new MailServiceException("CommitId " + commitId + " not found in redo logs", INVALID_COMMIT_ID, SENDERS_FAULT);
-    }
-
-    public static MailServiceException TOO_MANY_WAITSETS_FOR_THIS_ACCOUNT(String msg, String accountId, List<String> existingWaitSetId) {
-        Argument[] args = new Argument[existingWaitSetId.size()+1];
-        int i = 0;
-        args[i++] = new Argument("ACCOUNT", accountId, Argument.Type.STR); 
-        for (String s : existingWaitSetId) {
-            args[i++] = new Argument("EXISTING_WAITSET", s, Argument.Type.STR);
-        }
-        return new MailServiceException(msg, TOO_MANY_WAITSETS_FOR_THIS_ACCOUNT, SENDERS_FAULT, args); 
     }
     
 }
