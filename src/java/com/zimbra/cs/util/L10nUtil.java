@@ -245,13 +245,14 @@ public class L10nUtil {
     
     private static class LocalizedClientLocales {
         enum ClientResource {
-            I18nMsg,
+            // I18nMsg,  // generated, all locales are there, so we don't count this resource
             AjxMsg, 
             ZMsg, 
             ZaMsg, 
-            ZmMsg,
-            ZhMsg
+            ZhMsg,
+            ZmMsg
         }
+
         
         // set of localized(translated) locales
         static Set<Locale> sLocalizedLocales = null;
@@ -267,16 +268,23 @@ public class L10nUtil {
             String msgsDir = LC.localized_client_msgs_directory.value();
             ClassLoader classLoader = getClassLoader(msgsDir);
             Locale[] allLocales = Locale.getAvailableLocales();
+            
+            // the en_US locale is alwasy available
+            sLocalizedLocales.add(Locale.US);
+            
             for (Locale lc : allLocales) {
                 for (ClientResource clientRes : ClientResource.values()) {
                     try {
                         ResourceBundle rb = ResourceBundle.getBundle(clientRes.name(), lc, classLoader);
-                        /*
-                         * found a resource for the locale, a locale is considered
-                         * "installed" as long as any of its resource (the list in ClientResource) is present
-                         */ 
-                        sLocalizedLocales.add(lc);
-                        break;
+                        Locale rbLocale = rb.getLocale();
+                        if (rbLocale.equals(lc)) {
+                            /*
+                             * found a resource for the locale, a locale is considered "installed" as long as 
+                             * any of its resource (the list in ClientResource) is present
+                             */ 
+                            sLocalizedLocales.add(lc);
+                            break;
+                        }
                     } catch (MissingResourceException e) {
                     }
                 }
