@@ -242,9 +242,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>mail text signature (deprecatedSince 5.0 in identity)</desc>
 </attr>
 
-<attr id="18" name="zimbraPrefMailSignatureEnabled" type="boolean" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable" deprecatedSince="5.0">
-  <deprecateDesc>no longer used in account or identity</deprecateDesc>
-  <desc>mail signature enabled</desc>
+<attr id="18" name="zimbraPrefMailSignatureEnabled" type="boolean" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable">
+  <desc>mail signature enabled (deprecatedSince 5.0 in identity)</desc>
 </attr>
 
 <attr id="19" name="zimbraDomainName" type="string" max="256" immutable="1" cardinality="single" requiredIn="domain">
