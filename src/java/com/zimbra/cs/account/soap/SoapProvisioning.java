@@ -51,6 +51,8 @@ import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.NamedEntry.Visitor;
+import com.zimbra.cs.account.Provisioning.CacheEntry;
+import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
@@ -1505,28 +1507,24 @@ public class SoapProvisioning extends Provisioning {
         req.addElement(AdminConstants.E_MAILBOX).addAttribute(AdminConstants.A_ACCOUNTID, accountId);
         Element resp = invoke(req);
     }
+
     
-    public static enum CacheEntryBy {
-        
-        // case must match protocol
-        id, name;
+    public void flushCache(CacheEntryType type, CacheEntry[] entries) throws ServiceException {
+        flushCache(type.name(), entries);
     }
     
-    public static class CacheEntry {
-        public CacheEntry(CacheEntryBy entryBy, String entryIdentity) {
-            mEntryBy = entryBy;
-            mEntryIdentity = entryIdentity;
-        }
-        public CacheEntryBy mEntryBy;
-        public String mEntryIdentity;
-    }
-    
+    /*
+     * invoked from ProvUtil, as it has to support skin and locale caches, which are not 
+     * managed by Provisioning.
+     */
     public void flushCache(String type, CacheEntry[] entries) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.FLUSH_CACHE_REQUEST);
         Element eCache = req.addElement(AdminConstants.E_CACHE).addAttribute(AdminConstants.A_TYPE, type);
 
-        for (CacheEntry entry : entries) {
-            eCache.addElement(AdminConstants.E_ENTRY).addAttribute(AdminConstants.A_BY, entry.mEntryBy.name()).addText(entry.mEntryIdentity);
+        if (entries != null) {
+            for (CacheEntry entry : entries) {
+                eCache.addElement(AdminConstants.E_ENTRY).addAttribute(AdminConstants.A_BY, entry.mEntryBy.name()).addText(entry.mEntryIdentity);
+            }
         }
         invoke(req);
     }

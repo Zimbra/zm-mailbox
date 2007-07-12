@@ -2138,4 +2138,45 @@ public abstract class Provisioning {
      */
     public abstract DataSource get(Account account, DataSourceBy keyType, String key) throws ServiceException;
     
+    
+    public static enum CacheEntryType {
+        account,
+        cos,
+        domain,
+        server,
+        zimlet;
+        
+        public static CacheEntryType fromString(String s) throws ServiceException {
+            try {
+                return CacheEntryType.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("unknown cache type: "+s, e);
+            }
+        }
+    }
+    
+    public static enum CacheEntryBy {
+        
+        // case must match protocol
+        id, name;
+    }
+    
+    public static class CacheEntry {
+        public CacheEntry(CacheEntryBy entryBy, String entryIdentity) {
+            mEntryBy = entryBy;
+            mEntryIdentity = entryIdentity;
+        }
+        public CacheEntryBy mEntryBy;
+        public String mEntryIdentity;
+    }
+    
+    /**
+     * flush cache by entry type and optional specific e
+     * 
+     * @param type
+     * @param entries
+     * @throws ServiceException
+     */
+    public abstract void flushCache(CacheEntryType type, CacheEntry[] entries) throws ServiceException;
+    
 }

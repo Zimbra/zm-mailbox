@@ -1,29 +1,20 @@
 package com.zimbra.cs.service.admin;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.CacheEntry;
+import com.zimbra.cs.account.Provisioning.CacheEntryBy;
 import com.zimbra.cs.util.L10nUtil;
 import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class FlushCache extends AdminDocumentHandler {
-
-    private static enum CacheType {
-        // directory scan caches
-        skin,
-        locale,
-        
-        // ldap caches
-        account,
-        cos,
-        domain,
-        server,
-        zimlet;
-   }
     
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
@@ -31,22 +22,24 @@ public class FlushCache extends AdminDocumentHandler {
         Element eCache = request.getElement(AdminConstants.E_CACHE);
         String type = eCache.getAttribute(AdminConstants.A_TYPE);
         
-        try {
-            CacheType cacheType = CacheType.valueOf(type);
-            
-            switch (cacheType) {
-            case skin:
-                SkinUtil.flushSkinCache();
-                break;
-            case locale:
-                L10nUtil.flushLocaleCache();
-                break;
-            default:
-                throw ServiceException.FAILURE("cache type "+type+" is not yet implemented", null);
+        if (type.equals("skin"))
+            SkinUtil.flushSkinCache();
+        else if (type.equals("locale"))
+            L10nUtil.flushLocaleCache();
+        else {
+            Provisioning.CacheEntryType cacheType = Provisioning.CacheEntryType.fromString(type);
+                
+            List<Element> eEntries = eCache.listElements(AdminConstants.E_ENTRY);
+            CacheEntry[] entries = null;
+            if (eEntries.size() > 0) {
+                entries = new CacheEntry[eEntries.size()];
+                int i = 0;
+                for (Element eEntry : eEntries) {
+                    entries[i++] = new CacheEntry(CacheEntryBy.valueOf(eEntry.getAttribute(AdminConstants.A_BY)),
+                                                  eEntry.getText());
+                }
             }
-            
-        } catch (IllegalArgumentException e) {
-            throw ServiceException.INVALID_REQUEST("invalid cache type "+type, null);
+            Provisioning.getInstance().flushCache(cacheType, entries);
         }
 
         Element response = lc.createElement(AdminConstants.FLUSH_CACHE_RESPONSE);

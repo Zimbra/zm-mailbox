@@ -32,6 +32,9 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.CacheEntry;
+import com.zimbra.cs.account.Provisioning.CacheEntryBy;
+import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
@@ -191,7 +194,7 @@ public class ProvUtil implements DebugListener {
         DELETE_SIGNATURE("deleteSignature", "dsig", "{name@domain|id} {signature-name}", Category.ACCOUNT, 2, 2),
         DELETE_SERVER("deleteServer", "ds", "{name|id}", Category.SERVER, 1, 1),
         EXIT("exit", "quit", "", Category.MISC, 0, 0),
-        FLUSH_CACHE("flushCache", "fc", "", Category.MISC, 1, Integer.MAX_VALUE),
+        FLUSH_CACHE("flushCache", "fc", "{skin|locale|account|cos|domain|server|zimlet} [name1|id1 [name2|id2...]]", Category.MISC, 1, Integer.MAX_VALUE),
         GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa", "{domain|id} {name} {name|id|foreignPrincipal} {timestamp|0} {expires|0}", Category.MISC, 5, 5),
         GENERATE_DOMAIN_PRE_AUTH_KEY("generateDomainPreAuthKey", "gdpak", "{domain|id}", Category.MISC, 1, 1),
         GET_ACCOUNT("getAccount", "ga", "{name@domain|id} [attr1 [attr2...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
@@ -1667,20 +1670,32 @@ public class ProvUtil implements DebugListener {
     }
     
     private void doFlushCache(String[] args) throws ServiceException {
-        if (!(mProv instanceof SoapProvisioning))
-            throw ServiceException.INVALID_REQUEST("can only be used via SOAP", null);
-        SoapProvisioning sp = (SoapProvisioning)mProv;
-        SoapProvisioning.CacheEntry[] entries = new SoapProvisioning.CacheEntry[args.length - 2];
-        for (int i=2; i<args.length; i++) {
-            SoapProvisioning.CacheEntryBy entryBy;
-            if (isUUID(args[i]))
-                entryBy = SoapProvisioning.CacheEntryBy.id;
-            else
-                entryBy = SoapProvisioning.CacheEntryBy.name;
+        CacheEntry[] entries = null;
+        
+        if (args.length > 2) {
+            entries = new CacheEntry[args.length - 2];
+            for (int i=2; i<args.length; i++) {
+                CacheEntryBy entryBy;
+                if (isUUID(args[i]))
+                    entryBy = CacheEntryBy.id;
+                else
+                    entryBy = CacheEntryBy.name;
                 
-            entries[i-2] = new SoapProvisioning.CacheEntry(entryBy, args[i]);
+                entries[i-2] = new CacheEntry(entryBy, args[i]);
+            }
         }
-        sp.flushCache(args[1], entries);
+        
+        if (mProv instanceof SoapProvisioning) {
+            SoapProvisioning sp = (SoapProvisioning)mProv;
+            
+            // use this interface to accomadate skin and locale caches
+            sp.flushCache(args[1], entries);
+        } else {
+            if (args[1].equals("skin") || args[1].equals("locale"))
+                throw ServiceException.INVALID_REQUEST("cache type "+args[1]+" is only supported via SOAP", null);
+            // this interface only allows ldap caches, or should we just disallow this?? 
+            mProv.flushCache(CacheEntryType.fromString(args[1]), entries);
+        }
     }
 
     private void doGenerateDomainPreAuthKey(String[] args) throws ServiceException {

@@ -41,6 +41,8 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Account.CalendarUserType;
+import com.zimbra.cs.account.Provisioning.CacheEntry;
+import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AttributeClass;
@@ -4791,6 +4793,105 @@ public class LdapProvisioning extends Provisioning {
             return ((LdapZimlet)entry).getDN();
         else
             throw ServiceException.FAILURE("not a ldap entry", null);
+    }
+    
+    @Override
+    public void flushCache(CacheEntryType type, CacheEntry[] entries) throws ServiceException {
+        
+        NamedEntryCache cache = null;
+        Set<NamedEntry> namedEntries = null;
+        
+        switch (type) {
+        case account:
+            cache = sAccountCache;
+            if (entries != null) {
+                namedEntries = new HashSet<NamedEntry>();
+                for (CacheEntry entry : entries) {
+                    AccountBy accountBy = (entry.mEntryBy==CacheEntryBy.id)? AccountBy.id : AccountBy.name;
+                    Account account = get(accountBy, entry.mEntryIdentity);
+                    if (account == null)
+                        throw AccountServiceException.NO_SUCH_DOMAIN(entry.mEntryIdentity);
+                    else    
+                        namedEntries.add(account);
+                }
+            }
+            break;
+        case cos:
+            cache = sCosCache;
+            if (entries != null) {
+                namedEntries = new HashSet<NamedEntry>();
+                for (CacheEntry entry : entries) {
+                    CosBy cosBy = (entry.mEntryBy==CacheEntryBy.id)? CosBy.id : CosBy.name;
+                    Cos cos = get(cosBy, entry.mEntryIdentity);
+                    if (cos == null)
+                        throw AccountServiceException.NO_SUCH_DOMAIN(entry.mEntryIdentity);
+                    else    
+                        namedEntries.add(cos);
+                }
+            }
+            break;
+        case domain:
+            if (entries != null) {
+                namedEntries = new HashSet<NamedEntry>();
+                for (CacheEntry entry : entries) {
+                    DomainBy domainBy = (entry.mEntryBy==CacheEntryBy.id)? DomainBy.id : DomainBy.name;
+                    Domain domain = get(domainBy, entry.mEntryIdentity);
+                    if (domain == null)
+                        throw AccountServiceException.NO_SUCH_DOMAIN(entry.mEntryIdentity);
+                    else    
+                        namedEntries.add(domain);
+                }
+            }
+            
+            if (entries == null) {
+                sDomainCache.clear();
+            } else {    
+                for (NamedEntry entry : namedEntries) {
+                    sDomainCache.remove((Domain)entry);
+                }
+            }
+            return;
+        case server:
+            cache = sServerCache;
+            if (entries != null) {
+                namedEntries = new HashSet<NamedEntry>();
+                for (CacheEntry entry : entries) {
+                    ServerBy serverBy = (entry.mEntryBy==CacheEntryBy.id)? ServerBy.id : ServerBy.name;
+                    Server server = get(serverBy, entry.mEntryIdentity);
+                    if (server == null)
+                        throw AccountServiceException.NO_SUCH_DOMAIN(entry.mEntryIdentity);
+                    else    
+                        namedEntries.add(server);
+                }
+            }
+            break;
+        case zimlet:
+            cache = sZimletCache;
+            if (entries != null) {
+                namedEntries = new HashSet<NamedEntry>();
+                for (CacheEntry entry : entries) {
+                    if (entry.mEntryBy==CacheEntryBy.id)
+                        throw ServiceException.INVALID_REQUEST("zimlet by id is not supported "+type, null);
+                    Zimlet zimlet = getZimlet(entry.mEntryIdentity);
+                    if (zimlet == null)
+                        throw AccountServiceException.NO_SUCH_DOMAIN(entry.mEntryIdentity);
+                    else    
+                        namedEntries.add(zimlet);
+                }
+            }
+            break;
+        default:
+            throw ServiceException.INVALID_REQUEST("invalid cache type "+type, null);
+        }
+        
+        if (namedEntries == null)
+            cache.clear();
+        else {
+            for (NamedEntry entry : namedEntries) {
+                cache.remove(entry);
+            }
+        }
+        
     }
 
 }
