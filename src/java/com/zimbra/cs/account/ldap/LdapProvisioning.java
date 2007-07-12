@@ -4810,7 +4810,7 @@ public class LdapProvisioning extends Provisioning {
                     AccountBy accountBy = (entry.mEntryBy==CacheEntryBy.id)? AccountBy.id : AccountBy.name;
                     Account account = get(accountBy, entry.mEntryIdentity);
                     if (account == null)
-                        throw AccountServiceException.NO_SUCH_DOMAIN(entry.mEntryIdentity);
+                        throw AccountServiceException.NO_SUCH_ACCOUNT(entry.mEntryIdentity);
                     else    
                         namedEntries.add(account);
                 }
@@ -4824,7 +4824,7 @@ public class LdapProvisioning extends Provisioning {
                     CosBy cosBy = (entry.mEntryBy==CacheEntryBy.id)? CosBy.id : CosBy.name;
                     Cos cos = get(cosBy, entry.mEntryIdentity);
                     if (cos == null)
-                        throw AccountServiceException.NO_SUCH_DOMAIN(entry.mEntryIdentity);
+                        throw AccountServiceException.NO_SUCH_COS(entry.mEntryIdentity);
                     else    
                         namedEntries.add(cos);
                 }
@@ -4859,7 +4859,7 @@ public class LdapProvisioning extends Provisioning {
                     ServerBy serverBy = (entry.mEntryBy==CacheEntryBy.id)? ServerBy.id : ServerBy.name;
                     Server server = get(serverBy, entry.mEntryIdentity);
                     if (server == null)
-                        throw AccountServiceException.NO_SUCH_DOMAIN(entry.mEntryIdentity);
+                        throw AccountServiceException.NO_SUCH_SERVER(entry.mEntryIdentity);
                     else    
                         namedEntries.add(server);
                 }
@@ -4874,7 +4874,7 @@ public class LdapProvisioning extends Provisioning {
                         throw ServiceException.INVALID_REQUEST("zimlet by id is not supported "+type, null);
                     Zimlet zimlet = getZimlet(entry.mEntryIdentity);
                     if (zimlet == null)
-                        throw AccountServiceException.NO_SUCH_DOMAIN(entry.mEntryIdentity);
+                        throw AccountServiceException.NO_SUCH_ZIMLET(entry.mEntryIdentity);
                     else    
                         namedEntries.add(zimlet);
                 }
