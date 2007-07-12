@@ -1289,7 +1289,12 @@ public abstract class Provisioning {
     /*
      * Cross mailbox search
      */
-    public static final String A_zimbraExcludeFromCMBSearch = "zimbraExcludeFromCMBSearch";  
+    public static final String A_zimbraExcludeFromCMBSearch = "zimbraExcludeFromCMBSearch"; 
+    
+    /*
+     * Voice mail
+     */
+    public static final String A_zimbraPrefVoiceItemsPerPage = "zimbraPrefVoiceItemsPerPage";
     
     private static Provisioning sProvisioning;
 
