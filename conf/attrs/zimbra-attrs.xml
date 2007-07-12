@@ -2423,5 +2423,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Shortest allowed duration for zimbraDataSourcePollingInterval.</desc>
 </attr>
 
+<attr id="526" name="zimbraPrefVoiceItemsPerPage" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>25</defaultCOSValue>
+  <desc>number of voice messages/call logs per page</desc>
+</attr>
+
 </attrs>
 
