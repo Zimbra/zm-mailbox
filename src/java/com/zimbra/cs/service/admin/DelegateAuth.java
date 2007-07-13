@@ -47,12 +47,16 @@ import java.util.Map;
 public class DelegateAuth extends AdminDocumentHandler {
 
     // default is one hour
-	private static final long DEFAULT_AUTH_LIFETIME = 60*60*1;
+    private static final long DEFAULT_AUTH_LIFETIME = 60*60*1;
 
     public static final String BY_NAME = "name";
     public static final String BY_ID = "id";
+    
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
 
-	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
         Element a = request.getElement(AdminService.E_ACCOUNT);
@@ -61,7 +65,7 @@ public class DelegateAuth extends AdminDocumentHandler {
 
         long lifetime = request.getAttributeLong(AdminService.A_DURATION, DEFAULT_AUTH_LIFETIME) * 1000;
         
-		Provisioning prov = Provisioning.getInstance();
+        Provisioning prov = Provisioning.getInstance();
         
         Account account = null;
 
@@ -75,6 +79,9 @@ public class DelegateAuth extends AdminDocumentHandler {
 
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(value);
+        
+        if (!canAccessAccount(lc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "DelegateAuth","accountId", account.getId(), "accountName", account.getName()})); 
@@ -97,17 +104,7 @@ public class DelegateAuth extends AdminDocumentHandler {
         }
         response.addAttribute(AdminService.E_AUTH_TOKEN, token, Element.DISP_CONTENT);
         response.addAttribute(AdminService.E_LIFETIME, lifetime, Element.DISP_CONTENT);
-		return response;
-	}
-
-    public boolean needsAuth(Map<String, Object> context) {
-        // can't require auth on auth request
-        return false;
-    }
-
-    public boolean needsAdminAuth(Map<String, Object> context) {
-        // can't require auth on auth request
-        return false;
+        return response;
     }
     
     /*
