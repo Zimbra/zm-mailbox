@@ -154,7 +154,7 @@ public class DbMailItem {
                 stmt.setShort(pos++, data.volumeId);
             else
                 stmt.setNull(pos++, Types.TINYINT);
-            stmt.setString(pos++, data.blobDigest);
+            stmt.setString(pos++, data.getBlobDigest());
             if (data.type == MailItem.TYPE_MESSAGE || data.type == MailItem.TYPE_CHAT || data.type == MailItem.TYPE_FOLDER)
                 stmt.setInt(pos++, data.unreadCount);
             else
@@ -681,7 +681,7 @@ public class DbMailItem {
                 stmt.setInt(pos++, item.getParentId());
             stmt.setInt(pos++, (int) (item.getDate() / 1000));
             stmt.setInt(pos++, item.getSize());
-            stmt.setString(pos++, item.getDigest(true));
+            stmt.setString(pos++, item.getDigest());
             stmt.setInt(pos++, item.getInternalFlagBitmask());
             stmt.setString(pos++, checkSenderLength(sender));
             stmt.setString(pos++, checkSubjectLength(subject));
@@ -3165,7 +3165,7 @@ public class DbMailItem {
         data.volumeId    = rs.getShort(CI_VOLUME_ID + offset);
         if (rs.wasNull())
             data.volumeId = -1;
-        data.blobDigest  = rs.getString(CI_BLOB_DIGEST + offset);
+        data.setBlobDigest(rs.getString(CI_BLOB_DIGEST + offset));
         data.unreadCount = rs.getInt(CI_UNREAD + offset);
         data.flags       = rs.getInt(CI_FLAGS + offset);
         data.tags        = rs.getLong(CI_TAGS + offset);

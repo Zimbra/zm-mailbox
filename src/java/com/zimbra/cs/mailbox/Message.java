@@ -377,7 +377,7 @@ public class Message extends MailItem {
         data.volumeId    = volumeId;
         data.date        = (int) (pm.getReceivedDate() / 1000);
         data.size        = msgSize;
-        data.blobDigest  = digest;
+        data.setBlobDigest(digest);
         data.flags       = flags & (Flag.FLAGS_MESSAGE | Flag.FLAGS_GENERIC);
         data.tags        = tags;
         data.sender      = pm.getParsedSender().getSortString();

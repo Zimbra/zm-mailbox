@@ -25,24 +25,35 @@
 
 package com.zimbra.qa.unittest;
 
+import java.util.List;
+
 import junit.framework.TestCase;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbUtil;
+import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.common.util.ZimbraLog;
 
 public class TestMailItem extends TestCase {
     
+    private static final String USER_NAME = "user1";
+    private static final int TEST_CONTACT_ID = 9999;
+    
+    public void setUp()
+    throws Exception {
+        cleanUp();
+    }
+    
     public void testListItemIds()
     throws Exception {
-        ZimbraLog.test.debug("testListItemIds");
-        
-        Account account = TestUtil.getAccount("user1");
+        Account account = TestUtil.getAccount(USER_NAME);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         
         // Get item count per folder/type
@@ -66,5 +77,46 @@ public class TestMailItem extends TestCase {
             int ids[] = mbox.listItemIds(null, type, folderId);
             assertEquals("Item count does not match", count, ids.length);
         }
+    }
+    
+    /**
+     * Confirms that {@link MailItem#getBlob()} works when the blob digest
+     * contains an empty string.
+     */
+    public void testGetBlob()
+    throws Exception {
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        List<Integer> ids = TestUtil.search(mbox, "contact:Chin", MailItem.TYPE_CONTACT);
+        assertEquals("Unexpected number of contacts", 1, ids.size());
+        
+        String sql = "INSERT INTO " + DbMailItem.getMailItemTableName(mbox) +
+            "  (mailbox_id, id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, " +
+            "  blob_digest, unread, flags, tags, sender, subject, name, metadata, mod_metadata, " +
+            "  change_date, mod_content) " +
+            "SELECT mailbox_id, " + TEST_CONTACT_ID + ", type, parent_id, folder_id, " +
+              TEST_CONTACT_ID + ", imap_id, date, size, volume_id, " +
+            "  '', unread, flags, tags, 'TestMailItem.testGetBlob', subject, name, metadata, mod_metadata, " +
+            "  change_date, mod_content " +
+            "FROM " + DbMailItem.getMailItemTableName(mbox) +
+            " WHERE id = " + ids.get(0);
+        int numRows = DbUtil.executeUpdate(sql);
+        assertEquals("Unexpected number of rows updated", 1, numRows);
+        
+        Contact testContact = mbox.getContactById(null, TEST_CONTACT_ID);
+        String blobDigest = testContact.getDigest();
+        assertNull("Blob digest should have been null: " + blobDigest, blobDigest);
+        MailboxBlob blob = testContact.getBlob(); 
+        assertNull("Blob should have been null: " + blob, blob);
+    }
+    
+    public void tearDown()
+    throws Exception {
+        cleanUp();
+    }
+    
+    private void cleanUp()
+    throws Exception {
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        mbox.delete(null, TEST_CONTACT_ID, MailItem.TYPE_CONTACT);
     }
 }

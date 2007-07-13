@@ -566,7 +566,7 @@ public class Contact extends MailItem {
         data.indexId     = id;
         data.imapId      = id;
         data.volumeId    = volumeId;
-        data.blobDigest  = pc.getDigest();
+        data.setBlobDigest(pc.getDigest());
         data.date        = mbox.getOperationTimestamp();
         data.flags       = pc.hasAttachment() ? Flag.BITMASK_ATTACHED : 0;
         data.tags        = Tag.tagsToBitmask(tags);

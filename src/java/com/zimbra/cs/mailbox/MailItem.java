@@ -183,7 +183,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         public int    indexId  = -1;
         public int    imapId   = -1;
         public short  volumeId = -1;
-        public String blobDigest;
+        private String blobDigest;
         public int    date;
         public int    size;
         public int    flags;
@@ -200,6 +200,21 @@ public abstract class MailItem implements Comparable<MailItem> {
         public List<Integer> children;
         public int    unreadCount;
 
+        /**
+         * Returns the item's blob digest, or <tt>null</tt> if the item has no blob.
+         */
+        public String getBlobDigest() {
+            return blobDigest;
+        }
+        
+        public void setBlobDigest(String blobDigest) {
+            if ("".equals(blobDigest)) {
+                this.blobDigest = null;
+            } else {
+                this.blobDigest = blobDigest;
+            }
+        }
+        
         public boolean isUnread() {
             return (unreadCount > 0);
         }
@@ -541,25 +556,11 @@ public abstract class MailItem implements Comparable<MailItem> {
         return mData.volumeId;
     }
 
-    /** Returns the SHA-1 hash of the item's uncompressed blob.  Returns
-     *  <tt>""</tt> for items that have no stored blob. */
+    /** Returns the SHA-1 hash of the item's uncompressed blob.
+     * 
+     * @return the blob digest, or <tt>null</tt> if no blob exists */
     public String getDigest() {
-        return getDigest(false);
-    }
-
-    /**
-     * Returns the SHA-1 hash of the item's uncompressed blob.  If item has
-     * no blob, the return value depends on preserveNull argument.  If
-     * preserveNull is true, null is returned.  If not, "" (empty string) is
-     * returned.
-     * @param preserveNull
-     * @return
-     */
-    public String getDigest(boolean preserveNull) {
-        if (preserveNull || mData.blobDigest != null)
-            return mData.blobDigest;
-        else
-            return "";
+        return mData.getBlobDigest();
     }
 
     /** Returns the date the item's content was last modified.  For immutable
@@ -787,7 +788,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      * 
      * @throws ServiceException if the file cannot be found. */
     public synchronized MailboxBlob getBlob() throws ServiceException {
-        if (mBlob == null && mData.blobDigest != null) {
+        if (mBlob == null && getDigest() != null) {
             mBlob = StoreManager.getInstance().getMailboxBlob(mMailbox, mId, mData.modContent, mData.volumeId);
             if (mBlob == null)
                 throw ServiceException.FAILURE("missing blob for id: " + mId + ", change: " + mData.modContent, null);
@@ -805,7 +806,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      * @see #getMimeMessage()
      * @see #getContent() */
     public InputStream getContentStream() throws ServiceException {
-        return mData.blobDigest == null ? null : MessageCache.getRawContent(this);
+        return getDigest() == null ? null : MessageCache.getRawContent(this);
     }
 
     /** Returns the raw, uncompressed content of the item's blob as a byte
@@ -818,7 +819,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      * @see #getMimeMessage()
      * @see #getContentStream() */
     public byte[] getContent() throws ServiceException {
-        return mData.blobDigest == null ? null : MessageCache.getItemContent(this);
+        return getDigest() == null ? null : MessageCache.getItemContent(this);
     }
 
 
@@ -1269,7 +1270,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     Blob setContent(byte[] data, String digest, short volumeId, Object content)
     throws ServiceException, IOException {
         // catch the "was no blob, is no blob" case
-        if (digest == null && mData.blobDigest == null)
+        if (digest == null && getDigest() == null)
             return null;
 
         // delete the old blob *unless* we've already rewritten it in this transaction
@@ -1290,7 +1291,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             getFolder().updateSize(0, size - mData.size);
             mData.size = size;
         }
-        mData.blobDigest = digest;
+        mData.setBlobDigest(digest);
         mData.date       = mMailbox.getOperationTimestamp();
         mData.volumeId   = data == null ? -1 : volumeId;
         mData.imapId     = mMailbox.isTrackingImap() ? 0 : mData.id;
@@ -2083,7 +2084,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             else
                 (info.sharedIndex = new HashSet<Integer>()).add(mData.indexId);
         }
-        if (mData.blobDigest != null && mData.blobDigest.length() > 0) {
+        if (getDigest() != null) {
             try {
                 MailboxBlob mblob = StoreManager.getInstance().getMailboxBlob(mMailbox, mId, mData.modContent, mData.volumeId);
                 if (mblob == null)
@@ -2213,8 +2214,8 @@ public abstract class MailItem implements Comparable<MailItem> {
             sb.append(CN_SUBJECT).append(": ").append(mData.subject).append(", ");
         if (mData.children != null)
             sb.append(CN_CHILDREN).append(": [").append(mData.children.toString()).append("], ");
-        if (mData.blobDigest != null)
-            sb.append(CN_BLOB_DIGEST).append(": ").append(mData.blobDigest);
+        if (getDigest() != null)
+            sb.append(CN_BLOB_DIGEST).append(": ").append(getDigest());
         if (mData.imapId > 0)
             sb.append(CN_IMAP_ID).append(": ").append(mData.imapId).append(", ");
         sb.append(CN_DATE).append(": ").append(mData.date).append(", ");

@@ -4432,7 +4432,7 @@ public class Mailbox {
 
     /**
      * Deletes the <tt>MailItem</tt> with the given id.  Does nothing
-     * if there is the <tt>MailItem</tt> doesn't exist.
+     * if the <tt>MailItem</tt> doesn't exist.
      */
     public synchronized void delete(OperationContext octxt, int itemId, byte type) throws ServiceException {
         delete(octxt, new int[] { itemId }, type, null);
@@ -4705,7 +4705,7 @@ public class Mailbox {
             }
 
             try {
-                if (pc.getBlob() == null && con.mData.blobDigest == null)
+                if (pc.getBlob() == null && con.getDigest() == null)
                     con.setFields(pc);
                 else
                     con.setContent(pc.getBlob(), pc.getDigest(), volumeId, pc);
