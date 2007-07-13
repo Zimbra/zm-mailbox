@@ -4,13 +4,14 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.VoiceConstants;
+import com.zimbra.cs.account.Provisioning;
 
 import java.util.HashMap;
 
 public class ZVoiceMailPrefs extends ZCallFeature {
     private HashMap<String, String> mMap;
 
-    public ZVoiceMailPrefs(String name) {
+	public ZVoiceMailPrefs(String name) {
         super(name);
         mMap = new HashMap<String, String>();
     }
@@ -23,9 +24,26 @@ public class ZVoiceMailPrefs extends ZCallFeature {
         mMap.put(VoiceConstants.A_vmPrefEmailNotifAddress, address);
     }
 
+    public long getNumberPerPage() {
+        return this.getLong(Provisioning.A_zimbraPrefVoiceItemsPerPage);
+    }
+
+    public void setNumberPerPage(long number) {
+        mMap.put(Provisioning.A_zimbraPrefVoiceItemsPerPage, Long.toString(number));
+    }
+
     public String get(String key) {
         return mMap.get(key);
     }
+
+	public long getLong(String name) {
+		String v = get(name);
+		try {
+			return v == null ? -1 : Long.parseLong(v);
+		} catch (NumberFormatException e) {
+			return -1;
+		}
+	}
 
     public synchronized void assignFrom(ZCallFeature that) {
         super.assignFrom(that);
