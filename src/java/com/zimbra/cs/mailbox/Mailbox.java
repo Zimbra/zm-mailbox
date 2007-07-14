@@ -53,6 +53,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.db.DbMailItem;
@@ -2842,8 +2843,7 @@ public class Mailbox {
 
     public synchronized ZVCalendar getZCalendarForCalendarItems(
             Collection<CalendarItem> calItems,
-            boolean useOutlookCompatMode,
-            boolean ignoreErrors)
+            boolean useOutlookCompatMode, boolean ignoreErrors, boolean isOwner)
     throws ServiceException {
         ZVCalendar cal = new ZVCalendar();
 
@@ -2868,20 +2868,20 @@ public class Mailbox {
 
         // build all the event components and add them to the Calendar
         for (CalendarItem calItem : calItems)
-            calItem.appendRawCalendarData(cal, useOutlookCompatMode, ignoreErrors);
+            calItem.appendRawCalendarData(cal, useOutlookCompatMode, ignoreErrors, isOwner);
         return cal;
     }
 
     public synchronized ZVCalendar getZCalendarForRange(
             OperationContext octxt,
             long start, long end, int folderId,
-            boolean useOutlookCompatMode)
+            boolean useOutlookCompatMode, boolean isOwner)
     throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("getCalendarForRange", octxt);
             Collection<CalendarItem> calItems = getCalendarItemsForRange(octxt, start, end, folderId, null);
-            return getZCalendarForCalendarItems(calItems, useOutlookCompatMode, false);
+            return getZCalendarForCalendarItems(calItems, useOutlookCompatMode, false, isOwner);
         } finally {
             endTransaction(success);
         }
@@ -4619,6 +4619,14 @@ public class Mailbox {
 
     CalendarItem createCalendarItem(int folderId, short volumeId, int flags, long tags, String uid, ParsedMessage pm, Invite invite)
     throws ServiceException {
+        OperationContext octxt = getOperationContext();
+        boolean isOwner = octxt != null ? !octxt.isDelegatedRequest(this) : false;
+        boolean isCalendarResource = getAccount() instanceof CalendarResource;
+        // Don't allow creating a private appointment on behalf of another user,
+        // unless that other user is a calendar resource.
+        if (!isOwner && !invite.isPublic() && !isCalendarResource)
+            throw ServiceException.PERM_DENIED("private appointment/task cannot be created on behalf of another user");
+
         // FIXME: assuming that we're in the middle of a AddInvite op
         CreateCalendarItemPlayer redoPlayer = (CreateCalendarItemPlayer) mCurrentChange.getRedoPlayer();
         CreateCalendarItemRecorder redoRecorder = (CreateCalendarItemRecorder) mCurrentChange.getRedoRecorder();

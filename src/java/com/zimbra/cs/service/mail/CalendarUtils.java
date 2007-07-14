@@ -34,6 +34,7 @@ import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
 import com.zimbra.cs.mailbox.calendar.Alarm;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
+import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
@@ -53,6 +54,8 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZRecur;
+import com.zimbra.cs.util.L10nUtil;
+import com.zimbra.cs.util.L10nUtil.MsgKey;
 
 import java.io.StringReader;
 import java.text.ParseException;
@@ -60,6 +63,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 public class CalendarUtils {
     /**
@@ -1031,9 +1035,20 @@ public class CalendarUtils {
         for (ZAttendee a : attendees)
             cancel.addAttendee(a);
 
-        // COMMENT
-        if (comment != null && !comment.equals("")) {
-            cancel.setComment(comment);
+        cancel.setClassProp(inv.getClassProp());
+        boolean hidePrivate = onBehalfOf && !inv.isPublic();
+        Locale locale = acct.getLocale();
+        if (hidePrivate) {
+            // SUMMARY
+            String sbj = L10nUtil.getMessage(MsgKey.calendarSubjectWithheld, locale);
+            cancel.setName(CalendarMailSender.getCancelSubject(sbj, locale));
+        } else {
+            // SUMMARY
+            cancel.setName(CalendarMailSender.getCancelSubject(inv.getName(), locale));
+
+            // COMMENT
+            if (comment != null && !comment.equals(""))
+                cancel.setComment(comment);
         }
 
         // UID
@@ -1077,9 +1092,6 @@ public class CalendarUtils {
 
         // DTSTAMP
         cancel.setDtStamp(new Date().getTime());
-
-        // SUMMARY
-        cancel.setName("CANCELLED: " + inv.getName());
 
         return cancel;
     }

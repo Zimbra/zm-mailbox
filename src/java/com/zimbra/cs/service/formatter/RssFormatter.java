@@ -85,7 +85,10 @@ public class RssFormatter extends Formatter {
                     break;
                 if (curHit >= offset) {
                     if (itItem instanceof CalendarItem) {
-                        addCalendarItem((CalendarItem) itItem, channel, context);                
+                        // Don't return private appointments/tasks if the requester is not the mailbox owner.
+                        CalendarItem calItem = (CalendarItem) itItem;
+                        if (!context.opContext.isDelegatedRequest(context.targetMailbox) || calItem.isPublic())
+                            addCalendarItem(calItem, channel, context);
                     } else if (itItem instanceof Message) {
                         addMessage((Message) itItem, channel, context);
                     } else if (itItem instanceof Document) {

@@ -52,6 +52,7 @@ public class L10nUtil {
         // calendar messages
 
         calendarSubjectCancelled,
+        calendarSubjectWithheld,
         calendarCancelRemovedFromAttendeeList,
         calendarCancelAppointment,
         calendarCancelAppointmentInstance,

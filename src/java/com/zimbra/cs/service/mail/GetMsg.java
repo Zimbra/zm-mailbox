@@ -87,7 +87,7 @@ public class GetMsg extends MailDocumentHandler {
             if (raw) {
                 throw ServiceException.INVALID_REQUEST("Cannot request RAW formatted subpart message", null);
             } else {
-                ToXML.encodeInviteAsMP(response, ifmt, calItem, iid, part, wantHTML, neuter, headers, false);
+                ToXML.encodeInviteAsMP(response, ifmt, octxt, calItem, iid, part, wantHTML, neuter, headers, false);
             }
         } else {
             Message msg = getMsg(octxt, mbox, iid, read);

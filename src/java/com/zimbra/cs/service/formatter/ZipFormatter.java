@@ -30,7 +30,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -41,6 +40,7 @@ import javax.mail.internet.MimePart;
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -136,6 +136,16 @@ public class ZipFormatter extends Formatter {
                     out.putNextEntry(entry);
                     out.write(vcf.formatted.getBytes(Mime.P_CHARSET_UTF8));
                     out.closeEntry();
+                } else if (item instanceof CalendarItem) {
+                    // We aren't currently adding calendar items to the zip stream, but this block
+                    // of code is added to highlight the need to hide private calendar items
+                    // when/if we included calendar items to the zip later.
+
+                    // Don't return private appointments/tasks if the requester is not the mailbox owner.
+                    CalendarItem calItem = (CalendarItem) context.target;
+                    if (!context.opContext.isDelegatedRequest(context.targetMailbox) || calItem.isPublic()) {
+                        // do nothing for now
+                    }
                 }
             }
         } finally {

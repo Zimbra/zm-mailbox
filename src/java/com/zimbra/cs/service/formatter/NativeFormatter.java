@@ -84,7 +84,12 @@ public class NativeFormatter extends Formatter {
             if (context.target instanceof Message) {
                 handleMessage(context, (Message) context.target);
             } else if (context.target instanceof CalendarItem) {
-                handleCalendarItem(context, (CalendarItem) context.target);
+                // Don't return private appointments/tasks if the requester is not the mailbox owner.
+                CalendarItem calItem = (CalendarItem) context.target;
+                if (!context.opContext.isDelegatedRequest(context.targetMailbox) || calItem.isPublic())
+                    handleCalendarItem(context, calItem);
+                else
+                    context.resp.sendError(HttpServletResponse.SC_FORBIDDEN, "permission denied");
             } else if (context.target instanceof Document) {
                 handleDocument(context, (Document) context.target);
             } else if (context.target instanceof Contact) {

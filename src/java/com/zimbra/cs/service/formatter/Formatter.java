@@ -137,6 +137,8 @@ public abstract class Formatter {
     public abstract void saveCallback(byte[] body, UserServlet.Context context, String contentType, Folder folder, String filename)
     throws UserServletException, ServiceException, IOException, ServletException;
 
+    // Caller is responsible for filtering out Appointments/Tasks marked private if the requester
+    // is not the mailbox owner.
     public Iterator<? extends MailItem> getMailItems(Context context, long startTime, long endTime, long chunkSize) throws ServiceException {
     	if (context.respListItems != null) {
     		return context.respListItems.iterator();

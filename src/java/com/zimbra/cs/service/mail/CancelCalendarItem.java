@@ -93,9 +93,9 @@ public class CancelCalendarItem extends CalendarRequest {
                 RecurId recurId = CalendarUtils.parseRecurId(recurElt, tzmap, inv);
                 cancelInstance(zsc, octxt, request, acct, mbox, calItem, inv, recurId);
             } else {
-                // if recur is not set, then we're cancelling the entire calendar item...
+                // if recur is not set, then we're canceling the entire calendar item...
                 
-                // first, pull a list of all the invites and THEN start cancelling them: since cancelling them
+                // first, pull a list of all the invites and THEN start canceling them: since canceling them
                 // will remove them from the calendar item's list, we can get really confused if we just directly
                 // iterate through the list...
                 

@@ -189,7 +189,7 @@ public class Search extends MailDocumentHandler  {
                 totalNumHits++;
             } else if (hit instanceof CalendarItemHit) {
                 CalendarItemHit ah = (CalendarItemHit) hit;
-                e = addCalendarItemHit(ah, response, zsc, ifmt, inline, params);
+                e = addCalendarItemHit(ah, response, zsc, octxt, ifmt, inline, params);
             } else if (hit instanceof DocumentHit) {
                 DocumentHit dh = (DocumentHit) hit;
                 e = addDocumentHit(dh, response, ifmt);
@@ -245,7 +245,7 @@ public class Search extends MailDocumentHandler  {
      *           calendar item did not have any instances in the specified range
      * @throws ServiceException
      */
-    protected Element addCalendarItemHit(CalendarItemHit ah, Element response, ZimbraSoapContext zsc, ItemIdFormatter ifmt, boolean inline, SearchParams params)
+    protected Element addCalendarItemHit(CalendarItemHit ah, Element response, ZimbraSoapContext zsc, OperationContext octxt, ItemIdFormatter ifmt, boolean inline, SearchParams params)
     throws ServiceException {
         CalendarItem calItem = ah.getCalendarItem();
         Element calElement = null;
@@ -259,7 +259,7 @@ public class Search extends MailDocumentHandler  {
         
         if (calElement != null) {
             response.addElement(encoded.element);
-            ToXML.setCalendarItemFields(encoded.element, ifmt, calItem, fields, false);
+            ToXML.setCalendarItemFields(encoded.element, ifmt, octxt, calItem, fields, false);
 
             calElement.addAttribute(MailConstants.A_CONTENTMATCHED, true);
             if (ah.getScore() != 0)

@@ -95,7 +95,8 @@ public class IcsFormatter extends Formatter {
         boolean useOutlookCompatMode = Browser.IE.equals(browser);
 //        try {
             ZVCalendar cal = context.targetMailbox.getZCalendarForCalendarItems(
-                    calItems, useOutlookCompatMode, true);
+                    calItems, useOutlookCompatMode, true,
+                    !context.opContext.isDelegatedRequest(context.targetMailbox));
             ByteArrayOutputStream buf = new ByteArrayOutputStream();
             OutputStreamWriter wout = new OutputStreamWriter(buf, Mime.P_CHARSET_UTF8);
             cal.toICalendar(wout);
@@ -125,7 +126,7 @@ public class IcsFormatter extends Formatter {
         // use that charset in String() constructor.
         Reader reader = new StringReader(new String(body, Mime.P_CHARSET_UTF8));
         List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(reader);
-        List<Invite> invites = Invite.createFromCalendar(context.authAccount, null, icals, false);
+        List<Invite> invites = Invite.createFromCalendar(context.authAccount, null, icals, true);
         for (Invite inv : invites) {
             // handle missing UIDs on remote calendars by generating them as needed
             if (inv.getUid() == null)

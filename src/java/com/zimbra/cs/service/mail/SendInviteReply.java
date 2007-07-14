@@ -40,6 +40,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -61,6 +62,8 @@ import com.zimbra.cs.mailbox.calendar.CalendarMailSender.Verb;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
+import com.zimbra.cs.util.L10nUtil;
+import com.zimbra.cs.util.L10nUtil.MsgKey;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -133,8 +136,13 @@ public class SendInviteReply extends CalendarRequest {
             
             if ((mbox.getEffectivePermissions(octxt, calItemId, MailItem.TYPE_UNKNOWN) & ACL.RIGHT_ACTION) == 0)
                 throw ServiceException.PERM_DENIED("You do not have ACTION rights for CalendarItem "+calItemId);
-            
-            
+
+            // Don't allow creating/editing a private appointment on behalf of another user,
+            // unless that other user is a calendar resource.
+            boolean isCalendarResource = acct instanceof CalendarResource;
+            if (onBehalfOf && !oldInv.isPublic() && !isCalendarResource)
+                throw ServiceException.PERM_DENIED("Cannot reply to a private appointment/task on behalf of another user");
+
             // see if there is a specific Exception being referenced by this reply...
             Element exc = request.getOptionalElement(MailConstants.E_CAL_EXCEPTION_ID);
             ParsedDateTime exceptDt = null;
@@ -158,8 +166,13 @@ public class SendInviteReply extends CalendarRequest {
                     locale = organizer.getLocale();
                 else
                     locale = !onBehalfOf ? acct.getLocale() : authAcct.getLocale();
+                String subject;
+                if (onBehalfOf && !oldInv.isPublic())
+                    subject = L10nUtil.getMessage(MsgKey.calendarSubjectWithheld, locale);
+                else
+                    subject = oldInv.getName();
                 String replySubject =
-                    CalendarMailSender.getReplySubject(verb, oldInv, locale);
+                    CalendarMailSender.getReplySubject(verb, subject, locale);
 
                 CalSendData csd = new CalSendData();
                 csd.mOrigId = oldInv.getMailItemId();

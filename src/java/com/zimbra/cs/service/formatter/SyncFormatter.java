@@ -41,6 +41,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.UserServletException;
@@ -120,7 +121,12 @@ public class SyncFormatter extends Formatter {
             } else if (context.target instanceof Message) {
                 handleMessage(context, (Message) context.target);
             } else if (context.target instanceof CalendarItem) {
-                handleCalendarItem(context, (CalendarItem) context.target);
+                // Don't return private appointments/tasks if the requester is not the mailbox owner.
+                CalendarItem calItem = (CalendarItem) context.target;
+                if (!context.opContext.isDelegatedRequest(context.targetMailbox) || calItem.isPublic())
+                    handleCalendarItem(context, calItem);
+                else
+                    context.resp.sendError(HttpServletResponse.SC_FORBIDDEN, "permission denied");
             }
         } catch (MessagingException me) {
             throw ServiceException.FAILURE(me.getMessage(), me);

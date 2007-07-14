@@ -81,9 +81,10 @@ public class GetICal extends MailDocumentHandler {
                     if (inv == null) {
                         throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
                     }
-                    cal = inv.newToICalendar(useOutlookCompatMode);
+                    cal = inv.newToICalendar(useOutlookCompatMode, !octxt.isDelegatedRequest(mbx));
                 } else {
-                    cal = mbx.getZCalendarForRange(octxt, rangeStart, rangeEnd, Mailbox.ID_FOLDER_CALENDAR, useOutlookCompatMode);
+                    cal = mbx.getZCalendarForRange(octxt, rangeStart, rangeEnd, Mailbox.ID_FOLDER_CALENDAR,
+                                                   useOutlookCompatMode, !octxt.isDelegatedRequest(mbx));
                 }
                 
                 ByteArrayOutputStream buf = new ByteArrayOutputStream();

@@ -571,7 +571,7 @@ public class ItemActionHelper {
         }
 
         // explicitly add the invite metadata here
-        ToXML.encodeInvite(m, mIdFormatter, cal, inv);
+        ToXML.encodeInvite(m, mIdFormatter, getOpCtxt(), cal, inv, true);
 
         // fix up the Organizer if needed
         for (Element comp : m.getElement(MailConstants.E_INVITE).listElements(MailConstants.E_INVITE_COMPONENT)) {

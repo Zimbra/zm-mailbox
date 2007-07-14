@@ -84,7 +84,7 @@ public class ImportAppointments extends MailDocumentHandler  {
             List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(reader);
             reader.close();
 
-            List<Invite> invites = Invite.createFromCalendar(mbox.getAccount(), null, icals, false);
+            List<Invite> invites = Invite.createFromCalendar(mbox.getAccount(), null, icals, true);
 
             StringBuilder ids = new StringBuilder();
 

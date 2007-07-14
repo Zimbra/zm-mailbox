@@ -48,9 +48,11 @@ import javax.mail.internet.MimeMultipart;
 import org.apache.lucene.document.Field;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
@@ -674,6 +676,24 @@ public abstract class CalendarItem extends MailItem {
     }
 
     /**
+     * Returns true if all invites in the calendar item have CLASS:PUBLIC.
+     * @return
+     */
+    public boolean isPublic() {
+        boolean result = true;
+        Invite[] invs = getInvites();
+        if (invs != null && invs.length > 0) {
+            for (Invite i : invs) {
+                if (!i.isPublic()) {
+                    result = false;
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
      * @param pm
      * @param invite
      * @param force
@@ -737,6 +757,14 @@ public abstract class CalendarItem extends MailItem {
 
         if (!canAccess(isCancel ? ACL.RIGHT_DELETE : ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this appointment/task");
+
+        // Don't allow creating/editing a private appointment on behalf of another user,
+        // unless that other user is a calendar resource.
+        boolean isCalendarResource = getMailbox().getAccount() instanceof CalendarResource;
+        OperationContext octxt = getMailbox().getOperationContext();
+        boolean isOwner = octxt != null ? !octxt.isDelegatedRequest(getMailbox()) : false;
+        if (!isOwner && !newInvite.isPublic() && !isCalendarResource)
+            throw ServiceException.PERM_DENIED("private appointment/task cannot be created/edited on behalf of another user");
 
         organizerChangeCheck(newInvite);
 
@@ -824,6 +852,12 @@ public abstract class CalendarItem extends MailItem {
         boolean callProcessPartStat = false;
         if (addNewOne) {
             newInvite.setCalendarItem(this);
+
+            // Don't allow creating/editing a private appointment on behalf of another user,
+            // unless that other user is a calendar resource.
+            if (!isOwner && prev != null && !prev.isPublic() && !isCalendarResource)
+                throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this appointment/task");
+
             if (prev!=null && !newInvite.isOrganizer() && newInvite.sentByMe()) {
                 // A non-organizer attendee is modifying data on his/her
                 // appointment/task.  Any information that is tracked in
@@ -836,6 +870,18 @@ public abstract class CalendarItem extends MailItem {
                 // it has already been marked as a created item.
             } else {
                 callProcessPartStat = true;
+            }
+
+            newInvite.setClassPropSetByMe(newInvite.sentByMe());
+
+            // If updating attendee's appointment/task with a new version published by organizer
+            // and attendee's copy was previously set to private/confidential by himself/herself,
+            // retain the value and therefore don't allow the organizer to override it.
+            if (prev != null && !newInvite.isOrganizer() && !newInvite.sentByMe()) {
+                if (!prev.isPublic() && prev.classPropSetByMe()) {
+                    newInvite.setClassProp(prev.getClassProp());
+                    newInvite.setClassPropSetByMe(true);
+                }
             }
 
             mInvites.add(newInvite);
@@ -1243,7 +1289,10 @@ public abstract class CalendarItem extends MailItem {
                 if (icalPartNum != -1) {
                     updated = true;
                     multi.removeBodyPart(icalPartNum);
-                    ZVCalendar cal = inv.newToICalendar();
+                    Mailbox mbx = getMailbox();
+                    OperationContext octxt = mbx.getOperationContext();
+                    boolean isOwner = octxt != null ? !octxt.isDelegatedRequest(mbx) : false;
+                    ZVCalendar cal = inv.newToICalendar(isOwner);
                     MimeBodyPart icalPart = CalendarMailSender.makeICalIntoMimePart(inv.getUid(), cal);
                     multi.addBodyPart(icalPart, icalPartNum);
                     // Courtesy of JavaMail.  All three lines are necessary.
@@ -1727,12 +1776,13 @@ public abstract class CalendarItem extends MailItem {
 
     void appendRawCalendarData(ZVCalendar cal,
                                boolean useOutlookCompatMode,
-                               boolean ignoreErrors)
+                               boolean ignoreErrors,
+                               boolean isOwner)
     throws ServiceException {
         for (Iterator invIter = mInvites.iterator(); invIter.hasNext();) {
             Invite inv = (Invite)invIter.next();
             try {
-                cal.addComponent(inv.newToVComponent(useOutlookCompatMode));
+                cal.addComponent(inv.newToVComponent(useOutlookCompatMode, isOwner));
             } catch (ServiceException e) {
                 if (ignoreErrors) {
                     ZimbraLog.calendar.warn(
