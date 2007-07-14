@@ -1886,7 +1886,7 @@ public class LdapProvisioning extends Provisioning {
                 throw ServiceException.FAILURE("encountered invalid dl name " + dl.getName(), null);
             newLocal = parts[0];
             newEmail = newLocal + "@" + newName;   
-            renameAccount(dl.getId(), newEmail);
+            renameDistributionList(dl.getId(), newEmail);
          }
         
         List accts = getAllAccounts(oldDomain);
