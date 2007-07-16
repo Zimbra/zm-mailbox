@@ -25,7 +25,6 @@
 package com.zimbra.cs.service.formatter;
 
 import java.io.IOException;
-import java.util.HashMap;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
@@ -33,7 +32,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.mailbox.Folder;
@@ -44,16 +43,18 @@ import com.zimbra.cs.service.UserServlet.Context;
 
 public class HtmlFormatter extends Formatter {
     
-    private static final String PATH_MAIN_CONTEXT = "/zimbra";
+    private static final String PATH_MAIN_CONTEXT  = "/zimbra";
+    private static final String PATH_JSP_REST_PAGE = "/h/rest";
     private static final long   AUTH_EXPIRATION = 60 * 60 * 1000;
     
-    private HashMap<Byte, String> mTargets;
-    
-    public HtmlFormatter() {
-        mTargets = new HashMap<Byte,String>();
-        mTargets.put(MailItem.TYPE_APPOINTMENT, "/h/calendar");
-        //mTargets.put(MailItem.TYPE_MESSAGE, "/h");
-    }
+    private static final String ATTR_INTERNAL_DISPATCH   = "zimbra-internal-dispatch";
+    private static final String ATTR_AUTH_TOKEN          = "zimbra-authToken";
+    private static final String ATTR_TARGET_ACCOUNT_NAME = "zimbra-target-account-name";
+    private static final String ATTR_TARGET_ACCOUNT_ID   = "zimbra-target-account-id";
+    private static final String ATTR_TARGET_ITEM_ID      = "zimbra-target-item-id";
+    private static final String ATTR_TARGET_ITEM_TYPE    = "zimbra-target-item-type";
+    private static final String ATTR_TARGET_ITEM_COLOR   = "zimbra-target-item-color";
+    private static final String ATTR_TARGET_ITEM_VIEW    = "zimbra-target-item-view";
     
     @Override
     public boolean canBeBlocked() {
@@ -81,19 +82,22 @@ public class HtmlFormatter extends Formatter {
             throw new ServletException("error generating the authToken", e);
         }
         
-        ZimbraLog.misc.warn(authString);
+        Account targetAccount = context.targetAccount;
+        MailItem targetItem = context.target;
         
-        Folder f = (Folder) context.target;
-        String targetPath = mTargets.get(f.getDefaultView());
-        if (targetPath == null)
-            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "format not supported for this item");
-        
-        context.req.setAttribute("zimbra-internal-dispatch", "yes");
-        context.req.setAttribute("zimbra-authToken", authString);
+        context.req.setAttribute(ATTR_INTERNAL_DISPATCH, "yes");
+        context.req.setAttribute(ATTR_AUTH_TOKEN, authString);
+        context.req.setAttribute(ATTR_TARGET_ACCOUNT_NAME, targetAccount.getName());
+        context.req.setAttribute(ATTR_TARGET_ACCOUNT_ID, targetAccount.getId());
+        context.req.setAttribute(ATTR_TARGET_ITEM_ID, targetItem.getId());
+        context.req.setAttribute(ATTR_TARGET_ITEM_TYPE, targetItem.getType());
+        context.req.setAttribute(ATTR_TARGET_ITEM_COLOR, targetItem.getColor());
+        if (targetItem instanceof Folder)
+            context.req.setAttribute(ATTR_TARGET_ITEM_VIEW, ((Folder)targetItem).getDefaultView());
 
         ServletContext sc = getServlet().getServletConfig().getServletContext();
         ServletContext targetContext = sc.getContext(PATH_MAIN_CONTEXT);
-        RequestDispatcher dispatcher = targetContext.getRequestDispatcher(targetPath);
+        RequestDispatcher dispatcher = targetContext.getRequestDispatcher(PATH_JSP_REST_PAGE);
         dispatcher.forward(context.req, context.resp);
     }
 
