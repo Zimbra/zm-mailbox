@@ -762,8 +762,8 @@ public abstract class CalendarItem extends MailItem {
         // unless that other user is a calendar resource.
         boolean isCalendarResource = getMailbox().getAccount() instanceof CalendarResource;
         OperationContext octxt = getMailbox().getOperationContext();
-        boolean isOwner = octxt != null ? !octxt.isDelegatedRequest(getMailbox()) : false;
-        if (!isOwner && !newInvite.isPublic() && !isCalendarResource)
+        boolean onBehalfOf = octxt != null ? octxt.isDelegatedRequest(getMailbox()) : false;
+        if (onBehalfOf && !newInvite.isPublic() && !isCalendarResource)
             throw ServiceException.PERM_DENIED("private appointment/task cannot be created/edited on behalf of another user");
 
         organizerChangeCheck(newInvite);
@@ -855,7 +855,7 @@ public abstract class CalendarItem extends MailItem {
 
             // Don't allow creating/editing a private appointment on behalf of another user,
             // unless that other user is a calendar resource.
-            if (!isOwner && prev != null && !prev.isPublic() && !isCalendarResource)
+            if (onBehalfOf && prev != null && !prev.isPublic() && !isCalendarResource)
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this appointment/task");
 
             if (prev!=null && !newInvite.isOrganizer() && newInvite.sentByMe()) {

@@ -4620,11 +4620,11 @@ public class Mailbox {
     CalendarItem createCalendarItem(int folderId, short volumeId, int flags, long tags, String uid, ParsedMessage pm, Invite invite)
     throws ServiceException {
         OperationContext octxt = getOperationContext();
-        boolean isOwner = octxt != null ? !octxt.isDelegatedRequest(this) : false;
+        boolean onBehalfOf = octxt != null ? octxt.isDelegatedRequest(this) : false;
         boolean isCalendarResource = getAccount() instanceof CalendarResource;
         // Don't allow creating a private appointment on behalf of another user,
         // unless that other user is a calendar resource.
-        if (!isOwner && !invite.isPublic() && !isCalendarResource)
+        if (onBehalfOf && !invite.isPublic() && !isCalendarResource)
             throw ServiceException.PERM_DENIED("private appointment/task cannot be created on behalf of another user");
 
         // FIXME: assuming that we're in the middle of a AddInvite op
