@@ -220,7 +220,7 @@ public class LC {
 
     public static final KnownKey calendar_outlook_compatible_allday_events;
 
-    public static final KnownKey nio_imap_enable;
+    public static final KnownKey nio_imap_enabled;
     public static final KnownKey nio_imap_debug_logging;
     public static final KnownKey nio_imap_write_queue_max_size_unauth;
     public static final KnownKey nio_imap_write_queue_max_size;
@@ -818,9 +818,9 @@ public class LC {
         calendar_outlook_compatible_allday_events.setDefault("true");
         calendar_outlook_compatible_allday_events.setDoc("Use Outlook-compatible all-day events.  True by default.");
 
-        nio_imap_enable = new KnownKey("nio_imap_enable");
-        nio_imap_enable.setDefault("false");
-        nio_imap_enable.setDoc("Enable NIO based IMAP server.  If false, then the thread per connection IO framework is used.");
+        nio_imap_enabled = new KnownKey("nio_imap_enabled");
+        nio_imap_enabled.setDefault("false");
+        nio_imap_enabled.setDoc("Enable NIO based IMAP server.  If false, then the thread per connection IO framework is used.");
 
         nio_imap_debug_logging = new KnownKey("nio_imap_log_buffers");
         nio_imap_debug_logging.setDefault("false");
