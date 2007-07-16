@@ -535,6 +535,25 @@
 		<copy tofile="${dist.dir}/lib/libzimbra-native.${native.so}" file="${lib.dir}/libzimbra-native.${native.so}.${native.os}.${os.arch}" verbose="true" failonerror="false" overwrite="true"/>	
 	</target>
 
+	<target name="reset-all" description="Reset the world plus jetty">
+                <antcall target="stop-webserver"/>
+
+		<if><isset property="use-jetty"/><then>
+			<delete dir="${jetty.home.dir}" />
+			<gunzip src="${jetty.src.dir}/jetty-${jetty.version}.tar.gz" dest="${build.dir}/jetty-${jetty.version}.tar"/>
+			<untar src="${build.dir}/jetty-${jetty.version}.tar" dest="${zimbra.home.dir}" overwrite="true" />
+			<move file="${zimbra.home.dir}/jetty-${jetty.version}" tofile="${jetty.home.dir}" />
+			<delete file="${build.dir}/jetty-${jetty.version}.tar"/>
+			<mkdir dir="${jetty.home.dir}/logs"/>
+			<mkdir dir="${jetty.home.dir}/webapps"/>
+			<mkdir dir="${jetty.home.dir}/work"/>
+		</then></if>
+
+                <antcall target="reset-the-world"/>
+                <ant dir="../ZimbraWebClient" target="deploy" inheritAll="false"/>
+                <ant dir="../ZimbraWebClient" target="admin-deploy" inheritAll="false"/>
+	</target>
+
 	<!-- There are two ways to reset the world:
   		(a) If your webserver is a service, use "reset-the-world".
  		(b) If your webserver  container  is inside eclipse then do this:
@@ -671,17 +690,6 @@
 		<delete dir="${webserver.root.dir}/webapps/service"/>
 		<delete file="${webserver.root.dir}/webapps/service.war"/>
 	
-		<if><isset property="use-jetty"/><then>
-			<delete dir="${jetty.home.dir}" />
-			<gunzip src="${jetty.src.dir}/jetty-${jetty.version}.tar.gz" dest="${build.dir}/jetty-${jetty.version}.tar"/>
-			<untar src="${build.dir}/jetty-${jetty.version}.tar" dest="${zimbra.home.dir}" overwrite="true" />
-			<move file="${zimbra.home.dir}/jetty-${jetty.version}" tofile="${jetty.home.dir}" />
-			<delete file="${build.dir}/jetty-${jetty.version}.tar"/>
-			<mkdir dir="${jetty.home.dir}/logs"/>
-			<mkdir dir="${jetty.home.dir}/webapps"/>
-			<mkdir dir="${jetty.home.dir}/work"/>
-		</then></if>
-
 		<delete dir="${zimbra.home.dir}/openldap/var/openldap-data" />
 
 		<mkdir dir="${zimbra.home.dir}/openldap/var/openldap-data" />
