@@ -52,7 +52,7 @@ public class Alias extends NamedEntry {
         super(name, id, attrs, null);
     }
     
-    private NamedEntry searchTarget(boolean mustFind) throws ServiceException {
+    public NamedEntry searchTarget(boolean mustFind) throws ServiceException {
         String targetId = getAttr(Provisioning.A_zimbraAliasTargetId);
         SearchOptions options = new SearchOptions();
     

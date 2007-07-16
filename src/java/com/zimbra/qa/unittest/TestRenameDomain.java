@@ -96,8 +96,11 @@ public class TestRenameDomain  extends TestCase {
         return ACCOUNT_NAMEPREFIX + "-" + idx + "@" + domainName;
     }
     
-    private String accountAlias(int index, String domainName) {
-        return ALIAS_NAMEPREFIX + "-" + accountName(index, domainName);
+    private String accountAlias(int index, String aliasInDomain, String targetInDomain) {
+        if (aliasInDomain.equals(targetInDomain))
+            return ALIAS_NAMEPREFIX + "-" + accountName(index, aliasInDomain);
+        else
+            return ALIAS_NAMEPREFIX + "-" + targetInDomain + accountName(index, aliasInDomain);
     }
     
     private String topDLName(int index, String domainName) {
@@ -106,8 +109,11 @@ public class TestRenameDomain  extends TestCase {
         return TOP_DL_NAMEPREFIX + "-" + idx + "@" + domainName;
     }
     
-    private String topDLAlias(int index, String domainName) {
-        return ALIAS_NAMEPREFIX + "-" + topDLName(index, domainName);
+    private String topDLAlias(int index, String aliasInDomain, String targetInDomain) {
+        if (aliasInDomain.equals(targetInDomain))
+            return ALIAS_NAMEPREFIX + "-" + topDLName(index, aliasInDomain);
+        else
+            return ALIAS_NAMEPREFIX + "-" + targetInDomain + topDLName(index, aliasInDomain);
     }
     
     private String nestedDLName(int index, String domainName) {
@@ -116,11 +122,15 @@ public class TestRenameDomain  extends TestCase {
         return NESTED_DL_NAMEPREFIX + "-" + idx + "@" + domainName;
     }
     
-    private String nestedDLAlias(int index, String domainName) {
-        return ALIAS_NAMEPREFIX + "-" + nestedDLName(index, domainName);
+    private String nestedDLAlias(int index, String aliasInDomain, String targetInDomain) {
+        if (aliasInDomain.equals(targetInDomain))
+            return ALIAS_NAMEPREFIX + "-" + nestedDLName(index, aliasInDomain);
+        else
+            return ALIAS_NAMEPREFIX + "-" + targetInDomain + nestedDLName(index, aliasInDomain);
     }
     
     private void createDomain(String domainName) throws Exception {
+        System.out.println("createDomain: " + domainName);
         Map<String, Object> attrs = new HashMap<String, Object>();
         Domain domain = mProv.createDomain(domainName, attrs);
     }
@@ -129,14 +139,15 @@ public class TestRenameDomain  extends TestCase {
      * create and setup entries in the domain
      */
     private void setupDomain(String domainName, String diffDomainName) throws Exception {
+        System.out.println("setupDomain: " + domainName + ", " + diffDomainName);
         
         // create accounts and their aliases
         for (int a = 0; a < NUM_ACCOUNTS; a++) {
             Map<String, Object> acctAttrs = new HashMap<String, Object>();
             Account acct = mProv.createAccount(accountName(a, domainName), PASSWORD, acctAttrs);
             
-            mProv.addAlias(acct, accountAlias(a, domainName));
-            mProv.addAlias(acct, accountAlias(a, diffDomainName));
+            mProv.addAlias(acct, accountAlias(a, domainName, domainName));
+            mProv.addAlias(acct, accountAlias(a, diffDomainName, domainName));
         }
         
         // create nested dls and their aliases, then add accounts to dls
@@ -144,8 +155,8 @@ public class TestRenameDomain  extends TestCase {
             Map<String, Object> dlAttrs = new HashMap<String, Object>();
             DistributionList dl = mProv.createDistributionList(nestedDLName(nd, domainName), dlAttrs);
             
-            mProv.addAlias(dl, nestedDLAlias(nd, domainName));
-            mProv.addAlias(dl, nestedDLAlias(nd, diffDomainName));
+            mProv.addAlias(dl, nestedDLAlias(nd, domainName, domainName));
+            mProv.addAlias(dl, nestedDLAlias(nd, diffDomainName, domainName));
             
             String[] members = new String[NUM_ACCOUNTS];
             for (int a = 0; a < NUM_ACCOUNTS; a++) {
@@ -161,8 +172,8 @@ public class TestRenameDomain  extends TestCase {
             Map<String, Object> dlAttrs = new HashMap<String, Object>();
             DistributionList dl = mProv.createDistributionList(topDLName(td, domainName), dlAttrs);
             
-            mProv.addAlias(dl, topDLAlias(td, domainName));
-            mProv.addAlias(dl, topDLAlias(td, diffDomainName));
+            mProv.addAlias(dl, topDLAlias(td, domainName, domainName));
+            mProv.addAlias(dl, topDLAlias(td, diffDomainName, domainName));
             
             // setup the member array
             String[] members = new String[NUM_ACCOUNTS + NUM_NESTED_DLS];
@@ -183,6 +194,8 @@ public class TestRenameDomain  extends TestCase {
      * add all accounts and dls in sourceDomain to targetDomain
      */
     private void crossLinkDomain(String sourceDomainName, String targetDomainName) throws Exception {
+        System.out.println("crossLinkDomain: " + sourceDomainName + ", " + targetDomainName);
+        
         Domain sourceDomain = mProv.get(Provisioning.DomainBy.name, sourceDomainName);
         
         
