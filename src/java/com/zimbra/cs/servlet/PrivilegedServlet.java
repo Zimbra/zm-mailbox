@@ -47,6 +47,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.NetUtil;
+import com.zimbra.cs.imap.MinaImapServer;
 import com.zimbra.znative.IO;
 import com.zimbra.znative.Process;
 import com.zimbra.znative.Util;
@@ -112,14 +113,12 @@ public class PrivilegedServlet extends HttpServlet {
             	}
             }
 
-            boolean ozImap = LC.get("nio_imap_enable").equalsIgnoreCase("true");
-
             if (server.getBooleanAttr(Provisioning.A_zimbraImapServerEnabled, false)) {
             	port = server.getIntAttr(Provisioning.A_zimbraImapBindPort, Config.D_IMAP_BIND_PORT);
             	address = server.getAttr(Provisioning.A_zimbraImapBindAddress, null);
             	if (server.getBooleanAttr(Provisioning.A_zimbraImapBindOnStartup, port < 1024)) {
-                    if (ozImap) {
-                        NetUtil.bindOzServerSocket(address, port);
+                    if (MinaImapServer.isEnabled()) {
+                        MinaImapServer.bind(address, port);
                     } else {
                         NetUtil.bindTcpServerSocket(address, port);
                     }
@@ -130,8 +129,8 @@ public class PrivilegedServlet extends HttpServlet {
             	port = server.getIntAttr(Provisioning.A_zimbraImapSSLBindPort, Config.D_IMAP_SSL_BIND_PORT);
             	address = server.getAttr(Provisioning.A_zimbraImapSSLBindAddress, null);
             	if (server.getBooleanAttr(Provisioning.A_zimbraImapSSLBindOnStartup, port < 1024)) {
-                    if (ozImap) {
-                        NetUtil.bindOzServerSocket(address, port);
+                    if (MinaImapServer.isEnabled()) {
+                        MinaImapServer.bind(address, port);
                     } else {
                         NetUtil.bindSslTcpServerSocket(address, port);
                     }

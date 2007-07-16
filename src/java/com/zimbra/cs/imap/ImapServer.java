@@ -28,32 +28,28 @@
  */
 package com.zimbra.cs.imap;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.ozserver.OzServer;
+import com.zimbra.cs.stats.RealtimeStatsCallback;
+import com.zimbra.cs.stats.ZimbraPerf;
+import com.zimbra.cs.tcpserver.ProtocolHandler;
+import com.zimbra.cs.tcpserver.TcpServer;
+import com.zimbra.cs.util.Config;
+import com.zimbra.cs.util.NetUtil;
+import com.zimbra.cs.util.Zimbra;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.cs.ozserver.OzConnection;
-import com.zimbra.cs.ozserver.OzConnectionHandler;
-import com.zimbra.cs.ozserver.OzConnectionHandlerFactory;
-import com.zimbra.cs.ozserver.OzServer;
-import com.zimbra.cs.ozserver.OzTLSFilter;
-import com.zimbra.cs.stats.RealtimeStatsCallback;
-import com.zimbra.cs.stats.ZimbraPerf;
-import com.zimbra.cs.tcpserver.ProtocolHandler;
-import com.zimbra.cs.tcpserver.TcpServer;
-import com.zimbra.cs.util.Config;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Constants;
-import com.zimbra.cs.util.NetUtil;
-import com.zimbra.cs.util.Zimbra;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.util.CliUtil;
 
 /**
  * @author dkarp
@@ -134,23 +130,15 @@ public class ImapServer extends TcpServer implements RealtimeStatsCallback {
         for (String name : server.getMultiAttr(Provisioning.A_zimbraImapDisabledCapability))
             mDisabledExtensions.add(name.toUpperCase());
 
-        if (LC.nio_imap_enable.booleanValue()) {
-            ServerSocket serverSocket = NetUtil.getOzServerSocket(address, port);
-            OzConnectionHandlerFactory imapHandlerFactory = new OzConnectionHandlerFactory() {
-                public OzConnectionHandler newConnectionHandler(OzConnection conn) {
-                    conn.setAlarm(IMAP_UNAUTHED_CONNECTION_MAX_IDLE_MILLISECONDS);
-                    conn.setWriteQueueMaxCapacity(IMAP_WRITE_QUEUE_MAX_SIZE_UNAUTH);
-                    return new OzImapConnectionHandler(conn);
-                }
-            };
-
-            boolean debugLog = LC.nio_imap_debug_logging.booleanValue();
+        if (MinaImapServer.isEnabled()) {
+            ZimbraLog.imap.info("** Mina IMAP handler enabled **");
             try {
-                OzServer ozserver = new OzServer("IMAP", IMAP_READ_SIZE_HINT, serverSocket, imapHandlerFactory, debugLog, ZimbraLog.nio);
-                ozserver.start();
-                sImapServer = ozserver;
-            } catch (IOException ioe) {
-                Zimbra.halt("failed to create OzServer for IMAP", ioe);
+                MinaImapServer imapServer =
+                    new MinaImapServer(address, port, threads, false);
+                imapServer.start();
+                sImapServer = imapServer ;
+            } catch (IOException e) {
+                Zimbra.halt("failed to start MinaImapServer", e);
             }
         } else {
             ServerSocket serverSocket = NetUtil.getTcpServerSocket(address, port);
@@ -176,30 +164,18 @@ public class ImapServer extends TcpServer implements RealtimeStatsCallback {
         for (String name : server.getMultiAttr(Provisioning.A_zimbraImapSSLDisabledCapability))
             mDisabledSSLExtensions.add(name.toUpperCase());
 
-        if (LC.nio_imap_enable.booleanValue()) {
-            ServerSocket serverSocket = NetUtil.getOzServerSocket(address, port);
-
-            final boolean debugLogging = LC.nio_imap_debug_logging.booleanValue();
-
-            OzConnectionHandlerFactory imapHandlerFactory = new OzConnectionHandlerFactory() {
-                public OzConnectionHandler newConnectionHandler(OzConnection conn) {
-                    conn.setAlarm(IMAP_UNAUTHED_CONNECTION_MAX_IDLE_MILLISECONDS);
-                    conn.setWriteQueueMaxCapacity(IMAP_WRITE_QUEUE_MAX_SIZE_UNAUTH);
-                    conn.addFilter(new OzTLSFilter(conn, debugLogging, ZimbraLog.nio));
-                    return new OzImapConnectionHandler(conn);
-                }
-            };
+        if (MinaImapServer.isEnabled()) {
+            ZimbraLog.imap.info("** Mina IMAPS handler enabled **");
             try {
-                OzServer ozserver = new OzServer("IMAPS", IMAP_READ_SIZE_HINT, serverSocket, imapHandlerFactory, debugLogging, ZimbraLog.nio);
-                ozserver.setProperty(OzImapConnectionHandler.PROPERTY_SECURE_SERVER, "true");
-                ozserver.start();
-                sImapSSLServer = ozserver;
-            } catch (IOException ioe) {
-                Zimbra.halt("failed to create OzServer for IMAPS", ioe);
+                MinaImapServer imapServer =
+                    new MinaImapServer(address, port, threads, true);
+                imapServer.start();
+                sImapServer = imapServer ;
+            } catch (IOException e) {
+                Zimbra.halt("failed to start MinaImapServer", e);
             }
         } else {
             ServerSocket serverSocket = NetUtil.getSslTcpServerSocket(address, port);
-
             ImapServer imapsServer = new ImapServer(threads, serverSocket, true);
             imapsServer.setSSL(true);
             sImapSSLServer = imapsServer;
@@ -213,8 +189,8 @@ public class ImapServer extends TcpServer implements RealtimeStatsCallback {
         if (sImapServer != null) {
             if (sImapServer instanceof ImapServer) {
                 ((ImapServer)sImapServer).shutdown(10); // TODO shutdown grace period from config
-            } else if (sImapServer instanceof OzServer) {
-                ((OzServer)sImapServer).shutdown();
+            } else if (sImapServer instanceof MinaImapServer) {
+                ((MinaImapServer)sImapServer).shutdown(10);
             }
             sImapServer = null;
         }
@@ -243,5 +219,6 @@ public class ImapServer extends TcpServer implements RealtimeStatsCallback {
     public static void main(String args[]) throws ServiceException {
         CliUtil.toolSetup("INFO");
         startupImapServer();
+        startupImapSSLServer();
     }
 }
