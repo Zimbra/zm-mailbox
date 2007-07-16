@@ -84,6 +84,8 @@
 	<property name="zimbra.home.dir" location="/opt/zimbra" />
 	<property name="tomcat.home.dir" location="${zimbra.home.dir}/tomcat" />
 	<property name="jetty.home.dir" location="${zimbra.home.dir}/jetty" />
+	<property name="jetty.src.dir" location="../ThirdParty/jetty" />
+	<property name="jetty.version" value="6.1.5rc0" />
 	
 	<property name="ical4j.jar" value="ical4j-0.9.16-patched.jar" />
 
@@ -665,6 +667,18 @@
 		</delete>
 		<delete dir="${webserver.root.dir}/webapps/service"/>
 		<delete file="${webserver.root.dir}/webapps/service.war"/>
+	
+		<if><isset property="use-jetty"/><then>
+			<delete dir="${jetty.home.dir}" />
+			<gunzip src="${jetty.src.dir}/jetty-${jetty.version}.tar.gz" dest="${build.dir}/jetty-${jetty.version}.tar"/>
+			<untar src="${build.dir}/jetty-${jetty.version}.tar" dest="${zimbra.home.dir}" overwrite="true" />
+			<move file="${zimbra.home.dir}/jetty-${jetty.version}" tofile="${jetty.home.dir}" />
+			<delete file="${build.dir}/jetty-${jetty.version}.tar"/>
+			<mkdir dir="${jetty.home.dir}/logs"/>
+			<mkdir dir="${jetty.home.dir}/webapps"/>
+			<mkdir dir="${jetty.home.dir}/work"/>
+		</then></if>
+
 		<delete dir="${zimbra.home.dir}/openldap/var/openldap-data" />
 
 		<mkdir dir="${zimbra.home.dir}/openldap/var/openldap-data" />
