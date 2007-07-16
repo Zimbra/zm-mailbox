@@ -91,33 +91,34 @@
 	</Call>
 
     <!-- =========================================================== -->
-    <!-- Set up global session ID manager                            -->
-    <!-- =========================================================== -->
-    <!--
-    <Set name="sessionIdManager">
-      <New class="org.mortbay.jetty.servlet.HashSessionIdManager">
-        <Set name="workerName">node1</Set>
-      </New>
-    </Set>
-    -->
-
-    <!-- =========================================================== -->
     <!-- Set handler Collection Structure                            --> 
     <!-- =========================================================== -->
     <Set name="handler">
-      <New id="Handlers" class="org.mortbay.jetty.handler.HandlerCollection">
-        <Set name="handlers">
-         <Array type="org.mortbay.jetty.Handler">
-           <Item>
-             <New id="Contexts" class="org.mortbay.jetty.handler.ContextHandlerCollection"/>
-           </Item>
-           <Item>
-             <New id="DefaultHandler" class="org.mortbay.jetty.handler.DefaultHandler"/>
-           </Item>
-           <Item>
-             <New id="RequestLog" class="org.mortbay.jetty.handler.RequestLogHandler"/>
-           </Item>
-         </Array>
+      <New id="Handlers" class="org.mortbay.jetty.handler.RewriteHandler">
+        <Set name="rewriteRequestURI">true</Set>
+        <Set name="rewritePathInfo">false</Set>
+        <Set name="originalPathAttribute">requestedPath</Set>
+        <Call name="addRewriteRule"><Arg>/Microsoft-Server-ActiveSync/*</Arg><Arg>/service/extension/zimbrasync</Arg></Call>
+        <Call name="addRewriteRule"><Arg>/zimbraAdmin/*</Arg><Arg></Arg></Call>
+        <Call name="addRewriteRule"><Arg>/service/*</Arg><Arg></Arg></Call>
+        <Call name="addRewriteRule"><Arg>/zimbra/*</Arg><Arg></Arg></Call>
+        <Call name="addRewriteRule"><Arg>/*</Arg><Arg>/zimbra</Arg></Call>
+        <Set name="handler">
+          <New id="Handlers" class="org.mortbay.jetty.handler.HandlerCollection">
+            <Set name="handlers">
+             <Array type="org.mortbay.jetty.Handler">
+               <Item>
+                 <New id="Contexts" class="org.mortbay.jetty.handler.ContextHandlerCollection"/>
+               </Item>
+               <Item>
+                 <New id="DefaultHandler" class="org.mortbay.jetty.handler.DefaultHandler"/>
+               </Item>
+               <Item>
+                 <New id="RequestLog" class="org.mortbay.jetty.handler.RequestLogHandler"/>
+               </Item>
+             </Array>
+            </Set>
+          </New>
         </Set>
       </New>
     </Set>
@@ -136,15 +137,6 @@
       <Arg>/service</Arg>
       <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
       <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/service</Set>
-      <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
-    </New>
-
-    <New id="zimbra-root-context" class="org.mortbay.jetty.webapp.WebAppContext">
-      <Arg><Ref id="Contexts"/></Arg>
-      <Arg><SystemProperty name="jetty.home" default="."/>/webapps/zimbra</Arg>
-      <Arg>/</Arg>
-      <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
-      <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/ROOT</Set>
       <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
     </New>
 
