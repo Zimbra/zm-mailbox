@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
@@ -82,6 +83,8 @@ public class TestRenameDomain  extends TestCase {
         
         createDomain(OLD_DOMAIN_NAME);
         createDomain(OTHER_DOMAIN_NAME);
+        
+        // TODO, 3 domains, identity, signature, data source, cross link
         
         setupDomain(OLD_DOMAIN_NAME, OTHER_DOMAIN_NAME);
         setupDomain(OTHER_DOMAIN_NAME, OLD_DOMAIN_NAME);
@@ -240,6 +243,8 @@ public class TestRenameDomain  extends TestCase {
     }
    
     public static void main(String[] args) throws Exception {
+        CliUtil.toolSetup("DEBUG");
+        
         TestUtil.runTest(new TestSuite(TestRenameDomain.class));
         
         /*
