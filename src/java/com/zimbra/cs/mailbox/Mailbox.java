@@ -3448,12 +3448,14 @@ public class Mailbox {
 
         List<Invite> components = Invite.createFromCalendar(getAccount(), null, cal, false);
         for (Invite inv : components) {
-            if (!inv.hasOrganizer()) {
-                ZimbraLog.calendar.warn("No ORGANIZER found in REPLY");
-                continue;
+            String orgAddress;
+            if (inv.hasOrganizer()) {
+                ZOrganizer org = inv.getOrganizer();
+                orgAddress = org.getAddress();
+            } else {
+                ZimbraLog.calendar.warn("No ORGANIZER found in REPLY.  Assuming current mailbox.");
+                orgAddress = getAccount().getName();
             }
-            ZOrganizer org = inv.getOrganizer();
-            String orgAddress = org.getAddress();
             if (AccountUtil.addressMatchesAccount(getAccount(), orgAddress)) {
                 processICalReply(octxt, inv);
             } else {
