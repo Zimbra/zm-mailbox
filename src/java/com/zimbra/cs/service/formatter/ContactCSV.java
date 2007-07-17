@@ -178,7 +178,7 @@ public class ContactCSV {
         contact.put(field, buf.toString());
     }
     
-    private Map<String, String> toContact(List<String> csv, String fmt) {
+    private Map<String, String> toContact(List<String> csv, String fmt) throws ParseException {
         Map<String, String> contact = new HashMap<String, String>();
         
         CsvFormat format = getFormat(fmt);
@@ -351,7 +351,10 @@ public class ContactCSV {
         }
     }
 
-    private static CsvFormat getFormat(String fmt) {
+    private static CsvFormat getFormat(String fmt) throws ParseException {
+        if (mKnownFormats == null || mDefaultFormat == null)
+            throw new ParseException("missing config file "+LC.zimbra_csv_mapping_file.value());
+        
         for (CsvFormat f : mKnownFormats)
             if (f.name.equals(fmt))
                 return f;
@@ -359,7 +362,7 @@ public class ContactCSV {
         return mDefaultFormat;
     }
     
-    public static void toCSV(String format, Iterator contacts, StringBuffer sb) {
+    public static void toCSV(String format, Iterator contacts, StringBuffer sb) throws ParseException {
         if (mKnownFormats == null)
             return;
 

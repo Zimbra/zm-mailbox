@@ -28,8 +28,6 @@
  */
 package com.zimbra.cs.mailbox;
 
-import java.util.List;
-
 import com.zimbra.common.service.ServiceException;
 
 import javax.mail.Address;
@@ -83,6 +81,7 @@ public class MailServiceException extends ServiceException {
     public static final String TOO_MANY_UPLOADS  = "mail.TOO_MANY_UPLOADS";
     public static final String TOO_MANY_CONTACTS = "mail.TOO_MANY_CONTACTS";
     public static final String UNABLE_TO_IMPORT_CONTACTS = "mail.UNABLE_TO_IMPORT_CONTACTS";
+    public static final String UNABLE_TO_EXPORT_CONTACTS = "mail.UNABLE_TO_EXPORT_CONTACTS";
     public static final String UNABLE_TO_IMPORT_APPOINTMENTS = "mail.UNABLE_TO_IMPORT_APPOINTMENTS";    
     public static final String QUOTA_EXCEEDED  = "mail.QUOTA_EXCEEDED";
 	public static final String QUERY_PARSE_ERROR = "mail.QUERY_PARSE_ERROR";
@@ -269,6 +268,10 @@ public class MailServiceException extends ServiceException {
     }
 
     public static MailServiceException UNABLE_TO_IMPORT_CONTACTS(String msg, Throwable t) {
+        return new MailServiceException(msg, UNABLE_TO_IMPORT_CONTACTS, false, t);
+    }
+
+    public static MailServiceException UNABLE_TO_EXPORT_CONTACTS(String msg, Throwable t) {
         return new MailServiceException(msg, UNABLE_TO_IMPORT_CONTACTS, false, t);
     }
 

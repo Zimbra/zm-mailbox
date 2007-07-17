@@ -33,6 +33,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.formatter.ContactCSV;
@@ -68,7 +69,11 @@ public class ExportContacts extends MailDocumentHandler  {
         if (contacts == null)
         	contacts = new ArrayList<Contact>();
         
-        ContactCSV.toCSV(format, contacts.iterator(), sb);
+        try {
+            ContactCSV.toCSV(format, contacts.iterator(), sb);
+        } catch (ContactCSV.ParseException e) {
+            throw MailServiceException.UNABLE_TO_EXPORT_CONTACTS(e.getMessage(), e);
+        }
 
         Element response = zsc.createElement(MailConstants.EXPORT_CONTACTS_RESPONSE);
         Element content = response.addElement(MailConstants.E_CONTENT);
