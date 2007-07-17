@@ -45,7 +45,7 @@ public class HtmlFormatter extends Formatter {
     
     private static final String PATH_MAIN_CONTEXT  = "/zimbra";
     private static final String PATH_JSP_REST_PAGE = "/h/rest";
-    private static final long   AUTH_EXPIRATION = 60 * 60 * 1000;
+    private static final long   AUTH_EXPIRATION = 60L * 60L * 1000L;
     
     private static final String ATTR_INTERNAL_DISPATCH   = "zimbra-internal-dispatch";
     private static final String ATTR_AUTH_TOKEN          = "zimbra-authToken";
@@ -70,7 +70,7 @@ public class HtmlFormatter extends Formatter {
         AuthToken auth = null;
         if (context.basicAuthHappened) {
             long expiration = System.currentTimeMillis() + AUTH_EXPIRATION;
-            auth = new AuthToken(context.authAccount, expiration, false, null);
+            auth = new AuthToken(context.authAccount, expiration);
         } else if (context.cookieAuthHappened) {
             auth = UserServlet.getAuthTokenFromCookie(context.req, context.resp, true);
         }

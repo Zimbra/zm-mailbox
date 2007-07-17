@@ -47,6 +47,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.service.admin.AdminDocumentHandler;
@@ -249,61 +250,71 @@ public class SoapEngine {
         if (!Config.userServicesEnabled() && !(handler instanceof AdminDocumentHandler))
             return soapProto.soapFault(ServiceException.TEMPORARILY_UNAVAILABLE());
 
+        AuthToken at = zsc.getAuthToken();
         boolean needsAuth = handler.needsAuth(context);
         boolean needsAdminAuth = handler.needsAdminAuth(context);
-        if (needsAuth || needsAdminAuth) {
-            AuthToken at = zsc.getAuthToken();
-            if (at == null)
-                return soapProto.soapFault(ServiceException.AUTH_REQUIRED());
-            if (needsAdminAuth && !at.isAdmin()) {
-                boolean ok = handler.domainAuthSufficient(context) && at.isDomainAdmin();
-                if (!ok)
-                    return soapProto.soapFault(ServiceException.PERM_DENIED("need admin token"));
-            }
-            boolean delegatedAuth = at.getAdminAccountId() != null && !at.getAdminAccountId().equals("");
+        if ((needsAuth || needsAdminAuth) && at == null)
+            return soapProto.soapFault(ServiceException.AUTH_REQUIRED());
 
-            try {
-                // make sure that the authenticated account is still active and has not been deleted since the last request
-                //   note that delegated auth allows access unless the account's in maintenance mode
-                Account account = Provisioning.getInstance().get(AccountBy.id, at.getAccountId());
-                if (account == null || 
-                        (delegatedAuth && account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE)) ||
-                        (!delegatedAuth && !account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE)))
-                    return soapProto.soapFault(ServiceException.AUTH_EXPIRED());
-
-                // if using delegated auth, make sure the "admin" is really an active admin account
-                if (delegatedAuth) {
-                    Account admin = Provisioning.getInstance().get(AccountBy.id, at.getAdminAccountId());
-                    if (admin == null)
-                        return soapProto.soapFault(ServiceException.AUTH_EXPIRED());
-                    boolean isAdmin = admin.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false) ||
-                                      admin.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);
-                    if (!isAdmin || !admin.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
-                        return soapProto.soapFault(ServiceException.AUTH_EXPIRED());
-                }
-
-                // also, make sure that the target account (if any) is active
-                if (zsc.isDelegatedRequest() && !handler.isAdminCommand()) {
-                    Account target = Provisioning.getInstance().get(AccountBy.id, zsc.getRequestedAccountId());
-                    // treat the account as inactive if (a) it doesn't exist, (b) it's in maintenance mode, or (c) we're non-admins and it's not "active"
-                    boolean inactive = target == null || target.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE);
-                    if (!inactive && (!at.isAdmin() || !AccessManager.getInstance().canAccessAccount(at, target)))
-                        inactive = !target.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE);
-                    if (inactive)
-                        return soapProto.soapFault(AccountServiceException.ACCOUNT_INACTIVE(target == null ? zsc.getRequestedAccountId() : target.getName()));
-                }
-            } catch (ServiceException ex) {
-                return soapProto.soapFault(ex);
-            }
+        if (needsAdminAuth && !at.isAdmin()) {
+            boolean ok = handler.domainAuthSufficient(context) && at.isDomainAdmin();
+            if (!ok)
+                return soapProto.soapFault(ServiceException.PERM_DENIED("need admin token"));
         }
-        
+
         Element response = null;
+        
         try {
-            // fault in a session for this handler (if necessary) before executing the command
-            context.put(ZIMBRA_SESSION, handler.getSession(zsc));
-            // try to proxy the request if necesary (don't proxy commands that don't require auth)
-            if (needsAuth || needsAdminAuth)
-                response = handler.proxyIfNecessary(request, context);
+            String acctId = null;
+            boolean isGuestAccount = true;
+            boolean delegatedAuth = false;
+            if (at != null) {
+                acctId = at.getAccountId();
+                isGuestAccount = acctId.equals(ACL.GUID_PUBLIC);
+                delegatedAuth = at.getAdminAccountId() != null && !at.getAdminAccountId().equals("");
+            }
+            
+            if (!isGuestAccount) {
+                if (needsAuth || needsAdminAuth) {
+                    // make sure that the authenticated account is still active and has not been deleted since the last request
+                    //   note that delegated auth allows access unless the account's in maintenance mode
+                    Account account = Provisioning.getInstance().get(AccountBy.id, acctId);
+                    if (!isGuestAccount &&
+                            (account == null || 
+                                    (delegatedAuth && account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE)) ||
+                                    (!delegatedAuth && !account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))))
+                        return soapProto.soapFault(ServiceException.AUTH_EXPIRED());
+
+                    // if using delegated auth, make sure the "admin" is really an active admin account
+                    if (delegatedAuth) {
+                        Account admin = Provisioning.getInstance().get(AccountBy.id, at.getAdminAccountId());
+                        if (admin == null)
+                            return soapProto.soapFault(ServiceException.AUTH_EXPIRED());
+                        boolean isAdmin = admin.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false) ||
+                        admin.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);
+                        if (!isAdmin || !admin.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+                            return soapProto.soapFault(ServiceException.AUTH_EXPIRED());
+                    }
+
+                    // also, make sure that the target account (if any) is active
+                    if (zsc.isDelegatedRequest() && !handler.isAdminCommand()) {
+                        Account target = Provisioning.getInstance().get(AccountBy.id, zsc.getRequestedAccountId());
+                        // treat the account as inactive if (a) it doesn't exist, (b) it's in maintenance mode, or (c) we're non-admins and it's not "active"
+                        boolean inactive = target == null || target.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE);
+                        if (!inactive && (!at.isAdmin() || !AccessManager.getInstance().canAccessAccount(at, target)))
+                            inactive = !target.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE);
+                        if (inactive)
+                            return soapProto.soapFault(AccountServiceException.ACCOUNT_INACTIVE(target == null ? zsc.getRequestedAccountId() : target.getName()));
+                    }
+                }
+
+                // fault in a session for this handler (if necessary) before executing the command
+                context.put(ZIMBRA_SESSION, handler.getSession(zsc));
+
+                // try to proxy the request if necesary (don't proxy commands that don't require auth)
+                if (needsAuth || needsAdminAuth)
+                    response = handler.proxyIfNecessary(request, context);
+            }
             // if no proxy, execute the request locally
             if (response == null) {
                 Object userObj = handler.preHandle(request, context);
