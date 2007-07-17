@@ -424,22 +424,23 @@ public class StringUtil {
         }
         return buf.toString();
     }
-    
+
     /**
      * Joins an array of objects, separated by a delimiter.
      */
     public static String join(String delimiter, Object[] array) {
-        if (array == null) {
+        return (array == null ? null : join(delimiter, array, 0, array.length));
+    }
+
+    public static String join(String delimiter, Object[] array, final int start, final int count) {
+        if (array == null)
             return null;
-        }
-        
+
         StringBuilder buf = new StringBuilder();
-        
-        for (int i = 0; i < array.length; i++) {
+        for (int i = start, end = start + count; i < end; i++) {
             buf.append(array[i]);
-            if (i + 1 < array.length) {
+            if (i + 1 < end)
                 buf.append(delimiter);
-            }
         }
         return buf.toString();
     }
