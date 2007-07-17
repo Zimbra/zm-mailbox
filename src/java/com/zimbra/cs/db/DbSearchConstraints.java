@@ -526,9 +526,9 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
             new ObjectPrinter<NumericRange>().run(retVal, dates, "DATE");
         
         if (!calStartDates.isEmpty())
-            new ObjectPrinter<NumericRange>().run(retVal, calStartDates, "CALSTART"); 
+            new ObjectPrinter<NumericRange>().run(retVal, calStartDates, "APPT-START"); 
         if (!calEndDates.isEmpty())
-            new ObjectPrinter<NumericRange>().run(retVal, calEndDates, "CALEND"); 
+            new ObjectPrinter<NumericRange>().run(retVal, calEndDates, "APPT-END"); 
 
         if (!modified.isEmpty())
             new ObjectPrinter<NumericRange>().run(retVal, modified, "MOD") ;

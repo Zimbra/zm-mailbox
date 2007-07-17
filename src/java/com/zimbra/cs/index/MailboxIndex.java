@@ -111,6 +111,15 @@ public final class MailboxIndex
             return new EmptyQueryResults(params.getTypes(), params.getSortBy(), params.getMode());
         }
         
+        if ((params.getCalItemExpandStart() > 0) || (params.getCalItemExpandEnd() > 0)) {
+            qs = '(' + qs + ')';
+            if (params.getCalItemExpandStart() > 0) 
+                qs = qs + " appt-end:>=" + params.getCalItemExpandStart();
+            if (params.getCalItemExpandEnd() > 0)
+                qs = qs + " appt-start:<=" + params.getCalItemExpandEnd();
+            params.setQueryStr(qs);
+        }
+        
         // handle special-case Task-only sorts: convert them to a "normal sort"
         //     and then re-sort them at the end
         boolean isTaskSort = false;
