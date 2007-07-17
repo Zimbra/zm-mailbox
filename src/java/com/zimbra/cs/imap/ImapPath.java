@@ -27,6 +27,7 @@ package com.zimbra.cs.imap;
 import java.io.UnsupportedEncodingException;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
@@ -39,15 +40,19 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.cs.zclient.ZMountpoint;
 import com.zimbra.cs.zclient.ZSearchFolder;
 
 public class ImapPath {
+    static enum Scope { UNPARSED, NAME, CONTENT, REFERENCE };
+
     static final String NAMESPACE_PREFIX = "/home/";
 
     private ImapCredentials mCredentials;
@@ -55,6 +60,9 @@ public class ImapPath {
     private String mPath;
     private Object mMailbox;
     private Object mFolder;
+    private ItemId mItemId;
+    private Scope mScope = Scope.CONTENT;
+    private ImapPath mReferent;
 
     /** Takes a user-supplied IMAP mailbox path and converts it to a Zimbra
      *  folder pathname.  Applies all special, hack-specific folder mappings.
@@ -65,8 +73,13 @@ public class ImapPath {
      * @param creds      The authenticated user's login credentials.
      * @see #exportPath(String, ImapCredentials) */
     ImapPath(String imapPath, ImapCredentials creds) {
+        this(imapPath, creds, Scope.CONTENT);
+    }
+
+    ImapPath(String imapPath, ImapCredentials creds, Scope scope) {
         mCredentials = creds;
         mPath = imapPath;
+        mScope = scope;
 
         if (imapPath.toLowerCase().startsWith(NAMESPACE_PREFIX)) {
             imapPath = imapPath.substring(NAMESPACE_PREFIX.length());
@@ -90,22 +103,47 @@ public class ImapPath {
         }
     }
 
-    ImapPath(String owner, String zimbraPath, ImapCredentials session) {
-        mCredentials = session;
+    ImapPath(String owner, String zimbraPath, ImapCredentials creds) {
+        mCredentials = creds;
         mOwner = owner == null ? null : owner.toLowerCase();
         mPath = zimbraPath.startsWith("/") ? zimbraPath.substring(1) : zimbraPath;
     }
 
-    ImapPath(String owner, Folder folder, ImapCredentials session) {
-        this(owner, folder.getPath(), session);
-        mMailbox = folder.getMailbox();
-        mFolder = folder;
+    ImapPath(ImapPath other) {
+        mCredentials = other.mCredentials;
+        mOwner = other.mOwner;
+        mPath = other.mPath;
+        mMailbox = other.mMailbox;
+        mFolder = other.mFolder;
+        mItemId = other.mItemId;
     }
 
-    ImapPath(String owner, ZMailbox zmbx, ZFolder zfolder, ImapCredentials session) {
-        this(owner, zfolder.getPath(), session);
+    ImapPath(String owner, Folder folder, ImapCredentials creds) {
+        this(owner, folder.getPath(), creds);
+        mMailbox = folder.getMailbox();
+        mFolder = folder;
+        mItemId = new ItemId(folder);
+    }
+
+    ImapPath(String owner, Folder folder, ImapPath mountpoint) throws ServiceException {
+        this(mountpoint);
+        (mReferent = new ImapPath(owner, folder, mCredentials)).mScope = Scope.REFERENCE;
+        int start = mountpoint.getReferent().mPath.length() + 1;
+        mPath = mountpoint.mPath + "/" + mReferent.mPath.substring(start == 1 ? 0 : start);
+    }
+
+    ImapPath(String owner, ZMailbox zmbx, ZFolder zfolder, ImapCredentials creds) throws ServiceException {
+        this(owner, zfolder.getPath(), creds);
         mMailbox = zmbx;
         mFolder = zfolder;
+        mItemId = new ItemId(zfolder.getId(), creds == null ? null : creds.getAccountId());
+    }
+
+    ImapPath(String owner, ZMailbox zmbx, ZFolder zfolder, ImapPath mountpoint) throws ServiceException {
+        this(mountpoint);
+        (mReferent = new ImapPath(owner, zmbx, zfolder, mCredentials)).mScope = Scope.REFERENCE;
+        int start = mountpoint.getReferent().mPath.length() + 1;
+        mPath = mountpoint.mPath + "/" + mReferent.mPath.substring(start == 1 ? 0 : start);
     }
 
 
@@ -135,13 +173,24 @@ public class ImapPath {
     }
 
     ImapPath canonicalize() throws ServiceException {
-        if (getFolder() instanceof Folder)
-            mPath = ((Folder) getFolder()).getPath();
-        else
-            mPath = ((ZFolder) getFolder()).getPath();
+        getFolder();
 
-        while (mPath.startsWith("/"))
-            mPath = mPath.substring(1);
+        String path;
+        if (mFolder instanceof Folder)
+            path = ((Folder) mFolder).getPath();
+        else
+            path = ((ZFolder) mFolder).getPath();
+
+        while (path.startsWith("/"))
+            path = path.substring(1);
+        while (path.endsWith("/"))
+            path = path.substring(0, path.length() - 1);
+
+        int excess = mPath.length() - path.length();
+        if (mReferent == this || excess == 0)
+            mPath = path;
+        else
+            mPath = path + "/" + mReferent.canonicalize().mPath.substring(mReferent.mPath.length() - excess + 1);
         return this;
     }
 
@@ -168,7 +217,12 @@ public class ImapPath {
     }
 
     String getOwnerAccountId() throws ServiceException {
-        if (mOwner == null && mCredentials != null)
+        if (useReferent())
+            return getReferent().getOwnerAccountId();
+
+        if (mMailbox instanceof Mailbox)
+            return ((Mailbox) mMailbox).getAccountId();
+        else if (mOwner == null && mCredentials != null)
             return mCredentials.getAccountId();
         else if (mOwner == null)
             return null;
@@ -177,23 +231,31 @@ public class ImapPath {
     }
 
     Account getOwnerAccount() throws ServiceException {
-        if (mOwner != null)
+        if (useReferent())
+            return getReferent().getOwnerAccount();
+        else if (mOwner != null)
             return Provisioning.getInstance().get(AccountBy.name, mOwner);
         else if (mCredentials != null)
             return Provisioning.getInstance().get(AccountBy.id, mCredentials.getAccountId());
+        else if (mMailbox instanceof Mailbox)
+            return ((Mailbox) mMailbox).getAccount();
         else
             return null;
     }
 
     boolean onLocalServer() throws ServiceException {
-        return onLocalServer(getOwnerAccount());
-    }
-
-    boolean onLocalServer(Account acct) throws ServiceException {
+        Account acct = getOwnerAccount();
         return acct != null && Provisioning.onLocalServer(acct);
     }
 
     Object getOwnerMailbox() throws ServiceException {
+        return getOwnerMailbox(true);
+    }
+
+    Object getOwnerMailbox(boolean traverse) throws ServiceException {
+        if (useReferent())
+            return mReferent.getOwnerMailbox();
+
         if (mMailbox == null) {
             Account target = getOwnerAccount();
             if (target == null)
@@ -209,13 +271,21 @@ public class ImapPath {
     }
 
     ZMailbox getOwnerZMailbox() throws ServiceException {
+        if (useReferent())
+            return getReferent().getOwnerZMailbox();
+
         if (mMailbox instanceof ZMailbox)
             return (ZMailbox) mMailbox;
         if (mCredentials == null)
             return null;
 
         Account target = getOwnerAccount();
+        if (target == null)
+            throw AccountServiceException.NO_SUCH_ACCOUNT(getOwner());
         Account acct = Provisioning.getInstance().get(AccountBy.id, mCredentials.getAccountId());
+        if (acct == null)
+            throw AccountServiceException.NO_SUCH_ACCOUNT(mCredentials.getUsername());
+
         try {
             ZMailbox.Options options = new ZMailbox.Options(new AuthToken(acct).getEncoded(), AccountUtil.getSoapUri(target));
             options.setTargetAccount(target.getName());
@@ -226,20 +296,154 @@ public class ImapPath {
         }
     }
 
+    private OperationContext getContext() throws ServiceException {
+        return (mCredentials == null ? null : mCredentials.getContext());
+    }
+
     Object getFolder() throws ServiceException {
+        return getFolder(true);
+    }
+
+    Object getFolder(boolean traverse) throws ServiceException {
+        if (useReferent())
+            return getReferent().getFolder();
+
         if (mFolder == null) {
             Object mboxobj = getOwnerMailbox();
             if (mboxobj instanceof Mailbox) {
-                mFolder = ((Mailbox) mboxobj).getFolderByPath(mCredentials == null ? null : mCredentials.getContext(), asZimbraPath());
+                Folder folder = ((Mailbox) mboxobj).getFolderByPath(getContext(), asZimbraPath());
+                mFolder = folder;
+                mItemId = new ItemId(folder);
             } else if (mboxobj instanceof ZMailbox) {
-                mFolder = ((ZMailbox) mboxobj).getFolderByPath(asZimbraPath());
-                if (mFolder == null)
+                ZFolder zfolder = ((ZMailbox) mboxobj).getFolderByPath(asZimbraPath());
+                mFolder = zfolder;
+                if (zfolder == null)
                     throw MailServiceException.NO_SUCH_FOLDER(asImapPath());
+                mItemId = new ItemId(zfolder.getId(), mCredentials == null ? null : mCredentials.getAccountId());
             } else {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(getOwner());
             }
         }
         return mFolder;
+    }
+
+    private boolean useReferent() throws ServiceException {
+        if (getReferent() == this)
+            return false;
+        if (mScope == Scope.CONTENT)
+            return true;
+
+        // if we're here, we should be at NAME scope -- return whether the original path pointed at a mountpoint
+        assert(mScope == Scope.NAME);
+        assert(mFolder != null);
+        assert(mReferent != null);
+
+        ItemId iidBase;
+        if (mFolder instanceof Mountpoint)
+            iidBase = new ItemId(((Mountpoint) mFolder).getOwnerId(), ((Mountpoint) mFolder).getRemoteId());
+        else if (mFolder instanceof ZMountpoint)
+            iidBase = new ItemId(((ZMountpoint) mFolder).getCanonicalRemoteId(), (String) null);
+        else
+            return false;
+        return !iidBase.equals(mReferent.mItemId);
+    }
+
+    ImapPath getReferent() throws ServiceException {
+        if (mReferent != null)
+            return mReferent;
+
+        // while calculating, use the base 
+        mReferent = this;
+
+        // only follow the authenticated user's own mountpoints
+        if (mScope == Scope.REFERENCE || mScope == Scope.UNPARSED || !belongsTo(mCredentials))
+            return mReferent;
+
+        ItemId iidRemote;
+        String subpathRemote = null;
+
+        Object mboxobj = getOwnerMailbox();
+        if (mboxobj instanceof Mailbox) {
+            try {
+                if (mFolder == null) {
+                    Pair<Folder,String> resolved = ((Mailbox) mboxobj).getFolderByPathLongestMatch(getContext(), Mailbox.ID_FOLDER_USER_ROOT, asZimbraPath());
+                    subpathRemote = resolved.getSecond();
+
+                    boolean isMountpoint = resolved.getFirst() instanceof Mountpoint;
+                    if (isMountpoint || resolved.getSecond() == null) {
+                        mFolder = resolved.getFirst();
+                        mItemId = new ItemId(resolved.getFirst());
+                    }
+                    if (!isMountpoint || mFolder == null)
+                        return mReferent;
+                } else if (!(mFolder instanceof Mountpoint)) {
+                    return mReferent;
+                }
+
+                // somewhere along the specified path is a visible mountpoint owned by the user
+                Mountpoint mpt = (Mountpoint) mFolder;
+                iidRemote = new ItemId(mpt.getOwnerId(), mpt.getRemoteId());
+            } catch (ServiceException e) {
+                return mReferent;
+            }
+        } else {
+            iidRemote = null;
+            subpathRemote = null;
+        }
+
+        // don't allow mountpoints that point at the same mailbox (as it can cause infinite loops)
+        if (belongsTo(iidRemote.getAccountId()))
+            return mReferent;
+
+        Account target = Provisioning.getInstance().get(AccountBy.id, iidRemote.getAccountId());
+        if (target == null)
+            return mReferent;
+
+        String owner = mCredentials != null && mCredentials.getAccountId().equalsIgnoreCase(target.getId()) ? null : target.getName();
+        if (Provisioning.onLocalServer(target)) {
+            try {
+                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(iidRemote.getAccountId());
+                Folder folder = mbox.getFolderById(getContext(), iidRemote.getId());
+                if (subpathRemote == null)
+                    mReferent = new ImapPath(owner, folder, mCredentials);
+                else
+                    (mReferent = new ImapPath(owner, folder.getPath() + (folder.getPath().equals("/") ? "" : "/") + subpathRemote, mCredentials)).mMailbox = mbox;
+            } catch (ServiceException e) {
+            }
+        } else {
+            Account acct = Provisioning.getInstance().get(AccountBy.id, mCredentials.getAccountId());
+            if (acct == null)
+                return mReferent;
+            try {
+                ZMailbox.Options options = new ZMailbox.Options(new AuthToken(acct).getEncoded(), AccountUtil.getSoapUri(target));
+                options.setTargetAccount(target.getName());
+                options.setNoSession(true);
+                ZMailbox zmbx = ZMailbox.getMailbox(options);
+                ZFolder zfolder = zmbx.getFolderById(iidRemote.getId() + "");
+                if (subpathRemote == null)
+                    mReferent = new ImapPath(owner, zmbx, zfolder, mCredentials);
+                else
+                    (mReferent = new ImapPath(owner, zfolder.getPath() + (zfolder.getPath().equals("/") ? "" : "/") + subpathRemote, mCredentials)).mMailbox = zmbx;
+            } catch (AuthTokenException ate) {
+                throw ServiceException.FAILURE("error generating auth token", ate);
+            } catch (ServiceException e) {
+            }
+        }
+
+        if (mReferent != this)
+            mReferent.mScope = Scope.REFERENCE;
+        return mReferent;
+    }
+
+    short getFolderRights() throws ServiceException {
+        if (getFolder() instanceof Folder) {
+            Folder folder = (Folder) getFolder();
+            return folder.getMailbox().getEffectivePermissions(getContext(), folder.getId(), folder.getType());
+        } else {
+            ZFolder zfolder = (ZFolder) getFolder();
+            String rights = zfolder.getEffectivePerms();
+            return rights == null ? ~0 : ACL.stringToRights(rights);
+        }
     }
 
 
@@ -265,7 +469,7 @@ public class ImapPath {
         if (!isSelectable())
             return false;
 
-        if (getFolder() instanceof Folder) {
+        if (mFolder instanceof Folder) {
             Folder folder = (Folder) mFolder;
             if (folder instanceof SearchFolder || folder.getDefaultView() == MailItem.TYPE_CONTACT)
                 return false;
@@ -275,31 +479,30 @@ public class ImapPath {
                 return false;
         }
 
+        // note that getFolderRights() operates on the referent folder...
         if (rights == 0)
             return true;
         return (getFolderRights() & rights) == rights;
-    }
-
-    short getFolderRights() throws ServiceException {
-        if (getFolder() instanceof Folder) {
-            OperationContext octxt = mCredentials == null ? null : mCredentials.getContext();
-            Folder folder = (Folder) mFolder;
-            return folder.getMailbox().getEffectivePermissions(octxt, folder.getId(), folder.getType());
-        } else {
-            ZFolder zfolder = (ZFolder) mFolder;
-            String rights = zfolder.getEffectivePerms();
-            return rights == null ? ~0 : ACL.stringToRights(rights);
-        }
     }
 
     boolean isSelectable() throws ServiceException {
         if (!isVisible())
             return false;
 
-        if (getFolder() instanceof Folder)
-            return !((Folder) mFolder).isTagged(((Folder) mFolder).getMailbox().mDeletedFlag);
-        else
-            return !((ZFolder) mFolder).isIMAPDeleted();
+        if (mFolder instanceof Folder) {
+            Folder folder = (Folder) mFolder;
+            if (folder.getId() == Mailbox.ID_FOLDER_USER_ROOT)
+                return false;
+            if (folder.isTagged(folder.getMailbox().mDeletedFlag))
+                return false;
+        } else {
+            ZFolder zfolder = (ZFolder) mFolder;
+            if (new ItemId(zfolder.getId(), (String) null).getId() == Mailbox.ID_FOLDER_USER_ROOT)
+                return false;
+            if (zfolder.isIMAPDeleted())
+                return false;
+        }
+        return (mReferent == this ? true : mReferent.isSelectable());
     }
 
     boolean isVisible() throws ServiceException {
@@ -317,31 +520,46 @@ public class ImapPath {
             throw e;
         }
 
-        if (getFolder() instanceof Folder) {
+        if (mFolder instanceof Folder) {
             Folder folder = (Folder) mFolder;
-            if (folder.getId() == Mailbox.ID_FOLDER_USER_ROOT)
+            if (folder.isHidden())
+                return false;
+            if (folder.getId() == Mailbox.ID_FOLDER_USER_ROOT && mScope != Scope.REFERENCE)
                 return false;
             byte view = folder.getDefaultView();
             if (view == MailItem.TYPE_APPOINTMENT || view == MailItem.TYPE_TASK || view == MailItem.TYPE_WIKI || view == MailItem.TYPE_DOCUMENT)
                 return false;
             if (folder instanceof SearchFolder)
                 return ((SearchFolder) folder).isImapVisible();
+            // hide other users' mountpoints and mountpoints that point to the same mailbox
+            if (folder instanceof Mountpoint && mReferent == this && mScope != Scope.UNPARSED)
+                return false;
         } else {
             ZFolder zfolder = (ZFolder) mFolder;
-            if (new ItemId(zfolder.getId(), (String) null).getId() == Mailbox.ID_FOLDER_USER_ROOT)
+            // FIXME: not a problem if it's the terminus of a mountpoint
+            if (asItemId().getId() == Mailbox.ID_FOLDER_USER_ROOT)
                 return false;
             ZFolder.View view = zfolder.getDefaultView();
             if (view == ZFolder.View.appointment || view == ZFolder.View.task || view == ZFolder.View.wiki || view == ZFolder.View.document)
                 return false;
-            if (zfolder instanceof ZSearchFolder)
+            // hide all remote searchfolders and mountpoints
+            if (zfolder instanceof ZSearchFolder || zfolder instanceof ZMountpoint)
                 return false;
         }
-        return true;
+        return (mReferent == this ? true : mReferent.isVisible());
     }
 
 
     String asZimbraPath() {
         return mPath;
+    }
+
+    String asResolvedPath() throws ServiceException {
+        return getReferent().mPath;
+    }
+
+    ItemId asItemId() throws ServiceException {
+        return useReferent() ? getReferent().mItemId : mItemId;
     }
 
     @Override
@@ -351,8 +569,8 @@ public class ImapPath {
 
     /** Formats a folder path as an IMAP-UTF-7 quoted-string.  Applies all
      *  special hack-specific path transforms.
-     * @param mPath     The Zimbra-local folder pathname.
-     * @param mCredentials  The authenticated user's current session.
+     * @param mPath         The Zimbra-local folder pathname.
+     * @param mCredentials  The authenticated user's credentials.
      * @see #importPath(String, ImapCredentials) */
     String asImapPath() {
         String path = mPath, lcpath = path.toLowerCase();

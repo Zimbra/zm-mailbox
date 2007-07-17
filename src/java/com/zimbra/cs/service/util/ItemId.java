@@ -158,6 +158,25 @@ public class ItemId {
             sb.append(PART_DELIMITER).append(mSubpartId);
         return sb.toString();
     }
+    
+    @Override
+    public boolean equals(Object that) {
+        if (this == that)
+            return true;
+        else if (!(that instanceof ItemId))
+            return false;
+
+        ItemId other = (ItemId) that;
+        if (mAccountId == other.mAccountId || (mAccountId != null && mAccountId.equalsIgnoreCase(other.mAccountId)))
+            return (other.mId == this.mId && other.mSubpartId == this.mSubpartId);
+        else
+            return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return (mAccountId == null ? 0 : mAccountId.hashCode()) ^ mId;
+    }
 
     public static void main(String[] args) {
         ItemId foo = null;
@@ -167,24 +186,5 @@ public class ItemId {
             e.printStackTrace();
         }
         System.out.println(foo.toString());
-    }
-    
-    public boolean equals(Object that) {
-        if (this == that)
-            return true;
-        ItemId other = (ItemId)that;
-        if ((other.mAccountId==null && this.mAccountId==null) || (other.mAccountId.equals(this.mAccountId))) {
-            // same acct
-            return (other.mId == this.mId && other.mSubpartId == this.mSubpartId);
-        } else {
-            return false;
-        }
-    }
-    
-    public int hashCode() {
-        int toRet = 0;
-        if (mAccountId != null)
-            toRet = mAccountId.hashCode();
-        return (toRet ^ mId);
     }
 }

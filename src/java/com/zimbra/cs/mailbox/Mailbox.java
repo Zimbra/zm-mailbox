@@ -1717,7 +1717,7 @@ public class Mailbox {
                type == MailItem.TYPE_MOUNTPOINT;
     }
 
-    private MailItem checkAccess(MailItem item) throws ServiceException {
+    private <T extends MailItem> T checkAccess(T item) throws ServiceException {
         if (item == null || item.canAccess(ACL.RIGHT_READ))
             return item;
         throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
@@ -2529,7 +2529,7 @@ public class Mailbox {
      * Given a path, resolves as much of the path as possible and returns the folder and the unmatched part.
      * 
      * E.G. if the path is "/foo/bar/baz/gub" and this mailbox has a Folder at "/foo/bar" -- this API returns
-     * a Pair containing that Folder and the unmatched part "baz/gub/".  
+     * a Pair containing that Folder and the unmatched part "baz/gub".  
      * 
      * If the returned folder is a Mountpoint, then it can be assumed that the remaining part is a subfolder in
      * the remote mailbox.
@@ -2547,72 +2547,28 @@ public class Mailbox {
             path = path.substring(1);                         // strip off the optional leading "/"
         while (path.endsWith("/"))
             path = path.substring(0, path.length() - 1);      // strip off the optional trailing "/"
-
-        boolean success = false;
         
         if (path.length() == 0)
             throw MailServiceException.NO_SUCH_FOLDER("/" + path);
             
-        Folder startingFolder = getFolderById(null, startingFolderId);  
-        Folder curFolder = startingFolder; 
-        assert(curFolder != null);
+        Folder folder = getFolderById(null, startingFolderId); 
+        assert(folder != null);
 
+        boolean success = false;
         try {
-            beginTransaction("getFolderByPath", octxt);
-            
-            // for each segment in the path
-            String[] segments = path.split("/");
+            beginTransaction("getFolderByPathLongestMatch", octxt);
+
+            String unmatched = null, segments[] = path.split("/");
             for (int i = 0; i < segments.length; i++) {
-                Folder nextFolder = curFolder.findSubfolder(segments[i]);
-
-                // did we match the current segment?
-                if (nextFolder == null) {
-                    if (curFolder == null) { // couldn't match *anything* throw exception
-                        throw MailServiceException.NO_SUCH_FOLDER(startingFolder.getPath()+"/"+path);
-                    } else {
-                        StringBuilder unmatched = new StringBuilder();
-                        boolean atFirst = true;
-                        for (int j = i; j < segments.length; j++) {
-                            if (atFirst) {
-                                atFirst = false;
-                            } else {
-                                unmatched.append('/');
-                            }
-                            unmatched.append(segments[j]);
-                        }
-                        if (unmatched.length() > 0 && !(curFolder instanceof Mountpoint)) {
-                            // We have an unmatched part, but the last matched folder wasn't a mountpoint,
-                            // so throw an exception
-                            throw MailServiceException.NO_SUCH_FOLDER(startingFolder.getPath()+"/"+path);
-                        }
-                        return new Pair<Folder, String>(curFolder, unmatched.toString());
-                    }
+                Folder subfolder = folder.findSubfolder(segments[i]);
+                if (subfolder == null) {
+                    unmatched = StringUtil.join("/", segments, i, segments.length - i);
+                    break;
                 }
-                
-                // can we read the current segment?
-                if (!nextFolder.canAccess(ACL.RIGHT_READ)) {
-                    StringBuilder matched = new StringBuilder();
-                    boolean atFirst = true;
-                    for (int j = 0; j <= i; j++) {
-                        if (atFirst) {
-                            atFirst = false;
-                        } else {
-                            matched.append('/');
-                        }
-                        matched.append(segments[j]);
-                    }
-                    throw ServiceException.PERM_DENIED("you do not have sufficient permissions on folder /" + matched);
-                }
-
-                // matched this segment, keep going...
-                curFolder = nextFolder;
+                folder = subfolder;
             }
-            
-            // if we got here, folder is a match over the entire path
-            assert(curFolder != null); // should be caught above
-            assert(curFolder.canAccess(ACL.RIGHT_READ)); // should be caught above
-            
-            return new Pair<Folder, String>(curFolder, null);
+            // apply the "read access" check to the returned folder...
+            return new Pair<Folder, String>(checkAccess(folder), unmatched);
         } finally {
             endTransaction(success);
         }

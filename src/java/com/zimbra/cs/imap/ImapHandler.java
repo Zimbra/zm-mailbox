@@ -84,6 +84,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.SearchFolder;
@@ -298,7 +299,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                     break;
                 case 'D':
                     if (command.equals("DELETE")) {
-                        req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mCredentials);
+                        req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mCredentials, ImapPath.Scope.NAME);
                         checkEOF(tag, req);
                         return doDELETE(tag, path);
                     } else if (command.equals("DELETEACL") && extensionEnabled("ACL")) {
@@ -464,8 +465,8 @@ public abstract class ImapHandler extends ProtocolHandler {
                     break;
                 case 'R':
                     if (command.equals("RENAME")) {
-                        req.skipSpace();  ImapPath folder = new ImapPath(req.readFolder(), mCredentials);
-                        req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mCredentials);
+                        req.skipSpace();  ImapPath folder = new ImapPath(req.readFolder(), mCredentials, ImapPath.Scope.NAME);
+                        req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mCredentials, ImapPath.Scope.NAME);
                         checkEOF(tag, req);
                         return doRENAME(tag, folder, path);
                     }
@@ -956,6 +957,8 @@ public abstract class ImapHandler extends ProtocolHandler {
 
             if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER))
                 ZimbraLog.imap.info(command + " failed: no such folder: " + path);
+            else if (e.getCode().equals(ServiceException.PERM_DENIED))
+                ZimbraLog.imap.info(command + " failed: permission denied: " + path);
             else
                 ZimbraLog.imap.warn(command + " failed", e);
             sendNO(tag, command + " failed");
@@ -995,9 +998,9 @@ public abstract class ImapHandler extends ProtocolHandler {
         try {
             Object mboxobj = path.getOwnerMailbox();
             if (mboxobj instanceof Mailbox) {
-                ((Mailbox) mboxobj).createFolder(getContext(), path.asZimbraPath(), (byte) 0, MailItem.TYPE_MESSAGE);
+                ((Mailbox) mboxobj).createFolder(getContext(), path.asResolvedPath(), (byte) 0, MailItem.TYPE_MESSAGE);
             } else if (mboxobj instanceof ZMailbox) {
-                ((ZMailbox) mboxobj).createFolder(null, path.asZimbraPath(), ZFolder.View.message, ZFolder.Color.defaultColor, null, null);
+                ((ZMailbox) mboxobj).createFolder(null, path.asResolvedPath(), ZFolder.View.message, ZFolder.Color.defaultColor, null, null);
             } else {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(path.getOwner());
             }
@@ -1030,7 +1033,7 @@ public abstract class ImapHandler extends ProtocolHandler {
 
         try {
             if (!path.isVisible())
-                throw ImapServiceException.FOLDER_NOT_VISIBLE(path.asZimbraPath());
+                throw ImapServiceException.FOLDER_NOT_VISIBLE(path.asImapPath());
 
             Object mboxobj = path.getOwnerMailbox();
             if (mboxobj instanceof Mailbox) {
@@ -1096,26 +1099,24 @@ public abstract class ImapHandler extends ProtocolHandler {
 
             Object mboxobj = oldPath.getOwnerMailbox();
             if (mboxobj instanceof Mailbox) {
-                Mailbox mbox = (Mailbox) mboxobj;
-                int folderId = mbox.getFolderByPath(getContext(), oldPath.asZimbraPath()).getId();
+                int folderId = oldPath.asItemId().getId();
                 if (folderId == Mailbox.ID_FOLDER_INBOX)
                     throw ImapServiceException.CANT_RENAME_INBOX();
-                mbox.rename(getContext(), folderId, MailItem.TYPE_FOLDER, "/" + newPath.asZimbraPath());
+                Mailbox mbox = (Mailbox) mboxobj;
+                mbox.rename(getContext(), folderId, MailItem.TYPE_FOLDER, "/" + newPath.asResolvedPath());
             } else if (mboxobj instanceof ZMailbox) {
-                ZMailbox zmbx = (ZMailbox) mboxobj;
-                ZFolder zfolder = zmbx.getFolderByPath(oldPath.asZimbraPath());
-                if (zfolder == null)
-                    throw MailServiceException.NO_SUCH_FOLDER(oldPath.asZimbraPath());
-                else if (new ItemId(zfolder.getId(), (String) null).getId() == Mailbox.ID_FOLDER_INBOX)
+                if (oldPath.asItemId().getId() == Mailbox.ID_FOLDER_INBOX)
                     throw ImapServiceException.CANT_RENAME_INBOX();
-                zmbx.renameFolder(zfolder.getId(), newPath.asZimbraPath());
+                ZMailbox zmbx = (ZMailbox) mboxobj;
+                ZFolder zfolder = (ZFolder) oldPath.getFolder();
+                zmbx.renameFolder(zfolder.getId(), newPath.asResolvedPath());
             } else {
                 ZimbraLog.imap.info("RENAME failed: cannot get mailbox for path: " + oldPath);
                 sendNO(tag, "RENAME failed");
                 return CONTINUE_PROCESSING;
             }
         } catch (ServiceException e) {
-        	if (e instanceof ImapServiceException && e.getCode().equals(ImapServiceException.CANT_RENAME_INBOX)) {
+        	if (e.getCode().equals(ImapServiceException.CANT_RENAME_INBOX)) {
         		ZimbraLog.imap.info("RENAME failed: RENAME of INBOX not supported");
         		sendNO(tag, "RENAME failed: RENAME of INBOX not supported");
         		return CONTINUE_PROCESSING;
@@ -1143,27 +1144,22 @@ public abstract class ImapHandler extends ProtocolHandler {
             path.canonicalize();
 
             if (path.belongsTo(mCredentials)) {
-                Mailbox mbox = mCredentials.getMailbox();
-                Folder folder = mbox.getFolderByPath(getContext(), path.asZimbraPath());
                 if (!path.isVisible())
                     throw ImapServiceException.FOLDER_NOT_VISIBLE(path.asImapPath());
+                Mailbox mbox = (Mailbox) path.getOwnerMailbox();
+                Folder folder = (Folder) path.getFolder();
                 if (!folder.isTagged(mbox.mSubscribedFlag))
                     mbox.alterTag(getContext(), folder.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_SUBSCRIBED, true);
             } else {
                 mCredentials.subscribe(path);
             }
-        } catch (ImapServiceException e) {
-            if (e.getCode().equals(ImapServiceException.FOLDER_NOT_VISIBLE)) {
-                ZimbraLog.imap.info("SUBSCRIBE failed: "+e.toString());
-                sendNO(tag, "SUBSCRIBE failed");
-                return CONTINUE_PROCESSING;
-            } else 
-                ZimbraLog.imap.warn("SUBSCRIBE failed", e);
         } catch (ServiceException e) {
             if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER))
                 ZimbraLog.imap.info("SUBSCRIBE failed: no such folder: " + path);
             else if (e.getCode().equals(ServiceException.PERM_DENIED))
                 ZimbraLog.imap.info("SUBSCRIBE failed: permission denied on folder: " + path);
+            else if (e.getCode().equals(ImapServiceException.FOLDER_NOT_VISIBLE))
+                ZimbraLog.imap.info("SUBSCRIBE failed: folder not visible: " + path);
             else
                 ZimbraLog.imap.warn("SUBSCRIBE failed", e);
             sendNO(tag, "SUBSCRIBE failed");
@@ -1183,7 +1179,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             if (path.belongsTo(mCredentials)) {
                 try {
                     Mailbox mbox = mCredentials.getMailbox();
-                    Folder folder = mbox.getFolderByPath(getContext(), path.asZimbraPath());
+                    Folder folder = (Folder) path.getFolder();
                     if (folder.isTagged(mbox.mSubscribedFlag))
                         mbox.alterTag(getContext(), folder.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_SUBSCRIBED, false);
                 } catch (NoSuchItemException nsie) { }
@@ -1252,7 +1248,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                     if (referenceName.endsWith("/"))  pattern = referenceName + mailboxName;
                     else                              pattern = referenceName + '/' + mailboxName;
                 }
-                ImapPath patternPath = new ImapPath(pattern, mCredentials);
+                ImapPath patternPath = new ImapPath(pattern, mCredentials, ImapPath.Scope.UNPARSED);
                 pattern = patternPath.asImapPath().toUpperCase();
     
                 if (patternPath.getOwner() != null && patternPath.getOwner().indexOf('*') != -1) {
@@ -1275,63 +1271,48 @@ public abstract class ImapHandler extends ProtocolHandler {
                 if (acct == null)
                     continue;
 
-                boolean isOwner = patternPath.belongsTo(mCredentials);
-                if (!isOwner && subscriptions == null && (selectSubscribed || returnSubscribed))
+                if (returnSubscribed)
                     subscriptions = mCredentials.listSubscriptions();
 
                 // get the set of *all* folders; we'll iterate over it below to find matches
                 Map<ImapPath, ItemId> paths = new LinkedHashMap<ImapPath, ItemId>();
-                Object mboxobj = patternPath.getOwnerMailbox();
-                if (mboxobj instanceof Mailbox) {
-                    Mailbox mbox = (Mailbox) mboxobj;
-                    Collection<Folder> folders = mbox.getVisibleFolders(getContext());
-                    if (folders == null)
-                        folders = mbox.getFolderById(getContext(), Mailbox.ID_FOLDER_USER_ROOT).getSubfolderHierarchy();
-                    for (Folder folder : folders) {
-                        ImapPath path = new ImapPath(patternPath.getOwner(), folder, mCredentials);
-                        if (path.isVisible())
-                            paths.put(path, new ItemId(folder));
-                    }
-                } else if (mboxobj instanceof ZMailbox) {
-                    ZMailbox zmbx = (ZMailbox) mboxobj;
-                    for (ZFolder zfolder : zmbx.getAllFolders()) {
-                        ImapPath path = new ImapPath(patternPath.getOwner(), zmbx, zfolder, mCredentials);
-                        if (path.isVisible())
-                            paths.put(path, new ItemId(zfolder.getId(), acct.getId()));
-                    }
-                }
+                accumulatePaths(patternPath.getOwnerMailbox(), patternPath.getOwner(), null, paths);
 
                 // get the set of folders matching the selection criteria (either all folders or selected folders)
                 Set<ImapPath> selected = paths.keySet();
                 if (selectSubscribed) {
                     selected = new LinkedHashSet<ImapPath>();
-                    for (Map.Entry<ImapPath, ItemId> entry : paths.entrySet()) {
-                        ImapPath path = entry.getKey();
-                        if (isPathSubscribed(path, isOwner, subscriptions))
+                    for (ImapPath path : paths.keySet()) {
+                        if (isPathSubscribed(path, subscriptions))
                             selected.add(path);
                     }
-                    if (!isOwner) {
-                        // handle nonexistent selected folders by adding them to "selected" but not to "paths"
-                        for (String sub : subscriptions) {
-                            ImapPath spath = new ImapPath(sub, mCredentials);
-                            if (!selected.contains(spath) && spath.belongsTo(patternPath.getOwnerAccountId()))
-                                selected.add(spath);
-                        }
+                    // handle nonexistent selected folders by adding them to "selected" but not to "paths"
+                    for (String sub : subscriptions) {
+                        ImapPath spath = new ImapPath(sub, mCredentials);
+                        if (!selected.contains(spath))
+                            selected.add(spath);
                     }
                 }
 
                 // return only the selected folders (and perhaps their parents) matching the pattern
                 for (ImapPath path : selected) {
                     if (!matches.containsKey(path) && path.asImapPath().toUpperCase().matches(pattern))
-                        matches.put(path, "LIST (" + getFolderAttrs(path, returnOptions, paths, isOwner, subscriptions) + ") \"/\" " + path.asUtf7String());
+                        matches.put(path, "LIST (" + getFolderAttrs(path, returnOptions, paths, subscriptions) + ") \"/\" " + path.asUtf7String());
 
                     if (!selectRecursive)
                         continue;
                     String folderName = path.asZimbraPath();
                     for (int index = folderName.length() + 1; (index = folderName.lastIndexOf('/', index - 1)) != -1; ) {
                         ImapPath parent = new ImapPath(path.getOwner(), folderName.substring(0, index), mCredentials);
-                        if (parent.asImapPath().toUpperCase().matches(pattern))
-                            matches.put(parent, "LIST (" + getFolderAttrs(parent, returnOptions, paths, isOwner, subscriptions) + ") \"/\" " + parent.asUtf7String() + " (\"CHILDINFO\" (\"SUBSCRIBED\"))");
+                        if (parent.asImapPath().toUpperCase().matches(pattern)) {
+                            // use the already-resolved version of the parent ImapPath from the "paths" map if possible
+                            for (ImapPath cached : paths.keySet()) {
+                                if (cached.equals(parent)) {
+                                    parent = cached;  break;
+                                }
+                            }
+                            matches.put(parent, "LIST (" + getFolderAttrs(parent, returnOptions, paths, subscriptions) + ") \"/\" " + parent.asUtf7String() + " (\"CHILDINFO\" (\"SUBSCRIBED\"))");
+                        }
                     }
                 }
             }
@@ -1351,7 +1332,36 @@ public abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    private String getFolderAttrs(ImapPath path, byte returnOptions, Map<ImapPath, ItemId> paths, boolean isOwner, Set<String> subscriptions)
+    private void accumulatePaths(Object mboxobj, String owner, ImapPath relativeTo, Map<ImapPath, ItemId> paths) throws ServiceException {
+        String root = relativeTo == null ? "" : "/" + relativeTo.asResolvedPath();
+        if (mboxobj instanceof Mailbox) {
+            Mailbox mbox = (Mailbox) mboxobj;
+            Collection<Folder> folders = mbox.getVisibleFolders(getContext());
+            if (folders == null)
+                folders = mbox.getFolderById(getContext(), relativeTo == null ? Mailbox.ID_FOLDER_USER_ROOT : relativeTo.asItemId().getId()).getSubfolderHierarchy();
+            for (Folder folder : folders) {
+                if (!folder.getPath().startsWith(root) || folder.getPath().equals(root))
+                    continue;
+                ImapPath path = relativeTo == null ? new ImapPath(owner, folder, mCredentials) : new ImapPath(owner, folder, relativeTo);
+                if (path.isVisible()) {
+                    paths.put(path, path.asItemId());
+                    if (folder instanceof Mountpoint)
+                        accumulatePaths(path.getOwnerMailbox(), owner, path, paths);
+                }
+            }
+        } else if (mboxobj instanceof ZMailbox) {
+            ZMailbox zmbx = (ZMailbox) mboxobj;
+            for (ZFolder zfolder : zmbx.getAllFolders()) {
+                if (!zfolder.getPath().startsWith(root) || zfolder.getPath().equals(root))
+                    continue;
+                ImapPath path = relativeTo == null ? new ImapPath(owner, zmbx, zfolder, mCredentials) : new ImapPath(owner, zmbx, zfolder, relativeTo);
+                if (path.isVisible())
+                    paths.put(path, path.asItemId());
+            }
+        }
+    }
+
+    private String getFolderAttrs(ImapPath path, byte returnOptions, Map<ImapPath, ItemId> paths, Set<String> subscriptions)
     throws ServiceException {
         StringBuilder attrs = new StringBuilder();
 
@@ -1359,7 +1369,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         if (iid == null)
             attrs.append(attrs.length() == 0 ? "" : " ").append("\\NonExistent");
 
-        if ((returnOptions & RETURN_SUBSCRIBED) != 0 && isPathSubscribed(path, isOwner, subscriptions))
+        if ((returnOptions & RETURN_SUBSCRIBED) != 0 && isPathSubscribed(path, subscriptions))
             attrs.append(attrs.length() == 0 ? "" : " ").append("\\Subscribed");
 
         if (iid == null)
@@ -1386,8 +1396,8 @@ public abstract class ImapHandler extends ProtocolHandler {
         return attrs.toString();
     }
 
-    private boolean isPathSubscribed(ImapPath path, boolean isOwner, Set<String> subscriptions) throws ServiceException {
-        if (isOwner) {
+    private boolean isPathSubscribed(ImapPath path, Set<String> subscriptions) throws ServiceException {
+        if (path.belongsTo(mCredentials)) {
             Folder folder = (Folder) path.getFolder();
             return folder.isTagged(folder.getMailbox().mSubscribedFlag);
         } else if (subscriptions != null && !subscriptions.isEmpty()) {
@@ -1408,7 +1418,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             if (referenceName.endsWith("/"))  pattern = referenceName + mailboxName;
             else                              pattern = referenceName + '/' + mailboxName;
         }
-        ImapPath patternPath = new ImapPath(pattern, mCredentials);
+        ImapPath patternPath = new ImapPath(pattern, mCredentials, ImapPath.Scope.UNPARSED);
 
         try {
         	ImapLSubOperation op = new ImapLSubOperation(mSelectedFolder, getContext(), mCredentials.getMailbox(), patternPath, mCredentials, extensionEnabled("CHILDREN"));
@@ -1454,7 +1464,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             Object mboxobj = path.getOwnerMailbox();
             if (mboxobj instanceof Mailbox) {
                 Mailbox mbox = (Mailbox) mboxobj;
-                Folder folder = mbox.getFolderByPath(getContext(), path.asZimbraPath());
+                Folder folder = (Folder) path.getFolder();
 
                 messages = folder.getSize();
                 if ((status & STATUS_RECENT) == 0)
@@ -1470,7 +1480,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                 unread = folder.getUnreadCount();
                 modseq = folder instanceof SearchFolder ? 0 : folder.getImapMODSEQ();
             } else if (mboxobj instanceof ZMailbox) {
-                ZFolder zfolder = ((ZMailbox) mboxobj).getFolderByPath(path.asZimbraPath());
+                ZFolder zfolder = (ZFolder) path.getFolder();
                 if (zfolder == null)
                     throw MailServiceException.NO_SUCH_FOLDER(path.asImapPath());
 
@@ -2843,14 +2853,12 @@ public abstract class ImapHandler extends ProtocolHandler {
 
             // check target folder permissions before attempting the copy
             if (mboxobj instanceof Mailbox) {
-                Mailbox mboxTarget = (Mailbox) mboxobj;
-                sameMailbox = mbox.getAccountId().equalsIgnoreCase(mboxTarget.getAccountId());
-                Folder folder = mboxTarget.getFolderByPath(getContext(), path.asZimbraPath());
+                sameMailbox = mbox.getAccountId().equalsIgnoreCase(((Mailbox) mboxobj).getAccountId());
+                Folder folder = (Folder) path.getFolder();
                 iidTarget = new ItemId(folder);
                 uvv = ImapFolder.getUIDValidity(folder);
             } else if (mboxobj instanceof ZMailbox) {
-                ZMailbox zmbxTarget = (ZMailbox) mboxobj;
-                ZFolder zfolder = zmbxTarget.getFolderByPath(path.asZimbraPath());
+                ZFolder zfolder = (ZFolder) path.getFolder();
                 iidTarget = new ItemId(zfolder.getId(), path.getOwnerAccount().getId());
                 uvv = ImapFolder.getUIDValidity(zfolder);
             } else {

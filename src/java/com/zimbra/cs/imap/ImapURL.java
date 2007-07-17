@@ -215,10 +215,9 @@ class ImapURL {
                 }
             }
             // if not, have to fetch by IMAP UID if we're local
-            if (content == null && Provisioning.onLocalServer(acct)) {
-                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
-                Folder folder = mbox.getFolderByPath(octxt, mPath.asZimbraPath());
-                MailItem item = mbox.getItemByImapId(octxt, mUid, folder.getId());
+            if (content == null && mPath.onLocalServer()) {
+                Mailbox mbox = (Mailbox) mPath.getOwnerMailbox();
+                MailItem item = mbox.getItemByImapId(octxt, mUid, mPath.asItemId().getId());
                 if (item.getType() != MailItem.TYPE_MESSAGE && item.getType() != MailItem.TYPE_CONTACT)
                     throw new ImapUrlException(tag, mURL, "no such message");
                 content = ImapMessage.getContent(item);
@@ -229,7 +228,7 @@ class ImapURL {
                 AuthToken auth = new AuthToken(authacct, System.currentTimeMillis() + 60 * 1000);
                 HashMap<String, String> params = new HashMap<String, String>();
                 params.put(UserServlet.QP_IMAP_ID, Integer.toString(mUid));
-                content = UserServlet.getRemoteContent(auth.getEncoded(), acct, mPath.asZimbraPath(), params);
+                content = UserServlet.getRemoteContent(auth.getEncoded(), acct, mPath.asResolvedPath(), params);
             }
 
             // fetch the content of the message

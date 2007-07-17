@@ -130,7 +130,7 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
         mMailbox.beginTrackingImap();
 
         OperationContext octxt = mCredentials.getContext().setSession(this);
-        Folder folder = mMailbox.getFolderByPath(octxt, mPath.asZimbraPath());
+        Folder folder = (Folder) mPath.getFolder();
         mFolderId = folder.getId();
 
         // load the folder's contents
@@ -263,8 +263,7 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
         if (isVirtual())
             throw ServiceException.INVALID_REQUEST("cannot reopen virtual folders", null);
 
-        OperationContext octxt = mCredentials.getContext().setSession(this);
-        Folder folder = mMailbox.getFolderByPath(octxt, mPath.asZimbraPath());
+        Folder folder = (Folder) mPath.getFolder();
         if (!mPath.isSelectable())
             throw ServiceException.PERM_DENIED("cannot select folder: " + mPath);
         if (folder.getId() != mFolderId)
@@ -429,10 +428,11 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
 
 
     ImapPath getPath()              { return mPath; }
-    String getQuotedPath()          { return '"' + mPath.asZimbraPath() + '"'; }
     void updatePath(Folder folder)  { mPath = new ImapPath(null, folder.getPath(), mPath.getCredentials()); }
 
-    @Override public String toString()        { return mPath.toString(); }
+    String getQuotedPath() throws ServiceException  { return '"' + mPath.asResolvedPath() + '"'; }
+
+    @Override public String toString()  { return mPath.toString(); }
 
 
     /** Returns the UID Validity Value for the {@link Folder}.  This is the

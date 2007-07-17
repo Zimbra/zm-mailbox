@@ -128,7 +128,7 @@ public class ImapLSubOperation extends Operation {
 
     private String getFolderAttributes(ImapPath path, boolean matched) throws ServiceException {
         if (!matched)
-            return "\\Noselect";
+            return "\\NoSelect";
         if (!path.belongsTo(mMailbox))
             return "";
         try {
@@ -140,7 +140,7 @@ public class ImapLSubOperation extends Operation {
                 return FOLDER_ATTRIBUTES[mOutputChildInfo ? 0 : 1][attributes];
             }
         } catch (MailServiceException.NoSuchItemException nsie) { }
-        return "\\Noselect";
+        return "\\NoSelect";
     }
 
 	List<String> getSubs()  { return mSubs; }
