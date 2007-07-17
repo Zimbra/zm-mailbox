@@ -457,7 +457,7 @@ public class ZimbraLog {
     /**
      * Removes mailbox id from the current thread's logging context.
      */
-    public static void removeMboxFromContext(int mboxId) {
+    public static void removeMboxFromContext() {
         removeFromContext(C_MID);
     }
     
