@@ -94,7 +94,7 @@ extends ScheduledTask {
         }
         
         ZimbraLog.removeDataSourceNameFromContext();
-        ZimbraLog.removeMboxFromContext(getMailboxId());
+        ZimbraLog.removeMboxFromContext();
 
         return null;
     }
