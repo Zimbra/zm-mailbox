@@ -1853,6 +1853,13 @@ public class LdapProvisioning extends Provisioning {
         private LdapProvisioning mProv;
         private String mOldDomainName;
         private String mNewDomainName;
+        private Phase mPhase;
+        
+        private static enum Phase {
+            PHASE_RENAME_ENTRIES,
+            PHASE_FIX_FOREIGN_ALIASES,
+            PHASE_FIX_FOREIGN_DL_MEMBERS
+        }
         
         private static final String[] sDLAttrsNeedRename = {Provisioning.A_mail, 
                                                             Provisioning.A_zimbraMailAlias,
@@ -1892,22 +1899,30 @@ public class LdapProvisioning extends Provisioning {
                 mRenameDomainLog.debug(String.format(funcName + "(" + desc + "):" + format, objects));
         }
         
-        RenameDomainVisitor(DirContext ctxt, LdapProvisioning prov, String oldDomainName, String newDomainName) {
+        RenameDomainVisitor(DirContext ctxt, LdapProvisioning prov, String oldDomainName, String newDomainName, Phase phase) {
             mCtxt = ctxt;
             mProv = prov;
             mOldDomainName = oldDomainName;
             mNewDomainName = newDomainName;
+            mPhase = phase;
         }
         
         public void visit(NamedEntry entry) throws ServiceException {
-            debug("visiting " + entry.getName());
+            debug("(" + mPhase.name() + ") visiting " + entry.getName());
             
-            if (entry instanceof DistributionList)
-                handleEntry(entry, true);  // first pass
-            else if (entry instanceof Account)
-                handleEntry(entry, false); // first pass
-            else if (entry instanceof Alias)
-                handleForeignAlias(entry); // second pass
+            if (mPhase == Phase.PHASE_RENAME_ENTRIES) {
+                if (entry instanceof DistributionList)
+                    handleEntry(entry, true);  // PHASE_RENAME_ENTRIES
+                else if (entry instanceof Account)
+                    handleEntry(entry, false); // PHASE_RENAME_ENTRIES
+            } else if (mPhase == Phase.PHASE_FIX_FOREIGN_ALIASES) {
+                if (entry instanceof Alias)
+                    handleForeignAlias(entry); // PHASE_FIX_FOREIGN_ALIASES
+                else
+                    assert(false);  // by now there should only be foreign aliases in the old domain
+            } else if (mPhase == Phase.PHASE_FIX_FOREIGN_DL_MEMBERS) {
+                handleForeignDLMembers(entry);
+            }
         }
         
         private void handleEntry(NamedEntry entry, boolean isDL) {
@@ -2180,6 +2195,46 @@ public class LdapProvisioning extends Provisioning {
                 warn("fixupTargetInOtherDomain", "cannot add alias for account" + "acct=[%s], aliasOldAddr=[%s], aliasNewAddr=[%s]", targetEntry.getName(), aliasOldAddr, aliasNewAddr);
             }
         }
+        
+        /*
+         * replace "old addrs of DL/accounts and their aliases that are members of DLs in other domains" to the new addrs
+         */
+        private void handleForeignDLMembers(NamedEntry entry) {
+            Map<String, String> changedPairs = new HashMap<String, String>();
+            
+            String entryAddr = entry.getName();
+            String[] oldNewPair = changedAddrPairs(entryAddr);
+            if (oldNewPair != null)
+                changedPairs.put(oldNewPair[0], oldNewPair[1]);
+            
+            String[] aliasesAddrs = entry.getMultiAttr(Provisioning.A_zimbraMailAlias, false);
+            for (String aliasAddr : aliasesAddrs) {
+                oldNewPair = changedAddrPairs(aliasAddr);
+                if (oldNewPair != null)
+                    changedPairs.put(oldNewPair[0], oldNewPair[1]);
+            }
+
+            mProv.renameAddressesInAllDistributionLists(changedPairs);
+        }
+        
+        private String[] changedAddrPairs(String addr) {
+            String[] parts = EmailUtil.getLocalPartAndDomain(addr);
+            if (parts == null) {
+                warn("changedAddrPairs", "encountered invalid address", "addr=[%s]", addr);
+                return null;
+            }
+            
+            String domain = parts[1];
+            if (!domain.equals(mNewDomainName))
+                return null;
+            
+            String localPart = parts[0];
+            String[] oldNewAddrPairs = new String[2];
+            oldNewAddrPairs[0] = localPart + "@" + mOldDomainName; 
+            oldNewAddrPairs[1] = localPart + "@" + mNewDomainName; 
+            
+            return oldNewAddrPairs;
+        }
 
     }
     
@@ -2233,23 +2288,31 @@ public class LdapProvisioning extends Provisioning {
          */ 
         // lockDomain(newDomain); TODO
         
-        
         /*
-         * 4. move all accounts, DLs, and aliases into the new domain
+         * 4. move all accounts, DLs, and aliases
          */ 
-        String oldDomainDn = ((LdapDomain)oldDomain).getDN();
-        String searchBase = mDIT.domainDNToAccountSearchDN(oldDomainDn);
-        RenameDomainVisitor visitor = new RenameDomainVisitor(ctxt, this, oldDomainName, newDomainName);
+        RenameDomainVisitor visitor;
+        String searchBase = mDIT.domainDNToAccountSearchDN(((LdapDomain)oldDomain).getDN());
         int flags = 0;
         
-        // first pass, go thru DLs and accounts
+        // first phase, go thru DLs and accounts and their aliases that are in the old domain into the new domain
+        visitor = new RenameDomainVisitor(ctxt, this, oldDomainName, newDomainName, RenameDomainVisitor.Phase.PHASE_RENAME_ENTRIES);
         flags = Provisioning.SA_ACCOUNT_FLAG + Provisioning.SA_CALENDAR_RESOURCE_FLAG + Provisioning.SA_DISTRIBUTION_LIST_FLAG;
         searchObjects(null, null, searchBase, flags, visitor, 0);
         
-        // second pass, go thru aliases, by now aliases left in the domain should be aliases with target in other domain
+        // second phase, go thru aliases that have not been moved yet, by now aliases left in the domain should be aliases with target in other domains
+        visitor = new RenameDomainVisitor(ctxt, this, oldDomainName, newDomainName, RenameDomainVisitor.Phase.PHASE_FIX_FOREIGN_ALIASES);
         flags = Provisioning.SA_ALIAS_FLAG;
         searchObjects(null, null, searchBase, flags, visitor, 0);
         
+        // third phase, go thru DLs and accounts in the *new* domain, rename the addresses in all DLs
+        //     - the addresses to be renamed are: the DL/account's main address and all the aliases that were moved to the new domain
+        //     - by now the DLs to modify should be those in other domains, because members of DLs in the old domain (now new domain) 
+        //       have been updated in first pass.
+        visitor = new RenameDomainVisitor(ctxt, this, oldDomainName, newDomainName, RenameDomainVisitor.Phase.PHASE_FIX_FOREIGN_DL_MEMBERS);
+        searchBase = mDIT.domainDNToAccountSearchDN(((LdapDomain)newDomain).getDN());
+        flags = Provisioning.SA_ACCOUNT_FLAG + Provisioning.SA_CALENDAR_RESOURCE_FLAG + Provisioning.SA_DISTRIBUTION_LIST_FLAG;
+        searchObjects(null, null, searchBase, flags, visitor, 0);
         
         /*
          * 5. Delete the old domain
@@ -3640,7 +3703,6 @@ public class LdapProvisioning extends Provisioning {
      *  called when an account/dl is renamed
      *  
      */
-    // void renameAddressInAllDistributionLists(String oldName, String newName)
     protected void renameAddressesInAllDistributionLists(String oldName, String newName, ReplaceAddressResult replacedAliasPairs) {
     	Map<String, String> changedPairs = new HashMap<String, String>();
     	
@@ -3651,6 +3713,11 @@ public class LdapProvisioning extends Provisioning {
     	    if (!oldAddr.equals(newAddr))
     	    	changedPairs.put(oldAddr, newAddr);
     	}
+    	
+    	renameAddressesInAllDistributionLists(changedPairs);
+    }
+    	
+    protected void renameAddressesInAllDistributionLists(Map<String, String> changedPairs) {
 
     	String oldAddrs[] = changedPairs.keySet().toArray(new String[0]);
         String newAddrs[] = changedPairs.values().toArray(new String[0]);

@@ -1,6 +1,7 @@
 package com.zimbra.qa.unittest;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -28,26 +29,39 @@ public class TestRenameDomain  extends TestCase {
     private Provisioning mProv;
     private String TEST_ID;
     
-    private String PASSWORD;
-    private int NUM_ACCOUNTS;
-    private int NUM_TOP_DLS;
-    private int NUM_NESTED_DLS;
-    private int NUM_SIGNATURES;
-    private int NUM_IDENTITIES;
-    private int NUM_DATASOURCES;
+    private String PASSWORD = "test123";
     
-    private String ACCOUNT_NAMEPREFIX;
-    private String TOP_DL_NAMEPREFIX;
-    private String NESTED_DL_NAMEPREFIX;
-    private String ALIAS_NAMEPREFIX;
-    private String SIGNATURE_NAMEPREFIX;
-    private String IDENTITY_NAMEPREFIX;
-    private String DATASOURCE_NAMEPREFIX;
-    
+    private int NUM_ACCOUNTS = 3;
+    private int NUM_DLS_NESTED = 2;
+    private int NUM_DLS_TOP = 2;
+    private int NUM_DOMAINS = 3;
      
-    private String OLD_DOMAIN_NAME;
-    private String NEW_DOMAIN_NAME;
-    private String OTHER_DOMAIN_NAME;
+    /*
+     * NUM_IDENTITIES and NUM_DATASOURCES must be >= NUM_SIGNATURES, each identity/datasource get one signature of the same index.
+     * identities and datasources that do not have corresponding signature will get no signature. 
+     * e.g. 
+     *     identity-1 -> signature-1
+     *     identity-2 -> signature-2 
+     *     identity-3 -> (no signature)
+     * 
+     */ 
+    private int NUM_SIGNATURES = 2; 
+    private int NUM_IDENTITIES = 2;
+    private int NUM_DATASOURCES = 2;
+    
+    private String NAMEPREFIX_ACCOUNT     = "acct-";
+    private String NAMEPREFIX_ALIAS       = "alias-";
+    private String NAMEPREFIX_DATASOURCE  = "datasource-";
+    private String NAMEPREFIX_DL_NESTED   = "nestedDL-";
+    private String NAMEPREFIX_DL_TOP      = "topDL-";
+    private String NAMEPREFIX_IDENTITY    = "identity-";
+    private String NAMEPREFIX_OTHERDOMAIN = "otherdomain-";
+    private String NAMEPREFIX_SIGNATURE   = "signature-";
+    
+    // pseudo domain index for the old domain and new domain, so that we can use the unified interfaces
+    private int OLD_DOMAIN  = 0;
+    private int NEW_DOMAIN  = -1;
+    
     
     public void setUp() throws Exception {
         
@@ -60,125 +74,113 @@ public class TestRenameDomain  extends TestCase {
         mProv = Provisioning.getInstance();
         assertTrue(mProv instanceof LdapProvisioning);
         
-        PASSWORD = "test123";
-        NUM_ACCOUNTS = 3;
-        NUM_TOP_DLS = 2;
-        NUM_NESTED_DLS = 2;
-        
+         
         /*
-         * NUM_IDENTITIES and NUM_DATASOURCES must be >= NUM_SIGNATURES, each identity/datasource get one signature of the same index.
-         * identities and datasources that do not have corresponding signature will get no signature. 
-         * e.g. 
-         *     identity-1 -> signature-1
-         *     identity-2 -> signature-2 
-         *     identity-3 -> (no signature)
-         * 
-         */ 
-        NUM_SIGNATURES = 2; 
-        NUM_IDENTITIES = 2;
-        NUM_DATASOURCES = 2;
-        
-        ACCOUNT_NAMEPREFIX = "acct";
-        TOP_DL_NAMEPREFIX = "top-dl";
-        NESTED_DL_NAMEPREFIX = "nested-dl";
-        ALIAS_NAMEPREFIX = "alias";
-        SIGNATURE_NAMEPREFIX = "signature";
-        IDENTITY_NAMEPREFIX = "identity";
-        DATASOURCE_NAMEPREFIX = "datasource";
-                
-        OLD_DOMAIN_NAME   = "old-domain" + ".test-" + TEST_ID + ".ldap-test-domain";
-        NEW_DOMAIN_NAME   = "new-domain" + ".test-" + TEST_ID + ".ldap-test-domain";
-        OTHER_DOMAIN_NAME = "other-domain" + ".test-" + TEST_ID + ".ldap-test-domain";
-        
-        
-        /*
-         * Create 2 domains: domain to be renamed, and one other domain.  
+         * Create NUM_DOMAINS domains: one domain(the first one) to be renamed, and NUM_DOMAINS-1 other domains.  
          *     - Each domain:
          *           - has NUM_ACCOUNTS accounts
-         *           - has NUM_TOP_DLS top level dls (dl that is not a nested DL)
-         *           - has NUM_NESTED_DLS nested dls (dl under another DL)
+         *           - has NUM_DLS_TOP top level dls (dl that is not a nested DL)
+         *           - has NUM_DLS_NESTED nested dls (dl under another DL)
          * 
          *     - Each account:
-         *           - has two aliases, one in the same domain, one in diff domain
+         *           - has NUM_DOMAINS aliases, one in each domain
          *           - is a member of all DLs in all domains
          *           
          *     - Each top dl:
-         *           - has two aliases, one in the same domain, one in diff domain
+         *           - has NUM_DOMAINS aliases, one in each domain
          *                 
          *     - Each nested dl:
-         *           - has two aliases, one in the same domain, one in diff domain
-         *           - is a member of all DLs in all domains
+         *           - has NUM_DOMAINS aliases, one in each domain
+         *           - is a member of all top DLs in all domains
          */
         
-        createDomain(OLD_DOMAIN_NAME);
-        createDomain(OTHER_DOMAIN_NAME);
+        // create domains
+        for (int i = 0; i < NUM_DOMAINS; i++)
+            createDomain(DOMAIN_NAME(i));
         
-        // TODO, 3 domains, identity, signature, data source, cross link
+        // setup entries in domains
+        for (int i = 0; i < NUM_DOMAINS; i++)     
+            setupDomain(i);
         
-        setupDomain(OLD_DOMAIN_NAME, OTHER_DOMAIN_NAME);
-        setupDomain(OTHER_DOMAIN_NAME, OLD_DOMAIN_NAME);
+        for (int i = 0; i < NUM_DOMAINS; i++)     
+            crossLinkDomain(i);
+
+    }
         
-        crossLinkDomain(OLD_DOMAIN_NAME, OTHER_DOMAIN_NAME);
-        crossLinkDomain(OTHER_DOMAIN_NAME, OLD_DOMAIN_NAME);
+    private String DOMAIN_NAME(String leafDomainName) {
+        return leafDomainName + ".test-" + TEST_ID + ".ldap-test-domain";
     }
     
-    private String accountName(int index, String domainName) {
-        // we want our names to be 1 relative, easier to spot in ldap brawser
-        int idx = index+1;
-        return ACCOUNT_NAMEPREFIX + "-" + idx + "@" + domainName;
-    }
-    
-    private String accountAlias(int index, String aliasInDomain, String targetInDomain) {
-        if (aliasInDomain.equals(targetInDomain))
-            return ALIAS_NAMEPREFIX + "-" + accountName(index, aliasInDomain);
+    private String LEAF_DOMAIN_NAME(int index) {
+        if (index == OLD_DOMAIN)
+            return "olddomain";
+        else if (index == NEW_DOMAIN)
+            return "newdomain";
         else
-            return ALIAS_NAMEPREFIX + "-" + targetInDomain + accountName(index, aliasInDomain);
+            return NAMEPREFIX_OTHERDOMAIN + index;
+    }
+        
+    private String DOMAIN_NAME(int index) {
+        return DOMAIN_NAME(LEAF_DOMAIN_NAME(index));
     }
     
-    private String topDLName(int index, String domainName) {
+    private String ACCOUNT_LOCAL(int index) {
         // we want our names to be 1 relative, easier to spot in ldap brawser
-        int idx = index+1;
-        return TOP_DL_NAMEPREFIX + "-" + idx + "@" + domainName;
+        return NAMEPREFIX_ACCOUNT + String.valueOf(index+1);
     }
     
-    private String topDLAlias(int index, String aliasInDomain, String targetInDomain) {
-        if (aliasInDomain.equals(targetInDomain))
-            return ALIAS_NAMEPREFIX + "-" + topDLName(index, aliasInDomain);
-        else
-            return ALIAS_NAMEPREFIX + "-" + targetInDomain + topDLName(index, aliasInDomain);
+    private String ACCOUNT_NAME(int index, int domainIdx) {
+        return ACCOUNT_LOCAL(index) + "@" + DOMAIN_NAME(domainIdx);
     }
     
-    private String nestedDLName(int index, String domainName) {
+    private String ACCOUNT_ALIAS_NAME(int targetIdx, int targetDomainIdx, int aliasDomainIdx) {
+        return NAMEPREFIX_ALIAS + ACCOUNT_LOCAL(targetIdx) + "-" + LEAF_DOMAIN_NAME(targetDomainIdx) + "@" + DOMAIN_NAME(aliasDomainIdx);
+    }
+    
+    private String TOP_DL_LOCAL(int index) {
         // we want our names to be 1 relative, easier to spot in ldap brawser
-        int idx = index+1;
-        return NESTED_DL_NAMEPREFIX + "-" + idx + "@" + domainName;
+        return NAMEPREFIX_DL_TOP + String.valueOf(index+1);
     }
     
-    private String nestedDLAlias(int index, String aliasInDomain, String targetInDomain) {
-        if (aliasInDomain.equals(targetInDomain))
-            return ALIAS_NAMEPREFIX + "-" + nestedDLName(index, aliasInDomain);
-        else
-            return ALIAS_NAMEPREFIX + "-" + targetInDomain + nestedDLName(index, aliasInDomain);
+    private String TOP_DL_NAME(int index, int domainIdx) {
+        return TOP_DL_LOCAL(index) + "@" + DOMAIN_NAME(domainIdx);
     }
     
-    private String signatureName(Account acct, int index) {
-        int idx = index+1;
-        return SIGNATURE_NAMEPREFIX + "-" + idx + "of-acct-" + acct.getName();
+    private String TOP_DL_ALIAS_NAME(int targetIdx, int targetDomainIdx, int aliasDomainIdx) {
+        return NAMEPREFIX_ALIAS + TOP_DL_LOCAL(targetIdx) + "-" + LEAF_DOMAIN_NAME(targetDomainIdx) + "@" + DOMAIN_NAME(aliasDomainIdx);
     }
     
-    private String signatureContent(Account acct, int index) {
-        int idx = index+1;
-        return "signature content of " + SIGNATURE_NAMEPREFIX + "-" + idx + "of-acct-" + acct.getName();
+    private String NESTED_DL_LOCAL(int index) {
+        // we want our names to be 1 relative, easier to spot in ldap brawser
+        return NAMEPREFIX_DL_NESTED + String.valueOf(index+1);
     }
     
-    private String identityName(Account acct, int index) {
-        int idx = index+1;
-        return IDENTITY_NAMEPREFIX + "-" + idx + "of-acct-" + acct.getName();
+    private String NESTED_DL_NAME(int index, int domainIdx) {
+        return NESTED_DL_LOCAL(index) + "@" + DOMAIN_NAME(domainIdx);
     }
     
-    private String dataSourceName(Account acct, int index) {
+    private String NESTED_DL_ALIAS_NAME(int targetIdx, int targetDomainIdx, int aliasDomainIdx) {
+        return NAMEPREFIX_ALIAS + NESTED_DL_LOCAL(targetIdx) + "-" + LEAF_DOMAIN_NAME(targetDomainIdx) + "@" + DOMAIN_NAME(aliasDomainIdx);
+    }
+    
+    private String SIGNATURE_NAME(Account acct, int index) {
         int idx = index+1;
-        return DATASOURCE_NAMEPREFIX + "-" + idx + "of-acct-" + acct.getName();
+        return NAMEPREFIX_SIGNATURE + idx + "of-acct-" + acct.getName();
+    }
+    
+    private String SIGNATURE_CONTENT(Account acct, int index) {
+        int idx = index+1;
+        return "signature content of " + NAMEPREFIX_SIGNATURE + idx + "of-acct-" + acct.getName();
+    }
+    
+    private String IDENTITY_NAME(Account acct, int index) {
+        int idx = index+1;
+        return NAMEPREFIX_IDENTITY + idx + "of-acct-" + acct.getName();
+    }
+    
+    private String DATASOURCE_NAME(Account acct, int index) {
+        int idx = index+1;
+        return NAMEPREFIX_DATASOURCE + idx + "of-acct-" + acct.getName();
     }
     
     private void createDomain(String domainName) throws Exception {
@@ -192,8 +194,8 @@ public class TestRenameDomain  extends TestCase {
         
         for (int i = 0; i < NUM_SIGNATURES; i++) {
             Map<String, Object> attrs = new HashMap<String, Object>();
-            attrs.put(Provisioning.A_zimbraPrefMailSignature, signatureContent(acct, i));
-            Signature entry = mProv.createSignature(acct, signatureName(acct, i), attrs);
+            attrs.put(Provisioning.A_zimbraPrefMailSignature, SIGNATURE_CONTENT(acct, i));
+            Signature entry = mProv.createSignature(acct, SIGNATURE_NAME(acct, i), attrs);
         }
         
         return sigIds;
@@ -210,7 +212,7 @@ public class TestRenameDomain  extends TestCase {
             attrs.put(Provisioning.A_zimbraPrefReplyToDisplay, "Micky");
             if (i < NUM_SIGNATURES)
                 attrs.put(Provisioning.A_zimbraPrefDefaultSignatureId, sigIds[i]);
-            Identity entry = mProv.createIdentity(acct, identityName(acct, i), attrs);
+            Identity entry = mProv.createIdentity(acct, IDENTITY_NAME(acct, i), attrs);
         }
     }
     
@@ -232,41 +234,42 @@ public class TestRenameDomain  extends TestCase {
             attrs.put(Provisioning.A_zimbraPrefReplyToDisplay, "Micky");
             if (i < NUM_SIGNATURES)
                 attrs.put(Provisioning.A_zimbraPrefDefaultSignatureId, sigIds[i]);
-            DataSource entry = mProv.createDataSource(acct, DataSource.Type.pop3, dataSourceName(acct, i), attrs);
+            DataSource entry = mProv.createDataSource(acct, DataSource.Type.pop3, DATASOURCE_NAME(acct, i), attrs);
         }
     }
     
     /*
      * create and setup entries in the domain
      */
-    private void setupDomain(String domainName, String diffDomainName) throws Exception {
-        System.out.println("setupDomain: " + domainName + ", " + diffDomainName);
+    private void setupDomain(int domainIdx) throws Exception {
+        
+        String domainName = DOMAIN_NAME(domainIdx);
+        System.out.println("setupDomain: " + domainName);
         
         // create accounts and their aliases
         for (int a = 0; a < NUM_ACCOUNTS; a++) {
             Map<String, Object> acctAttrs = new HashMap<String, Object>();
-            Account acct = mProv.createAccount(accountName(a, domainName), PASSWORD, acctAttrs);
+            Account acct = mProv.createAccount(ACCOUNT_NAME(a, domainIdx), PASSWORD, acctAttrs);
             
-            mProv.addAlias(acct, accountAlias(a, domainName, domainName));
-            mProv.addAlias(acct, accountAlias(a, diffDomainName, domainName));
+            for (int d = 0; d < NUM_DOMAINS; d++)
+                mProv.addAlias(acct, ACCOUNT_ALIAS_NAME(a, domainIdx, d));
             
             String[] signatureIds = createSignatures(acct);
             createIdentities(acct, signatureIds);
             createDataSources(acct, signatureIds);
-            
         }
         
         // create nested dls and their aliases, then add accounts to dls
-        for (int nd = 0; nd < NUM_NESTED_DLS; nd++) {
+        for (int nd = 0; nd < NUM_DLS_NESTED; nd++) {
             Map<String, Object> dlAttrs = new HashMap<String, Object>();
-            DistributionList dl = mProv.createDistributionList(nestedDLName(nd, domainName), dlAttrs);
+            DistributionList dl = mProv.createDistributionList(NESTED_DL_NAME(nd, domainIdx), dlAttrs);
             
-            mProv.addAlias(dl, nestedDLAlias(nd, domainName, domainName));
-            mProv.addAlias(dl, nestedDLAlias(nd, diffDomainName, domainName));
+            for (int d = 0; d < NUM_DOMAINS; d++)
+                mProv.addAlias(dl, NESTED_DL_ALIAS_NAME(nd, domainIdx, d));
             
             String[] members = new String[NUM_ACCOUNTS];
             for (int a = 0; a < NUM_ACCOUNTS; a++) {
-                members[a] = accountName(a, domainName);
+                members[a] = ACCOUNT_NAME(a, domainIdx);
             }
             
             // add members to the dl
@@ -274,21 +277,21 @@ public class TestRenameDomain  extends TestCase {
         }
         
         // create top dls and their aliases, then add accounts and nested dls to top dls
-        for (int td = 0; td < NUM_TOP_DLS; td++) {
+        for (int td = 0; td < NUM_DLS_TOP; td++) {
             Map<String, Object> dlAttrs = new HashMap<String, Object>();
-            DistributionList dl = mProv.createDistributionList(topDLName(td, domainName), dlAttrs);
+            DistributionList dl = mProv.createDistributionList(TOP_DL_NAME(td, domainIdx), dlAttrs);
             
-            mProv.addAlias(dl, topDLAlias(td, domainName, domainName));
-            mProv.addAlias(dl, topDLAlias(td, diffDomainName, domainName));
+            for (int d = 0; d < NUM_DOMAINS; d++)
+                mProv.addAlias(dl, TOP_DL_ALIAS_NAME(td, domainIdx, d));
             
             // setup the member array
-            String[] members = new String[NUM_ACCOUNTS + NUM_NESTED_DLS];
+            String[] members = new String[NUM_ACCOUNTS + NUM_DLS_NESTED];
             for (int a = 0; a < NUM_ACCOUNTS; a++) {
-                members[a] = accountName(a, domainName);
+                members[a] = ACCOUNT_NAME(a, domainIdx);
             }
             
-            for (int nd = 0; nd < NUM_NESTED_DLS; nd++) {
-                members[NUM_ACCOUNTS+nd] = nestedDLName(nd, domainName);
+            for (int nd = 0; nd < NUM_DLS_NESTED; nd++) {
+                members[NUM_ACCOUNTS+nd] = NESTED_DL_NAME(nd, domainIdx);
             }
             
             // add members to the dl
@@ -297,32 +300,73 @@ public class TestRenameDomain  extends TestCase {
     }
     
     /*
-     * add all accounts and dls in sourceDomain to targetDomain
+     * add all accounts and dls of the domain to all other domains
      */
-    private void crossLinkDomain(String sourceDomainName, String targetDomainName) throws Exception {
-        System.out.println("crossLinkDomain: " + sourceDomainName + ", " + targetDomainName);
+    private void crossLinkDomain(int domainIdx) throws Exception {
         
-        Domain sourceDomain = mProv.get(Provisioning.DomainBy.name, sourceDomainName);
+        String domainName = DOMAIN_NAME(domainIdx);
+        System.out.println("crossLinkDomain: " + domainName);
         
+        Domain sourceDomain = mProv.get(Provisioning.DomainBy.name, domainName);
         
-        /*
-        List dls = mProv.getAllDistributionLists(sourceDomain);
-        for (Iterator it = dls.iterator(); it.hasNext();) {
-            DistributionList dl = (DistributionList)it.next();
-            parts = EmailUtil.getLocalPartAndDomain(dl.getName());
-            if (parts == null)
-                throw ServiceException.FAILURE("encountered invalid dl name " + dl.getName(), null);
-            newLocal = parts[0];
-            newEmail = newLocal + "@" + newName;   
-            renameDistributionList(dl.getId(), newEmail);
-         }
-         */
+        List<String>[][] nestedDLMembers = new ArrayList[NUM_DOMAINS][NUM_DLS_NESTED];
+        List<String>[][] topDLMembers = new ArrayList[NUM_DOMAINS][NUM_DLS_TOP];        
+        
+        for (int d = 0; d < NUM_DOMAINS; d++) {
+            for (int nd = 0; nd < NUM_DLS_TOP; nd++) {
+                nestedDLMembers[d][nd] = new ArrayList();
+            }
+            for (int td = 0; td < NUM_DLS_TOP; td++) {
+                topDLMembers[d][td] = new ArrayList();
+            }
+        }
+        
+        // add accounts to top and nested dls
+        for (int a = 0; a < NUM_ACCOUNTS; a++) {
+            String acctName = ACCOUNT_NAME(a, domainIdx);
+            for (int d = 0; d < NUM_DOMAINS; d++) {
+                if (d != domainIdx) {
+                    for (int nd = 0; nd < NUM_DLS_NESTED; nd++) {
+                        nestedDLMembers[d][nd].add(acctName);
+                    }
+                    for (int td = 0; td < NUM_DLS_TOP; td++) {
+                        topDLMembers[d][td].add(acctName);
+                    }
+                }
+            }
+        }
+        
+        // add nested dls to top dls
+        for (int nd = 0; nd < NUM_DLS_NESTED; nd++) {
+            String nestedDLName = NESTED_DL_NAME(nd, domainIdx);
+            for (int d = 0; d < NUM_DOMAINS; d++) {
+                if (d != domainIdx) {
+                    for (int td = 0; td < NUM_DLS_TOP; td++) {
+                        topDLMembers[d][td].add(nestedDLName);
+                    }
+                }
+            }
+        }
+        
+        // now add them
+        for (int d = 0; d < NUM_DOMAINS; d++) {
+            if (d != domainIdx) {
+                for (int nd = 0; nd < NUM_DLS_NESTED; nd++) {
+                    DistributionList dl = mProv.get(Provisioning.DistributionListBy.name, NESTED_DL_NAME(nd, d));
+                    mProv.addMembers(dl, nestedDLMembers[d][nd].toArray(new String[0]));
+                }
+                for (int td = 0; td < NUM_DLS_TOP; td++) {
+                    DistributionList dl = mProv.get(Provisioning.DistributionListBy.name, TOP_DL_NAME(td, d));
+                    mProv.addMembers(dl, topDLMembers[d][td].toArray(new String[0]));
+                }
+            }
+        }
     }
     
     private String execute() throws Exception {
         
-        Domain oldDomain = mProv.get(Provisioning.DomainBy.name, OLD_DOMAIN_NAME);
-        ((LdapProvisioning)mProv).renameDomain(oldDomain.getId(), NEW_DOMAIN_NAME);
+        Domain oldDomain = mProv.get(Provisioning.DomainBy.name, DOMAIN_NAME(OLD_DOMAIN));
+        ((LdapProvisioning)mProv).renameDomain(oldDomain.getId(), DOMAIN_NAME(NEW_DOMAIN));
         
         return TEST_ID;
     }
