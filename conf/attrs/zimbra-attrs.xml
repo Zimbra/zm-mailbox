@@ -475,7 +475,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="96" name="zimbraPop3NumThreads" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
-  <globalConfigValue>20</globalConfigValue>
+  <globalConfigValue>100</globalConfigValue>
   <desc>number of handler threads</desc>
 </attr>
 
