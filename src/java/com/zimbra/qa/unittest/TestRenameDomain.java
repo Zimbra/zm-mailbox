@@ -11,10 +11,14 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
+import com.zimbra.cs.account.ldap.LdapUtil;
 
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
@@ -28,11 +32,19 @@ public class TestRenameDomain  extends TestCase {
     private int NUM_ACCOUNTS;
     private int NUM_TOP_DLS;
     private int NUM_NESTED_DLS;
+    private int NUM_SIGNATURES;
+    private int NUM_IDENTITIES;
+    private int NUM_DATASOURCES;
+    
     private String ACCOUNT_NAMEPREFIX;
     private String TOP_DL_NAMEPREFIX;
     private String NESTED_DL_NAMEPREFIX;
     private String ALIAS_NAMEPREFIX;
+    private String SIGNATURE_NAMEPREFIX;
+    private String IDENTITY_NAMEPREFIX;
+    private String DATASOURCE_NAMEPREFIX;
     
+     
     private String OLD_DOMAIN_NAME;
     private String NEW_DOMAIN_NAME;
     private String OTHER_DOMAIN_NAME;
@@ -52,11 +64,28 @@ public class TestRenameDomain  extends TestCase {
         NUM_ACCOUNTS = 3;
         NUM_TOP_DLS = 2;
         NUM_NESTED_DLS = 2;
+        
+        /*
+         * NUM_IDENTITIES and NUM_DATASOURCES must be >= NUM_SIGNATURES, each identity/datasource get one signature of the same index.
+         * identities and datasources that do not have corresponding signature will get no signature. 
+         * e.g. 
+         *     identity-1 -> signature-1
+         *     identity-2 -> signature-2 
+         *     identity-3 -> (no signature)
+         * 
+         */ 
+        NUM_SIGNATURES = 2; 
+        NUM_IDENTITIES = 2;
+        NUM_DATASOURCES = 2;
+        
         ACCOUNT_NAMEPREFIX = "acct";
         TOP_DL_NAMEPREFIX = "top-dl";
         NESTED_DL_NAMEPREFIX = "nested-dl";
         ALIAS_NAMEPREFIX = "alias";
-        
+        SIGNATURE_NAMEPREFIX = "signature";
+        IDENTITY_NAMEPREFIX = "identity";
+        DATASOURCE_NAMEPREFIX = "datasource";
+                
         OLD_DOMAIN_NAME   = "old-domain" + ".test-" + TEST_ID + ".ldap-test-domain";
         NEW_DOMAIN_NAME   = "new-domain" + ".test-" + TEST_ID + ".ldap-test-domain";
         OTHER_DOMAIN_NAME = "other-domain" + ".test-" + TEST_ID + ".ldap-test-domain";
@@ -132,10 +161,79 @@ public class TestRenameDomain  extends TestCase {
             return ALIAS_NAMEPREFIX + "-" + targetInDomain + nestedDLName(index, aliasInDomain);
     }
     
+    private String signatureName(Account acct, int index) {
+        int idx = index+1;
+        return SIGNATURE_NAMEPREFIX + "-" + idx + "of-acct-" + acct.getName();
+    }
+    
+    private String signatureContent(Account acct, int index) {
+        int idx = index+1;
+        return "signature content of " + SIGNATURE_NAMEPREFIX + "-" + idx + "of-acct-" + acct.getName();
+    }
+    
+    private String identityName(Account acct, int index) {
+        int idx = index+1;
+        return IDENTITY_NAMEPREFIX + "-" + idx + "of-acct-" + acct.getName();
+    }
+    
+    private String dataSourceName(Account acct, int index) {
+        int idx = index+1;
+        return DATASOURCE_NAMEPREFIX + "-" + idx + "of-acct-" + acct.getName();
+    }
+    
     private void createDomain(String domainName) throws Exception {
         System.out.println("createDomain: " + domainName);
         Map<String, Object> attrs = new HashMap<String, Object>();
         Domain domain = mProv.createDomain(domainName, attrs);
+    }
+    
+    private String[] createSignatures(Account acct) throws Exception {
+        String[] sigIds = new String[NUM_SIGNATURES];
+        
+        for (int i = 0; i < NUM_SIGNATURES; i++) {
+            Map<String, Object> attrs = new HashMap<String, Object>();
+            attrs.put(Provisioning.A_zimbraPrefMailSignature, signatureContent(acct, i));
+            Signature entry = mProv.createSignature(acct, signatureName(acct, i), attrs);
+        }
+        
+        return sigIds;
+    }
+    
+    private void createIdentities(Account acct, String[] sigIds) throws Exception {
+        for (int i = 0; i < NUM_IDENTITIES; i++) {
+            Map<String, Object> attrs = new HashMap<String, Object>();
+            attrs.put(Provisioning.A_zimbraPrefDefaultSignatureId, LdapUtil.generateUUID());  // just some random id, not used anywhere
+            attrs.put(Provisioning.A_zimbraPrefFromAddress, "micky.mouse@zimbra,com");
+            attrs.put(Provisioning.A_zimbraPrefFromDisplay, "Micky Mouse");
+            attrs.put(Provisioning.A_zimbraPrefReplyToEnabled, "TRUE");
+            attrs.put(Provisioning.A_zimbraPrefReplyToAddress, "goofy@yahoo.com");
+            attrs.put(Provisioning.A_zimbraPrefReplyToDisplay, "Micky");
+            if (i < NUM_SIGNATURES)
+                attrs.put(Provisioning.A_zimbraPrefDefaultSignatureId, sigIds[i]);
+            Identity entry = mProv.createIdentity(acct, identityName(acct, i), attrs);
+        }
+    }
+    
+    private void createDataSources(Account acct, String[] sigIds) throws Exception {
+        for (int i = 0; i < NUM_DATASOURCES; i++) {
+            Map<String, Object> attrs = new HashMap<String, Object>();
+            attrs.put(Provisioning.A_zimbraDataSourceEnabled, "TRUE");
+            attrs.put(Provisioning.A_zimbraDataSourceConnectionType, "ssl");
+            attrs.put(Provisioning.A_zimbraDataSourceFolderId, "inbox");
+            attrs.put(Provisioning.A_zimbraDataSourceHost, "pop.google.com");
+            attrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer, "TRUE");
+            attrs.put(Provisioning.A_zimbraDataSourcePassword, PASSWORD);
+            attrs.put(Provisioning.A_zimbraDataSourcePort, "9999");
+            attrs.put(Provisioning.A_zimbraDataSourceUsername, "mickymouse");
+            attrs.put(Provisioning.A_zimbraDataSourceEmailAddress, "micky@google.com");
+            attrs.put(Provisioning.A_zimbraPrefDefaultSignatureId, LdapUtil.generateUUID()); // just some random id, not used anywhere
+            attrs.put(Provisioning.A_zimbraPrefFromDisplay, "Micky Mouse");
+            attrs.put(Provisioning.A_zimbraPrefReplyToAddress, "goofy@yahoo.com");
+            attrs.put(Provisioning.A_zimbraPrefReplyToDisplay, "Micky");
+            if (i < NUM_SIGNATURES)
+                attrs.put(Provisioning.A_zimbraPrefDefaultSignatureId, sigIds[i]);
+            DataSource entry = mProv.createDataSource(acct, DataSource.Type.pop3, dataSourceName(acct, i), attrs);
+        }
     }
     
     /*
@@ -151,6 +249,11 @@ public class TestRenameDomain  extends TestCase {
             
             mProv.addAlias(acct, accountAlias(a, domainName, domainName));
             mProv.addAlias(acct, accountAlias(a, diffDomainName, domainName));
+            
+            String[] signatureIds = createSignatures(acct);
+            createIdentities(acct, signatureIds);
+            createDataSources(acct, signatureIds);
+            
         }
         
         // create nested dls and their aliases, then add accounts to dls
