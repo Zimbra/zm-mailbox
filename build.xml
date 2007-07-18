@@ -338,26 +338,24 @@
 	     Windows you cannot undeploy because Tomcat is unable to
 	     complete delete the service directory. zimbra-native.jar
 	     opens a shared library so it should not be in a war file
-	     which can be redeployed. Please copy
-	     {mail,activation,zimbra-native}.jar to
-	     $TOMCAT\common\lib -->
-	<condition property="war.exclude" value="${ical4j.jar},servlet-api.jar,jsp-api.jar,mail.jar,activation.jar,zimbra-native.jar,KeyView.jar">
+	     which can be redeployed.-->
+	<condition property="war.include" value="slf4j*.jar, ldap.jar, jetty-util*.jar, log4j*.jar">
 		<isset property="use-tomcat"/>
 	</condition>
 	<!-- jetty loads jetty-util*.jar, log4j*.jar and slf4j*.jar, and ldap.jar conflicts with jetty naming stuff  -->
-	<condition property="war.exclude" value="${ical4j.jar},servlet-api.jar,jsp-api.jar,mail.jar,activation.jar,zimbra-native.jar,KeyView.jar,ldap.jar,jetty-util-*.jar,log4j*.jar">
+	<condition property="war.include" value="slf4j*.jar">
 		<isset property="use-jetty"/>
 	</condition>
 
 	<target name="war" depends="jar">
-		<echo>war.exclude=${war.exclude}</echo>
+		<echo>war.include=${war.include}</echo>
 		<war warfile="${warfile}" webxml="${config.dir}/web.xml${production.suffix}">
 			<fileset dir="WebRoot"/>
 			<lib file="${common.jarfile}" />
 			<lib file="${im.jarfile}" />
 			<lib file="${jarfile}" />
-			<lib dir="${common.jars.dir}" includes="*.jar" excludes="${war.exclude}" />
-			<lib dir="${im.jars.dir}" includes="*.jar" excludes="${war.exclude}" />
+			<lib dir="${common.jars.dir}" includes="${war.include}"/>
+			<lib dir="${im.jars.dir}" includes="*.jar"/>
 			<classes dir="${config.dir}" includes="sieveConfig.xml" />
 		</war>
 	</target>
@@ -511,7 +509,7 @@
 				<copy tofile="${dist.dir}/jetty/etc/wrapper.conf" file="${config.dir}/jetty-6.1/wrapper.conf"/>
 			</then></if>
 			<copy tofile="${dist.dir}/jetty/resources/log4j.properties" file="${config.dir}/jetty-6.1/log4j.properties${production.suffix}" overwrite="true"/>
-			<copy todir="${dist.dir}/jetty/common/lib" overwrite="true"><fileset dir="${common.jars.dir}" includes="${ical4j.jar},mail.jar,activation.jar,zimbra-native.jar,zimbra-charset.jar"/></copy>
+			<copy todir="${dist.dir}/jetty/common/lib" overwrite="true"><fileset dir="${common.jars.dir}" includes="${ical4j.jar},mail.jar,activation.jar,zimbra-native.jar,zimbra-charset.jar,bouncycastle.jar,commons-beanutils*.jar,commons-cli*.jar,commons-codec*.jar,commons-collections*.jar,commons-dbcp*.jar,commons-digester*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-logging.jar,commons-pool*.jar,concurrent*.jar,custom_rhino.jar,dom4j*.jar,ganymed-ssh2*.jar,jakarta-oro*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,jsieve*.jar,junit*.jar,jzlib.jar,ldapbp.jar,lucene-core*.jar,mina*.jar,mysql-connector-java*.jar,nekohtml.jar,tnef*.jar,xercesImpl.jar,xpp3.jar"/></copy>
 			<copy todir="${dist.dir}/jetty/lib" overwrite="true">
 			    <fileset dir="${common.jars.dir}" includes="log4j*.jar"/>
 			</copy>
@@ -537,8 +535,9 @@
 
 	<target name="reset-all" description="Reset the world plus jetty">
                 <antcall target="stop-webserver"/>
-
+		<antcall target="clean"/>
 		<if><isset property="use-jetty"/><then>
+			<mkdir dir="${build.dir}"/>
 			<delete dir="${jetty.home.dir}" />
 			<gunzip src="${jetty.src.dir}/jetty-${jetty.version}.tar.gz" dest="${build.dir}/jetty-${jetty.version}.tar"/>
 			<untar src="${build.dir}/jetty-${jetty.version}.tar" dest="${zimbra.home.dir}" overwrite="true" />
@@ -550,6 +549,7 @@
 		</then></if>
 
                 <antcall target="reset-the-world"/>
+		<ant dir="../ZimbraWebClient" target="clean" inheritAll="false"/>
                 <ant dir="../ZimbraWebClient" target="deploy" inheritAll="false"/>
                 <ant dir="../ZimbraWebClient" target="admin-deploy" inheritAll="false"/>
 	</target>
