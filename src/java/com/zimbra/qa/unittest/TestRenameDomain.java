@@ -12,10 +12,13 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Alias;
+import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Identity;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
@@ -35,6 +38,7 @@ public class TestRenameDomain  extends TestCase {
     private int NUM_DLS_NESTED = 2;
     private int NUM_DLS_TOP = 2;
     private int NUM_DOMAINS = 3;
+    private int NUM_SUB_DOMAINS = 2;  // number of sub domains under the old domain(domain to be renamed)
      
     /*
      * NUM_IDENTITIES and NUM_DATASOURCES must be >= NUM_SIGNATURES, each identity/datasource get one signature of the same index.
@@ -57,6 +61,7 @@ public class TestRenameDomain  extends TestCase {
     private String NAMEPREFIX_IDENTITY    = "identity-";
     private String NAMEPREFIX_OTHERDOMAIN = "otherdomain-";
     private String NAMEPREFIX_SIGNATURE   = "signature-";
+    private String NAMEPREFIX_SUB_DOMAIN  = "subdomian-";
     
     // pseudo domain index for the old domain and new domain, so that we can use the unified interfaces
     private int OLD_DOMAIN  = 0;
@@ -98,6 +103,10 @@ public class TestRenameDomain  extends TestCase {
         for (int i = 0; i < NUM_DOMAINS; i++)
             createDomain(DOMAIN_NAME(i));
         
+        // create sub domains under the domain-to-rename
+        for (int i = 0; i < NUM_SUB_DOMAINS; i++) 
+            createDomain(SUB_DOMAIN_NAME(i, OLD_DOMAIN));
+        
         // setup entries in domains
         for (int i = 0; i < NUM_DOMAINS; i++)     
             setupDomain(i);
@@ -109,6 +118,12 @@ public class TestRenameDomain  extends TestCase {
         
     private String DOMAIN_NAME(String leafDomainName) {
         return leafDomainName + ".test-" + TEST_ID + ".ldap-test-domain";
+    }
+    
+    private String SUB_DOMAIN_NAME(int index, int parentDomain) {
+        int idx = index + 1;
+        String parentDomainName = DOMAIN_NAME(parentDomain);
+        return NAMEPREFIX_SUB_DOMAIN + idx + "." + parentDomainName;
     }
     
     private String LEAF_DOMAIN_NAME(int index) {
@@ -363,10 +378,45 @@ public class TestRenameDomain  extends TestCase {
         }
     }
     
+    
+    private void verifyOldDomain() throws Exception {
+        String oldDomainName = DOMAIN_NAME(OLD_DOMAIN);
+        Domain oldDomain = mProv.get(Provisioning.DomainBy.name, oldDomainName);
+        assertTrue(oldDomain == null);
+    }
+    
+    private void verifyNewDomain(String domainId) throws Exception {
+        String newDomainName = DOMAIN_NAME(NEW_DOMAIN);
+        
+        Domain domainByName = mProv.get(Provisioning.DomainBy.name, newDomainName);
+        assertTrue(domainByName != null);
+        
+        Domain domainById = mProv.get(Provisioning.DomainBy.id, domainId);
+        assertTrue(domainById != null);
+        
+        TestProvisioningUtil.verifySameEntry(domainByName, domainById);
+    }
+    
+    private void verifyOtherDomains() throws Exception {
+        
+    }
+    
+    // TODO: 
+    //  - stop the rename at different stages and test the restart
+    //  - sub domain under old domain 
+    private void verify(String domainId) throws Exception {
+        verifyOldDomain();
+        verifyNewDomain(domainId);
+        verifyOtherDomains();
+    }
+
     private String execute() throws Exception {
         
         Domain oldDomain = mProv.get(Provisioning.DomainBy.name, DOMAIN_NAME(OLD_DOMAIN));
+        String oldDomainId = oldDomain.getId();
         ((LdapProvisioning)mProv).renameDomain(oldDomain.getId(), DOMAIN_NAME(NEW_DOMAIN));
+        
+        verify(oldDomainId);
         
         return TEST_ID;
     }

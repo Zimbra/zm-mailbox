@@ -312,99 +312,6 @@ public class TestProvisioning extends TestCase {
         }
     }
     
-    private void verifySameId(NamedEntry entry1, NamedEntry entry2) throws Exception {
-        assertNotNull(entry1);
-        assertNotNull(entry2);
-        assertEquals(entry1.getId(), entry2.getId());
-    }
-    
-    
-    private void verifySameEntry(NamedEntry entry1, NamedEntry entry2) throws Exception {
-        verifySameId(entry1, entry2);
-        assertEquals(entry1.getName(), entry2.getName());
-    }
-    
-    // verify list contains all the entries
-    // if checkCount == true, verify the count matches too
-    private void verifyEntries(List<NamedEntry> list, NamedEntry[] entries, boolean checkCount) throws Exception {
-        try {
-            if (checkCount)
-                assertEquals(list.size(), entries.length);
-        
-            Set<String> ids = new HashSet<String>();
-            for (NamedEntry entry : list)
-                ids.add(entry.getId());
-            
-            for (NamedEntry entry : entries) {
-                assertTrue(ids.contains(entry.getId()));
-                ids.remove(entry.getId());
-            }
-            
-            // make sure all ids in list is present is entries
-            if (checkCount)
-                assertEquals(ids.size(), 0);
-         
-        } catch (AssertionFailedError e) {
-            System.out.println("\n===== verifyEntries failed =====");
-            System.out.println("Message:" + e.getMessage());
-            
-            System.out.println("\nlist contains " + list.size() + " entries:");
-            for (NamedEntry entry : list)
-                System.out.println("    " + entry.getName());
-            System.out.println("entries contains " + entries.length + " entries:");
-            for (NamedEntry entry : entries)
-                System.out.println("    " + entry.getName());
-            
-            System.out.println();
-            throw e;
-        }
-    }
-    
-    // verify list of NamedEntry contains all the ids
-    // if checkCount == true, verify the count matches too
-    private void verifyEntriesById(List<NamedEntry> list, String[] names, boolean checkCount) throws Exception {
-        Set<String> idsInList = new HashSet<String>();
-        for (NamedEntry entry : list)
-            idsInList.add(entry.getId());
-        
-        verifyEntries(idsInList, names, checkCount);
-    }
-    
-    // verify list of NamedEntry contains all the names
-    // if checkCount == true, verify the count matches too
-    private void verifyEntriesByName(List<NamedEntry> list, String[] names, boolean checkCount) throws Exception {
-        Set<String> namesInList = new HashSet<String>();
-        for (NamedEntry entry : list)
-            namesInList.add(entry.getName());
-        
-        verifyEntries(namesInList, names, checkCount);
-    }
-    
-    // verify list contains all the names
-    // if checkCount == true, verify the count matches too
-    private void verifyEntries(Set<String> list, String[] names, boolean checkCount) throws Exception {
-        try {
-            if (checkCount)
-                assertEquals(names.length, list.size());
-            
-            for (String name : names)
-                assertTrue(list.contains(name));
-         
-        } catch (AssertionFailedError e) {
-            System.out.println("\n===== verifyEntries failed =====");
-            System.out.println("Message:" + e.getMessage());
-            
-            System.out.println("\nlist contains " + list.size() + " entries:");
-            for (String name : list)
-                System.out.println("    " + name);
-            System.out.println("entries contains " + names.length + " entries:");
-            for (String name : names)
-                System.out.println("    " + name);
-            
-            System.out.println();
-            throw e;
-        }
-    }
     
     private void setDefaultDomain(String domain) throws Exception {
         Map<String, Object> confAttrs = new HashMap<String, Object>();
@@ -443,14 +350,14 @@ public class TestProvisioning extends TestCase {
         Cos entry = mProv.createCos(COS_NAME, new HashMap<String, Object>());
         
         Cos entryGot = mProv.get(Provisioning.CosBy.id, entry.getId());
-        verifySameEntry(entry, entryGot);
+        TestProvisioningUtil.verifySameEntry(entry, entryGot);
         entryGot = mProv.get(Provisioning.CosBy.name, COS_NAME);
-        verifySameEntry(entry, entryGot);
+        TestProvisioningUtil.verifySameEntry(entry, entryGot);
         Cos defaultCos = mProv.get(Provisioning.CosBy.name, "default");
         assertNotNull(defaultCos);
         
         List list = mProv.getAllCos();
-        verifyEntries(list, new NamedEntry[]{defaultCos, entry}, false);
+        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{defaultCos, entry}, false);
         
         mProv.renameCos(entry.getId(), NEW_NAME);
         mProv.renameCos(entry.getId(), COS_NAME);
@@ -466,15 +373,15 @@ public class TestProvisioning extends TestCase {
         Domain entry = mProv.createDomain(DOMAIN_NAME, attrs);
         
         Domain entryGot = mProv.get(Provisioning.DomainBy.id, entry.getId());
-        verifySameEntry(entry, entryGot);
+        TestProvisioningUtil.verifySameEntry(entry, entryGot);
         entryGot = mProv.get(Provisioning.DomainBy.name, DOMAIN_NAME);
-        verifySameEntry(entry, entryGot);
+        TestProvisioningUtil.verifySameEntry(entry, entryGot);
         
         Domain otherEntry = mProv.createDomain(OTHER_DOMAIN_NAME, attrs);
         Domain specialCharEntry = mProv.createDomain(DOMAIN_NAME_SPECIAL_CHARS, attrs);
                 
         List list = mProv.getAllDomains();
-        verifyEntries(list, new NamedEntry[]{entry, otherEntry, specialCharEntry}, false);
+        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{entry, otherEntry, specialCharEntry}, false);
         
         // set our domain as the default domain
         setDefaultDomain(DOMAIN_NAME);
@@ -499,18 +406,18 @@ public class TestProvisioning extends TestCase {
         Server entry = mProv.createServer(SERVER_NAME, serverAttrs);
         
         Server entryGot = mProv.get(Provisioning.ServerBy.id, entry.getId());
-        verifySameEntry(entry, entryGot);
+        TestProvisioningUtil.verifySameEntry(entry, entryGot);
         entryGot = mProv.get(Provisioning.ServerBy.name, SERVER_NAME);
-        verifySameEntry(entry, entryGot);
+        TestProvisioningUtil.verifySameEntry(entry, entryGot);
         
         Server localeServer = mProv.getLocalServer();
         assertNotNull(localeServer);
         
         List list = mProv.getAllServers();
-        verifyEntries(list, new NamedEntry[]{localeServer, entry}, false);
+        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{localeServer, entry}, false);
         
         list = mProv.getAllServers("mailbox");
-        verifyEntries(list, new NamedEntry[]{localeServer}, false);
+        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{localeServer}, false);
         
         return entry;
     }
@@ -523,13 +430,13 @@ public class TestProvisioning extends TestCase {
         Zimlet entry = mProv.createZimlet(ZIMLET_NAME, zimletAttrs);
         
         Zimlet entryGot = mProv.getZimlet(ZIMLET_NAME);
-        verifySameEntry(entry, entryGot);
+        TestProvisioningUtil.verifySameEntry(entry, entryGot);
         
         List list = mProv.getObjectTypes();
-        verifyEntries(list, new NamedEntry[]{entry}, false);
+        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{entry}, false);
         
         list = mProv.listAllZimlets();
-        verifyEntries(list, new NamedEntry[]{entry}, false);
+        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{entry}, false);
             
         return entry;
     }
@@ -617,17 +524,17 @@ public class TestProvisioning extends TestCase {
         entry = mProv.createAccount(ADMIN_EMAIL, PASSWORD, acctAttrs);
         
         Account entryGot = mProv.get(Provisioning.AccountBy.name, ADMIN_EMAIL);
-        verifySameEntry(entry, entryGot);
+        TestProvisioningUtil.verifySameEntry(entry, entryGot);
         
         /*
          * admin can be retrieved without the domain, default domain will be used if domain is not supplied
          */
         Account entryGotByuser = mProv.get(Provisioning.AccountBy.name, ADMIN_USER);
-        verifySameEntry(entryGot, entryGotByuser);
+        TestProvisioningUtil.verifySameEntry(entryGot, entryGotByuser);
         
         
         List list = mProv.getAllAdminAccounts();
-        verifyEntries(list, new NamedEntry[]{entry}, false);
+        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{entry}, false);
 
         return entry;
     }
@@ -656,7 +563,7 @@ public class TestProvisioning extends TestCase {
         String acctSpecialCharsDn = ACCT_NAMING_ATTR + "=" + namingAttrValue(ACCT_USER_SPECIAL_CHARS) + "," + ACCT_BASE_DN;
         mCustomProvTester.verifyDn(entrySpecialChars, acctSpecialCharsDn);
         Account entryGot = mProv.get(Provisioning.AccountBy.name, ACCT_EMAIL_SPECIAL_CHARS);
-        verifySameEntry(entrySpecialChars, entryGot);
+        TestProvisioningUtil.verifySameEntry(entrySpecialChars, entryGot);
         
         // add an alias in the same domain
         mProv.addAlias(entry, ACCT_ALIAS_EMAIL);
@@ -674,31 +581,31 @@ public class TestProvisioning extends TestCase {
         
         // get account by id
         entryGot = mProv.get(Provisioning.AccountBy.id, entry.getId());
-        verifySameEntry(entry, entryGot);
+        TestProvisioningUtil.verifySameEntry(entry, entryGot);
         
         // get account by name(i.e. email)
         entryGot = mProv.get(Provisioning.AccountBy.name, ACCT_EMAIL);
-        verifySameEntry(entry, entryGot);
+        TestProvisioningUtil.verifySameEntry(entry, entryGot);
         
         // get account by alias
         entryGot = mProv.get(Provisioning.AccountBy.name, ACCT_ALIAS_EMAIL);
-        verifySameEntry(entry, entryGot);
+        TestProvisioningUtil.verifySameEntry(entry, entryGot);
         
         // get account by alias
         entryGot = mProv.get(Provisioning.AccountBy.name, ACCT_ALIAS_IN_OTHER_DOMAIN_EMAIL);
         if (mCustomProvTester.isCustom())
             assertEquals(null, entryGot);
         else
-            verifySameEntry(entry, entryGot);        
+            TestProvisioningUtil.verifySameEntry(entry, entryGot);        
                 
         // get all accounts in a domain
         List list = mProv.getAllAccounts(domain);
-        verifyEntries(list, new NamedEntry[]{entry, adminAcct}, mCustomProvTester.verifyAccountCountForDomainBasedSearch());
+        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{entry, adminAcct}, mCustomProvTester.verifyAccountCountForDomainBasedSearch());
         
         // get all accounts in a domain, visitor version
         TestVisitor visitor = new TestVisitor();
         mProv.getAllAccounts(domain, visitor);
-        verifyEntries(visitor.visited(), new NamedEntry[]{entry, adminAcct}, mCustomProvTester.verifyAccountCountForDomainBasedSearch());
+        TestProvisioningUtil.verifyEntries(visitor.visited(), new NamedEntry[]{entry, adminAcct}, mCustomProvTester.verifyAccountCountForDomainBasedSearch());
         
         // modify account status
         mProv.modifyAccountStatus(entry, "maintenance");
@@ -710,8 +617,8 @@ public class TestProvisioning extends TestCase {
         mProv.renameAccount(entryId, NEW_EMAIL);
         // make sure the account is still in the same domain
         list = searchAccountsInDomain(domain);
-        verifyEntriesById(list, new String[]{entryId}, false);
-        verifyEntriesByName(list, new String[]{NEW_EMAIL}, false);
+        TestProvisioningUtil.verifyEntriesById(list, new String[]{entryId}, false);
+        TestProvisioningUtil.verifyEntriesByName(list, new String[]{NEW_EMAIL}, false);
         // re-get the entry since it might've been changed after the rename
         entry = mProv.get(Provisioning.AccountBy.id, entryId);
         if (mCustomProvTester.isCustom()) {
@@ -721,14 +628,14 @@ public class TestProvisioning extends TestCase {
             // actually the following just verifies that they are not changed, 
             // for now can't verify if they are moved unless we improve the test
             list = searchAliasesInDomain(domain);
-            verifyEntriesByName(list, new String[]{ACCT_ALIAS_EMAIL}, true);
+            TestProvisioningUtil.verifyEntriesByName(list, new String[]{ACCT_ALIAS_EMAIL}, true);
         } else {
             // make sure the alias is still in the same domain
             list = searchAliasesInDomain(domain);
-            verifyEntriesByName(list, new String[]{ACCT_ALIAS_EMAIL}, true);
+            TestProvisioningUtil.verifyEntriesByName(list, new String[]{ACCT_ALIAS_EMAIL}, true);
             // make sure the alias in the other domain is still in the other domain
             list = searchAliasesInDomain(otherDomain);
-            verifyEntriesByName(list, new String[]{ACCT_ALIAS_IN_OTHER_DOMAIN_EMAIL}, true);
+            TestProvisioningUtil.verifyEntriesByName(list, new String[]{ACCT_ALIAS_IN_OTHER_DOMAIN_EMAIL}, true);
         }
         
         /*
@@ -749,14 +656,14 @@ public class TestProvisioning extends TestCase {
         if (!mCustomProvTester.isCustom()) {
             // make sure the account is now in the other domain
             list = searchAccountsInDomain(otherDomain);
-            verifyEntriesById(list, new String[]{entryId}, true);
-            verifyEntriesByName(list, new String[]{NEW_EMAIL_IN_OTHER_DOMAIN}, true);
+            TestProvisioningUtil.verifyEntriesById(list, new String[]{entryId}, true);
+            TestProvisioningUtil.verifyEntriesByName(list, new String[]{NEW_EMAIL_IN_OTHER_DOMAIN}, true);
             // make sure the alias is now moved to the other domain and there shouldn't be any let in the old domain
             list = searchAliasesInDomain(domain);
             assertEquals(0, list.size());
             // make sure both aliases are now in the other doamin
             list = searchAliasesInDomain(otherDomain);
-            verifyEntriesByName(list, new String[]{ACCT_ALIAS_AFTER_ACCOUNT_RENAME_TO_OTHER_DMAIN_EMAIL,
+            TestProvisioningUtil.verifyEntriesByName(list, new String[]{ACCT_ALIAS_AFTER_ACCOUNT_RENAME_TO_OTHER_DMAIN_EMAIL,
                                 ACCT_ALIAS_IN_OTHER_DOMAIN_EMAIL}, true);
         }
         
@@ -766,21 +673,21 @@ public class TestProvisioning extends TestCase {
         mProv.renameAccount(entryId, ACCT_EMAIL);
         // make sure the account is moved back to the orig domain
         list = searchAccountsInDomain(domain);
-        verifyEntriesById(list, new String[]{entryId}, false);
-        verifyEntriesByName(list, new String[]{ACCT_EMAIL}, false);
+        TestProvisioningUtil.verifyEntriesById(list, new String[]{entryId}, false);
+        TestProvisioningUtil.verifyEntriesByName(list, new String[]{ACCT_EMAIL}, false);
         // re-get the entry since it might've been changed after the rename
         entry = mProv.get(Provisioning.AccountBy.id, entryId);
 
         if (mCustomProvTester.isCustom()) {
             list = searchAliasesInDomain(domain);
-            verifyEntriesByName(list, new String[]{ACCT_ALIAS_EMAIL}, true);
+            TestProvisioningUtil.verifyEntriesByName(list, new String[]{ACCT_ALIAS_EMAIL}, true);
 
         } else {
             // now, both aliases should be moved to the orig domain
             list = searchAliasesInDomain(otherDomain);
             assertEquals(0, list.size());
             list = searchAliasesInDomain(domain);
-            verifyEntriesByName(list, new String[]{ACCT_ALIAS_EMAIL,
+            TestProvisioningUtil.verifyEntriesByName(list, new String[]{ACCT_ALIAS_EMAIL,
                                 ACCT_ALIAS_IN_OTHER_DOMAIN_AFTER_ACCOUNT_RENAME_TO_ORIG_DOMAIN_EMAIL}, true);
         }
         
@@ -824,18 +731,18 @@ public class TestProvisioning extends TestCase {
         mProv.addAlias(entry, CR_ALIAS_EMAIL);
         
         CalendarResource entryGot = mProv.get(Provisioning.CalendarResourceBy.id, entry.getId());
-        verifySameEntry(entry, entryGot);
+        TestProvisioningUtil.verifySameEntry(entry, entryGot);
         entryGot = mProv.get(Provisioning.CalendarResourceBy.name, CR_EMAIL);
-        verifySameEntry(entry, entryGot);
+        TestProvisioningUtil.verifySameEntry(entry, entryGot);
         entryGot = mProv.get(Provisioning.CalendarResourceBy.name, CR_ALIAS_EMAIL);
-        verifySameEntry(entry, entryGot);
+        TestProvisioningUtil.verifySameEntry(entry, entryGot);
         
         List list = mProv.getAllCalendarResources(domain); 
-        verifyEntries(list, new NamedEntry[]{entry}, mCustomProvTester.verifyAccountCountForDomainBasedSearch());
+        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{entry}, mCustomProvTester.verifyAccountCountForDomainBasedSearch());
         
         TestVisitor visitor = new TestVisitor();
         mProv.getAllCalendarResources(domain, visitor);
-        verifyEntries(visitor.visited(), new NamedEntry[]{entry}, mCustomProvTester.verifyAccountCountForDomainBasedSearch());
+        TestProvisioningUtil.verifyEntries(visitor.visited(), new NamedEntry[]{entry}, mCustomProvTester.verifyAccountCountForDomainBasedSearch());
         
         mProv.renameCalendarResource(entry.getId(), NEW_EMAIL);
         mProv.renameCalendarResource(entry.getId(), CR_EMAIL);
@@ -855,11 +762,11 @@ public class TestProvisioning extends TestCase {
         mProv.addAlias(entry, DL_ALIAS_EMAIL);
                 
         DistributionList entryGot = mProv.get(Provisioning.DistributionListBy.id, entry.getId());
-        verifySameEntry(entry, entryGot);
+        TestProvisioningUtil.verifySameEntry(entry, entryGot);
         entryGot = mProv.get(Provisioning.DistributionListBy.name, DL_EMAIL);
-        verifySameEntry(entry, entryGot);
+        TestProvisioningUtil.verifySameEntry(entry, entryGot);
         entryGot = mProv.get(Provisioning.DistributionListBy.name, DL_ALIAS_EMAIL);
-        verifySameEntry(entry, entryGot);
+        TestProvisioningUtil.verifySameEntry(entry, entryGot);
         
         Map<String, Object> dlNestedAttrs = new HashMap<String, Object>();
         mCustomProvTester.addAttr(dlNestedAttrs, BASE_DN_PSEUDO_ATTR, ACCT_BASE_DN);
@@ -880,7 +787,7 @@ public class TestProvisioning extends TestCase {
         mCustomProvTester.addAttr(dlAttrsSpecialChars, ACCT_NAMING_ATTR, namingAttrValue(DL_USER_SPECIAL_CHARS));
         DistributionList dlSpecilaChars = mProv.createDistributionList(DL_EMAIL_SPECIAL_CHARS, dlAttrsSpecialChars);
         entryGot = mProv.get(Provisioning.DistributionListBy.name, DL_EMAIL_SPECIAL_CHARS);
-        verifySameEntry(dlSpecilaChars, entryGot);
+        TestProvisioningUtil.verifySameEntry(dlSpecilaChars, entryGot);
         // set back the orig default domain
         if (mCustomProvTester.isCustom())
             setDefaultDomain(curDefaultDomain);
@@ -889,7 +796,7 @@ public class TestProvisioning extends TestCase {
         mProv.addMembers(dlNested, new String[]{ACCT_EMAIL});
         
         List list = mProv.getAllDistributionLists(domain);
-        verifyEntries(list, new NamedEntry[]{entry, dlNested}, mCustomProvTester.verifyDLCountForDomainBasedSearch());
+        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{entry, dlNested}, mCustomProvTester.verifyDLCountForDomainBasedSearch());
         
         Account account = mProv.get(Provisioning.AccountBy.name, ACCT_EMAIL);
         Set<String> set = mProv.getDistributionLists(account);
@@ -899,12 +806,12 @@ public class TestProvisioning extends TestCase {
         
         Map<String, String> via = new HashMap<String, String>();
         list = mProv.getDistributionLists(account, false, via);
-        verifyEntries(list, new NamedEntry[]{entry, dlNested}, true);
+        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{entry, dlNested}, true);
         assertEquals(1, via.size());
         assertEquals(dlNested.getName(), via.get(entry.getName()));
         
         list = mProv.getDistributionLists(account, true, null);
-        verifyEntries(list, new NamedEntry[]{dlNested}, true);
+        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{dlNested}, true);
         
         boolean inList = mProv.inDistributionList(account, entry.getId());
         assertTrue(inList);
@@ -940,12 +847,12 @@ public class TestProvisioning extends TestCase {
         DataSource entry = mProv.createDataSource(account, DataSource.Type.pop3, DATA_SOURCE_NAME, dsAttrs);
 
         DataSource entryGot = mProv.get(account, Provisioning.DataSourceBy.id, entry.getId());
-        verifySameEntry(entry, entryGot);
+        TestProvisioningUtil.verifySameEntry(entry, entryGot);
         entryGot = mProv.get(account, Provisioning.DataSourceBy.name, DATA_SOURCE_NAME);
-        verifySameEntry(entry, entryGot);
+        TestProvisioningUtil.verifySameEntry(entry, entryGot);
         
         List list = mProv.getAllDataSources(account);
-        verifyEntries(list, new NamedEntry[]{entry}, true);
+        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{entry}, true);
         
         Map attrsToMod = new HashMap<String, Object>();
         attrsToMod.put(Provisioning.A_zimbraDataSourcePollingInterval, "100");
@@ -967,15 +874,15 @@ public class TestProvisioning extends TestCase {
         Identity entry = mProv.createIdentity(account, IDENTITY_NAME, identityAttrs);
         
         Identity entryGot = mProv.get(account, Provisioning.IdentityBy.id, entry.getId());
-        verifySameEntry(entry, entryGot);
+        TestProvisioningUtil.verifySameEntry(entry, entryGot);
         entryGot = mProv.get(account, Provisioning.IdentityBy.name, IDENTITY_NAME);
-        verifySameEntry(entry, entryGot);
+        TestProvisioningUtil.verifySameEntry(entry, entryGot);
         Identity defaultIdentity = mProv.get(account, Provisioning.IdentityBy.name, Provisioning.DEFAULT_IDENTITY_NAME);
-        verifySameId(account, defaultIdentity);
+        TestProvisioningUtil.verifySameId(account, defaultIdentity);
         assertEquals(Provisioning.DEFAULT_IDENTITY_NAME, defaultIdentity.getName());
         
         List list = mProv.getAllIdentities(account);
-        verifyEntries(list, new NamedEntry[]{defaultIdentity, entry}, true);
+        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{defaultIdentity, entry}, true);
         
         // modify
         Map attrsToMod = new HashMap<String, Object>();
@@ -991,7 +898,7 @@ public class TestProvisioning extends TestCase {
         // get by new name
         entryGot = mProv.get(account, Provisioning.IdentityBy.name, newName);
         entry = mProv.get(account, Provisioning.IdentityBy.id, entry.getId());
-        verifySameEntry(entry, entryGot);
+        TestProvisioningUtil.verifySameEntry(entry, entryGot);
         
         // rename back
         attrsToMod.clear();
@@ -1014,15 +921,15 @@ public class TestProvisioning extends TestCase {
         
         // get the signature by id
         Signature entryGot = mProv.get(account, Provisioning.SignatureBy.id, entry.getId());
-        verifySameEntry(entry, entryGot);
+        TestProvisioningUtil.verifySameEntry(entry, entryGot);
         
         // get the signature by name
         entryGot = mProv.get(account, Provisioning.SignatureBy.name, SIGNATURE_NAME);
-        verifySameEntry(entry, entryGot);
+        TestProvisioningUtil.verifySameEntry(entry, entryGot);
         
         // get all the signatures, there should be only one - the one we just created
         List list = mProv.getAllSignatures(account);
-        verifyEntries(list, new NamedEntry[]{entry}, true);
+        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{entry}, true);
         
         // since this is the only signature, it should be automatically set as the default signature of the account
         String defaultSigId = account.getAttr(Provisioning.A_zimbraPrefDefaultSignatureId);
@@ -1079,7 +986,7 @@ public class TestProvisioning extends TestCase {
         assertEquals(thirdSigName, acctSigName);
         
         list = mProv.getAllSignatures(account);
-        verifyEntries(list, new NamedEntry[]{secondEntry, thirdEntry}, true);
+        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{secondEntry, thirdEntry}, true);
         
         // now, verify that if A_zimbraPrefMailSignature is present on the account and if 
         // A_zimbraPrefSignatureName is not present on the account, system should return 
@@ -1107,7 +1014,7 @@ public class TestProvisioning extends TestCase {
         
         // get all signatures, the account entry should be included
         list = mProv.getAllSignatures(account);
-        verifyEntries(list, new NamedEntry[]{acctSig, secondEntry}, true);
+        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{acctSig, secondEntry}, true);
         
         // delete it
         mProv.deleteSignature(account, acctSig.getId());
@@ -1216,14 +1123,14 @@ public class TestProvisioning extends TestCase {
                                         Provisioning.A_zimbraMailDeliveryAddress, 
                                         true,
                                         Provisioning.SA_ACCOUNT_FLAG); 
-        verifyEntries(list, new NamedEntry[]{acct}, true);
+        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{acct}, true);
                
         list = mProv.searchAccounts(domain, query, 
                                    new String[]{Provisioning.A_zimbraMailDeliveryAddress}, 
                                    Provisioning.A_zimbraMailDeliveryAddress, 
                                    true,
                                    Provisioning.SA_ACCOUNT_FLAG); 
-        verifyEntries(list, new NamedEntry[]{acct}, true);
+        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{acct}, true);
         
         EntrySearchFilter.Term term = new EntrySearchFilter.Single(false, 
                                                                    Provisioning.A_zimbraMailDeliveryAddress, 
@@ -1234,20 +1141,20 @@ public class TestProvisioning extends TestCase {
                                             new String[]{Provisioning.A_zimbraMailDeliveryAddress}, 
                                             Provisioning.A_zimbraMailDeliveryAddress, 
                                             true);
-        verifyEntries(list, new NamedEntry[]{cr}, true);       
+        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{cr}, true);       
         
         list = mProv.searchCalendarResources(domain,
                                             filter,
                                             new String[]{Provisioning.A_zimbraMailDeliveryAddress}, 
                                             Provisioning.A_zimbraMailDeliveryAddress, 
                                             true);
-        verifyEntries(list, new NamedEntry[]{cr}, true);
+        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{cr}, true);
         
         Provisioning.SearchOptions options = new Provisioning.SearchOptions();
         options.setDomain(domain);
         options.setQuery(query);
         list = mProv.searchDirectory(options);
-        verifyEntries(list, new NamedEntry[]{acct}, true);
+        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{acct}, true);
     }
     
     private String execute() throws Exception {

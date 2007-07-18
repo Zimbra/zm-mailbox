@@ -1789,7 +1789,7 @@ public class LdapProvisioning extends Provisioning {
             LdapUtil.closeContext(ctxt);
         }
     }
-         
+    
     public void deleteDomain(String zimbraId) throws ServiceException {
         // TODO: should only allow a domain delete to succeed if there are no people
         // if there aren't, we need to delete the people trees first, then delete the domain.
@@ -2269,7 +2269,8 @@ public class LdapProvisioning extends Provisioning {
          * 2. create the new domain
          */ 
         // Get existing domain attributes
-        Map<String, Object> domainAttrs = oldDomain.getAttrs(false);
+        // make a copy, we don't want to step over our old domain object
+        Map<String, Object> domainAttrs = new HashMap<String, Object>(oldDomain.getAttrs(false));
         
         // remove attributes that are not needed for createDomain
         domainAttrs.remove(A_o);
@@ -2282,7 +2283,7 @@ public class LdapProvisioning extends Provisioning {
         
         // TODO.  if the new domain exists, make sure it is the new domain 
         Domain newDomain = createDomain(newDomainName, domainAttrs);
-        
+                
         /*
          * 3. Disable the new domain until all entries are moved
          */ 
@@ -2322,10 +2323,11 @@ public class LdapProvisioning extends Provisioning {
         /*
          * 6. restore zimbraId to the id of the old domain
          */ 
+        sDomainCache.remove(newDomain);
         HashMap<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(A_zimbraId, zimbraId);
         modifyAttrsInternal(newDomain, ctxt, attrs);
-
+        
         
         /*
          * 7. Unlock the new domain
