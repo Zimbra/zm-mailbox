@@ -216,7 +216,7 @@ public class Contact extends MailItem {
             mSize = content == null ? 0 : mContent.length;
             mContentType = ctype == null ? Mime.CT_APPLICATION_OCTET_STREAM : ctype.toLowerCase();
             mFieldName = field;
-            mFilename = filename;
+            mFilename = filename == null ? "unknown" : filename;
         }
 
         public Attachment(byte[] content, String ctype, String field, String filename, String part) {

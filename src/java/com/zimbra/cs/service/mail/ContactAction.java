@@ -41,6 +41,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.Pair;
+import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -109,7 +110,8 @@ public class ContactAction extends ItemAction {
                 byte color = (byte) action.getAttributeLong(MailConstants.A_COLOR, -1);
                 ParsedContact pc = null;
                 if (!action.listElements(MailConstants.E_ATTRIBUTE).isEmpty()) {
-                    Pair<Map<String,String>, List<Attachment>> cdata = CreateContact.parseContact(zsc, action);
+                    Contact cn = local.size() == 1 ? mbox.getContactById(octxt, local.get(0)) : null;
+                    Pair<Map<String,String>, List<Attachment>> cdata = CreateContact.parseContact(action, zsc, octxt, cn);
                     pc = new ParsedContact(cdata.getFirst(), cdata.getSecond());
                 }
 

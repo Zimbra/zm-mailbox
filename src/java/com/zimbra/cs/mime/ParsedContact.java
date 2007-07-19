@@ -47,7 +47,6 @@ import org.apache.lucene.document.Field;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.convert.ConversionException;

@@ -35,10 +35,11 @@ import java.util.List;
 import java.util.Map;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.ContentType;
 import javax.mail.internet.MimePart;
 
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.Document;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -46,6 +47,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.MimeCompoundHeader.ContentType;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.UserServlet;
@@ -93,7 +95,7 @@ public class CreateContact extends MailDocumentHandler  {
             pclist = parseAttachedVCard(zsc, octxt, mbox, vcard);
         } else {
             pclist = new ArrayList<ParsedContact>(1);
-            Pair<Map<String,String>, List<Attachment>> cdata = parseContact(zsc, cn);
+            Pair<Map<String,String>, List<Attachment>> cdata = parseContact(cn, zsc, octxt);
             pclist.add(new ParsedContact(cdata.getFirst(), cdata.getSecond()));
         }
 
@@ -112,7 +114,11 @@ public class CreateContact extends MailDocumentHandler  {
         return response;
     }
 
-    static Pair<Map<String,String>, List<Attachment>> parseContact(ZimbraSoapContext zsc, Element cn) throws ServiceException {
+    static Pair<Map<String,String>, List<Attachment>> parseContact(Element cn, ZimbraSoapContext zsc, OperationContext octxt) throws ServiceException {
+        return parseContact(cn, zsc, octxt, null);
+    }
+
+    static Pair<Map<String,String>, List<Attachment>> parseContact(Element cn, ZimbraSoapContext zsc, OperationContext octxt, Contact existing) throws ServiceException {
         Map<String, String> fields = new HashMap<String, String>();
         List<Attachment> attachments = new ArrayList<Attachment>();
 
@@ -121,7 +127,7 @@ public class CreateContact extends MailDocumentHandler  {
             if (name.trim().equals(""))
                 throw ServiceException.INVALID_REQUEST("at least one contact field name is blank", null);
 
-            Attachment attach = parseAttachment(zsc, elt, name);
+            Attachment attach = parseAttachment(elt, name, zsc, octxt, existing);
             if (attach == null)
                 fields.put(name, elt.getText());
             else
@@ -131,7 +137,7 @@ public class CreateContact extends MailDocumentHandler  {
         return new Pair<Map<String,String>, List<Attachment>>(fields, attachments);
     }
 
-    private static Attachment parseAttachment(ZimbraSoapContext zsc, Element elt, String name) throws ServiceException {
+    private static Attachment parseAttachment(Element elt, String name, ZimbraSoapContext zsc, OperationContext octxt, Contact existing) throws ServiceException {
         // check for uploaded attachment
         String attachId = elt.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
         if (attachId != null) {
@@ -143,7 +149,54 @@ public class CreateContact extends MailDocumentHandler  {
             }
         }
 
-        // FIXME: support attaching messages, message parts, contact attachments, documents
+        int itemId = (int) elt.getAttributeLong(MailConstants.A_ID, -1);
+        String part = elt.getAttribute(MailConstants.A_PART, null);
+        if (itemId != -1 || (part != null && existing != null)) {
+            MailItem item = itemId == -1 ? existing : getRequestedMailbox(zsc).getItemById(octxt, itemId, MailItem.TYPE_UNKNOWN);
+
+            try {
+                if (item instanceof Contact) {
+                    Contact contact = (Contact) item;
+                    if (part != null && !part.equals("")) {
+                        try {
+                            int partNum = Integer.parseInt(part) - 1;
+                            if (partNum >= 0 && partNum < contact.getAttachments().size()) {
+                                Attachment att = contact.getAttachments().get(partNum);
+                                return new Attachment(att.getContent(contact), att.getContentType(), name, att.getFilename());
+                            }
+                        } catch (MessagingException me) {
+                            throw ServiceException.FAILURE("error parsing blob", me);
+                        } catch (NumberFormatException nfe) { }
+                        throw ServiceException.INVALID_REQUEST("invalid contact part number: " + part, null);
+                    } else {
+                        VCard vcf = VCard.formatContact(contact);
+                        return new Attachment(vcf.formatted.getBytes("utf-8"), "text/x-vcard; charset=utf-8", name, vcf.fn + ".vcf");
+                    }
+                } else if (item instanceof Message) {
+                    Message msg = (Message) item;
+                    if (part != null && !part.equals("")) {
+                        try {
+                            MimePart mp = Mime.getMimePart(msg.getMimeMessage(), part);
+                            if (mp == null)
+                                throw MailServiceException.NO_SUCH_PART(part);
+                            return new Attachment(ByteUtil.getContent(mp.getInputStream(), mp.getSize()), mp.getContentType(), name, Mime.getFilename(mp));
+                        } catch (MessagingException me) {
+                            throw ServiceException.FAILURE("error parsing blob", me);
+                        }
+                    } else {
+                        return new Attachment(msg.getContent(), "message/rfc822", name, msg.getSubject());
+                    }
+                } else if (item instanceof Document) {
+                    Document doc = (Document) item;
+                    if (part != null && !part.equals(""))
+                        throw MailServiceException.NO_SUCH_PART(part);
+                    return new Attachment(doc.getContent(), doc.getContentType(), name, doc.getName());
+                }
+            } catch (IOException ioe) {
+                throw ServiceException.FAILURE("error attaching existing item data", ioe);
+            }
+        }
+
         return null;
     }
 
@@ -175,9 +228,9 @@ public class CreateContact extends MailDocumentHandler  {
                         mbox = MailboxManager.getInstance().getMailboxByAccountId(iid.getAccountId());
                     Message msg = mbox.getMessageById(octxt, iid.getId());
                     MimePart mp = Mime.getMimePart(msg.getMimeMessage(), part);
-                    ContentType ctype = new ContentType(mp.getContentType());
-                    if (!ctype.match(Mime.CT_TEXT_PLAIN) && !ctype.match(Mime.CT_TEXT_VCARD))
-                        throw MailServiceException.INVALID_CONTENT_TYPE(ctype.getBaseType());
+                    String ctype = new ContentType(mp.getContentType()).getValue();
+                    if (!ctype.equals(Mime.CT_TEXT_PLAIN) && !ctype.equals(Mime.CT_TEXT_VCARD))
+                        throw MailServiceException.INVALID_CONTENT_TYPE(ctype);
                     text = Mime.getStringContent(mp);
                 } catch (IOException e) {
                     throw ServiceException.FAILURE("error reading vCard", e);

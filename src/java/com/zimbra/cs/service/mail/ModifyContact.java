@@ -66,12 +66,13 @@ public class ModifyContact extends MailDocumentHandler  {
         Element cn = request.getElement(MailConstants.E_CONTACT);
         ItemId iid = new ItemId(cn.getAttribute(MailConstants.A_ID), zsc);
 
-        Pair<Map<String,String>, List<Attachment>> cdata = CreateContact.parseContact(zsc, cn);
+        Contact contact = mbox.getContactById(octxt, iid.getId());
+        Pair<Map<String,String>, List<Attachment>> cdata = CreateContact.parseContact(cn, zsc, octxt, contact);
         ParsedContact pc;
         if (replace)
             pc = new ParsedContact(cdata.getFirst(), cdata.getSecond());
         else
-            pc = new ParsedContact(mbox.getContactById(octxt, iid.getId())).modify(cdata.getFirst(), cdata.getSecond());
+            pc = new ParsedContact(contact).modify(cdata.getFirst(), cdata.getSecond());
 
         mbox.modifyContact(octxt, iid.getId(), pc);
         
