@@ -53,7 +53,6 @@ import com.zimbra.cs.service.wiki.WikiServiceException;
 import com.zimbra.cs.session.WikiSession;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.ServiceException.Argument;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.MailConstants;
@@ -307,10 +306,8 @@ public abstract class Wiki {
 			mFolderId = fid;
 			
 			if (Provisioning.onLocalServer(acct)) {
-				Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
-				if (mbox == null)
-					throw WikiServiceException.ERROR("wiki account mailbox not found");
-				mbox.addListener(WikiSession.getInstance());
+			    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+			    WikiSession.getInstance().addMailboxForNotification(mbox);
 			} else {
 				// for some reason if the account is not local, but we have folder id.
 				throw WikiServiceException.ERROR("cannot access remote account "+acct.getName());
@@ -323,6 +320,8 @@ public abstract class Wiki {
 			if (page != null)
 				return page;
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mWikiAccount);
+			if (mbox == null)
+			    throw WikiServiceException.ERROR("mailbox not found for account "+mWikiAccount);
 			try {
 				MailItem item = mbox.getItemByPath(ctxt.octxt, wikiWord, mFolderId);
 				page = WikiPage.create((Document) item);
@@ -339,6 +338,8 @@ public abstract class Wiki {
 		public synchronized void renameDocument(WikiContext ctxt, int id, String newName, String author) throws ServiceException {
 			// rename the page, then flush the cache.
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mWikiAccount);
+			if (mbox == null)
+			    throw WikiServiceException.ERROR("mailbox not found for account "+mWikiAccount);
 			mbox.rename(ctxt.octxt, id, MailItem.TYPE_DOCUMENT, newName);
 			Wiki.remove(mWikiAccount, Integer.toString(mFolderId));
 		}

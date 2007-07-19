@@ -32,7 +32,6 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
-import com.zimbra.cs.wiki.Wiki.WikiContext;
 
 /**
  * Cache for the composited Wiki / Notebook pages.  Each pages are fully

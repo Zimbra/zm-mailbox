@@ -30,6 +30,14 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.wiki.Wiki;
 
+/*
+ * WikiSession acts as a conduit between the Mailboxes and the wiki caches,
+ * so the dirty cache data can be invalidated when there is a Mailbox change.
+ * It doesn't require registration and cleanup as login and activity based
+ * conventional session objects.  When a Mailbox it listens to gets unloaded,
+ * it will re-register as the listener the next time the Mailbox is accessed 
+ * by wiki.
+ */
 public class WikiSession extends Session {
 
 	public static WikiSession getInstance() throws ServiceException {
@@ -48,7 +56,7 @@ public class WikiSession extends Session {
 
     @Override
     protected boolean isMailboxListener() {
-        return true;
+        return false;
     }
 
     @Override
@@ -56,6 +64,11 @@ public class WikiSession extends Session {
         return false;
     }
 
+    @Override
+    public Session register() {
+        return this;
+    }
+    
 	@Override
 	protected void cleanup() {
 	}
@@ -94,4 +107,9 @@ public class WikiSession extends Session {
 			Wiki.expireAll();
 		}
 	}
+    
+    public void addMailboxForNotification(Mailbox mbox) throws ServiceException {
+        if (mbox != null)
+            mbox.addListener(this);
+    }
 }
