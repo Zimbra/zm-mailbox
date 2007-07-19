@@ -15,7 +15,7 @@
  * The Original Code is: Zimbra Collaboration Suite Server.
  * 
  * The Initial Developer of the Original Code is Zimbra, Inc.
- * Portions created by Zimbra are Copyright (C) 2005, 2006 Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * All Rights Reserved.
  * 
  * Contributor(s): 
@@ -32,9 +32,6 @@ import java.util.Map;
 import javax.mail.Address;
 import javax.mail.MessagingException;
 
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
-
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -50,12 +47,6 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 
 public class ModifyCalendarItem extends CalendarRequest {
-
-    private static Log sLog = LogFactory.getLog(ModifyCalendarItem.class);
-
-    private static final String[] TARGET_PATH = new String[] { MailConstants.A_ID };
-    protected String[] getProxiedIdPath(Element request)     { return TARGET_PATH; }
-    protected boolean checkMountpointProxy(Element request)  { return false; }
 
     // very simple: generate a new UID and send a REQUEST
     protected class ModifyCalendarItemParser extends ParseMimeMessage.InviteParser {
@@ -88,26 +79,51 @@ public class ModifyCalendarItem extends CalendarRequest {
         Account acct = getRequestedAccount(zsc);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
-        
+
+        // proxy handling
+
+        Element msgElem = request.getElement(MailConstants.E_MSG);
+        String folderStr = msgElem.getAttribute(MailConstants.A_FOLDER, null);
         ItemId iid = new ItemId(request.getAttribute(MailConstants.A_ID), zsc);
-        int compNum = (int) request.getAttributeLong(MailConstants.E_INVITE_COMPONENT, 0);
-        sLog.info("<ModifyCalendarItem id=" + iid + " comp=" + compNum + ">");
-        
-        synchronized(mbox) {
-            CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
-            if (calItem == null) {
-                throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
+        if (!iid.belongsTo(acct)) {
+            // Proxy it.
+            if (folderStr != null) {
+                // make sure that the folder ID is fully qualified
+                ItemId folderFQ = new ItemId(folderStr, zsc);
+                msgElem.addAttribute(MailConstants.A_FOLDER, folderFQ.toString());
             }
-            Invite inv = calItem.getInvite(iid.getSubpartId(), compNum);
-            if (inv == null) {
-                throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
+            return proxyRequest(request, context, iid.getAccountId());
+        }
+        String moveTargetAccountId = null;
+        if (folderStr != null) {
+            ItemId iidFolder = new ItemId(folderStr, zsc);
+            if (!iidFolder.belongsTo(mbox)) {
+                // We're moving the item out of this mailbox.
+                moveTargetAccountId = iidFolder.getAccountId();
             }
-            
-            // response
-            Element response = getResponseElement(zsc);
-            
-            return modifyCalendarItem(zsc, octxt, request, acct, mbox, calItem, inv, response);
-        } // synchronized on mailbox                
+        }
+
+        if (moveTargetAccountId != null) {
+            throw ServiceException.INVALID_REQUEST("cannot combine cross-mailbox move with edits", null);
+            // TODO: Should we allow this?
+        } else {
+            int compNum = (int) request.getAttributeLong(MailConstants.A_CAL_COMP, 0);
+            synchronized(mbox) {
+                CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
+                if (calItem == null) {
+                    throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
+                }
+                Invite inv = calItem.getInvite(iid.getSubpartId(), compNum);
+                if (inv == null) {
+                    throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
+                }
+                
+                // response
+                Element response = getResponseElement(zsc);
+                
+                return modifyCalendarItem(zsc, octxt, request, acct, mbox, calItem, inv, response);
+            } // synchronized on mailbox                
+        }
     }
 
     private Element modifyCalendarItem(ZimbraSoapContext zsc, OperationContext octxt, Element request, Account acct, Mailbox mbox,
@@ -134,6 +150,6 @@ public class ModifyCalendarItem extends CalendarRequest {
 
         sendCalendarMessage(zsc, octxt, calItem.getFolderId(), acct, mbox, dat, response, false);
 
-        return response;        
+        return response;
     }
 }

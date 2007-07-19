@@ -49,6 +49,7 @@ import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
@@ -520,18 +521,17 @@ public class ItemActionHelper {
                     CalendarItem cal = (CalendarItem) item;
 
                     Invite invDefault = cal.getDefaultInviteOrNull();
-                    if (invDefault == null)
-                        throw ServiceException.FAILURE("cannot copy: no default invite for " + MailItem.getNameForType(item) + " " + item.getId(), null);
-                    addCalendarPart(request.addUniqueElement(MailConstants.A_DEFAULT), cal, invDefault, zmbx, target);
+                    if (invDefault != null)
+                        addCalendarPart(request.addUniqueElement(MailConstants.A_DEFAULT), cal, invDefault, zmbx, target);
 
                     for (Invite inv : cal.getInvites()) {
                         if (inv == null || inv == invDefault)
                             continue;
-                        else if (inv.isCancel())
-                            addCalendarPart(request.addUniqueElement(MailConstants.E_CAL_CANCEL), cal, inv, zmbx, target);
-                        else
-                            addCalendarPart(request.addUniqueElement(MailConstants.E_CAL_EXCEPT), cal, inv, zmbx, target);
+                        String elem = inv.isCancel() ? MailConstants.E_CAL_CANCEL : MailConstants.E_CAL_EXCEPT;
+                        addCalendarPart(request.addElement(elem), cal, inv, zmbx, target);
                     }
+
+                    ToXML.encodeCalendarReplies(request, cal, null);
 
                     createdId = zmbx.invoke(request).getAttribute(MailConstants.A_CAL_ID);
                     mCreatedIds.add(createdId);
@@ -553,7 +553,8 @@ public class ItemActionHelper {
         }
     }
 
-    private Element addCalendarPart(Element parent, CalendarItem cal, Invite inv, ZMailbox zmbx, Account target) throws ServiceException {
+    private void addCalendarPart(Element parent, CalendarItem cal, Invite inv, ZMailbox zmbx, Account target) throws ServiceException {
+        parent.addAttribute(MailConstants.A_CAL_PARTSTAT, inv.getPartStat());
         Element m = parent.addUniqueElement(MailConstants.E_MSG);
 
         Pair<MimeMessage, Integer> spinfo = cal.getSubpartMessageData(inv.getMailItemId());
@@ -570,18 +571,20 @@ public class ItemActionHelper {
             }
         }
 
-        // explicitly add the invite metadata here
-        ToXML.encodeInvite(m, mIdFormatter, getOpCtxt(), cal, inv, true);
-
-        // fix up the Organizer if needed
-        for (Element comp : m.getElement(MailConstants.E_INVITE).listElements(MailConstants.E_INVITE_COMPONENT)) {
-            if (comp.getAttributeBool(MailConstants.A_CAL_ISORG, false) && comp.getOptionalElement(MailConstants.E_CAL_ORGANIZER) != null) {
-                comp.getOptionalElement(MailConstants.E_CAL_ORGANIZER).detach();
-                comp.addUniqueElement(MailConstants.E_CAL_ORGANIZER).addAttribute(MailConstants.A_ADDRESS, target.getName())
-                                                                    .addAttribute(MailConstants.A_DISPLAY, target.getAttr(Provisioning.A_displayName));
-            }
+        if (inv.isOrganizer() && inv.hasOrganizer()) {
+            Invite invCopy = inv.newCopy();
+            invCopy.setInviteId(inv.getMailItemId());
+            // Increment SEQUENCE and bring DTSTAMP current because we're changing organizer.
+            invCopy.setSeqNo(inv.getSeqNo() + 1);
+            invCopy.setDtStamp(System.currentTimeMillis());
+            ZOrganizer org = invCopy.getOrganizer();
+            org.setAddress(target.getName());
+            org.setCn(target.getAttr(Provisioning.A_displayName));
+            // Preserve any SENT-BY on organizer by leaving it alone.
+            inv = invCopy;
         }
 
-        return m;
+        // explicitly add the invite metadata here
+        ToXML.encodeInvite(m, mIdFormatter, getOpCtxt(), cal, inv, true);
     }
 }

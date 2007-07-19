@@ -886,7 +886,12 @@ public class CalendarUtils {
     	
         //zdsync: must set this only after recur is processed
     	if (invId != null) {
-    		newInv.setInviteId(Integer.parseInt(invId));
+    	    try {
+        	    int invIdInt = Integer.parseInt(invId);
+        	    newInv.setInviteId(invIdInt);
+    	    } catch (NumberFormatException e) {
+    	        // ignore if invId is not a number, e.g. refers to a remote account
+    	    }
     	}
     	if (dts != null) {
     		newInv.setDtStamp(Long.parseLong(dts));

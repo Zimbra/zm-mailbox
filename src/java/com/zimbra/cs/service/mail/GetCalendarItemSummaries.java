@@ -175,7 +175,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                             }
 
                             calItemElem.addAttribute("x_uid", calItem.getUid());
-
+                            calItemElem.addAttribute(MailConstants.A_UID, calItem.getUid());
                         }
 
                         Element instElt = calItemElem.addElement(MailConstants.E_INSTANCE);
@@ -287,8 +287,9 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                 boolean showAll = isOwner || defaultInvite.isPublic();
                 if (calItemElem == null) {
                     calItemElem = lc.createElement(isAppointment ? MailConstants.E_APPOINTMENT : MailConstants.E_TASK);
-                    
+
                     calItemElem.addAttribute("x_uid", calItem.getUid());
+                    calItemElem.addAttribute(MailConstants.A_UID, calItem.getUid());
 
                     if (showAll) {
                         // flags and tags

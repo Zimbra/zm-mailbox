@@ -3142,10 +3142,8 @@ public class Mailbox {
 
             // allocate IDs for all of the passed-in invites (and the calendar item!) if necessary
             if (redoPlayer == null || redoPlayer.getCalendarItemId() == 0) {
-                if (defaultInv != null) {
-                    assert(defaultInv.mInv.getMailItemId() == 0);
+                if (defaultInv != null)
                     defaultInv.mInv.setInviteId(getNextItemId(Mailbox.ID_AUTO_INCREMENT));
-                }
                 if (exceptions != null) {
                     for (SetCalendarItemData sad : exceptions)
                         sad.mInv.setMailItemId(getNextItemId(Mailbox.ID_AUTO_INCREMENT));

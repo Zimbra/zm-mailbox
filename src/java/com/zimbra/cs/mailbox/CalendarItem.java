@@ -984,6 +984,9 @@ public abstract class CalendarItem extends MailItem {
      * @throws ServiceException
      */
     private void organizerChangeCheck(Invite newInvite) throws ServiceException {
+        // TODO: Skip this check if and only if we positively know the operation is intentional
+        // and legitimate, such as moving an appointment from one calendar to another calendar.
+
         Invite originalInvite = null;
         if (!newInvite.hasRecurId()) {
             // New invite is not for an exception.

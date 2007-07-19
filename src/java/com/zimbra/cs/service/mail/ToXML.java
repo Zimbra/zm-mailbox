@@ -769,7 +769,7 @@ public class ToXML {
                     isPublic = false;
             }
             if (isPublic || isCalendarItemOwner(octxt, calItem))
-                encodeReplies(calItemElem, calItem, null);
+                encodeCalendarReplies(calItemElem, calItem, null);
         }
     }
 
@@ -867,7 +867,7 @@ public class ToXML {
         return encodeCalendarItemSummary(parent, ifmt, octxt, calItem, fields, includeInvites, false);
     }
 
-    private static void encodeReplies(Element parent, CalendarItem calItem, Invite inv) {
+    public static void encodeCalendarReplies(Element parent, CalendarItem calItem, Invite inv) {
         Element repliesElt = parent.addElement(MailConstants.E_CAL_REPLIES);
         List<CalendarItem.ReplyInfo> replies = calItem.getReplyInfo(inv);
         for (CalendarItem.ReplyInfo repInfo : replies) {
@@ -982,7 +982,7 @@ public class ToXML {
             encodeTimeZoneMap(invElt, calItem.getTimeZoneMap());
             if (invites.length > 0) {
                 if (showAll)
-                    encodeReplies(invElt, calItem, invites[0]);
+                    encodeCalendarReplies(invElt, calItem, invites[0]);
                 for (Invite inv : invites)
                     encodeInviteComponent(invElt, ifmt, octxt, calItem, inv, NOTIFY_FIELDS);
             }
@@ -1277,6 +1277,7 @@ public class ToXML {
 
             boolean isRecurring = false;
             e.addAttribute("x_uid", invite.getUid());
+            e.addAttribute(MailConstants.A_UID, invite.getUid());
             e.addAttribute(MailConstants.A_CAL_SEQUENCE, invite.getSeqNo());
             e.addAttribute(MailConstants.A_CAL_DATETIME, invite.getDTStamp()); //zdsync
 
@@ -1296,8 +1297,15 @@ public class ToXML {
             e.addAttribute(MailConstants.A_CAL_CLASS, invite.getClassProp());
 
             boolean isException = invite.hasRecurId();
-            if (isException)
+            if (isException) {
                 e.addAttribute(MailConstants.A_CAL_IS_EXCEPTION, true);
+                Element ridElem = e.addElement(MailConstants.E_CAL_EXCEPTION_ID);
+                RecurId rid = invite.getRecurId();
+                ParsedDateTime ridDt = rid.getDt();
+                ridElem.addAttribute(MailConstants.A_CAL_DATETIME, ridDt.getDateTimePartString());
+                ridElem.addAttribute(MailConstants.A_CAL_TIMEZONE, ridDt.getTZName());
+                ridElem.addAttribute(MailConstants.A_CAL_RECURRENCE_RANGE_TYPE, rid.getRange());
+            }
 
             boolean allDay = invite.isAllDayEvent();
             if (allDay)
