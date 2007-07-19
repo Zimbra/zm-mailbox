@@ -26,37 +26,37 @@
     <url-pattern>/zimlet/*</url-pattern>
   </filter-mapping>
 
-  <filter>
-    <filter-name>GZIPFilter</filter-name>
-    <filter-class>
-      com.zimbra.common.filters.GZIPFilter
-    </filter-class>
+    <filter>
+        <filter-name>GzipFilter</filter-name>
+        <filter-class>
+	    org.mortbay.servlet.jetty.IncludableGzipFilter
+        </filter-class>
 
-    <init-param>
-      <param-name>compressableMimeTypes</param-name>
-      <param-value>text/javascript,text/xml,application/soap+xml</param-value>
-    </init-param>
+        <init-param>
+            <param-name>mimeTypes</param-name>
+            <param-value>text/html,text/plain,text/css,text/javascript,application/x-javascript,application/soap+xml</param-value>
+        </init-param>
 
-    <init-param>
-      <param-name>noCompressionUserAgents</param-name>
-      <param-value>.*MSIE 6.*</param-value>
-    </init-param>
+        <init-param>
+            <param-name>userAgent</param-name>
+            <param-value>(?:Mozilla[^\(]*\(compatible;\s*+([^;]*);.*)|(?:.*?([^\s]+/[^\s]+).*)</param-value>
+        </init-param>
 
-    <init-param>
-      <param-name>userAgentCacheSize</param-name>
-      <param-value>20</param-value>
-    </init-param>
-  </filter>
+        <init-param>
+            <param-name>excludedAgents</param-name>
+            <param-value>MSIE 6.0</param-value>
+        </init-param>
 
-  <filter-mapping>
-    <filter-name>GZIPFilter</filter-name>
-    <url-pattern>/soap/*</url-pattern>
-  </filter-mapping>
+        <init-param>
+            <param-name>minGzipSize</param-name>
+            <param-value>2048</param-value>
+        </init-param>
+    </filter>
 
-  <filter-mapping>
-    <filter-name>GZIPFilter</filter-name>
-    <url-pattern>/admin/soap/*</url-pattern>
-  </filter-mapping>
+    <filter-mapping>
+        <filter-name>GzipFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
 
   <servlet>
     <servlet-name>PrivilegedServlet</servlet-name>
