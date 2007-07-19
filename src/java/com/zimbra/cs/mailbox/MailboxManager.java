@@ -530,7 +530,8 @@ public class MailboxManager {
                 mMailboxIds.put(lock.getAccountId().toLowerCase(), lock.getMailboxId());
 
                 if (mbox != null) {
-                    assert(lock == mbox.getMailboxLock());
+                    assert(lock == mbox.getMailboxLock() ||
+                           mbox.getMailboxLock() == null);  // restore case
     
                     // Backend data may have changed while mailbox was in
                     // maintenance mode.  Invalidate all caches.
