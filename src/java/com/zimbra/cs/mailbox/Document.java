@@ -58,6 +58,15 @@ public class Document extends MailItem {
             mParent = parent;
             mRev = rev;
         }
+        public String getName() {
+            return mParent.getName();
+        }
+        public int getId() {
+            return mParent.getId();
+        }
+        public int getFolderId() {
+            return mParent.getFolderId();
+        }
         public int getRevId() throws ServiceException {
             return (int)mRev.getLong(Metadata.FN_REV_ID);
         }
@@ -172,10 +181,11 @@ public class Document extends MailItem {
     	}
     }
     
-    public DocumentRevision getRevision(int rev) throws ServiceException {
-        if (rev < 1 || rev > mRevisionList.size())
-            throw new IllegalArgumentException("no such revision: "+rev);
-        return new DocumentRevision(this, mRevisionList.getMap(rev-1));
+    public DocumentRevision getRevision(long rev) throws ServiceException {
+        int r = (int) rev;
+        if (r < 1 || r > mRevisionList.size())
+            throw new IllegalArgumentException("no such revision: "+r);
+        return new DocumentRevision(this, mRevisionList.getMap(r-1));
     }
 
     public DocumentRevision getLastRevision() throws ServiceException {

@@ -44,6 +44,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.wiki.PageCache;
 import com.zimbra.cs.wiki.Wiki;
+import com.zimbra.cs.wiki.WikiPage;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
 import com.zimbra.cs.wiki.WikiTemplate;
 
@@ -61,7 +62,16 @@ public class WikiFormatter extends Formatter {
 	
     private void handleDocument(Context context, Document doc) throws IOException, ServiceException {
         context.resp.setContentType(doc.getContentType());
-        InputStream is = doc.getRawDocument();
+        InputStream is;
+        String v = context.params.get(UserServlet.QP_VERSION);
+        int ver = -1;
+        if (v != null)
+            ver = Integer.parseInt(v);
+        
+        if (ver > 0)
+            is = doc.getRevision(ver).getContent();
+        else
+            is = doc.getRawDocument();
         ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
     }
     
@@ -82,14 +92,21 @@ public class WikiFormatter extends Formatter {
     
     private void handleWiki(Context context, WikiItem wiki) throws IOException, ServiceException {
     	WikiContext ctxt = createWikiContext(context);
-    	// fully rendered pages are cached in <code>PageCache</code>.
-    	String key = sCache.generateKey(context.opContext.getAuthenticatedUser(), wiki);
-    	String template = sCache.getPage(key);
-    	if (template == null) {
-    		WikiTemplate wt = getTemplate(context, wiki);
-    		template = wt.getComposedPage(ctxt, wiki, CHROME);
-    		sCache.addPage(key, template);
-    	}
+    	String template = null;
+        String v = context.params.get(UserServlet.QP_VERSION);
+        if (v == null) {
+            // fully rendered pages are cached in <code>PageCache</code>.
+            String key = sCache.generateKey(context.opContext.getAuthenticatedUser(), wiki);
+            template = sCache.getPage(key);
+            if (template == null) {
+                WikiTemplate wt = getTemplate(context, wiki);
+                template = wt.getComposedPage(ctxt, wiki, CHROME);
+                sCache.addPage(key, template);
+            }
+        } else {
+            WikiTemplate wt = getTemplate(context, wiki);
+            template = wt.getComposedPage(ctxt, wiki, CHROME);
+        }
     	String url = UserServlet.getRestUrl(wiki);
 		printWikiPage(context, template, wiki.getName(),url);
 	}
@@ -104,9 +121,18 @@ public class WikiFormatter extends Formatter {
     	return getTemplate(context, folder.getMailbox().getAccountId(), folder.getId(), name);
     }
     private WikiTemplate getTemplate(Context context, String accountId, int folderId, String name) throws ServiceException {
+        int ver = -1;
+        String v = context.params.get(UserServlet.QP_VERSION);
+        if (v != null)
+            ver = Integer.parseInt(v);
+        
     	WikiContext wctxt = createWikiContext(context);
     	Wiki wiki = Wiki.getInstance(wctxt, accountId, Integer.toString(folderId));
-    	return wiki.getTemplate(wctxt, name);
+    	WikiPage page = wiki.lookupWikiRevision(wctxt, name, ver);
+        if (page != null)
+            return page.getTemplate(wctxt);
+        
+        return wiki.getTemplate(wctxt, name);
     }
     private WikiTemplate getDefaultTOC() {
     	return WikiTemplate.getDefaultTOC();

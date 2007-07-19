@@ -88,7 +88,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 	
 	public String toString(WikiContext ctxt, MailItem item)
 	throws ServiceException, IOException {
-		return toString(new Context(ctxt, item));
+		return toString(new Context(ctxt, item, this));
 	}
 	
 	public String toString(Context ctxt) throws ServiceException, IOException {
@@ -115,7 +115,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 	
 	public String getComposedPage(WikiContext ctxt, MailItem item, String chrome)
 	throws ServiceException, IOException {
-		return getComposedPage(new Context(ctxt, item), chrome);
+		return getComposedPage(new Context(ctxt, item, this), chrome);
 	}
 	
 	public String getComposedPage(Context ctxt, String chrome)
@@ -335,13 +335,14 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 	
 	public static class Context {
 		public Context(Context copy) {
-			this(copy.wctxt, copy.item);
+			this(copy.wctxt, copy.item, copy.itemTemplate);
 		}
-		public Context(WikiContext wc, MailItem it) {
-			wctxt = wc; item = it; content = null;
+		public Context(WikiContext wc, MailItem it, WikiTemplate itt) {
+			wctxt = wc; item = it; itemTemplate = itt; content = null;
 		}
 		public WikiContext wctxt;
 		public MailItem item;
+		public WikiTemplate itemTemplate;
 		public Token token;
 		public String content;
 	}
@@ -869,8 +870,11 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 				return ctxt.content;
 			if (!(ctxt.item instanceof WikiItem))
 				return "<!-- cotent wiklet on non-wiki item -->";
-			WikiItem wiki = (WikiItem) ctxt.item;
-			WikiTemplate template = WikiTemplate.findTemplate(ctxt, wiki.getWikiWord());
+			WikiTemplate template = ctxt.itemTemplate;
+			if (template == null) {
+			    WikiItem wiki = (WikiItem) ctxt.item;
+			    template = WikiTemplate.findTemplate(ctxt, wiki.getWikiWord());
+			}
 			return template.toString(ctxt);
 		}
 	}
