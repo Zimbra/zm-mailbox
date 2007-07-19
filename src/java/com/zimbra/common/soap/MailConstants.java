@@ -432,6 +432,7 @@ public class MailConstants {
     public static final String A_DEFAULT = "default";
     public static final String A_VERB = "verb";
     public static final String A_CAL_ITEM_TYPE = "type";
+    public static final String A_CAL_COMP = "comp";
     public static final String A_CAL_COMPONENT_NUM = "compNum";
     public static final String A_CAL_SEQUENCE = "seq";
     public static final String A_CAL_IS_EXCEPTION = "ex";
