@@ -2095,7 +2095,7 @@ public class LdapProvisioning extends Provisioning {
                     }
                 
                     // replace the attr with the new values
-                    attrs.put(attr, newValues);
+                    attrs.put(attr, newValues.toArray(new String[newValues.size()]));
                 }
             }
             

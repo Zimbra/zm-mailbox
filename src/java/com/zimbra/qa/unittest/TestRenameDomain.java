@@ -2,18 +2,19 @@ package com.zimbra.qa.unittest;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
-import com.zimbra.common.util.EmailUtil;
+import com.zimbra.common.util.SetUtil;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Alias;
-import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
@@ -34,10 +35,11 @@ public class TestRenameDomain  extends TestCase {
     
     private String PASSWORD = "test123";
     
-    private int NUM_ACCOUNTS = 3;
-    private int NUM_DLS_NESTED = 2;
-    private int NUM_DLS_TOP = 2;
-    private int NUM_DOMAINS = 3;
+    private int NUM_ACCOUNTS    = 3;
+    private int NUM_CAS         = 3;  // calendar resources, TODO
+    private int NUM_DLS_NESTED  = 2;
+    private int NUM_DLS_TOP     = 2;
+    private int NUM_DOMAINS     = 2;
     private int NUM_SUB_DOMAINS = 2;  // number of sub domains under the old domain(domain to be renamed)
      
     /*
@@ -49,15 +51,19 @@ public class TestRenameDomain  extends TestCase {
      *     identity-3 -> (no signature)
      * 
      */ 
-    private int NUM_SIGNATURES = 2; 
-    private int NUM_IDENTITIES = 2;
+    private int NUM_SIGNATURES  = 2; 
+    private int NUM_IDENTITIES  = 2;
     private int NUM_DATASOURCES = 2;
+    
+    private String NAME_ROOT_DOMAIN     = "ldap-test-domain";
+    private String NAME_LEAF_OLD_DOMAIN = "olddomain";
+    private String NAME_LEAF_NEW_DOMAIN = "newdomain";
     
     private String NAMEPREFIX_ACCOUNT     = "acct-";
     private String NAMEPREFIX_ALIAS       = "alias-";
     private String NAMEPREFIX_DATASOURCE  = "datasource-";
-    private String NAMEPREFIX_DL_NESTED   = "nestedDL-";
-    private String NAMEPREFIX_DL_TOP      = "topDL-";
+    private String NAMEPREFIX_DL_NESTED   = "nesteddl-";
+    private String NAMEPREFIX_DL_TOP      = "topdl-";
     private String NAMEPREFIX_IDENTITY    = "identity-";
     private String NAMEPREFIX_OTHERDOMAIN = "otherdomain-";
     private String NAMEPREFIX_SIGNATURE   = "signature-";
@@ -117,7 +123,7 @@ public class TestRenameDomain  extends TestCase {
     }
         
     private String DOMAIN_NAME(String leafDomainName) {
-        return leafDomainName + ".test-" + TEST_ID + ".ldap-test-domain";
+        return leafDomainName + ".test-" + TEST_ID + "." + NAME_ROOT_DOMAIN;
     }
     
     private String SUB_DOMAIN_NAME(int index, int parentDomain) {
@@ -128,9 +134,9 @@ public class TestRenameDomain  extends TestCase {
     
     private String LEAF_DOMAIN_NAME(int index) {
         if (index == OLD_DOMAIN)
-            return "olddomain";
+            return NAME_LEAF_OLD_DOMAIN;
         else if (index == NEW_DOMAIN)
-            return "newdomain";
+            return NAME_LEAF_NEW_DOMAIN;
         else
             return NAMEPREFIX_OTHERDOMAIN + index;
     }
@@ -385,16 +391,145 @@ public class TestRenameDomain  extends TestCase {
         assertTrue(oldDomain == null);
     }
     
-    private void verifyNewDomain(String domainId) throws Exception {
-        String newDomainName = DOMAIN_NAME(NEW_DOMAIN);
+    private void dumpAttrs(Map<String, Object> attrsIn, Set<String> specificAttrs) {
         
-        Domain domainByName = mProv.get(Provisioning.DomainBy.name, newDomainName);
+        System.out.println();
+        
+        TreeMap<String, Object> attrs = new TreeMap<String, Object>(attrsIn);
+
+        for (Map.Entry<String, Object> entry : attrs.entrySet()) {
+            String name = entry.getKey();
+            if (specificAttrs == null || specificAttrs.contains(name.toLowerCase())) {
+                Object value = entry.getValue();
+                if (value instanceof String[]) {
+                    String sv[] = (String[]) value;
+                    for (String aSv : sv) {
+                        System.out.println(name + ": " + aSv);
+                    }
+                } else if (value instanceof String){
+                    System.out.println(name+": "+value);
+                }
+            }
+        }
+        
+        System.out.println();
+    }
+    
+    private void dumpNames(String desc, List<NamedEntry> entries) {
+        System.out.println();
+        
+        System.out.println("===== " + ((desc==null)?"":desc) + " =====");
+        for (NamedEntry entry : entries)
+            System.out.println(entry.getName());
+        
+        System.out.println();
+    }
+    
+    private void dumpAttrs(Map<String, Object> attrsIn) {
+        dumpAttrs(attrsIn, null);
+    }
+    
+    private Domain verifyNewDomainBasic(String domainId) throws Exception {
+        // get by name
+        Domain domainByName = mProv.get(Provisioning.DomainBy.name, DOMAIN_NAME(NEW_DOMAIN));
         assertTrue(domainByName != null);
         
+        // get by id
         Domain domainById = mProv.get(Provisioning.DomainBy.id, domainId);
         assertTrue(domainById != null);
         
         TestProvisioningUtil.verifySameEntry(domainByName, domainById);
+        
+        return domainById;
+    }
+    
+    /*
+     * ensure all the attrs are carried over
+     */ 
+    private void verifyNewDomainAttrs(Domain newDomain, Map<String, Object> oldDomainAttrs) {
+        Map<String, Object> newDomainAttrs = newDomain.getAttrs(false);
+
+        // make a copy of the two attrs maps, becase we are deleting from them
+        Map<String, Object> oldAttrs = new HashMap<String, Object>(oldDomainAttrs);
+        Map<String, Object> newAttrs = new HashMap<String, Object>(newDomainAttrs);
+                
+        // dumpAttrs(oldAttrs);
+        // dumpAttrs(newAttrs);
+        
+        oldAttrs.remove(Provisioning.A_dc);
+        oldAttrs.remove(Provisioning.A_o);
+        oldAttrs.remove(Provisioning.A_zimbraDomainName);
+
+        newAttrs.remove(Provisioning.A_dc);
+        newAttrs.remove(Provisioning.A_o);
+        newAttrs.remove(Provisioning.A_zimbraDomainName);
+        
+        for (Map.Entry<String, Object> oldAttr : oldAttrs.entrySet()) {
+            String oldKey = oldAttr.getKey();
+            Object oldValue = oldAttr.getValue();
+            
+            Object newValue = newAttrs.get(oldKey);
+            if (oldValue instanceof String[]) {
+                assertTrue(newValue instanceof String[]);
+                Set<String> oldV = new HashSet(Arrays.asList((String[])oldValue));
+                Set<String> newV = new HashSet(Arrays.asList((String[])newValue));
+                assertEquals(oldV.size(), newV.size());
+                assertEquals(SetUtil.subtract(oldV, newV).size(), 0);
+                
+            } else if (oldValue instanceof String){
+                assertEquals(oldValue, newValue);
+            }
+        }
+    }
+    
+    /*
+     * verify that the DL list contains the all the DLs in domain domainIdx an new domain account is supposed to be in
+     */
+    private void verifyNewDomainAccountInDLsOfDomain(List<String> dlNames, int domainIdx) {
+        for (int nd = 0; nd < NUM_DLS_NESTED; nd++) {
+            String dlName = NESTED_DL_NAME(nd, domainIdx);
+            assertTrue(dlNames.contains(dlName));
+        }
+        for (int td = 0; td < NUM_DLS_TOP; td++) {
+            String dlName = TOP_DL_NAME(td, domainIdx);
+            assertTrue(dlNames.contains(dlName));
+        }
+    }
+    
+    private void verifyNewDomainAccounts(Domain newDomain) throws Exception {
+        
+        /*
+         * verify the account is in correct DLs in all domains
+         */
+        for (int a = 0; a < NUM_ACCOUNTS; a++) {
+            String acctName = ACCOUNT_NAME(a, NEW_DOMAIN);
+            Account acct = mProv.get(Provisioning.AccountBy.name, acctName);
+            assertNotNull(acct);
+            
+            HashMap<String,String> via = new HashMap<String, String>();
+            List dls = mProv.getDistributionLists(acct, false, via);
+            // dumpNames("DLs account " + acctName + " is member of", dls);
+            assertEquals((NUM_DLS_NESTED + NUM_DLS_TOP)*(NUM_DOMAINS), dls.size());
+            
+            List<String> dlNames = new ArrayList<String>();
+            for (Object dl : dls)
+                dlNames.add(((DistributionList)dl).getName());
+            
+            verifyNewDomainAccountInDLsOfDomain(dlNames, NEW_DOMAIN);
+            for (int d = 0; d < NUM_DOMAINS; d++) {
+                if (d != OLD_DOMAIN) {
+                    verifyNewDomainAccountInDLsOfDomain(dlNames, d);
+                }
+            }
+        }
+       
+    }
+    
+    private void verifyNewDomain(String domainId,  Map<String, Object> oldDomainAttrs) throws Exception {
+        Domain newDomain = verifyNewDomainBasic(domainId);
+        verifyNewDomainAttrs(newDomain, oldDomainAttrs);
+        verifyNewDomainAccounts(newDomain);
+        
     }
     
     private void verifyOtherDomains() throws Exception {
@@ -404,19 +539,17 @@ public class TestRenameDomain  extends TestCase {
     // TODO: 
     //  - stop the rename at different stages and test the restart
     //  - sub domain under old domain 
-    private void verify(String domainId) throws Exception {
-        verifyOldDomain();
-        verifyNewDomain(domainId);
-        verifyOtherDomains();
-    }
 
     private String execute() throws Exception {
         
         Domain oldDomain = mProv.get(Provisioning.DomainBy.name, DOMAIN_NAME(OLD_DOMAIN));
         String oldDomainId = oldDomain.getId();
+        Map<String, Object> oldDomainAttrs = oldDomain.getAttrs(false);
         ((LdapProvisioning)mProv).renameDomain(oldDomain.getId(), DOMAIN_NAME(NEW_DOMAIN));
         
-        verify(oldDomainId);
+        verifyOldDomain();
+        verifyNewDomain(oldDomainId, oldDomainAttrs);
+        verifyOtherDomains();
         
         return TEST_ID;
     }
