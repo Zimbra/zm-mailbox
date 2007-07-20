@@ -63,7 +63,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Zimlet;
-import com.zimbra.cs.account.ldap.RenameDomain.RenameDomainVisitor;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.Zimbra;
@@ -1841,105 +1840,26 @@ public class LdapProvisioning extends Provisioning {
         }
     }
     
-    private void flushDomainCacheOnAllServers(String[] domainIds) {
-        // TODO
-    }
-    
-    private void beginRenameDomain(Domain oldDomain, String newDomainName) {
-        
-        /*
-         * Lock the old domain and mark it being renamed   TODO
-         */ 
-        // attrs.put(A_zimbraDomainStatus, TODO);
-        // attrs.put(A_zimbraDomainRenameInfo, TODO);
-        
-        flushDomainCacheOnAllServers(new String[]{oldDomain.getId()});
-    }
+
     
     public void renameDomain(String zimbraId, String newDomainName) throws ServiceException {
+        newDomainName = newDomainName.toLowerCase().trim();
+        validDomainName(newDomainName);
         
         DirContext ctxt = LdapUtil.getDirContext(true);
         
         try {
-            renameDomain(ctxt, zimbraId, newDomainName);
+            Domain oldDomain = getDomainById(zimbraId, ctxt);
+            if (oldDomain == null)
+               throw AccountServiceException.NO_SUCH_DOMAIN(zimbraId);
+            
+            String oldDomainName = oldDomain.getName();
+            
+            RenameDomain rd = new RenameDomain(ctxt, this, oldDomain, newDomainName);
+            rd.execute();
         } finally {
             LdapUtil.closeContext(ctxt);
         }
-    }
-    
-    private void renameDomain(DirContext ctxt, String zimbraId, String newDomainName) throws ServiceException {
-    	newDomainName = newDomainName.toLowerCase().trim();
-        validDomainName(newDomainName);
-        
-        Domain oldDomain = getDomainById(zimbraId, ctxt);
-        if (oldDomain == null)
-           throw AccountServiceException.NO_SUCH_DOMAIN(zimbraId);
-        
-        String oldDomainName = oldDomain.getName();
-        
-        beginRenameDomain(oldDomain, newDomainName);
-
-        
-        /*
-         * 1. create the new domain
-         */ 
-        // Get existing domain attributes
-        // make a copy, we don't want to step over our old domain object
-        Map<String, Object> domainAttrs = new HashMap<String, Object>(oldDomain.getAttrs(false));
-        
-        // remove attributes that are not needed for createDomain
-        domainAttrs.remove(A_o);
-        domainAttrs.remove(A_dc);
-        domainAttrs.remove(A_objectClass);
-        domainAttrs.remove(A_zimbraId);  // use a new zimbraId so getDomainById of the old domain will not return this half baked domain
-        domainAttrs.remove(A_zimbraDomainName);
-        domainAttrs.remove(A_zimbraMailStatus);
-        // domainAttrs.remove(A_zimbraDomainStatus); // the new domain is created locked, TODO
-        
-        // TODO.  if the new domain exists, make sure it is the new domain 
-        Domain newDomain = createDomain(newDomainName, domainAttrs);
-
-        
-        /*
-         * 2. move all accounts, DLs, and aliases
-         */ 
-        RenameDomainVisitor visitor;
-        String searchBase = mDIT.domainDNToAccountSearchDN(((LdapDomain)oldDomain).getDN());
-        int flags = 0;
-        
-        // first phase, go thru DLs and accounts and their aliases that are in the old domain into the new domain
-        visitor = new RenameDomainVisitor(ctxt, this, oldDomainName, newDomainName, RenameDomainVisitor.Phase.PHASE_RENAME_ENTRIES);
-        flags = Provisioning.SA_ACCOUNT_FLAG + Provisioning.SA_CALENDAR_RESOURCE_FLAG + Provisioning.SA_DISTRIBUTION_LIST_FLAG;
-        searchObjects(null, null, searchBase, flags, visitor, 0);
-        
-        // second phase, go thru aliases that have not been moved yet, by now aliases left in the domain should be aliases with target in other domains
-        visitor = new RenameDomainVisitor(ctxt, this, oldDomainName, newDomainName, RenameDomainVisitor.Phase.PHASE_FIX_FOREIGN_ALIASES);
-        flags = Provisioning.SA_ALIAS_FLAG;
-        searchObjects(null, null, searchBase, flags, visitor, 0);
-        
-        // third phase, go thru DLs and accounts in the *new* domain, rename the addresses in all DLs
-        //     - the addresses to be renamed are: the DL/account's main address and all the aliases that were moved to the new domain
-        //     - by now the DLs to modify should be those in other domains, because members of DLs in the old domain (now new domain) 
-        //       have been updated in first pass.
-        visitor = new RenameDomainVisitor(ctxt, this, oldDomainName, newDomainName, RenameDomainVisitor.Phase.PHASE_FIX_FOREIGN_DL_MEMBERS);
-        searchBase = mDIT.domainDNToAccountSearchDN(((LdapDomain)newDomain).getDN());
-        flags = Provisioning.SA_ACCOUNT_FLAG + Provisioning.SA_CALENDAR_RESOURCE_FLAG + Provisioning.SA_DISTRIBUTION_LIST_FLAG;
-        searchObjects(null, null, searchBase, flags, visitor, 0);
-        
-        /*
-         * 3. Delete the old domain
-         */ 
-        deleteDomain(zimbraId);
-        
-        /*
-         * 4. restore zimbraId to the id of the old domain and make the new domain available
-         */ 
-        sDomainCache.remove(newDomain);
-        HashMap<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(A_zimbraId, zimbraId);
-        // attrs.put(A_zimbraDomainStatus, TODO);
-        // attrs.put(A_zimbraDomainRenameInfo, TODO);
-        modifyAttrsInternal(newDomain, ctxt, attrs);  // skip callback
     }
     
     
