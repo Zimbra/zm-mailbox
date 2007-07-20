@@ -7,6 +7,7 @@ import java.util.Set;
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 
+import com.zimbra.common.util.SetUtil;
 import com.zimbra.cs.account.NamedEntry;
 
 public class TestProvisioningUtil extends TestCase {
@@ -103,5 +104,10 @@ public class TestProvisioningUtil extends TestCase {
             System.out.println();
             throw e;
         }
+    }
+    
+    public static void verifyEquals(Set<String> expected, Set<String> atual) throws Exception {
+        assertEquals(0, SetUtil.subtract(expected, atual).size());
+        assertEquals(0, SetUtil.subtract(atual, expected).size());
     }
 }

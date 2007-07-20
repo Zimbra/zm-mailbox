@@ -2846,8 +2846,7 @@ public class LdapProvisioning extends Provisioning {
 
         String uid = LdapUtil.escapeSearchFilterArg(parts[0]);
         String domain = parts[1];
-        String dn = mDIT.domainToAccountSearchDN(domain);
-        return getDistributionListByQuery(dn, 
+        return getDistributionListByQuery("", 
                                           "(&(zimbraMailAlias="+listAddress+")" +
                                           FILTER_DISTRIBUTION_LIST_OBJECTCLASS+ ")",
                                           null);

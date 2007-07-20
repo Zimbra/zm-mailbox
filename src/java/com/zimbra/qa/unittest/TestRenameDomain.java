@@ -3,6 +3,8 @@ package com.zimbra.qa.unittest;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,6 +17,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Alias;
+import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
@@ -33,14 +37,14 @@ public class TestRenameDomain  extends TestCase {
     private Provisioning mProv;
     private String TEST_ID;
     
-    private String PASSWORD = "test123";
+    private static String PASSWORD = "test123";
     
-    private int NUM_ACCOUNTS    = 3;
-    private int NUM_CAS         = 3;  // calendar resources, TODO
-    private int NUM_DLS_NESTED  = 2;
-    private int NUM_DLS_TOP     = 2;
-    private int NUM_DOMAINS     = 2;
-    private int NUM_SUB_DOMAINS = 2;  // number of sub domains under the old domain(domain to be renamed)
+    private static int NUM_ACCOUNTS    = 3;
+    private static int NUM_CAS         = 3;  // calendar resources, TODO
+    private static int NUM_DLS_NESTED  = 2;
+    private static int NUM_DLS_TOP     = 2;
+    private static int NUM_DOMAINS     = 3;
+    private static int NUM_SUB_DOMAINS = 2;  // number of sub domains under the old domain(domain to be renamed)
      
     /*
      * NUM_IDENTITIES and NUM_DATASOURCES must be >= NUM_SIGNATURES, each identity/datasource get one signature of the same index.
@@ -51,28 +55,67 @@ public class TestRenameDomain  extends TestCase {
      *     identity-3 -> (no signature)
      * 
      */ 
-    private int NUM_SIGNATURES  = 2; 
-    private int NUM_IDENTITIES  = 2;
-    private int NUM_DATASOURCES = 2;
+    private static int NUM_SIGNATURES  = 2; 
+    private static int NUM_IDENTITIES  = 2;
+    private static int NUM_DATASOURCES = 2;
     
-    private String NAME_ROOT_DOMAIN     = "ldap-test-domain";
-    private String NAME_LEAF_OLD_DOMAIN = "olddomain";
-    private String NAME_LEAF_NEW_DOMAIN = "newdomain";
+    private static String NAME_ROOT_DOMAIN     = "ldap-test-domain";
+    private static String NAME_LEAF_OLD_DOMAIN = "olddomain";
+    private static String NAME_LEAF_NEW_DOMAIN = "newdomain";
     
-    private String NAMEPREFIX_ACCOUNT     = "acct-";
-    private String NAMEPREFIX_ALIAS       = "alias-";
-    private String NAMEPREFIX_DATASOURCE  = "datasource-";
-    private String NAMEPREFIX_DL_NESTED   = "nesteddl-";
-    private String NAMEPREFIX_DL_TOP      = "topdl-";
-    private String NAMEPREFIX_IDENTITY    = "identity-";
-    private String NAMEPREFIX_OTHERDOMAIN = "otherdomain-";
-    private String NAMEPREFIX_SIGNATURE   = "signature-";
-    private String NAMEPREFIX_SUB_DOMAIN  = "subdomian-";
+    private static String NAMEPREFIX_ACCOUNT     = "acct-";
+    private static String NAMEPREFIX_ALIAS       = "alias-";
+    private static String NAMEPREFIX_DATASOURCE  = "datasource-";
+    private static String NAMEPREFIX_DL_NESTED   = "nesteddl-";
+    private static String NAMEPREFIX_DL_TOP      = "topdl-";
+    private static String NAMEPREFIX_IDENTITY    = "identity-";
+    private static String NAMEPREFIX_OTHERDOMAIN = "otherdomain-";
+    private static String NAMEPREFIX_SIGNATURE   = "signature-";
+    private static String NAMEPREFIX_SUB_DOMAIN  = "subdomian-";
     
     // pseudo domain index for the old domain and new domain, so that we can use the unified interfaces
-    private int OLD_DOMAIN  = 0;
-    private int NEW_DOMAIN  = -1;
+    private static int OLD_DOMAIN  = 0;
+    private static int NEW_DOMAIN  = -1;
+
+    private static final int OBJ_ACCT = 0x1;
+    private static final int OBJ_DL_NESTED = 0x2;
+    private static final int OBJ_DL_TOP = 0x4;
+
     
+    int NUM_OBJS(int objType) throws Exception {
+        switch (objType) {
+        case OBJ_ACCT:
+            return TestRenameDomain.NUM_ACCOUNTS;
+        case OBJ_DL_NESTED:
+            return TestRenameDomain.NUM_DLS_NESTED;
+        case OBJ_DL_TOP:
+            return TestRenameDomain.NUM_DLS_TOP;         }
+        throw new Exception();
+    }
+        
+    String OBJ_NAME(int objType, int index, int domainIdx) throws Exception {
+        switch (objType) {
+        case OBJ_ACCT:
+            return ACCOUNT_NAME(index, domainIdx);
+        case OBJ_DL_NESTED:
+            return NESTED_DL_NAME(index, domainIdx);
+        case OBJ_DL_TOP:
+            return TOP_DL_NAME(index, domainIdx);
+        }
+        throw new Exception();
+    }
+    
+    String GET_ALIAS_NAME(int objType, int targetIdx, int targetDomainIdx, int aliasDomainIdx) throws Exception {
+        switch (objType) {
+        case OBJ_ACCT:
+            return ACCOUNT_ALIAS_NAME(targetIdx, targetDomainIdx, aliasDomainIdx);
+        case OBJ_DL_NESTED:
+            return NESTED_DL_ALIAS_NAME(targetIdx, targetDomainIdx, aliasDomainIdx);
+        case OBJ_DL_TOP:
+            return TOP_DL_ALIAS_NAME(targetIdx, targetDomainIdx, aliasDomainIdx);
+        }
+        throw new Exception();
+    }
     
     public void setUp() throws Exception {
         
@@ -97,6 +140,9 @@ public class TestRenameDomain  extends TestCase {
          *           - has NUM_DOMAINS aliases, one in each domain
          *           - is a member of all DLs in all domains
          *           
+         *     - Each alias:
+         *           - is a member of all DLs in all domains  
+         *           
          *     - Each top dl:
          *           - has NUM_DOMAINS aliases, one in each domain
          *                 
@@ -115,13 +161,20 @@ public class TestRenameDomain  extends TestCase {
         
         // setup entries in domains
         for (int i = 0; i < NUM_DOMAINS; i++)     
-            setupDomain(i);
+            populateDomain(i);
         
         for (int i = 0; i < NUM_DOMAINS; i++)     
-            crossLinkDomain(i);
+            setupDLs(i);
 
     }
         
+    private int DOMAIN_INDEX_AFTER_RENAME(int domainIdx) {
+        if (domainIdx == OLD_DOMAIN)
+            return NEW_DOMAIN;
+        else
+            return domainIdx;
+    }
+    
     private String DOMAIN_NAME(String leafDomainName) {
         return leafDomainName + ".test-" + TEST_ID + "." + NAME_ROOT_DOMAIN;
     }
@@ -154,6 +207,21 @@ public class TestRenameDomain  extends TestCase {
         return ACCOUNT_LOCAL(index) + "@" + DOMAIN_NAME(domainIdx);
     }
     
+    /*
+     * returns account name in domain and all its aliases
+     */
+    private Set<String> ACCOUNT_NAMES(int index, int domainIdx, boolean afterRename) {
+        int dIdx = afterRename?DOMAIN_INDEX_AFTER_RENAME(domainIdx):domainIdx;
+        Set<String> names = new HashSet<String>();
+        String name = ACCOUNT_NAME(index, dIdx);
+        names.add(name);
+        for (int d = 0; d < NUM_DOMAINS; d++) {
+            String aliasName = ACCOUNT_ALIAS_NAME(index, d, afterRename?DOMAIN_INDEX_AFTER_RENAME(d):d);
+            names.add(aliasName);
+        }
+        return names;
+    }
+    
     private String ACCOUNT_ALIAS_NAME(int targetIdx, int targetDomainIdx, int aliasDomainIdx) {
         return NAMEPREFIX_ALIAS + ACCOUNT_LOCAL(targetIdx) + "-" + LEAF_DOMAIN_NAME(targetDomainIdx) + "@" + DOMAIN_NAME(aliasDomainIdx);
     }
@@ -167,6 +235,21 @@ public class TestRenameDomain  extends TestCase {
         return TOP_DL_LOCAL(index) + "@" + DOMAIN_NAME(domainIdx);
     }
     
+    /*
+     * returns nested DL name in domain and all its aliases
+     */
+    private Set<String> TOP_DL_NAMES(int index, int domainIdx, boolean afterRename) {
+        int dIdx = afterRename?DOMAIN_INDEX_AFTER_RENAME(domainIdx):domainIdx;
+        Set<String> names = new HashSet<String>();
+        String name = TOP_DL_NAME(index, dIdx);
+        names.add(name);
+        for (int d = 0; d < NUM_DOMAINS; d++) {
+            String aliasName = TOP_DL_ALIAS_NAME(index, d, afterRename?DOMAIN_INDEX_AFTER_RENAME(d):d);
+            names.add(aliasName);
+        }
+        return names;
+    }
+    
     private String TOP_DL_ALIAS_NAME(int targetIdx, int targetDomainIdx, int aliasDomainIdx) {
         return NAMEPREFIX_ALIAS + TOP_DL_LOCAL(targetIdx) + "-" + LEAF_DOMAIN_NAME(targetDomainIdx) + "@" + DOMAIN_NAME(aliasDomainIdx);
     }
@@ -178,6 +261,21 @@ public class TestRenameDomain  extends TestCase {
     
     private String NESTED_DL_NAME(int index, int domainIdx) {
         return NESTED_DL_LOCAL(index) + "@" + DOMAIN_NAME(domainIdx);
+    }
+    
+    /*
+     * returns nested DL name in domain and all its aliases
+     */
+    private Set<String> NESTED_DL_NAMES(int index, int domainIdx, boolean afterRename) {
+        int dIdx = afterRename?DOMAIN_INDEX_AFTER_RENAME(domainIdx):domainIdx;
+        Set<String> names = new HashSet<String>();
+        String name = NESTED_DL_NAME(index, dIdx);
+        names.add(name);
+        for (int d = 0; d < NUM_DOMAINS; d++) {
+            String aliasName = NESTED_DL_ALIAS_NAME(index, d, afterRename?DOMAIN_INDEX_AFTER_RENAME(d):d);
+            names.add(aliasName);
+        }
+        return names;
     }
     
     private String NESTED_DL_ALIAS_NAME(int targetIdx, int targetDomainIdx, int aliasDomainIdx) {
@@ -262,7 +360,7 @@ public class TestRenameDomain  extends TestCase {
     /*
      * create and setup entries in the domain
      */
-    private void setupDomain(int domainIdx) throws Exception {
+    private void populateDomain(int domainIdx) throws Exception {
         
         String domainName = DOMAIN_NAME(domainIdx);
         System.out.println("setupDomain: " + domainName);
@@ -280,55 +378,34 @@ public class TestRenameDomain  extends TestCase {
             createDataSources(acct, signatureIds);
         }
         
-        // create nested dls and their aliases, then add accounts to dls
+        // create nested dls and their aliases
         for (int nd = 0; nd < NUM_DLS_NESTED; nd++) {
             Map<String, Object> dlAttrs = new HashMap<String, Object>();
             DistributionList dl = mProv.createDistributionList(NESTED_DL_NAME(nd, domainIdx), dlAttrs);
             
             for (int d = 0; d < NUM_DOMAINS; d++)
                 mProv.addAlias(dl, NESTED_DL_ALIAS_NAME(nd, domainIdx, d));
-            
-            String[] members = new String[NUM_ACCOUNTS];
-            for (int a = 0; a < NUM_ACCOUNTS; a++) {
-                members[a] = ACCOUNT_NAME(a, domainIdx);
-            }
-            
-            // add members to the dl
-            mProv.addMembers(dl, members);
         }
         
-        // create top dls and their aliases, then add accounts and nested dls to top dls
+        // create top dls and their aliases
         for (int td = 0; td < NUM_DLS_TOP; td++) {
             Map<String, Object> dlAttrs = new HashMap<String, Object>();
             DistributionList dl = mProv.createDistributionList(TOP_DL_NAME(td, domainIdx), dlAttrs);
             
             for (int d = 0; d < NUM_DOMAINS; d++)
                 mProv.addAlias(dl, TOP_DL_ALIAS_NAME(td, domainIdx, d));
-            
-            // setup the member array
-            String[] members = new String[NUM_ACCOUNTS + NUM_DLS_NESTED];
-            for (int a = 0; a < NUM_ACCOUNTS; a++) {
-                members[a] = ACCOUNT_NAME(a, domainIdx);
-            }
-            
-            for (int nd = 0; nd < NUM_DLS_NESTED; nd++) {
-                members[NUM_ACCOUNTS+nd] = NESTED_DL_NAME(nd, domainIdx);
-            }
-            
-            // add members to the dl
-            mProv.addMembers(dl, members);
         }
     }
     
     /*
-     * add all accounts and dls of the domain to all other domains
+     * add all accounts, nested Dls, and their aliases of the domain to all DLs of all domains
      */
-    private void crossLinkDomain(int domainIdx) throws Exception {
+    private void setupDLs(int domainIdx) throws Exception {
         
         String domainName = DOMAIN_NAME(domainIdx);
         System.out.println("crossLinkDomain: " + domainName);
         
-        Domain sourceDomain = mProv.get(Provisioning.DomainBy.name, domainName);
+        // Domain sourceDomain = mProv.get(Provisioning.DomainBy.name, domainName);
         
         List<String>[][] nestedDLMembers = new ArrayList[NUM_DOMAINS][NUM_DLS_NESTED];
         List<String>[][] topDLMembers = new ArrayList[NUM_DOMAINS][NUM_DLS_TOP];        
@@ -342,44 +419,43 @@ public class TestRenameDomain  extends TestCase {
             }
         }
         
-        // add accounts to top and nested dls
+        // add accounts and their aliases to top and nested dls
         for (int a = 0; a < NUM_ACCOUNTS; a++) {
-            String acctName = ACCOUNT_NAME(a, domainIdx);
+            Set<String> members = ACCOUNT_NAMES(a, domainIdx, false);
+           
             for (int d = 0; d < NUM_DOMAINS; d++) {
-                if (d != domainIdx) {
-                    for (int nd = 0; nd < NUM_DLS_NESTED; nd++) {
-                        nestedDLMembers[d][nd].add(acctName);
-                    }
-                    for (int td = 0; td < NUM_DLS_TOP; td++) {
-                        topDLMembers[d][td].add(acctName);
-                    }
+                for (int nd = 0; nd < NUM_DLS_NESTED; nd++) {
+                    for (String m : members)
+                        nestedDLMembers[d][nd].add(m);
+                }
+                for (int td = 0; td < NUM_DLS_TOP; td++) {
+                    for (String m : members)
+                        topDLMembers[d][td].add(m);
                 }
             }
         }
         
-        // add nested dls to top dls
+        // add nested dls and their aliases to top dls
         for (int nd = 0; nd < NUM_DLS_NESTED; nd++) {
-            String nestedDLName = NESTED_DL_NAME(nd, domainIdx);
+            Set<String> members = NESTED_DL_NAMES(nd, domainIdx, false);
+            
             for (int d = 0; d < NUM_DOMAINS; d++) {
-                if (d != domainIdx) {
-                    for (int td = 0; td < NUM_DLS_TOP; td++) {
-                        topDLMembers[d][td].add(nestedDLName);
-                    }
+                for (int td = 0; td < NUM_DLS_TOP; td++) {
+                    for (String m : members)
+                        topDLMembers[d][td].add(m);
                 }
             }
         }
         
         // now add them
         for (int d = 0; d < NUM_DOMAINS; d++) {
-            if (d != domainIdx) {
-                for (int nd = 0; nd < NUM_DLS_NESTED; nd++) {
-                    DistributionList dl = mProv.get(Provisioning.DistributionListBy.name, NESTED_DL_NAME(nd, d));
-                    mProv.addMembers(dl, nestedDLMembers[d][nd].toArray(new String[0]));
-                }
-                for (int td = 0; td < NUM_DLS_TOP; td++) {
-                    DistributionList dl = mProv.get(Provisioning.DistributionListBy.name, TOP_DL_NAME(td, d));
-                    mProv.addMembers(dl, topDLMembers[d][td].toArray(new String[0]));
-                }
+            for (int nd = 0; nd < NUM_DLS_NESTED; nd++) {
+                DistributionList dl = mProv.get(Provisioning.DistributionListBy.name, NESTED_DL_NAME(nd, d));
+                mProv.addMembers(dl, nestedDLMembers[d][nd].toArray(new String[0]));
+            }
+            for (int td = 0; td < NUM_DLS_TOP; td++) {
+                DistributionList dl = mProv.get(Provisioning.DistributionListBy.name, TOP_DL_NAME(td, d));
+                mProv.addMembers(dl, topDLMembers[d][td].toArray(new String[0]));
             }
         }
     }
@@ -429,6 +505,36 @@ public class TestRenameDomain  extends TestCase {
         dumpAttrs(attrsIn, null);
     }
     
+    private void dumpStrings(Collection<String> strings) {
+
+        List<String> sorted = new ArrayList<String>(strings);
+        Collections.sort(sorted);
+        System.out.println();
+        
+        for (String s : sorted)
+            System.out.println(s);
+
+        System.out.println();
+    }
+    
+    Set<String> namedEntryListToNameSet(List<NamedEntry> entries) {
+        Set<String> nameSet = new HashSet<String>();
+        for (NamedEntry entry : entries)
+            nameSet.add(entry.getName());
+        return nameSet;     
+    }
+    
+    private NamedEntry getEntryByName(int objType, String name) throws Exception {
+        switch (objType) {
+        case OBJ_ACCT:
+            return mProv.get(Provisioning.AccountBy.name, name);
+        case OBJ_DL_NESTED:
+        case OBJ_DL_TOP:
+            return mProv.get(Provisioning.DistributionListBy.name, name);
+        }
+        throw new Exception();
+    }
+    
     private Domain verifyNewDomainBasic(String domainId) throws Exception {
         // get by name
         Domain domainByName = mProv.get(Provisioning.DomainBy.name, DOMAIN_NAME(NEW_DOMAIN));
@@ -444,9 +550,9 @@ public class TestRenameDomain  extends TestCase {
     }
     
     /*
-     * ensure all the attrs are carried over
+     * verify all attrs of the old domain are carried over to the new domain
      */ 
-    private void verifyNewDomainAttrs(Domain newDomain, Map<String, Object> oldDomainAttrs) {
+    private void verifyNewDomainAttrs(Domain newDomain, Map<String, Object> oldDomainAttrs) throws Exception {
         Map<String, Object> newDomainAttrs = newDomain.getAttrs(false);
 
         // make a copy of the two attrs maps, becase we are deleting from them
@@ -473,8 +579,7 @@ public class TestRenameDomain  extends TestCase {
                 assertTrue(newValue instanceof String[]);
                 Set<String> oldV = new HashSet(Arrays.asList((String[])oldValue));
                 Set<String> newV = new HashSet(Arrays.asList((String[])newValue));
-                assertEquals(oldV.size(), newV.size());
-                assertEquals(SetUtil.subtract(oldV, newV).size(), 0);
+                TestProvisioningUtil.verifyEquals(oldV, newV);
                 
             } else if (oldValue instanceof String){
                 assertEquals(oldValue, newValue);
@@ -483,62 +588,243 @@ public class TestRenameDomain  extends TestCase {
     }
     
     /*
-     * verify that the DL list contains the all the DLs in domain domainIdx an new domain account is supposed to be in
+     * verify all expected entries are in the domain and the domain only contains these entries
      */
-    private void verifyNewDomainAccountInDLsOfDomain(List<String> dlNames, int domainIdx) {
-        for (int nd = 0; nd < NUM_DLS_NESTED; nd++) {
-            String dlName = NESTED_DL_NAME(nd, domainIdx);
-            assertTrue(dlNames.contains(dlName));
+    private void verifyEntries(int domainIdx, Domain domain) throws Exception {
+     
+        // get all the entries reside in the domain
+        Provisioning.SearchOptions options = new Provisioning.SearchOptions();
+        int flags = Provisioning.SA_ACCOUNT_FLAG | Provisioning.SA_DISTRIBUTION_LIST_FLAG;
+        options.setFlags(flags);
+        options.setDomain(domain);
+        List<NamedEntry> list = mProv.searchDirectory(options);
+        
+        // come up with all expected entries
+        Set<String> expectedEntries = new HashSet<String>();
+        for (int a = 0; a < NUM_ACCOUNTS; a++) {
+            String name = ACCOUNT_NAME(a, domainIdx);
+            Account entry = mProv.get(Provisioning.AccountBy.name, name);
+            assertNotNull(entry);
+            expectedEntries.add(name);
         }
-        for (int td = 0; td < NUM_DLS_TOP; td++) {
-            String dlName = TOP_DL_NAME(td, domainIdx);
-            assertTrue(dlNames.contains(dlName));
+            
+        for (int nd = 0; nd < NUM_DLS_NESTED; nd++) {
+            String name = NESTED_DL_NAME(nd, domainIdx);
+            DistributionList entry = mProv.get(Provisioning.DistributionListBy.name, name);
+            assertNotNull(entry);
+            expectedEntries.add(name);
+        }
+            
+        for (int td = 0; td < NUM_DLS_NESTED; td++){
+            String name = TOP_DL_NAME(td, domainIdx);
+            DistributionList entry = mProv.get(Provisioning.DistributionListBy.name, name);
+            assertNotNull(entry);
+            expectedEntries.add(name);
+        }
+      
+        
+        // dumpStrings(expectedAliases);
+        // dumpStrings(namedEntryListToNameSet(list));
+        
+        // verify all our aliases are there
+        Set<String> actualEntries = namedEntryListToNameSet(list);
+        TestProvisioningUtil.verifyEquals(expectedEntries, actualEntries);
+    }
+    
+    /*
+     * verify all aliases in the domain 
+     */
+    private void verifyDomainAliases(int domainIdx, Domain domain) throws Exception {
+        
+        // get all the aliases reside in the domain
+        Provisioning.SearchOptions options = new Provisioning.SearchOptions();
+        int flags = Provisioning.SA_ALIAS_FLAG;
+        options.setFlags(flags);
+        options.setDomain(domain);
+        List<NamedEntry> list = mProv.searchDirectory(options);
+        
+        // come up with all expected aliases
+        Set<String> expectedAliases = new HashSet<String>();
+        for (int d = 0; d < NUM_DOMAINS; d++) {
+            for (int a = 0; a < NUM_ACCOUNTS; a++)
+                expectedAliases.add(ACCOUNT_ALIAS_NAME(a, d, domainIdx));
+            
+            for (int nd = 0; nd < NUM_DLS_NESTED; nd++)
+                expectedAliases.add(NESTED_DL_ALIAS_NAME(nd, d, domainIdx));
+            
+            for (int td = 0; td < NUM_DLS_NESTED; td++)
+                expectedAliases.add(TOP_DL_ALIAS_NAME(td, d, domainIdx));
+        }
+        
+        // dumpStrings(expectedAliases);
+        // dumpStrings(namedEntryListToNameSet(list));
+        
+        // verify all our aliases are there
+        Set<String> actualAliases = namedEntryListToNameSet(list);
+        TestProvisioningUtil.verifyEquals(expectedAliases, actualAliases);
+        
+        // verify the target of each alias can be found
+        for (NamedEntry entry : list) {
+            assertTrue(entry instanceof Alias);
+            
+            NamedEntry target = ((Alias)entry).searchTarget(true);
+            assertNotNull(target);
+        }        
+    }
+    
+    /*
+     * verify aliases of entries in a domain 
+     */
+    private void verifyAliasesOfEntriesInDomain(int objType, Domain domain) throws Exception {
+        /*
+         * verify the account aliases
+         */
+        for (int i = 0; i < NUM_OBJS(objType); i++) {
+            // get the the entry by main name
+            String entryName = OBJ_NAME(objType, i, NEW_DOMAIN);
+            NamedEntry entry = getEntryByName(objType, entryName);
+            assertNotNull(entry);
+            
+            // get the entry by its aliases
+            for (int d = 0; d < NUM_DOMAINS; d++) {
+                int aliasDomainIdx = DOMAIN_INDEX_AFTER_RENAME(d);
+                String aliasName = GET_ALIAS_NAME(objType, i, OLD_DOMAIN, aliasDomainIdx);
+                NamedEntry entryByAlias = getEntryByName(objType, aliasName);
+                assertNotNull(entryByAlias);
+                TestProvisioningUtil.verifySameEntry(entry, entryByAlias);
+            }
         }
     }
     
-    private void verifyNewDomainAccounts(Domain newDomain) throws Exception {
+    private void verifyAliases(int domainIdx, Domain domain) throws Exception {
+        verifyDomainAliases(domainIdx, domain);
         
-        /*
-         * verify the account is in correct DLs in all domains
-         */
-        for (int a = 0; a < NUM_ACCOUNTS; a++) {
-            String acctName = ACCOUNT_NAME(a, NEW_DOMAIN);
-            Account acct = mProv.get(Provisioning.AccountBy.name, acctName);
-            assertNotNull(acct);
+        verifyAliasesOfEntriesInDomain(OBJ_ACCT, domain);
+        verifyAliasesOfEntriesInDomain(OBJ_DL_NESTED, domain);
+        verifyAliasesOfEntriesInDomain(OBJ_DL_TOP, domain);
+    }
+
+    private void verifyMemberOf(int memberType, int dlTypes, int domainIdx) throws Exception {
+        for (int i = 0; i < NUM_OBJS(memberType); i++) {
+            String name = OBJ_NAME(memberType, i, domainIdx);
+            NamedEntry entry = getEntryByName(memberType, name);
+            assertNotNull(entry);
+            
+            Set<String> expectedNames = new HashSet<String>();
+            
+            for (int d = 0; d < NUM_DOMAINS; d++) {
+                int dIdx = DOMAIN_INDEX_AFTER_RENAME(d);
+                if ((dlTypes & OBJ_DL_NESTED) != 0) {
+                    for (int dlIdx = 0; dlIdx < NUM_DLS_NESTED; dlIdx++)
+                        expectedNames.add(NESTED_DL_NAME(dlIdx, dIdx));
+                } 
+
+                if ((dlTypes & OBJ_DL_TOP) != 0) {
+                    for (int dlIdx = 0; dlIdx < NUM_DLS_TOP; dlIdx++)
+                        expectedNames.add(TOP_DL_NAME(dlIdx, dIdx));
+                } 
+            }
             
             HashMap<String,String> via = new HashMap<String, String>();
-            List dls = mProv.getDistributionLists(acct, false, via);
-            // dumpNames("DLs account " + acctName + " is member of", dls);
-            assertEquals((NUM_DLS_NESTED + NUM_DLS_TOP)*(NUM_DOMAINS), dls.size());
+            List lists;
+            if (memberType == OBJ_ACCT)
+                lists = mProv.getDistributionLists((Account)entry, false, via);
+            else
+                lists = mProv.getDistributionLists((DistributionList)entry, false, via);
             
-            List<String> dlNames = new ArrayList<String>();
-            for (Object dl : dls)
-                dlNames.add(((DistributionList)dl).getName());
-            
-            verifyNewDomainAccountInDLsOfDomain(dlNames, NEW_DOMAIN);
-            for (int d = 0; d < NUM_DOMAINS; d++) {
-                if (d != OLD_DOMAIN) {
-                    verifyNewDomainAccountInDLsOfDomain(dlNames, d);
-                }
-            }
+            Set<String> actualNames = namedEntryListToNameSet(lists);
+            // dumpStrings(expectedNames);
+            // dumpStrings(actualNames);
+            TestProvisioningUtil.verifyEquals(expectedNames, actualNames);
         }
+    }
+    
+    private void verifyHasMembers(int dlType, int memberTypes, int domainIdx) throws Exception {
+        
+        for (int dlIdx = 0; dlIdx < NUM_OBJS(dlType); dlIdx++) {
+            String name =  OBJ_NAME(dlType, dlIdx, domainIdx);
+            DistributionList dl = mProv.get(Provisioning.DistributionListBy.name, name);
+            assertNotNull(dl);
+            
+            Set<String> expectedNames = new HashSet<String>();
+            
+            for (int d = 0; d < NUM_DOMAINS; d++) {
+                int dIdx = DOMAIN_INDEX_AFTER_RENAME(d);
+                
+                if ((memberTypes & OBJ_ACCT) != 0) {
+                    for (int i = 0; i < NUM_ACCOUNTS; i++) {
+                        Set<String> names = ACCOUNT_NAMES(i, dIdx, true);
+                        for (String n : names)
+                            expectedNames.add(n);
+                    }
+                } 
+                
+                if ((memberTypes & OBJ_DL_NESTED) != 0) {
+                    for (int i = 0; i < NUM_DLS_NESTED; i++) {
+                        Set<String> names = NESTED_DL_NAMES(i, dIdx, true);
+                        for (String n : names)
+                            expectedNames.add(n);
+                    }
+                } 
+
+                if ((memberTypes & OBJ_DL_TOP) != 0) {
+                    for (int i = 0; i < NUM_DLS_TOP; i++) {
+                        Set<String> names = TOP_DL_NAMES(i, dIdx, true);
+                        for (String n : names)
+                            expectedNames.add(n);
+                    }
+                } 
+            }
+            
+            String[] members = dl.getAllMembers();
+            Set<String> actualNames = new HashSet<String>(Arrays.asList(members));
+            // dumpStrings(expectedNames);
+            // dumpStrings(actualNames);
+            TestProvisioningUtil.verifyEquals(expectedNames, actualNames);
+        }
+    }
+    
+    
+    private void verifyDLMembership(int domainIdx, Domain domain) throws Exception {
+        // accounts
+        verifyMemberOf(OBJ_ACCT, OBJ_DL_NESTED | OBJ_DL_TOP, domainIdx);
+        
+        // nested DLs
+        verifyMemberOf(OBJ_DL_NESTED, OBJ_DL_TOP, domainIdx);
+        verifyHasMembers(OBJ_DL_NESTED, OBJ_ACCT, domainIdx);
+        
+        // top DLs
+        verifyHasMembers(OBJ_DL_TOP, OBJ_ACCT | OBJ_DL_NESTED, domainIdx);
        
+    }
+    
+    private void verifyDomain(int domainIdx) throws Exception {
+        System.out.println("Verifying domain " + DOMAIN_NAME(domainIdx));
+        
+        String domainName = DOMAIN_NAME(domainIdx);
+        Domain domain = mProv.get(Provisioning.DomainBy.name, domainName);
+        
+        verifyEntries(domainIdx, domain);
+        verifyAliases(domainIdx, domain);
+        verifyDLMembership(domainIdx, domain);
     }
     
     private void verifyNewDomain(String domainId,  Map<String, Object> oldDomainAttrs) throws Exception {
         Domain newDomain = verifyNewDomainBasic(domainId);
         verifyNewDomainAttrs(newDomain, oldDomainAttrs);
-        verifyNewDomainAccounts(newDomain);
-        
+        verifyDomain(NEW_DOMAIN);
     }
     
     private void verifyOtherDomains() throws Exception {
-        
+        for (int d = 0; d < NUM_DOMAINS; d++) {
+            if (d != OLD_DOMAIN)
+                verifyDomain(d);
+        }
     }
     
     // TODO: 
     //  - stop the rename at different stages and test the restart
-    //  - sub domain under old domain 
+   
 
     private String execute() throws Exception {
         
@@ -549,7 +835,7 @@ public class TestRenameDomain  extends TestCase {
         
         verifyOldDomain();
         verifyNewDomain(oldDomainId, oldDomainAttrs);
-        verifyOtherDomains();
+        verifyOtherDomains();        
         
         return TEST_ID;
     }
