@@ -47,8 +47,9 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 
 
-
-class RenameDomainVisitor implements NamedEntry.Visitor {
+class RenameDomain {
+    
+static class RenameDomainVisitor implements NamedEntry.Visitor {
     
     private static final Log mRenameDomainLog = LogFactory.getLog("zimbra.provisioning.renamedomain");
     
@@ -438,4 +439,5 @@ class RenameDomainVisitor implements NamedEntry.Visitor {
         return oldNewAddrPairs;
     }
 
+}
 }
