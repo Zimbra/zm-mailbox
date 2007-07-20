@@ -755,8 +755,6 @@ public final class ZimbraQuery {
 
         public static BaseQuery Create(Mailbox mailbox, Analyzer analyzer, int modifier, String folderName) throws ServiceException {
             Pair<Folder, String> result = mailbox.getFolderByPathLongestMatch(null, Mailbox.ID_FOLDER_USER_ROOT, folderName);
-            if (!(result.getFirst() instanceof Mountpoint))
-                throw MailServiceException.NO_SUCH_FOLDER(folderName);
             return recursiveResolve(mailbox, analyzer, modifier, result.getFirst(), result.getSecond());
         }
         
@@ -772,8 +770,6 @@ public final class ZimbraQuery {
                 Pair<Folder, String> result;
                 if (subfolderPath != null && subfolderPath.length() > 0) {
                     result = mailbox.getFolderByPathLongestMatch(null, iid.getId(), subfolderPath);
-                    if (!(result.getFirst() instanceof Mountpoint))
-                        throw MailServiceException.NO_SUCH_FOLDER(subfolderPath);
                 } else {
                     Folder f = mailbox.getFolderById(null, iid.getId());
                     result = new Pair<Folder, String>(f, null);
