@@ -12,20 +12,6 @@
   <display-name>Zimbra Service</display-name>
   <description>SOAP Service</description>
 
-  <filter>
-    <filter-name>ZimletFilter</filter-name>
-    <filter-class>com.zimbra.cs.zimlet.ZimletFilter</filter-class>
-    <init-param>
-      <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, 7070, 7443, 7071</param-value>
-    </init-param>
-  </filter>
-
-  <filter-mapping>
-    <filter-name>ZimletFilter</filter-name>
-    <url-pattern>/zimlet/*</url-pattern>
-  </filter-mapping>
-
     <filter>
         <filter-name>GzipFilter</filter-name>
         <filter-class>
@@ -34,7 +20,7 @@
 
         <init-param>
             <param-name>mimeTypes</param-name>
-            <param-value>text/html,text/plain,text/css,application/x-javascript,application/soap+xml,application/vnd.ms-sync.wbxml</param-value>
+            <param-value>application/x-javascript,application/soap+xml,application/vnd.ms-sync.wbxml</param-value>
         </init-param>
 
         <init-param>
@@ -57,6 +43,20 @@
         <filter-name>GzipFilter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
+
+  <filter>
+    <filter-name>ZimletFilter</filter-name>
+    <filter-class>com.zimbra.cs.zimlet.ZimletFilter</filter-class>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, 7070, 7443, 7071</param-value>
+    </init-param>
+  </filter>
+
+  <filter-mapping>
+    <filter-name>ZimletFilter</filter-name>
+    <url-pattern>/zimlet/*</url-pattern>
+  </filter-mapping>
 
   <servlet>
     <servlet-name>PrivilegedServlet</servlet-name>
