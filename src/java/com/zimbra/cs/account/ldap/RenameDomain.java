@@ -41,6 +41,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Alias;
@@ -50,6 +51,7 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
@@ -72,7 +74,7 @@ class RenameDomain {
         mNewDomainName = newDomainName;
     }
     
-    private RenameDomainVisitor getVisitor(RenameDomainVisitor.Phase phase) {
+    private RenameDomainVisitor getVisitor(RenamePhase phase) {
         return new RenameDomainVisitor(mDirCtxt, mProv, mOldDomain.getName(), mNewDomainName, phase);
     }
         
@@ -81,28 +83,14 @@ class RenameDomain {
         String oldDomainName = mOldDomain.getName();
         String oldDomainId = mOldDomain.getId();
            
-        beginRenameDomain();
-
+        RenameInfo renameInfo = beginRenameDomain();
+        RenamePhase startingPhase = renameInfo.phase();
+        RenamePhase phase = RenamePhase.PHASE_FIX_FOREIGN_DL_MEMBERS;
             
         /*
          * 1. create the new domain
          */ 
-        // Get existing domain attributes
-        // make a copy, we don't want to step over our old domain object
-        Map<String, Object> domainAttrs = new HashMap<String, Object>(mOldDomain.getAttrs(false));
-        
-        // remove attributes that are not needed for createDomain
-        domainAttrs.remove(Provisioning.A_o);
-        domainAttrs.remove(Provisioning.A_dc);
-        domainAttrs.remove(Provisioning.A_objectClass);
-        domainAttrs.remove(Provisioning.A_zimbraId);  // use a new zimbraId so getDomainById of the old domain will not return this half baked domain
-        domainAttrs.remove(Provisioning.A_zimbraDomainName);
-        domainAttrs.remove(Provisioning.A_zimbraMailStatus);
-        // domainAttrs.remove(Provisioning.A_zimbraDomainStatus); // the new domain is created locked, TODO
-        
-        // TODO.  if the new domain exists, make sure it is the new domain 
-        Domain newDomain = mProv.createDomain(mNewDomainName, domainAttrs);
-
+        Domain newDomain = createNewDomain();
             
         /*
          * 2. move all accounts, DLs, and aliases
@@ -112,24 +100,38 @@ class RenameDomain {
         int flags = 0;
             
         // first phase, go thru DLs and accounts and their aliases that are in the old domain into the new domain
-        visitor = getVisitor(RenameDomainVisitor.Phase.PHASE_RENAME_ENTRIES);
-        flags = Provisioning.SA_ACCOUNT_FLAG + Provisioning.SA_CALENDAR_RESOURCE_FLAG + Provisioning.SA_DISTRIBUTION_LIST_FLAG;
-        mProv.searchObjects(null, null, searchBase, flags, visitor, 0);
+        phase = RenamePhase.PHASE_RENAME_ENTRIES;
+        if (phase.ordinal() >= startingPhase.ordinal()) {
+            // don't need to setPhase for the first first, it was set or got from beginRenameDomain
+            visitor = getVisitor(phase);
+            flags = Provisioning.SA_ACCOUNT_FLAG + Provisioning.SA_CALENDAR_RESOURCE_FLAG + Provisioning.SA_DISTRIBUTION_LIST_FLAG;
+            mProv.searchObjects(null, null, searchBase, flags, visitor, 0);
+        }
             
         // second phase, go thru aliases that have not been moved yet, by now aliases left in the domain should be aliases with target in other domains
-        visitor = getVisitor(RenameDomainVisitor.Phase.PHASE_FIX_FOREIGN_ALIASES);
-        flags = Provisioning.SA_ALIAS_FLAG;
-        mProv.searchObjects(null, null, searchBase, flags, visitor, 0);
+        phase = RenamePhase.PHASE_FIX_FOREIGN_ALIASES;
+        if (phase.ordinal() >= startingPhase.ordinal()) {
+            renameInfo.setPhase(phase);
+            renameInfo.write(mProv, mOldDomain);
+            visitor = getVisitor(phase);
+            flags = Provisioning.SA_ALIAS_FLAG;
+            mProv.searchObjects(null, null, searchBase, flags, visitor, 0);
+        }
             
         // third phase, go thru DLs and accounts in the *new* domain, rename the addresses in all DLs
         //     - the addresses to be renamed are: the DL/account's main address and all the aliases that were moved to the new domain
         //     - by now the DLs to modify should be those in other domains, because members of DLs in the old domain (now new domain) 
         //       have been updated in first pass.
-        visitor = getVisitor(RenameDomainVisitor.Phase.PHASE_FIX_FOREIGN_DL_MEMBERS);
-        searchBase = mProv.mDIT.domainDNToAccountSearchDN(((LdapDomain)newDomain).getDN());
-        flags = Provisioning.SA_ACCOUNT_FLAG + Provisioning.SA_CALENDAR_RESOURCE_FLAG + Provisioning.SA_DISTRIBUTION_LIST_FLAG;
-        mProv.searchObjects(null, null, searchBase, flags, visitor, 0);
-            
+        phase = RenamePhase.PHASE_FIX_FOREIGN_DL_MEMBERS;
+        if (phase.ordinal() >= startingPhase.ordinal()) {
+            renameInfo.setPhase(phase);
+            renameInfo.write(mProv, mOldDomain);
+            visitor = getVisitor(phase);
+            searchBase = mProv.mDIT.domainDNToAccountSearchDN(((LdapDomain)newDomain).getDN());
+            flags = Provisioning.SA_ACCOUNT_FLAG + Provisioning.SA_CALENDAR_RESOURCE_FLAG + Provisioning.SA_DISTRIBUTION_LIST_FLAG;
+            mProv.searchObjects(null, null, searchBase, flags, visitor, 0);
+        }
+        
         /*
          * 3. Delete the old domain
          */ 
@@ -142,20 +144,157 @@ class RenameDomain {
         HashMap<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraId, oldDomainId);
         // attrs.put(A_zimbraDomainStatus, TODO);
-        // attrs.put(A_zimbraDomainRenameInfo, TODO);
+        attrs.put(Provisioning.A_zimbraDomainRenameInfo, "");
         mProv.modifyAttrsInternal(newDomain, mDirCtxt, attrs);  // skip callback
+        
+    }
+    
+    public static enum RenamePhase {
+        /*
+         * Note: the following text is written in zimbraDomainRenameInfo - change would require migration!!
+         */
+        PHASE_RENAME_ENTRIES,
+        PHASE_FIX_FOREIGN_ALIASES,
+        PHASE_FIX_FOREIGN_DL_MEMBERS;
+        
+        public static RenamePhase fromString(String s) throws ServiceException {
+            try {
+                return RenamePhase.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.FAILURE("unknown phase: "+s, e);
+            }
+        }
+        
+        public String toString() {
+            return name().substring(6);  // skip the "PHASE_"
+        }
     }
         
-    private void beginRenameDomain() throws ServiceException {
+    private static class RenameInfo {
+        
+        /*
+         * values are written in ldap attr, change would require migration!
+         */
+        private static final String SRC  = "SRC";
+        private static final String DEST = "DEST";
+        private static final char COLON = ':';
+        private static final char COMMA = ',';
+        
+        /*
+         * if this is the source domain, mDestDomainName contains the dest domain name, mSrcDomainName is null
+         * if this is the dest domain, mSrcDomainName contains the src domain name, mDestDomainName is null
+         */
+        private String mSrcDomainName;
+        private String mDestDomainName;
+        private RenamePhase mPhase;
+        private boolean mIsSrc;  // convenient var so we don't need to check mSrcDomainName/mDestDomainName when determining whether thsi is for src or desc
+        
+        private RenameInfo(String srcDomainName, String destDomainName, RenamePhase phase) {
+            mSrcDomainName = srcDomainName;
+            mDestDomainName = destDomainName;
+            mPhase = phase;
+            mIsSrc = (srcDomainName == null);
+        }
+        
+        String srcDomainName() { return mSrcDomainName; }
+        String destDomainName() { return mDestDomainName; } 
+        RenamePhase phase() { return mPhase; }
+        
+        public void setPhase(RenamePhase phase) throws ServiceException {
+            mPhase = phase;
+        }
+        
+        private String encodeSrc() {
+            return SRC + COMMA + mPhase.toString() + COLON + mDestDomainName;
+        }
+        
+        private String encodeDest() {
+            return DEST + COLON + mSrcDomainName;
+        }
+        
+        static RenameInfo load(Domain domain, boolean expectingSrc) throws ServiceException {
+            /*
+             * rename info is stored in zimbraDomainRenameInfo. 
+             * The format is:
+             *     On the source(old) domain:
+             *         SOURCE,{phase}:{destination-domain-name}
+             *     On the destination(new) domain:
+             *         DEST:{source-domain-name}
+             */
+            
+            String renameInfo = domain.getAttr(Provisioning.A_zimbraDomainRenameInfo);
+            if (StringUtil.isNullOrEmpty(renameInfo))
+                return null;
+            
+            int idx = renameInfo.indexOf(COLON);
+            if (idx == -1)
+                throw ServiceException.FAILURE("invalid value in " + Provisioning.A_zimbraDomainRenameInfo + ": " + renameInfo + " missing " + COLON, null);
+            String statusPart = renameInfo.substring(0, idx);
+            String domainName = renameInfo.substring(idx);
+            if (StringUtil.isNullOrEmpty(domainName))
+                throw ServiceException.FAILURE("invalid value in " + Provisioning.A_zimbraDomainRenameInfo + ": " + renameInfo + " missing domain name", null);
+            
+            idx = statusPart.indexOf(COMMA);
+            String srcOrDest = statusPart;
+            RenamePhase phase = null;
+            if (idx != -1) {
+                srcOrDest = statusPart.substring(0, idx);
+                phase = RenamePhase.fromString(statusPart.substring(idx));
+            }
+                
+            if (srcOrDest.equals(SRC)) {
+                if (!expectingSrc)
+                    throw ServiceException.FAILURE("invalid value in " + Provisioning.A_zimbraDomainRenameInfo + ": " + renameInfo + " missing " + DEST + " keyword", null);
+                if (phase == null)
+                    throw ServiceException.FAILURE("invalid value in " + Provisioning.A_zimbraDomainRenameInfo + ": " + renameInfo + " missing phase info for source doamin" , null);
+                return new RenameInfo(null, domainName, phase);
+            } else {
+                if (expectingSrc)
+                    throw ServiceException.FAILURE("invalid value in " + Provisioning.A_zimbraDomainRenameInfo + ": " + renameInfo + " missing " + SRC + " keyword", null);
+                return new RenameInfo(domainName, null, phase);
+            }
+        }
+        
+        public void write(LdapProvisioning prov, Domain domain) throws ServiceException {
+            HashMap<String, Object> attrs = new HashMap<String, Object>();
+            
+            String renameInfoStr;
+            
+            if (mIsSrc)
+                renameInfoStr = encodeSrc();
+            else
+                renameInfoStr = encodeDest();
+            attrs.put(Provisioning.A_zimbraDomainRenameInfo, renameInfoStr);
+            prov.modifyAttrs(domain, attrs);
+        }
+    }
+    
+    private RenameInfo beginRenameDomain() throws ServiceException {
         
         /*
          * Lock the old domain and mark it being renamed   TODO
          */ 
         // attrs.put(A_zimbraDomainStatus, TODO);
-        // attrs.put(A_zimbraDomainRenameInfo, TODO);
+                
+        String oldDomainName = mOldDomain.getName();
+        RenamePhase phase = RenamePhase.PHASE_RENAME_ENTRIES;
+       
+        RenameInfo renameInfo = RenameInfo.load(mOldDomain, true);
+        if (renameInfo == null) {
+            renameInfo = new RenameInfo(null, mNewDomainName, phase);
+            renameInfo.write(mProv, mOldDomain);
+        } else {
+            if (!renameInfo.destDomainName().equals(mNewDomainName))
+                throw ServiceException.INVALID_REQUEST("domain " + oldDomainName + " was being renamed to " + renameInfo.destDomainName() + 
+                                                       " it cannot be renamed to " + mNewDomainName + " until the previous rename is finished" , null);
+            phase = renameInfo.phase();
+        }
         
         flushDomainCacheOnAllServers(mOldDomain.getId());
+        
+        return renameInfo;
     }
+
     
     private void flushDomainCache(Provisioning prov, String domainId) throws ServiceException {
         
@@ -188,22 +327,57 @@ class RenameDomain {
         }
     }
    
+    
+
+    private Domain createNewDomain() throws ServiceException {
+        
+        // Get existing domain attributes
+        // make a copy, we don't want to step over our old domain object
+        Map<String, Object> domainAttrs = new HashMap<String, Object>(mOldDomain.getAttrs(false));
+        
+        // remove attributes that are not needed for createDomain
+        domainAttrs.remove(Provisioning.A_o);
+        domainAttrs.remove(Provisioning.A_dc);
+        domainAttrs.remove(Provisioning.A_objectClass);
+        domainAttrs.remove(Provisioning.A_zimbraId);  // use a new zimbraId so getDomainById of the old domain will not return this half baked domain
+        domainAttrs.remove(Provisioning.A_zimbraDomainName);
+        domainAttrs.remove(Provisioning.A_zimbraMailStatus);
+        // domainAttrs.remove(Provisioning.A_zimbraDomainStatus); // the new domain is created locked, TODO
+        
+        Domain newDomain = null;
+        try {
+            newDomain = mProv.createDomain(mNewDomainName, domainAttrs);
+        } catch (AccountServiceException e) {
+            if (e.getCode().equals(AccountServiceException.DOMAIN_EXISTS)) {
+                newDomain = mProv.get(Provisioning.DomainBy.name, mNewDomainName);
+                if (newDomain == null)  // this should not happen
+                    throw ServiceException.FAILURE("failed to load existing domain " + mNewDomainName, null);
+                
+                // the new domain already exists, make sure it is the one that was being renamed to
+                RenameInfo renameInfo = RenameInfo.load(newDomain, false);
+                if (!renameInfo.srcDomainName().equals(mOldDomain.getName()))
+                    throw ServiceException.INVALID_REQUEST("domain " + mNewDomainName + " was being renamed from " + renameInfo.srcDomainName() + 
+                            " it cannot be renamed from " + mOldDomain.getName() + " until the previous rename is finished" , null);
+                return newDomain;  // all is well
+            } else
+                throw e;
+                
+        } 
+        
+        RenameInfo renameInfo = new RenameInfo(mOldDomain.getName(), null, null);
+        renameInfo.write(mProv, newDomain);
+        return newDomain;
+    }
+    
     static class RenameDomainVisitor implements NamedEntry.Visitor {
     
         private DirContext mDirCtxt;
         private LdapProvisioning mProv;
         private String mOldDomainName;
         private String mNewDomainName;
-        private Phase mPhase;
+        private RenamePhase mPhase;
     
-        public static enum Phase {
-            /*
-             * Note: the following text is written in zimbraDomainRenameInfo - if changed needs migration.
-             */
-            PHASE_RENAME_ENTRIES,
-            PHASE_FIX_FOREIGN_ALIASES,
-            PHASE_FIX_FOREIGN_DL_MEMBERS
-        }
+        
     
         private static final String[] sDLAttrsNeedRename = {Provisioning.A_mail, 
                                                             Provisioning.A_zimbraMailAlias,
@@ -220,7 +394,7 @@ class RenameDomain {
     
         
     
-        private RenameDomainVisitor(DirContext dirCtxt, LdapProvisioning prov, String oldDomainName, String newDomainName, Phase phase) {
+        private RenameDomainVisitor(DirContext dirCtxt, LdapProvisioning prov, String oldDomainName, String newDomainName, RenamePhase phase) {
             mDirCtxt = dirCtxt;
             mProv = prov;
             mOldDomainName = oldDomainName;
@@ -229,19 +403,19 @@ class RenameDomain {
         }
     
         public void visit(NamedEntry entry) throws ServiceException {
-            debug("(" + mPhase.name() + ") visiting " + entry.getName());
+            debug("(" + mPhase.toString() + ") visiting " + entry.getName());
         
-            if (mPhase == Phase.PHASE_RENAME_ENTRIES) {
+            if (mPhase == RenamePhase.PHASE_RENAME_ENTRIES) {
                 if (entry instanceof DistributionList)
                     handleEntry(entry, true);  // PHASE_RENAME_ENTRIES
                 else if (entry instanceof Account)
                     handleEntry(entry, false); // PHASE_RENAME_ENTRIES
-            } else if (mPhase == Phase.PHASE_FIX_FOREIGN_ALIASES) {
+            } else if (mPhase == RenamePhase.PHASE_FIX_FOREIGN_ALIASES) {
                 if (entry instanceof Alias)
                     handleForeignAlias(entry); // PHASE_FIX_FOREIGN_ALIASES
                 else
                     assert(false);  // by now there should only be foreign aliases in the old domain
-            } else if (mPhase == Phase.PHASE_FIX_FOREIGN_DL_MEMBERS) {
+            } else if (mPhase == RenamePhase.PHASE_FIX_FOREIGN_DL_MEMBERS) {
                 handleForeignDLMembers(entry);
             }
         }

@@ -405,6 +405,9 @@ public abstract class Provisioning {
      */
     public static final String A_zimbraDomainType = "zimbraDomainType";
     
+    public static final String A_zimbraDomainStatus = "zimbraDomainStatus";
+    public static final String A_zimbraDomainRenameInfo = "zimbraDomainRenameInfo";
+    
     /**
      * Hostname visited by the client to domain name mapping, in order to make
      * virtual hosting work.

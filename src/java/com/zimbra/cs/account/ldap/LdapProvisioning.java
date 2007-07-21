@@ -1846,9 +1846,11 @@ public class LdapProvisioning extends Provisioning {
         newDomainName = newDomainName.toLowerCase().trim();
         validDomainName(newDomainName);
         
-        DirContext ctxt = LdapUtil.getDirContext(true);
+        DirContext ctxt = null;
         
         try {
+            ctxt = LdapUtil.getDirContext(true);
+            
             Domain oldDomain = getDomainById(zimbraId, ctxt);
             if (oldDomain == null)
                throw AccountServiceException.NO_SUCH_DOMAIN(zimbraId);
