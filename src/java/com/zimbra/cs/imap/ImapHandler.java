@@ -1565,7 +1565,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                     if (append.mFlagNames != null && !append.mFlagNames.isEmpty()) {
                         for (String name : append.mFlagNames) {
                             ImapFlag i4flag = flagset.getByName(name);
-                            if (!i4flag.mListed)
+                            if (i4flag != null && !i4flag.mListed)
                                 i4flag = null;
                             else if (i4flag == null && !name.startsWith("\\"))
                                 i4flag = tagset.getByName(name);
