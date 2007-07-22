@@ -8,18 +8,19 @@ import com.zimbra.cs.util.Config;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mina.MinaHandler;
+import com.zimbra.cs.mina.MinaRequest;
+import com.zimbra.cs.mina.MinaIoSessionOutputStream;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.common.IdleStatus;
 import org.apache.mina.filter.SSLFilter;
 
-import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.net.Socket;
-import java.nio.ByteBuffer;
 
-public class MinaImapHandler extends ImapHandler {
+public class MinaImapHandler extends ImapHandler implements MinaHandler {
     private MinaImapServer server;    
     private IoSession session;
 
@@ -63,28 +64,29 @@ public class MinaImapHandler extends ImapHandler {
     @Override void disableUnauthConnectionAlarm() throws ServiceException {}
 
     @Override OutputStream getFetchOutputStream() {
-        return new BufferedOutputStream(new SessionOutputStream());
+        return new MinaIoSessionOutputStream(session);
     }
 
-    public boolean handleConnect() throws IOException {
+    public void connectionOpened() throws IOException {
         if (!Config.userServicesEnabled()) {
             ZimbraLog.imap.debug(
               "Dropping connection (user services are disabled)");
-            return false;
+            // TODO Is there a better way of handling this?
+            dropConnection();
+            return;
         }
-        // TODO mStartedTLS = true;
         sendUntagged(ImapServer.getBanner(), true);
         mStartedTLS = server.isSSLEnabled();
         session.setIdleTime(IdleStatus.BOTH_IDLE,
             (int) (ImapServer.IMAP_UNAUTHED_CONNECTION_MAX_IDLE_MILLISECONDS / 1000));
-        return true;
     }
 
     @Override protected boolean processCommand() {
         throw new UnsupportedOperationException();
     }
 
-    public void handleRequest(MinaImapRequest req) throws IOException {
+    public void requestReceived(MinaRequest req) throws IOException {
+        assert req instanceof MinaImapRequest;
         if (mCredentials != null) {
             ZimbraLog.addAccountNameToContext(mCredentials.getUsername());
         }
@@ -95,7 +97,7 @@ public class MinaImapHandler extends ImapHandler {
         ZimbraLog.addIpToContext(session.getRemoteAddress().toString());
         long start = ZimbraPerf.STOPWATCH_IMAP.start();
         try {
-            if (!processRequest(req)) dropConnection();
+            if (!processRequest((MinaImapRequest) req)) dropConnection();
         } finally {
             ZimbraPerf.STOPWATCH_IMAP.stop(start);
             ZimbraLog.clearContext();
@@ -177,16 +179,6 @@ public class MinaImapHandler extends ImapHandler {
             Provisioning.ACCOUNT_STATUS_ACTIVE);
     }
     
-    private class SessionOutputStream extends OutputStream {
-        public void write(int b) throws IOException {
-            write(new byte[] { (byte) b }, 0, 1);
-        }
-
-        public void write(byte[] b, int off, int len) {
-            session.write(ByteBuffer.wrap(b, off, len));
-        }
-    }
-
     /**
      * Called when connection is closed. No need to worry about concurrent
      * execution since requests are processed in sequence for any given
@@ -212,6 +204,14 @@ public class MinaImapHandler extends ImapHandler {
         }
     }
 
+    public void connectionClosed() {
+        dropConnection();
+    }
+
+    public void connectionIdle() {
+        notifyIdleConnection();
+    }
+    
     @Override protected boolean setupConnection(Socket connection) {
         throw new UnsupportedOperationException();
     }
@@ -225,7 +225,6 @@ public class MinaImapHandler extends ImapHandler {
         dropConnection();
     }
 
-    
     @Override void flushOutput() {
         // TODO Do we need to do anything here?
     }

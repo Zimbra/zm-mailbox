@@ -6,7 +6,10 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
-public class MinaImapRequest extends ImapRequest {
+import com.zimbra.cs.mina.MinaRequest;
+import com.zimbra.cs.mina.MinaHandler;
+
+public class MinaImapRequest extends ImapRequest implements MinaRequest {
     private ByteBuffer buf;   // Buffer for current line or literal bytes
     private State state;      // Current request state
     private int count;        // Remaining byte count for current literal
@@ -16,8 +19,8 @@ public class MinaImapRequest extends ImapRequest {
     // Expecting command line, literal, message body, or the message is complete
     private enum State { LINE, LITERAL, COMPLETE }
 
-    public MinaImapRequest(IoSession session) {
-        super(MinaImapIoHandler.getImapHandler(session));
+    public MinaImapRequest(MinaHandler handler) {
+        super((MinaImapHandler) handler);
         state = State.LINE;
     }
 
@@ -83,9 +86,7 @@ public class MinaImapRequest extends ImapRequest {
         parseLine(line);
     }
 
-    private void parseLine(String line)
-            throws IOException, ImapParseException {
-        System.out.println("parseLine: line = |" + line + "|");
+    private void parseLine(String line) throws IOException, ImapParseException {
         int i;
         if (!line.endsWith("}") || (i = line.lastIndexOf('{')) == -1) {
             state = State.COMPLETE;
