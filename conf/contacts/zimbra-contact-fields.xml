@@ -352,4 +352,88 @@ outlook-2003-csv
         <column name="User 4" field="custom4"/>
         <column name="Web Page" field="workURL"/>
     </format>
+
+    <format name="some-csv" type="csv">
+        <column name="Title" field="jobTitle"/>
+        <column name="FirstName" field="firstName"/>
+        <column name="MiddleName" field="middleName"/>
+        <column name="LastName" field="lastName"/>
+        <column name="Suffix" field="nameSuffix"/>
+        <column name="Company" field="company"/>
+        <column name="Department" field="department"/>
+        <column name="JobTitle" field="jobTitle"/>
+        <column name="BusinessStreet,BusinessStreet2,BusinessStreet3" field="workStreet" type="multivalue"/>
+        <column name="BusinessCity" field="workCity"/>
+        <column name="BusinessState" field="workState"/>
+        <column name="BusinessPostalCode" field="workPostalCode"/>
+        <column name="BusinessCountry" field="workCountry"/>
+        <column name="HomeStreet,HomeStreet2,HomeStreet3" field="homeStreet" type="multivalue"/>
+        <column name="HomeCity" field="homeCity"/>
+        <column name="HomeState" field="homeState"/>
+        <column name="HomePostalCode" field="homePostalCode"/>
+        <column name="HomeCountry" field="homeCountry"/>
+        <column name="OtherStreet,OtherStreet2,OtherStreet3" field="otherStreet" type="multivalue"/>
+        <column name="OtherCity" field="otherCity"/>
+        <column name="OtherState" field="otherState"/>
+        <column name="OtherPostalCode" field="otherPostalCode"/>
+        <column name="OtherCountry" field="otherCountry"/>
+        <column name="AssistantsPhone" field="assistant"/>
+        <column name="BusinessFax" field="workFax"/>
+        <column name="BusinessPhone" field="workPhone"/>
+        <column name="BusinessPhone2" field="workPhone2"/>
+        <column name="Callback" field="callbackPhone"/>
+        <column name="CarPhone" field="carPhone"/>
+        <column name="CompanyMainPhone" field="companyPhone"/>
+        <column name="HomeFax" field="homeFax"/>
+        <column name="HomePhone" field="homePhone"/>
+        <column name="HomePhone2" field="homePhone2"/>
+        <column name="ISDN"/>
+        <column name="MobilePhone" field="mobilePhone"/>
+        <column name="OtherFax" field="otherFax"/>
+        <column name="OtherPhone" field="otherPhone"/>
+        <column name="Pager" field="pager"/>
+        <column name="PrimaryPhone"/>
+        <column name="RadioPhone"/>
+        <column name="TTYTDDPhone"/>
+        <column name="Telex"/>
+        <column name="Account"/>
+        <column name="Anniversary"/>
+        <column name="AssistantsName"/>
+        <column name="BillingInformation"/>
+        <column name="Birthday" field="birthday"/>
+        <column name="Categories"/>
+        <column name="Children"/>
+        <column name="DirectoryServer"/>
+        <column name="EmailAddress" field="email"/>
+        <column name="EmailDisplayName"/>
+        <column name="Email2Address" field="email2"/>
+        <column name="Email2DisplayName"/>
+        <column name="Email3Address" field="email3"/>
+        <column name="Email3DisplayName"/>
+        <column name="Gender"/>
+        <column name="GovernmentIDNumber"/>
+        <column name="Hobby"/>
+        <column name="Initials" field="initials"/>
+        <column name="InternetFreeBusy"/>
+        <column name="Keywords"/>
+        <column name="Language1"/>
+        <column name="Location"/>
+        <column name="ManagersName"/>
+        <column name="Mileage"/>
+        <column name="Notes" field="notes"/>
+        <column name="OfficeLocation" field="office"/>
+        <column name="OrganizationalIDNumber"/>
+        <column name="POBox"/>
+        <column name="Priority"/>
+        <column name="Private"/>
+        <column name="Profession"/>
+        <column name="ReferredBy"/>
+        <column name="Sensitivity"/>
+        <column name="Spouse"/>
+        <column name="User 1" field="custom1"/>
+        <column name="User 2" field="custom2"/>
+        <column name="User 3" field="custom3"/>
+        <column name="User 4" field="custom4"/>
+        <column name="Web Page" field="workURL"/>
+    </format>
 </contacts>
