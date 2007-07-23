@@ -178,15 +178,20 @@ public class ContactCSV {
         contact.put(field, buf.toString());
     }
     
-    private Map<String, String> toContact(List<String> csv, String fmt) throws ParseException {
+    private Map<String, String> toContact(List<String> csv, CsvFormat format) throws ParseException {
         Map<String, String> contact = new HashMap<String, String>();
         
-        CsvFormat format = getFormat(fmt);
-        for (CsvColumn col : format.columns) {
-            if (col.multivalue) {
-                addMultiValueField(col.names, csv, col.field, contact);
-            } else {
-                addField(col.name, csv, col.field, contact);
+        if (format.allFields()) {
+            for (String field : mFields) {
+                addField(field, csv, field, contact);
+            }
+        } else {
+            for (CsvColumn col : format.columns) {
+                if (col.multivalue) {
+                    addMultiValueField(col.names, csv, col.field, contact);
+                } else {
+                    addField(col.name, csv, col.field, contact);
+                }
             }
         }
 
@@ -195,13 +200,19 @@ public class ContactCSV {
 
     private List<Map<String, String>> getContactsInternal(BufferedReader reader, String fmt) throws ParseException {
         try {
+            CsvFormat format = null;
             initFields(reader, fmt);
+            
+            if (fmt == null)
+                format = guessFormat(mFields);
+            else
+                format = getFormat(fmt);
 
             List<Map<String, String>> result = new ArrayList<Map<String, String>>();
             List<String> fields = new ArrayList<String>();
             
             while (parseLine(reader, fields, false)) {
-                Map<String, String> contact = toContact(fields, fmt);
+                Map<String, String> contact = toContact(fields, format);
                 if (contact.size() > 0)
                     result.add(contact);
             }
@@ -351,6 +362,29 @@ public class ContactCSV {
         }
     }
 
+    private static CsvFormat guessFormat(List<String> keys) throws ParseException {
+        if (mKnownFormats == null || mDefaultFormat == null)
+            throw new ParseException("missing config file "+LC.zimbra_csv_mapping_file.value());
+        
+        int numMatchedFields, numBestMatch;
+        CsvFormat bestMatch;
+        
+        numBestMatch = 0;
+        bestMatch = mDefaultFormat;
+        
+        for (CsvFormat f : mKnownFormats) {
+            numMatchedFields = 0;
+            for (CsvColumn col : f.columns)
+                if (keys.contains(col.name))
+                    numMatchedFields++;
+            if (numMatchedFields > numBestMatch) {
+                numBestMatch = numMatchedFields;
+                bestMatch = f;
+            }
+        }
+        return bestMatch;
+    }
+    
     private static CsvFormat getFormat(String fmt) throws ParseException {
         if (mKnownFormats == null || mDefaultFormat == null)
             throw new ParseException("missing config file "+LC.zimbra_csv_mapping_file.value());
