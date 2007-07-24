@@ -84,7 +84,6 @@ public class CreateDataSource extends AdminDocumentHandler {
         String name = dsEl.getAttribute(AccountConstants.A_NAME);
         DataSource.Type type = DataSource.Type.fromString(dsEl.getAttribute(AccountConstants.A_TYPE));
         DataSource ds = Provisioning.getInstance().createDataSource(account, type, name, attrs);
-        DataSourceManager.updateSchedule(account.getId(), ds.getId());
         Element response = zsc.createElement(AdminConstants.CREATE_DATA_SOURCE_RESPONSE);
         ToXML.encodeDataSource(response, ds);
         return response;

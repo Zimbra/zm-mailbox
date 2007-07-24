@@ -84,7 +84,6 @@ public class CreateDataSource extends MailDocumentHandler {
         
         DataSource ds = prov.createDataSource(account, type, name, dsAttrs);
         ZimbraLog.addDataSourceNameToContext(ds.getName());
-        DataSourceManager.updateSchedule(account.getId(), ds.getId());
         
         // Assemble response
         Element response = zsc.createElement(MailConstants.CREATE_DATA_SOURCE_RESPONSE);

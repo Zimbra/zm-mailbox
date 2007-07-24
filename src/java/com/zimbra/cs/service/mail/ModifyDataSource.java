@@ -28,17 +28,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
-import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbPop3Message;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
 
 
@@ -133,8 +132,6 @@ public class ModifyDataSource extends MailDocumentHandler {
             DbPop3Message.deleteUids(mbox, ds.getId());
         }
         
-        DataSourceManager.updateSchedule(account.getId(), id);
-
         Element response = zsc.createElement(MailConstants.MODIFY_DATA_SOURCE_RESPONSE);
 
         return response;

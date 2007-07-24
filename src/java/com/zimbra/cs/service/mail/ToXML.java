@@ -1745,9 +1745,14 @@ public class ToXML {
         if (ds.getUsername() != null) {
             m.addAttribute(MailConstants.A_DS_USERNAME, ds.getUsername());
         }
-        if (ds.getPollingInterval() > 0) {
-            m.addAttribute(MailConstants.A_DS_POLLING_INTERVAL,
-                ds.getAttr(Provisioning.A_zimbraDataSourcePollingInterval));
+        
+        try {
+            if (ds.getPollingInterval() > 0) {
+                m.addAttribute(MailConstants.A_DS_POLLING_INTERVAL,
+                    ds.getAttr(Provisioning.A_zimbraDataSourcePollingInterval));
+            }
+        } catch (ServiceException e) {
+            mLog.warn("Unable to get polling interval from %s", ds, e);
         }
         
         m.addAttribute(MailConstants.A_DS_EMAIL_ADDRESS, ds.getEmailAddress());

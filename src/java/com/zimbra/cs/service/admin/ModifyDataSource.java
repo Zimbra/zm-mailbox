@@ -98,7 +98,6 @@ public class ModifyDataSource extends AdminDocumentHandler {
             attrs.remove(key);
         
         prov.modifyDataSource(account, dsId, attrs);
-        DataSourceManager.updateSchedule(account.getId(), dsId);
         
         Element response = zsc.createElement(AdminConstants.MODIFY_DATA_SOURCE_RESPONSE);
         return response;

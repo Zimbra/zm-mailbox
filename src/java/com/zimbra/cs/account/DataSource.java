@@ -42,6 +42,7 @@ import org.apache.commons.codec.binary.Base64;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -137,16 +138,24 @@ public class DataSource extends NamedEntry implements Comparable {
     }
     
     /**
-     * Returns the poll interval in milliseconds, or 0 if
-     * {@link Provisioning#A_zimbraDataSourcePollingInterval} is not specified.
+     * Returns the poll interval in milliseconds.  If <tt>zimbraDataSourcePollingInterval</tt>
+     * is not specified on the data source, uses the value set for the account.  If not
+     * set on either the data source or account, returns <tt>0</tt>.
      */
-    public long getPollingInterval() {
-        long interval = getTimeInterval(Provisioning.A_zimbraDataSourcePollingInterval, 0);
+    public long getPollingInterval()
+    throws ServiceException {
+        String val = getAttr(Provisioning.A_zimbraDataSourcePollingInterval);
+        if (val == null) {
+            val = getAccount().getAttr(Provisioning.A_zimbraDataSourcePollingInterval);
+        }
+        long interval = DateUtil.getTimeInterval(val, 0);
+
+        // Don't allow anyone to poll more frequently than every 10 seconds
         long safeguard = 10 * Constants.MILLIS_PER_SECOND;
         if (0 < interval && interval < safeguard) {
-            // Don't allow anyone to poll more frequently than every 10 seconds
             interval = safeguard;
         }
+        
         return interval;
     }
     
@@ -154,7 +163,8 @@ public class DataSource extends NamedEntry implements Comparable {
      * Returns <tt>true</tt> if this data source has a scheduled poll interval.
      * @see #getPollInterval
      */
-    public boolean isScheduled() {
+    public boolean isScheduled()
+    throws ServiceException {
         return getPollingInterval() != 0;
     }
 

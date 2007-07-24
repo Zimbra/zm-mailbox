@@ -744,4 +744,28 @@ public class DbMailbox {
 
         return flagsets;
     }
+
+    /**
+     * Returns the account id's for the current server.
+     */
+    public static Set<String> getAccountIds(Connection conn) throws ServiceException {
+        Set<String> accountIds = new HashSet<String>();
+
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement(
+                "SELECT account_id FROM mailbox");
+            rs = stmt.executeQuery();
+            while (rs.next())
+                accountIds.add(rs.getString(1));
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("getting distinct account id's", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+
+        return accountIds;
+    }
 }

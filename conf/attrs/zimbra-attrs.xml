@@ -198,7 +198,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="2" name="zimbraAccountStatus" type="enum" value="active,maintenance,locked,closed,lockout" callback="AccountStatus" cardinality="single" requiredIn="account" flags="domainAdminModifiable">
-  <desc>account status (TODO: enumerate valid values here)</desc>
+  <desc>account status</desc>
 </attr>
 
 <attr id="3" name="zimbraMailAddress" type="email" max="256" immutable="1" cardinality="multi" optionalIn="mailRecipient">
@@ -2079,9 +2079,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>maximum length of mail signature, 0 means unlimited. If not set, default is 1024</desc>
 </attr>
 
-<attr id="455" name="zimbraDataSourcePollingInterval" type="duration" min="0" cardinality="single" optionalIn="dataSource" callback="DataSourceCallback">
+<attr id="455" name="zimbraDataSourcePollingInterval" type="duration" min="0" cardinality="single" optionalIn="dataSource,account,cos" callback="DataSourceCallback" flags="accountInfo,accountInherited,domainAdminModifiable">
   <desc>
-    The time interval between automated data imports for this data source.  If unset or 0,
+    The time interval between automated data imports for a data source, or
+    all data sources owned by an account.  If unset or 0,
     the data source will not be scheduled for automated polling.
   </desc>
 </attr>
