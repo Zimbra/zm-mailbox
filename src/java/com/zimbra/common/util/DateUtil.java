@@ -270,6 +270,20 @@ public class DateUtil {
         return null;
     }
     
+    /**
+     * Returns the number of milliseconds specified by the time interval value.
+     * The format of the time interval value is one of the following, where <tt>NN</tt>
+     * is a number:
+     * <ul>
+     *   <li>NNd - days</li>
+     *   <li>NNh - hours</li>
+     *   <li>NNm - minutes</li>
+     *   <li>NNs - seconds</li>
+     *   <li>NN - seconds</li>
+     * </ul>
+     * @param value the time interval value
+     * @param defaultValue returned if the time interval is null or cannot be parsed
+     */
     public static long getTimeInterval(String value, long defaultValue) {
         if (value == null || value.length() == 0)
             return defaultValue;
