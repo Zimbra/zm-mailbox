@@ -1486,6 +1486,14 @@ public class LdapProvisioning extends Provisioning {
             }
         }
     }
+    
+    /*
+    public void modifyDomainStatus(Domain domain, String newStatus) throws ServiceException {
+        HashMap<String, String> attrs = new HashMap<String, String>();
+        attrs.put(Provisioning.A_zimbraDomainStatus, newStatus);
+        modifyAttrs(domain, attrs);
+    }
+    */
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#createCos(java.lang.String, java.util.Map)
@@ -3905,7 +3913,11 @@ public class LdapProvisioning extends Provisioning {
             if (newName) identityAttrs.remove(A_zimbraPrefIdentityName);
 
             modifyAttrs(identity, identityAttrs, true);
-            if (newName) renameIdentity(ldapEntry, identity, name);
+            if (newName) {
+                // the identity cache could've been loaded again if getAllIdentities were called in pre/poseModify callback, so we clear it again
+                account.setCachedData(IDENTITY_LIST_CACHE_KEY, null);
+                renameIdentity(ldapEntry, identity, name);
+            }
             
         }
     }
@@ -4178,6 +4190,8 @@ public class LdapProvisioning extends Provisioning {
 
             modifyAttrs(signature, signatureAttrs, true);
             if (nameChanged) {
+                // the signature cache could've been loaded again if getAllSignatures were called in pre/poseModify callback, so we clear it again
+                account.setCachedData(SIGNATURE_LIST_CACHE_KEY, null);
                 renameSignature(ldapEntry, signature, newName);
             }
             
@@ -4574,6 +4588,8 @@ public class LdapProvisioning extends Provisioning {
         
         modifyAttrs(ds, attrs, true);
         if (newName) {
+            // the datasoruce cache could've been loaded again if getAllDataSources were called in pre/poseModify callback, so we clear it again
+            account.setCachedData(DATA_SOURCE_LIST_CACHE_KEY, null);
             DirContext ctxt = null;
             try {
                 ctxt = LdapUtil.getDirContext(true);
