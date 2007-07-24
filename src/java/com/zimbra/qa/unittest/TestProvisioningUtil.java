@@ -1,5 +1,7 @@
 package com.zimbra.qa.unittest;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -12,6 +14,18 @@ import com.zimbra.cs.account.NamedEntry;
 
 public class TestProvisioningUtil extends TestCase {
     
+    private static String NAME_ROOT_DOMAIN     = "ldap-test-domain";
+    
+    public static String genTestId() {
+        Date date = new Date();
+        SimpleDateFormat fmt =  new SimpleDateFormat("yyyyMMdd-HHmmss");
+        return fmt.format(date);
+    }
+    
+    public static String baseDomainName(String testName, String testId) {
+        return testName + "-" + testId + "." + NAME_ROOT_DOMAIN;
+    }
+
     public static void verifySameId(NamedEntry entry1, NamedEntry entry2) throws Exception {
         assertNotNull(entry1);
         assertNotNull(entry2);

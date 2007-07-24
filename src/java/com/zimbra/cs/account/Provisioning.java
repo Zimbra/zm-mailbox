@@ -144,6 +144,12 @@ public abstract class Provisioning {
      * the addresses to appear as "non-existant" to the MTA.
      */
     public static final String MAIL_STATUS_DISABLED = "disabled";
+    
+    public static final String DOMAIN_STATUS_ACTIVE = "active";
+    public static final String DOMAIN_STATUS_MAINTENANCE = "maintenance";
+    public static final String DOMAIN_STATUS_LOCKED = "locked";
+    public static final String DOMAIN_STATUS_CLOSED = "closed";
+    public static final String DOMAIN_STATUS_SUSPENDED = "suspended";
 
     /**
      * An alias domain is a domain where ALL addresses in the domain
@@ -1642,6 +1648,8 @@ public abstract class Provisioning {
 
     public abstract void deleteDomain(String zimbraId) throws ServiceException;
 
+    public abstract void modifyDomainStatus(Domain domain, String newStatus) throws ServiceException;
+    
     public abstract Cos createCos(String name, Map<String, Object> attrs) throws ServiceException;
 
     public abstract void renameCos(String zimbraId, String newName) throws ServiceException;

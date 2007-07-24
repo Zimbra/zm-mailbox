@@ -75,7 +75,38 @@ public class Account extends NamedEntry {
     }
     
     public String getAccountStatus() {
-        return super.getAttr(Provisioning.A_zimbraAccountStatus);
+        
+        String domainStatus = null;
+        String accountStatus = super.getAttr(Provisioning.A_zimbraAccountStatus);
+        
+        if (mDomain != null) {
+            try {
+                Domain domain = Provisioning.getInstance().get(Provisioning.DomainBy.name, mDomain);
+                domainStatus = domain.getDomainStatus();
+            } catch (ServiceException e) {
+                ZimbraLog.account.warn("unable to get domain for account " + getName(), e);
+                return accountStatus;
+            }
+        }
+        
+        if (domainStatus == null || domainStatus.equals(Provisioning.DOMAIN_STATUS_ACTIVE))
+            return accountStatus;
+        else if (domainStatus.equals(Provisioning.DOMAIN_STATUS_LOCKED)) {
+            if (accountStatus.equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE) ||
+                accountStatus.equals(Provisioning.ACCOUNT_STATUS_CLOSED))
+                return accountStatus;
+            else
+                return Provisioning.ACCOUNT_STATUS_LOCKED;
+        } else if (domainStatus.equals(Provisioning.DOMAIN_STATUS_MAINTENANCE) ||
+                   domainStatus.equals(Provisioning.DOMAIN_STATUS_SUSPENDED)) {
+            if (accountStatus.equals(Provisioning.ACCOUNT_STATUS_CLOSED))
+                return accountStatus;
+            else
+                return Provisioning.ACCOUNT_STATUS_MAINTENANCE;
+        } else {
+            assert(domainStatus.equals(Provisioning.ACCOUNT_STATUS_CLOSED));
+            return Provisioning.ACCOUNT_STATUS_CLOSED;
+        }
     }
     
     public String[] getAliases() {

@@ -65,8 +65,8 @@ public abstract class AccessManager {
      * @param credentials  The authenticated account performing the action. 
      * @param target       The target account for the proposed action. 
      * @param asAdmin      If the authenticated account is acting as an admin accunt */
-    public abstract boolean canAccessAccount(Account credentials, Account target, boolean asAdmin);
-    public abstract boolean canAccessAccount(Account credentials, Account target);
+    public abstract boolean canAccessAccount(Account credentials, Account target, boolean asAdmin) throws ServiceException;
+    public abstract boolean canAccessAccount(Account credentials, Account target) throws ServiceException;
 
     public abstract boolean canAccessDomain(AuthToken at, String domainName) throws ServiceException;
 

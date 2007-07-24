@@ -37,6 +37,9 @@ public class DomainAccessManager extends AccessManager {
     }
 
     public boolean canAccessAccount(AuthToken at, Account target, boolean asAdmin) throws ServiceException {
+        
+        accessDomain(target);
+        
         if (asAdmin && at.isAdmin()) return true;
         if (isParentOf(at, target)) return true;
         if (!(asAdmin && at.isDomainAdmin())) return false;
@@ -59,7 +62,10 @@ public class DomainAccessManager extends AccessManager {
      * @param credentials  The authenticated account performing the action. 
      * @param target       The target account for the proposed action. 
      * @param asAdmin      If the authenticated account is acting as an admin accunt*/
-    public boolean canAccessAccount(Account credentials, Account target, boolean asAdmin) {
+    public boolean canAccessAccount(Account credentials, Account target, boolean asAdmin) throws ServiceException {
+        
+        accessDomain(target);
+        
         // admin auth account will always succeed
         if (asAdmin && credentials.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false))
             return true;
@@ -79,18 +85,24 @@ public class DomainAccessManager extends AccessManager {
         return false;
     }
     
-    public boolean canAccessAccount(Account credentials, Account target) {
+    public boolean canAccessAccount(Account credentials, Account target) throws ServiceException {
         return canAccessAccount(credentials, target, true);
     }
 
-    public boolean canAccessDomain(AuthToken at, String domainName) throws ServiceException {
+    private boolean canAccessDomainInternal(AuthToken at, String domainName) throws ServiceException {
         if (at.isAdmin()) return true;
         if (!at.isDomainAdmin()) return false;
         return getDomain(at).getName().equalsIgnoreCase(domainName);
     }
 
+    public boolean canAccessDomain(AuthToken at, String domainName) throws ServiceException {
+        accessDomain(domainName);
+        return canAccessDomainInternal(at, domainName);
+    }
+
     public boolean canAccessDomain(AuthToken at, Domain domain) throws ServiceException {
-        return canAccessDomain(at, domain.getName());
+        accessDomain(domain);
+        return canAccessDomainInternal(at, domain.getName());
     }
 
     public boolean canAccessEmail(AuthToken at, String email) throws ServiceException {
@@ -98,7 +110,7 @@ public class DomainAccessManager extends AccessManager {
         if (parts == null)
             throw ServiceException.INVALID_REQUEST("must be valid email address: "+email, null);
         
-        // check for famil mailbox
+        // check for family mailbox
         Account targetAcct = Provisioning.getInstance().get(Provisioning.AccountBy.name, email);
         if (targetAcct != null) {
             if (isParentOf(at, targetAcct))
@@ -173,5 +185,23 @@ public class DomainAccessManager extends AccessManager {
             return true;
 
         return false;
+    }
+    
+    private void accessDomain(Account acct) throws ServiceException {
+        Domain domain = Provisioning.getInstance().getDomain(acct);
+        accessDomain(domain);
+    }
+    
+    private void accessDomain(String domainName) throws ServiceException {
+        Domain domain = Provisioning.getInstance().get(Provisioning.DomainBy.name, domainName);
+        accessDomain(domain);
+    }
+    
+    private void accessDomain(Domain domain) throws ServiceException {
+        if (domain != null) {
+            if (domain.isSuspended())
+                throw ServiceException.PERM_DENIED("domain " + domain.getName() + " is suspended");
+        }
+
     }
 }

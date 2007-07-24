@@ -32,6 +32,8 @@ package com.zimbra.cs.account;
 
 import java.util.Map;
 
+import com.zimbra.common.util.ZimbraLog;
+
 /**
  * @author schemers
  *
@@ -41,5 +43,20 @@ public class Domain extends NamedEntry {
  
     protected Domain(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults) {
         super(name, id, attrs, defaults);
+    }
+    
+    public String getDomainStatus() {
+        return super.getAttr(Provisioning.A_zimbraDomainStatus);
+    }
+    
+    public boolean isSuspended() {
+        String domainStatus = getDomainStatus();
+        boolean suspended = false;
+        if (domainStatus != null)
+            suspended = domainStatus.equals(Provisioning.DOMAIN_STATUS_SUSPENDED);
+        
+        if (suspended)
+            ZimbraLog.account.warn("domain " + mName + " is " + Provisioning.DOMAIN_STATUS_SUSPENDED);
+        return suspended;
     }
 }

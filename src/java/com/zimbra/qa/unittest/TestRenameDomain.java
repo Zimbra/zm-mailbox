@@ -59,7 +59,7 @@ public class TestRenameDomain  extends TestCase {
     private static int NUM_IDENTITIES  = 2;
     private static int NUM_DATASOURCES = 2;
     
-    private static String NAME_ROOT_DOMAIN     = "ldap-test-domain";
+    
     private static String NAME_LEAF_OLD_DOMAIN = "olddomain";
     private static String NAME_LEAF_NEW_DOMAIN = "newdomain";
     
@@ -119,9 +119,7 @@ public class TestRenameDomain  extends TestCase {
     
     public void setUp() throws Exception {
         
-        Date date = new Date();
-        SimpleDateFormat fmt =  new SimpleDateFormat("yyyyMMdd-HHmmss");
-        TEST_ID = fmt.format(date);
+        TEST_ID = TestProvisioningUtil.genTestId();
         
         System.out.println("\nTest " + TEST_ID + " setting up...\n");
         
@@ -176,7 +174,7 @@ public class TestRenameDomain  extends TestCase {
     }
     
     private String DOMAIN_NAME(String leafDomainName) {
-        return leafDomainName + ".test-" + TEST_ID + "." + NAME_ROOT_DOMAIN;
+        return leafDomainName + "." + TestProvisioningUtil.baseDomainName("renamedomain", TEST_ID);
     }
     
     private String SUB_DOMAIN_NAME(int index, int parentDomain) {
@@ -826,18 +824,17 @@ public class TestRenameDomain  extends TestCase {
     //  - stop the rename at different stages and test the restart
    
 
-    private String execute() throws Exception {
+    private void execute() throws Exception {
         
         Domain oldDomain = mProv.get(Provisioning.DomainBy.name, DOMAIN_NAME(OLD_DOMAIN));
         String oldDomainId = oldDomain.getId();
         Map<String, Object> oldDomainAttrs = oldDomain.getAttrs(false);
+        
         ((LdapProvisioning)mProv).renameDomain(oldDomain.getId(), DOMAIN_NAME(NEW_DOMAIN));
         
         verifyOldDomain();
         verifyNewDomain(oldDomainId, oldDomainAttrs);
         verifyOtherDomains();        
-        
-        return TEST_ID;
     }
     
     public void testRenameDomain() throws Exception {
@@ -864,7 +861,6 @@ public class TestRenameDomain  extends TestCase {
         TestUtil.runTest(new TestSuite(TestRenameDomain.class));
         
         /*
-        System.out.println("\n===== hello =====");
         TestRenameDomain t = new TestRenameDomain();
         t.setUp();
         */

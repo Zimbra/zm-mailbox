@@ -1487,13 +1487,12 @@ public class LdapProvisioning extends Provisioning {
         }
     }
     
-    /*
     public void modifyDomainStatus(Domain domain, String newStatus) throws ServiceException {
         HashMap<String, String> attrs = new HashMap<String, String>();
         attrs.put(Provisioning.A_zimbraDomainStatus, newStatus);
         modifyAttrs(domain, attrs);
     }
-    */
+    
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#createCos(java.lang.String, java.util.Map)

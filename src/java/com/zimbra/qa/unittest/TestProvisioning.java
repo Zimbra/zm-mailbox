@@ -17,6 +17,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.*;
@@ -108,9 +109,7 @@ public class TestProvisioning extends TestCase {
         
         mCustomProvTester = new CustomProvTester(mProv);
         
-        Date date = new Date();
-        SimpleDateFormat fmt =  new SimpleDateFormat("yyyyMMdd-HHmmss");
-        TEST_ID = fmt.format(date);
+        TEST_ID = TestProvisioningUtil.genTestId();
         
         PRE_AUTH_KEY = PreAuthKey.generateRandomPreAuthKey();
         PASSWORD = "test123";
@@ -1250,6 +1249,7 @@ public class TestProvisioning extends TestCase {
     }
    
     public static void main(String[] args) throws Exception {
+        CliUtil.toolSetup("DEBUG");
         TestUtil.runTest(new TestSuite(TestProvisioning.class));
     }
 }

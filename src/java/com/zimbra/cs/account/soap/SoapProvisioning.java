@@ -769,6 +769,14 @@ public class SoapProvisioning extends Provisioning {
                 throw e;
         }
     }
+    
+    @Override
+    public void modifyDomainStatus(Domain domain, String newStatus)
+            throws ServiceException {
+        HashMap<String, String> attrs = new HashMap<String,String>();
+        attrs.put(Provisioning.A_zimbraDomainStatus, newStatus);
+        modifyAttrs(domain, attrs);
+    }
 
     @Override
     public Domain get(DomainBy keyType, String key) throws ServiceException {
