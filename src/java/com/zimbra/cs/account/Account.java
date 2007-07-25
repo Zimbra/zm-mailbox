@@ -82,7 +82,9 @@ public class Account extends NamedEntry {
         if (mDomain != null) {
             try {
                 Domain domain = Provisioning.getInstance().get(Provisioning.DomainBy.name, mDomain);
-                domainStatus = domain.getDomainStatus();
+                if (domain != null) {
+                    domainStatus = domain.getDomainStatus();
+                }
             } catch (ServiceException e) {
                 ZimbraLog.account.warn("unable to get domain for account " + getName(), e);
                 return accountStatus;
