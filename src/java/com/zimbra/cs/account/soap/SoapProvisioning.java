@@ -184,7 +184,7 @@ public class SoapProvisioning extends Provisioning {
         }
     }
 
-    synchronized Element invokeOnTargetAccount(Element request, String targetId) throws ServiceException {
+    protected synchronized Element invokeOnTargetAccount(Element request, String targetId) throws ServiceException {
         String oldTarget = mTransport.getTargetAcctId();
         try {
             mTransport.setTargetAcctId(targetId);
