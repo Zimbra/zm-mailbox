@@ -80,15 +80,15 @@ public class GetInfo extends AccountDocumentHandler  {
                 Session s = (Session) context.get(SoapEngine.ZIMBRA_SESSION);
                 if (s instanceof SoapSession) {
                     // we have a valid session; get the stats on this session
-                    response.addAttribute(AccountConstants.E_PREVIOUS_SESSION, ((SoapSession) s).getPreviousSessionTime());
-                    response.addAttribute(AccountConstants.E_LAST_ACCESS, ((SoapSession) s).getLastWriteAccessTime());
-                    response.addAttribute(AccountConstants.E_RECENT_MSGS, ((SoapSession) s).getRecentMessageCount());
+                    response.addAttribute(AccountConstants.E_PREVIOUS_SESSION, ((SoapSession) s).getPreviousSessionTime(), Element.Disposition.CONTENT);
+                    response.addAttribute(AccountConstants.E_LAST_ACCESS, ((SoapSession) s).getLastWriteAccessTime(), Element.Disposition.CONTENT);
+                    response.addAttribute(AccountConstants.E_RECENT_MSGS, ((SoapSession) s).getRecentMessageCount(), Element.Disposition.CONTENT);
                 } else {
                     // we have no session; calculate the stats from the mailbox and the other SOAP sessions
                     long lastAccess = mbox.getLastSoapAccessTime();
-                    response.addAttribute(AccountConstants.E_PREVIOUS_SESSION, lastAccess);
-                    response.addAttribute(AccountConstants.E_LAST_ACCESS, lastAccess);
-                    response.addAttribute(AccountConstants.E_RECENT_MSGS, mbox.getRecentMessageCount());
+                    response.addAttribute(AccountConstants.E_PREVIOUS_SESSION, lastAccess, Element.Disposition.CONTENT);
+                    response.addAttribute(AccountConstants.E_LAST_ACCESS, lastAccess, Element.Disposition.CONTENT);
+                    response.addAttribute(AccountConstants.E_RECENT_MSGS, mbox.getRecentMessageCount(), Element.Disposition.CONTENT);
                 }
             } catch (ServiceException e) { }
         }
