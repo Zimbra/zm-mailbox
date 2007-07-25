@@ -354,7 +354,7 @@ public class CalendarUtils {
                 exclude = true;
             } else {
                 if (!e.getName().equals(MailConstants.E_CAL_ADD)) {
-                    throw ServiceException.INVALID_REQUEST("<add> or <exclude> expected inside <recur>", null);
+                    continue;
                 }
             }
             
