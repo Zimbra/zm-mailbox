@@ -443,6 +443,9 @@ public class MailboxManager {
      */
     public synchronized boolean isMailboxLoadedAndAvailable(int mailboxId) {
         Object cached = mMailboxCache.get(mailboxId);
+        if (cached == null) {
+            return false;
+        }
         if (cached instanceof SoftReference) {
             Mailbox mbox = (Mailbox) ((SoftReference) cached).get();
             return (mbox != null);
@@ -575,10 +578,10 @@ public class MailboxManager {
     }
 
 
-    /** Returns an array of all the mailbox IDs on this host.  Note that
-     *  <code>Mailbox</code>es are lazily created, so this is not the same
-     *  as the set of mailboxes for accounts whose <code>zimbraMailHost</code>
-     *  LDAP attribute points to this server. */
+    /** Returns an array of all the mailbox IDs on this host in an undefined
+     *  order. Note that <code>Mailbox</code>es are lazily created, so this is
+     *  not the same as the set of mailboxes for accounts whose
+     *  <code>zimbraMailHost</code> LDAP attribute points to this server. */
     public int[] getMailboxIds() {
         int i = 0;
         synchronized (this) {

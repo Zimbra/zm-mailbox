@@ -1007,9 +1007,18 @@ public abstract class Provisioning {
     public static final String A_zimbraNotifySSLBindAddress = "zimbraNotifySSLBindAddress";
     public static final String A_zimbraNotifySSLBindPort = "zimbraNotifySSLBindPort";
 
+    // Message purging
     public static final String A_zimbraMailTrashLifetime = "zimbraMailTrashLifetime";
     public static final String A_zimbraMailSpamLifetime = "zimbraMailSpamLifetime";
     public static final String A_zimbraMailMessageLifetime = "zimbraMailMessageLifetime";
+    public static final String A_zimbraPrefInboxUnreadLifetime = "zimbraPrefInboxUnreadLifetime";
+    public static final String A_zimbraPrefInboxReadLifetime = "zimbraPrefInboxReadLifetime";
+    public static final String A_zimbraPrefSentLifetime = "zimbraPrefSentLifetime";
+    public static final String A_zimbraPrefJunkLifetime = "zimbraPrefJunkLifetime";
+    public static final String A_zimbraPrefTrashLifetime = "zimbraPrefTrashLifetime";
+    public static final String A_zimbraMailPurgeSleepInterval = "zimbraMailPurgeSleepInterval";
+    public static final String A_zimbraMailLastPurgedMailboxId = "zimbraMailLastPurgedMailboxId";
+    
     public static final String A_zimbraContactMaxNumEntries = "zimbraContactMaxNumEntries";
     public static final String A_zimbraIdentityMaxNumEntries = "zimbraIdentityMaxNumEntries";
     public static final String A_zimbraSignatureMaxNumEntries = "zimbraSignatureMaxNumEntries";

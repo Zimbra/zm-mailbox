@@ -5003,7 +5003,23 @@ public class Mailbox {
      * @throws ServiceException
      */
     public synchronized void purgeMessages(OperationContext octxt) throws ServiceException {
+        ZimbraLog.mailbox.info("Purging messages.");
+
         Account acct = getAccount();
+        
+        if (ZimbraLog.mailbox.isDebugEnabled()) {
+            ZimbraLog.mailbox.debug("System retention policy: Trash=%s, Junk=%s, All messages=%s",
+                acct.getAttr(Provisioning.A_zimbraMailTrashLifetime),
+                acct.getAttr(Provisioning.A_zimbraMailSpamLifetime),
+                acct.getAttr(Provisioning.A_zimbraMailMessageLifetime));
+            ZimbraLog.mailbox.debug("User-specified retention policy: Inbox read=%s, Inbox unread=%s, Sent=%s, Junk=%s, Trash=%s",
+                acct.getAttr(Provisioning.A_zimbraPrefInboxReadLifetime),
+                acct.getAttr(Provisioning.A_zimbraPrefInboxUnreadLifetime),
+                acct.getAttr(Provisioning.A_zimbraPrefSentLifetime),
+                acct.getAttr(Provisioning.A_zimbraPrefJunkLifetime),
+                acct.getAttr(Provisioning.A_zimbraPrefTrashLifetime));
+        }
+        
         int globalTimeout = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailMessageLifetime, 0) / 1000);
         int trashTimeout = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailTrashLifetime, 0) / 1000);
         int spamTimeout  = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailSpamLifetime, 0) / 1000);

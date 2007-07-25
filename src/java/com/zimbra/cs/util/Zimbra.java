@@ -38,6 +38,7 @@ import com.zimbra.cs.imap.ImapServer;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.lmtpserver.LmtpServer;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.PurgeThread;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
 import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
 import com.zimbra.common.localconfig.LC;
@@ -144,6 +145,8 @@ public class Zimbra {
         MemoryStats.startup();
         
         ScheduledTaskManager.startup();
+        
+        PurgeThread.startup();
 
         // should be last, so that other subsystems can add dynamic stats counters 
         ZimbraPerf.initialize();
