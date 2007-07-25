@@ -51,7 +51,8 @@ public class MailServiceException extends ServiceException {
     public static final String NO_SUCH_CALITEM = "mail.NO_SUCH_CALITEM";
 	public static final String NO_SUCH_APPT    = "mail.NO_SUCH_APPT";
     public static final String NO_SUCH_TASK    = "mail.NO_SUCH_TASK";
-	public static final String NO_SUCH_DOC     = "mail.NO_SUCH_DOC";
+    public static final String NO_SUCH_DOC     = "mail.NO_SUCH_DOC";
+    public static final String NO_SUCH_REVISION = "mail.NO_SUCH_REVISION";
     public static final String NO_SUCH_TAG     = "mail.NO_SUCH_TAG";
     public static final String NO_SUCH_UPLOAD  = "mail.NO_SUCH_UPLOAD";
     public static final String NO_SUCH_WAITSET = "mail.NO_SUCH_WAITSET";
@@ -102,6 +103,7 @@ public class MailServiceException extends ServiceException {
     public static final String ID              = "id";
     public static final String TOKEN           = "token";
     public static final String ITEM_ID         = "itemId";
+    public static final String REVISION        = "ver";
     public static final String NAME            = "name"; 
     public static final String PATH            = "path"; 
     public static final String UID             = "uid"; 
@@ -226,9 +228,13 @@ public class MailServiceException extends ServiceException {
     public static MailServiceException NO_SUCH_TASK(String uid, String msg) {
         return new MailServiceException("no such task: "+uid+" "+msg, NO_SUCH_TASK, SENDERS_FAULT, new Argument(UID, uid, Argument.Type.STR));
     }
-    
+
     public static MailServiceException NO_SUCH_DOC(int id) {
         return new NoSuchItemException("no such document: " + id, NO_SUCH_DOC, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
+    }
+
+    public static MailServiceException NO_SUCH_REVISION(int docId, int version) {
+        return new NoSuchItemException("no such revision: " + docId + '/' + version, NO_SUCH_REVISION, SENDERS_FAULT, new Argument(ITEM_ID, docId, Argument.Type.IID), new Argument(REVISION, version, Argument.Type.NUM));
     }
 
     public static MailServiceException NO_SUCH_TAG(int id) {

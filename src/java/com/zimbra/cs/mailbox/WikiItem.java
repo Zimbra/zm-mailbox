@@ -93,15 +93,12 @@ public class WikiItem extends Document {
     @Override 
     public String toString() {
         StringBuffer sb = new StringBuffer();
-        try {
-            sb.append("wikiitem: {");
-            sb.append(CN_WIKIWORD).append(": ").append(getWikiWord()).append(", ");
-            sb.append(CN_EDITOR).append(": ").append(getCreator()).append(", ");
-            sb.append(CN_VERSION).append(": ").append(getVersion()).append(", ");
-            appendCommonMembers(sb).append(", ");
-            sb.append("}");
-        } catch (ServiceException se) {
-        }
+        sb.append("wikiitem: {");
+        sb.append(CN_WIKIWORD).append(": ").append(getWikiWord()).append(", ");
+        sb.append(CN_EDITOR).append(": ").append(getCreator()).append(", ");
+        sb.append(CN_VERSION).append(": ").append(getVersion()).append(", ");
+        appendCommonMembers(sb).append(", ");
+        sb.append("}");
         return sb.toString();
     }
 }

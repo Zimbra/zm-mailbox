@@ -67,7 +67,7 @@ public class Notebook extends MailItemResource {
 	public InputStream getContent(DavContext ctxt) throws IOException, DavException {
 		try {
 			if (mDoc.getType() == MailItem.TYPE_DOCUMENT)
-				return mDoc.getRawDocument();
+				return mDoc.getContentStream();
 			Wiki wiki = Wiki.getInstance(mWctxt, mDoc.getAccount().getId(), mDoc.getFolderId());
 			String val = wiki.getTemplate(mWctxt, mDoc.getName()).getComposedPage(mWctxt, mDoc, "_Template");
 			StringBuilder buf = new StringBuilder();

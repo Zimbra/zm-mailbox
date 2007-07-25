@@ -571,7 +571,7 @@ public class Contact extends MailItem {
         data.flags       = pc.hasAttachment() ? Flag.BITMASK_ATTACHED : 0;
         data.tags        = Tag.tagsToBitmask(tags);
         data.sender      = getFileAsString(pc.getFields());
-        data.metadata    = encodeMetadata(DEFAULT_COLOR, pc.getFields(), pc.getAttachments());
+        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, pc.getFields(), pc.getAttachments());
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 
@@ -700,14 +700,14 @@ public class Contact extends MailItem {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mFields, mAttachments);
+        return encodeMetadata(meta, mColor, mVersion, mFields, mAttachments);
     }
 
-    private static String encodeMetadata(byte color, Map<String, String> fields, List<Attachment> attachments) {
-        return encodeMetadata(new Metadata(), color, fields, attachments).toString();
+    private static String encodeMetadata(byte color, int version, Map<String, String> fields, List<Attachment> attachments) {
+        return encodeMetadata(new Metadata(), color, version, fields, attachments).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, byte color, Map<String, String> fields, List<Attachment> attachments) {
+    static Metadata encodeMetadata(Metadata meta, byte color, int version, Map<String, String> fields, List<Attachment> attachments) {
         meta.put(Metadata.FN_FIELDS, new Metadata(fields));
         if (attachments != null && !attachments.isEmpty()) {
             MetadataList mlist = new MetadataList();
@@ -715,7 +715,7 @@ public class Contact extends MailItem {
                 mlist.add(attach.asMetadata());
             meta.put(Metadata.FN_ATTACHMENTS, mlist);
         }
-        return MailItem.encodeMetadata(meta, color);
+        return MailItem.encodeMetadata(meta, color, version);
     }
 
 

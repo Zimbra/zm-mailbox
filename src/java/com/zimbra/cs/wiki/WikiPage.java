@@ -32,6 +32,7 @@ import org.apache.commons.httpclient.Header;
 
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.mailbox.Document;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -40,7 +41,6 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.wiki.WikiServiceException;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
@@ -48,12 +48,12 @@ import com.zimbra.cs.wiki.Wiki.WikiContext;
 
 public abstract class WikiPage {
 
-	public static WikiPage create(Document page) throws ServiceException {
+	public static WikiPage create(Document page) {
 		return new LocalWikiPage(page);
 	}
 	
-    public static WikiPage create(Document page, int rev) throws ServiceException {
-        return new LocalWikiPage(page, rev);
+    public static WikiPage create(Document page, int rev, WikiContext ctxt) throws ServiceException {
+        return new LocalWikiPage(page, rev, ctxt);
     }
     
 	public static WikiPage create(String wikiWord, String author, byte[] data) {
@@ -72,7 +72,7 @@ public abstract class WikiPage {
 	protected String mWikiWord;
 	protected int mId;
 	protected int mFolderId;
-	protected long mRevision;
+	protected int mVersion;
 	protected long mCreatedDate;
 	protected long mModifiedDate;
 	protected String mCreator;
@@ -98,8 +98,8 @@ public abstract class WikiPage {
 		return mWikiWord;
 	}
 
-	public long getLastRevision() {
-		return mRevision;
+	public long getLastVersion() {
+		return mVersion;
 	}
 
 	public long getCreatedDate() {
@@ -125,7 +125,7 @@ public abstract class WikiPage {
 
 	public String getId() {
 		ItemId iid = new ItemId(mAccountId, mId);
-		return iid.toString((String)null);
+		return iid.toString((String) null);
 	}
 	
 	public String getFragment() {
@@ -137,12 +137,12 @@ public abstract class WikiPage {
 		private byte[]  mData;
 		private byte    mType;
 
-		LocalWikiPage(Document doc) throws ServiceException {
+		LocalWikiPage(Document doc) {
 			addWikiItem(doc);
 		}
 		
-        LocalWikiPage(Document doc, int rev) throws ServiceException {
-            addWikiItem(doc, rev);
+        LocalWikiPage(Document doc, int rev, WikiContext ctxt) throws ServiceException {
+            addWikiItem(doc, rev, ctxt);
         }
         
 		LocalWikiPage(String wikiWord, String mime, String author, byte[] data, byte type) {
@@ -173,44 +173,47 @@ public abstract class WikiPage {
 			addWikiItem(doc);
 			newRev.addWikiItem(doc);
 		}
-		
-		private void addWikiItem(Document newItem) throws ServiceException {
-			addWikiItem(newItem.getLastRevision());
-			mAccountId = newItem.getMailbox().getAccountId();
-		}
 
-        private void addWikiItem(Document newItem, int revision) throws ServiceException {
-            addWikiItem(newItem.getRevision(revision));
-            mAccountId = newItem.getMailbox().getAccountId();
+        private void addWikiItem(Document newItem, int version, WikiContext ctxt) throws ServiceException {
+            Document revision = (Document) newItem.getMailbox().getItemRevision(ctxt.octxt, newItem.getId(), newItem.getType(), version);
+            if (revision == null)
+                throw MailServiceException.NO_SUCH_REVISION(newItem.getId(), version);
+            addWikiItem(revision);
         }
 
-        private void addWikiItem(Document.DocumentRevision rev) throws ServiceException {
-            mWikiWord = rev.getName();
-            mId = rev.getId();
-            mRevision = rev.getVersion();
-            mModifiedDate = rev.getRevDate();
-            mModifiedBy = rev.getCreator();
-            mCreatedDate = rev.getRevDate();
-            mCreator = rev.getCreator();
-            mFolderId = rev.getFolderId();
-            mFragment = rev.getFragment();
+        private void addWikiItem(Document newItem) {
+            mWikiWord = newItem.getName();
+            mId = newItem.getId();
+            mVersion = newItem.getVersion();
+            mModifiedDate = newItem.getDate();
+            mModifiedBy = newItem.getCreator();
+            mCreatedDate = newItem.getDate();
+            mCreator = newItem.getCreator();
+            mFolderId = newItem.getFolderId();
+            mFragment = newItem.getFragment();
             mContents = null;
+            mAccountId = newItem.getMailbox().getAccountId();
         }
         
 		public void deleteAllRevisions(WikiContext ctxt) throws ServiceException {
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
-			mbox.delete(ctxt.octxt, mId, MailItem.TYPE_UNKNOWN);
+			mbox.delete(ctxt.octxt, mId, MailItem.TYPE_DOCUMENT);
 		}
 
-		public Document getWikiItem(WikiContext ctxt) throws ServiceException {
-			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
-			return (Document)mbox.getItemById(ctxt.octxt, mId, MailItem.TYPE_UNKNOWN);
-		}
-		
+        public Document getWikiItem(WikiContext ctxt) throws ServiceException {
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
+            return (Document) mbox.getItemById(ctxt.octxt, mId, MailItem.TYPE_DOCUMENT);
+        }
+
+        public Document getWikiRevision(WikiContext ctxt, int version) throws ServiceException {
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
+            return (Document) mbox.getItemRevision(ctxt.octxt, mId, MailItem.TYPE_DOCUMENT, version);
+        }
+
 		public String getContents(WikiContext ctxt) throws ServiceException {
 			if (mContents == null) {
 				try {
-					byte[] raw = ByteUtil.getContent(getWikiItem(ctxt).getRevision(mRevision).getContent(), 0);
+					byte[] raw = getWikiRevision(ctxt, mVersion).getContent();
 					mContents = new String(raw, "UTF-8");
 				} catch (IOException ioe) {
 					throw WikiServiceException.ERROR("can't get contents", ioe);
@@ -238,7 +241,7 @@ public abstract class WikiPage {
 			mId = iid.getId();
 			mFolderId = fid.getId();
 			mWikiWord = elem.getAttribute(MailConstants.A_NAME);
-			mRevision = (int)elem.getAttributeLong(MailConstants.A_VERSION);
+			mVersion = (int) elem.getAttributeLong(MailConstants.A_VERSION);
 			mModifiedDate = elem.getAttributeLong(MailConstants.A_MODIFIED_DATE);
 			mModifiedBy = elem.getAttribute(MailConstants.A_LAST_EDITED_BY);
 			mRestUrl = elem.getAttribute(MailConstants.A_REST_URL);

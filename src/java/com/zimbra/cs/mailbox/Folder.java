@@ -104,7 +104,7 @@ public class Folder extends MailItem {
      *  contents.  For instance, if the default view for the folder is
      *  {@link MailItem#TYPE_APPOINTMENT}, the client would render the
      *  contents using the calendar app.<p>
-     *  Defaults to {@link MailItem#TYPE_UNKNOWN}.*/
+     *  Defaults to {@link MailItem#TYPE_UNKNOWN}. */
     public byte getDefaultView() {
         return mDefaultView;
     }
@@ -613,7 +613,7 @@ public class Folder extends MailItem {
         data.flags    = flags & Flag.FLAGS_FOLDER;
         data.name     = name;
         data.subject  = name;
-        data.metadata = encodeMetadata(color, attributes, view, null, new SyncData(url), id + 1, 0, mbox.getOperationChangeID(), 0);
+        data.metadata = encodeMetadata(color, 1, attributes, view, null, new SyncData(url), id + 1, 0, mbox.getOperationChangeID(), 0);
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 
@@ -1079,14 +1079,14 @@ public class Folder extends MailItem {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mAttributes, mDefaultView, mRights, mSyncData, mImapUIDNEXT, mTotalSize, mImapMODSEQ, mImapRECENT);
+        return encodeMetadata(meta, mColor, mVersion, mAttributes, mDefaultView, mRights, mSyncData, mImapUIDNEXT, mTotalSize, mImapMODSEQ, mImapRECENT);
     }
 
-    private static String encodeMetadata(byte color, byte attributes, byte hint, ACL rights, SyncData fsd, int uidnext, long totalSize, int modseq, int imapRecent) {
-        return encodeMetadata(new Metadata(), color, attributes, hint, rights, fsd, uidnext, totalSize, modseq, imapRecent).toString();
+    private static String encodeMetadata(byte color, int version, byte attributes, byte hint, ACL rights, SyncData fsd, int uidnext, long totalSize, int modseq, int imapRecent) {
+        return encodeMetadata(new Metadata(), color, version, attributes, hint, rights, fsd, uidnext, totalSize, modseq, imapRecent).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, byte color, byte attributes, byte hint, ACL rights, SyncData fsd, int uidnext, long totalSize, int modseq, int imapRecent) {
+    static Metadata encodeMetadata(Metadata meta, byte color, int version, byte attributes, byte hint, ACL rights, SyncData fsd, int uidnext, long totalSize, int modseq, int imapRecent) {
         if (hint != TYPE_UNKNOWN)
             meta.put(Metadata.FN_VIEW, hint);
         if (attributes != 0)
@@ -1107,7 +1107,7 @@ public class Folder extends MailItem {
             if (fsd.lastDate > 0)
                 meta.put(Metadata.FN_SYNC_DATE, fsd.lastDate);
         }
-        return MailItem.encodeMetadata(meta, color);
+        return MailItem.encodeMetadata(meta, color, version);
     }
 
 

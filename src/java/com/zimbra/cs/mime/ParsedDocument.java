@@ -28,7 +28,6 @@
  */
 package com.zimbra.cs.mime;
 
-import java.io.File;
 import java.io.IOException;
 
 import javax.mail.util.ByteArrayDataSource;

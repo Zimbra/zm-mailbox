@@ -160,7 +160,7 @@ public class Tag extends MailItem {
         data.date        = mbox.getOperationTimestamp();
         data.name        = name;
         data.subject     = name;
-        data.metadata    = encodeMetadata(color);
+        data.metadata    = encodeMetadata(color, 1);
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 
@@ -255,15 +255,15 @@ public class Tag extends MailItem {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor);
+        return encodeMetadata(meta, mColor, mVersion);
     }
 
-    private static String encodeMetadata(byte color) {
-        return encodeMetadata(new Metadata(), color).toString();
+    private static String encodeMetadata(byte color, int version) {
+        return encodeMetadata(new Metadata(), color, version).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, byte color) {
-        return MailItem.encodeMetadata(meta, color);
+    static Metadata encodeMetadata(Metadata meta, byte color, int version) {
+        return MailItem.encodeMetadata(meta, color, version);
     }
 
     @Override

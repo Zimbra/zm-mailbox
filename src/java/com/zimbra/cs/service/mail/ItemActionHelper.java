@@ -38,7 +38,6 @@ import org.dom4j.QName;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -503,8 +502,7 @@ public class ItemActionHelper {
 
                 case MailItem.TYPE_DOCUMENT:
                     Document doc = (Document) item;
-                    byte[] content = ByteUtil.getContent(doc.getRawDocument(), doc.getSize());
-                    String uploadId = zmbx.uploadAttachment(name, content, doc.getContentType(), 4000);
+                    String uploadId = zmbx.uploadAttachment(name, doc.getContent(), doc.getContentType(), 4000);
                     createdId = zmbx.createDocument(folderStr, name, uploadId);
                     mCreatedIds.add(createdId);
                     break;

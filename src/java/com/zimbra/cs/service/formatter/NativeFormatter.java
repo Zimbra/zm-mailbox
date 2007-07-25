@@ -171,13 +171,13 @@ public class NativeFormatter extends Formatter {
     }
     
     private void handleDocument(Context context, Document doc) throws IOException, ServiceException, ServletException {
+        InputStream is = doc.getContentStream();
     	if (HTML_VIEW.equals(context.getView())) {
-    		handleConversion(context, doc.getRawDocument(), doc.getName(), doc.getContentType(), doc.getDigest());
-    		return;
-    	}
-    	context.resp.setContentType(doc.getContentType());
-    	InputStream is = doc.getLastRevision().getContent();
-    	ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
+    		handleConversion(context, is, doc.getName(), doc.getContentType(), doc.getDigest());
+    	} else {
+        	context.resp.setContentType(doc.getContentType());
+        	ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
+        }
     }
     
     private void handleConversion(Context ctxt, InputStream is, String filename, String ct, String digest) throws IOException, ServletException {

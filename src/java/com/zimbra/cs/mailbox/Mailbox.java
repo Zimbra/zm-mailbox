@@ -143,7 +143,7 @@ public class Mailbox {
     public static final int HIGHEST_SYSTEM_ID = 16;
     public static final int FIRST_USER_ID     = 256;
 
-    static final String MD_CONFIG_VERSION = "ver";
+    private static final String MD_CONFIG_VERSION = "ver";
 
 
     public static final class MailboxData {
@@ -390,6 +390,8 @@ public class Mailbox {
     public Flag mUrgentFlag;
     /** flag: low-priority messages */
     public Flag mBulkFlag;
+    /** flag: items with accessible past revisions */
+    public Flag mVersionedFlag;
     /** flag: IMAP-subscribed folders */
     public Flag mSubscribedFlag;
     /** flag: exclude folder from free-busy calculations */
@@ -820,14 +822,16 @@ public class Mailbox {
      *  the transaction.
      * @param item  The created item. */
     void markItemCreated(MailItem item) {
-        mCurrentChange.mDirty.recordCreated(item);
+        if ((item.getFlagBitmask() & Flag.BITMASK_UNCACHED) == 0)
+            mCurrentChange.mDirty.recordCreated(item);
     }
 
     /** Adds the item to the current change's list of items deleted during
      *  the transaction.
      * @param item  The deleted item. */
     void markItemDeleted(MailItem item) {
-        mCurrentChange.mDirty.recordDeleted(item);
+        if ((item.getFlagBitmask() & Flag.BITMASK_UNCACHED) == 0)
+            mCurrentChange.mDirty.recordDeleted(item);
     }
 
     /** Adds the item id to the current change's list of items deleted during
@@ -851,7 +855,8 @@ public class Mailbox {
      * @param reason  The bitmask describing the modified item properties.
      * @see com.zimbra.cs.session.PendingModifications.Change */
     void markItemModified(MailItem item, int reason) {
-        mCurrentChange.mDirty.recordModified(item, reason);
+        if ((item.getFlagBitmask() & Flag.BITMASK_UNCACHED) == 0)
+            mCurrentChange.mDirty.recordModified(item, reason);
     }
 
     /** Adds the object to the current change's list of non-{@link MailItem}
@@ -861,7 +866,7 @@ public class Mailbox {
      *    <li>The {@link MailItem.PendingDelete} holding blobs and index
      *        entries to be cleaned up after a {@link MailItem#delete}.
      *    <li>The SHA1 hash of a conversation's subject stored in
-     *        {@link #mConvHashes}.
+     *        {@link #mConvHashes}.</ul>
      * 
      * @param obj  The relevant object.
      * @see #commitCache(Mailbox.MailboxChange)
@@ -1076,8 +1081,9 @@ public class Mailbox {
     }
 
     void cache(MailItem item) throws ServiceException {
-        if (item == null)
+        if (item == null || (item.getFlagBitmask() & Flag.BITMASK_UNCACHED) != 0)
             return;
+
         if (item instanceof Tag) {
             if (item instanceof Flag)
                 mFlags[((Flag) item).getIndex()] = (Flag) item;
@@ -1089,8 +1095,9 @@ public class Mailbox {
         } else if (item instanceof Folder) {
             if (mFolderCache != null)
                 mFolderCache.put(item.getId(), (Folder) item);
-        } else
+        } else {
             getItemCache().put(item.getId(), item);
+        }
 
         if (ZimbraLog.cache.isDebugEnabled())
             ZimbraLog.cache.debug("cached " + MailItem.getNameForType(item) + " " + item.getId() + " in mailbox " + getId());
@@ -1222,6 +1229,7 @@ public class Mailbox {
         mInviteFlag     = Flag.instantiate(this, "\\Invite",     Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_INVITE);
         mUrgentFlag     = Flag.instantiate(this, "\\Urgent",     Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_HIGH_PRIORITY);
         mBulkFlag       = Flag.instantiate(this, "\\Bulk",       Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_LOW_PRIORITY);
+        mVersionedFlag  = Flag.instantiate(this, "\\Versioned",  Flag.FLAG_GENERIC,         Flag.ID_FLAG_VERSIONED);
 
         mSubscribedFlag = Flag.instantiate(this, "\\Subscribed", Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SUBSCRIBED);
         mExcludeFBFlag  = Flag.instantiate(this, "\\ExcludeFB",  Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_EXCLUDE_FREEBUSY);
@@ -1384,30 +1392,6 @@ public class Mailbox {
     }
 
 
-    public static class ReIndexStatus {
-        public int mNumProcessed = 0;
-        public int mNumToProcess = 0;
-        public int mNumFailed = 0;
-        public boolean mCancel = false;
-
-        public String toString() {
-            String toRet = "Completed "+mNumProcessed+" out of " +mNumToProcess + " ("+mNumFailed +" failures";
-
-            if (mCancel) 
-                return "--CANCELLING--  "+toRet;
-            else 
-                return toRet;
-        }
-
-        public Object clone() {
-            ReIndexStatus toRet = new ReIndexStatus();
-            toRet.mNumProcessed = mNumProcessed;
-            toRet.mNumToProcess = mNumToProcess;
-            toRet.mNumFailed = mNumFailed;
-            return toRet;
-        }
-    }
-    
     public synchronized MailboxVersion getVersion() { return mVersion; }
     
     synchronized void updateVersion(MailboxVersion vers) throws ServiceException {
@@ -1439,6 +1423,26 @@ public class Mailbox {
     }
 
 
+    public static class ReIndexStatus {
+        public int mNumProcessed = 0;
+        public int mNumToProcess = 0;
+        public int mNumFailed = 0;
+        public boolean mCancel = false;
+
+        public String toString() {
+            String status = "Completed " + mNumProcessed + " out of " + mNumToProcess + " (" + mNumFailed + " failures)";
+            return (mCancel ? "--CANCELLING--  " : "") + status;
+        }
+
+        public Object clone() {
+            ReIndexStatus toRet = new ReIndexStatus();
+            toRet.mNumProcessed = mNumProcessed;
+            toRet.mNumToProcess = mNumToProcess;
+            toRet.mNumFailed = mNumFailed;
+            return toRet;
+        }
+    }
+    
     /** Status of current reindexing operation for this mailbox, or NULL 
      *  if a re-index is not in progress. */
     private ReIndexStatus mReIndexStatus = null;
@@ -1929,11 +1933,13 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("getItemFromUd", null);
+//            data.flags |= Flag.BITMASK_UNCACHED;
             MailItem item = getItem(data);
             success = true;
             return item;
         } finally {
             endTransaction(success);
+            data.flags &= ~Flag.BITMASK_UNCACHED;
         }
     }
 
@@ -1946,6 +1952,18 @@ public class Mailbox {
         if (item != null)
             return item;
         return MailItem.constructItem(this, data);
+    }
+
+    public MailItem getItemRevision(OperationContext octxt, int id, byte type, int version) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("getItemRevision", null);
+            MailItem revision = checkAccess(getItemById(id, type)).getRevision(version);
+            success = true;
+            return revision;
+        } finally {
+            endTransaction(success);
+        }
     }
 
     /**
@@ -2134,6 +2152,7 @@ public class Mailbox {
         }
     }
 
+
     public synchronized List<ImapMessage> openImapFolder(OperationContext octxt, int folderId) throws ServiceException {
         boolean success = false;
         try {
@@ -2167,7 +2186,7 @@ public class Mailbox {
         try {
             beginTransaction("openImapFolder", octxt);
 
-            Folder folder = (Folder) checkAccess(getFolderById(folderId));
+            Folder folder = checkAccess(getFolderById(folderId));
             int recent = DbMailItem.countImapRecent(folder);
             success = true;
             return recent;
@@ -3029,7 +3048,7 @@ public class Mailbox {
      * @throws ParseException
      * @throws ServiceException
      */
-    public String getRewrittenQueryString(OperationContext octxt, SearchParams params) throws IOException, ParseException, ServiceException {
+    public String getRewrittenQueryString(OperationContext octxt, SearchParams params) throws ParseException, ServiceException {
         if (octxt == null)
             throw ServiceException.INVALID_REQUEST("The OperationContext must not be null", null);
         
@@ -3073,20 +3092,19 @@ public class Mailbox {
                 } else if (browseBy == BROWSE_BY_DOMAINS) {
                     HashMap<String, DomainItem> domainItems = new HashMap<String, DomainItem>();
                     HashSet<String> set = new HashSet<String>();
-    
+
                     idx.getDomainsForField(LuceneFields.L_H_CC, set);
                     addDomains(domainItems, set, DomainItem.F_CC);
-    
+
                     set.clear();
                     idx.getDomainsForField(LuceneFields.L_H_FROM, set);
                     addDomains(domainItems, set, DomainItem.F_FROM);
-    
-                    set.clear();             
+
+                    set.clear();
                     idx.getDomainsForField(LuceneFields.L_H_TO, set);
                     addDomains(domainItems, set, DomainItem.F_TO);
-    
+
                     browseResult.getResult().addAll(domainItems.values());
-    
                 } else if (browseBy == BROWSE_BY_OBJECTS) {
                     idx.getObjects(browseResult.getResult());
                 } else { 
@@ -5046,8 +5064,6 @@ public class Mailbox {
             doc.setContent(pd.getContent(), pd.getDigest(), volumeId, pd);
             queueForIndexing(doc, false, pd);
 
-            int maxNumRevisions = doc.getAccount().getIntAttr(Provisioning.A_zimbraNotebookMaxRevisions, 0);
-            doc.purgeOldRevisions(maxNumRevisions);
             success = true;
             return doc;
         } catch (IOException ioe) {
@@ -5622,7 +5638,8 @@ public class Mailbox {
             if (deleted != null && deleted.blobs != null) {
                 for (MailboxBlob blob : deleted.blobs) {
                     try {
-                        sm.delete(blob);
+                        if (blob != null)
+                            sm.delete(blob);
                     } catch (IOException e) {
                         ZimbraLog.mailbox.warn("could not delete blob " + blob.getPath() + " during commit");
                     }

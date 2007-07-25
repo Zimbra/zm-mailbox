@@ -138,7 +138,7 @@ public class Mountpoint extends Folder {
         data.flags    = flags & Flag.FLAGS_FOLDER;
         data.name     = name;
         data.subject  = name;
-        data.metadata = encodeMetadata(color, view, ownerId, remoteId);
+        data.metadata = encodeMetadata(color, 1, view, ownerId, remoteId);
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 
@@ -164,16 +164,16 @@ public class Mountpoint extends Folder {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mAttributes, mDefaultView, mOwnerId, mRemoteId);
+        return encodeMetadata(meta, mColor, mVersion, mAttributes, mDefaultView, mOwnerId, mRemoteId);
     }
 
-    private static String encodeMetadata(byte color, byte view, String owner, int remoteId) {
-        return encodeMetadata(new Metadata(), color, (byte) 0, view, owner, remoteId).toString();
+    private static String encodeMetadata(byte color, int version, byte view, String owner, int remoteId) {
+        return encodeMetadata(new Metadata(), color, version, (byte) 0, view, owner, remoteId).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, byte color, byte attrs, byte view, String owner, int remoteId) {
+    static Metadata encodeMetadata(Metadata meta, byte color, int version, byte attrs, byte view, String owner, int remoteId) {
         meta.put(Metadata.FN_ACCOUNT_ID, owner);
         meta.put(Metadata.FN_REMOTE_ID, remoteId);
-        return Folder.encodeMetadata(meta, color, attrs, view, null, null, 0, 0, 0, 0);
+        return Folder.encodeMetadata(meta, color, version, attrs, view, null, null, 0, 0, 0, 0);
     }
 }

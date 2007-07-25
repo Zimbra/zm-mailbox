@@ -192,7 +192,7 @@ public class Search extends MailDocumentHandler  {
                 e = addCalendarItemHit(ah, response, zsc, octxt, ifmt, inline, params);
             } else if (hit instanceof DocumentHit) {
                 DocumentHit dh = (DocumentHit) hit;
-                e = addDocumentHit(dh, response, ifmt);
+                e = addDocumentHit(dh, response, octxt, ifmt);
             } else {
                 mLog.error("Got an unknown hit type putting search hits: "+hit);
                 continue;
@@ -362,12 +362,12 @@ public class Search extends MailDocumentHandler  {
         return ToXML.encodeContact(response, ifmt, ch.getContact(), true, null);
     }
 
-    Element addDocumentHit(DocumentHit dh, Element response, ItemIdFormatter ifmt) throws ServiceException {
+    Element addDocumentHit(DocumentHit dh, Element response, OperationContext octxt, ItemIdFormatter ifmt) throws ServiceException {
         int ver = dh.getVersion();
         if (dh.getItemType() == MailItem.TYPE_DOCUMENT)
-            return ToXML.encodeDocument(response, ifmt, dh.getDocument(), ver);
+            return ToXML.encodeDocument(response, ifmt, octxt, dh.getDocument(), ver);
         else if (dh.getItemType() == MailItem.TYPE_WIKI)
-            return ToXML.encodeWiki(response, ifmt, (WikiItem)dh.getDocument(), ver);
+            return ToXML.encodeWiki(response, ifmt, octxt, (WikiItem)dh.getDocument(), ver);
         throw ServiceException.UNKNOWN_DOCUMENT("invalid document type "+dh.getItemType(), null);
     }
 

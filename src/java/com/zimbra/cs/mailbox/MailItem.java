@@ -40,6 +40,7 @@ import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.Volume;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -175,7 +176,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
     public static final byte DEFAULT_COLOR = 0;
 
-    public static final class UnderlyingData {
+    public static final class UnderlyingData implements Cloneable {
         public int    id;
         public byte   type;
         public int    parentId = -1;
@@ -197,29 +198,23 @@ public abstract class MailItem implements Comparable<MailItem> {
         public int    modContent;
 
         public String inheritedTags;
-        public List<Integer> children;
         public int    unreadCount;
+        public List<Integer> children;
 
-        /**
-         * Returns the item's blob digest, or <tt>null</tt> if the item has no blob.
-         */
+        /** Returns the item's blob digest, or <tt>null</tt> if the item has no blob. */
         public String getBlobDigest() {
             return blobDigest;
         }
-        
-        public void setBlobDigest(String blobDigest) {
-            if ("".equals(blobDigest)) {
-                this.blobDigest = null;
-            } else {
-                this.blobDigest = blobDigest;
-            }
+
+        public void setBlobDigest(String digest) {
+            blobDigest = "".equals(digest) ? null : digest;
         }
         
         public boolean isUnread() {
             return (unreadCount > 0);
         }
 
-        public UnderlyingData duplicate(int newId, int newFolder, short newVolume) {
+        UnderlyingData duplicate(int newId, int newFolder, short newVolume) {
             UnderlyingData data = new UnderlyingData();
             data.id          = newId;
             data.type        = this.type;
@@ -236,6 +231,14 @@ public abstract class MailItem implements Comparable<MailItem> {
             data.subject     = this.subject;
             data.unreadCount = this.unreadCount;
             return data;
+        }
+
+        @Override protected UnderlyingData clone() {
+            try {
+                return (UnderlyingData) super.clone();
+            } catch (CloneNotSupportedException cnse) {
+                return null;
+            }
         }
 
         void metadataChanged(Mailbox mbox) throws ServiceException {
@@ -453,6 +456,8 @@ public abstract class MailItem implements Comparable<MailItem> {
     protected UnderlyingData mData;
     protected Mailbox        mMailbox;
     protected MailboxBlob    mBlob;
+    protected int            mVersion;
+    protected List<MailItem> mRevisions;
 
     MailItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
         if (data == null)
@@ -563,6 +568,13 @@ public abstract class MailItem implements Comparable<MailItem> {
         return mData.getBlobDigest();
     }
 
+    /** Returns the 1-based version number on the item.  Each time the item's
+     *  "content" changes (e.g. editing a {@link Document} or a draft), this
+     *  counter is incremented. */
+    public int getVersion() {
+        return mVersion;
+    }
+
     /** Returns the date the item's content was last modified.  For immutable
      *  objects (e.g. received messages), this will be the same as the date
      *  the item was created. */
@@ -595,6 +607,18 @@ public abstract class MailItem implements Comparable<MailItem> {
      *  that have a blob, this is the size in bytes of the raw blob. */
     public int getSize() {
         return mData.size;
+    }
+
+    /** Returns the item's total count against mailbox quota including all old
+     *  revisions.  For items that have a blob, this is the sum of the size in
+     *  bytes of the raw blobs. */
+    public long getTotalSize() throws ServiceException {
+        long size = mData.size;
+        if (isTagged(mMailbox.mVersionedFlag)) {
+            for (MailItem revision : loadRevisions())
+                size += revision.getSize();
+        }
+        return size;
     }
 
     public String getSubject() {
@@ -989,6 +1013,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      *                   currently only Message class uses this argument for
      *                   passing in a {@link com.zimbra.cs.mime.ParsedMessage}.
      * @throws ServiceException */
+    @SuppressWarnings("unused")
     public void reindex(IndexItem redo, boolean deleteFirst, Object indexData) throws ServiceException {
         // override in subclasses that support indexing
     }
@@ -1084,7 +1109,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             case TYPE_TASK:         return new Task(mbox, data);
             case TYPE_MOUNTPOINT:   return new Mountpoint(mbox, data);
             case TYPE_WIKI:         return new WikiItem(mbox, data);
-            case TYPE_CHAT:        return new Chat(mbox, data);
+            case TYPE_CHAT:         return new Chat(mbox, data);
             default:                return null;
         }
     }
@@ -1104,10 +1129,10 @@ public abstract class MailItem implements Comparable<MailItem> {
             case TYPE_TAG:          return MailServiceException.NO_SUCH_TAG(id);
             case TYPE_VIRTUAL_CONVERSATION:
             case TYPE_CONVERSATION: return MailServiceException.NO_SUCH_CONV(id);
-//          case TYPE_INVITE:
-            case TYPE_CHAT:      return MailServiceException.NO_SUCH_MSG(id);
+            case TYPE_CHAT:
             case TYPE_MESSAGE:      return MailServiceException.NO_SUCH_MSG(id);
             case TYPE_CONTACT:      return MailServiceException.NO_SUCH_CONTACT(id);
+            case TYPE_WIKI:
             case TYPE_DOCUMENT:     return MailServiceException.NO_SUCH_DOC(id);
             case TYPE_NOTE:         return MailServiceException.NO_SUCH_NOTE(id);
             case TYPE_APPOINTMENT:  return MailServiceException.NO_SUCH_APPT(id);
@@ -1274,9 +1299,8 @@ public abstract class MailItem implements Comparable<MailItem> {
             return null;
 
         // delete the old blob *unless* we've already rewritten it in this transaction
-        MailboxBlob oldBlob = null;
         if (getSavedSequence() != mMailbox.getOperationChangeID())
-            oldBlob = getBlob();
+            addRevision(false);
 
         // remove the content from the cache
         MessageCache.purge(this);
@@ -1292,13 +1316,13 @@ public abstract class MailItem implements Comparable<MailItem> {
             mData.size = size;
         }
         mData.setBlobDigest(digest);
-        mData.date       = mMailbox.getOperationTimestamp();
-        mData.volumeId   = data == null ? -1 : volumeId;
-        mData.imapId     = mMailbox.isTrackingImap() ? 0 : mData.id;
+        mData.date     = mMailbox.getOperationTimestamp();
+        mData.volumeId = data == null ? -1 : volumeId;
+        mData.imapId   = mMailbox.isTrackingImap() ? 0 : mData.id;
         mData.contentChanged(mMailbox);
         mBlob = null;
 
-        // rewrite the DB row to reflect our new view
+        // rewrite the DB row to reflect our new view (MUST call saveData)
         reanalyze(content);
 
         if (data == null)
@@ -1310,11 +1334,99 @@ public abstract class MailItem implements Comparable<MailItem> {
         MailboxBlob mblob = sm.renameTo(blob, mMailbox, mId, getSavedSequence(), volumeId);
         mMailbox.markOtherItemDirty(mblob);
 
-        // delete the old blob
-        if (oldBlob != null)
-            markBlobForDeletion(oldBlob);
-
         return blob;
+    }
+
+    @SuppressWarnings("unused") int getMaxRevisions() throws ServiceException  { return 1; }
+
+    List<MailItem> loadRevisions() throws ServiceException {
+        if (mRevisions == null) {
+            mRevisions = new ArrayList<MailItem>();
+
+            if (isTagged(mMailbox.mVersionedFlag)) {
+                for (UnderlyingData data : DbMailItem.getRevisionInfo(this))
+                    mRevisions.add(constructItem(mMailbox, data));
+            }
+        }
+
+        return mRevisions;
+    }
+
+    void addRevision(boolean persist) throws ServiceException {
+        // don't take two revisions for the same data
+        if (mData.modContent == mMailbox.getOperationChangeID())
+            return;
+
+        Folder folder = getFolder();
+        int maxNumRevisions = getMaxRevisions();
+
+        // record the current version as a revision
+        if (maxNumRevisions != 1) {
+            loadRevisions();
+
+            UnderlyingData data = mData.clone();
+            data.metadata = encodeMetadata();
+            data.flags   |= Flag.BITMASK_UNCACHED;
+            mRevisions.add(constructItem(mMailbox, data));
+
+            folder.updateSize(0, mData.size);
+            mMailbox.updateSize(mData.size);
+
+            DbMailItem.snapshotRevision(this, mVersion);
+            if (!isTagged(mMailbox.mVersionedFlag))
+                tagChanged(mMailbox.mVersionedFlag, true);
+        }
+
+        // now that we've made a copy of the item, we can increment the version number
+        mVersion++;
+
+        // purge old revisions if we're over the threshhold
+        if (maxNumRevisions == 1)
+            markBlobForDeletion();
+
+        if (maxNumRevisions > 0 && mVersion > maxNumRevisions && isTagged(mMailbox.mVersionedFlag)) {
+            // must load the revision list before doing the DB revision purge
+            int firstPurgedRevision = mVersion - maxNumRevisions;
+
+            boolean purged = false;
+            for (Iterator<MailItem> it = loadRevisions().iterator(); it.hasNext(); ) {
+                MailItem revision = it.next();
+                if (revision.mVersion > firstPurgedRevision)
+                    break;
+
+                mMailbox.updateSize(-revision.getSize());
+                folder.updateSize(0, -revision.getSize());
+
+                revision.markBlobForDeletion();
+
+                it.remove();
+                purged = true;
+            }
+
+            if (purged)
+                DbMailItem.purgeRevisions(this, firstPurgedRevision);
+            if (mRevisions.isEmpty() && isTagged(mMailbox.mVersionedFlag))
+                tagChanged(mMailbox.mVersionedFlag, false);
+        }
+
+        mData.metadataChanged(mMailbox);
+        if (persist)
+            saveData(getSender());
+        mBlob = null;
+    }
+
+    // do *not* make this public, as it'd skirt Mailbox-level synchronization and caching
+    MailItem getRevision(int version) throws ServiceException {
+        if (version == mVersion)
+            return this;
+        if (version <= 0 || version > mVersion || !isTagged(mMailbox.mVersionedFlag))
+            return null;
+
+        for (MailItem revision : loadRevisions()) {
+            if (revision.mVersion == version)
+                return revision;
+        }
+        return null;
     }
 
     /** Recalculates the size, metadata, etc. for an existing MailItem and
@@ -1327,7 +1439,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         throw ServiceException.FAILURE("reanalysis of " + getNameForType(this) + "s not supported", null);
     }
 
-    void detach() throws ServiceException  { }
+    @SuppressWarnings("unused") void detach() throws ServiceException  { }
 
     /** Updates the item's unread state.  Persists the change to the
      *  database and cache, and also updates the unread counts for the
@@ -1392,8 +1504,6 @@ public abstract class MailItem implements Comparable<MailItem> {
         // don't let the user tag things as "has attachments" or "draft"
         if (tag instanceof Flag && (tag.getBitmask() & Flag.FLAG_SYSTEM) != 0)
             throw MailServiceException.CANNOT_TAG(tag, this);
-
-        markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
 
         // change our cached tags
         tagChanged(tag, newValue);
@@ -1749,11 +1859,22 @@ public abstract class MailItem implements Comparable<MailItem> {
                     throw MailServiceException.ALREADY_EXISTS(name);
             } catch (MailServiceException.NoSuchItemException nsie) { }
 
+            Blob oldblob = getBlob().getBlob();
+            addRevision(false);
+
             markItemModified(Change.MODIFIED_NAME);
             mData.name = name;
             mData.date = mMailbox.getOperationTimestamp();
             mData.contentChanged(mMailbox);
             saveName(target.getId());
+
+            if (oldblob != null) {
+                try {
+                    StoreManager.getInstance().link(oldblob, mMailbox, mId, getSavedSequence(), Volume.getCurrentMessageVolume().getId());
+                } catch (IOException ioe) {
+                    throw ServiceException.FAILURE("could not copy blob for renamed document", ioe);
+                }
+            }
         }
 
         if (moved)
@@ -1847,8 +1968,8 @@ public abstract class MailItem implements Comparable<MailItem> {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the target folder");
 
         if (isLeafNode()) {
-            oldFolder.updateSize(-1, -getSize());
-            target.updateSize(1, getSize());
+            oldFolder.updateSize(-1, -getTotalSize());
+            target.updateSize(1, getTotalSize());
         }
 
         if (!inTrash() && target.inTrash()) {
@@ -1933,6 +2054,9 @@ public abstract class MailItem implements Comparable<MailItem> {
         /** The total size of all the items being deleted. */
         public long size;
 
+        /** The number of {@link Contact}s being deleted. */
+        public int contacts;
+
         /** The ids of all items being deleted. */
         public TypedIdList itemIds = new TypedIdList();
 
@@ -1964,9 +2088,6 @@ public abstract class MailItem implements Comparable<MailItem> {
          *  persisted in the store. */
         public List<MailboxBlob> blobs = new ArrayList<MailboxBlob>();
 
-        /** The number of {@link Contact}s being deleted. */
-        public int contacts = 0;
-
         /** Maps {@link Folder} ids to {@link DbMailItem.LocationCount}s
          *  tracking various per-folder counts for items being deleted. */
         public Map<Integer, DbMailItem.LocationCount> messages = new HashMap<Integer, DbMailItem.LocationCount>();
@@ -1979,11 +2100,28 @@ public abstract class MailItem implements Comparable<MailItem> {
         PendingDelete add(PendingDelete other) {
             if (other != null) {
                 deletedTypes |= other.deletedTypes;
+                incomplete   |= other.incomplete;
+
                 size     += other.size;
                 contacts += other.contacts;
+
                 itemIds.add(other.itemIds);
                 unreadIds.addAll(other.unreadIds);
+                modifiedIds.addAll(other.modifiedIds);
+                indexIds.addAll(other.indexIds);
                 blobs.addAll(other.blobs);
+
+                if (other.cascadeIds != null)
+                    (cascadeIds == null ? cascadeIds = new ArrayList<Integer>(other.cascadeIds.size()) : cascadeIds).addAll(other.cascadeIds);
+                if (other.sharedIndex != null)
+                    (sharedIndex == null ? sharedIndex = new HashSet<Integer>(other.sharedIndex.size()) : sharedIndex).addAll(other.sharedIndex);
+                for (Map.Entry<Integer, DbMailItem.LocationCount> entry : other.messages.entrySet()) {
+                    DbMailItem.LocationCount lcount = messages.get(entry.getKey());
+                    if (lcount == null)
+                        messages.put(entry.getKey(), new DbMailItem.LocationCount(entry.getValue()));
+                    else
+                        lcount.increment(entry.getValue());
+                }
             }
             return this;
         }
@@ -2074,26 +2212,30 @@ public abstract class MailItem implements Comparable<MailItem> {
         Integer id = new Integer(mId);
         PendingDelete info = new PendingDelete();
         info.rootId = mId;
-        info.size   = mData.size;
+        info.size   = getTotalSize();
         info.itemIds.add(getType(), id);
         if (mData.unreadCount != 0 && mMailbox.mUnreadFlag.canTag(this))
             info.unreadIds.add(id);
+
+        info.messages.put(new Integer(getFolderId()), new DbMailItem.LocationCount(1, getTotalSize()));
+
         if (mData.indexId > 0) {
             if (!isTagged(mMailbox.mCopiedFlag))
                 info.indexIds.add(new Integer(mData.indexId));
             else
                 (info.sharedIndex = new HashSet<Integer>()).add(mData.indexId);
         }
-        if (getDigest() != null) {
+
+        List<MailItem> items = new ArrayList<MailItem>();
+        items.add(this);  items.addAll(loadRevisions());
+        for (MailItem revision : items) {
             try {
-                MailboxBlob mblob = StoreManager.getInstance().getMailboxBlob(mMailbox, mId, mData.modContent, mData.volumeId);
-                if (mblob == null)
-                    ZimbraLog.mailbox.error("missing blob for id: " + mId + ", change: " + mData.modContent);
-                else
-                    info.blobs.add(mblob);
-            } catch (Exception e) { }
+                info.blobs.add(revision.getBlob());
+            } catch (Exception e) {
+                ZimbraLog.mailbox.error("missing blob for id: " + mId + ", change: " + revision.getSavedSequence());
+            }
         }
-        info.messages.put(new Integer(getFolderId()), new DbMailItem.LocationCount(1, getSize()));
+
         return info;
     }
 
@@ -2133,9 +2275,11 @@ public abstract class MailItem implements Comparable<MailItem> {
 
     abstract Metadata encodeMetadata(Metadata meta);
 
-    static Metadata encodeMetadata(Metadata meta, byte color) {
+    static Metadata encodeMetadata(Metadata meta, byte color, int version) {
         if (color != DEFAULT_COLOR)
             meta.put(Metadata.FN_COLOR, color);
+        if (version > 1)
+            meta.put(Metadata.FN_VERSION, version);
         return meta;
     }
 
@@ -2147,6 +2291,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (meta == null)
             return;
         mColor = (byte) meta.getLong(Metadata.FN_COLOR, DEFAULT_COLOR);
+        mVersion = (int) meta.getLong(Metadata.FN_VERSION, 1);
     }
 
 
@@ -2165,7 +2310,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
     protected void saveName(int folderId) throws ServiceException {
         mData.contentChanged(mMailbox);
-        DbMailItem.saveName(this, folderId);
+        DbMailItem.saveName(this, folderId, encodeMetadata());
     }
 
     protected void saveData(String sender) throws ServiceException {
@@ -2193,6 +2338,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     private static final String CN_NAME         = "name";
     private static final String CN_CHILDREN     = "children";
     private static final String CN_COLOR        = "color";
+    private static final String CN_VERSION      = "version";
     private static final String CN_IMAP_ID      = "imap_id";
 
     protected StringBuffer appendCommonMembers(StringBuffer sb) {
@@ -2207,6 +2353,8 @@ public abstract class MailItem implements Comparable<MailItem> {
             sb.append(CN_TAGS).append(": [").append(getTagString()).append("], ");
         sb.append(CN_FOLDER_ID).append(": ").append(mData.folderId).append(", ");
         sb.append(CN_SIZE).append(": ").append(mData.size).append(", ");
+        if (mVersion > 1)
+            sb.append(CN_VERSION).append(": ").append(mVersion).append(", ");
         if (mData.parentId > 0)
             sb.append(CN_PARENT_ID).append(": ").append(mData.parentId).append(", ");
         sb.append(CN_COLOR).append(": ").append(mColor).append(", ");

@@ -117,9 +117,9 @@ public class ToXML {
         else if (item instanceof Conversation)
             encodeConversationSummary(parent, ifmt, octxt, (Conversation) item, fields);
         else if (item instanceof WikiItem)
-            encodeWiki(parent, ifmt, (WikiItem) item, fields, -1);
+            encodeWiki(parent, ifmt, octxt, (WikiItem) item, fields, -1);
         else if (item instanceof Document)
-            encodeDocument(parent, ifmt, (Document) item, fields, -1);
+            encodeDocument(parent, ifmt, octxt, (Document) item, fields, -1);
         else if (item instanceof Message) {
             OutputParticipants output = (fields == NOTIFY_FIELDS ? OutputParticipants.PUT_BOTH : OutputParticipants.PUT_SENDERS);
             encodeMessageSummary(parent, ifmt, octxt, (Message) item, output, fields);
@@ -1641,28 +1641,28 @@ public class ToXML {
         return elem;
     }
 
-    public static Element encodeWiki(Element parent, ItemIdFormatter ifmt, WikiItem wiki, int rev) {
-        return encodeWiki(parent, ifmt, wiki, NOTIFY_FIELDS, rev);
+    public static Element encodeWiki(Element parent, ItemIdFormatter ifmt, OperationContext octxt, WikiItem wiki, int rev) {
+        return encodeWiki(parent, ifmt, octxt, wiki, NOTIFY_FIELDS, rev);
     }
 
-    public static Element encodeWiki(Element parent, ItemIdFormatter ifmt, WikiItem wiki, int fields, int rev) {
+    public static Element encodeWiki(Element parent, ItemIdFormatter ifmt, OperationContext octxt, WikiItem wiki, int fields, int rev) {
         Element m = parent.addElement(MailConstants.E_WIKIWORD);
-        encodeDocumentCommon(m, ifmt, wiki, fields, rev);
+        encodeDocumentCommon(m, ifmt, octxt, wiki, fields, rev);
         return m;
     }
 
-    public static Element encodeDocument(Element parent, ItemIdFormatter ifmt, Document doc, int rev) {
-        return encodeDocument(parent, ifmt, doc, NOTIFY_FIELDS, rev);
+    public static Element encodeDocument(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Document doc, int rev) {
+        return encodeDocument(parent, ifmt, octxt, doc, NOTIFY_FIELDS, rev);
     }
 
-    public static Element encodeDocument(Element parent, ItemIdFormatter ifmt, Document doc, int fields, int rev) {
+    public static Element encodeDocument(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Document doc, int fields, int rev) {
         Element m = parent.addElement(MailConstants.E_DOC);
-        encodeDocumentCommon(m, ifmt, doc, fields, rev);
+        encodeDocumentCommon(m, ifmt, octxt, doc, fields, rev);
         m.addAttribute(MailConstants.A_CONTENT_TYPE, doc.getContentType());
         return m;
     }
 
-    public static Element encodeDocumentCommon(Element m, ItemIdFormatter ifmt, Document doc, int fields, int rev) {
+    public static Element encodeDocumentCommon(Element m, ItemIdFormatter ifmt, OperationContext octxt, Document doc, int fields, int version) {
         m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(doc));
         if (needToOutput(fields, Change.MODIFIED_NAME)) {
         	m.addAttribute(MailConstants.A_NAME, doc.getName());
@@ -1677,19 +1677,19 @@ public class ToXML {
         recordItemTags(m, doc, fields);
 
         if (needToOutput(fields, Change.MODIFIED_CONTENT)) {
-
             try {
-                Document.DocumentRevision revision = doc.getRevision(1);
-                m.addAttribute(MailConstants.A_CREATOR, revision.getCreator());
-                m.addAttribute(MailConstants.A_CREATED_DATE, revision.getRevDate());
+                m.addAttribute(MailConstants.A_VERSION, doc.getVersion());
+                m.addAttribute(MailConstants.A_LAST_EDITED_BY, doc.getCreator());
+                m.addAttribute(MailConstants.A_MODIFIED_DATE, doc.getDate());
+                String fragment = doc.getFragment();
+                if (fragment != null && !fragment.equals(""))
+                    m.addAttribute(MailConstants.E_FRAG, fragment, Element.Disposition.CONTENT);
 
-                revision = (rev > 0) ? doc.getRevision(rev) : doc.getLastRevision(); 
-                m.addAttribute(MailConstants.A_VERSION, revision.getVersion());
-                m.addAttribute(MailConstants.A_LAST_EDITED_BY, revision.getCreator());
-                m.addAttribute(MailConstants.A_MODIFIED_DATE, revision.getRevDate());
-                String frag = revision.getFragment();
-                if (frag != null && !frag.equals(""))
-                    m.addAttribute(MailConstants.E_FRAG, frag, Element.Disposition.CONTENT);
+                Document revision = (Document) doc.getMailbox().getItemRevision(octxt, doc.getId(), doc.getType(), 1);
+                if (revision != null) {
+                    m.addAttribute(MailConstants.A_CREATOR, revision.getCreator());
+                    m.addAttribute(MailConstants.A_CREATED_DATE, revision.getDate());
+                }
             } catch (Exception ex) {
                 mLog.warn("ignoring exception while fetching revision for document " + doc.getSubject(), ex);
             }
@@ -1706,7 +1706,7 @@ public class ToXML {
         //m.addAttribute(MailService.A_SIZE, page.getSize());
         m.addAttribute(MailConstants.A_DATE, page.getModifiedDate());
         m.addAttribute(MailConstants.A_FOLDER, page.getFolderId());
-        m.addAttribute(MailConstants.A_VERSION, page.getLastRevision());
+        m.addAttribute(MailConstants.A_VERSION, page.getLastVersion());
         m.addAttribute(MailConstants.A_CREATOR, page.getCreator());
         m.addAttribute(MailConstants.A_CREATED_DATE, page.getCreatedDate());
         m.addAttribute(MailConstants.A_LAST_EDITED_BY, page.getLastEditor());

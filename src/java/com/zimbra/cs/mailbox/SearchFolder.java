@@ -139,7 +139,7 @@ public class SearchFolder extends Folder {
         data.date        = mbox.getOperationTimestamp();
         data.name        = name;
         data.subject     = name;
-        data.metadata    = encodeMetadata(DEFAULT_COLOR, query, types, sort);
+        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, query, types, sort);
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
         
@@ -208,16 +208,18 @@ public class SearchFolder extends Folder {
     }
 
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mQuery, mTypes, mSort);
+        return encodeMetadata(meta, mColor, mVersion, mQuery, mTypes, mSort);
     }
-    private static String encodeMetadata(byte color, String query, String types, String sort) {
-        return encodeMetadata(new Metadata(), color, query, types, sort).toString();
+
+    private static String encodeMetadata(byte color, int version, String query, String types, String sort) {
+        return encodeMetadata(new Metadata(), color, version, query, types, sort).toString();
     }
-    static Metadata encodeMetadata(Metadata meta, byte color, String query, String types, String sort) {
+
+    static Metadata encodeMetadata(Metadata meta, byte color, int version, String query, String types, String sort) {
         meta.put(Metadata.FN_QUERY, query);
         meta.put(Metadata.FN_TYPES, types);
         meta.put(Metadata.FN_SORT,  sort);
-        return MailItem.encodeMetadata(meta, color);
+        return MailItem.encodeMetadata(meta, color, version);
     }
 
 

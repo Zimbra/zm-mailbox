@@ -288,7 +288,7 @@ public abstract class CalendarItem extends MailItem {
         data.tags     = tags;
         data.sender   = sender;
         data.subject = subject;
-        data.metadata = encodeMetadata(DEFAULT_COLOR, uid, startTime, endTime,
+        data.metadata = encodeMetadata(DEFAULT_COLOR, 1, uid, startTime, endTime,
                                        recur, invites, firstInvite.getTimeZoneMap(),
                                        new ReplyList());
         data.contentChanged(mbox);
@@ -422,20 +422,17 @@ public abstract class CalendarItem extends MailItem {
     }
 
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mUid, mStartTime, mEndTime,
-                              mRecurrence, mInvites, mTzMap, mReplyList);
+        return encodeMetadata(meta, mColor, mVersion, mUid, mStartTime, mEndTime, mRecurrence, mInvites, mTzMap, mReplyList);
     }
-    private static String encodeMetadata(byte color, String uid, long startTime, long endTime,
-                                         Recurrence.IRecurrence recur,
-                                         List /*Invite */ invs, TimeZoneMap tzmap,
+    private static String encodeMetadata(byte color, int version, String uid, long startTime, long endTime,
+                                         Recurrence.IRecurrence recur, List<Invite> invs, TimeZoneMap tzmap,
                                          ReplyList replyList) {
-        return encodeMetadata(new Metadata(), color, uid, startTime, endTime, recur, invs, tzmap,
-                              replyList).toString();
+        return encodeMetadata(new Metadata(), color, version, uid, startTime, endTime, recur, invs, tzmap, replyList).toString();
     }
-    static Metadata encodeMetadata(Metadata meta, byte color, String uid,
+    static Metadata encodeMetadata(Metadata meta, byte color, int version, String uid,
                                    long startTime, long endTime,
                                    Recurrence.IRecurrence recur,
-                                   List /*Invite */ invs, TimeZoneMap tzmap,
+                                   List<Invite> invs, TimeZoneMap tzmap,
                                    ReplyList replyList) {
         meta.put(Metadata.FN_TZMAP, tzmap.encodeAsMetadata());
         meta.put(Metadata.FN_UID, uid);
@@ -446,16 +443,13 @@ public abstract class CalendarItem extends MailItem {
         meta.put(Metadata.FN_REPLY_LIST, replyList.encodeAsMetadata());
 
         int num = 0;
-        for (Iterator iter = invs.iterator(); iter.hasNext();) {
-            Invite comp = (Invite) iter.next();
-            String compName = Metadata.FN_INV + num++;
-            meta.put(compName, Invite.encodeMetadata(comp));
-        }
+        for (Invite comp : invs)
+            meta.put(Metadata.FN_INV + num++, Invite.encodeMetadata(comp));
 
         if (recur != null)
             meta.put(FN_CALITEM_RECURRENCE, recur.encodeMetadata());
 
-        return MailItem.encodeMetadata(meta, color);
+        return MailItem.encodeMetadata(meta, color, version);
     }
 
     // /**
@@ -1320,8 +1314,7 @@ public abstract class CalendarItem extends MailItem {
             
             if (mmp.getCount() == 0) {
                 if (!isCancel)
-                    ZimbraLog.calendar.warn(
-                            "Invalid state: deleting blob for calendar item " + getId() +
+                    ZimbraLog.calendar.warn("Invalid state: deleting blob for calendar item " + getId() +
                             " in mailbox " + getMailboxId() + " while processing a non-cancel request");
                 markBlobForDeletion();
             } else {

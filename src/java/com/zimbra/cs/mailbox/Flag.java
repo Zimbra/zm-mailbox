@@ -48,7 +48,7 @@ public class Flag extends Tag {
     public static final int BITMASK_FROM_ME = 1 << getIndex(ID_FLAG_FROM_ME);
         static { FLAG_REP[getIndex(ID_FLAG_FROM_ME)] = 's'; }
 
-    public static final int ID_FLAG_ATTACHED = -2; 
+    public static final int ID_FLAG_ATTACHED = -2;
     public static final int BITMASK_ATTACHED = 1 << getIndex(ID_FLAG_ATTACHED);  // 2
         static { FLAG_REP[getIndex(ID_FLAG_ATTACHED)] = 'a'; }
 
@@ -96,6 +96,10 @@ public class Flag extends Tag {
     public static final int BITMASK_LOW_PRIORITY = 1 << getIndex(ID_FLAG_LOW_PRIORITY); // 2048
         static { FLAG_REP[getIndex(ID_FLAG_LOW_PRIORITY)] = '?'; }
 
+    public static final int ID_FLAG_VERSIONED = -13;
+    public static final int BITMASK_VERSIONED = 1 << getIndex(ID_FLAG_VERSIONED); // 4096
+        static { FLAG_REP[getIndex(ID_FLAG_VERSIONED)] = '/'; }
+
     public static final int ID_FLAG_SUBSCRIBED = -20;
     public static final int BITMASK_SUBSCRIBED = 1 << getIndex(ID_FLAG_SUBSCRIBED); // 524288
         static { FLAG_REP[getIndex(ID_FLAG_SUBSCRIBED)] = '*'; }
@@ -110,23 +114,31 @@ public class Flag extends Tag {
 
     public static final int ID_FLAG_NO_INHERIT = -23;
     public static final int BITMASK_NO_INHERIT = 1 << getIndex(ID_FLAG_NO_INHERIT); // 4194304
-    static { FLAG_REP[getIndex(ID_FLAG_NO_INHERIT)] = 'i'; }
-            
+        static { FLAG_REP[getIndex(ID_FLAG_NO_INHERIT)] = 'i'; }
+
     public static final int ID_FLAG_INVITE = -24;
     public static final int BITMASK_INVITE = 1 << getIndex(ID_FLAG_INVITE); // 8388608
-    static { FLAG_REP[getIndex(ID_FLAG_INVITE)] = 'v'; }
+        static { FLAG_REP[getIndex(ID_FLAG_INVITE)] = 'v'; }
+
+    public static final int ID_FLAG_UNCACHED = -31;
+    public static final int BITMASK_UNCACHED = 1 << getIndex(ID_FLAG_UNCACHED); // 4096
+        static { FLAG_REP[getIndex(ID_FLAG_UNCACHED)] = 'h'; }
 
 
     static final String UNREAD_FLAG_ONLY = getAbbreviation(ID_FLAG_UNREAD) + "";
 
-    public static final int FLAG_SYSTEM = BITMASK_FROM_ME | BITMASK_ATTACHED | BITMASK_COPIED | BITMASK_DRAFT |
-                                          BITMASK_INVITE | BITMASK_LOW_PRIORITY | BITMASK_HIGH_PRIORITY;
+    public static final int FLAG_SYSTEM = BITMASK_FROM_ME | BITMASK_ATTACHED  | BITMASK_COPIED |
+                                          BITMASK_DRAFT   | BITMASK_UNCACHED  | BITMASK_LOW_PRIORITY |
+                                          BITMASK_INVITE  | BITMASK_VERSIONED | BITMASK_HIGH_PRIORITY;
 
     public static final int FLAGS_FOLDER  = BITMASK_CHECKED | BITMASK_SUBSCRIBED | BITMASK_EXCLUDE_FREEBUSY | BITMASK_NO_INHERIT;
+
     public static final int FLAGS_MESSAGE = BITMASK_FROM_ME | BITMASK_REPLIED      | BITMASK_FORWARDED |
                                             BITMASK_DRAFT   | BITMASK_NOTIFIED     | BITMASK_UNREAD |
                                             BITMASK_INVITE  | BITMASK_LOW_PRIORITY | BITMASK_HIGH_PRIORITY;
-    public static final int FLAGS_GENERIC = BITMASK_ATTACHED | BITMASK_COPIED | BITMASK_FLAGGED | BITMASK_DELETED;
+
+    public static final int FLAGS_GENERIC = BITMASK_ATTACHED | BITMASK_COPIED    | BITMASK_FLAGGED |
+                                            BITMASK_DELETED  | BITMASK_VERSIONED | BITMASK_UNCACHED;
 
     /** Bitmask of all valid flags <b>except</b> {@link #BITMASK_UNREAD}. */
     public static final int FLAGS_ALL = (FLAGS_FOLDER | FLAGS_MESSAGE | FLAGS_GENERIC) & ~BITMASK_UNREAD;
@@ -143,7 +155,7 @@ public class Flag extends Tag {
 			throw new IllegalArgumentException();
 	}
 
-    public byte getIndex() {
+    @Override public byte getIndex() {
         return getIndex(mId);
     }
     public static byte getIndex(int flagId) {
@@ -205,8 +217,8 @@ public class Flag extends Tag {
     }
 
 
-	boolean isMutable()       { return false; }
-	boolean trackUnread()     { return false; }
+	boolean isMutable()    { return false; }
+	boolean trackUnread()  { return false; }
 
 
 	static Flag instantiate(Mailbox mbox, String name, byte attributes, int id) throws ServiceException {

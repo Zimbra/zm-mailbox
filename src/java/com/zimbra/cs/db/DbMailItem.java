@@ -85,6 +85,7 @@ import com.zimbra.cs.store.StoreManager;
 public class DbMailItem {
 
     public static final String TABLE_MAIL_ITEM = "mail_item";
+    public static final String TABLE_REVISION = "revision";
     public static final String TABLE_APPOINTMENT = "appointment";
     public static final String TABLE_OPEN_CONVERSATION = "open_conversation";
     public static final String TABLE_TOMBSTONE = "tombstone";
@@ -269,7 +270,7 @@ public class DbMailItem {
             if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
                 throw MailServiceException.ALREADY_EXISTS(id, e);
             else
-                throw ServiceException.FAILURE("copying " + MailItem.getNameForType(item.getType()) + ": " + item.getId(), e);
+                throw ServiceException.FAILURE("copying " + MailItem.getNameForType(item ) + ": " + item.getId(), e);
         } finally {
             DbPool.closeStatement(stmt);
         }
@@ -340,7 +341,63 @@ public class DbMailItem {
             if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
                 throw MailServiceException.ALREADY_EXISTS(data.id, e);
             else
-                throw ServiceException.FAILURE("i-copying " + MailItem.getNameForType(source.getType()) + ": " + source.getId(), e);
+                throw ServiceException.FAILURE("i-copying " + MailItem.getNameForType(source) + ": " + source.getId(), e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    public static void snapshotRevision(MailItem item, int version) throws ServiceException {
+        Mailbox mbox = item.getMailbox();
+        assert(version >= 1);
+
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement("INSERT INTO " + getRevisionTableName(mbox) +
+                        "(mailbox_id, item_id, version, date, size, volume_id, blob_digest," +
+                        " name, metadata, mod_metadata, change_date, mod_content) " +
+                        "(SELECT mailbox_id, id, ?, date, size, volume_id, blob_digest," +
+                        " name, metadata, mod_metadata, change_date, mod_content" +
+                        " FROM " + getMailItemTableName(mbox) +
+                        " WHERE " + IN_THIS_MAILBOX_AND + "id = ?)");
+            int mboxId = mbox.getId();
+            int pos = 1;
+            stmt.setInt(pos++, version);
+            stmt.setInt(pos++, mboxId);
+            stmt.setInt(pos++, item.getId());
+            int num = stmt.executeUpdate();
+            if (num != 1)
+                throw ServiceException.FAILURE("failed to copy revision data", null);
+        } catch (SQLException e) {
+            // catch item_id uniqueness constraint violation and return failure
+            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
+                throw MailServiceException.ALREADY_EXISTS(item.getId(), e);
+            else
+                throw ServiceException.FAILURE("saving revision info for " + MailItem.getNameForType(item) + ": " + item.getId(), e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    public static void purgeRevisions(MailItem item, int highestPurged) throws ServiceException {
+        if (highestPurged <= 0)
+            return;
+        Mailbox mbox = item.getMailbox();
+
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement("DELETE FROM " + getRevisionTableName(mbox) +
+                        " WHERE " + IN_THIS_MAILBOX_AND + "item_id = ? AND version <= ?");
+            int mboxId = mbox.getId();
+            int pos = 1;
+            stmt.setInt(pos++, mboxId);
+            stmt.setInt(pos++, item.getId());
+            stmt.setInt(pos++, highestPurged);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("purging revisions for " + MailItem.getNameForType(item) + ": " + item.getId(), e);
         } finally {
             DbPool.closeStatement(stmt);
         }
@@ -615,7 +672,7 @@ public class DbMailItem {
         }
     }
 
-    public static void saveName(MailItem item, int folderId) throws ServiceException {
+    public static void saveName(MailItem item, int folderId, String metadata) throws ServiceException {
         Mailbox mbox = item.getMailbox();
         String name = item.getName().equals("") ? null : item.getName();
 
@@ -625,14 +682,17 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                        " SET date = ?, size = ?, name = ?, subject = ?, folder_id = ?, mod_metadata = ?, change_date = ?, mod_content = ?" +
+                        " SET date = ?, size = ?, flags = ?, name = ?, subject = ?, folder_id = ?," +
+                        " metadata = ?, mod_metadata = ?, change_date = ?, mod_content = ?" +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setInt(pos++, (int) (item.getDate() / 1000));
             stmt.setInt(pos++, item.getSize());
+            stmt.setInt(pos++, item.getInternalFlagBitmask());
             stmt.setString(pos++, name);
             stmt.setString(pos++, name);
             stmt.setInt(pos++, folderId);
+            stmt.setString(pos++, metadata);
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             stmt.setInt(pos++, mbox.getOperationChangeID());
@@ -650,8 +710,7 @@ public class DbMailItem {
         }
     }
 
-    public static void saveData(MailItem item, String sender, String metadata)
-    throws ServiceException {
+    public static void saveData(MailItem item, String sender, String metadata) throws ServiceException {
         Mailbox mbox = item.getMailbox();
 
         String name = item.getName().equals("") ? null : item.getName();
@@ -1544,6 +1603,7 @@ public class DbMailItem {
                         " GROUP BY folder_id, type, tags");
             stmt.setInt(1, mbox.getId());
             rs = stmt.executeQuery();
+
             while (rs.next()) {
                 byte type  = rs.getByte(2);
                 int count  = rs.getInt(4);
@@ -1572,6 +1632,25 @@ public class DbMailItem {
                     }
                 }
             }
+
+            rs.close();
+            stmt.close();
+
+            String revSize = (Db.supports(Db.Capability.CAST_AS_BIGINT) ? "SUM(CAST(rev.size AS BIGINT))" : "SUM(rev.size)");
+            stmt = conn.prepareStatement("SELECT mi.folder_id, " + revSize +
+                        " FROM " + table + ", " + getRevisionTableName(mbox, "rev") +
+                        " WHERE rev.mailbox_id = ? AND mi.mailbox_id = rev.mailbox_id AND mi.id = rev.item_id" +
+                        " GROUP BY folder_id");
+            stmt.setInt(1, mbox.getId());
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                UnderlyingData data = lookup.get(rs.getInt(1));
+                assert(data != null);
+                Long folderSize = folderData.get(data);
+                folderData.put(data, folderSize == null ? rs.getLong(2) : folderSize + rs.getLong(2));
+            }
+
             return mbd;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("fetching folder data for mailbox " + mbox.getId(), e);
@@ -2011,7 +2090,6 @@ public class DbMailItem {
         }
     }
 
-    // note: need "Db.getInstance().selectBOOLEAN" here because we need the Capability settings to be initialized by getInstance()...
     private static final String LEAF_NODE_FIELDS = "id, size, type, unread, folder_id, parent_id, " +
                                                    Db.selectBOOLEAN("blob_digest IS NOT NULL") + ',' +
                                                    " mod_content, mod_metadata, flags, index_id, volume_id";
@@ -2038,9 +2116,10 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
+            String constraint = IN_THIS_MAILBOX_AND + "folder_id = ? AND type NOT IN " + FOLDER_TYPES;
             stmt = conn.prepareStatement("SELECT " + LEAF_NODE_FIELDS +
-                        " FROM " + getMailItemTableName(folder) +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type NOT IN " + FOLDER_TYPES);
+                        " FROM " + getMailItemTableName(mbox) +
+                        " WHERE " + constraint);
             int pos = 1;
             stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, folderId);
@@ -2078,12 +2157,12 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT " + LEAF_NODE_FIELDS +
                         " FROM " + getMailItemTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + constraint);
-            int attr = 1;
-            stmt.setInt(attr++, mbox.getId());
-            stmt.setInt(attr++, before);
+            int pos = 1;
+            stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, before);
             if (!globalMessages) {
                 for (Folder folder : folders)
-                    stmt.setInt(attr++, folder.getId());
+                    stmt.setInt(pos++, folder.getId());
             }
             rs = stmt.executeQuery();
 
@@ -2101,12 +2180,15 @@ public class DbMailItem {
     public static class LocationCount {
         public int count;
         public long size;
-        public LocationCount(int c, long sz)            { count = c;  size = sz; }
-        public LocationCount increment(int c, long sz)  { count += c;  size += sz;  return this; }
+        public LocationCount(int c, long sz)              { count = c;  size = sz; }
+        public LocationCount(LocationCount lc)            { count = lc.count;  size = lc.size; }
+        public LocationCount increment(int c, long sz)    { count += c;  size += sz;  return this; }
+        public LocationCount increment(LocationCount lc)  { count += lc.count;  size += lc.size;  return this; }
     }
 
     private static PendingDelete accumulateLeafNodes(PendingDelete info, Mailbox mbox, ResultSet rs) throws SQLException, ServiceException {
         StoreManager sm = StoreManager.getInstance();
+        List<Integer> versioned = null;
 
         while (rs.next()) {
             // first check to make sure we don't have a modify conflict
@@ -2131,7 +2213,7 @@ public class DbMailItem {
             boolean isMessage = false;
             switch (type) {
                 case MailItem.TYPE_CONTACT:  info.contacts++;  break;
-                case MailItem.TYPE_CHAT:  // fall through to MESSAGE!
+                case MailItem.TYPE_CHAT:
                 case MailItem.TYPE_MESSAGE:  isMessage = true;    break;
             }
 
@@ -2163,18 +2245,69 @@ public class DbMailItem {
                 } catch (Exception e1) { }
             }
 
+            int flags = rs.getInt(LEAF_CI_FLAGS);
+            if ((flags & Flag.BITMASK_VERSIONED) != 0)
+                (versioned == null ? new ArrayList<Integer>() : versioned).add(id);
+
             Integer indexId = new Integer(rs.getInt(LEAF_CI_INDEX_ID));
             boolean indexed = !rs.wasNull();
             if (indexed) {
                 if (info.sharedIndex == null)
                     info.sharedIndex = new HashSet<Integer>();
-                boolean shared = (rs.getInt(LEAF_CI_FLAGS) & Flag.BITMASK_COPIED) != 0;
+                boolean shared = (flags & Flag.BITMASK_COPIED) != 0;
                 if (!shared)  info.indexIds.add(indexId);
                 else          info.sharedIndex.add(indexId);
             }
         }
 
+        if (versioned != null)
+            accumulateLeafRevisions(info, mbox, versioned);
+
         return info;
+    }
+
+    private static void accumulateLeafRevisions(PendingDelete info, Mailbox mbox, List<Integer> versioned) throws ServiceException {
+        Connection conn = mbox.getOperationConnection();
+        StoreManager sm = StoreManager.getInstance();
+
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT mi.id, mi.folder_id, rev.size, rev.mod_content, rev.volume_id, " + Db.selectBOOLEAN("rev.blob_digest IS NOT NULL") +
+                    " FROM " + getMailItemTableName(mbox, "mi") + ", " + getRevisionTableName(mbox, "rev") +
+                    " WHERE mi.mailbox_id = ? AND mi.id IN " + DbUtil.suitableNumberOfVariables(versioned) +
+                    " AND mi.mailbox_id = rev.mailbox_id AND mi.id = rev.item_id");
+            int pos = 1;
+            stmt.setInt(pos++, mbox.getId());
+            for (int vid : versioned)
+                stmt.setInt(pos++, vid);
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Integer folderId = rs.getInt(2);
+                LocationCount count = info.messages.get(folderId);
+                if (count == null)
+                    info.messages.put(folderId, new LocationCount(0, rs.getInt(3)));
+                else
+                    count.increment(0, rs.getInt(3));
+
+                boolean hasBlob = rs.getBoolean(6);
+                if (hasBlob) {
+                    try {
+                        MailboxBlob mblob = sm.getMailboxBlob(mbox, rs.getInt(1), rs.getInt(4), rs.getShort(5));
+                        if (mblob == null)
+                            sLog.error("missing blob for id: " + rs.getInt(1) + ", change: " + rs.getInt(4));
+                        else
+                            info.blobs.add(mblob);
+                    } catch (Exception e1) { }
+                }
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("getting version deletion info for items: " + versioned, e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
     }
 
     public static void resolveSharedIndex(Mailbox mbox, PendingDelete info) throws ServiceException {
@@ -2280,7 +2413,7 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT " + POP3_FIELDS +
-                        " FROM " + getMailItemTableName(folder.getMailbox(), " mi") +
+                        " FROM " + getMailItemTableName(mbox, " mi") +
                         " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type IN " + POP3_TYPES +
                         " AND NOT " + Db.bitmaskAND("flags", Flag.BITMASK_DELETED));
             int pos = 1;
@@ -2293,6 +2426,36 @@ public class DbMailItem {
             return result;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("loading POP3 folder data: " + folder.getPath(), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    public static List<UnderlyingData> getRevisionInfo(MailItem item) throws ServiceException {
+        Mailbox mbox = item.getMailbox();
+
+        List<UnderlyingData> dlist = new ArrayList<UnderlyingData>();
+        if (!item.isTagged(mbox.mVersionedFlag))
+            return dlist;
+
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT " + REVISION_FIELDS + " FROM " + getRevisionTableName(mbox) +
+                        " WHERE " + IN_THIS_MAILBOX_AND + "item_id = ?" +
+                        " ORDER BY version");
+            int pos = 1;
+            stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, item.getId());
+            rs = stmt.executeQuery();
+
+            while (rs.next())
+                dlist.add(constructRevision(rs, item));
+            return dlist;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("getting old revisions for item: " + item.getId(), e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
@@ -3182,6 +3345,37 @@ public class DbMailItem {
         return data;
     }
 
+    private static final String REVISION_FIELDS = "date, size, volume_id, blob_digest, name, " +
+                                                  "metadata, mod_metadata, change_date, mod_content";
+
+    private static UnderlyingData constructRevision(ResultSet rs, MailItem item) throws SQLException {
+        UnderlyingData data = new UnderlyingData();
+        data.id          = item.getId();
+        data.type        = item.getType();
+        data.parentId    = item.getParentId();
+        data.folderId    = item.getFolderId();
+        data.indexId     = -1;
+        data.imapId      = -1;
+        data.date        = rs.getInt(1);
+        data.size        = rs.getInt(2);
+        data.volumeId    = rs.getShort(3);
+        if (rs.wasNull())
+            data.volumeId = -1;
+        data.setBlobDigest(rs.getString(4));
+        data.unreadCount = item.getUnreadCount();
+        data.flags       = item.getInternalFlagBitmask() | Flag.BITMASK_UNCACHED;
+        data.tags        = item.getTagBitmask();
+        data.subject     = item.getSubject();
+        data.name        = rs.getString(5);
+        data.metadata    = rs.getString(6);
+        data.modMetadata = rs.getInt(7);
+        data.dateChanged = rs.getInt(8);
+        data.modContent  = rs.getInt(9);
+        // make sure to handle NULL column values
+        if (data.parentId <= 0)     data.parentId = -1;
+        if (data.dateChanged == 0)  data.dateChanged = -1;
+        return data;
+    }
 
     //////////////////////////////////////
     // CALENDAR STUFF BELOW HERE!
@@ -3411,62 +3605,64 @@ public class DbMailItem {
 
     /**
      * Returns the name of the table that stores {@link MailItem} data.  The table name is qualified
-     * by the name of the database (e.g. <code>mailbox1.mail_item</code>).
+     * by the name of the database (e.g. <tt>mailbox1.mail_item</tt>).
      */
     public static String getMailItemTableName(int mailboxId, int groupId) {
-        return String.format("%s.%s", DbMailbox.getDatabaseName(mailboxId, groupId), TABLE_MAIL_ITEM);
+        return DbMailbox.getDatabaseName(mailboxId, groupId) + '.' + TABLE_MAIL_ITEM;
     }
     public static String getMailItemTableName(Mailbox mbox) {
-        int id = mbox.getId();
-        int gid = mbox.getSchemaGroupId();
-        return getMailItemTableName(id, gid);
+        return getMailItemTableName(mbox.getId(), mbox.getSchemaGroupId());
     }
     public static String getMailItemTableName(Mailbox mbox, String alias) {
-        int id = mbox.getId();
-        int gid = mbox.getSchemaGroupId();
-        return getMailItemTableName(id, gid) + " AS " + alias;
+        return getMailItemTableName(mbox) + " AS " + alias;
     }
     public static String getMailItemTableName(MailItem item) {
         return getMailItemTableName(item.getMailbox());
     }
 
     /**
+     * Returns the name of the table that stores data on old revisions of {@link MailItem}s.
+     * The table name is qualified by the name of the database (e.g. <tt>mailbox1.mail_item</tt>).
+     */
+    public static String getRevisionTableName(int mailboxId, int groupId) {
+        return DbMailbox.getDatabaseName(mailboxId, groupId) + '.' + TABLE_REVISION;
+    }
+    public static String getRevisionTableName(Mailbox mbox) {
+        return getRevisionTableName(mbox.getId(), mbox.getSchemaGroupId());
+    }
+    public static String getRevisionTableName(Mailbox mbox, String alias) {
+        return getRevisionTableName(mbox) + " AS " + alias;
+    }
+    public static String getRevisionTableName(MailItem item) {
+        return getRevisionTableName(item.getMailbox());
+    }
+
+    /**
      * Returns the name of the table that stores {@link CalendarItem} data.  The table name is qualified
-     * by the name of the database (e.g. <code>mailbox1.appointment</code>).
+     * by the name of the database (e.g. <tt>mailbox1.appointment</tt>).
      */
     public static String getCalendarItemTableName(int mailboxId, int groupId) {
-        return String.format("%s.%s", DbMailbox.getDatabaseName(mailboxId, groupId), TABLE_APPOINTMENT);
+        return DbMailbox.getDatabaseName(mailboxId, groupId) + '.' + TABLE_APPOINTMENT;
     }
     public static String getCalendarItemTableName(Mailbox mbox) {
-        int id = mbox.getId();
-        int gid = mbox.getSchemaGroupId();
-        return getCalendarItemTableName(id, gid);
+        return getCalendarItemTableName(mbox.getId(), mbox.getSchemaGroupId());
     }
     public static String getCalendarItemTableName(Mailbox mbox, String alias) {
-        int id = mbox.getId();
-        int gid = mbox.getSchemaGroupId();
-        return getCalendarItemTableName(id, gid) + " AS " + alias;
+        return getCalendarItemTableName(mbox) + " AS " + alias;
     }
 
     /**
      * Returns the name of the table that maps subject hashes to {@link Conversation} ids.  The table 
-     * name is qualified by the name of the database (e.g. <code>mailbox1.open_conversation</code>).
+     * name is qualified by the name of the database (e.g. <tt>mailbox1.open_conversation</tt>).
      */
     public static String getConversationTableName(int mailboxId, int groupId) {
-        return String.format("%s.%s", DbMailbox.getDatabaseName(mailboxId, groupId), TABLE_OPEN_CONVERSATION);
-    }
-    public static String getConversationTableName(int mailboxId, int groupId, String alias) {
-        return String.format("%s.%s AS %s", DbMailbox.getDatabaseName(mailboxId, groupId), TABLE_OPEN_CONVERSATION, alias);
+        return DbMailbox.getDatabaseName(mailboxId, groupId) + '.' + TABLE_OPEN_CONVERSATION;
     }
     public static String getConversationTableName(Mailbox mbox) {
-        int id = mbox.getId();
-        int gid = mbox.getSchemaGroupId();
-        return getConversationTableName(id, gid);
+        return getConversationTableName(mbox.getId(), mbox.getSchemaGroupId());
     }
     public static String getConversationTableName(Mailbox mbox, String alias) {
-        int id = mbox.getId();
-        int gid = mbox.getSchemaGroupId();
-        return getConversationTableName(id, gid, alias);
+        return getConversationTableName(mbox) + " AS " + alias;
     }
     public static String getConversationTableName(MailItem item) {
         return getConversationTableName(item.getMailbox());
@@ -3474,15 +3670,13 @@ public class DbMailItem {
 
     /**
      * Returns the name of the table that stores data on deleted items for the purpose of sync.
-     * The table name is qualified by the name of the database (e.g. <code>mailbox1.tombstone</code>).
+     * The table name is qualified by the name of the database (e.g. <tt>mailbox1.tombstone</tt>).
      */
     public static String getTombstoneTableName(int mailboxId, int groupId) {
-        return String.format("%s.%s", DbMailbox.getDatabaseName(mailboxId, groupId), TABLE_TOMBSTONE);
+        return DbMailbox.getDatabaseName(mailboxId, groupId) + '.' + TABLE_TOMBSTONE;
     }
     public static String getTombstoneTableName(Mailbox mbox) {
-        int id = mbox.getId();
-        int gid = mbox.getSchemaGroupId();
-        return getTombstoneTableName(id, gid);
+        return getTombstoneTableName(mbox.getId(), mbox.getSchemaGroupId());
     }
 
     private static boolean areTagsetsLoaded(int mailboxId) {

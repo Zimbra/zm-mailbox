@@ -32,7 +32,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 
 import com.zimbra.common.util.Log;
@@ -40,7 +39,6 @@ import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.db.DbMailItem.LocationCount;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
@@ -366,7 +364,7 @@ public class Conversation extends MailItem {
         data.subject     = msgs.length > 0 ? msgs[0].getNormalizedSubject() : "";
         data.date        = date;
         data.size        = msgs.length;
-        data.metadata    = encodeMetadata(DEFAULT_COLOR, sl, data.subject, msgs.length > 0 ? msgs[0].getSubject() : "");
+        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, sl, data.subject, msgs.length > 0 ? msgs[0].getSubject() : "");
         data.unreadCount = unread;
         data.children    = children;
         data.inheritedTags = tags.toString();
@@ -592,8 +590,8 @@ public class Conversation extends MailItem {
             }
 
             // handle folder message counts
-            source.updateSize(-1, -msg.getSize());
-            target.updateSize(1, msg.getSize());
+            source.updateSize(-1, -msg.getTotalSize());
+            target.updateSize(1, msg.getTotalSize());
 
             moved.add(msg);
             msg.folderChanged(target, 0);
@@ -750,7 +748,7 @@ public class Conversation extends MailItem {
      *    <li><code>service.FAILURE</code> - if there's a database
      *        failure fetching the message list</ul> */
     @Override
-    MailItem.PendingDelete getDeletionInfo() throws ServiceException {
+    PendingDelete getDeletionInfo() throws ServiceException {
         PendingDelete info = new PendingDelete();
         info.rootId = mId;
         info.itemIds.add(getType(), mId);
@@ -763,39 +761,14 @@ public class Conversation extends MailItem {
         boolean excludeModify = false, excludeAccess = false;
         for (Message child : msgs) {
             // silently skip explicitly excluded messages, PERMISSION_DENIED messages, and MODIFY_CONFLICT messages
-            if (!TargetConstraint.checkItem(tcon, child)) {
+            if (!TargetConstraint.checkItem(tcon, child))
                 continue;
-            } else if (!child.canAccess(ACL.RIGHT_DELETE)) {
-                excludeAccess = true;  continue;
-            } else if (!child.checkChangeID()) {
-                excludeModify = true;  continue;
-            }
-            Integer childId = child.getId();
-
-            info.size += child.getSize();
-            info.itemIds.add(child.getType(), childId);
-            if (child.isUnread())
-                info.unreadIds.add(childId);
-
-            if (child.getIndexId() > 0) {
-                if (!isTagged(mMailbox.mCopiedFlag))
-                    info.indexIds.add(new Integer(child.getIndexId()));
-                else if (info.sharedIndex == null)
-                    (info.sharedIndex = new HashSet<Integer>()).add(child.getIndexId());
-                else
-                    info.sharedIndex.add(new Integer(child.getIndexId()));
-            }
-
-            try {
-                info.blobs.add(child.getBlob());
-            } catch (Exception e1) { }
-
-            Integer folderId = new Integer(child.getFolderId());
-            LocationCount count = info.messages.get(folderId);
-            if (count == null)
-                info.messages.put(folderId, new LocationCount(1, child.getSize()));
+            else if (!child.canAccess(ACL.RIGHT_DELETE))
+                excludeAccess = true;
+            else if (!child.checkChangeID())
+                excludeModify = true;
             else
-                count.increment(1, child.getSize());
+                info.add(child.getDeletionInfo());
         }
 
         int totalDeleted = info.itemIds.size();
@@ -879,17 +852,17 @@ public class Conversation extends MailItem {
                 SenderList senders = mSenderList == null ? getSenderList() : mSenderList;
                 encoded = senders == null ? null : senders.toString();
             }
-        	return encodeMetadata(meta, mColor, encoded, mData.subject, mRawSubject);
+        	return encodeMetadata(meta, mColor, mVersion, encoded, mData.subject, mRawSubject);
         } catch (ServiceException e) {
-            return encodeMetadata(meta, mColor, null, mData.subject, mRawSubject);
+            return encodeMetadata(meta, mColor, mVersion, null, mData.subject, mRawSubject);
         }
     }
 
-    static String encodeMetadata(byte color, SenderList senders, String subject, String rawSubject) {
-        return encodeMetadata(new Metadata(), color, senders.toString(), subject, rawSubject).toString();
+    static String encodeMetadata(byte color, int version, SenderList senders, String subject, String rawSubject) {
+        return encodeMetadata(new Metadata(), color, version, senders.toString(), subject, rawSubject).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, byte color, String encodedSenders, String subject, String rawSubject) {
+    static Metadata encodeMetadata(Metadata meta, byte color, int version, String encodedSenders, String subject, String rawSubject) {
         String prefix = null;
         if (rawSubject == null || rawSubject.equals("") || rawSubject.equals(subject))
             rawSubject = null;
@@ -902,7 +875,7 @@ public class Conversation extends MailItem {
         meta.put(Metadata.FN_RAW_SUBJ,     rawSubject);
         meta.put(Metadata.FN_PARTICIPANTS, encodedSenders);
 
-        return MailItem.encodeMetadata(meta, color);
+        return MailItem.encodeMetadata(meta, color, version);
     }
 
 

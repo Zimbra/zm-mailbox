@@ -331,13 +331,13 @@ public abstract class Wiki {
             wikiWord = wikiWord.toLowerCase();
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mWikiAccount);
             if (mbox == null)
-                throw WikiServiceException.ERROR("mailbox not found for account "+mWikiAccount);
+                throw WikiServiceException.ERROR("mailbox not found for account " + mWikiAccount);
             try {
                 MailItem item = mbox.getItemByPath(ctxt.octxt, wikiWord, mFolderId);
                 if (rev == -1)
                     return WikiPage.create((Document) item);
                 else
-                    return WikiPage.create((Document) item, rev);
+                    return WikiPage.create((Document) item, rev, ctxt);
             } catch (MailServiceException.NoSuchItemException se) {
                 return null;
             }
@@ -364,7 +364,7 @@ public abstract class Wiki {
 	public static class WikiByPath extends Wiki {
 		private String mPath;
 		
-		WikiByPath(Account acct, String path) throws ServiceException {
+		WikiByPath(Account acct, String path) {
 			mWikiAccount = acct.getId();
 			mPath = path;
 		}
@@ -639,7 +639,7 @@ public abstract class Wiki {
 					throw MailServiceException.ALREADY_EXISTS("wiki word "+wikiWord+" in folder "+fid,
 							new Argument(MailConstants.A_NAME, wikiWord, Argument.Type.STR),
 							new Argument(MailConstants.A_ID, pg.getId(), Argument.Type.IID),
-							new Argument(MailConstants.A_VERSION, pg.getLastRevision(), Argument.Type.NUM),
+							new Argument(MailConstants.A_VERSION, pg.getLastVersion(), Argument.Type.NUM),
 							new Argument(MailConstants.A_REST_URL, url, Argument.Type.STR));
 				}
 
@@ -651,11 +651,11 @@ public abstract class Wiki {
 			WikiPage oldPage = findPage(ctxt, account, id);
 			if (oldPage == null)
 				throw new WikiServiceException.NoSuchWikiException("page id="+id+" not found");
-			if (oldPage.getLastRevision() != ver) {
+			if (oldPage.getLastVersion() != ver) {
 				throw MailServiceException.MODIFY_CONFLICT(
 						new Argument(MailConstants.A_NAME, wikiWord, Argument.Type.STR),
 						new Argument(MailConstants.A_ID, oldPage.getId(), Argument.Type.IID),
-						new Argument(MailConstants.A_VERSION, oldPage.getLastRevision(), Argument.Type.NUM));
+						new Argument(MailConstants.A_VERSION, oldPage.getLastVersion(), Argument.Type.NUM));
 			}
 			oldPage.add(ctxt, page);
 		}

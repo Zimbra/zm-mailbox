@@ -25,7 +25,6 @@
 
 package com.zimbra.cs.service.wiki;
 
-import java.io.InputStream;
 import java.io.IOException;
 import java.util.Map;
 
@@ -38,7 +37,6 @@ import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
@@ -53,6 +51,7 @@ public class GetWiki extends WikiDocumentHandler {
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext zsc = getZimbraSoapContext(context);
 		checkEnabled(zsc);
+		Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
@@ -60,7 +59,7 @@ public class GetWiki extends WikiDocumentHandler {
         String word = wElem.getAttribute(MailConstants.A_NAME, null);
         String id = wElem.getAttribute(MailConstants.A_ID, null);
         int traverse = (int)wElem.getAttributeLong(MailConstants.A_TRAVERSE, 0);
-        int rev = (int) wElem.getAttributeLong(MailConstants.A_VERSION, -1);
+        int version = (int) wElem.getAttributeLong(MailConstants.A_VERSION, -1);
         int count = (int) wElem.getAttributeLong(MailConstants.A_COUNT, -1);
 
         Element response = zsc.createElement(MailConstants.GET_WIKI_RESPONSE);
@@ -92,34 +91,32 @@ public class GetWiki extends WikiDocumentHandler {
         	}
         } else if (id != null) {
         	ItemId iid = new ItemId(id, zsc);
-        	Mailbox mbox = getRequestedMailbox(zsc);
         	wikiItem = mbox.getWikiById(octxt, iid.getId());
         } else {
         	throw ServiceException.FAILURE("missing attribute w or id", null);
         }
 
-        Element wikiElem = ToXML.encodeWiki(response, ifmt, wikiItem, rev);
+        Element wikiElem = ToXML.encodeWiki(response, ifmt, octxt, wikiItem, version);
         
         if (count > 1) {
     		count--;  // head version was already printed
-        	if (rev <= 0) {
-        		rev = wikiItem.getVersion();
+        	if (version <= 0) {
+        		version = wikiItem.getVersion();
         	}
-        	while (--rev > 0) {
-                ToXML.encodeWiki(response, ifmt, wikiItem, rev);
+        	while (--version > 0) {
+                ToXML.encodeWiki(response, ifmt, octxt, wikiItem, version);
         		count--;
         		if (count == 0) {
         			break;
         		}
         	}
         } else {
-        	Document.DocumentRevision revision = (rev > 0) ? wikiItem.getRevision(rev) : wikiItem.getLastRevision(); 
+        	Document revision = (version > 0 ? (Document) mbox.getItemRevision(octxt, wikiItem.getId(), wikiItem.getType(), version) : wikiItem); 
         	try {
-        		InputStream is = revision.getContent();
         		// when the revisions get pruned after each save, the contents of
         		// old revision is gone, and revision.getContent() returns null.
-        		if (is != null) {
-        			byte[] raw = ByteUtil.getContent(is, 0);
+        		if (revision != null) {
+        			byte[] raw = revision.getContent();
         			wikiElem.addAttribute(MailConstants.A_BODY, new String(raw, "UTF-8"), Element.Disposition.CONTENT);
         		}
         	} catch (IOException ioe) {

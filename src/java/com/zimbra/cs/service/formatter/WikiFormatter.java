@@ -25,13 +25,13 @@
 package com.zimbra.cs.service.formatter;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
@@ -62,17 +62,13 @@ public class WikiFormatter extends Formatter {
 	
     private void handleDocument(Context context, Document doc) throws IOException, ServiceException {
         context.resp.setContentType(doc.getContentType());
-        InputStream is;
         String v = context.params.get(UserServlet.QP_VERSION);
-        int ver = -1;
-        if (v != null)
-            ver = Integer.parseInt(v);
-        
-        if (ver > 0)
-            is = doc.getRevision(ver).getContent();
-        else
-            is = doc.getRawDocument();
-        ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
+        int version = v != null ? Integer.parseInt(v) : -1;
+
+        MailItem item = (version > 0 ? doc.getMailbox().getItemRevision(context.opContext, doc.getId(), doc.getType(), version) : doc);
+        if (item == null)
+            throw MailServiceException.NO_SUCH_REVISION(doc.getId(), version);
+        ByteUtil.copy(item.getContentStream(), true, context.resp.getOutputStream(), false);
     }
     
     private static PageCache sCache = new PageCache();
