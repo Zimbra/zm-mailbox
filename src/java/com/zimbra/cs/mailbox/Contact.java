@@ -559,6 +559,7 @@ public class Contact extends MailItem {
         Mailbox mbox = folder.getMailbox();
         mbox.updateContactCount(1);
 
+        // XXX: should maintain size on contacts with attachments
         UnderlyingData data = new UnderlyingData();
         data.id          = id;
         data.type        = TYPE_CONTACT;
@@ -642,6 +643,8 @@ public class Contact extends MailItem {
             throw ServiceException.INVALID_REQUEST("contact must have fields", null);
 
     	// XXX: should update mData.size and Mailbox.size and folder.size
+        addRevision(false);
+
         mData.date = mMailbox.getOperationTimestamp();
         mData.contentChanged(mMailbox);
         saveData(getFileAsString());

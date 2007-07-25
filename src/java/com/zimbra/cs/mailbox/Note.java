@@ -161,16 +161,19 @@ public class Note extends MailItem {
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
         if (!canAccess(ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the note");
+
         content = StringUtil.stripControlCharacters(content);
         if (content == null || content.equals(""))
             throw ServiceException.INVALID_REQUEST("notes may not be empty", null);
         if (content.equals(mData.subject))
             return;
+
+        addRevision(false);
         markItemModified(Change.MODIFIED_CONTENT | Change.MODIFIED_DATE);
         // XXX: should probably update both mData.size and the Mailbox's size
         mData.subject = content;
         mData.date    = mMailbox.getOperationTimestamp();
-        saveSubject();
+        saveData(null);
     }
 
     protected void saveSubject() throws ServiceException {
