@@ -1859,7 +1859,7 @@ public abstract class MailItem implements Comparable<MailItem> {
                     throw MailServiceException.ALREADY_EXISTS(name);
             } catch (MailServiceException.NoSuchItemException nsie) { }
 
-            Blob oldblob = getBlob().getBlob();
+            MailboxBlob oldblob = getBlob();
             addRevision(false);
 
             markItemModified(Change.MODIFIED_NAME);
@@ -1870,7 +1870,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
             if (oldblob != null) {
                 try {
-                    StoreManager.getInstance().link(oldblob, mMailbox, mId, getSavedSequence(), Volume.getCurrentMessageVolume().getId());
+                    StoreManager.getInstance().link(oldblob.getBlob(), mMailbox, mId, getSavedSequence(), Volume.getCurrentMessageVolume().getId());
                 } catch (IOException ioe) {
                     throw ServiceException.FAILURE("could not copy blob for renamed document", ioe);
                 }

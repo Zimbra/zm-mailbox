@@ -1939,7 +1939,7 @@ public class Mailbox {
             return item;
         } finally {
             endTransaction(success);
-            data.flags &= ~Flag.BITMASK_UNCACHED;
+//            data.flags &= ~Flag.BITMASK_UNCACHED;
         }
     }
 
