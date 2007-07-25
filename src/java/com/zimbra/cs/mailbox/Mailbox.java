@@ -770,7 +770,7 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("recordLastSoapAccessTime", null);
-            if (time > getLastSoapAccessTime()) {
+            if (time > mData.lastWriteDate) {
                 mCurrentChange.accessed = (int) (time / 1000);
                 DbMailbox.recordLastSoapAccess(this);
             }
