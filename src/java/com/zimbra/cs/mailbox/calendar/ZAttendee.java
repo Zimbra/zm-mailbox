@@ -289,7 +289,13 @@ public class ZAttendee extends CalendarUser {
     }
 
     public static ZAttendee parse(Element element) throws ServiceException {
-        String address = element.getAttribute(MailConstants.A_ADDRESS);
+        String address = element.getAttribute(MailConstants.A_ADDRESS, null);
+        if (address == null) {
+        	address = element.getAttribute(MailConstants.A_URL, null); //4.5 back compat
+        	if (address == null) {
+                throw ServiceException.INVALID_REQUEST("missing attendee address", null);
+        	}
+        }
         String cn = element.getAttribute(MailConstants.A_DISPLAY, null);
         String sentBy = element.getAttribute(MailConstants.A_CAL_SENTBY, null);
         String dir = element.getAttribute(MailConstants.A_CAL_DIR, null);
