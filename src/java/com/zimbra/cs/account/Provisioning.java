@@ -189,9 +189,10 @@ public abstract class Provisioning {
      * local network we would redirect you to http after login, but if you came
      * externally you would stay in https - one day we will do this.) "both"
      * says to run both https and http, and not do any redirects between the
-     * two.
+     * two.  "redirect" means the web server should listen on both HTTP and HTTPS
+     * but redirect traffic on the HTTP port to HTTPS.
      */
-    public enum MAIL_MODE { http, https, mixed, both }
+    public enum MAIL_MODE { http, https, mixed, both, redirect }
 
     // attributes
 
