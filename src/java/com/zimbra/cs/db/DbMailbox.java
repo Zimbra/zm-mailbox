@@ -136,10 +136,15 @@ public class DbMailbox {
             stmt.close();
             stmt = null;
 
-            stmt = conn.prepareStatement("UPDATE current_volumes" +
-                    " SET next_mailbox_id = CASE WHEN ? > next_mailbox_id THEN ? + 1 ELSE next_mailbox_id + 1 END");
-            stmt.setInt(1, mailboxId);
-            stmt.setInt(2, mailboxId);
+            if (explicitId) {
+                stmt = conn.prepareStatement(
+                        "UPDATE current_volumes SET next_mailbox_id = ? + 1 WHERE next_mailbox_id <= ?");
+                stmt.setInt(1, mailboxId);
+                stmt.setInt(2, mailboxId);
+            } else {
+                stmt = conn.prepareStatement(
+                        "UPDATE current_volumes SET next_mailbox_id = next_mailbox_id + 1");
+            }
             stmt.executeUpdate();
             stmt.close();
             stmt = null;
