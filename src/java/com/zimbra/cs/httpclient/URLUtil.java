@@ -101,6 +101,7 @@ public class URLUtil {
         switch (mode) {
         case both:
         case mixed:
+	case redirect:
             ssl = preferSSL;
             break;
         case https:
