@@ -394,6 +394,10 @@ public class SpamExtract {
                 protocol = "https";
                 portAttr = Provisioning.A_zimbraMailSSLPort;
             }
+            if (mode.equalsIgnoreCase("redirect")) {
+                protocol = "https";
+                portAttr = Provisioning.A_zimbraMailSSLPort;
+            }
         }
 
         int port = server.getIntAttr(portAttr, -1);
