@@ -156,6 +156,7 @@ public class MailConstants {
     public static final QName ICAL_REPLY_REQUEST = QName.get("ICalReplyRequest", NAMESPACE);
     public static final QName GET_FREE_BUSY_REQUEST = QName.get("GetFreeBusyRequest", NAMESPACE);
     public static final QName GET_ICAL_REQUEST = QName.get("GetICalRequest", NAMESPACE);
+    public static final QName ANNOUNCE_ORGANIZER_CHANGE = QName.get("AnnounceOrganizerChange", NAMESPACE);
 
     // spell checking
     public static final QName CHECK_SPELLING_REQUEST = QName.get("CheckSpellingRequest", NAMESPACE);
