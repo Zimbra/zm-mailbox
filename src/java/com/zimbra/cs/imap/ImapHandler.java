@@ -224,8 +224,13 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     boolean executeRequest(ImapRequest req) throws IOException, ImapParseException {
-        if (isIdle())
-            return doIDLE(null, IDLE_STOP, req.readATOM().equals("DONE") && req.eof());
+        if (isIdle()) {
+            boolean clean = false;
+            try {
+                clean = req.readATOM().equals("DONE") && req.eof();
+            } catch (ImapParseException ipe) { }
+            return doIDLE(null, IDLE_STOP, clean);
+        }
 
         String tag = req.readTag();
 
