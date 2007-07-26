@@ -227,6 +227,23 @@ public class UserServlet extends ZimbraServlet {
         return mFormatters.get(type);
     }
 
+    private Mailbox getTargetMailbox(Context context) throws ServiceException {
+
+        // treat the non-existing target account the same as insufficient permission
+        // to access existing item in order to prevent account harvesting.
+        Mailbox mbox = null;
+        try {
+            mbox = context.targetMailbox = MailboxManager.getInstance().getMailboxByAccount(context.targetAccount);
+        } catch (Exception e) {
+            // ignore IllegalArgumentException or ServiceException being thrown,
+            // as we'll throw PERM_DENIED for any error.
+        } finally {
+            if (mbox == null)
+                throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+        }
+        return mbox;
+    }
+    
     private void getAccount(Context context) throws IOException, ServletException {
         try {
             boolean isAdminRequest = isAdminRequest(context);
@@ -330,10 +347,6 @@ public class UserServlet extends ZimbraServlet {
             context.targetAccount = context.authAccount;
         }
 
-        // at this point we must have a target account
-        if (context.targetAccount == null)
-            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "target account not found");
-
         // auth is required if we haven't yet authed and they've specified a formatter that requires auth (including write ops).
         boolean authRequired = context.authAccount == null &&
                 (context.formatter == null || context.formatter.requiresAuth() || req.getMethod().equalsIgnoreCase("POST"));
@@ -353,7 +366,7 @@ public class UserServlet extends ZimbraServlet {
         // this should handle both explicit /user/user-on-other-server/ and
         // /user/~/?id={account-id-on-other-server}:id            
 
-        if (!Provisioning.onLocalServer(context.targetAccount)) {
+        if (context.targetAccount != null && !Provisioning.onLocalServer(context.targetAccount)) {
             try {
                 if (context.basicAuthHappened && context.authTokenCookie == null)
                     context.authTokenCookie = new AuthToken(context.authAccount, isAdminRequest(context)).getEncoded();
@@ -370,9 +383,7 @@ public class UserServlet extends ZimbraServlet {
 
     private void doAuthGet(HttpServletRequest req, HttpServletResponse resp, Context context)
     throws ServletException, IOException, ServiceException, UserServletException {
-        Mailbox mbox = context.targetMailbox = MailboxManager.getInstance().getMailboxByAccount(context.targetAccount);
-        if (mbox == null)
-            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "mailbox not found");
+        Mailbox mbox = getTargetMailbox(context);
         ZimbraLog.addMboxToContext(mbox.getId());
 
         if (ZimbraLog.mailbox.isDebugEnabled()) {
@@ -433,9 +444,7 @@ public class UserServlet extends ZimbraServlet {
                 ZimbraLog.addAccountNameToContext(context.authAccount.getName());
             ZimbraLog.addIpToContext(context.req.getRemoteAddr());
 
-            Mailbox mbox = context.targetMailbox = MailboxManager.getInstance().getMailboxByAccount(context.targetAccount);
-            if (mbox == null)
-                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "mailbox not found");
+            Mailbox mbox = getTargetMailbox(context);
             ZimbraLog.addMboxToContext(mbox.getId());
 
             ZimbraLog.mailbox.info("UserServlet (POST): " + context.req.getRequestURL().toString());
