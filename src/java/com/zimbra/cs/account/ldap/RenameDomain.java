@@ -138,14 +138,18 @@ class RenameDomain {
         mProv.deleteDomain(oldDomainId);
             
         /*
-         * 4. restore zimbraId to the id of the old domain and make the new domain available
+         * 4. restore zimbraId to the id of the old domain
          */ 
-        flushDomainCache(mProv, newDomain.getId());
+        LdapProvisioning.flushDomainCache(mProv, newDomain.getId());
         HashMap<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraId, oldDomainId);
-        // attrs.put(A_zimbraDomainStatus, TODO);
         attrs.put(Provisioning.A_zimbraDomainRenameInfo, "");
         mProv.modifyAttrsInternal(newDomain, mDirCtxt, attrs);  // skip callback
+        
+        /*
+         * 5. activate the new domain
+         */
+        mProv.modifyDomainStatus(newDomain, Provisioning.DOMAIN_STATUS_ACTIVE);
         
     }
     
@@ -271,10 +275,15 @@ class RenameDomain {
     
     private RenameInfo beginRenameDomain() throws ServiceException {
         
-        /*
-         * Lock the old domain and mark it being renamed   TODO
-         */ 
-        // attrs.put(A_zimbraDomainStatus, TODO);
+        // see if the domain is suspended
+        boolean domainIsSuspended = mOldDomain.isSuspended();
+        
+        // mark domain suspended and rejecting mails
+        // mProv.modifyDomainStatus(mOldDomain, Provisioning.DOMAIN_STATUS_SUSPENDED);
+        Map<String, String> attrs = new HashMap<String, String>();
+        attrs.put(Provisioning.A_zimbraDomainStatus, Provisioning.DOMAIN_STATUS_SUSPENDED);
+        attrs.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_DISABLED);
+        mProv.modifyAttrs(mOldDomain, attrs, false, false);
                 
         String oldDomainName = mOldDomain.getName();
         RenamePhase phase = RenamePhase.PHASE_RENAME_ENTRIES;
@@ -290,44 +299,11 @@ class RenameDomain {
             phase = renameInfo.phase();
         }
         
-        flushDomainCacheOnAllServers(mOldDomain.getId());
+        mProv.flushDomainCacheOnAllServers(mOldDomain.getId());
         
         return renameInfo;
     }
-
-    
-    private void flushDomainCache(Provisioning prov, String domainId) throws ServiceException {
-        
-        CacheEntry[] cacheEntries = new CacheEntry[1];
-        cacheEntries[0] = new CacheEntry(CacheEntryBy.id, domainId);
-        prov.flushCache(CacheEntryType.domain, cacheEntries);
-    }
-    
-    private void flushDomainCacheOnAllServers(String domainId) throws ServiceException {
-        SoapProvisioning soapProv = new SoapProvisioning();
-        
-        for (Server server : mProv.getAllServers()) {
-            
-            String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
-                                
-            int port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
-            if (port <= 0) {
-                warn("flushDomainCacheOnAllServers: remote server " + server.getName() + " does not have https port enabled, domain cache not flushed on server");
-                continue;        
-            }
-                
-            soapProv.soapSetURI(LC.zimbra_admin_service_scheme.value()+hostname+":"+port+ZimbraServlet.ADMIN_SERVICE_URI);
-                
-            try {
-                soapProv.soapZimbraAdminAuthenticate();
-                flushDomainCache(soapProv, domainId);
-            } catch (ServiceException e) {
-                warn("flushDomainCacheOnAllServers: domain cache not flushed on server " + server.getName(), e);
-            }
-        }
-    }
    
-    
 
     private Domain createNewDomain() throws ServiceException {
         
@@ -342,7 +318,10 @@ class RenameDomain {
         domainAttrs.remove(Provisioning.A_zimbraId);  // use a new zimbraId so getDomainById of the old domain will not return this half baked domain
         domainAttrs.remove(Provisioning.A_zimbraDomainName);
         domainAttrs.remove(Provisioning.A_zimbraMailStatus);
-        // domainAttrs.remove(Provisioning.A_zimbraDomainStatus); // the new domain is created locked, TODO
+        
+        // the new domain is created suspended and rejecting mails
+        domainAttrs.put(Provisioning.A_zimbraDomainStatus, Provisioning.DOMAIN_STATUS_SUSPENDED);
+        domainAttrs.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_DISABLED);
         
         Domain newDomain = null;
         try {

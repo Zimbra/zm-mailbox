@@ -41,6 +41,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Account.CalendarUserType;
+import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AttributeClass;
@@ -65,6 +66,7 @@ import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;
@@ -1307,7 +1309,10 @@ public class LdapProvisioning extends Provisioning {
             String zimbraIdStr = LdapUtil.generateUUID();
             attrs.put(A_zimbraId, zimbraIdStr);
             attrs.put(A_zimbraDomainName, name);
-            attrs.put(A_zimbraMailStatus, MAIL_STATUS_ENABLED);
+            
+            String mailStatus = (String) domainAttrs.get(A_zimbraMailStatus);
+            if (mailStatus == null)
+                attrs.put(A_zimbraMailStatus, MAIL_STATUS_ENABLED);
             
             if (domainType.equalsIgnoreCase(DOMAIN_TYPE_ALIAS)) {
                 attrs.put(A_zimbraMailCatchAllAddress, "@" + name);
@@ -1491,6 +1496,8 @@ public class LdapProvisioning extends Provisioning {
         HashMap<String, String> attrs = new HashMap<String, String>();
         attrs.put(Provisioning.A_zimbraDomainStatus, newStatus);
         modifyAttrs(domain, attrs);
+        
+        flushDomainCacheOnAllServers(domain.getId());
     }
     
 
@@ -1825,7 +1832,11 @@ public class LdapProvisioning extends Provisioning {
                     if (key.startsWith("zimbra")) 
                         attrs.put(key, "");
                 }
-                modifyAttrs(d, attrs, false);
+                // cannot invoke callback here.  If another domain attr is added in a callback, 
+                // e.g. zimbraDomainStatus would add zimbraMailStatus, then we will get a LDAP 
+                // schema violation naming error(zimbraDomain is removed, thus there cannot be 
+                // any zimbraAttrs left) and the modify will fail.    
+                modifyAttrs(d, attrs, false, false); 
             }
 
             String defaultDomain = getConfig().getAttr(A_zimbraDefaultDomainName, null);
@@ -4706,6 +4717,38 @@ public class LdapProvisioning extends Provisioning {
             return ((LdapZimlet)entry).getDN();
         else
             throw ServiceException.FAILURE("not a ldap entry", null);
+    }
+    
+
+    
+    static void flushDomainCache(Provisioning prov, String domainId) throws ServiceException {
+        CacheEntry[] cacheEntries = new CacheEntry[1];
+        cacheEntries[0] = new CacheEntry(CacheEntryBy.id, domainId);
+        prov.flushCache(CacheEntryType.domain, cacheEntries);
+    }
+    
+    void flushDomainCacheOnAllServers(String domainId) throws ServiceException {
+        SoapProvisioning soapProv = new SoapProvisioning();
+        
+        for (Server server : getAllServers()) {
+            
+            String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
+                                
+            int port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
+            if (port <= 0) {
+                ZimbraLog.account.warn("flushDomainCacheOnAllServers: remote server " + server.getName() + " does not have https port enabled, domain cache not flushed on server");
+                continue;        
+            }
+                
+            soapProv.soapSetURI(LC.zimbra_admin_service_scheme.value()+hostname+":"+port+ZimbraServlet.ADMIN_SERVICE_URI);
+                
+            try {
+                soapProv.soapZimbraAdminAuthenticate();
+                flushDomainCache(soapProv, domainId);
+            } catch (ServiceException e) {
+                ZimbraLog.account.warn("flushDomainCacheOnAllServers: domain cache not flushed on server " + server.getName(), e);
+            }
+        }
     }
     
     @Override
