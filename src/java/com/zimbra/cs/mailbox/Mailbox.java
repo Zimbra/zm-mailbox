@@ -3345,7 +3345,6 @@ public class Mailbox {
             short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
 
             if (redoPlayer == null || redoPlayer.getCalendarItemId() == 0) {
-                assert(inv.getMailItemId() == 0); 
                 inv.setInviteId(getNextItemId(Mailbox.ID_AUTO_INCREMENT));
             }
 

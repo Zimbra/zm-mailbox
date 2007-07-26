@@ -45,6 +45,7 @@ import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.mail.Address;
 import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
@@ -117,8 +118,58 @@ public class CalendarMailSender {
     }
 
     public static String getCancelSubject(String subject, Locale lc) {
-        String prefix = L10nUtil.getMessage(MsgKey.calendarSubjectCancelled, lc);
-        return prefix + ": " + subject;
+        String prefix = L10nUtil.getMessage(MsgKey.calendarSubjectCancelled, lc) + ": ";
+        if (subject != null && subject.startsWith(prefix))
+            return subject;
+        else
+            return prefix + subject;
+    }
+
+    public static MimeMessage createOrganizerChangeMessage(Account fromAccount,
+                                                           CalendarItem calItem,
+                                                           Invite inv,
+                                                           List<Address> rcpts)
+    throws ServiceException {
+        ZOrganizer organizer = inv.getOrganizer();
+        assert(organizer != null);
+        boolean onBehalfOf = organizer.hasSentBy();
+        String senderAddr = onBehalfOf ? organizer.getSentBy() : organizer.getAddress();
+
+        Locale locale = fromAccount.getLocale();
+
+        boolean hidePrivate = onBehalfOf && !calItem.isPublic();
+        String subject;
+        if (hidePrivate)
+            subject = L10nUtil.getMessage(MsgKey.calendarSubjectWithheld, locale);
+        else
+            subject = inv.getName();
+        StringBuilder sb = new StringBuilder("Organizer has been changed to " + fromAccount.getName());
+        sb.append("\r\n\r\n");
+
+        if (!hidePrivate) {
+            MimeMessage mmInv = inv.getMimeMessage();
+            if (mmInv != null)
+                attachInviteSummary(sb, mmInv, locale);
+        }
+
+        ZVCalendar iCal = inv.newToICalendar();
+
+        Address from;
+        try {
+            from = AccountUtil.getFriendlyEmailAddress(fromAccount);
+        } catch (UnsupportedEncodingException e) {
+            throw MailServiceException.ADDRESS_PARSE_ERROR(e);
+        }
+        Address sender = null;
+        if (onBehalfOf) {
+            try {
+                sender = new InternetAddress(senderAddr);
+            } catch (AddressException e) {
+                throw MailServiceException.ADDRESS_PARSE_ERROR(e);
+            }
+        }
+        return createCalendarMessage(
+                from, sender, rcpts, subject, sb.toString(), inv.getUid(), iCal);
     }
 
     public static MimeMessage createDefaultReply(Account fromAccount,

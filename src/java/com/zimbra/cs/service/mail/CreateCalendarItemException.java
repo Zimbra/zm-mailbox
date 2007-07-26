@@ -24,11 +24,9 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
@@ -47,12 +45,6 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class CreateCalendarItemException extends CreateCalendarItem {
     
-    private static Log sLog = LogFactory.getLog(CreateCalendarItemException.class);
-
-    private static final String[] TARGET_PATH = new String[] { MailConstants.A_ID };
-    protected String[] getProxiedIdPath(Element request)     { return TARGET_PATH; }
-    protected boolean checkMountpointProxy(Element request)  { return false; }
-
     protected class CreateCalendarItemExceptionInviteParser extends ParseMimeMessage.InviteParser
     {
         private String mUid;
@@ -66,10 +58,9 @@ public class CreateCalendarItemException extends CreateCalendarItem {
         public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraSoapContext zsc, OperationContext octxt, Account account, Element inviteElem)
         throws ServiceException {
             ParseMimeMessage.InviteParserResult toRet =
-                CalendarUtils.parseInviteForCreate(
+                CalendarUtils.parseInviteForCreateException(
                         account, getItemType(), inviteElem,
-                        mDefaultInvite.getTimeZoneMap(), mUid, true,
-                        CalendarUtils.RECUR_NOT_ALLOWED);
+                        mDefaultInvite.getTimeZoneMap(), mUid, mDefaultInvite);
 
             // Send cancellations to any attendees who have been removed.
             List<ZAttendee> removedAttendees = CalendarUtils.getRemovedAttendees(mDefaultInvite, toRet.mInvite);
@@ -88,17 +79,31 @@ public class CreateCalendarItemException extends CreateCalendarItem {
         OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
-        ItemId iid = new ItemId(request.getAttribute(MailConstants.A_ID), zsc);
-        int compNum = (int) request.getAttributeLong(MailConstants.E_INVITE_COMPONENT);
-        sLog.info("<CreateCalendarItemException id=" + ifmt.formatItemId(iid) + " comp=" + compNum + "> " + zsc.toString());
-        
-        // <M>
+        // proxy handling
+
         Element msgElem = request.getElement(MailConstants.E_MSG);
-        
-        if (msgElem.getAttribute(MailConstants.A_FOLDER, null) != null) {
-            throw ServiceException.FAILURE("You may not specify a target Folder when creating an Exception for an existing calendar item", null);
+        String folderStr = msgElem.getAttribute(MailConstants.A_FOLDER, null);
+        ItemId iid = new ItemId(request.getAttribute(MailConstants.A_ID), zsc);
+        if (!iid.belongsTo(acct)) {
+            // Proxy it.
+            if (folderStr != null) {
+                // make sure that the folder ID is fully qualified
+                ItemId folderFQ = new ItemId(folderStr, zsc);
+                msgElem.addAttribute(MailConstants.A_FOLDER, folderFQ.toString());
+            }
+            return proxyRequest(request, context, iid.getAccountId());
         }
-        
+
+        // Check if moving to a different mailbox.
+        boolean isInterMboxMove = false;
+        ItemId iidFolder = null;
+        if (folderStr != null) {
+            iidFolder = new ItemId(folderStr, zsc);
+            isInterMboxMove = !iidFolder.belongsTo(mbox);
+        }
+
+        int compNum = (int) request.getAttributeLong(MailConstants.E_INVITE_COMPONENT);
+
         Element response = getResponseElement(zsc);
         synchronized(mbox) {
             CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId()); 
@@ -113,8 +118,22 @@ public class CreateCalendarItemException extends CreateCalendarItem {
             
             CreateCalendarItemExceptionInviteParser parser = new CreateCalendarItemExceptionInviteParser(calItem.getUid(), inv);
             CalSendData dat = handleMsgElement(zsc, octxt, msgElem, acct, mbox, parser);
+            dat.mDontNotifyAttendees = isInterMboxMove;
             
-            return sendCalendarMessage(zsc, octxt, calItem.getFolderId(), acct, mbox, dat, response, false);
+            int folderId = calItem.getFolderId();
+            if (!isInterMboxMove && iidFolder != null)
+                folderId = iidFolder.getId();
+            sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, false);
         }
+
+        // Inter-mailbox move if necessary.
+        if (isInterMboxMove) {
+            CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
+            List<Integer> ids = new ArrayList<Integer>(1);
+            ids.add(calItem.getId());
+            ItemActionHelper.MOVE(octxt, mbox, ids, calItem.getType(), null, iidFolder);
+        }
+
+        return response;
     }
 }

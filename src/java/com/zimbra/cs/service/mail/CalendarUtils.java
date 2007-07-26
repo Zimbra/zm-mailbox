@@ -147,6 +147,45 @@ public class CalendarUtils {
         return toRet;
     }
 
+    static ParseMimeMessage.InviteParserResult parseInviteForCreateException(
+            Account account, byte itemType, Element inviteElem, TimeZoneMap tzMap, String uid,
+            Invite defaultInv)
+    throws ServiceException {
+        if (tzMap == null) {
+            tzMap = new TimeZoneMap(ICalTimeZone.getAccountTimeZone(account));
+        }
+        Invite create = new Invite(ICalTok.PUBLISH.toString(), tzMap, false);
+
+        CalendarUtils.parseInviteElementCommon(
+                account, itemType, inviteElem, create, true, false);
+
+        // DTSTAMP
+        if (create.getDTStamp() == 0) { //zdsync
+            create.setDtStamp(new Date().getTime());
+        }
+
+        // UID
+        if (uid != null && uid.length() > 0)
+            create.setUid(uid);
+
+        // Don't allow changing organizer in an exception instance.
+        create.setOrganizer(defaultInv.hasOrganizer()
+                            ? new ZOrganizer(defaultInv.getOrganizer()) : null);
+        create.setIsOrganizer(account);
+
+        ZVCalendar iCal = create.newToICalendar();
+
+        String summaryStr = create.getName() != null ? create.getName() : "";
+
+        ParseMimeMessage.InviteParserResult toRet = new ParseMimeMessage.InviteParserResult();
+        toRet.mCal = iCal;
+        toRet.mUid = create.getUid();
+        toRet.mSummary = summaryStr;
+        toRet.mInvite = create;
+
+        return toRet;
+    }
+
     /**
      * Parse an <inv> element in a Modify context -- existing UID, etc
      * 
@@ -179,6 +218,10 @@ public class CalendarUtils {
         }
 
         attendeesToCancel.addAll(getRemovedAttendees(oldInv, mod));
+
+        // Don't allow changing organizer in modify request.
+        mod.setOrganizer(oldInv.hasOrganizer() ? new ZOrganizer(oldInv.getOrganizer()) : null);
+        mod.setIsOrganizer(account);
 
         ZVCalendar iCal = mod.newToICalendar();
 

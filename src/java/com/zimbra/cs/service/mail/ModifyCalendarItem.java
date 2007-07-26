@@ -94,47 +94,56 @@ public class ModifyCalendarItem extends CalendarRequest {
             }
             return proxyRequest(request, context, iid.getAccountId());
         }
-        String moveTargetAccountId = null;
+
+        // Check if moving to a different mailbox.
+        boolean isInterMboxMove = false;
+        ItemId iidFolder = null;
         if (folderStr != null) {
-            ItemId iidFolder = new ItemId(folderStr, zsc);
-            if (!iidFolder.belongsTo(mbox)) {
-                // We're moving the item out of this mailbox.
-                moveTargetAccountId = iidFolder.getAccountId();
+            iidFolder = new ItemId(folderStr, zsc);
+            isInterMboxMove = !iidFolder.belongsTo(mbox);
+        }
+        
+        Element response = getResponseElement(zsc);
+        int compNum = (int) request.getAttributeLong(MailConstants.A_CAL_COMP, 0);
+        synchronized(mbox) {
+            CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
+            if (calItem == null) {
+                throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
             }
+            Invite inv = calItem.getInvite(iid.getSubpartId(), compNum);
+            if (inv == null) {
+                throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
+            }
+            int folderId = calItem.getFolderId();
+            if (!isInterMboxMove && iidFolder != null)
+                folderId = iidFolder.getId();
+            modifyCalendarItem(zsc, octxt, request, acct, mbox, folderId, calItem, inv,
+                               response, isInterMboxMove);
         }
 
-        if (moveTargetAccountId != null) {
-            throw ServiceException.INVALID_REQUEST("cannot combine cross-mailbox move with edits", null);
-            // TODO: Should we allow this?
-        } else {
-            int compNum = (int) request.getAttributeLong(MailConstants.A_CAL_COMP, 0);
-            synchronized(mbox) {
-                CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
-                if (calItem == null) {
-                    throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
-                }
-                Invite inv = calItem.getInvite(iid.getSubpartId(), compNum);
-                if (inv == null) {
-                    throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
-                }
-                
-                // response
-                Element response = getResponseElement(zsc);
-                
-                return modifyCalendarItem(zsc, octxt, request, acct, mbox, calItem, inv, response);
-            } // synchronized on mailbox                
+        // Inter-mailbox move if necessary.
+        if (isInterMboxMove) {
+            CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
+            List<Integer> ids = new ArrayList<Integer>(1);
+            ids.add(calItem.getId());
+            ItemActionHelper.MOVE(octxt, mbox, ids, calItem.getType(), null, iidFolder);
         }
+
+        return response;
     }
 
-    private Element modifyCalendarItem(ZimbraSoapContext zsc, OperationContext octxt, Element request, Account acct, Mailbox mbox,
-            CalendarItem calItem, Invite inv, Element response) throws ServiceException
-    {
+    private Element modifyCalendarItem(
+            ZimbraSoapContext zsc, OperationContext octxt, Element request,
+            Account acct, Mailbox mbox, int folderId,
+            CalendarItem calItem, Invite inv, Element response, boolean isInterMboxMove)
+    throws ServiceException {
         // <M>
         Element msgElem = request.getElement(MailConstants.E_MSG);
         
         ModifyCalendarItemParser parser = new ModifyCalendarItemParser(mbox, inv);
         
         CalSendData dat = handleMsgElement(zsc, octxt, msgElem, acct, mbox, parser);
+        dat.mDontNotifyAttendees = isInterMboxMove;
 
         // If we are sending this update to other people, then we MUST be the organizer!
         if (!inv.isOrganizer()) {
@@ -148,7 +157,7 @@ public class ModifyCalendarItem extends CalendarRequest {
             }
         }
 
-        sendCalendarMessage(zsc, octxt, calItem.getFolderId(), acct, mbox, dat, response, false);
+        sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, false);
 
         return response;
     }

@@ -760,7 +760,8 @@ public abstract class CalendarItem extends MailItem {
         if (onBehalfOf && !newInvite.isPublic() && !isCalendarResource)
             throw ServiceException.PERM_DENIED("private appointment/task cannot be created/edited on behalf of another user");
 
-        organizerChangeCheck(newInvite);
+        boolean organizerChanged = organizerChangeCheck(newInvite, isCancel);
+        ZOrganizer newOrganizer = newInvite.getOrganizer();
 
         // If modifying recurrence series (rather than an instance) and the
         // start time (HH:MM:SS) is changing, we need to update the time
@@ -825,18 +826,25 @@ public abstract class CalendarItem extends MailItem {
                     addNewOne = false;
                 }
 //              break; // don't stop here!  new Invite *could* obsolete multiple existing ones! 
-            } else if (needRecurrenceIdUpdate) {
-                RecurId rid = cur.getRecurId();
+            } else if (needRecurrenceIdUpdate || organizerChanged) {
+                // If organizer is changing on any invite, change it on all invites.
+                boolean added = false;
+                if (organizerChanged) {
+                    cur.setOrganizer(newOrganizer);
+                    toUpdate.add(cur);
+                    added = true;
+                }
                 // Translate the date/time in RECURRENCE-ID to the timezone in
                 // original recurrence DTSTART.  If they have the same HHMMSS
                 // part, the RECURRENCE-ID need to be adjusted by the diff of
                 // old and new recurrence DTSTART.
+                RecurId rid = cur.getRecurId();
                 if (rid != null && rid.getDt() != null) {
                     ParsedDateTime ridDt = (ParsedDateTime) rid.getDt().clone();
                     ICalTimeZone oldTz = oldDtStart.getTimeZone();
                     if (oldTz != null) {
                         ridDt.toTimeZone(oldTz);
-                        if (ridDt.sameTime(oldDtStart))
+                        if (ridDt.sameTime(oldDtStart) && !added)
                             toUpdate.add(cur);
                     }
                 }
@@ -975,12 +983,11 @@ public abstract class CalendarItem extends MailItem {
     /**
      * Check to make sure the new invite doesn't change the organizer in a disallowed way.
      * @param newInvite
+     * @return true if organizer change was detected, false if no change
      * @throws ServiceException
      */
-    private void organizerChangeCheck(Invite newInvite) throws ServiceException {
-        // TODO: Skip this check if and only if we positively know the operation is intentional
-        // and legitimate, such as moving an appointment from one calendar to another calendar.
-
+    private boolean organizerChangeCheck(Invite newInvite, boolean denyChange)
+    throws ServiceException {
         Invite originalInvite = null;
         if (!newInvite.hasRecurId()) {
             // New invite is not for an exception.
@@ -1008,49 +1015,68 @@ public abstract class CalendarItem extends MailItem {
             if (originalInvite == null) {
                 // Still no invite.  Something is seriously wrong.  Return without any further
                 // checks in this method.
-                return;
+                return false;
             }
         }
 
+        boolean changed = false;
         ZOrganizer originalOrganizer = originalInvite.getOrganizer();
         if (!originalInvite.isOrganizer()) {
             // This account WAS NOT the organizer.  Prevent organizer change.
             if (newInvite.hasOrganizer()) {
                 String newOrgAddr = newInvite.getOrganizer().getAddress();
                 if (originalOrganizer == null) {
-                    throw ServiceException.INVALID_REQUEST(
-                            "Changing organizer of an appointment/task to another user is not allowed: old=(unspecified), new=" + newOrgAddr, null);
+                    if (denyChange) {
+                        throw ServiceException.INVALID_REQUEST(
+                                "Changing organizer of an appointment/task to another user is not allowed: old=(unspecified), new=" + newOrgAddr, null);
+                    } else {
+                        changed = true;
+                    }
                 } else {
                     // Both old and new organizers are set.  They must be the
                     // same address.
                     String origOrgAddr = originalOrganizer.getAddress();
-                    if (newOrgAddr == null || !newOrgAddr.equalsIgnoreCase(origOrgAddr))
-                        throw ServiceException.INVALID_REQUEST(
-                                "Changing organizer of an appointment/task is not allowed: old=" + origOrgAddr + ", new=" + newOrgAddr, null);
+                    if (newOrgAddr == null || !newOrgAddr.equalsIgnoreCase(origOrgAddr)) {
+                        if (denyChange) {
+                            throw ServiceException.INVALID_REQUEST(
+                                    "Changing organizer of an appointment/task is not allowed: old=" + origOrgAddr + ", new=" + newOrgAddr, null);
+                        } else {
+                            changed = true;
+                        }
+                    }
                 }
             } else if (originalOrganizer != null) {
-                throw ServiceException.INVALID_REQUEST(
-                        "Removing organizer of an appointment/task is not allowed", null);
+                if (denyChange) {
+                    throw ServiceException.INVALID_REQUEST(
+                            "Removing organizer of an appointment/task is not allowed", null);
+                } else {
+                    changed = true;
+                }
             }
         } else {
             // Even for the organizer account, don't allow changing the organizer field
             // to an arbitrary address.
             if (newInvite.hasOrganizer()) {
                 if (!newInvite.isOrganizer()) {
-                    String newOrgAddr = newInvite.getOrganizer().getAddress();
-                    if (originalOrganizer != null) {
-                        String origOrgAddr = originalOrganizer.getAddress();
-                        throw ServiceException.INVALID_REQUEST(
-                                "Changing organizer of an appointment/task to another user is not allowed: old=" +
-                                origOrgAddr + ", new=" + newOrgAddr, null);
+                    if (denyChange) {
+                        String newOrgAddr = newInvite.getOrganizer().getAddress();
+                        if (originalOrganizer != null) {
+                            String origOrgAddr = originalOrganizer.getAddress();
+                            throw ServiceException.INVALID_REQUEST(
+                                    "Changing organizer of an appointment/task to another user is not allowed: old=" +
+                                    origOrgAddr + ", new=" + newOrgAddr, null);
+                        } else {
+                            throw ServiceException.INVALID_REQUEST(
+                                    "Changing organizer of an appointment/task to another user is not allowed: old=(unspecified), new=" +
+                                    newOrgAddr, null);
+                        }
                     } else {
-                        throw ServiceException.INVALID_REQUEST(
-                                "Changing organizer of an appointment/task to another user is not allowed: old=(unspecified), new=" +
-                                newOrgAddr, null);
+                        changed = true;
                     }
                 }
             }
         }
+        return changed;
     }
 
     /**

@@ -81,6 +81,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         String mIdentityId;
         MimeMessage mMm;
         Invite mInvite;
+        boolean mDontNotifyAttendees;
     }
 
     /**
@@ -203,7 +204,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
     throws ServiceException {
         return sendCalendarMessageInternal(zsc, octxt, apptFolderId,
                                            acct, mbox, csd, response,
-                                           ignoreFailedAddresses, true);
+                                           ignoreFailedAddresses, true, true);
     }
 
     /**
@@ -232,7 +233,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         boolean cancelOwnAppointment)
     throws ServiceException {
     	return sendCalendarMessageInternal(zsc, octxt, apptFolderId, acct, mbox, csd,
-                                           null, true, cancelOwnAppointment);
+                                           null, true, cancelOwnAppointment, true);
     }
 
     /**
@@ -259,7 +260,8 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         CalSendData csd,
         Element response,
         boolean ignoreFailedAddresses,
-        boolean updateOwnAppointment)
+        boolean updateOwnAppointment,
+        boolean mustBeOrganizer)
     throws ServiceException {
         synchronized (mbox) {
             if (csd.mInvite.hasOrganizer()) {
@@ -274,7 +276,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                     // owner and reject any such request.  If we didn't, attendees would
                     // receive an invitation from user A claiming the meeting was
                     // organized by user B.  (Saw this behavior with Consilient.)
-                    if (!isOrganizer) {
+                    if (!isOrganizer && mustBeOrganizer) {
                         String orgAddress = csd.mInvite.getOrganizer().getAddress();
                         throw ServiceException.INVALID_REQUEST(
                                 "Cannot create/modify an appointment/task with organizer set to " +
@@ -283,7 +285,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                     }
                     break;
                 case CANCEL:
-                    if (!isOrganizer) {
+                    if (!isOrganizer && mustBeOrganizer) {
                         boolean hasRcpts = false;
                         try {
                             hasRcpts = csd.mMm.getAllRecipients() != null;
@@ -369,8 +371,10 @@ public abstract class CalendarRequest extends MailDocumentHandler {
 //                    }
 //                } catch (MessagingException e) { }
 //            } else {
-            msgId = mbox.getMailSender().sendMimeMessage(octxt, mbox, csd.mMm, csd.newContacts, csd.uploads,
-                                                         csd.mOrigId, csd.mReplyType, csd.mIdentityId, ignoreFailedAddresses, true);
+            if (!csd.mDontNotifyAttendees)
+                msgId = mbox.getMailSender().sendMimeMessage(
+                        octxt, mbox, csd.mMm, csd.newContacts, csd.uploads,
+                        csd.mOrigId, csd.mReplyType, csd.mIdentityId, ignoreFailedAddresses, true);
 //            }
 
             if (updateOwnAppointment) {
@@ -389,6 +393,26 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             }
         }
         
+        return response;
+    }
+
+    protected static Element sendOrganizerChangeMessage(
+            ZimbraSoapContext zsc, OperationContext octxt,
+            CalendarItem calItem, Account acct, Mailbox mbox,
+            Element response)
+    throws ServiceException {
+        Invite[] invites = calItem.getInvites();
+        for (Invite inv : invites) {
+            List<Address> rcpts = CalendarMailSender.toListFromAttendees(inv.getAttendees());
+            if (rcpts.size() > 0) {
+                CalSendData csd = new CalSendData();
+                csd.mInvite = inv;
+                csd.mOrigId = inv.getMailItemId();
+                csd.mMm = CalendarMailSender.createOrganizerChangeMessage(acct, calItem, csd.mInvite, rcpts);
+                sendCalendarMessageInternal(zsc, octxt, calItem.getFolderId(), acct, mbox, csd,
+                                            response, true, true, false);
+            }
+        }
         return response;
     }
 

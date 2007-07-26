@@ -514,17 +514,24 @@ public class ItemActionHelper {
 
                 case MailItem.TYPE_APPOINTMENT:
                 case MailItem.TYPE_TASK:
+                    // Move the item to remote mailbox using SetAppointmentRequest/SetTaskRequest.
                     QName qname = (item.getType() == MailItem.TYPE_TASK ? MailConstants.SET_TASK_REQUEST : MailConstants.SET_APPOINTMENT_REQUEST);
                     Element request = new Element.XMLElement(qname).addAttribute(MailConstants.A_FOLDER, folderStr).addAttribute(MailConstants.A_FLAGS, flags);
                     CalendarItem cal = (CalendarItem) item;
 
+                    boolean isOrganizer = false;
                     Invite invDefault = cal.getDefaultInviteOrNull();
-                    if (invDefault != null)
+                    if (invDefault != null) {
+                        if (invDefault.isOrganizer())
+                            isOrganizer = true;
                         addCalendarPart(request.addUniqueElement(MailConstants.A_DEFAULT), cal, invDefault, zmbx, target);
+                    }
 
                     for (Invite inv : cal.getInvites()) {
                         if (inv == null || inv == invDefault)
                             continue;
+                        if (inv.isOrganizer())
+                            isOrganizer = true;
                         String elem = inv.isCancel() ? MailConstants.E_CAL_CANCEL : MailConstants.E_CAL_EXCEPT;
                         addCalendarPart(request.addElement(elem), cal, inv, zmbx, target);
                     }
@@ -533,6 +540,13 @@ public class ItemActionHelper {
 
                     createdId = zmbx.invoke(request).getAttribute(MailConstants.A_CAL_ID);
                     mCreatedIds.add(createdId);
+
+                    if (isOrganizer) {
+                        // Announce organizer change to attendees.
+                        request = new Element.XMLElement(MailConstants.ANNOUNCE_ORGANIZER_CHANGE);
+                        request.addAttribute(MailConstants.A_ID, createdId);
+                        zmbx.invoke(request);
+                    }
                     break;
 
                 default:
