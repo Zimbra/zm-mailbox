@@ -81,6 +81,8 @@ public class AdminConstants {
     public static final QName GET_DOMAIN_INFO_RESPONSE = QName.get("GetDomainInfoResponse", NAMESPACE);
     public static final QName MODIFY_DOMAIN_REQUEST = QName.get("ModifyDomainRequest", NAMESPACE);
     public static final QName MODIFY_DOMAIN_RESPONSE = QName.get("ModifyDomainResponse", NAMESPACE);
+    public static final QName MODIFY_DOMAIN_STATUS_REQUEST = QName.get("ModifyDomainStatusRequest", NAMESPACE);
+    public static final QName MODIFY_DOMAIN_STATUS_RESPONSE = QName.get("ModifyDomainStatusResponse", NAMESPACE);
     public static final QName DELETE_DOMAIN_REQUEST = QName.get("DeleteDomainRequest", NAMESPACE);
     public static final QName DELETE_DOMAIN_RESPONSE = QName.get("DeleteDomainResponse", NAMESPACE);
     public static final QName GET_ALL_DOMAINS_REQUEST = QName.get("GetAllDomainsRequest", NAMESPACE);
