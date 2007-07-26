@@ -431,7 +431,7 @@ public class OzImapConnectionHandler extends ImapHandler implements OzConnection
 
             if (literal.octets() > 0) {
                 if (literal.blocking())
-                    sendContinuation();
+                    sendContinuation("send literal data");
                 gotoReadLiteralState(literal.octets());
                 return;
             } else {

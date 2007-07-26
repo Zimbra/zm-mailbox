@@ -59,7 +59,7 @@ public class MinaImapRequest extends ImapRequest implements MinaRequest {
             buf = null;
             state = State.LINE;
         } else if (blocking) {
-            getHandler().sendContinuation();
+            getHandler().sendContinuation("send literal data");
         }
     }
 
@@ -97,7 +97,7 @@ public class MinaImapRequest extends ImapRequest implements MinaRequest {
             --j;
         } else {
             blocking = true;
-            getHandler().sendContinuation();
+            getHandler().sendContinuation("send literal data");
         }
         state = State.LITERAL;
         count = parseNumber(line, i + 1, j);

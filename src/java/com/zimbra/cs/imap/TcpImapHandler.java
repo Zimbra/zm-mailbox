@@ -185,7 +185,7 @@ public class TcpImapHandler extends ImapHandler {
         } catch (TcpImapRequest.ImapContinuationException ice) {
             mIncompleteRequest = req.rewind();
             if (ice.sendContinuation)
-                sendContinuation();
+                sendContinuation("send literal data");
         } catch (TcpImapRequest.ImapTerminatedException ite) {
             mIncompleteRequest = null;
             keepGoing = STOP_PROCESSING;
