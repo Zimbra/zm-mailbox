@@ -274,9 +274,20 @@ class RenameDomain {
     }
     
     private RenameInfo beginRenameDomain() throws ServiceException {
+        String oldDomainName = mOldDomain.getName();
         
-        // see if the domain is suspended
+        // see if the domain is currently suspended and/or being renamed
         boolean domainIsSuspended = mOldDomain.isSuspended();
+        RenameInfo renameInfo = RenameInfo.load(mOldDomain, true);
+        
+        if (domainIsSuspended && renameInfo == null)
+            throw ServiceException.INVALID_REQUEST("domain " + oldDomainName + " is suspended without rename domain info", null);
+        
+        if (renameInfo != null && !renameInfo.destDomainName().equals(mNewDomainName))
+            throw ServiceException.INVALID_REQUEST("domain " + oldDomainName + " was being renamed to " + renameInfo.destDomainName() + 
+                                                   " it cannot be renamed to " + mNewDomainName + " until the previous rename is finished", null);
+      
+        // okay, this is either a new rename or a restart of a previous rename that did not finish   
         
         // mark domain suspended and rejecting mails
         // mProv.modifyDomainStatus(mOldDomain, Provisioning.DOMAIN_STATUS_SUSPENDED);
@@ -285,17 +296,14 @@ class RenameDomain {
         attrs.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_DISABLED);
         mProv.modifyAttrs(mOldDomain, attrs, false, false);
                 
-        String oldDomainName = mOldDomain.getName();
         RenamePhase phase = RenamePhase.PHASE_RENAME_ENTRIES;
-       
-        RenameInfo renameInfo = RenameInfo.load(mOldDomain, true);
+        
         if (renameInfo == null) {
+            // new rename
             renameInfo = new RenameInfo(null, mNewDomainName, phase);
             renameInfo.write(mProv, mOldDomain);
         } else {
-            if (!renameInfo.destDomainName().equals(mNewDomainName))
-                throw ServiceException.INVALID_REQUEST("domain " + oldDomainName + " was being renamed to " + renameInfo.destDomainName() + 
-                                                       " it cannot be renamed to " + mNewDomainName + " until the previous rename is finished" , null);
+            // restart of a previous rename that did not finish
             phase = renameInfo.phase();
         }
         

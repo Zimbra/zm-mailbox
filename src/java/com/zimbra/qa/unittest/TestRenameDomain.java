@@ -826,15 +826,22 @@ public class TestRenameDomain  extends TestCase {
 
     private void execute() throws Exception {
         
+        // setup
         Domain oldDomain = mProv.get(Provisioning.DomainBy.name, DOMAIN_NAME(OLD_DOMAIN));
         String oldDomainId = oldDomain.getId();
         Map<String, Object> oldDomainAttrs = oldDomain.getAttrs(false);
         
+        System.out.println("rd " + oldDomain.getId() + " " +  DOMAIN_NAME(NEW_DOMAIN));
+        
+        /*
+        // rename
         ((LdapProvisioning)mProv).renameDomain(oldDomain.getId(), DOMAIN_NAME(NEW_DOMAIN));
         
+        // verify
         verifyOldDomain();
         verifyNewDomain(oldDomainId, oldDomainAttrs);
         verifyOtherDomains();        
+        */
     }
     
     public void testRenameDomain() throws Exception {
@@ -866,65 +873,3 @@ public class TestRenameDomain  extends TestCase {
         */
     }
 }
-
-
-/*
- zmprov command - must be LDAP (-l), no SOAP
-===========================================
-renameDomain(rd) [-c] {domain-name} {new-domain-name}
-
--c: cancel a previously started(and stopped) renameDomain.
-
-
-High level flow:
-================
-Let's say we are renaming olddomain to newdomain:
-
-1. Disable olddomain so olddomain and entries under it cannot be added/deleted/modified/renamed/logged in; also, all new mails going to olddomain will be bounced.  (This needs bug 13236, see comment #8, the disabled status.  Anand, bug 13236 is currently targeted for G&R, we should probably retarget it for Franklin, not sure if I can get it in D3 though.)
-
-2. Flush LDAP domain caches on all the servers, using the new FlushCache SOAP call (bug 18295, I can get this in for D3).
-
-3. Set zimbraDomainRenameInfo on olddomain to "SOURCE,CREATING:newdomain".   zimbraDomainRenameInfo is a new domain attr.  It is for keeping states of the renameDomain command for recovering from stop for any reason.  If the rename stopped in the middle it can be resumed only to the same destination.
-
-   Format of zimbraDomainRenameInfo:
-   On the source domain it should be set to:
-       SOURCE,{CREATING|DELETING}:{destination-domain-name}
-           - indicating the domain is being renamed to {destination-domain-name}
-           - CREATING => the command is the "creating" stage.
-           - DELETING => the command is the "deleting" stage.
-
-   On the destination domain it should be set to:
-       DESTINATION:{source-domain-name}
-           - indicating the domain is being renamed from {source-domain-name}
-
-
-4. Create domain newdomain - the domain is created disabled and zimbraDomainRenameInfo is set to DESTINATION:olddomain.  Ignore DOMAIN_EXISTS error if newdomain already exists with zimbraDomainRenameInfo=DESTINATION:olddomain, otherwise reanmeDomain will fail.
-
-
-5. CREATING stage:
-     - For each entry under oldmain, create/fix up accounts/DLs/aliases under newdomain, but don't delete the entries under olddomain yet.  
-     - If it stopped/crashed in this stage, when it is restarted it will try to create all the entries again in newdomain, any NameAlreadyBoundException exceptions will be ignored.
-
-
-6. DELETING stage:
-     - Set zimbraDomainRenameInfo of olddomain to SOURCE,DELETING:newdomain.
-     - Once it enters this stage, the -c(cancel) option is not allowed.  It cannot be reverted from now on.
-     - Delete all entries in the old domain.  
-     - If it stopped/crashed in this stage, when it is restarted it'll skip all previous steps and continue from this stage.
-    
-
-7. Delete olddomain
-
-
-8. Activate newdomain and erase newdomain.zimbraDomainRenameInfo.
-
-
-For -c(cancel), it:
-
-1. Allows only if olddomain was in the CREATING stage.  (It's operators responsibility to ensure there is only one instance of zmprov running the renameDomain command on the same domain.  This actually applies to many commands as a common sense. :) )
-
-2. Delete newdomain and all entries under it.
-
-3. Activate olddomain and erase olddomain.zimbraDomainRenameInfo.
-
-*/

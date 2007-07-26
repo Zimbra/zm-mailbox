@@ -20,7 +20,16 @@ public class DomainStatus implements AttributeCallback {
         if (status.equals(Provisioning.DOMAIN_STATUS_CLOSED)) {
             attrsToModify.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_DISABLED);
         } else {
-            attrsToModify.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_ENABLED);
+            String alsoModifyingMailStatus = (String)attrsToModify.get(Provisioning.A_zimbraMailStatus);
+            if (alsoModifyingMailStatus == null) {
+                String curMailStatus = entry.getAttr(Provisioning.A_zimbraMailStatus);
+                if (status.equals(Provisioning.DOMAIN_STATUS_SUSPENDED) && 
+                    curMailStatus != null &&
+                    curMailStatus.equals(Provisioning.MAIL_STATUS_DISABLED))
+                    return;
+                
+                attrsToModify.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_ENABLED);
+            }
         }
 
     }
