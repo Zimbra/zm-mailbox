@@ -508,7 +508,7 @@ public class ItemActionHelper {
                     break;
 
                 case MailItem.TYPE_WIKI:
-                    createdId = zmbx.createWiki(folderStr, name, new String(((WikiItem) item).getMessageContent(), "utf-8"));
+                    createdId = zmbx.createWiki(folderStr, name, new String(((WikiItem) item).getContent(), "utf-8"));
                     mCreatedIds.add(createdId);
                     break;
 

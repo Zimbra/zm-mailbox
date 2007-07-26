@@ -24,8 +24,6 @@
  */
 package com.zimbra.cs.mailbox;
 
-import java.io.InputStream;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -33,47 +31,19 @@ import com.zimbra.cs.mime.ParsedDocument;
 
 public class WikiItem extends Document {
 	
-	String mWikiWord;
-	
 	WikiItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
 		super(mbox, data);
-	}
-	
-	@Override 
-	Metadata encodeMetadata(Metadata meta) {
-		meta.put(Metadata.FN_WIKI_WORD, mWikiWord);
-		return super.encodeMetadata(meta);
 	}
 	
 	public String getWikiWord() {
 		return getName();
 	}
-	
-	public long getCreatedTime() {
-		return getDate();
-	}
-	
-    public byte[] getMessageContent() throws ServiceException {
-        return MessageCache.getItemContent(this);
-    }
-
-    public InputStream getRawMessage() throws ServiceException {
-        return MessageCache.getRawContent(this);
-    }
-    
-    @Override 
-    void decodeMetadata(Metadata meta) throws ServiceException {
-        super.decodeMetadata(meta);
-        mWikiWord = meta.get(Metadata.FN_WIKI_WORD);
-    }
 
     public static final String WIKI_CONTENT_TYPE = "text/html; charset=utf-8";
 	
     static WikiItem create(int id, Folder folder, short volumeId, String wikiword, ParsedDocument pd)
     throws ServiceException {
         Metadata meta = new Metadata();
-		meta.put(Metadata.FN_WIKI_WORD, wikiword);
-
         UnderlyingData data = prepareCreate(TYPE_WIKI, id, folder, volumeId, wikiword, WIKI_CONTENT_TYPE, pd, meta);
 
 		Mailbox mbox = folder.getMailbox();
@@ -84,21 +54,5 @@ public class WikiItem extends Document {
         wiki.finishCreation(null);
         pd.setVersion(wiki.getVersion());
         return wiki;
-    }
-
-    private static final String CN_WIKIWORD = "wikiword";
-    private static final String CN_EDITOR   = "edited_by";
-    private static final String CN_VERSION  = "version";
-    
-    @Override 
-    public String toString() {
-        StringBuffer sb = new StringBuffer();
-        sb.append("wikiitem: {");
-        sb.append(CN_WIKIWORD).append(": ").append(getWikiWord()).append(", ");
-        sb.append(CN_EDITOR).append(": ").append(getCreator()).append(", ");
-        sb.append(CN_VERSION).append(": ").append(getVersion()).append(", ");
-        appendCommonMembers(sb).append(", ");
-        sb.append("}");
-        return sb.toString();
     }
 }

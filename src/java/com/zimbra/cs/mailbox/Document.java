@@ -204,7 +204,7 @@ public class Document extends MailItem {
     @Override 
     public String toString() {
         StringBuffer sb = new StringBuffer();
-        sb.append("document: {");
+        sb.append(getNameForType(this)).append(": {");
         sb.append(CN_FILE_NAME).append(": ").append(getName()).append(", ");
         sb.append(CN_EDITOR).append(": ").append(getCreator()).append(", ");
         sb.append(CN_MIME_TYPE).append(": ").append(mContentType).append(", ");
