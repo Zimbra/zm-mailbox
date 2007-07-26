@@ -98,6 +98,7 @@ public class AccountConstants {
     public static final String E_ID = "id";
     public static final String E_PASSWORD = "password";
     public static final String E_OLD_PASSWORD = "oldPassword";
+    public static final String A_SECTIONS = "sections";
     public static final String E_PREF = "pref";
     public static final String E_PREFS = "prefs";
     public static final String E_ATTR = "attr";
