@@ -5021,9 +5021,22 @@ public class Mailbox {
         }
         
         int globalTimeout = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailMessageLifetime, 0) / 1000);
-        int trashTimeout = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailTrashLifetime, 0) / 1000);
-        int spamTimeout  = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailSpamLifetime, 0) / 1000);
-        if (globalTimeout <= 0 && trashTimeout <= 0 && spamTimeout <= 0)
+        int systemTrashTimeout = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailTrashLifetime, 0) / 1000);
+        int systemJunkTimeout  = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailSpamLifetime, 0) / 1000);
+
+        int userInboxReadTimeout = (int) (acct.getTimeInterval(Provisioning.A_zimbraPrefInboxReadLifetime, 0) / 1000);
+        int userInboxUnreadTimeout = (int) (acct.getTimeInterval(Provisioning.A_zimbraPrefInboxUnreadLifetime, 0) / 1000);
+        int userTrashTimeout = (int) (acct.getTimeInterval(Provisioning.A_zimbraPrefTrashLifetime, 0) / 1000);
+        int userJunkTimeout = (int) (acct.getTimeInterval(Provisioning.A_zimbraPrefJunkLifetime, 0) / 1000);
+        int userSentTimeout = (int) (acct.getTimeInterval(Provisioning.A_zimbraPrefSentLifetime, 0) / 1000);
+
+        int trashTimeout = pickTimeout(systemTrashTimeout, userTrashTimeout);
+        int junkTimeout = pickTimeout(systemJunkTimeout, userJunkTimeout);
+        
+        if (globalTimeout <= 0 && trashTimeout <= 0 && junkTimeout <= 0 &&
+            userInboxReadTimeout <= 0 && userInboxReadTimeout <= 0 &&
+            userInboxUnreadTimeout <= 0 && userSentTimeout <= 0)
+            // Nothing to do
             return;
 
         // sanity-check the really dangerous value...
@@ -5041,19 +5054,41 @@ public class Mailbox {
 
             // get the folders we're going to be purging
             Folder trash = getFolderById(ID_FOLDER_TRASH);
-            Folder spam  = getFolderById(ID_FOLDER_SPAM);
+            Folder junk  = getFolderById(ID_FOLDER_SPAM);
+            Folder sent = getFolderById(ID_FOLDER_SENT);
+            Folder inbox = getFolderById(ID_FOLDER_INBOX);
 
             if (globalTimeout > 0)
-                Folder.purgeMessages(this, null, getOperationTimestamp() - globalTimeout);
+                Folder.purgeMessages(this, null, getOperationTimestamp() - globalTimeout, null);
             if (trashTimeout > 0)
-                Folder.purgeMessages(this, trash, getOperationTimestamp() - trashTimeout);
-            if (spamTimeout > 0)
-                Folder.purgeMessages(this, spam, getOperationTimestamp() - spamTimeout);
+                Folder.purgeMessages(this, trash, getOperationTimestamp() - trashTimeout, null);
+            if (junkTimeout > 0)
+                Folder.purgeMessages(this, junk, getOperationTimestamp() - junkTimeout, null);
+            if (userInboxReadTimeout > 0)
+                Folder.purgeMessages(this, inbox, getOperationTimestamp() - userInboxReadTimeout, false);
+            if (userInboxUnreadTimeout > 0)
+                Folder.purgeMessages(this, inbox, getOperationTimestamp() - userInboxUnreadTimeout, true);
+            if (userSentTimeout > 0)
+                Folder.purgeMessages(this, sent, getOperationTimestamp() - userSentTimeout, null);
 
             success = true;
         } finally {
             endTransaction(success);
         }
+    }
+    
+    /**
+     * Returns the smaller non-zero value, or <tt>0</tt> if both
+     * <tt>t1</tt> and <tt>t2</tt> are <tt>0</tt>.
+     */
+    private int pickTimeout(int t1, int t2) {
+        if (t1 == 0) {
+            return t2;
+        }
+        if (t2 == 0) {
+            return t1;
+        }
+        return Math.min(t1, t2);
     }
 
     public Document addDocumentRevision(OperationContext octxt, int docId, byte type, byte[] rawData, String author) throws ServiceException {

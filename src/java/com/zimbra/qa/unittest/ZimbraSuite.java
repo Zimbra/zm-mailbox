@@ -34,7 +34,6 @@ import junit.framework.TestSuite;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
-import com.zimbra.cs.index.TestSearch;
 
 /**
  * Complete unit test suite for the Zimbra code base.
@@ -90,7 +89,8 @@ public class ZimbraSuite extends TestSuite
         TestLmtp.class,
         TestMimeHandler.class,
         TestScheduledTaskManager.class,
-        TestDataSource.class
+        TestDataSource.class,
+        TestPurge.class
         
         // XXX bburtin: Commenting out IMAP tests, since the new schema hasn't been
         // checked in

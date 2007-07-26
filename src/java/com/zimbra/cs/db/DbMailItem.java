@@ -2140,7 +2140,8 @@ public class DbMailItem {
         }
     }
 
-    public static PendingDelete getLeafNodes(Mailbox mbox, List<Folder> folders, int before, boolean globalMessages) throws ServiceException {
+    public static PendingDelete getLeafNodes(Mailbox mbox, List<Folder> folders, int before, boolean globalMessages, Boolean unread)
+    throws ServiceException {
         PendingDelete info = new PendingDelete();
 
         Connection conn = mbox.getOperationConnection();
@@ -2153,6 +2154,9 @@ public class DbMailItem {
             else
                 constraint = "date < ? AND type NOT IN " + NON_SEARCHABLE_TYPES +
                              " AND folder_id IN" + DbUtil.suitableNumberOfVariables(folders);
+            if (unread != null) {
+                constraint += " AND unread = ?";
+            }
 
             stmt = conn.prepareStatement("SELECT " + LEAF_NODE_FIELDS +
                         " FROM " + getMailItemTableName(mbox) +
@@ -2163,6 +2167,9 @@ public class DbMailItem {
             if (!globalMessages) {
                 for (Folder folder : folders)
                     stmt.setInt(pos++, folder.getId());
+            }
+            if (unread != null) {
+                stmt.setBoolean(pos++, unread);
             }
             rs = stmt.executeQuery();
 

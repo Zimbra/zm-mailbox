@@ -967,14 +967,14 @@ public class Folder extends MailItem {
     }
 
 
-    static void purgeMessages(Mailbox mbox, Folder folder, int beforeDate) throws ServiceException {
+    static void purgeMessages(Mailbox mbox, Folder folder, int beforeDate, Boolean unread) throws ServiceException {
         if (beforeDate <= 0 || beforeDate >= mbox.getOperationTimestamp())
             return;
         boolean allFolders = (folder == null);
         List<Folder> folders = (allFolders ? null : folder.getSubfolderHierarchy());
 
         // get the full list of things that are being removed
-        PendingDelete info = DbMailItem.getLeafNodes(mbox, folders, beforeDate, allFolders);
+        PendingDelete info = DbMailItem.getLeafNodes(mbox, folders, beforeDate, allFolders, unread);
         if (info.itemIds.isEmpty())
             return;
         mbox.markItemDeleted(info.itemIds.getTypesMask(), info.itemIds.getAll());

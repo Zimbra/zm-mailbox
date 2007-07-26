@@ -186,43 +186,51 @@ public class TestUtil {
 
     public static Message insertMessage(Mailbox mbox, int messageNum, String subject)
     throws Exception {
-        String message = getTestMessage(messageNum, subject);
-        ParsedMessage pm = new ParsedMessage(message.getBytes(), System.currentTimeMillis(), false);
-        pm.analyze();
-        return mbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX, false, Flag.BITMASK_UNREAD, null);
+        return insertMessage(mbox, Mailbox.ID_FOLDER_INBOX, messageNum, subject, System.currentTimeMillis());
     }
     
-    private static String getDateHeaderValue() {
-        return String.format("%1$ta, %1$td %1$tb %1$tY %1$tH:%1$tM:%1$tS %1$tz (%1$tZ)", new Date());
+    public static Message insertMessage(Mailbox mbox, int folderId, int messageNum, String subject, long timestamp)
+    throws Exception {
+        String message = getTestMessage(messageNum, subject, null, null, new Date(timestamp));
+        ParsedMessage pm = new ParsedMessage(message.getBytes(), timestamp, false);
+        pm.analyze();
+        return mbox.addMessage(null, pm, folderId, false, Flag.BITMASK_UNREAD, null);
+    }
+    
+    private static String getDateHeaderValue(Date date) {
+        return String.format("%1$ta, %1$td %1$tb %1$tY %1$tH:%1$tM:%1$tS %1$tz (%1$tZ)", date);
     }
 
     private static String getTestMessage(int messageNum, String subject)
     throws ServiceException {
-        Map<String, Object> vars = new HashMap<String, Object>();
-        vars.put("MESSAGE_NUM", new Integer(messageNum));
-        vars.put("SUBJECT", subject);
-        vars.put("DOMAIN", getDomain());
-        vars.put("SENDER", "jspiccoli");
-        vars.put("RECIPIENT", "user1");
-        vars.put("DATE", getDateHeaderValue());
-        return StringUtil.fillTemplate(MESSAGE_TEMPLATE, vars);
+        return getTestMessage(messageNum, subject, null, null, null);
     }
 
-    private static String getTestMessage(int messageNum, String subject, String recipient, String sender)
+    private static String getTestMessage(int messageNum, String subject, String recipient, String sender, Date date)
     throws ServiceException {
+        if (recipient == null) {
+            recipient = "user1";
+        }
+        if (sender == null) {
+            sender = "jspiccoli";
+        }
+        if (date == null) {
+            date = new Date();
+        }
+        
         Map<String, Object> vars = new HashMap<String, Object>();
         vars.put("MESSAGE_NUM", new Integer(messageNum));
         vars.put("SUBJECT", subject);
         vars.put("DOMAIN", getDomain());
         vars.put("SENDER", sender);
         vars.put("RECIPIENT", recipient);
-        vars.put("DATE", getDateHeaderValue());
+        vars.put("DATE", getDateHeaderValue(date));
         return StringUtil.fillTemplate(MESSAGE_TEMPLATE, vars);
     }
 
     public static void insertMessageLmtp(int messageNum, String subject, String recipient, String sender)
     throws Exception {
-        String message = getTestMessage(messageNum, subject, recipient, sender);
+        String message = getTestMessage(messageNum, subject, recipient, sender, null);
         LmtpClient lmtp = new LmtpClient("localhost", 7025);
         lmtp.sendMessage(message.getBytes(), recipient, sender, "TestUtil");
         lmtp.close();
@@ -304,6 +312,7 @@ public class TestUtil {
         // Workaround for bug 15160 (is:anywhere is busted)
         deleteMessages(mbox, "in:trash " + subjectSubstring);
         deleteMessages(mbox, "in:junk " + subjectSubstring);
+        deleteMessages(mbox, "in:sent " + subjectSubstring);
         
         // Delete tags
         for (ZTag tag : mbox.getAllTags()) {
