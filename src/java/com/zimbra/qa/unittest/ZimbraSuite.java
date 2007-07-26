@@ -90,13 +90,12 @@ public class ZimbraSuite extends TestSuite
         TestMimeHandler.class,
         TestScheduledTaskManager.class,
         TestDataSource.class,
-        TestPurge.class
+        TestPurge.class,
         
         // XXX bburtin: Commenting out IMAP tests, since the new schema hasn't been
         // checked in
-        // TestImapImport.class,
-        // TestImapImport.TearDown.class,
-        
+        TestImapImport.class,
+        TestImapImport.TearDown.class
     };
     
     public static TestResult runUserTests(Element response, List<String> tests) throws ServiceException {

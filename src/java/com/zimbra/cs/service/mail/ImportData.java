@@ -50,18 +50,20 @@ public class ImportData extends MailDocumentHandler {
 
         for (Element elem : request.listElements()) {
             DataSource ds = null;
-            DataSource.Type type = DataSource.Type.fromString(elem.getName());
             
-            String id = elem.getAttribute(MailConstants.A_ID);
-            ds = prov.get(account, DataSourceBy.id, id);
-            if (ds.getType() != type) {
-                String msg = String.format(
-                    "Incorrect type specified for Data Source %s (%s).  Expected '%s', got '%s'.",
-                    ds.getId(), ds.getName(), ds.getType(), type);
-                throw ServiceException.INVALID_REQUEST(msg, null);
-            }
-            if (ds == null) {
-                throw ServiceException.INVALID_REQUEST("Could not find Data Source with id " + id, null);
+            String name, id = elem.getAttribute(MailConstants.A_ID, null);
+            if (id != null) {
+                ds = prov.get(account, DataSourceBy.id, id);
+                if (ds == null) {
+                    throw ServiceException.INVALID_REQUEST("Could not find Data Source with id " + id, null);
+                }
+            } else if ((name = elem.getAttribute(MailConstants.A_NAME, null)) != null) {
+                ds = prov.get(account, DataSourceBy.name, name);
+                if (ds == null) {
+                    throw ServiceException.INVALID_REQUEST("Could not find Data Source with name " + name, null);
+                }
+            } else {
+                throw ServiceException.INVALID_REQUEST("must specify either 'id' or 'name'", null);
             }
             
             ZimbraLog.addDataSourceNameToContext(ds.getName());

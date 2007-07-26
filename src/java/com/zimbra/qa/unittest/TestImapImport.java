@@ -365,5 +365,6 @@ extends TestCase {
         TestUtil.cliSetup();
         TestUtil.runTest(new TestSuite(TestImapImport.TearDown.class));
         TestUtil.runTest(new TestSuite(TestImapImport.class));
+        TestUtil.runTest(new TestSuite(TestImapImport.TearDown.class));
     }
 }
