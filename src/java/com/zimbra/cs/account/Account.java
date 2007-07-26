@@ -77,7 +77,14 @@ public class Account extends NamedEntry {
     public String getAccountStatus() {
         
         String domainStatus = null;
-        String accountStatus = super.getAttr(Provisioning.A_zimbraAccountStatus);
+        String accountStatus = getAttr(Provisioning.A_zimbraAccountStatus);
+        
+        boolean isAdmin = getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);
+        boolean isDomainAdmin = getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
+        isAdmin = (isAdmin && !isDomainAdmin);
+        if (isAdmin)
+            return accountStatus;
+            
         
         if (mDomain != null) {
             try {

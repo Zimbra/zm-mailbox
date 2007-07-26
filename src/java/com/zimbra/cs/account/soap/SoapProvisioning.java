@@ -773,9 +773,12 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public void modifyDomainStatus(Domain domain, String newStatus)
             throws ServiceException {
-        HashMap<String, String> attrs = new HashMap<String,String>();
-        attrs.put(Provisioning.A_zimbraDomainStatus, newStatus);
-        modifyAttrs(domain, attrs);
+        XMLElement req = new XMLElement(AdminConstants.MODIFY_DOMAIN_STATUS_REQUEST);
+        Element eId = req.addElement(AccountConstants.E_ID);
+        eId.setText(domain.getId());
+        Element eStatus = req.addElement(AdminConstants.E_STATUS);
+        eStatus.setText(newStatus);
+        invoke(req);
     }
 
     @Override
@@ -1082,7 +1085,7 @@ public class SoapProvisioning extends Provisioning {
         XMLElement req = new XMLElement(AdminConstants.GET_ALL_ACCOUNTS_REQUEST);
         if (d != null && d.getId() != null) {
         	Element domainEl = req.addElement(AdminConstants.E_DOMAIN);
-        	domainEl.addAttribute(AdminConstants.A_BY, AccountBy.id.name());
+        	domainEl.addAttribute(AdminConstants.A_BY, DomainBy.id.name());
         	domainEl.setText(d.getId());
         }
         Element resp = invoke(req);

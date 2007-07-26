@@ -50,37 +50,13 @@ import com.zimbra.cs.account.AttributeType;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
 import com.zimbra.cs.lmtpserver.LmtpProtocolException;
-import com.zimbra.cs.service.admin.*;
 
-/*
-import com.zimbra.cs.service.account.Auth;
-import com.zimbra.cs.service.account.AutoCompleteGal;
-import com.zimbra.cs.service.account.ChangePassword;
-import com.zimbra.cs.service.account.CreateIdentity;
-import com.zimbra.cs.service.account.CreateSignature;
-import com.zimbra.cs.service.account.DeleteIdentity;
-import com.zimbra.cs.service.account.DeleteSignature;
-import com.zimbra.cs.service.account.GetAccountInfo;
-import com.zimbra.cs.service.account.GetAllLocales;
-import com.zimbra.cs.service.account.GetAvailableLocales;
-import com.zimbra.cs.service.account.GetAvailableSkins;
-import com.zimbra.cs.service.account.GetIdentities;
-import com.zimbra.cs.service.account.GetInfo;
-import com.zimbra.cs.service.account.GetPrefs;
-import com.zimbra.cs.service.account.GetSignatures;
-import com.zimbra.cs.service.account.ModifyIdentity;
-import com.zimbra.cs.service.account.ModifyPrefs;
-import com.zimbra.cs.service.account.ModifyProperties;
-import com.zimbra.cs.service.account.ModifySignature;
-import com.zimbra.cs.service.account.SearchCalendarResources;
-import com.zimbra.cs.service.account.SearchGal;
-import com.zimbra.cs.service.account.SyncGal;
-import com.zimbra.cs.zclient.ZClientException;
-*/
 
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
@@ -363,54 +339,94 @@ public class TestDomainStatus extends TestCase {
         }
     }
     
+    static class SoapTestContext {
+        private SoapClient mSoapClient;
+        private AccountType mAuthedAcctType;
+        private Account mTargetAcct;
+        private boolean mSuspended;
+        private String mDomainName;
+        private String mDomainId;
+        private String[] mTesters;
+        private String mTestId;
+        
+        SoapTestContext(SoapClient soapClient, AccountType authedAcctType, 
+                        Account targetAcct, boolean suspended, 
+                        String domainName, String domainId, // we don't want to pass a Domain object
+                        String[] testers, String testId) {
+            mSoapClient = soapClient;
+            mAuthedAcctType = authedAcctType;
+            mTargetAcct = targetAcct;
+            mSuspended = suspended;
+            mDomainName = domainName;
+            mDomainId = domainId;
+            mTesters = testers;
+            mTestId = testId;
+        }
+    }
+    
     static class SoapCommands {
-        protected SoapTester mTester;
-        protected AccountType mAuthedAcctType;
-        protected Account mTargetAcct;
-        protected boolean mSuspended;
+         
+        private SoapTestContext mCtx;
+        
+        public static enum TesterObjs {
+            TESTER_ID_ACCOUNT_FOR_DELETE_ACCOUNT_REQUEST
+        }
         
         // signature APIs only takes id, not name, 
         // remember the signature ids, we need them for modify/delete signatures
         private Map<String, String> mSignatureNameIdMap;
-        
-        SoapCommands(SoapTester tester, AccountType authedAcctType, 
-                     Account targetAcct, boolean suspended) {
-            
-            mTester = tester;
-            mAuthedAcctType = authedAcctType;
-            mTargetAcct = targetAcct;
-            mSuspended = suspended;
+
+        SoapCommands(SoapTestContext ctx) {
+            mCtx = ctx;
             
             mSignatureNameIdMap = new HashMap<String, String>();
         }
         
+        private String testCtxId() {
+            return mCtx.mAuthedAcctType.name() + "-" + (mCtx.mSuspended?"suspended":"active");
+        }
+        
         private String identityName() {
-            return "identity-of-" + mAuthedAcctType.name();
+            return "identity-of-" + testCtxId();
         }
         
         private String signatureName() {
-            return "signature-of-" + mAuthedAcctType.name();
+            return "signature-of-" + testCtxId();
         }
         
-        private void setSignatureIdByName(String sigName, String sigId) {
-            mSignatureNameIdMap.put(sigName, sigId);
+        private String accountName() {
+            return "acct-created-by-" + testCtxId() + "@" + mCtx.mDomainName;
         }
         
-        private String getSignatureIdByName(String sigName) {
-            return mSignatureNameIdMap.get(sigName);
+        private String aliasName() {
+            return "alias-created-by-" + testCtxId() + "@" + mCtx.mDomainName;
         }
         
+        private String domainName() {
+            return "domain-created-by-" + testCtxId() + "." + mCtx.mDomainName;
+        }
+        
+        private String cosName() {
+            String cosName = "cos-created-by-" + testCtxId() + "-" + mCtx.mTestId;
+            return cosName.replace("_", "-");
+        }
+        
+        /*
+         * ================
+         * account commands
+         * ================
+         */
         public void AUTH_REQUEST() throws Exception {
-            mTester.authAccount(mTargetAcct, PASSWORD, "suspended-domain-test-" + mSuspended);
+            mCtx.mSoapClient.authAccount(mCtx.mTargetAcct, PASSWORD, "suspended-domain-test-" + mCtx.mSuspended);
         }
         
         public void CHANGE_PASSWORD_REQUEST() throws Exception {
-            mTester.changePassword(mTargetAcct, PASSWORD, PASSWORD);
+            mCtx.mSoapClient.changePassword(mCtx.mTargetAcct, PASSWORD, PASSWORD);
         }
         
         public void GET_PREFS_REQUEST() throws Exception {
             XMLElement req = new XMLElement(AccountConstants.GET_PREFS_REQUEST);
-            mTester.invoke(req);
+            mCtx.mSoapClient.invoke(req);
         }
         
         public void MODIFY_PREFS_REQUEST() throws Exception {
@@ -418,27 +434,27 @@ public class TestDomainStatus extends TestCase {
             Element p = req.addElement(AccountConstants.E_PREF);
             p.addAttribute(AccountConstants.A_NAME, Provisioning.A_zimbraPrefSkin);
             p.setText("sand");
-            mTester.invoke(req);
+            mCtx.mSoapClient.invoke(req);
         }
         
         public void GET_INFO_REQUEST() throws Exception {
             XMLElement req = new XMLElement(AccountConstants.GET_INFO_REQUEST);
-            mTester.invoke(req);
+            mCtx.mSoapClient.invoke(req);
         }
         
         public void GET_ACCOUNT_INFO_REQUEST() throws Exception {
            XMLElement req = new XMLElement(AccountConstants.GET_ACCOUNT_INFO_REQUEST);
            Element a = req.addElement(AccountConstants.E_ACCOUNT);
            a.addAttribute(AccountConstants.A_BY, AccountConstants.A_NAME);
-           a.setText(mTargetAcct.getName());
-           mTester.invoke(req);
+           a.setText(mCtx.mTargetAcct.getName());
+           mCtx.mSoapClient.invokeOnTargetAccount(req, mCtx.mTargetAcct.getId());
         }
         
         public void SEARCH_GAL_REQUEST() throws Exception {
             XMLElement req = new XMLElement(AccountConstants.SEARCH_GAL_REQUEST);
             Element n = req.addElement(AccountConstants.E_NAME);
             n.setText("foo");
-            mTester.invoke(req);
+            mCtx.mSoapClient.invoke(req);
         }
         
         public void AUTO_COMPLETE_GAL_REQUEST() throws Exception {
@@ -446,12 +462,12 @@ public class TestDomainStatus extends TestCase {
             req.addAttribute(AccountConstants.A_LIMIT, "20");
             Element n = req.addElement(AccountConstants.E_NAME);
             n.setText("foo");
-            mTester.invoke(req);
+            mCtx.mSoapClient.invoke(req);
         }
         
         public void SYNC_GAL_REQUEST() throws Exception {
             XMLElement req = new XMLElement(AccountConstants.SYNC_GAL_REQUEST);
-            mTester.invoke(req);
+            mCtx.mSoapClient.invoke(req);
         }
         
         public void SEARCH_CALENDAR_RESOURCES_REQUEST() throws Exception {
@@ -461,87 +477,227 @@ public class TestDomainStatus extends TestCase {
             cond.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_ATTR, Provisioning.A_zimbraCalResType);
             cond.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_OP, "eq");
             cond.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_VALUE, "Equipment");
-            mTester.invoke(req);
+            mCtx.mSoapClient.invoke(req);
         }
         
         public void MODIFY_PROPERTIES_REQUEST() throws Exception {
             XMLElement req = new XMLElement(AccountConstants.MODIFY_PROPERTIES_REQUEST);
-            mTester.invoke(req);
+            mCtx.mSoapClient.invoke(req);
          }
         
         public void GET_ALL_LOCALES_REQUEST() throws Exception {
             XMLElement req = new XMLElement(AccountConstants.GET_ALL_LOCALES_REQUEST);
-            mTester.invoke(req);
+            mCtx.mSoapClient.invoke(req);
         }
         
         public void GET_AVAILABLE_LOCALES_REQUEST() throws Exception {
             XMLElement req = new XMLElement(AccountConstants.GET_AVAILABLE_LOCALES_REQUEST);
-            mTester.invoke(req);
+            mCtx.mSoapClient.invoke(req);
         }
         
         public void GET_AVAILABLE_SKINS_REQUEST() throws Exception {
             XMLElement req = new XMLElement(AccountConstants.GET_AVAILABLE_SKINS_REQUEST);
-            mTester.invoke(req);
+            mCtx.mSoapClient.invoke(req);
         }
         
         public void CREATE_IDENTITY_REQUEST() throws Exception {
-            mTester.createIdentity(mTargetAcct, identityName(), new HashMap<String, Object>()) ;
+            mCtx.mSoapClient.createIdentity(mCtx.mTargetAcct, identityName(), new HashMap<String, Object>()) ;
         }
         
         public void MODIFY_IDENTITY_REQUEST() throws Exception {
-            mTester.modifyIdentity(mTargetAcct, identityName(), new HashMap<String, Object>()) ;
+            mCtx.mSoapClient.modifyIdentity(mCtx.mTargetAcct, identityName(), new HashMap<String, Object>()) ;
         }
         
         public void DELETE_IDENTITY_REQUEST() throws Exception {
-            mTester.deleteIdentity(mTargetAcct, identityName()) ;
+            mCtx.mSoapClient.deleteIdentity(mCtx.mTargetAcct, identityName()) ;
         }
         
         public void GET_IDENTITIES_REQUEST() throws Exception {
-            mTester.getAllIdentities(mTargetAcct) ;
+            mCtx.mSoapClient.getAllIdentities(mCtx.mTargetAcct) ;
         }
 
         public void CREATE_SIGNATURE_REQUEST() throws Exception {
-            Signature sig = mTester.createSignature(mTargetAcct, signatureName(), new HashMap<String, Object>());
-            setSignatureIdByName(sig.getName(), sig.getId());
+            Signature sig = mCtx.mSoapClient.createSignature(mCtx.mTargetAcct, signatureName(), new HashMap<String, Object>());
+            mSignatureNameIdMap.put(sig.getName(), sig.getId());
         }
         
         public void MODIFY_SIGNATURE_REQUEST() throws Exception {
-            String sigId = getSignatureIdByName(signatureName());
-            mTester.modifySignature(mTargetAcct, sigId, new HashMap<String, Object>()) ;
+            String sigId = mSignatureNameIdMap.get(signatureName());
+            mCtx.mSoapClient.modifySignature(mCtx.mTargetAcct, sigId, new HashMap<String, Object>()) ;
         }
         
         public void DELETE_SIGNATURE_REQUEST() throws Exception {
-            String sigId = getSignatureIdByName(signatureName());
-            mTester.deleteSignature(mTargetAcct, sigId) ;
+            String sigId = mSignatureNameIdMap.get(signatureName());
+            mCtx.mSoapClient.deleteSignature(mCtx.mTargetAcct, sigId) ;
         }
         
         public void GET_SIGNATURES_REQUEST() throws Exception {
-            mTester.getAllSignatures(mTargetAcct) ;
+            mCtx.mSoapClient.getAllSignatures(mCtx.mTargetAcct) ;
         }
         
+        /*
+         * ==============
+         * admin commands
+         * ==============
+         */
         public void PING_REQUEST() throws Exception {
             XMLElement req = new XMLElement(AdminConstants.PING_REQUEST);
-            mTester.invoke(req);
+            mCtx.mSoapClient.invoke(req);
         }
         
         public void CHECK_HEALTH_REQUEST() throws Exception {
-            mTester.healthCheck();
+            mCtx.mSoapClient.healthCheck();
         }
         
         public void ADMIN_AUTH_REQUEST() throws Exception {
             XMLElement req = new XMLElement(AdminConstants.AUTH_REQUEST);
-            req.addElement(AdminConstants.E_NAME).setText(mTargetAcct.getName());
+            req.addElement(AdminConstants.E_NAME).setText(mCtx.mTargetAcct.getName());
             req.addElement(AdminConstants.E_PASSWORD).setText(PASSWORD);
-            mTester.invoke(req);
+            mCtx.mSoapClient.invoke(req);
         }
+        
+        public void CREATE_ACCOUNT_REQUEST() throws Exception {
+            Account acct = mCtx.mSoapClient.createAccount(accountName(), PASSWORD, null);
+        }
+        
+        public void DELEGATE_AUTH_REQUEST() throws Exception {
+            DelegateAuthResponse r = mCtx.mSoapClient.delegateAuth(AccountBy.name, mCtx.mTargetAcct.getName(), 0);
+        }
+        
+        public void GET_ACCOUNT_REQUEST() throws Exception {
+            XMLElement req = new XMLElement(AdminConstants.GET_ACCOUNT_REQUEST);
+            Element a = req.addElement(AccountConstants.E_ACCOUNT);
+            a.addAttribute(AccountConstants.A_BY, AccountConstants.A_NAME);
+            a.setText(mCtx.mTargetAcct.getName());
+            mCtx.mSoapClient.invokeOnTargetAccount(req, mCtx.mTargetAcct.getId());
+        }
+        
+        public void ADMIN_GET_ACCOUNT_INFO_REQUEST() throws Exception {
+            mCtx.mSoapClient.getAccountInfo(AccountBy.name, mCtx.mTargetAcct.getName());
+        }
+        
+        public void GET_ALL_ACCOUNTS_REQUEST() throws Exception {
+            // the one in SOapProvisioning requires a Domain obj, so we write our own
+            XMLElement req = new XMLElement(AdminConstants.GET_ALL_ACCOUNTS_REQUEST);
+            Element eDomain = req.addElement(AdminConstants.E_DOMAIN);
+            eDomain.addAttribute(AdminConstants.A_BY, DomainBy.name.name());
+            eDomain.setText(mCtx.mDomainName);
+            mCtx.mSoapClient.invoke(req);
+        }
+        
+        public void KNOWNBUG_GET_ALL_ACCOUNTS_REQUEST() throws Exception {
+            // if invoked by global admin without a specific domain, accounts in the suspended domain will also be returned, they should not
+            XMLElement req = new XMLElement(AdminConstants.GET_ALL_ACCOUNTS_REQUEST);
+            mCtx.mSoapClient.invoke(req);
+        }
+        
+        public void GET_ALL_ADMIN_ACCOUNTS_REQUEST() throws Exception {
+            mCtx.mSoapClient.getAllAdminAccounts();
+        }
+        
+        public void MODIFY_ACCOUNT_REQUEST() throws Exception {
+            XMLElement req = new XMLElement(AdminConstants.MODIFY_ACCOUNT_REQUEST);
+            Element eId = req.addElement(AccountConstants.E_ID);
+            eId.setText(mCtx.mTargetAcct.getId());
+            Element eA = req.addElement(AccountConstants.E_A);
+            eA.addAttribute(AccountConstants.A_N, Provisioning.A_zimbraFeatureCalendarEnabled);
+            mCtx.mSoapClient.invoke(req);
+        }
+        
+        public void DELETE_ACCOUNT_REQUEST() throws Exception {
+            mCtx.mSoapClient.deleteAccount(mCtx.mTesters[TesterObjs.TESTER_ID_ACCOUNT_FOR_DELETE_ACCOUNT_REQUEST.ordinal()]);
+        }
+        
+        public void SET_PASSWORD_REQUEST() throws Exception {
+            mCtx.mSoapClient.setPassword(mCtx.mTargetAcct, PASSWORD);
+        }
+        
+        public void CHECK_PASSWORD_STRENGTH_REQUEST() throws Exception {
+            mCtx.mSoapClient.checkPasswordStrength(mCtx.mTargetAcct, PASSWORD);
+        }
+        
+        public void ADD_ACCOUNT_ALIAS_REQUEST() throws Exception {
+            mCtx.mSoapClient.addAlias(mCtx.mTargetAcct, aliasName());
+        }
+          
+        public void REMOVE_ACCOUNT_ALIAS_REQUEST() throws Exception {
+            mCtx.mSoapClient.removeAlias(mCtx.mTargetAcct, aliasName());
+        }
+        
+        /* ... TODO */
+        
+        public void CREATE_DOMAIN_REQUEST() throws Exception {
+            mCtx.mSoapClient.createDomain(domainName(), null);
+        }
+        
+        public void GET_DOMAIN_REQUEST() throws Exception {
+            mCtx.mSoapClient.get(DomainBy.name, mCtx.mDomainName) ;
+        }
+        
+        public void GET_DOMAIN_INFO_REQUEST() throws Exception {
+            // KNOWNBU?? what is this API for and why doesn't it require any auth?
+            mCtx.mSoapClient.getDomainInfo(DomainBy.name, mCtx.mDomainName);
+        }
+       
+        public void GET_ALL_DOMAINS_REQUEST() throws Exception {
+            mCtx.mSoapClient.getAllDomains();
+        }
+        
+        public void MODIFY_DOMAIN_REQUEST() throws Exception {
+            XMLElement req = new XMLElement(AdminConstants.MODIFY_DOMAIN_REQUEST);
+            Element eId = req.addElement(AdminConstants.E_ID);
+            eId.setText(mCtx.mDomainId);
+            Element eA = req.addElement(AccountConstants.E_A);
+            eA.addAttribute(AccountConstants.A_N, Provisioning.A_zimbraDomainStatus);
+            mCtx.mSoapClient.invoke(req);
+        }
+        
+        public void MODIFY_DOMAIN_STATUS_REQUEST() throws Exception {
+            String curStatus = (mCtx.mSuspended) ? Provisioning.DOMAIN_STATUS_SUSPENDED : Provisioning.DOMAIN_STATUS_ACTIVE;
+            
+            {   // change to a new status 
+                XMLElement req = new XMLElement(AdminConstants.MODIFY_DOMAIN_STATUS_REQUEST);
+                Element eId = req.addElement(AccountConstants.E_ID);
+                eId.setText(mCtx.mDomainId);
+                Element eStatus = req.addElement(AdminConstants.E_STATUS);
+                eStatus.setText(Provisioning.DOMAIN_STATUS_LOCKED);
+                mCtx.mSoapClient.invoke(req);
+            }
+            
+            {
+                // set it back so our test can continue
+                XMLElement req = new XMLElement(AdminConstants.MODIFY_DOMAIN_STATUS_REQUEST);
+                Element eId = req.addElement(AccountConstants.E_ID);
+                eId.setText(mCtx.mDomainId);
+                Element eStatus = req.addElement(AdminConstants.E_STATUS);
+                eStatus.setText(curStatus);
+                mCtx.mSoapClient.invoke(req);
+            }
+        }
+        
+        public void DELETE_DOMAIN_REQUEST() throws Exception {
+            mCtx.mSoapClient.deleteDomain(mCtx.mDomainId);
+        }
+        
+        
+        /* ... TODO */
+        public void CREATE_COS_REQUEST() throws Exception {
+            mCtx.mSoapClient.createCos(cosName(), null);
+        }
+        
         
         private static enum Result {
             GOOD("G_O_O_D", "G_O_O_D"),
             BAD("B_A_D", "B_A_D"),
             
+            KNOWN_BUG("KNOWN_BUG", "KNOWN_BUG"),
+            ACCOUNT_INACTIVE(AccountServiceException.ACCOUNT_INACTIVE, "account is not active"),
             AUTH_EXPIRED(ServiceException.AUTH_EXPIRED, "auth credentials have expired"),
+            DOMAIN_NOT_EMPTY(AccountServiceException.DOMAIN_NOT_EMPTY, "domain not empty"),
             MAINTENANCE_MODE(AccountServiceException.MAINTENANCE_MODE, "account is in maintenance mode"),
-            PERM_DENIED(ServiceException.PERM_DENIED, "permission denied: not an admin account");
+            PERM_DENIED_1(ServiceException.PERM_DENIED, "permission denied: not an admin account"),
+            PERM_DENIED_2(ServiceException.PERM_DENIED, "permission denied: need admin token"),
+            PERM_DENIED_3(ServiceException.PERM_DENIED, "permission denied: domain is suspended");
             
             String mCode;
             String mMsg;
@@ -549,7 +705,7 @@ public class TestDomainStatus extends TestCase {
             private static class R {
                 static Map<String, Result> sMap = new HashMap<String, Result>();
                 static String getKey(String code, String msg) {
-                    return "[" +code + "]" + "[" + msg + "]";
+                    return "[" +code + "]" + " - " + msg;
                 }
             }
 
@@ -567,47 +723,83 @@ public class TestDomainStatus extends TestCase {
                 assertNotNull(code);
                 assertNotNull(msg);
                     
+                /*
                 String key = R.getKey(code, msg);
                 Result r = R.sMap.get(key);
                 assertNotNull(key, r);  // unknown exception
+                */
                 
-                return r;
+                String key = R.getKey(code, msg);
+                for (String k : R.sMap.keySet()) {
+                    if (key.startsWith(k))
+                        return R.sMap.get(k);
+                }
+                fail("unknow exception " + key);
+                return null; // to shut the compiler error
             }
         }
 
         private static enum Command {
-            
             ACCOUNT_FIRST_COMMAND(),
-            ACCOUNT_AUTH_REQUEST("AUTH_REQUEST",                                           Result.GOOD, Result.GOOD, Result.GOOD, Result.MAINTENANCE_MODE, Result.MAINTENANCE_MODE, Result.MAINTENANCE_MODE),
-            ACCOUNT_CHANGE_PASSWORD_REQUEST("CHANGE_PASSWORD_REQUEST",                     Result.GOOD, Result.GOOD, Result.GOOD, Result.MAINTENANCE_MODE, Result.MAINTENANCE_MODE, Result.MAINTENANCE_MODE),
-            ACCOUNT_GET_PREFS_REQUEST("GET_PREFS_REQUEST",                                 Result.GOOD, Result.GOOD, Result.GOOD, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED),
-            ACCOUNT_MODIFY_PREFS_REQUEST("MODIFY_PREFS_REQUEST",                           Result.GOOD, Result.GOOD, Result.GOOD, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED),
-            ACCOUNT_GET_INFO_REQUEST("GET_INFO_REQUEST",                                   Result.GOOD, Result.GOOD, Result.GOOD, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED),
-            ACCOUNT_GET_ACCOUNT_INFO_REQUEST("GET_ACCOUNT_INFO_REQUEST",                   Result.GOOD, Result.GOOD, Result.GOOD, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED),
-            ACCOUNT_SEARCH_GAL_REQUEST("SEARCH_GAL_REQUEST",                               Result.GOOD, Result.GOOD, Result.GOOD, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED),
-            ACCOUNT_AUTO_COMPLETE_GAL_REQUEST("AUTO_COMPLETE_GAL_REQUEST",                 Result.GOOD, Result.GOOD, Result.GOOD, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED),
-            ACCOUNT_SYNC_GAL_REQUEST("SYNC_GAL_REQUEST",                                   Result.GOOD, Result.GOOD, Result.GOOD, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED),
-            ACCOUNT_SEARCH_CALENDAR_RESOURCES_REQUEST("SEARCH_CALENDAR_RESOURCES_REQUEST", Result.GOOD, Result.GOOD, Result.GOOD, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED),
-            ACCOUNT_MODIFY_PROPERTIES_REQUEST("MODIFY_PROPERTIES_REQUEST",                 Result.GOOD, Result.GOOD, Result.GOOD, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED),
-            ACCOUNT_GET_ALL_LOCALES_REQUEST("GET_ALL_LOCALES_REQUEST",                     Result.GOOD, Result.GOOD, Result.GOOD, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED),
-            ACCOUNT_GET_AVAILABLE_LOCALES_REQUEST("GET_AVAILABLE_LOCALES_REQUEST",         Result.GOOD, Result.GOOD, Result.GOOD, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED),
-            ACCOUNT_GET_AVAILABLE_SKINS_REQUEST("GET_AVAILABLE_SKINS_REQUEST",             Result.GOOD, Result.GOOD, Result.GOOD, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED),
-            ACCOUNT_CREATE_IDENTITY_REQUEST("CREATE_IDENTITY_REQUEST",                     Result.GOOD, Result.GOOD, Result.GOOD, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED),
-            ACCOUNT_MODIFY_IDENTITY_REQUEST("MODIFY_IDENTITY_REQUEST",                     Result.GOOD, Result.GOOD, Result.GOOD, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED),
-            ACCOUNT_DELETE_IDENTITY_REQUEST("DELETE_IDENTITY_REQUEST",                     Result.GOOD, Result.GOOD, Result.GOOD, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED),
-            ACCOUNT_GET_IDENTITIES_REQUEST("GET_IDENTITIES_REQUEST",                       Result.GOOD, Result.GOOD, Result.GOOD, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED),
-            ACCOUNT_CREATE_SIGNATURE_REQUEST("CREATE_SIGNATURE_REQUEST",                   Result.GOOD, Result.GOOD, Result.GOOD, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED),
-            ACCOUNT_MODIFY_SIGNATURE_REQUEST("MODIFY_SIGNATURE_REQUEST",                   Result.GOOD, Result.GOOD, Result.GOOD, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED),
-            ACCOUNT_DELETE_SIGNATURE_REQUEST("DELETE_SIGNATURE_REQUEST",                   Result.GOOD, Result.GOOD, Result.GOOD, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED),
-            ACCOUNT_GET_SIGNATURES_REQUEST("GET_SIGNATURES_REQUEST",                       Result.GOOD, Result.GOOD, Result.GOOD, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED, Result.AUTH_EXPIRED),
+            ACCOUNT_AUTH_REQUEST("AUTH_REQUEST",                                           Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.MAINTENANCE_MODE, Result.MAINTENANCE_MODE, Result.MAINTENANCE_MODE),
+            ACCOUNT_CHANGE_PASSWORD_REQUEST("CHANGE_PASSWORD_REQUEST",                     Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.MAINTENANCE_MODE, Result.MAINTENANCE_MODE, Result.MAINTENANCE_MODE),
+            ACCOUNT_GET_PREFS_REQUEST("GET_PREFS_REQUEST",                                 Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.AUTH_EXPIRED,     Result.AUTH_EXPIRED,     Result.GOOD),
+            ACCOUNT_MODIFY_PREFS_REQUEST("MODIFY_PREFS_REQUEST",                           Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.AUTH_EXPIRED,     Result.AUTH_EXPIRED,     Result.GOOD),
+            ACCOUNT_GET_INFO_REQUEST("GET_INFO_REQUEST",                                   Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.AUTH_EXPIRED,     Result.AUTH_EXPIRED,     Result.GOOD),
+            ACCOUNT_GET_ACCOUNT_INFO_REQUEST("GET_ACCOUNT_INFO_REQUEST",                   Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.AUTH_EXPIRED,     Result.AUTH_EXPIRED,     Result.ACCOUNT_INACTIVE),
+            ACCOUNT_SEARCH_GAL_REQUEST("SEARCH_GAL_REQUEST",                               Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.AUTH_EXPIRED,     Result.AUTH_EXPIRED,     Result.GOOD),
+            ACCOUNT_AUTO_COMPLETE_GAL_REQUEST("AUTO_COMPLETE_GAL_REQUEST",                 Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.AUTH_EXPIRED,     Result.AUTH_EXPIRED,     Result.GOOD),
+            ACCOUNT_SYNC_GAL_REQUEST("SYNC_GAL_REQUEST",                                   Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.AUTH_EXPIRED,     Result.AUTH_EXPIRED,     Result.GOOD),
+            ACCOUNT_SEARCH_CALENDAR_RESOURCES_REQUEST("SEARCH_CALENDAR_RESOURCES_REQUEST", Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.AUTH_EXPIRED,     Result.AUTH_EXPIRED,     Result.GOOD),
+            ACCOUNT_MODIFY_PROPERTIES_REQUEST("MODIFY_PROPERTIES_REQUEST",                 Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.AUTH_EXPIRED,     Result.AUTH_EXPIRED,     Result.GOOD),
+            ACCOUNT_GET_ALL_LOCALES_REQUEST("GET_ALL_LOCALES_REQUEST",                     Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.AUTH_EXPIRED,     Result.AUTH_EXPIRED,     Result.GOOD),
+            ACCOUNT_GET_AVAILABLE_LOCALES_REQUEST("GET_AVAILABLE_LOCALES_REQUEST",         Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.AUTH_EXPIRED,     Result.AUTH_EXPIRED,     Result.GOOD),
+            ACCOUNT_GET_AVAILABLE_SKINS_REQUEST("GET_AVAILABLE_SKINS_REQUEST",             Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.AUTH_EXPIRED,     Result.AUTH_EXPIRED,     Result.GOOD),
+            ACCOUNT_CREATE_IDENTITY_REQUEST("CREATE_IDENTITY_REQUEST",                     Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.AUTH_EXPIRED,     Result.AUTH_EXPIRED,     Result.ACCOUNT_INACTIVE),
+            ACCOUNT_MODIFY_IDENTITY_REQUEST("MODIFY_IDENTITY_REQUEST",                     Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.AUTH_EXPIRED,     Result.AUTH_EXPIRED,     Result.ACCOUNT_INACTIVE),
+            ACCOUNT_DELETE_IDENTITY_REQUEST("DELETE_IDENTITY_REQUEST",                     Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.AUTH_EXPIRED,     Result.AUTH_EXPIRED,     Result.ACCOUNT_INACTIVE),
+            ACCOUNT_GET_IDENTITIES_REQUEST("GET_IDENTITIES_REQUEST",                       Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.AUTH_EXPIRED,     Result.AUTH_EXPIRED,     Result.ACCOUNT_INACTIVE),
+            ACCOUNT_CREATE_SIGNATURE_REQUEST("CREATE_SIGNATURE_REQUEST",                   Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.AUTH_EXPIRED,     Result.AUTH_EXPIRED,     Result.ACCOUNT_INACTIVE),
+            ACCOUNT_MODIFY_SIGNATURE_REQUEST("MODIFY_SIGNATURE_REQUEST",                   Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.AUTH_EXPIRED,     Result.AUTH_EXPIRED,     Result.ACCOUNT_INACTIVE),
+            ACCOUNT_DELETE_SIGNATURE_REQUEST("DELETE_SIGNATURE_REQUEST",                   Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.AUTH_EXPIRED,     Result.AUTH_EXPIRED,     Result.ACCOUNT_INACTIVE),
+            ACCOUNT_GET_SIGNATURES_REQUEST("GET_SIGNATURES_REQUEST",                       Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.AUTH_EXPIRED,     Result.AUTH_EXPIRED,     Result.ACCOUNT_INACTIVE),
             ACCOUNT_LAST_COMMAND(),
-           
+          
             
             ADMIN_FIRST_COMMAND(),
-            ADMIN_PING_REQUEST("PING_REQUEST",                                             Result.GOOD, Result.GOOD, Result.GOOD, Result.GOOD, Result.GOOD, Result.GOOD),
-            ADMIN_CHECK_HEALTH_REQUEST("CHECK_HEALTH_REQUEST",                             Result.GOOD, Result.GOOD, Result.GOOD, Result.GOOD, Result.GOOD, Result.GOOD),
+            ADMIN_PING_REQUEST("PING_REQUEST",                                             Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.GOOD),
+            ADMIN_CHECK_HEALTH_REQUEST("CHECK_HEALTH_REQUEST",                             Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.GOOD),
             // TODO, for now the target account is always a user account, should also test when the target is a domain admon/global admin
-            ADMIN_AUTH_REQUEST("ADMIN_AUTH_REQUEST",                                       Result.PERM_DENIED, Result.PERM_DENIED, Result.PERM_DENIED, Result.MAINTENANCE_MODE, Result.MAINTENANCE_MODE, Result.MAINTENANCE_MODE),
+            ADMIN_AUTH_REQUEST("ADMIN_AUTH_REQUEST",                                       Result.PERM_DENIED_1,    Result.PERM_DENIED_1,    Result.PERM_DENIED_1,    Result.MAINTENANCE_MODE, Result.MAINTENANCE_MODE, Result.MAINTENANCE_MODE),
+            ADMIN_CREATE_ACCOUNT_REQUEST("CREATE_ACCOUNT_REQUEST",                         Result.PERM_DENIED_2,    Result.GOOD,             Result.GOOD,             Result.PERM_DENIED_2,    Result.AUTH_EXPIRED,     Result.PERM_DENIED_3),
+            ADMIN_DELEGATE_AUTH_REQUEST("DELEGATE_AUTH_REQUEST",                           Result.PERM_DENIED_2,    Result.GOOD,             Result.GOOD,             Result.PERM_DENIED_2,    Result.AUTH_EXPIRED,     Result.PERM_DENIED_3),
+            ADMIN_GET_ACCOUNT_REQUEST("GET_ACCOUNT_REQUEST",                               Result.PERM_DENIED_2,    Result.GOOD,             Result.GOOD,             Result.PERM_DENIED_2,    Result.AUTH_EXPIRED,     Result.PERM_DENIED_3),
+            ADMIN_GET_ACCOUNT_INFO_REQUEST("ADMIN_GET_ACCOUNT_INFO_REQUEST",               Result.PERM_DENIED_2,    Result.GOOD,             Result.GOOD,             Result.PERM_DENIED_2,    Result.AUTH_EXPIRED,     Result.PERM_DENIED_3),
+            ADMIN_GET_ALL_ACCOUNTS_REQUEST("GET_ALL_ACCOUNTS_REQUEST",                     Result.PERM_DENIED_2,    Result.GOOD,             Result.GOOD,             Result.PERM_DENIED_2,    Result.AUTH_EXPIRED,     Result.PERM_DENIED_3),
+            ADMIN_KNOWNBUG_GET_ALL_ACCOUNTS_REQUEST("KNOWNBUG_GET_ALL_ACCOUNTS_REQUEST",   Result.PERM_DENIED_2,    Result.GOOD,             Result.GOOD,             Result.PERM_DENIED_2,    Result.AUTH_EXPIRED,     Result.KNOWN_BUG),
+            ADMIN_GET_ALL_ADMIN_ACCOUNTS_REQUEST("GET_ALL_ADMIN_ACCOUNTS_REQUEST",         Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.GOOD,             Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.GOOD),
+            ADMIN_MODIFY_ACCOUNT_REQUEST("MODIFY_ACCOUNT_REQUEST",                         Result.PERM_DENIED_2,    Result.GOOD,             Result.GOOD,             Result.PERM_DENIED_2,    Result.AUTH_EXPIRED,     Result.PERM_DENIED_3),
+            ADMIN_DELETE_ACCOUNT_REQUEST("DELETE_ACCOUNT_REQUEST",                         Result.PERM_DENIED_2,    Result.GOOD,             Result.GOOD,             Result.PERM_DENIED_2,    Result.AUTH_EXPIRED,     Result.PERM_DENIED_3),
+            ADMIN_SET_PASSWORD_REQUEST("SET_PASSWORD_REQUEST",                             Result.PERM_DENIED_2,    Result.GOOD,             Result.GOOD,             Result.PERM_DENIED_2,    Result.AUTH_EXPIRED,     Result.PERM_DENIED_3),
+            ADMIN_CHECK_PASSWORD_STRENGTH_REQUEST("CHECK_PASSWORD_STRENGTH_REQUEST",       Result.PERM_DENIED_2,    Result.GOOD,             Result.GOOD,             Result.PERM_DENIED_2,    Result.AUTH_EXPIRED,     Result.PERM_DENIED_3),
+            ADMIN_ADD_ACCOUNT_ALIAS_REQUEST("ADD_ACCOUNT_ALIAS_REQUEST",                   Result.PERM_DENIED_2,    Result.GOOD,             Result.GOOD,             Result.PERM_DENIED_2,    Result.AUTH_EXPIRED,     Result.PERM_DENIED_3),
+            ADMIN_REMOVE_ACCOUNT_ALIAS_REQUEST("REMOVE_ACCOUNT_ALIAS_REQUEST",             Result.PERM_DENIED_2,    Result.GOOD,             Result.GOOD,             Result.PERM_DENIED_2,    Result.AUTH_EXPIRED,     Result.PERM_DENIED_3), 
+            /* TODO skip for now, complete when have time
+            dispatcher.registerHandler(AdminConstants.SEARCH_ACCOUNTS_REQUEST, new SearchAccounts());
+            dispatcher.registerHandler(AdminConstants.RENAME_ACCOUNT_REQUEST, new RenameAccount());
+
+            dispatcher.registerHandler(AdminConstants.SEARCH_DIRECTORY_REQUEST, new SearchDirectory());
+            dispatcher.registerHandler(AdminConstants.GET_ACCOUNT_MEMBERSHIP_REQUEST, new GetAccountMembership());
+            */
+            ADMIN_CREATE_DOMAIN_REQUEST("CREATE_DOMAIN_REQUEST",                           Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.GOOD,             Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.GOOD),
+            ADMIN_GET_DOMAIN_REQUEST("GET_DOMAIN_REQUEST",                                 Result.PERM_DENIED_2,    Result.GOOD,             Result.GOOD,             Result.PERM_DENIED_2,    Result.AUTH_EXPIRED,     Result.PERM_DENIED_3),
+            // ADMIN_GET_DOMAIN_INFO_REQUEST("GET_DOMAIN_INFO_REQUEST",                       Result.PERM_DENIED_2,    Result.GOOD,    Result.GOOD,             Result.PERM_DENIED_2,    Result.AUTH_EXPIRED,     Result.PERM_DENIED_3),
+            ADMIN_GET_DOMAIN_INFO_REQUEST("GET_DOMAIN_INFO_REQUEST",                       Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.GOOD),
+            ADMIN_GET_ALL_DOMAINS_REQUEST("GET_ALL_DOMAINS_REQUEST",                       Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.GOOD,             Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.GOOD),
+            ADMIN_MODIFY_DOMAIN_REQUEST("MODIFY_DOMAIN_REQUEST",                           Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.GOOD,             Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.PERM_DENIED_3),
+            ADMIN_MODIFY_DOMAIN_STATUS_REQUEST("MODIFY_DOMAIN_STATUS_REQUEST",             Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.GOOD,             Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.GOOD),
+            ADMIN_DELETE_DOMAIN_REQUEST("DELETE_DOMAIN_REQUEST",                           Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.DOMAIN_NOT_EMPTY, Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.DOMAIN_NOT_EMPTY),  // global admin should be able to delete domain if it is suspended??? TODO
+            ADMIN_CREATE_COS_REQUEST("CREATE_COS_REQUEST",                                 Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.GOOD,             Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.GOOD),
             ADMIN_LAST_COMMAND();
             
             private String mFuncName;
@@ -639,36 +831,6 @@ public class TestDomainStatus extends TestCase {
         }
         
         /*
-        dispatcher.registerHandler(AdminConstants.PING_REQUEST, new Ping());
-        dispatcher.registerHandler(AdminConstants.CHECK_HEALTH_REQUEST, new CheckHealth());
-
-        dispatcher.registerHandler(AdminConstants.AUTH_REQUEST, new Auth());
-        dispatcher.registerHandler(AdminConstants.CREATE_ACCOUNT_REQUEST, new CreateAccount());
-        dispatcher.registerHandler(AdminConstants.DELEGATE_AUTH_REQUEST, new DelegateAuth());
-        dispatcher.registerHandler(AdminConstants.GET_ACCOUNT_REQUEST, new GetAccount());
-        dispatcher.registerHandler(AdminConstants.GET_ACCOUNT_INFO_REQUEST, new GetAccountInfo());
-        dispatcher.registerHandler(AdminConstants.GET_ALL_ACCOUNTS_REQUEST, new GetAllAccounts());
-        dispatcher.registerHandler(AdminConstants.GET_ALL_ADMIN_ACCOUNTS_REQUEST, new GetAllAdminAccounts());
-        dispatcher.registerHandler(AdminConstants.MODIFY_ACCOUNT_REQUEST, new ModifyAccount());
-        dispatcher.registerHandler(AdminConstants.DELETE_ACCOUNT_REQUEST, new DeleteAccount());
-        dispatcher.registerHandler(AdminConstants.SET_PASSWORD_REQUEST, new SetPassword());
-        dispatcher.registerHandler(AdminConstants.CHECK_PASSWORD_STRENGTH_REQUEST, new CheckPasswordStrength());
-        dispatcher.registerHandler(AdminConstants.ADD_ACCOUNT_ALIAS_REQUEST, new AddAccountAlias());
-        dispatcher.registerHandler(AdminConstants.REMOVE_ACCOUNT_ALIAS_REQUEST, new RemoveAccountAlias());
-        dispatcher.registerHandler(AdminConstants.SEARCH_ACCOUNTS_REQUEST, new SearchAccounts());
-        dispatcher.registerHandler(AdminConstants.RENAME_ACCOUNT_REQUEST, new RenameAccount());
-
-        dispatcher.registerHandler(AdminConstants.SEARCH_DIRECTORY_REQUEST, new SearchDirectory());
-        dispatcher.registerHandler(AdminConstants.GET_ACCOUNT_MEMBERSHIP_REQUEST, new GetAccountMembership());
-
-        dispatcher.registerHandler(AdminConstants.CREATE_DOMAIN_REQUEST, new CreateDomain());
-        dispatcher.registerHandler(AdminConstants.GET_DOMAIN_REQUEST, new GetDomain());
-        dispatcher.registerHandler(AdminConstants.GET_DOMAIN_INFO_REQUEST, new GetDomainInfo());
-        dispatcher.registerHandler(AdminConstants.GET_ALL_DOMAINS_REQUEST, new GetAllDomains());
-        dispatcher.registerHandler(AdminConstants.MODIFY_DOMAIN_REQUEST, new ModifyDomain());
-        dispatcher.registerHandler(AdminConstants.DELETE_DOMAIN_REQUEST, new DeleteDomain());
-
-        dispatcher.registerHandler(AdminConstants.CREATE_COS_REQUEST, new CreateCos());
         dispatcher.registerHandler(AdminConstants.GET_COS_REQUEST, new GetCos());
         dispatcher.registerHandler(AdminConstants.GET_ALL_COS_REQUEST, new GetAllCos());
         dispatcher.registerHandler(AdminConstants.MODIFY_COS_REQUEST, new ModifyCos());
@@ -787,12 +949,13 @@ public class TestDomainStatus extends TestCase {
         dispatcher.registerHandler(AdminConstants.FLUSH_CACHE_REQUEST, new FlushCache());
          */
         
-        public static void run(SoapTester tester, AccountType authedAcctType, 
-                               Account targetAcct, boolean suspended) throws Exception {
-            SoapCommands cmds = new SoapCommands(tester, authedAcctType, targetAcct, suspended);
+        public static void run(SoapTestContext ctx) throws Exception {
+            SoapCommands cmds = new SoapCommands(ctx);
            
             Class cls = cmds.getClass();
             for (Command c : Command.values()) {
+                
+                System.out.println((ctx.mSuspended?"suspended ":"active ") + ctx.mAuthedAcctType.name() + ": " + c.name());
                 
                 if (c.mFuncName == null)
                     continue;
@@ -804,7 +967,7 @@ public class TestDomainStatus extends TestCase {
                 
                 Method method = cls.getMethod(c.mFuncName);
                  
-                Result expectedResult = c.expectedResult(cmds.mSuspended, cmds.mAuthedAcctType);
+                Result expectedResult = c.expectedResult(ctx.mSuspended, ctx.mAuthedAcctType);
                 Result actualResult = null;
                 
                 try {
@@ -822,12 +985,13 @@ public class TestDomainStatus extends TestCase {
                    
                 }
                 
-                assertEquals(c.name(), expectedResult, actualResult);
+                if (expectedResult != Result.KNOWN_BUG)
+                    assertEquals(c.name(), expectedResult, actualResult);
              }
         }
     }
     
-    private static class SoapTester extends SoapProvisioning {
+    private static class SoapClient extends SoapProvisioning {
               
         private void soapAuthenticate(String name, String password) throws ServiceException {
             XMLElement req = new XMLElement(AccountConstants.AUTH_REQUEST);
@@ -840,20 +1004,20 @@ public class TestDomainStatus extends TestCase {
             setAuthToken(authToken);
          }     
         
-        static SoapTester newInstance(Account acct, AccountType at) throws Exception {
+        static SoapClient newInstance(Account acct, AccountType at) throws Exception {
             
-            SoapTester soapTester = new SoapTester();
+            SoapClient soapClient = new SoapClient();
             if (at == AccountType.ACCT_USER) {
-                // soapTester.soapSetURI(TestUtil.getSoapUrl());
-                soapTester.soapSetURI(TestUtil.getAdminSoapUrl());
-                soapTester.authAccount(acct, PASSWORD, "SoapTester");
-                soapTester.soapAuthenticate(acct.getName(), PASSWORD);
+                // soapClient.soapSetURI(TestUtil.getSoapUrl());
+                soapClient.soapSetURI(TestUtil.getAdminSoapUrl());
+                // soapClient.authAccount(acct, PASSWORD, "DomainStatusTest");
+                soapClient.soapAuthenticate(acct.getName(), PASSWORD);
             } else {
-                soapTester.soapSetURI(TestUtil.getAdminSoapUrl());
-                soapTester.soapAdminAuthenticate(acct.getName(), PASSWORD);
+                soapClient.soapSetURI(TestUtil.getAdminSoapUrl());
+                soapClient.soapAdminAuthenticate(acct.getName(), PASSWORD);
             }
                 
-            return soapTester;
+            return soapClient;
         }
         
         protected synchronized Element invokeOnTargetAccount(Element request, String targetId) throws ServiceException {
@@ -861,29 +1025,47 @@ public class TestDomainStatus extends TestCase {
         }
     }
     
+    String[] createTesters(DomainStatus ds, AccountType at) throws Exception {
+        String[] testers = new String[SoapCommands.TesterObjs.values().length];
+        
+        String objSuffix = "tester-" + ds.name() + "-" + at.name();
+        
+        String name = ACCOUNT_NAME("acct-" + objSuffix);
+        testers[SoapCommands.TesterObjs.TESTER_ID_ACCOUNT_FOR_DELETE_ACCOUNT_REQUEST.ordinal()] = createAccount(name, AccountType.ACCT_USER).getId();
+        
+        return testers;
+    }
+    
     private void suspendedDomainTest() throws Exception {
         Domain domain = getDomain();
+        String domainId = domain.getId();
         mProv.modifyDomainStatus(domain, DomainStatus.active.name());
         
         // auth to user, domain admin and global admin before we suspend the domain
         Account user = createAccount(ACCOUNT_NAME("user"), AccountType.ACCT_USER);
-        SoapTester testerUser = SoapTester.newInstance(user, AccountType.ACCT_USER);
+        String[] testersActiveUser = createTesters(DomainStatus.active, AccountType.ACCT_USER);
+        String[] testersSuspendedUser = createTesters(DomainStatus.suspended, AccountType.ACCT_USER);
+        SoapClient clientUser = SoapClient.newInstance(user, AccountType.ACCT_USER);
         
         Account domainAdmin = createAccount(ACCOUNT_NAME("domain-admin"), AccountType.ACCT_DOMAIN_ADMIN);
-        SoapTester testerDomainAdmin = SoapTester.newInstance(domainAdmin, AccountType.ACCT_DOMAIN_ADMIN);
+        String[] testersActiveDomainAdmin = createTesters(DomainStatus.active, AccountType.ACCT_DOMAIN_ADMIN);
+        String[] testersSuspendedDomainAdmin = createTesters(DomainStatus.suspended, AccountType.ACCT_DOMAIN_ADMIN);
+        SoapClient clientDomainAdmin = SoapClient.newInstance(domainAdmin, AccountType.ACCT_DOMAIN_ADMIN);
         
         Account globalAdmin = createAccount(ACCOUNT_NAME("global-admin"), AccountType.ACCT_GLOBAL_ADMIN);
-        SoapTester testerGlobalAdmin = SoapTester.newInstance(globalAdmin, AccountType.ACCT_GLOBAL_ADMIN);
+        String[] testersActiveGlobalAdmin = createTesters(DomainStatus.active, AccountType.ACCT_GLOBAL_ADMIN);
+        String[] testersSuspendedGlobalAdmin = createTesters(DomainStatus.suspended, AccountType.ACCT_GLOBAL_ADMIN);
+        SoapClient clientGlobalAdmin = SoapClient.newInstance(globalAdmin, AccountType.ACCT_GLOBAL_ADMIN);
         
         mProv.modifyDomainStatus(domain, DomainStatus.suspended.name());
-        SoapCommands.run(testerUser, AccountType.ACCT_USER, user, true);
-        SoapCommands.run(testerDomainAdmin, AccountType.ACCT_DOMAIN_ADMIN, user, true);
-        SoapCommands.run(testerGlobalAdmin, AccountType.ACCT_GLOBAL_ADMIN, user, true);
+        SoapCommands.run(new SoapTestContext(clientUser, AccountType.ACCT_USER, user, true, DOMAIN_NAME, domainId, testersSuspendedUser, TEST_ID));
+        SoapCommands.run(new SoapTestContext(clientDomainAdmin, AccountType.ACCT_DOMAIN_ADMIN, user, true, DOMAIN_NAME, domainId, testersSuspendedDomainAdmin, TEST_ID));
+        SoapCommands.run(new SoapTestContext(clientGlobalAdmin, AccountType.ACCT_GLOBAL_ADMIN, user, true, DOMAIN_NAME, domainId, testersSuspendedGlobalAdmin, TEST_ID));
         
         mProv.modifyDomainStatus(domain, DomainStatus.active.name());
-        SoapCommands.run(testerUser, AccountType.ACCT_USER, user, false);
-        SoapCommands.run(testerDomainAdmin, AccountType.ACCT_DOMAIN_ADMIN, user, false);
-        SoapCommands.run(testerGlobalAdmin, AccountType.ACCT_GLOBAL_ADMIN, user, false);
+        SoapCommands.run(new SoapTestContext(clientUser, AccountType.ACCT_USER, user, false, DOMAIN_NAME, domainId, testersActiveUser, TEST_ID));
+        SoapCommands.run(new SoapTestContext(clientDomainAdmin, AccountType.ACCT_DOMAIN_ADMIN, user, false, DOMAIN_NAME, domainId, testersActiveDomainAdmin, TEST_ID));
+        SoapCommands.run(new SoapTestContext(clientGlobalAdmin, AccountType.ACCT_GLOBAL_ADMIN, user, false, DOMAIN_NAME, domainId, testersActiveGlobalAdmin, TEST_ID));
     }
     
     private void execute() throws Exception {

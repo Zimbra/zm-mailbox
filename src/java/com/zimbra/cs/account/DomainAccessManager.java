@@ -200,7 +200,7 @@ public class DomainAccessManager extends AccessManager {
     private void accessDomain(Domain domain) throws ServiceException {
         if (domain != null) {
             if (domain.isSuspended())
-                throw ServiceException.PERM_DENIED("domain " + domain.getName() + " is suspended");
+                throw ServiceException.PERM_DENIED("domain is suspended " + domain.getName());
         }
 
     }
