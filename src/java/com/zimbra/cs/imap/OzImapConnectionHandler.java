@@ -701,7 +701,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         if (finished)
             mAuthenticator = null;
         else
-            sendContinuation();
+            sendContinuation("");
         return CONTINUE_PROCESSING;
     }
 
@@ -1258,7 +1258,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         if (begin == IDLE_START) {
             mSession.beginIdle(tag);
             sendNotifications(true, false);
-            sendContinuation();
+            sendContinuation("idling");
         } else {
             tag = mSession.endIdle();
             if (success)  sendOK(tag, "IDLE completed");
@@ -2010,7 +2010,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     void sendBAD(String tag, String response) throws IOException { sendResponse(tag, response.equals("") ? "BAD" : "BAD " + response, true); }
     void sendUntagged(String response) throws IOException        { sendResponse("*", response, false); }
     void sendUntagged(String response, boolean flush) throws IOException { sendResponse("*", response, flush); }
-    void sendContinuation() throws IOException                   { sendResponse("+", null, true); }
     void sendContinuation(String response) throws IOException    { sendResponse("+", response, true); }
 
     private void sendResponse(String status, String msg, boolean flush) throws IOException {
@@ -2234,7 +2233,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
 
             if (literal.octets() > 0) {
                 if (literal.blocking()) {
-                    sendContinuation();
+                    sendContinuation("send literal data");
                 }
                 gotoReadLiteralState(literal.octets());
                 return;

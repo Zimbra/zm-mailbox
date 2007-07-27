@@ -253,7 +253,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         } catch (ImapContinuationException ice) {
             mIncompleteRequest = req.rewind();
             if (ice.sendContinuation)
-                sendContinuation();
+                sendContinuation("send literal data");
         } catch (ImapParseException ipe) {
             mIncompleteRequest = null;
             if (ipe.mTag == null)
@@ -748,7 +748,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         if (finished)
             mAuthenticator = null;
         else
-            sendContinuation();
+            sendContinuation("");
         return CONTINUE_PROCESSING;
     }
 
@@ -1064,7 +1064,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         if (mailboxName.equals("")) {
             // 6.3.8: "An empty ("" string) mailbox name argument is a special request to return
             //         the hierarchy delimiter and the root name of the name given in the reference."
-            sendUntagged("LIST (\\Noselect) \"/\" \"\"");
+            sendUntagged("LIST (\\NoSelect) \"/\" \"\"");
             sendOK(tag, "LIST completed");
             return CONTINUE_PROCESSING;
         }
@@ -1299,7 +1299,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         if (begin == IDLE_START) {
             mSession.beginIdle(tag);
             sendNotifications(true, false);
-            sendContinuation();
+            sendContinuation("idling");
         } else {
             tag = mSession.endIdle();
             if (success)  sendOK(tag, "IDLE completed");
@@ -2079,7 +2079,6 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
     void sendBAD(String tag, String response) throws IOException { sendResponse(tag, response.equals("") ? "BAD" : "BAD " + response, true); }
     void sendUntagged(String response) throws IOException        { sendResponse("*", response, false); }
     void sendUntagged(String response, boolean flush) throws IOException { sendResponse("*", response, flush); }
-    void sendContinuation() throws IOException                   { sendResponse("+", null, true); }
     void sendContinuation(String response) throws IOException    { sendResponse("+", response, true); }
     void flushOutput() throws IOException                        { mOutputStream.flush(); }
     
