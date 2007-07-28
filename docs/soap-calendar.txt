@@ -589,6 +589,8 @@ OR
 //
 // (f)ree (b)usy busy-(t)entative busy-(u)navailable or (n)o-data elements
 //
+// "uid" is a comma-separated list of account emails or zimbraId GUIDs
+//
 <GetFreeBusyRequest s="RANGE_START_MSECS_GMT" e="RANGE_END_MSECS_GMT" [uid="id,..."]/>
 <GetFreeBusyResponse>
   <usr id="id">

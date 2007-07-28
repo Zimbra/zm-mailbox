@@ -33,6 +33,7 @@ import java.util.Map;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
@@ -102,7 +103,10 @@ public class GetFreeBusy extends MailDocumentHandler {
         return response;
     }
 
-    protected static void proxyRemoteItems(Map<String, Object> context, ZimbraSoapContext zc, Element response, long rangeStart, long rangeEnd, Map<String, StringBuilder> remote) {
+    protected static void proxyRemoteItems(
+            Map<String, Object> context, ZimbraSoapContext zc, Element response,
+            long rangeStart, long rangeEnd, Map<String, StringBuilder> remote) {
+        Provisioning prov = Provisioning.getInstance();
         for (Map.Entry<String, StringBuilder> entry : remote.entrySet()) {
             // String server = entry.getKey();
             String paramStr = entry.getValue().toString();
@@ -114,12 +118,17 @@ public class GetFreeBusy extends MailDocumentHandler {
                 req.addAttribute(MailConstants.A_CAL_END_TIME, rangeEnd);
                 req.addAttribute(MailConstants.A_UID, paramStr);
 
-                // hack: use the ID of the first user 
-                Account acct = Provisioning.getInstance().get(AccountBy.name, idStrs[0]);
-
-                Element remoteResponse = proxyRequest(req, context, acct.getId());
-                for (Element thisElt : remoteResponse.listElements())
-                    response.addElement(thisElt.detach());
+                // hack: use the ID of the first user
+                Account acct = prov.get(AccountBy.name, idStrs[0]);
+                if (acct == null)
+                    acct = prov.get(AccountBy.id, idStrs[0]);
+                if (acct != null) {
+                    Element remoteResponse = proxyRequest(req, context, acct.getId());
+                    for (Element thisElt : remoteResponse.listElements())
+                        response.addElement(thisElt.detach());
+                } else {
+                    ZimbraLog.calendar.debug("Account " + idStrs[0] + " not found while searching free/busy");
+                }
             } catch (SoapFaultException e) {
                 for (int i = 0; i < idStrs.length; i++)
                     addFailureInfo(response, rangeStart, rangeEnd, idStrs[i], e);
@@ -178,9 +187,8 @@ public class GetFreeBusy extends MailDocumentHandler {
             Mailbox mbox = id.getMailbox();
 
             FreeBusy fb = mbox.getFreeBusy(start, end);
-            
-            for (Iterator iter = fb.iterator(); iter.hasNext(); ) {
-                FreeBusy.Interval cur = (FreeBusy.Interval)iter.next();
+            for (Iterator<FreeBusy.Interval> iter = fb.iterator(); iter.hasNext(); ) {
+                FreeBusy.Interval cur = iter.next();
                 String status = cur.getStatus();
                 Element elt;
                 if (status.equals(IcalXmlStrMap.FBTYPE_FREE)) {
@@ -199,9 +207,6 @@ public class GetFreeBusy extends MailDocumentHandler {
                 elt.addAttribute(MailConstants.A_CAL_START_TIME, cur.getStart());
                 elt.addAttribute(MailConstants.A_CAL_END_TIME, cur.getEnd());
             }
-        } else {
-            throw new IllegalArgumentException("REMOTE MAILBOXES NOT SUPPORTED YET\n");
         }
     }
-    
 }
