@@ -30,8 +30,6 @@ import java.io.FileFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -80,6 +78,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
 
 public class FileUploadServlet extends ZimbraServlet {
@@ -184,24 +183,13 @@ public class FileUploadServlet extends ZimbraServlet {
     private static Upload fetchRemoteUpload(String accountId, String uploadId, String authtoken) throws ServiceException {
         // the first half of the upload id is the server id where it lives
         Server server = Provisioning.getInstance().get(ServerBy.id, uploadId.substring(0, UPLOAD_ID_LENGTH / 2));
-        if (server == null)
+        String url = AccountUtil.getBaseUri(server);
+        if (url == null)
             return null;
-        // determine the URI for the remote ContentServlet
-        int port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
-        boolean useHTTP = port > 0;
-        if (!useHTTP)
-            port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
-        if (port <= 0)
-            throw ServiceException.FAILURE("remote server " + server.getName() + " has neither http nor https port enabled", null);
         String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
-        String url;
-		try {
-			url = (useHTTP ? "http" : "https") + "://" + hostname + ':' + port +
-			             ContentServlet.SERVLET_PATH + ContentServlet.PREFIX_PROXY + '?' +
-			             ContentServlet.PARAM_UPLOAD_ID + '=' + URLEncoder.encode(uploadId, "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			throw ServiceException.FAILURE("fetchRemoteUpload(): unsupported encoding", e);
-		}
+        url += ContentServlet.SERVLET_PATH + ContentServlet.PREFIX_PROXY + '?' +
+               ContentServlet.PARAM_UPLOAD_ID + '=' + uploadId + '&' +
+               ContentServlet.PARAM_EXPUNGE + "=true";
 
         // create an HTTP client with auth cookie to fetch the file from the remote ContentServlet
         HttpState state = new HttpState();
@@ -368,6 +356,7 @@ public class FileUploadServlet extends ZimbraServlet {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void handleMultipartUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, String accountId) throws IOException, ServiceException {
         List<FileItem> items = null;
         String reqId = null;

@@ -175,25 +175,43 @@ public class AccountUtil {
     }
 
 
-    
     public static String getSoapUri(Account account) {
+        String base = getBaseUri(account);
+        return (base == null ? null : base + ZimbraServlet.USER_SERVICE_URI);
+    }
+
+    public static String getBaseUri(Account account) {
+        if (account == null)
+            return null;
+
         try {
             Server server = Provisioning.getInstance().getServer(account);
-            String host = server.getAttr(Provisioning.A_zimbraServiceHostname);
-
-            String mode = server.getAttr(Provisioning.A_zimbraMailMode, "http");
-            int port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
-            if (port > 0 && !mode.equalsIgnoreCase("https") && !mode.equalsIgnoreCase("redirect")) {
-                return "http://" + host + ':' + port + ZimbraServlet.USER_SERVICE_URI;
-            } else if (!mode.equalsIgnoreCase("http")) {
-                port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
-                if (port > 0)
-                    return "https://" + host + ':' + port + ZimbraServlet.USER_SERVICE_URI;
+            if (server == null) {
+                ZimbraLog.account.warn("no server associated with acccount " + account.getName());
+                return null;
             }
-            ZimbraLog.account.warn("no service port available on host " + host);
+            return getBaseUri(server);
         } catch (ServiceException e) {
-            ZimbraLog.account.warn("error fetching SOAP URI for account " + account.getName());
+            ZimbraLog.account.warn("error fetching SOAP URI for account " + account.getName(), e);
+            return null;
         }
+    }
+
+    public static String getBaseUri(Server server) {
+        if (server == null)
+            return null;
+
+        String host = server.getAttr(Provisioning.A_zimbraServiceHostname);
+        String mode = server.getAttr(Provisioning.A_zimbraMailMode, "http");
+        int port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
+        if (port > 0 && !mode.equalsIgnoreCase("https") && !mode.equalsIgnoreCase("redirect")) {
+            return "http://" + host + ':' + port;
+        } else if (!mode.equalsIgnoreCase("http")) {
+            port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
+            if (port > 0)
+                return "https://" + host + ':' + port;
+        }
+        ZimbraLog.account.warn("no service port available on host " + host);
         return null;
     }
 

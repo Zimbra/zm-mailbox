@@ -84,6 +84,7 @@ public class ContentServlet extends ZimbraServlet {
     protected static final String PARAM_PART = "part";
     protected static final String PARAM_FORMAT = "fmt";
     protected static final String PARAM_SYNC = "sync";
+    protected static final String PARAM_EXPUNGE = "expunge";
 
     protected static final String FORMAT_RAW = "raw";
     protected static final String FORMAT_DEFANGED_HTML = "htmldf";
@@ -245,8 +246,7 @@ public class ContentServlet extends ZimbraServlet {
          */
     }
 
-    private void retrieveUpload(HttpServletRequest req, HttpServletResponse resp, AuthToken authToken)
-    throws ServletException, IOException {
+    private void retrieveUpload(HttpServletRequest req, HttpServletResponse resp, AuthToken authToken) throws IOException {
         // if it's another server fetching an already-uploaded file, just do that
         String uploadId = req.getParameter(PARAM_UPLOAD_ID);
         if (uploadId == null) {
@@ -274,7 +274,9 @@ public class ContentServlet extends ZimbraServlet {
             resp.addHeader("Content-Disposition", cd.toString());
             sendbackOriginalDoc(up.getInputStream(), up.getContentType(), resp);
 
-            FileUploadServlet.deleteUpload(up);
+            boolean expunge = "true".equalsIgnoreCase(req.getParameter(PARAM_EXPUNGE)) || "1".equals(req.getParameter(PARAM_EXPUNGE));
+            if (expunge)
+                FileUploadServlet.deleteUpload(up);
         } catch (ServiceException e) {
         	returnError(resp, e);
         } catch (AuthTokenException e) {
