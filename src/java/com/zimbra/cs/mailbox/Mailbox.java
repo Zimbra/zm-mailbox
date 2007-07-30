@@ -2407,6 +2407,15 @@ public class Mailbox {
      *  Returns <tt>null</tt> if the authenticated user has read access to
      *  the entire Mailbox. */
     Set<Folder> getVisibleFolders() throws ServiceException {
+        return getAccessibleFolders(ACL.RIGHT_READ);
+    }
+
+    /** Returns a list of all <code>Folder</code>s that the authenticated user
+     *  from the current transaction has a certain set of rights on.  Returns
+     *  <tt>null</tt> if the authenticated user has the required access on the
+     *  entire Mailbox.
+     * @param rights  The bitmask representing the required permissions. */
+    Set<Folder> getAccessibleFolders(short rights) throws ServiceException {
         if (!mCurrentChange.isActive())
             throw ServiceException.FAILURE("cannot get visible hierarchy outside transaction", null);
         if (hasFullAccess())
@@ -2415,7 +2424,7 @@ public class Mailbox {
         boolean incomplete = false;
         Set<Folder> visible = new HashSet<Folder>();
         for (Folder folder : mFolderCache.values())
-            if (folder.canAccess(ACL.RIGHT_READ))
+            if (folder.canAccess(rights))
                 visible.add(folder);
             else
                 incomplete = true;
@@ -5018,7 +5027,7 @@ public class Mailbox {
                 acct.getAttr(Provisioning.A_zimbraPrefJunkLifetime),
                 acct.getAttr(Provisioning.A_zimbraPrefTrashLifetime));
         }
-        
+
         int globalTimeout = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailMessageLifetime, 0) / 1000);
         int systemTrashTimeout = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailTrashLifetime, 0) / 1000);
         int systemJunkTimeout  = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailSpamLifetime, 0) / 1000);
@@ -5031,7 +5040,7 @@ public class Mailbox {
 
         int trashTimeout = pickTimeout(systemTrashTimeout, userTrashTimeout);
         int junkTimeout = pickTimeout(systemJunkTimeout, userJunkTimeout);
-        
+
         if (globalTimeout <= 0 && trashTimeout <= 0 && junkTimeout <= 0 &&
             userInboxReadTimeout <= 0 && userInboxReadTimeout <= 0 &&
             userInboxUnreadTimeout <= 0 && userSentTimeout <= 0)
@@ -5070,24 +5079,40 @@ public class Mailbox {
             if (userSentTimeout > 0)
                 Folder.purgeMessages(this, sent, getOperationTimestamp() - userSentTimeout, null);
 
+            // collect all the tombstones and write once
+            MailItem.TypedIdList tombstones = collectPendingTombstones();
+            if (tombstones != null && !tombstones.isEmpty())
+                DbMailItem.writeTombstones(this, tombstones);
+
             success = true;
         } finally {
             endTransaction(success);
         }
     }
     
-    /**
-     * Returns the smaller non-zero value, or <tt>0</tt> if both
-     * <tt>t1</tt> and <tt>t2</tt> are <tt>0</tt>.
-     */
+    /** Returns the smaller non-zero value, or <tt>0</tt> if both
+     *  <tt>t1</tt> and <tt>t2</tt> are <tt>0</tt>. */
     private int pickTimeout(int t1, int t2) {
-        if (t1 == 0) {
+        if (t1 == 0)
             return t2;
-        }
-        if (t2 == 0) {
+        if (t2 == 0)
             return t1;
-        }
         return Math.min(t1, t2);
+    }
+
+    public void purgeImapDeleted(OperationContext octxt) throws ServiceException {
+        PurgeImapDeleted redoRecorder = new PurgeImapDeleted(mId);
+        boolean success = false;
+        try {
+            beginTransaction("purgeImapDeleted", octxt, redoRecorder);
+
+            Set<Folder> purgeable = getAccessibleFolders((short) (ACL.RIGHT_READ | ACL.RIGHT_DELETE));
+            MailItem.PendingDelete info = DbMailItem.getImapDeleted(this, purgeable);
+            MailItem.delete(this, info, null, MailItem.DeleteScope.ENTIRE_ITEM, true);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
     }
 
     public Document addDocumentRevision(OperationContext octxt, int docId, byte type, byte[] rawData, String author) throws ServiceException {

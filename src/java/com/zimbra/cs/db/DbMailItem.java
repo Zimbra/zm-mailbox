@@ -2154,9 +2154,8 @@ public class DbMailItem {
             else
                 constraint = "date < ? AND type NOT IN " + NON_SEARCHABLE_TYPES +
                              " AND folder_id IN" + DbUtil.suitableNumberOfVariables(folders);
-            if (unread != null) {
+            if (unread != null)
                 constraint += " AND unread = ?";
-            }
 
             stmt = conn.prepareStatement("SELECT " + LEAF_NODE_FIELDS +
                         " FROM " + getMailItemTableName(mbox) +
@@ -2168,9 +2167,8 @@ public class DbMailItem {
                 for (Folder folder : folders)
                     stmt.setInt(pos++, folder.getId());
             }
-            if (unread != null) {
+            if (unread != null)
                 stmt.setBoolean(pos++, unread);
-            }
             rs = stmt.executeQuery();
 
             info.rootId = 0;
@@ -2178,6 +2176,49 @@ public class DbMailItem {
             return accumulateLeafNodes(info, mbox, rs);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("fetching list of items for purge", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    public static PendingDelete getImapDeleted(Mailbox mbox, Set<Folder> folders) throws ServiceException {
+        PendingDelete info = new PendingDelete();
+        if (folders != null && folders.isEmpty())
+            return info;
+
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            // figure out the set of FLAGS bitmasks containing the \Deleted flag
+            Set<Long> flagsets = getFlagsetCache(conn, mbox).getMatchingTagsets(Flag.BITMASK_DELETED, Flag.BITMASK_DELETED);
+            if (flagsets != null && flagsets.isEmpty())
+                return info;
+
+            String flagconstraint = flagsets == null ? "" : " AND flags IN" + DbUtil.suitableNumberOfVariables(flagsets);
+            String folderconstraint = folders == null ? "" : " AND folder_id IN" + DbUtil.suitableNumberOfVariables(folders);
+
+            stmt = conn.prepareStatement("SELECT " + LEAF_NODE_FIELDS +
+                        " FROM " + getMailItemTableName(mbox) +
+                        " WHERE " + IN_THIS_MAILBOX_AND + "type IN " + IMAP_TYPES + flagconstraint + folderconstraint);
+            int pos = 1;
+            stmt.setInt(pos++, mbox.getId());
+            if (flagsets != null) {
+                for (long flags : flagsets)
+                    stmt.setInt(pos++, (int) flags);
+            }
+            if (folders != null) {
+                for (Folder folder : folders)
+                    stmt.setInt(pos++, folder.getId());
+            }
+            rs = stmt.executeQuery();
+
+            info.rootId = 0;
+            info.size   = 0;
+            return accumulateLeafNodes(info, mbox, rs);
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("fetching list of \\Deleted items for purge", e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);

@@ -32,7 +32,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -490,6 +489,19 @@ public class Folder extends MailItem {
         markItemModified(Change.INTERNAL_ONLY);
         mImapRECENT = mMailbox.getLastItemId();
         saveMetadata();
+    }
+
+    /** Persists the folder's current unread/message counts and IMAP UIDNEXT
+     *  value to the database.
+     * @param initial  Whether this is the first time we're saving folder
+     *                 counts, in which case we also initialize the IMAP
+     *                 UIDNEXT and HIGHESTMODSEQ values. */
+    protected void saveFolderCounts(boolean initial) throws ServiceException {
+        if (initial) {
+            mImapUIDNEXT = mMailbox.getLastItemId() + 1;
+            mImapMODSEQ  = mMailbox.getLastChangeID();
+        }
+        DbMailItem.persistCounts(this, encodeMetadata());
     }
 
     @Override boolean isTaggable()       { return false; }
@@ -970,74 +982,12 @@ public class Folder extends MailItem {
     static void purgeMessages(Mailbox mbox, Folder folder, int beforeDate, Boolean unread) throws ServiceException {
         if (beforeDate <= 0 || beforeDate >= mbox.getOperationTimestamp())
             return;
-        boolean allFolders = (folder == null);
-        List<Folder> folders = (allFolders ? null : folder.getSubfolderHierarchy());
 
         // get the full list of things that are being removed
+        boolean allFolders = (folder == null);
+        List<Folder> folders = (allFolders ? null : folder.getSubfolderHierarchy());
         PendingDelete info = DbMailItem.getLeafNodes(mbox, folders, beforeDate, allFolders, unread);
-        if (info.itemIds.isEmpty())
-            return;
-        mbox.markItemDeleted(info.itemIds.getTypesMask(), info.itemIds.getAll());
-
-        // update message counts
-        for (Map.Entry<Integer, DbMailItem.LocationCount> entry : info.messages.entrySet()) {
-            int folderID = entry.getKey();
-            DbMailItem.LocationCount lcount = entry.getValue();
-            mbox.getFolderById(folderID).updateSize(-lcount.count, -lcount.size);
-        }
-
-        // update the mailbox's size
-        mbox.updateSize(-info.size);
-        mbox.updateContactCount(-info.contacts);
-
-        // update unread counts on folders and tags
-        List<UnderlyingData> unreadData = DbMailItem.getById(mbox, info.unreadIds, TYPE_MESSAGE);
-        for (UnderlyingData data : unreadData)
-            mbox.getItem(data).updateUnread(-1);
-
-        // remove the deleted item(s) from the mailbox's cache
-        if (!info.itemIds.isEmpty()) {
-            info.cascadeIds = DbMailItem.markDeletionTargets(mbox, info.itemIds.getIds(TYPE_MESSAGE), info.modifiedIds);
-            if (info.cascadeIds != null)
-                info.modifiedIds.removeAll(info.cascadeIds);
-            mbox.purge(TYPE_CONVERSATION);
-            for (int convId : info.modifiedIds)
-                mbox.getConversationById(convId);
-        }
-
-        // actually delete the items from the DB
-        DbMailItem.delete(mbox, info.itemIds.getAll());
-        mbox.markOtherItemDirty(info);
-
-        // also delete any conversations whose messages have all been removed
-        if (info.cascadeIds != null && !info.cascadeIds.isEmpty()) {
-            DbMailItem.delete(mbox, info.cascadeIds);
-            mbox.markItemDeleted(MailItem.typeToBitmask(TYPE_CONVERSATION), info.cascadeIds);
-            info.itemIds.add(TYPE_CONVERSATION, info.cascadeIds);
-        }
-
-        // deal with index sharing
-        if (!info.sharedIndex.isEmpty())
-            DbMailItem.resolveSharedIndex(mbox, info);
-
-        // write a deletion record for later sync
-        if (mbox.isTrackingSync() && !info.itemIds.isEmpty())
-            DbMailItem.writeTombstones(mbox, info.itemIds);
-
-        // don't actually delete the blobs or index entries here; wait until after the commit
-    }
-
-    /** Persists the folder's current unread/message counts and IMAP UIDNEXT
-     *  value to the database.
-     * @param initial  Whether this is the first time we're saving folder
-     *                 counts, in which case we also initialize the IMAP
-     *                 UIDNEXT and HIGHESTMODSEQ values. */
-    protected void saveFolderCounts(boolean initial) throws ServiceException {
-        if (initial) {
-            mImapUIDNEXT = mMailbox.getLastItemId() + 1;
-            mImapMODSEQ  = mMailbox.getLastChangeID();
-        }
-        DbMailItem.persistCounts(this, encodeMetadata());
+        delete(mbox, info, null, MailItem.DeleteScope.ENTIRE_ITEM, false);
     }
 
 

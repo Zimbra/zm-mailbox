@@ -128,6 +128,9 @@ public class FolderAction extends ItemAction {
         if (operation.equals(OP_EMPTY)) {
             boolean subfolders = action.getAttributeBool(MailConstants.A_RECURSIVE, true);
             mbox.emptyFolder(octxt, iid.getId(), subfolders);
+            // empty trash means also to purge all IMAP \Deleted messages
+            if (iid.getId() == Mailbox.ID_FOLDER_TRASH)
+                mbox.purgeImapDeleted(octxt);
         } else if (operation.equals(OP_REFRESH)) {
             mbox.synchronizeFolder(octxt, iid.getId());
         } else if (operation.equals(OP_IMPORT)) {
