@@ -571,7 +571,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>how often (nnnnn[hmsd]) the zimbraLastLogonTimestamp is updated</desc>
 </attr>
 
-<attr id="115" name="zimbraAttachmentsBlocked" type="boolean" cardinality="single" optionalIn="account,cos,globalConfig" flags="accountInherited,domainAdminModifiable">
+<attr id="115" name="zimbraAttachmentsBlocked" type="boolean" cardinality="single" optionalIn="account,cos,globalConfig" flags="accountInfo,accountInherited,domainAdminModifiable">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>block all attachment downloading</desc>
