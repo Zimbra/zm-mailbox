@@ -32,6 +32,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import junit.framework.Assert;
+import junit.framework.Test;
+import junit.framework.TestResult;
+
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
@@ -51,7 +59,6 @@ import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.lmtpserver.utils.LmtpClient;
 import com.zimbra.cs.localconfig.DebugConfig;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -62,13 +69,15 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.zclient.ZEmailAddress;
+import com.zimbra.cs.zclient.ZGetMessageParams;
 import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.zclient.ZMessage;
+import com.zimbra.cs.zclient.ZSearchHit;
+import com.zimbra.cs.zclient.ZSearchParams;
+import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage;
+import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.MessagePart;
 import com.zimbra.soap.SoapFaultException;
-import junit.framework.Test;
-import junit.framework.TestResult;
 
 /**
  * @author bburtin
@@ -201,6 +210,20 @@ public class TestUtil {
         lmtp.close();
     }
 
+    public static void sendMessage(ZMailbox senderMbox, String recipientName, String subject, String body)
+    throws Exception {
+        ZOutgoingMessage msg = new ZOutgoingMessage();
+        List<ZEmailAddress> addresses = new ArrayList<ZEmailAddress>();
+        addresses.add(new ZEmailAddress(TestUtil.getAddress(recipientName),
+            null, null, ZEmailAddress.EMAIL_TYPE_TO));
+        msg.setAddresses(addresses);
+        msg.setSubject(subject);
+        List<MessagePart> parts = new ArrayList<MessagePart>();
+        parts.add(new MessagePart("text/plain", body));
+        msg.setMessageParts(parts);
+        senderMbox.sendMessage(msg, null, false);
+    }
+
     /**
      * Searches a mailbox and returns the id's of all matching items.
      */
@@ -218,6 +241,36 @@ public class TestUtil {
         }
         return ids;
 
+    }
+
+    public static List<ZMessage> search(ZMailbox mbox, String query)
+    throws Exception {
+        List<ZMessage> msgs = new ArrayList<ZMessage>();
+        ZSearchParams params = new ZSearchParams(query);
+        params.setTypes(ZSearchParams.TYPE_MESSAGE);
+
+        for (ZSearchHit hit : mbox.search(params).getHits()) {
+            ZGetMessageParams msgParams = new ZGetMessageParams();
+            msgParams.setId(hit.getId());
+            msgs.add(mbox.getMessage(msgParams));
+        }
+        return msgs;
+    }
+    
+    public static ZMessage waitForMessage(ZMailbox mbox, String query)
+    throws Exception {
+        for (int i = 1; i <= 20; i++) {
+            List<ZMessage> msgs = search(mbox, query);
+            if (msgs.size() == 1) {
+                return msgs.get(0);
+            }
+            if (msgs.size() > 1) {
+                Assert.fail("Unexpected number of messages (" + msgs.size() + ") returned by query '" + query + "'");
+            }
+            Thread.sleep(500);
+        }
+        Assert.fail("Message for query '" + query + "' never arrived.  Either the MTA is not running or the test failed.");
+        return null;
     }
 
     /**

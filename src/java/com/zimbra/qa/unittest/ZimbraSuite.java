@@ -80,6 +80,7 @@ public class ZimbraSuite extends TestSuite
         suite.addTest(new TestSuite(TestPop3Import.class));
         suite.addTest(new TestSuite(TestFilter.class));
         suite.addTest(new TestSuite(TestPop3ImapAuth.class));
+        suite.addTest(new TestSuite(TestNotification.class));
 
         synchronized (sAdditionalTests) {
             for (Test additional : sAdditionalTests) {
