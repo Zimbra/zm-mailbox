@@ -138,7 +138,8 @@
 
 	<property name="defaultdomain.name" value="${zimbra.server.hostname}"/>
 	<property name="wiki.user.default" value="wiki@${defaultdomain.name}" /><!-- global wiki account -->
-
+	<property name="samplefamilyaccounts.file" location="data/soap/samplefamilyaccounts.xml"/>
+	
 	<taskdef resource="net/sf/antcontrib/antlib.xml">
 		<classpath>
 			<pathelement location="${common.jars.dir}/ant-contrib-1.0b1.jar"/>
@@ -1051,8 +1052,8 @@
 			<sysproperty key="DOMAIN_NAME" value="${defaultdomain.name}"/>
 			<sysproperty key="ADMIN_USER" value="admin@${defaultdomain.name}"/>
 			<sysproperty key="ADMIN_PASSWORD" value="test123"/>
-			<arg line="-s -d -f data/soap/samplefamilyaccounts.xml"/>
-		</java>
+			<arg line="-s -d -f ${samplefamilyaccounts.file}"/>
+	    </java>
 		
 		<!-- inject test data for family parent and child -->
 		<for list="family-parent,family-child1-visible" param="accountName">
