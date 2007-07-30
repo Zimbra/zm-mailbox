@@ -68,6 +68,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.zclient.ZEmailAddress;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZGetMessageParams;
 import com.zimbra.cs.zclient.ZMailbox;
@@ -75,6 +76,9 @@ import com.zimbra.cs.zclient.ZMessage;
 import com.zimbra.cs.zclient.ZSearchHit;
 import com.zimbra.cs.zclient.ZSearchParams;
 import com.zimbra.cs.zclient.ZTag;
+import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage;
+import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.MessagePart;
+
 
 /**
  * @author bburtin
@@ -235,7 +239,7 @@ public class TestUtil {
         lmtp.sendMessage(message.getBytes(), recipient, sender, "TestUtil");
         lmtp.close();
     }
-    
+
     public static String insertMessage(ZMailbox mbox, int messageNum, String subject)
     throws ServiceException {
         return insertMessage(mbox, messageNum, subject, Integer.toString(Mailbox.ID_FOLDER_INBOX));
@@ -246,7 +250,19 @@ public class TestUtil {
         String message = getTestMessage(messageNum, subject);
         return mbox.addMessage(folderId, null, null, 0, message, true);
     }
-    
+
+    public static void sendMessage(ZMailbox senderMbox, String recipientName, String subject, String body)
+    throws Exception {
+        ZOutgoingMessage msg = new ZOutgoingMessage();
+        List<ZEmailAddress> addresses = new ArrayList<ZEmailAddress>();
+        addresses.add(new ZEmailAddress(TestUtil.getAddress(recipientName),
+            null, null, ZEmailAddress.EMAIL_TYPE_TO));
+        msg.setAddresses(addresses);
+        msg.setSubject(subject);
+        msg.setMessagePart(new MessagePart("text/plain", body));
+        senderMbox.sendMessage(msg, null, false);
+    }
+
     /**
      * Searches a mailbox and returns the id's of all matching items.
      */
@@ -266,6 +282,7 @@ public class TestUtil {
 
     }
     
+
     public static List<ZMessage> search(ZMailbox mbox, String query)
     throws Exception {
         List<ZMessage> msgs = new ArrayList<ZMessage>();
@@ -278,6 +295,22 @@ public class TestUtil {
             msgs.add(mbox.getMessage(msgParams));
         }
         return msgs;
+    }
+    
+    public static ZMessage waitForMessage(ZMailbox mbox, String query)
+    throws Exception {
+        for (int i = 1; i <= 20; i++) {
+            List<ZMessage> msgs = search(mbox, query);
+            if (msgs.size() == 1) {
+                return msgs.get(0);
+            }
+            if (msgs.size() > 1) {
+                Assert.fail("Unexpected number of messages (" + msgs.size() + ") returned by query '" + query + "'");
+            }
+            Thread.sleep(500);
+        }
+        Assert.fail("Message for query '" + query + "' never arrived.  Either the MTA is not running or the test failed.");
+        return null;
     }
 
     /**

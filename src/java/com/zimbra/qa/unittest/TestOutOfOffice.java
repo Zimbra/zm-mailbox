@@ -25,25 +25,15 @@
 
 package com.zimbra.qa.unittest;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
-
 import junit.framework.TestCase;
 
+import com.zimbra.common.util.Constants;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapUtil;
-import com.zimbra.cs.client.LmcSession;
-import com.zimbra.cs.client.soap.LmcGetPrefsRequest;
-import com.zimbra.cs.client.soap.LmcGetPrefsResponse;
-import com.zimbra.cs.client.soap.LmcModifyPrefsRequest;
 import com.zimbra.cs.db.DbOutOfOffice;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.common.util.Constants;
 
 /**
  * @author bburtin
@@ -53,10 +43,10 @@ public class TestOutOfOffice extends TestCase
     private Connection mConn;
     private Mailbox mMbox;
     
-    private static String SOAP_URL = TestUtil.getSoapUrl();
     private static String USER_NAME = "user1";
     private static String RECIPIENT1_ADDRESS = "TestOutOfOffice1@example.zimbra.com";
     private static String RECIPIENT2_ADDRESS = "TestOutOfOffice2@example.zimbra.com";
+    
 
     protected void setUp() throws Exception
     {
@@ -65,9 +55,8 @@ public class TestOutOfOffice extends TestCase
         Account account = TestUtil.getAccount(USER_NAME);
         mMbox = MailboxManager.getInstance().getMailboxByAccount(account);
         mConn = DbPool.getConnection();
-
-        DbOutOfOffice.clear(mConn, account.getId());
-        mConn.commit();
+        
+        cleanUp();
 }
     
     public void testRowExists() throws Exception
@@ -107,104 +96,18 @@ public class TestOutOfOffice extends TestCase
         assertTrue("recipient1", DbOutOfOffice.alreadySent(mConn, mMbox, RECIPIENT1_ADDRESS, 6 * Constants.MILLIS_PER_DAY));
         assertFalse("recipient2", DbOutOfOffice.alreadySent(mConn, mMbox, RECIPIENT2_ADDRESS, 7 * Constants.MILLIS_PER_DAY));
     }
-
-    public void testGetOutOfOffice() throws Exception
-    {
-        String keyEnabled = Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled;
-        String keyReply = Provisioning.A_zimbraPrefOutOfOfficeReply;
-
-        LmcSession session = TestUtil.getSoapSession(USER_NAME);
-        LmcGetPrefsRequest req = new LmcGetPrefsRequest();
-        String[] prefsToGet = { keyEnabled, keyReply };
-        req.setPrefsToGet(prefsToGet);
-        req.setSession(session);
-        LmcGetPrefsResponse response = (LmcGetPrefsResponse)req.invoke(SOAP_URL);
-        
-
-        // Get current settings
-        Account account = TestUtil.getAccount(USER_NAME);
-        boolean isCurrentlyEnabled =
-            account.getBooleanAttr(keyEnabled, false);
-        String currentReplyBody = account.getAttr(keyReply);
-        
-        // Get SOAP response settings
-        Map prefs = response.getPrefsMap();
-        boolean isEnabled;
-        if (prefs.containsKey(keyEnabled)) {
-            String value = (String) prefs.get(keyEnabled);
-            isEnabled = (value.equals(LdapUtil.LDAP_TRUE));
-        }
-        else {
-            // If the pref isn't set in the response, make sure the test passes 
-            isEnabled = isCurrentlyEnabled;
-        }
-        String replyBody = (String) prefs.get(keyReply);
-
-        // Normalize nulls so we don't get false positives
-        if (currentReplyBody == null) {
-            currentReplyBody = "";
-        }
-        if (replyBody == null) {
-            replyBody = "";
-        }
-        
-        assertEquals(isCurrentlyEnabled, isEnabled);
-        assertEquals("currentReplyBody='" + currentReplyBody +"', replyBody='" + replyBody + "'",
-                     currentReplyBody, replyBody);
-    }
     
-    public void testModifyOutOfOffice() throws Exception
-    {
-        final String keyEnabled = Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled;
-        final String keyReply = Provisioning.A_zimbraPrefOutOfOfficeReply;
-        
-        // Get current settings
-        Account account = TestUtil.getAccount(USER_NAME);
-        boolean wasEnabled =
-            account.getBooleanAttr(keyEnabled, false);
-        String oldReplyBody = account.getAttr(keyReply);
-        
-        // Set new settings
-        boolean isEnabled = !wasEnabled;
-        StringBuffer buf = new StringBuffer();
-        int numWords = (new Random()).nextInt(1000) + 1; 
-        for (int i = 0; i < numWords; i++) {
-            buf.append("blah ");
-        }
-        String replyBody = buf.toString();
-
-        // Send the request
-        LmcSession session = TestUtil.getSoapSession(USER_NAME);
-        LmcModifyPrefsRequest req = new LmcModifyPrefsRequest();
-        Map prefs = new HashMap();
-        prefs.put(keyEnabled, LdapUtil.getBooleanString(isEnabled));
-        prefs.put(keyReply, replyBody);
-        req.setPrefMods(prefs);
-        req.setSession(session);
-        req.invoke(SOAP_URL);
-
-        // Refresh Account object
-        account = TestUtil.getAccount(USER_NAME);
-        
-        // Validate
-        assertNotNull(account.getAttr(keyEnabled));
-        assertEquals(isEnabled, account.getBooleanAttr(keyEnabled, wasEnabled));
-        assertEquals(replyBody, account.getAttr(keyReply));
-
-        // Reset, so that the account attributes are not modified
-        prefs = new HashMap();
-        prefs.put(keyEnabled, LdapUtil.getBooleanString(wasEnabled));
-        prefs.put(keyReply, oldReplyBody);
-        Provisioning.getInstance().modifyAttrs(account, prefs);
-    }
-    
-    protected void tearDown() throws Exception
-    {
-        DbOutOfOffice.clear(mConn, mMbox.getAccountId());
-        mConn.commit();
-        
+    public void tearDown()
+    throws Exception {
+        cleanUp();
         DbPool.quietClose(mConn);
+        
         super.tearDown();
     }
     
+    private void cleanUp()
+    throws Exception {
+        DbOutOfOffice.clear(mConn, mMbox.getAccountId());
+        mConn.commit();
+    }
 }

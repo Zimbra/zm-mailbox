@@ -264,7 +264,7 @@ implements LmtpCallback {
             out.setSentDate(new Date());
 
             // Subject
-            out.setSubject("Re: " + pm.getNormalizedSubject());
+            out.setSubject("Re: " + pm.getNormalizedSubject(), Mime.P_CHARSET_UTF8);
 
             // In-Reply-To
             String messageId = pm.getMessageID();
@@ -407,7 +407,7 @@ implements LmtpCallback {
             out.setFrom(address);
             address = new InternetAddress(destination);
             out.setRecipient(javax.mail.Message.RecipientType.TO, address);
-            out.setSubject(subject);
+            out.setSubject(subject, Mime.P_CHARSET_UTF8);
             out.setText(body, Mime.P_CHARSET_UTF8);
 
             String envFrom = "<>";
