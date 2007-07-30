@@ -68,7 +68,7 @@ public class GetDomain extends AdminDocumentHandler {
         if (domain == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(value);
 
-        if (!canAccessDomain(lc, domain))
+        if (isDomainAdminOnly(lc) && !canAccessDomain(lc, domain))
             throw ServiceException.PERM_DENIED("can not access domain");
 
         Element response = lc.createElement(AdminConstants.GET_DOMAIN_RESPONSE);

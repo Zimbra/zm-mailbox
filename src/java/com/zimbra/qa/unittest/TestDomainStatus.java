@@ -792,7 +792,7 @@ public class TestDomainStatus extends TestCase {
             dispatcher.registerHandler(AdminConstants.GET_ACCOUNT_MEMBERSHIP_REQUEST, new GetAccountMembership());
             */
             ADMIN_CREATE_DOMAIN_REQUEST("CREATE_DOMAIN_REQUEST",                           Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.GOOD,             Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.GOOD),
-            ADMIN_GET_DOMAIN_REQUEST("GET_DOMAIN_REQUEST",                                 Result.PERM_DENIED_2,    Result.GOOD,             Result.GOOD,             Result.PERM_DENIED_2,    Result.AUTH_EXPIRED,     Result.PERM_DENIED_3),
+            ADMIN_GET_DOMAIN_REQUEST("GET_DOMAIN_REQUEST",                                 Result.PERM_DENIED_2,    Result.GOOD,             Result.GOOD,             Result.PERM_DENIED_2,    Result.AUTH_EXPIRED,     Result.GOOD),
             // ADMIN_GET_DOMAIN_INFO_REQUEST("GET_DOMAIN_INFO_REQUEST",                       Result.PERM_DENIED_2,    Result.GOOD,    Result.GOOD,             Result.PERM_DENIED_2,    Result.AUTH_EXPIRED,     Result.PERM_DENIED_3),
             ADMIN_GET_DOMAIN_INFO_REQUEST("GET_DOMAIN_INFO_REQUEST",                       Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.GOOD),
             ADMIN_GET_ALL_DOMAINS_REQUEST("GET_ALL_DOMAINS_REQUEST",                       Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.GOOD,             Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.GOOD),

@@ -1290,10 +1290,18 @@ public class LdapProvisioning extends Provisioning {
                 domainAttrs.remove(A_zimbraDomainType); // add back later
             }
             
+            String domainStatus = (String) domainAttrs.get(A_zimbraDomainStatus);
+            if (domainStatus == null) {
+                domainStatus = DOMAIN_STATUS_ACTIVE;
+            } else {
+                domainAttrs.remove(A_zimbraDomainStatus); // add back later
+            }
+            
             AttributeManager.getInstance().preModify(domainAttrs, null, attrManagerContext, true, true);
             
             // Add back attrs we circumvented from attribute checking
             domainAttrs.put(A_zimbraDomainType, domainType);
+            domainAttrs.put(A_zimbraDomainStatus, domainStatus);
             
             String parts[] = name.split("\\.");        
             String dns[] = mDIT.domainToDNs(parts);

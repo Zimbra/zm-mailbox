@@ -234,6 +234,7 @@ public class ProvUtil implements DebugListener {
         MODIFY_DATA_SOURCE("modifyDataSource", "mds", "{name@domain|id} {ds-name|ds-id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),                
         MODIFY_DISTRIBUTION_LIST("modifyDistributionList", "mdl", "{list@domain|id} attr1 value1 [attr2 value2...]", Category.LIST, 3, Integer.MAX_VALUE),
         MODIFY_DOMAIN("modifyDomain", "md", "{domain|id} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 3, Integer.MAX_VALUE),
+        MODIFY_DOMAIN_STATUS("modifyDomainStatus", "mdst", "{domain|id} {domain-status}", Category.DOMAIN, 2, 2),
         MODIFY_IDENTITY("modifyIdentity", "mid", "{name@domain|id} {identity-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),
         MODIFY_SIGNATURE("modifySignature", "msig", "{name@domain|id} {signature-name|signature-id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),
         MODIFY_SERVER("modifyServer", "ms", "{name|id} [attr1 value1 [attr2 value2...]]", Category.SERVER, 3, Integer.MAX_VALUE),
@@ -480,7 +481,10 @@ public class ProvUtil implements DebugListener {
             break;                        
         case MODIFY_DOMAIN:
             mProv.modifyAttrs(lookupDomain(args[1]), getMap(args, 2), true);            
-            break;            
+            break; 
+        case MODIFY_DOMAIN_STATUS:
+            mProv.modifyDomainStatus(lookupDomain(args[1]), args[2]);            
+            break; 
         case MODIFY_SERVER:
             mProv.modifyAttrs(lookupServer(args[1]), getMap(args, 2), true);            
             break;            

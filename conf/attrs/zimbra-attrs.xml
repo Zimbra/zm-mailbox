@@ -2475,7 +2475,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>voice upsell URL</desc>
 </attr>
 
-<attr id="535" name="zimbraDomainStatus" type="enum" value="active,maintenance,locked,closed,suspended" callback="DomainStatus" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
+<attr id="535" name="zimbraDomainStatus" type="enum" value="active,maintenance,locked,closed,suspended" immutable="1" callback="DomainStatus" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
   <desc>domain status.  enum values are akin to those of zimbraAccountStatus
         
         zimbraAccountStatus values:
