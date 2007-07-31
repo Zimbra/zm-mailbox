@@ -132,18 +132,6 @@ public class ZIdentity  {
 
     public boolean getWhenInFoldersEnabled() { return getBool(Provisioning.A_zimbraPrefWhenInFoldersEnabled); }
 
-    public synchronized boolean containsAddress(ZEmailAddress address) {
-        if (address == null || address.getAddress() == null)
-            return false;
-
-        for (String addr: getWhenSentToAddresses()) {
-            if (addr != null && addr.toLowerCase().contains(address.getAddress().toLowerCase())) {
-                    return true;
-            }
-        }
-        return false;      
-    }
-    
     public boolean containsFolderId(String folderId) {
         for (String id : getWhenInFolderIds()) {
             if (id.equals(folderId)) {
@@ -152,10 +140,6 @@ public class ZIdentity  {
         }
         return false;
     }
-
-    public String[] getWhenSentToAddresses() { return getMulti(Provisioning.A_zimbraPrefWhenSentToAddresses); }
-
-    public boolean getWhenSentToEnabled() { return getBool(Provisioning.A_zimbraPrefWhenSentToEnabled); }
 
     public Element toElement(Element parent) {
         Element identity = parent.addElement(AccountConstants.E_IDENTITY);
