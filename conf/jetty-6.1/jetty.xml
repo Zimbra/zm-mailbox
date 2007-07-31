@@ -124,7 +124,6 @@
       <Arg><SystemProperty name="jetty.home" default="."/>/webapps/service</Arg>
       <Arg>/service</Arg>
       <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
-      <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/service</Set>
       <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
     </New>
 
@@ -133,7 +132,6 @@
       <Arg><SystemProperty name="jetty.home" default="."/>/webapps/zimbra</Arg>
       <Arg>/zimbra</Arg>
       <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
-      <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/zimbra</Set>
       <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
     </New>
 
@@ -142,7 +140,6 @@
       <Arg><SystemProperty name="jetty.home" default="."/>/webapps/zimbraAdmin</Arg>
       <Arg>/zimbraAdmin</Arg>
       <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
-      <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/zimbraAdmin</Set>
       <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
     </New>
     
