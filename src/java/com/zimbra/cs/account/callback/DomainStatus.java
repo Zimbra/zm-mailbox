@@ -4,6 +4,7 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.AttributeCallback;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 
@@ -20,6 +21,12 @@ public class DomainStatus implements AttributeCallback {
         if (status.equals(Provisioning.DOMAIN_STATUS_CLOSED)) {
             attrsToModify.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_DISABLED);
         } else {
+            if (entry != null) {
+                Domain domain = (Domain)entry;
+                if (domain.beingRenamed())
+                    throw ServiceException.INVALID_REQUEST("domain " + domain.getName() + " is being renamed, cannot change " + Provisioning.A_zimbraDomainStatus, null);
+            }
+            
             String alsoModifyingMailStatus = (String)attrsToModify.get(Provisioning.A_zimbraMailStatus);
             if (alsoModifyingMailStatus == null) {
                 if (entry != null) {

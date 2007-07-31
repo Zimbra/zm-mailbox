@@ -32,6 +32,7 @@ package com.zimbra.cs.account;
 
 import java.util.Map;
 
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 /**
@@ -46,7 +47,7 @@ public class Domain extends NamedEntry {
     }
     
     public String getDomainStatus() {
-        return super.getAttr(Provisioning.A_zimbraDomainStatus);
+        return getAttr(Provisioning.A_zimbraDomainStatus);
     }
     
     public boolean isSuspended() {
@@ -58,5 +59,10 @@ public class Domain extends NamedEntry {
         if (suspended)
             ZimbraLog.account.warn("domain " + mName + " is " + Provisioning.DOMAIN_STATUS_SUSPENDED);
         return suspended;
+    }
+    
+    public boolean beingRenamed() {
+        String renameInfo = getAttr(Provisioning.A_zimbraDomainRenameInfo);
+        return (!StringUtil.isNullOrEmpty(renameInfo));
     }
 }

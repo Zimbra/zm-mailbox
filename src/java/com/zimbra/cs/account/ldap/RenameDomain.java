@@ -138,7 +138,7 @@ class RenameDomain {
         mProv.deleteDomain(oldDomainId);
             
         /*
-         * 4. restore zimbraId to the id of the old domain
+         * 4. restore zimbraId to the id of the old domain and erase rename info
          */ 
         LdapProvisioning.flushDomainCache(mProv, newDomain.getId());
         HashMap<String, Object> attrs = new HashMap<String, Object>();
@@ -364,22 +364,38 @@ class RenameDomain {
         private String mNewDomainName;
         private RenamePhase mPhase;
     
+        private static final Set<String> sAddrContainsDomainOnly;
         
+        static {
+            sAddrContainsDomainOnly = new HashSet<String>();
+            
+            sAddrContainsDomainOnly.add(Provisioning.A_zimbraMailCatchAllAddress);
+            sAddrContainsDomainOnly.add(Provisioning.A_zimbraMailCatchAllCanonicalAddress);
+            sAddrContainsDomainOnly.add(Provisioning.A_zimbraMailCatchAllForwardingAddress);
+        }
     
         private static final String[] sDLAttrsNeedRename = {Provisioning.A_mail, 
                                                             Provisioning.A_zimbraMailAlias,
                                                             Provisioning.A_zimbraMailForwardingAddress,
                                                             Provisioning.A_zimbraMailDeliveryAddress, // ?
-                                                            Provisioning.A_zimbraMailCanonicalAddress};
+                                                            Provisioning.A_zimbraMailCanonicalAddress,
+                                                            Provisioning.A_zimbraMailCatchAllAddress,
+                                                            Provisioning.A_zimbraMailCatchAllCanonicalAddress,
+                                                            Provisioning.A_zimbraMailCatchAllForwardingAddress};
     
         private static final String[] sAcctAttrsNeedRename = {Provisioning.A_mail, 
                                                               Provisioning.A_zimbraMailAlias,
                                                               Provisioning.A_zimbraMailForwardingAddress,
                                                               Provisioning.A_zimbraMailDeliveryAddress, // ?
-                                                              Provisioning.A_zimbraMailCanonicalAddress};
+                                                              Provisioning.A_zimbraMailCanonicalAddress,
+                                                              Provisioning.A_zimbraMailCatchAllAddress,
+                                                              Provisioning.A_zimbraMailCatchAllCanonicalAddress,
+                                                              Provisioning.A_zimbraMailCatchAllForwardingAddress};
     
     
-        
+        private static boolean addrContainsDomainOnly(String addr) {
+            return (sAddrContainsDomainOnly.contains(addr));
+        }
     
         private RenameDomainVisitor(DirContext dirCtxt, LdapProvisioning prov, String oldDomainName, String newDomainName, RenamePhase phase) {
             mDirCtxt = dirCtxt;
@@ -564,17 +580,22 @@ class RenameDomain {
             // replace the addr attrs
             Map<String, Object> attrs = entry.getAttrs(false);
             for (String attr : attrsNeedRename) {
+                boolean addrCanBeDomainOnly = addrContainsDomainOnly(attr);
+                
                 String[] values = entry.getMultiAttr(attr, false);
                 if (values.length > 0) {
                     Set<String> newValues = new HashSet<String>();
                     for (int i=0; i<values.length; i++) {
-                        String newValue = convertToNewAddr(values[i], mOldDomainName, mNewDomainName);
+                        String newValue = convertToNewAddr(values[i], mOldDomainName, mNewDomainName, addrCanBeDomainOnly);
                         if (newValue != null)
                             newValues.add(newValue);
                     }
             
                     // replace the attr with the new values
-                    attrs.put(attr, newValues.toArray(new String[newValues.size()]));
+                    // if there is any address format error and the address cannot be converted, 
+                    // whatever the current value will be carried to the new entry.
+                    if (newValues.size() > 0)
+                        attrs.put(attr, newValues.toArray(new String[newValues.size()]));
                 }
             }
         
@@ -585,20 +606,39 @@ class RenameDomain {
          * given an email address, and old domain name and a new domain name, returns:
          *   - if the domain of the address is the same as the old domain, returns localpart-of-addr@new-domain
          *   - otherwise returns the email addr as is.
+         *   
+         *   Note, for some addresses they can be in the @domain format (no local part)
          */
-        private String convertToNewAddr(String addr, String oldDomain, String newDomain) {
+        private String convertToNewAddr(String address, String oldDomain, String newDomain, boolean addrCanBeDomainOnly) {
+            String addr = address.trim();
             String[] parts = EmailUtil.getLocalPartAndDomain(addr);
-            if (parts == null) {
-                assert(false);
+            if (parts == null && !addrCanBeDomainOnly) {
                 warn("convertToNewAddr", "encountered invalid address", "addr=[%s]", addr);
                 return null;
             }
                 
-            String local = parts[0];
-            String domain = parts[1];
-            if (domain.equals(oldDomain))
-                return local + "@" + newDomain;
-            else
+            String local = null;
+            String domain = null;
+            
+            if (parts != null) {
+               local = parts[0];
+               domain = parts[1];
+            } else {
+               if (addr.charAt(0) == '@')
+                   domain = addr.substring(1);
+            }
+            
+            if (domain == null) {
+                warn("convertToNewAddr", "encountered invalid address", "addr=[%s]", addr);
+                return null;
+            }
+            
+            if (domain.equals(oldDomain)) {
+                if (local != null)
+                    return local + "@" + newDomain;
+                else
+                    return "@" + newDomain;
+            } else
                 return addr;
         }
     

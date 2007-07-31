@@ -81,6 +81,17 @@ public class TestRenameDomain  extends TestCase {
     private static final int OBJ_DL_NESTED = 0x2;
     private static final int OBJ_DL_TOP = 0x4;
 
+    private static final Set<String> sAttrsToVerify;
+    
+    static {
+        sAttrsToVerify = new HashSet<String>();
+        
+        sAttrsToVerify.add(Provisioning.A_zimbraMailCanonicalAddress);
+        sAttrsToVerify.add(Provisioning.A_zimbraMailForwardingAddress);
+        sAttrsToVerify.add(Provisioning.A_zimbraMailCatchAllAddress);
+        sAttrsToVerify.add(Provisioning.A_zimbraMailCatchAllCanonicalAddress);
+        sAttrsToVerify.add(Provisioning.A_zimbraMailCatchAllForwardingAddress);
+    }
     
     int NUM_OBJS(int objType) throws Exception {
         switch (objType) {
@@ -204,6 +215,8 @@ public class TestRenameDomain  extends TestCase {
     private String ACCOUNT_NAME(int index, int domainIdx) {
         return ACCOUNT_LOCAL(index) + "@" + DOMAIN_NAME(domainIdx);
     }
+    
+    
     
     /*
      * returns account name in domain and all its aliases
@@ -355,6 +368,20 @@ public class TestRenameDomain  extends TestCase {
         }
     }
     
+    private Account createAccount(String acctName, String domainName) throws Exception {
+        Map<String, Object> acctAttrs = new HashMap<String, Object>();
+        
+        acctAttrs.put(Provisioning.A_zimbraMailCanonicalAddress, "canonical-address" + "@" + domainName);
+        // acctAttrs.put(Provisioning.A_zimbraMailDeliveryAddress, "delivery-address" + "@" + domainName);
+        acctAttrs.put(Provisioning.A_zimbraMailForwardingAddress, "forwarding-address" + "@" + domainName);
+        acctAttrs.put(Provisioning.A_zimbraMailCatchAllAddress, "" + "@" + domainName);
+        acctAttrs.put(Provisioning.A_zimbraMailCatchAllCanonicalAddress, "" + "@" + domainName);
+        acctAttrs.put(Provisioning.A_zimbraMailCatchAllForwardingAddress, "" + "@" + domainName);
+        
+        Account acct = mProv.createAccount(acctName, PASSWORD, acctAttrs);
+        return acct;
+    }
+    
     /*
      * create and setup entries in the domain
      */
@@ -365,8 +392,7 @@ public class TestRenameDomain  extends TestCase {
         
         // create accounts and their aliases
         for (int a = 0; a < NUM_ACCOUNTS; a++) {
-            Map<String, Object> acctAttrs = new HashMap<String, Object>();
-            Account acct = mProv.createAccount(ACCOUNT_NAME(a, domainIdx), PASSWORD, acctAttrs);
+            Account acct = createAccount(ACCOUNT_NAME(a, domainIdx), domainName);
             
             for (int d = 0; d < NUM_DOMAINS; d++)
                 mProv.addAlias(acct, ACCOUNT_ALIAS_NAME(a, domainIdx, d));
@@ -585,6 +611,17 @@ public class TestRenameDomain  extends TestCase {
         }
     }
     
+    private void verifyEntryAttrs(List<NamedEntry> list) throws Exception {
+        for (NamedEntry e : list) {
+            for (String attr : sAttrsToVerify) {
+                String value = e.getAttr(attr);
+                if (value != null) {
+                    // TODO
+                }
+            }
+        }
+    }
+    
     /*
      * verify all expected entries are in the domain and the domain only contains these entries
      */
@@ -627,6 +664,8 @@ public class TestRenameDomain  extends TestCase {
         // verify all our aliases are there
         Set<String> actualEntries = namedEntryListToNameSet(list);
         TestProvisioningUtil.verifyEquals(expectedEntries, actualEntries);
+        
+        verifyEntryAttrs(list);
     }
     
     /*
@@ -833,7 +872,6 @@ public class TestRenameDomain  extends TestCase {
         
         System.out.println("rd " + oldDomain.getId() + " " +  DOMAIN_NAME(NEW_DOMAIN));
         
-        /*
         // rename
         ((LdapProvisioning)mProv).renameDomain(oldDomain.getId(), DOMAIN_NAME(NEW_DOMAIN));
         
@@ -841,7 +879,7 @@ public class TestRenameDomain  extends TestCase {
         verifyOldDomain();
         verifyNewDomain(oldDomainId, oldDomainAttrs);
         verifyOtherDomains();        
-        */
+        
     }
     
     public void testRenameDomain() throws Exception {

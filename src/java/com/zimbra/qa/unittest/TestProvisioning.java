@@ -1249,7 +1249,7 @@ public class TestProvisioning extends TestCase {
     }
    
     public static void main(String[] args) throws Exception {
-        CliUtil.toolSetup("DEBUG");
+        // CliUtil.toolSetup("INFO");
         TestUtil.runTest(new TestSuite(TestProvisioning.class));
     }
 }
