@@ -120,7 +120,7 @@ public class TestTableMaintenance extends TestCase {
     throws Exception {
         Provisioning prov = Provisioning.getInstance();
         Server server = prov.getLocalServer();
-        Map map = new HashMap();
+        Map<String, Object> map = new HashMap<String, Object>();
         map.put(Provisioning.A_zimbraTableMaintenanceMinRows, Integer.toString(minRows));
         map.put(Provisioning.A_zimbraTableMaintenanceMaxRows, Integer.toString(maxRows));
         map.put(Provisioning.A_zimbraTableMaintenanceOperation, operation);

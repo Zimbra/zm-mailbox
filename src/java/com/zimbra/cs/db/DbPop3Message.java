@@ -156,7 +156,7 @@ public class DbPop3Message {
     }
 
     public static String getTableName(int mailboxId, int groupId) {
-        return String.format("%s.%s", DbMailbox.getDatabaseName(mailboxId, groupId), TABLE_POP3_MESSAGE);
+        return String.format("%s.%s", DbMailbox.getDatabaseName(groupId), TABLE_POP3_MESSAGE);
     }
 
     public static String getTableName(Mailbox mbox) {

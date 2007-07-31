@@ -151,7 +151,7 @@ public class DbImapMessage {
     }
 
     public static String getTableName(int mailboxId, int groupId) {
-        return String.format("%s.%s", DbMailbox.getDatabaseName(mailboxId, groupId), TABLE_IMAP_MESSAGE);
+        return String.format("%s.%s", DbMailbox.getDatabaseName(groupId), TABLE_IMAP_MESSAGE);
     }
 
     public static String getTableName(Mailbox mbox) {

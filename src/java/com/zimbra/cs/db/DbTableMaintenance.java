@@ -29,19 +29,24 @@
 package com.zimbra.cs.db;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxManager.MailboxLock;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 
 public class DbTableMaintenance {
     
@@ -93,20 +98,16 @@ public class DbTableMaintenance {
     throws ServiceException {
         
         int tableCount = 0;
-        int[] mailboxIds = MailboxManager.getInstance().getMailboxIds();
         
-        ZimbraLog.mailbox.info(
-            "Starting table maintenance.  MinRows=" + getMinRows() + ", MaxRows=" + getMaxRows() +
-            ", GrowthFactor=" + getGrowthFactor());
+        ZimbraLog.mailbox.info("Starting table maintenance.  MinRows=%d, MaxRows=%d, GrowthFactor=%d",
+            getMinRows(), getMaxRows(), getGrowthFactor());
 
-        Set<String> dbsProcessed = new HashSet<String>();
-        for (int i = 0; i < mailboxIds.length; i++) {
-            int id = mailboxIds[i];
-            Mailbox mbox = MailboxManager.getInstance().getMailboxById(id);
-            MailboxLock lock = null;
-            String dbName = DbMailbox.getDatabaseName(mbox);
-            if (dbsProcessed.contains(dbName)) continue;
-            dbsProcessed.add(dbName);
+        Map<Integer, Set<Integer>> ids = getIds();
+        MailboxManager mgr = MailboxManager.getInstance();
+        
+        for (int groupId : ids.keySet()) {
+            String dbName = DbMailbox.getDatabaseName(groupId);
+            List<MailboxLock> locks = null;
 
             DbResults results = DbUtil.executeQuery("SHOW TABLE STATUS FROM `" + dbName + "`");
             try {
@@ -126,22 +127,32 @@ public class DbTableMaintenance {
                     // Check for 0 rows is required.  If minRows is set to 0, we'll
                     // unnecessarily run table maintenance on an empty table.
                     if (numRows > 0 && numRows >= lastNumRows * getGrowthFactor()) {
-                        if (lock == null) {
-                            lock = MailboxManager.getInstance().beginMaintenance(mbox.getAccountId(), mbox.getId());
+                        if (locks == null) {
+                            locks = new ArrayList<MailboxLock>();
+                            for (int mailboxId : ids.get(groupId)) {
+                                try {
+                                    Mailbox mbox = mgr.getMailboxById(mailboxId);
+                                    locks.add(mgr.beginMaintenance(mbox.getAccountId(), mbox.getId()));
+                                } catch (ServiceException e) {
+                                    ZimbraLog.mailbox.warn("Unable to lock mailbox %d.", mailboxId, e);
+                                }
+                            }
                         }
-                        ZimbraLog.mailbox.info("Maintaining table " + tableName + summary);
-                        if (maintainTable(mbox, tableName, numRows)) {
+                        ZimbraLog.mailbox.info("Maintaining table %s%s", tableName, summary);
+                        if (maintainTable(dbName, tableName, numRows)) {
                             tableCount++;
                         }
                     } else {
-                        ZimbraLog.mailbox.debug("Skipping table " + tableName + summary);
+                        ZimbraLog.mailbox.debug("Skipping table %s%s", tableName, summary);
                     }
                 }
             } finally {
-                if (lock != null) {
+                if (locks != null) {
                     // Always end maintenance successfully, since table maintenance
                     // doesn't modify the data
-                    MailboxManager.getInstance().endMaintenance(lock, true, false);
+                    for (MailboxLock lock : locks) {
+                        MailboxManager.getInstance().endMaintenance(lock, true, false);
+                    }
                 }
             }
         }
@@ -185,10 +196,8 @@ public class DbTableMaintenance {
         DbUtil.executeUpdate(sql, params);
     }
     
-    private static boolean maintainTable(Mailbox mbox, String tableName, int numRows)
+    private static boolean maintainTable(String dbName, String tableName, int numRows)
     throws ServiceException {
-        String dbName = DbMailbox.getDatabaseName(mbox);
-        
         Connection conn = null;
         PreparedStatement stmt = null;
         String sql = getOperation() + " TABLE `" + dbName + "`.`" + tableName + "`";
@@ -201,10 +210,7 @@ public class DbTableMaintenance {
             conn.commit();
             updateLastNumRows(dbName, tableName, numRows);
         } catch (SQLException e) {
-            String error = 
-                DbTableMaintenance.class.getName() + ".maintainTable(" +
-                mbox.getId() + ", " + tableName + "): error while running '" + sql + "': " + e.toString();
-            ZimbraLog.mailbox.error(error);
+            ZimbraLog.mailbox.error("Error while maintaining table %s.%s.", dbName, tableName, e);
             return false;
         } finally {
             DbPool.closeStatement(stmt);
@@ -212,5 +218,49 @@ public class DbTableMaintenance {
         }
         
         return true;
+    }
+
+    /**
+     * Returns all the mailbox id's and group id's.  The key is the group id
+     * and the value is a set of all mailbox id's for that group.
+     */
+    private static Map<Integer, Set<Integer>> getIds()
+    throws ServiceException {
+        Map<Integer, Set<Integer>> ids = new TreeMap<Integer, Set<Integer>>();
+    
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        int currentGroup = 0;
+        Set<Integer> mailboxIds = null;
+        Connection conn = null;
+        
+        try {
+            conn = DbPool.getConnection();
+            stmt = conn.prepareStatement(
+                "SELECT group_id, id FROM mailbox ORDER BY group_id, id");
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                // Get ids from current row
+                int groupId = rs.getInt("group_id");
+                int mailboxId = rs.getInt("id");
+                
+                // If this is a new group, create the set of mailbox id's for it 
+                if (groupId != currentGroup) {
+                    mailboxIds = new TreeSet<Integer>();
+                    ids.put(groupId, mailboxIds);
+                    currentGroup = groupId;
+                }
+                
+                mailboxIds.add(mailboxId);
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("getting mailbox and group id's", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    
+        return ids;
     }
 }

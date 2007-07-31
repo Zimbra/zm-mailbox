@@ -214,7 +214,7 @@ public class DbImapFolder {
     }
 
     static String getTableName(int mailboxId, int groupId) {
-        return String.format("%s.%s", DbMailbox.getDatabaseName(mailboxId, groupId), TABLE_IMAP_FOLDER);
+        return String.format("%s.%s", DbMailbox.getDatabaseName(groupId), TABLE_IMAP_FOLDER);
     }
 
     static String getTableName(Mailbox mbox) {

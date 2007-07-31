@@ -195,7 +195,7 @@ public class DbMailbox {
 
         PreparedStatement stmt = null;
         try {
-            String dbName = getDatabaseName(mailboxId, groupId);
+            String dbName = getDatabaseName(groupId);
             if (Db.getInstance().databaseExists(conn, dbName))
                 return;
 
@@ -242,7 +242,7 @@ public class DbMailbox {
             conn.disableForeignKeyConstraints();
 
         try {
-            String dbname = getDatabaseName(mailboxId, groupId);
+            String dbname = getDatabaseName(groupId);
 
             // Delete in reverse order.
             for (int i = sTables.length - 1; i >= 0; i--) {
@@ -564,13 +564,11 @@ public class DbMailbox {
     }
 
     /** @return the name of the database that contains tables for the specified <code>mailboxId</code>. */
-    public static String getDatabaseName(int mailboxId, int groupId) {
+    public static String getDatabaseName(int groupId) {
         return DB_PREFIX_MAILBOX_GROUP + groupId;
     }
     public static String getDatabaseName(Mailbox mbox) {
-        int id = mbox.getId();
-        int gid = mbox.getSchemaGroupId();
-        return getDatabaseName(id, gid);
+        return getDatabaseName(mbox.getSchemaGroupId());
     }
 
     public static void removeFromDeletedAccount(Connection conn, String email)

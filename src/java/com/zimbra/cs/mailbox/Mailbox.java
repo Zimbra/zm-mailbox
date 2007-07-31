@@ -914,6 +914,7 @@ public class Mailbox {
     synchronized MailboxLock beginMaintenance() throws ServiceException {
         if (mMaintenance != null)
             throw MailServiceException.MAINTENANCE(mId);
+        ZimbraLog.mailbox.info("Locking mailbox %d for maintenance.", getId());
         mMaintenance = new MailboxLock(mData.accountId, mId, this);
         purgeListeners();
         if (mMailboxIndex != null)
@@ -925,10 +926,13 @@ public class Mailbox {
         if (mMaintenance == null)
             throw ServiceException.FAILURE("mainbox not in maintenance mode", null);
 
-        if (success)
+        if (success) {
+            ZimbraLog.mailbox.info("Ending maintenance on mailbox %d.", getId());
             mMaintenance = null;
-        else
+        } else {
+            ZimbraLog.mailbox.info("Ending maintenance and marking mailbox %d as unavailable.", getId());
             mMaintenance.markUnavailable();
+        }
     }
 
 

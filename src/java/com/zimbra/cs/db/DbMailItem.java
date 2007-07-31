@@ -3656,7 +3656,7 @@ public class DbMailItem {
      * by the name of the database (e.g. <tt>mailbox1.mail_item</tt>).
      */
     public static String getMailItemTableName(int mailboxId, int groupId) {
-        return DbMailbox.getDatabaseName(mailboxId, groupId) + '.' + TABLE_MAIL_ITEM;
+        return DbMailbox.getDatabaseName(groupId) + '.' + TABLE_MAIL_ITEM;
     }
     public static String getMailItemTableName(Mailbox mbox) {
         return getMailItemTableName(mbox.getId(), mbox.getSchemaGroupId());
@@ -3673,7 +3673,7 @@ public class DbMailItem {
      * The table name is qualified by the name of the database (e.g. <tt>mailbox1.mail_item</tt>).
      */
     public static String getRevisionTableName(int mailboxId, int groupId) {
-        return DbMailbox.getDatabaseName(mailboxId, groupId) + '.' + TABLE_REVISION;
+        return DbMailbox.getDatabaseName(groupId) + '.' + TABLE_REVISION;
     }
     public static String getRevisionTableName(Mailbox mbox) {
         return getRevisionTableName(mbox.getId(), mbox.getSchemaGroupId());
@@ -3690,7 +3690,7 @@ public class DbMailItem {
      * by the name of the database (e.g. <tt>mailbox1.appointment</tt>).
      */
     public static String getCalendarItemTableName(int mailboxId, int groupId) {
-        return DbMailbox.getDatabaseName(mailboxId, groupId) + '.' + TABLE_APPOINTMENT;
+        return DbMailbox.getDatabaseName(groupId) + '.' + TABLE_APPOINTMENT;
     }
     public static String getCalendarItemTableName(Mailbox mbox) {
         return getCalendarItemTableName(mbox.getId(), mbox.getSchemaGroupId());
@@ -3704,7 +3704,7 @@ public class DbMailItem {
      * name is qualified by the name of the database (e.g. <tt>mailbox1.open_conversation</tt>).
      */
     public static String getConversationTableName(int mailboxId, int groupId) {
-        return DbMailbox.getDatabaseName(mailboxId, groupId) + '.' + TABLE_OPEN_CONVERSATION;
+        return DbMailbox.getDatabaseName(groupId) + '.' + TABLE_OPEN_CONVERSATION;
     }
     public static String getConversationTableName(Mailbox mbox) {
         return getConversationTableName(mbox.getId(), mbox.getSchemaGroupId());
@@ -3721,7 +3721,7 @@ public class DbMailItem {
      * The table name is qualified by the name of the database (e.g. <tt>mailbox1.tombstone</tt>).
      */
     public static String getTombstoneTableName(int mailboxId, int groupId) {
-        return DbMailbox.getDatabaseName(mailboxId, groupId) + '.' + TABLE_TOMBSTONE;
+        return DbMailbox.getDatabaseName(groupId) + '.' + TABLE_TOMBSTONE;
     }
     public static String getTombstoneTableName(Mailbox mbox) {
         return getTombstoneTableName(mbox.getId(), mbox.getSchemaGroupId());
