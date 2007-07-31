@@ -477,7 +477,16 @@ public class TestUtil {
     public static void deleteAccount(String username)
     throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
-        Account account = getAccount(username);
+        
+        // If this code is running on the server, call SoapProvisioning explicitly
+        // so that both the account and mailbox are deleted.
+        if (!(prov instanceof SoapProvisioning)) {
+            SoapProvisioning sp = new SoapProvisioning();
+            sp.soapSetURI("https://localhost:7071" + ZimbraServlet.ADMIN_SERVICE_URI);
+            sp.soapZimbraAdminAuthenticate();
+            prov = sp;
+        }
+        Account account = prov.get(AccountBy.name, getAddress(username));
         if (account != null) {
             prov.deleteAccount(account.getId());
         }
