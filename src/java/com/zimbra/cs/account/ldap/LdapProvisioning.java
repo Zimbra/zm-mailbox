@@ -2536,6 +2536,20 @@ public class LdapProvisioning extends Provisioning {
             throw AccountServiceException.CHANGE_PASSWORD();
 
         // update/check last logon
+        updateLastLogon(acct);
+        
+    }
+    
+    private void updateLastLogon(Account acct) throws ServiceException {
+        Config config = Provisioning.getInstance().getConfig();
+        long freq = config.getTimeInterval(
+                    Provisioning.A_zimbraLastLogonTimestampFrequency,
+                    com.zimbra.cs.util.Config.D_ZIMBRA_LAST_LOGON_TIMESTAMP_FREQUENCY);
+        
+        // never update timestamp if frequency is 0
+        if (freq == 0)
+            return;
+        
         Date lastLogon = acct.getGeneralizedTimeAttr(Provisioning.A_zimbraLastLogonTimestamp, null);
         if (lastLogon == null) {
             Map<String, String> attrs = new HashMap<String, String>();
@@ -2546,10 +2560,6 @@ public class LdapProvisioning extends Provisioning {
                 ZimbraLog.account.warn("updating zimbraLastLogonTimestamp", e);
             }
         } else {
-            Config config = Provisioning.getInstance().getConfig();
-            long freq = config.getTimeInterval(
-                    Provisioning.A_zimbraLastLogonTimestampFrequency,
-                    com.zimbra.cs.util.Config.D_ZIMBRA_LAST_LOGON_TIMESTAMP_FREQUENCY);
             long current = System.currentTimeMillis();
             if (current - freq >= lastLogon.getTime()) {
                 Map<String, String> attrs = new HashMap<String , String>();
@@ -2561,6 +2571,7 @@ public class LdapProvisioning extends Provisioning {
                 }
             }
         }
+    
     }
 
     private void externalLdapAuth(Domain d, String authMech, Account acct, String password) throws ServiceException {
