@@ -264,8 +264,9 @@ implements LmtpCallback {
             out.setSentDate(new Date());
 
             // Subject
-            String charset = account.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, Mime.P_CHARSET_UTF8);
-            out.setSubject("Re: " + pm.getNormalizedSubject(), charset);
+            String subject = "Re: " + pm.getNormalizedSubject();
+            String charset = getCharset(account, subject);
+            out.setSubject(subject, charset);
 
             // In-Reply-To
             String messageId = pm.getMessageID();
@@ -281,6 +282,7 @@ implements LmtpCallback {
             
             // Body
             String body = account.getAttr(Provisioning.A_zimbraPrefOutOfOfficeReply, "");
+            charset = getCharset(account, body);
             out.setText(body, charset);
             
             if (Provisioning.getInstance().getConfig().getBooleanAttr(Provisioning.A_zimbraAutoSubmittedNullReturnPath, true)) {
@@ -309,6 +311,11 @@ implements LmtpCallback {
             ofailed("send failed", destination, rcpt, msg, uee);
             return;
         }
+    }
+    
+    private String getCharset(Account account, String data) {
+        String requestedCharset = account.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, Mime.P_CHARSET_UTF8);
+        return StringUtil.checkCharset(data, requestedCharset);
     }
 
     /**
@@ -409,8 +416,9 @@ implements LmtpCallback {
             address = new InternetAddress(destination);
             out.setRecipient(javax.mail.Message.RecipientType.TO, address);
             
-            String charset = account.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, Mime.P_CHARSET_UTF8);
+            String charset = getCharset(account, subject);
             out.setSubject(subject, charset);
+            charset = getCharset(account, body);
             out.setText(body, charset);
 
             String envFrom = "<>";

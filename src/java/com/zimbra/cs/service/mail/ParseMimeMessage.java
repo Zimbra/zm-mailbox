@@ -63,7 +63,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -85,6 +84,7 @@ import javax.mail.internet.MimePart;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.soap.MailConstants;
 
 
@@ -318,7 +318,7 @@ public class ParseMimeMessage {
 
             // deal with things that can be either <m> attributes or subelements
             String subject = msgElem.getAttribute(MailConstants.E_SUBJECT, "");
-            mm.setSubject(subject, checkCharset(subject, ctxt.defaultCharset));
+            mm.setSubject(subject, StringUtil.checkCharset(subject, ctxt.defaultCharset));
 
             String irt = msgElem.getAttribute(MailConstants.E_IN_REPLY_TO, null);
             if (irt != null)
@@ -460,7 +460,7 @@ public class ParseMimeMessage {
         String data = elem.getAttribute(MailConstants.E_CONTENT, "");
 
         // if the user has specified an alternative charset, make sure it exists and can encode the content
-        String charset = checkCharset(data, ctxt.defaultCharset);
+        String charset = StringUtil.checkCharset(data, ctxt.defaultCharset);
         ctype.setParameter(Mime.P_CHARSET, charset);
 
         if (mmp != null) {
@@ -477,20 +477,6 @@ public class ParseMimeMessage {
             for (int i = 0; i < alternatives.length; i++)
                 mmp.addBodyPart(alternatives[i]);
         }
-    }
-
-    static String checkCharset(String data, String requestedCharset) {
-        if (data == null)
-            return Mime.P_CHARSET_DEFAULT;
-
-        if (!requestedCharset.equalsIgnoreCase(Mime.P_CHARSET_UTF8)) {
-            try {
-                Charset cset = Charset.forName(requestedCharset);
-                if (cset.canEncode() && cset.newEncoder().canEncode(data))
-                    return requestedCharset;
-            } catch (Exception e) {}
-        }
-        return Mime.P_CHARSET_UTF8;
     }
 
     private static void setMultipartContent(String subType, MimeMessage mm, MimeMultipart mmp, Element elem, MimeBodyPart[] alternatives, ParseMessageContext ctxt)
@@ -591,7 +577,7 @@ public class ParseMimeMessage {
     throws MessagingException {
         VCard vcf = VCard.formatContact(contact);
         String filename = vcf.fn + ".vcf";
-        String charset = checkCharset(vcf.formatted, ctxt.defaultCharset);
+        String charset = StringUtil.checkCharset(vcf.formatted, ctxt.defaultCharset);
 
         MimeBodyPart mbp = new MimeBodyPart();
         mbp.setText(vcf.formatted, charset);
@@ -694,7 +680,7 @@ public class ParseMimeMessage {
             String personalName = elem.getAttribute(MailConstants.A_PERSONAL, null);
             String addressType = elem.getAttribute(MailConstants.A_ADDRESS_TYPE);
 
-            InternetAddress addr = new InternetAddress(emailAddress, personalName, checkCharset(personalName, defaultCharset));
+            InternetAddress addr = new InternetAddress(emailAddress, personalName, StringUtil.checkCharset(personalName, defaultCharset));
             if (elem.getAttributeBool(MailConstants.A_ADD_TO_AB, false))
                 newContacts.add(addr);
 
