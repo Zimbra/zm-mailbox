@@ -28,20 +28,21 @@
  */
 package com.zimbra.common.util;
 
-import com.zimbra.common.service.ServiceException;
-
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.zimbra.common.service.ServiceException;
 
 /**
  * @author schemers
@@ -551,5 +552,27 @@ public class StringUtil {
         }
         if (sb != null) m.appendTail(sb);
         return sb == null ? text : sb.toString();
+    }
+
+    /**
+     * Determines whether data can be encoded using <tt>requestedCharset</tt>.
+     *  
+     * @param data the data to be encoded
+     * @param requestedCharset the character set
+     * @return <tt>requestedCharset</tt> if encoding is supported, <tt>&quot;utf-8&quot;</tt>
+     * if not, or <tt>&quot;us-ascii&quot;</tt> if data is <tt>null</tt>.
+     */
+    public static String checkCharset(String data, String requestedCharset) {
+        if (data == null)
+            return "us-ascii";
+    
+        if (!requestedCharset.equalsIgnoreCase("utf-8")) {
+            try {
+                Charset cset = Charset.forName(requestedCharset);
+                if (cset.canEncode() && cset.newEncoder().canEncode(data))
+                    return requestedCharset;
+            } catch (Exception e) {}
+        }
+        return "utf-8";
     }
 }
