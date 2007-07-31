@@ -264,7 +264,8 @@ implements LmtpCallback {
             out.setSentDate(new Date());
 
             // Subject
-            out.setSubject("Re: " + pm.getNormalizedSubject(), Mime.P_CHARSET_UTF8);
+            String charset = account.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, Mime.P_CHARSET_UTF8);
+            out.setSubject("Re: " + pm.getNormalizedSubject(), charset);
 
             // In-Reply-To
             String messageId = pm.getMessageID();
@@ -280,7 +281,7 @@ implements LmtpCallback {
             
             // Body
             String body = account.getAttr(Provisioning.A_zimbraPrefOutOfOfficeReply, "");
-            out.setText(body, Mime.P_CHARSET_UTF8);
+            out.setText(body, charset);
             
             if (Provisioning.getInstance().getConfig().getBooleanAttr(Provisioning.A_zimbraAutoSubmittedNullReturnPath, true)) {
                 out.setEnvelopeFrom("<>");
@@ -407,11 +408,12 @@ implements LmtpCallback {
             out.setFrom(address);
             address = new InternetAddress(destination);
             out.setRecipient(javax.mail.Message.RecipientType.TO, address);
-            out.setSubject(subject, Mime.P_CHARSET_UTF8);
-            out.setText(body, Mime.P_CHARSET_UTF8);
+            
+            String charset = account.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, Mime.P_CHARSET_UTF8);
+            out.setSubject(subject, charset);
+            out.setText(body, charset);
 
             String envFrom = "<>";
-            Provisioning prov;
             try {
                 if (!Provisioning.getInstance().getConfig().getBooleanAttr(Provisioning.A_zimbraAutoSubmittedNullReturnPath, true)) {
                     envFrom = account.getName();
