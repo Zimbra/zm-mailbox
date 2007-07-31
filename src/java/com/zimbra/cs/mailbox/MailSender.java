@@ -333,15 +333,12 @@ public class MailSender {
             } catch (MessagingException e) {
                 msg.append(e);
             }
-            if (origMsgId > 0) {
+            if (origMsgId > 0)
                 msg.append(", origMsgId=" + origMsgId);
-            }
-            if (uploads != null && uploads.size() > 0) {
+            if (uploads != null && uploads.size() > 0)
                 msg.append(", uploads=" + uploads);
-            }
-            if (replyType != null) {
+            if (replyType != null)
                 msg.append(", replyType=" + replyType);
-            }
             ZimbraLog.smtp.info(msg);
         }
     }
@@ -369,8 +366,8 @@ public class MailSender {
 
         // we need to set the Sender to the authenticated user for delegated sends by non-admins
         boolean isAdminRequest = octxt == null ? false : octxt.isUsingAdminPrivileges();
-        boolean noSenderRequired = acct.getId().equalsIgnoreCase(authuser.getId()) ||
-                                   AccessManager.getInstance().canAccessAccount(authuser, acct, isAdminRequest);
+        boolean isDelegatedRequest = !acct.getId().equalsIgnoreCase(authuser.getId());
+        boolean noSenderRequired = !isDelegatedRequest || AccessManager.getInstance().canAccessAccount(authuser, acct, isAdminRequest);
         InternetAddress sender = noSenderRequired ? null : AccountUtil.getFriendlyEmailAddress(authuser);
 
         // set various headers on the outgoing message
@@ -388,13 +385,15 @@ public class MailSender {
         } else {
             if (replyToSender)
                 mm.setReplyTo(new Address[] {sender});
-            // set MAIL FROM to authenticated user for bounce purposes
-            if (mm instanceof FixedMimeMessage) {
-                Properties props = new Properties(JMSession.getSession().getProperties());
-                props.setProperty("mail.smtp.from", sender.getAddress());
-                ((FixedMimeMessage) mm).setSession(Session.getInstance(props));
-            }
         }
+
+        if (isDelegatedRequest && mm instanceof FixedMimeMessage) {
+            // set MAIL FROM to authenticated user for bounce purposes
+            Properties props = new Properties(JMSession.getSession().getProperties());
+            props.setProperty("mail.smtp.from", sender.getAddress());
+            ((FixedMimeMessage) mm).setSession(Session.getInstance(props));
+        }
+
         mm.saveChanges();
     }
 
