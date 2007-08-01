@@ -1265,6 +1265,10 @@ public abstract class ImapHandler extends ProtocolHandler {
                     return CONTINUE_PROCESSING;
                 }
 
+                // you cannot access your own mailbox via the /home/username mechanism
+                if (patternPath.getOwner() != null && patternPath.belongsTo(mCredentials))
+                    continue;
+
                 // make sure we can do a  LIST "" "/home/user1"
                 if (patternPath.getOwner() != null && (ImapPath.NAMESPACE_PREFIX + patternPath.getOwner()).toUpperCase().equals(pattern)) {
                     matches.put(patternPath, "LIST (\\NoSelect) \"/\" " + patternPath.asUtf7String());
@@ -1424,11 +1428,14 @@ public abstract class ImapHandler extends ProtocolHandler {
             else                              pattern = referenceName + '/' + mailboxName;
         }
         ImapPath patternPath = new ImapPath(pattern, mCredentials, ImapPath.Scope.UNPARSED);
-
+        List<String> subscriptions = null;
         try {
-        	ImapLSubOperation op = new ImapLSubOperation(mSelectedFolder, getContext(), mCredentials.getMailbox(), patternPath, mCredentials, extensionEnabled("CHILDREN"));
-        	op.schedule();
-        	List<String> subscriptions = op.getSubs();
+            // you cannot access your own mailbox via the /home/username mechanism
+            if (patternPath.getOwner() == null || !patternPath.belongsTo(mCredentials)) {
+            	ImapLSubOperation op = new ImapLSubOperation(mSelectedFolder, getContext(), mCredentials.getMailbox(), patternPath, mCredentials, extensionEnabled("CHILDREN"));
+            	op.schedule();
+            	subscriptions = op.getSubs();
+            }
 
             if (subscriptions != null) {
             	for (String sub : subscriptions)
@@ -1654,6 +1661,10 @@ public abstract class ImapHandler extends ProtocolHandler {
                     msg = "[TRYCREATE] APPEND failed: no such mailbox";
             } else if (e.getCode().equals(MailServiceException.INVALID_NAME)) {
                 ZimbraLog.imap.info("APPEND failed: " + e.getMessage());
+            } else if (e.getCode().equals(ImapServiceException.FOLDER_NOT_VISIBLE)) {
+                ZimbraLog.imap.info("APPEND failed: folder not visible: " + path);
+            } else if (e.getCode().equals(ImapServiceException.FOLDER_NOT_WRITABLE)) {
+                ZimbraLog.imap.info("APPEND failed: folder not writable: " + path);
             } else {
                 ZimbraLog.imap.warn("APPEND failed", e);
             }
@@ -2951,6 +2962,10 @@ public abstract class ImapHandler extends ProtocolHandler {
                 ZimbraLog.imap.info(command + " failed: no such folder: " + path);
                 if (path.isCreatable())
                     rcode = "[TRYCREATE] ";
+            } else if (e.getCode().equals(ImapServiceException.FOLDER_NOT_VISIBLE)) {
+                ZimbraLog.imap.info(command + " failed: folder not visible: " + path);
+            } else if (e.getCode().equals(ImapServiceException.FOLDER_NOT_WRITABLE)) {
+                ZimbraLog.imap.info(command + " failed: folder not writable: " + path);
             } else {
                 ZimbraLog.imap.warn(command + " failed", e);
             }

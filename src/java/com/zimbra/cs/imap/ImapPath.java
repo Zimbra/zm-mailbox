@@ -520,6 +520,10 @@ public class ImapPath {
             throw e;
         }
 
+        // you cannot access your own mailbox via the /home/username mechanism
+        if (mOwner != null && belongsTo(mCredentials))
+            return false;
+
         if (mFolder instanceof Folder) {
             Folder folder = (Folder) mFolder;
             if (folder.isHidden())
