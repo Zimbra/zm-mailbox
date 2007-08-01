@@ -31,14 +31,13 @@ import java.util.Map;
 import junit.framework.TestResult;
 
 import com.zimbra.qa.unittest.ZimbraSuite;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author bburtin
  */
-public class RunUnitTests extends DocumentHandler {
+public class RunUnitTests extends AdminDocumentHandler {
     
 	public Element handle(Element request, Map<String, Object> context) {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
