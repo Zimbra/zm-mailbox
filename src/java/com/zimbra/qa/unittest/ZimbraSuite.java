@@ -55,9 +55,7 @@ public class ZimbraSuite extends TestSuite
     }
 
     static final Class[] classes = {
-        // XXX bburtin: commenting out TestWaitSet until bug 18483 is fixed. 
-        // TestWaitSet.class,
-        
+        TestWaitSet.class,
         TestUtilCode.class,
         TestEmailUtil.class,
         TestOutOfOffice.class,

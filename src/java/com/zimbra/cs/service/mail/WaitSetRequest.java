@@ -297,7 +297,8 @@ public class WaitSetRequest extends MailDocumentHandler {
                 this.signalledAccounts = signalledAccounts;
                 this.seqNo = seqNo;
                 this.completed = true;
-                continuation.resume();
+                if (continuation != null)
+                    continuation.resume();
             }
         }
 
