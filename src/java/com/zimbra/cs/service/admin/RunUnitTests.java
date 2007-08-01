@@ -33,17 +33,16 @@ import java.util.Map;
 
 import junit.framework.TestResult;
 
-import com.zimbra.qa.unittest.ZimbraSuite;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
-import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.qa.unittest.ZimbraSuite;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author bburtin
  */
-public class RunUnitTests extends DocumentHandler {
+public class RunUnitTests extends AdminDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
