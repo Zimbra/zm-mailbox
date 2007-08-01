@@ -1411,8 +1411,10 @@ public class IndexEditor {
     {
         CliUtil.toolSetup("DEBUG");
 
+        MailboxIndex.startup();
         IndexEditor editor = new IndexEditor();
         editor.run();
+        MailboxIndex.shutdown();
     }
 
     void getSize(int mailboxId) throws ServiceException {
