@@ -24,13 +24,33 @@ Examples:
 
 - Create a primary account and link secondary accounts to it:
     zmprov createAccount parent@zimbra.com test123 zimbraChildAccount {id-of-child-1} zimbraChildAccount {id-of-child-2} zimbraChildVisibleAccount {id-of-child-1}
+    (or 
+    zmprov createAccount parent@zimbra.com test123 +zimbraChildAccount {id-of-child-1} +zimbraChildAccount {id-of-child-2} +zimbraChildVisibleAccount {id-of-child-1}
+    )
     
     or can do in two steps:
     zmprov createAccount parent@zimbra.com test123
     zmprov modifyAccount parent@zimbra.com zimbraChildAccount {id-of-child-1} zimbraChildAccount {id-of-child-2} zimbraChildVisibleAccount {id-of-child-1}
+    (or
+     zmprov modifyAccount parent@zimbra.com +zimbraChildAccount {id-of-child-1} +zimbraChildAccount {id-of-child-2} +zimbraChildVisibleAccount {id-of-child-1}
+    ) 
     
     The above example adds child-1@zimbra.com and child-2@zimbra.com as secondary accounts of parent@zimbra.com; 
     child-1@zimbra.com is visible, child-2@zimbra.com is not visible.
     Note: for visible secondary accounts, they have to appear in both zimbraChildAccount and zimbraChildVisibleAccount attributes.
-    
 
+    
+- Adding children under a parent
+    zmprov modifyAccount parent@zimbra.com \
+                         +zimbraChildAccount {id-of-visible-child-1} +zimbraChildVisibleAccount {id-of-visible-child-1} \
+                         +zimbraChildAccount {id-of-invisible-child-2}
+
+- Removing children from a parent
+    zmprov modifyAccount parent@zimbra.com \
+                         -zimbraChildAccount {id-of-visible-child-1} -zimbraChildVisibleAccount {id-of-visible-child-1}
+                         -zimbraChildAccount {id-of-invisible-child-2}
+
+- Replacing children under a parent
+    zmprov modifyAccount parent@zimbra.com \
+                         zimbraChildAccount {id-of-visible-child-1} zimbraChildVisibleAccount {id-of-visible-child-1} \
+                         zimbraChildAccount {id-of-invisible-child-2}
