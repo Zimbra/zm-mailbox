@@ -58,11 +58,8 @@ import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.SoapProtocol;
 
 /**
- * @author schemers
- * 
  * This class models the soap context (the data from the soap envelope)  
  * for a single request 
- * 
  */
 public class ZimbraSoapContext {
 
@@ -366,8 +363,18 @@ public class ZimbraSoapContext {
      *  <li>sessions specified in a <tt>&lt;sessionId></tt> element in the 
      *      <tt>&lt;context></tt> SOAP header block, or</li>
      *  <li>new sessions created during the course of the SOAP call</li></ul> */
-    List<SessionInfo> getReferencedSessions() {
+    List<SessionInfo> getReferencedSessionsInfo() {
         return mSessionInfo;
+    }
+    
+    public List<Session> getReferencedSessions() {
+        List<Session> toRet = new ArrayList<Session>(mSessionInfo.size());
+        
+        for (ZimbraSoapContext.SessionInfo sinfo : mSessionInfo) {
+            Session s = SessionCache.lookup(sinfo.sessionId, getAuthtokenAccountId());
+            toRet.add(s);
+        }
+        return toRet;
     }
     
     /**
@@ -376,7 +383,7 @@ public class ZimbraSoapContext {
      *         to send a <refresh> block if one is necessary.
      */
     public boolean hasCreatedSession() {
-        for (SessionInfo sinfo : getReferencedSessions()) {
+        for (SessionInfo sinfo : getReferencedSessionsInfo()) {
             if (sinfo.created)
                 return true;
         }
@@ -389,7 +396,6 @@ public class ZimbraSoapContext {
         mWaitForNotifications = true;
         mContinuation = continuation;
         
-        // synchronized against 
         for (SessionInfo sinfo : mSessionInfo) {
             Session session = SessionCache.lookup(sinfo.sessionId, mAuthTokenAccountId);
             if (session instanceof SoapSession) {

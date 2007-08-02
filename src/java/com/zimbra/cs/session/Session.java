@@ -32,7 +32,6 @@ import java.util.List;
 
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.im.IMPersona;
-import com.zimbra.cs.im.IMRouter;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.operation.Operation;
@@ -113,7 +112,21 @@ public abstract class Session {
     public Type getType() {
         return mSessionType;
     }
-
+    
+    /**
+     * Registers this session as an IM listener
+     *  
+     * @throws ServiceException
+     */
+    public synchronized void registerWithIM(IMPersona persona) throws ServiceException {
+        assert(Thread.holdsLock(persona.getLock()));
+        assert(mPersona == null || mPersona == persona);
+        if (mPersona == null && isIMListener() && mAuthenticatedAccountId.equalsIgnoreCase(mTargetAccountId)) {
+            mPersona = persona; 
+            mPersona.addListener(this);
+        }
+    }
+    
     /** Registers the session as a listener on the target mailbox and adds
      *  it to the session cache.  When a session is added to the cache, its
      *  session ID is initialized.
@@ -126,13 +139,24 @@ public abstract class Session {
 
         if (isMailboxListener()) {
             mMailbox = MailboxManager.getInstance().getMailboxByAccountId(mTargetAccountId);
-            mMailbox.addListener(this);
-
-            if (shouldRegisterWithIM() && mAuthenticatedAccountId.equalsIgnoreCase(mTargetAccountId)) {
-                mPersona = IMRouter.getInstance().findPersona(null, mMailbox);
-                synchronized (mPersona.getLock()) {
-                    mPersona.addListener(this);
-                }
+            
+            synchronized(mMailbox) {
+            
+                // once addListener is called, you may NOT lock the mailbox (b/c of deadlock possibilities)
+                mMailbox.addListener(this);
+                
+//                if (/*isIMListener() &&*/ mAuthenticatedAccountId.equalsIgnoreCase(mTargetAccountId)) {
+//                    IMPersona persona = IMRouter.getInstance().findPersona(null, mMailbox);
+//                    if (persona != null)
+//                        registerWithIM(persona);
+//                }
+                
+//              try {
+//              return Provisioning.getInstance().get(AccountBy.id, this.getTargetAccountId()).getBooleanAttr(Provisioning.A_zimbraPrefIMAutoLogin, false);
+//              } catch (ServiceException e) {
+//              ZimbraLog.session.info("Caught exception fetching account preference A_zimbraPrefIMAutoLogin", e);
+//              return false; 
+//              }
             }
         }
 
@@ -150,16 +174,23 @@ public abstract class Session {
      * @see #isMailboxListener()
      * @see #isRegisteredInCache() */
     public Session unregister() {
+        // locking order is always Mailbox then Session
+        assert(Thread.holdsLock(mMailbox) || !Thread.holdsLock(this));
+        
         if (mMailbox != null && isMailboxListener()) {
             mMailbox.removeListener(this);
             mMailbox = null;
         }
-
-        if (mPersona != null) {
-            synchronized (mPersona.getLock()) {
-                mPersona.removeListener(this);
-            }
+        
+        // Must do this in two steps (first, w/ the Session lock, and then
+        // w/ the Persona lock if we have one) b/c of possible deadlock.
+        IMPersona persona = null;
+        synchronized(this) {
+            persona = mPersona;
             mPersona = null;
+        }
+        if (persona != null) {
+            persona.removeListener(this);
         }
 
         if (mSessionId != null && isRegisteredInCache()) {
@@ -168,6 +199,11 @@ public abstract class Session {
         }
 
         return this;
+    }
+    
+    /** Returns TRUE if this session wants to hear about IM events */
+    protected boolean isIMListener() { 
+        return false;
     }
 
     /** Whether the session should be attached to the target {@link Mailbox}
@@ -264,13 +300,6 @@ public abstract class Session {
         // do nothing by default.
     }
     
-    /** Returns whether this session should be registered with IM (i.e. if the
-     *  existence of this session should lead to an "online" presence in the
-     *  IM system for this user. */
-    protected boolean shouldRegisterWithIM() { 
-        return false;
-    }
-
     /** Disconnects from any resources and deregisters as a {@link Mailbox} listener. */
     final void doCleanup() {
         if (mCleanedUp)

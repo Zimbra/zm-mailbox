@@ -32,6 +32,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.*;
@@ -189,8 +191,14 @@ public class SoapSession extends Session {
     }
 
     @Override
-    protected boolean shouldRegisterWithIM() {
+    protected boolean isIMListener() {
         return true;
+//        try {
+//            return Provisioning.getInstance().get(AccountBy.id, this.getTargetAccountId()).getBooleanAttr(Provisioning.A_zimbraPrefIMAutoLogin, false);
+//        } catch (ServiceException e) {
+//            ZimbraLog.session.info("Caught exception fetching account preference A_zimbraPrefIMAutoLogin", e);
+//            return false;
+//        }
     }
 
     /**

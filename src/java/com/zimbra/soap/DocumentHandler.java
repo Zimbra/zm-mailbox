@@ -245,7 +245,7 @@ public abstract class DocumentHandler {
     public Session updateAuthenticatedAccount(ZimbraSoapContext zsc, String accountId, boolean getSession) {
         String oldAccountId = zsc.getAuthtokenAccountId();
         if (accountId != null && !accountId.equals(oldAccountId))
-            zsc.getReferencedSessions().clear();
+            zsc.getReferencedSessionsInfo().clear();
         zsc.setAuthenticatedAccountId(accountId);
 
         return (getSession ? getSession(zsc) : null);
@@ -283,7 +283,7 @@ public abstract class DocumentHandler {
         Session s = null;
 
         // if the caller referenced a session of this type, fetch it from the session cache
-        List<SessionInfo> sessions = zsc.getReferencedSessions();
+        List<SessionInfo> sessions = zsc.getReferencedSessionsInfo();
         for (Iterator<SessionInfo> it = sessions.iterator(); it.hasNext(); ) {
             // touch all the sessions referenced by the request
             SessionInfo sinfo = it.next();

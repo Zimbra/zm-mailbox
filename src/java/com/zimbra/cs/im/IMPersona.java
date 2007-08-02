@@ -148,6 +148,16 @@ public class IMPersona extends ClassLogger {
         mAddr = addr;
         mMailbox = lock;
     }
+//    
+//    /**
+//     * Register this persona with the passed-in Session, 
+//     */
+//    public void registerWithSession(Session session) {
+//        assert(Thread.holdsLock(this.getLock()));
+//        assert(session.shouldRegisterWithIM());
+//        
+//        
+//    }
 
     /**
      * Active Sessions are tracked here so that we can use them to push
@@ -156,16 +166,18 @@ public class IMPersona extends ClassLogger {
      * @param session
      */
     public void addListener(Session session) {
-        if (mListeners.size() == 0) {
-            mIsOnline = true;
-            connectToIMServer();
-            try {
-                pushMyPresence();
-            } catch (ServiceException e) {
-                e.printStackTrace();
+        synchronized(getLock()) {
+            if (mListeners.size() == 0) {
+                mIsOnline = true;
+                connectToIMServer();
+                try {
+                    pushMyPresence();
+                } catch (ServiceException e) {
+                    e.printStackTrace();
+                }
             }
+            mListeners.add(session);
         }
-        mListeners.add(session);
     }
 
     /**
@@ -854,15 +866,17 @@ public class IMPersona extends ClassLogger {
      * @param session
      */
     public void removeListener(Session session) {
-        mListeners.remove(session);
-        if (mListeners.size() == 0) {
-            mIsOnline = false;
-            try {
-                pushMyPresence();
-            } catch (ServiceException e) {
-                e.printStackTrace();
+        synchronized(this.getLock()) {
+            mListeners.remove(session);
+            if (mListeners.size() == 0) {
+                mIsOnline = false;
+                try {
+                    pushMyPresence();
+                } catch (ServiceException e) {
+                    e.printStackTrace();
+                }
+                disconnectFromIMServer();
             }
-            disconnectFromIMServer();
         }
     }
 

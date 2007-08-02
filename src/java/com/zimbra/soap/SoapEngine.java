@@ -374,7 +374,7 @@ public class SoapEngine {
         ctxt = zsc.createElement(HeaderConstants.CONTEXT);
         boolean foundSessionForRequestedAccount = false;
         try {
-            for (SessionInfo sinfo : zsc.getReferencedSessions()) {
+            for (SessionInfo sinfo : zsc.getReferencedSessionsInfo()) {
                 Session session = SessionCache.lookup(sinfo.sessionId, authAccountId);
                 if (session == null)
                     continue;
