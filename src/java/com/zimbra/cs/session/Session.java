@@ -175,7 +175,7 @@ public abstract class Session {
      * @see #isRegisteredInCache() */
     public Session unregister() {
         // locking order is always Mailbox then Session
- //       assert(Thread.holdsLock(mMailbox) || !Thread.holdsLock(this));
+        assert(mMailbox == null || Thread.holdsLock(mMailbox) || !Thread.holdsLock(this));
         
         if (mMailbox != null && isMailboxListener()) {
             mMailbox.removeListener(this);
