@@ -48,16 +48,15 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 abstract class ImapRequest {
-    static final boolean[] ATOM_CHARS     = new boolean[128];
-    static final boolean[] ASTRING_CHARS  = new boolean[128];
-    static final boolean[] TAG_CHARS      = new boolean[128];
-    static final boolean[] PATTERN_CHARS  = new boolean[128];
-    static final boolean[] FETCH_CHARS    = new boolean[128];
-    static final boolean[] NUMBER_CHARS   = new boolean[128];
-    static final boolean[] SEQUENCE_CHARS = new boolean[128];
-    static final boolean[] BASE64_CHARS   = new boolean[128];
-    static final boolean[] SEARCH_CHARS   = new boolean[128];
-    static final boolean[] REGEXP_ESCAPED = new boolean[128];
+    static final boolean[] TAG_CHARS              = new boolean[128];
+    private static final boolean[] ATOM_CHARS     = new boolean[128];
+    private static final boolean[] ASTRING_CHARS  = new boolean[128];
+    private static final boolean[] PATTERN_CHARS  = new boolean[128];
+    private static final boolean[] FETCH_CHARS    = new boolean[128];
+    private static final boolean[] NUMBER_CHARS   = new boolean[128];
+    private static final boolean[] SEQUENCE_CHARS = new boolean[128];
+    private static final boolean[] BASE64_CHARS   = new boolean[128];
+    private static final boolean[] SEARCH_CHARS   = new boolean[128];
         static {
             for (int i = 0x21; i < 0x7F; i++)
                 if (i != '(' && i != ')' && i != '{' && i != '%' && i != '*' && i != '"' && i != '\\')
@@ -76,12 +75,6 @@ abstract class ImapRequest {
                 BASE64_CHARS[i] = NUMBER_CHARS[i] = SEQUENCE_CHARS[i] = true;
             SEQUENCE_CHARS['*'] = SEQUENCE_CHARS[':'] = SEQUENCE_CHARS[','] = SEQUENCE_CHARS['$'] = true;
             BASE64_CHARS['+'] = BASE64_CHARS['/'] = true;
-
-            REGEXP_ESCAPED['('] = REGEXP_ESCAPED[')'] = REGEXP_ESCAPED['.'] = true;
-            REGEXP_ESCAPED['['] = REGEXP_ESCAPED[']'] = REGEXP_ESCAPED['|'] = true;
-            REGEXP_ESCAPED['^'] = REGEXP_ESCAPED['$'] = REGEXP_ESCAPED['?'] = true;
-            REGEXP_ESCAPED['{'] = REGEXP_ESCAPED['}'] = REGEXP_ESCAPED['*'] = true;
-            REGEXP_ESCAPED['\\'] = true;
         }
 
     final ImapHandler mHandler;
@@ -359,11 +352,8 @@ abstract class ImapRequest {
     String readFolder() throws IOException, ImapParseException {
         return readFolder(false);
     }
-    String readEscapedFolder() throws IOException, ImapParseException {
-        return escapeFolder(readFolder(false), false);
-    }
     String readFolderPattern() throws IOException, ImapParseException {
-        return escapeFolder(readFolder(true), true);
+        return readFolder(true);
     }
     private String readFolder(boolean isPattern) throws IOException, ImapParseException {
         String raw = readAstring(null, isPattern ? PATTERN_CHARS : ASTRING_CHARS);
@@ -375,21 +365,6 @@ abstract class ImapRequest {
             ZimbraLog.imap.debug("ignoring error while decoding folder name: " + raw, t);
             return raw;
         }
-    }
-    private String escapeFolder(String unescaped, boolean isPattern) {
-        if (unescaped == null)
-            return null;
-        StringBuffer escaped = new StringBuffer();
-        for (int i = 0; i < unescaped.length(); i++) {
-            char c = unescaped.charAt(i);
-            // 6.3.8: "The character "*" is a wildcard, and matches zero or more characters at this position.
-            //         The character "%" is similar to "*", but it does not match a hierarchy delimiter."
-            if (isPattern && c == '*')                escaped.append(".*");
-            else if (isPattern && c == '%')           escaped.append("[^/]*");
-            else if (c > 0x7f || !REGEXP_ESCAPED[c])  escaped.append(c);
-            else                                      escaped.append('\\').append(c);
-        }
-        return escaped.toString().toUpperCase();
     }
 
     List<String> readFlags() throws ImapParseException {

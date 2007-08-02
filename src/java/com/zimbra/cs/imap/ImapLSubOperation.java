@@ -66,7 +66,7 @@ public class ImapLSubOperation extends Operation {
     protected void callback() throws ServiceException {
         Account acct = mMailbox.getAccount();
 
-        String pattern = mPattern.asImapPath().toUpperCase();
+        String pattern = mPattern.asPattern();
         Map<ImapPath, Boolean> hits = new HashMap<ImapPath, Boolean>();
 
         synchronized (mMailbox) {

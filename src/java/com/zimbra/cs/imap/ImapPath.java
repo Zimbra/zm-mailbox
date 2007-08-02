@@ -600,4 +600,30 @@ public class ImapPath {
         }
         return path.replaceAll("\\\\", "\\\\\\\\");
     }
+
+    private static final boolean[] REGEXP_ESCAPED = new boolean[128];
+        static {
+            REGEXP_ESCAPED['('] = REGEXP_ESCAPED[')'] = REGEXP_ESCAPED['.'] = true;
+            REGEXP_ESCAPED['['] = REGEXP_ESCAPED[']'] = REGEXP_ESCAPED['|'] = true;
+            REGEXP_ESCAPED['^'] = REGEXP_ESCAPED['$'] = REGEXP_ESCAPED['?'] = true;
+            REGEXP_ESCAPED['{'] = REGEXP_ESCAPED['}'] = REGEXP_ESCAPED['*'] = true;
+            REGEXP_ESCAPED['\\'] = true;
+        }
+
+    String asPattern() {
+        String unescaped = asImapPath();
+        if (unescaped == null)
+            return null;
+        StringBuffer escaped = new StringBuffer();
+        for (int i = 0; i < unescaped.length(); i++) {
+            char c = unescaped.charAt(i);
+            // 6.3.8: "The character "*" is a wildcard, and matches zero or more characters at this position.
+            //         The character "%" is similar to "*", but it does not match a hierarchy delimiter."
+            if (c == '*')                             escaped.append(".*");
+            else if (c == '%')                        escaped.append("[^/]*");
+            else if (c > 0x7f || !REGEXP_ESCAPED[c])  escaped.append(c);
+            else                                      escaped.append('\\').append(c);
+        }
+        return escaped.toString().toUpperCase();
+    }
 }

@@ -412,7 +412,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                             req.skipChar(')');  req.skipSpace();
                         }
 
-                        String base = req.readEscapedFolder();  req.skipSpace();
+                        String base = req.readFolder();  req.skipSpace();
 
                         if (req.peekChar() == '(' && extensionEnabled("LIST-EXTENDED")) {
                             parenthesized = true;  req.skipChar('(');
@@ -441,7 +441,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                         checkEOF(tag, req);
                         return doLIST(tag, base, patterns, selectOptions, returnOptions);
                     } else if (command.equals("LSUB")) {
-                        req.skipSpace();  String base = req.readEscapedFolder();
+                        req.skipSpace();  String base = req.readFolder();
                         req.skipSpace();  String pattern = req.readFolderPattern();
                         checkEOF(tag, req);
                         return doLSUB(tag, base, pattern);
@@ -1254,9 +1254,10 @@ public abstract class ImapHandler extends ProtocolHandler {
                     else                              pattern = referenceName + '/' + mailboxName;
                 }
                 ImapPath patternPath = new ImapPath(pattern, mCredentials, ImapPath.Scope.UNPARSED);
-                pattern = patternPath.asImapPath().toUpperCase();
-    
-                if (patternPath.getOwner() != null && patternPath.getOwner().indexOf('*') != -1) {
+                String owner = patternPath.getOwner();
+                pattern = patternPath.asPattern();
+
+                if (owner != null && (owner.indexOf('*') != -1 || owner.indexOf('%') != -1)) {
                     // RFC 2342 5: "Alternatively, a server MAY return NO to such a LIST command,
                     //              requiring that a user name be included with the Other Users'
                     //              Namespace prefix before listing any other user's mailboxes."
@@ -1266,11 +1267,11 @@ public abstract class ImapHandler extends ProtocolHandler {
                 }
 
                 // you cannot access your own mailbox via the /home/username mechanism
-                if (patternPath.getOwner() != null && patternPath.belongsTo(mCredentials))
+                if (owner != null && patternPath.belongsTo(mCredentials))
                     continue;
 
                 // make sure we can do a  LIST "" "/home/user1"
-                if (patternPath.getOwner() != null && (ImapPath.NAMESPACE_PREFIX + patternPath.getOwner()).toUpperCase().equals(pattern)) {
+                if (owner != null && (ImapPath.NAMESPACE_PREFIX + owner).toUpperCase().equals(pattern)) {
                     matches.put(patternPath, "LIST (\\NoSelect) \"/\" " + patternPath.asUtf7String());
                     continue;
                 }
@@ -1285,7 +1286,7 @@ public abstract class ImapHandler extends ProtocolHandler {
 
                 // get the set of *all* folders; we'll iterate over it below to find matches
                 Map<ImapPath, ItemId> paths = new LinkedHashMap<ImapPath, ItemId>();
-                accumulatePaths(patternPath.getOwnerMailbox(), patternPath.getOwner(), null, paths);
+                accumulatePaths(patternPath.getOwnerMailbox(), owner, null, paths);
 
                 // get the set of folders matching the selection criteria (either all folders or selected folders)
                 Set<ImapPath> selected = paths.keySet();
