@@ -31,4 +31,6 @@ public class RemoteCommands {
     public static final String FLUSHQUEUE = "flushqueue";
 
     public static final String ZMQSTAT = "zmqstat";
+    
+    public static final String COLLECT_CONFIG_FILES = "zmcollectconfigfiles";
 }
