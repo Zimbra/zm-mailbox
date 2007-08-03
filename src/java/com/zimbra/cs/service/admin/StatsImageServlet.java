@@ -27,7 +27,7 @@
  * Created on Dec 20, 2004
  * @author Greg Solovyev
  * */
-package com.zimbra.cs.service;
+package com.zimbra.cs.service.admin;
 
 import java.io.*;
 

@@ -186,7 +186,7 @@
 
   <servlet>
     <servlet-name>StatsImageServlet</servlet-name>
-    <servlet-class>com.zimbra.cs.service.StatsImageServlet</servlet-class>
+    <servlet-class>com.zimbra.cs.service.admin.StatsImageServlet</servlet-class>
     <init-param>
       <param-name>allowed.ports</param-name>
       <param-value>7071</param-value>

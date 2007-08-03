@@ -184,7 +184,7 @@
 
   <servlet>
     <servlet-name>StatsImageServlet</servlet-name>
-    <servlet-class>com.zimbra.cs.service.StatsImageServlet</servlet-class>
+    <servlet-class>com.zimbra.cs.service.admin.StatsImageServlet</servlet-class>
     <init-param>
       <param-name>allowed.ports</param-name>
       <param-value>7071</param-value>
@@ -192,6 +192,16 @@
     <load-on-startup>7</load-on-startup>
   </servlet>
 
+  <servlet>
+    <servlet-name>CollectConfigFiles</servlet-name>
+    <servlet-class>com.zimbra.cs.service.admin.CollectConfigFiles</servlet-class>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>7071</param-value>
+    </init-param>
+    <load-on-startup>7</load-on-startup>
+  </servlet>
+  
   <servlet>
     <servlet-name>ProxyServlet</servlet-name>
     <servlet-class>com.zimbra.cs.zimlet.ProxyServlet</servlet-class>
@@ -276,6 +286,11 @@
     <url-pattern>/statsimg/*</url-pattern>
   </servlet-mapping>
 
+  <servlet-mapping>
+    <servlet-name>CollectConfigFiles</servlet-name>
+    <url-pattern>/collectconfig/*</url-pattern>
+  </servlet-mapping>
+  
   <servlet-mapping>
     <servlet-name>ProxyServlet</servlet-name>
     <url-pattern>/proxy/*</url-pattern>
