@@ -45,6 +45,7 @@ import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Identity;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Zimlet;
@@ -252,6 +253,8 @@ public class GetInfo extends AccountDocumentHandler  {
             class ChildInfo {
                 public boolean mVisible;
                 public String mName;
+                public String mDisplayName;
+                
                 ChildInfo(boolean visible) {
                     mVisible = visible;
                 }
@@ -274,17 +277,19 @@ public class GetInfo extends AccountDocumentHandler  {
                 query.append(String.format("(%s=%s)", Provisioning.A_zimbraId, id));
             query.append(")");
             
-            List accounts = prov.searchAccounts(query.toString(), null, null, true, flags);
-            for (Object obj: accounts) {
+            List<NamedEntry> accounts = prov.searchAccounts(query.toString(), null, null, true, flags);
+            for (NamedEntry obj: accounts) {
                 if (!(obj instanceof Account))
-                    throw ServiceException.FAILURE("child id is not an account", null);
+                    throw ServiceException.FAILURE("child id " + obj.getId() +"is not an account", null);
                 Account childAcct = (Account)obj;
                 String childId = childAcct.getId();
                 String childName = childAcct.getName();
+                String childDisplayName = childAcct.getAttr(Provisioning.A_displayName);
                 
                 ChildInfo ci = children.get(childId);
                 assert(ci.mName == null);
                 ci.mName = childName;
+                ci.mDisplayName = childDisplayName;
             }
 
             for (Map.Entry<String, ChildInfo> child : children.entrySet()) {
@@ -293,6 +298,11 @@ public class GetInfo extends AccountDocumentHandler  {
                 acctElem.addAttribute(AccountConstants.A_ID, child.getKey());
                 acctElem.addAttribute(AccountConstants.A_NAME, ci.mName);
                 acctElem.addAttribute(AccountConstants.A_VISIBLE, ci.mVisible);
+                
+                Element attrsElem = acctElem.addElement(AccountConstants.E_ATTRS);
+                if (ci.mDisplayName != null)
+                    attrsElem.addElement(AccountConstants.E_ATTR).addAttribute(AccountConstants.A_NAME, Provisioning.A_displayName).setText(ci.mDisplayName);
+                
             }
         }
     }

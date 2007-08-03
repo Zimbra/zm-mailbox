@@ -445,7 +445,11 @@ an authToken can be passed instead of account/password/preauth to validate an ex
      ...
    </dataSources>*
    <childAccounts>
-     <childAccount name="{child-account-name}" visible="0|1" id="{child-account-id}"></childAccount>*
+     <childAccount name="{child-account-name}" visible="0|1" id="{child-account-id}">
+         <attrs>
+            <attr name="{name}">{value}</a>*
+         </attrs>
+     </childAccount>*
    </childAccounts>
    [<license status="inGracePeriod|bad"/>]
 </GetInfoResponse>
@@ -474,6 +478,9 @@ an authToken can be passed instead of account/password/preauth to validate an ex
 
   license attribute is pertinent to the Network edition only.  this attribute is 
   present only when the installed license is NOT ok.
+  
+  attrs under <childAccount>: including the following attrs of the child account:
+        - displayName
 
 ----------------------------
 
