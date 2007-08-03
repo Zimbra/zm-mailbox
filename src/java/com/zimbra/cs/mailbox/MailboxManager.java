@@ -280,13 +280,14 @@ public class MailboxManager {
             throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
         if (!Provisioning.onLocalServer(account))
             throw ServiceException.WRONG_HOST(account.getAttr(Provisioning.A_zimbraMailHost), null);
+
         synchronized (this) {
             mailboxKey = mMailboxIds.get(accountId.toLowerCase());
-            if (mailboxKey != null)
-                return getMailboxById(mailboxKey.intValue(), fetchMode, false);
-            else
-                return createMailbox(null, account);
         }
+        if (mailboxKey != null)
+            return getMailboxById(mailboxKey.intValue(), fetchMode, false);
+        else
+            return createMailbox(null, account);
     }
 
 
@@ -356,7 +357,7 @@ public class MailboxManager {
                 return (Mailbox) cached;
             }
         }
-        
+
         if (fetchMode == FetchMode.ONLY_IF_CACHED)
             return null;
 
@@ -374,27 +375,26 @@ public class MailboxManager {
                 DbPool.quietClose(conn);
         }
 
-        Mailbox mbox;
+        Mailbox mbox = instantiateMailbox(data);
+
+        if (!skipMailHostCheck) {
+            // The host check here makes sure that sessions that were
+            // already connected at the time of mailbox move are not
+            // allowed to continue working with this mailbox which is
+            // essentially a soft-deleted copy.  The WRONG_HOST
+            // exception forces the clients to reconnect to the new
+            // server.
+            Account account = mbox.getAccount();
+            if (!Provisioning.onLocalServer(account))
+                throw ServiceException.WRONG_HOST(account.getAttr(Provisioning.A_zimbraMailHost), null);
+        }
+
         synchronized (this) {
             // avoid the race condition by re-checking the cache and using that data (if any)
             Object cached = retrieveFromCache(mailboxId, false);
             if (cached instanceof Mailbox) {
                 ZimbraPerf.STOPWATCH_MBOX_GET.stop(startTime);
                 return (Mailbox) cached;
-            }
-
-            mbox = instantiateMailbox(data);
-
-            if (!skipMailHostCheck) {
-                // The host check here makes sure that sessions that were
-                // already connected at the time of mailbox move are not
-                // allowed to continue working with this mailbox which is
-                // essentially a soft-deleted copy.  The WRONG_HOST
-                // exception forces the clients to reconnect to the new
-                // server.
-                Account account = mbox.getAccount();
-                if (!Provisioning.onLocalServer(account))
-                    throw ServiceException.WRONG_HOST(account.getAttr(Provisioning.A_zimbraMailHost), null);
             }
 
             // cache the newly-created Mailbox object
