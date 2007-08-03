@@ -25,6 +25,7 @@
 package com.zimbra.cs.service.formatter;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -164,7 +165,7 @@ public class WikiFormatter extends Formatter {
 	private static void printWikiPage(Context context, String s, String title, String baseURL)
 	throws IOException {
 		context.resp.setContentType(WikiItem.WIKI_CONTENT_TYPE);
-		javax.servlet.ServletOutputStream out = context.resp.getOutputStream();
+		PrintWriter out = context.resp.getWriter();
 		out.println("<HTML>");
 		out.println("<HEAD>");
 		out.println("<TITLE>");
