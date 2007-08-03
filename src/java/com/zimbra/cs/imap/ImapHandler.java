@@ -48,6 +48,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
@@ -1255,13 +1256,12 @@ public abstract class ImapHandler extends ProtocolHandler {
                 }
                 ImapPath patternPath = new ImapPath(pattern, mCredentials, ImapPath.Scope.UNPARSED);
                 String owner = patternPath.getOwner();
-                pattern = patternPath.asPattern();
 
                 if (owner != null && (owner.indexOf('*') != -1 || owner.indexOf('%') != -1)) {
                     // RFC 2342 5: "Alternatively, a server MAY return NO to such a LIST command,
                     //              requiring that a user name be included with the Other Users'
                     //              Namespace prefix before listing any other user's mailboxes."
-                    ZimbraLog.imap.info("LIST failed: wildcards not permitted in username " + pattern);
+                    ZimbraLog.imap.info("LIST failed: wildcards not permitted in username " + patternPath);
                     sendNO(tag, "LIST failed: wildcards not permitted in username");
                     return CONTINUE_PROCESSING;
                 }
@@ -1299,14 +1299,14 @@ public abstract class ImapHandler extends ProtocolHandler {
                     // handle nonexistent selected folders by adding them to "selected" but not to "paths"
                     for (String sub : subscriptions) {
                         ImapPath spath = new ImapPath(sub, mCredentials);
-                        if (!selected.contains(spath))
+                        if (!selected.contains(spath) && (owner == null) == (spath.getOwner() == null))
                             selected.add(spath);
                     }
                 }
 
                 // return only the selected folders (and perhaps their parents) matching the pattern
                 for (ImapPath path : selected) {
-                    if (!matches.containsKey(path) && path.asImapPath().toUpperCase().matches(pattern))
+                    if (!matches.containsKey(path) && patternPath.matches(path))
                         matches.put(path, "LIST (" + getFolderAttrs(path, returnOptions, paths, subscriptions) + ") \"/\" " + path.asUtf7String());
 
                     if (!selectRecursive)
@@ -1314,7 +1314,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                     String folderName = path.asZimbraPath();
                     for (int index = folderName.length() + 1; (index = folderName.lastIndexOf('/', index - 1)) != -1; ) {
                         ImapPath parent = new ImapPath(path.getOwner(), folderName.substring(0, index), mCredentials);
-                        if (parent.asImapPath().toUpperCase().matches(pattern)) {
+                        if (patternPath.matches(parent)) {
                             // use the already-resolved version of the parent ImapPath from the "paths" map if possible
                             for (ImapPath cached : paths.keySet()) {
                                 if (cached.equals(parent)) {
@@ -1429,18 +1429,37 @@ public abstract class ImapHandler extends ProtocolHandler {
             else                              pattern = referenceName + '/' + mailboxName;
         }
         ImapPath patternPath = new ImapPath(pattern, mCredentials, ImapPath.Scope.UNPARSED);
+        ImapPath childPattern = new ImapPath(patternPath.asImapPath() + "/*", mCredentials, ImapPath.Scope.UNPARSED);
+
         List<String> subscriptions = null;
         try {
             // you cannot access your own mailbox via the /home/username mechanism
             if (patternPath.getOwner() == null || !patternPath.belongsTo(mCredentials)) {
-            	ImapLSubOperation op = new ImapLSubOperation(mSelectedFolder, getContext(), mCredentials.getMailbox(), patternPath, mCredentials, extensionEnabled("CHILDREN"));
-            	op.schedule();
-            	subscriptions = op.getSubs();
-            }
+                Map<ImapPath, Boolean> hits = new HashMap<ImapPath, Boolean>();
 
-            if (subscriptions != null) {
-            	for (String sub : subscriptions)
-            		sendUntagged(sub);
+                if (patternPath.getOwner() == null) {
+                    Mailbox mbox = mCredentials.getMailbox();
+                    for (Folder folder : mbox.getFolderById(getContext(), Mailbox.ID_FOLDER_USER_ROOT).getSubfolderHierarchy()) {
+                        if (folder.isTagged(mbox.mSubscribedFlag))
+                            checkSubscription(new ImapPath(null, folder, mCredentials), patternPath, childPattern, hits);
+                    }
+                }
+
+                Set<String> remoteSubscriptions = mCredentials.listSubscriptions();
+                if (remoteSubscriptions != null && !remoteSubscriptions.isEmpty()) {
+                    String owner = patternPath.getOwner();
+                    for (String sub : remoteSubscriptions) {
+                        ImapPath subscribed = new ImapPath(sub, mCredentials);
+                        if ((owner == null) == (subscribed.getOwner() == null))
+                            checkSubscription(subscribed, patternPath, childPattern, hits);
+                    }
+                }
+
+                subscriptions = new ArrayList<String>(hits.size());
+                for (Map.Entry<ImapPath, Boolean> hit : hits.entrySet()) {
+                    String attrs = hit.getValue() ? "" : "\\NoSelect";
+                    subscriptions.add("LSUB (" + attrs + ") \"/\" " + hit.getKey().asUtf7String());
+                }
             }
         } catch (ServiceException e) {
             ZimbraLog.imap.warn("LSUB failed", e);
@@ -1448,9 +1467,39 @@ public abstract class ImapHandler extends ProtocolHandler {
             return canContinue(e);
         }
 
+        if (subscriptions != null) {
+            for (String sub : subscriptions)
+                sendUntagged(sub);
+        }
+
         sendNotifications(true, false);
         sendOK(tag, "LSUB completed");
         return CONTINUE_PROCESSING;
+    }
+
+    private boolean checkSubscription(ImapPath path, ImapPath pattern, ImapPath childPattern, Map<ImapPath, Boolean> hits) {
+        if (pattern.matches(path)) {
+            hits.put(path, Boolean.TRUE);  return true;
+        } else if (!childPattern.matches(path)) {
+            return false;
+        }
+
+        // 6.3.9: "A special situation occurs when using LSUB with the % wildcard. Consider 
+        //         what happens if "foo/bar" (with a hierarchy delimiter of "/") is subscribed
+        //         but "foo" is not.  A "%" wildcard to LSUB must return foo, not foo/bar, in
+        //         the LSUB response, and it MUST be flagged with the \Noselect attribute."
+
+        // figure out the set of unsubscribed mailboxes that match the pattern and are parents of subscribed mailboxes
+        boolean matched = false;
+        int delimiter = path.asImapPath().lastIndexOf('/');
+        while (delimiter > 0) {
+            path = new ImapPath(path.asImapPath().substring(0, delimiter), mCredentials);
+            if (!hits.containsKey(path) && pattern.matches(path)) {
+                hits.put(path, Boolean.FALSE);  matched = true;
+            }
+            delimiter = path.asImapPath().lastIndexOf('/');
+        }
+        return matched;
     }
 
     static final int STATUS_MESSAGES      = 0x01;
