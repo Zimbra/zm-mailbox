@@ -47,7 +47,7 @@ import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapTransport.DebugListener;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.PosixParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
@@ -1402,7 +1402,7 @@ public class ProvUtil implements DebugListener {
         Zimbra.toolSetup();
         
         ProvUtil pu = new ProvUtil();
-        CommandLineParser parser = new GnuParser();
+        CommandLineParser parser = new PosixParser();
         Options options = new Options();
         options.addOption("h", "help", false, "display usage");
         options.addOption("f", "file", true, "use file as input stream");
