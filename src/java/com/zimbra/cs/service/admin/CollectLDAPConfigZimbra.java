@@ -34,6 +34,9 @@ public class CollectLDAPConfigZimbra extends ZimbraServlet {
 			//find the LDAP master
 			Provisioning prov = Provisioning.getInstance();
 			String ldapHost = LC.ldap_host.value();
+			if(ldapHost == null) {
+				throw ServiceException.INVALID_REQUEST("Cannot find value for ldap_host in local config", null);
+			}
 			Server server = prov.get(ServerBy.name, ldapHost);
 			if (server == null) {
 				throw ServiceException.INVALID_REQUEST("Cannot find server record for LDAP master host: " + ldapHost, null);
