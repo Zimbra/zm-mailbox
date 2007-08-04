@@ -73,6 +73,7 @@ import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.mailbox.ACL.GuestAccount;
 import com.zimbra.cs.mailbox.BrowseResult.DomainItem;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
@@ -285,11 +286,16 @@ public class Mailbox {
             authuser = acct;  isAdmin = admin;
         }
         public OperationContext(String accountId) throws ServiceException {
-            this(accountId, false);
-        }
-        public OperationContext(String accountId, boolean admin) throws ServiceException {
-            isAdmin = admin;
             authuser = Provisioning.getInstance().get(AccountBy.id, accountId);
+            if (authuser == null)
+                throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
+        }
+        public OperationContext(AuthToken auth) throws ServiceException {
+            String accountId = auth.getAccountId();
+            isAdmin = auth.isAdmin() || auth.isDomainAdmin();
+            authuser = Provisioning.getInstance().get(AccountBy.id, accountId);
+            if (authuser == null && !auth.isZimbraUser())
+                authuser = new ACL.GuestAccount(auth);
             if (authuser == null)
                 throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
         }

@@ -122,7 +122,7 @@ public abstract class DocumentHandler {
 
     public static OperationContext getOperationContext(ZimbraSoapContext zsc, Session session) throws ServiceException {
         AuthToken at = zsc.getAuthToken();
-        OperationContext octxt = new OperationContext(zsc.getAuthtokenAccountId(), at != null && (at.isAdmin() || at.isDomainAdmin()));
+        OperationContext octxt = new OperationContext(at);
         octxt.setChangeConstraint(zsc.getChangeConstraintType(), zsc.getChangeConstraintLimit());
         octxt.setRequestIP(zsc.getRequestIP()).setSession(session);
         return octxt;

@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.service.ServiceException;
@@ -97,12 +98,24 @@ public class ACL {
     }
     
     public static class GuestAccount extends Account {
-        private String mPassword;
-    	public GuestAccount(String emailAddress, String password) {
+        private String mDigest;
+        public GuestAccount(String emailAddress, String password) {
             super(emailAddress, GUID_PUBLIC, getAnonAttrs(), null);
-            mPassword = password;
-    	}
-    	public String getPassword() { return mPassword; }
+            mDigest = AuthToken.generateDigest(emailAddress, password);
+        }
+        public GuestAccount(AuthToken auth) {
+            super(auth.getExternalUserEmail(), GUID_PUBLIC, getAnonAttrs(), null);
+            mDigest = auth.getDigest();
+        }
+        public boolean matches(String emailAddress, String password) {
+            if (getName().compareTo(emailAddress) != 0)
+                return false;
+            String digest = AuthToken.generateDigest(emailAddress, password);
+            return (mDigest.compareTo(digest) == 0);
+        }
+        public String getDigest() {
+            return mDigest;
+        }
     }
 
     public static class Grant {
@@ -187,8 +200,7 @@ public class ACL {
         private boolean matchesGuestAccount(Account acct) {
         	if (!(acct instanceof GuestAccount))
         		return false;
-        	GuestAccount ga = (GuestAccount) acct;
-        	return ga.getName().equals(mGrantee) && ga.getPassword().equals(mPassword);
+        	return ((GuestAccount) acct).matches(mGrantee, mPassword);
         }
         
         /** Utility function: Returns the zimbraId for a null-checked LDAP

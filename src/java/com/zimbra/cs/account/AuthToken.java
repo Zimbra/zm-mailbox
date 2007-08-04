@@ -38,6 +38,8 @@ import javax.crypto.SecretKey;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.collections.map.LRUMap;
+
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
@@ -63,6 +65,12 @@ public class AuthToken {
 	private static final String C_EXP = "exp";
     private static final String C_ADMIN = "admin";
     private static final String C_DOMAIN = "domain";    
+    private static final String C_TYPE = "type";
+    private static final String C_TYPE_ZIMBRA_USER = "zimbra";
+    private static final String C_TYPE_EXTERNAL_USER = "external";
+    private static final String C_EXTERNAL_USER_EMAIL = "email";
+    private static final String C_DIGEST = "digest";
+    
 	private static LRUMap mCache = new LRUMap(AUTHTOKEN_CACHE_SIZE);
     
     private static Log mLog = LogFactory.getLog(AuthToken.class); 
@@ -74,6 +82,9 @@ public class AuthToken {
     private boolean mIsAdmin;
     private boolean mIsDomainAdmin;    
 //	private static AuthTokenKey mTempKey;
+    private String mType;
+    private String mExternalUserEmail;
+    private String mDigest;
     
     public String toString() {
         return "AuthToken(acct="+mAccountId+" admin="+mAdminAccountId+" exp="
@@ -149,6 +160,9 @@ public class AuthToken {
             mIsAdmin = "1".equals(ia);
             String da = (String) map.get(C_DOMAIN);            
             mIsDomainAdmin = "1".equals(da);
+            mType = (String)map.get(C_TYPE);
+            mExternalUserEmail = (String)map.get(C_EXTERNAL_USER_EMAIL);
+            mDigest = (String)map.get(C_DIGEST);
         } catch (ServiceException e) {
             throw new AuthTokenException("service exception", e);
         } catch (DecoderException e) {
@@ -188,8 +202,30 @@ public class AuthToken {
         mIsAdmin = isAdmin && "TRUE".equals(acct.getAttr(Provisioning.A_zimbraIsAdminAccount));
         mIsDomainAdmin = isAdmin && "TRUE".equals(acct.getAttr(Provisioning.A_zimbraIsDomainAdminAccount));
 		mEncoded = null;
+        mType = C_TYPE_ZIMBRA_USER;
 	}
 
+    public AuthToken(String acctId, String externalEmail, String pass, String digest, long expires) {
+        mAccountId = acctId;
+        mExpires = expires;
+        mExternalUserEmail = externalEmail;
+        if (digest != null)
+            mDigest = digest;
+        else
+            mDigest = generateDigest(externalEmail, pass);
+        
+        mType = C_TYPE_EXTERNAL_USER;
+    }
+    
+    public static String generateDigest(String a, String b) {
+        StringBuilder buf = new StringBuilder();
+        buf.append(a);
+        buf.append(":");
+        if (b != null)
+            buf.append(b);
+        return ByteUtil.getDigest(buf.toString().getBytes());
+    }
+    
 	public String getAccountId() {
 		return mAccountId;
 	}
@@ -214,6 +250,18 @@ public class AuthToken {
         return mIsDomainAdmin;
     }
     
+    public boolean isZimbraUser() {
+        return mType == null || mType.compareTo(C_TYPE_ZIMBRA_USER) == 0;
+    }
+
+    public String getExternalUserEmail() {
+        return mExternalUserEmail;
+    }
+    
+    public String getDigest() {
+        return mDigest;
+    }
+    
 	public String getEncoded() throws AuthTokenException {
 		if (mEncoded == null) {
 			StringBuffer encodedBuff = new StringBuffer(64);
@@ -224,11 +272,14 @@ public class AuthToken {
             if (mIsAdmin)
                 BlobMetaData.encodeMetaData(C_ADMIN, "1", encodedBuff);
             if (mIsDomainAdmin)
-                BlobMetaData.encodeMetaData(C_DOMAIN, "1", encodedBuff);            
-			String data = new String(Hex.encodeHex(encodedBuff.toString().getBytes()));
+                BlobMetaData.encodeMetaData(C_DOMAIN, "1", encodedBuff);
+            BlobMetaData.encodeMetaData(C_TYPE, mType, encodedBuff);
+            BlobMetaData.encodeMetaData(C_EXTERNAL_USER_EMAIL, mExternalUserEmail, encodedBuff);
+            BlobMetaData.encodeMetaData(C_DIGEST, mDigest, encodedBuff);
+            String data = new String(Hex.encodeHex(encodedBuff.toString().getBytes()));
             AuthTokenKey key = getCurrentKey();
-			String hmac = getHmac(data, key.getKey());
-			mEncoded = key.getVersion()+"_"+hmac+"_"+data;
+            String hmac = getHmac(data, key.getKey());
+            mEncoded = key.getVersion()+"_"+hmac+"_"+data;
 		}
 		return mEncoded;
 	}

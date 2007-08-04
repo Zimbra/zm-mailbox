@@ -32,9 +32,14 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.UserServlet;
@@ -64,20 +69,22 @@ public class HtmlFormatter extends Formatter {
     @Override
     public void formatCallback(Context context) throws UserServletException,
             ServiceException, IOException, ServletException {
-        if (!(context.target instanceof Folder))
-            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "format not supported for this item");
-
         AuthToken auth = null;
         if (context.basicAuthHappened) {
             long expiration = System.currentTimeMillis() + AUTH_EXPIRATION;
-            auth = new AuthToken(context.authAccount, expiration);
+            Account acc = context.authAccount;
+            if (acc instanceof ACL.GuestAccount)
+                auth = new AuthToken(acc.getId(), acc.getName(), null, ((ACL.GuestAccount)acc).getDigest(), expiration);
+            else
+                auth = new AuthToken(context.authAccount, expiration);
         } else if (context.cookieAuthHappened) {
             auth = UserServlet.getAuthTokenFromCookie(context.req, context.resp, true);
         }
         
         String authString = null;
         try {
-            authString = auth.getEncoded();
+            if (auth != null)
+                authString = auth.getEncoded();
         } catch (AuthTokenException e) {
             throw new ServletException("error generating the authToken", e);
         }
@@ -111,5 +118,23 @@ public class HtmlFormatter extends Formatter {
             Folder folder, String filename) throws UserServletException,
             ServiceException, IOException, ServletException {
         throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "format not supported for save");
+    }
+    
+    public static void main(String[] args) throws Exception {
+        if (args.length == 0)
+            return;
+        SoapHttpTransport tr;
+        AuthToken auth = new AuthToken(ACL.GUID_PUBLIC, "foo@bar.com", "test123", null, System.currentTimeMillis() + AUTH_EXPIRATION);
+        String url = "http://localhost:7070/service/soap";
+        tr = new SoapHttpTransport(url);
+        tr.setAuthToken(auth.getEncoded());
+        tr.setTargetAcctName("user1");
+        XMLElement req = new XMLElement(MailConstants.GET_WIKI_REQUEST);
+        Element w = req.addElement(MailConstants.E_WIKIWORD);
+        w.addAttribute(MailConstants.A_ID, args[0]);
+        if (args.length > 1)
+            w.addAttribute(MailConstants.A_VERSION, args[1]);
+        Element resp = tr.invoke(req);
+        System.out.println(resp);
     }
 }
