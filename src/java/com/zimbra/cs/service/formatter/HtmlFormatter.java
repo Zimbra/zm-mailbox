@@ -24,18 +24,11 @@
  */
 package com.zimbra.cs.service.formatter;
 
-import java.io.IOException;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletResponse;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapHttpTransport;
-import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
@@ -43,8 +36,14 @@ import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.UserServlet;
-import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
+import com.zimbra.cs.service.UserServletException;
+
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 public class HtmlFormatter extends Formatter {
     
@@ -52,14 +51,14 @@ public class HtmlFormatter extends Formatter {
     private static final String PATH_JSP_REST_PAGE = "/h/rest";
     private static final long   AUTH_EXPIRATION = 60L * 60L * 1000L;
     
-    private static final String ATTR_INTERNAL_DISPATCH   = "zimbra-internal-dispatch";
-    private static final String ATTR_AUTH_TOKEN          = "zimbra-authToken";
-    private static final String ATTR_TARGET_ACCOUNT_NAME = "zimbra-target-account-name";
-    private static final String ATTR_TARGET_ACCOUNT_ID   = "zimbra-target-account-id";
-    private static final String ATTR_TARGET_ITEM_ID      = "zimbra-target-item-id";
-    private static final String ATTR_TARGET_ITEM_TYPE    = "zimbra-target-item-type";
-    private static final String ATTR_TARGET_ITEM_COLOR   = "zimbra-target-item-color";
-    private static final String ATTR_TARGET_ITEM_VIEW    = "zimbra-target-item-view";
+    private static final String ATTR_INTERNAL_DISPATCH   = "zimbra_internal_dispatch";
+    private static final String ATTR_AUTH_TOKEN          = "zimbra_authToken";
+    private static final String ATTR_TARGET_ACCOUNT_NAME = "zimbra_target_account_name";
+    private static final String ATTR_TARGET_ACCOUNT_ID   = "zimbra_target_account_id";
+    private static final String ATTR_TARGET_ITEM_ID      = "zimbra_target_item_id";
+    private static final String ATTR_TARGET_ITEM_TYPE    = "zimbra_target_item_type";
+    private static final String ATTR_TARGET_ITEM_COLOR   = "zimbra_target_item_color";
+    private static final String ATTR_TARGET_ITEM_VIEW    = "zimbra_target_item_view";
     
     @Override
     public boolean canBeBlocked() {
