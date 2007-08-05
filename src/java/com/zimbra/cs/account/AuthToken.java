@@ -218,6 +218,8 @@ public class AuthToken {
     }
     
     public static String generateDigest(String a, String b) {
+        if (a == null || b == null)
+            return null;
         StringBuilder buf = new StringBuilder();
         buf.append(a);
         buf.append(":");

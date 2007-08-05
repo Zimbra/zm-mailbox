@@ -294,8 +294,12 @@ public class Mailbox {
             String accountId = auth.getAccountId();
             isAdmin = auth.isAdmin() || auth.isDomainAdmin();
             authuser = Provisioning.getInstance().get(AccountBy.id, accountId);
-            if (authuser == null && !auth.isZimbraUser())
-                authuser = new ACL.GuestAccount(auth);
+            if (authuser == null && !auth.isZimbraUser()) {
+                if (auth.getDigest() != null)
+                    authuser = new ACL.GuestAccount(auth);
+                else
+                    authuser = ACL.ANONYMOUS_ACCT;
+            }
             if (authuser == null)
                 throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
         }
