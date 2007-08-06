@@ -32,6 +32,7 @@ import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -59,7 +60,10 @@ public class HtmlFormatter extends Formatter {
     private static final String ATTR_TARGET_ITEM_TYPE    = "zimbra_target_item_type";
     private static final String ATTR_TARGET_ITEM_COLOR   = "zimbra_target_item_color";
     private static final String ATTR_TARGET_ITEM_VIEW    = "zimbra_target_item_view";
-    
+
+    private static final String ATTR_TARGET_ACCOUNT_PREF_TIME_ZONE   = "zimbra_target_account_pref_time_zone";
+    private static final String ATTR_TARGET_ACCOUNT_PREF_SKIN   = "zimbra_target_account_pref_skin";
+
     @Override
     public boolean canBeBlocked() {
         return false;
@@ -98,10 +102,14 @@ public class HtmlFormatter extends Formatter {
         context.req.setAttribute(ATTR_TARGET_ACCOUNT_NAME, targetAccount.getName());
         context.req.setAttribute(ATTR_TARGET_ACCOUNT_ID, targetAccount.getId());
         context.req.setAttribute(ATTR_TARGET_ITEM_ID, targetItem.getId());
-        context.req.setAttribute(ATTR_TARGET_ITEM_TYPE, targetItem.getType());
+        context.req.setAttribute(ATTR_TARGET_ITEM_TYPE, MailItem.getNameForType(targetItem));
         context.req.setAttribute(ATTR_TARGET_ITEM_COLOR, targetItem.getColor());
         if (targetItem instanceof Folder)
-            context.req.setAttribute(ATTR_TARGET_ITEM_VIEW, ((Folder)targetItem).getDefaultView());
+            context.req.setAttribute(ATTR_TARGET_ITEM_VIEW, MailItem.getNameForType(((Folder)targetItem).getDefaultView()));
+
+        context.req.setAttribute(ATTR_TARGET_ACCOUNT_PREF_TIME_ZONE, targetAccount.getAttr(Provisioning.A_zimbraPrefTimeZoneId));
+        context.req.setAttribute(ATTR_TARGET_ACCOUNT_PREF_SKIN, targetAccount.getAttr(Provisioning.A_zimbraPrefSkin));
+
 
         ServletContext sc = getServlet().getServletConfig().getServletContext();
         ServletContext targetContext = sc.getContext(PATH_MAIN_CONTEXT);
