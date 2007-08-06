@@ -101,6 +101,7 @@ public class PreAuthServlet extends ZimbraServlet {
     public void doGet(HttpServletRequest req, HttpServletResponse resp)
     throws ServletException, IOException
     {
+        ZimbraLog.clearContext();
         try {
             Provisioning prov = Provisioning.getInstance();
             

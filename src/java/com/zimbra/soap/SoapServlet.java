@@ -194,6 +194,7 @@ public class SoapServlet extends ZimbraServlet {
         new StatsFile("perf_soap", new String[] { "response" }, true);
     
     public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        ZimbraLog.clearContext();
         long startTime = ZimbraPerf.STOPWATCH_SOAP.start();
         
         // Performance

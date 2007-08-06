@@ -88,7 +88,8 @@ public class DavServlet extends ZimbraServlet {
 	}
 	
 	public void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		
+		ZimbraLog.clearContext();
+        
 		if (!isRequestOnAllowedPort(req)) {
 			resp.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE);
 			return;

@@ -148,6 +148,7 @@ public class ProxyServlet extends ZimbraServlet {
 	}
 
 	private void doProxy(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+        ZimbraLog.clearContext();
         AuthToken authToken = getAuthTokenFromCookie(req, resp);
         if (authToken == null) {
         	return;

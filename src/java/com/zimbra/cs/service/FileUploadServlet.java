@@ -75,6 +75,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.FileUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.Zimbra;
 
 public class FileUploadServlet extends ZimbraServlet {
@@ -293,6 +294,8 @@ public class FileUploadServlet extends ZimbraServlet {
     }
 
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+        ZimbraLog.clearContext();
+        
 		int status = HttpServletResponse.SC_OK;
         List<FileItem> items = null;
         String attachmentId = null;
