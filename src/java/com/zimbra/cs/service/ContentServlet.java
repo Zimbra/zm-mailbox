@@ -358,7 +358,8 @@ public class ContentServlet extends ZimbraServlet {
     }
     
     public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
-        mLog.debug("request url: " + req.getRequestURL() + " path info: " + req.getPathInfo());
+        ZimbraLog.clearContext();
+        mLog.debug("request url: %s, path info: ", req.getRequestURL(), req.getPathInfo());
         
         AuthToken authToken = getAuthTokenFromCookie(req, resp);
         if (authToken == null) 

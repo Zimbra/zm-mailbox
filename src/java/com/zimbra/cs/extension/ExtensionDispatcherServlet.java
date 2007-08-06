@@ -97,6 +97,7 @@ public class ExtensionDispatcherServlet extends ZimbraServlet {
     }
     
     public void service(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+        ZimbraLog.clearContext();
         try {
             ExtensionHttpHandler handler = getHandler(req);
             String method = req.getMethod();

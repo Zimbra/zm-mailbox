@@ -158,6 +158,7 @@ public class ProxyServlet extends ZimbraServlet {
     private static final String DEFAULT_CTYPE = "text/xml";
 
     private void doProxy(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        ZimbraLog.clearContext();
         AuthToken authToken = getAuthTokenFromCookie(req, resp);
         if (authToken == null)
             return;

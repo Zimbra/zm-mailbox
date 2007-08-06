@@ -305,6 +305,8 @@ public class FileUploadServlet extends ZimbraServlet {
 
     @Override
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+        ZimbraLog.clearContext();
+        
 	    String fmt = req.getParameter(ContentServlet.PARAM_FORMAT);
         ZimbraLog.addIpToContext(req.getRemoteAddr());
 

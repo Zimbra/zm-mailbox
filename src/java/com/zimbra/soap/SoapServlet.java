@@ -198,6 +198,7 @@ public class SoapServlet extends ZimbraServlet {
     }
     
     public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        ZimbraLog.clearContext();
         long startTime = ZimbraPerf.STOPWATCH_SOAP.start();  
         
         int len = req.getContentLength();

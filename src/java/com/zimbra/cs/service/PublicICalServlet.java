@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
@@ -55,6 +56,7 @@ public class PublicICalServlet extends ZimbraServlet {
 
 
     public final void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+        ZimbraLog.clearContext();
         String pathInfo = req.getPathInfo().toLowerCase();
         boolean isReply = pathInfo != null && pathInfo.endsWith("reply");
         boolean isFreeBusy = pathInfo != null && pathInfo.endsWith("freebusy.ifb");

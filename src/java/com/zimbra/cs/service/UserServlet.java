@@ -304,6 +304,7 @@ public class UserServlet extends ZimbraServlet {
     public void doGet(HttpServletRequest req, HttpServletResponse resp)
     throws ServletException, IOException {
         Context context = null;
+        ZimbraLog.clearContext();
         try {
             context = new Context(req, resp, this);
             if (!checkAuthentication(req, resp, context)) {
@@ -430,6 +431,7 @@ public class UserServlet extends ZimbraServlet {
     public void doPost(HttpServletRequest req, HttpServletResponse resp)
     throws ServletException, IOException {
         Context context = null;
+        ZimbraLog.clearContext();
         try {
             context = new Context(req, resp, this);
             if (!checkAuthentication(req, resp, context)) {
