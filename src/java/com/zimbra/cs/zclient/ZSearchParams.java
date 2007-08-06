@@ -30,6 +30,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
 
+import java.util.TimeZone;
+
 public class ZSearchParams {
 
     public static final String TYPE_CONVERSATION = "conversation";
@@ -138,6 +140,7 @@ public class ZSearchParams {
     private long mCalExpandInstStart;
     private long mCalExpandInstEnd;
 
+    private TimeZone mTimeZone;
     /**
      * used only for equals/hascode purposes
      */
@@ -173,6 +176,10 @@ public class ZSearchParams {
                 !StringUtil.equal(this.mField, that.mField))
             return false;
 
+        if ((this.mTimeZone == null && that.mTimeZone != null) ||
+                (this.mTimeZone != null && !this.mTimeZone.equals(that.mTimeZone)))
+            return false;
+
         if (this.mCursor == null || that.mCursor == null)
             return this.mCursor == that.mCursor;
         else
@@ -194,6 +201,7 @@ public class ZSearchParams {
         this.mConvId = that.mConvId;
         this.mCalExpandInstEnd = that.mCalExpandInstEnd;
         this.mCalExpandInstStart = that.mCalExpandInstStart;
+        this.mTimeZone = that.mTimeZone;
     }
 
     public ZSearchParams(String query) {
@@ -210,6 +218,10 @@ public class ZSearchParams {
         mSortBy = folder.getSortBy();
     }
 
+    public void setTimeZone(TimeZone tz) { this.mTimeZone = tz; }
+
+    public TimeZone getTimeZone() { return this.mTimeZone; }
+    
     public Cursor getCursor() {
         return mCursor;
     }

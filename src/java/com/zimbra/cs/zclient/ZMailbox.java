@@ -2241,8 +2241,7 @@ public class ZMailbox {
             if (cursor.getPreviousId() != null) cursorEl.addAttribute(MailConstants.A_ID, cursor.getPreviousId());
             if (cursor.getPreviousSortValue() != null) cursorEl.addAttribute(MailConstants.A_SORTVAL, cursor.getPreviousSortValue());
         }
-
-        return new ZSearchResult(invoke(req), nest, getPrefs().getTimeZone());
+        return new ZSearchResult(invoke(req), nest, params.getTimeZone() != null ? params.getTimeZone() : getPrefs().getTimeZone());
     }
 
     /**
@@ -2974,6 +2973,8 @@ public class ZMailbox {
         Map<String, ZApptSummaryResult> folder2List = new HashMap<String, ZApptSummaryResult>();
         Map<String, String> folderIdMapper = new HashMap<String, String>();
 
+        String targetId = mTransport.getTargetAcctId();
+
         if (!idsToFetch.isEmpty()) {
             StringBuilder searchQuery = new StringBuilder();
             searchQuery.append("(");
@@ -2985,9 +2986,11 @@ public class ZMailbox {
                 ZApptSummaryResult result = new ZApptSummaryResult(startMsec, endMsec, folderId, timeZone, appts, query);
                 summaries.add(result);
                 folder2List.put(folderId, result);
-                ZFolder folder = getFolderById(folderId);
+                ZFolder folder = targetId != null ? null : getFolderById(folderId);
                 if (folder != null && folder instanceof ZMountpoint) {
                     folderIdMapper.put(((ZMountpoint)folder).getCanonicalRemoteId(), folderId);
+                } else if (targetId != null) {
+                    folderIdMapper.put(mTransport.getTargetAcctId()+":"+folderId, folderId);
                 } else {
                     folderIdMapper.put(folderId, folderId);
                 }
@@ -2997,7 +3000,6 @@ public class ZMailbox {
             if (query.length() > 0) {
                 searchQuery.append("AND (").append(query).append(")");
             }
-
             
             ZSearchParams params = new ZSearchParams(searchQuery.toString());
             params.setCalExpandInstStart(startMsec);
@@ -3005,6 +3007,7 @@ public class ZMailbox {
             params.setTypes(types);
             params.setLimit(2000);
             params.setSortBy(SearchSortBy.dateAsc);
+            params.setTimeZone(timeZone);
             int n = 0;
             // really while(true), but add in a safety net?
             while (n++ < 100) {
