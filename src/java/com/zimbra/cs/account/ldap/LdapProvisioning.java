@@ -2448,7 +2448,15 @@ public class LdapProvisioning extends Provisioning {
     public static final long TIMESTAMP_WINDOW = Constants.MILLIS_PER_MINUTE * 5; 
 
     private void checkAccountStatus(Account acct) throws ServiceException {
-        reload(acct);
+        /*
+         * We no longer do this reload(see bug 18981):
+         *     Staled data can be read back if there are replication delays and the account is 
+         *     refreshed from a not-caught-up replica.
+         * 
+         * For now we comment it out and leave a "stub" here for reference instead of deleting it.
+         */
+        // reload(acct);
+        
         String accountStatus = acct.getAccountStatus();
         if (accountStatus == null)
             throw AccountServiceException.AUTH_FAILED(acct.getName());
