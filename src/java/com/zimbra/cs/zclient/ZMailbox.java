@@ -2991,6 +2991,7 @@ public class ZMailbox {
                     folderIdMapper.put(((ZMountpoint)folder).getCanonicalRemoteId(), folderId);
                 } else if (targetId != null) {
                     folderIdMapper.put(mTransport.getTargetAcctId()+":"+folderId, folderId);
+                    folderIdMapper.put(folderId, folderId);
                 } else {
                     folderIdMapper.put(folderId, folderId);
                 }
