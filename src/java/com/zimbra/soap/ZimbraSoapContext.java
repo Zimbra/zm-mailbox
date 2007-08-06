@@ -342,10 +342,11 @@ public class ZimbraSoapContext {
         return mAuthTokenAccountId;
     }
 
-    /** Sets the id of the authenticated account.  This should only be called
+    /** Sets the AuthToken of the authenticated account.  This should only be called
      *  in the course of some flavor of <tt>Auth</tt> request. */
-    void setAuthenticatedAccountId(String accountId) {
-        mAuthTokenAccountId = accountId;
+    void setAuthToken(AuthToken auth) {
+        mAuthToken = auth;
+        mAuthTokenAccountId = auth.getAccountId();
     }
 
     /** Returns whether the authenticated user is the same as the user whose

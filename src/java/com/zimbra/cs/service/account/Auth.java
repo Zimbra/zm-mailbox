@@ -140,7 +140,7 @@ public class Auth extends AccountDocumentHandler {
         response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
         boolean isCorrectHost = Provisioning.onLocalServer(acct);
         if (isCorrectHost) {
-            Session session = updateAuthenticatedAccount(zsc, acct.getId(), true);
+            Session session = updateAuthenticatedAccount(zsc, at, true);
             if (session != null)
                 ZimbraSoapContext.encodeSession(response, session.getSessionId(), session.getSessionType(), true);
         }

@@ -242,11 +242,12 @@ public abstract class DocumentHandler {
      * @param stype       One of the types defined in the {@link SessionCache} class.
      * @param getSession  Whether to try to generate a new Session.
      * @return A new Session object of the appropriate type, or <tt>null</tt>. */
-    public Session updateAuthenticatedAccount(ZimbraSoapContext zsc, String accountId, boolean getSession) {
+    public Session updateAuthenticatedAccount(ZimbraSoapContext zsc, AuthToken authToken, boolean getSession) {
         String oldAccountId = zsc.getAuthtokenAccountId();
+        String accountId = authToken.getAccountId();
         if (accountId != null && !accountId.equals(oldAccountId))
             zsc.getReferencedSessionsInfo().clear();
-        zsc.setAuthenticatedAccountId(accountId);
+        zsc.setAuthToken(authToken);
 
         return (getSession ? getSession(zsc) : null);
     }
