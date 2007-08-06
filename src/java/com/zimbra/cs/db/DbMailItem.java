@@ -2836,7 +2836,7 @@ public class DbMailItem {
                 /*
                  * UNION
                  */
-                statement.append(" UNION ");
+                statement.append(" UNION ALL ");
                 /*
                  * SELECT...again...(this time with "appointment as ap")...WHERE...
                  */
