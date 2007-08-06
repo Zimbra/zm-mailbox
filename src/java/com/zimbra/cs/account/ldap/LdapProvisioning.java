@@ -287,7 +287,7 @@ public class LdapProvisioning extends Provisioning {
      * @param attrs
      * @throws ServiceException
      */
-    private synchronized void modifyAttrsInternal(Entry entry, DirContext initCtxt, Map attrs)
+    private void modifyAttrsInternal(Entry entry, DirContext initCtxt, Map attrs)
             throws ServiceException {
         DirContext ctxt = initCtxt;
         try {
@@ -324,7 +324,7 @@ public class LdapProvisioning extends Provisioning {
         refreshEntry(e, null, this);
     }
 
-    synchronized void refreshEntry(Entry entry, DirContext initCtxt, LdapProvisioning prov)
+    void refreshEntry(Entry entry, DirContext initCtxt, LdapProvisioning prov)
     throws ServiceException {
         DirContext ctxt = initCtxt;
         try {
@@ -399,7 +399,7 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#getMimeType(java.lang.String)
      */
-    public synchronized MimeTypeInfo getMimeType(String name) throws ServiceException {
+    public MimeTypeInfo getMimeType(String name) throws ServiceException {
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
@@ -413,7 +413,7 @@ public class LdapProvisioning extends Provisioning {
         }
     }
     
-    public synchronized MimeTypeInfo getMimeTypeByExtension(String ext) throws ServiceException {
+    public MimeTypeInfo getMimeTypeByExtension(String ext) throws ServiceException {
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
@@ -440,7 +440,7 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#getObjectType(java.lang.String)
      */
-    public synchronized List<Zimlet> getObjectTypes() throws ServiceException {
+    public List<Zimlet> getObjectTypes() throws ServiceException {
     	return listAllZimlets();
     }
 
