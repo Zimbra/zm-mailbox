@@ -276,7 +276,7 @@ public class LdapProvisioning extends Provisioning {
      * @param attrs
      * @throws ServiceException
      */
-    protected synchronized void modifyAttrsInternal(Entry entry, DirContext initCtxt, Map attrs)
+    protected void modifyAttrsInternal(Entry entry, DirContext initCtxt, Map attrs)
             throws ServiceException {
         DirContext ctxt = initCtxt;
         try {
@@ -313,7 +313,7 @@ public class LdapProvisioning extends Provisioning {
         refreshEntry(e, null, this);
     }
 
-    synchronized void refreshEntry(Entry entry, DirContext initCtxt, LdapProvisioning prov)
+    void refreshEntry(Entry entry, DirContext initCtxt, LdapProvisioning prov)
     throws ServiceException {
         DirContext ctxt = initCtxt;
         try {
@@ -386,7 +386,7 @@ public class LdapProvisioning extends Provisioning {
         return sConfig;
     }
 
-    public synchronized List<MimeTypeInfo> getMimeTypes(String mimeType) throws ServiceException {
+    public List<MimeTypeInfo> getMimeTypes(String mimeType) throws ServiceException {
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
@@ -410,7 +410,7 @@ public class LdapProvisioning extends Provisioning {
         }
     }
     
-    public synchronized List<MimeTypeInfo> getMimeTypesByExtension(String ext) throws ServiceException {
+    public List<MimeTypeInfo> getMimeTypesByExtension(String ext) throws ServiceException {
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
@@ -435,7 +435,7 @@ public class LdapProvisioning extends Provisioning {
         
     }
 
-    public synchronized List<Zimlet> getObjectTypes() throws ServiceException {
+    public List<Zimlet> getObjectTypes() throws ServiceException {
     	return listAllZimlets();
     }
 
