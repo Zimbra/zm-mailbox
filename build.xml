@@ -535,7 +535,7 @@
 	</target>
 
 	<target name="reset-all" description="Reset the world plus jetty">
-                <antcall target="stop-webserver"/>
+        <antcall target="stop-webserver"/>
 		<antcall target="clean"/>
 		<if><isset property="use-jetty"/><then>
 			<mkdir dir="${build.dir}"/>
@@ -549,10 +549,10 @@
 			<mkdir dir="${jetty.home.dir}/work"/>
 		</then></if>
 
-                <antcall target="reset-the-world"/>
+        <antcall target="reset-the-world"/>
 		<ant dir="../ZimbraWebClient" target="clean" inheritAll="false"/>
-                <ant dir="../ZimbraWebClient" target="deploy" inheritAll="false"/>
-                <ant dir="../ZimbraWebClient" target="admin-deploy" inheritAll="false"/>
+        <ant dir="../ZimbraWebClient" target="deploy" inheritAll="false"/>
+        <ant dir="../ZimbraWebClient" target="admin-deploy" inheritAll="false"/>
 	</target>
 
 	<!-- There are two ways to reset the world:
@@ -1096,9 +1096,17 @@
 	</target>
 
 	<target name="stop-ldap-unix" if="is-unix">
-		<exec executable="${zimbra.home.dir}/bin/ldap">
+		<if>
+			<available file="${zimbra.home.dir}/bin/ldap" type="file"/>
+ 		<then>
+ 		<exec executable="${zimbra.home.dir}/bin/ldap">
 			<arg value="stop" />
 		</exec>
+		</then>
+		<else>
+			<echo>OpenLDAP not installed; skipping OpenLDAP stop</echo>
+		</else>
+		</if>
 	</target>
 
 	<target name="start-ldap" depends="start-ldap-windows,start-ldap-unix" />
@@ -1192,9 +1200,17 @@
 	</target>
 	
 	<target name="stop-jetty-unix" if="is-unix">
-		<exec executable="${zimbra.home.dir}/bin/jetty">
-			<arg value="stop" />
-		</exec>
+		<if>
+			<available file="${zimbra.home.dir}/bin/jetty" type="file"/>
+ 		<then>
+			<exec executable="${zimbra.home.dir}/bin/jetty">
+				<arg value="stop" />
+			</exec>
+		</then>
+		<else>
+			<echo>Jetty not installed; skipping jetty stop</echo>
+		</else>
+		</if>
 	</target>
 	
 	<target name="stop-jetty" depends="stop-jetty-windows,stop-jetty-unix" if="use-jetty">
