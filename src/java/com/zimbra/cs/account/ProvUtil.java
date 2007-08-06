@@ -322,6 +322,13 @@ public class ProvUtil implements DebugListener {
     private Command lookupCommand(String command) {
         return mCommandIndex.get(command.toLowerCase());
     }
+    
+    private boolean needsAuth(Command command) {
+        if (command == Command.HELP)
+            return false;
+        else
+            return true;
+    }
 
     private ProvUtil() {
         initCommands();
@@ -1644,11 +1651,18 @@ public class ProvUtil implements DebugListener {
         args = cl.getArgs();
         
         try {
-            pu.initProvisioning();
+            
             if (args.length < 1) {
+                pu.initProvisioning();
                 InputStream is = cl.hasOption('f') ? new FileInputStream(cl.getOptionValue('f')) : System.in;
                 pu.interactive(new BufferedReader(new InputStreamReader(is)));
             } else {
+                Command cmd = pu.lookupCommand(args[0]);
+                if (cmd == null)
+                    pu.usage();
+                if (pu.needsAuth(cmd))
+                    pu.initProvisioning();
+                
                 try {
                     if (!pu.execute(args))
                         pu.usage();
