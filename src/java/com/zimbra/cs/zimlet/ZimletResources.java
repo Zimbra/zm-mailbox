@@ -61,6 +61,8 @@ extends ZimbraServlet {
 
     public void doGet(HttpServletRequest req, HttpServletResponse resp)
     throws IOException, ServletException {
+        ZimbraLog.clearContext();
+        
         String uri = req.getRequestURI();
         String contentType = getContentType(uri);
         String type = contentType.replaceAll("^.*/", "");
