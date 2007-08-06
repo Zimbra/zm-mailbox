@@ -71,7 +71,7 @@ public class GetInfo extends AccountDocumentHandler  {
 
         static Section lookup(String value) throws ServiceException {
             try {
-                return Section.valueOf(value.toLowerCase().trim());
+                return Section.valueOf(value.toUpperCase().trim());
             } catch (IllegalArgumentException iae) {
                 throw ServiceException.INVALID_REQUEST("unknown GetInfo section: " + value.trim(), null);
             }
