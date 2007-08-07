@@ -482,6 +482,7 @@ public class MailConstants {
     public static final String A_TASK_COMPLETED = "completed";
     public static final String A_WAIT = "wait";
     public static final String A_TIMEOUT = "timeout";
+    public static final String A_WAIT_DISALLOWED= "waitDisallowed";
 
     public static final String A_CAL_RULE_FREQ = "freq";
     public static final String A_CAL_RULE_COUNT_NUM = "num";
