@@ -40,17 +40,17 @@ Examples:
     Note: for visible secondary accounts, they have to appear in both zimbraChildAccount and zimbraChildVisibleAccount attributes.
 
     
-- Adding children under a parent
+- Add secondary accounts under a primary account
     zmprov modifyAccount parent@zimbra.com \
                          +zimbraChildAccount {id-of-visible-child-1} +zimbraChildVisibleAccount {id-of-visible-child-1} \
                          +zimbraChildAccount {id-of-invisible-child-2}
 
-- Removing children from a parent
+- Remove secondary accounts from a primary account
     zmprov modifyAccount parent@zimbra.com \
                          -zimbraChildAccount {id-of-visible-child-1} -zimbraChildVisibleAccount {id-of-visible-child-1}
                          -zimbraChildAccount {id-of-invisible-child-2}
 
-- Replacing children under a parent
+- Replace secondary accounts under a primary account
     zmprov modifyAccount parent@zimbra.com \
                          zimbraChildAccount {id-of-visible-child-1} zimbraChildVisibleAccount {id-of-visible-child-1} \
                          zimbraChildAccount {id-of-invisible-child-2}
