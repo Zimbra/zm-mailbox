@@ -389,8 +389,9 @@ public class MailSender {
 
         if (isDelegatedRequest && mm instanceof FixedMimeMessage) {
             // set MAIL FROM to authenticated user for bounce purposes
+            String mailfrom = (sender != null ? sender : AccountUtil.getFriendlyEmailAddress(authuser)).getAddress();
             Properties props = new Properties(JMSession.getSession().getProperties());
-            props.setProperty("mail.smtp.from", sender.getAddress());
+            props.setProperty("mail.smtp.from", mailfrom);
             ((FixedMimeMessage) mm).setSession(Session.getInstance(props));
         }
 
