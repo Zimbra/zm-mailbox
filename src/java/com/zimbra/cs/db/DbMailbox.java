@@ -92,7 +92,7 @@ public class DbMailbox {
     public static final int CI_METADATA_METADATA    = 3;
 
     private static String DB_PREFIX_DB_PER_MAILBOX = "mailbox";
-    private static String DB_PREFIX_MAILBOX_GROUP = "mboxgroup";
+    static String DB_PREFIX_MAILBOX_GROUP = "mboxgroup";
 
     public static class NewMboxId {
         public int id;
