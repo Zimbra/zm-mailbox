@@ -183,9 +183,6 @@ public class UserServlet extends ZimbraServlet {
     	Account acct = item.getMailbox().getAccount();
         String url = getRestUrl(acct) + item.getPath();
 
-        if (item instanceof Folder)
-        	url = url + "/";
-
         if (url.startsWith("https"))
         	url = new HttpsURL(url).toString();
         else
