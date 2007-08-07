@@ -798,26 +798,6 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>initial contact view to use</desc>
 </attr>
 
-<attr id="168" name="zimbraTableMaintenanceMinRows" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
-  <globalConfigValue>10000</globalConfigValue>
-  <desc>minimum number of rows required for database table maintenance</desc>
-</attr>
-
-<attr id="169" name="zimbraTableMaintenanceMaxRows" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
-  <globalConfigValue>1000000</globalConfigValue>
-  <desc>maximum number of rows required for database table maintenance</desc>
-</attr>
-
-<attr id="170" name="zimbraTableMaintenanceOperation" type="enum" value="ANALYZE,OPTIMIZE" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited">
-  <globalConfigValue>ANALYZE</globalConfigValue>
-  <desc>table maintenance operation that will be performed.  Valid options: "ANALYZE", "OPTIMIZE"</desc>
-</attr>
-
-<attr id="171" name="zimbraTableMaintenanceGrowthFactor" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
-  <globalConfigValue>10</globalConfigValue>
-  <desc>table maintenance will be performed if the number of rows grows by this factor</desc>
-</attr>
-
 <attr id="172" name="zimbraDefaultDomainName" type="string" max="256" cardinality="single" optionalIn="globalConfig">
   <desc>name of the default domain for accounts when authenticating without a domain</desc>
 </attr>

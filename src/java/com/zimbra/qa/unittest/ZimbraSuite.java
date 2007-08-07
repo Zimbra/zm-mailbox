@@ -60,7 +60,6 @@ public class ZimbraSuite extends TestSuite
         TestEmailUtil.class,
         TestOutOfOffice.class,
         TestDbUtil.class,
-        TestTableMaintenance.class,
         TestUnread.class,
         TestTags.class,
         TestItemCache.class,

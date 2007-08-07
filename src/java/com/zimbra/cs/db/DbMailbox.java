@@ -95,7 +95,7 @@ public class DbMailbox {
     public static final int CI_METADATA_SECTION    = 2;
     public static final int CI_METADATA_METADATA    = 3;
 
-    private static String DB_PREFIX_MAILBOX_GROUP = "mboxgroup";
+    static String DB_PREFIX_MAILBOX_GROUP = "mboxgroup";
 
     private static int MAX_COMMENT_LENGTH = 255;
 

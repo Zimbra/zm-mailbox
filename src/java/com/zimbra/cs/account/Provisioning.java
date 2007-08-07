@@ -1099,11 +1099,6 @@ public abstract class Provisioning {
     public static final String A_zimbraObjectHandlerClass       = "zimbraObjectHandlerClass";
     public static final String A_zimbraObjectHandlerConfig      = "zimbraObjectHandlerConfig";
 
-    public static final String A_zimbraTableMaintenanceMinRows      = "zimbraTableMaintenanceMinRows";
-    public static final String A_zimbraTableMaintenanceMaxRows      = "zimbraTableMaintenanceMaxRows";
-    public static final String A_zimbraTableMaintenanceOperation    = "zimbraTableMaintenanceOperation";
-    public static final String A_zimbraTableMaintenanceGrowthFactor = "zimbraTableMaintenanceGrowthFactor";
-    
     public static final String A_zimbraSpamCheckEnabled = "zimbraSpamCheckEnabled";
     public static final String A_zimbraSpamKillPercent = "zimbraSpamKillPercent";
     public static final String A_zimbraSpamSubjectTag = "zimbraSpamSubjectTag";
