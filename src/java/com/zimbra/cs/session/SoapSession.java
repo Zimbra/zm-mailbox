@@ -32,8 +32,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.*;
@@ -205,7 +203,7 @@ public class SoapSession extends Session {
      * A callback interface which is listening on this session and waiting for new notifications
      */
     public static interface PushChannel {
-        public void close();
+        public void closePushChannel();
         public int getLastKnownSeqNo();
         public ZimbraSoapContext getSoapContext();
         public void notificationsReady() throws ServiceException; 
@@ -232,12 +230,12 @@ public class SoapSession extends Session {
         synchronized (mMailbox) {
             synchronized (this) {
                 if (mPushChannel != null) {
-                    mPushChannel.close();
+                    mPushChannel.closePushChannel();
                     mPushChannel = null;
                 }
                 
                 if (!mNotify || mMailbox == null) {
-                    sc.close();
+                    sc.closePushChannel();
                     return RegisterNotificationResult.NO_NOTIFY;
                 }
 

@@ -2164,15 +2164,21 @@ EXAMPLE:
 
  <NoOpRequest [wait='1'] [timeout="msecs to wait"/>
 
- <NoOpResponse/>
+ <NoOpResponse [waitDisallowed="1"]/>
 
 A request that does nothing and always returns nothing. Used to keep a session alive, and return
 any pending notifications.
 
-If "wait" is set, and if the current session allows them, this request will block until there are
-new notifications for the client.  Note that the soap envelope must reference an existing session
-that has notifications enabled, and the notification sequencing number
-should be specified.
+If "wait" is set, and if the current session allows them, this request
+will block until there are new notifications for the client.  Note
+that the soap envelope must reference an existing session that has
+notifications enabled, and the notification sequencing number should
+be specified.
+
+The server may reply with a "waitDisallowed" attribute on response to
+a request with wait="1".  If "waitDisallowed" is true, then
+blocking-NoOpRequests (ie requests with wait="1") are *not* allowed by
+the server right now, and the client should stop attempting them.  
 
 The client may specifiy a custom timeout-length for their request if
 they know something about the particular underlying network.  The

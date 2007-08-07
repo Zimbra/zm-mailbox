@@ -29,6 +29,7 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -40,7 +41,6 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -73,40 +73,65 @@ public class NoOp extends MailDocumentHandler  {
         return timeout;
     }
     
+    ConcurrentHashMap<String /*AccountId*/, ZimbraSoapContext> sBlockedNops = 
+        new ConcurrentHashMap<String /*AccountId*/, ZimbraSoapContext>(5000, 0.75f, 50);
+    
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 	    ZimbraSoapContext zsc = getZimbraSoapContext(context);
         boolean wait = request.getAttributeBool(MailConstants.A_WAIT, false);
-
+        HttpServletRequest servletRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+        
+        boolean blockingUnsupported = false;
+        
         // See bug 16494 - if a session is new, we should return from the NoOp immediately so the client
         // gets the <refresh> block 
         if (zsc.hasCreatedSession())
             wait = false;
         
         if (wait) {
-            HttpServletRequest servletRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-            Continuation continuation = ContinuationSupport.getContinuation(servletRequest, zsc);
-            ZimbraLog.session.debug("NoOp got continuation: %s resumed=%s", continuation.toString(), continuation.isResumed() ? "RESUMED" : "not_resumed");
-            if (continuation instanceof WaitingContinuation) {
-                // workaround for a Jetty bug: Jetty currently (in bio mode) re-uses the Continuation object, but doesn't
-                // clear it's state correctly...and unfortunately there's no way to re-set the mutex once it is already set.  Fortunately,
-                // in blocking mode it doesn't matter if we create a brand-new Continuation here since the Continuation
-                // object is just a wrapper around normal java wait/notify.
-                continuation = new WaitingContinuation(zsc);
-                ZimbraLog.session.debug("NoOp replacing with our own WaitingContinuation: %s", continuation.toString());
-            }
-            
-            assert(!(continuation instanceof WaitingContinuation) || !continuation.isResumed());
-            if (!continuation.isResumed()) {
+            if (!context.containsKey(SoapServlet.IS_RESUMED_REQUEST)) {
+                Continuation continuation = ContinuationSupport.getContinuation(servletRequest, zsc);
+                
+                servletRequest.setAttribute("nop_origcontext", zsc);
+                
+                // NOT a resumed request -- block if necessary
                 if (zsc.beginWaitForNotifications(continuation)) {
+                    ZimbraSoapContext otherContext = sBlockedNops.put(zsc.getAuthtokenAccountId(), zsc);
+                    if (otherContext!= null) {
+                        otherContext.signalNotification(true);
+                    }
+                    
                     synchronized(zsc) {
                         if (zsc.waitingForNotifications()) {
                             assert (!(continuation instanceof WaitingContinuation) || ((WaitingContinuation)continuation).getMutex()==zsc); 
                             continuation.suspend(parseTimeout(request));
                         }
+                        assert(continuation instanceof WaitingContinuation); // this part of code only reached if we're using WaitingContinuations
+                        
+                        if (zsc.isCanceledWaitForNotifications())
+                            blockingUnsupported = true;
                     }
                 }
+            } else {
+                ZimbraSoapContext origContext = (ZimbraSoapContext)(servletRequest.getAttribute("nop_origcontext"));
+                if (origContext.isCanceledWaitForNotifications())
+                    blockingUnsupported = true;
             }
+            //
+            // at this point, we know we're done waiting -- we either blocked on a BlockingContinuation, or
+            // we've resumed a RetryContinuation...either way our wait is up, time to execute.
+            //
+//            blockingUnsupported = zsc.isCanceledWaitForNotifications();
+            
+            // remove this soap context from the blocked-conext hash, but only
+            // if it hasn't already been removed by someone else...
+            sBlockedNops.remove(zsc.getAuthtokenAccountId(), zsc);
         }
-        return zsc.createElement(MailConstants.NO_OP_RESPONSE);
+        Element toRet = zsc.createElement(MailConstants.NO_OP_RESPONSE);
+        if (blockingUnsupported) {
+            toRet.addAttribute(MailConstants.A_WAIT_DISALLOWED, true);
+        }
+        
+        return toRet;
 	}
 }

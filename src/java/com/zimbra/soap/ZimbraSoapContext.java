@@ -81,12 +81,12 @@ public class ZimbraSoapContext {
 
 
         private class SoapPushChannel implements SoapSession.PushChannel {
-            public void close() {  
-                signalNotification(); // don't allow there to be more than one NoOp hanging on a particular account
+            public void closePushChannel() {  
+                signalNotification(true); // don't allow there to be more than one NoOp hanging on a particular account
             }
             public int getLastKnownSeqNo()            { return sequence; }
             public ZimbraSoapContext getSoapContext() { return ZimbraSoapContext.this; }
-            public void notificationsReady()          { signalNotification(); }
+            public void notificationsReady()          { signalNotification(false); }
         }
 
         public PushChannel getPushChannel() {
@@ -114,6 +114,7 @@ public class ZimbraSoapContext {
     private boolean mHaltNotifications; // if true, then no notifications are sent to this context
     private boolean mUnqualifiedItemIds;
     private boolean mWaitForNotifications;
+    private boolean mCanceledWaitForNotifications = false;
     private Continuation mContinuation; // used for blocking requests
 
     private ProxyTarget mProxyTarget;
@@ -416,10 +417,13 @@ public class ZimbraSoapContext {
     /**
      * Called by the Session object if a new notification comes in 
      */
-    synchronized public void signalNotification() {
+    synchronized public void signalNotification(boolean canceled) {
         mWaitForNotifications = false;
+        mCanceledWaitForNotifications = canceled;
         mContinuation.resume();
     }
+    
+    synchronized public boolean isCanceledWaitForNotifications() { return mCanceledWaitForNotifications; }
     
     synchronized public boolean waitingForNotifications() {
         return mWaitForNotifications;
