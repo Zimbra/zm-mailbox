@@ -166,6 +166,26 @@ A list of files in a zip package:
 /home/smith/?fmt=zip&list=12345,22453    // a zip file containing two mail items
 
 ------------------------------------------------------------
+CALENDAR OPTIONS
+------------------------------------------------------------
+tz=timezone
+date=YYYYMMDD
+view=day|workWeek|week|month
+notoolbar=1
+skin={skin-name}
+color=defaultColor(0),
+        blue(1),
+        cyan(2),
+        green(3),
+        purple(4),
+        red(5),
+        yellow(6),
+        pink(7),
+        gray(8),
+        orange(9);
+
+
+------------------------------------------------------------
 SEARCHING
 ------------------------------------------------------------
 
