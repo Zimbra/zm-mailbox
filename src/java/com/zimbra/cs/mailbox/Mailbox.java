@@ -73,7 +73,6 @@ import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.localconfig.DebugConfig;
-import com.zimbra.cs.mailbox.ACL.GuestAccount;
 import com.zimbra.cs.mailbox.BrowseResult.DomainItem;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
@@ -1968,13 +1967,38 @@ public class Mailbox {
         return MailItem.constructItem(this, data);
     }
 
+    /** Returns a current or past revision of an item.  Item version numbers
+     *  are 1-based and incremented each time the "content" of the item changes
+     *  (e.g. editing a draft, modifying a contact's fields).  If the requested
+     *  revision does not exist, either because the version number is out of
+     *  range or because the requested revision has not been retained, returns
+     *  <tt>null</tt>. */
     public MailItem getItemRevision(OperationContext octxt, int id, byte type, int version) throws ServiceException {
         boolean success = false;
         try {
-            beginTransaction("getItemRevision", null);
+            beginTransaction("getItemRevision", octxt);
             MailItem revision = checkAccess(getItemById(id, type)).getRevision(version);
             success = true;
             return revision;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    /** Returns a {@link List} containing all available revisions of an item,
+     *  both current and past.  These revisions are returned in increasing
+     *  order of their 1-based "version", with the current revision always
+     *  present and listed last. */
+    public List<MailItem> getAllRevisions(OperationContext octxt, int id, byte type) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("getAllRevisions", octxt);
+            MailItem item = checkAccess(getItemById(id, type));
+            List<MailItem> revisions = new ArrayList<MailItem>(item.loadRevisions());
+            revisions.add(item);
+
+            success = true;
+            return revisions;
         } finally {
             endTransaction(success);
         }
