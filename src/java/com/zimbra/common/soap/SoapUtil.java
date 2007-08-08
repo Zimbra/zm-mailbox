@@ -72,27 +72,19 @@ public class SoapUtil {
      *  created by a call to {@link #toCtxt}.  By default, the server creates
      *  a session for the client unless a valid sessionId is specified referring
      *  to an existing session.<p>
-     *
-     *  By default, all sessions have change notification enabled.  Passing true
-     *  for noNotify disables notification for the specified session.<p>
-     *
+     *  
      *  No changes to the context occur if no auth token is present.
      * @param ctxt       A <code>&lt;context></code> Element as created by toCtxt.
      * @param sessionId  The ID of the session to add to the <code>&lt;context></code>
-     * @param noNotify   Whether to suppress notification on the session from here out.
-     *
      * @return The passed-in <code>&lt;context></code> Element.
      * @see #toCtxt */
-    public static Element addSessionToCtxt(Element ctxt, String sessionId, boolean noNotify) {
+    public static Element addSessionToCtxt(Element ctxt, String sessionId) {
         if (ctxt == null || sessionId == null || sessionId.trim().equals(""))
             return ctxt;
         if (ctxt.getAttribute(HeaderConstants.E_AUTH_TOKEN, null) == null)
             return ctxt;
 
-        Element eSession = ctxt.addElement(HeaderConstants.E_SESSION_ID).addAttribute(HeaderConstants.A_ID, sessionId)
-        .setText(sessionId);
-        if (noNotify)
-            eSession.addAttribute(HeaderConstants.A_NOTIFY, false);
+        ctxt.addElement(HeaderConstants.E_SESSION_ID).addAttribute(HeaderConstants.A_ID, sessionId).setText(sessionId);
         return ctxt;
     }
 
@@ -156,6 +148,6 @@ public class SoapUtil {
      * @see #toCtxt(com.zimbra.common.soap.SoapProtocol, String, boolean) */
     public static Element toCtxt(SoapProtocol protocol, String authToken, String sessionId) {
         Element ctxt = toCtxt(protocol, authToken, false);
-        return addSessionToCtxt(ctxt, sessionId, false);
+        return addSessionToCtxt(ctxt, sessionId);
     }
 }

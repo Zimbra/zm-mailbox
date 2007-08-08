@@ -31,6 +31,9 @@ package com.zimbra.common.soap;
 
 import org.dom4j.DocumentException;
 
+import com.zimbra.common.soap.Element.JSONElement;
+import com.zimbra.common.soap.Element.XMLElement;
+
 import java.io.IOException;
 
 /**
@@ -39,7 +42,8 @@ import java.io.IOException;
 
 public abstract class SoapTransport {
 
-    private SoapProtocol mSoapProto;
+    private SoapProtocol mRequestProto;
+    private SoapProtocol mResponseProto;
     private boolean mPrettyPrint;
     private String mAuthToken;
     private String mTargetAcctId = null;
@@ -57,7 +61,7 @@ public abstract class SoapTransport {
     }
 
     protected SoapTransport() {
-        mSoapProto = SoapProtocol.Soap12;
+        mRequestProto = SoapProtocol.Soap12;
         mPrettyPrint = false;
     }
 
@@ -131,46 +135,67 @@ public abstract class SoapTransport {
         mUserAgentName = name;
         mUserAgentVersion = version;
     }
-    
-    /**
-     * Which version of Soap to use.
-     *
-     * <p> Default value is <code>Constants.SOAP_VERSION_12</code>.
-     */
-    public void setSoapProtocol(SoapProtocol soapProto) {
-        this.mSoapProto = soapProto;
+
+    /** Sets the version of SOAP to use when generating requests. */
+    public void setRequestProtocol(SoapProtocol proto) {
+        if (proto != null)
+            mRequestProto = proto;
     }
 
-    /**
-     * Get the soap protocol.
-     */
-    public SoapProtocol getSoapProtocol() {
-        return mSoapProto;
+    /** Returns the version of SOAP used to generate requests.  Defaults
+     *  to {@link SoapProtocol#Soap12}. */
+    public SoapProtocol getRequestProtocol() {
+        return mRequestProto;
     }
 
-    protected String generateSoapMessage(Element document, boolean raw, boolean noSession, boolean noNotify, String requestedAccountId, String changeToken, String tokenType) {
+    /** Sets the version of SOAP we'd like the server to reply with.  <i>(Note
+     *  that this only controls XML/JSON serialization; requesting SOAP 1.1
+     *  responses to a SOAP 1.2 request will not be honored.)</i> */
+    public void setResponseProtocol(SoapProtocol proto) {
+        if (proto != null)
+            mResponseProto = proto;
+    }
+
+    /** Returns the version of SOAP used by the remote server when it generates
+     *  its responses.  Defaults to {@link #getRequestProtocol()} .*/
+    public SoapProtocol getResponseProtocol() {
+        return mResponseProto == null ? mRequestProto : mResponseProto;
+    }
+
+    protected String generateSoapMessage(Element document, boolean raw, boolean noSession, String requestedAccountId, String changeToken, String tokenType) {
     	if (raw) {
             if (mDebugListener != null) mDebugListener.sendSoapMessage(document);
     		return SoapProtocol.toString(document, mPrettyPrint);
         }
-        
-        Element context = SoapUtil.toCtxt(mSoapProto, mAuthToken, mTargetAcctId, mTargetAcctName, noSession);
-        SoapUtil.addSessionToCtxt(context, mSessionId, noNotify);
-        SoapUtil.addChangeTokenToCtxt(context, changeToken, tokenType);
-        if (mUserAgentName != null) {
-            SoapUtil.addUserAgentToCtxt(context, mUserAgentName, mUserAgentVersion);
-        }
 
-        if (requestedAccountId != null) {
+        // don't use the default protocol version if it's incompatible with the passed-in request
+        SoapProtocol proto = mRequestProto;
+        if (proto == SoapProtocol.SoapJS) {
+            if (document instanceof XMLElement)
+                proto = SoapProtocol.Soap12;
+        } else {
+            if (document instanceof JSONElement)
+                proto = SoapProtocol.SoapJS;
+        }
+        SoapProtocol responseProto = mResponseProto == null ? proto : mResponseProto;
+
+        Element context = SoapUtil.toCtxt(proto, mAuthToken, mTargetAcctId, mTargetAcctName, noSession);
+        SoapUtil.addSessionToCtxt(context, mSessionId);
+        SoapUtil.addChangeTokenToCtxt(context, changeToken, tokenType);
+        if (mUserAgentName != null)
+            SoapUtil.addUserAgentToCtxt(context, mUserAgentName, mUserAgentVersion);
+
+        if (requestedAccountId != null)
             context.addElement(HeaderConstants.E_ACCOUNT).addAttribute(HeaderConstants.A_BY, HeaderConstants.BY_ID).setText(requestedAccountId);
-        }
-        if (mMaxNotifySeq != -1) {
+        if (mMaxNotifySeq != -1)
             context.addElement(ZimbraNamespace.E_NOTIFY).addAttribute(HeaderConstants.A_SEQNO, mMaxNotifySeq);
-        }
-        Element envelope = mSoapProto.soapEnvelope(document, context);
+        if (responseProto != proto)
+            context.addElement(HeaderConstants.E_FORMAT).addAttribute(HeaderConstants.A_TYPE, responseProto == SoapProtocol.SoapJS ? HeaderConstants.TYPE_JAVASCRIPT : HeaderConstants.TYPE_XML);
+
+        Element envelope = proto.soapEnvelope(document, context);
         if (mDebugListener != null) mDebugListener.sendSoapMessage(envelope);
-        String soapMessage = SoapProtocol.toString(envelope, getPrettyPrint());
-    	return soapMessage;
+
+        return SoapProtocol.toString(envelope, getPrettyPrint());
     }
 
     Element parseSoapResponse(String envelopeStr, boolean raw) throws SoapParseException, SoapFaultException {
@@ -226,7 +251,7 @@ public abstract class SoapTransport {
      *
      */
     public final Element invoke(Element document) throws SoapFaultException, IOException {
-    	return invoke(document, false, false, false, null);
+    	return invoke(document, false, false, null);
     }
 
     /**
@@ -237,7 +262,7 @@ public abstract class SoapTransport {
      * @throws IOException
      */
     public final Element invokeRaw(Element envelope) throws SoapFaultException, IOException {
-    	return invoke(envelope, true, false, false, null);
+    	return invoke(envelope, true, false, null);
     }
 
     /**
@@ -249,19 +274,7 @@ public abstract class SoapTransport {
      * @throws IOException
      */
     public final Element invokeWithoutSession(Element document) throws SoapFaultException, IOException {
-    	return invoke(document, false, true, true, null);
-    }
-
-    /**
-     * Sends the specified document as a SOAP message.  The session created
-     * for this request will have notifications turned off.
-     * @param document
-     * @return
-     * @throws SoapFaultException
-     * @throws IOException
-     */
-    public final Element invokeWithoutNotify(Element document) throws SoapFaultException, IOException {
-    	return invoke(document, false, false, true, null);
+    	return invoke(document, false, true, null);
     }
 
     /**
@@ -271,11 +284,10 @@ public abstract class SoapTransport {
      * If <code>raw</code> is true, then it expects <code>document</code> to already be 
      * a &lt;soap:Envelope&gt; element, otherwise it wraps it in an envelope/body.
      * 
-     * If <code>noNotify</code> is true, response omits change notification block.
+     * If <tt>noSession</tt> is true, no session object is created/accessed for this request.
      */
-    public final Element invoke(Element document, boolean raw, boolean noSession, boolean noNotify, String requestedAccountId) 
-    	throws SoapFaultException, IOException {
-    	return invoke(document, raw, noSession, noNotify, requestedAccountId, null, null);
+    public final Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId) throws SoapFaultException, IOException {
+    	return invoke(document, raw, noSession, requestedAccountId, null, null);
     }
 
     /**
@@ -285,7 +297,7 @@ public abstract class SoapTransport {
      * If <code>changeToken</code> is non-null, it's used in the soap context to
      * detect modify conflict.
      */
-    public abstract Element invoke(Element document, boolean raw, boolean noSession, boolean noNotify, String requestedAccountId, String changeToken, String tokenType) 
+    public abstract Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId, String changeToken, String tokenType) 
     	throws SoapFaultException, IOException;
 }
 

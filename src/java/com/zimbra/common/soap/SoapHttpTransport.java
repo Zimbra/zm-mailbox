@@ -179,19 +179,19 @@ public class SoapHttpTransport extends SoapTransport {
         return mTimeout;
     }
 
-    public Element invoke(Element document, boolean raw, boolean noSession, boolean noNotify, String requestedAccountId, String changeToken, String tokenType) 
+    public Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId, String changeToken, String tokenType) 
 	throws SoapFaultException, IOException, HttpException {
     	int statusCode = -1;
 
     	// the content-type charset will determine encoding used
     	// when we set the request body
     	PostMethod method = new PostMethod(mUri);
-    	method.setRequestHeader("Content-Type", getSoapProtocol().getContentType());
-    	String soapMessage = generateSoapMessage(document, raw, noSession, noNotify, requestedAccountId, changeToken, tokenType);
+    	method.setRequestHeader("Content-Type", getRequestProtocol().getContentType());
+    	String soapMessage = generateSoapMessage(document, raw, noSession, requestedAccountId, changeToken, tokenType);
     	method.setRequestBody(soapMessage);
     	method.setRequestContentLength(EntityEnclosingMethod.CONTENT_LENGTH_AUTO);
     	
-    	if (getSoapProtocol().hasSOAPActionHeader())
+    	if (getRequestProtocol().hasSOAPActionHeader())
     		method.setRequestHeader("SOAPAction", mUri);
 
     	for (int attempt = 0; statusCode == -1 && attempt < mRetryCount; attempt++) {
