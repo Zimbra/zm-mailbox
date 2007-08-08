@@ -86,7 +86,6 @@ public class IMConstants {
     public static final String E_ITEMS          = "items";
     public static final String E_ITEM           = "item";
     public static final String E_PRESENCE       = "presence";
-    public static final String E_STATUS         = "status";
     public static final String E_LEFTCHAT       = "leftchat";
     public static final String E_ENTEREDCHAT    = "enteredchat";
     public static final String E_INVITED        = "invited";
