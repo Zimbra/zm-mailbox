@@ -734,7 +734,12 @@ public class IMChat extends ClassLogger {
     private class FlushTask extends TimerTask {
         @Override
         public void run() {
-            timerExecute();
+            try {
+                timerExecute();
+            } catch (Exception e) {
+              //don't let exceptions kill the timer
+                ZimbraLog.im.warn("Caught exception in IMChat timer", e);                
+            }
         }
     }
     

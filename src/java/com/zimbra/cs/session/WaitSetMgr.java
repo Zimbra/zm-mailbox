@@ -49,7 +49,11 @@ public class WaitSetMgr {
     private static final TimerTask sSweeper = new TimerTask() { 
         @Override
         public void run() { 
-            WaitSetMgr.sweep();
+            try {
+                WaitSetMgr.sweep();
+            } catch (Exception e) {
+                ZimbraLog.session.warn("Caught exception in WaitSetMgr timer", e);
+            }
         }
     };
     

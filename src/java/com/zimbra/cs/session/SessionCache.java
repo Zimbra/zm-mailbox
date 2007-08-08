@@ -258,49 +258,54 @@ public final class SessionCache {
     
     private static final class SweepMapTimerTask extends TimerTask {
         public void run() {
-            if (sLog.isDebugEnabled())
-                SessionCache.logActiveSessions();
-
-            int removedByType[] = new int[Session.Type.values().length];
-            int totalActive = 0;
-            
-            for (SessionMap sessionMap : sSessionMaps) {
-                List<Session> toReap = sessionMap.pruneIdleSessions();
-                totalActive += sessionMap.totalActiveSessions();
+            try {
+                if (sLog.isDebugEnabled())
+                    SessionCache.logActiveSessions();
                 
-                // keep track of the count of each session type that's removed
-                removedByType[sessionMap.getType().getIndex()]+=toReap.size();
+                int removedByType[] = new int[Session.Type.values().length];
+                int totalActive = 0;
                 
-                for (Session s : toReap) {
-                    if (ZimbraLog.session.isDebugEnabled())
-                        ZimbraLog.session.debug("Removing cached session: " + s);
-                    assert(!Thread.holdsLock(sessionMap));
-                    // IMPORTANT: Clean up sessions *after* releasing lock on Session Map
-                    // If Session.doCleanup() is called with sLRUMap locked, it can lead
-                    // to deadlock. (bug 7866)
-                    s.doCleanup();
-                }
-            }
-            
-            int totalRemoved = 0;
-            for (int r : removedByType) {
-                totalRemoved += r;
-            }
-            
-            if (sLog.isInfoEnabled() && totalRemoved > 0) {
-                StringBuilder sb = new StringBuilder("Removed ").append(totalRemoved).append(" idle sessions (");
-                StringBuilder typeStr = new StringBuilder();
-                for (int i = 1; i < removedByType.length; i++) {
-                    if (removedByType[i]>0) {
-                        if (typeStr.length() > 0) {
-                            typeStr.append(", ");
-                        }
-                        typeStr.append(Session.Type.values()[i].name());
+                for (SessionMap sessionMap : sSessionMaps) {
+                    List<Session> toReap = sessionMap.pruneIdleSessions();
+                    totalActive += sessionMap.totalActiveSessions();
+                    
+                    // keep track of the count of each session type that's removed
+                    removedByType[sessionMap.getType().getIndex()]+=toReap.size();
+                    
+                    for (Session s : toReap) {
+                        if (ZimbraLog.session.isDebugEnabled())
+                            ZimbraLog.session.debug("Removing cached session: " + s);
+                        assert(!Thread.holdsLock(sessionMap));
+                        // IMPORTANT: Clean up sessions *after* releasing lock on Session Map
+                        // If Session.doCleanup() is called with sLRUMap locked, it can lead
+                        // to deadlock. (bug 7866)
+                        s.doCleanup();
                     }
                 }
-                sb.append(typeStr).append("). ").append(totalActive).append(" active sessions remain.");
-                sLog.info(sb.toString());
+                
+                int totalRemoved = 0;
+                for (int r : removedByType) {
+                    totalRemoved += r;
+                }
+                
+                if (sLog.isInfoEnabled() && totalRemoved > 0) {
+                    StringBuilder sb = new StringBuilder("Removed ").append(totalRemoved).append(" idle sessions (");
+                    StringBuilder typeStr = new StringBuilder();
+                    for (int i = 1; i < removedByType.length; i++) {
+                        if (removedByType[i]>0) {
+                            if (typeStr.length() > 0) {
+                                typeStr.append(", ");
+                            }
+                            typeStr.append(Session.Type.values()[i].name());
+                        }
+                    }
+                    sb.append(typeStr).append("). ").append(totalActive).append(" active sessions remain.");
+                    sLog.info(sb.toString());
+                }
+            } catch (Exception e) { //don't let exceptions kill the timer
+                ZimbraLog.session.warn("Caught exception in SessionCache timer", e);
             }
+                
         }
     }
     

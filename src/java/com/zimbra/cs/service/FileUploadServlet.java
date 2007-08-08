@@ -577,33 +577,37 @@ public class FileUploadServlet extends ZimbraServlet {
 
     private final class MapReaperTask extends TimerTask {
         public void run() {
-            ArrayList<Upload> reaped = new ArrayList<Upload>();
-            int sizeBefore;
-            int sizeAfter;
-            synchronized(mPending) {
-                sizeBefore = mPending.size();
-                long cutoffTime = System.currentTimeMillis() - UPLOAD_TIMEOUT_MSEC;
-                for (Iterator<Upload> it = mPending.values().iterator(); it.hasNext(); ) {
-                    Upload up = it.next();
-                    if (!up.accessedAfter(cutoffTime)) {
-                        mLog.debug("Purging cached upload: " + up);
-                        it.remove();
-                        reaped.add(up);
-                        assert(mPending.get(up.uuid) == null);
+            try {
+                ArrayList<Upload> reaped = new ArrayList<Upload>();
+                int sizeBefore;
+                int sizeAfter;
+                synchronized(mPending) {
+                    sizeBefore = mPending.size();
+                    long cutoffTime = System.currentTimeMillis() - UPLOAD_TIMEOUT_MSEC;
+                    for (Iterator<Upload> it = mPending.values().iterator(); it.hasNext(); ) {
+                        Upload up = it.next();
+                        if (!up.accessedAfter(cutoffTime)) {
+                            mLog.debug("Purging cached upload: " + up);
+                            it.remove();
+                            reaped.add(up);
+                            assert(mPending.get(up.uuid) == null);
+                        }
                     }
+                    sizeAfter = mPending.size();
                 }
-                sizeAfter = mPending.size();
+                if (mLog.isInfoEnabled()) {
+                    int removed = sizeBefore - sizeAfter;
+                    if (removed > 0)
+                        mLog.info("Removed " + removed + " expired file uploads; " +
+                            sizeAfter + " pending file uploads");
+                    else if (sizeAfter > 0)
+                        mLog.info(sizeAfter + " pending file uploads");
+                }
+                for (Upload up : reaped)
+                    up.purge();
+            } catch (Exception e) { //don't let exceptions kill the timer
+                ZimbraLog.system.warn("Caught exception in FileUploadServlet timer", e);
             }
-            if (mLog.isInfoEnabled()) {
-                int removed = sizeBefore - sizeAfter;
-                if (removed > 0)
-                    mLog.info("Removed " + removed + " expired file uploads; " +
-                              sizeAfter + " pending file uploads");
-                else if (sizeAfter > 0)
-                    mLog.info(sizeAfter + " pending file uploads");
-            }
-            for (Upload up : reaped)
-                up.purge();
         }
     }
 }
