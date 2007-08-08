@@ -62,6 +62,8 @@ public class HtmlFormatter extends Formatter {
     private static final String ATTR_TARGET_ITEM_TYPE    = "zimbra_target_item_type";
     private static final String ATTR_TARGET_ITEM_COLOR   = "zimbra_target_item_color";
     private static final String ATTR_TARGET_ITEM_VIEW    = "zimbra_target_item_view";
+    private static final String ATTR_TARGET_ITEM_PATH    = "zimbra_target_item_path";
+    private static final String ATTR_TARGET_ITEM_NAME    = "zimbra_target_item_name";
 
     private static final String ATTR_TARGET_ACCOUNT_PREF_TIME_ZONE   = "zimbra_target_account_prefTimeZoneId";
     private static final String ATTR_TARGET_ACCOUNT_PREF_SKIN   = "zimbra_target_account_prefSkin";
@@ -104,6 +106,7 @@ public class HtmlFormatter extends Formatter {
 
         String uri = (String)context.req.getAttribute("requestedPath");
 
+
         context.req.setAttribute(ATTR_INTERNAL_DISPATCH, "yes");
         context.req.setAttribute(ATTR_REQUEST_URI, uri != null ? uri : context.req.getRequestURI());
         context.req.setAttribute(ATTR_AUTH_TOKEN, authString);
@@ -111,6 +114,16 @@ public class HtmlFormatter extends Formatter {
         context.req.setAttribute(ATTR_TARGET_ACCOUNT_ID, targetAccount.getId());
         context.req.setAttribute(ATTR_TARGET_ITEM_ID, targetItem.getId());
         context.req.setAttribute(ATTR_TARGET_ITEM_TYPE, MailItem.getNameForType(targetItem));
+        if (context.itemPath != null) {
+            String path = context.itemPath;
+            context.req.setAttribute(ATTR_TARGET_ITEM_PATH, path);
+            int i = path.lastIndexOf('/');
+            if (i > -1 && i < (path.length()-1)) {
+                path = path.substring(i+1);
+            }
+            context.req.setAttribute(ATTR_TARGET_ITEM_NAME, path);
+        }
+
         context.req.setAttribute(ATTR_TARGET_ITEM_COLOR, targetItem.getColor());
         if (targetItem instanceof Folder)
             context.req.setAttribute(ATTR_TARGET_ITEM_VIEW, MailItem.getNameForType(((Folder)targetItem).getDefaultView()));
