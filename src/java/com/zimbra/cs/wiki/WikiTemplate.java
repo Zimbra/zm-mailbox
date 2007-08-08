@@ -27,6 +27,7 @@ package com.zimbra.cs.wiki;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -89,6 +90,11 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 	public String toString(WikiContext ctxt, MailItem item)
 	throws ServiceException, IOException {
 		return toString(new Context(ctxt, item, this));
+	}
+
+	public String toString(WikiContext ctxt, MailItem item, MailItem latestVersionItem)
+	throws ServiceException, IOException {
+		return toString(new Context(ctxt, item, this, latestVersionItem));
 	}
 	
 	public String toString(Context ctxt) throws ServiceException, IOException {
@@ -338,13 +344,19 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			this(copy.wctxt, copy.item, copy.itemTemplate);
 		}
 		public Context(WikiContext wc, MailItem it, WikiTemplate itt) {
-			wctxt = wc; item = it; itemTemplate = itt; content = null;
+			this(wc, it, itt, null);
 		}
+		public Context(WikiContext wc, MailItem it, WikiTemplate itt, MailItem tit) {
+			wctxt = wc; item = it; itemTemplate = itt; content = null; latestVersionItem = tit;
+		}		
+		
 		public WikiContext wctxt;
 		public MailItem item;
 		public WikiTemplate itemTemplate;
 		public Token token;
 		public String content;
+		public MailItem latestVersionItem;		
+		
 	}
 	public static abstract class Wiklet {
 		public abstract String getName();
@@ -380,6 +392,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		static {
 			sWIKLETS = new HashMap<String,Wiklet>();
 			addWiklet(new TocWiklet());
+			addWiklet(new HistoryWiklet());			
 			addWiklet(new BreadcrumbsWiklet());
 			addWiklet(new IconWiklet());
 			addWiklet(new NameWiklet());
@@ -554,6 +567,65 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			return generateList(ctxt, format.equals(sSIMPLE) ? sTAGSIMPLE : sTAGLIST);
 		}
 	}
+
+	public static class HistoryWiklet extends Wiklet {
+		public static final String sFORMAT = "format";
+		public static final String sBODYTEMPLATE = "bodyTemplate";
+		public static final String sITEMTEMPLATE = "itemTemplate";
+
+		public static final String sDEFAULTBODYTEMPLATE = "_TocVersionBodyTemplate";
+		public static final String sDEFAULTITEMTEMPLATE = "_TocVersionItemTemplate";
+		
+		public String getName() {
+			return "Version";
+		}
+		public String getPattern() {
+			return "HISTORY";
+		}
+		public WikiTemplate findInclusion(Context ctxt) {
+			return null;
+		}
+		public String applyTemplates(Context ctxt, Map<String,String> params) throws ServiceException, IOException {
+			
+			Mailbox mbox = ctxt.item.getMailbox();			
+			List<MailItem> list = mbox.getAllRevisions(ctxt.wctxt.octxt, ctxt.item.getId(), ctxt.item.getType());	    	
+	    	
+			Collections.reverse(list);
+			
+			String bt = params.get(sBODYTEMPLATE);
+			String it = params.get(sITEMTEMPLATE);
+			if (bt == null)
+				bt = sDEFAULTBODYTEMPLATE;
+			if (it == null)
+				it = sDEFAULTITEMTEMPLATE;
+			return handleTemplates(ctxt, list, bt, it);
+		}		
+		
+		protected String handleTemplates(Context ctxt,
+				List<MailItem> list,
+				String bodyTemplate, 
+				String itemTemplate) throws ServiceException, IOException {
+			StringBuffer buf = new StringBuffer();
+			for (MailItem item : list) {
+				WikiTemplate t = WikiTemplate.findTemplate(ctxt, itemTemplate);
+				buf.append(t.toString(ctxt.wctxt, item, ctxt.item));
+			}
+			Context newCtxt = new Context(ctxt);
+			newCtxt.content = buf.toString();
+			WikiTemplate body = WikiTemplate.findTemplate(newCtxt, bodyTemplate);
+
+			return body.toString(newCtxt);
+		}
+
+		
+		public String apply(Context ctxt) throws ServiceException, IOException {
+			Map<String,String> params = ctxt.token.parseParam();
+			return applyTemplates(ctxt, params);
+		}
+	}
+
+	
+	
 	public static class BreadcrumbsWiklet extends Wiklet {
 		public static final String sPAGE = "page";
 		public static final String sFORMAT = "format";
@@ -955,6 +1027,8 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		}
 	}
 	public static class UrlWiklet extends Wiklet {
+		private static final String sTYPE = "type";
+		private static final String sVERSIONURL = "version";
 		public String getName() {
 			return "Url";
 		}
@@ -970,9 +1044,19 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			String title = ctxt.item.getName();
 			WikiUrl wurl = new WikiUrl(ctxt.item);
 			try {
+				Map<String,String> params = ctxt.token.parseParam();
+				String type = params.get(sTYPE);
+
 				StringBuffer buf = new StringBuffer();
+				String url = null;
+				if(type != null && type.equals(sVERSIONURL) && ctxt.latestVersionItem !=null) {
+					wurl = new WikiUrl(ctxt.latestVersionItem);
+					url = wurl.getFullUrl(ctxt.wctxt, ctxt.latestVersionItem.getMailbox().getAccountId())+"?ver="+ctxt.item.getVersion();
+				}else{
+					url = wurl.getFullUrl(ctxt.wctxt, ctxt.item.getMailbox().getAccountId());
+				}
 				buf.append("<a href='");
-				buf.append(wurl.getFullUrl(ctxt.wctxt, ctxt.item.getMailbox().getAccountId()));
+				buf.append(url);
 				buf.append("'>").append(title).append("</a>");
 				return buf.toString();
 			} catch (Exception e) {

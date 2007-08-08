@@ -107,9 +107,19 @@ public class WikiFormatter extends Formatter {
     	String url = UserServlet.getRestUrl(wiki);
 		printWikiPage(context, template, wiki.getName(),url);
 	}
-
+    
+    private void handleWikiHistory(Context context, WikiItem wiki) throws IOException, ServiceException {
+    	WikiContext ctxt = createWikiContext(context);
+    	String template = null;
+       	WikiTemplate wt = getTemplate(context, wiki.getMailbox().getAccountId(), wiki.getFolderId(), VERSION);
+       	template = wt.getComposedPage(ctxt, wiki, CHROME);
+    	String url = UserServlet.getRestUrl(wiki);
+		printWikiPage(context, template, wiki.getName(),url);
+	}
+    
     private static final String TOC = "_Index";
     private static final String CHROME = "_Template";
+    private static final String VERSION = "_VersionIndex";    
     
     private WikiTemplate getTemplate(Context context, WikiItem item) throws ServiceException {
     	return getTemplate(context, item.getMailbox().getAccountId(), item.getFolderId(), item.getWikiWord());
@@ -214,7 +224,10 @@ public class WikiFormatter extends Formatter {
         	context.resp.sendRedirect(context.req.getRequestURI() + "/");
         	return;
         }
-        if (context.target instanceof WikiItem) {
+        String view = context.params.get(UserServlet.QP_VIEW);        
+        if (view!=null && view.compareTo(UserServlet.QP_HISTORY) == 0 && context.target instanceof  WikiItem) {
+        	handleWikiHistory(context, (WikiItem) context.target);
+        } else if (context.target instanceof WikiItem) {
             handleWiki(context, (WikiItem) context.target);
         } else if (context.target instanceof Document) {
             handleDocument(context, (Document) context.target);
