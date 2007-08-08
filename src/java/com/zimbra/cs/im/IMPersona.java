@@ -251,8 +251,8 @@ public class IMPersona extends ClassLogger {
      *         going or NULL otherwise
      */
     private IMChat findTargetMUC(Packet packet) {
-//        String threadId = packet.getFrom().getNode();
-        String threadId = packet.getFrom().toBareJID();
+        String threadId = packet.getFrom().getNode();
+//        String threadId = packet.getFrom().toBareJID();
         if (threadId != null && threadId.length() > 0) {
             IMChat chat = getChat(threadId);
             if (chat != null && chat.isMUC())
@@ -596,7 +596,7 @@ public class IMPersona extends ClassLogger {
                 // as a final try, just use the remove addr of this message
                 if (threadId == null || threadId.length() == 0) {
 //                    threadId = (toMe ? msg.getFrom() : msg.getTo()).getNode();
-                    threadId = (toMe ? msg.getFrom() : msg.getTo()).toBareJID();
+                    threadId = (toMe ? msg.getFrom() : msg.getTo()).getNode();
                 }
             }
             chat = getChat(true, threadId, new IMAddr(remoteJID));
@@ -929,7 +929,7 @@ public class IMPersona extends ClassLogger {
                 // threadId = newChat(octxt, toAddr, message);
                 // threadId = toAddr.getAddr();
 //                threadId = "chat-" + this.mAddr.getNode() + "-" + mCurChatId;
-                threadId = "chat-" + this.mAddr.getAddr() + "-" + mCurChatId;
+                threadId = "chat-" + this.mAddr.getNode() + "%" + this.mAddr.getDomain() + "-" + mCurChatId;
                 mCurChatId++;
                 // add the other user as the first participant in this chat
                 IMChat.Participant part;

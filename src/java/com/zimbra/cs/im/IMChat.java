@@ -408,10 +408,12 @@ public class IMChat extends ClassLogger {
                         joinMUCChat(msg.getFrom().toBareJID());
                     }
                 } else {
-                    IMChatInviteNotification inviteNot = 
-                        new IMChatInviteNotification(new IMAddr(msg.getFrom().toBareJID()),
-                                    getThreadId(), body);
-                    mPersona.postIMNotification(inviteNot);
+                    if (mucInvitationFrom != null) {
+                        IMChatInviteNotification inviteNot = 
+                            new IMChatInviteNotification(new IMAddr(msg.getFrom().toBareJID()),
+                                getThreadId(), body);
+                        mPersona.postIMNotification(inviteNot);
+                    }
                     addMessage(true, new IMAddr(messageFrom), subject, body, typing);
                     assert(this.getHighestSeqNo() > seqNoStart);
                 }
