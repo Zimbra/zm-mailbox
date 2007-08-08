@@ -241,6 +241,7 @@
           <Set name="retainDays">30</Set>
           <Set name="append">true</Set>
           <Set name="extended">true</Set>
+          <Set name="filenameDateFormat">yyyy-mm-dd</Set>
         </New>
       </Set>
     </Ref>
