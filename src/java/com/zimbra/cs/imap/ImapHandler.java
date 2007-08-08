@@ -2967,7 +2967,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                     for (MailItem target : copyMsgs)
                         createdList.add(target.getImapUid());
                 } else {
-                    ItemActionHelper op = ItemActionHelper.COPY(getContext(), mbox, idlist, MailItem.TYPE_UNKNOWN, null, iidTarget);
+                    ItemActionHelper op = ItemActionHelper.COPY(getContext(), mbox, null, idlist, MailItem.TYPE_UNKNOWN, null, iidTarget);
                     for (String target : op.getCreatedIds())
                         createdList.add(new ItemId(target, mSelectedFolder.getAuthenticatedAccountId()).getId());
                 }

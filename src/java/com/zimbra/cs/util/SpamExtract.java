@@ -232,7 +232,7 @@ public class SpamExtract {
 
             try {
                 if (mLog.isDebugEnabled()) mLog.debug(searchReq.prettyPrint());
-                Element searchResp = transport.invoke(searchReq, false, true, true, account.getId());
+                Element searchResp = transport.invoke(searchReq, false, true, account.getId());
                 if (mLog.isDebugEnabled()) mLog.debug(searchResp.prettyPrint());
                 
                 StringBuilder deleteList = new StringBuilder();
@@ -273,7 +273,7 @@ public class SpamExtract {
                     action.addAttribute(MailConstants.A_OPERATION, ItemAction.OP_HARD_DELETE);
                     
                     if (mLog.isDebugEnabled()) mLog.debug(msgActionReq.prettyPrint());
-                    Element msgActionResp = transport.invoke(msgActionReq, false, true, true, account.getId());
+                    Element msgActionResp = transport.invoke(msgActionReq, false, true, account.getId());
                     if (mLog.isDebugEnabled()) mLog.debug(msgActionResp.prettyPrint());
                 }
             } finally {

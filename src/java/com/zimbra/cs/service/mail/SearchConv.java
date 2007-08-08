@@ -163,7 +163,7 @@ public class SearchConv extends Search {
                     SoapHttpTransport soapTransp = new SoapHttpTransport(AccountUtil.getSoapUri(target));
                     soapTransp.setAuthToken(new AuthToken(acct).getEncoded());
                     soapTransp.setTargetAcctId(target.getId());
-                    soapTransp.setSoapProtocol(zsc.getResponseProtocol());
+                    soapTransp.setRequestProtocol(zsc.getResponseProtocol());
 
                     // and just pass the response on through!
                     Element response = soapTransp.invokeWithoutSession(proxyRequest);

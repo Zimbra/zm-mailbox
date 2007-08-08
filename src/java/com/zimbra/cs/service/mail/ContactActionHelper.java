@@ -27,6 +27,7 @@ package com.zimbra.cs.service.mail;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -36,11 +37,11 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class ContactActionHelper extends ItemActionHelper {
 
-    public static ContactActionHelper UPDATE(ZimbraSoapContext zc, OperationContext octxt,
-                                                Mailbox mbox, List<Integer> ids, ItemId iidFolder,
-                                                String flags, String tags, byte color, ParsedContact pc)
+    public static ContactActionHelper UPDATE(ZimbraSoapContext zsc, OperationContext octxt,
+            Mailbox mbox, List<Integer> ids, ItemId iidFolder,
+            String flags, String tags, byte color, ParsedContact pc)
     throws ServiceException {
-        ContactActionHelper ca = new ContactActionHelper(octxt, mbox, ids, Op.UPDATE);
+        ContactActionHelper ca = new ContactActionHelper(octxt, mbox, zsc.getResponseProtocol(), ids, Op.UPDATE);
         ca.setIidFolder(iidFolder);
         ca.setFlags(flags);
         ca.setTags(tags);
@@ -59,8 +60,8 @@ public class ContactActionHelper extends ItemActionHelper {
         mParsedContact = pc;
     }
 
-    ContactActionHelper(OperationContext octxt, Mailbox mbox, List<Integer> ids, Op op) throws ServiceException {
-        super(octxt, mbox, ids, op, MailItem.TYPE_CONTACT, true, null);
+    ContactActionHelper(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto, List<Integer> ids, Op op) throws ServiceException {
+        super(octxt, mbox, responseProto, ids, op, MailItem.TYPE_CONTACT, true, null);
     }
 
     @Override

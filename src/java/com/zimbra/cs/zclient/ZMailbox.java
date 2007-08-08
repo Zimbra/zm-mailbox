@@ -34,6 +34,7 @@ import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.VoiceConstants;
 import com.zimbra.common.soap.ZimbraNamespace;
@@ -148,12 +149,11 @@ public class ZMailbox {
     }
 
     private enum NotifyPreference {
-        nosession, nonotify, full;
+        nosession, full;
 
         static NotifyPreference fromOptions(Options options) {
             if (options == null)              return full;
             else if (options.getNoSession())  return nosession;
-            else if (options.getNoNotify())   return nonotify;
             else                              return full;
         }
     }
@@ -168,15 +168,15 @@ public class ZMailbox {
         private String mUri;
         private int mTimeout = -1;
         private int mRetryCount;
+        private SoapProtocol mResponseProtocol = SoapProtocol.Soap12;
         private SoapTransport.DebugListener mDebugListener;
         private String mTargetAccount;
         private AccountBy mTargetAccountBy = AccountBy.name;
         private boolean mNoSession;
-        private boolean mNoNotify;
         private boolean mAuthAuthToken;
         private ZEventHandler mHandler;
         private List<String> mAttrs;
-        private List<String> mPrefs; 
+        private List<String> mPrefs;
 
         public Options() {
         }
@@ -226,14 +226,14 @@ public class ZMailbox {
         public int getRetryCount() { return mRetryCount; }
         public void setRetryCount(int retryCount) { mRetryCount = retryCount; }
 
+        public SoapProtocol getResponseProtocol() { return mResponseProtocol; }
+        public void setResponseProtocol(SoapProtocol proto) { mResponseProtocol = proto; }
+
         public SoapTransport.DebugListener getDebugListener() { return mDebugListener; }
         public void setDebugListener(SoapTransport.DebugListener liistener) { mDebugListener = liistener; }
 
         public boolean getNoSession() { return mNoSession; }
         public void setNoSession(boolean noSession) { mNoSession = noSession; }
-
-        public boolean getNoNotify() { return mNoNotify; }
-        public void setNoNotify(boolean noNotify) { mNoNotify = noNotify; }
 
         public boolean getAuthAuthToken() { return mAuthAuthToken; }
         /** @param authAuthToken set to true if you want to send an AuthRequest to valid the auth token */
@@ -247,7 +247,6 @@ public class ZMailbox {
 
         public List<String> getAttrs() { return mAttrs; }
         public void setAttrs(List<String> attrs) { mAttrs = attrs; }
-
     }
 
     private String mAuthToken;
@@ -289,7 +288,7 @@ public class ZMailbox {
     public static void changePassword(Options options) throws ServiceException {
         ZMailbox mailbox = new ZMailbox();
         mailbox.mNotifyPreference = NotifyPreference.fromOptions(options);
-        mailbox.initPreAuth(options.getUri(), options.getDebugListener(), options.getTimeout(), options.getRetryCount());
+        mailbox.initPreAuth(options.getUri(), options.getDebugListener(), options.getTimeout(), options.getRetryCount(), options.getResponseProtocol());
         mailbox.changePassword(options.getAccount(), options.getAccountBy(), options.getPassword(), options.getNewPassword(), options.getVirtualHost());
     }
 
@@ -307,7 +306,7 @@ public class ZMailbox {
     		mHandlers.add(options.getEventHandler());
 
         mNotifyPreference = NotifyPreference.fromOptions(options);
-        initPreAuth(options.getUri(), options.getDebugListener(), options.getTimeout(), options.getRetryCount());
+        initPreAuth(options.getUri(), options.getDebugListener(), options.getTimeout(), options.getRetryCount(), options.getResponseProtocol());
         if (options.getAuthToken() != null) {
             if (options.getAuthAuthToken())
                 mAuthResult = authByAuthToken(options);
@@ -346,10 +345,10 @@ public class ZMailbox {
         mTransport.setAuthToken(mAuthToken);
     }
 
-    public void initPreAuth(String uri, SoapTransport.DebugListener listener, int timeout, int retryCount) {
+    public void initPreAuth(String uri, SoapTransport.DebugListener listener, int timeout, int retryCount, SoapProtocol responseProto) {
         mNameToTag = new HashMap<String, ZTag>();
         mIdToItem = new HashMap<String, ZItem>();
-        setSoapURI(uri, timeout, retryCount);
+        setSoapURI(uri, timeout, retryCount, responseProto);
         if (listener != null) mTransport.setDebugListener(listener);
     }
 
@@ -427,7 +426,7 @@ public class ZMailbox {
      * @param timeout timeout for HTTP connection or 0 for no timeout
      * @param retryCount max number of times to retry the call on connection failure
      */
-    private void setSoapURI(String uri, int timeout, int retryCount) {
+    private void setSoapURI(String uri, int timeout, int retryCount, SoapProtocol responseProto) {
         if (mTransport != null) mTransport.shutdown();
         mTransport = new SoapHttpTransport(uri);
         mTransport.setUserAgent("zclient", BuildInfo.VERSION);
@@ -438,13 +437,14 @@ public class ZMailbox {
             mTransport.setRetryCount(retryCount);
         if (mAuthToken != null)
             mTransport.setAuthToken(mAuthToken);
+        if (responseProto != null)
+            mTransport.setResponseProtocol(responseProto);
     }
 
     public synchronized Element invoke(Element request) throws ServiceException {
         try {
             switch (mNotifyPreference) {
                 case nosession:  return mTransport.invokeWithoutSession(request);
-                case nonotify:   return mTransport.invokeWithoutNotify(request);
                 default:         return mTransport.invoke(request);
             }
         } catch (SoapFaultException e) {
@@ -1513,7 +1513,7 @@ public class ZMailbox {
         }
     }
 
-    Pattern sAttachmentId = Pattern.compile("\\d+,'.*','(.*)'");
+    private static Pattern sAttachmentId = Pattern.compile("\\d+,'.*','(.*)'");
 
     private String getAttachmentId(String result) throws ZClientException {
         if (result.startsWith(HttpServletResponse.SC_OK+"")) {
@@ -1525,7 +1525,7 @@ public class ZMailbox {
         throw ZClientException.UPLOAD_FAILED("upload failed, response: " + result, null);
     }
 
-    private void addAuthCookoie(String name, URI uri, HttpState state) {
+    private void addAuthCookie(String name, URI uri, HttpState state) {
         Cookie cookie = new Cookie(uri.getHost(), name, getAuthToken(), "/", -1, false);
         state.addCookie(cookie);
     }
@@ -1534,8 +1534,8 @@ public class ZMailbox {
         boolean isAdmin = uri.getPort() == LC.zimbra_admin_service_port.intValue();
         HttpState initialState = new HttpState();
         if (isAdmin)
-            addAuthCookoie(ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN, uri, initialState);
-        addAuthCookoie(ZimbraServlet.COOKIE_ZM_AUTH_TOKEN, uri, initialState);
+            addAuthCookie(ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN, uri, initialState);
+        addAuthCookie(ZimbraServlet.COOKIE_ZM_AUTH_TOKEN, uri, initialState);
         HttpClient client = new HttpClient();
         client.setState(initialState);
         client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);

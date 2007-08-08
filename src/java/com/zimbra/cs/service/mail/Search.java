@@ -29,7 +29,6 @@
 package com.zimbra.cs.service.mail;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -316,9 +315,7 @@ public class Search extends MailDocumentHandler  {
         if (inline && msg.isUnread() && params.getMarkRead()) {
             // Mark the message as READ          
             try {
-                ArrayList<Integer> ids = new ArrayList<Integer>(1);
-                ids.add(msg.getId());
-                ItemActionHelper.READ(octxt, msg.getMailbox(), ids, MailItem.TYPE_MESSAGE, true, null);
+                msg.getMailbox().alterTag(octxt, msg.getId(), msg.getType(), Flag.ID_FLAG_UNREAD, false);
             } catch (ServiceException e) {
                 mLog.warn("problem marking message as read (ignored): " + msg.getId(), e);
             }

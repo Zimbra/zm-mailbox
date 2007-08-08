@@ -89,7 +89,7 @@ extends TestCase {
 			Element a = action.addElement(MailConstants.E_A);
 			a.addAttribute(MailConstants.A_ATTRIBUTE_NAME, name);
 			a.addText(value);
-			transport.invoke(req, false, true, true, null, rev, null);
+			transport.invoke(req, false, true, null, rev, null);
 		} finally {
 			if (transport != null)
 				transport.shutdown();

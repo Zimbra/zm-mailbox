@@ -38,6 +38,7 @@ import org.dom4j.QName;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -58,118 +59,100 @@ import com.zimbra.cs.zclient.ZMailbox;
 
 public class ItemActionHelper {
 
-    public static ItemActionHelper TAG(OperationContext oc, Mailbox mbox,
-        List<Integer> ids, byte type, boolean flagValue, 
-                TargetConstraint tcon, int tagId)
+    public static ItemActionHelper TAG(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
+                List<Integer> ids, byte type, boolean flagValue, TargetConstraint tcon, int tagId)
     throws ServiceException {
-        ItemActionHelper ia = new ItemActionHelper(oc, mbox, 
+        ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, 
                     ids, Op.TAG, type, flagValue, tcon);
         ia.setTagId(tagId);
         ia.schedule();
         return ia;
     }
     
-    public static ItemActionHelper FLAG(OperationContext oc, Mailbox mbox,
-                List<Integer> ids, byte type, boolean flagValue, 
-                TargetConstraint tcon)
+    public static ItemActionHelper FLAG(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
+                List<Integer> ids, byte type, boolean flagValue, TargetConstraint tcon)
     throws ServiceException {
-        ItemActionHelper ia = new ItemActionHelper(oc, mbox,
-                    ids, Op.FLAG, type, flagValue, tcon);
+        ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.FLAG, type, flagValue, tcon);
         ia.schedule();
         return ia;
     }
     
-    public static ItemActionHelper READ(OperationContext oc, Mailbox mbox,
-                List<Integer> ids, byte type, boolean flagValue, 
-                TargetConstraint tcon)
+    public static ItemActionHelper READ(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
+                List<Integer> ids, byte type, boolean flagValue, TargetConstraint tcon)
     throws ServiceException {
-        ItemActionHelper ia = new ItemActionHelper(oc, mbox, 
-                    ids, Op.READ, type, flagValue, tcon);
+        ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.READ, type, flagValue, tcon);
         ia.schedule();
         return ia;
     }
     
-    public static ItemActionHelper COLOR(OperationContext oc, Mailbox mbox,
-                List<Integer> ids, byte type, TargetConstraint tcon, 
-                byte color)
+    public static ItemActionHelper COLOR(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
+                List<Integer> ids, byte type, TargetConstraint tcon, byte color)
     throws ServiceException {
-        ItemActionHelper ia = new ItemActionHelper(oc, mbox, 
-                    ids, Op.COLOR, type, true, tcon);
+        ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.COLOR, type, true, tcon);
         ia.setColor(color);
         ia.schedule();
         return ia;
     }
 
-    public static ItemActionHelper HARD_DELETE(OperationContext oc, Mailbox mbox,
-        List<Integer> ids, byte type, TargetConstraint tcon)
+    public static ItemActionHelper HARD_DELETE(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
+                List<Integer> ids, byte type, TargetConstraint tcon)
     throws ServiceException {
-        ItemActionHelper ia = new ItemActionHelper(oc, mbox,  
-                    ids, Op.HARD_DELETE, type, true, tcon);
+        ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.HARD_DELETE, type, true, tcon);
         ia.schedule();
         return ia;
     }
     
-    public static ItemActionHelper MOVE(OperationContext oc, Mailbox mbox,
-        List<Integer> ids, byte type, TargetConstraint tcon, 
-                ItemId iidFolder)
+    public static ItemActionHelper MOVE(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
+                List<Integer> ids, byte type, TargetConstraint tcon, ItemId iidFolder)
     throws ServiceException {
-        ItemActionHelper ia = new ItemActionHelper(oc, mbox,
-                    ids, Op.MOVE, type, true, tcon);
+        ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.MOVE, type, true, tcon);
         ia.setIidFolder(iidFolder);
         ia.schedule();
         return ia;
     }
     
-    public static ItemActionHelper COPY(OperationContext oc, Mailbox mbox,
-                List<Integer> ids, byte type, TargetConstraint tcon, 
-                ItemId iidFolder)
+    public static ItemActionHelper COPY(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
+                List<Integer> ids, byte type, TargetConstraint tcon, ItemId iidFolder)
     throws ServiceException {
-        ItemActionHelper ia = new ItemActionHelper(oc, mbox,
-                    ids, Op.COPY, type, true, tcon);
+        ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.COPY, type, true, tcon);
         ia.setIidFolder(iidFolder);
         ia.schedule();
         return ia;
     }
 
-    public static ItemActionHelper SPAM(OperationContext oc, Mailbox mbox,
+    public static ItemActionHelper SPAM(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
                 List<Integer> ids, byte type, boolean flagValue, 
                 TargetConstraint tcon, int folderId)
     throws ServiceException {
-        ItemActionHelper ia = new ItemActionHelper(oc, mbox, 
-                    ids, Op.SPAM, type, flagValue, tcon);
+        ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.SPAM, type, flagValue, tcon);
         ia.setFolderId(folderId);
         ia.schedule();
         return ia;
     }
     
-    public static ItemActionHelper TRASH(OperationContext oc, Mailbox mbox,
+    public static ItemActionHelper TRASH(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
                 List<Integer> ids, 
                 byte type, TargetConstraint tcon) throws ServiceException {
-        ItemActionHelper ia = new ItemActionHelper(oc, mbox,
-                    ids, Op.TRASH, type, true, tcon);
+        ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.TRASH, type, true, tcon);
         ia.schedule();
         return ia;
     }
 
-    public static ItemActionHelper RENAME(OperationContext oc, Mailbox mbox,
-                List<Integer> ids, byte type, TargetConstraint tcon, 
-                String name, ItemId iidFolder)
+    public static ItemActionHelper RENAME(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
+                List<Integer> ids, byte type, TargetConstraint tcon, String name, ItemId iidFolder)
     throws ServiceException {
-        ItemActionHelper ia = new ItemActionHelper(oc, mbox,
-                    ids, Op.RENAME, type, true, tcon);
+        ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.RENAME, type, true, tcon);
         ia.setName(name);
         ia.setIidFolder(iidFolder);
         ia.schedule();
         return ia;
     }
     
-    public static ItemActionHelper UPDATE(OperationContext oc, Mailbox mbox,
-                List<Integer> ids, byte type, TargetConstraint tcon, 
-                String name, ItemId iidFolder, String flags,
+    public static ItemActionHelper UPDATE(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
+                List<Integer> ids, byte type, TargetConstraint tcon, String name, ItemId iidFolder, String flags,
                 String tags, byte color)
     throws ServiceException {
-        ItemActionHelper ia = new ItemActionHelper(oc, mbox, 
-                    ids, Op.UPDATE, type, true, tcon);
+        ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.UPDATE, type, true, tcon);
         ia.setName(name);
         ia.setIidFolder(iidFolder);
         ia.setFlags(flags);
@@ -206,6 +189,7 @@ public class ItemActionHelper {
     protected String mResult;
     protected List<String> mCreatedIds;
 
+    protected SoapProtocol mResponseProtocol;
     protected Op mOperation;
     protected int[] mIds;
     protected byte mItemType;
@@ -294,10 +278,8 @@ public class ItemActionHelper {
         mTags = tags; 
     }
 
-    ItemActionHelper(OperationContext octxt, Mailbox mbox,
-                List<Integer> ids, 
-                Op op, byte type, boolean flagValue, 
-                TargetConstraint tcon)
+    ItemActionHelper(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
+                List<Integer> ids, Op op, byte type, boolean flagValue, TargetConstraint tcon)
     throws ServiceException {
         
         mOpCtxt = octxt;
@@ -307,6 +289,7 @@ public class ItemActionHelper {
         if (mAuthenticatedAccount == null)
             mAuthenticatedAccount = mbox.getAccount();
         mIdFormatter = new ItemIdFormatter(mAuthenticatedAccount, mbox, false);
+        mResponseProtocol = responseProto;
 
         int i = 0;
         mIds = new int[ids.size()];
@@ -458,6 +441,7 @@ public class ItemActionHelper {
         Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mIidFolder.getAccountId());
         ZMailbox.Options zoptions = new ZMailbox.Options(authtoken, AccountUtil.getSoapUri(target));
         zoptions.setNoSession(true);
+        zoptions.setResponseProtocol(mResponseProtocol);
         ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
 
         boolean deleteOriginal = mOperation != Op.COPY;

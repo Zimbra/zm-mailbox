@@ -147,7 +147,7 @@ public abstract class LmcSoapRequest {
             if (mRequestedAccountId == null)
                 responseXML = trans.invoke(requestElt).toXML();
             else
-                responseXML = trans.invoke(requestElt, false, true, true, mRequestedAccountId).toXML();
+                responseXML = trans.invoke(requestElt, false, true, mRequestedAccountId).toXML();
             if (sDumpXML) {
                 sLog.info("Response:" + DomUtil.toString(responseXML, true) + "\n");
             }

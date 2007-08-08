@@ -126,7 +126,7 @@ public class ModifyCalendarItem extends CalendarRequest {
             CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
             List<Integer> ids = new ArrayList<Integer>(1);
             ids.add(calItem.getId());
-            ItemActionHelper.MOVE(octxt, mbox, ids, calItem.getType(), null, iidFolder);
+            ItemActionHelper.MOVE(octxt, mbox, zsc.getResponseProtocol(), ids, calItem.getType(), null, iidFolder);
         }
 
         return response;

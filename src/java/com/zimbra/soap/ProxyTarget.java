@@ -101,7 +101,7 @@ public class ProxyTarget {
         SoapHttpTransport transport = new SoapHttpTransport(mURL);
         try {
             transport.setAuthToken(mAuthToken);
-            transport.setSoapProtocol(proto);
+            transport.setRequestProtocol(proto);
             return transport.invokeWithoutSession(request);
         } catch (IOException e) {
             throw ServiceException.PROXY_ERROR(e, mURL);
