@@ -53,6 +53,7 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.PartBase;
+import org.dom4j.DocumentException;
 
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Cos;
@@ -297,29 +298,31 @@ public class ZimletUtil {
 	 * @param elem - Parent Element node
 	 * @param zimlet
 	 */
-	public static void listZimlet(Element elem, String zimlet, int priority) {
-		loadZimlets();
-		ZimletFile zim = (ZimletFile) sZimlets.get(zimlet);
-		if (zim == null) {
-			ZimbraLog.zimlet.info("cannot find zimlet "+zimlet);
-			return;
-		}
-		try {
-			String zimletBase = ZIMLET_BASE + "/" + zim.getZimletName() + "/";
+	public static void listZimlet(Element elem, Zimlet zimlet, int priority) {
+        loadZimlets();
+        ZimletFile zf = (ZimletFile) sZimlets.get(zimlet.getName());
+        if (zf == null) {
+            ZimbraLog.zimlet.info("cannot find zimlet "+zimlet.getName());
+            return;
+        }
+        try {
+			String zimletBase = ZIMLET_BASE + "/" + zimlet.getName() + "/";
 			Element entry = elem.addElement(AccountConstants.E_ZIMLET);
 			Element zimletContext = entry.addElement(AccountConstants.E_ZIMLET_CONTEXT);
 			zimletContext.addAttribute(AccountConstants.A_ZIMLET_BASE_URL, zimletBase);
 			if (priority >= 0) {
 				zimletContext.addAttribute(AccountConstants.A_ZIMLET_PRIORITY, priority);
 			}
-			zim.getZimletDescription().addToElement(entry);
-			if (zim.hasZimletConfig()) {
-				zim.getZimletConfig().addToElement(entry);
-			}
+			zf.getZimletDescription().addToElement(entry);
+			String config = zimlet.getHandlerConfig();
+			if (config != null)
+			    entry.addElement(Element.parseXML(config, elem.getFactory()));
+		} catch (DocumentException de) {
+		    ZimbraLog.zimlet.info("error loading zimlet "+zimlet+": "+de.getMessage());
 		} catch (ZimletException ze) {
-			ZimbraLog.zimlet.info("error loading zimlet "+zimlet+": "+ze.getMessage());
+		    ZimbraLog.zimlet.info("error loading dev zimlets: "+ze.getMessage());
 		} catch (IOException ioe) {
-			ZimbraLog.zimlet.info("error loading zimlet "+zimlet+": "+ioe.getMessage());
+		    ZimbraLog.zimlet.info("error loading dev zimlets: "+ioe.getMessage());
 		}
 	}
 	

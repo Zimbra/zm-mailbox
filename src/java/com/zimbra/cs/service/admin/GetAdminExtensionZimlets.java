@@ -57,7 +57,7 @@ public class GetAdminExtensionZimlets extends AdminDocumentHandler  {
 		while (zimlets.hasNext()) {
 			Zimlet z = (Zimlet) zimlets.next();
 			if (z.isExtension()) {
-				ZimletUtil.listZimlet(response, z.getName(), -1);
+				ZimletUtil.listZimlet(response, z, -1);
 			}
 		}
     }

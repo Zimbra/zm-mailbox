@@ -29,11 +29,8 @@ import javax.naming.directory.Attributes;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
-import com.zimbra.cs.object.ObjectType;
-import com.zimbra.cs.zimlet.ZimletHandler;
-import com.zimbra.cs.zimlet.ZimletUtil;
 
-class LdapZimlet extends Zimlet implements LdapEntry, ObjectType {
+class LdapZimlet extends Zimlet implements LdapEntry {
 
     private String mDn;
     
@@ -44,38 +41,6 @@ class LdapZimlet extends Zimlet implements LdapEntry, ObjectType {
         mDn = dn;
 	}
 	
-    public String getType() {
-        return getAttr(Provisioning.A_cn);
-    }
-    
-    public String getDescription() {
-        return getAttr(Provisioning.A_zimbraZimletDescription);
-    }
-    
-    public boolean isIndexingEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraZimletIndexingEnabled, false);
-    }
-    
-    public boolean isStoreMatched() {
-        return false;
-    }
-    
-    public String getHandlerClassName() {
-        return getAttr(Provisioning.A_zimbraZimletHandlerClass);
-    }
-    
-    public ZimletHandler getHandler() {
-    	return ZimletUtil.getHandler(getName());
-    }
-    
-    public String getHandlerConfig() {
-        return getAttr(Provisioning.A_zimbraZimletHandlerConfig);
-    }
-
-    public String getServerIndexRegex() {
-    	return getAttr(Provisioning.A_zimbraZimletServerIndexRegex);
-    }
-
     public String getDN() {
         return mDn;
     }

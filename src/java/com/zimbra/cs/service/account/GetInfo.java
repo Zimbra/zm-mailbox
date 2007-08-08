@@ -195,7 +195,7 @@ public class GetInfo extends AccountDocumentHandler  {
         int priority = 0;
         for (Zimlet z : zimletList) {
             if (z.isEnabled() && !z.isExtension())
-                ZimletUtil.listZimlet(response, z.getName(), priority);
+                ZimletUtil.listZimlet(response, z, priority);
             priority++;
         }
 

@@ -38,6 +38,7 @@ import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.zimlet.ZimletConfig;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletHandler;
@@ -49,13 +50,13 @@ public class ObjectHandler {
 
     private static Log mLog = LogFactory.getLog(ObjectHandler.class);
     
-    private static List mHandlerList;
-    
-    private ObjectType    mObjectType;
+    private static List<ObjectHandler> mHandlerList;
+
+    private Zimlet        mObjectType;
     private ZimletHandler mHandlerObject;
     private ZimletConfig  mConfigObject;
 
-    private ObjectHandler(ObjectType obj) throws ObjectHandlerException, ZimletException {
+    private ObjectHandler(Zimlet obj) throws ObjectHandlerException, ZimletException {
         mObjectType = obj;
     	mHandlerObject = (ZimletHandler) obj.getHandler();
     	if (mHandlerObject == null) {
@@ -77,10 +78,10 @@ public class ObjectHandler {
         if (mHandlerList != null)
             return mHandlerList;
         
-        mHandlerList = new ArrayList();
+        mHandlerList = new ArrayList<ObjectHandler>();
         List dots = Provisioning.getInstance().getObjectTypes();
         for (Iterator it=dots.iterator(); it.hasNext();) {
-            ObjectType dot = (ObjectType) it.next();
+            Zimlet dot = (Zimlet) it.next();
             ObjectHandler handler = loadHandler(dot);
             if (handler != null)
                 mHandlerList.add(handler);
@@ -92,7 +93,7 @@ public class ObjectHandler {
      * @param type
      * @return
      */
-    private static synchronized ObjectHandler loadHandler(ObjectType dot) {
+    private static synchronized ObjectHandler loadHandler(Zimlet dot) {
         ObjectHandler handler = null;
         String clazz = dot.getHandlerClassName();
         if (clazz == null)
