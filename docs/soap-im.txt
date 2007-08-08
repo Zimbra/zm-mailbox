@@ -45,7 +45,7 @@ IMSetPresence -- modify your presence state
 -------------
 <IMSetPresenceRequest>
    [
-     <presence [lang="en"] [show="away|chat|dnd|xa|online|offline"] [priority="0-255"] [status="STATUS"]/>
+     <presence [lang="en"] [show="away|chat|dnd|xa|online|offline"] [priority="0-255"] [status="CUSTOM_STATUS"]/>
    ]+  // if multiple, each must have a different lang  
 </IMSetPresenceRequest>
 

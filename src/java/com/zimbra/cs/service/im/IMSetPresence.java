@@ -48,10 +48,7 @@ public class IMSetPresence extends IMDocumentHandler {
 
         String showStr = e.getAttribute(IMConstants.A_SHOW, IMPresence.Show.ONLINE.toString());
         String statusStr = null;
-        Element status = e.getOptionalElement(IMConstants.E_STATUS);
-        if (status != null) {
-            statusStr = status.getText();
-        }
+        statusStr = e.getAttribute(IMConstants.A_STATUS, null);
 
         IMPresence presence = new IMPresence(IMPresence.Show.valueOf(showStr.toUpperCase()), (byte)1, statusStr);
 
