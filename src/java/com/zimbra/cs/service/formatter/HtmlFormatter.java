@@ -51,7 +51,9 @@ public class HtmlFormatter extends Formatter {
     private static final String PATH_MAIN_CONTEXT  = "/zimbra";
     private static final String PATH_JSP_REST_PAGE = "/h/rest";
     private static final long   AUTH_EXPIRATION = 60L * 60L * 1000L;
-    
+
+    private static final String ATTR_REQUEST_URI         = "zimbra_request_uri";
+
     private static final String ATTR_INTERNAL_DISPATCH   = "zimbra_internal_dispatch";
     private static final String ATTR_AUTH_TOKEN          = "zimbra_authToken";
     private static final String ATTR_TARGET_ACCOUNT_NAME = "zimbra_target_account_name";
@@ -99,8 +101,11 @@ public class HtmlFormatter extends Formatter {
         
         Account targetAccount = context.targetAccount;
         MailItem targetItem = context.target;
-        
+
+        String uri = (String)context.req.getAttribute("requestedPath");
+
         context.req.setAttribute(ATTR_INTERNAL_DISPATCH, "yes");
+        context.req.setAttribute(ATTR_REQUEST_URI, uri != null ? uri : context.req.getRequestURI());
         context.req.setAttribute(ATTR_AUTH_TOKEN, authString);
         context.req.setAttribute(ATTR_TARGET_ACCOUNT_NAME, targetAccount.getName());
         context.req.setAttribute(ATTR_TARGET_ACCOUNT_ID, targetAccount.getId());
