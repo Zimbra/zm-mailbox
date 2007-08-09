@@ -233,6 +233,7 @@ public class MailConstants {
     public static final String A_ZIMBRA_ID = "zid";
     public static final String A_RIGHTS = "perm";
     public static final String A_GRANT_TYPE = "gt";
+    public static final String A_PASSWORD = "pw";
 
     // email addresses
     public static final String E_EMAIL = "e";
