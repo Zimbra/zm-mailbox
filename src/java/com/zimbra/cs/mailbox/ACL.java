@@ -240,6 +240,13 @@ public class ACL {
         	if (mType == GRANTEE_GUEST && password != null)
                 mPassword = password;
         }
+        
+        /**
+         * Only for grants to external users
+         */
+        public String getPassword() {
+        	return mPassword;
+        }
 
 
         private static final String FN_GRANTEE  = "g";

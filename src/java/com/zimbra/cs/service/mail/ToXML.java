@@ -200,7 +200,8 @@ public class ToXML {
                                 .addAttribute(MailConstants.A_ZIMBRA_ID, grant.getGranteeId())
                                 .addAttribute(MailConstants.A_GRANT_TYPE, FolderAction.typeToString(grant.getGranteeType()))
                                 .addAttribute(MailConstants.A_RIGHTS, ACL.rightsToString(grant.getGrantedRights()))
-                                .addAttribute(MailConstants.A_DISPLAY, nentry == null ? null : nentry.getName());
+                                .addAttribute(MailConstants.A_DISPLAY, nentry == null ? null : nentry.getName())
+                            	.addAttribute(MailConstants.A_PASSWORD, grant.getPassword());
                         }
                     }
                 }
