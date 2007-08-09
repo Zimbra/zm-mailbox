@@ -31,6 +31,7 @@ package com.zimbra.cs.mailbox;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 import com.zimbra.cs.account.AccessManager;
@@ -54,13 +55,23 @@ public class Folder extends MailItem {
         String url;
         String lastGuid;
         long   lastDate;
+        boolean stop;
 
         SyncData(String link)  { url = link; }
+        SyncData(SyncData sd)  { this(sd.url, sd.lastGuid, sd.lastDate); }
         SyncData(String link, String guid, long date) {
-            url = link;  lastGuid = guid;  lastDate = date;
+            url = link;  lastGuid = guid == null ? null : guid.trim();  lastDate = date;
         }
 
-        public boolean alreadySeen(String guid, long date)  { return lastDate >= date; }
+        public boolean alreadySeen(String guid, Date date) {
+            if (date != null)
+                return lastDate >= date.getTime();
+            if (stop)
+                return true;
+            if (guid == null || lastGuid == null || !guid.trim().equalsIgnoreCase(lastGuid))
+                return false;
+            return (stop = true);
+        }
     }
 
     public static final byte FOLDER_IS_IMMUTABLE      = 0x01;
@@ -131,7 +142,7 @@ public class Folder extends MailItem {
      *  such association.
      * @see #setUrl(String) */
     public SyncData getSyncData() {
-        return mSyncData;
+        return mSyncData == null ? null : new SyncData(mSyncData);
     }
 
     /** Returns the last assigned item ID in the enclosing Mailbox the last

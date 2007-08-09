@@ -42,7 +42,6 @@ import java.util.List;
 
 import javax.mail.BodyPart;
 import javax.mail.MessagingException;
-import javax.mail.internet.ContentType;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
@@ -68,6 +67,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.mime.MimeCompoundHeader.ContentType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.FileUtil;
@@ -90,7 +90,7 @@ public class FeedManager {
         SubscriptionData(List list)  { items = list; }
         SubscriptionData(long fdate) { items = new ArrayList();  feedDate = fdate; }
 
-        void recordItem(String guid, long date, Object item) {
+        void recordItem(Object item, String guid, long date) {
             items.add(item);
             if (date > lastDate)  { lastGuid = guid;  lastDate = date; }
         }
@@ -236,12 +236,7 @@ public class FeedManager {
         String getLocation()     { return mUrl; }
         String getDescription()  { return mTitle; }
         String getContentType() {
-            ContentType ctype;
-            try {
-                ctype = new ContentType(mCtype == null ? "text/plain" : mCtype);
-            } catch (javax.mail.internet.ParseException e) {
-                ctype = new ContentType("text", "plain", null);
-            }
+            ContentType ctype = new ContentType(mCtype == null ? "text/plain" : mCtype);
             try {
                 ctype.setParameter("name", FileUtil.trimFilename(URLDecoder.decode(mUrl, "utf-8")));
             } catch (UnsupportedEncodingException e) {
@@ -270,8 +265,7 @@ public class FeedManager {
             else if (!rname.equals("RDF"))
                 throw ServiceException.PARSE_ERROR("unknown top-level rss element name: " + root.getQualifiedName(), null);
 
-            for (Iterator it = root.elementIterator("item"); it.hasNext(); ) {
-                Element item = (Element) it.next();
+            for (Element item : root.listElements("item")) {
                 // get the item's date
                 Date date = DateUtil.parseRFC2822Date(item.getAttribute("pubDate", null), null);
                 if (date == null)
@@ -288,7 +282,7 @@ public class FeedManager {
                 String href = item.getAttribute("link", hrefChannel);
                 String guid = item.getAttribute("guid", href);
                 // make sure we haven't already seen this item
-                if (fsd != null && fsd.alreadySeen(guid, date.getTime()))
+                if (fsd != null && fsd.alreadySeen(guid == hrefChannel ? null : guid, date == dateChannel ? null : date))
                     continue;
                 // handle the enclosure (associated media link), if any
                 enclosures.clear();
@@ -307,7 +301,7 @@ public class FeedManager {
                 html |= text.indexOf("</") != -1 || text.indexOf("/>") != -1 || text.indexOf("<p>") != -1;
 
                 ParsedMessage pm = generateMessage(title, text, href, html, addr, date, enclosures);
-                sdata.recordItem(guid, date.getTime(), pm);
+                sdata.recordItem(pm, guid, date.getTime());
             }
             return sdata;
         } catch (UnsupportedEncodingException e) {
@@ -341,8 +335,7 @@ public class FeedManager {
                 // find the item's link and any enclosures (associated media links)
                 enclosures.clear();
                 String href = "";
-                for (Iterator itlink = item.elementIterator("link"); itlink.hasNext(); ) {
-                    Element link = (Element) itlink.next();
+                for (Element link : item.listElements("link")) {
                     String relation = link.getAttribute("rel", "alternate");
                     if (relation.equals("alternate"))
                         href = link.getAttribute("href");
@@ -351,7 +344,7 @@ public class FeedManager {
                 }
                 String guid = item.getAttribute("id", href);
                 // make sure we haven't already seen this item
-                if (fsd != null && fsd.alreadySeen(guid, date.getTime()))
+                if (fsd != null && fsd.alreadySeen(guid == null || guid.equals("") ? null : guid, date == dateFeed ? null : date))
                     continue;
                 // get the content/summary and markup
                 Element content = item.getOptionalElement("content");
@@ -367,7 +360,7 @@ public class FeedManager {
                     throw ServiceException.PARSE_ERROR("unsupported atom entry content type: " + type, null);
 
                 ParsedMessage pm = generateMessage(title, content.getText(), href, html, addr, date, enclosures);
-                sdata.recordItem(guid, date.getTime(), pm);
+                sdata.recordItem(pm, guid, date.getTime());
             }
             return sdata;
         } catch (UnsupportedEncodingException e) {
@@ -384,10 +377,11 @@ public class FeedManager {
         String ctype = html ? "text/html; charset=\"utf-8\"" : "text/plain; charset=\"utf-8\"";
         String content = html ? HTML_HEADER + text + "<p>" + href + HTML_FOOTER : text + "\r\n\r\n" + href;
         // cull out invalid enclosures
-        if (attach != null)
+        if (attach != null) {
             for (Iterator it = attach.iterator(); it.hasNext(); )
                 if (((Enclosure) it.next()).getLocation() == null)
                     it.remove();
+        }
         boolean hasAttachments = attach != null && attach.size() > 0;
 
         // create the MIME message and wrap it
@@ -408,6 +402,7 @@ public class FeedManager {
                     part.addHeader("Content-Type", enc.getContentType());
                     if (enc.getDescription() != null)
                         part.addHeader("Content-Description", enc.getDescription());
+                    part.addHeader("Content-Disposition", "attachment");
                     mmp.addBodyPart(part);
                 }
                 mm.setContent(mmp);
@@ -431,9 +426,9 @@ public class FeedManager {
         // check for a mailto: link
         String lc = creator.trim().toLowerCase(), address = "", personal = creator;
         int mailto = lc.indexOf("mailto:");
-        if (mailto == 0 && lc.length() <= 7)
+        if (mailto == 0 && lc.length() <= 7) {
             return addrChannel;
-        else if (mailto == 0) {
+        } else if (mailto == 0) {
             personal = null;  address = creator = creator.substring(7);
         } else if (mailto != -1) {
             // checking for "...[mailto:...]..." or "...(mailto:...)..."
