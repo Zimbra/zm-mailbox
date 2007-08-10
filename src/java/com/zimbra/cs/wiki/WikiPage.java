@@ -40,6 +40,7 @@ import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.wiki.WikiServiceException;
+import com.zimbra.cs.session.WikiSession;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.soap.MailConstants;
@@ -157,6 +158,7 @@ public abstract class WikiPage {
 			if (mMimeType == null || mData == null || mType == 0)
 				throw WikiServiceException.ERROR("cannot create", null);
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(where.mWikiAccount);
+			WikiSession.getInstance().addMailboxForNotification(mbox);
 			addWikiItem(mbox.createDocument(ctxt.octxt, where.getWikiFolderId(), mWikiWord, mMimeType, mCreator, mData, mType));
 		}
 
@@ -164,6 +166,7 @@ public abstract class WikiPage {
 			if (!(p instanceof LocalWikiPage))
 				throw WikiServiceException.ERROR("cannot add revision", null);
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
+			WikiSession.getInstance().addMailboxForNotification(mbox);
 
 			LocalWikiPage newRev = (LocalWikiPage) p;
 			Document doc = getWikiItem(ctxt);
