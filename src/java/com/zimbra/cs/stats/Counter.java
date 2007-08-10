@@ -39,8 +39,8 @@ import com.zimbra.common.util.StringUtil;
 public class Counter
 implements Accumulator {
 
-    private long mCount = 0;
-    private long mTotal = 0;
+    private volatile long mCount = 0;
+    private volatile long mTotal = 0;
     private boolean mShowCount = false;
     private boolean mShowTotal = true;
     private boolean mShowAverage = false;
@@ -61,6 +61,22 @@ implements Accumulator {
     
     Counter(String name) {
         this(name, null);
+    }
+    
+    public long getCount() {
+        return mCount;
+    }
+    
+    public long getTotal() { 
+        return mTotal;
+    }
+    
+    public double getAverage() {
+        if (mCount == 0) {
+            return 0.0;
+        } else {
+            return (double) mTotal / (double) mCount;
+        }
     }
     
     /**
@@ -153,7 +169,7 @@ implements Accumulator {
             if (mCount > 0) {
                 // Force US locale, so that the file format is the same for all locales
                 // and we don't run into problems with commas.
-                data.add(String.format(Locale.US, "%.2f", ((double) mTotal / (double) mCount)));
+                data.add(String.format(Locale.US, "%.2f", getAverage()));
             } else {
                 data.add("");
             }

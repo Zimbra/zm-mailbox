@@ -47,6 +47,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.stats.ActivityTracker;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServerInputStream;
@@ -77,6 +78,8 @@ public class Pop3Handler extends ProtocolHandler {
     private String mAccountId;
     private String mAccountName;
     private Pop3Mailbox mMbx;
+    private String mCommand;
+    private long mStartTime;
     
     private int mState;
 
@@ -90,13 +93,16 @@ public class Pop3Handler extends ProtocolHandler {
     private String mCurrentCommandLine;
     private int mExpire;
 
+    private static ActivityTracker sActivityTracker;
+    
     Pop3Handler(Pop3Server server) {
         super(server);
         mServer = server;
+        if (sActivityTracker == null) {
+            sActivityTracker = ActivityTracker.getInstance("pop3.csv");
+        }
     }
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.tcpserver.ProtocolHandler#setupConnection(java.net.Socket)
-     */
+    
     protected boolean setupConnection(Socket connection) throws IOException {
         mRemoteAddress = connection.getInetAddress().getHostAddress();
 
@@ -120,25 +126,28 @@ public class Pop3Handler extends ProtocolHandler {
         return true;
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.tcpserver.ProtocolHandler#authenticate()
-     */
     protected boolean authenticate() {
         // we auth with the USER/PASS commands
         return true;
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.tcpserver.ProtocolHandler#processCommand()
-     */
     protected boolean processCommand() throws IOException {
         // TODO: catch IOException too?
-        long start = ZimbraPerf.STOPWATCH_POP.start();
+        mCommand = null;
+        mStartTime = 0;
         
         try {
             if (mAccountName != null) ZimbraLog.addAccountNameToContext(mAccountName);
             boolean result = processCommandInternal();
-            ZimbraPerf.STOPWATCH_POP.stop(start);
+
+            // Track stats if the command completed successfully
+            if (mStartTime > 0) {
+                ZimbraPerf.STOPWATCH_POP.stop(mStartTime);
+                if (mCommand != null) {
+                    sActivityTracker.addStat(mCommand.toUpperCase(), mStartTime);
+                }
+            }
+
             return result;
         } catch (Pop3CmdException e) {
             sendERR(e.getResponse());
@@ -157,11 +166,12 @@ public class Pop3Handler extends ProtocolHandler {
     
     protected boolean processCommandInternal() throws Pop3CmdException, IOException, ServiceException {
         mCurrentCommandLine = mInputStream.readLine();
+        mStartTime = System.currentTimeMillis();
         //ZimbraLog.pop.info("command("+mCurrentCommandLine+")");
-        String cmd = mCurrentCommandLine;
+        mCommand = mCurrentCommandLine;
         String arg = null;
 
-        if (cmd == null) {
+        if (mCommand == null) {
             dropConnection = true;
             ZimbraLog.pop.info("disconnected without quit");
             //dropConnection();
@@ -177,18 +187,18 @@ public class Pop3Handler extends ProtocolHandler {
 
         setIdle(false);
 
-        int space = cmd.indexOf(" ");
+        int space = mCommand.indexOf(" ");
         if (space > 0) {
-            arg = cmd.substring(space + 1); 
-            cmd = cmd.substring(0, space);
+            arg = mCommand.substring(space + 1); 
+            mCommand = mCommand.substring(0, space);
         }
         
         if (ZimbraLog.pop.isDebugEnabled()) {
-            String darg = "PASS".equals(cmd) ? "<BLOCKED>" : arg;
-            ZimbraLog.pop.debug("command=%s arg=%s", cmd, darg);
+            String darg = "PASS".equals(mCommand) ? "<BLOCKED>" : arg;
+            ZimbraLog.pop.debug("command=%s arg=%s", mCommand, darg);
         }
                 
-        if (cmd.length() < 1)
+        if (mCommand.length() < 1)
             throw new Pop3CmdException("invalid request. please specify a command");
 
         // check account status before executing command
@@ -201,7 +211,7 @@ public class Pop3Handler extends ProtocolHandler {
                 return false;
             }
 
-        int ch = cmd.charAt(0);
+        int ch = mCommand.charAt(0);
         
         // Breaking out of this switch causes a syntax error to be returned
         // So if you process a command then return immediately (even if the
@@ -210,79 +220,79 @@ public class Pop3Handler extends ProtocolHandler {
         switch (ch) {
         case 'c':
         case 'C':
-            if ("CAPA".equalsIgnoreCase(cmd)) {
+            if ("CAPA".equalsIgnoreCase(mCommand)) {
                 doCAPA();
                 return true;
             }
             break;
         case 'd':
         case 'D':
-            if ("DELE".equalsIgnoreCase(cmd)) {
+            if ("DELE".equalsIgnoreCase(mCommand)) {
                 doDELE(arg);
                 return true;
             }
             break;            
         case 'l':
         case 'L':
-            if ("LIST".equalsIgnoreCase(cmd)) {
+            if ("LIST".equalsIgnoreCase(mCommand)) {
                 doLIST(arg);
                 return true;
             }
             break;                                    
         case 'n':
         case 'N':
-            if ("NOOP".equalsIgnoreCase(cmd)) {
+            if ("NOOP".equalsIgnoreCase(mCommand)) {
                 doNOOP();
                 return true;
             }
             break;
         case 'p':
         case 'P':
-            if ("PASS".equalsIgnoreCase(cmd)) {
+            if ("PASS".equalsIgnoreCase(mCommand)) {
                 doPASS(arg);
                 return true;
             }
             break;
         case 'q':
         case 'Q':
-            if ("QUIT".equalsIgnoreCase(cmd)) {
+            if ("QUIT".equalsIgnoreCase(mCommand)) {
                 doQUIT();
                 return false;
             }
             break;
         case 'r':
         case 'R':
-            if ("RETR".equalsIgnoreCase(cmd)) {
+            if ("RETR".equalsIgnoreCase(mCommand)) {
                 doRETR(arg);
                 return true;
-            } else if ("RSET".equalsIgnoreCase(cmd)) {
+            } else if ("RSET".equalsIgnoreCase(mCommand)) {
                 doRSET();
                 return true;
             }
             break;            
         case 's':
         case 'S':
-            if ("STAT".equalsIgnoreCase(cmd)) {
+            if ("STAT".equalsIgnoreCase(mCommand)) {
                 doSTAT();
                 return true;
-            } else if ("STLS".equalsIgnoreCase(cmd)) {
+            } else if ("STLS".equalsIgnoreCase(mCommand)) {
                 doSTLS();
                 return true;
             }
             break;            
         case 't':
         case 'T':
-            if ("TOP".equalsIgnoreCase(cmd)) {
+            if ("TOP".equalsIgnoreCase(mCommand)) {
                 doTOP(arg);
                 return true;
             }
             break;                        
         case 'u':
         case 'U':
-            if ("UIDL".equalsIgnoreCase(cmd)) {
+            if ("UIDL".equalsIgnoreCase(mCommand)) {
                 doUIDL(arg);
                 return true;
-            } else if ("USER".equalsIgnoreCase(cmd)) {
+            } else if ("USER".equalsIgnoreCase(mCommand)) {
                 doUSER(arg);
                 return true;            
             }

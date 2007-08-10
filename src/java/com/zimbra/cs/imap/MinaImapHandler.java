@@ -100,6 +100,9 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
             if (!processRequest((MinaImapRequest) req)) dropConnection();
         } finally {
             ZimbraPerf.STOPWATCH_IMAP.stop(start);
+            if (mLastCommand != null) {
+                sActivityTracker.addStat(mLastCommand.toUpperCase(), start);
+            }
             ZimbraLog.clearContext();
         }
     }

@@ -101,6 +101,8 @@ import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZGrant;
 import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.cs.stats.ActivityTracker;
+import com.zimbra.cs.stats.ZimbraPerf;
 
 /**
  * @author dkarp
@@ -160,13 +162,18 @@ public abstract class ImapHandler extends ProtocolHandler {
     protected ImapFolder      mSelectedFolder;
     private   String          mIdleTag;
     protected boolean         mGoodbyeSent;
+    
+    protected static ActivityTracker sActivityTracker;
 
     ImapHandler() {
-        super(null);
+        this(null);
     }
 
     ImapHandler(ImapServer server) {
         super(server);
+        if (sActivityTracker == null) {
+            sActivityTracker = ActivityTracker.getInstance("imap.csv");
+        }
     }
 
     abstract void dumpState(Writer w);

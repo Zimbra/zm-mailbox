@@ -266,7 +266,6 @@ public class SoapServlet extends ZimbraServlet {
         resp.getOutputStream().write(soapBytes);
         
         ZimbraLog.clearContext();
-
         ZimbraPerf.STOPWATCH_SOAP.stop(startTime);
     }
 }

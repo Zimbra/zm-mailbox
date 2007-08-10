@@ -28,11 +28,9 @@ package com.zimbra.cs.stats;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -41,6 +39,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.stats.StatUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -217,8 +216,7 @@ public class ZimbraPerf {
     {
         public Void call() {
             List<Object> data = new ArrayList<Object>();
-            String dateString = String.format("%1$tm/%1$td/%1$tY %1$tH:%1$tM:%1$tS", new Date()); 
-            data.add(dateString);
+            data.add(StatUtil.getTimestampString());
             for (Accumulator a : sAccumulators) {
                 synchronized (a) {
                     data.addAll(a.getData());
