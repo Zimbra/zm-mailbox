@@ -86,6 +86,7 @@ import com.zimbra.cs.operation.SetTagsOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.util.ThreadLocalData;
 import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.stats.ActivityTracker;
 import com.zimbra.cs.stats.StatsFile;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
@@ -154,10 +155,15 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
     private String        mLastCommand;
     private boolean       mStartedTLS;
     private boolean       mGoodbyeSent;
+    
+    private static ActivityTracker sActivityTracker;
 
     public ImapHandler(ImapServer server) {
         super(server);
         mServer = server;
+        if (sActivityTracker == null) {
+            sActivityTracker = ActivityTracker.getInstance("imap.csv");
+        }
     }
 
     public void dumpState(Writer w) {
@@ -200,9 +206,6 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
     }
 
     private static final boolean STOP_PROCESSING = false, CONTINUE_PROCESSING = true;
-    
-    private static StatsFile STATS_FILE =
-        new StatsFile("perf_imap", new String[] { "command" }, true);
     
     protected boolean processCommand() throws IOException {
         ImapRequest req = null;
@@ -247,8 +250,9 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             setIdle(false);
             mIncompleteRequest = null;
 
-            if (ZimbraPerf.isPerfEnabled())
-                ZimbraPerf.writeStats(STATS_FILE, mLastCommand);
+            if (mLastCommand != null) {
+                sActivityTracker.addStat(mLastCommand.toUpperCase(), start);
+            }
             ZimbraPerf.STOPWATCH_IMAP.stop(start);
         } catch (ImapContinuationException ice) {
             mIncompleteRequest = req.rewind();

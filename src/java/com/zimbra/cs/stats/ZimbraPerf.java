@@ -28,28 +28,26 @@ package com.zimbra.cs.stats;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TimerTask;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.stats.StatUtil;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbUtil;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.service.util.ThreadLocalData;
-import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.common.util.ZimbraLog;
 
 /**
  * A collection of methods for keeping track of server performance statistics.
@@ -291,9 +289,6 @@ public class ZimbraPerf {
         }
     }
 
-    private static final SimpleDateFormat TIMESTAMP_FORMATTER =
-        new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
-
     private static void writeSlowQuery(String sql, String normalized, int durationMillis) {
         String filename = LC.zimbra_log_directory.value() + "/slow_queries.csv";
         FileWriter writer = null;
@@ -312,7 +307,7 @@ public class ZimbraPerf {
                 // replace() does regexp operations, so only use it when necessary.
                 sql.replace("\"", "\"\"");
             }
-            writer.write(TIMESTAMP_FORMATTER.format(new Date()) + "," + durationMillis +
+            writer.write(StatUtil.getTimestampString() + "," + durationMillis +
                 ",\"" + sql + "\",\"" + normalized + "\"\n");
             writer.close();
         } catch (IOException e) {
@@ -431,7 +426,7 @@ public class ZimbraPerf {
             StringBuffer buf = new StringBuffer();
             writer = getWriter(statsFile);
             // Write timestamp and event name
-            buf.append(TIMESTAMP_FORMATTER.format(new Date()));;
+            buf.append(StatUtil.getTimestampString());
             
             // Write stats
             for (Object value : stats) {
@@ -546,7 +541,7 @@ public class ZimbraPerf {
         public void run() {
             try {
                 List<Object> data = new ArrayList<Object>();
-                data.add(TIMESTAMP_FORMATTER.format(new Date()));
+                data.add(StatUtil.getTimestampString());
                 for (Accumulator a : sAccumulators) {
                     synchronized (a) {
                         data.addAll(a.getData());

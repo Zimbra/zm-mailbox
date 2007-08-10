@@ -190,9 +190,6 @@ public class SoapServlet extends ZimbraServlet {
         service.registerHandlers(mEngine.getDocumentDispatcher());
     }
     
-    private static final StatsFile STATS_FILE =
-        new StatsFile("perf_soap", new String[] { "response" }, true);
-    
     public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         ZimbraLog.clearContext();
         long startTime = ZimbraPerf.STOPWATCH_SOAP.start();
@@ -245,12 +242,6 @@ public class SoapServlet extends ZimbraServlet {
         resp.setContentLength(soapBytes.length);
         resp.setStatus(statusCode);
         resp.getOutputStream().write(soapBytes);
-
-        // If perf logging is enabled, track server response times
-        if (ZimbraPerf.isPerfEnabled()) {
-            String responseName = soapProto.getBodyElement(envelope).getName();
-            ZimbraPerf.writeStats(STATS_FILE, responseName);
-        }
 
         ZimbraPerf.STOPWATCH_SOAP.stop(startTime);
     }

@@ -25,6 +25,16 @@
 
 package com.zimbra.soap;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.Map;
+
+import org.dom4j.DocumentException;
+
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
@@ -32,19 +42,9 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.service.admin.AdminDocumentHandler;
+import com.zimbra.cs.stats.ActivityTracker;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.soap.SoapProtocol;
-
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.util.Map;
-
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
-import org.dom4j.DocumentException;
 
 /**
  * The soap engine.
@@ -58,12 +58,17 @@ public class SoapEngine {
     /** context name of request IP */
     public static final String REQUEST_IP = "request.ip";
     
+    private static ActivityTracker sActivityTracker;
+    
 	private static Log mLog = LogFactory.getLog(SoapEngine.class);
 	
 	private DocumentDispatcher mDispatcher;
-	
+    
     public SoapEngine() {
         mDispatcher = new DocumentDispatcher();
+        if (sActivityTracker == null) {
+            sActivityTracker = ActivityTracker.getInstance("soap.csv");
+        }
     }
 
     public Element dispatch(String path, byte[] soapMessage, Map<String, Object> context) {
@@ -266,8 +271,11 @@ public class SoapEngine {
             if (needsAuth || needsAdminAuth)
                 response = handler.proxyIfNecessary(request, context);
             // if no proxy, execute the request locally
-            if (response == null)
+            if (response == null) {
+                long startTime = System.currentTimeMillis();
                 response = handler.handle(request, context);
+                sActivityTracker.addStat(request.getName(), startTime);
+            }
         } catch (SoapFaultException e) {
             response = e.getFault() != null ? e.getFault().detach() : soapProto.soapFault(ServiceException.FAILURE(e.toString(), e)); 
             if (!e.isSourceLocal())
