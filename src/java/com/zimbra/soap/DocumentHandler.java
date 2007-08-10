@@ -31,7 +31,6 @@ package com.zimbra.soap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -77,8 +76,8 @@ public abstract class DocumentHandler {
             Zimbra.halt("could not fetch local server name from LDAP for request proxying");
         }
     }
-    
-    
+
+
     /**
      * Guaranteed to be called by the engine before handle() is called.  If an exception is thrown,
      * then the handler() is *not* called. 
@@ -90,8 +89,9 @@ public abstract class DocumentHandler {
      * @return user-defined object which will be passed along to postHandle()
      * 
      */
+    @SuppressWarnings("unused")
     public Object preHandle(Element request, Map<String, Object> context) throws ServiceException { return null; }
-    
+
     /**
      * Guaranteed to be called by the engine after handle() is called.  (Called from a finally{} block)
      *  
@@ -101,6 +101,9 @@ public abstract class DocumentHandler {
 
     public abstract Element handle(Element request, Map<String, Object> context) throws ServiceException;
 
+
+    /** Returns the {@link ZimbraSoapContext} object encapsulating the
+     *  containing SOAP request's <pre>&lt;context></pre> header element. */
     public static ZimbraSoapContext getZimbraSoapContext(Map<String, Object> context) {
         return (ZimbraSoapContext) context.get(SoapEngine.ZIMBRA_CONTEXT);
     }
@@ -128,6 +131,10 @@ public abstract class DocumentHandler {
         return octxt;
     }
 
+    /** Returns the {@link Account} corresponding to the authenticated user.
+     *  The authenticated user is determined from the serialized
+     *  {@link com.zimbra.cs.account.AuthToken} in the SOAP request's
+     *  <pre>&lt;context></pre> header element. */
     public static Account getAuthenticatedAccount(ZimbraSoapContext zsc) throws ServiceException {
         String id = zsc.getAuthtokenAccountId();
 
@@ -154,76 +161,54 @@ public abstract class DocumentHandler {
         return mbox; 
     }
 
-    /** @return Returns whether the command's caller must be authenticated. */
+    /** Returns whether the command's caller must be authenticated. */
     public boolean needsAuth(Map<String, Object> context) {
         return true;
     }
 
-    /** @return Returns whether this is an administrative command (and thus requires
+    /** Returns whether this is an administrative command (and thus requires
      *  a valid admin auth token). */
     public boolean needsAdminAuth(Map<String, Object> context) {
         return false;
     }
 
-    public boolean isDomainAdminOnly(ZimbraSoapContext zsc) {
-        return AccessManager.getInstance().isDomainAdminOnly(zsc.getAuthToken());
-    }
 
     public boolean canAccessAccount(ZimbraSoapContext zsc, Account target) throws ServiceException {
         return AccessManager.getInstance().canAccessAccount(zsc.getAuthToken(), target);
     }
 
-    public Domain getAuthTokenAccountDomain(ZimbraSoapContext zsc) throws ServiceException {
-        return AccessManager.getInstance().getDomain(zsc.getAuthToken());
-    }
-
-    public boolean canAccessDomain(ZimbraSoapContext zsc, String domainName) throws ServiceException {
-        return AccessManager.getInstance().canAccessDomain(zsc.getAuthToken(), domainName);
-    }
-
-    public boolean canAccessDomain(ZimbraSoapContext zsc, Domain domain) throws ServiceException {
-        return canAccessDomain(zsc, domain.getName());
-    }
-
-    public boolean canModifyMailQuota(ZimbraSoapContext zsc, Account target, long mailQuota) throws ServiceException {
-        return AccessManager.getInstance().canModifyMailQuota(zsc.getAuthToken(), target, mailQuota);
-    }
-
-    public boolean canAccessEmail(ZimbraSoapContext zsc, String email) throws ServiceException {
-        String parts[] = EmailUtil.getLocalPartAndDomain(email);
-        if (parts == null)
-            throw ServiceException.INVALID_REQUEST("must be valid email address: "+email, null);
-        return canAccessDomain(zsc, parts[1]);
-    }
-    
-    public boolean canModifyOptions(ZimbraSoapContext zsc, Account acct) throws ServiceException {
-        if (!acct.getBooleanAttr(Provisioning.A_zimbraFeatureOptionsEnabled, true)) {
-            if (!canAccessAccount(zsc, acct))
+    public void canModifyOptions(ZimbraSoapContext zsc, Account acct) throws ServiceException {
+        if (zsc.isDelegatedRequest()) {
+            // if we're modifying someone else's options, we need to have admin access to the account
+            //   *and* we need to be able to change our own options (this is a standin for finer-grained access control)
+            if (!canAccessAccount(zsc, acct) || !getAuthenticatedAccount(zsc).getBooleanAttr(Provisioning.A_zimbraFeatureOptionsEnabled, true))
+                throw ServiceException.PERM_DENIED("can not modify options");
+        } else {
+            // if we're modifying our own options, we just need the appropriate feature enabled
+            if (!acct.getBooleanAttr(Provisioning.A_zimbraFeatureOptionsEnabled, true))
                 throw ServiceException.PERM_DENIED("can not modify options");
         }
-        return true;
     }
 
-    /**
-     * @return returns true if domain admin auth is sufficient to run this command. This should be overriden only on admin
-     * commands that can be run in a restricted "domain admin" mode.
-     */
+    /** Returns whether domain admin auth is sufficient to run this command.
+     *  This should be overriden only on admin commands that can be run in a
+     *  restricted "domain admin" mode. */
     public boolean domainAuthSufficient(Map<String, Object> context) {
         return false; 
     }
 
-    /** @return Returns whether the command is in the administration command set. */
+    /** Returns whether the command is in the administration command set. */
     public boolean isAdminCommand() {
         return false;
     }
 
-    /** @return Returns <tt>true</tt> if the operation is read-only, or
+    /** Returns <tt>true</tt> if the operation is read-only, or
      *  <tt>false</tt> if the operation causes backend state change. */
     public boolean isReadOnly() {
         return true;
     }
 
-    /** @return Returns whether the client making the SOAP request is localhost. */
+    /** Returns whether the client making the SOAP request is localhost. */
     protected boolean clientIsLocal(Map<String, Object> context) {
         HttpServletRequest req = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
         if (req == null) return true;

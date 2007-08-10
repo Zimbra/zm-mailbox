@@ -31,8 +31,10 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -46,6 +48,7 @@ import com.zimbra.cs.session.Session;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.EmailUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /** @author schemers */
@@ -157,5 +160,33 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
     @Override
     public Session getSession(ZimbraSoapContext zsc) {
         return getSession(zsc, Session.Type.ADMIN);
+    }
+
+
+    public boolean isDomainAdminOnly(ZimbraSoapContext zsc) {
+        return AccessManager.getInstance().isDomainAdminOnly(zsc.getAuthToken());
+    }
+
+    public Domain getAuthTokenAccountDomain(ZimbraSoapContext zsc) throws ServiceException {
+        return AccessManager.getInstance().getDomain(zsc.getAuthToken());
+    }
+
+    public boolean canAccessDomain(ZimbraSoapContext zsc, String domainName) throws ServiceException {
+        return AccessManager.getInstance().canAccessDomain(zsc.getAuthToken(), domainName);
+    }
+
+    public boolean canAccessDomain(ZimbraSoapContext zsc, Domain domain) throws ServiceException {
+        return canAccessDomain(zsc, domain.getName());
+    }
+
+    public boolean canModifyMailQuota(ZimbraSoapContext zsc, Account target, long mailQuota) throws ServiceException {
+        return AccessManager.getInstance().canModifyMailQuota(zsc.getAuthToken(), target, mailQuota);
+    }
+
+    public boolean canAccessEmail(ZimbraSoapContext zsc, String email) throws ServiceException {
+        String parts[] = EmailUtil.getLocalPartAndDomain(email);
+        if (parts == null)
+            throw ServiceException.INVALID_REQUEST("must be valid email address: "+email, null);
+        return canAccessDomain(zsc, parts[1]);
     }
 }
