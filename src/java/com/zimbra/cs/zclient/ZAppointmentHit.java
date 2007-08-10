@@ -57,7 +57,7 @@ public class ZAppointmentHit implements ZSearchHit {
 
     public static final String CLASS_PUBLIC = "PUB";
     public static final String CLASS_PRIVATE = "PRI";
-    public static final String CLASS_CONFIDENTIAL = "CONFI";
+    public static final String CLASS_CONFIDENTIAL = "CON";
 
     public enum Flag {
         flagged('f'),
