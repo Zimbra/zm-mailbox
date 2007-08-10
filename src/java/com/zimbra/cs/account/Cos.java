@@ -42,7 +42,7 @@ import com.zimbra.common.service.ServiceException;
  */
 public class Cos extends NamedEntry {
  
-    private Map<String, Object> mAccountDefaults = new HashMap<String, Object>();
+    private Map<String, Object> mAccountDefaults;
 
     public Cos(String name, String id, Map<String,Object> attrs) {
         super(name, id, attrs, null);
@@ -53,7 +53,7 @@ public class Cos extends NamedEntry {
     protected void resetData() {
         super.resetData();
         try {
-            getDefaults(AttributeFlag.accountInherited, mAccountDefaults);
+            mAccountDefaults = getDefaults(AttributeFlag.accountInherited);
         } catch (ServiceException e) {
             // TODO log
         }
