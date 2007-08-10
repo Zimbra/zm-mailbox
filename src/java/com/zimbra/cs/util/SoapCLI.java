@@ -244,7 +244,7 @@ public abstract class SoapCLI {
         String trailer = getTrailer();
         if (trailer != null && trailer.length() > 0) {
             System.err.println();
-            System.err.print(trailer);
+            System.err.println(trailer);
         }
     }
 
