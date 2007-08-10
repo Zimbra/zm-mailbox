@@ -2560,7 +2560,7 @@ public class Mailbox {
     }
 
     /** Returns the folder with the specified path, delimited by slashes (<tt>/</tt>).
-     * @throws NoSuchItemException if the folder does not exist */
+     * @throws {@link NoSuchItemException} if the folder does not exist */
     public synchronized Folder getFolderByPath(OperationContext octxt, String name) throws ServiceException {
         if (name == null)
             throw MailServiceException.NO_SUCH_FOLDER(name);
