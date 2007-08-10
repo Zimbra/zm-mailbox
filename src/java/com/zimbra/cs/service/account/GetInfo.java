@@ -78,7 +78,10 @@ public class GetInfo extends AccountDocumentHandler  {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Account acct = getRequestedAccount(zsc);
+        Account account = getRequestedAccount(zsc);
+
+        if (!canAccessAccount(zsc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
 
         // figure out the subset of data the caller wants (default to all data)
         String secstr = request.getAttribute(AccountConstants.A_SECTIONS, null);
@@ -94,12 +97,12 @@ public class GetInfo extends AccountDocumentHandler  {
 
         Element response = zsc.createElement(AccountConstants.GET_INFO_RESPONSE);
         response.addAttribute(AccountConstants.E_VERSION, BuildInfo.FULL_VERSION, Element.Disposition.CONTENT);
-        response.addAttribute(AccountConstants.E_ID, acct.getId(), Element.Disposition.CONTENT);
-        response.addAttribute(AccountConstants.E_NAME, acct.getName(), Element.Disposition.CONTENT);
+        response.addAttribute(AccountConstants.E_ID, account.getId(), Element.Disposition.CONTENT);
+        response.addAttribute(AccountConstants.E_NAME, account.getName(), Element.Disposition.CONTENT);
         long lifetime = zsc.getAuthToken().getExpires() - System.currentTimeMillis();
         response.addAttribute(AccountConstants.E_LIFETIME, lifetime, Element.Disposition.CONTENT);
 
-        if (sections.contains(Section.MBOX) && Provisioning.onLocalServer(acct)) {
+        if (sections.contains(Section.MBOX) && Provisioning.onLocalServer(account)) {
             try {
                 Mailbox mbox = getRequestedMailbox(zsc);
                 response.addAttribute(AccountConstants.E_QUOTA_USED, mbox.getSize(), Element.Disposition.CONTENT);
@@ -120,43 +123,43 @@ public class GetInfo extends AccountDocumentHandler  {
             } catch (ServiceException e) { }
         }
 
-        Map<String, Object> attrMap = acct.getAttrs();
-        Locale locale = Provisioning.getInstance().getLocale(acct);
+        Map<String, Object> attrMap = account.getAttrs();
+        Locale locale = Provisioning.getInstance().getLocale(account);
 
         if (sections.contains(Section.PREFS)) {
             Element prefs = response.addUniqueElement(AccountConstants.E_PREFS);
-            GetPrefs.doPrefs(acct, locale.toString(), prefs, attrMap, null);
+            GetPrefs.doPrefs(account, locale.toString(), prefs, attrMap, null);
         }
         if (sections.contains(Section.ATTRS)) {
             Element attrs = response.addUniqueElement(AccountConstants.E_ATTRS);
-            doAttrs(acct, locale.toString(), attrs, attrMap);
+            doAttrs(account, locale.toString(), attrs, attrMap);
         }
         if (sections.contains(Section.ZIMLETS)) {
             Element zimlets = response.addUniqueElement(AccountConstants.E_ZIMLETS);
-            doZimlets(zimlets, acct);
+            doZimlets(zimlets, account);
         }
         if (sections.contains(Section.PROPS)) {
             Element props = response.addUniqueElement(AccountConstants.E_PROPERTIES);
-            doProperties(props, acct);
+            doProperties(props, account);
         }
         if (sections.contains(Section.IDENTS)) {
             Element ids = response.addUniqueElement(AccountConstants.E_IDENTITIES);
-            doIdentities(ids, acct);
+            doIdentities(ids, account);
         }
         if (sections.contains(Section.SIGS)) {
             Element sigs = response.addUniqueElement(AccountConstants.E_SIGNATURES);
-            doSignatures(sigs, acct);
+            doSignatures(sigs, account);
         }
         if (sections.contains(Section.DSRCS)) {
             Element ds = response.addUniqueElement(AccountConstants.E_DATA_SOURCES);
-            doDataSources(ds, acct, zsc);
+            doDataSources(ds, account, zsc);
         }
         if (sections.contains(Section.CHILDREN)) {
             Element ca = response.addUniqueElement(AccountConstants.E_CHILD_ACCOUNTS);
-            doChildAccounts(ca, acct);
+            doChildAccounts(ca, account);
         }
         
-        GetAccountInfo.addUrls(response, acct);
+        GetAccountInfo.addUrls(response, account);
         return response;
     }
 

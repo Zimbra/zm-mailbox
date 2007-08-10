@@ -44,26 +44,27 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class GetAvailableLocales extends AccountDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Account acct = getRequestedAccount(lc);
-        
-        Locale displayLocale = getDisplayLocale(acct, context);
-        
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Account account = getRequestedAccount(zsc);
+
+        if (!canAccessAccount(zsc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
+
+        Locale displayLocale = getDisplayLocale(account, context);
+
         // get installed locales, sorted
         Locale installedLocales[] = L10nUtil.getLocalesSorted(displayLocale);
-        
+
         // get avail locales for this account/COS
-        Set<String> allowedLocales = acct.getMultiAttrSet(Provisioning.A_zimbraAvailableLocale);
-        
+        Set<String> allowedLocales = account.getMultiAttrSet(Provisioning.A_zimbraAvailableLocale);
+
         Locale[] availLocales = null;
         if (allowedLocales.size() > 0)
             availLocales = computeAvailLocales(installedLocales, allowedLocales);
         else
             availLocales = installedLocales; 
-        
-        Element response = lc.createElement(AccountConstants.GET_AVAILABLE_LOCALES_RESPONSE);
-        
-        
+
+        Element response = zsc.createElement(AccountConstants.GET_AVAILABLE_LOCALES_RESPONSE);
         for (Locale locale : availLocales) {
             if (locale != null)
                 ToXML.encodeLocale(response, locale, displayLocale);
@@ -74,7 +75,6 @@ public class GetAvailableLocales extends AccountDocumentHandler {
     }
     
     private Locale getDisplayLocale(Account acct, Map<String, Object> context) throws ServiceException {
-        
         // use zimbraPrefLocale is it is present 
         String locale = acct.getAttr(Provisioning.A_zimbraPrefLocale, false);
         

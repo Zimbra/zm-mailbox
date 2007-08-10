@@ -43,7 +43,8 @@ public class DeleteIdentity extends DocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getRequestedAccount(zsc);
         
-        canModifyOptions(zsc, account);
+        if (!canModifyOptions(zsc, account))
+            throw ServiceException.PERM_DENIED("can not modify options");
         
         Provisioning prov = Provisioning.getInstance();
 

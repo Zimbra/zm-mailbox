@@ -173,20 +173,22 @@ public abstract class DocumentHandler {
     }
 
 
-    public boolean canAccessAccount(ZimbraSoapContext zsc, Account target) throws ServiceException {
+    public static boolean canAccessAccount(ZimbraSoapContext zsc, Account target) throws ServiceException {
+        if (zsc.getAuthtokenAccountId() == null || target == null)
+            return false;
+        if (target.getId().equals(zsc.getAuthtokenAccountId()))
+            return true;
         return AccessManager.getInstance().canAccessAccount(zsc.getAuthToken(), target);
     }
 
-    public void canModifyOptions(ZimbraSoapContext zsc, Account acct) throws ServiceException {
+    public static boolean canModifyOptions(ZimbraSoapContext zsc, Account acct) throws ServiceException {
         if (zsc.isDelegatedRequest()) {
             // if we're modifying someone else's options, we need to have admin access to the account
             //   *and* we need to be able to change our own options (this is a standin for finer-grained access control)
-            if (!canAccessAccount(zsc, acct) || !getAuthenticatedAccount(zsc).getBooleanAttr(Provisioning.A_zimbraFeatureOptionsEnabled, true))
-                throw ServiceException.PERM_DENIED("can not modify options");
+            return canAccessAccount(zsc, acct) && getAuthenticatedAccount(zsc).getBooleanAttr(Provisioning.A_zimbraFeatureOptionsEnabled, true);
         } else {
             // if we're modifying our own options, we just need the appropriate feature enabled
-            if (!acct.getBooleanAttr(Provisioning.A_zimbraFeatureOptionsEnabled, true))
-                throw ServiceException.PERM_DENIED("can not modify options");
+            return acct.getBooleanAttr(Provisioning.A_zimbraFeatureOptionsEnabled, true);
         }
     }
 

@@ -41,12 +41,15 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class GetAvailableSkins extends DocumentHandler  {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Account acct = getRequestedAccount(lc);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Account account = getRequestedAccount(zsc);
 
-        String[] availSkins = SkinUtil.getSkins(acct);
+        if (!canAccessAccount(zsc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
+
+        String[] availSkins = SkinUtil.getSkins(account);
             
-        Element response = lc.createElement(AccountConstants.GET_AVAILABLE_SKINS_RESPONSE);
+        Element response = zsc.createElement(AccountConstants.GET_AVAILABLE_SKINS_RESPONSE);
         for (String skin : availSkins) {
             Element skinElem = response.addElement(AccountConstants.E_SKIN);
             skinElem.addAttribute(AccountConstants.A_NAME, skin);

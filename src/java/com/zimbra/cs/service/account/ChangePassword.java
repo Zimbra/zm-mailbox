@@ -47,7 +47,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class ChangePassword extends AccountDocumentHandler {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         
         String name = request.getAttribute(AccountConstants.E_ACCOUNT);
@@ -68,7 +68,7 @@ public class ChangePassword extends AccountDocumentHandler {
 		String newPassword = request.getAttribute(AccountConstants.E_PASSWORD);
 		prov.changePassword(acct, oldPassword, newPassword);
 
-        Element response = lc.createElement(AccountConstants.CHANGE_PASSWORD_RESPONSE);
+        Element response = zsc.createElement(AccountConstants.CHANGE_PASSWORD_RESPONSE);
         return response;
 	}
 

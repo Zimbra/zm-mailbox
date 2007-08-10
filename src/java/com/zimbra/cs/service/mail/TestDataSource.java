@@ -48,7 +48,8 @@ public class TestDataSource extends MailDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
         Account account = getRequestedAccount(zsc);
         
-        canModifyOptions(zsc, account);
+        if (!canModifyOptions(zsc, account))
+            throw ServiceException.PERM_DENIED("can not modify options");
 
         Map<String, Object> testAttrs = new HashMap<String, Object>();
         String testId = "TestId";

@@ -47,9 +47,10 @@ public class ModifyPrefs extends AccountDocumentHandler {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Account acct = getRequestedAccount(zsc);
+        Account account = getRequestedAccount(zsc);
 
-        canModifyOptions(zsc, acct);
+        if (!canModifyOptions(zsc, account))
+            throw ServiceException.PERM_DENIED("can not modify options");
         
         HashMap<String, String> prefs = new HashMap<String, String>();
         for (Element e : request.listElements(AccountConstants.E_PREF)) {
@@ -61,13 +62,12 @@ public class ModifyPrefs extends AccountDocumentHandler {
         }
 
         if (prefs.containsKey(Provisioning.A_zimbraPrefMailForwardingAddress)) {
-            if (!acct.getBooleanAttr(Provisioning.A_zimbraFeatureMailForwardingEnabled, false)) {
+            if (!account.getBooleanAttr(Provisioning.A_zimbraFeatureMailForwardingEnabled, false))
                 throw ServiceException.PERM_DENIED("forwarding not enabled");
-            }
         }
 
         // call modifyAttrs and pass true to checkImmutable
-        Provisioning.getInstance().modifyAttrs(acct, prefs, true);
+        Provisioning.getInstance().modifyAttrs(account, prefs, true);
 
         Element response = zsc.createElement(AccountConstants.MODIFY_PREFS_RESPONSE);
         return response;

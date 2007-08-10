@@ -28,7 +28,6 @@
  */
 package com.zimbra.cs.service.account;
 
-
 import java.util.List;
 import java.util.Map;
 
@@ -46,14 +45,16 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class GetIdentities extends AccountDocumentHandler  {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-		ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Account acct = getRequestedAccount(lc);
+		ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Account account = getRequestedAccount(zsc);
 
-        Element response = lc.createElement(AccountConstants.GET_IDENTITIES_RESPONSE);
-        List<Identity> identities = Provisioning.getInstance().getAllIdentities(acct);
-        for (Identity i : identities) {
-            ToXML.encodeIdentity(response, i);
-        }
+        if (!canAccessAccount(zsc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
+
+        Element response = zsc.createElement(AccountConstants.GET_IDENTITIES_RESPONSE);
+        List<Identity> identities = Provisioning.getInstance().getAllIdentities(account);
+        for (Identity ident : identities)
+            ToXML.encodeIdentity(response, ident);
         return response;
     }
 }

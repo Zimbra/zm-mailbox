@@ -37,7 +37,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
-import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -51,8 +50,9 @@ public class CreateDataSource extends MailDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         Account account = getRequestedAccount(zsc);
-        
-        canModifyOptions(zsc, account);
+
+        if (!canModifyOptions(zsc, account))
+            throw ServiceException.PERM_DENIED("can not modify options");
         
         Mailbox mbox = getRequestedMailbox(zsc);
         

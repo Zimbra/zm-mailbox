@@ -33,25 +33,23 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
-
 
 public class GetDataSources extends MailDocumentHandler {
 
     @Override
-    public Element handle(Element request, Map<String, Object> context)
-    throws ServiceException, SoapFaultException {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         Account account = getRequestedAccount(zsc);
-        
+
+        if (!canAccessAccount(zsc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
+
         List<DataSource> dataSources = prov.getAllDataSources(account);
     	Element response = zsc.createElement(MailConstants.GET_DATA_SOURCES_RESPONSE);
-
-    	for (DataSource ds : dataSources) {
-    		ToXML.encodeDataSource(response, ds);
-    	}
+    	for (DataSource dsrc : dataSources)
+    		ToXML.encodeDataSource(response, dsrc);
     	return response;
     }
 }

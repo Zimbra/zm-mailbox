@@ -42,7 +42,8 @@ public class CreateIdentity extends DocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getRequestedAccount(zsc);
         
-        canModifyOptions(zsc, account);
+        if (!canModifyOptions(zsc, account))
+            throw ServiceException.PERM_DENIED("can not modify options");
         
         Element identityEl = request.getElement(AccountConstants.E_IDENTITY);
         String name = identityEl.getAttribute(AccountConstants.A_NAME);

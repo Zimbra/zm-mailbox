@@ -50,7 +50,8 @@ public class ModifyDataSource extends MailDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
         Account account = getRequestedAccount(zsc);
         
-        canModifyOptions(zsc, account);
+        if (!canModifyOptions(zsc, account))
+            throw ServiceException.PERM_DENIED("can not modify options");
         
         boolean wipeOutOldData = false;
         

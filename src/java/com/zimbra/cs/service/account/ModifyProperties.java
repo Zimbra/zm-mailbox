@@ -39,20 +39,21 @@ import com.zimbra.cs.zimlet.ZimletUserProperties;
 public class ModifyProperties extends AccountDocumentHandler {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-		ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Account acct = getRequestedAccount(lc);
+		ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Account account = getRequestedAccount(zsc);
         
-        canModifyOptions(lc, acct);
+        if (!canModifyOptions(zsc, account))
+            throw ServiceException.PERM_DENIED("can not modify options");
 
-        ZimletUserProperties props = ZimletUserProperties.getProperties(acct);
+        ZimletUserProperties props = ZimletUserProperties.getProperties(account);
 
         for (Element e : request.listElements(AccountConstants.E_PROPERTY)) {
             props.setProperty(e.getAttribute(AccountConstants.A_ZIMLET),
             					e.getAttribute(AccountConstants.A_NAME),
             					e.getText());
         }
-        props.saveProperties(acct);
-        Element response = lc.createElement(AccountConstants.MODIFY_PROPERTIES_RESPONSE);
+        props.saveProperties(account);
+        Element response = zsc.createElement(AccountConstants.MODIFY_PROPERTIES_RESPONSE);
         return response;
 	}
 }

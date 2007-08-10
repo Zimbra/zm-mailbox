@@ -49,9 +49,10 @@ public class DeleteDataSource extends MailDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         Account account = getRequestedAccount(zsc);
-        
-        canModifyOptions(zsc, account);
-        
+
+        if (!canModifyOptions(zsc, account))
+            throw ServiceException.PERM_DENIED("can not modify options");
+
         Mailbox mbox = getRequestedMailbox(zsc);
 
         for (Element eDsrc : request.listElements()) {

@@ -47,7 +47,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class GetAccountInfo extends AccountDocumentHandler  {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
         Element a = request.getElement(AccountConstants.E_ACCOUNT);
         String key = a.getAttribute(AccountConstants.A_BY);
@@ -58,8 +58,10 @@ public class GetAccountInfo extends AccountDocumentHandler  {
 
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(value);
+        if (!canAccessAccount(zsc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
 
-        Element response = lc.createElement(AccountConstants.GET_ACCOUNT_INFO_RESPONSE);
+        Element response = zsc.createElement(AccountConstants.GET_ACCOUNT_INFO_RESPONSE);
         response.addAttribute(AccountConstants.E_NAME, account.getName(), Element.Disposition.CONTENT);
         response.addKeyValuePair(Provisioning.A_zimbraId, account.getId(), AccountConstants.E_ATTR, AccountConstants.A_NAME);
         response.addKeyValuePair(Provisioning.A_zimbraMailHost, account.getAttr(Provisioning.A_zimbraMailHost), AccountConstants.E_ATTR, AccountConstants.A_NAME);

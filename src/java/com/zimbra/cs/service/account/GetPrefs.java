@@ -29,7 +29,6 @@
 package com.zimbra.cs.service.account;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 
@@ -46,16 +45,19 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class GetPrefs extends AccountDocumentHandler  {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-		ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Account acct = getRequestedAccount(lc);
+		ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Account account = getRequestedAccount(zsc);
 
-        Element response = lc.createElement(AccountConstants.GET_PREFS_RESPONSE);
-        handle(request, response, acct);
+        if (!canAccessAccount(zsc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
+
+        Element response = zsc.createElement(AccountConstants.GET_PREFS_RESPONSE);
+        handle(request, response, account);
         return response;
     }
 
 	/**
-	 * Pass in a request that optional has &lt;pre&gt; items as a filter, and
+	 * Pass in a request that optional has &lt;pref&gt; items as a filter, and
 	 * fills in the response document with gathered prefs.
 	 * 
 	 * @param request 
@@ -65,19 +67,16 @@ public class GetPrefs extends AccountDocumentHandler  {
 	 */
 	public static void handle(Element request, Element response, Account acct) throws ServiceException {
 		HashSet<String> specificPrefs = null;
-		for (Iterator it = request.elementIterator(AccountConstants.E_PREF); it.hasNext(); ) {
+        for (Element epref : request.listElements(AccountConstants.E_PREF)) {
 			if (specificPrefs == null)
 				specificPrefs = new HashSet<String>();
-			Element e = (Element) it.next();
-			String name = e.getAttribute(AccountConstants.A_NAME);
-			if (name != null)
-				specificPrefs.add(name);
+			specificPrefs.add(epref.getAttribute(AccountConstants.A_NAME));
 		}
-	
+
 		Map<String, Object> map = acct.getAttrs();
 		if (map != null) {
-			Locale lc = Provisioning.getInstance().getLocale(acct);
-			doPrefs(acct, lc.toString(), response, map, specificPrefs);
+			Locale locale = Provisioning.getInstance().getLocale(acct);
+			doPrefs(acct, locale.toString(), response, map, specificPrefs);
 		}
 	}
     
