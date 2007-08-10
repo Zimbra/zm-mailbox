@@ -47,15 +47,16 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class SearchGal extends AccountDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        String n = request.getAttribute(AccountConstants.E_NAME);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Element response = zsc.createElement(AccountConstants.SEARCH_GAL_RESPONSE);
+        Account account = getRequestedAccount(getZimbraSoapContext(context));
 
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Element response = lc.createElement(AccountConstants.SEARCH_GAL_RESPONSE);
-        Account acct = getRequestedAccount(getZimbraSoapContext(context));
-
-        if (!acct.getBooleanAttr(Provisioning.A_zimbraFeatureGalEnabled , false))
+        if (!canAccessAccount(zsc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
+        if (!account.getBooleanAttr(Provisioning.A_zimbraFeatureGalEnabled, false))
             throw ServiceException.PERM_DENIED("cannot search GAL");
 
+        String n = request.getAttribute(AccountConstants.E_NAME);
         while (n.endsWith("*"))
             n = n.substring(0, n.length() - 1);
 
@@ -71,7 +72,7 @@ public class SearchGal extends AccountDocumentHandler {
             throw ServiceException.INVALID_REQUEST("Invalid search type: " + typeStr, null);
 
         Provisioning prov = Provisioning.getInstance();
-        Domain d = prov.getDomain(acct);
+        Domain d = prov.getDomain(account);
         SearchGalResult result = prov.searchGal(d, n, type, null);
         response.addAttribute(AccountConstants.A_MORE, result.hadMore);
         for (GalContact contact : result.matches)

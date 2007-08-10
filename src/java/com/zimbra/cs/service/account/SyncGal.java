@@ -47,16 +47,19 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class SyncGal extends AccountDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Element response = lc.createElement(AccountConstants.SYNC_GAL_RESPONSE);
-        String tokenAttr = request.getAttribute(MailConstants.A_TOKEN, "");
-        Account acct = getRequestedAccount(getZimbraSoapContext(context));
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Account account = getRequestedAccount(getZimbraSoapContext(context));
 
-        if (!acct.getBooleanAttr(Provisioning.A_zimbraFeatureGalEnabled , false))
+        if (!canAccessAccount(zsc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
+        if (!account.getBooleanAttr(Provisioning.A_zimbraFeatureGalEnabled , false))
             throw ServiceException.PERM_DENIED("cannot sync GAL");
-        
-        Domain d = Provisioning.getInstance().getDomain(acct);
+
+        Domain d = Provisioning.getInstance().getDomain(account);
+        String tokenAttr = request.getAttribute(MailConstants.A_TOKEN, "");
         SearchGalResult result = Provisioning.getInstance().searchGal(d, "", Provisioning.GAL_SEARCH_TYPE.ALL, tokenAttr);
+
+        Element response = zsc.createElement(AccountConstants.SYNC_GAL_RESPONSE);
         if (result.token != null)
             response.addAttribute(MailConstants.A_TOKEN, result.token);
         for (GalContact contact : result.matches)

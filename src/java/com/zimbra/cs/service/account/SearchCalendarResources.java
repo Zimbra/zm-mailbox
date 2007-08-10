@@ -50,9 +50,12 @@ public class SearchCalendarResources extends AccountDocumentHandler {
     }
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Element response = lc.createElement(AccountConstants.SEARCH_CALENDAR_RESOURCES_RESPONSE);
-        Account acct = getRequestedAccount(getZimbraSoapContext(context));
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Element response = zsc.createElement(AccountConstants.SEARCH_CALENDAR_RESOURCES_RESPONSE);
+        Account account = getRequestedAccount(getZimbraSoapContext(context));
+
+        if (!canAccessAccount(zsc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
 
         String sortBy = request.getAttribute(AccountConstants.A_SORT_BY, null);
         boolean sortAscending = request.getAttributeBool(AccountConstants.A_SORT_ASCENDING, true);
@@ -63,7 +66,7 @@ public class SearchCalendarResources extends AccountDocumentHandler {
         filter.andWith(sFilterActiveResourcesOnly);
 
         Provisioning prov = Provisioning.getInstance();
-        List resources = prov.searchCalendarResources(prov.getDomain(acct), filter, attrs, sortBy, sortAscending);
+        List resources = prov.searchCalendarResources(prov.getDomain(account), filter, attrs, sortBy, sortAscending);
         for (Iterator iter = resources.iterator(); iter.hasNext(); ) {
             CalendarResource resource = (CalendarResource) iter.next();
             ToXML.encodeCalendarResource(response, resource);
