@@ -36,6 +36,7 @@ public class CreateFolder extends RedoableOp {
 
     private String mName;
     private int mParentId;
+    private byte mAttrs;
     private byte mDefaultView;
     private int mFlags;
     private byte mColor;
@@ -45,9 +46,14 @@ public class CreateFolder extends RedoableOp {
     public CreateFolder() { }
 
     public CreateFolder(int mailboxId, String name, int parentId, byte view, int flags, byte color, String url) {
+    	this(mailboxId, name, parentId, (byte)0, view, flags, color, url);
+    }
+    
+    public CreateFolder(int mailboxId, String name, int parentId, byte attrs, byte view, int flags, byte color, String url) {
         setMailboxId(mailboxId);
         mName = name == null ? "" : name;
         mParentId = parentId;
+        mAttrs = attrs;
         mDefaultView = view;
         mFlags = flags;
         mColor = color;
@@ -70,7 +76,9 @@ public class CreateFolder extends RedoableOp {
     @Override
     protected String getPrintableData() {
         StringBuilder sb = new StringBuilder("name=").append(mName);
-        sb.append(", parent=").append(mParentId).append(", view=").append(mDefaultView);
+        sb.append(", parent=").append(mParentId);
+        sb.append(", attrs=").append(mAttrs);
+        sb.append(", view=").append(mDefaultView);
         sb.append(", flags=").append(mFlags).append(", color=").append(mColor);
         sb.append(", url=").append(mUrl).append(", id=").append(mFolderId);
         return sb.toString();
@@ -80,6 +88,7 @@ public class CreateFolder extends RedoableOp {
     protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeUTF(mName);
         out.writeInt(mParentId);
+        if (getVersion().atLeast(1, 19)) out.writeByte(mAttrs);
         out.writeByte(mDefaultView);
         out.writeInt(mFlags);
         out.writeByte(mColor);
@@ -91,6 +100,7 @@ public class CreateFolder extends RedoableOp {
     protected void deserializeData(RedoLogInput in) throws IOException {
         mName = in.readUTF();
         mParentId = in.readInt();
+        if (getVersion().atLeast(1, 19)) mAttrs = in.readByte();
         mDefaultView = in.readByte();
         mFlags = in.readInt();
         mColor = in.readByte();
@@ -103,7 +113,7 @@ public class CreateFolder extends RedoableOp {
         int mboxId = getMailboxId();
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
         try {
-            mailbox.createFolder(getOperationContext(), mName, mParentId, mDefaultView, mFlags, mColor, mUrl);
+            mailbox.createFolder(getOperationContext(), mName, mParentId, mAttrs, mDefaultView, mFlags, mColor, mUrl);
         } catch (MailServiceException e) {
             String code = e.getCode();
             if (code.equals(MailServiceException.ALREADY_EXISTS)) {

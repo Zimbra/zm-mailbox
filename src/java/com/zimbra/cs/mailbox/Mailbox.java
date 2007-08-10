@@ -4748,13 +4748,18 @@ public class Mailbox {
             endTransaction(success);
         }
     }
-
+    
     /**
-     * @see #createFolder(OperationContext, String, int, byte, int, byte, String)
+     * @see #createFolder(OperationContext, String, int, byte, byteint, byte, String)
      */
     public synchronized Folder createFolder(OperationContext octxt, String name, int parentId, byte defaultView, int flags, byte color, String url)
+    		throws ServiceException {
+		return createFolder(octxt, name, parentId, (byte)0, defaultView, flags, color, url);
+	}
+
+    public synchronized Folder createFolder(OperationContext octxt, String name, int parentId, byte attrs, byte defaultView, int flags, byte color, String url)
     throws ServiceException {
-        CreateFolder redoRecorder = new CreateFolder(mId, name, parentId, defaultView, flags, color, url);
+        CreateFolder redoRecorder = new CreateFolder(mId, name, parentId, attrs, defaultView, flags, color, url);
 
         boolean success = false;
         try {
@@ -4762,7 +4767,7 @@ public class Mailbox {
             CreateFolder redoPlayer = (CreateFolder) mCurrentChange.getRedoPlayer();
 
             int folderId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getFolderId());
-            Folder folder = Folder.create(folderId, this, getFolderById(parentId), name, (byte) 0, defaultView, flags, color, url);
+            Folder folder = Folder.create(folderId, this, getFolderById(parentId), name, attrs, defaultView, flags, color, url);
             redoRecorder.setFolderId(folder.getId());
             success = true;
             return folder;
