@@ -178,6 +178,52 @@ public class ContactCSV {
         contact.put(field, buf.toString());
     }
     
+    private void addNameField(String colName, List<String> csv, String field, Map<String,String> contact) {
+        String[] nameFields = field.split(",");
+        String value = getField(colName.toLowerCase(), csv);
+        String firstNameField = nameFields[0];
+
+        if (firstNameField == null)
+            return;
+
+        String middleNameField = null, lastNameField = null;
+        if (nameFields.length == 2)       // firstName,lastName
+            lastNameField = nameFields[1];
+        else if (nameFields.length == 3) {  // firstName,middleName,lastName
+            middleNameField = nameFields[1];
+            lastNameField = nameFields[2];
+        } else {
+            // not sure how to parse this one.  just put everything in firstName field.
+            contact.put(firstNameField, value);
+            return;
+        }
+
+        int comma = value.indexOf(',');
+        if (comma > 0) {
+            // Brown, James
+            contact.put(lastNameField, value.substring(0, comma).trim());
+            contact.put(firstNameField, value.substring(comma+1).trim());
+            return;
+        }
+        
+        int space = value.indexOf(' ');
+        if (space == -1) {
+            contact.put(firstNameField, value);
+            return;
+        }
+        contact.put(firstNameField, value.substring(0, space).trim());
+        space++;
+        if (middleNameField != null) {
+            int anotherSpace = value.indexOf(' ', space);
+            if (anotherSpace > 0) {
+                contact.put(middleNameField, value.substring(space, anotherSpace).trim());
+                space = anotherSpace + 1;
+            }
+        }
+        if (space < value.length())
+            contact.put(lastNameField, value.substring(space).trim());
+    }
+    
     private Map<String, String> toContact(List<String> csv, CsvFormat format) throws ParseException {
         Map<String, String> contact = new HashMap<String, String>();
         
@@ -189,6 +235,8 @@ public class ContactCSV {
             for (CsvColumn col : format.columns) {
                 if (col.multivalue) {
                     addMultiValueField(col.names, csv, col.field, contact);
+                } else if (col.isName) {
+                    addNameField(col.name, csv, col.field, contact);
                 } else {
                     addField(col.name, csv, col.field, contact);
                 }
@@ -276,15 +324,20 @@ public class ContactCSV {
         String field;   // zimbra field that it maps to
         List<String> names;  // in case of multivalue mapping
         boolean multivalue;
+        boolean isName;
         CsvColumn(Element col) {
             names = new ArrayList<String>();
             name  = col.attributeValue(ATTR_NAME);
             field = col.attributeValue(ATTR_FIELD);
             String type = col.attributeValue(ATTR_TYPE);
-            if (type != null && type.equals("multivalue")) {
+            if (type == null) {
+                return;
+            } else if (type.equals("multivalue")) {
                 multivalue = true;
                 Collections.addAll(names, name.split(","));
                 name = names.get(0);
+            } else if (type.equals("name")) {
+                isName = true;
             }
         }
     }
