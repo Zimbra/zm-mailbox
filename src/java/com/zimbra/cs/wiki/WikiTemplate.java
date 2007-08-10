@@ -211,30 +211,36 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			Token tok = null;
 			int padding = 2;
 			int end = pos;
+			int lastPos = str.length() - 1;
+			if (pos >= lastPos)
+                return;
 			if (str.startsWith("{{", pos)) {
 				end = str.indexOf("}}", pos);
-				if (end > 0)
+				if (end > 0) {
 					tok = new Token(str.substring(pos+2, end), TokenType.WIKLET);
+					end += padding;
+				}
 			} else if (str.startsWith("[[", pos)) {
 				end = str.indexOf("]]", pos);
-				if (end > 0)
+				if (end > 0) {
 					tok = new Token(str.substring(pos+2, end), TokenType.WIKILINK);
+					end += padding;
+				}
 			} else if (str.startsWith("<wiklet", pos)) {
 				end = str.indexOf(">", pos);
 				if (end > 0) {
 					if (str.charAt(end-1) == '/') {
-						end = end - 1;
+						padding = 1;
 					} else {
 						int endSection = str.indexOf("</wiklet>", end);
 						padding = endSection - end + 9;
 					}
 					tok = new Token(str.substring(pos+1, end), TokenType.WIKLET);
+					end += padding;
 				}
 			}
-			end += padding;
 			
 			if (tok == null) {
-				int lastPos = str.length() - 1;
 				end = pos+1;
 				while (end < lastPos) {
 					if (str.startsWith("{{", end) ||
@@ -246,13 +252,14 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 				}
 				if (end == lastPos)
 					end = str.length();
-				tok = new Token(str.substring(pos, end), TokenType.TEXT);
+				if (end > pos)
+				    tok = new Token(str.substring(pos, end), TokenType.TEXT);
 			}
 			
 			if (tok != null)
 				tokens.add(tok);
 
-			if (end == -1 || end == str.length())
+			if (end == -1 || end >= str.length())
 				return;
 			
 			Token.parse(str, end, tokens);
