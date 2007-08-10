@@ -46,10 +46,13 @@ import com.zimbra.cs.session.Session;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * @author schemers
@@ -81,6 +84,7 @@ public class SearchDirectory extends AdminDocumentHandler {
         int offset = (int) request.getAttributeLong(AdminConstants.A_OFFSET, 0);
         String domain = request.getAttribute(AdminConstants.A_DOMAIN, null);
         boolean applyCos = request.getAttributeBool(AdminConstants.A_APPLY_COS, true);
+        boolean applyConfig = request.getAttributeBool(AdminConstants.A_APPLY_CONFIG, true);
         String attrsStr = request.getAttribute(AdminConstants.A_ATTRS, null);
         String sortBy = request.getAttribute(AdminConstants.A_SORT_BY, null);
         String types = request.getAttribute(AdminConstants.A_TYPES, "accounts");
@@ -132,20 +136,21 @@ public class SearchDirectory extends AdminDocumentHandler {
             accounts = prov.searchDirectory(options);
         }
 
+        Set<String> reqAttrs = attrs == null ? null : new HashSet(Arrays.asList(attrs));
         Element response = zsc.createElement(AdminConstants.SEARCH_DIRECTORY_RESPONSE);
         int i, limitMax = offset+limit;
         for (i=offset; i < limitMax && i < accounts.size(); i++) {
             NamedEntry entry = (NamedEntry) accounts.get(i);
         	if (entry instanceof CalendarResource) {
-        	    ToXML.encodeCalendarResourceOld(response, (CalendarResource) entry, applyCos);
+        	    ToXML.encodeCalendarResourceOld(response, (CalendarResource) entry, applyCos, reqAttrs);
         	} else if (entry instanceof Account) {
-                ToXML.encodeAccountOld(response, (Account) entry, applyCos);
+                ToXML.encodeAccountOld(response, (Account) entry, applyCos, reqAttrs);
             } else if (entry instanceof DistributionList) {
                 doDistributionList(response, (DistributionList) entry);
             } else if (entry instanceof Alias) {
                 doAlias(response, (Alias) entry);
             } else if (entry instanceof Domain) {
-                GetDomain.doDomain(response, (Domain) entry, applyCos);
+                GetDomain.doDomain(response, (Domain) entry, applyConfig, reqAttrs);
             }
         }          
 

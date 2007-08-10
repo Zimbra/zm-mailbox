@@ -58,11 +58,15 @@ public class ToXML {
     }
 
     public static Element encodeAccountOld(Element parent, Account account, boolean applyCos) {
+        return encodeAccountOld(parent, account, applyCos, null);
+    }
+    
+    public static Element encodeAccountOld(Element parent, Account account, boolean applyCos, Set<String> reqAttrs) {
         Element acctElem = parent.addElement(AccountConstants.E_ACCOUNT);
         acctElem.addAttribute(AccountConstants.A_NAME, account.getName());
         acctElem.addAttribute(AccountConstants.A_ID, account.getId());
         Map attrs = account.getAttrs(applyCos);
-        addAccountAttrsOld(acctElem, attrs, AccountConstants.A_N);
+        addAccountAttrsOld(acctElem, attrs, AccountConstants.A_N, applyCos?null:reqAttrs);
         return acctElem;
     }
 
@@ -80,11 +84,15 @@ public class ToXML {
     }
 
     public static Element encodeCalendarResourceOld(Element parent, CalendarResource resource, boolean applyCos) {
+        return encodeCalendarResourceOld(parent, resource, applyCos, null);
+    }
+    
+    public static Element encodeCalendarResourceOld(Element parent, CalendarResource resource, boolean applyCos,  Set<String> reqAttrs) {
         Element resElem = parent.addElement(AccountConstants.E_CALENDAR_RESOURCE);
         resElem.addAttribute(AccountConstants.A_NAME, resource.getName());
         resElem.addAttribute(AccountConstants.A_ID, resource.getId());
         Map attrs = resource.getAttrs(applyCos);
-        addAccountAttrsOld(resElem, attrs, AccountConstants.A_N);
+        addAccountAttrsOld(resElem, attrs, AccountConstants.A_N, applyCos?null:reqAttrs);
         return resElem;
     }
 
@@ -116,7 +124,7 @@ public class ToXML {
         }       
     }
 
-    private static void addAccountAttrsOld(Element e, Map attrs, String key) {
+    private static void addAccountAttrsOld(Element e, Map attrs, String key, Set<String> reqAttrs) {
         for (Iterator iter = attrs.entrySet().iterator(); iter.hasNext(); ) {
             Map.Entry entry = (Entry) iter.next();
             String name = (String) entry.getKey();
@@ -129,6 +137,10 @@ public class ToXML {
             // Never return password.
             if (name.equalsIgnoreCase(Provisioning.A_userPassword))
                 value = "VALUE-BLOCKED";
+            
+            // only returns requested attrs
+            if (reqAttrs != null && !reqAttrs.contains(name))
+                continue;
 
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;

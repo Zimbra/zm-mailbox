@@ -37,9 +37,11 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.soap.ZimbraSoapContext;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * @author schemers
@@ -82,6 +84,10 @@ public class GetDomain extends AdminDocumentHandler {
     }
     
     public static void doDomain(Element e, Domain d, boolean applyConfig) throws ServiceException {
+        doDomain(e, d, applyConfig, null);
+    }
+    
+    public static void doDomain(Element e, Domain d, boolean applyConfig, Set<String> reqAttrs) throws ServiceException {
         Element domain = e.addElement(AdminConstants.E_DOMAIN);
         domain.addAttribute(AdminConstants.A_NAME,d.getName());
         domain.addAttribute(AdminConstants.A_ID,d.getId());
@@ -90,6 +96,10 @@ public class GetDomain extends AdminDocumentHandler {
             Map.Entry entry = (Entry) mit.next();
             String name = (String) entry.getKey();
             Object value = entry.getValue();
+            
+            if (!applyConfig && (reqAttrs != null && !reqAttrs.contains(name)))
+                continue;
+            
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;
                 for (int i = 0; i < sv.length; i++)

@@ -261,6 +261,8 @@ SearchAccountsRequest
 	domain - the domain name to limit the search to
 	applyCos - whether or not (0/1) to apply the COS policy to account. specify 0 if only
 	           requesting attrs that aren't inherited from COS
+	applyConfig - whether or not (0/1) to apply the global config attrs to domain. specify 0 if only
+               requesting attrs that aren't inherited from global config
 	attrs - comma-seperated list of attrs to return ("displayName", "zimbraId", "zimbraAccountStatus")
 	sortBy - name of attribute to sort on. default is the account name.
 	sortAscending - whether to sort in ascending order (0/1), 1 is default
@@ -630,7 +632,7 @@ Notes:
 
 by "serviceHostname" will return the server that has zimbraServiceHostname set to the specified value.
 
- if {apply-config} is 1, then certain unset attrs on an account will get their value from the global config.
+ if {apply-config} is 1, then certain unset attrs on a server will get their value from the global config.
 
  if {apply-config} is 0, then only attributes directly set on the server will be returned
 
