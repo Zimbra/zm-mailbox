@@ -29,7 +29,6 @@
 package com.zimbra.cs.service.account;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -45,7 +44,6 @@ import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Identity;
-import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Zimlet;
@@ -164,15 +162,8 @@ public class GetInfo extends AccountDocumentHandler  {
 
     static void doAttrs(Account acct, String locale, Element response, Map attrsMap) throws ServiceException {
         Set<String> attrList = AttributeManager.getInstance().getAttrsWithFlag(AttributeFlag.accountInfo);
-        
-        if (attrList.contains(Provisioning.A_zimbraLocale)) {
-            doAttr(response, Provisioning.A_zimbraLocale, locale);
-        }
-        for (String key : attrList) {
-            Object value = attrsMap.get(key);
-            if (!key.equals(Provisioning.A_zimbraLocale))
-                doAttr(response, key, value);
-        }
+        for (String key : attrList)
+            doAttr(response, key, key.equals(Provisioning.A_zimbraLocale) ? locale : attrsMap.get(key));
     }
     
     static void doAttr(Element response, String key, Object value) {
@@ -244,68 +235,45 @@ public class GetInfo extends AccountDocumentHandler  {
         }
     }
  
-    private static void doChildAccounts(Element ca, Account acct) throws ServiceException {
+    private static void doChildAccounts(Element response, Account acct) throws ServiceException {
         String[] childAccounts = acct.getMultiAttr(Provisioning.A_zimbraChildAccount);
         String[] visibleChildAccounts = acct.getMultiAttr(Provisioning.A_zimbraChildVisibleAccount);
 
-        if (childAccounts.length > 0 || visibleChildAccounts.length > 0) {
-            
-            class ChildInfo {
-                public boolean mVisible;
-                public String mName;
-                public String mDisplayName;
-                
-                ChildInfo(boolean visible) {
-                    mVisible = visible;
-                }
-            }
-            
-            Map<String, ChildInfo> children = new HashMap<String, ChildInfo>();
-            for (int i = 0; i < visibleChildAccounts.length; i++) {
-                children.put(visibleChildAccounts[i], new ChildInfo(true));
-            }
-            for (int i = 0; i < childAccounts.length; i++) {
-                if (!children.containsKey(childAccounts[i]))
-                    children.put(childAccounts[i], new ChildInfo(false));
-            }
-            
-            Provisioning prov = Provisioning.getInstance();
-            int flags = Provisioning.SA_ACCOUNT_FLAG;
-            StringBuilder query = new StringBuilder();
-            query.append("(|");
-            for (String id : children.keySet())
-                query.append(String.format("(%s=%s)", Provisioning.A_zimbraId, id));
-            query.append(")");
-            
-            List<NamedEntry> accounts = prov.searchAccounts(query.toString(), null, null, true, flags);
-            for (NamedEntry obj: accounts) {
-                if (!(obj instanceof Account))
-                    throw ServiceException.FAILURE("child id " + obj.getId() +"is not an account", null);
-                Account childAcct = (Account)obj;
-                String childId = childAcct.getId();
-                String childName = childAcct.getName();
-                String childDisplayName = childAcct.getAttr(Provisioning.A_displayName);
-                
-                ChildInfo ci = children.get(childId);
-                assert(ci.mName == null);
-                ci.mName = childName;
-                ci.mDisplayName = childDisplayName;
-            }
+        if (childAccounts.length == 0 && visibleChildAccounts.length == 0)
+            return;
 
-            for (Map.Entry<String, ChildInfo> child : children.entrySet()) {
-                ChildInfo ci = child.getValue();
-                Element acctElem = ca.addElement(AccountConstants.E_CHILD_ACCOUNT);
-                acctElem.addAttribute(AccountConstants.A_ID, child.getKey());
-                acctElem.addAttribute(AccountConstants.A_NAME, ci.mName);
-                acctElem.addAttribute(AccountConstants.A_VISIBLE, ci.mVisible);
-                
-                Element attrsElem = acctElem.addElement(AccountConstants.E_ATTRS);
-                if (ci.mDisplayName != null)
-                    attrsElem.addElement(AccountConstants.E_ATTR).addAttribute(AccountConstants.A_NAME, Provisioning.A_displayName).setText(ci.mDisplayName);
-                
-            }
+        Provisioning prov = Provisioning.getInstance();
+        Set<String> children = new HashSet<String>(childAccounts.length);
+
+        for (String childId : visibleChildAccounts) {
+            if (children.contains(childId))
+                continue;
+            Account child = prov.get(Provisioning.AccountBy.id, childId);
+            if (child != null)
+                encodeChildAccount(response, child, true);
+            children.add(childId);
+        }
+
+        for (String childId : childAccounts) {
+            if (children.contains(childId))
+                continue;
+            Account child = prov.get(Provisioning.AccountBy.id, childId);
+            if (child != null)
+                encodeChildAccount(response, child, false);
+            children.add(childId);
         }
     }
-    
 
+    private static void encodeChildAccount(Element parent, Account child, boolean isVisible) {
+        Element elem = parent.addElement(AccountConstants.E_CHILD_ACCOUNT);
+        elem.addAttribute(AccountConstants.A_ID, child.getId());
+        elem.addAttribute(AccountConstants.A_NAME, child.getName());
+        elem.addAttribute(AccountConstants.A_VISIBLE, isVisible);
+
+        String displayName = child.getAttr(Provisioning.A_displayName);
+        if (displayName != null) {
+            Element attrsElem = elem.addUniqueElement(AccountConstants.E_ATTRS);
+            attrsElem.addKeyValuePair(Provisioning.A_displayName, displayName, AccountConstants.E_ATTR, AccountConstants.A_NAME);
+        }
+    }
 }
