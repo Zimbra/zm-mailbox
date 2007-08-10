@@ -42,7 +42,6 @@ import javax.mail.internet.MailDateFormat;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeUtility;
 
-import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import org.apache.lucene.document.Document;
@@ -478,16 +477,14 @@ public class ParsedMessage {
     }
 
     private void setReceivedDate(long date) {
-        if (date == -1)
-            date = System.currentTimeMillis();
-        date = Math.max(0, date);
         // round to nearest second...
-        mReceivedDate = (date / 1000) * 1000;
+        if (date != -1)
+            mReceivedDate = (Math.max(0, date) / 1000) * 1000;
     }
     public long getReceivedDate() {
         if (mReceivedDate == -1)
-            sLog.error("Received date not set for ParsedMessage!");
-        assert(mReceivedDate != -1);  
+            mReceivedDate = System.currentTimeMillis();
+        assert(mReceivedDate >= 0);  
         return mReceivedDate;
     }
 
