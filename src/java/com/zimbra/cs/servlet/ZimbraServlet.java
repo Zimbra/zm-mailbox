@@ -90,36 +90,40 @@ public class ZimbraServlet extends HttpServlet {
     private int[] mAllowedPorts;
 
     public void init() throws ServletException {
-        String portsCSV = getInitParameter(PARAM_ALLOWED_PORTS);
-        if (portsCSV != null) {
-            // Split on zero-or-more spaces followed by comma followed by
-            // zero-or-more spaces.
-            String[] vals = portsCSV.split("\\s*,\\s*");
-            if (vals == null || vals.length == 0)
-                throw new ServletException("Must specify comma-separated list of port numbers for " +
-                                           PARAM_ALLOWED_PORTS + " parameter");
-            mAllowedPorts = new int[vals.length];
-            for (int i = 0; i < vals.length; i++) {
-                try {
-                    mAllowedPorts[i] = Integer.parseInt(vals[i]);
-                } catch (NumberFormatException e) {
-                    throw new ServletException("Invalid port number \"" + vals[i] + "\" in " +
+        try {
+            String portsCSV = getInitParameter(PARAM_ALLOWED_PORTS);
+            if (portsCSV != null) {
+                // Split on zero-or-more spaces followed by comma followed by
+                // zero-or-more spaces.
+                String[] vals = portsCSV.split("\\s*,\\s*");
+                if (vals == null || vals.length == 0)
+                    throw new ServletException("Must specify comma-separated list of port numbers for " +
                                                PARAM_ALLOWED_PORTS + " parameter");
+                mAllowedPorts = new int[vals.length];
+                for (int i = 0; i < vals.length; i++) {
+                    try {
+                        mAllowedPorts[i] = Integer.parseInt(vals[i]);
+                    } catch (NumberFormatException e) {
+                        throw new ServletException("Invalid port number \"" + vals[i] + "\" in " +
+                                                   PARAM_ALLOWED_PORTS + " parameter");
+                    }
+                    if (mAllowedPorts[i] < 1)
+                        throw new ServletException("Invalid port number " + mAllowedPorts[i] + " in " +
+                                                   PARAM_ALLOWED_PORTS + " parameter; port number must be greater than zero");
                 }
-                if (mAllowedPorts[i] < 1)
-                    throw new ServletException("Invalid port number " + mAllowedPorts[i] + " in " +
-                                               PARAM_ALLOWED_PORTS + " parameter; port number must be greater than zero");
             }
-        }
-        
-        // Store reference to this servlet for accessor 
-        synchronized (sServlets) {
-            String name = getServletName();
-            if (sServlets.containsKey(name)) {
-                Zimbra.halt("Attempted to instantiate a second instance of " + name);
+            
+            // Store reference to this servlet for accessor 
+            synchronized (sServlets) {
+                String name = getServletName();
+                if (sServlets.containsKey(name)) {
+                    Zimbra.halt("Attempted to instantiate a second instance of " + name);
+                }
+                sServlets.put(getServletName(), this);
+                mLog.debug("Added " + getServletName() + " to the servlet list");
             }
-            sServlets.put(getServletName(), this);
-            mLog.debug("Added " + getServletName() + " to the servlet list");
+        } catch (Throwable t) {
+            Zimbra.halt("Unable to initialize servlet " + getServletName() + "; halting", t);
         }
     }
     
