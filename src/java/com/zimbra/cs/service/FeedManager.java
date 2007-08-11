@@ -104,7 +104,7 @@ public class FeedManager {
         HttpClient client = new HttpClient();
         NetUtil.configureProxy(client);
         client.setConnectionTimeout(10000);
-        client.setTimeout(20000);
+        client.setTimeout(60000);
 
         HttpMethodParams params = new HttpMethodParams();
         params.setParameter(HttpMethodParams.HTTP_CONTENT_CHARSET, Mime.P_CHARSET_UTF8);
