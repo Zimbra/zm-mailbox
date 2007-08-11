@@ -100,13 +100,14 @@ public class SenderList {
             return this;
         }
 
-        if (msg.getDate() < mLastDate)
+        long date = msg.getDate();
+        if (date < mLastDate)
             throw new RefreshException("appended message predates existing last message");
 
-        mLastDate = msg.getDate();
+        mLastDate = date;
         mSize++;
-        ParsedAddress pa = new ParsedAddress(msg.getSender()).parse();
-        
+
+        ParsedAddress pa = new ParsedAddress(sender).parse();
         if (mFirst == null) {
             mFirst = pa;
         } else if (pa.equals(mFirst)) {
@@ -158,6 +159,7 @@ public class SenderList {
     public static SenderList parse(Metadata meta) throws ServiceException {
         SenderList sl = new SenderList();
         sl.mSize = (int) meta.getLong(Metadata.FN_NODES);
+        sl.mLastDate = meta.getLong(Metadata.FN_LAST_DATE, 0);
         sl.mFirst = importAddress(meta.getMap(Metadata.FN_FIRST, true));
         sl.mIsElided = meta.getBool(Metadata.FN_ELIDED);
         MetadataList entries = meta.getList(Metadata.FN_ENTRIES, true);
@@ -183,6 +185,7 @@ public class SenderList {
     public String toString() {
         Metadata meta = new Metadata();
         meta.put(Metadata.FN_NODES, mSize);
+        meta.put(Metadata.FN_LAST_DATE, mLastDate);
         meta.put(Metadata.FN_FIRST, exportAddress(mFirst));
         meta.put(Metadata.FN_ELIDED, mIsElided);
         if (mParticipants != null && !mParticipants.isEmpty()) {
