@@ -45,6 +45,9 @@ public class GetDataSources extends MailDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
         Account account = getRequestedAccount(zsc);
         
+        if (!canAccessAccount(zsc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
+        
         List<DataSource> dataSources = prov.getAllDataSources(account);
     	Element response = zsc.createElement(MailService.GET_DATA_SOURCES_RESPONSE);
 

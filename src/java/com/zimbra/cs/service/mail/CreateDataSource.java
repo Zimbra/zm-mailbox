@@ -46,6 +46,9 @@ public class CreateDataSource extends MailDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
         Account account = getRequestedAccount(zsc);
         
+        if (!canAccessAccount(zsc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
+        
         // Create the data source.  Currently only POP3 is supported.
         Element ePop3 = request.getElement(MailService.E_DS_POP3);
         Map<String, Object> dsAttrs = new HashMap<String, Object>();

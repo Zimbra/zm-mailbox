@@ -41,6 +41,10 @@ public class DeleteIdentity extends DocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getRequestedAccount(zsc);
+        
+        if (!canAccessAccount(zsc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
+ 
         Provisioning prov = Provisioning.getInstance();
 
         Element eIdentity = request.getElement(AccountService.E_IDENTITY);

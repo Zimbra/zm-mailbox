@@ -57,6 +57,8 @@ public class GetAccountInfo extends AccountDocumentHandler  {
 
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(value);
+        if (!canAccessAccount(lc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
 
         Element response = lc.createElement(AccountService.GET_ACCOUNT_INFO_RESPONSE);
         response.addElement(AccountService.E_NAME).setText(account.getName());

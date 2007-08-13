@@ -45,16 +45,19 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class AutoCompleteGal extends AccountDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        String n = request.getAttribute(AccountService.E_NAME);
-
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Element response = lc.createElement(AccountService.AUTO_COMPLETE_GAL_RESPONSE);
+        
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Element response = zsc.createElement(AccountService.AUTO_COMPLETE_GAL_RESPONSE);
         Account acct = getRequestedAccount(getZimbraSoapContext(context));
 
+        if (!canAccessAccount(zsc, acct))
+            throw ServiceException.PERM_DENIED("can not access account");
+        
         if (!(acct.getBooleanAttr(Provisioning.A_zimbraFeatureGalAutoCompleteEnabled , false) &&
               acct.getBooleanAttr(Provisioning.A_zimbraFeatureGalEnabled , false)))
               throw ServiceException.PERM_DENIED("cannot auto complete GAL");
         
+        String n = request.getAttribute(AccountService.E_NAME);
         while (n.endsWith("*"))
             n = n.substring(0, n.length() - 1);
 

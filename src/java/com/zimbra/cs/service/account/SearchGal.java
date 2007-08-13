@@ -46,15 +46,18 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class SearchGal extends AccountDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        String n = request.getAttribute(AccountService.E_NAME);
-
+        
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Element response = lc.createElement(AccountService.SEARCH_GAL_RESPONSE);
         Account acct = getRequestedAccount(getZimbraSoapContext(context));
 
+        if (!canAccessAccount(lc, acct))
+            throw ServiceException.PERM_DENIED("can not access account");
+
         if (!acct.getBooleanAttr(Provisioning.A_zimbraFeatureGalEnabled , false))
             throw ServiceException.PERM_DENIED("cannot search GAL");
 
+        String n = request.getAttribute(AccountService.E_NAME);
         while (n.endsWith("*"))
             n = n.substring(0, n.length() - 1);
 

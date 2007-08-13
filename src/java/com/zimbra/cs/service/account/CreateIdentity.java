@@ -41,6 +41,9 @@ public class CreateIdentity extends DocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getRequestedAccount(zsc);
         
+        if (!canAccessAccount(zsc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
+        
         Element identityEl = request.getElement(AccountService.E_IDENTITY);
         String name = identityEl.getAttribute(AccountService.A_NAME);
         Map<String,Object> attrs = AccountService.getAttrs(identityEl, AccountService.A_NAME);

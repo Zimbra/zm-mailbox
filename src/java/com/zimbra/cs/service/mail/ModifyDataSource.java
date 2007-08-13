@@ -48,6 +48,10 @@ public class ModifyDataSource extends MailDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         Account account = getRequestedAccount(zsc);
+        
+        if (!canAccessAccount(zsc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
+
         boolean wipeOutOldData = false;
         
         Element ePop3 = request.getElement(MailService.E_DS_POP3);

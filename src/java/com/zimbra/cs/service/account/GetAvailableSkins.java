@@ -42,6 +42,9 @@ public class GetAvailableSkins extends DocumentHandler  {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(lc);
+        
+        if (!canAccessAccount(lc, acct))
+            throw ServiceException.PERM_DENIED("can not access account");
 
         String[] skins = acct.getMultiAttr(Provisioning.A_zimbraAvailableSkin);
         if (skins.length == 0) {

@@ -53,6 +53,9 @@ public class SearchCalendarResources extends AccountDocumentHandler {
         Element response = lc.createElement(AccountService.SEARCH_CALENDAR_RESOURCES_RESPONSE);
         Account acct = getRequestedAccount(getZimbraSoapContext(context));
 
+        if (!canAccessAccount(lc, acct))
+            throw ServiceException.PERM_DENIED("can not access account");
+
         String sortBy = request.getAttribute(AccountService.A_SORT_BY, null);        
         boolean sortAscending = request.getAttributeBool(AccountService.A_SORT_ASCENDING, true);        
         String attrsStr = request.getAttribute(AccountService.A_ATTRS, null);

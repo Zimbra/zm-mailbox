@@ -49,6 +49,9 @@ public class GetPrefs extends AccountDocumentHandler  {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(lc);
 
+        if (!canAccessAccount(lc, acct))
+            throw ServiceException.PERM_DENIED("can not access account");
+     
         Element response = lc.createElement(AccountService.GET_PREFS_RESPONSE);
         handle(request, response, acct);
         return response;

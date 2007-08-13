@@ -50,7 +50,10 @@ public class SyncGal extends AccountDocumentHandler {
         Element response = lc.createElement(AccountService.SYNC_GAL_RESPONSE);
         String tokenAttr = request.getAttribute(MailService.A_TOKEN, "");        
         Account acct = getRequestedAccount(getZimbraSoapContext(context));
-
+        
+        if (!canAccessAccount(lc, acct))
+            throw ServiceException.PERM_DENIED("can not access account");
+     
         if (!acct.getBooleanAttr(Provisioning.A_zimbraFeatureGalEnabled , false))
             throw ServiceException.PERM_DENIED("cannot sync GAL");
         

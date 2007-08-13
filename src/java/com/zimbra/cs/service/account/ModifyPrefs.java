@@ -45,6 +45,9 @@ public class ModifyPrefs extends AccountDocumentHandler {
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(lc);
+        
+        if (!canAccessAccount(lc, acct))
+            throw ServiceException.PERM_DENIED("can not access account");
 
         HashMap<String, String> prefs = new HashMap<String, String>();
 //        HashMap specialPrefs = new HashMap();

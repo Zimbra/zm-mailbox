@@ -113,7 +113,11 @@ public abstract class DocumentHandler {
         return AccessManager.getInstance().isDomainAdminOnly(zsc.getAuthToken());
     }
 
-    public boolean canAccessAccount(ZimbraSoapContext zsc, Account target) throws ServiceException {
+    public static boolean canAccessAccount(ZimbraSoapContext zsc, Account target) throws ServiceException {
+        if (zsc.getAuthtokenAccountId() == null || target == null)
+            return false;
+        if ( target.getId().equals(zsc.getAuthtokenAccountId()))
+            return true;
         return AccessManager.getInstance().canAccessAccount(zsc.getAuthToken(), target);
     }
 
