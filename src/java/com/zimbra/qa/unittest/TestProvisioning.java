@@ -460,6 +460,17 @@ public class TestProvisioning extends TestCase {
         // ad auth
         // need an AD, can't test
         
+        // kerberos5 auth
+        attrsToMod.clear();
+        attrsToMod.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_KERBEROS5);
+        attrsToMod.put(Provisioning.A_zimbraAuthKerberos5Realm, "PHOEBE.LOCAL");
+        mProv.modifyAttrs(domain, attrsToMod, true);
+        attrsToMod.clear();
+        attrsToMod.put(Provisioning.A_zimbraForeignPrincipal, "kerberos5: user1@PHOEBE.LOCAL");
+        mProv.modifyAttrs(account, attrsToMod, true);
+        mProv.authAccount(account, PASSWORD, "unittest");
+        
+        
         // custom auth
         attrsToMod.clear();
         String customAuthHandlerName = "test";
@@ -496,6 +507,8 @@ public class TestProvisioning extends TestCase {
                             timestamp,  // timestamp
                             0,          // expires
                             preAuth);   // preauth key
+        
+        
         
     }
     

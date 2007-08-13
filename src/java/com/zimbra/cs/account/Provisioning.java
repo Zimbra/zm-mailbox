@@ -101,11 +101,28 @@ public abstract class Provisioning {
     public static final String AM_AD = "ad";
     
     /**
+     * zimbraAuthMech type of "kerberos5" means use kerberos5 authentication.
+     * The principle can be obtained by, either:
+     * (1) {email-local-part}@{domain-attr-zimbraAuthKerberos5Realm}
+     * or
+     * (2) {principal-name} if account zimbraForeignPrincipal is in the format of 
+     *     kerberos5:{principal-name}
+     */
+    public static final String AM_KERBEROS5 = "kerberos5";
+    
+    /**
      * zimbraAuthMech type of "custom:{handler}" means use registered extension
      * of ZimbraCustomAuth.authenticate() method 
      * see customauth.txt
      */
     public static final String AM_CUSTOM = "custom:";  
+    
+    /**
+     * For kerberos5 auth, we allow specifying a principle on a per-account basis.
+     * If zimbraForeignPrincipal is in the format of kerberos5:{principal-name}, we 
+     * use the {principal-name} instead of {user-part}@{kerberos5-realm-of-the-domain}
+     */
+    public static final String FP_PREFIX_KERBEROS5 = "kerberos5:";  
     
     /**
      * the account is active, and allows logins, etc.
@@ -320,6 +337,8 @@ public abstract class Provisioning {
     public static final String A_zimbraAuthMech = "zimbraAuthMech";
 
     public static final String A_zimbraAuthFallbackToLocal = "zimbraAuthFallbackToLocal";
+    
+    public static final String A_zimbraAuthKerberos5Realm = "zimbraAuthKerberos5Realm";
 
     /**
      * LDAP URL (ldap://ldapserver[:port]/ or ldaps://ldapserver[:port]/)

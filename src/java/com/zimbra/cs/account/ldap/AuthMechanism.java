@@ -36,6 +36,7 @@ public class AuthMechanism {
     public static enum AuthMechType {
         AMT_ZIMBRA,
         AMT_LDAP,
+        AMT_KERBEROS5,
         AMT_CUSTOM
     }
     
@@ -43,8 +44,8 @@ public class AuthMechanism {
     private AuthMechType mType;
     
     /*
-     * For AMT_ZIMBRA and AMT_LDAP, the same value as mAuthMech
-     * For AMT_CUSTOM, the handler name afte the : in mAuthMech
+     * For AMT_ZIMBRA, AMT_LDAP, and AMT_KERBEROS5: the same value as mAuthMech
+     * For AMT_CUSTOM, the handler name after the : in mAuthMech
      */ 
     private String mAuthHandler; 
     
@@ -67,6 +68,10 @@ public class AuthMechanism {
             
         } else if (mAuthMech.equals(Provisioning.AM_LDAP) || mAuthMech.equals(Provisioning.AM_AD)) {
             mType = AuthMechType.AMT_LDAP;
+            mAuthHandler = mAuthMech;
+            
+        } else if (mAuthMech.equals(Provisioning.AM_KERBEROS5)) {
+            mType = AuthMechType.AMT_KERBEROS5;
             mAuthHandler = mAuthMech;
             
         } else if (mAuthMech.startsWith(Provisioning.AM_CUSTOM)) {

@@ -41,6 +41,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Account.CalendarUserType;
+import com.zimbra.cs.account.ldap.AuthMechanism.AuthMechType;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Alias;
@@ -57,6 +58,7 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Identity;
+import com.zimbra.cs.account.krb5.Krb5Login;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.NamedEntryCache;
 import com.zimbra.cs.account.PreAuthKey;
@@ -98,6 +100,7 @@ import javax.naming.ldap.Control;
 import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.PagedResultsControl;
 import javax.naming.ldap.PagedResultsResponseControl;
+import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -2682,6 +2685,41 @@ public class LdapProvisioning extends Provisioning {
                     throw e;
                 ZimbraLog.account.warn(authMech.getHandler() + " auth for domain " +
                                        d.getName() + " failed, falling back to default mech");
+            }
+        } else if (authMechType == AuthMechanism.AuthMechType.AMT_KERBEROS5) {
+            String principle = null;
+            String foreignPrincipal = acct.getAttr(Provisioning.A_zimbraForeignPrincipal);
+            if (foreignPrincipal != null && foreignPrincipal.startsWith(FP_PREFIX_KERBEROS5)) {
+                int idx = foreignPrincipal.indexOf(':');
+                if (idx != -1)
+                    principle = foreignPrincipal.substring(idx+1).trim();
+                else
+                    ZimbraLog.account.warn(authMech.getHandler() + "cannot extract principle from " + Provisioning.A_zimbraForeignPrincipal +
+                                           ", using local part and domain realm"); 
+            }
+            if (principle == null) {
+                String realm = d.getAttr(Provisioning.A_zimbraAuthKerberos5Realm);
+                if (realm != null) {
+                    String[] parts = EmailUtil.getLocalPartAndDomain(acct.getName());
+                    if (parts != null)
+                        principle = parts[0] + "@" + realm;
+                    else
+                        principle = acct.getName() + "@" + realm; // just use whatever in the name
+                }
+            }
+            
+            if (principle == null && !allowFallback)
+                throw AccountServiceException.AUTH_FAILED(acct.getName(), new Exception("cannot obtain principle for " + authMech.getHandler() + " auth"));
+            
+            if (principle != null) {
+                try {
+                    Krb5Login.verifyPassword(principle, password);
+                    return;
+                } catch (LoginException e) {
+                    if (!allowFallback) 
+                        throw AccountServiceException.AUTH_FAILED(acct.getName() + "(kerberos5 principle: " + principle + ")", e);
+                    ZimbraLog.account.warn(authMech.getHandler() + " auth for principle " + principle + " failed, falling back to default mech");
+                }
             }
         } else if (authMechType == AuthMechanism.AuthMechType.AMT_CUSTOM) {
             String handlerName = authMech.getHandler();
