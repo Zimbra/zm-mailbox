@@ -28,6 +28,7 @@ package com.zimbra.cs.account.callback;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.AttributeCallback;
@@ -36,6 +37,15 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Signature;
  
 public class MailSignature implements AttributeCallback {
+    
+    /*
+     * for modifying signature, we can get the max len from entry.getAccount
+     * 
+     * if the signature entry is being created, or if someone is setting it (not a valid supported case) directly with createAccount, 
+     * the entry field will be null, and we cannot do entry.getAccount to get the max signature length.  So we pass the max length 
+     * in the context.
+     */
+    public static final String CALLBACK_KEY_MAX_SIGNATURE_LEN = "KEY_MAX_SIGNATURE_LEN";
 
     /**
      * check to make sure zimbraPrefMailSignature is shorter than the limit
@@ -46,20 +56,37 @@ public class MailSignature implements AttributeCallback {
         if (!(value instanceof String))
             throw ServiceException.INVALID_REQUEST(Provisioning.A_zimbraPrefMailSignature + " is a single-valued attribute", null);
         
-        if (!((entry instanceof Account)||(entry instanceof Identity)||(entry instanceof Signature))) 
+        if (entry != null && !((entry instanceof Account)||(entry instanceof Identity)||(entry instanceof Signature))) 
             return;
         
-        Account account;
-        if (entry instanceof Account)
-            account = (Account)entry;
-        else if (entry instanceof Identity)
-            account = ((Identity)entry).getAccount();
-        else if (entry instanceof Signature)
-            account = ((Signature)entry).getAccount();
-        else
-            return;
+        long maxLen = -1;
+        
+        String maxInContext = (String)context.get(CALLBACK_KEY_MAX_SIGNATURE_LEN);
+        if (maxInContext != null) {
+            try {
+                maxLen = Integer.parseInt(maxInContext);
+            } catch (NumberFormatException e) {
+                ZimbraLog.account.warn("encountered invalid " + CALLBACK_KEY_MAX_SIGNATURE_LEN + ": " + maxInContext);
+            }
+        } 
+
+        if (maxLen == -1) {
+            // we don't have a good KEY_MAX_SIGNATURE_LEN value, see if we can getAccount
+            if (entry == null)
+                return;
             
-        long maxLen = account.getLongAttr(Provisioning.A_zimbraMailSignatureMaxLength, 1024);
+            Account account;
+            if (entry instanceof Account)
+                account = (Account)entry;
+            else if (entry instanceof Identity)
+                account = ((Identity)entry).getAccount();
+            else if (entry instanceof Signature)
+                account = ((Signature)entry).getAccount();
+            else
+                return;
+                
+            maxLen = account.getLongAttr(Provisioning.A_zimbraMailSignatureMaxLength, 1024);
+        }
 
         // 0 means unlimited
         if (maxLen != 0 && ((String)value).length() > maxLen)

@@ -64,6 +64,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.callback.MailSignature;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -4147,6 +4148,7 @@ public class LdapProvisioning extends Provisioning {
         account.setCachedData(SIGNATURE_LIST_CACHE_KEY, null);
         
         HashMap attrManagerContext = new HashMap();
+        attrManagerContext.put(MailSignature.CALLBACK_KEY_MAX_SIGNATURE_LEN, account.getAttr(Provisioning.A_zimbraMailSignatureMaxLength, "1024"));
         AttributeManager.getInstance().preModify(signatureAttrs, null, attrManagerContext, true, true);
 
         String signatureId = (String)signatureAttrs.get(Provisioning.A_zimbraSignatureId);
