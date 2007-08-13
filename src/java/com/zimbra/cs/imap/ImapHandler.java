@@ -48,7 +48,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
@@ -2460,6 +2459,8 @@ public abstract class ImapHandler extends ProtocolHandler {
                 result.append(' ').append(byUID ? i4msg.imapUid : i4msg.sequence);
         } else if (options != RETURN_SAVE) {
             result = new StringBuilder("ESEARCH (TAG \"").append(tag).append("\")");
+            if (byUID)
+                result.append(" UID");
             if (!hits.isEmpty() && (options & RETURN_MIN) != 0)
                 result.append(" MIN ").append(byUID ? hits.first().imapUid : hits.first().sequence);
             if (!hits.isEmpty() && (options & RETURN_MAX) != 0)
@@ -2489,7 +2490,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         if (result != null)
             sendUntagged(result.toString());
         sendNotifications(false, false);
-        sendOK(tag, "SEARCH completed");
+        sendOK(tag, (byUID ? "UID " : "") + "SEARCH completed");
         return CONTINUE_PROCESSING;
     }
 
