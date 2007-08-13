@@ -1576,6 +1576,8 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                 result.append(' ').append(byUID ? i4msg.imapUid : i4msg.sequence);
         } else if (options != RETURN_SAVE) {
             result = new StringBuilder("ESEARCH (TAG \"").append(tag).append("\")");
+            if (byUID)
+                result.append(" UID");
             if (!hits.isEmpty() && (options & RETURN_MIN) != 0)
                 result.append(" MIN ").append(byUID ? hits.first().imapUid : hits.first().sequence);
             if (!hits.isEmpty() && (options & RETURN_MAX) != 0)
@@ -1602,7 +1604,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         if (result != null)
             sendUntagged(result.toString());
         sendNotifications(false, false);
-        sendOK(tag, "SEARCH completed");
+        sendOK(tag, (byUID ? "UID " : "") + "SEARCH completed");
         return CONTINUE_PROCESSING;
     }
 
