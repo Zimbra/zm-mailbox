@@ -35,7 +35,7 @@ public final class MinaUtils {
     public static final int INITIAL_CAPACITY = 32;
     
     /*
-     * Copies bytes from 'fromBuf' to 'toBuf' up to and including a terminating
+     * Copies bytes from 'fromBuf' to 'toBuf' up to and including the terminating
      * newline character. If no newline character was found then all remaining
      * source bytes are copied. The destination buffer is resized as needed.
      */
@@ -45,7 +45,7 @@ public final class MinaUtils {
             // No end of line found, so just add remaining bytes to buffer
             return expand(toBuf, fromBuf.remaining()).put(fromBuf);
         }
-        int len = pos - fromBuf.position();
+        int len = pos + 1 - fromBuf.position();
         ByteBuffer bb = fromBuf.slice();
         bb.limit(len);
         fromBuf.position(pos + 1);
@@ -53,18 +53,17 @@ public final class MinaUtils {
     }
 
     /*
-     * If specified buffer is a line ending with LF then return the
+     * If specified buffer is a complete line ending with LF then return the
      * line as a string otherwise return null. The returned string does
      * not include the trailing LF or any preceding CR.
      */
     public static String getLine(ByteBuffer bb) {
-        int pos = bb.position() - 1;
-        if (pos >= 0 && bb.get(pos) == LF) {
-            while (pos > 0 && bb.get(--pos) == CR) {}
-            bb.duplicate().flip().limit(pos);
-            return getString(bb);
-        }
-        return null;
+        int pos = bb.limit() - 1; // last byte is assumed to be LF
+        if (pos < 0 || bb.get(pos) != LF) return null;
+        while (pos > 0 && bb.get(pos - 1) == CR) --pos;
+        bb = bb.duplicate();
+        bb.position(0).limit(pos);
+        return getString(bb);
     }
 
     public static ByteBuffer expand(ByteBuffer bb, int size) {
@@ -93,8 +92,8 @@ public final class MinaUtils {
 
     public static int findLF(ByteBuffer bb) {
         int limit = bb.limit();
-        for (int i = bb.position(); i < limit; i++) {
-            if (bb.get(i) == LF) return i;
+        for (int pos = bb.position(); pos < limit; pos++) {
+            if (bb.get(pos) == LF) return pos;
         }
         return -1;
     }

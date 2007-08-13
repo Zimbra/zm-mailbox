@@ -34,8 +34,7 @@ import java.nio.ByteBuffer;
 public class TestMinaUtils extends TestCase {
     private static final String CR = "\r";
     private static final String CRLF = "\r\n";
-    private static final String LINE_1 = "This is line 1.";
-    private static final String LINE_2 = "This is line 2.";
+    private static final String LINE = "This is a line.";
 
     private static final int SIZE = 64 * 1024;
     
@@ -53,17 +52,22 @@ public class TestMinaUtils extends TestCase {
     }
 
     public void testGetLine() {
-        assertNull(MinaUtils.getLine(toByteBuffer(LINE_1)));
-        assertEquals(LINE_1, MinaUtils.getLine(toByteBuffer(LINE_1 + CRLF)));
+        assertNull(MinaUtils.getLine(toByteBuffer(LINE)));
+        assertEquals(LINE, MinaUtils.getLine(toByteBuffer(LINE + CRLF)));
         assertEquals("", MinaUtils.getLine(toByteBuffer(CRLF)));
         assertEquals("", MinaUtils.getLine(toByteBuffer(CR + CR + CRLF)));
     }
     
     public void testCopyLine() {
-        ByteBuffer bb = MinaUtils.copyLine(null, toByteBuffer(LINE_1));
-
-
+        ByteBuffer bb = MinaUtils.copyLine(null, toByteBuffer(LINE));
+        bb = MinaUtils.copyLine(bb, toByteBuffer(CRLF));
+        bb.flip();
+        assertEquals(LINE + CRLF, toString(bb));
+        bb = MinaUtils.copyLine(null, toByteBuffer(LINE + CRLF + LINE + CRLF));
+        bb.flip();
+        assertEquals(LINE + CRLF, toString(bb));
     }
+
     private ByteBuffer toByteBuffer(String s) {
         return ByteBuffer.wrap(s.getBytes());
     }
