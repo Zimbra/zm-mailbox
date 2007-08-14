@@ -37,6 +37,8 @@ public class DomainAccessManager extends AccessManager {
     }
 
     public boolean canAccessAccount(AuthToken at, Account target, boolean asAdmin) throws ServiceException {
+        if (!at.isZimbraUser())
+            return false;
         
         accessDomain(target);
         
@@ -63,6 +65,8 @@ public class DomainAccessManager extends AccessManager {
      * @param target       The target account for the proposed action. 
      * @param asAdmin      If the authenticated account is acting as an admin accunt*/
     public boolean canAccessAccount(Account credentials, Account target, boolean asAdmin) throws ServiceException {
+        if (credentials == null)
+            return false;
         
         accessDomain(target);
         
@@ -96,11 +100,15 @@ public class DomainAccessManager extends AccessManager {
     }
 
     public boolean canAccessDomain(AuthToken at, String domainName) throws ServiceException {
+        if (!at.isZimbraUser())
+            return false;
         accessDomain(domainName);
         return canAccessDomainInternal(at, domainName);
     }
 
     public boolean canAccessDomain(AuthToken at, Domain domain) throws ServiceException {
+        if (!at.isZimbraUser())
+            return false;
         accessDomain(domain);
         return canAccessDomainInternal(at, domain.getName());
     }
