@@ -114,15 +114,8 @@ public class HtmlFormatter extends Formatter {
         context.req.setAttribute(ATTR_TARGET_ACCOUNT_ID, targetAccount.getId());
         context.req.setAttribute(ATTR_TARGET_ITEM_ID, targetItem.getId());
         context.req.setAttribute(ATTR_TARGET_ITEM_TYPE, MailItem.getNameForType(targetItem));
-        if (context.itemPath != null) {
-            String path = context.itemPath;
-            context.req.setAttribute(ATTR_TARGET_ITEM_PATH, path);
-            int i = path.lastIndexOf('/');
-            if (i > -1 && i < (path.length()-1)) {
-                path = path.substring(i+1);
-            }
-            context.req.setAttribute(ATTR_TARGET_ITEM_NAME, path);
-        }
+        context.req.setAttribute(ATTR_TARGET_ITEM_PATH, targetItem.getPath());
+        context.req.setAttribute(ATTR_TARGET_ITEM_NAME, targetItem.getName());
 
         context.req.setAttribute(ATTR_TARGET_ITEM_COLOR, targetItem.getColor());
         if (targetItem instanceof Folder)
