@@ -235,4 +235,7 @@ public class ProxyServlet extends ZimbraServlet {
 				method.releaseConnection();
 		}
 	}
+                for (Header h : method.getResponseHeaders())
+                    if (canProxyHeader(h.getName()))
+                        resp.addHeader(h.getName(), h.getValue());
 }
