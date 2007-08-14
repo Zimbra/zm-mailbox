@@ -101,7 +101,7 @@ public class ItemActionHelper {
         ia.schedule();
         return ia;
     }
-    
+
     public static ItemActionHelper MOVE(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
                 List<Integer> ids, byte type, TargetConstraint tcon, ItemId iidFolder)
     throws ServiceException {
@@ -110,7 +110,7 @@ public class ItemActionHelper {
         ia.schedule();
         return ia;
     }
-    
+
     public static ItemActionHelper COPY(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
                 List<Integer> ids, byte type, TargetConstraint tcon, ItemId iidFolder)
     throws ServiceException {
@@ -129,7 +129,7 @@ public class ItemActionHelper {
         ia.schedule();
         return ia;
     }
-    
+
     public static ItemActionHelper TRASH(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
                 List<Integer> ids, 
                 byte type, TargetConstraint tcon) throws ServiceException {
@@ -147,7 +147,7 @@ public class ItemActionHelper {
         ia.schedule();
         return ia;
     }
-    
+
     public static ItemActionHelper UPDATE(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
                 List<Integer> ids, byte type, TargetConstraint tcon, String name, ItemId iidFolder, String flags,
                 String tags, byte color)
@@ -262,7 +262,7 @@ public class ItemActionHelper {
         mName = name; 
     }
     public void setIidFolder(ItemId iidFolder)  { 
-        assert(mOperation == Op.MOVE || mOperation == Op.RENAME || mOperation == Op.UPDATE);
+        assert(mOperation == Op.MOVE || mOperation == Op.COPY || mOperation == Op.RENAME || mOperation == Op.UPDATE);
         mIidFolder = iidFolder; 
     }
     public void setFolderId(int folderId) {
