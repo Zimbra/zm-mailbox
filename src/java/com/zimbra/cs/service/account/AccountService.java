@@ -67,6 +67,7 @@ public class AccountService implements DocumentService {
         dispatcher.registerHandler(AccountConstants.GET_ALL_LOCALES_REQUEST, new GetAllLocales());
         dispatcher.registerHandler(AccountConstants.GET_AVAILABLE_LOCALES_REQUEST, new GetAvailableLocales());
         dispatcher.registerHandler(AccountConstants.GET_AVAILABLE_SKINS_REQUEST, new GetAvailableSkins());
+        dispatcher.registerHandler(AccountConstants.GET_AVAILABLE_CSV_FORMATS_REQUEST, new GetAvailableCsvFormats());
 
         // identity
         dispatcher.registerHandler(AccountConstants.CREATE_IDENTITY_REQUEST, new CreateIdentity());

@@ -560,6 +560,13 @@ public class ContactCSV {
         }
     }
     
+    public static String[] getAllFormatNames() {
+        Set<String> formats = new HashSet<String>();
+        for (CsvFormat f : mKnownFormats)
+            formats.add(f.name);
+        return formats.toArray(new String[0]);
+    }
+    
     public static void main(String args[]) throws IOException, ParseException, DocumentException {
         //String mappingFile = LC.zimbra_csv_mapping_file.value();
         readMappingFile(args[0]);

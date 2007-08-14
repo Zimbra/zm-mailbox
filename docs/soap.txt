@@ -524,6 +524,17 @@ by a directory scan of the designated location of skins on a server.
 
 ----------------------------
 
+<GetAvailableCsvFormatsRequest/>
+
+<GetAvailableCsvFormatsResponse>
+  <csv name="{format-name}"/>+
+</GetAvailableCsvFormatsResponse>
+
+Returns the known CSV formats that can be used for
+import and export of addressbook.
+
+----------------------------
+
 
  <SearchGalRequest [type="{type}"]>
    <name>...</name>
