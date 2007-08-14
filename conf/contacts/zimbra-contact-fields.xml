@@ -361,7 +361,7 @@ lastName.
         <column name="Web Page" field="workURL"/>
     </format>
 
-    <format name="some-csv" type="csv">
+    <format name="outlook-unknown-csv" type="csv">
         <column name="Title" field="jobTitle"/>
         <column name="FirstName" field="firstName"/>
         <column name="MiddleName" field="middleName"/>
