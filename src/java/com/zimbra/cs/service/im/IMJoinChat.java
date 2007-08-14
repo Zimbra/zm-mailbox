@@ -33,7 +33,7 @@ import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.service.im.IMDocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class IMJoinChatRequest extends IMDocumentHandler {
+public class IMJoinChat extends IMDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
