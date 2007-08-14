@@ -64,6 +64,8 @@ public class AccountConstants {
     public static final QName GET_AVAILABLE_LOCALES_RESPONSE = QName.get("GetAvailableLocalesResponse", NAMESPACE);
     public static final QName GET_AVAILABLE_SKINS_REQUEST = QName.get("GetAvailableSkinsRequest", NAMESPACE);
     public static final QName GET_AVAILABLE_SKINS_RESPONSE = QName.get("GetAvailableSkinsResponse", NAMESPACE);
+    public static final QName GET_AVAILABLE_CSV_FORMATS_REQUEST = QName.get("GetAvailableCsvFormatsRequest", NAMESPACE);
+    public static final QName GET_AVAILABLE_CSV_FORMATS_RESPONSE = QName.get("GetAvailableCsvFormatsResponse", NAMESPACE);
 
     // identities
     public static final QName CREATE_IDENTITY_REQUEST = QName.get("CreateIdentityRequest", NAMESPACE);
@@ -131,6 +133,7 @@ public class AccountConstants {
     public static final String E_CHILD_ACCOUNTS = "childAccounts";
     public static final String E_CHILD_ACCOUNT = "childAccount";
     public static final String E_CONTENT = "content";
+    public static final String E_CSV = "csv";
     public static final String A_N = "n";
     public static final String A_NAME = "name";
     public static final String A_ID = "id";
