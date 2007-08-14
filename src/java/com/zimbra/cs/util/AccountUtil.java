@@ -106,25 +106,21 @@ public class AccountUtil {
         String ca = account.getAttr(Provisioning.A_zimbraMailCanonicalAddress);
         
         // But we still have to canonicalize domain names, so do that with account address
-        if (ca == null) {
+        if (ca == null)
             ca = account.getName();
-        }
-        
+
         String[] parts = EmailUtil.getLocalPartAndDomain(ca);
-        if (parts == null) {
+        if (parts == null)
             return ca;
-        }
-        
+
         Domain domain = Provisioning.getInstance().get(DomainBy.name, parts[1]);
-        if (domain == null) {
+        if (domain == null)
             return ca;
-        }
 
         String domainCatchAll = domain.getAttr(Provisioning.A_zimbraMailCatchAllCanonicalAddress);
-        if (domainCatchAll != null) {
+        if (domainCatchAll != null)
             return parts[0] + domainCatchAll;
-        }
-        
+
         return ca;
     }
 
@@ -132,26 +128,20 @@ public class AccountUtil {
      * Check if given account is allowed to set given from header.
      */
     public static boolean allowFromAddress(Account acct, String fromAddr) throws ServiceException {
-        if (fromAddr == null) {
+        if (fromAddr == null)
             return false;
-        }
 
-        if (acct.getBooleanAttr(Provisioning.A_zimbraAllowAnyFromAddress, false)) {
+        if (acct.getBooleanAttr(Provisioning.A_zimbraAllowAnyFromAddress, false))
             return true;
-        }
-
-        if (addressMatchesAccount(acct, fromAddr)) {
+        if (addressMatchesAccount(acct, fromAddr))
             return true;
-        }
 
         String[] allowedAddrs = acct.getMultiAttr(Provisioning.A_zimbraAllowFromAddress);
-        if (allowedAddrs == null) {
+        if (allowedAddrs == null)
             return false;
-        }
         for (String addr : allowedAddrs) {
-            if (fromAddr.equalsIgnoreCase(addr)) {
+            if (fromAddr.equalsIgnoreCase(addr))
                 return true;
-            }
         }
         return false;
     }
@@ -171,12 +161,12 @@ public class AccountUtil {
     private static boolean addressMatchesAccount(String accountAddress, String canonicalAddress, String[] accountAliases, String givenAddress) {
         if (givenAddress == null)
             return false;
-        if (givenAddress.equalsIgnoreCase(accountAddress)) {
+
+        if (givenAddress.equalsIgnoreCase(accountAddress))
             return true;
-        }
-        if (givenAddress.equalsIgnoreCase(canonicalAddress)) {
+        if (givenAddress.equalsIgnoreCase(canonicalAddress))
             return true;
-        }
+
         for (int j = 0; j < accountAliases.length; j++) {
             if (givenAddress.equalsIgnoreCase(accountAliases[j]))
                 return true;
@@ -190,10 +180,12 @@ public class AccountUtil {
         try {
             Server server = Provisioning.getInstance().getServer(account);
             String host = server.getAttr(Provisioning.A_zimbraServiceHostname);
+
+            String mode = server.getAttr(Provisioning.A_zimbraMailMode, "http");
             int port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
-            if (port > 0) {
+            if (port > 0 && !mode.equalsIgnoreCase("https") && !mode.equalsIgnoreCase("redirect")) {
                 return "http://" + host + ':' + port + ZimbraServlet.USER_SERVICE_URI;
-            } else {
+            } else if (!mode.equalsIgnoreCase("http")) {
                 port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
                 if (port > 0)
                     return "https://" + host + ':' + port + ZimbraServlet.USER_SERVICE_URI;
