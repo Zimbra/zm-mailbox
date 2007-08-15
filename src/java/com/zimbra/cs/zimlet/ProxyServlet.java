@@ -35,6 +35,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpMethod;
@@ -229,13 +230,13 @@ public class ProxyServlet extends ZimbraServlet {
 				// workaround for Alexa Thumbnails paid web service, which doesn't bother to return a content-type line.
 				resp.setContentType("text/xml");
 			}
+                	for (Header h : method.getResponseHeaders())
+                		if (canProxyHeader(h.getName()))
+                        		resp.addHeader(h.getName(), h.getValue());
 			ByteUtil.copy(method.getResponseBodyAsStream(), false, resp.getOutputStream(), false);
 		} finally {
 			if (method != null)
 				method.releaseConnection();
 		}
 	}
-                for (Header h : method.getResponseHeaders())
-                    if (canProxyHeader(h.getName()))
-                        resp.addHeader(h.getName(), h.getValue());
 }
