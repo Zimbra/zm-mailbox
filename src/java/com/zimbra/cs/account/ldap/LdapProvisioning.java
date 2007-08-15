@@ -4099,9 +4099,10 @@ public class LdapProvisioning extends Provisioning {
         }
     }
     
-    private List<Signature> getSignaturesByQuery(Account acct, LdapEntry entry, String query, DirContext initCtxt) throws ServiceException {
+    private List<Signature> getSignaturesByQuery(Account acct, LdapEntry entry, String query, DirContext initCtxt, List<Signature> result) throws ServiceException {
         DirContext ctxt = initCtxt;
-        List<Signature> result = new ArrayList<Signature>();
+        if (result == null)
+            result = new ArrayList<Signature>();
         try {
             if (ctxt == null)
                 ctxt = LdapUtil.getDirContext();
@@ -4127,7 +4128,7 @@ public class LdapProvisioning extends Provisioning {
 
     private Signature getSignatureById(Account acct, LdapEntry entry, String id,  DirContext ctxt) throws ServiceException {
         id = LdapUtil.escapeSearchFilterArg(id);
-        List<Signature> result = getSignaturesByQuery(acct, entry, "(&(" + Provisioning.A_zimbraSignatureId + "=" + id +")(objectclass=zimbraSignature))", ctxt); 
+        List<Signature> result = getSignaturesByQuery(acct, entry, "(&(" + Provisioning.A_zimbraSignatureId + "=" + id +")(objectclass=zimbraSignature))", ctxt, null); 
         return result.isEmpty() ? null : result.get(0);
     }
 
@@ -4332,25 +4333,12 @@ public class LdapProvisioning extends Provisioning {
             return result;
         }
         
-        result = getSignaturesByQuery(account, ldapEntry, "(objectclass=zimbraSignature)", null);
-        for (Signature signature: result) {
-            // gross hack for 4.5beta. should be able to remove post 4.5
-            if (signature.getId() == null) {
-                String id = LdapUtil.generateUUID();
-                signature.setId(id);
-                Map<String, Object> newAttrs = new HashMap<String, Object>();
-                newAttrs.put(Provisioning.A_zimbraSignatureId, id);
-                try {
-                    modifySignature(account, signature.getName(), newAttrs);
-                } catch (ServiceException se) {
-                    ZimbraLog.account.warn("error updating signature: "+account.getName()+" "+signature.getName()+" "+se.getMessage(), se);
-                }
-            }
-        }
-        
+        result = new ArrayList<Signature>();
         Signature acctSig = LdapSignature.getAccountSignature(this, account);
         if (acctSig != null)
             result.add(acctSig);
+        
+        result = getSignaturesByQuery(account, ldapEntry, "(objectclass=zimbraSignature)", null, result);
         
         result = Collections.unmodifiableList(result);
         account.setCachedData(SIGNATURE_LIST_CACHE_KEY, result);

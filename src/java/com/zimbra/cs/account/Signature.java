@@ -34,7 +34,7 @@ public class Signature extends NamedEntry implements Comparable {
     }
     
     /*
-     * get account of the identity
+     * get account of the signature
      */
     public Account getAccount() throws ServiceException {
         return Provisioning.getInstance().get(Provisioning.AccountBy.id, mAcctId);
