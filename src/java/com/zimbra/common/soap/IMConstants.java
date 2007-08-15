@@ -48,13 +48,20 @@ public class IMConstants {
     public static final QName IM_SEND_MESSAGE_RESPONSE = QName.get("IMSendMessageResponse", NAMESPACE);
     public static final QName IM_JOIN_CHAT_REQUEST = QName.get("IMJoinChatRequest", NAMESPACE);
     public static final QName IM_JOIN_CHAT_RESPONSE = QName.get("IMJoinChatResponse", NAMESPACE);
+    
+    public static final QName IM_GET_PRIVACY_LIST_REQUEST = QName.get("IMGetPrivacyListRequest", NAMESPACE);
+    public static final QName IM_GET_PRIVACY_LIST_RESPONSE = QName.get("IMGetPrivacyListResponse", NAMESPACE);
+    
+    public static final QName IM_UPDATE_PRIVACY_LIST_REQUEST = QName.get("IMUpdatePrivacyListRequest", NAMESPACE);
+    public static final QName IM_UPDATE_PRIVACY_LIST_RESPONSE = QName.get("IMUpdatePrivacyListResponse", NAMESPACE);
 
     public static final QName IM_GATEWAY_LIST_REQUEST = QName.get("IMGatewayListRequest", NAMESPACE);
     public static final QName IM_GATEWAY_LIST_RESPONSE = QName.get("IMGatewayListResponse", NAMESPACE);
     public static final QName IM_GATEWAY_REGISTER_REQUEST = QName.get("IMGatewayRegisterRequest", NAMESPACE);
     public static final QName IM_GATEWAY_REGISTER_RESPONSE = QName.get("IMGatewayRegisterResponse", NAMESPACE);
 
-    public static final String A_AUTHORIZED = "authorized";
+    public static final String A_ACTION         = "action";
+    public static final String A_AUTHORIZED     = "authorized";
     public static final String A_THREAD_ID      = "thread";
     public static final String A_ADDRESS        = "addr";
     public static final String A_ADD            = "add";
@@ -68,6 +75,7 @@ public class IMConstants {
     public static final String A_FROM           = "from";
     public static final String A_TO             = "to";
     public static final String A_TIMESTAMP      = "ts";
+    public static final String A_ORDER          = "order";
     public static final String A_SERVICE        = "service";
     public static final String A_STATUS         = "status";
     public static final String A_STATE          = "state";
@@ -75,6 +83,7 @@ public class IMConstants {
     public static final String A_USERNAME       = "username";
     public static final String A_ERROR          = "error";
 
+    public static final String E_LIST           = "list";
     public static final String E_MESSAGES       = "messages";
     public static final String E_MESSAGE        = "message";
     public static final String E_SUBJECT        = "subject";
