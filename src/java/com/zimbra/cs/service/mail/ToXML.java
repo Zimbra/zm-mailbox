@@ -531,7 +531,7 @@ public class ToXML {
         if (needToOutput(fields, Change.MODIFIED_DATE))
             c.addAttribute(MailConstants.A_DATE, msgHit != null ? msgHit.getDate() : conv.getDate());
         if (needToOutput(fields, Change.MODIFIED_SUBJECT))
-            c.addAttribute(MailConstants.E_SUBJECT, conv.getSubject(), Element.Disposition.CONTENT);
+            c.addAttribute(MailConstants.E_SUBJECT, msgHit != null ? msgHit.getSubject() : conv.getSubject(), Element.Disposition.CONTENT);
         if (fields == NOTIFY_FIELDS && msgHit != null)
             c.addAttribute(MailConstants.E_FRAG, msgHit.getFragment(), Element.Disposition.CONTENT);
 
