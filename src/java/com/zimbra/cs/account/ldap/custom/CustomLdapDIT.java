@@ -5,6 +5,7 @@ import java.util.Map;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
+import com.zimbra.common.localconfig.KnownKey;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
@@ -51,8 +52,30 @@ public class CustomLdapDIT extends LdapDIT {
         super(prov);
     }
     
-    private String getLC(String key, String defaultValue) {
-        String lcValue = LC.get(key);
+    /*
+     * We do not, yet, want to put the following keys in LC.  
+     * We put them here to suppress the WARM spit out by LC.get if the key is not a KnownKey nor set in localconfig.xml.
+     */
+    static class CustomLdapDITLC {
+        public static final KnownKey ldap_dit_base_dn_admin  = new KnownKey("ldap_dit_base_dn_admin",  "", "LDAP Custom DIT base DN for LDAP admin entries");
+        public static final KnownKey ldap_dit_base_dn_config = new KnownKey("ldap_dit_base_dn_config", "", "LDAP Custom DIT base DN for config branch");
+        public static final KnownKey ldap_dit_base_dn_cos    = new KnownKey("ldap_dit_base_dn_cos",    "", "LDAP Custom DIT base DN for cos entries");
+        public static final KnownKey ldap_dit_base_dn_domain = new KnownKey("ldap_dit_base_dn_domain", "", "LDAP Custom DIT base DN for domain entries");
+        public static final KnownKey ldap_dit_base_dn_mime   = new KnownKey("ldap_dit_base_dn_mime",   "", "LDAP Custom DIT base DN for mime entries");
+        public static final KnownKey ldap_dit_base_dn_server = new KnownKey("ldap_dit_base_dn_server", "", "LDAP Custom DIT base DN for server entries");
+        public static final KnownKey ldap_dit_base_dn_zimlet = new KnownKey("ldap_dit_base_dn_zimlet", "", "LDAP Custom DIT base DN for zimlet entries");
+        
+        public static final KnownKey ldap_dit_naming_rdn_attr_cos          = new KnownKey("ldap_dit_naming_rdn_attr_cos",          "", "LDAP Custom DIT RDN attr for cos entries");
+        public static final KnownKey ldap_dit_naming_rdn_attr_globalconfig = new KnownKey("ldap_dit_naming_rdn_attr_globalconfig", "", "LDAP Custom DIT RDN attr for globalconfig entry");
+        public static final KnownKey ldap_dit_naming_rdn_attr_mime         = new KnownKey("ldap_dit_naming_rdn_attr_mime",         "", "LDAP Custom DIT RDN attr for mime entries");
+        public static final KnownKey ldap_dit_naming_rdn_attr_server       = new KnownKey("ldap_dit_naming_rdn_attr_server",       "", "LDAP Custom DIT RDN attr for server entries");
+        public static final KnownKey ldap_dit_naming_rdn_attr_user         = new KnownKey("ldap_dit_naming_rdn_attr_user",         "", "LDAP Custom DIT RDN attr for account, calendar resource, and distribution list entries");
+        public static final KnownKey ldap_dit_naming_rdn_attr_zimlet       = new KnownKey("ldap_dit_naming_rdn_attr_zimlet",       "", "LDAP Custom DIT RDN attr for zimlet entries");
+    }
+    
+    private String getLC(KnownKey key, String defaultValue) {
+        // String lcValue = LC.get(key);
+        String lcValue = key.value();
         
         if (StringUtil.isNullOrEmpty(lcValue))
             return defaultValue;
@@ -62,26 +85,26 @@ public class CustomLdapDIT extends LdapDIT {
     
     protected void init() {
        
-        BASE_DN_CONFIG_BRANCH = getLC("ldap_config_base_dn", DEFAULT_CONFIG_BASE_DN);
+        BASE_DN_CONFIG_BRANCH = getLC(CustomLdapDITLC.ldap_dit_base_dn_config, DEFAULT_CONFIG_BASE_DN);
 
         BASE_RDN_ACCOUNT  = "";
 
-        NAMING_RDN_ATTR_USER          = getLC("ldap_user_naming_rdn_attr",         DEFAULT_NAMING_RDN_ATTR_USER);
-        NAMING_RDN_ATTR_COS           = getLC("ldap_cos_naming_rdn_attr",          DEFAULT_NAMING_RDN_ATTR_COS);
-        NAMING_RDN_ATTR_GLOBALCONFIG  = getLC("ldap_globalconfig_naming_rdn_attr", DEFAULT_NAMING_RDN_ATTR_GLOBALCONFIG);
-        NAMING_RDN_ATTR_MIME          = getLC("ldap_mime_naming_rdn_attr",         DEFAULT_NAMING_RDN_ATTR_MIME);
-        NAMING_RDN_ATTR_SERVER        = getLC("ldap_server_naming_rdn_attr",       DEFAULT_NAMING_RDN_ATTR_SERVER);
-        NAMING_RDN_ATTR_ZIMLET        = getLC("ldap_zimlet_naming_rdn_attr",       DEFAULT_NAMING_RDN_ATTR_ZIMLET);
+        NAMING_RDN_ATTR_USER          = getLC(CustomLdapDITLC.ldap_dit_naming_rdn_attr_user,         DEFAULT_NAMING_RDN_ATTR_USER);
+        NAMING_RDN_ATTR_COS           = getLC(CustomLdapDITLC.ldap_dit_naming_rdn_attr_cos,          DEFAULT_NAMING_RDN_ATTR_COS);
+        NAMING_RDN_ATTR_GLOBALCONFIG  = getLC(CustomLdapDITLC.ldap_dit_naming_rdn_attr_globalconfig, DEFAULT_NAMING_RDN_ATTR_GLOBALCONFIG);
+        NAMING_RDN_ATTR_MIME          = getLC(CustomLdapDITLC.ldap_dit_naming_rdn_attr_mime,         DEFAULT_NAMING_RDN_ATTR_MIME);
+        NAMING_RDN_ATTR_SERVER        = getLC(CustomLdapDITLC.ldap_dit_naming_rdn_attr_server,       DEFAULT_NAMING_RDN_ATTR_SERVER);
+        NAMING_RDN_ATTR_ZIMLET        = getLC(CustomLdapDITLC.ldap_dit_naming_rdn_attr_zimlet,       DEFAULT_NAMING_RDN_ATTR_ZIMLET);
        
         DN_GLOBALCONFIG   = NAMING_RDN_ATTR_GLOBALCONFIG + "=config" + "," + BASE_DN_CONFIG_BRANCH; 
 
-        BASE_DN_ADMIN        = getLC("ldap_admin_base_dn",  DEFAULT_BASE_RDN_ADMIN  + "," + BASE_DN_CONFIG_BRANCH);
-        BASE_DN_COS          = getLC("ldap_cos_base_dn",    DEFAULT_BASE_RDN_COS    + "," + BASE_DN_CONFIG_BRANCH); 
-        BASE_DN_MIME         = getLC("ldap_mime_base_dn",   DEFAULT_BASE_RDN_MIME   + "," + DN_GLOBALCONFIG);
-        BASE_DN_SERVER       = getLC("ldap_server_base_dn", DEFAULT_BASE_RDN_SERVER + "," + BASE_DN_CONFIG_BRANCH);
-        BASE_DN_ZIMLET       = getLC("ldap_zimlet_base_dn", DEFAULT_BASE_RDN_ZIMLET + "," + BASE_DN_CONFIG_BRANCH);
+        BASE_DN_ADMIN        = getLC(CustomLdapDITLC.ldap_dit_base_dn_admin,  DEFAULT_BASE_RDN_ADMIN  + "," + BASE_DN_CONFIG_BRANCH);
+        BASE_DN_COS          = getLC(CustomLdapDITLC.ldap_dit_base_dn_cos,    DEFAULT_BASE_RDN_COS    + "," + BASE_DN_CONFIG_BRANCH); 
+        BASE_DN_MIME         = getLC(CustomLdapDITLC.ldap_dit_base_dn_mime,   DEFAULT_BASE_RDN_MIME   + "," + DN_GLOBALCONFIG);
+        BASE_DN_SERVER       = getLC(CustomLdapDITLC.ldap_dit_base_dn_server, DEFAULT_BASE_RDN_SERVER + "," + BASE_DN_CONFIG_BRANCH);
+        BASE_DN_ZIMLET       = getLC(CustomLdapDITLC.ldap_dit_base_dn_zimlet, DEFAULT_BASE_RDN_ZIMLET + "," + BASE_DN_CONFIG_BRANCH);
     
-        BASE_DN_DOMAIN       = getLC("ldap_domain_base_dn", DEFAULT_BASE_RDN_DOMAIN + "," + BASE_DN_CONFIG_BRANCH);
+        BASE_DN_DOMAIN       = getLC(CustomLdapDITLC.ldap_dit_base_dn_domain, DEFAULT_BASE_RDN_DOMAIN + "," + BASE_DN_CONFIG_BRANCH);
     }
     
     
