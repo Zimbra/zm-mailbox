@@ -43,7 +43,7 @@ IMAuthorizeSubscribe -- used to OK another user adding you to their buddy list
 
 IMSetPresence -- modify your presence state
 -------------
-<IMSetPresenceRequest>
+<IMSetPresenceRequest [idle="seconds_idle"]>
    [
      <presence [lang="en"] [show="away|chat|dnd|xa|online|offline"] [priority="0-255"] [status="CUSTOM_STATUS"]/>
    ]+  // if multiple, each must have a different lang  
@@ -123,9 +123,24 @@ IMJoinChat -- join a multi-user chat you have been invited to
 
 
 
-IMModifyWhitelist -- block/allow
+IMGetPrivacyList -- request the privacy list
 -----------------
+<IMGetPrivacyListRequest/>
+// response in 'privacy' notification below
+<IMGetPrivacyListResponse/>
 
+
+IMSetPrivacyList -- sets the list
+-------------------
+<IMUpdatePrivacyListRequest>
+   <list name="name">
+      [
+         <item action="deny" order="UNIQUE_POSITIVE_INTEGER" addr="address OR domain"/>
+      ]*
+   </list>
+</IMUpdatePrivacyListRequest>
+
+<IMUpdatePrivacyListResponse/>
 
 
 IMGatewayList - gateways to external IM services
@@ -228,6 +243,16 @@ IM NOTIFICATIONS
                 [
                 // your account has connected to the interop service from another location
                   <n type="otherLocation" service="GATEWAY_SERVICE_NAME" username="REMOTE_SERVICE_USERNAME"/>
+                ]
+                [
+                // privacy (block/allow) list
+                  <n type="privacy">
+                     <list name="name">
+                        [
+                           <item action="deny" order="UNIQUE_POSITIVE_INTEGER" addr="address OR domain"/>
+                        ]*
+                     </list>
+                  </n>   
                 ]
              </im>]
           ]?     

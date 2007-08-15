@@ -124,12 +124,14 @@ public class IMPersona extends ClassLogger {
     }
 
     private boolean mHaveInitialRoster = false;
+    private String mDefaultPrivacyListName = null;
     private Map<IMAddr, IMSubscribedNotification> mRoster = new HashMap<IMAddr, IMSubscribedNotification>();
     private Map<IMAddr, IMSubscribeNotification> mPendingSubscribes = new HashMap<IMAddr, IMSubscribeNotification>();
     private Map<IMAddr, IMPresence> mBufferedPresence = new HashMap<IMAddr, IMPresence>();
     private IMAddr mAddr;
     private Map<String, IMChat> mChats = new HashMap<String, IMChat>();
     private int mCurChatId = 0;
+    private int mCurRequestId = 0;
     private Map<String, IMGroup> mGroups = new HashMap<String, IMGroup>();
     private Set<Session> mListeners = new HashSet<Session>();
     private Mailbox mMailbox; // object used to lock the persona
@@ -148,16 +150,6 @@ public class IMPersona extends ClassLogger {
         mAddr = addr;
         mMailbox = lock;
     }
-//    
-//    /**
-//     * Register this persona with the passed-in Session, 
-//     */
-//    public void registerWithSession(Session session) {
-//        assert(Thread.holdsLock(this.getLock()));
-//        assert(session.shouldRegisterWithIM());
-//        
-//        
-//    }
 
     /**
      * Active Sessions are tracked here so that we can use them to push
@@ -251,12 +243,14 @@ public class IMPersona extends ClassLogger {
      *         going or NULL otherwise
      */
     private IMChat findTargetMUC(Packet packet) {
-        String threadId = packet.getFrom().getNode();
-//        String threadId = packet.getFrom().toBareJID();
-        if (threadId != null && threadId.length() > 0) {
-            IMChat chat = getChat(threadId);
-            if (chat != null && chat.isMUC())
-                return chat;
+        if (packet.getFrom() != null) {
+            String threadId = packet.getFrom().getNode();
+//          String threadId = packet.getFrom().toBareJID();
+            if (threadId != null && threadId.length() > 0) {
+                IMChat chat = getChat(threadId);
+                if (chat != null && chat.isMUC())
+                    return chat;
+            }
         }
         return null;
     }
@@ -532,17 +526,160 @@ public class IMPersona extends ClassLogger {
                 ZimbraLog.im.info("Ignoring IQ error packet: "+iq);
                 break;
             case result:
-                ZimbraLog.im.info("Ignoring IQ result packet: "+iq);
-                break;
+            {
+                boolean handled = false;
+                org.dom4j.Element child = iq.getChildElement();
+                if ("query".equals(child.getName())) {
+                    if ("jabber:iq:privacy".equals(child.getNamespaceURI())) {
+                        handlePrivacyResult(iq);
+                        handled = true;
+                    }
+                }
+                if (!handled)
+                    ZimbraLog.im.info("Ignoring IQ result packet: "+iq);
+            }
+            break;
             default:
             {
-                // is it a MUC iq?
-                IMChat chat = findTargetMUC(iq);
-                if (chat != null)
-                    chat.handleIQPacket(iq);
+                boolean handled = false;
+                if (iq.getType() == Type.set) {
+                    org.dom4j.Element child = iq.getChildElement();
+                    if ("query".equals(child.getName())) {
+                        if ("jabber:iq:privacy".equals(child.getNamespaceURI())) {
+                            handlePrivacySet(iq);
+                            handled = true;
+                        }
+                    }
+                    
+                }
+                
+                if (!handled) {
+                    // is it a MUC iq?
+                    IMChat chat = findTargetMUC(iq);
+                    if (chat != null)
+                        chat.handleIQPacket(iq);
+                }
             }
         }
     }
+
+    private void handlePrivacySet(IQ iq) {
+        // request default privacy list
+        IQ result= new IQ();
+        result.setType(Type.result);
+        result.setID(iq.getID());
+        xmppRoute(result);
+        this.getDefaultPrivacyList();
+    }
+    
+    private void handlePrivacyResult(IQ iq) {
+        org.dom4j.Element child = iq.getChildElement();        
+        ZimbraLog.im.info("Received Privacy List Packet: "+iq);
+        String idParts[] = iq.getID().split("-");
+        boolean handled = false; 
+        if (idParts.length > 0) {
+            if ("getPrivLists".equals(idParts[0])) { 
+                //
+                // we got a response to our request for the LIST of privacy lists
+                //
+                ZimbraLog.im.info("It's a list of our privacy lists!");
+                mDefaultPrivacyListName = null;
+                
+                // find the default list
+                org.dom4j.Element defaultList = child.element("default");
+                if (defaultList != null) {
+                    String defaultListName = defaultList.attributeValue("name", null);
+                    if (defaultListName != null) {
+                        handled = true;
+                        mDefaultPrivacyListName = defaultListName;
+                        requestPrivacyList(defaultListName);
+                    }
+                }
+                if (!handled) {
+                    handled = true;
+                    // no default list: inform the client
+                    IMPrivacyListNotification not = new IMPrivacyListNotification(new PrivacyList("default"));
+                    postIMNotification(not);
+                }
+            } else if ("getDefaultPrivList".equals(idParts[0])) {
+                //
+                // we got a response to our request for the DEFAULT privacy list
+                //
+                ZimbraLog.im.info("Received default privacy list: "+iq);
+                handled = true;
+                
+                /*
+                <list name='public'>
+                  <item type='jid'
+                      value='tybalt@example.com'
+                      action='deny'
+                      order='1'/>
+                  <item action='allow' order='2'/>
+                </list>
+                 */
+
+                // find the list
+                org.dom4j.Element list = child.element("list");
+                if (list != null) {
+                    String name = list.attributeValue("name", null);
+                    if (name != null) {
+                        PrivacyList pl = new PrivacyList(name);
+                        
+                        for (Iterator<org.dom4j.Element> iter = (Iterator<org.dom4j.Element>)list.elementIterator("item");iter.hasNext();) {
+                            org.dom4j.Element item = iter.next();
+                            
+                            String type = item.attributeValue("type", "jid");
+                            String value = item.attributeValue("value", null);
+                            String action = item.attributeValue("action", "allow");
+                            String order = item.attributeValue("order", null);
+                                                        
+                            if (value != null && order != null && "deny".equals(action) && "jid".equals(type)) {
+                                int orderInt = Integer.parseInt(order);
+
+                                byte blockType = 0;
+                                if (item.element("message") != null) 
+                                    blockType |= PrivacyListEntry.BLOCK_MESSAGES;
+                                if (item.element("presence-in") != null) 
+                                    blockType |= PrivacyListEntry.BLOCK_PRESENCE_IN;
+                                if (item.element("presence-out") != null) 
+                                    blockType |= PrivacyListEntry.BLOCK_PRESENCE_OUT;
+                                if (item.element("iq") != null) 
+                                    blockType |= PrivacyListEntry.BLOCK_IQ;
+                                if (blockType == 0)
+                                    blockType = PrivacyListEntry.BLOCK_ALL;
+                                
+                                PrivacyListEntry entry = new PrivacyListEntry(new IMAddr(value), orderInt, blockType);
+                                
+                                try {
+                                    pl.addEntry(entry);
+                                } catch (PrivacyList.DuplicateOrderException e) {
+                                    ZimbraLog.im.warn("Received an invalid PrivacyList from server: order was non-unique.  Ignoring: %s", item);
+                                }
+                            }
+                        }
+                        IMPrivacyListNotification not = new IMPrivacyListNotification(pl);
+                        postIMNotification(not);
+                    } // if name!=null
+                }
+            } else {
+                handled = true;
+//                if (false) {
+//                    
+//                    // some other privacy list update -- re-request our list of lists!
+//                    // request list of privacy lists
+//                    IQ requestList = new IQ();
+//                    requestList.setType(Type.get);
+//                    requestList.setID("getPrivLists-"+(mCurRequestId++));
+//                    org.dom4j.Element query = requestList.setChildElement("query", "jabber:iq:privacy");
+//                    xmppRoute(requestList);
+//                }
+            }
+        } 
+            
+        if (!handled)
+            ZimbraLog.im.info("Ignoring unknown privacy IQ response: "+iq);
+    }
+    
 
     private void handleMessagePacket(boolean toMe, Message msg) {
         // is it a gateway notification?  If so, then stop processing it here
@@ -740,11 +877,71 @@ public class IMPersona extends ClassLogger {
                 Roster rosterRequest = new Roster();
                 xmppRoute(rosterRequest);
                 
+                // request list of privacy lists
+                getDefaultPrivacyList();
             }
         } catch (ServiceException ex) {
             ZimbraLog.im.warn("Caught Exception checking if XMPP enabled "
                         + ex.toString(), ex);
         }
+    }
+    
+    public void setPrivacyList(PrivacyList pl) {
+        // update privacy list
+        {
+            IQ set = new IQ();
+            set.setType(Type.set);
+            org.dom4j.Element query = set.setChildElement("query", "jabber:iq:privacy");
+            org.dom4j.Element list= query.addElement("list");
+            list.addAttribute("name", pl.getName());
+            for (PrivacyListEntry e : pl) {
+                org.dom4j.Element item = list.addElement("item");
+                item.addAttribute("type", "jid");
+                item.addAttribute("value", e.getAddr().toString());
+                item.addAttribute("action", "deny");
+                item.addAttribute("order", Integer.toString(e.getOrder()));
+                if (e.getTypes() != PrivacyListEntry.BLOCK_ALL) {
+                    if (e.isBlockMessages())
+                        item.addElement("message");
+                    if (e.isBlockPresenceOut())
+                        item.addElement("presence-out");
+                    if (e.isBlockPresenceIn())
+                        item.addElement("presence-in");
+                    if (e.isBlockIQ())
+                        item.addElement("iq");
+                }
+            }
+            xmppRoute(set);
+        }
+        
+        if (mDefaultPrivacyListName == null) {
+            IQ set = new IQ();
+            set.setType(Type.set);
+            org.dom4j.Element query = set.setChildElement("query", "jabber:iq:privacy");
+            org.dom4j.Element defaultElt = query.addElement("default");
+            defaultElt.addAttribute("name", pl.getName());
+            xmppRoute(set);
+        }
+    }
+    
+    public void requestPrivacyList(String name) {
+        IQ request = new IQ();
+        request.setType(Type.get);
+        request.setID("getDefaultPrivList-"+(mCurRequestId++));
+        org.dom4j.Element query = request.setChildElement("query", "jabber:iq:privacy");
+        org.dom4j.Element list = query.addElement("list");
+        list.addAttribute("name", name);
+        xmppRoute(request);
+    }
+    
+    public void getDefaultPrivacyList() {
+        // request list of privacy lists, when we receive it we'll find the 
+        // default and ask the server to list it for us
+        IQ iq = new IQ();
+        iq.setType(Type.get);
+        iq.setID("getPrivLists-"+(mCurRequestId++));
+        iq.setChildElement("query", "jabber:iq:privacy");
+        xmppRoute(iq);
     }
     
     private void disconnectFromIMServer() {
@@ -969,6 +1166,31 @@ public class IMPersona extends ClassLogger {
                 debug("Trying to leave shared group: %s", words[1]);
                 leaveSharedGroup(words[1]);
                 return;
+            } else if (msg.startsWith("/block")) {
+                // "/block foo@bar.com,bug@gub.com,fooz.com"
+                if (msg.equals("/block"))
+                    msg = "/block ";
+                
+                msg = msg.substring("/block ".length());
+                String[] addrs = msg.split(",");
+                
+                String listName = mDefaultPrivacyListName;
+                if (listName == null)
+                    listName = "default";
+                
+                PrivacyList pl = new PrivacyList(listName);
+                int order = 1;
+                for (String s : addrs) {
+                    if (s.length() > 0) {
+                        PrivacyListEntry entry = new PrivacyListEntry(new IMAddr(s), order, PrivacyListEntry.BLOCK_ALL);
+                        try {
+                            pl.addEntry(entry);
+                        } catch (PrivacyList.DuplicateOrderException e) { e.printStackTrace(); }
+                        order++;
+                    }
+                }
+                
+                setPrivacyList(pl);
             }
         }
         chat.sendMessage(octxt, toAddr, threadId, message, this);
