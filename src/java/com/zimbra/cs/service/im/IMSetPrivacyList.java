@@ -53,13 +53,14 @@ public class IMSetPrivacyList extends IMDocumentHandler {
         for (Iterator<Element> iter = list.elementIterator(IMConstants.E_ITEM); iter.hasNext();) {
             Element item = iter.next();
             
-            String action = item.getAttribute(IMConstants.A_ACTION);
+            String actionStr = item.getAttribute(IMConstants.A_ACTION);
+            PrivacyListEntry.Action action = PrivacyListEntry.Action.valueOf(actionStr);
             int order = (int)item.getAttributeLong(IMConstants.A_ORDER);
             if (order <= 0)
                 throw ServiceException.INVALID_REQUEST("Order must be >= 0 in item "+item.toString(), null);
             String addr = item.getAttribute(IMConstants.A_ADDRESS);
             
-            PrivacyListEntry entry = new PrivacyListEntry(new IMAddr(addr), order, PrivacyListEntry.BLOCK_ALL);
+            PrivacyListEntry entry = new PrivacyListEntry(new IMAddr(addr), order, action, PrivacyListEntry.BLOCK_ALL);
             
             try { 
                 pl.addEntry(entry);

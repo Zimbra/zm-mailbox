@@ -38,15 +38,21 @@ public class PrivacyListEntry {
     public static final byte BLOCK_PRESENCE_IN = 0x4;
     public static final byte BLOCK_IQ = 0x8;
     public static final byte BLOCK_ALL = 0xf;
-
+    
+    public static enum Action {
+        allow, deny;
+    }
+    
     private IMAddr mAddr;
     private int mOrder;
     private byte mBlockTypes;
+    private Action mAction;
     
-    public PrivacyListEntry(IMAddr addr, int order, byte blockTypes) {
+    public PrivacyListEntry(IMAddr addr, int order, Action action, byte blockTypes) {
         mAddr = addr;
         mOrder = order;
         mBlockTypes = blockTypes;
+        mAction = action;
     }
 
     public boolean isBlockMessages() {
@@ -64,6 +70,7 @@ public class PrivacyListEntry {
     public IMAddr getAddr() { return mAddr; }
     public int getOrder() { return mOrder; }
     public byte getTypes() { return mBlockTypes; }
+    public Action getAction() { return mAction; }
     
     public String toString() { 
         try { 
@@ -82,7 +89,7 @@ public class PrivacyListEntry {
             item= Element.create(SoapProtocol.Soap12, "item");
         
         item.addAttribute(IMConstants.A_ADDRESS, getAddr().toString());
-        item.addAttribute("action", "deny");
+        item.addAttribute("action", mAction.name());
         item.addAttribute("order", getOrder());
         if (getTypes() != BLOCK_ALL) {
             if (isBlockMessages())

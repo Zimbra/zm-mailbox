@@ -630,11 +630,13 @@ public class IMPersona extends ClassLogger {
                             
                             String type = item.attributeValue("type", "jid");
                             String value = item.attributeValue("value", null);
-                            String action = item.attributeValue("action", "allow");
+                            String actionStr = item.attributeValue("action", "deny");
                             String order = item.attributeValue("order", null);
                                                         
-                            if (value != null && order != null && "deny".equals(action) && "jid".equals(type)) {
+                            if (value != null && order != null && "jid".equals(type)) {
                                 int orderInt = Integer.parseInt(order);
+                                
+                                PrivacyListEntry.Action action = PrivacyListEntry.Action.valueOf(actionStr);
 
                                 byte blockType = 0;
                                 if (item.element("message") != null) 
@@ -648,7 +650,7 @@ public class IMPersona extends ClassLogger {
                                 if (blockType == 0)
                                     blockType = PrivacyListEntry.BLOCK_ALL;
                                 
-                                PrivacyListEntry entry = new PrivacyListEntry(new IMAddr(value), orderInt, blockType);
+                                PrivacyListEntry entry = new PrivacyListEntry(new IMAddr(value), orderInt, action, blockType);
                                 
                                 try {
                                     pl.addEntry(entry);
@@ -898,7 +900,7 @@ public class IMPersona extends ClassLogger {
                 org.dom4j.Element item = list.addElement("item");
                 item.addAttribute("type", "jid");
                 item.addAttribute("value", e.getAddr().toString());
-                item.addAttribute("action", "deny");
+                item.addAttribute("action", e.getAction().name());
                 item.addAttribute("order", Integer.toString(e.getOrder()));
                 if (e.getTypes() != PrivacyListEntry.BLOCK_ALL) {
                     if (e.isBlockMessages())
@@ -1182,7 +1184,7 @@ public class IMPersona extends ClassLogger {
                 int order = 1;
                 for (String s : addrs) {
                     if (s.length() > 0) {
-                        PrivacyListEntry entry = new PrivacyListEntry(new IMAddr(s), order, PrivacyListEntry.BLOCK_ALL);
+                        PrivacyListEntry entry = new PrivacyListEntry(new IMAddr(s), order, PrivacyListEntry.Action.deny, PrivacyListEntry.BLOCK_ALL);
                         try {
                             pl.addEntry(entry);
                         } catch (PrivacyList.DuplicateOrderException e) { e.printStackTrace(); }

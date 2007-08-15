@@ -135,7 +135,13 @@ IMSetPrivacyList -- sets the list
 <IMUpdatePrivacyListRequest>
    <list name="name">
       [
-         <item action="deny" order="UNIQUE_POSITIVE_INTEGER" addr="address OR domain"/>
+         // Entries are evaluated by the server in increasing order (1 then 2 then 3 ...)
+         //
+         // EG, this will allow 'foo@bar.com' but block all others @bar.com:
+         //   <item action="allow" order="1" addr="foo@bar.com"/>
+         //   <item action="deny" order="2" addr="bar.com"/>
+         //
+         <item action="allow|deny" order="UNIQUE_POSITIVE_INTEGER" addr="address OR domain"/>
       ]*
    </list>
 </IMUpdatePrivacyListRequest>
