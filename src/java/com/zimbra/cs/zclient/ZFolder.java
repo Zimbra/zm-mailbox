@@ -51,6 +51,7 @@ public class ZFolder implements ZItem, Comparable {
     public static final String ID_NOTEBOOK = "12";
     public static final String ID_AUTO_CONTACTS = "13";
     public static final String ID_CHATS = "14";
+    public static final String ID_TASKS = "15";
     public static final String ID_FIRST_USER_ID = "256";
 
     private ZFolder.Color mColor;

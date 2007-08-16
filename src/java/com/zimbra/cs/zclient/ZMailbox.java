@@ -125,7 +125,8 @@ public class ZMailbox {
     public final static char PATH_SEPARATOR_CHAR = '/';
 
     public enum SearchSortBy {
-        dateDesc, dateAsc, subjDesc, subjAsc, nameDesc, nameAsc, durDesc, durAsc;
+        dateDesc, dateAsc, subjDesc, subjAsc, nameDesc, nameAsc, durDesc, durAsc,
+        taskDueAsc, taskDueDesc, taskStatusAsc, taskStatusDesc, taskPercCompletedAsc, taskPercCompletedDesc;
 
         public static SearchSortBy fromString(String s) throws ServiceException {
             try {

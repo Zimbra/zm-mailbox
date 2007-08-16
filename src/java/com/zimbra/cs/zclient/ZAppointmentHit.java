@@ -49,6 +49,13 @@ public class ZAppointmentHit implements ZSearchHit {
     public static final String STATUS_CONFIRMED = "CONF";
     public static final String STATUS_CANCELLED = "CANC";
 
+
+    public static final String STATUS_COMPLETED = "COMP";
+    public static final String STATUS_DEFERRED = "DEFERRED";
+    public static final String STATUS_INPROGRESS = "INPR";
+    public static final String STATUS_NOT_STARTED = "NEED";
+    public static final String STATUS_WAITING = "WAITING";
+    
     public static final String PSTATUS_NEEDS_ACTION = "NE";
     public static final String PSTATUS_TENTATIVE = "TE";
     public static final String PSTATUS_ACCEPT = "AC";
@@ -111,6 +118,7 @@ public class ZAppointmentHit implements ZSearchHit {
     private boolean mIsOrganizer;
     private String mPriority;
     private String mPercentComplete;
+    private long mDueDate;
     private long mDuration;
     private String mFragment;
     private String mSortField;
@@ -152,8 +160,11 @@ public class ZAppointmentHit implements ZSearchHit {
         boolean isOrganizer = e.getAttributeBool(MailConstants.A_CAL_ISORG, false);
         String priority = e.getAttribute(MailConstants.A_CAL_PRIORITY, null);
         String percentComplete = e.getAttribute(MailConstants.A_TASK_PERCENT_COMPLETE, null);
+        long dueDate = e.getAttributeLong(MailConstants.A_TASK_DUE_DATE, 0);
+
         long duration = e.getAttributeLong(MailConstants.A_CAL_NEW_DURATION, 0);
         long hitDate = e.getAttributeLong(MailConstants.A_DATE, 0);
+
 
         String sortField = e.getAttribute(MailConstants.A_SORT_FIELD, null);
         long size = (int) e.getAttributeLong(MailConstants.A_SIZE, 0);
@@ -219,6 +230,7 @@ public class ZAppointmentHit implements ZSearchHit {
             appt.mIsOrganizer = inst.getAttributeBool(MailConstants.A_CAL_ISORG, isOrganizer);
             appt.mPriority = inst.getAttribute(MailConstants.A_CAL_PRIORITY, priority);
             appt.mPercentComplete = inst.getAttribute(MailConstants.A_TASK_PERCENT_COMPLETE, percentComplete);
+            appt.mDueDate = inst.getAttributeLong(MailConstants.A_TASK_DUE_DATE, dueDate);
             appt.mDuration = inst.getAttributeLong(MailConstants.A_CAL_DURATION, duration);
 
             appt.mEndTime = appt.mStartTime + appt.mDuration;
@@ -374,6 +386,10 @@ public class ZAppointmentHit implements ZSearchHit {
     public long getDuration() { return mDuration; }
 
     public long getStartTime() { return mStartTime; }
+
+    public long getDueDateTime() { return mDueDate; }
+
+    public Date getDueDate() { return new Date(mDueDate); }
 
     /* computed from start+duration */
     public long getEndTime() { return mEndTime; }
