@@ -180,7 +180,10 @@ public class ZInvite {
                     mReplies.add(new ZReply(replyEl));
                 }
             }
-            mStart = new ZDateTime(e.getElement(MailConstants.E_CAL_START_TIME));
+            Element startEl = e.getOptionalElement(MailConstants.E_CAL_START_TIME);
+            if (startEl != null)
+                mStart = new ZDateTime(startEl);
+
             Element endEl = e.getOptionalElement(MailConstants.E_CAL_END_TIME);
             if (endEl != null)
                 mEnd = new ZDateTime(endEl);
