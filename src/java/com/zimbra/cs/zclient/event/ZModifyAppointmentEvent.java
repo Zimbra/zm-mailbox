@@ -30,7 +30,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.zclient.ZSoapSB;
 import com.zimbra.cs.zclient.ZItem;
 
-public class ZModifyAppointmentEvent implements ZModifyItemEvent {
+public class ZModifyAppointmentEvent implements ZModifyItemEvent, ZModifyItemFolderEvent {
 
     protected Element mApptEl;
 
@@ -61,4 +61,38 @@ public class ZModifyAppointmentEvent implements ZModifyItemEvent {
     public ZItem getItem() throws ServiceException {
         return null;
     }
+
+    /**
+     * @param defaultValue value to return if unchanged
+     * @return new flags or default value if flags didn't change
+     */
+    public String getFlags(String defaultValue) {
+        return mApptEl.getAttribute(MailConstants.A_FLAGS, defaultValue);
+    }
+
+    /**
+     * @param defaultValue value to return if unchanged
+     * @return new tags or default value if tags didn't change
+     */
+    public String getTagIds(String defaultValue) {
+        return mApptEl.getAttribute(MailConstants.A_TAGS, defaultValue);
+    }
+
+    public String getFolderId(String defaultValue) {
+        return mApptEl.getAttribute(MailConstants.A_FOLDER, defaultValue);
+    }
+
+    public String getPriority(String defaultValue) {
+        return mApptEl.getAttribute(MailConstants.A_CAL_PRIORITY, defaultValue);
+    }
+
+    public String getPercentComplete(String defaultValue) {
+        return mApptEl.getAttribute(MailConstants.A_TASK_PERCENT_COMPLETE, defaultValue);
+    }
+
+    public String getStatus(String defaultValue) {
+        return mApptEl.getAttribute(MailConstants.A_CAL_STATUS, defaultValue);
+    }
+
+
 }

@@ -74,6 +74,8 @@ import com.zimbra.cs.zclient.event.ZModifyMountpointEvent;
 import com.zimbra.cs.zclient.event.ZModifySearchFolderEvent;
 import com.zimbra.cs.zclient.event.ZModifyTagEvent;
 import com.zimbra.cs.zclient.event.ZRefreshEvent;
+import com.zimbra.cs.zclient.event.ZModifyTaskEvent;
+import com.zimbra.cs.zclient.event.ZCreateTaskEvent;
 import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
@@ -517,6 +519,8 @@ public class ZMailbox {
                 event = new ZModifyMailboxEvent(e);
             } else if (e.getName().equals(MailConstants.E_APPOINTMENT)) {
                 event = new ZModifyAppointmentEvent(e);
+            } else if (e.getName().equals(MailConstants.E_TASK)) {
+                event = new ZModifyTaskEvent(e);
             }
             if (event != null)
             	for (ZEventHandler handler : mHandlers)
@@ -548,6 +552,8 @@ public class ZMailbox {
                 event = new ZCreateContactEvent(e);
             } else if (e.getName().equals(MailConstants.E_APPOINTMENT)) {
                 event = new ZCreateAppointmentEvent(e);
+            } else if (e.getName().equals(MailConstants.E_TASK)) {
+                event = new ZCreateTaskEvent(e);
             } else if (e.getName().equals(MailConstants.E_FOLDER)) {
                 String parentId = e.getAttribute(MailConstants.A_FOLDER);
                 ZFolder parent = getFolderById(parentId);
@@ -3231,6 +3237,84 @@ public class ZMailbox {
     	return new ZImportAppointmentsResult(invoke(req).getElement(MailConstants.E_APPOINTMENT));
     }
 
+    /* tasks */
+
+    public ZAppointmentResult createTask(String folderId, String flags, ZOutgoingMessage message, ZInvite invite, String optionalUid) throws ServiceException {
+        XMLElement req = new XMLElement(MailConstants.CREATE_TASK_REQUEST);
+
+        //noinspection UnusedDeclaration
+        Element mEl = getMessageElement(req, message);
+
+        if (flags != null)
+            mEl.addAttribute(MailConstants.A_FLAGS, flags);
+
+        if (folderId != null)
+            mEl.addAttribute(MailConstants.A_FOLDER, folderId);
+
+        Element invEl = invite.toElement(mEl);
+        if (optionalUid != null)
+            invEl.addAttribute(MailConstants.A_UID, optionalUid);
+
+        return new ZAppointmentResult(invoke(req));
+    }
+
+    public ZAppointmentResult createTaskException(String id, String component, ZDateTime exceptionId, ZOutgoingMessage message, ZInvite invite, String optionalUid) throws ServiceException {
+        XMLElement req = new XMLElement(MailConstants.CREATE_TASK_EXCEPTION_REQUEST);
+
+        req.addAttribute(MailConstants.A_ID, id);
+        req.addAttribute(MailConstants.E_INVITE_COMPONENT, component);
+
+        Element mEl = getMessageElement(req, message);
+
+        Element invEl = invite.toElement(mEl);
+        Element compEl = invEl.getElement(MailConstants.E_INVITE_COMPONENT);
+        exceptionId.toElement(MailConstants.E_CAL_EXCEPTION_ID, compEl);
+
+        if (optionalUid != null)
+            invEl.addAttribute(MailConstants.A_UID, optionalUid);
+
+        return new ZAppointmentResult(invoke(req));
+    }
+
+    public ZAppointmentResult modifyTask(String id, String component, ZDateTime exceptionId, ZOutgoingMessage message, ZInvite invite) throws ServiceException {
+        XMLElement req = new XMLElement(MailConstants.MODIFY_TASK_REQUEST);
+
+        req.addAttribute(MailConstants.A_ID, id);
+        req.addAttribute(MailConstants.E_INVITE_COMPONENT, component);
+
+        Element mEl = getMessageElement(req, message);
+
+        Element invEl = invite.toElement(mEl);
+
+        if (exceptionId != null) {
+            Element compEl = invEl.getElement(MailConstants.E_INVITE_COMPONENT);
+            exceptionId.toElement(MailConstants.E_CAL_EXCEPTION_ID, compEl);
+        }
+
+        return new ZAppointmentResult(invoke(req));
+    }
+
+    public void cancelTask(String id, String component, ZTimeZone tz, ZDateTime instance, CancelRange range, ZOutgoingMessage message)  throws ServiceException {
+        XMLElement req = new XMLElement(MailConstants.CANCEL_TASK_REQUEST);
+
+        req.addAttribute(MailConstants.A_ID, id);
+        req.addAttribute(MailConstants.E_INVITE_COMPONENT, component);
+
+        if (tz != null) tz.toElement(req);
+
+        if (instance != null) {
+            Element instEl = instance.toElement(MailConstants.E_INSTANCE, req);
+            if (range != null)
+                instEl.addAttribute(MailConstants.A_CAL_RANGE, range.name());
+        }
+
+        if (message != null) getMessageElement(req, message);
+
+        mMessageCache.remove(id);
+
+        invoke(req);
+    }
+    
     public synchronized List<ZPhoneAccount> getAllPhoneAccounts() throws ServiceException {
         if (mPhoneAccounts == null) {
             mPhoneAccounts = new ArrayList<ZPhoneAccount>();

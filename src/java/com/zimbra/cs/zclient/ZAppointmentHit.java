@@ -27,13 +27,14 @@ package com.zimbra.cs.zclient;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.cs.zclient.event.ZModifyAppointmentEvent;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
-import java.util.ArrayList;
 
 public class ZAppointmentHit implements ZSearchHit {
 
@@ -242,8 +243,16 @@ public class ZAppointmentHit implements ZSearchHit {
     }
 
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
-
-    }
+		if (event instanceof ZModifyAppointmentEvent) {
+			ZModifyAppointmentEvent mevent = (ZModifyAppointmentEvent) event;
+            mFlags = mevent.getFlags(mFlags);
+            mTags = mevent.getTagIds(mTags);
+            mFolderId = mevent.getFolderId(mFolderId);
+            mStatus = mevent.getStatus(mStatus);
+            mPercentComplete = mevent.getPercentComplete(mPercentComplete);
+            mPriority = mevent.getPriority(mPriority);
+        }
+	}
 
     public String getId() {
         return mId;
