@@ -127,7 +127,7 @@ public class ZSearchPager {
         ZSearchHit hit = mHitMap.get(event.getId());
         if (hit != null)
             hit.modifyNotification(event);
-    }
+        }
 
     /**
      * @param event create item event

@@ -29,6 +29,8 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyAppointmentEvent;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
+import com.zimbra.cs.zclient.ZInvite.ZComponent;
+import com.zimbra.cs.zclient.ZInvite.ZStatus;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -242,15 +244,34 @@ public class ZAppointmentHit implements ZSearchHit {
         }
     }
 
+    private String getStr(String value, String def) {
+        return value == null ? def : value;
+    }
+
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
-		if (event instanceof ZModifyAppointmentEvent) {
-			ZModifyAppointmentEvent mevent = (ZModifyAppointmentEvent) event;
-            mFlags = mevent.getFlags(mFlags);
-            mTags = mevent.getTagIds(mTags);
-            mFolderId = mevent.getFolderId(mFolderId);
-            mStatus = mevent.getStatus(mStatus);
-            mPercentComplete = mevent.getPercentComplete(mPercentComplete);
-            mPriority = mevent.getPriority(mPriority);
+        if (event instanceof ZModifyAppointmentEvent) {
+
+            ZModifyAppointmentEvent mevent = (ZModifyAppointmentEvent) event;
+            ZAppointment appt = (ZAppointment) mevent.getItem();
+            mFlags = getStr(appt.getFlags(), mFlags);
+            mTags = getStr(appt.getTagIds(), mTags);
+            mFolderId = getStr(appt.getFolderId(), mFolderId);
+
+            List<ZInvite> invites = appt.getInvites();
+            if (invites.size() > 0) {
+                ZInvite inv = invites.get(0);
+                ZComponent comp = inv.getComponent();
+                if (comp != null) {
+                    // just do task-related ones for now, as appts are handled differently
+                    ZStatus stat = comp.getStatus();
+                    if (stat != null) mStatus = stat.name();
+                    mPercentComplete = getStr(comp.getPercentCompleted(), mPercentComplete);
+                    mPriority = getStr(comp.getPriority(), mPriority);
+                    mName = getStr(comp.getName(), mName);
+                    mLocation = getStr(comp.getLocation(), mLocation);
+
+                }
+            }
         }
 	}
 

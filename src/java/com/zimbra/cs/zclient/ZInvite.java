@@ -229,8 +229,8 @@ public class ZInvite {
                 }
             }
 
-
-            mStart.toElement(MailConstants.E_CAL_START_TIME, compEl);
+            if (mStart != null)
+                mStart.toElement(MailConstants.E_CAL_START_TIME, compEl);
             if (mEnd != null)
                 mEnd.toElement(MailConstants.E_CAL_END_TIME, compEl);
             else if (mDuration != null)
