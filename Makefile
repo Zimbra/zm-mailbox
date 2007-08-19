@@ -17,6 +17,7 @@ SHARED := -dynamiclib
 MACDEF := -DDARWIN
 SHARED_EXT := jnilib
 LIB_OPTS := -install_name /opt/zimbra/lib/libzimbra-native.$(SHARED_EXT) -framework JavaVM
+LIB_OPTS_SETUID := -install_name /opt/zimbra/lib/libsetuid.$(SHARED_EXT) -framework JavaVM
 JAVA_BINARY = /usr/bin/java
 PUSHED_EXT := jnilib.MacOSX.ppc
 endif
@@ -27,6 +28,7 @@ SHARED := -dynamiclib
 MACDEF := -DDARWIN
 SHARED_EXT := jnilib
 LIB_OPTS := -install_name /opt/zimbra/lib/libzimbra-native.$(SHARED_EXT) -framework JavaVM
+LIB_OPTS_SETUID := -install_name /opt/zimbra/lib/libsetuid.$(SHARED_EXT) -framework JavaVM
 JAVA_BINARY = /usr/bin/java
 PUSHED_EXT := jnilib.MacOSX.i386
 endif
@@ -34,13 +36,20 @@ endif
 all: FORCE
 	ant
 	$(MAKE) $(BUILD)/libzimbra-native.$(SHARED_EXT)
+	$(MAKE) $(BUILD)/libsetuid.$(SHARED_EXT)
 
 FORCE: ;
 
 $(BUILD)/libzimbra-native.$(SHARED_EXT): $(BUILD)/IO.o $(BUILD)/Process.o $(BUILD)/ProcessorUsage.o $(BUILD)/ResourceUsage.o $(BUILD)/Util.o $(BUILD)/zjniutil.o
 	gcc $(CF) $(LIB_OPTS) $(SHARED) -o $@ $^
 
+$(BUILD)/libsetuid.$(SHARED_EXT): $(BUILD)/org_mortbay_setuid_SetUID.o
+	gcc $(CF) $(LIB_OPTS_SETUID) $(SHARED) -o $@ $^
+
 $(BUILD)/%.o: $(SRC)/native/%.c
+	gcc $(CF) $(MACDEF) $(JAVAINC) -I$(BUILD) -Wall -Wmissing-prototypes -c -o $@ $<
+
+$(BUILD)/%.o: $(SRC)/jetty-setuid/%.c
 	gcc $(CF) $(MACDEF) $(JAVAINC) -I$(BUILD) -Wall -Wmissing-prototypes -c -o $@ $<
 
 $(BUILD)/Process.o: $(SRC)/native/Process.c $(BUILD)/Process.h $(SRC)/native/zjniutil.h
@@ -54,6 +63,8 @@ $(BUILD)/Util.o: $(SRC)/native/Util.c $(BUILD)/Util.h $(SRC)/native/zjniutil.h
 $(BUILD)/zjniutil.o: $(SRC)/native/zjniutil.c $(SRC)/native/zjniutil.h
 
 $(BUILD)/IO.o: $(SRC)/native/IO.c $(BUILD)/IO.h $(SRC)/native/zjniutil.h
+
+$(BUILD)/org_mortbay_setuid_SetUID.o: $(SRC)/jetty-setuid/org_mortbay_setuid_SetUID.c $(SRC)/jetty-setuid/org_mortbay_setuid_SetUID.h
 
 #
 # Hack to copy to destination for use on incremental builds in a linux
