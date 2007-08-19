@@ -59,9 +59,8 @@
   </filter-mapping>
 
   <servlet>
-    <servlet-name>PrivilegedServlet</servlet-name>
-    <!-- PrivilegedServlet will bind to privileged ports and drop privileges. -->
-    <servlet-class>com.zimbra.cs.servlet.PrivilegedServlet</servlet-class>
+    <servlet-name>FirstServlet</servlet-name>
+    <servlet-class>com.zimbra.cs.servlet.FirstServlet</servlet-class>
     <load-on-startup>1</load-on-startup>
   </servlet>
 

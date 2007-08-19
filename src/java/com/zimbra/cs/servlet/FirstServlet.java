@@ -39,15 +39,11 @@ import javax.naming.directory.DirContext;
 import javax.servlet.http.HttpServlet;
 
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
-import com.zimbra.common.util.EasySSLProtocolSocketFactory;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.util.Config;
-import com.zimbra.cs.util.NetUtil;
-import com.zimbra.cs.imap.MinaImapServer;
+import com.zimbra.common.util.EasySSLProtocolSocketFactory;
 import com.zimbra.znative.IO;
 import com.zimbra.znative.Process;
 import com.zimbra.znative.Util;
@@ -55,7 +51,7 @@ import com.zimbra.znative.Util;
 /**
  * Bind to all necessary privileged ports and then drop privilege.
  */
-public class PrivilegedServlet extends HttpServlet {
+public class FirstServlet extends HttpServlet {
 
     private static final long serialVersionUID = -1660545976482412029L;
 
@@ -81,101 +77,43 @@ public class PrivilegedServlet extends HttpServlet {
     }
     
     public void init() {
-        Server server;
-        int port;
-        String address;
-        try {
-            if (LC.ssl_allow_untrusted_certs.booleanValue())
-                EasySSLProtocolSocketFactory.init();
+    	try {
+    		System.err.println("Zimbra server process is running as uid=" + Process.getuid() + " euid=" + Process.geteuid() + " gid=" + Process.getgid() + " egid=" + Process.getegid());
 
-            System.setProperty("javax.net.ssl.keyStore", LC.mailboxd_keystore.value());
-            System.setProperty("javax.net.ssl.keyStorePassword", LC.mailboxd_keystore_password.value());
-            System.setProperty("javax.net.ssl.trustStorePassword", LC.mailboxd_truststore_password.value());
-
-            if (Provisioning.getInstance() instanceof LdapProvisioning)
-                checkLDAP();
-
-            server = Provisioning.getInstance().getLocalServer();
-
-            if (server.getBooleanAttr(Provisioning.A_zimbraPop3ServerEnabled, false)) {
-            	port = server.getIntAttr(Provisioning.A_zimbraPop3BindPort, Config.D_POP3_BIND_PORT);
-            	address = server.getAttr(Provisioning.A_zimbraPop3BindAddress, null);
-            	if (server.getBooleanAttr(Provisioning.A_zimbraPop3BindOnStartup, port < 1024)) {
-            		NetUtil.bindTcpServerSocket(address, port);
-            	}
-            }
-
-            if (server.getBooleanAttr(Provisioning.A_zimbraPop3SSLServerEnabled, false)) {
-            	port = server.getIntAttr(Provisioning.A_zimbraPop3SSLBindPort, Config.D_POP3_SSL_BIND_PORT);
-            	address = server.getAttr(Provisioning.A_zimbraPop3SSLBindAddress, null);
-            	if (server.getBooleanAttr(Provisioning.A_zimbraPop3SSLBindOnStartup, port < 1024)) {
-            		NetUtil.bindSslTcpServerSocket(address, port);
-            	}
-            }
-
-            if (server.getBooleanAttr(Provisioning.A_zimbraImapServerEnabled, false)) {
-            	port = server.getIntAttr(Provisioning.A_zimbraImapBindPort, Config.D_IMAP_BIND_PORT);
-            	address = server.getAttr(Provisioning.A_zimbraImapBindAddress, null);
-            	if (server.getBooleanAttr(Provisioning.A_zimbraImapBindOnStartup, port < 1024)) {
-                    if (MinaImapServer.isEnabled()) {
-                        MinaImapServer.bind(address, port);
-                    } else {
-                        NetUtil.bindTcpServerSocket(address, port);
-                    }
-            	}
-            }
-
-            if (server.getBooleanAttr(Provisioning.A_zimbraImapSSLServerEnabled, false)) {
-            	port = server.getIntAttr(Provisioning.A_zimbraImapSSLBindPort, Config.D_IMAP_SSL_BIND_PORT);
-            	address = server.getAttr(Provisioning.A_zimbraImapSSLBindAddress, null);
-            	if (server.getBooleanAttr(Provisioning.A_zimbraImapSSLBindOnStartup, port < 1024)) {
-                    if (MinaImapServer.isEnabled()) {
-                        MinaImapServer.bind(address, port);
-                    } else {
-                        NetUtil.bindSslTcpServerSocket(address, port);
-                    }
-            	}
-            }
-
-            port = server.getIntAttr(Provisioning.A_zimbraLmtpBindPort, Config.D_LMTP_BIND_PORT);
-            address = server.getAttr(Provisioning.A_zimbraLmtpBindAddress, null);
-            if (server.getBooleanAttr(Provisioning.A_zimbraLmtpBindOnStartup, port < 1024)) {
-                NetUtil.bindTcpServerSocket(address, port);
-            }
-            
-            if (Process.geteuid() == 0) {
-                String user = LC.zimbra_user.value();
-                int uid = LC.zimbra_uid.intValue();
-                int gid = LC.zimbra_gid.intValue();
-                System.err.println("Zimbra server process is running as root, changing to user=" + user + " uid=" + uid + " gid=" + gid);
-                Process.setPrivileges(user, uid, gid);
-                System.err.println("Zimbra server process, after change, is running with uid=" + Process.getuid() + " euid=" + Process.geteuid() + " gid=" + Process.getgid() + " egid=" + Process.getegid());
-            } else {
-                System.err.println("Zimbra server process is not running as root");
-            }
-            
             if (Process.getuid() == 0) {
                 Util.halt("can not start server with uid of 0");
             }
             if (Process.geteuid() == 0) {
                 Util.halt("can not start server with effective uid of 0");
             }
+            
             if (Process.getgid() == 0) {
                 Util.halt("can not start server with gid of 0");
             }
             if (Process.getegid() == 0) {
                 Util.halt("can not start server with effective gid of 0");
             }
+
+            System.setProperty("javax.net.ssl.keyStore", LC.mailboxd_keystore.value());
+            System.setProperty("javax.net.ssl.keyStorePassword", LC.mailboxd_keystore_password.value());
+            System.setProperty("javax.net.ssl.trustStorePassword", LC.mailboxd_truststore_password.value());
+
+            if (LC.ssl_allow_untrusted_certs.booleanValue())
+                EasySSLProtocolSocketFactory.init();
             
+            if (Provisioning.getInstance() instanceof LdapProvisioning)
+                checkLDAP();
+    		
             synchronized (mInitializedCondition) {
                 mInitialized = true;
                 mInitializedCondition.notifyAll();
             }
 
-            /* This should be done after privileges are dropped... */
             setupOutputRotation();
         } catch (Throwable t) {
-            Util.halt("PrivilegedServlet init failed", t);
+        	System.err.println("PrivilegedServlet init failed");
+        	t.printStackTrace(System.err);
+        	Runtime.getRuntime().halt(1);
         }
     }
 

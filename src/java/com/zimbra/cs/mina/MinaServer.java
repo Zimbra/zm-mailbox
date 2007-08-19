@@ -10,14 +10,8 @@ import javax.net.ssl.TrustManagerFactory;
 import java.security.KeyStore;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.SocketAddress;
-import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import java.net.InetAddress;
 import java.nio.channels.ServerSocketChannel;
-import java.util.Map;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -36,7 +30,7 @@ import org.apache.mina.common.IoSession;
  * Base class for MINA-baqsed server implementations.
  */
 public abstract class MinaServer {
-    protected final InetSocketAddress socketAddr;
+    protected final ServerSocket serverSocket;
     protected final SocketAcceptorConfig acceptorConfig;
     protected final ExecutorService executorService;
     protected final SocketAcceptor socketAcceptor;
@@ -67,33 +61,10 @@ public abstract class MinaServer {
         context.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
         return context;
     }
-
-    protected static final Map<SocketAddress, ServerSocketChannel> channels =
-        Collections.synchronizedMap(new HashMap<SocketAddress,
-            ServerSocketChannel>());
-
-    public static void bind(String host, int port) throws IOException {
-        InetSocketAddress addr = address(host, port);
-        ServerSocketChannel ssc = ServerSocketChannel.open();
-        ssc.configureBlocking(false);
-        ServerSocket ss = ssc.socket();
-        ss.setReuseAddress(true);
-        // ss.setReceiveBufferSize(1024);
-        ss.bind(addr, 1024);
-        channels.put(addr, ssc);
-    }
-
-    protected static InetSocketAddress address(String host, int port)
-            throws IOException {
-        return (host != null && host.length() > 0) ?
-            new InetSocketAddress(InetAddress.getByName(host), port) :
-            new InetSocketAddress(port);
-    }
     
-    protected MinaServer(String host, int port, int numThreads,
-                         boolean sslEnabled)
+    protected MinaServer(ServerSocket serverSocket, int numThreads, boolean sslEnabled)
             throws IOException {
-        socketAddr = address(host, port);
+    	this.serverSocket = serverSocket;
         acceptorConfig = new SocketAcceptorConfig();
         acceptorConfig.setReuseAddress(true);
         executorService = Executors.newFixedThreadPool(numThreads);
@@ -110,12 +81,11 @@ public abstract class MinaServer {
         fc.addLast("executer", new ExecutorFilter(executorService));
         fc.addLast("logger", new LoggingFilter());
         IoHandler handler = new MinaIoHandler(this);
-        ServerSocketChannel ssc = channels.get(socketAddr);
-        if (ssc != null) {
-            socketAcceptor.register(ssc, handler, acceptorConfig);
-        } else {
-            socketAcceptor.bind(socketAddr, handler, acceptorConfig);
-        }
+        
+        ServerSocketChannel ssc = serverSocket.getChannel();
+        assert(ssc != null);  //the socket should have been created using a channel
+        assert(!ssc.isBlocking()); //and the channel should be NIO
+        socketAcceptor.register(ssc, handler, acceptorConfig);
     }
 
     protected abstract MinaHandler createHandler(IoSession session);

@@ -39,7 +39,7 @@ import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
 import com.zimbra.cs.util.Config;
-import com.zimbra.cs.util.NetUtil;
+import com.zimbra.common.util.NetUtil;
 
 public class Pop3Server extends TcpServer
 implements RealtimeStatsCallback {

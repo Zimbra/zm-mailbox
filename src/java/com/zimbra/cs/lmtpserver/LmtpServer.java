@@ -37,7 +37,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
-import com.zimbra.cs.util.NetUtil;
+import com.zimbra.common.util.NetUtil;
 import com.zimbra.cs.util.Zimbra;
 
 public class LmtpServer extends TcpServer {

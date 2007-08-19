@@ -46,7 +46,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.pop3.Pop3Server;
 import com.zimbra.cs.redolog.RedoLogProvider;
-import com.zimbra.cs.servlet.PrivilegedServlet;
+import com.zimbra.cs.servlet.FirstServlet;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.WaitSetMgr;
 import com.zimbra.cs.stats.ZimbraPerf;
@@ -83,7 +83,7 @@ public class Zimbra {
         if (sInited)
             return;
         
-        PrivilegedServlet.waitForInitialization();
+        FirstServlet.waitForInitialization();
 
         ZimbraLog.misc.info("version=" + BuildInfo.VERSION +
                             " release=" + BuildInfo.RELEASE +

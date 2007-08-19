@@ -74,7 +74,7 @@ import com.zimbra.cs.tcpserver.TcpServer;
 import com.zimbra.cs.tcpserver.TcpServerInputStream;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.*;
-import com.zimbra.cs.util.NetUtil;
+import com.zimbra.common.util.NetUtil;
 
 
 /**

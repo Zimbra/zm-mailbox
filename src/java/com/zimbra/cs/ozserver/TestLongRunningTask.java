@@ -37,7 +37,7 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DummySSLSocketFactory;
 import com.zimbra.common.util.CliUtil;
-import com.zimbra.cs.util.NetUtil;
+import com.zimbra.common.util.NetUtil;
 
 /**
  * If there is no read interest enabled on a channel, and the channel is

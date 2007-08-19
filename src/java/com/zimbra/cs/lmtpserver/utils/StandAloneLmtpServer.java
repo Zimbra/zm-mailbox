@@ -42,7 +42,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.lmtpserver.LmtpBackend;
 import com.zimbra.cs.lmtpserver.LmtpServer;
-import com.zimbra.cs.util.NetUtil;
+import com.zimbra.common.util.NetUtil;
 
 public class StandAloneLmtpServer {
 

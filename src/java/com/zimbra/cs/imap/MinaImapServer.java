@@ -3,6 +3,7 @@ package com.zimbra.cs.imap;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Log;
+import com.zimbra.common.util.NetUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mina.MinaHandler;
 import com.zimbra.cs.mina.MinaRequest;
@@ -10,6 +11,7 @@ import com.zimbra.cs.mina.MinaServer;
 import org.apache.mina.common.IoSession;
 
 import java.io.IOException;
+import java.net.ServerSocket;
 
 /**
  * Mina-based IMAP server.
@@ -27,9 +29,9 @@ public class MinaImapServer extends MinaServer {
                Boolean.getBoolean(ENABLED_PROP);
     }
 
-    MinaImapServer(String host, int port, int numThreads, boolean sslEnabled)
+    MinaImapServer(ServerSocket serverSocket, int numThreads, boolean sslEnabled)
             throws IOException {
-        super(host, port, numThreads, sslEnabled);
+        super(serverSocket, numThreads, sslEnabled);
     }
 
     @Override public MinaHandler createHandler(IoSession session) {
@@ -45,8 +47,8 @@ public class MinaImapServer extends MinaServer {
     public static void main(String... args) throws Exception {
         System.setProperty(ENABLED_PROP, "true");
         CliUtil.toolSetup("INFO");
-        bind(null, 9143);
-        MinaImapServer imapServer = new MinaImapServer(null, 9143, 10, false);
+        ServerSocket serverSocket = NetUtil.getServerSocket(null, 9143, false, true);
+        MinaImapServer imapServer = new MinaImapServer(serverSocket, 10, false);
         imapServer.start();
     }
 }

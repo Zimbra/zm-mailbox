@@ -41,7 +41,7 @@ import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
 import com.zimbra.cs.util.Config;
-import com.zimbra.cs.util.NetUtil;
+import com.zimbra.common.util.NetUtil;
 import com.zimbra.cs.util.Zimbra;
 
 import java.io.IOException;
@@ -132,9 +132,9 @@ public class ImapServer extends TcpServer implements RealtimeStatsCallback {
 
         if (MinaImapServer.isEnabled()) {
             ZimbraLog.imap.info("** Mina IMAP handler enabled **");
+            ServerSocket serverSocket = NetUtil.getServerSocket(address, port, false, true);
             try {
-                MinaImapServer imapServer =
-                    new MinaImapServer(address, port, threads, false);
+                MinaImapServer imapServer = new MinaImapServer(serverSocket, threads, false);
                 imapServer.start();
                 sImapServer = imapServer ;
             } catch (IOException e) {
@@ -166,11 +166,11 @@ public class ImapServer extends TcpServer implements RealtimeStatsCallback {
 
         if (MinaImapServer.isEnabled()) {
             ZimbraLog.imap.info("** Mina IMAPS handler enabled **");
+            ServerSocket serverSocket = NetUtil.getServerSocket(address, port, true, true);
             try {
-                MinaImapServer imapServer =
-                    new MinaImapServer(address, port, threads, true);
+                MinaImapServer imapServer = new MinaImapServer(serverSocket, threads, true);
                 imapServer.start();
-                sImapServer = imapServer ;
+                sImapSSLServer = imapServer ;
             } catch (IOException e) {
                 Zimbra.halt("failed to start MinaImapServer", e);
             }
