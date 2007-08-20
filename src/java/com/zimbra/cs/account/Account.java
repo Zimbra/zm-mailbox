@@ -107,7 +107,8 @@ public class Account extends NamedEntry {
             else
                 return Provisioning.ACCOUNT_STATUS_LOCKED;
         } else if (domainStatus.equals(Provisioning.DOMAIN_STATUS_MAINTENANCE) ||
-                   domainStatus.equals(Provisioning.DOMAIN_STATUS_SUSPENDED)) {
+                   domainStatus.equals(Provisioning.DOMAIN_STATUS_SUSPENDED) ||
+                   domainStatus.equals(Provisioning.DOMAIN_STATUS_SHUTDOWN)) {
             if (accountStatus.equals(Provisioning.ACCOUNT_STATUS_CLOSED))
                 return accountStatus;
             else

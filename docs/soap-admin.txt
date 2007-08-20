@@ -488,23 +488,6 @@ Notes:
 
 -----------------------------
 
-<ModifyDomainStatusRequest>
-  <id>{value-of-zimbraId}</id>
-  <status>{domain-status}</status>
-</ModifyDomainRequest>
-
-<ModifyDomainStatusResponse>
-  <domain name="{name}" id="{id}">
-    <status>{domain-status}</status>
-  </domain>
-</ModifyDomainStatusResponse>
-
-Notes:
-
-  domain-status: active | maintenance | locked | closed | suspended
-
------------------------------
-
 <DeleteDomainRequest>
   <id>{value-of-zimbraId}</id>
 </DeleteDomainRequest>

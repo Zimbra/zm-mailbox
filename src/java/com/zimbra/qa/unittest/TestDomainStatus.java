@@ -330,10 +330,15 @@ public class TestDomainStatus extends TestCase {
         for (DomainStatus ds : DomainStatus.values()) {
             String domainStatus = ds.name();
             if (ds == DomainStatus.EMPTY) {
-                mProv.modifyDomainStatus(domain, "");
+                Map attrs = new HashMap<String, String>();
+                attrs.put(Provisioning.A_zimbraDomainStatus, "");
+                mProv.modifyAttrs(domain, attrs);
                 domainStatus = DomainStatus.active.name();
-            } else    
-                mProv.modifyDomainStatus(domain, domainStatus);
+            } else {
+                Map attrs = new HashMap<String, String>();
+                attrs.put(Provisioning.A_zimbraDomainStatus, domainStatus);
+                mProv.modifyAttrs(domain, attrs);
+            }
             
             statusTest(domainStatus);
         }
@@ -648,10 +653,11 @@ public class TestDomainStatus extends TestCase {
             Element eId = req.addElement(AdminConstants.E_ID);
             eId.setText(mCtx.mDomainId);
             Element eA = req.addElement(AccountConstants.E_A);
-            eA.addAttribute(AccountConstants.A_N, Provisioning.A_zimbraDomainStatus);
+            eA.addAttribute(AccountConstants.A_N, Provisioning.A_description).addText("this is a domain");
             mCtx.mSoapClient.invoke(req);
         }
         
+        /*
         public void MODIFY_DOMAIN_STATUS_REQUEST() throws Exception {
             String curStatus = (mCtx.mSuspended) ? Provisioning.DOMAIN_STATUS_SUSPENDED : Provisioning.DOMAIN_STATUS_ACTIVE;
             
@@ -674,6 +680,7 @@ public class TestDomainStatus extends TestCase {
                 mCtx.mSoapClient.invoke(req);
             }
         }
+        */
         
         public void DELETE_DOMAIN_REQUEST() throws Exception {
             mCtx.mSoapClient.deleteDomain(mCtx.mDomainId);
@@ -796,8 +803,8 @@ public class TestDomainStatus extends TestCase {
             // ADMIN_GET_DOMAIN_INFO_REQUEST("GET_DOMAIN_INFO_REQUEST",                       Result.PERM_DENIED_2,    Result.GOOD,    Result.GOOD,             Result.PERM_DENIED_2,    Result.AUTH_EXPIRED,     Result.PERM_DENIED_3),
             ADMIN_GET_DOMAIN_INFO_REQUEST("GET_DOMAIN_INFO_REQUEST",                       Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.GOOD),
             ADMIN_GET_ALL_DOMAINS_REQUEST("GET_ALL_DOMAINS_REQUEST",                       Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.GOOD,             Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.GOOD),
-            ADMIN_MODIFY_DOMAIN_REQUEST("MODIFY_DOMAIN_REQUEST",                           Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.GOOD,             Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.PERM_DENIED_3),
-            ADMIN_MODIFY_DOMAIN_STATUS_REQUEST("MODIFY_DOMAIN_STATUS_REQUEST",             Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.GOOD,             Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.GOOD),
+            ADMIN_MODIFY_DOMAIN_REQUEST("MODIFY_DOMAIN_REQUEST",                           Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.GOOD,             Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.GOOD),
+//             ADMIN_MODIFY_DOMAIN_STATUS_REQUEST("MODIFY_DOMAIN_STATUS_REQUEST",             Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.GOOD,             Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.GOOD),
             ADMIN_DELETE_DOMAIN_REQUEST("DELETE_DOMAIN_REQUEST",                           Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.DOMAIN_NOT_EMPTY, Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.DOMAIN_NOT_EMPTY),  // global admin should be able to delete domain if it is suspended??? TODO
             ADMIN_CREATE_COS_REQUEST("CREATE_COS_REQUEST",                                 Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.GOOD,             Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.GOOD),
             ADMIN_LAST_COMMAND();
@@ -1002,7 +1009,7 @@ public class TestDomainStatus extends TestCase {
             Element response = invoke(req);
             String authToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
             setAuthToken(authToken);
-         }     
+        }     
         
         static SoapClient newInstance(Account acct, AccountType at) throws Exception {
             
@@ -1039,8 +1046,11 @@ public class TestDomainStatus extends TestCase {
     private void suspendedDomainTest() throws Exception {
         Domain domain = getDomain();
         String domainId = domain.getId();
-        mProv.modifyDomainStatus(domain, DomainStatus.active.name());
         
+        Map attrs = new HashMap<String, String>();
+        attrs.put(Provisioning.A_zimbraDomainStatus, DomainStatus.active.name());
+        mProv.modifyAttrs(domain, attrs);
+                
         // auth to user, domain admin and global admin before we suspend the domain
         Account user = createAccount(ACCOUNT_NAME("user"), AccountType.ACCT_USER);
         String[] testersActiveUser = createTesters(DomainStatus.active, AccountType.ACCT_USER);
@@ -1057,12 +1067,16 @@ public class TestDomainStatus extends TestCase {
         String[] testersSuspendedGlobalAdmin = createTesters(DomainStatus.suspended, AccountType.ACCT_GLOBAL_ADMIN);
         SoapClient clientGlobalAdmin = SoapClient.newInstance(globalAdmin, AccountType.ACCT_GLOBAL_ADMIN);
         
-        mProv.modifyDomainStatus(domain, DomainStatus.suspended.name());
+        attrs.clear();
+        attrs.put(Provisioning.A_zimbraDomainStatus, DomainStatus.suspended.name());
+        mProv.modifyAttrs(domain, attrs);
         SoapCommands.run(new SoapTestContext(clientUser, AccountType.ACCT_USER, user, true, DOMAIN_NAME, domainId, testersSuspendedUser, TEST_ID));
         SoapCommands.run(new SoapTestContext(clientDomainAdmin, AccountType.ACCT_DOMAIN_ADMIN, user, true, DOMAIN_NAME, domainId, testersSuspendedDomainAdmin, TEST_ID));
         SoapCommands.run(new SoapTestContext(clientGlobalAdmin, AccountType.ACCT_GLOBAL_ADMIN, user, true, DOMAIN_NAME, domainId, testersSuspendedGlobalAdmin, TEST_ID));
         
-        mProv.modifyDomainStatus(domain, DomainStatus.active.name());
+        attrs.clear();
+        attrs.put(Provisioning.A_zimbraDomainStatus, DomainStatus.active.name());
+        mProv.modifyAttrs(domain, attrs);
         SoapCommands.run(new SoapTestContext(clientUser, AccountType.ACCT_USER, user, false, DOMAIN_NAME, domainId, testersActiveUser, TEST_ID));
         SoapCommands.run(new SoapTestContext(clientDomainAdmin, AccountType.ACCT_DOMAIN_ADMIN, user, false, DOMAIN_NAME, domainId, testersActiveDomainAdmin, TEST_ID));
         SoapCommands.run(new SoapTestContext(clientGlobalAdmin, AccountType.ACCT_GLOBAL_ADMIN, user, false, DOMAIN_NAME, domainId, testersActiveGlobalAdmin, TEST_ID));
@@ -1104,3 +1118,7 @@ public class TestDomainStatus extends TestCase {
         */
     }
 }
+
+// TODO
+// - ModifyDomain with zimbraDomainStatus
+// - DeleteDomain while is suspended status

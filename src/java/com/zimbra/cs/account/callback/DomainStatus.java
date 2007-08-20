@@ -31,7 +31,7 @@ public class DomainStatus implements AttributeCallback {
             if (alsoModifyingMailStatus == null) {
                 if (entry != null) {
                     String curMailStatus = entry.getAttr(Provisioning.A_zimbraMailStatus);
-                    if (status.equals(Provisioning.DOMAIN_STATUS_SUSPENDED) && 
+                    if ((status.equals(Provisioning.DOMAIN_STATUS_SUSPENDED) || status.equals(Provisioning.DOMAIN_STATUS_SHUTDOWN))&& 
                         curMailStatus != null &&
                         curMailStatus.equals(Provisioning.MAIL_STATUS_DISABLED))
                         return;

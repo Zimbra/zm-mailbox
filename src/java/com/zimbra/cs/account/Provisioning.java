@@ -167,6 +167,7 @@ public abstract class Provisioning {
     public static final String DOMAIN_STATUS_LOCKED = "locked";
     public static final String DOMAIN_STATUS_CLOSED = "closed";
     public static final String DOMAIN_STATUS_SUSPENDED = "suspended";
+    public static final String DOMAIN_STATUS_SHUTDOWN = "shutdown";
 
     /**
      * An alias domain is a domain where ALL addresses in the domain
@@ -1675,8 +1676,6 @@ public abstract class Provisioning {
 
     public abstract void deleteDomain(String zimbraId) throws ServiceException;
 
-    public abstract void modifyDomainStatus(Domain domain, String newStatus) throws ServiceException;
-    
     public abstract Cos createCos(String name, Map<String, Object> attrs) throws ServiceException;
 
     public abstract void renameCos(String zimbraId, String newName) throws ServiceException;

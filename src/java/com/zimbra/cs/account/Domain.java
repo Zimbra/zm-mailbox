@@ -61,6 +61,17 @@ public class Domain extends NamedEntry {
         return suspended;
     }
     
+    public boolean isShutdown() {
+        String domainStatus = getDomainStatus();
+        boolean shutdown = false;
+        if (domainStatus != null)
+            shutdown = domainStatus.equals(Provisioning.DOMAIN_STATUS_SHUTDOWN);
+        
+        if (shutdown)
+            ZimbraLog.account.warn("domain " + mName + " is " + Provisioning.DOMAIN_STATUS_SHUTDOWN);
+        return shutdown;
+    }
+    
     public boolean beingRenamed() {
         String renameInfo = getAttr(Provisioning.A_zimbraDomainRenameInfo);
         return (!StringUtil.isNullOrEmpty(renameInfo));

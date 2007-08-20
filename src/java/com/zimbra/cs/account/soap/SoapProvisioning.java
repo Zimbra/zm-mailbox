@@ -769,17 +769,6 @@ public class SoapProvisioning extends Provisioning {
                 throw e;
         }
     }
-    
-    @Override
-    public void modifyDomainStatus(Domain domain, String newStatus)
-            throws ServiceException {
-        XMLElement req = new XMLElement(AdminConstants.MODIFY_DOMAIN_STATUS_REQUEST);
-        Element eId = req.addElement(AccountConstants.E_ID);
-        eId.setText(domain.getId());
-        Element eStatus = req.addElement(AdminConstants.E_STATUS);
-        eStatus.setText(newStatus);
-        invoke(req);
-    }
 
     @Override
     public Domain get(DomainBy keyType, String key) throws ServiceException {

@@ -276,12 +276,12 @@ class RenameDomain {
     private RenameInfo beginRenameDomain() throws ServiceException {
         String oldDomainName = mOldDomain.getName();
         
-        // see if the domain is currently suspended and/or being renamed
-        boolean domainIsSuspended = mOldDomain.isSuspended();
+        // see if the domain is currently shutdown and/or being renamed
+        boolean domainIsShutdown = mOldDomain.isShutdown();
         RenameInfo renameInfo = RenameInfo.load(mOldDomain, true);
         
-        if (domainIsSuspended && renameInfo == null)
-            throw ServiceException.INVALID_REQUEST("domain " + oldDomainName + " is suspended without rename domain info", null);
+        if (domainIsShutdown && renameInfo == null)
+            throw ServiceException.INVALID_REQUEST("domain " + oldDomainName + " is shutdown without rename domain info", null);
         
         if (renameInfo != null && !renameInfo.destDomainName().equals(mNewDomainName))
             throw ServiceException.INVALID_REQUEST("domain " + oldDomainName + " was being renamed to " + renameInfo.destDomainName() + 
@@ -289,10 +289,10 @@ class RenameDomain {
       
         // okay, this is either a new rename or a restart of a previous rename that did not finish   
         
-        // mark domain suspended and rejecting mails
-        // mProv.modifyDomainStatus(mOldDomain, Provisioning.DOMAIN_STATUS_SUSPENDED);
+        // mark domain shutdown and rejecting mails
+        // mProv.modifyDomainStatus(mOldDomain, Provisioning.DOMAIN_STATUS_SHUTDOWN);
         Map<String, String> attrs = new HashMap<String, String>();
-        attrs.put(Provisioning.A_zimbraDomainStatus, Provisioning.DOMAIN_STATUS_SUSPENDED);
+        attrs.put(Provisioning.A_zimbraDomainStatus, Provisioning.DOMAIN_STATUS_SHUTDOWN);
         attrs.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_DISABLED);
         mProv.modifyAttrs(mOldDomain, attrs, false, false);
                 
@@ -327,8 +327,8 @@ class RenameDomain {
         domainAttrs.remove(Provisioning.A_zimbraDomainName);
         domainAttrs.remove(Provisioning.A_zimbraMailStatus);
         
-        // the new domain is created suspended and rejecting mails
-        domainAttrs.put(Provisioning.A_zimbraDomainStatus, Provisioning.DOMAIN_STATUS_SUSPENDED);
+        // the new domain is created shutdown and rejecting mails
+        domainAttrs.put(Provisioning.A_zimbraDomainStatus, Provisioning.DOMAIN_STATUS_SHUTDOWN);
         domainAttrs.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_DISABLED);
         
         Domain newDomain = null;
