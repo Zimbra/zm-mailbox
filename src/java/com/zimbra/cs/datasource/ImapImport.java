@@ -166,8 +166,17 @@ public class ImapImport implements MailItemImport {
                 // Handle new IMAP folder
                 if (imapFolder == null) {
                     String zimbraPath = getZimbraFolderPath(mbox, ds, remoteFolder);
-                    localFolder = mbox.createFolder(null, zimbraPath, (byte) 0,
-                        MailItem.TYPE_UNKNOWN);
+                    // Try to get the folder first, in case it was manually created or the
+                    // last sync failed between creating the folder and writing the mapping row.
+                    try {
+                        localFolder = mbox.getFolderByPath(null, zimbraPath);
+                    } catch (NoSuchItemException e) {
+                    }
+                    
+                    if (localFolder == null) {
+                        localFolder = mbox.createFolder(null, zimbraPath, (byte) 0,
+                            MailItem.TYPE_UNKNOWN);
+                    }
                     imapFolder = DbImapFolder.createImapFolder(mbox, ds, localFolder.getId(),
                         localFolder.getPath(), remoteFolder.getFullName());
                     imapFolders.add(imapFolder);
