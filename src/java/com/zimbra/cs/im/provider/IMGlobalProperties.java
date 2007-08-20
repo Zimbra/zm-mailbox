@@ -41,7 +41,7 @@ public class IMGlobalProperties implements PropertyProvider {
         mProvMap.put("xmpp.socket.blocking", "false");
         mProvMap.put("xmpp.server.certificate.verify", "false");
         
-        if (true) { // UNCOMMENT ME TO DISABLE TLS FOR DEBUGGING!
+        if (false) { // UNCOMMENT ME TO DISABLE TLS FOR DEBUGGING!
             mProvMap.put("xmpp.client.tls.policy", "disabled");
         }
                 
