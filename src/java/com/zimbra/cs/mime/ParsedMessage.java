@@ -31,6 +31,7 @@ package com.zimbra.cs.mime;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
@@ -41,6 +42,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MailDateFormat;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeUtility;
+import javax.mail.util.SharedByteArrayInputStream;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -56,6 +58,7 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.object.ObjectHandlerException;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.util.JMSession;
@@ -97,7 +100,12 @@ public class ParsedMessage {
     private String mRawDigest;
     private boolean mHaveRaw;
 
-
+    static {
+        // XXX bburtin: remove after testing is complete
+        ZimbraLog.test.info("%s=%b", LC.debug_lmtp_use_shared_stream.key(),
+            LC.debug_lmtp_use_shared_stream.booleanValue());
+    }
+    
     public ParsedMessage(MimeMessage msg, boolean indexAttachments) {
         this(msg, getZimbraDateHeader(msg), indexAttachments);
     }
@@ -148,10 +156,17 @@ public class ParsedMessage {
     }
 
     void parseRawData(byte[] rawData) throws MessagingException {
-        ByteArrayInputStream bais = new ByteArrayInputStream(rawData);
-        mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), bais);
+        InputStream is = null;
+        if (LC.debug_lmtp_use_shared_stream.booleanValue()) {
+            is = new SharedByteArrayInputStream(rawData);
+        } else {
+            is = new ByteArrayInputStream(rawData);
+        }
+        mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), is);
         try {
-            bais.close();
+            if (!LC.debug_lmtp_use_shared_stream.booleanValue()) {
+                is.close();
+            }
         } catch (IOException ioe) {
             // we know ByteArrayInputStream.close() is a no-op
         }

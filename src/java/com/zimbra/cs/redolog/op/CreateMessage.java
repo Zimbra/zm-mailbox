@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.SharedInputStream;
 
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -397,7 +398,9 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
 
             InputStream is = StoreManager.getInstance().getContent(src);
             MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
-            is.close();
+            if (!(is instanceof SharedInputStream)) {
+                is.close();
+            }
             pm = new ParsedMessage(mm, mReceivedDate, mbox.attachmentsIndexingEnabled());
         } else { // mMsgBodyType == MSGBODY_INLINE
             pm = new ParsedMessage(mData, mReceivedDate, mbox.attachmentsIndexingEnabled());

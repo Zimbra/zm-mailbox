@@ -36,12 +36,15 @@ import java.util.Map;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.SharedInputStream;
+import javax.mail.util.SharedByteArrayInputStream;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.util.JMSession;
@@ -65,6 +68,12 @@ public class MessageCache {
     }
 
     private static final int DEFAULT_CACHE_SIZE = 16 * 1000 * 1000;
+    
+    static {
+        // XXX bburtin: remove after testing is complete
+        ZimbraLog.test.info("%s=%b", LC.debug_message_cache_use_shared_stream.key(),
+            LC.debug_message_cache_use_shared_stream.booleanValue());
+    }
 
     private static Map<String, CacheNode> mCache = new LinkedHashMap<String, CacheNode>(150, (float) 0.75, true);
     private static int mTotalSize = 0;
@@ -185,9 +194,19 @@ public class MessageCache {
                     cnode = new CacheNode(size, cnOrig.mMessage, ConvertedState.BOTH);
                 } else {
                     // use the raw byte array to construct the MimeMessage if possible, else read from disk
-                    is = (cnOrig == null || cnOrig.mContent == null ? fetchFromStore(item) : new ByteArrayInputStream(cnOrig.mContent));
+                    if (cnOrig == null || cnOrig.mContent == null) {
+                        is = fetchFromStore(item);
+                    } else if (LC.debug_message_cache_use_shared_stream.booleanValue()) {
+                        is =  new SharedByteArrayInputStream(cnOrig.mContent);
+                    } else {
+                        is =  new ByteArrayInputStream(cnOrig.mContent);
+                    }
+                    
                     cnode = new CacheNode(size, new Mime.FixedMimeMessage(JMSession.getSession(), is), expand ? ConvertedState.BOTH : ConvertedState.RAW);
-                    is.close();
+                    
+                    if (!(is instanceof SharedInputStream)) {
+                        is.close();
+                    }
                 }
 
                 if (expand) {
@@ -200,9 +219,19 @@ public class MessageCache {
                         // if the conversion bombs for any reason, revert to the original
                         ZimbraLog.mailbox.warn("MIME converter failed for message " + item.getId(), e);
 
-                        is = (cnOrig == null || cnOrig.mContent == null ? fetchFromStore(item) : new ByteArrayInputStream(cnOrig.mContent));
+                        if (cnOrig == null || cnOrig.mContent == null) {
+                            fetchFromStore(item);
+                        } else if (LC.debug_message_cache_use_shared_stream.booleanValue()) {
+                            is =  new SharedByteArrayInputStream(cnOrig.mContent);
+                        } else {
+                            is = new ByteArrayInputStream(cnOrig.mContent);
+                        }
+                        
                         cnode = new CacheNode(size, new MimeMessage(JMSession.getSession(), is), ConvertedState.BOTH);
-                        is.close();
+
+                        if (!(is instanceof SharedInputStream)) {
+                            is.close();
+                        }
                     }
                 }
 
@@ -213,7 +242,7 @@ public class MessageCache {
             } catch (MessagingException e) {
                 throw ServiceException.FAILURE("MessagingException while creating MimeMessage for item " + item.getId(), e);
             } finally {
-            	if (is != null)
+            	if (is != null && !(is instanceof SharedInputStream))
             		try {
             			is.close();
             		} catch (IOException e) {}

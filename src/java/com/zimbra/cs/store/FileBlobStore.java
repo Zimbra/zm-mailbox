@@ -29,7 +29,6 @@
 package com.zimbra.cs.store;
 
 import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -39,16 +38,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
+import javax.mail.util.SharedFileInputStream;
 
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.cs.localconfig.DebugConfig;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.FileUtil;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.znative.IO;
 
 /**
@@ -60,6 +61,12 @@ public class FileBlobStore extends StoreManager {
 
     private UniqueFileNameGenerator mUniqueFilenameGenerator;
 
+    static {
+        // XXX bburtin: remove this after testing is completed
+        ZimbraLog.test.info("%s=%b", LC.debug_blob_store_use_shared_stream.key(),
+            LC.debug_blob_store_use_shared_stream.booleanValue());
+    }
+    
 	FileBlobStore() throws Exception {
         mUniqueFilenameGenerator = new UniqueFileNameGenerator();
         long sweepMaxAgeMS =
@@ -309,8 +316,14 @@ public class FileBlobStore extends StoreManager {
         is.mark(2);
         int header = is.read() | (is.read() << 8);
         is.reset();
-        if (header == GZIPInputStream.GZIP_MAGIC)
+        if (header == GZIPInputStream.GZIP_MAGIC) {
         	is = new GZIPInputStream(is);
+        } else {
+            if (LC.debug_blob_store_use_shared_stream.booleanValue()) {
+                is.close();
+                is = new SharedFileInputStream(blob.getFile());
+            }
+        }
         return is;
     }
 
