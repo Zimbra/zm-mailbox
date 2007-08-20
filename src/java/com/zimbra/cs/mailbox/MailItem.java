@@ -37,6 +37,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.redolog.op.IndexItem;
+import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
@@ -187,6 +188,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         private String blobDigest;
         public int    date;
         public int    size;
+        public int    unreadCount;
         public int    flags;
         public long   tags;
         public String sender;
@@ -198,7 +200,6 @@ public abstract class MailItem implements Comparable<MailItem> {
         public int    modContent;
 
         public String inheritedTags;
-        public int    unreadCount;
         public List<Integer> children;
 
         /** Returns the item's blob digest, or <tt>null</tt> if the item has no blob. */
@@ -2199,8 +2200,10 @@ public abstract class MailItem implements Comparable<MailItem> {
             if (info.cascadeIds != null)
                 info.modifiedIds.removeAll(info.cascadeIds);
             mbox.purge(TYPE_CONVERSATION);
-            for (int convId : info.modifiedIds)
-                mbox.getConversationById(convId);
+            // if there are SOAP listeners, instantiate all modified conversations for notification purposes
+            if (!info.modifiedIds.isEmpty() && mbox.hasListeners(Session.Type.SOAP))
+                for (MailItem conv : mbox.getItemById(info.modifiedIds, TYPE_CONVERSATION))
+                    ((Conversation) conv).getSenderList();
         }
 
         // also delete any conversations whose messages have all been removed

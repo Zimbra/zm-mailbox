@@ -94,7 +94,7 @@ public class VirtualConversation extends Conversation {
         data.modMetadata = msg.getSavedSequence();
         data.modContent  = msg.getSavedSequence();
         data.size        = 1;
-        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, new SenderList(msg), data.subject, msg.getSubject());
+        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, new SenderList(msg));
         data.unreadCount = msg.getUnreadCount();
         data.children    = children;
         data.inheritedTags = "-" + msg.mData.flags + ',' + msg.mData.tags;

@@ -480,6 +480,8 @@ public class Mailbox {
     }
 
 
+    /** Returns the list of all <code>Mailbox</code> listeners of a given type.
+     *  Returns all listeners when the passed-in type is <tt>null</tt>. */
     public synchronized List<Session> getListeners(Session.Type stype) {
         if (mListeners.isEmpty())
             return Collections.emptyList();
@@ -491,6 +493,18 @@ public class Mailbox {
             if (s.getType() == stype)
                 sessions.add(s);
         return sessions;
+    }
+
+    boolean hasListeners(Session.Type stype) {
+        if (mListeners.isEmpty())
+            return false;
+        else if (stype == null)
+            return true;
+
+        for (Session s : mListeners)
+            if (s.getType() == stype)
+                return true;
+        return false;
     }
 
     /** Adds a {@link Session} to the set of listeners notified on Mailbox
@@ -1119,6 +1133,7 @@ public class Mailbox {
     void uncache(MailItem item) throws ServiceException {
         if (item == null)
             return;
+
         if (item instanceof Tag) {
             if (mTagCache == null)
                 return;
@@ -1128,8 +1143,9 @@ public class Mailbox {
             if (mFolderCache == null)
                 return;
             mFolderCache.remove(item.getId());
-        } else
+        } else {
             getItemCache().remove(item.getId());
+        }
 
         if (ZimbraLog.cache.isDebugEnabled())
             ZimbraLog.cache.debug("uncached " + MailItem.getNameForType(item) + " " + item.getId() + " in mailbox " + getId());

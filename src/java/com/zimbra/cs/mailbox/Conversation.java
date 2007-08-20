@@ -34,12 +34,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
-
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -48,8 +46,6 @@ import com.zimbra.common.util.ZimbraLog;
  * @author schemers
  */
 public class Conversation extends MailItem {
-
-    private static Log sLog = LogFactory.getLog(Conversation.class);
 
     protected final class TagSet {
         private List<Integer> mTags;
@@ -141,7 +137,6 @@ public class Conversation extends MailItem {
         public String toString() { return mTags.toString(); }
     }
 
-    private   String     mRawSubject;
     private   String     mEncodedSenders;
     protected SenderList mSenderList;
     protected TagSet     mInheritedTagSet;
@@ -162,14 +157,6 @@ public class Conversation extends MailItem {
      * @see ParsedMessage#normalizeSubject */
     public String getNormalizedSubject() {
         return super.getSubject();
-    }
-
-    /** Returns the raw subject of the conversation.  This is taken directly
-     *  from the <code>Subject:</code> header of the first message, with no
-     *  processing. */
-    @Override
-    public String getSubject() {
-        return (mRawSubject == null ? "" : mRawSubject);
     }
 
     @Override
@@ -204,6 +191,25 @@ public class Conversation extends MailItem {
         return mSenderList;
     }
 
+    void instantiateSenderList() {
+        if (mSenderList != null && mSenderList.size() == mData.size)
+            return;
+
+        mSenderList = null;
+        // first, attempt to decode the existing sender list (if there is one)
+        if (mEncodedSenders != null) {
+            try {
+                String encoded = mEncodedSenders;
+                mEncodedSenders = null;
+                // if the first message has been removed, this should throw
+                //   an exception and force mRawSubject to be recalculated
+                mSenderList = SenderList.parse(encoded);
+                if (mSenderList.size() != mData.size)
+                    mSenderList = null;
+            } catch (Exception e) { }
+        }
+    }
+
     /** Makes certain the Conversation's {@link SenderList} is loaded and
      *  valid.  If it's not, first tries to instantiate it from the loaded
      *  metadata.  If that's either missing or invalid, recalculates the
@@ -213,21 +219,9 @@ public class Conversation extends MailItem {
      * @return <tt>true</tt> if the metadata was recalculated, <tt>false</tt>
      *         if the SenderList was generated from existing data */
     boolean loadSenderList() throws ServiceException {
-        if (mSenderList != null && mSenderList.size() == mData.size)
+        instantiateSenderList();
+        if (mSenderList != null)
             return false;
-
-        mSenderList = null;
-        // first, attempt to decode the existing sender list (if there is one)
-        if (mEncodedSenders != null)
-            try {
-                String encoded = mEncodedSenders;
-                mEncodedSenders = null;
-                // if the first message has been removed, this should throw
-                //   an exception and force mRawSubject to be recalculated
-                mSenderList = SenderList.parse(encoded);
-                if (mSenderList.size() == mData.size)
-                    return false;
-            } catch (Exception e) { }
 
         // failed to parse or too few senders are listed -- have to recalculate
         //   (go through the Mailbox because we need to be in a transaction)
@@ -241,18 +235,14 @@ public class Conversation extends MailItem {
 
     SenderList recalculateMetadata(List<Message> msgs) throws ServiceException {
         Collections.sort(msgs, new Message.SortDateAscending());
-        String oldSubject = mRawSubject;
 
         mEncodedSenders = null;
         mSenderList = new SenderList(msgs);
-        recalculateSubject(msgs.size() > 0 ? msgs.get(0) : null);
 
         mData.size = msgs.size();
         mData.unreadCount = 0;
 
         markItemModified(RECALCULATE_CHANGE_MASK);
-        if (!mRawSubject.equals(oldSubject))
-        	markItemModified(Change.MODIFIED_SUBJECT);
 
         mData.children = new ArrayList<Integer>(msgs.size());
         mInheritedTagSet = new TagSet();
@@ -265,20 +255,6 @@ public class Conversation extends MailItem {
         ZimbraLog.mailbox.debug("resetting metadata: cid=" + mId + ", size was=" + mData.size + " is=" + mSenderList.size());
         saveData(null);
         return mSenderList;
-    }
-
-    void recalculateSubject(Message firstMsg) {
-        if (firstMsg == null) {
-            mData.subject = null;
-            mRawSubject   = "";
-        } else {
-            mData.subject = firstMsg.getNormalizedSubject();
-            mRawSubject   = firstMsg.getSubject();
-        }
-        if (sLog.isDebugEnabled()) {
-            sLog.debug("conv " + mId + ": new subject is '" + getSubject() + '\'');
-            sLog.debug("conv " + mId + ": new normalized is '" + getNormalizedSubject() + '\'');
-        }
     }
 
     public static final byte SORT_ID_ASCENDING   = DbMailItem.SORT_BY_ID | DbMailItem.SORT_ASCENDING;
@@ -364,7 +340,7 @@ public class Conversation extends MailItem {
         data.subject     = msgs.length > 0 ? msgs[0].getNormalizedSubject() : "";
         data.date        = date;
         data.size        = msgs.length;
-        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, sl, data.subject, msgs.length > 0 ? msgs[0].getSubject() : "");
+        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, sl);
         data.unreadCount = unread;
         data.children    = children;
         data.inheritedTags = tags.toString();
@@ -639,23 +615,36 @@ public class Conversation extends MailItem {
         //   recalc the metadata, it uses the already-updated DB message state to do it...
         mData.date = mMailbox.getOperationTimestamp();
         mData.contentChanged(mMailbox);
-        boolean recalculated = loadSenderList();
 
-        if (!recalculated) {
-            Message msg = (Message) child;
+        if (!mMailbox.hasListeners(Session.Type.SOAP)) {
+            instantiateSenderList();
             mData.size++;
             try {
-                mSenderList.add(msg);
-                saveMetadata();
+                if (mSenderList != null)
+                    mSenderList.add((Message) child);
             } catch (SenderList.RefreshException slre) {
-                recalculateMetadata(getMessages(SORT_ID_ASCENDING));
+                mSenderList = null;
+            }
+            saveMetadata();
+        } else {
+            boolean recalculated = loadSenderList();
+            if (!recalculated) {
+                mData.size++;
+                try {
+                    mSenderList.add((Message) child);
+                    saveMetadata();
+                } catch (SenderList.RefreshException slre) {
+                    recalculateMetadata(getMessages(SORT_ID_ASCENDING));
+                }
             }
         }
     }
 
     @Override
     void removeChild(MailItem child) throws ServiceException {
+        // superclass removeChild() updates the unread count and child list
         super.removeChild(child);
+
         // remove the last message and the conversation goes away
         if (getMessageCount() == 0) {
             delete();
@@ -678,9 +667,16 @@ public class Conversation extends MailItem {
 
         markItemModified(Change.MODIFIED_SIZE | Change.MODIFIED_SENDERS);
 
-        List<Message> msgs = getMessages(SORT_ID_ASCENDING);
-        msgs.remove(child);
-        recalculateMetadata(msgs);
+        if (!mMailbox.hasListeners(Session.Type.SOAP)) {
+            mEncodedSenders = null;
+            mSenderList = null;
+            mData.size--;
+            saveMetadata(null);
+        } else {
+            List<Message> msgs = getMessages(SORT_ID_ASCENDING);
+            msgs.remove(child);
+            recalculateMetadata(msgs);
+        }
     }
 
     /*
@@ -803,78 +799,40 @@ public class Conversation extends MailItem {
 
 
     @Override
-    void decodeMetadata(String metadata) throws ServiceException {
-        Metadata meta = null;
-        boolean recalculate = true;
-
-        // When a folder is deleted, DbMailItem.markDeletionTargets()
-        // nulls out metadata for all affected conversations.
+    void decodeMetadata(String metadata) {
+        // when a folder is deleted, DbMailItem.markDeletionTargets() nulls out metadata for all affected conversations
+        //   in that case, leave mSenderList unset and fault it in as necessary
         if (metadata != null) {
             try {
-                meta = new Metadata(metadata, this);
+                Metadata meta = new Metadata(metadata, this);
                 if (meta.containsKey(Metadata.FN_PARTICIPANTS))
-                    recalculate = false;
+                    decodeMetadata(meta);
             } catch (ServiceException e) {
                 ZimbraLog.mailbox.info("Unable to parse conversation metadata: id= " + mId + ", data='" + metadata + "'", e);
             }
         }
-
-        if (recalculate) {
-            recalculateMetadata(getMessages(SORT_ID_ASCENDING));
-            return;
-        }
-
-        decodeMetadata(meta);
     }
 
     @Override
     void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
-
         mEncodedSenders = meta.get(Metadata.FN_PARTICIPANTS, null);
-
-        String rawSubject = meta.get(Metadata.FN_RAW_SUBJ, null);
-        if (rawSubject != null) {
-            mRawSubject = rawSubject;
-        } else {
-            mRawSubject = (mData.subject == null ? "" : mData.subject);
-            String prefix = meta.get(Metadata.FN_PREFIX, null);
-            if (prefix != null)
-                mRawSubject = (mData.subject == null ? prefix : prefix + mData.subject);
-        }
     }
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        try {
-            String encoded = mEncodedSenders;
-            if (encoded == null) {
-                SenderList senders = mSenderList == null ? getSenderList() : mSenderList;
-                encoded = senders == null ? null : senders.toString();
-            }
-        	return encodeMetadata(meta, mColor, mVersion, encoded, mData.subject, mRawSubject);
-        } catch (ServiceException e) {
-            return encodeMetadata(meta, mColor, mVersion, null, mData.subject, mRawSubject);
-        }
+        String encoded = mEncodedSenders;
+        if (encoded == null && mSenderList != null)
+            encoded = mSenderList.toString();
+    	return encodeMetadata(meta, mColor, mVersion, encoded);
     }
 
-    static String encodeMetadata(byte color, int version, SenderList senders, String subject, String rawSubject) {
-        return encodeMetadata(new Metadata(), color, version, senders.toString(), subject, rawSubject).toString();
+    static String encodeMetadata(byte color, int version, SenderList senders) {
+        return encodeMetadata(new Metadata(), color, version, senders.toString()).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, byte color, int version, String encodedSenders, String subject, String rawSubject) {
-        String prefix = null;
-        if (rawSubject == null || rawSubject.equals("") || rawSubject.equals(subject))
-            rawSubject = null;
-        else if (rawSubject.endsWith(subject)) {
-            prefix = rawSubject.substring(0, rawSubject.length() - subject.length());
-            rawSubject = null;
-        }
-
-        meta.put(Metadata.FN_PREFIX,       prefix);
-        meta.put(Metadata.FN_RAW_SUBJ,     rawSubject);
+    static Metadata encodeMetadata(Metadata meta, byte color, int version, String encodedSenders) {
         meta.put(Metadata.FN_PARTICIPANTS, encodedSenders);
-
         return MailItem.encodeMetadata(meta, color, version);
     }
 
