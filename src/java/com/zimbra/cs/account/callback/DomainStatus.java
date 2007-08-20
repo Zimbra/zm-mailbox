@@ -18,8 +18,12 @@ public class DomainStatus implements AttributeCallback {
         
         String status = (String) value;
 
-        if (status.equals(Provisioning.DOMAIN_STATUS_CLOSED)) {
+        if (status.equals(Provisioning.DOMAIN_STATUS_SHUTDOWN)) {
+            throw ServiceException.INVALID_REQUEST("Setting " + Provisioning.A_zimbraDomainStatus + " to " + Provisioning.DOMAIN_STATUS_SHUTDOWN + " is not allowed.  It is an internal status and can only be set by server", null);
+            
+        } else if (status.equals(Provisioning.DOMAIN_STATUS_CLOSED)) {
             attrsToModify.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_DISABLED);
+            
         } else {
             if (entry != null) {
                 Domain domain = (Domain)entry;
@@ -31,7 +35,7 @@ public class DomainStatus implements AttributeCallback {
             if (alsoModifyingMailStatus == null) {
                 if (entry != null) {
                     String curMailStatus = entry.getAttr(Provisioning.A_zimbraMailStatus);
-                    if ((status.equals(Provisioning.DOMAIN_STATUS_SUSPENDED) || status.equals(Provisioning.DOMAIN_STATUS_SHUTDOWN))&& 
+                    if (status.equals(Provisioning.DOMAIN_STATUS_SUSPENDED) && 
                         curMailStatus != null &&
                         curMailStatus.equals(Provisioning.MAIL_STATUS_DISABLED))
                         return;

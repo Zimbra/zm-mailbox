@@ -294,7 +294,7 @@ class RenameDomain {
         Map<String, String> attrs = new HashMap<String, String>();
         attrs.put(Provisioning.A_zimbraDomainStatus, Provisioning.DOMAIN_STATUS_SHUTDOWN);
         attrs.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_DISABLED);
-        mProv.modifyAttrs(mOldDomain, attrs, false, false);
+        mProv.modifyAttrs(mOldDomain, attrs, false, false);  // skip callback
                 
         RenamePhase phase = RenamePhase.PHASE_RENAME_ENTRIES;
         
