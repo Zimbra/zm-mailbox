@@ -120,7 +120,25 @@ SECTION mailbox
 	VAR zimbraMailPort
 	VAR zimbraMailSSLPort
   VAR zimbraLogToSyslog
+  VAR zimbraAdminURL
+  VAR zimbraLmtpBindPort
+  VAR zimbraPop3ServerEnabled
+  VAR zimbraPop3BindAddress
+  VAR zimbraPop3BindPort
+  VAR zimbraPop3SSLServerEnabled
+  VAR zimbraPop3SSLBindAddress
+  VAR zimbraPop3SSLBindPort
+  VAR zimbraImapServerEnabled
+  VAR zimbraImapBindAddress
+  VAR zimbraImapBindPort
+  VAR zimbraImapSSLServerEnabled
+  VAR zimbraImapSSLBindAddress
+  VAR zimbraImapSSLBindPort
+  VAR nio_imap_enabled
+  LOCAL mailboxd_keystore_password
+  LOCAL mailboxd_truststore_password
   REWRITE conf/log4j.properties.in conf/log4j.properties
+  REWRITE mailboxd/etc/jetty.properties.in mailboxd/etc/jetty.properties
 	REWRITE mailboxd/etc/jetty.xml.in mailboxd/etc/jetty.xml
 RESTART mailboxd
 
