@@ -105,19 +105,16 @@ public class PrivilegedHandler {
         Object v = attributes.get(name);
         String s = (String)v;
         if (s != null && s.equals("")) s = null; //null out empty string because jetty-setuid.xml may pass in ""
-        System.out.println(name + "=" + s);
         return s == null ? defaultValue : s;
 	}
 	
 	private static boolean getBooleanAttr(Map<String, Object> attributes, String name, boolean defaultValue) {
         Object v = attributes.get(name);
-        System.out.println(name + "=" + v);
         return v == null ? defaultValue : ((Boolean)v).booleanValue();
 	}
 
 	private static int getIntAttr(Map<String, Object> attributes, String name, int defaultValue) {
         Object v = attributes.get(name);
-        System.out.println(name + "=" + v);
         return v == null ? defaultValue : ((Integer)v).intValue();
 	}
 }
