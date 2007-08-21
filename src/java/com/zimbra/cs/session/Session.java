@@ -30,14 +30,18 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.im.IMPersona;
+import com.zimbra.cs.im.IMRouter;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.operation.Operation;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  *  A {@link Session} is identified by an (accountId, sessionID) pair.  A single
@@ -144,19 +148,20 @@ public abstract class Session {
             
                 // once addListener is called, you may NOT lock the mailbox (b/c of deadlock possibilities)
                 mMailbox.addListener(this);
-                
-//                if (/*isIMListener() &&*/ mAuthenticatedAccountId.equalsIgnoreCase(mTargetAccountId)) {
-//                    IMPersona persona = IMRouter.getInstance().findPersona(null, mMailbox);
-//                    if (persona != null)
-//                        registerWithIM(persona);
-//                }
-                
-//              try {
-//              return Provisioning.getInstance().get(AccountBy.id, this.getTargetAccountId()).getBooleanAttr(Provisioning.A_zimbraPrefIMAutoLogin, false);
-//              } catch (ServiceException e) {
-//              ZimbraLog.session.info("Caught exception fetching account preference A_zimbraPrefIMAutoLogin", e);
-//              return false; 
-//              }
+
+                // Connect the session to their IM Persona, if and only if IMAutoLogin is enabled for this account 
+                if (isIMListener() && mAuthenticatedAccountId.equalsIgnoreCase(mTargetAccountId)) {
+                    try {
+                        if (Provisioning.getInstance().get(AccountBy.id, this.getTargetAccountId()).getBooleanAttr(Provisioning.A_zimbraPrefIMAutoLogin, false)) {
+                            IMPersona persona = IMRouter.getInstance().findPersona(null, mMailbox);
+                            if (persona != null) {
+                                registerWithIM(persona);
+                            }
+                        }
+                    } catch (ServiceException e) {
+                        ZimbraLog.session.info("Caught exception fetching account preference A_zimbraPrefIMAutoLogin", e);
+                    }
+                }
             }
         }
 
