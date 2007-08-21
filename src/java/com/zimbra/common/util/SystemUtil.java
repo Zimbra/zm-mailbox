@@ -39,4 +39,22 @@ public class SystemUtil {
         t.printStackTrace(new PrintWriter(writer));
         return writer.toString();
     }
+    
+    /**
+     * Returns the innermost exception wrapped by
+     * <tt>t</tt>.  The innermost exception is found by iterating
+     * the exceptions returned by {@link Throwable#getCause()}.
+     * 
+     * @return the innermost exception, or <tt>null</tt> if <tt>t</tt>
+     * is <tt>null</tt>.
+     */
+    public static Throwable getInnermostException(Throwable t) {
+        if (t == null) {
+            return null;
+        }
+        while (t.getCause() != null) {
+            t = t.getCause();
+        }
+        return t;
+    }
 }
