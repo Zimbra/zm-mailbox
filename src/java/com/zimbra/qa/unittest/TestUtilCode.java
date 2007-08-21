@@ -170,6 +170,18 @@ public class TestUtilCode extends TestCase
             assertTrue("Lists don't match: " + StringUtil.join(",", list), compareLists(list, listOfLists));
         }
     }
+    
+    /**
+     * Tests {@link SystemUtil#getInnermostException(Throwable)}.
+     */
+    public void testInnermostException()
+    throws Exception {
+        assertNull(SystemUtil.getInnermostException(null));
+        Exception inner = new Exception("inner");
+        Exception middle = new Exception("middle", inner);
+        Exception outer = new Exception("outer", middle);
+        assertSame(inner, SystemUtil.getInnermostException(outer));
+    }
 
     private static <E> boolean compareLists(List<E> list, List<List<E>> listOfLists) {
         int i = 0;

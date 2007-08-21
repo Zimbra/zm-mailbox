@@ -51,6 +51,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
@@ -97,7 +98,7 @@ public class ImapImport implements MailItemImport {
             store.close();
         } catch (MessagingException e) {
             ZimbraLog.datasource.info("Testing connection to data source", e);
-            error = e.getMessage();
+            error = SystemUtil.getInnermostException(e).getMessage();
         }
         return error;
     }
