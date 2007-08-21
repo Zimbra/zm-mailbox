@@ -81,6 +81,7 @@ public class NoOp extends MailDocumentHandler  {
         boolean wait = request.getAttributeBool(MailConstants.A_WAIT, false);
         HttpServletRequest servletRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
         
+        boolean enforceLimit = request.getAttributeBool(MailConstants.A_LIMIT_TO_ONE_BLOCKED, false);
         boolean blockingUnsupported = false;
         
         // See bug 16494 - if a session is new, we should return from the NoOp immediately so the client
@@ -96,9 +97,11 @@ public class NoOp extends MailDocumentHandler  {
                 
                 // NOT a resumed request -- block if necessary
                 if (zsc.beginWaitForNotifications(continuation)) {
-                    ZimbraSoapContext otherContext = sBlockedNops.put(zsc.getAuthtokenAccountId(), zsc);
-                    if (otherContext!= null) {
-                        otherContext.signalNotification(true);
+                    if (enforceLimit) {
+                        ZimbraSoapContext otherContext = sBlockedNops.put(zsc.getAuthtokenAccountId(), zsc);
+                        if (otherContext!= null) {
+                            otherContext.signalNotification(true);
+                        }
                     }
                     
                     synchronized(zsc) {
@@ -122,10 +125,12 @@ public class NoOp extends MailDocumentHandler  {
             // we've resumed a RetryContinuation...either way our wait is up, time to execute.
             //
 //            blockingUnsupported = zsc.isCanceledWaitForNotifications();
-            
-            // remove this soap context from the blocked-conext hash, but only
-            // if it hasn't already been removed by someone else...
-            sBlockedNops.remove(zsc.getAuthtokenAccountId(), zsc);
+
+            if (enforceLimit) {
+                // remove this soap context from the blocked-conext hash, but only
+                // if it hasn't already been removed by someone else...
+                sBlockedNops.remove(zsc.getAuthtokenAccountId(), zsc);
+            }
         }
         Element toRet = zsc.createElement(MailConstants.NO_OP_RESPONSE);
         if (blockingUnsupported) {

@@ -425,6 +425,9 @@
       <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
         <arg line="-l -v mc default zimbraFeatureIMEnabled TRUE" />
       </java>
+      <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+        <arg line="-l -v mc default zimbraFeatureInstantNotify TRUE" />
+      </java>
       <antcall target="stop-webserver"/>
       <antcall target="start-webserver"/>
     </target>

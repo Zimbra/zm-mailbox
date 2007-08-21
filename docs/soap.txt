@@ -2173,7 +2173,7 @@ EXAMPLE:
 
 -----------------------
 
- <NoOpRequest [wait='1'] [timeout="msecs to wait"/>
+ <NoOpRequest [wait='1'] [limitToOneBlocked='1'] [timeout="msecs to wait"/>
 
  <NoOpResponse [waitDisallowed="1"]/>
 
@@ -2185,6 +2185,17 @@ will block until there are new notifications for the client.  Note
 that the soap envelope must reference an existing session that has
 notifications enabled, and the notification sequencing number should
 be specified.
+
+Some clients (notably browsers) have a global-limit on the number of
+outstanding sockets...in situations with two App Instances connected
+to one Zimbra Server, the browser app my appear to 'hang' if two app
+sessions attempt to do a blocking-NoOp simultaneously.  Since the apps
+are completely separate in the browser, it is impossible for the apps
+to coordinate with each other -- therefore the 'limitToOneBlocked'
+setting is exposed by the server.  If specified, the server will only
+allow a given user to have one single waiting-NoOp on the server at a
+time, it will complete (with waitDisallowed='1') any existing
+limited hanging NoOpRequests when a new request comes in.
 
 The server may reply with a "waitDisallowed" attribute on response to
 a request with wait="1".  If "waitDisallowed" is true, then
