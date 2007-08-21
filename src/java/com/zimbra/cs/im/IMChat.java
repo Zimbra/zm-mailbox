@@ -527,7 +527,8 @@ public class IMChat extends ClassLogger {
         mDestJid = new JID(roomAddr);
         JoinRoom join = new JoinRoom(mPersona.getFullJidAsString(), getMUCJidWithNickname());
         mPersona.xmppRoute(join);
-        debug("Join MUC: DestJID=%s",mDestJid);
+        
+        debug("Join MUC: DestJID="+mDestJid);
     }
 
     void addUserToChat(IMAddr addr, String inviteMessage) throws ServiceException {

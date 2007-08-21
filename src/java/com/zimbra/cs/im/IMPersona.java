@@ -962,13 +962,14 @@ public class IMPersona extends ClassLogger {
 //        return mSharedGroups.contains(name);
 //    }
 
-    public void joinChat(String threadId) throws ServiceException {
+    public void joinChat(String addr, String threadId) throws ServiceException {
         IMChat chat = mChats.get(threadId);
         if (chat == null) {
+//            throw ServiceException.FAILURE("Couldn't find chat: "+ threadId, null);
             chat = new IMChat(getMailbox(), this, threadId, null);
             mChats.put(threadId, chat);
         }
-        chat.joinMUCChat(threadId);
+        chat.joinMUCChat(addr);
     }
 
     public void joinSharedGroup(String name) throws ServiceException {

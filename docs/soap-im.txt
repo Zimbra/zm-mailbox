@@ -117,7 +117,7 @@ IMModifyChat -- add/remove users from multi-user chat, adjust save preferences, 
 
 IMJoinChat -- join a multi-user chat you have been invited to
 ----------
-<IMJoinChatRequest thread="threadId"/>
+<IMJoinChatRequest thread="threadId" addr="chatAddr"/>
 </IMJoinChatResponse>
 // **look for notification: <n type="enteredchat" thread="threadId"/>**
 

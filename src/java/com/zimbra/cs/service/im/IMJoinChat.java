@@ -40,12 +40,13 @@ public class IMJoinChat extends IMDocumentHandler {
         Element response = lc.createElement(IMConstants.IM_JOIN_CHAT_RESPONSE);
         
         String threadId = request.getAttribute(IMConstants.A_THREAD_ID);
+        String addr = request.getAttribute(IMConstants.A_ADDRESS);
         
         Object lock = super.getLock(lc);
         
         synchronized(lock) {
             IMPersona persona = super.getRequestedPersona(lc, context, lock);
-            persona.joinChat(threadId);
+            persona.joinChat(addr, threadId);
         }
         return response;
     }
