@@ -1106,6 +1106,12 @@ public abstract class ImapHandler extends ProtocolHandler {
                 ZimbraLog.imap.info("RENAME failed: cannot move folder between mailboxes");
                 sendNO(tag, "RENAME failed: cannot rename mailbox to other user's namespace");
                 return CONTINUE_PROCESSING;
+            } else if (!newPath.isCreatable()) {
+                ZimbraLog.imap.info("RENAME failed: hidden folder or parent: " + newPath);
+                sendNO(tag, "RENAME failed");
+                return CONTINUE_PROCESSING;
+            } else if (!oldPath.isVisible()) {
+                throw MailServiceException.NO_SUCH_FOLDER(oldPath.asZimbraPath());
             }
 
             Object mboxobj = oldPath.getOwnerMailbox();
@@ -1131,8 +1137,12 @@ public abstract class ImapHandler extends ProtocolHandler {
         		ZimbraLog.imap.info("RENAME failed: RENAME of INBOX not supported");
         		sendNO(tag, "RENAME failed: RENAME of INBOX not supported");
         		return CONTINUE_PROCESSING;
-        	} else if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER)) {
-        		ZimbraLog.imap.info("RENAME failed: no such folder: " + oldPath);
+            } else if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER)) {
+                ZimbraLog.imap.info("RENAME failed: no such folder: " + oldPath);
+            } else if (e.getCode().equals(MailServiceException.IMMUTABLE_OBJECT)) {
+                ZimbraLog.imap.info("RENAME failed: cannot rename system folder: " + oldPath);
+            } else if (e.getCode().equals(MailServiceException.CANNOT_CONTAIN)) {
+                ZimbraLog.imap.info("RENAME failed: invalid target folder: " + newPath);
             } else {
         		ZimbraLog.imap.warn("RENAME failed", e);
             }

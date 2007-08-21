@@ -596,7 +596,12 @@ public class ImapPath {
     }
 
     ItemId asItemId() throws ServiceException {
-        return useReferent() ? getReferent().mItemId : mItemId;
+        if (useReferent())
+            return getReferent().mItemId;
+
+        if (mItemId == null)
+            getFolder();
+        return mItemId;
     }
 
     @Override
