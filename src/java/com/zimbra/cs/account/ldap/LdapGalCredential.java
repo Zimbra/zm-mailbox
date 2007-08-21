@@ -10,12 +10,12 @@ public class LdapGalCredential {
     String mBindDn;
     String mBindPassword;
     
-    String mKrb5Principle;
+    String mKrb5Principal;
     String mKrb5Keytab;
     
     public static LdapGalCredential init(String authMech, 
                                          String bindDn, String bindPassword,
-                                         String krb5Principle, String krb5Keytab) throws ServiceException {
+                                         String krb5Principal, String krb5Keytab) throws ServiceException {
         
         if (StringUtil.isNullOrEmpty(authMech)) {
             if (bindDn != null && bindPassword != null)
@@ -30,22 +30,22 @@ public class LdapGalCredential {
             if (bindDn == null || bindPassword == null)
                 throw ServiceException.INVALID_REQUEST("missing bindDn or bindPassword for LDAP GAL auth mechenism " + authMech, null);
         } else if (authMech.equals(Provisioning.LDAP_AM_KERBEROS5)) {
-            if (krb5Principle == null || krb5Keytab == null)
-                throw ServiceException.INVALID_REQUEST("missing krb5Principle or krb5Keytab for LDAP GAL auth mechenism " + authMech, null);
+            if (krb5Principal == null || krb5Keytab == null)
+                throw ServiceException.INVALID_REQUEST("missing krb5Principal or krb5Keytab for LDAP GAL auth mechenism " + authMech, null);
         } else
             throw ServiceException.INVALID_REQUEST("invalid LDAP GAL auth mechenism " + authMech, null);
             
-        return new LdapGalCredential(authMech, bindDn, bindPassword, krb5Principle, krb5Keytab);
+        return new LdapGalCredential(authMech, bindDn, bindPassword, krb5Principal, krb5Keytab);
     }
     
     private LdapGalCredential(String authMech, 
                               String bindDn, String bindPassword,
-                              String krb5Principle, String krb5Keytab) {
+                              String krb5Principal, String krb5Keytab) {
 
         mAuthMech = authMech;
         mBindDn = bindDn;
         mBindPassword = bindPassword;
-        mKrb5Principle = krb5Principle;
+        mKrb5Principal = krb5Principal;
         mKrb5Keytab = krb5Keytab;
     }
     
@@ -61,8 +61,8 @@ public class LdapGalCredential {
         return mBindPassword;
     }
     
-    String getKrb5Principle() {
-        return mKrb5Principle;
+    String getKrb5Principal() {
+        return mKrb5Principal;
     }
     
     String getKrb5Keytab() {

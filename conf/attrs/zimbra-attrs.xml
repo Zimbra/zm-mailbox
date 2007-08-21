@@ -2576,12 +2576,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>external LDAP GAL authentication mechanism
         none: anonymous binding
         simple: zimbraGalLdapBindDn and zimbraGalLdapBindPassword has to be set
-        kerberos5: zimbraGalLdapKerberos5Principle and zimbraGalLdapKerberos5Keytab has to be set
+        kerberos5: zimbraGalLdapKerberos5Principal and zimbraGalLdapKerberos5Keytab has to be set
   </desc>
 </attr>
 
-<attr id="550" name="zimbraGalLdapKerberos5Principle" type="string" max="256" cardinality="single" optionalIn="domain">
-  <desc>kerberos5 principle for external GAL queries</desc>
+<attr id="550" name="zimbraGalLdapKerberos5Principal" type="string" max="256" cardinality="single" optionalIn="domain">
+  <desc>kerberos5 principal for external GAL queries</desc>
 </attr>
 
 <attr id="551" name="zimbraGalLdapKerberos5Keytab" type="string" max="256" cardinality="single" optionalIn="domain">

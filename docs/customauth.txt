@@ -109,7 +109,7 @@ When an AuthRequest come in, if the domain is specified to use custom auth
 authenticating framework will invoke the authenticate method on the ZimbraCustomAuth 
 instance passed as the handler parameter to ZimbraCustomAuth.register().
 
-The account object for the principle to be authenticated and the clear-text password 
+The account object for the principal to be authenticated and the clear-text password 
 entered by user are passed to the ZimbraCustomAuth.authenticate() method.  All 
 attributes of the account can be retrieved from the account object.   
 

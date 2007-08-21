@@ -69,7 +69,7 @@ public abstract class ZimbraCustomAuth {
      * 
      * Implementor must ensure thread safety during the life span in this method.
      * 
-     * @param account: The account object of the principle to be authenticated
+     * @param account: The account object of the principal to be authenticated
      *                 all attributes of the account can be retrieved from this object.
      *                   
      * @param password: Clear-text password, usually entered by user and colected by an UI. 

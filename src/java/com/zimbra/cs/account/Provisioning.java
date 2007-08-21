@@ -102,7 +102,7 @@ public abstract class Provisioning {
     
     /**
      * zimbraAuthMech type of "kerberos5" means use kerberos5 authentication.
-     * The principle can be obtained by, either:
+     * The principal can be obtained by, either:
      * (1) {email-local-part}@{domain-attr-zimbraAuthKerberos5Realm}
      * or
      * (2) {principal-name} if account zimbraForeignPrincipal is in the format of 
@@ -118,7 +118,7 @@ public abstract class Provisioning {
     public static final String AM_CUSTOM = "custom:";  
     
     /**
-     * For kerberos5 auth, we allow specifying a principle on a per-account basis.
+     * For kerberos5 auth, we allow specifying a principal on a per-account basis.
      * If zimbraForeignPrincipal is in the format of kerberos5:{principal-name}, we 
      * use the {principal-name} instead of {user-part}@{kerberos5-realm-of-the-domain}
      */
@@ -481,7 +481,7 @@ public abstract class Provisioning {
      *  external LDAP GAL authentication mechanism
      *      none: anonymous binding
      *      simple: zimbraGalLdapBindDn and zimbraGalLdapBindPassword has to be set
-     *      kerberos5: zimbraGalLdapKerberos5Principle and zimbraGalLdapKerberos5Keytab has to be set
+     *      kerberos5: zimbraGalLdapKerberos5Principal and zimbraGalLdapKerberos5Keytab has to be set
      */
     public static final String A_zimbraGalLdapAuthMech = "zimbraGalLdapAuthMech";
     
@@ -489,7 +489,7 @@ public abstract class Provisioning {
     public static final String LDAP_AM_SIMPLE = "simple";
     public static final String LDAP_AM_KERBEROS5 = "kerberos5";
     
-    public static final String A_zimbraGalLdapKerberos5Principle = "zimbraGalLdapKerberos5Principle";
+    public static final String A_zimbraGalLdapKerberos5Principal = "zimbraGalLdapKerberos5Principal";
     public static final String A_zimbraGalLdapKerberos5Keytab = "zimbraGalLdapKerberos5Keytab";
     
     

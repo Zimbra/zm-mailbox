@@ -154,35 +154,35 @@ abstract class AuthMechanism {
         }
         
         void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password) throws ServiceException {
-            String principle = null;
+            String principal = null;
             String foreignPrincipal = acct.getAttr(Provisioning.A_zimbraForeignPrincipal);
             if (foreignPrincipal != null && foreignPrincipal.startsWith(Provisioning.FP_PREFIX_KERBEROS5)) {
                 int idx = foreignPrincipal.indexOf(':');
                 if (idx != -1)
-                    principle = foreignPrincipal.substring(idx+1).trim();
+                    principal = foreignPrincipal.substring(idx+1).trim();
                 else
-                    ZimbraLog.account.warn(mAuthMech + " auth cannot extract principle from " + Provisioning.A_zimbraForeignPrincipal + " " +
+                    ZimbraLog.account.warn(mAuthMech + " auth cannot extract principal from " + Provisioning.A_zimbraForeignPrincipal + " " +
                                            foreignPrincipal + " , using local part and domain realm"); 
             }
-            if (principle == null) {
+            if (principal == null) {
                 String realm = domain.getAttr(Provisioning.A_zimbraAuthKerberos5Realm);
                 if (realm != null) {
                     String[] parts = EmailUtil.getLocalPartAndDomain(acct.getName());
                     if (parts != null)
-                        principle = parts[0] + "@" + realm;
+                        principal = parts[0] + "@" + realm;
                     else
-                        principle = acct.getName() + "@" + realm; // just use whatever in the name
+                        principal = acct.getName() + "@" + realm; // just use whatever in the name
                 }
             }
             
-            if (principle == null)
-                throw AccountServiceException.AUTH_FAILED(acct.getName(), new Exception("cannot obtain principle for " + mAuthMech + " auth"));
+            if (principal == null)
+                throw AccountServiceException.AUTH_FAILED(acct.getName(), new Exception("cannot obtain principal for " + mAuthMech + " auth"));
             
-            if (principle != null) {
+            if (principal != null) {
                 try {
-                    Krb5Login.verifyPassword(principle, password);
+                    Krb5Login.verifyPassword(principal, password);
                 } catch (LoginException e) {
-                    throw AccountServiceException.AUTH_FAILED(acct.getName() + "(kerberos5 principle: " + principle + ")", e);
+                    throw AccountServiceException.AUTH_FAILED(acct.getName() + "(kerberos5 principal: " + principal + ")", e);
                 }
             }
         }

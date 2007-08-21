@@ -32,6 +32,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
+import com.zimbra.cs.account.krb5.Krb5Login;
 import com.zimbra.cs.stats.ZimbraPerf;
 import org.apache.commons.codec.binary.Base64;
 
@@ -61,10 +62,16 @@ import javax.naming.directory.SearchResult;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.Rdn;
+import javax.security.auth.login.LoginException;
+
 import java.io.UnsupportedEncodingException;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivilegedExceptionAction;
+import java.security.PrivilegedActionException;
 import java.security.SecureRandom;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -857,7 +864,11 @@ public class LdapUtil {
             }
         }
         
-        searchLdapGal(url, credential, base, query, maxResults, rules, token, result);
+        String authMech = credential.getAuthMech();
+        if (authMech.equals(Provisioning.LDAP_AM_KERBEROS5))
+            searchLdapGalKrb5(url, credential, base, query, maxResults, rules, token, result);
+        else    
+            searchLdapGal(url, credential, base, query, maxResults, rules, token, result);
         return result;
     }
     
@@ -868,7 +879,7 @@ public class LdapUtil {
                                       int maxResults,
                                       LdapGalMapRules rules,
                                       String token,
-                                      SearchGalResult result) throws NamingException, ServiceException {
+                                      SearchGalResult result) throws NamingException {
         
         SearchControls sc = new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, rules.getLdapAttrs(), false, false);
         result.token = token != null && !token.equals("")? token : EARLIEST_SYNC_TOKEN;
@@ -895,6 +906,67 @@ public class LdapUtil {
         } finally {
             closeContext(ctxt);
             closeEnumContext(ne);
+        }
+    }
+    
+    private static void searchLdapGalKrb5(String url[],
+            LdapGalCredential credential,
+            String base, 
+            String query, 
+            int maxResults,
+            LdapGalMapRules rules,
+            String token,
+            SearchGalResult result) throws NamingException, ServiceException {
+        
+        try {
+            Krb5Login.performAs(credential.getKrb5Principal(), credential.getKrb5Keytab(),
+                                new SearchGalAction(url, credential, base, query, maxResults, rules, token, result));
+        } catch (LoginException le) {
+            throw ServiceException.FAILURE("login failed, unable to search GAL", le);
+        } catch (PrivilegedActionException pae) {
+            // e.getException() should be an instance of NamingException,
+            // as only "checked" exceptions will be "wrapped" in a PrivilegedActionException.
+            Exception e = pae.getException();
+            if (e instanceof NamingException)
+                throw (NamingException)e;
+            else // huh?
+                throw ServiceException.FAILURE("caught unknown excweption, unable to search GAL", e); 
+        }
+    }
+    
+    static class SearchGalAction implements PrivilegedExceptionAction {
+        
+        String[] url;
+        LdapGalCredential credential;
+        String base;
+        String query;
+        int maxResults;
+        LdapGalMapRules rules;
+        String token;
+        SearchGalResult result;
+        
+        SearchGalAction(String arg_url[],
+                        LdapGalCredential arg_credential,
+                        String arg_base, 
+                        String arg_query, 
+                        int arg_maxResults,
+                        LdapGalMapRules arg_rules,
+                        String arg_token,
+                        SearchGalResult arg_result) {
+            url = arg_url;
+            credential = arg_credential;
+            base = arg_base;
+            query = arg_query;
+            maxResults = arg_maxResults;
+            rules = arg_rules;
+            token = arg_token;
+            result = arg_result;
+        }
+            
+        
+        public Object run() throws NamingException {
+            searchLdapGal(url, credential, base, query, maxResults, rules, token, result);
+            return null;
         }
     }
 

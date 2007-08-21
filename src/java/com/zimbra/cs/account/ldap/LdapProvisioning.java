@@ -3747,14 +3747,14 @@ public class LdapProvisioning extends Provisioning {
         String authMech = d.getAttr(Provisioning.A_zimbraGalLdapAuthMech);
         String bindDn = d.getAttr(Provisioning.A_zimbraGalLdapBindDn);
         String bindPassword = d.getAttr(Provisioning.A_zimbraGalLdapBindPassword);
-        String krb5Principle = d.getAttr(Provisioning.A_zimbraGalLdapKerberos5Principle);
+        String krb5Principal = d.getAttr(Provisioning.A_zimbraGalLdapKerberos5Principal);
         String krb5Keytab = d.getAttr(Provisioning.A_zimbraGalLdapKerberos5Keytab);
         String searchBase = d.getAttr(Provisioning.A_zimbraGalLdapSearchBase, "");
         LdapGalMapRules rules = getGalRules(d);
         String filter = d.getAttr(autoComplete ? Provisioning.A_zimbraGalAutoCompleteLdapFilter : Provisioning.A_zimbraGalLdapFilter);
         String[] galAttrList = rules.getLdapAttrs();
         try {
-            LdapGalCredential credential = LdapGalCredential.init(authMech, bindDn, bindPassword, krb5Principle, krb5Keytab);
+            LdapGalCredential credential = LdapGalCredential.init(authMech, bindDn, bindPassword, krb5Principal, krb5Keytab);
             return LdapUtil.searchLdapGal(url, credential, searchBase, filter, n, maxResults, rules, token);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to search GAL", e);

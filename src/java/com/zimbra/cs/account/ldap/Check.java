@@ -177,7 +177,7 @@ public class Check {
         String authMech = (String)attrs.get(Provisioning.A_zimbraGalLdapAuthMech);
         String bindDn = (String) attrs.get(Provisioning.A_zimbraGalLdapBindDn);
         String bindPassword = (String) attrs.get(Provisioning.A_zimbraGalLdapBindPassword);
-        String krb5Principle = (String) attrs.get(Provisioning.A_zimbraGalLdapKerberos5Principle);
+        String krb5Principal = (String) attrs.get(Provisioning.A_zimbraGalLdapKerberos5Principal);
         String krb5Keytab = (String) attrs.get(Provisioning.A_zimbraGalLdapKerberos5Keytab);
         String searchBase = getRequiredAttr(attrs, Provisioning.A_zimbraGalLdapSearchBase);
         String filter = getRequiredAttr(attrs, Provisioning.A_zimbraGalLdapFilter);
@@ -187,7 +187,7 @@ public class Check {
         LdapGalMapRules rules = new LdapGalMapRules(galAttrs);
 
         try {
-            LdapGalCredential credential = LdapGalCredential.init(authMech, bindDn, bindPassword, krb5Principle, krb5Keytab);
+            LdapGalCredential credential = LdapGalCredential.init(authMech, bindDn, bindPassword, krb5Principal, krb5Keytab);
             SearchGalResult result = LdapUtil.searchLdapGal(url, credential, searchBase, filter, query, limit, rules, null); 
             List contacts = result.matches;
             return new Result(STATUS_OK, "", contacts);

@@ -1,7 +1,12 @@
 package com.zimbra.cs.account.krb5;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
+import java.security.PrivilegedExceptionAction;
+import java.security.PrivilegedActionException;
+
+import javax.naming.NamingException;
 import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
@@ -10,6 +15,7 @@ import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.callback.PasswordCallback;
+import javax.security.auth.Subject;
 import java.util.HashMap;
 import java.util.Map;
 import java.io.IOException;
@@ -21,6 +27,27 @@ public class Krb5Login {
         try {
             lc = Krb5Login.withPassword(principal, password);
             lc.login();
+        } finally {
+            if (lc != null) {
+                try {
+                    lc.logout();
+                } catch(LoginException le) {
+                    ZimbraLog.account.warn("krb5 logout failed", le);
+                }
+            }
+        }
+    }
+    
+    public static void performAs(String principal, String keytab, PrivilegedExceptionAction action) throws PrivilegedActionException, LoginException {
+        LoginContext lc = null;
+        try {
+            // Authenticate to Kerberos.
+            lc = Krb5Login.withKeyTab(principal, keytab);
+            lc.login();
+            
+            // Assume the identity of the authenticated principal. 
+            Subject.doAs(lc.getSubject(), action);
+            
         } finally {
             if (lc != null) {
                 try {
@@ -57,10 +84,23 @@ public class Krb5Login {
                                           String keytab)
         throws LoginException
     {
+        /*
+         * com.sun.security.auth.module.Krb5LoginModule required 
+         * useKeyTab=true 
+         * debug=true 
+         * keyTab="/apps/workgroup-audit/keytab/keytab.workgroup-audit" 
+         * doNotPrompt=true 
+         * storeKey=true 
+         * principal="service/workgroup-audit@stanford.edu" 
+         * useTicketCache=true
+         */
         Krb5Config kc = Krb5Config.getInstance();
+        // kc.setDebug(true);
         kc.setPrincipal(principal);
         kc.setKeyTab(keytab);
         kc.setStoreKey(true);
+        kc.setDoNotPrompt(true);
+        kc.setUseTicketCache(true);
         Configuration dc = new DynamicConfiguration(S_CONFIG_NAME, new AppConfigurationEntry[] {kc});
         return new LoginContext(S_CONFIG_NAME, null, null, dc);
     }
@@ -70,7 +110,7 @@ public class Krb5Login {
      * ticket cache and logs in with that entry. 
      *<p>If <code>cache</code> is <code>null</code>, then
      * <code>Krb5Config.setTicketCache</code> will be set to
-     * <code>true</code> and the default ticekt cache will be used.
+     * <code>true</code> and the default ticket cache will be used.
      * <p>Equivalent to the following calls:
      *<pre>
      * Krb5Config kc = Krb5Config.getInstance();
@@ -160,7 +200,7 @@ public class Krb5Login {
             return kc;
         }
 
-        public Krb5Config setDebug(boolean value) { mOptions.put("storeKey", value ? "true" : "false"); return this; }
+        public Krb5Config setDebug(boolean value) { mOptions.put("debug", value ? "true" : "false"); return this; }
         public Krb5Config setDoNotPrompt(boolean value)   { mOptions.put("doNotPrompt", value ? "true" : "false"); return this;}
         public Krb5Config setKeyTab(String filename)      { mOptions.put("keyTab", filename); setUseKeyTab(true); return this; }
         public Krb5Config setPrincipal(String principal)  { mOptions.put("principal", principal); return this; }
@@ -169,8 +209,37 @@ public class Krb5Login {
         public Krb5Config setUseKeyTab(boolean value)     { mOptions.put("useKeyTab", value ? "true" : "false"); return this; }
         public Krb5Config setUseTicketCache(boolean value) { mOptions.put("useTicketCache", value ? "true" : "false"); return this;}
     }
+    
+    static class Dummy implements PrivilegedExceptionAction {
+        String mArg;
+        
+        Dummy(String arg) {
+            mArg = arg;
+        }
+        
+        public Object run() throws Exception {
+            System.out.println("arg is " + mArg);
+            throw new Exception("exception thrown from run");
+        }
+    }
+    
+    private static void testPerformAs() {
+        try {
+            // performAs("service/workgroup-audit@stanford.edu", "/apps/workgroup-audit/keytab/keytab.workgroup-audit", new Dummy("phoebe"));
+            performAs("service/stan-ldap-test@PHOEBE.LOCAL", "/etc/krb5.keytab", new Dummy("phoebe"));
+        } catch (LoginException le) {
+            le.printStackTrace();
+        } catch (PrivilegedActionException pae) {
+            Exception e = pae.getException();
+            System.out.println("exception msg is: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 
     public static void main(String arsg[]) throws LoginException {
-        verifyPassword("user1@MACPRO.LOCAL", "test123");
+        // verifyPassword("user1@MACPRO.LOCAL", "test123");
+        testPerformAs();
+        
+        System.out.println("succeeded");
     }
 }
