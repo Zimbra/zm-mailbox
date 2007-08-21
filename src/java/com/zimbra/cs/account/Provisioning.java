@@ -478,6 +478,22 @@ public abstract class Provisioning {
     public static final String A_zimbraGalMode = "zimbraGalMode";
     
     /**
+     *  external LDAP GAL authentication mechanism
+     *      none: anonymous binding
+     *      simple: zimbraGalLdapBindDn and zimbraGalLdapBindPassword has to be set
+     *      kerberos5: zimbraGalLdapKerberos5Principle and zimbraGalLdapKerberos5Keytab has to be set
+     */
+    public static final String A_zimbraGalLdapAuthMech = "zimbraGalLdapAuthMech";
+    
+    public static final String LDAP_AM_NONE = "none";
+    public static final String LDAP_AM_SIMPLE = "simple";
+    public static final String LDAP_AM_KERBEROS5 = "kerberos5";
+    
+    public static final String A_zimbraGalLdapKerberos5Principle = "zimbraGalLdapKerberos5Principle";
+    public static final String A_zimbraGalLdapKerberos5Keytab = "zimbraGalLdapKerberos5Keytab";
+    
+    
+    /**
      * set to true if an account is an admin account
      */
     public static final String A_zimbraIsAdminAccount = "zimbraIsAdminAccount";    

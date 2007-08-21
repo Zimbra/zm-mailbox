@@ -508,8 +508,6 @@ public class TestProvisioning extends TestCase {
                             0,          // expires
                             preAuth);   // preauth key
         
-        
-        
     }
     
     private Account adminAccountTest() throws Exception {

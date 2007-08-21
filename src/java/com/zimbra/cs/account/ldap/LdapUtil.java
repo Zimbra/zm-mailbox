@@ -222,16 +222,37 @@ public class LdapUtil {
      * @throws NamingException
      */
     public static DirContext getDirContext(String urls[], String bindDn, String bindPassword)  throws NamingException {
+        return getDirContext(urls, null, bindDn, bindPassword);
+    }
+    
+    /**
+     * 
+     * @return
+     * @throws NamingException
+     */
+    public static DirContext getDirContext(String urls[], String authMech, String bindDn, String bindPassword)  throws NamingException {
         Hashtable<String, String> env = new Hashtable<String, String>();
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
         env.put(Context.PROVIDER_URL, joinURLS(urls));
-        if (bindDn == null || bindPassword == null) {
+        
+        if (authMech == null) {
+            if (bindDn != null && bindPassword != null)
+                authMech = Provisioning.LDAP_AM_SIMPLE;
+            else
+                authMech = Provisioning.LDAP_AM_NONE;
+        }
+        
+        if (authMech.equals(Provisioning.LDAP_AM_NONE)) {
             env.put(Context.SECURITY_AUTHENTICATION, "none");
-        } else {
+        } else if (authMech.equals(Provisioning.LDAP_AM_SIMPLE)) {
             env.put(Context.SECURITY_AUTHENTICATION, "simple");
             env.put(Context.SECURITY_PRINCIPAL, bindDn);
             env.put(Context.SECURITY_CREDENTIALS, bindPassword);        
+        } else if (authMech.equals(Provisioning.LDAP_AM_KERBEROS5)) {
+            env.put(Context.SECURITY_AUTHENTICATION, "GSSAPI");
+            env.put("javax.security.sasl.qop", "auth-conf");
         }
+        
         env.put(Context.REFERRAL, "follow");
         // wait at most 10 seconds
         env.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
@@ -782,13 +803,13 @@ public class LdapUtil {
          return LdapProvisioning.expandStr(bindDnRule, vars);
       }
 
+      
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#searchGal(java.lang.String)
      */
     public static SearchGalResult searchLdapGal(
             String url[],
-            String bindDn,
-            String bindPassword,
+            LdapGalCredential credential,
             String base,
             String filter, 
             String n,
@@ -835,12 +856,27 @@ public class LdapUtil {
                 ZimbraLog.misc.debug("searchLdapGal attr:"+a);
             }
         }
+        
+        searchLdapGal(url, credential, base, query, maxResults, rules, token, result);
+        return result;
+    }
+    
+    private static void searchLdapGal(String url[],
+                                      LdapGalCredential credential,
+                                      String base, 
+                                      String query, 
+                                      int maxResults,
+                                      LdapGalMapRules rules,
+                                      String token,
+                                      SearchGalResult result) throws NamingException, ServiceException {
+        
         SearchControls sc = new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, rules.getLdapAttrs(), false, false);
         result.token = token != null && !token.equals("")? token : EARLIEST_SYNC_TOKEN;
         DirContext ctxt = null;
         NamingEnumeration ne = null;
+        
         try {
-            ctxt = getDirContext(url, bindDn, bindPassword);
+            ctxt = getDirContext(url, credential.getAuthMech(), credential.getBindDn(), credential.getBindPassword());
             ne = searchDir(ctxt, base, query, sc);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
@@ -860,7 +896,6 @@ public class LdapUtil {
             closeContext(ctxt);
             closeEnumContext(ne);
         }
-        return result;
     }
 
     /**
