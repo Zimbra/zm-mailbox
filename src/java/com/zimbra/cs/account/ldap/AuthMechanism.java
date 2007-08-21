@@ -25,85 +25,211 @@
 
 package com.zimbra.cs.account.ldap;
 
+import javax.naming.AuthenticationException;
+import javax.naming.AuthenticationNotSupportedException;
+import javax.naming.NamingException;
+import javax.security.auth.login.LoginException;
+
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.krb5.Krb5Login;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.EmailUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
-public class AuthMechanism {
+abstract class AuthMechanism {
     
-    public static enum AuthMechType {
-        AMT_ZIMBRA,
-        AMT_LDAP,
-        AMT_KERBEROS5,
-        AMT_CUSTOM
+    protected String mAuthMech;  // value of the zimbraAuthMech attribute
+    
+    protected AuthMechanism(String authMech) {
+        mAuthMech = authMech;
     }
     
-    private String mAuthMech;  // value of the zimbraAuthMech attribute
-    private AuthMechType mType;
-    
-    /*
-     * For AMT_ZIMBRA, AMT_LDAP, and AMT_KERBEROS5: the same value as mAuthMech
-     * For AMT_CUSTOM, the handler name after the : in mAuthMech
-     */ 
-    private String mAuthHandler; 
-    
-    AuthMechanism(Account acct) throws ServiceException {
+    public static AuthMechanism makeInstance(Account acct) throws ServiceException {
+        String authMech = Provisioning.AM_ZIMBRA;
         
-        mAuthMech = Provisioning.AM_ZIMBRA;   
-   
         Provisioning prov = Provisioning.getInstance();
-        Domain d = prov.getDomain(acct);
+        Domain domain = prov.getDomain(acct);
+        
         // see if it specifies an alternate auth
-        if (d != null) {
-            String am = d.getAttr(Provisioning.A_zimbraAuthMech);
+        if (domain != null) {
+            String am = domain.getAttr(Provisioning.A_zimbraAuthMech);
             if (am != null)
-                mAuthMech = am;
+                authMech = am;
         }
         
-        if (mAuthMech.equals(Provisioning.AM_ZIMBRA)) {
-            mType = AuthMechType.AMT_ZIMBRA;
-            mAuthHandler = mAuthMech;
+        if (authMech.equals(Provisioning.AM_ZIMBRA))
+            return new ZimbraAuth(authMech);
+        else if (authMech.equals(Provisioning.AM_LDAP) || authMech.equals(Provisioning.AM_AD)) 
+            return new LdapAuth(authMech);
+        else if (authMech.equals(Provisioning.AM_KERBEROS5))
+            return new Kerberos5Auth(authMech);
+        else if (authMech.startsWith(Provisioning.AM_CUSTOM))
+            return new CustomAuth(authMech);
+        else {
+            // we didn't have a valid auth mech, fallback to zimbra default
+            ZimbraLog.account.warn("unknown value for "+Provisioning.A_zimbraAuthMech+": "+authMech+", falling back to default mech");
+            return new ZimbraAuth(authMech);
+        }
+    }
+    
+    public static void doDefaultAuth(AuthMechanism authMech, LdapProvisioning prov, Domain domain, Account acct, String password) throws ServiceException {
+        ZimbraAuth zimbraAuth = new ZimbraAuth(authMech.getMechanism());
+        zimbraAuth.doAuth(prov, domain, acct, password);
+    }
+
+    
+    public boolean isZimbraAuth() {
+        return false;
+    }
+    
+    abstract void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password) throws ServiceException;
+    
+    String getMechanism() {
+        return mAuthMech;
+    }
+    
+    /*
+     * ZimbraAuth 
+     */
+    static class ZimbraAuth extends AuthMechanism {
+        ZimbraAuth(String authMech) {
+            super(authMech);
+        }
+        
+        public boolean isZimbraAuth() {
+            return true;
+        }
+        
+        void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password) throws ServiceException {
+            String encodedPassword = acct.getAttr(Provisioning.A_userPassword);
+
+            if (encodedPassword == null)
+                throw AccountServiceException.AUTH_FAILED(acct.getName());
+
+            if (LdapUtil.isSSHA(encodedPassword)) {
+                if (LdapUtil.verifySSHA(encodedPassword, password)) {
+                    return; // good password, RETURN
+                }
+
+            } else if (acct instanceof LdapEntry) {
+                String[] urls = new String[] { LdapUtil.getLdapURL() };
+                try {
+                    LdapUtil.ldapAuthenticate(urls, ((LdapEntry)acct).getDN(), password);
+                    return; // good password, RETURN                
+                } catch (AuthenticationException e) {
+                    throw AccountServiceException.AUTH_FAILED(acct.getName(), e);
+                } catch (AuthenticationNotSupportedException e) {
+                    throw AccountServiceException.AUTH_FAILED(acct.getName(), e);
+                } catch (NamingException e) {
+                    throw ServiceException.FAILURE(e.getMessage(), e);
+                }
+            }
+            throw AccountServiceException.AUTH_FAILED(acct.getName());       
+        }
+    }
+    
+    /*
+     * LdapAuth
+     */
+    static class LdapAuth extends AuthMechanism {
+        LdapAuth(String authMech) {
+            super(authMech);
+        }
+        
+        void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password) throws ServiceException {
+            prov.externalLdapAuth(domain, mAuthMech, acct, password);
+        }
+    }
+    
+    /*
+     * Kerberos5Auth
+     */
+    static class Kerberos5Auth extends AuthMechanism {
+        Kerberos5Auth(String authMech) {
+            super(authMech);
+        }
+        
+        void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password) throws ServiceException {
+            String principle = null;
+            String foreignPrincipal = acct.getAttr(Provisioning.A_zimbraForeignPrincipal);
+            if (foreignPrincipal != null && foreignPrincipal.startsWith(Provisioning.FP_PREFIX_KERBEROS5)) {
+                int idx = foreignPrincipal.indexOf(':');
+                if (idx != -1)
+                    principle = foreignPrincipal.substring(idx+1).trim();
+                else
+                    ZimbraLog.account.warn(mAuthMech + " auth cannot extract principle from " + Provisioning.A_zimbraForeignPrincipal + " " +
+                                           foreignPrincipal + " , using local part and domain realm"); 
+            }
+            if (principle == null) {
+                String realm = domain.getAttr(Provisioning.A_zimbraAuthKerberos5Realm);
+                if (realm != null) {
+                    String[] parts = EmailUtil.getLocalPartAndDomain(acct.getName());
+                    if (parts != null)
+                        principle = parts[0] + "@" + realm;
+                    else
+                        principle = acct.getName() + "@" + realm; // just use whatever in the name
+                }
+            }
             
-        } else if (mAuthMech.equals(Provisioning.AM_LDAP) || mAuthMech.equals(Provisioning.AM_AD)) {
-            mType = AuthMechType.AMT_LDAP;
-            mAuthHandler = mAuthMech;
+            if (principle == null)
+                throw AccountServiceException.AUTH_FAILED(acct.getName(), new Exception("cannot obtain principle for " + mAuthMech + " auth"));
             
-        } else if (mAuthMech.equals(Provisioning.AM_KERBEROS5)) {
-            mType = AuthMechType.AMT_KERBEROS5;
-            mAuthHandler = mAuthMech;
-            
-        } else if (mAuthMech.startsWith(Provisioning.AM_CUSTOM)) {
-            // the value is in the format of custom:{handler}
+            if (principle != null) {
+                try {
+                    Krb5Login.verifyPassword(principle, password);
+                } catch (LoginException e) {
+                    throw AccountServiceException.AUTH_FAILED(acct.getName() + "(kerberos5 principle: " + principle + ")", e);
+                }
+            }
+        }
+    }
+    
+    /*
+     * CustomAuth
+     */
+    static class CustomAuth extends AuthMechanism {
+        private String mAuthHandler; 
+        
+        CustomAuth(String authMech) {
+            super(authMech);
+         
+            // value is in the format of custom:{handler}
             int idx = mAuthMech.indexOf(':');
             if (idx != -1) {
-                mType = AuthMechType.AMT_CUSTOM;
                 mAuthHandler = mAuthMech.substring(idx+1);
             }
         }
-     
-        if (mType == null) {
-            // we didn't have a valid value, fallback to zimbra default
-            ZimbraLog.account.warn("unknown value for "+Provisioning.A_zimbraAuthMech+": "+
-                                   mAuthMech+", falling back to default mech");
-
-            mAuthMech = Provisioning.AM_ZIMBRA;
-            mType = AuthMechType.AMT_ZIMBRA;
-            mAuthHandler = mAuthMech;
+        
+        void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password) throws ServiceException {
+            
+            if (mAuthHandler == null)
+                throw AccountServiceException.AUTH_FAILED(acct.getName(), new Exception("missing handler for custom auth"));
+            
+            ZimbraCustomAuth handler = ZimbraCustomAuth.getHandler(mAuthHandler);
+            if (handler == null) {
+                throw AccountServiceException.AUTH_FAILED(acct.getName(), new Exception("handler " + mAuthHandler + " for custom auth for domain " + domain.getName() + " not found"));
+            } else {
+                try {
+                    handler.authenticate(acct, password);
+                    return;
+                } catch (Exception e) {
+                    if (e instanceof ServiceException) {
+                        throw (ServiceException)e;
+                    } else {   
+                        String msg = e.getMessage();
+                        if (StringUtil.isNullOrEmpty(msg))
+                            msg = "";
+                        else
+                            msg = " (" + msg + ")";
+                        throw AccountServiceException.AUTH_FAILED(acct.getName() + msg , e);
+                    }
+                }
+            }
         }
     }
-    
-    public AuthMechType getType() {
-        return mType;
-    }
-    
-    public String getHandler() {
-        return mAuthHandler;
-    }
-    
-    public boolean isZimbraAuth() {
-        return (mType == AuthMechType.AMT_ZIMBRA);
-    }
-    
 }
+

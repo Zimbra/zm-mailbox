@@ -41,7 +41,6 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Account.CalendarUserType;
-import com.zimbra.cs.account.ldap.AuthMechanism.AuthMechType;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Alias;
@@ -2525,7 +2524,7 @@ public class LdapProvisioning extends Provisioning {
     private void authAccount(Account acct, String password, boolean checkPasswordPolicy) throws ServiceException {
         checkAccountStatus(acct);
         
-        AuthMechanism authMech = new AuthMechanism(acct);
+        AuthMechanism authMech = AuthMechanism.makeInstance(acct);
         verifyPassword(acct, password, authMech);
 
         if (!checkPasswordPolicy || !authMech.isZimbraAuth())
@@ -2586,7 +2585,7 @@ public class LdapProvisioning extends Provisioning {
     
     }
 
-    private void externalLdapAuth(Domain d, String authMech, Account acct, String password) throws ServiceException {
+    void externalLdapAuth(Domain d, String authMech, Account acct, String password) throws ServiceException {
         String url[] = d.getMultiAttr(Provisioning.A_zimbraAuthLdapURL);
         
         if (url == null || url.length == 0) {
@@ -2663,120 +2662,28 @@ public class LdapProvisioning extends Provisioning {
      * password and auths the user
      */
     private void verifyPasswordInternal(Account acct, String password, AuthMechanism authMech) throws ServiceException {
-        String encodedPassword = acct.getAttr(Provisioning.A_userPassword);
         
-        AuthMechanism.AuthMechType authMechType = authMech.getType();
-        
-        Domain d = Provisioning.getInstance().getDomain(acct);
+        Domain domain = Provisioning.getInstance().getDomain(acct);
         
         boolean allowFallback = true;
         if (!authMech.isZimbraAuth())
             allowFallback = 
-                d.getBooleanAttr(Provisioning.A_zimbraAuthFallbackToLocal, false) ||
+                domain.getBooleanAttr(Provisioning.A_zimbraAuthFallbackToLocal, false) ||
                 acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false) ||
                 acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false); 
         
-        if (authMechType == AuthMechanism.AuthMechType.AMT_LDAP) {
-            try {
-                externalLdapAuth(d, authMech.getHandler(), acct, password);
-                return;
-            } catch (ServiceException e) {
-                if (!allowFallback) 
-                    throw e;
-                ZimbraLog.account.warn(authMech.getHandler() + " auth for domain " +
-                                       d.getName() + " failed, falling back to default mech");
-            }
-        } else if (authMechType == AuthMechanism.AuthMechType.AMT_KERBEROS5) {
-            String principle = null;
-            String foreignPrincipal = acct.getAttr(Provisioning.A_zimbraForeignPrincipal);
-            if (foreignPrincipal != null && foreignPrincipal.startsWith(FP_PREFIX_KERBEROS5)) {
-                int idx = foreignPrincipal.indexOf(':');
-                if (idx != -1)
-                    principle = foreignPrincipal.substring(idx+1).trim();
-                else
-                    ZimbraLog.account.warn(authMech.getHandler() + "cannot extract principle from " + Provisioning.A_zimbraForeignPrincipal +
-                                           ", using local part and domain realm"); 
-            }
-            if (principle == null) {
-                String realm = d.getAttr(Provisioning.A_zimbraAuthKerberos5Realm);
-                if (realm != null) {
-                    String[] parts = EmailUtil.getLocalPartAndDomain(acct.getName());
-                    if (parts != null)
-                        principle = parts[0] + "@" + realm;
-                    else
-                        principle = acct.getName() + "@" + realm; // just use whatever in the name
-                }
-            }
-            
-            if (principle == null && !allowFallback)
-                throw AccountServiceException.AUTH_FAILED(acct.getName(), new Exception("cannot obtain principle for " + authMech.getHandler() + " auth"));
-            
-            if (principle != null) {
-                try {
-                    Krb5Login.verifyPassword(principle, password);
-                    return;
-                } catch (LoginException e) {
-                    if (!allowFallback) 
-                        throw AccountServiceException.AUTH_FAILED(acct.getName() + "(kerberos5 principle: " + principle + ")", e);
-                    ZimbraLog.account.warn(authMech.getHandler() + " auth for principle " + principle + " failed, falling back to default mech");
-                }
-            }
-        } else if (authMechType == AuthMechanism.AuthMechType.AMT_CUSTOM) {
-            String handlerName = authMech.getHandler();
-            ZimbraCustomAuth handler = ZimbraCustomAuth.getHandler(handlerName);
-            if (handler == null) {
-                String msg = "handler " + handlerName + " for custom auth for domain " + d.getName() + " not found";
-                if (!allowFallback) 
-                    throw AccountServiceException.AUTH_FAILED(acct.getName(), new Exception(msg));
-                ZimbraLog.account.warn(msg + "falling back to default mech");
-            } else {
-                try {
-                    handler.authenticate(acct, password);
-                    return;
-                } catch (Exception e) {
-                    if (!allowFallback) {
-                        if (e instanceof ServiceException) {
-                            throw (ServiceException)e;
-                        } else {   
-                            String msg = e.getMessage();
-                            if (StringUtil.isNullOrEmpty(msg))
-                                msg = "";
-                            else
-                                msg = " (" + msg + ")";
-                            throw AccountServiceException.AUTH_FAILED(acct.getName() + msg , e);
-                        }
-                    }
-                    
-                    ZimbraLog.account.warn("custom auth " + authMech.getHandler() + " for domain " +
-                                           d.getName() + " failed, falling back to default mech");
-                }
-            }
+        try {
+            authMech.doAuth(this, domain, acct, password);
+            return;
+        } catch (ServiceException e) {
+            if (!allowFallback || authMech.isZimbraAuth()) 
+                throw e;
+            ZimbraLog.account.warn(authMech.getMechanism() + " auth for domain " +
+                                   domain.getName() + " failed, fall back to zimbra default auth mechanism");
         }
-
-        // fall back to zimbra
-        if (encodedPassword == null)
-            throw AccountServiceException.AUTH_FAILED(acct.getName());
-
-        if (LdapUtil.isSSHA(encodedPassword)) {
-
-            if (LdapUtil.verifySSHA(encodedPassword, password)) {
-                return; // good password, RETURN
-            }
-
-        } else if (acct instanceof LdapEntry) {
-            String[] urls = new String[] { LdapUtil.getLdapURL() };
-            try {
-                LdapUtil.ldapAuthenticate(urls, ((LdapEntry)acct).getDN(), password);
-                return; // good password, RETURN                
-            } catch (AuthenticationException e) {
-                throw AccountServiceException.AUTH_FAILED(acct.getName(), e);
-            } catch (AuthenticationNotSupportedException e) {
-                throw AccountServiceException.AUTH_FAILED(acct.getName(), e);
-            } catch (NamingException e) {
-                throw ServiceException.FAILURE(e.getMessage(), e);
-            }
-        }
-        throw AccountServiceException.AUTH_FAILED(acct.getName());        
+        
+        // fall back to zimbra default auth
+        AuthMechanism.doDefaultAuth(authMech, this, domain, acct, password);    
     }
  
      /**
