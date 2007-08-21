@@ -51,7 +51,7 @@ public final class MemoryStats implements RealtimeStatsCallback {
     private static final String FREE_SUFFIX = "_free";
     private static final String GC_PREFIX = "gc_";
     private static final String COUNT_SUFFIX = "_count";
-    private static final String TIME_SUFFIX = "_time";
+    private static final String TIME_SUFFIX = "_ms";
     private static final String MINOR = "minor";
     private static final String MAJOR = "major";
 
