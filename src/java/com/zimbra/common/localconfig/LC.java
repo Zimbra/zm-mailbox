@@ -232,6 +232,7 @@ public class LC {
     public static final KnownKey search_dbfirst_term_percentage_cutoff;
 
     public static final KnownKey zmstat_log_directory;
+    public static final KnownKey zmstat_interval;
     static {
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  Changing this setting does not immediately reflect in MySQL server.  You will have to, with abundant precaution, re-generate my.cnf and restart MySQL server for the change to take effect.";
         final String FS = File.separator;
@@ -908,5 +909,9 @@ public class LC {
         zmstat_log_directory = new KnownKey("zmstat_log_directory");
         zmstat_log_directory.setDefault("${zimbra_home}" + FS + "zmstat");
         zmstat_log_directory.setDoc("where zmstat csv files are saved");
+
+        zmstat_interval = new KnownKey("zmstat_interval");
+        zmstat_interval.setDefault("30");
+        zmstat_interval.setDoc("how often samples are taken by zmstat (seconds)");
     }
 }
