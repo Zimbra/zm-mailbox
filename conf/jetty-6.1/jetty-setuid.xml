@@ -90,7 +90,7 @@
 
   <Set name="startServerAsPrivileged">false</Set>
   <Set name="umask">2</Set>
-  <Set name="uid">501</Set>
-  <Set name="gid">501</Set>
+  <Set name="uid"><Property name="zimbra_user_uid"/></Set>
+  <Set name="gid"><Property name="zimbra_user_gid"/></Set>
 </Configure>
 
