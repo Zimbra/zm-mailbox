@@ -131,50 +131,62 @@ final class SessionMap {
      *  removed from the cache and its {@link Session#doCleanup()} method is
      *  called.  As a side effect, all removed <tt>Session</tt>s have their
      *  session ID unset. */
-    public synchronized Session putAndPrune(String accountId, String sessionId, Session session, int maxSessionsPerAcct) {
+    public void putAndPrune(String accountId, String sessionId, Session session, int maxSessionsPerAcct) {
         //ZimbraLog.session.debug("PutAndPrune(%s, %s, %s)", accountId, sessionId, session.toString());
-        
-        Session oldValue = put(accountId, sessionId, session);
-        assert(session != null);
-        AccountSessionMap acctMap = mAcctSessionMap.get(accountId);
-        int iterations = 0; // debugging info looking for bug 17324
-        while (acctMap.size() > maxSessionsPerAcct) {
-            iterations++;
-            long leastRecent = Long.MAX_VALUE;
-            String leastRecentId = null;
-            
-            for (Map.Entry<String, Session> entry : acctMap.entrySet()) {
-                Session s = entry.getValue();
-                if (s.getLastAccessTime() < leastRecent) {
-                    leastRecent = s.getLastAccessTime();
-                    leastRecentId = entry.getKey();
-                }
-            }
-            assert(leastRecentId != null);
-            int prevSize = acctMap.size();
-            Session removed = remove(accountId, leastRecentId);
-            acctMap = mAcctSessionMap.get(accountId); // could have been removed by remove()
-            if (acctMap == null) // drop out if the acctSessionMap was empty 
-                return oldValue;
-            
-            ZimbraLog.session.debug("Account: %s has too many sessions open of type %s, forcing session %s to close",
-                accountId, session.getType(), removed);
-            if (removed != null)
-                removed.doCleanup();
-            assert(acctMap.size() < prevSize);
-            
-            if (acctMap.size() > maxSessionsPerAcct || acctMap.size() >= prevSize) {
-                ZimbraLog.session.warn("Problem in SessionMap.putAndPrune(%d): accountId: %s session: %s  maxPerAcct: %d prevSize: %d finishSize: %d leastRecentTime: %d leastRecentId: %s removed: %s",
-                    iterations, accountId, sessionId, maxSessionsPerAcct, prevSize, acctMap.size(), leastRecent, leastRecentId, removed);
-                StringBuilder sb = new StringBuilder("SessionMap for account ");
-                sb.append(accountId).append(" contains: ");
+
+        List<Session> dequeued = null;
+        synchronized (this) {
+            assert(session != null);
+            put(accountId, sessionId, session);
+    
+            AccountSessionMap acctMap = mAcctSessionMap.get(accountId);
+            int iterations = 0; // debugging info looking for bug 17324
+            while (acctMap != null && acctMap.size() > maxSessionsPerAcct) {
+                iterations++;
+                long leastRecent = Long.MAX_VALUE;
+                String leastRecentId = null;
+                
                 for (Map.Entry<String, Session> entry : acctMap.entrySet()) {
-                    sb.append("(").append(entry.getKey()).append(",").append(entry.getValue().toString()).append(" time=").append(entry.getValue().getLastAccessTime()).append(") ");
+                    Session s = entry.getValue();
+                    if (s.getLastAccessTime() < leastRecent) {
+                        leastRecent = s.getLastAccessTime();
+                        leastRecentId = entry.getKey();
+                    }
                 }
-                ZimbraLog.session.warn(sb.toString());
+                assert(leastRecentId != null);
+
+                int prevSize = acctMap.size();
+                Session removed = remove(accountId, leastRecentId);
+                if (removed != null) {
+                    if (dequeued == null)
+                        dequeued = new ArrayList<Session>(3);
+                    dequeued.add(removed);
+                }
+
+                // note that remove() may have nulled out mAcctSessionMap[accountId]
+                acctMap = mAcctSessionMap.get(accountId);
+
+                assert(acctMap == null || acctMap.size() < prevSize);
+                if (acctMap.size() > maxSessionsPerAcct || acctMap.size() >= prevSize) {
+                    ZimbraLog.session.warn("Problem in SessionMap.putAndPrune(%d): accountId: %s session: %s  maxPerAcct: %d prevSize: %d finishSize: %d leastRecentTime: %d leastRecentId: %s removed: %s",
+                        iterations, accountId, sessionId, maxSessionsPerAcct, prevSize, acctMap.size(), leastRecent, leastRecentId, removed);
+                    StringBuilder sb = new StringBuilder("SessionMap for account ");
+                    sb.append(accountId).append(" contains: ");
+                    for (Map.Entry<String, Session> entry : acctMap.entrySet())
+                        sb.append("(").append(entry.getKey()).append(",").append(entry.getValue().toString()).append(" time=").append(entry.getValue().getLastAccessTime()).append(") ");
+                    ZimbraLog.session.warn(sb.toString());
+                }
             }
         }
-        return oldValue;
+
+        // clean up the sessions outside of the synchronized block
+        if (dequeued != null) {
+            for (Session removed : dequeued) {
+                ZimbraLog.session.debug("Account: %s has too many sessions open of type %s, forcing session %s to close",
+                    accountId, session.getType(), removed);
+                removed.doCleanup();
+            }
+        }
     }
 
     /** Adds a {@link Session} to the cache.  As a side effect, updates the

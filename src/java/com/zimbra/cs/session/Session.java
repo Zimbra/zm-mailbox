@@ -70,11 +70,11 @@ public abstract class Session {
      */
     public enum Type {
         NULL(0, 0), // unused dummy session type
-        SOAP(1, 5), 
-        IMAP(2, 5), 
-        ADMIN(3, 5), 
-        WIKI(4, 0), 
-        SYNCLISTENER(5, 2), 
+        SOAP(1, 5),
+        IMAP(2, 5),
+        ADMIN(3, 5),
+        WIKI(4, 0),
+        SYNCLISTENER(5, 2),
         WAITSET(6, 0)
         ;
         
@@ -122,7 +122,7 @@ public abstract class Session {
      *  
      * @throws ServiceException
      */
-    public synchronized void registerWithIM(IMPersona persona) throws ServiceException {
+    public synchronized void registerWithIM(IMPersona persona) {
         assert(Thread.holdsLock(persona.getLock()));
         assert(mPersona == null || mPersona == persona);
         if (mPersona == null && isIMListener() && mAuthenticatedAccountId.equalsIgnoreCase(mTargetAccountId)) {
