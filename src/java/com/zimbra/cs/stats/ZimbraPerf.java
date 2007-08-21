@@ -36,6 +36,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TimerTask;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.stats.StatUtil;
@@ -105,22 +106,45 @@ public class ZimbraPerf {
             RTS_POP_CONN, RTS_POP_SSL_CONN, RTS_IMAP_CONN, RTS_IMAP_SSL_CONN
         });
 
-    private static Accumulator[] sAccumulators = {
-        COUNTER_LMTP_RCVD_MSGS, COUNTER_LMTP_RCVD_BYTES, COUNTER_LMTP_RCVD_RCPT,
-        COUNTER_LMTP_DLVD_MSGS, COUNTER_LMTP_DLVD_BYTES,
-        STOPWATCH_DB_CONN,
-        STOPWATCH_LDAP_DC,
-        STOPWATCH_MBOX_ADD_MSG, STOPWATCH_MBOX_GET, COUNTER_MBOX_CACHE,
-        COUNTER_MBOX_MSG_CACHE, COUNTER_MBOX_ITEM_CACHE,
-        STOPWATCH_SOAP,
-        STOPWATCH_IMAP,
-        STOPWATCH_POP,
-        COUNTER_IDX_WRT,
-        COUNTER_IDX_WRT_OPENED,
-        COUNTER_IDX_WRT_OPENED_CACHE_HIT,        
-        sRealtimeStats
-    };
-    
+    private static CopyOnWriteArrayList<Accumulator> sAccumulators = 
+        new CopyOnWriteArrayList<Accumulator>(
+                    new Accumulator[] {
+                        COUNTER_LMTP_RCVD_MSGS, COUNTER_LMTP_RCVD_BYTES, COUNTER_LMTP_RCVD_RCPT,
+                        COUNTER_LMTP_DLVD_MSGS, COUNTER_LMTP_DLVD_BYTES,
+                        STOPWATCH_DB_CONN,
+                        STOPWATCH_LDAP_DC,
+                        STOPWATCH_MBOX_ADD_MSG, STOPWATCH_MBOX_GET, COUNTER_MBOX_CACHE,
+                        COUNTER_MBOX_MSG_CACHE, COUNTER_MBOX_ITEM_CACHE,
+                        STOPWATCH_SOAP,
+                        STOPWATCH_IMAP,
+                        STOPWATCH_POP,
+                        COUNTER_IDX_WRT,
+                        COUNTER_IDX_WRT_OPENED,
+                        COUNTER_IDX_WRT_OPENED_CACHE_HIT,        
+                        sRealtimeStats
+                    }
+        );
+
+    /**
+     * This may only be called BEFORE ZimbraPerf.initialize is called, otherwise the column
+     * names will not be output correctly into the logs
+     */
+    public static void addRealtimeStatName(String name) {
+        if (sIsInitialized)
+            throw new IllegalStateException("Cannot add stat name after ZimbraPerf.initialize() is called");
+        sRealtimeStats.addName(name);
+    }
+
+    /**
+     * This may only be called BEFORE ZimbraPerf.initialize is called, otherwise the column
+     * names will not be output correctly into the logs
+     */
+    public static void addAccumulator(Accumulator toAdd) {
+        if (sIsInitialized)
+            throw new IllegalStateException("Cannot add stat name after ZimbraPerf.initialize() is called");
+        sAccumulators.add(toAdd);
+    }
+
     private static Map<String, StatementStats> sSqlToStats =
         new HashMap<String, StatementStats>();
     

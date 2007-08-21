@@ -152,6 +152,9 @@ public class Zimbra {
                 ImapServer.startupImapSSLServer();
         }
         
+        MemoryStats.startup();
+
+        // should be last, so that other subsystems can add dynamic stats counters 
         ZimbraPerf.initialize();
         sInited = true;
     }
@@ -161,6 +164,8 @@ public class Zimbra {
             return;
 
         sInited = false;
+
+        MemoryStats.shutdown();
         
         RedoLogProvider redoLog = RedoLogProvider.getInstance();
         if (!redoLog.isSlave()) {
