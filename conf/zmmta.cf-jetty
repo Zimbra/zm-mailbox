@@ -137,6 +137,8 @@ SECTION mailbox
   VAR nio_imap_enabled
   LOCAL mailboxd_keystore_password
   LOCAL mailboxd_truststore_password
+  LOCAL zimbra_uid
+  LOCAL zimbra_gid
   REWRITE conf/log4j.properties.in conf/log4j.properties
   REWRITE mailboxd/etc/jetty.properties.in mailboxd/etc/jetty.properties
 	REWRITE mailboxd/etc/jetty.xml.in mailboxd/etc/jetty.xml
