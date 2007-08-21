@@ -101,7 +101,6 @@ import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZGrant;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.stats.ActivityTracker;
-import com.zimbra.cs.stats.ZimbraPerf;
 
 /**
  * @author dkarp
@@ -1242,7 +1241,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         if (selectSubscribed)
             returnOptions |= RETURN_SUBSCRIBED;
         boolean returnSubscribed = (returnOptions & RETURN_SUBSCRIBED) != 0;
-        Set<String> subscriptions = null;
+        Set<String> remoteSubscriptions = null;
 
         boolean selectRecursive = (selectOptions & SELECT_RECURSIVE) != 0;
 
@@ -1288,7 +1287,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                     continue;
 
                 if (returnSubscribed)
-                    subscriptions = mCredentials.listSubscriptions();
+                    remoteSubscriptions = mCredentials.listSubscriptions();
 
                 // get the set of *all* folders; we'll iterate over it below to find matches
                 Map<ImapPath, ItemId> paths = new LinkedHashMap<ImapPath, ItemId>();
@@ -1299,21 +1298,23 @@ public abstract class ImapHandler extends ProtocolHandler {
                 if (selectSubscribed) {
                     selected = new LinkedHashSet<ImapPath>();
                     for (ImapPath path : paths.keySet()) {
-                        if (isPathSubscribed(path, subscriptions))
+                        if (isPathSubscribed(path, remoteSubscriptions))
                             selected.add(path);
                     }
                     // handle nonexistent selected folders by adding them to "selected" but not to "paths"
-                    for (String sub : subscriptions) {
-                        ImapPath spath = new ImapPath(sub, mCredentials);
-                        if (!selected.contains(spath) && (owner == null) == (spath.getOwner() == null))
-                            selected.add(spath);
+                    if (remoteSubscriptions != null) {
+                        for (String sub : remoteSubscriptions) {
+                            ImapPath spath = new ImapPath(sub, mCredentials);
+                            if (!selected.contains(spath) && (owner == null) == (spath.getOwner() == null))
+                                selected.add(spath);
+                        }
                     }
                 }
 
                 // return only the selected folders (and perhaps their parents) matching the pattern
                 for (ImapPath path : selected) {
                     if (!matches.containsKey(path) && patternPath.matches(path))
-                        matches.put(path, "LIST (" + getFolderAttrs(path, returnOptions, paths, subscriptions) + ") \"/\" " + path.asUtf7String());
+                        matches.put(path, "LIST (" + getFolderAttrs(path, returnOptions, paths, remoteSubscriptions) + ") \"/\" " + path.asUtf7String());
 
                     if (!selectRecursive)
                         continue;
@@ -1327,7 +1328,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                                     parent = cached;  break;
                                 }
                             }
-                            matches.put(parent, "LIST (" + getFolderAttrs(parent, returnOptions, paths, subscriptions) + ") \"/\" " + parent.asUtf7String() + " (\"CHILDINFO\" (\"SUBSCRIBED\"))");
+                            matches.put(parent, "LIST (" + getFolderAttrs(parent, returnOptions, paths, remoteSubscriptions) + ") \"/\" " + parent.asUtf7String() + " (\"CHILDINFO\" (\"SUBSCRIBED\"))");
                         }
                     }
                 }
