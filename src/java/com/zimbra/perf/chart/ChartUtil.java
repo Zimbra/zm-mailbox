@@ -196,7 +196,7 @@ public class ChartUtil {
     private static void usage(Options opts, String msg) {
         if (msg != null)
             System.err.println(msg);
-        String invocation = "Usage: zmstat-chart [options]";
+        String invocation = "Usage: zmstat-chart -c <arg> -s <arg> -d <arg> [options]";
         PrintWriter pw = new PrintWriter(System.err, true);
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp(pw, formatter.getWidth(), invocation, null, opts,
@@ -227,74 +227,80 @@ public class ChartUtil {
     public static void main(String[] args) throws Exception {
         CommandLineParser clParser = new GnuParser();
         Options opts = getOptions();
-        CommandLine cl = clParser.parse(opts, args);
-
-        if (cl.hasOption(OPT_HELP))
+        try {
+            CommandLine cl = clParser.parse(opts, args);
+    
+            if (cl.hasOption('h'))
+                usage(opts);
+    
+            String[] confs = cl.getOptionValues(OPT_CONF);
+            if (confs == null || confs.length == 0)
+                usage(opts, "Missing --" + OPT_CONF + " option");
+            File[] confFiles = new File[confs.length];
+            for (int i = 0; i < confs.length; i++) {
+                File conf = new File(confs[i]);
+                if (!conf.exists()) {
+                    System.err.printf("Configuration file %s does not exist\n",
+                            conf.getAbsolutePath());
+                    System.exit(1);
+                }
+                confFiles[i] = conf;
+            }
+    
+            String[] srcDirStrs = cl.getOptionValues(OPT_SRCDIR);
+            if (srcDirStrs == null || srcDirStrs.length == 0)
+                usage(opts, "Missing --" + OPT_SRCDIR + " option");
+            List<File> srcDirsList = new ArrayList<File>(srcDirStrs.length);
+            for (int i = 0; i < srcDirStrs.length; i++) {
+                File srcDir = new File(srcDirStrs[i]);
+                if (srcDir.exists())
+                    srcDirsList.add(srcDir);
+                else
+                    System.err.printf("Source directory %s does not exist\n",
+                            srcDir.getAbsolutePath());
+            }
+            if (srcDirsList.size() < 1)
+                usage(opts, "No valid source directory found");
+            File[] srcDirs = new File[srcDirsList.size()];
+            srcDirsList.toArray(srcDirs);
+    
+            String destDirStr = cl.getOptionValue(OPT_DESTDIR);
+            if (destDirStr == null)
+                usage(opts, "Missing --" + OPT_DESTDIR + " option");
+            File destDir = new File(destDirStr);
+            if (!destDir.exists()) {
+                boolean created = destDir.mkdirs();
+                if (!created) {
+                    System.err.printf(
+                            "Unable to create destination directory %s\n", destDir
+                                    .getAbsolutePath());
+                    System.exit(1);
+                }
+            }
+            if (!destDir.canWrite()) {
+                System.err.printf("Destination directory %s is not writable\n",
+                        destDir.getAbsolutePath());
+                System.exit(1);
+            }
+    
+            String title = cl.getOptionValue(OPT_TITLE);
+            if (title == null)
+                title = srcDirs[0].getAbsoluteFile().getName();
+    
+            Date startAt = parseTimestampOption(cl, opts, OPT_START_AT);
+            Date endAt = parseTimestampOption(cl, opts, OPT_END_AT);
+            Date aggStartAt = parseTimestampOption(cl, opts, OPT_AGGREGATE_START_AT);
+            Date aggEndAt = parseTimestampOption(cl, opts, OPT_AGGREGATE_END_AT);
+    
+            boolean noSummary = cl.hasOption('n');
+            ChartUtil app = new ChartUtil(confFiles, srcDirs, destDir, title,
+                    startAt, endAt, aggStartAt, aggEndAt, noSummary);
+            app.doit();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println();
             usage(opts);
-
-        String[] confs = cl.getOptionValues(OPT_CONF);
-        if (confs == null || confs.length == 0)
-            usage(opts, "Missing --" + OPT_CONF + " option");
-        File[] confFiles = new File[confs.length];
-        for (int i = 0; i < confs.length; i++) {
-            File conf = new File(confs[i]);
-            if (!conf.exists()) {
-                System.err.printf("Configuration file %s does not exist\n",
-                        conf.getAbsolutePath());
-                System.exit(1);
-            }
-            confFiles[i] = conf;
         }
-
-        String[] srcDirStrs = cl.getOptionValues(OPT_SRCDIR);
-        if (srcDirStrs == null || srcDirStrs.length == 0)
-            usage(opts, "Missing --" + OPT_SRCDIR + " option");
-        List<File> srcDirsList = new ArrayList<File>(srcDirStrs.length);
-        for (int i = 0; i < srcDirStrs.length; i++) {
-            File srcDir = new File(srcDirStrs[i]);
-            if (srcDir.exists())
-                srcDirsList.add(srcDir);
-            else
-                System.err.printf("Source directory %s does not exist\n",
-                        srcDir.getAbsolutePath());
-        }
-        if (srcDirsList.size() < 1)
-            usage(opts, "No valid source directory found");
-        File[] srcDirs = new File[srcDirsList.size()];
-        srcDirsList.toArray(srcDirs);
-
-        String destDirStr = cl.getOptionValue(OPT_DESTDIR);
-        if (destDirStr == null)
-            usage(opts, "Missing --" + OPT_DESTDIR + " option");
-        File destDir = new File(destDirStr);
-        if (!destDir.exists()) {
-            boolean created = destDir.mkdirs();
-            if (!created) {
-                System.err.printf(
-                        "Unable to create destination directory %s\n", destDir
-                                .getAbsolutePath());
-                System.exit(1);
-            }
-        }
-        if (!destDir.canWrite()) {
-            System.err.printf("Destination directory %s is not writable\n",
-                    destDir.getAbsolutePath());
-            System.exit(1);
-        }
-
-        String title = cl.getOptionValue(OPT_TITLE);
-        if (title == null)
-            title = srcDirs[0].getAbsoluteFile().getName();
-
-        Date startAt = parseTimestampOption(cl, opts, OPT_START_AT);
-        Date endAt = parseTimestampOption(cl, opts, OPT_END_AT);
-        Date aggStartAt = parseTimestampOption(cl, opts, OPT_AGGREGATE_START_AT);
-        Date aggEndAt = parseTimestampOption(cl, opts, OPT_AGGREGATE_END_AT);
-
-        boolean noSummary = cl.hasOption(OPT_NO_SUMMARY);
-        ChartUtil app = new ChartUtil(confFiles, srcDirs, destDir, title,
-                startAt, endAt, aggStartAt, aggEndAt, noSummary);
-        app.doit();
     }
 
     public ChartUtil(File[] confFiles, File[] srcDirs, File destDir,
