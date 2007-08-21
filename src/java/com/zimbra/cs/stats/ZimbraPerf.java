@@ -58,9 +58,6 @@ public class ZimbraPerf {
     static Log sLog = LogFactory.getLog(ZimbraPerf.class);
     private static final com.zimbra.common.util.Log sZimbraStats = LogFactory.getLog("zimbra.stats");
 
-    // Name constants for real-time statistics
-    public static final String RTS_JAVA_HEAP_MB = "java_heap_MB"; 
-    
     public static final String RTS_DB_POOL_SIZE = "db_pool_size";
     public static final String RTS_MYSQL_OPENED_TABLES = "mysql_opened_tables";
     public static final String RTS_MYSQL_SLOW_QUERIES = "mysql_slow_queries";
@@ -99,7 +96,6 @@ public class ZimbraPerf {
     
     private static RealtimeStats sRealtimeStats = new RealtimeStats(
         new String[] {
-            RTS_JAVA_HEAP_MB, 
             RTS_DB_POOL_SIZE,
             RTS_MYSQL_OPENED_TABLES, RTS_MYSQL_SLOW_QUERIES, RTS_MYSQL_THREADS_CONNECTED,
             RTS_INNODB_PAGES_READ, RTS_INNODB_PAGES_WRITTEN, RTS_INNODB_BP_HIT_RATE,
