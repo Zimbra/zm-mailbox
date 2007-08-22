@@ -506,6 +506,7 @@ public class ZimbraLog {
             contextMap.clear();
         }
         getAccountNamesForThread().clear();
+        sContextString.remove();
     }
 
     /**
