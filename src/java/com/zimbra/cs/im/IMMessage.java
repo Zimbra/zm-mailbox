@@ -26,6 +26,7 @@ package com.zimbra.cs.im;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.common.soap.Element;
@@ -40,29 +41,64 @@ public class IMMessage {
     
     public static class TextPart {
         private Lang mLang;
-        private String mText;
+        private String mPlaintext = null;
+        private org.dom4j.Element mElement; // always <body>...something...</body>
         
-        public TextPart(Lang lang, String text) {
+        public TextPart(Lang lang, String plaintext) {
             mLang = lang;
-            mText = text;
+            mElement = org.dom4j.DocumentHelper.createElement("body");
+            mElement.addText(plaintext);
         }
         
-        public TextPart(String text) {
+        public TextPart(Element xhtml) {
+            mElement = xhtml.toXML();
+        }
+        
+        public TextPart(org.dom4j.Element xhtml) {
+            mElement = xhtml;
+        }
+        
+        public TextPart(String plaintext) {
             mLang = Lang.DEFAULT;
-            mText = text;
+            mElement = org.dom4j.DocumentHelper.createElement("body");
+            mElement.addText(plaintext);
         }
         
         public Lang getLang() { return mLang; }
-        public String getHtmlText() { return mText; }
+        
+        public boolean hasXHTML() {
+            if ("http://www.w3.org/1999/xhtml".equals(mElement.getNamespaceURI())) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        public org.dom4j.Element getHtml() { return mElement; }
         
         public String getPlainText() {
-            // TODO: strip HTML tags here
-            return mText;
+            if (mPlaintext == null) {
+                if (!hasXHTML()) {
+                    mPlaintext = mElement.getText();
+                } else {
+                    mPlaintext = depthFirstTextExtract(mElement);
+                }
+            }
+            return mPlaintext;
+        }
+        
+        private String depthFirstTextExtract(org.dom4j.Element cur) {
+            StringBuilder toRet = new StringBuilder();
+            for (Iterator iter = cur.elementIterator(); iter.hasNext();) {  
+                org.dom4j.Element e = (org.dom4j.Element)iter.next();
+                toRet.append(depthFirstTextExtract(e));
+            }
+            toRet.append(cur.getText());
+            return toRet.toString();
         }
         
         @Override
         public String toString() {
-            return mText;
+            return mElement.asXML();
         }
     }
     
@@ -135,13 +171,14 @@ public class IMMessage {
         {
             if (mSubject != null) {
                 Element e = parent.addElement("subject");
-                e.setText(mSubject.getHtmlText());
+                e.addElement(mSubject.getPlainText());
             }
         }
         {
             if (mBody != null) {
+//              parent.addElement(parent.convertDOM(mBody.getHtml(), parent.getFactory()));
                 Element e = parent.addElement("body");
-                e.setText(mBody.getHtmlText());
+                e.setText(mBody.getHtml().asXML());
             }
         }
         return parent;

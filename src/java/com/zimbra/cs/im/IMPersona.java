@@ -718,7 +718,7 @@ public class IMPersona extends ClassLogger {
         
         // either TO or FROM, depending which one isn't "me"
         JID remoteJID = (toMe ? msg.getFrom() : msg.getTo());
-        // Step 1: find the appropriate chat
+        // find the appropriate chat
         IMChat chat = findTargetMUC(msg);
         if (chat == null) {
             String threadId = msg.getThread();

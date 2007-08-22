@@ -80,8 +80,12 @@ IMSendMessage -- send a new message, optional chat parameter
 To an existing chat:
 <IMSendMessageRequest>
    <message thread="threadID">
-      [<subject [lang="LANGUAGE"]>SUBJECT</subject>]*   // HTML
-      [<body [lang="LANGUAGE">BODY</body>]              // HTML
+      [<subject [lang="LANGUAGE"]>
+         SUBJECT_AS_XML
+      </subject>]*   // HTML
+      [<body [lang="LANGUAGE">
+         BODY
+      </body>]              // HTML
       [<typing/>]
    </message>
 </IMSendMessageRequest>

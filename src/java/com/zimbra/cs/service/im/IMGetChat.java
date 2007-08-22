@@ -94,7 +94,7 @@ public class IMGetChat extends IMDocumentHandler {
                     TextPart subj = msg.getSubject(Lang.DEFAULT);
                     if (subj != null) {
                         Element se = me.addElement(IMConstants.E_SUBJECT);
-                        se.setText(subj.getHtmlText());
+                        se.setText(subj.getPlainText());
                     }
                 }
                 
@@ -102,8 +102,7 @@ public class IMGetChat extends IMDocumentHandler {
                 {
                     TextPart body = msg.getBody(Lang.DEFAULT);
                     if (body != null) {
-                        Element se = me.addElement(IMConstants.E_BODY);
-                        se.setText(body.getHtmlText());
+                        me.addElement(Element.convertDOM(body.getHtml(), me.getFactory()));
                     }
                 }
                 

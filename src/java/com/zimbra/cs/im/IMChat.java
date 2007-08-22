@@ -252,7 +252,7 @@ public class IMChat extends ClassLogger {
         info("Got a presence update packet for chat: %s", pres);
         if (isMUC()) {
             if (pres.getType() == org.xmpp.packet.Presence.Type.error) {
-                addMessage(true, new IMAddr(pres.getFrom()), null, "ERROR: "+pres.toXML(), false); 
+                addMessage(true, new IMAddr(pres.getFrom()), null, new TextPart("ERROR: "+pres.toXML()), false); 
             } else {
                 JID  fromFullJID = null;
                 IMAddr fromNick = new IMAddr(pres.getFrom().getResource());
@@ -270,18 +270,23 @@ public class IMChat extends ClassLogger {
                 if (pres.getType()==Presence.Type.unavailable) { 
                     action = "left";
                     removeParticipant(fromNick);
-                    if (fromFullJID != null) 
+                    if (fromFullJID != null) { 
                         removeParticipant(new IMAddr(fromFullJID));
+                        IMLeftChatNotification not = new IMLeftChatNotification(IMAddr.fromJID(fromFullJID), getThreadId());
+                        mPersona.postIMNotification(not);
+                    }
                 } else {
                     if (fromFullJID != null) {
                         getParticipant(true, new IMAddr(fromFullJID), fromFullJID.getResource(), fromFullJID.getNode());
+                        IMEnteredChatNotification not = new IMEnteredChatNotification(IMAddr.fromJID(fromFullJID), getThreadId());
+                        mPersona.postIMNotification(not);
                     } else {
                         getParticipant(true, fromNick, "", fromNick.toString());
                     }
                 }
                 String body = new Formatter().format("%s has %s the chat.",
                             pres.getFrom().getResource(), action).toString();
-                addMessage(true, new IMAddr(pres.getFrom()), null, body, false);
+                addMessage(true, new IMAddr(pres.getFrom()), null, new TextPart(body), false);
             }
         }
     }
@@ -338,25 +343,40 @@ public class IMChat extends ClassLogger {
             String mucInvitationFrom = null;
             String messageFrom = msg.getFrom().toBareJID();
             String subject = msg.getSubject();
-            String body = null;
+//            String body = null;
+//            String html = null;
+            TextPart bodyPart = null;
+            
             boolean isError = false;
             if (msg.getType() == org.xmpp.packet.Message.Type.error) {
                 isError = true;
-                body = "ERROR: "+msg.toXML();
+                bodyPart = new TextPart("ERROR: "+msg.toXML());
             } else {
-                body = msg.getBody();
-
+                org.dom4j.Element htmlElt = msg.getChildElement("html", "http://jabber.org/protocol/xhtml-im");
+                if (htmlElt != null) {
+                    List<org.dom4j.Element> elements = htmlElt.elements("body");
+                    for (org.dom4j.Element e : elements) {
+                        if ("http://www.w3.org/1999/xhtml".equals(e.getNamespaceURI())) {
+                            bodyPart = new TextPart(e);
+                            break;
+                        }
+                    }
+                }
+                if (bodyPart == null && msg.getBody() != null && msg.getBody().length() > 0) {
+                    bodyPart = new TextPart(msg.getBody());
+                }
+                
                 org.dom4j.Element xElt = null;                 
                 if ((xElt = msg.getChildElement("x", "http://jabber.org/protocol/muc#user"))!=null) { 
                     org.dom4j.Element inviteElement = xElt.element("invite");
                     if (inviteElement != null) {
                         mucInvitationFrom = inviteElement.attributeValue("from");
-                        if (body == null || body.length()==0) {
+                        if (bodyPart == null || bodyPart.getPlainText().length()==0) {
                             org.dom4j.Element reason = inviteElement.element("reason");
                             if (reason != null) 
-                                body = reason.getText() + " (/join "+msg.getFrom().toBareJID()+")";
+                                bodyPart = new TextPart(reason.getText() + " (/join "+msg.getFrom().toBareJID()+")");
                             else
-                                body = mucInvitationFrom + " has invited you into a groupchat "+ " (/join "+msg.getFrom().toBareJID()+")";
+                                bodyPart = new TextPart(mucInvitationFrom + " has invited you into a groupchat "+ " (/join "+msg.getFrom().toBareJID()+")");
                         }
                     }
                 }
@@ -396,7 +416,7 @@ public class IMChat extends ClassLogger {
 
             if (mucInvitationFrom == null && 
                         (subject == null || subject.length() == 0) &&
-                        (body == null || body.length() == 0)) 
+                        (bodyPart == null || bodyPart.getPlainText().length() == 0)) 
             {
                 IMBaseMessageNotification notification = 
                     new IMBaseMessageNotification(msg.getFrom().toBareJID(), getThreadId(), typing, System.currentTimeMillis());  
@@ -411,10 +431,10 @@ public class IMChat extends ClassLogger {
                     if (mucInvitationFrom != null) {
                         IMChatInviteNotification inviteNot = 
                             new IMChatInviteNotification(new IMAddr(msg.getFrom().toBareJID()),
-                                getThreadId(), body);
+                                getThreadId(), bodyPart.getPlainText());
                         mPersona.postIMNotification(inviteNot);
                     }
-                    addMessage(true, new IMAddr(messageFrom), subject, body, typing);
+                    addMessage(true, new IMAddr(messageFrom), subject, bodyPart, typing);
                     assert(this.getHighestSeqNo() > seqNoStart);
                 }
             }
@@ -446,7 +466,7 @@ public class IMChat extends ClassLogger {
             mPersona.xmppRoute(toSend);
         }
     }
-
+    
     void sendMessage(OperationContext octxt, IMAddr toAddr, String threadId, IMMessage message, IMPersona sender) throws ServiceException 
     {
         IMAddr fromAddr = mPersona.getAddr();
@@ -463,12 +483,20 @@ public class IMChat extends ClassLogger {
             xmppMsg.setThread(this.getThreadId());
             xmppMsg.setType(org.xmpp.packet.Message.Type.chat);
         }
-
+        
         if (message.getBody(Lang.DEFAULT) != null)
             xmppMsg.setBody(message.getBody(Lang.DEFAULT).getPlainText());
 
         if (message.getSubject(Lang.DEFAULT) != null)
             xmppMsg.setSubject(message.getSubject(Lang.DEFAULT).getPlainText());
+
+        if (message.getBody().hasXHTML()) {
+            //
+            // ADD XHTML BODY PART HERE
+            //
+            org.dom4j.Element html = xmppMsg.addChildElement("html", "http://jabber.org/protocol/xhtml-im");
+            html.add(message.getBody().getHtml().createCopy());
+        }
         
         if (message.isTyping()) {
             // xep-0085: the "right way" to do it
@@ -607,10 +635,9 @@ public class IMChat extends ClassLogger {
      * 
      * @param msg
      */
-    private void addMessage(boolean notify, IMAddr from, String subject, String body, boolean isTyping)
+    private void addMessage(boolean notify, IMAddr from, String subject, TextPart bodyPart, boolean isTyping)
     {
-        IMMessage immsg = new IMMessage(subject==null?null:new TextPart(subject),
-                    body==null?null:new TextPart(body), isTyping);
+        IMMessage immsg = new IMMessage(subject==null?null:new TextPart(subject), bodyPart, isTyping);
         immsg.setFrom(from);
         addMessage(notify, immsg);
     }
@@ -647,10 +674,11 @@ public class IMChat extends ClassLogger {
     private void enableTimer(TIMER_STATE requestedState) {
         ZimbraLog.im.debug("Chat + " +this.getThreadId() + " setting timer to " +requestedState);
         //                   requested
-        // current:                        CLOSE           SAVE          NONE 
-        //                     CLOSE         nop              nop           start-close
-        //                     SAVE          start-save    nop           start-save  
-        //                     NONE          cancel          cancel       none
+        // current:                         CLOSE         SAVE          NONE
+        //                     -----------------------------------------------------
+        //                     CLOSE        nop           nop           start-close
+        //                     SAVE         start-save    nop           start-save  
+        //                     NONE         cancel        cancel        none
         //
         switch (requestedState) {
             case WAITING_TO_CLOSE:
