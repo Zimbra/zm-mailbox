@@ -394,6 +394,7 @@ public class ZimbraLog {
         if (contextMap != null) {
             contextMap.clear();
         }
+        sContextString.remove();
     }
 
     /**
