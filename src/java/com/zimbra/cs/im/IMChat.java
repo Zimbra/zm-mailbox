@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Formatter;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TimerTask;
@@ -343,8 +344,6 @@ public class IMChat extends ClassLogger {
             String mucInvitationFrom = null;
             String messageFrom = msg.getFrom().toBareJID();
             String subject = msg.getSubject();
-//            String body = null;
-//            String html = null;
             TextPart bodyPart = null;
             
             boolean isError = false;
@@ -358,7 +357,6 @@ public class IMChat extends ClassLogger {
                     for (org.dom4j.Element e : elements) {
                         if ("http://www.w3.org/1999/xhtml".equals(e.getNamespaceURI())) {
                             bodyPart = new TextPart(e);
-                            break;
                         }
                     }
                 }
@@ -495,7 +493,7 @@ public class IMChat extends ClassLogger {
             // ADD XHTML BODY PART HERE
             //
             org.dom4j.Element html = xmppMsg.addChildElement("html", "http://jabber.org/protocol/xhtml-im");
-            html.add(message.getBody().getHtml().createCopy());
+            html.add(message.getBody().getXHTML().createCopy());
         }
         
         if (message.isTyping()) {

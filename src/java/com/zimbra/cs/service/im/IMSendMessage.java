@@ -64,11 +64,8 @@ public class IMSendMessage extends IMDocumentHandler {
 
         Element bodyElt = msgElt.getOptionalElement(IMConstants.E_BODY);
         if (bodyElt != null) {
-            // 
-            // FIXME - temp hack
-            //
             try {
-                String s = bodyElt.toString();
+                String s = bodyElt.getText();
 //                s = s.replaceAll("<p", "<span").replaceAll("</p", "</span" );
 //                s = "<span style=\"font-weight: bold;\">aaa</span>";
 //                s = "<span style='text-decoration: underline;'>hihi</span>";
@@ -77,19 +74,19 @@ public class IMSendMessage extends IMDocumentHandler {
 //                s=s.replaceAll("font-style.*none;","");
 //                s=s.replaceAll("font-weight:bold", "font-weight: bold");
 //                s=s.replaceAll(":", ": ");
-                Element e = Element.parseXML(s);
+                //bodyPart = new TextPart(s);
+//                Element e = Element.parseXML(s);
                 org.dom4j.Element root = org.dom4j.DocumentHelper.createElement("root");
+                org.dom4j.Element parsed = org.dom4j.DocumentHelper.parseText(s).getRootElement();
                 org.dom4j.Element xhtmlBody = root.addElement("body", "http://www.w3.org/1999/xhtml");
-                xhtmlBody.add(e.toXML());
+                xhtmlBody.add(parsed);
+//                xhtmlBody.add(e.toXML());
                 xhtmlBody.detach();
                 bodyPart = new TextPart(xhtmlBody);
             } catch (DocumentException e) {
                 throw ServiceException.FAILURE("Error parsing message body: "+bodyElt.toXML().toString(), e);
             }
         }
-//        if (bodyElt != null) {
-//            bodyPart = new TextPart(bodyElt);
-//        }
 
         boolean isTyping = false;
         if (msgElt.getOptionalElement(IMConstants.E_TYPING) != null)

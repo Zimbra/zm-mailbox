@@ -42,63 +42,83 @@ public class IMMessage {
     public static class TextPart {
         private Lang mLang;
         private String mPlaintext = null;
-        private org.dom4j.Element mElement; // always <body>...something...</body>
+        private String mXHTMLAsText = null;
+        private org.dom4j.Element mXHTML; // includes <body> as root
         
         public TextPart(Lang lang, String plaintext) {
             mLang = lang;
-            mElement = org.dom4j.DocumentHelper.createElement("body");
-            mElement.addText(plaintext);
+            mPlaintext = plaintext;
         }
         
-        public TextPart(Element xhtml) {
-            mElement = xhtml.toXML();
-        }
-        
-        public TextPart(org.dom4j.Element xhtml) {
-            mElement = xhtml;
+        public TextPart(org.dom4j.Element body) {
+            String s = body.asXML();
+            System.out.println(s);
+            mXHTML = body;
         }
         
         public TextPart(String plaintext) {
-            mLang = Lang.DEFAULT;
-            mElement = org.dom4j.DocumentHelper.createElement("body");
-            mElement.addText(plaintext);
+            this(Lang.DEFAULT, plaintext);
         }
         
         public Lang getLang() { return mLang; }
         
-        public boolean hasXHTML() {
-            if ("http://www.w3.org/1999/xhtml".equals(mElement.getNamespaceURI())) {
-                return true;
-            } else {
-                return false;
+        public String getXHTMLAsString() {
+            if (mXHTMLAsText != null)
+                return mXHTMLAsText;
+            if (mXHTML == null)
+                return null;
+
+            // mXHTML is the <body>...</body> -- we don't want to include the
+            // body tag, so we iterate all the dom4j internal nodes underneath body and 
+            // add them to the string
+            StringBuilder sb = new StringBuilder();
+            for (Iterator nodeIter = mXHTML.nodeIterator(); nodeIter.hasNext();) {
+                org.dom4j.Node node = (org.dom4j.Node)nodeIter.next();
+                sb.append(node.asXML());
             }
+            mXHTMLAsText = sb.toString();
+            return mXHTMLAsText;
         }
-        public org.dom4j.Element getHtml() { return mElement; }
         
         public String getPlainText() {
-            if (mPlaintext == null) {
-                if (!hasXHTML()) {
-                    mPlaintext = mElement.getText();
-                } else {
-                    mPlaintext = depthFirstTextExtract(mElement);
-                }
-            }
+            if (mPlaintext != null)
+                return mPlaintext;
+            if (mXHTML == null)
+                return mPlaintext;
+
+            mPlaintext = depthFirstTextExtract(mXHTML);
             return mPlaintext;
         }
         
+        public org.dom4j.Element getXHTML() {
+            return mXHTML;
+        }
+        
+        
+        public boolean hasXHTML() {
+            return getXHTMLAsString() != null;
+        }
+        
+        
         private String depthFirstTextExtract(org.dom4j.Element cur) {
             StringBuilder toRet = new StringBuilder();
-            for (Iterator iter = cur.elementIterator(); iter.hasNext();) {  
-                org.dom4j.Element e = (org.dom4j.Element)iter.next();
-                toRet.append(depthFirstTextExtract(e));
+            for (Iterator nodeIter = cur.nodeIterator(); nodeIter.hasNext();) {
+                org.dom4j.Node node = (org.dom4j.Node)nodeIter.next();
+                if (node instanceof org.dom4j.Element)
+                    toRet.append(depthFirstTextExtract((org.dom4j.Element)node));
+                else
+                    toRet.append(node.asXML());
             }
-            toRet.append(cur.getText());
+                
             return toRet.toString();
         }
         
         @Override
         public String toString() {
-            return mElement.asXML();
+            if (hasXHTML()) 
+                return getXHTMLAsString();
+            else
+                return getPlainText();
         }
     }
     
@@ -108,10 +128,7 @@ public class IMMessage {
     }
     
     public void setFrom(IMAddr from) { mFrom = from; }
-
-    public void setTo(IMAddr to) {
-	mTo = to;
-    }
+    public void setTo(IMAddr to) { mTo = to; }
     
     
     public IMMessage(TextPart subject, TextPart body, boolean isTyping) {
@@ -176,9 +193,8 @@ public class IMMessage {
         }
         {
             if (mBody != null) {
-//              parent.addElement(parent.convertDOM(mBody.getHtml(), parent.getFactory()));
                 Element e = parent.addElement("body");
-                e.setText(mBody.getHtml().asXML());
+                e.setText(mBody.toString());
             }
         }
         return parent;

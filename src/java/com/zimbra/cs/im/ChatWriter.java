@@ -181,7 +181,7 @@ class ChatWriter {
             if (msg.getDate().after(highestDate))
                 highestDate = msg.getDate();
 
-            String msgBodyHtml = msg.getBody() != null ? msg.getBody().getHtml().asXML() : "";
+            String msgBodyHtml = msg.getBody() != null ? msg.getBody().toString() : "";
 
             // find the color for this user
             if (!colorMap.containsKey(from)) {
