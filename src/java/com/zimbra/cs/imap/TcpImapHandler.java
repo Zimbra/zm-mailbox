@@ -27,7 +27,6 @@ package com.zimbra.cs.imap;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.Writer;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -39,7 +38,6 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -49,47 +47,14 @@ import com.zimbra.cs.tcpserver.TcpServerInputStream;
 import com.zimbra.cs.util.Config;
 
 public class TcpImapHandler extends ImapHandler {
-    
     private TcpServerInputStream mInputStream;
-    private OutputStream         mOutputStream;
-
-    private final ImapServer mServer;
-
     private String         mRemoteAddress;
     private TcpImapRequest mIncompleteRequest = null;
 
     TcpImapHandler(ImapServer server) {
         super(server);
-        mServer = server;
     }
-
-    @Override
-    void dumpState(Writer w) {
-        try {
-            w.write("\n\tImapHandler(Thread-Per-Connection) " + this);
-        } catch(IOException e) {};
-    }
-
-    @Override
-    void encodeState(Element parent) {
-        Element e = parent.addElement("ThreadPerConnIMAP");
-        if (mConnection != null) {
-            Element ce = e.addElement("connection");
-            ce.setText(mConnection.toString());
-        }
-        if (mRemoteAddress != null)
-            e.addAttribute("remoteAddr", mRemoteAddress);
-        e.addAttribute("startedTls", mStartedTLS);
-        e.addAttribute("goodbyeSent", mGoodbyeSent);
-    }
-    
-
-    @Override
-    Object getServer() {
-        return mServer;
-    }
-
-
+                                                      
     @Override
     protected boolean setupConnection(Socket connection) throws IOException {
         mRemoteAddress = connection.getInetAddress().getHostAddress();
@@ -97,7 +62,7 @@ public class TcpImapHandler extends ImapHandler {
 
         mInputStream = new TcpServerInputStream(connection.getInputStream());
         mOutputStream = new BufferedOutputStream(connection.getOutputStream());
-        mStartedTLS = mServer.isConnectionSSL();
+        mStartedTLS = mConfig.isSSLEnabled();
 
         if (!Config.userServicesEnabled()) {
             ZimbraLog.imap.debug("dropping connection because user services are disabled");
@@ -105,7 +70,7 @@ public class TcpImapHandler extends ImapHandler {
             return false;
         }
 
-        sendUntagged(ImapServer.getBanner(), true);
+        sendUntagged(mConfig.getBanner(), true);
         return true;
     }
 
@@ -232,21 +197,12 @@ public class TcpImapHandler extends ImapHandler {
     }
 
     @Override
-    void disableUnauthConnectionAlarm()  { }
-
-    @Override
-    OutputStream getFetchOutputStream() {
-        return mOutputStream;
-    }
-
-
-    @Override
     public void dropConnection() {
         dropConnection(true);
     }
 
     @Override
-    void dropConnection(boolean sendBanner) {
+    protected void dropConnection(boolean sendBanner) {
         if (mSelectedFolder != null) {
             mSelectedFolder.setHandler(null);
             SessionCache.clearSession(mSelectedFolder);
@@ -257,7 +213,7 @@ public class TcpImapHandler extends ImapHandler {
             if (mOutputStream != null) {
                 if (sendBanner) {
                     if (!mGoodbyeSent)
-                         sendUntagged(ImapServer.getGoodbye(), true);
+                         sendUntagged(mConfig.getGoodbye(), true);
                     mGoodbyeSent = true;
                 }
                 mOutputStream.close();
@@ -283,7 +239,13 @@ public class TcpImapHandler extends ImapHandler {
     }
 
     @Override
-    void flushOutput() throws IOException {
+    protected void enableInactivityTimer() {
+        // Already enabled when connection was established.
+        // TODO Fix watchdog to allow this timeout to be changed dynamically.
+    }
+
+    @Override
+    protected void flushOutput() throws IOException {
         mOutputStream.flush();
     }
 

@@ -41,6 +41,9 @@ import java.util.List;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.server.Server;
+import com.zimbra.cs.server.ServerConfig;
 
 import EDU.oswego.cs.dl.util.concurrent.BoundedLinkedQueue;
 import EDU.oswego.cs.dl.util.concurrent.PooledExecutor;
@@ -51,11 +54,9 @@ import EDU.oswego.cs.dl.util.concurrent.PooledExecutor;
  * TODO To change the template for this generated type comment go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-public abstract class TcpServer implements Runnable {
+public abstract class TcpServer implements Runnable, Server {
 
 	protected abstract ProtocolHandler newProtocolHandler();
-	public abstract int getConfigMaxIdleMilliSeconds();
-
 
 	private Log mLog;
 
@@ -67,8 +68,15 @@ public abstract class TcpServer implements Runnable {
 	private ServerSocket mServerSocket;
 
 	private boolean mShutdownRequested;
-    private boolean mSSL; 
+        private boolean mSSLEnabled;
 
+        private ServerConfig mConfig;
+
+    public TcpServer(String name, ServerConfig config) throws ServiceException {
+        this(name, config.getNumThreads(), config.getServerSocket());
+        mConfig = config;
+    }
+    
     public TcpServer(String name, int numThreads, ServerSocket serverSocket) {
     	    this(name, numThreads, Thread.NORM_PRIORITY, serverSocket);
     }
@@ -98,12 +106,27 @@ public abstract class TcpServer implements Runnable {
 	// TODO write some tests for shutdown/startup
 	private List mActiveHandlers;
 
-   
-    public void setSSL(boolean ssl) {
-        mSSL = ssl;
+    public ServerConfig getConfig() {
+        return mConfig;
+    }
+
+    public int getConfigMaxIdleMilliSeconds() {
+        if (mConfig != null) {
+            int secs = mConfig.getMaxIdleSeconds();
+            if (secs >= 0) return secs * 1000;
+        }
+        return -1;
     }
     
-	public void addActiveHandler(ProtocolHandler handler) {
+    public void setSSLEnabled(boolean ssl) {
+        mSSLEnabled = ssl;
+    }
+
+    public boolean isSSLEnabled() {
+        return mSSLEnabled;
+    }
+    
+        public void addActiveHandler(ProtocolHandler handler) {
 		synchronized (mActiveHandlers) {
 			mActiveHandlers.add(handler);
 		}
@@ -132,8 +155,14 @@ public abstract class TcpServer implements Runnable {
 			}
 		}
 	}
-	
-	public void shutdown(int forceShutdownAfterSeconds) {
+
+        public void start() {
+            Thread t = new Thread(this);
+            if (mName != null) t.setName(mName);
+            t.start();
+        }
+    
+        public void shutdown(int forceShutdownAfterSeconds) {
 
 		mLog.info(mName + " initiating shutdown");
 		mShutdownRequested = true;

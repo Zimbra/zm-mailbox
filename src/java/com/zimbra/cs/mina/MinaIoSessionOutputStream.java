@@ -1,67 +1,50 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1
+ *
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 ("License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.zimbra.com/license
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+ * the License for the specific language governing rights and limitations
+ * under the License.
+ *
+ * The Original Code is: Zimbra Collaboration Suite Server.
+ *
+ * The Initial Developer of the Original Code is Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2004, 2005, 2006 Zimbra, Inc.
+ * All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK *****
+ */
+
 package com.zimbra.cs.mina;
 
 import org.apache.mina.common.IoSession;
 
-import java.io.OutputStream;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
-/**
- * An output stream that writes to an associated MINA IoSession. This
- * implementation also provides buffering.
- */
-public class MinaIoSessionOutputStream extends OutputStream {
-    private final IoSession session;
-    private ByteBuffer buffer;
-    
-    public MinaIoSessionOutputStream(IoSession session, int bufSize) {
-        this.session = session;
-        this.buffer = ByteBuffer.allocate(bufSize);
+public class MinaIoSessionOutputStream extends MinaOutputStream {
+    private final IoSession mSession;
+
+    public MinaIoSessionOutputStream(IoSession session, int size) {
+        super(size);
+        mSession = session;
     }
 
     public MinaIoSessionOutputStream(IoSession session) {
         this(session, 1024);
     }
-    
-    @Override
-    public synchronized void write(byte[] b, int off, int len)
-            throws IOException {
-        checkClosed();
-        for (int total = 0; total < len; ) {
-            int count = Math.min(len - total, buffer.remaining());
-            buffer.put(b, off, count);
-            if (!buffer.hasRemaining()) flushBytes();
-            total += count;
-        }
-    }
 
     @Override
-    public synchronized void write(int b) throws IOException {
-        write(new byte[] { (byte) b });
-    }
-
-    @Override
-    public synchronized void flush() throws IOException {
-        checkClosed();
-        flushBytes();
-    }
-
-    @Override
-    public synchronized void close() throws IOException {
-        flush();
+    protected void writeBytes(ByteBuffer bb) {
+        mSession.write(bb);
     }
     
-    private void flushBytes() throws IOException {
-        if (buffer.position() <= 0) return;
-        buffer.flip();
-        session.write(buffer);
-        buffer = ByteBuffer.allocate(buffer.capacity());
-    }
-    
-    private void checkClosed() throws IOException {
-        if (!session.isConnected()) {
-            throw new IOException("Session has been closed"); 
-        }
-    }
 }
 

@@ -25,178 +25,58 @@
 
 package com.zimbra.cs.lmtpserver;
 
-import java.net.ServerSocket;
+import java.io.IOException;
 
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
-
-import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
 import com.zimbra.common.util.NetUtil;
 import com.zimbra.cs.util.Zimbra;
 
 public class LmtpServer extends TcpServer {
+    private static com.zimbra.cs.server.Server lmtpServer;
 
-	private Log mLog;
-
-	public LmtpServer(int numThreads, ServerSocket serverSocket) {
-		super("LmtpServer", numThreads, serverSocket);
-		mLog = LogFactory.getLog(LmtpServer.class.getName() + "/" + serverSocket.getLocalPort());
-	}
-
-	protected ProtocolHandler newProtocolHandler() {
-		return new LmtpHandler(this);
-	}
-
-	public void run() {
-		/* Check is for initial sanity - you can always shoot yourself later by setting these to null. */
-		if (getConfigName() == null) throw new IllegalStateException("Call LmtpServer.setConfigName() first");
-		if (getConfigBackend() == null) throw new IllegalStateException("Call LmtpServer.setConfigBackend() first");
-		super.run();
-	}
-
-
-	// TODO actually get it from configuration!
-
-	/*
-	 * Config idle.
-	 */
-	public static final int DEFAULT_MAX_IDLE_SECONDS = 300;
-	
-	private int mConfigMaxIdleMilliSeconds = DEFAULT_MAX_IDLE_SECONDS * 1000;
-
-	public void setConfigMaxIdleSeconds(int configMaxIdleSeconds) {
-		mConfigMaxIdleMilliSeconds = configMaxIdleSeconds * 1000;
-	}
-
-	public int getConfigMaxIdleSeconds() {
-		return mConfigMaxIdleMilliSeconds / 1000;
-	}
-
-	public int getConfigMaxIdleMilliSeconds() {
-		return mConfigMaxIdleMilliSeconds;
-	}
-
-	/*
-	 * Config name.
-	 */
-	private String mConfigName;
-
-	public void setConfigNameFromHostname() {
-		setConfigName(LC.zimbra_server_hostname.value());
-	}
-	
-	public void setConfigName(String name) {
-		mConfigName = name;
-		m220Greeting = new String("220 " + name + " Zimbra LMTP ready");
-		m221Goodbye = new String("221 " + name + " closing connection");
-        m421Error = new String("421 4.3.2 " + name + " Service not available, closing transmission channel");
-	}
-
-    /*
-     * Config to allow address extensions.
-     */
-    private String mRecipientDelimiter;
-    
-    public void setConfigRecipientDelimiter(String delimiter) {
-        mRecipientDelimiter = delimiter; 
+    public LmtpServer(LmtpConfig config) throws ServiceException {
+        super("LmtpServer", config);
     }
 
-    public String getConfigRecipientDelimiter() {
-        return mRecipientDelimiter;
+    protected ProtocolHandler newProtocolHandler() {
+        return new TcpLmtpHandler(this);
+    }
+
+    public static void bindServerSocket(String addr, int port)
+            throws IOException {
+        NetUtil.bindServerSocket(addr, port, false, MinaLmtpServer.isEnabled());
     }
     
-	public String getConfigName() {
-		return mConfigName;
-	}
-	
-	/*
-	 * Config backend.
-	 */
-	private LmtpBackend mConfigBackend;
-	
-	public void setConfigBackend(LmtpBackend backend) {
-		mConfigBackend = backend;
-	}
-	
-	public LmtpBackend getConfigBackend() {
-		return mConfigBackend;
-	}
-	
-	private void setDefaultConfigBackend() {
-		mConfigBackend = new ZimbraLmtpBackend();
-	}
-	
-	/*
-	 * This falls out of the configuration, so stick it here.
-	 */
-	private String m220Greeting;
+    public static void startupLmtpServer() throws ServiceException {
+        if (lmtpServer != null) return;
 
-	public String get220Greeting() {
-		return m220Greeting;
-	}
-	
-	private String m221Goodbye;
-	
-	public String get221Goodbye() {
-		return m221Goodbye;
-	}
+        LmtpConfig config = new LmtpConfig(Provisioning.getInstance());
 
-    private String m421Error;
-
-    public String get421Error() {
-    	return m421Error;
-    }
-
-	private static LmtpServer theInstance;
-
-	public static void startupLmtpServer() throws ServiceException {
-		if (theInstance != null)
-			return;
-
-        Server sconfig = Provisioning.getInstance().getLocalServer();
-        
-        int numThreads = sconfig.getIntAttr(Provisioning.A_zimbraLmtpNumThreads, -1);
-        if (numThreads < 0) {
-            Zimbra.halt("invalid value " + numThreads + " for " + Provisioning.A_zimbraLmtpNumThreads);
-        }
-
-        int port = sconfig.getIntAttr(Provisioning.A_zimbraLmtpBindPort, -1);
-        if (port < 0) {
-            Zimbra.halt("invalid value " + port + " for " + Provisioning.A_zimbraLmtpBindPort);
-        }
-
-        String address = sconfig.getAttr(Provisioning.A_zimbraLmtpBindAddress, null);
-        String advertisedName = sconfig.getAttr(Provisioning.A_zimbraLmtpAdvertisedName, null);
-        
-        Config gconfig = Provisioning.getInstance().getConfig();
-        String delimiter = gconfig.getAttr(Provisioning.A_zimbraMtaRecipientDelimiter, null);
-
-        ServerSocket serverSocket = NetUtil.getTcpServerSocket(address, port);
-
-        theInstance = new LmtpServer(numThreads, serverSocket);
-        theInstance.setConfigRecipientDelimiter(delimiter);
-        
-        if (advertisedName == null || advertisedName.length() == 0) {
-            theInstance.setConfigNameFromHostname();
+        if (MinaLmtpServer.isEnabled()) {
+            try {
+                lmtpServer = new MinaLmtpServer(config);
+            } catch (IOException e) {
+                Zimbra.halt("failed to create MinaLmtpServer", e);
+            }
         } else {
-            theInstance.setConfigName(advertisedName);
+            lmtpServer = new LmtpServer(config);
         }
-        theInstance.setConfigBackend(new ZimbraLmtpBackend());
-        Thread lmtpThread = new Thread(theInstance);
-        lmtpThread.setName("LmtpServer");
-        lmtpThread.start();
-	}
+        try {
+            lmtpServer.start();
+        } catch (IOException e) {
+            Zimbra.halt("failed to start LmtpServer", e);
+        }
 
-	public static void shutdownLmtpServer() {
-		if (theInstance != null) {
-			theInstance.shutdown(10); // TODO shutdown grace period from config
-		}
-		theInstance = null;
-	}
+    }
+
+    public static void shutdownLmtpServer() {
+        if (lmtpServer != null) {
+            lmtpServer.shutdown(10); // TODO shutdown grace period from config
+            lmtpServer = null;
+        }
+    }
 }

@@ -15,7 +15,7 @@
  * The Original Code is: Zimbra Collaboration Suite Server.
  *
  * The Initial Developer of the Original Code is Zimbra, Inc.
- * Portions created by Zimbra are Copyright (C) 2007 Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2004, 2005, 2006 Zimbra, Inc.
  * All Rights Reserved.
  *
  * Contributor(s):
@@ -23,28 +23,32 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.lmtpserver.utils;
+package com.zimbra.cs.lmtpserver;
 
 import java.nio.ByteBuffer;
 
-import static com.zimbra.cs.mina.MinaUtils.*;
+import static com.zimbra.cs.mina.MinaUtil.*;
+import com.zimbra.cs.mina.MinaRequest;
+import com.zimbra.cs.mina.MinaUtil;
 
-/**
- * Utility class that can be used to parse LMTP message data asynchronously.
- * Supports MINA (NIO) based LMTP server.
- */
-public class LmtpData {
-    private ByteBuffer mBuffer; // Line or data buffer
+public class MinaLmtpDataRequest implements MinaRequest {
+    private ByteBuffer mBuffer; // Data buffer
     private int mMatched;       // Number of bytes in EOM sequence mMatched so far
     private boolean complete;
     
-    public LmtpData(int size) {
+    public MinaLmtpDataRequest(int size, String prefix) {
+        if (size == 0) {
+            size = 8192;
+        } else if (prefix != null) {
+            size += prefix.length();
+        }
         mBuffer = ByteBuffer.allocate(size);
+        if (prefix != null) MinaUtil.put(mBuffer, prefix);
         mMatched = 2; // Start as if CRLF already matched
     }
 
-    public LmtpData() {
-        this(512);
+    public MinaLmtpDataRequest() {
+        this(0, null);
     }
 
     public void parse(ByteBuffer bb) {
@@ -88,15 +92,6 @@ public class LmtpData {
         return complete;
     }
 
-    public void append(byte[] b, int off, int len) {
-        mBuffer = expand(mBuffer, len);
-        mBuffer.put(b, off, len);
-    }
-
-    public void append(byte[] b) {
-        append(b, 0, b.length);
-    }
-    
     // Returns true if byte matches next expected character in EOM sequence
     private boolean matches(byte c) {
         switch (c) {
@@ -109,21 +104,9 @@ public class LmtpData {
 
     public byte[] getBytes() {
         checkComplete();
-        if (mBuffer == null) return null;
-        if (mBuffer.limit() == mBuffer.capacity()) {
-            return mBuffer.array(); // Buffer was correctly sized
-        }
-        ByteBuffer bb = mBuffer.duplicate();
-        byte[] b = new byte[bb.limit()];
-        bb.get(b, 0, b.length);
-        return b;
+        return MinaUtil.getBytes(mBuffer);
     }
 
-    public ByteBuffer getByteBuffer() {
-        checkComplete();
-        return mBuffer;
-    }
-    
     private void checkComplete() {
         if (!isComplete()) {
             throw new IllegalStateException("data is not complete");

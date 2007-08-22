@@ -26,12 +26,10 @@
 package com.zimbra.cs.lmtpserver;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.Socket;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.net.InetAddress;
 
 import javax.mail.internet.MailDateFormat;
 import javax.mail.internet.MimeUtility;
@@ -44,53 +42,47 @@ import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.util.Config;
 
-public class LmtpHandler extends ProtocolHandler {
-
-    // Connection specific data
-	private LmtpServer mServer;
-	private LmtpInputStream mInputStream;
-	private LmtpWriter mWriter;
-	private String mRemoteAddress;
-    private String mRemoteHostname;
-    private String mLhloArg;
+public abstract class LmtpHandler extends ProtocolHandler {
+        // Connection specific data
+        protected LmtpConfig mConfig;
+	protected LmtpWriter mWriter;
+	protected String mRemoteAddress;
+        protected String mRemoteHostname;
+        private String mLhloArg;
 	
 	// Message specific data
-	private LmtpEnvelope mEnvelope;
-	private String mCurrentCommandLine;
+	protected LmtpEnvelope mEnvelope;
+        private String mCurrentCommandLine;
 
-	LmtpHandler(LmtpServer server) {
-		super(server);
-		mServer = server;
-    }
-
-	protected void notifyIdleConnection() {
-		sendResponse("421 " + mServer.getConfigName() + " Timeout exceeded");
-	}
-
-	protected boolean setupConnection(Socket connection) throws IOException {
-	    reset();
-	    mRemoteAddress = connection.getInetAddress().getHostAddress();
-        mRemoteHostname = connection.getInetAddress().getHostName();
-        if (StringUtil.isNullOrEmpty(mRemoteHostname)) {
-            mRemoteHostname = mRemoteAddress;
+        LmtpHandler(MinaLmtpServer server) {
+            super(null);
+            mConfig = (LmtpConfig) server.getConfig();
         }
-	    ZimbraLog.addIpToContext(mRemoteAddress);
-	    ZimbraLog.lmtp.debug("connected");
 
-	    InputStream is = connection.getInputStream();
-	    mInputStream = new LmtpInputStream(is);
+        LmtpHandler(LmtpServer server) {
+            super(server);
+            mConfig = (LmtpConfig) server.getConfig();
+        }
 
-	    OutputStream os = connection.getOutputStream();
-	    mWriter = new LmtpWriter(os);
+        protected boolean setupConnection(InetAddress remoteAddr) {
+            mRemoteAddress = remoteAddr.getHostAddress();
+            mRemoteHostname = remoteAddr.getHostName();
+            if (mRemoteHostname == null || mRemoteHostname.length() == 0) {
+                mRemoteHostname = mRemoteAddress;
+            }
+            ZimbraLog.addIpToContext(mRemoteAddress);
+            ZimbraLog.lmtp.debug("connected");
+            if (!Config.userServicesEnabled()) {
+                sendResponse("421 4.3.2 User services disabled");
+                dropConnection();
+                return false;
+            }
+            sendResponse(mConfig.get220Greeting());
+            return true;
+        }
 
-	    boolean allow = Config.userServicesEnabled();
-	    if (allow) {
-	        sendResponse(mServer.get220Greeting());
-	    } else {
-	        sendResponse("421 4.3.2 User services disabled");
-	        dropConnection();
-	    }
-	    return allow;
+        protected void notifyIdleConnection() {
+		sendResponse("421 " + mConfig.getName() + " Timeout exceeded");
 	}
 
 	protected boolean authenticate() {
@@ -98,37 +90,21 @@ public class LmtpHandler extends ProtocolHandler {
 		return true;
 	}
 
-	protected synchronized void dropConnection() {
-		try {
-			if (mInputStream != null) {
-				mInputStream.close();
-				mInputStream = null;
-			}
-			if (mWriter != null) {
-				mWriter.close();
-				mWriter = null;
-			}
-		} catch (IOException e) {
-			ZimbraLog.lmtp.info("exception while closing connection", e);
-		}
-	}
-
-	protected boolean processCommand() throws IOException {
-		mCurrentCommandLine = mInputStream.readLine();
-		String cmd = mCurrentCommandLine;
+        protected boolean processCommand(String cmd) throws IOException {
+                mCurrentCommandLine = cmd;
 		String arg = null;
 
 		if (cmd == null) {
-		    ZimbraLog.lmtp.info("disconnected without quit");
+		        ZimbraLog.lmtp.info("disconnected without quit");
 			dropConnection();
 			return false;
 		}
 
-        if (!Config.userServicesEnabled()) {
-            sendResponse(mServer.get421Error());
-            dropConnection();
-            return false;
-        }
+                if (!Config.userServicesEnabled()) {
+                        sendResponse(mConfig.get421Error());
+                        dropConnection();
+                        return false;
+                }
 
 		setIdle(false);
 
@@ -138,7 +114,7 @@ public class LmtpHandler extends ProtocolHandler {
 			cmd = cmd.substring(0, space);
 		}
 
-        ZimbraLog.lmtp.debug("command=%s arg=%s", cmd, arg);
+                ZimbraLog.lmtp.debug("command=%s arg=%s", cmd, arg);
 				
 		if (cmd.length() < 4) {
 			doSyntaxError("command too short");
@@ -226,7 +202,7 @@ public class LmtpHandler extends ProtocolHandler {
 		case 'v':
 		case 'V':
 			if ("VRFY".equalsIgnoreCase(cmd)) {
-				doVRFY(arg);
+				doVRFY(arg);                                          
 				return true;
 			}
 			break;
@@ -238,7 +214,7 @@ public class LmtpHandler extends ProtocolHandler {
 		return true;
     }
 
-	private void sendResponse(String response) {
+	protected void sendResponse(String response) {
 		String cl = mCurrentCommandLine != null ? mCurrentCommandLine : "<none>";
 		char firstCh = response.charAt(0);
 		if (ZimbraLog.lmtp.isDebugEnabled()) {
@@ -261,7 +237,7 @@ public class LmtpHandler extends ProtocolHandler {
     }
     
     private void doQUIT() {
-    	sendResponse(mServer.get221Goodbye());
+    	sendResponse(mConfig.get221Goodbye());
     	ZimbraLog.lmtp.debug("quit from client");
     	dropConnection();
     }
@@ -294,7 +270,7 @@ public class LmtpHandler extends ProtocolHandler {
     		doSyntaxError("no parameter to lhlo");
     		return;
     	}
-    	mWriter.println("250-" + mServer.getConfigName());
+    	mWriter.println("250-" + mConfig.getName());
     	mWriter.println("250-8BITMIME");
     	mWriter.println("250-ENHANCEDSTATUSCODES");
     	mWriter.println("250-SIZE ");
@@ -344,7 +320,6 @@ public class LmtpHandler extends ProtocolHandler {
 		mEnvelope.setSender(addr);
 		mEnvelope.setBodyType(type);
 		mEnvelope.setSize(size);
-		
 		sendResponse("250 2.0.0 Sender OK");
     }
     
@@ -359,13 +334,13 @@ public class LmtpHandler extends ProtocolHandler {
     		return;
     	}
     	
-		LmtpAddress addr = new LmtpAddress(arg, null, mServer.getConfigRecipientDelimiter());
+		LmtpAddress addr = new LmtpAddress(arg, null, mConfig.getRecipientDelimiter());
 		if (!addr.isValid()) {
 			sendResponse("501 5.5.4 Syntax error in parameters");
 			return;
 		}
 		
-		LmtpStatus status = mServer.getConfigBackend().getAddressStatus(addr);
+		LmtpStatus status = mConfig.getLmtpBackend().getAddressStatus(addr);
 
 		if (status == LmtpStatus.REJECT) {
 			sendResponse("550 5.1.1 No such user here");
@@ -381,26 +356,28 @@ public class LmtpHandler extends ProtocolHandler {
 		sendResponse("250 2.1.5 Recipient OK");
     }
     
-    private void reset() {
+    protected void reset() {
     	// Reset must not change any earlier LHLO argument
     	mEnvelope = new LmtpEnvelope();
-    	mCurrentCommandLine = null; 
+    	mCurrentCommandLine = null;                
     }
-    
-    private void doDATA(String arg) throws IOException {
-    	if (!mEnvelope.hasRecipients()) {
-    		sendResponse("503 5.5.1 No recipients");
-    		return;
-    	}
 
-    	sendResponse("354 End data with <CR><LF>.<CR><LF>");
-    	
-        // Read message
-    	byte[] data = mInputStream.readMessage(mEnvelope.getSize(), getAdditionalHeaders());
-    	if (data == null || data.length == 0) {
-    		sendResponse("554 5.6.0 Empty message not allowed");
-    		return;
-    	}
+    private void doDATA(String arg) throws IOException {
+        if (!mEnvelope.hasRecipients()) {
+            sendResponse("503 5.5.1 No recipients");
+            return;
+        }
+        sendResponse("354 End data with <CR><LF>.<CR><LF>");
+        continueDATA();
+    }
+
+    protected abstract void continueDATA() throws IOException;
+    
+    protected void processMessageData(byte[] data) throws IOException {
+        if (data == null || data.length == 0) {
+            sendResponse("554 5.6.0 Empty message not allowed");
+            return;
+        }
 
         // Log envelope information
         if (ZimbraLog.lmtp.isInfoEnabled()) {
@@ -438,7 +415,7 @@ public class LmtpHandler extends ProtocolHandler {
         ZimbraPerf.COUNTER_LMTP_RCVD_BYTES.increment(dataLength);
         ZimbraPerf.COUNTER_LMTP_RCVD_RCPT.increment(numRecipients);
     	
-        mServer.getConfigBackend().deliver(mEnvelope, data);
+        mConfig.getLmtpBackend().deliver(mEnvelope, data);
 
         int numDelivered = 0;
     	List recipients = mEnvelope.getRecipients();
@@ -463,11 +440,11 @@ public class LmtpHandler extends ProtocolHandler {
     	reset();
     }
 
-    /**
+    /*
      * Generates the <tt>Return-Path</tt> and <tt>Received</tt> headers
      * for the current incoming message.
      */
-    private String getAdditionalHeaders() {
+    protected String getAdditionalHeaders() {
         StringBuilder headers = new StringBuilder();
 
         // Assemble Return-Path header

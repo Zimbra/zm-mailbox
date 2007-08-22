@@ -28,15 +28,11 @@
  */
 package com.zimbra.cs.pop3;
 
-import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PushbackInputStream;
-import java.net.Socket;
-
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
+import java.net.InetAddress;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -50,14 +46,12 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.stats.ActivityTracker;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
-import com.zimbra.cs.tcpserver.TcpServerInputStream;
 import com.zimbra.cs.util.Config;
 
 /**
  * @author schemers
  */
-public class Pop3Handler extends ProtocolHandler {
-
+public abstract class Pop3Handler extends ProtocolHandler {
     static final int MIN_EXPIRE_DAYS = 31;
     static final int MAX_RESPONSE = 512;
     static final int MAX_RESPONSE_TEXT = MAX_RESPONSE - 7; // "-ERR" + " " + "\r\n"
@@ -66,13 +60,12 @@ public class Pop3Handler extends ProtocolHandler {
     private static final String TERMINATOR = ".";
     private static final int TERMINATOR_C = '.';    
     private static final byte[] TERMINATOR_BYTE = { '.' };
-    
+
     // Connection specific data
-    private SSLSocket mTlsConnection;    
-    private Pop3Server mServer;
-    private TcpServerInputStream mInputStream;
-    private OutputStream mOutputStream;    
-    private String mRemoteAddress;
+    protected Pop3Config mConfig;
+    protected OutputStream mOutputStream;
+    protected boolean mStartedTLS;
+
     private String mUser;
     private String mQuery;
     private String mAccountId;
@@ -81,60 +74,65 @@ public class Pop3Handler extends ProtocolHandler {
     private String mCommand;
     private long mStartTime;
     
-    private int mState;
-
-    private boolean dropConnection;
+    protected int mState;
+                      
+    protected boolean dropConnection;
     
-    private static final int STATE_AUTHORIZATION = 1;
-    private static final int STATE_TRANSACTION = 2;    
-    private static final int STATE_UPDATE = 3;
+    protected static final int STATE_AUTHORIZATION = 1;
+    protected static final int STATE_TRANSACTION = 2;
+    protected static final int STATE_UPDATE = 3;
 
     // Message specific data
     private String mCurrentCommandLine;
     private int mExpire;
 
     private static ActivityTracker sActivityTracker;
-    
-    Pop3Handler(Pop3Server server) {
-        super(server);
-        mServer = server;
+
+    private static synchronized void initActivityTracker() {
         if (sActivityTracker == null) {
             sActivityTracker = ActivityTracker.getInstance("pop3.csv");
         }
     }
     
-    protected boolean setupConnection(Socket connection) throws IOException {
-        mRemoteAddress = connection.getInetAddress().getHostAddress();
-
-        ZimbraLog.clearContext();
-        ZimbraLog.addIpToContext(mRemoteAddress);
-        ZimbraLog.pop.info("connected");
-
-        mInputStream = new TcpServerInputStream(connection.getInputStream());
-        
-        mOutputStream = new BufferedOutputStream(connection.getOutputStream());
-        
-        if (!Config.userServicesEnabled()) {
-            dropConnection();
-            return false;
-        }
-
-        sendOK(mServer.getBanner());
-
-        mState = STATE_AUTHORIZATION;
-        dropConnection = false;        
-        return true;
+    Pop3Handler(Pop3Server server) {
+        super(server);
+        mConfig = (Pop3Config) server.getConfig();
+        initActivityTracker();
     }
 
+    
+    Pop3Handler(MinaPop3Server server) {
+        super(null);
+        mConfig = (Pop3Config) server.getConfig();
+        initActivityTracker();
+    }
+
+   
     protected boolean authenticate() {
         // we auth with the USER/PASS commands
         return true;
     }
 
-    protected boolean processCommand() throws IOException {
+    protected boolean setupConnection(InetAddress remoteAddr)
+            throws IOException {
+        ZimbraLog.clearContext();
+        ZimbraLog.addIpToContext(remoteAddr.getHostAddress());
+        ZimbraLog.pop.info("connected");
+        if (!Config.userServicesEnabled()) {
+            dropConnection();
+            return false;
+        }
+        sendOK(mConfig.getBanner());
+        mState = STATE_AUTHORIZATION;
+        dropConnection = false;
+        return true;
+    }
+    
+    protected boolean processCommand(String line) throws IOException {
         // TODO: catch IOException too?
         mCommand = null;
         mStartTime = 0;
+        mCurrentCommandLine = line;
         
         try {
             if (mAccountName != null) ZimbraLog.addAccountNameToContext(mAccountName);
@@ -152,20 +150,17 @@ public class Pop3Handler extends ProtocolHandler {
         } catch (Pop3CmdException e) {
             sendERR(e.getResponse());
             ZimbraLog.pop.debug(e.getMessage(), e);
-            return dropConnection == false;
+            return !dropConnection;
         } catch (ServiceException e) {
             sendERR(Pop3CmdException.getResponse(e.getMessage()));
             ZimbraLog.pop.debug(e.getMessage(), e);
-            return dropConnection == false;
+            return !dropConnection;
         } finally {
-            if (dropConnection)
-                dropConnection();
             ZimbraLog.clearContext();
         }
     }
     
     protected boolean processCommandInternal() throws Pop3CmdException, IOException, ServiceException {
-        mCurrentCommandLine = mInputStream.readLine();
         mStartTime = System.currentTimeMillis();
         //ZimbraLog.pop.info("command("+mCurrentCommandLine+")");
         mCommand = mCurrentCommandLine;
@@ -305,24 +300,6 @@ public class Pop3Handler extends ProtocolHandler {
     }
 
     /* (non-Javadoc)
-     * @see com.zimbra.cs.tcpserver.ProtocolHandler#dropConnection()
-     */
-    protected void dropConnection() {
-        try {
-            if (mInputStream != null) {
-                mInputStream.close();
-                mInputStream = null;
-            }
-            if (mOutputStream != null) {
-                mOutputStream.close();
-                mOutputStream = null;
-            }
-        } catch (IOException e) {
-            ZimbraLog.pop.info("exception while closing connection", e);
-        }
-    }
-
-    /* (non-Javadoc)
      * @see com.zimbra.cs.tcpserver.ProtocolHandler#notifyIdleConnection()
      */
     protected void notifyIdleConnection() {
@@ -335,7 +312,7 @@ public class Pop3Handler extends ProtocolHandler {
         sendResponse("-ERR", response, true);
     }
 
-    private void sendOK(String response) throws IOException {
+    protected void sendOK(String response) throws IOException {
         sendResponse("+OK", response, true);        
     }
     
@@ -427,7 +404,7 @@ public class Pop3Handler extends ProtocolHandler {
             int count = mMbx.deleteMarked(true);
             sendOK("deleted "+count+" message(s)");
         } else {
-            sendOK(mServer.getGoodbye());
+            sendOK(mConfig.getGoodbye());
         }
         ZimbraLog.pop.info("quit from client");
         //dropConnection();
@@ -520,10 +497,10 @@ public class Pop3Handler extends ProtocolHandler {
     
     private void checkIfLoginPermitted()
     throws Pop3CmdException, ServiceException {
-        if (mServer.isConnectionSSL()) {
+        if (mConfig.isSSLEnabled()) {
             return;
         }
-        if ((mTlsConnection == null) && !mServer.allowCleartextLogins())
+        if (!mStartedTLS && !mConfig.allowCleartextLogins())
             throw new Pop3CmdException("only valid after entering TLS mode");        
     }
     
@@ -534,23 +511,17 @@ public class Pop3Handler extends ProtocolHandler {
     }
     
     private void doSTLS() throws Pop3CmdException, IOException {
-        if (mServer.isConnectionSSL())
-            throw new Pop3CmdException("command not valid over TLS");
+        if (mConfig.isSSLEnabled())
+            throw new Pop3CmdException("command not valid over SSL");
 
         if (mState != STATE_AUTHORIZATION)
             throw new Pop3CmdException("this command is only valid prior to login");
-        if (mTlsConnection != null)
+        if (mStartedTLS)
             throw new Pop3CmdException("command not valid while in TLS mode");
-        SSLSocketFactory fac = (SSLSocketFactory) SSLSocketFactory.getDefault();
-        sendOK("Begin TLS negotiation");        
-        mTlsConnection = (SSLSocket) fac.createSocket(mConnection, mConnection.getInetAddress().getHostName(), mConnection.getPort(), true);
-        mTlsConnection.setUseClientMode(false);
-        mTlsConnection.startHandshake();
-        ZimbraLog.pop.debug("suite: "+mTlsConnection.getSession().getCipherSuite());
-        mInputStream = new TcpServerInputStream(mTlsConnection.getInputStream());
-        mOutputStream = new BufferedOutputStream(mTlsConnection.getOutputStream());        
+        startTLS();
+        mStartedTLS = true;
     }
-    
+
     private void doLIST(String msg) throws Pop3CmdException, IOException {
         if (mState != STATE_TRANSACTION) 
             throw new Pop3CmdException("this command is only valid after a login");
@@ -660,7 +631,7 @@ public class Pop3Handler extends ProtocolHandler {
         sendLine("TOP", false);
         sendLine("USER", false);
         sendLine("UIDL", false);
-        if (!mServer.isConnectionSSL())
+        if (!mConfig.isSSLEnabled())
             sendLine("STLS", false);        
         if (mState != STATE_TRANSACTION) {
             sendLine("EXPIRE "+MIN_EXPIRE_DAYS+" USER", false);
@@ -674,4 +645,6 @@ public class Pop3Handler extends ProtocolHandler {
         sendLine("IMPLEMENTATION ZimbraInc", false);
         sendLine(TERMINATOR);
     }
+
+    protected abstract void startTLS() throws IOException;
 }

@@ -1,3 +1,28 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1
+ *
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 ("License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.zimbra.com/license
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+ * the License for the specific language governing rights and limitations
+ * under the License.
+ *
+ * The Original Code is: Zimbra Collaboration Suite Server.
+ *
+ * The Initial Developer of the Original Code is Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2004, 2005, 2006 Zimbra, Inc.
+ * All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK *****
+ */
+
 package com.zimbra.cs.mina;
 
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
@@ -16,10 +41,10 @@ import java.io.IOException;
  * MINA protocol codec factory.
  */
 class MinaCodecFactory implements ProtocolCodecFactory {
-    private MinaServer server;
+    private MinaServer mServer;
 
     MinaCodecFactory(MinaServer server) {
-        this.server = server;
+        mServer = server;
     }
 
     public ProtocolEncoder getEncoder() {
@@ -35,7 +60,7 @@ class MinaCodecFactory implements ProtocolCodecFactory {
                            ProtocolEncoderOutput out) {
             ByteBuffer bb;
             if (msg instanceof String) {
-                bb = toByteBuffer((String) msg);
+                bb = MinaUtil.toByteBuffer((String) msg);
             } else if (msg instanceof ByteBuffer) {
                 bb = (ByteBuffer) msg;
             } else {
@@ -54,9 +79,9 @@ class MinaCodecFactory implements ProtocolCodecFactory {
             ByteBuffer bb = in.buf();
             while (bb.hasRemaining()) {
                 if (req == null) {
-                    req = server.createRequest(MinaIoHandler.getHandler(session));
+                    req = mServer.createRequest(MinaIoHandler.getHandler(session));
                 }
-                req.parse(session, bb);
+                req.parse(bb);
                 if (!req.isComplete()) break;
                 out.write(req);
                 req = null;
@@ -64,11 +89,5 @@ class MinaCodecFactory implements ProtocolCodecFactory {
         }
     }
 
-    private static ByteBuffer toByteBuffer(String s) {
-        ByteBuffer bb = ByteBuffer.allocate(s.length());
-        for (int i = 0; i < s.length(); i++) {
-            bb.put(i, (byte) s.charAt(i));
-        }
-        return bb;
-    }
+
 }

@@ -23,7 +23,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.imap;
+package com.zimbra.cs.pop3;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.Log;
@@ -32,34 +32,29 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mina.MinaHandler;
 import com.zimbra.cs.mina.MinaRequest;
 import com.zimbra.cs.mina.MinaServer;
-import org.apache.mina.common.IoSession;
+import com.zimbra.cs.mina.MinaTextLineRequest;
+import com.zimbra.cs.server.ServerConfig;
 
 import java.io.IOException;
 
-/**
- * Mina-based IMAP server.
- */
-public class MinaImapServer extends MinaServer {
-    /**
-     * Checks if the MINA NIO-based IMAP service is enabled, either through
-     * configuration or -DZimbraNioEnabled property.
-     * @return true if MINA IMAP service is enabled, false otherwise
-     */
+import org.apache.mina.common.IoSession;
+
+public class MinaPop3Server extends MinaServer {
     public static boolean isEnabled() {
-        return MinaServer.isEnabled() || LC.nio_imap_enabled.booleanValue();
+        return MinaServer.isEnabled() || LC.nio_pop3_enabled.booleanValue();
     }
 
-    MinaImapServer(ImapConfig config) throws IOException, ServiceException {
+    MinaPop3Server(ServerConfig config) throws IOException, ServiceException {
         super(config);
     }
 
     @Override public MinaHandler createHandler(IoSession session) {
-        return new MinaImapHandler(this, session);
+        return new MinaPop3Handler(this, session);
     }
 
     @Override public MinaRequest createRequest(MinaHandler handler) {
-        return new MinaImapRequest(handler);
+        return new MinaTextLineRequest();
     }
 
-    @Override public Log getLog() { return ZimbraLog.imap; }
+    @Override public Log getLog() { return ZimbraLog.pop; }
 }

@@ -28,7 +28,6 @@ package com.zimbra.cs.lmtpserver.utils;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.util.Properties;
 
 import org.apache.commons.cli.CommandLine;
@@ -40,9 +39,11 @@ import org.apache.commons.cli.ParseException;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
-import com.zimbra.cs.lmtpserver.LmtpBackend;
 import com.zimbra.cs.lmtpserver.LmtpServer;
-import com.zimbra.common.util.NetUtil;
+import com.zimbra.cs.lmtpserver.MinaLmtpServer;
+import com.zimbra.cs.lmtpserver.LmtpConfig;
+import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.server.Server;
 
 public class StandAloneLmtpServer {
 
@@ -67,14 +68,16 @@ public class StandAloneLmtpServer {
 
     private static CommandLine parseArgs(String args[]) {
         CommandLineParser parser = new GnuParser();
-        CommandLine cl = null;
+        CommandLine cl;
         try {
             cl = parser.parse(mOptions, args);
         } catch (ParseException pe) {
             usage(pe.getMessage());
+            return null;
         }
         if (cl.hasOption("h")) {
             usage(null);
+            return null;
         }
         return cl;
     }
@@ -90,9 +93,10 @@ public class StandAloneLmtpServer {
         int threads;
 
         if (cl.hasOption("p")) {
-            port = Integer.valueOf(cl.getOptionValue("p")).intValue();
+            port = Integer.valueOf(cl.getOptionValue("p"));
             if (port <= 0) {
                 usage("invalid port number: " + port);
+                return;
             }
         } else {
             usage("port not specified");
@@ -106,9 +110,10 @@ public class StandAloneLmtpServer {
         }
 
         if (cl.hasOption("t")) {
-            threads = Integer.valueOf(cl.getOptionValue("t")).intValue();
+            threads = Integer.valueOf(cl.getOptionValue("t"));
             if (threads <= 0) {
                 usage("invalid number of threads: " + threads);
+                return;
             }
         } else {
             threads = 5;
@@ -122,21 +127,36 @@ public class StandAloneLmtpServer {
                 maildirMap.list(System.out);
             } catch (IOException ioe) {
                 usage(ioe.getMessage());
+                return;
             }
         } else {
             usage("maildir map file not specified");
+            return;
         }
 
-        ServerSocket serverSocket = NetUtil.getTcpServerSocket(address, port);
-        LmtpServer lmtpServer = new LmtpServer(threads, serverSocket);
-        lmtpServer.setConfigNameFromHostname();
-
-        LmtpBackend backend = new MaildirBackend(maildirMap);
-        lmtpServer.setConfigBackend(backend);
-
-        Thread acceptThread = new Thread(lmtpServer);
-        acceptThread.setName("LmtpServer");
-        acceptThread.start();
+        LmtpConfig config = new LmtpConfig();
+        config.setBindAddress(address);
+        config.setBindPort(port);
+        config.setNumThreads(threads);
+        config.setLmtpBackend(new MaildirBackend(maildirMap));
+        
+        Server lmtpServer;
+        if (MinaLmtpServer.isEnabled()) {
+            try {
+                lmtpServer = new MinaLmtpServer(config);
+            } catch (IOException e) {
+                Zimbra.halt("failed to create MinaLmtpServer");
+                return;
+            }
+        } else {
+            lmtpServer = new LmtpServer(config);
+        }
+        
+        try {
+            lmtpServer.start();
+        } catch (IOException e) {
+            Zimbra.halt("failed to start LmtpServer");
+        }
 
         try {
             while (true) {

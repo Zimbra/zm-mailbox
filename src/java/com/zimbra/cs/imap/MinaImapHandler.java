@@ -1,7 +1,31 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1
+ *
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 ("License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.zimbra.com/license
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+ * the License for the specific language governing rights and limitations
+ * under the License.
+ *
+ * The Original Code is: Zimbra Collaboration Suite Server.
+ *
+ * The Initial Developer of the Original Code is Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2004, 2005, 2006 Zimbra, Inc.
+ * All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK *****
+ */
+
 package com.zimbra.cs.imap;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.util.Config;
@@ -17,34 +41,14 @@ import org.apache.mina.filter.SSLFilter;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.Writer;
 import java.net.Socket;
 
 public class MinaImapHandler extends ImapHandler implements MinaHandler {
-    private MinaImapServer server;    
-    private IoSession session;
+    private IoSession mSession;
 
     MinaImapHandler(MinaImapServer server, IoSession session) {
-        this.server = server;
-        this.session = session;
-    }
-
-    @Override void dumpState(Writer w) {
-        try {
-            w.write(toString());
-        } catch (IOException e) {
-        }
-    }
-
-    @Override void encodeState(Element parent) {
-        Element e = parent.addElement("OZIMAP");
-        e.addElement("session").setText(session.toString());
-        e.addAttribute("startedTls", mStartedTLS);
-        e.addAttribute("goodbyeSent", mGoodbyeSent);
-    }
-
-    @Override Object getServer() {
-        return server;
+        super(server);
+        this.mSession = session;
     }
 
     @Override boolean doSTARTTLS(String tag) throws IOException {
@@ -54,17 +58,11 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
             return true;
         }
         SSLFilter filter = new SSLFilter(MinaImapServer.getSSLContext());
-        session.getFilterChain().addFirst("ssl", filter);
-        session.setAttribute(SSLFilter.DISABLE_ENCRYPTION_ONCE, true);
+        mSession.getFilterChain().addFirst("ssl", filter);
+        mSession.setAttribute(SSLFilter.DISABLE_ENCRYPTION_ONCE, true);
         sendOK(tag, "Begin TLS negotiation now");
         mStartedTLS = true;
         return true;
-    }
-
-    @Override void disableUnauthConnectionAlarm() throws ServiceException {}
-
-    @Override OutputStream getFetchOutputStream() {
-        return new MinaIoSessionOutputStream(session);
     }
 
     public void connectionOpened() throws IOException {
@@ -75,10 +73,11 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
             dropConnection();
             return;
         }
-        sendUntagged(ImapServer.getBanner(), true);
-        mStartedTLS = server.isSSLEnabled();
-        session.setIdleTime(IdleStatus.BOTH_IDLE,
-            (int) (ImapServer.IMAP_UNAUTHED_CONNECTION_MAX_IDLE_MILLISECONDS / 1000));
+        mOutputStream = new MinaIoSessionOutputStream(mSession);
+        sendUntagged(mConfig.getBanner(), true);
+        mStartedTLS = mConfig.isSSLEnabled();
+        mSession.setIdleTime(IdleStatus.BOTH_IDLE,
+                             mConfig.getUnauthMaxIdleSeconds());
     }
 
     @Override protected boolean processCommand() {
@@ -94,7 +93,7 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
             ZimbraLog.addMboxToContext(mSelectedFolder.getMailbox().getId());
             mSelectedFolder.updateAccessTime();
         }
-        ZimbraLog.addIpToContext(session.getRemoteAddress().toString());
+        ZimbraLog.addIpToContext(mSession.getRemoteAddress().toString());
         long start = ZimbraPerf.STOPWATCH_IMAP.start();
         try {
             if (!processRequest((MinaImapRequest) req)) dropConnection();
@@ -109,23 +108,13 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
 
     private boolean processRequest(MinaImapRequest req) throws IOException {
         if (!checkAccountStatus()) return false;
-        if (mAuthenticator != null) return authenticate(req);
+        if (mAuthenticator != null) return continueAuthentication(req);
         try {
             return executeRequest(req);
         } catch (ImapParseException e) {
             handleParseException(e);
             return true;
         }
-    }
-
-    private boolean authenticate(MinaImapRequest req) throws IOException {
-        boolean cont = continueAuthentication(req);
-        if (mAuthenticator == null) {
-            // Authentication succeeded
-            session.setIdleTime(IdleStatus.BOTH_IDLE,
-                (int) (ImapFolder.IMAP_IDLE_TIMEOUT_MSEC / 1000));
-        }
-        return cont;
     }
 
     private void handleParseException(ImapParseException e) throws IOException {
@@ -187,21 +176,22 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
      * execution since requests are processed in sequence for any given
      * connection.
      */
-    @Override void dropConnection(boolean sendBanner) {
+    @Override
+    protected void dropConnection(boolean sendBanner) {
         ZimbraLog.imap.debug("dropConnection: sendBanner = %s\n", sendBanner);
         if (mSelectedFolder != null) {
             mSelectedFolder.setHandler(null);
             SessionCache.clearSession(mSelectedFolder);
             mSelectedFolder = null;
         }
-        if (session == null) return; // Already closed...
+        if (mSession == null) return; // Already closed...
         try {
             if (sendBanner && !mGoodbyeSent) {
-                sendUntagged(ImapServer.getGoodbye(), true);
+                sendUntagged(mConfig.getGoodbye(), true);
                 mGoodbyeSent = true;
             }
-            session.close();
-            session = null;
+            mSession.close();
+            mSession = null;
         } catch (IOException e) {
             info("exception while closing connection", e);
         }
@@ -228,20 +218,25 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
         dropConnection();
     }
 
-    @Override void flushOutput() {
+    @Override protected void enableInactivityTimer() {
+        mSession.setIdleTime(IdleStatus.BOTH_IDLE,
+                             ImapFolder.IMAP_IDLE_TIMEOUT_SEC);
+    }
+
+    @Override protected void flushOutput() {
         // TODO Do we need to do anything here?
     }
     
     @Override void sendLine(String line, boolean flush) throws IOException {
-        if (session == null) throw new IOException("Stream is closed");
-        session.write(line + "\r\n");
+        if (mSession == null) throw new IOException("Stream is closed");
+        mSession.write(line + "\r\n");
         if (flush) flushOutput();
     }
 
     private void info(String msg, Throwable e) {
         if (!ZimbraLog.imap.isInfoEnabled()) return;
         StringBuilder sb = new StringBuilder(64);
-        sb.append('[').append(session.getRemoteAddress()).append("] ")
+        sb.append('[').append(mSession.getRemoteAddress()).append("] ")
           .append(msg);
         if (e != null) {
             ZimbraLog.imap.info(sb.toString(), e);

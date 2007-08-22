@@ -32,6 +32,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Arrays;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -42,10 +43,8 @@ import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.imap.ImapPartSpecifier.BinaryDecodingException;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.Mime;
@@ -167,10 +166,8 @@ class ImapURL {
         if (isection != -1) {
             String section = urlDecode(url.substring(isection + 10));
             if (section.length() > 0) {
-                List<Object> list = new ArrayList<Object>();
-                list.add(section);
                 try {
-                    OzImapRequest req = new OzImapRequest(tag, list, null);
+                    ImapRequest req = new ParserImapRequest(tag, section);
                     mPart = req.readPartSpecifier(false, false);
                     if (!req.eof())
                         throw new ImapUrlException(tag, url, "extra chars at end of IMAP URL SECTION");
@@ -180,6 +177,30 @@ class ImapURL {
                     throw new ImapUrlException(tag, url, ioe.getMessage());
                 }
             }
+        }
+    }
+
+    private static class ParserImapRequest extends ImapRequest {
+        public ParserImapRequest(String tag, String section) {
+            super(null);
+            mTag = tag;
+            mParts = Arrays.asList((Object) section);
+        }
+
+        private byte[] getNextBuffer() throws ImapParseException {
+            if ((mIndex + 1) >= mParts.size()) {
+                throw new ImapParseException(mTag, "no next literal");
+            }
+            Object part = mParts.get(mIndex + 1);
+            if (!(part instanceof byte[]))
+                throw new ImapParseException(mTag, "in string next not literal");
+            mIndex += 2;
+            mOffset = 0;
+            return (byte[]) part;
+        }
+
+        byte[] readLiteral() throws ImapParseException {
+            return getNextBuffer();
         }
     }
 

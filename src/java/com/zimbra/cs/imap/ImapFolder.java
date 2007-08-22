@@ -69,7 +69,8 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 
 public class ImapFolder extends Session implements Iterable<ImapMessage> {
-    public static final long IMAP_IDLE_TIMEOUT_MSEC = 30 * Constants.MILLIS_PER_MINUTE;
+    public static final int IMAP_IDLE_TIMEOUT_SEC = 30 * Constants.SECONDS_PER_MINUTE;
+    public static final long IMAP_IDLE_TIMEOUT_MSEC = IMAP_IDLE_TIMEOUT_SEC * Constants.MILLIS_PER_SECOND;
 
     static final byte SELECT_READONLY  = 0x01;
     static final byte SELECT_CONDSTORE = 0x02;
