@@ -43,7 +43,7 @@ import java.net.UnknownHostException;
 public class LC {
 
     public static String get(String key) {
-        String value = null;
+        String value;
         try {
             value = LocalConfig.getInstance().get(key);
         } catch (ConfigException ce) {
@@ -220,11 +220,11 @@ public class LC {
 
     public static final KnownKey calendar_outlook_compatible_allday_events;
 
+    public static final KnownKey nio_enabled;
     public static final KnownKey nio_imap_enabled;
     public static final KnownKey nio_imap_debug_logging;
-    public static final KnownKey nio_imap_write_queue_max_size_unauth;
-    public static final KnownKey nio_imap_write_queue_max_size;
-    public static final KnownKey nio_write_buffer_compaction_percent;
+    public static final KnownKey nio_pop3_enabled;
+    public static final KnownKey nio_lmtp_enabled;
 
     public static final KnownKey zimbra_mtareport_max_recipients;
     public static final KnownKey zimbra_mtareport_max_senders;
@@ -831,30 +831,17 @@ public class LC {
         nio_imap_debug_logging.setDoc("Log extremely large amounts of detail from the NIO IMAP server framework.  " +
                     "Useful only for debugging the IO framework.");
 
-        nio_imap_write_queue_max_size_unauth = new KnownKey("nio_imap_write_queue_max_size_unauth");
-        nio_imap_write_queue_max_size_unauth.setDefault("20480");        
-        nio_imap_write_queue_max_size_unauth.setDoc("If the OS buffers are full (not a common/normal occurence)," +
-                    " the NIO framework has to queue the requested write in Java heap." +
-                    " This is the max capacity of the write queue for an connection" +
-                    " that has not yet logged in. Default is > 16K because" +
-                    " of SSLEngine.");
+        nio_pop3_enabled = new KnownKey("nio_pop3_enabled");
+        nio_pop3_enabled.setDefault("false");
+        nio_pop3_enabled.setDoc("Enable NIO based POP3 server. If false, then the thread per connection IO framework is used.");
 
-        nio_imap_write_queue_max_size = new KnownKey("nio_imap_write_queue_max_size");
-        nio_imap_write_queue_max_size.setDefault("10240000");        
-        nio_imap_write_queue_max_size.setDoc("If the OS buffers are full (not a common/normal occurence)," +
-                    " the NIO framework has to queue the requested write in Java heap." +
-                    " The larger of mta max message size or this is the max capacity of" +
-                    " the write queue for an authenticated connection.");
+        nio_lmtp_enabled = new KnownKey("nio_lmtp_enabled");
+        nio_lmtp_enabled.setDefault("false");
+        nio_lmtp_enabled.setDoc("Enable NIO based LMTP server. If false, then the thread per connection IO framework is used.");
 
-        nio_write_buffer_compaction_percent = new KnownKey("nio_write_buffer_compaction_percent");
-        nio_write_buffer_compaction_percent.setDefault("50");
-        nio_write_buffer_compaction_percent.setDoc("If the OS buffers are full (not a common/normal occurence)," +
-                    " the NIO framework has to queue the requested write in Java heap." +
-                    " But a lot of the time, specially with SSLEngine, the write" +
-                    " buffer is not that full (or: a big part, but not all, of the" +
-                    " buffer might have been written to the OS buffers). If the buffer" +
-                    " is less than this percent full compared to its capacity, then it" +
-                    " is copied to a smaller buffer and the smaller buffer is queued.");
+        nio_enabled = new KnownKey("nio_enabled");
+        nio_enabled.setDefault("false");
+        nio_enabled.setDoc("Enable NIO-based IMAP/POP3/LMTP servers. If false, then the thread per connection IO framework is used.");
 
         zimbra_mtareport_max_recipients = new KnownKey("zimbra_mtareport_max_recipients");
         zimbra_mtareport_max_recipients.setDefault("50");

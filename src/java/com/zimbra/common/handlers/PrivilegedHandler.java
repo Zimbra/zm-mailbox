@@ -1,8 +1,10 @@
 package com.zimbra.common.handlers;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.NetUtil;
+
 import java.util.Map;
 
-import com.zimbra.common.util.NetUtil;
 /**
  * This is the class jetty will call back before setuid.
  * We will open sockets on privileged ports if configured to do so.
@@ -28,8 +30,6 @@ public class PrivilegedHandler {
     private static final String A_zimbraPop3SSLBindAddress = "zimbraPop3SSLBindAddress";
     private static final String A_zimbraPop3SSLServerEnabled = "zimbraPop3SSLServerEnabled";
     
-    private static final String nio_imap_enabled = "nio_imap_enabled"; //TODO: add this to ldap
-    
     private static final String mailboxd_keystore = "mailboxd_keystore";
     private static final String mailboxd_keystore_password = "mailboxd_keystore_password";
     private static final String mailboxd_truststore_password = "mailboxd_truststore_password";
@@ -39,32 +39,42 @@ public class PrivilegedHandler {
     private static final int D_IMAP_SSL_BIND_PORT = 993;
     private static final int D_POP3_BIND_PORT = 110;
     private static final int D_POP3_SSL_BIND_PORT = 995;
-    
-	public static void openPorts(Map<String, Object> attributes) {
+
+    public static void openPorts(Map<String, Object> attributes) {
         int port;
         String address;
+        boolean nio_enabled = LC.nio_enabled.booleanValue(); // TODO move this to ldap
+        
         try {
             System.setProperty("javax.net.ssl.keyStore", getAttr(attributes, mailboxd_keystore));
             System.setProperty("javax.net.ssl.keyStorePassword", getAttr(attributes, mailboxd_keystore_password));
             System.setProperty("javax.net.ssl.trustStorePassword", getAttr(attributes, mailboxd_truststore_password));
 
             if (getBooleanAttr(attributes, A_zimbraPop3ServerEnabled, false)) {
-            	port = getIntAttr(attributes, A_zimbraPop3BindPort, D_POP3_BIND_PORT);
-            	address = getAttr(attributes, A_zimbraPop3BindAddress, null);
-           		NetUtil.bindTcpServerSocket(address, port);
+                port = getIntAttr(attributes, A_zimbraPop3BindPort, D_POP3_BIND_PORT);
+                address = getAttr(attributes, A_zimbraPop3BindAddress, null);
+                if (nio_enabled || LC.nio_pop3_enabled.booleanValue()) {
+                    NetUtil.bindNioServerSocket(address, port);
+                } else {
+                    NetUtil.bindTcpServerSocket(address, port);
+                }
             }
 
             if (getBooleanAttr(attributes, A_zimbraPop3SSLServerEnabled, false)) {
-            	port = getIntAttr(attributes, A_zimbraPop3SSLBindPort, D_POP3_SSL_BIND_PORT);
-            	address = getAttr(attributes, A_zimbraPop3SSLBindAddress, null);
-            	NetUtil.bindSslTcpServerSocket(address, port);
+                port = getIntAttr(attributes, A_zimbraPop3SSLBindPort, D_POP3_SSL_BIND_PORT);
+                address = getAttr(attributes, A_zimbraPop3SSLBindAddress, null);
+                if (nio_enabled || LC.nio_pop3_enabled.booleanValue()) {
+                    NetUtil.bindNioServerSocket(address, port);
+                } else {
+                    NetUtil.bindSslTcpServerSocket(address, port);
+                }
             }
 
             if (getBooleanAttr(attributes, A_zimbraImapServerEnabled, false)) {
             	port = getIntAttr(attributes, A_zimbraImapBindPort, D_IMAP_BIND_PORT);
             	address = getAttr(attributes, A_zimbraImapBindAddress, null);
-            	if (getBooleanAttr(attributes, nio_imap_enabled, false)) {
-                	NetUtil.bindServerSocket(address, port, false, true);
+                if (nio_enabled || LC.nio_imap_enabled.booleanValue()) {
+                    NetUtil.bindNioServerSocket(address, port);
                 } else {
                     NetUtil.bindTcpServerSocket(address, port);
                 }
@@ -73,8 +83,8 @@ public class PrivilegedHandler {
             if (getBooleanAttr(attributes, A_zimbraImapSSLServerEnabled, false)) {
             	port = getIntAttr(attributes, A_zimbraImapSSLBindPort, D_IMAP_SSL_BIND_PORT);
             	address = getAttr(attributes, A_zimbraImapSSLBindAddress, null);
-            	if (getBooleanAttr(attributes, nio_imap_enabled, false)) {
-                	NetUtil.bindServerSocket(address, port, true, true);
+                if (nio_enabled || LC.nio_imap_enabled.booleanValue()) {
+                    NetUtil.bindNioServerSocket(address, port);
                 } else {
                     NetUtil.bindSslTcpServerSocket(address, port);
                 }
@@ -82,7 +92,11 @@ public class PrivilegedHandler {
 
             port = getIntAttr(attributes, A_zimbraLmtpBindPort, D_LMTP_BIND_PORT);
             address = getAttr(attributes, A_zimbraLmtpBindAddress, null);
-            NetUtil.bindTcpServerSocket(address, port);
+            if (nio_enabled || LC.nio_lmtp_enabled.booleanValue()) {
+                NetUtil.bindNioServerSocket(address, port);
+            } else {
+                NetUtil.bindTcpServerSocket(address, port);
+            }
         } catch (Throwable t) {        	
             try {
             	System.err.println("Fatal error: exception while binding to ports");

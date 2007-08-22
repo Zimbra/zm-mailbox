@@ -47,10 +47,10 @@ public class NetUtil {
         return getServerSocket(address, port, true, /* doesn't matter, but keep it false always */ false);
     }
 
-    public static ServerSocket getOzServerSocket(String address, int port) throws ServiceException {
+    public static ServerSocket getNioServerSocket(String address, int port) throws ServiceException {
         return getServerSocket(address, port, false, true);
     }
-    
+
     public static void bindTcpServerSocket(String address, int port) throws IOException {
         bindServerSocket(address, port, false, false);
     }
@@ -59,7 +59,7 @@ public class NetUtil {
         bindServerSocket(address, port, true, /* doesn't matter, but it false always */ false);
     }
 
-    public static void bindOzServerSocket(String address, int port) throws IOException { 
+    public static void bindNioServerSocket(String address, int port) throws IOException { 
         bindServerSocket(address, port, false, true);
     }
     
