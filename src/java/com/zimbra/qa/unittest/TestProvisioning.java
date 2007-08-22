@@ -1119,6 +1119,27 @@ public class TestProvisioning extends TestCase {
         matches = galResult.matches;
         assertEquals(1, matches.size());
         assertEquals(ACCT_FULL_NAME, matches.get(0).getAttrs().get("fullName"));
+        
+        // search external gal
+        Map<String, String> attrs = new HashMap<String, String>();
+        attrs.put(Provisioning.A_zimbraGalMode, Provisioning.AM_LDAP);
+        attrs.put(Provisioning.A_zimbraGalLdapURL, "ldap://localhost:389");
+        attrs.put(Provisioning.A_zimbraGalLdapBindDn, "uid=zimbra,cn=admins,cn=zimbra");
+        attrs.put(Provisioning.A_zimbraGalLdapBindPassword, "zimbra");
+        attrs.put(Provisioning.A_zimbraGalLdapFilter, "(mail=*%s*)");
+        
+        // attrs.put(Provisioning.A_zimbraGalLdapAuthMech, Provisioning.LDAP_AM_KERBEROS5);
+        attrs.put(Provisioning.A_zimbraGalLdapKerberos5Principal, "ldap/phoebe.local@PHOEBE.LOCAL");
+        attrs.put(Provisioning.A_zimbraGalLdapKerberos5Keytab, "/etc/krb5.keytab");
+        
+        mProv.modifyAttrs(domain, attrs, true);
+        galResult = mProv.searchGal(domain, 
+                ACCT_EMAIL,
+                Provisioning.GAL_SEARCH_TYPE.ALL, 
+                null);
+        matches = galResult.matches;
+        assertEquals(1, matches.size());
+        assertEquals(ACCT_FULL_NAME, matches.get(0).getAttrs().get("fullName"));
     }
     
     private void searchTest(Domain domain) throws Exception {

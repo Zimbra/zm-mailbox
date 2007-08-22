@@ -6,7 +6,12 @@ import com.zimbra.common.util.ZimbraLog;
 import java.security.PrivilegedExceptionAction;
 import java.security.PrivilegedActionException;
 
+import javax.naming.Context;
+import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
+import javax.naming.directory.DirContext;
+import javax.naming.directory.InitialDirContext;
+import javax.naming.directory.SearchControls;
 import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
@@ -17,6 +22,7 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.callback.PasswordCallback;
 import javax.security.auth.Subject;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
 import java.io.IOException;
 
@@ -210,10 +216,10 @@ public class Krb5Login {
         public Krb5Config setUseTicketCache(boolean value) { mOptions.put("useTicketCache", value ? "true" : "false"); return this;}
     }
     
-    static class Dummy implements PrivilegedExceptionAction {
+    static class DummyAction implements PrivilegedExceptionAction {
         String mArg;
         
-        Dummy(String arg) {
+        DummyAction(String arg) {
             mArg = arg;
         }
         
@@ -223,10 +229,58 @@ public class Krb5Login {
         }
     }
     
+    static class SearchAction implements PrivilegedExceptionAction {
+
+        public Object run() {
+
+            // Set up the environment for creating the initial context
+            Hashtable env = new Hashtable(11);
+            env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+
+            // env.put(Context.PROVIDER_URL, "ldap://ldap.stanford.edu:389/");
+            env.put(Context.PROVIDER_URL, "ldap://localhost:389/");
+            env.put(Context.SECURITY_AUTHENTICATION, "GSSAPI");
+            env.put("javax.security.sasl.qop", "auth-conf");
+
+            DirContext ctx = null;
+            try {
+               // Create initial context
+               ctx = new InitialDirContext(env);
+
+               SearchControls ctls = new SearchControls();
+               ctls.setReturningAttributes(
+                     new String[] {"displayName", "mail","description"});
+
+               NamingEnumeration answer =
+                    ctx.search("", "(cn=*)", ctls);
+
+               return answer;
+
+
+            } catch (Exception e) {
+                   e.printStackTrace();
+            }
+             // Close the context when we're done
+            finally {
+                if (!(ctx == null)) {
+                  try {
+                          ctx.close();
+                  }
+                  catch (Exception closeProblem) {
+                           System.err.println("error closing Context - " + closeProblem.getMessage());
+                  }
+              }
+            }
+            return null;
+        }
+    }
+    
     private static void testPerformAs() {
         try {
             // performAs("service/workgroup-audit@stanford.edu", "/apps/workgroup-audit/keytab/keytab.workgroup-audit", new Dummy("phoebe"));
-            performAs("service/stan-ldap-test@PHOEBE.LOCAL", "/etc/krb5.keytab", new Dummy("phoebe"));
+            // performAs("service/stan-ldap-test@PHOEBE.LOCAL", "/etc/krb5.keytab", new DummyAction("phoebe"));
+            // performAs("ldap/phoebe.local@PHOEBE.LOCAL", "/etc/krb5.keytab", new SearchAction());
+            performAs("ldap/phoebe.local@PHOEBE.LOCAL", "/etc/krb5.keytab", new SearchAction());
         } catch (LoginException le) {
             le.printStackTrace();
         } catch (PrivilegedActionException pae) {

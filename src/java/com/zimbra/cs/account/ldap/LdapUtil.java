@@ -237,7 +237,16 @@ public class LdapUtil {
      * @return
      * @throws NamingException
      */
-    public static DirContext getDirContext(String urls[], String authMech, String bindDn, String bindPassword)  throws NamingException {
+    private static DirContext getDirContext(String urls[], LdapGalCredential credential)  throws NamingException {
+        return getDirContext(urls, credential.getAuthMech(), credential.getBindDn(), credential.getBindPassword());
+    }
+    
+    /**
+     * 
+     * @return
+     * @throws NamingException
+     */
+    private static DirContext getDirContext(String urls[], String authMech, String bindDn, String bindPassword)  throws NamingException {
         Hashtable<String, String> env = new Hashtable<String, String>();
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
         env.put(Context.PROVIDER_URL, joinURLS(urls));
@@ -887,7 +896,7 @@ public class LdapUtil {
         NamingEnumeration ne = null;
         
         try {
-            ctxt = getDirContext(url, credential.getAuthMech(), credential.getBindDn(), credential.getBindPassword());
+            ctxt = getDirContext(url, credential);
             ne = searchDir(ctxt, base, query, sc);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
