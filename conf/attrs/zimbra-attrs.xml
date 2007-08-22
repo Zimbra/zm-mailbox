@@ -1791,7 +1791,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="397" name="zimbraXMPPEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
-  <globalConfigValue>FALSE</globalConfigValue>
+  <globalConfigValue>TRUE</globalConfigValue>
   <desc>Enable XMPP support for IM</desc>
 </attr>
 
@@ -2392,7 +2392,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="521" name="zimbraFeatureInstantNotify" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
-  <defaultCOSValue>FALSE</defaultCOSValue>
+  <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Enable instant notifications</desc>
 </attr>
 
