@@ -30,6 +30,7 @@
 package com.zimbra.cs.service.util;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.account.Account;
@@ -63,6 +64,7 @@ public class ParseMailboxID
      */
     public static ParseMailboxID parse(String idStr) throws ServiceException {
         try {
+        	ZimbraLog.misc.info("Parsing id string %s", idStr);
             return new ParseMailboxID(idStr, false);
         } catch (IllegalArgumentException e) {
             throw ServiceException.FAILURE("Error parsing MailboxID specifier: "+idStr, e);
@@ -78,6 +80,7 @@ public class ParseMailboxID
      */
     public static ParseMailboxID parse(Account acc) throws ServiceException {
         try {
+        	ZimbraLog.misc.info("Parsing account %s", acc.getName());
             return new ParseMailboxID(acc, false);
         } catch (IllegalArgumentException e) {
             throw ServiceException.FAILURE("Error creating ParseMailboxID from Account specifier ", e);
@@ -210,13 +213,16 @@ public class ParseMailboxID
     }
     
     protected void initFromAccount(Account account, boolean forceRemote) throws ServiceException, IllegalArgumentException {
-        if (!forceRemote &&  Provisioning.onLocalServer(account)) {
+        mHostName = account.getAttr(Provisioning.A_zimbraMailHost);
+        mInitialString = account.getId();             
+    	if (!forceRemote &&  Provisioning.onLocalServer(account)) {
+    		ZimbraLog.misc.info("Account %s is local", account.getId());
             mIsLocal = true;
             mMailbox = MailboxManager.getInstance().getMailboxByAccountId(account.getId());
             mMailboxId = mMailbox.getId();
+    		ZimbraLog.misc.info("Account id %s, mailbox id %s", account.getId(),mMailbox.getId());
         } else {
-            mHostName = account.getAttr(Provisioning.A_zimbraMailHost);
-            mInitialString = account.getId();            
+        	ZimbraLog.misc.info("Account %s is not local", account.getId());
         }
     }
     
