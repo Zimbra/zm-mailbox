@@ -27,14 +27,12 @@ package com.zimbra.common.util;
 import org.apache.log4j.Category;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Layout;
-import org.apache.log4j.MDC;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.helpers.PatternParser;
 
 /**
  * Subclasses Log4J's <tt>PatternLayout</tt> class to add additional support for
- * the <tt>%X</tt> option.  If <tt>%X</tt> is specified without braces, all keys
- * and values in the {@link MDC} are logged.
+ * the <tt>%z</tt> option, which prints the value returned by {@link ZimbraLog#getContextString()}.
  *   
  * @author bburtin
  */
@@ -56,12 +54,14 @@ public class ZimbraPatternLayout extends PatternLayout {
     }
     
     public static void main(String[] args) {
-        Layout layout = new ZimbraPatternLayout("[%X] - %m%n");
+        Layout layout = new ZimbraPatternLayout("[%z] - %m%n");
         Category cat = Category.getInstance("some.cat");
         cat.addAppender(new ConsoleAppender(layout, ConsoleAppender.SYSTEM_OUT));
-        MDC.put("one", "1");
-        MDC.put("two", "2");
+        ZimbraLog.addAccountNameToContext("my@account.com");
+        ZimbraLog.addMboxToContext(99);
         cat.debug("Hello, log");
-        cat.info("Hello again...");    
+        cat.info("Hello again...");
+        ZimbraLog.clearContext();
+        cat.info("No more context");
     }
 }
