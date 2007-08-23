@@ -178,7 +178,7 @@ public class VolumeUtil extends SoapCLI {
 
     private Map getVolumes(String id, boolean auth)
     throws SoapFaultException, IOException, ServiceException {
-    	Map vols = new LinkedHashMap();
+    	Map<Integer, Map<String, Object>> vols = new LinkedHashMap<Integer, Map<String, Object>>();
         if (auth)
             auth();
         Element req = null;
@@ -200,9 +200,10 @@ public class VolumeUtil extends SoapCLI {
 //            String mbits = volElem.getAttribute(AdminService.A_VOLUME_MBITS);
 //            String mgbits = volElem.getAttribute(AdminService.A_VOLUME_MGBITS);
             boolean compressed = volElem.getAttributeBool(AdminConstants.A_VOLUME_COMPRESS_BLOBS);
+            boolean isCurrent = volElem.getAttributeBool(AdminConstants.A_VOLUME_IS_CURRENT);
             String threshold = volElem.getAttribute(AdminConstants.A_VOLUME_COMPRESSION_THRESHOLD);
 
-            Map vol = new HashMap();
+            Map<String, Object> vol = new HashMap<String, Object>();
             Integer key = new Integer(vid);
             vol.put(AdminConstants.A_ID, key);
             vol.put(AdminConstants.A_VOLUME_NAME, name);
@@ -212,8 +213,9 @@ public class VolumeUtil extends SoapCLI {
 //            vol.put(AdminService.A_VOLUME_FGBITS, new Integer(fgbits));
 //            vol.put(AdminService.A_VOLUME_MBITS, new Integer(mbits));
 //            vol.put(AdminService.A_VOLUME_MGBITS, new Integer(mgbits));
-            vol.put(AdminConstants.A_VOLUME_COMPRESS_BLOBS, new Boolean(compressed));
+            vol.put(AdminConstants.A_VOLUME_COMPRESS_BLOBS, Boolean.valueOf(compressed));
             vol.put(AdminConstants.A_VOLUME_COMPRESSION_THRESHOLD, new Integer(threshold));
+            vol.put(AdminConstants.A_VOLUME_IS_CURRENT, Boolean.valueOf(isCurrent));
             vols.put(key, vol);
         }
 
@@ -239,6 +241,7 @@ public class VolumeUtil extends SoapCLI {
             System.out.println("\t         threshold: " + threshold + " bytes");
         else
             System.out.println();
+        System.out.println("     current: " + vol.get(AdminConstants.A_VOLUME_IS_CURRENT));
 //        System.out.println("   file bits: " + fbits +      "\t   file group bits: " + fgbits);
 //        System.out.println("mailbox bits: " + mbits +      "\tmailbox group bits: " + mgbits);
         System.out.println();

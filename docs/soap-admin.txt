@@ -909,6 +909,7 @@ Notes:
   compressionThreshold: long value that specifies the maximum uncompressed
     file size, in bytes, of blobs that will not be compressed
     (in other words blobs larger than this threshold are compressed)
+  isCurrent: 1 if the volume is current, 0 if not
 
 -----------------------------
 
@@ -916,7 +917,8 @@ Notes:
 
 <GetVolumeResponse>
   <volume id="{id}" type="..." name="..." rootpath="..."
-          compressBlobs="..." compressionThreshold="..."/>
+          compressBlobs="..." compressionThreshold="..."
+          isCurrent="0|1"/>
 </GetVolumeResponse>
 
 -----------------------------

@@ -25,7 +25,9 @@
 
 package com.zimbra.cs.service.admin;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -60,5 +62,23 @@ public class GetVolume extends AdminDocumentHandler {
         eVol.addAttribute(AdminConstants.A_VOLUME_COMPRESS_BLOBS, vol.getCompressBlobs());
         eVol.addAttribute(AdminConstants.A_VOLUME_COMPRESSION_THRESHOLD,
                           vol.getCompressionThreshold());
+        eVol.addAttribute(AdminConstants.A_VOLUME_IS_CURRENT, getCurrentVolumeIds().contains(vol.getId()));
+    }
+    
+    private static Set<Short> getCurrentVolumeIds() {
+        Set<Short> current = new HashSet<Short>();
+        Volume vol = Volume.getCurrentMessageVolume();
+        if (vol != null) {
+            current.add(vol.getId());
+        }
+        vol = Volume.getCurrentSecondaryMessageVolume();
+        if (vol != null) {
+            current.add(vol.getId());
+        }
+        vol = Volume.getCurrentIndexVolume();
+        if (vol != null) {
+            current.add(vol.getId());
+        }
+        return current;
     }
 }
