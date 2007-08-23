@@ -256,7 +256,7 @@ public class ProvUtil implements DebugListener {
         GET_ALL_REVERSE_PROXY_URLS("getAllReverseProxyURLs", "garpu", "", Category.SERVER, 0, 0),
         GET_ALL_MTA_AUTH_URLS("getAllMtaAuthURLs", "gamau", "", Category.SERVER, 0, 0),
         SOAP(".soap", ".s"),
-        SYNC_GAL("syncGal", "syg");
+        SYNC_GAL("syncGal", "syg","{domain} [{token}]", Category.MISC, 1, 2);
 
         private String mName;
         private String mAlias;
@@ -1051,30 +1051,8 @@ public class ProvUtil implements DebugListener {
     }    
     
     private void doSyncGal(String[] args) throws ServiceException {
-        boolean verbose = false;
-        int i = 1;
-        
-        if (args.length < i+1) {
-            usage();
-            return;
-        }
-
-        if (args[i].equals("-v")) {
-            verbose = true;
-            i++;
-            if (args.length < i-1) {
-                usage();
-                return;
-            }
-        }
-        
-        if (args.length < i+2) {
-            usage();
-            return;
-        }
-
-        String domain = args[i];
-        String token = args[i+1];
+        String domain = args[1];
+        String token = args.length  == 3 ? args[2] : "";
         
         Domain d = lookupDomain(domain);
 
