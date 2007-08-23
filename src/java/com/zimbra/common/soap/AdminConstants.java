@@ -429,6 +429,7 @@ public class AdminConstants {
     public static final String A_VOLUME_FBITS = "fbits";
     public static final String A_VOLUME_COMPRESS_BLOBS = "compressBlobs";
     public static final String A_VOLUME_COMPRESSION_THRESHOLD = "compressionThreshold";
+    public static final String A_VOLUME_IS_CURRENT = "isCurrent";
 
     public static final String A_VERSION_INFO_INFO = "info";
     public static final String A_VERSION_INFO_VERSION = "version";
