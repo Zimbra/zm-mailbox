@@ -29,13 +29,24 @@ import java.nio.ByteBuffer;
 import java.io.IOException;
 import java.io.OutputStream;
 
+/**
+ * Base class for MinaIoSessionOutputStream. Can be used to create an output
+ * stream to write bytes to any destination as a stream of byte buffer
+ * packets. These packets are never reused once written, which is required
+ * since writing is assumed to be asynchronous.
+ */
 public abstract class MinaOutputStream extends OutputStream {
-    private final int mMinSize;
+    private final int mSize;
     private ByteBuffer mBuffer;
     private boolean closed;
 
-    public MinaOutputStream(int minSize) {
-        mMinSize = minSize;
+    /**
+     * Creates a new output stream using the specified buffer size.
+     * 
+     * @param size the size of the output buffer.
+     */
+    public MinaOutputStream(int size) {
+        mSize = size;
     }
 
     @Override
@@ -47,7 +58,7 @@ public abstract class MinaOutputStream extends OutputStream {
         if (closed) throw new IOException("Stream has been closed");
         while (len > 0) {
             if (mBuffer == null) {
-                mBuffer = ByteBuffer.allocate(Math.max(len, mMinSize));
+                mBuffer = ByteBuffer.allocate(Math.max(len, mSize));
             }
             int count = Math.min(len, mBuffer.remaining());
             mBuffer.put(b, off, count);
@@ -78,16 +89,16 @@ public abstract class MinaOutputStream extends OutputStream {
     private void flushBytes() throws IOException {
         if (mBuffer == null || mBuffer.position() <= 0) return;
         mBuffer.flip();
-        writeBytes(mBuffer);
+        flushBytes(mBuffer);
         mBuffer = null;
     }
 
     /**
-     * Writes specified bytes. Implementation can assume that byte buffer will
+     * Flushes specified bytes. Implementation can assume that byte buffer will
      * not be subsequently reused, so this is safe for asynchronous writes.
      *
      * @param bb the bytes to be written
      * @throws IOException if an I/O error occurs
      */
-    protected abstract void writeBytes(ByteBuffer bb) throws IOException;
+    protected abstract void flushBytes(ByteBuffer bb) throws IOException;
 }

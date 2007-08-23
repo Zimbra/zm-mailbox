@@ -119,7 +119,7 @@ public class TestMina extends TestCase {
     private static class TestMinaOutputStream extends MinaOutputStream {
         ByteBuffer buf;
         TestMinaOutputStream() { super(23); }
-        public void writeBytes(ByteBuffer bb) {
+        public void flushBytes(ByteBuffer bb) {
             buf = MinaUtil.expand(buf, bb.remaining()).put(bb);
         }
     }

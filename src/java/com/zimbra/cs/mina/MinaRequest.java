@@ -28,7 +28,23 @@ package com.zimbra.cs.mina;
 import java.nio.ByteBuffer;
 import java.io.IOException;
 
+/**
+ * Represents request that has been received by a MINA-based server.
+ */
 public interface MinaRequest {
+    /**
+     * Parses specified bytes for the request. Any remaining bytes are left
+     * in the specified buffer.
+     * 
+     * @param bb the byte buffer containing the request bytes
+     * @throws IOException if an I/O error occurs
+     */
     void parse(ByteBuffer bb) throws IOException;
+
+    /**
+     * Returns true if the request is complete and no more bytes are required.
+     * 
+     * @return true if the request is complete, otherwise false
+     */
     boolean isComplete();
 }

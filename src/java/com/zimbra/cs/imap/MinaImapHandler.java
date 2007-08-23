@@ -27,20 +27,19 @@ package com.zimbra.cs.imap;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.session.SessionCache;
-import com.zimbra.cs.util.Config;
-import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mina.MinaHandler;
-import com.zimbra.cs.mina.MinaRequest;
 import com.zimbra.cs.mina.MinaIoSessionOutputStream;
-import org.apache.mina.common.IoSession;
+import com.zimbra.cs.mina.MinaRequest;
+import com.zimbra.cs.mina.MinaServer;
+import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.stats.ZimbraPerf;
+import com.zimbra.cs.util.Config;
 import org.apache.mina.common.IdleStatus;
-import org.apache.mina.filter.SSLFilter;
+import org.apache.mina.common.IoSession;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.Socket;
 
 public class MinaImapHandler extends ImapHandler implements MinaHandler {
@@ -51,15 +50,14 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
         this.mSession = session;
     }
 
-    @Override boolean doSTARTTLS(String tag) throws IOException {
+    @Override
+    boolean doSTARTTLS(String tag) throws IOException {
         if (!checkState(tag, State.NOT_AUTHENTICATED)) return true;
         if (mStartedTLS) {
             sendNO(tag, "TLS already started");
             return true;
         }
-        SSLFilter filter = new SSLFilter(MinaImapServer.getSSLContext());
-        mSession.getFilterChain().addFirst("ssl", filter);
-        mSession.setAttribute(SSLFilter.DISABLE_ENCRYPTION_ONCE, true);
+        MinaServer.startTLS(mSession);
         sendOK(tag, "Begin TLS negotiation now");
         mStartedTLS = true;
         return true;
@@ -80,7 +78,8 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
                              mConfig.getUnauthMaxIdleSeconds());
     }
 
-    @Override protected boolean processCommand() {
+    @Override
+    protected boolean processCommand() {
         throw new UnsupportedOperationException();
     }
 
@@ -205,29 +204,35 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
         notifyIdleConnection();
     }
     
-    @Override protected boolean setupConnection(Socket connection) {
+    @Override
+    protected boolean setupConnection(Socket connection) {
         throw new UnsupportedOperationException();
     }
     
-    @Override protected boolean authenticate() {
+    @Override
+    protected boolean authenticate() {
         throw new UnsupportedOperationException();
     }
 
-    @Override protected void notifyIdleConnection() {
+    @Override
+    protected void notifyIdleConnection() {
         ZimbraLog.imap.debug("dropping connection for inactivity");
         dropConnection();
     }
 
-    @Override protected void enableInactivityTimer() {
+    @Override
+    protected void enableInactivityTimer() {
         mSession.setIdleTime(IdleStatus.BOTH_IDLE,
                              ImapFolder.IMAP_IDLE_TIMEOUT_SEC);
     }
 
-    @Override protected void flushOutput() {
+    @Override
+    protected void flushOutput() {
         // TODO Do we need to do anything here?
     }
     
-    @Override void sendLine(String line, boolean flush) throws IOException {
+    @Override
+    void sendLine(String line, boolean flush) throws IOException {
         if (mSession == null) throw new IOException("Stream is closed");
         mSession.write(line + "\r\n");
         if (flush) flushOutput();

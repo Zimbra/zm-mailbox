@@ -37,8 +37,9 @@ import org.apache.mina.common.IoSession;
 import java.nio.ByteBuffer;
 import java.io.IOException;
 
-/**
- * MINA protocol codec factory.
+/*
+ * MINA protocol codec factory. Decodes new MinaRequests' as they are received
+ * by a connection then passed them to the appropriate MinaHandler.
  */
 class MinaCodecFactory implements ProtocolCodecFactory {
     private MinaServer mServer;

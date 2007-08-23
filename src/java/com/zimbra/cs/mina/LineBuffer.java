@@ -29,16 +29,37 @@ import java.nio.ByteBuffer;
 
 import static com.zimbra.cs.mina.MinaUtil.*;
 
+/**
+ * Utility class for incrementally parsing a line of text from a ByteBuffer.
+ * Used when parsing IMAP, POP3, and LMTP command line requests. 
+ */
 public class LineBuffer {
     private ByteBuffer mBuffer;
     private boolean mComplete;
 
+    /**
+     * Creates a new empty line buffer.
+     */
     public LineBuffer() {}
-    
+
+    /**
+     * Creates a new line buffer with initial capacity of 'size' bytes.
+     * 
+     * @param size the initial size of the buffer in bytes
+     */
     public LineBuffer(int size) {
         mBuffer = ByteBuffer.allocate(size);
     }
 
+    /**
+     * Parses text line bytes from remaining bytes in the specified ByteBuffer
+     * until a terminating LF is reached, in which case the ByteBuffer position
+     * will be advanced to the character which immediately followed the LF.
+     * Otherwise, if no LF was encountered than all remaining characters in
+     * 'bb' are consumed.
+     * 
+     * @param bb the ByteBuffer from which bytes are to be parsed
+     */
     public void parse(ByteBuffer bb) {
         if (isComplete()) return;
         int pos = findLF(bb);
@@ -59,14 +80,33 @@ public class LineBuffer {
         mComplete = true;
     }
 
+    /**
+     * Returns the line which has been parsed, excluding the terminating
+     * LF and any immediately preceding CRs which are stripped from the line.
+     * 
+     * @return the ByteBuffer containing the line, or null if the line has
+     *         not been completely parsed
+     */
     public ByteBuffer getByteBuffer() {
         return isComplete() ? mBuffer : null;
     }
 
+    /**
+     * Returns the line which has been parsed as a string, exluding the
+     * terminating LF and any immediately preceding CRs.
+     * 
+     * @return the line as a String, or null if the line has not been
+     *         completely parsed.
+     */
     public String toString() {
         return isComplete() ? MinaUtil.toString(mBuffer) : null;
     }
-    
+
+    /**
+     * Returns true if the line has been completely parsed.
+     *
+     * @return true if the line has been parsed, false otherwise
+     */
     public boolean isComplete() {
         return mComplete;
     }

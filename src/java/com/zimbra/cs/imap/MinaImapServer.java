@@ -37,14 +37,9 @@ import org.apache.mina.common.IoSession;
 import java.io.IOException;
 
 /**
- * Mina-based IMAP server.
+ * MINA-based IMAP server implementation.
  */
 public class MinaImapServer extends MinaServer {
-    /**
-     * Checks if the MINA NIO-based IMAP service is enabled, either through
-     * configuration or -DZimbraNioEnabled property.
-     * @return true if MINA IMAP service is enabled, false otherwise
-     */
     public static boolean isEnabled() {
         return MinaServer.isEnabled() || LC.nio_imap_enabled.booleanValue();
     }
@@ -53,13 +48,16 @@ public class MinaImapServer extends MinaServer {
         super(config);
     }
 
-    @Override public MinaHandler createHandler(IoSession session) {
+    @Override
+    public MinaHandler createHandler(IoSession session) {
         return new MinaImapHandler(this, session);
     }
 
-    @Override public MinaRequest createRequest(MinaHandler handler) {
+    @Override
+    public MinaRequest createRequest(MinaHandler handler) {
         return new MinaImapRequest(handler);
     }
 
-    @Override public Log getLog() { return ZimbraLog.imap; }
+    @Override
+    public Log getLog() { return ZimbraLog.imap; }
 }

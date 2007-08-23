@@ -25,18 +25,18 @@
 
 package com.zimbra.cs.pop3;
 
-import com.zimbra.cs.mina.MinaHandler;
-import com.zimbra.cs.mina.MinaRequest;
-import com.zimbra.cs.mina.MinaIoSessionOutputStream;
-import com.zimbra.cs.mina.MinaTextLineRequest;
 import com.zimbra.common.util.ZimbraLog;
-import org.apache.mina.common.IoSession;
+import com.zimbra.cs.mina.MinaHandler;
+import com.zimbra.cs.mina.MinaIoSessionOutputStream;
+import com.zimbra.cs.mina.MinaRequest;
+import com.zimbra.cs.mina.MinaServer;
+import com.zimbra.cs.mina.MinaTextLineRequest;
 import org.apache.mina.common.IdleStatus;
-import org.apache.mina.filter.SSLFilter;
+import org.apache.mina.common.IoSession;
 
 import java.io.IOException;
-import java.net.Socket;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 
 public class MinaPop3Handler extends Pop3Handler implements MinaHandler {
     private IoSession mSession;
@@ -71,9 +71,7 @@ public class MinaPop3Handler extends Pop3Handler implements MinaHandler {
 
     @Override
     protected void startTLS() throws IOException {
-        SSLFilter filter = new SSLFilter(MinaPop3Server.getSSLContext());
-        mSession.getFilterChain().addFirst("ssl", filter);
-        mSession.setAttribute(SSLFilter.DISABLE_ENCRYPTION_ONCE, true);
+        MinaServer.startTLS(mSession);
         sendOK("Begin TLS negotiation");
     }
     

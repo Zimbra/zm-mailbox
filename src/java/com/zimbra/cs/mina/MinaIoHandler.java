@@ -32,7 +32,9 @@ import org.apache.mina.common.IdleStatus;
 import java.io.IOException;
 
 /**
- * Handler for MINA I/O events.
+ * Handler for MINA I/O events. Responsible for notifying the connection's
+ * MinaHandler when a connection has been opened, closed, become idle, or a
+ * new request has been received.
  */
 class MinaIoHandler implements IoHandler {
     private MinaServer mServer;
@@ -44,6 +46,7 @@ class MinaIoHandler implements IoHandler {
     }
 
     public void sessionCreated(IoSession session) {
+        // Nothing to do here...
     }
 
     public void sessionOpened(IoSession session) throws IOException {
@@ -80,7 +83,7 @@ class MinaIoHandler implements IoHandler {
     }
 
     public void messageSent(IoSession session, Object obj) {
-        // TODO
+        // Nothing to do here...
     }
 
     public static MinaHandler getHandler(IoSession session) {

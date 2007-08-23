@@ -38,8 +38,6 @@ import javax.net.ssl.TrustManagerFactory;
 import java.security.KeyStore;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.InetAddress;
 import java.nio.channels.ServerSocketChannel;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -56,7 +54,8 @@ import org.apache.mina.common.DefaultIoFilterChainBuilder;
 import org.apache.mina.common.IoSession;
 
 /**
- * Base class for MINA-baqsed server implementations.
+ * Base class for MINA-based IMAP/POP3/LMTP servers. Handles creation of new
+ * MINA request and connection handler instances.
  */
 public abstract class MinaServer implements Server {
     protected final ServerSocketChannel mChannel;
@@ -74,8 +73,8 @@ public abstract class MinaServer implements Server {
         return LC.nio_enabled.booleanValue() ||
               Boolean.getBoolean(NIO_ENABLED_PROP);
     }
-    
-    public static synchronized SSLContext getSSLContext() {
+
+    private static synchronized SSLContext getSSLContext() {
         if (sslContext == null) {
             try {
                 sslContext = initSSLContext();
@@ -99,8 +98,14 @@ public abstract class MinaServer implements Server {
         return context;
     }
 
-    protected MinaServer(ServerConfig config)
-            throws IOException, ServiceException {
+    /**
+     * Creates a new server for the specified configuration.
+     * 
+     * @param config the ServerConfig for the server
+     * @throws IOException if an I/O error occurred while creating the server
+     * @throws ServiceException if a ServiceException occured
+     */
+    protected MinaServer(ServerConfig config) throws IOException, ServiceException {
         mChannel = config.getServerSocketChannel();
         mAcceptorConfig = new SocketAcceptorConfig();
         mAcceptorConfig.setReuseAddress(true);
@@ -109,10 +114,21 @@ public abstract class MinaServer implements Server {
         mServerConfig = config;
     }
 
+    /**
+     * Returns the configuration for this server.
+     * 
+     * @return the ServerConfig for this server
+     */
     public ServerConfig getConfig() {
         return mServerConfig;
     }
-    
+
+    /**
+     * Starts the server. Binds the server port and starts the connection
+     * handler. Optionally adds an SSLFilter if ssl is enabled.
+     * 
+     * @throws IOException if an I/O error occured while starting the server
+     */
     public void start() throws IOException {
         ServerConfig sc = getConfig();
         DefaultIoFilterChainBuilder fc = mAcceptorConfig.getFilterChain();
@@ -128,12 +144,12 @@ public abstract class MinaServer implements Server {
                       sc.getBindAddress(), sc.getBindPort(), sc.isSSLEnabled());
     }
 
-    protected abstract MinaHandler createHandler(IoSession session);
-
-    protected abstract MinaRequest createRequest(MinaHandler handler);
-
-    public abstract Log getLog();
-
+    /**
+     * Shuts down the server. Waits up to 'graceSecs' seconds for the server
+     * to stop, otherwise the server is forced to shut down.
+     *
+     * @param graceSecs number of seconds to wait before forced shutdown
+     */
     public void shutdown(int graceSecs) {
         mSocketAcceptor.unbindAll();
         mExecutorService.shutdown();
@@ -144,4 +160,42 @@ public abstract class MinaServer implements Server {
         }
         mExecutorService.shutdownNow();
     }
+
+    /**
+     * Starts TLS handshake for the specified I/O session. Disables encryption
+     * once so that notification can be sent to the client to start the
+     * handshake.
+     *
+     * @param session the IoSession on which to start the TLS handshake
+     */
+    public static void startTLS(IoSession session) {
+        SSLFilter filter = new SSLFilter(getSSLContext());
+        session.getFilterChain().addFirst("ssl", filter);
+        session.setAttribute(SSLFilter.DISABLE_ENCRYPTION_ONCE, true);
+    }
+    
+    /**
+     * Creates a new handler for handling requests received by the
+     * specified MINA session (connection).
+     *
+     * @param session the I/O session (connection) being opened
+     * @return the MinaHandler for handling requests
+     */
+    protected abstract MinaHandler createHandler(IoSession session);
+
+    /**
+     * Creates a new MinaRequest for parsing a new request received by the
+     * specified handler.
+     *
+     * @param handler the MinaHandler receiving the request
+     * @return the new MinaRequest
+     */
+    protected abstract MinaRequest createRequest(MinaHandler handler);
+
+    /**
+     * Returns the logger for server log messages.
+     *
+     * @return the Zimbra Log for this server
+     */
+    public abstract Log getLog();
 }
