@@ -2237,10 +2237,7 @@ public class ZMailboxUtil implements DebugListener {
             for (Command c : Command.values()) {
                 if (!c.hasHelp()) continue;
                 if (cat == Category.COMMANDS || cat == c.getCategory()) {
-                    if (verboseOpt())
-                        System.out.print(c.getFullUsage());
-                    else
-                        System.out.print(c.getCommandHelp());
+                    System.out.print(c.getFullUsage());
                     System.out.println();
                 }
             }
