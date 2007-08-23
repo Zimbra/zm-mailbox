@@ -508,7 +508,7 @@ public class ZMailboxUtil implements DebugListener {
 
     public void selectMailbox(String targetAccount, SoapProvisioning prov) throws ServiceException {
         if (prov == null) {
-            throw ZClientException.CLIENT_ERROR("can only select mailbox after adminAuth", null);
+            throw ZClientException.CLIENT_ERROR("can only select mailbox after adminAuthenticate", null);
         } else if (mProv == null) {
             mProv = prov;
         }
