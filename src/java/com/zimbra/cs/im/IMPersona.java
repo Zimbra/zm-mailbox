@@ -521,54 +521,61 @@ public class IMPersona extends ClassLogger {
     }
 
     void handleIQPacket(boolean toMe, IQ iq) {
+        boolean handled = false;
+        
         switch (iq.getType()) {
             case error:
                 ZimbraLog.im.info("Ignoring IQ error packet: "+iq);
-                break;
+                return;
             case result:
             {
-                boolean handled = false;
                 org.dom4j.Element child = iq.getChildElement();
-                if ("query".equals(child.getName())) {
-                    if ("jabber:iq:privacy".equals(child.getNamespaceURI())) {
-                        handlePrivacyResult(iq);
-                        handled = true;
+                if (child != null) {
+                    if ("query".equals(child.getName())) {
+                        if ("jabber:iq:privacy".equals(child.getNamespaceURI())) {
+                            handlePrivacyResult(iq);
+                            handled = true;
+                        }
                     }
                 }
                 if (!handled)
                     ZimbraLog.im.info("Ignoring IQ result packet: "+iq);
+                return;
+            }
+            case set:
+            {
+                org.dom4j.Element child = iq.getChildElement();
+                if (child != null && "query".equals(child.getName())) {
+                    if ("jabber:iq:privacy".equals(child.getNamespaceURI())) {
+                        handlePrivacySet(iq);
+                        handled = true;
+                    } else {
+                        info("Ignorig unknown IQ set: "+iq.toString());
+                    }
+                }
+                
+                // respond to the SET
+                IQ result= new IQ();
+                result.setType(Type.result);
+                result.setID(iq.getID());
+                xmppRoute(result);
             }
             break;
             default:
             {
-                boolean handled = false;
-                if (iq.getType() == Type.set) {
-                    org.dom4j.Element child = iq.getChildElement();
-                    if ("query".equals(child.getName())) {
-                        if ("jabber:iq:privacy".equals(child.getNamespaceURI())) {
-                            handlePrivacySet(iq);
-                            handled = true;
-                        }
-                    }
-                    
-                }
-                
-                if (!handled) {
-                    // is it a MUC iq?
-                    IMChat chat = findTargetMUC(iq);
-                    if (chat != null)
-                        chat.handleIQPacket(iq);
-                }
             }
+        }
+        
+        if (!handled) {
+            // is it a MUC iq?
+            IMChat chat = findTargetMUC(iq);
+            if (chat != null)
+                chat.handleIQPacket(iq);
         }
     }
 
     private void handlePrivacySet(IQ iq) {
         // request default privacy list
-        IQ result= new IQ();
-        result.setType(Type.result);
-        result.setID(iq.getID());
-        xmppRoute(result);
         this.getDefaultPrivacyList();
     }
     
@@ -831,15 +838,20 @@ public class IMPersona extends ClassLogger {
                     
                     // do we need to tell the client about FROM subs?  We do need to tell the
                     // client if the sub is unsubscribed, but not in the case of a roster SET
-                    if (subscript == Roster.Subscription.both || subscript == Roster.Subscription.to) {
+                    if (roster.getType() == IQ.Type.set || subscript == Roster.Subscription.both || subscript == Roster.Subscription.to) {
+                        boolean isTo = (subscript == Roster.Subscription.both || subscript == Roster.Subscription.to);
                         IMSubscribedNotification not = IMSubscribedNotification
                         .create(
                             buddyAddr,
                             item.getName(),
                             item.getGroups(),
-                            (subscript == Roster.Subscription.both || subscript == Roster.Subscription.to),
+                            isTo,
                             item.getAsk());
-                        mRoster.put(buddyAddr, not);
+                        if (isTo) {
+                            mRoster.put(buddyAddr, not);
+                        } else {
+                            mRoster.remove(buddyAddr);
+                        }
                         if (!isResult) {
                             postIMNotification(not);
                         }
