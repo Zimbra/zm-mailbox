@@ -291,23 +291,36 @@ public class SoapSession extends Session {
         }
 
         try {
-            // must lock the Mailbox before locking the Session to avoid deadlock
-            //   because ToXML functions can now call back into the Mailbox
-            synchronized (mMailbox) {
-                synchronized (this) {
-                    // XXX: should constrain to folders, tags, and stuff relevant to the current query??
-                    mChanges.add(pms);
-                    
-                    if (mPushChannel != null) {
-                        mPushChannel.notificationsReady();
-                        mPushChannel = null;
-                    }
-                }
-            }
-            
+        	notifyPushChannel(pms);
         	clearCachedQueryResults();
         } catch (ServiceException e) {
             ZimbraLog.session.warn("ServiceException in notifyPendingChanges ", e);
+        }
+    }
+    
+    private void notifyPushChannel(PendingModifications pms) throws ServiceException {
+        // must lock the Mailbox before locking the Session to avoid deadlock
+        //   because ToXML functions can now call back into the Mailbox
+        synchronized (mMailbox) {
+            synchronized (this) {
+                // XXX: should constrain to folders, tags, and stuff relevant to the current query??
+            	if (pms != null)
+            		mChanges.add(pms);
+                
+                if (mPushChannel != null) {
+                    mPushChannel.notificationsReady();
+                    if (pms != null)
+                    	mPushChannel = null;
+                }
+            }
+        }
+    }
+    
+    public void forcePush() {
+    	try {
+    		notifyPushChannel(null);
+        } catch (ServiceException e) {
+            ZimbraLog.session.warn("ServiceException in forcePush ", e);
         }
     }
 
