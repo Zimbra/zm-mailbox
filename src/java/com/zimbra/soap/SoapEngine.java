@@ -398,6 +398,9 @@ public class SoapEngine {
                         ((SoapSession) session).putRefresh(ctxt, zsc);
                     // put <notify> blocks back for any SoapSession objects
                     ((SoapSession) session).putNotifications(ctxt, zsc, sinfo.sequence);
+                    
+                    //Add any extension headers
+                    SoapContextExtension.addExtensionHeaders(ctxt, zsc, session);
                 }
             }
             
