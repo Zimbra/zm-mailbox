@@ -33,6 +33,7 @@ import java.util.List;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimePart;
 
+import com.zimbra.cs.mime.MimeCompoundHeader.ContentType;
 
 public class MPartInfo {
 	MimePart mPart;
@@ -63,7 +64,7 @@ public class MPartInfo {
         sb.append("}");
         return sb.toString();
     }
-    
+
 	/**
 	 * Returns true if we consider this to be an attachment for the sake of "filtering" by attachments.
 	 * i.e., if someone searchs for messages with attachment types of "text/plain", we probably wouldn't want
@@ -114,7 +115,7 @@ public class MPartInfo {
 
     public String getContentTypeParameter(String name) {
         try {
-            return new MimeCompoundHeader(mPart.getContentType()).getParameter(name);
+            return new ContentType(mPart.getContentType()).getParameter(name);
         } catch (MessagingException e) {
             return null;
         }

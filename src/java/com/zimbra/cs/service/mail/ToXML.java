@@ -1576,7 +1576,7 @@ public class ToXML {
             try {
                 if (charset != null && !charset.trim().equals("")) {
                     stream = mp.getInputStream();
-                    Reader reader = new InputStreamReader(stream, charset);
+                    Reader reader = Mime.getTextReader(stream, mpi.getContentType());
                     data = HtmlDefang.defang(reader, neuter);
                 } else {
                     String cte = mp.getEncoding();
