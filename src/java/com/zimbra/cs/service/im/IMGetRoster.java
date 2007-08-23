@@ -27,7 +27,6 @@ package com.zimbra.cs.service.im;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.IMConstants;
 import com.zimbra.cs.im.IMChat;
 import com.zimbra.cs.im.IMPersona;
@@ -63,10 +62,10 @@ public class IMGetRoster extends IMDocumentHandler {
                 }
             }
             Session s = this.getSession(zsc);
-            if (s != null)
+            if (s != null) {
                 persona.refreshRoster(s);
-
-            ZimbraLog.im.debug("GET ROSTER RESPONSE:\n" + response.toXML().asXML());
+                persona.getDefaultPrivacyList();
+            }
         }
 
         return response;
