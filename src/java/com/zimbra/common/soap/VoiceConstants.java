@@ -88,6 +88,9 @@ public class VoiceConstants {
     public static final String FLAG_HI_PRIORITY   = "h";  // 'h'igh priority
     public static final String FLAG_UNFORWARDABLE = "p";  // 'p'rivate
     
+    // folder inventory
+    public static final String E_VOICE_FOLDER_INVENTORY   = "vfi";
+    
     //
     // call feature elements
     //
