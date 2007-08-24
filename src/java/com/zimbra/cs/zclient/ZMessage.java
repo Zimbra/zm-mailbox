@@ -45,7 +45,8 @@ public class ZMessage implements ZItem {
         forwarded('w'),
         draft('d'),
         deleted('x'),
-        notificationSent('n');
+        notificationSent('n'),
+        highpriority('!');
 
         private char mFlagChar;
         
@@ -463,6 +464,10 @@ public class ZMessage implements ZItem {
 
     public boolean isUnread() {
         return hasFlags() && mFlags.indexOf(ZMessage.Flag.unread.getFlagChar()) != -1;
+    }
+    
+    public boolean isHighPriority() {
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.highpriority.getFlagChar()) != -1;
     }
 
 }
