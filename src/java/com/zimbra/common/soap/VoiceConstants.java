@@ -85,7 +85,6 @@ public class VoiceConstants {
     public static final String A_STATE         = "st";
     public static final String A_COUNTRY       = "co";
     
-    public static final String FLAG_HI_PRIORITY   = "h";  // 'h'igh priority
     public static final String FLAG_UNFORWARDABLE = "p";  // 'p'rivate
     
     // folder inventory
