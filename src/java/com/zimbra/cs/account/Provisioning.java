@@ -762,6 +762,9 @@ public abstract class Provisioning {
     
     public static final String A_zimbraFeatureFlaggingEnabled = "zimbraFeatureFlaggingEnabled";
 
+    public static final String A_zimbraFeaturePortalEnabled = "zimbraFeaturePortalEnabled";
+    
+
     /**
      * administrative notes for an entry.
      */

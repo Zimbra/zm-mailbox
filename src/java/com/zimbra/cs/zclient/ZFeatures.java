@@ -116,5 +116,7 @@ public class ZFeatures {
     public boolean getGroupcalendarEnabled() { return getBool(Provisioning.A_zimbraFeatureGroupCalendarEnabled); }
 
     public boolean getFlagging() { return getBool(Provisioning.A_zimbraFeatureFlaggingEnabled); }
+
+    public boolean getPortalEnabled() { return getBool(Provisioning.A_zimbraFeaturePortalEnabled); }
 }
 
