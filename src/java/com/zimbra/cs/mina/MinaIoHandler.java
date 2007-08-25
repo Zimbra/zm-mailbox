@@ -30,7 +30,6 @@ import org.apache.mina.common.IoHandler;
 import org.apache.mina.common.IoSession;
 
 import java.io.IOException;
-import java.net.SocketAddress;
 
 /**
  * Handler for MINA I/O events. Responsible for notifying the connection's

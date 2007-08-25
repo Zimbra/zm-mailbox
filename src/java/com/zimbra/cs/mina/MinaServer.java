@@ -145,8 +145,9 @@ public abstract class MinaServer implements Server {
         if (isDebugEnabled()) fc.addLast("logger", new MinaLoggingFilter(this));
         IoHandler handler = new MinaIoHandler(this);
         mSocketAcceptor.register(mChannel, handler, mAcceptorConfig);
-        getLog().info("Starting MINA server (addr = %s, port = %d, ssl = %b)",
-                      sc.getBindAddress(), sc.getBindPort(), sc.isSSLEnabled());
+        getLog().info("Starting listener on %s%s",
+                      mChannel.socket().getLocalSocketAddress(),
+                      sc.isSSLEnabled() ? " (SSL)" : "");
     }
 
     /**
