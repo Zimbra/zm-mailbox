@@ -844,7 +844,7 @@ public class LC {
         nio_enabled.setDefault("false");
         nio_enabled.setDoc("Enable NIO-based IMAP/POP3/LMTP servers. If false, then the thread per connection IO framework is used.");
 
-        nio_debug_enabled = new KnownKey("nio_debug)enabled");
+        nio_debug_enabled = new KnownKey("nio_debug_enabled");
         nio_debug_enabled.setDefault("false");
         nio_debug_enabled.setDoc("Enable debug logging for NIO-based IMAP/POP3/LMTP servers.");
 
