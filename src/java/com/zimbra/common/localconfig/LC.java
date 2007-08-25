@@ -221,6 +221,7 @@ public class LC {
     public static final KnownKey calendar_outlook_compatible_allday_events;
 
     public static final KnownKey nio_enabled;
+    public static final KnownKey nio_debug_enabled;
     public static final KnownKey nio_imap_enabled;
     public static final KnownKey nio_imap_debug_logging;
     public static final KnownKey nio_pop3_enabled;
@@ -842,6 +843,10 @@ public class LC {
         nio_enabled = new KnownKey("nio_enabled");
         nio_enabled.setDefault("false");
         nio_enabled.setDoc("Enable NIO-based IMAP/POP3/LMTP servers. If false, then the thread per connection IO framework is used.");
+
+        nio_debug_enabled = new KnownKey("nio_debug)enabled");
+        nio_debug_enabled.setDefault("false");
+        nio_debug_enabled.setDoc("Enable debug logging for NIO-based IMAP/POP3/LMTP servers.");
 
         zimbra_mtareport_max_recipients = new KnownKey("zimbra_mtareport_max_recipients");
         zimbra_mtareport_max_recipients.setDefault("50");
