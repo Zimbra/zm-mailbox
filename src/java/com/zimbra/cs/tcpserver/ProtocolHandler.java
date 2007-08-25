@@ -23,12 +23,6 @@
  * ***** END LICENSE BLOCK *****
  */
 
-/*
- * Created on 2004. 10. 21.
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Generation - Code and Comments
- */
 package com.zimbra.cs.tcpserver;
 
 import java.io.IOException;
@@ -44,100 +38,95 @@ import com.zimbra.cs.util.Zimbra;
 import EDU.oswego.cs.dl.util.concurrent.ClockDaemon;
 
 /**
- * @author jhahm
- *
  * Protocol-agnostic abstract base class for handling each client connection
  * to TcpServer.  Each derived class of this class implements a specific
  * protocol, for example LMTP.
  */
 public abstract class ProtocolHandler implements Runnable {
-
-	/**
-	 * Performs any necessary setup steps upon connection from client.
+    /**
+     * Performs any necessary setup steps upon connection from client.
+     * @param connection the Socket for the connection
      * @return true if connection was accepted; false if refused
-	 * @throws IOException
-	 */
-	protected abstract boolean setupConnection(Socket connection) throws IOException;
+     * @throws IOException if an I/O error occurred
+     */
+    protected abstract boolean setupConnection(Socket connection) throws IOException;
 
-	/**
-	 * Authenticates the client.
-	 * @return true if authenticated, false if not authenticated
-	 * @throws IOException
-	 */
-	protected abstract boolean authenticate() throws IOException;
+    /**
+     * Authenticates the client.
+     * @return true if authenticated, false if not authenticated
+     * @throws IOException if an I/O error occurred
+     */
+    protected abstract boolean authenticate() throws IOException;
 
-	/**
-	 * Reads and processes one command sent by client.
-	 * @return true if expecting more commands, false if QUIT command was
-	 *         received and server disconnected the connection
-	 * @throws Exception
-	 */
-	protected abstract boolean processCommand() throws Exception;
+    /**
+     * Reads and processes one command sent by client.
+     * @return true if expecting more commands, false if QUIT command was
+     *         received and server disconnected the connection
+     * @throws Exception if an error occurred
+     */
+    protected abstract boolean processCommand() throws Exception;
 
-	/**
-	 * Closes any input/output streams with the client.  May get called
-	 * multiple times, even after connection was refused.
-	 */
-	protected abstract void dropConnection();
+    /**
+     * Closes any input/output streams with the client.  May get called
+     * multiple times, even after connection was refused.
+     */
+    protected abstract void dropConnection();
 
-	/**
-	 * Called when a connection has been idle for too long.  Sends
-	 * protocol-specific message to client notifying it that the
-	 * connection is being dropped due to idle timeout.
-	 */
-	protected abstract void notifyIdleConnection();
+    /**
+     * Called when a connection has been idle for too long.  Sends
+     * protocol-specific message to client notifying it that the
+     * connection is being dropped due to idle timeout.
+     */
+    protected abstract void notifyIdleConnection();
 
     /**
      * Gets the watchdog task. The default watchdog task periodically checks if any
      * progress has been made processing the connection. If the connection is found
      * to be idle, the server closes that connection.
-     * 
+     *
      * Subclass can override this method to provide a watchdog task that functions differently.
-     * @return
+     * @return the WatchdogTask
      */
-	protected Runnable getWatchdogTask() {
-	    return new WatchdogTask();
+    protected Runnable getWatchdogTask() {
+        return new WatchdogTask();
+    }
+
+    // Watchdog to kill idle connections
+    private static ClockDaemon mWatchdogDaemon;
+    private Object mWatchdogTask;
+    static {
+        mWatchdogDaemon = new ClockDaemon();
+        mWatchdogDaemon.setThreadFactory(new TcpThreadFactory("TcpWatchdog", true));
     }
     
-	/*
-	 * Watchdog to kill idle connections.
-	 */
-	private static ClockDaemon mWatchdogDaemon;
-	private Object mWatchdogTask;
-	static {
-		mWatchdogDaemon = new ClockDaemon();
-		mWatchdogDaemon.setThreadFactory(new TcpThreadFactory("TcpWatchdog", true));
-	}
     private boolean mMadeProgress = true;
     private final Object mMadeProgressGuard = new Object();
-	
-	protected class WatchdogTask implements Runnable {
-		public void run() {
-            boolean idle;
-			if (getMadeProgress() == false && getIdle() == true) {
-			    mIdleClosed = true;
-				notifyIdleConnection();
-				hardShutdown("Closing idle connection");
-			} else {
-				setMadeProgress(false); // and we'll check again later if you did anything
-			}
-		}
-	}
+
+    protected class WatchdogTask implements Runnable {
+        public void run() {
+            if (!getMadeProgress() && getIdle()) {
+                mIdleClosed = true;
+                notifyIdleConnection();
+                hardShutdown("Closing idle connection");
+            } else {
+                setMadeProgress(false); // and we'll check again later if you did anything
+            }
+        }
+    }
 
     protected boolean getMadeProgress() {
-    	synchronized (mMadeProgressGuard) {
-    		return mMadeProgress;
+        synchronized (mMadeProgressGuard) {
+            return mMadeProgress;
         }
     }
 
     private void setMadeProgress(boolean b) {
-    	synchronized (mMadeProgressGuard) {
-    		mMadeProgress = b;
+        synchronized (mMadeProgressGuard) {
+            mMadeProgress = b;
         }
     }
 
-
-	private static Log mLog = LogFactory.getLog(ProtocolHandler.class);
+    private static Log mLog = LogFactory.getLog(ProtocolHandler.class);
 
     protected Socket mConnection;
     private boolean mIdle;
@@ -145,93 +134,93 @@ public abstract class ProtocolHandler implements Runnable {
     private boolean mIdleClosed;
     private boolean mShuttingDown;
     private final Object mShuttingDownGuard = new Object();
-	private TcpServer mServer;
-	private Thread mHandlerThread;
+    private TcpServer mServer;
+    private Thread mHandlerThread;
 
-	public ProtocolHandler(TcpServer server) {
-		mServer = server;
+    public ProtocolHandler(TcpServer server) {
+        mServer = server;
         mIdle = true;
         mShuttingDown = false;
     }
 
     protected boolean getIdle() {
-    	synchronized (mIdleGuard) {
-    		return mIdle;
+        synchronized (mIdleGuard) {
+            return mIdle;
         }
     }
 
-	protected void setIdle(boolean idle) {
+    protected void setIdle(boolean idle) {
         synchronized (mIdleGuard) {
-        	mIdle = idle;
+            mIdle = idle;
         }
-	}
-    
+    }
+
     private boolean getShuttingDown() {
-    	synchronized (mShuttingDownGuard) {
-    		return mShuttingDown;
+        synchronized (mShuttingDownGuard) {
+            return mShuttingDown;
         }
     }
 
     private void setShuttingDown(boolean b) {
-    	synchronized (mShuttingDownGuard) {
-    		mShuttingDown = b;
+        synchronized (mShuttingDownGuard) {
+            mShuttingDown = b;
         }
     }
 
-	void setConnection(Socket connection) {
-		mConnection = connection;
-		mIdleClosed = false;
-	}
+    void setConnection(Socket connection) {
+        mConnection = connection;
+        mIdleClosed = false;
+    }
 
-	public void run() {
-		// This asserts any reuse of a ProtocolHandler object.  Once we close a connection
-		// we also set it to null, and since there is no setConnection, you can't meaningfully
-		// reuse an ProtocolHandler object and if you do we give you this ISE.
-		if (mConnection == null) throw new IllegalStateException("Connection can not be null when running ProtocolHandler");
-		String remoteAddress = mConnection.getInetAddress().getHostAddress();
+    public void run() {
+        // This asserts any reuse of a ProtocolHandler object.  Once we close a connection
+        // we also set it to null, and since there is no setConnection, you can't meaningfully
+        // reuse an ProtocolHandler object and if you do we give you this ISE.
+        if (mConnection == null) throw new IllegalStateException("Connection can not be null when running ProtocolHandler");
+        String remoteAddress = mConnection.getInetAddress().getHostAddress();
 
-		mHandlerThread = Thread.currentThread();
-		mServer.addActiveHandler(this);
-		try {
-			if (setupConnection(mConnection)) {
-    			if (authenticate())
-    				processConnection();
-    			else
-    				mLog.info("Authentication failed for client " + remoteAddress);
+        mHandlerThread = Thread.currentThread();
+        mServer.addActiveHandler(this);
+        try {
+            if (setupConnection(mConnection)) {
+                if (authenticate())
+                    processConnection();
+                else
+                    mLog.info("Authentication failed for client " + remoteAddress);
             } else {
                 mLog.info("Connection refused for client " + remoteAddress);
             }
         } catch (Error e) {
             Zimbra.halt("Fatal error occurred while handling connection", e);
-		} catch (Throwable e) {
-			mLog.info("Exception occurred while handling connection", e);
-		} finally {
-			cancelWatchdog();
-			dropConnection();
-			try {
-				mConnection.close();
-			} catch (IOException ioe) {
-				mLog.info("Exception while closing connection", ioe);
-			}
-		}
-		mServer.removeActiveHandler(this);
-		mHandlerThread = null;
+        } catch (Throwable e) {
+            mLog.info("Exception occurred while handling connection", e);
+        } finally {
+            cancelWatchdog();
+            dropConnection();
+            try {
+                mConnection.close();
+            } catch (IOException ioe) {
+                mLog.info("Exception while closing connection", ioe);
+            }
+        }
+        mServer.removeActiveHandler(this);
+        mHandlerThread = null;
         mLog.info("Handler exiting normally");
-	}
+    }
 
-	private void processConnection() throws Exception {
-		int idleTimeoutMS = mServer.getConfigMaxIdleMilliSeconds();
-		if (idleTimeoutMS > 0)
-			mWatchdogTask = mWatchdogDaemon.executePeriodically(idleTimeoutMS, getWatchdogTask(), true);
-		boolean cont = true;
-		while (cont) {
+    private void processConnection() throws Exception {
+        int idleTimeoutMS = mServer.getConfigMaxIdleMilliSeconds();
+        if (idleTimeoutMS > 0)
+            mWatchdogTask = mWatchdogDaemon.executePeriodically(idleTimeoutMS, getWatchdogTask(), true);
+        boolean cont = true;
+        while (cont) {
             if (getShuttingDown())
                 break;
-			try {
-				cont = processCommand();
-				setIdle(true);
-				setMadeProgress(true);
-			} catch (IOException e) {
+            try {
+                cont = processCommand();
+                setIdle(true);
+                setMadeProgress(true);
+            } catch (IOException e) {
                 if (e instanceof SocketException || e instanceof AsynchronousCloseException ) {
                     // If we get a network exception on a connection that was closed
                     // by watchdog due to idleness, treat it as if we got a QUIT
@@ -250,16 +239,16 @@ public abstract class ProtocolHandler implements Runnable {
                     // propagate other types of I/O exceptions
                     throw e;
                 }
-			}
-		}
-	}
+            }
+        }
+    }
 
-	private void cancelWatchdog() {
-		if (mWatchdogTask != null) {
-			ClockDaemon.cancel(mWatchdogTask);
-			mWatchdogTask = null;
-		}
-	}
+    private void cancelWatchdog() {
+        if (mWatchdogTask != null) {
+            ClockDaemon.cancel(mWatchdogTask);
+            mWatchdogTask = null;
+        }
+    }
 
     void gracefulShutdown(String reason) {
         setShuttingDown(true);
@@ -272,25 +261,25 @@ public abstract class ProtocolHandler implements Runnable {
             // a command.  At the end of the command the handler thread
             // will exit normally because of setShuttingDown(true) call
             // above.
-        	if (mIdle)
+            if (mIdle)
                 hardShutdown(null);
         }
     }
 
-	void hardShutdown(String reason) {
+    void hardShutdown(String reason) {
         setShuttingDown(true);
         if (reason != null)
-    		mLog.info(reason);
-		if (!mConnection.isClosed()) {
-			dropConnection();
-			try {
-				mConnection.close();
-			} catch (IOException ioe) {
-				mLog.info("Exception while closing connection", ioe);
-			}
-		}
-		if (mHandlerThread != null) {
-			mHandlerThread.interrupt();
-		}
-	}
+            mLog.info(reason);
+        if (!mConnection.isClosed()) {
+            dropConnection();
+            try {
+                mConnection.close();
+            } catch (IOException ioe) {
+                mLog.info("Exception while closing connection", ioe);
+            }
+        }
+        if (mHandlerThread != null) {
+            mHandlerThread.interrupt();
+        }
+    }
 }
