@@ -68,12 +68,18 @@ public abstract class MinaServer implements Server {
 
     // TODO Disable for production
     public static final String NIO_ENABLED_PROP = "ZimbraNioEnabled";
+    public static final String NIO_DEBUG_ENABLED_PROP = "ZimbraNioDebugEnabled";
 
     public static boolean isEnabled() {
         return LC.nio_enabled.booleanValue() ||
               Boolean.getBoolean(NIO_ENABLED_PROP);
     }
 
+    public static boolean isDebugEnabled() {
+        return LC.nio_debug_enabled.booleanValue() ||
+            Boolean.getBoolean(NIO_DEBUG_ENABLED_PROP);
+    }
+    
     private static synchronized SSLContext getSSLContext() {
         if (sslContext == null) {
             try {
@@ -137,7 +143,7 @@ public abstract class MinaServer implements Server {
         }
         fc.addLast("codec", new ProtocolCodecFilter(new MinaCodecFactory(this)));
         fc.addLast("executer", new ExecutorFilter(mExecutorService));
-        fc.addLast("logger", new LoggingFilter());
+        if (isDebugEnabled()) fc.addLast("logger", new LoggingFilter());
         IoHandler handler = new MinaIoHandler(this);
         mSocketAcceptor.register(mChannel, handler, mAcceptorConfig);
         getLog().info("Starting MINA server (addr = %s, port = %d, ssl = %b)",
