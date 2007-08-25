@@ -46,7 +46,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.mina.transport.socket.nio.SocketAcceptorConfig;
 import org.apache.mina.transport.socket.nio.SocketAcceptor;
 import org.apache.mina.filter.SSLFilter;
-import org.apache.mina.filter.LoggingFilter;
 import org.apache.mina.filter.executor.ExecutorFilter;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.common.IoHandler;
@@ -79,7 +78,7 @@ public abstract class MinaServer implements Server {
         return LC.nio_debug_enabled.booleanValue() ||
             Boolean.getBoolean(NIO_DEBUG_ENABLED_PROP);
     }
-    
+
     private static synchronized SSLContext getSSLContext() {
         if (sslContext == null) {
             try {
@@ -143,7 +142,7 @@ public abstract class MinaServer implements Server {
         }
         fc.addLast("codec", new ProtocolCodecFilter(new MinaCodecFactory(this)));
         fc.addLast("executer", new ExecutorFilter(mExecutorService));
-        if (isDebugEnabled()) fc.addLast("logger", new LoggingFilter());
+        if (isDebugEnabled()) fc.addLast("logger", new MinaLoggingFilter(this));
         IoHandler handler = new MinaIoHandler(this);
         mSocketAcceptor.register(mChannel, handler, mAcceptorConfig);
         getLog().info("Starting MINA server (addr = %s, port = %d, ssl = %b)",
