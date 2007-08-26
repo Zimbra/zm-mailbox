@@ -268,7 +268,7 @@
 			</not>
 		</condition>
 		<property name="zimbra.buildinfo.all" value="Version: ${zimbra.buildinfo.version}; Type: ${zimbra.buildinfo.type}; Release: ${zimbra.buildinfo.release}; Built: ${zimbra.buildinfo.date}; Host: ${zimbra.buildinfo.host}"/>
-		<echo>Version: ${zimbra.buildinfo.version}</echo>
+		<echo>Version: ${zimbra.buildinfo.version} Date: ${zimbra.buildinfo.date}</echo>
 	</target>
 
 	<target name="generate-buildinfo" depends="set-buildinfo-vars">
@@ -289,26 +289,41 @@
 
 	<!-- You can add more attrs.xml files from outside this project and invoke this target. -->
 	<target name="generate-ldap-config" depends="set-buildinfo-vars">
-		<mkdir dir="${build.dir}/attrs"/>
-		<copy todir="${build.dir}/attrs" overwrite="true">
-		    <fileset dir="${config.dir}/attrs" includes="*.xml"/>
-		</copy>
-		<mkdir dir="${build.dir}/ldap-config" />
-		<java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path" failonerror="true" >
-			<sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
-			<arg line="-a generateLdapSchema -i ${build.dir}/attrs -t ${config.dir}/ldap/zimbra.schema-template -o ${build.dir}/ldap-config/zimbra.schema"/>
-		</java>
-		<java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path" failonerror="true">
-			<sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
-			<arg line="-a generateGlobalConfigLdif -i ${build.dir}/attrs -o ${build.dir}/ldap-config/zimbra_globalconfig.ldif"/>
-		</java>
-		<java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path" failonerror="true">
-			<sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
-			<arg line="-a generateDefaultCOSLdif -i ${build.dir}/attrs -o ${build.dir}/ldap-config/zimbra_defaultcos.ldif"/>
-		</java>
-		<copy todir="${build.dir}/ldap-config" file="${config.dir}/ldap/zimbra.ldif"/>
-		<copy todir="${build.dir}/ldap-config" file="${config.dir}/ldap/zimbra_mimehandlers.ldif"/>
-		<copy todir="${build.dir}/ldap-config" file="${config.dir}/ldap/amavisd.schema"/>
+		<dependset>
+			<srcfileset dir="${config.dir}/attrs" includes="*.xml"/>
+			<targetfileset dir='${build.dir}/ldap-config' includes='*'/>
+		</dependset>
+
+		<if>
+			<not>
+				<available file="${build.dir}/ldap-config/zimbra.schema"/>
+			</not>
+			<then>
+				<mkdir dir="${build.dir}/attrs"/>
+				<copy todir="${build.dir}/attrs" overwrite="true">
+					<fileset dir="${config.dir}/attrs" includes="*.xml"/>
+				</copy>
+				<mkdir dir="${build.dir}/ldap-config"/>
+				<java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path"
+					  failonerror="true">
+					<sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
+					<arg line="-a generateLdapSchema -i ${build.dir}/attrs -t ${config.dir}/ldap/zimbra.schema-template -o ${build.dir}/ldap-config/zimbra.schema"/>
+				</java>
+				<java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path"
+					  failonerror="true">
+					<sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
+					<arg line="-a generateGlobalConfigLdif -i ${build.dir}/attrs -o ${build.dir}/ldap-config/zimbra_globalconfig.ldif"/>
+				</java>
+				<java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path"
+					  failonerror="true">
+					<sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
+					<arg line="-a generateDefaultCOSLdif -i ${build.dir}/attrs -o ${build.dir}/ldap-config/zimbra_defaultcos.ldif"/>
+				</java>
+				<copy todir="${build.dir}/ldap-config" file="${config.dir}/ldap/zimbra.ldif"/>
+				<copy todir="${build.dir}/ldap-config" file="${config.dir}/ldap/zimbra_mimehandlers.ldif"/>
+				<copy todir="${build.dir}/ldap-config" file="${config.dir}/ldap/amavisd.schema"/>
+			</then>
+		</if>
 	</target>
 
 	<target name="compile" depends="build-init">
