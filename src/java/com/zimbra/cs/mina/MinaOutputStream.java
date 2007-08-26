@@ -30,15 +30,14 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 /**
- * Base class for MinaIoSessionOutputStream. Can be used to create an output
- * stream to write bytes to any destination as a stream of byte buffer
- * packets. These packets are never reused once written, which is required
- * since writing is assumed to be asynchronous.
+ * A buffered output stream for writing data as a sequence of ByteBuffer
+ * objects. Subclasses override the flushBytes() method to specify how
+ * the ByteBuffer should be written.
  */
 public abstract class MinaOutputStream extends OutputStream {
     private final int mSize;
     private ByteBuffer mBuffer;
-    private boolean closed;
+    private boolean mClosed;
 
     /**
      * Creates a new output stream using the specified buffer size.
@@ -55,7 +54,7 @@ public abstract class MinaOutputStream extends OutputStream {
         if ((off | len | (b.length - (len + off)) | (off + len)) < 0) {
 	    throw new IndexOutOfBoundsException();
         }
-        if (closed) throw new IOException("Stream has been closed");
+        if (mClosed) throw new IOException("Stream has been closed");
         while (len > 0) {
             if (mBuffer == null) {
                 mBuffer = ByteBuffer.allocate(Math.max(len, mSize));
@@ -75,14 +74,14 @@ public abstract class MinaOutputStream extends OutputStream {
 
     @Override
     public synchronized void flush() throws IOException {
-        if (!closed) flushBytes();
+        if (!mClosed) flushBytes();
     }
 
     @Override
     public synchronized void close() throws IOException {
-        if (!closed) {
+        if (!mClosed) {
             flushBytes();
-            closed = true;
+            mClosed = true;
         }
     }
 
