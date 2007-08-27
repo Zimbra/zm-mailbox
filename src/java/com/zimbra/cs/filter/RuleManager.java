@@ -41,6 +41,7 @@ import org.apache.jsieve.SieveException;
 import org.apache.jsieve.SieveFactory;
 import org.apache.jsieve.parser.generated.Node;
 import org.apache.jsieve.parser.generated.ParseException;
+import org.apache.jsieve.parser.generated.TokenMgrError;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -106,6 +107,9 @@ public class RuleManager {
         } catch (ParseException e) {
             ZimbraLog.filter.error("Unable to parse script:\n" + script);
             throw ServiceException.PARSE_ERROR("parsing Sieve script", e);
+        } catch (TokenMgrError e) {
+            ZimbraLog.filter.error("Unable to parse script:\n" + script);
+            throw ServiceException.PARSE_ERROR("parsing Sieve script", e);
         } catch (SieveException e) {
             ZimbraLog.filter.error("Unable to evaluate script:\n" + script);
             throw ServiceException.PARSE_ERROR("evaluating Sieve script", e);
@@ -136,6 +140,8 @@ public class RuleManager {
             RuleRewriter t = new RuleRewriter(parent, node);
             return t.getElement();
         } catch (ParseException e) {
+            throw ServiceException.PARSE_ERROR("parsing Sieve script", e);
+        } catch (TokenMgrError e) {
             throw ServiceException.PARSE_ERROR("parsing Sieve script", e);
         }
     }
@@ -207,7 +213,13 @@ public class RuleManager {
                         false, Flag.BITMASK_UNREAD, null, recipient, sharedDeliveryCtxt);
             }
         } catch (ParseException e) {
-            ZimbraLog.filter.warn("Sieve script parsing error:", e);
+            ZimbraLog.filter.warn("Unable to parse Sieve script.  Filing message in Inbox.", e);
+            // filtering system generates errors; 
+            // ignore filtering and file the message into INBOX
+            msg = mailbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX,
+                    false, Flag.BITMASK_UNREAD, null, recipient, sharedDeliveryCtxt);
+        } catch (TokenMgrError e) {
+            ZimbraLog.filter.warn("Unable to parse Sieve script.  Filing message in Inbox.", e);
             // filtering system generates errors; 
             // ignore filtering and file the message into INBOX
             msg = mailbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX,
