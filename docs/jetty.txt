@@ -1,26 +1,16 @@
-NOTE: If you are stuck and somehow want to try your luck with tomcat,
-there's a build time switch.  Stop jetty if running.  Set env var
-ZIMBRA_USE_TOMCAT=1 and reset-the-world.
+0. If this is the first time you setup your dev env, follow steps in
+   INSTALL*.txt to setup /opt/zimbra with mysql, ldap, etc.
 
-0. Here we assume you have previously been using tomcat and have setup
-   /opt/zimbra with mysql, ldap, etc.  If not, follow steps in INSTALL*.txt.
+1. You can run "ant reset-all" target of ZimbraServer project to build
+   and start up the dev webapps including serivce/zimbra/zimbraAdmin.
 
-1. untargz ThirdParty/jetty/jetty-{latest-version}.tar.gz to
-   /opt/zimbra and symlink 
+2. On Windows if you want to install jetty as a Windows service and
+   start/stop it that way, skip to 3.  For those who don't want to mess
+   with Windows services, use ant targets "start-jetty" and "stop-jetty"
+   of ZimbraServer project to start/stop.
 
-       ln -s /opt/zimbra/jetty-{verison} /opt/zimbra/jetty
-
-   On Windows because there's no symlink, rename the jetty directory
-   to C:\opt\zimbra\jetty.
-
-2. On Mac or Unix copy ZimbraServer/src/bin/jetty script to
-   /opt/zimbra/bin.  Set env var JAVA_HOME to the right place.  On Mac
-   OS X it should be /System/Library/Frameworks/JavaVM.framework/Home.
-   On Windows it depends on where you installed JDK.  JAVA_HOME is
-   needed by the jetty start/stop script.
-
-3. On Windows you may want to install jetty as a Windows service for
-   convenience.  This can be achieved using Java Service Wrapper.
+3. On Windows if you really want to install jetty as a Windows service
+   you can achieve using Java Service Wrapper.
    Google search and download wrapper-windows-x86-32-3.2.3.zip and
    unzip it.  Copy the wrapper.exe file under the unzipped bin
    directory to C:\opt\zimbra\bin.  Copy wrapper.jar and wrapper.dll
@@ -33,7 +23,7 @@ ZIMBRA_USE_TOMCAT=1 and reset-the-world.
    to install jetty as a Windows Service.  Make sure the 'C' in 'C:' is
    in upper case because wrapper.exe surprisingly is sensitive to it.
 
-4. You may need to fix the permissions on the jetty directory and its
+   You may need to fix the permissions on the jetty directory and its
    subdirectories in order to run jetty as a service.  Open Windows 
    Explorer.  Right click jetty directory, click Sharing and Security...
    Click Security tab.  Check if you have SYSTEM user in the list.
@@ -45,14 +35,14 @@ ZIMBRA_USE_TOMCAT=1 and reset-the-world.
    here that apply to child objects".  Click OK to dismiss advanced
    dialog.  Click OK to dismiss the sharing dialog.
 
-5. Run 'ant reset-the-world' under ZimbraServer. Then run 'ant deploy'
-   and 'ant admin-deploy' under ZimbraWebClient as usual.  For
-   offline, run 'ant offline-reset-the-world'.
+   To start/stop jetty service on command line, use "net start jetty"
+   and "net stop jetty".
 
-6. On Mac OS X or Linux you should be able to bounce jetty with
-   command line 'jetty start' and 'jetty stop'.  On Windows you can
-   start/stop jetty by running command line 'net start jetty' and 'net
-   stop jetty'.
+   To make sure that build.xml also uses windows service to start/stop
+   jetty, set environment variable ZIMBRA_JETTY_USE_SERVICE=1.
+
+4. On Mac OS X or Linux you should be able to bounce jetty with
+   command line 'jetty start' and 'jetty stop'.
 
 ============
 
