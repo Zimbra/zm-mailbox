@@ -82,7 +82,6 @@
 	<property name="lmtpinject.numthreads" value="2" />
 
 	<property name="zimbra.home.dir" location="/opt/zimbra" />
-	<property name="tomcat.home.dir" location="${zimbra.home.dir}/tomcat" />
 	<property name="jetty.home.dir" location="${zimbra.home.dir}/jetty" />
 	<property name="jetty.src.dir" location="../ThirdParty/jetty" />
 	<property name="jetty.version" value="6.1.5" />
@@ -92,18 +91,11 @@
 	<condition property="is-windows"><os family="windows"/></condition>
 	<condition property="is-unix"><not><os family="windows"/></not></condition>
 	
-	<condition property="use-tomcat"><isset property="env.ZIMBRA_USE_TOMCAT"/></condition>
-	<condition property="use-jetty"><not><isset property="use-tomcat"/></not></condition>
+	<condition property="jetty-use-service"><isset property="env.ZIMBRA_JETTY_USE_SERVICE"/></condition>
 	
-	<condition property="jetty-no-service"><isset property="env.ZIMBRA_JETTY_NO_SERVICE"/></condition>
-	
-	<condition property="webserver.name" value="jetty"><isset property="use-jetty"/></condition>
-	<condition property="webserver.name" value="tomcat"><isset property="use-tomcat"/></condition>
-
+	<property name="webserver.name" value="jetty"/>
 	<property name="webserver.root.dir" location="${zimbra.home.dir}/${webserver.name}"/>
-	
-	<condition property="webserver.conf.dir" value="${webserver.root.dir}/etc"><isset property="use-jetty"/></condition>
-	<condition property="webserver.conf.dir" value="${webserver.root.dir}/conf"><isset property="use-tomcat"/></condition>
+	<property name="webserver.conf.dir" value="${webserver.root.dir}/etc"/>
 
 	<condition property="deploy.dir" value="${env.DEPLOY_DIR}">
 	    <isset property="env.DEPLOY_DIR" />
@@ -187,12 +179,6 @@
 		<mkdir dir="${base.dir}/lib/ext"/>
 		<mkdir dir="${base.dir}/lib/jars"/>
 		<mkdir dir="${base.dir}/libexec"/>
-		<if><isset property="use-tomcat"/><then>
-			<mkdir dir="${base.dir}/tomcat/common/endorsed"/>
-			<mkdir dir="${base.dir}/tomcat/common/lib"/>
-			<mkdir dir="${base.dir}/tomcat/conf"/>
-			<mkdir dir="${base.dir}/tomcat/webapps"/>
-		</then></if>
 		<mkdir dir="${base.dir}/wiki"/>
 	</target>
 
@@ -350,18 +336,8 @@
         <delete dir="${build.dir}" />
 	</target>
 
-	<!-- activation.jar keeps mail.jar open.  As a result, on
-	     Windows you cannot undeploy because Tomcat is unable to
-	     complete delete the service directory. zimbra-native.jar
-	     opens a shared library so it should not be in a war file
-	     which can be redeployed.-->
-	<condition property="war.include" value="slf4j*.jar, jsieve*.jar, jetty-util*.jar, log4j*.jar">
-		<isset property="use-tomcat"/>
-	</condition>
 	<!-- jetty loads jetty-util*.jar, log4j*.jar and slf4j*.jar -->
-	<condition property="war.include" value="slf4j*.jar, jsieve*.jar">
-		<isset property="use-jetty"/>
-	</condition>
+	<property name="war.include" value="slf4j*.jar, jsieve*.jar"/>
 
 	<target name="war" depends="jar">
 		<echo>war.include=${war.include}</echo>
@@ -377,15 +353,7 @@
 
 	<target name="service-deploy" depends="refresh-opt-zimbra,deploy-war,deploy-zimlets" description="Not just war file deployment, but a /opt/zimbra refresh as well!"/>
 
-	<target name="deploy-war">
-		<if><isset property="use-tomcat"/><then>
-			<antcall target="deploy-war-tomcat"/>
-		</then><else>
-			<antcall target="deploy-war-jetty"/>
-		</else></if>
-	</target>
-	
-	<target name="deploy-war-jetty" depends="war" if="use-jetty">
+	<target name="deploy-war" depends="war">
 		<antcall target="stop-jetty"/>
 	    <delete dir="${webserver.root.dir}/webapps/service"/>
 	    <delete file="${webserver.root.dir}/webapps/service.war"/>
@@ -393,27 +361,6 @@
         <mkdir dir='${webserver.root.dir}/webapps/service' />
         <unzip dest="${webserver.root.dir}/webapps/service" src="${webserver.root.dir}/webapps/${warfilename}" />
 		<antcall target="start-jetty"/>
-	</target>
-
-    <target name="remote-deploy" if="remote.deploy.host" depends="war">
-		<echo message="Wait for remote tomcat to start at http://${remote.deploy.host}:${remote.deploy.port}/" />
-        <waitfor checkevery="2" checkeveryunit="second" maxwait="60" maxwaitunit="second">
-			<http url="http://${remote.deploy.host}:${remote.deploy.port}/" />
-		</waitfor>
-		<echo message="Remote server found -- trying manager port at http://${remote.deploy.host}:${remote.deploy.port}/manager/" />
-        <deploy url="http://${remote.deploy.host}:${remote.deploy.port}/manager/" username="zimbra" password="zimbra" path="/service" war="${warfile}" update="true" />
-    </target>
-	
-	<target name="deploy-war-tomcat" depends="war" if="use-tomcat">
-        <if><isset property="remote.deploy.host"/><then>
-            <antcall target="remote-deploy"/>
-        </then></if>
-      
-		<echo message="Wait for tomcat to start at http://${deploy.host}:${deploy.port}/" />
-		<waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
-			<http url="http://${deploy.host}:${deploy.port}/" />
-		</waitfor>
-		<deploy url="http://${deploy.host}:${deploy.port}/manager/" username="zimbra" password="zimbra" path="/service" war="${warfile}" update="true" />
 	</target>
 
 	<target name="init-opt-zimbra" depends="dev-dist,localhost-ssl-cert">
@@ -427,7 +374,7 @@
 		<copy todir="${zimbra.home.dir}" overwrite="true">
 			<fileset dir="${dist.dir}">
 				<exclude name="conf/localconfig.xml"/> <!-- don't trash zimbra_server_hostname -->
-				<exclude name="${webserver.name}/webapps/**"/> <!-- deploy-war instead of copying files behind tomcat's back -->
+				<exclude name="${webserver.name}/webapps/**"/> <!-- deploy-war covers these -->
 			</fileset>
 		</copy>
 		<chmod perm="a+rx"><fileset dir="${zimbra.home.dir}/bin"/><fileset dir="${zimbra.home.dir}/libexec"/></chmod>
@@ -466,7 +413,7 @@
     
 	<target name="dev-dist" depends="war,dev-dist-unix,choose-db-schema">
 		<!-- bin, libexec -->
-		<copy todir="${dist.dir}/bin" overwrite="true"><fileset dir="${src.dir}/bin" excludes="*.production,zmmailboxdctl,jetty,tomcat"/></copy>
+		<copy todir="${dist.dir}/bin" overwrite="true"><fileset dir="${src.dir}/bin" excludes="*.production,zmmailboxdctl,jetty"/></copy>
 		<copy todir="${dist.dir}/libexec" overwrite="true"><fileset dir="${src.dir}/libexec" excludes="*.production"/></copy>
 		<if><isset property="is-production"/><then>
 		    <copy tofile="${dist.dir}/bin/zmmailboxdctl" file="${src.dir}/bin/zmmailboxdctl" overwrite="true"/>
@@ -505,19 +452,6 @@
 		<copy todir="${dist.dir}/lib/jars" file="${im.jarfile}" overwrite="true"/>
 		<copy todir="${dist.dir}/lib/jars" file="${jarfile}" overwrite="true"/>
 		
-		<!-- tomcat -->
-		<if><isset property="use-tomcat"/><then>
-			<copy todir="${dist.dir}/tomcat/webapps" file="${warfile}" overwrite="true"/>
-			<copy tofile="${dist.dir}/tomcat/conf/server.xml" file="${config.dir}/tomcat-5.5/server.xml${production.suffix}" overwrite="true"/>
-			<copy tofile="${dist.dir}/tomcat/conf/context.xml" file="${config.dir}/tomcat-5.5/context.xml" overwrite="true"/>
-			<copy todir="${dist.dir}/tomcat/conf" file="${config.dir}/tomcat-5.5/tomcat-users.xml" overwrite="true"/>
-			<copy todir="${dist.dir}/tomcat/conf" file="${config.dir}/tomcat-5.5/web.xml" overwrite="true"/>
-			<copy todir="${dist.dir}/tomcat/common/lib" overwrite="true"><fileset dir="${common.jars.dir}" includes="${ical4j.jar},mail.jar,activation.jar,zimbra-native.jar" /></copy>
-			<copy todir="${dist.dir}/tomcat/common/endorsed" file="${common.jars.dir}/zimbra-charset.jar" overwrite="true"/>
-		</then></if>
-		
-		<!-- jetty -->
-		<if><isset property="use-jetty"/><then>
 			<copy todir="${dist.dir}/jetty/webapps" file="${warfile}" overwrite="true"/>
 			<copy tofile="${dist.dir}/jetty/etc/jettyrc" file="${config.dir}/jetty-6.1/jettyrc" overwrite="true"/>
 			<copy tofile="${dist.dir}/jetty/etc/jetty.xml" file="${config.dir}/jetty-6.1/jetty.xml" overwrite="true"/>
@@ -532,7 +466,6 @@
 			<copy todir="${dist.dir}/jetty/lib" overwrite="true">
 			    <fileset dir="${common.jars.dir}" includes="log4j*.jar"/>
 			</copy>
-		</then></if>
 		
 		<!-- openldap -->
 		<copy tofile="${dist.dir}/${slapd.conf.dir}/slapd.conf" file="${slapd.conf.src}" overwrite="true"/> <!-- CHECK this is ok with dev build -->
@@ -555,7 +488,6 @@
 	<target name="reset-all" description="Reset the world plus jetty">
         <antcall target="stop-webserver"/>
 		<antcall target="clean"/>
-		<if><isset property="use-jetty"/><then>
 			<mkdir dir="${build.dir}"/>
 			<delete dir="${jetty.home.dir}" />
 			<gunzip src="${jetty.src.dir}/jetty-${jetty.version}.tar.gz" dest="${build.dir}/jetty-${jetty.version}.tar"/>
@@ -565,7 +497,6 @@
 			<mkdir dir="${jetty.home.dir}/logs"/>
 			<mkdir dir="${jetty.home.dir}/webapps"/>
 			<mkdir dir="${jetty.home.dir}/work"/>
-		</then></if>
 
         <antcall target="reset-the-world"/>
 		<ant dir="../ZimbraWebClient" target="clean" inheritAll="false"/>
@@ -576,15 +507,12 @@
 	<!-- There are two ways to reset the world:
   		(a) If your webserver is a service, use "reset-the-world".
  		(b) If your webserver  container  is inside eclipse then do this:
-			1. stop web server (tomcat stop / jetty stop)
+			1. stop web server
 			2. run the target "reset-the-world-stage1"
-			3. start web server (tomcat start / jetty start )
+			3. start web server
 			4. run the target "reset-the-world-stage2" -->
 	<target name="reset-the-world" description="Reset the world">
 		<antcall target="reset-the-world-stage1"/>
-		<if><isset property="use-tomcat"/><then>
-			<antcall target="start-tomcat"/>
-		</then></if>
 		<antcall target="reset-the-world-stage2"/>
 	</target>
 
@@ -686,7 +614,7 @@
 
 	<target name="dir-init">
 		<echo message="If the following deletes fail, wait for your web server" />
-		<echo message="to stop (or stop jetty/tomcat as the case may be)" />
+		<echo message="to stop (or stop jetty manually)" />
 		<echo message="and try again later." />
 		<delete failonerror="no">
 			<fileset dir="${zimbra.home.dir}/db" excludes="data/**"/>
@@ -1142,54 +1070,14 @@
 		</exec>
 	</target>
 
-	<!-- Tomcat service control -->
-	<target name="restart-tomcat" depends="stop-tomcat,start-tomcat" description="Restart Tomcat"/>
-
-	<target name="stop-tomcat" depends="stop-tomcat-windows,stop-tomcat-unix" if="use-tomcat"/>
-
-	<target name="stop-tomcat-windows" if="is-windows">
-		<exec executable="net">
-			<arg value="stop" />
-			<arg value="apache tomcat" />
-		</exec>
-		<!-- Wait for Tomcat to really go away. -->
-		<echo>Waiting for tomcat to stop</echo>
-		<waitfor checkevery="1" checkeveryunit="second" maxwait="10" maxwaitunit="second">
-			<not>
-				<http url="http://${deploy.host}:${deploy.port}/" />
-			</not>
-		</waitfor>
-	</target>
-
-	<target name="stop-tomcat-unix" if="is-unix">
-		<exec executable="${zimbra.home.dir}/bin/tomcat">
-			<arg value="stop" />
-		</exec>
-	</target>
-
-	<target name="start-tomcat" depends="start-tomcat-windows,start-tomcat-unix" if="use-tomcat"/>
-
-	<target name="start-tomcat-windows" if="is-windows">
-		<exec executable="net">
-			<arg value="start" />
-			<arg value="apache tomcat" />
-		</exec>
-	</target>
-	
-	<target name="start-tomcat-unix" if="is-unix">
-		<exec executable="${zimbra.home.dir}/bin/tomcat">
-			<arg value="start" />
-		</exec>
-	</target>
-		
 	<target name="start-jetty-windows" if="is-windows">
-	    <if><isset property="jetty-no-service"/><then>
-	    	<antcall target="start-jetty-java"/>
-	    </then><else>
+	    <if><isset property="jetty-use-service"/><then>
 	        <exec executable="net">
 	              <arg value="start" />
 	              <arg value="jetty" />
 	        </exec>
+	    </then><else>
+	    	<antcall target="start-jetty-java"/>
 	    </else></if>
 	</target>
 		
@@ -1199,7 +1087,7 @@
 		</exec>
 	</target>
 
-	<target name="start-jetty" depends="start-jetty-windows,start-jetty-unix" if="use-jetty">
+	<target name="start-jetty" depends="start-jetty-windows,start-jetty-unix">
 		<echo>Waiting for jetty to start</echo>
 		<waitfor checkevery="5" checkeveryunit="second" maxwait="60" maxwaitunit="second">
 			<http url="http://${deploy.host}:${deploy.port}/service/soap" errorsBeginAt="500"/>
@@ -1207,13 +1095,13 @@
 	</target>
 	
 	<target name="stop-jetty-windows" if="is-windows">
-	    <if><isset property="jetty-no-service"/><then>
-	    	<antcall target="stop-jetty-java"/>
-	    </then><else>
+	    <if><isset property="jetty-use-service"/><then>
 	    	<exec executable="net">
 	    		<arg value="stop" />
 	    		<arg value="jetty" />
 	    	</exec>
+	    </then><else>
+	    	<antcall target="stop-jetty-java"/>
 	    </else></if>
 	</target>
 	
@@ -1231,7 +1119,7 @@
 		</if>
 	</target>
 	
-	<target name="stop-jetty" depends="stop-jetty-windows,stop-jetty-unix" if="use-jetty">
+	<target name="stop-jetty" depends="stop-jetty-windows,stop-jetty-unix">
 		<echo>Waiting for jetty to stop</echo>
 		<waitfor checkevery="1" checkeveryunit="second" maxwait="10" maxwaitunit="second">
 			<not>
@@ -1240,7 +1128,7 @@
 		</waitfor>
 	</target>
 	
-	<target name="start-jetty-java" if="use-jetty">
+	<target name="start-jetty-java">
 		<java dir="${jetty.home.dir}" jar="${jetty.home.dir}/start.jar" fork="true" spawn="true">
 			<sysproperty key="java.library.path" value="${zimbra.home.dir}/lib"/>
 			<sysproperty key="START" value="${jetty.home.dir}/etc/start.config"/>
@@ -1250,7 +1138,7 @@
 		</java>
 	</target>
 
-	<target name="stop-jetty-java" if="use-jetty">
+	<target name="stop-jetty-java">
 		<java dir="${jetty.home.dir}" jar="${jetty.home.dir}/start.jar" fork="true" failonerror="true">
 			<sysproperty key="STOP.PORT" value="7867"/>
 			<sysproperty key="STOP.KEY" value="stop"/>
@@ -1258,22 +1146,14 @@
 		</java>
 	</target>
 	
-	<target name="restart-jetty" depends="stop-jetty,start-jetty" if="use-jetty"/>
+	<target name="restart-jetty" depends="stop-jetty,start-jetty"/>
 	
 	<target name="start-webserver">
-		<if><isset property="use-tomcat"/><then>
-			<antcall target="start-tomcat"/>
-		</then><else>
-			<antcall target="start-jetty"/>
-		</else></if>
+		<antcall target="start-jetty"/>
 	</target>
 	
 	<target name="stop-webserver">
-		<if><isset property="use-tomcat"/><then>
-			<antcall target="stop-tomcat"/>
-		</then><else>
-			<antcall target="stop-jetty"/>
-		</else></if>
+		<antcall target="stop-jetty"/>
 	</target>
 	
 	<target name="restart-webserver" depends="stop-webserver,start-webserver"/>
