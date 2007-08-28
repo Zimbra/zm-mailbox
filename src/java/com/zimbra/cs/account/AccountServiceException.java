@@ -47,7 +47,8 @@ public class AccountServiceException extends ServiceException {
     public static final String INVALID_PASSWORD   = "account.INVALID_PASSWORD";
     public static final String INVALID_ATTR_NAME  = "account.INVALID_ATTR_NAME";
     public static final String INVALID_ATTR_VALUE = "account.INVALID_ATTR_VALUE";
-    public static final String MULTIPLE_ACCOUNTS_MATCHED  = "account.MULTIPLE_ACCOUNTS_MATCHED";    
+    public static final String MULTIPLE_ACCOUNTS_MATCHED  = "account.MULTIPLE_ACCOUNTS_MATCHED"; 
+    public static final String MULTIPLE_DOMAINS_MATCHED  = "account.MULTIPLE_DOMAINS_MATCHED";
     public static final String NO_SUCH_ACCOUNT    = "account.NO_SUCH_ACCOUNT";
     public static final String NO_SUCH_ALIAS      = "account.NO_SUCH_ALIAS";
     public static final String NO_SUCH_DOMAIN     = "account.NO_SUCH_DOMAIN";    
@@ -104,6 +105,10 @@ public class AccountServiceException extends ServiceException {
 
     public static AccountServiceException MULTIPLE_ACCOUNTS_MATCHED(String desc) {
         return new AccountServiceException("lookup returned multiple accounts: "+desc, MULTIPLE_ACCOUNTS_MATCHED, SENDERS_FAULT, null);
+    }
+    
+    public static AccountServiceException MULTIPLE_DOMAINS_MATCHED(String desc) {
+        return new AccountServiceException("lookup returned multiple domains: "+desc, MULTIPLE_DOMAINS_MATCHED, SENDERS_FAULT, null);
     }
 
     public static AccountServiceException PASSWORD_CHANGE_TOO_SOON() {

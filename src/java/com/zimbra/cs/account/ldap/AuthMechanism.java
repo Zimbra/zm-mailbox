@@ -35,6 +35,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.krb5.Krb5Login;
+import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.StringUtil;
@@ -154,26 +155,7 @@ abstract class AuthMechanism {
         }
         
         void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password) throws ServiceException {
-            String principal = null;
-            String foreignPrincipal = acct.getAttr(Provisioning.A_zimbraForeignPrincipal);
-            if (foreignPrincipal != null && foreignPrincipal.startsWith(Provisioning.FP_PREFIX_KERBEROS5)) {
-                int idx = foreignPrincipal.indexOf(':');
-                if (idx != -1)
-                    principal = foreignPrincipal.substring(idx+1).trim();
-                else
-                    ZimbraLog.account.warn(mAuthMech + " auth cannot extract principal from " + Provisioning.A_zimbraForeignPrincipal + " " +
-                                           foreignPrincipal + " , using local part and domain realm"); 
-            }
-            if (principal == null) {
-                String realm = domain.getAttr(Provisioning.A_zimbraAuthKerberos5Realm);
-                if (realm != null) {
-                    String[] parts = EmailUtil.getLocalPartAndDomain(acct.getName());
-                    if (parts != null)
-                        principal = parts[0] + "@" + realm;
-                    else
-                        principal = acct.getName() + "@" + realm; // just use whatever in the name
-                }
-            }
+            String principal = Krb5Principal.getKrb5Principal(domain, acct);
             
             if (principal == null)
                 throw AccountServiceException.AUTH_FAILED(acct.getName(), new Exception("cannot obtain principal for " + mAuthMech + " auth"));

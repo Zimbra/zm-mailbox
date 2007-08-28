@@ -59,6 +59,7 @@ import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.krb5.Krb5Login;
+import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.NamedEntryCache;
 import com.zimbra.cs.account.PreAuthKey;
@@ -452,12 +453,7 @@ public class LdapProvisioning extends Provisioning {
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 if (ne.hasMore()) {
-                    StringBuffer dups = new StringBuffer();
-                    dups.append("[" + sr.getNameInNamespace() + "] ");
-                    while (ne.hasMore()) {
-                        SearchResult dup = (SearchResult) ne.next();
-                        dups.append("[" + dup.getNameInNamespace() + "] ");
-                    }
+                    String dups = formatMultipleMatchEntries(sr, ne);
                     throw AccountServiceException.MULTIPLE_ACCOUNTS_MATCHED("getAccountByQuery: "+query+" returned multiple entries at "+dups);
                 }
                 ne.close();
@@ -503,8 +499,10 @@ public class LdapProvisioning extends Provisioning {
                 return getAccountByForeignPrincipal(key);
             case name: 
                 return getAccountByName(key);
+            case krb5Principal:
+                return Krb5Principal.getAccountFromKrb5Principal(key);
             default:
-                    return null;
+                return null;
         }
     }
     
@@ -1379,6 +1377,17 @@ public class LdapProvisioning extends Provisioning {
         }
     }
 
+    private String formatMultipleMatchEntries(SearchResult first, NamingEnumeration rest) throws NamingException {
+        StringBuffer dups = new StringBuffer();
+        dups.append("[" + first.getNameInNamespace() + "] ");
+        while (rest.hasMore()) {
+            SearchResult dup = (SearchResult) rest.next();
+            dups.append("[" + dup.getNameInNamespace() + "] ");
+        }
+        
+        return new String(dups);
+    }
+    
     private LdapDomain getDomainByQuery(String query, DirContext initCtxt) throws ServiceException {
         DirContext ctxt = initCtxt;
         try {
@@ -1387,6 +1396,10 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = LdapUtil.searchDir(ctxt, "", query, sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
+                if (ne.hasMore()) {
+                    String dups = formatMultipleMatchEntries(sr, ne);
+                    throw AccountServiceException.MULTIPLE_DOMAINS_MATCHED("getDomainByQuery: "+query+" returned multiple entries at "+dups);
+                }
                 ne.close();
                 return new LdapDomain(sr.getNameInNamespace(), sr.getAttributes(), getConfig().getDomainDefaults());
             }
@@ -1412,6 +1425,8 @@ public class LdapProvisioning extends Provisioning {
                 return getDomainById(key);
             case virtualHostname:
                 return getDomainByVirtualHostname(key);
+            case krb5Realm:    
+                return getDomainByKrb5Realm(key);
             default:
                     return null;
         }
@@ -1463,6 +1478,17 @@ public class LdapProvisioning extends Provisioning {
         }
         return domain;        
     }
+    
+    private Domain getDomainByKrb5Realm(String krb5Realm) throws ServiceException {
+        LdapDomain domain = (LdapDomain) sDomainCache.getByKrb5Realm(krb5Realm);
+        if (domain == null) {
+            krb5Realm = LdapUtil.escapeSearchFilterArg(krb5Realm);
+            domain = getDomainByQuery("(&(zimbraAuthKerberos5Realm="+krb5Realm+")(objectclass=zimbraDomain))", null);
+            sDomainCache.put(domain);
+        }
+        return domain;        
+    }
+    
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#getAllDomains()

@@ -1554,7 +1554,7 @@ public abstract class Provisioning {
     public static enum AccountBy {
         
         // case must match protocol
-        adminName, id, foreignPrincipal, name;
+        adminName, id, foreignPrincipal, name, krb5Principal;
         
         public static AccountBy fromString(String s) throws ServiceException {
             try {
@@ -1678,7 +1678,7 @@ public abstract class Provisioning {
     public static enum DomainBy {
         
         // case must match protocol
-        id, name, virtualHostname;
+        id, name, virtualHostname, krb5Realm;
         
         public static DomainBy fromString(String s) throws ServiceException {
             try {

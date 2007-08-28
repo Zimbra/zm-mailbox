@@ -41,6 +41,7 @@ public class DomainCache {
     private LRUMap mNameCache;
     private LRUMap mIdCache;
     private LRUMap mVirtualHostnameCache;
+    private LRUMap mKrb5RealmCache;
     
     private long mRefreshTTL;
 
@@ -64,7 +65,8 @@ public class DomainCache {
     public DomainCache(int maxItems, long refreshTTL) {
         mNameCache = new LRUMap(maxItems);
         mIdCache = new LRUMap(maxItems);
-        mVirtualHostnameCache = new LRUMap(maxItems);        
+        mVirtualHostnameCache = new LRUMap(maxItems);  
+        mKrb5RealmCache = new LRUMap(maxItems);   
         mRefreshTTL = refreshTTL;
     }
 
@@ -72,6 +74,7 @@ public class DomainCache {
         mNameCache.clear();
         mIdCache.clear();
         mVirtualHostnameCache.clear();
+        mKrb5RealmCache.clear();
     }
 
     public synchronized void remove(Domain entry) {
@@ -81,6 +84,9 @@ public class DomainCache {
             String vhost[] = entry.getMultiAttr(Provisioning.A_zimbraVirtualHostname);            
             for (String vh : vhost)
                 mVirtualHostnameCache.remove(vh.toLowerCase());
+            String krb5Realm = entry.getAttr(Provisioning.A_zimbraAuthKerberos5Realm);
+            if (krb5Realm != null)
+                mKrb5RealmCache.remove(krb5Realm);
         }
     }
     
@@ -92,6 +98,9 @@ public class DomainCache {
             String vhost[] = entry.getMultiAttr(Provisioning.A_zimbraVirtualHostname);            
             for (String vh : vhost)
                 mVirtualHostnameCache.put(vh.toLowerCase(), cacheEntry);            
+            String krb5Realm = entry.getAttr(Provisioning.A_zimbraAuthKerberos5Realm);
+            if (krb5Realm != null)
+                mKrb5RealmCache.put(krb5Realm, cacheEntry);
         }
     }
 
@@ -120,5 +129,10 @@ public class DomainCache {
     
     public synchronized Domain getByVirtualHostname(String key) {
         return get(key.toLowerCase(), mVirtualHostnameCache);
-    }    
+    }
+    
+    public synchronized Domain getByKrb5Realm(String key) {
+        return get(key.toLowerCase(), mKrb5RealmCache);
+    }
+    
 }
