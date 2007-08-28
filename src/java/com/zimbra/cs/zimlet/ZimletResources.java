@@ -88,12 +88,12 @@ extends ZimbraServlet {
                 ServletConfig config = this.getServletConfig();
                 ServletContext baseContext = config.getServletContext();
                 ServletContext clientContext = baseContext.getContext("/zimbra/");
-                RequestDispatcher dispatcher = clientContext.getRequestDispatcher("/js/msgs/");
+                RequestDispatcher dispatcher = clientContext.getRequestDispatcher("/messages/");
 
                 List<ZimletFile> files = getZimletFiles(req, type);
                 for (ZimletFile file : files) {
                     String filename = file.getAbsolutePath();
-                    if (!filename.startsWith("/msgs/")) {
+                    if (!filename.startsWith("/messages/")) {
                         continue;
                     }
                     HttpServletRequest wrappedReq = new RequestWrapper(req, filename);
@@ -199,7 +199,7 @@ extends ZimbraServlet {
         List<ZimletFile> files = getZimletFiles(req, type);
         for (ZimletFile file : files) {
             String filename = file.getAbsolutePath();
-            if (filename.startsWith("/msgs/")) {
+            if (filename.startsWith("/messages/")) {
                 continue;
             }
 
@@ -333,7 +333,7 @@ extends ZimbraServlet {
             // add properties files
             boolean isJavaScript = type.equals(T_JAVASCRIPT);
             if (isJavaScript) {
-                files.add(new ZimletFile(zimletName, "/msgs/"+zimletName));
+                files.add(new ZimletFile(zimletName, "/messages/"+zimletName));
             }
 
             // add included files
@@ -396,7 +396,7 @@ extends ZimbraServlet {
             this.filename = filename;
         }
         public String getRequestURI() {
-            return "/js"+filename+".js";
+            return filename+".js";
         }
     }
 
