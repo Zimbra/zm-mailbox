@@ -546,6 +546,7 @@ public class ProvUtil implements DebugListener {
             break;
         case CHECK_PASSWORD_STRENGTH:
             mProv.checkPasswordStrength(lookupAccount(args[1]), args[2]);
+            System.out.println("Password passed strength check.");
             break;
         case CREATE_DISTRIBUTION_LIST:
             System.out.println(mProv.createDistributionList(args[1], getMap(args, 2)).getId());
