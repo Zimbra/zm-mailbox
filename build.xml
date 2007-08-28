@@ -85,6 +85,7 @@
 	<property name="jetty.home.dir" location="${zimbra.home.dir}/jetty" />
 	<property name="jetty.src.dir" location="../ThirdParty/jetty" />
 	<property name="jetty.version" value="6.1.5" />
+	<available property="jetty.start.jar.exists" file="${jetty.home.dir}/start.jar"/>
 	
 	<property name="ical4j.jar" value="ical4j-0.9.16-patched.jar" />
 
@@ -486,7 +487,9 @@
 	</target>
 
 	<target name="reset-all" description="Reset the world plus jetty">
-        <antcall target="stop-webserver"/>
+		<if><isset property="jetty.start.jar.exists"/>
+            <then><antcall target="stop-webserver"/></then>
+		</if>            	
 		<antcall target="clean"/>
 			<mkdir dir="${build.dir}"/>
 			<delete dir="${jetty.home.dir}" />
