@@ -57,6 +57,7 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Identity;
+import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.krb5.Krb5Login;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.NamedEntryCache;
@@ -542,12 +543,17 @@ public class LdapProvisioning extends Provisioning {
         int index = emailAddress.indexOf('@');
         String domain = null;
         if (index == -1) {
-             domain = getConfig().getAttr(Provisioning.A_zimbraDefaultDomainName, null);
+            // domain is already in ASCII name
+            domain = getConfig().getAttr(Provisioning.A_zimbraDefaultDomainName, null);
             if (domain == null)
                 throw ServiceException.INVALID_REQUEST("must be valid email address: "+emailAddress, null);
             else
                 emailAddress = emailAddress + "@" + domain;            
-         }
+        } else {
+            String localPart = emailAddress.substring(0, index);
+            domain = emailAddress.substring(index+1);
+            emailAddress = localPart + "@" + IDNUtil.toAsciiDomainName(domain);
+        }
         
         Account account = sAccountCache.getByName(emailAddress);
         if (account == null) {
@@ -608,7 +614,16 @@ public class LdapProvisioning extends Provisioning {
         
     	validate("createAccount", emailAddress);
         emailAddress = emailAddress.toLowerCase().trim();
-
+        
+        String parts[] = emailAddress.split("@");
+        if (parts.length != 2)
+            throw ServiceException.INVALID_REQUEST("must be valid email address: "+emailAddress, null);
+            
+        String localPart = parts[0];
+        String domain = parts[1];
+        domain = IDNUtil.toAsciiDomainName(domain);
+        emailAddress = localPart + "@" + domain;
+            
         HashMap attrManagerContext = new HashMap();
         if (acctAttrs == null) {
             acctAttrs = new HashMap<String, Object>();
@@ -620,14 +635,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             ctxt = LdapUtil.getDirContext(true);
 
-            String parts[] = emailAddress.split("@");
-            if (parts.length != 2)
-                throw ServiceException.INVALID_REQUEST("must be valid email address: "+emailAddress, null);
-            
-            String localPart = parts[0];
-            String domain = parts[1];
-
-            Domain d = getDomainByName(domain, ctxt);
+            Domain d = getDomainByAsciiName(domain, ctxt);
             if (d == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
             String domainType = d.getAttr(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_LOCAL);
@@ -1127,7 +1135,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             ctxt = LdapUtil.getDirContext(true);
 
-            Domain domain = getDomainByName(aliasDomain, ctxt);
+            Domain domain = getDomainByAsciiName(aliasDomain, ctxt);
             if (domain == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(aliasDomain);
             
@@ -1211,7 +1219,7 @@ public class LdapProvisioning extends Provisioning {
             String aliasDomain = alias.substring(loc+1);
             String aliasName = alias.substring(0, loc);
 
-            Domain domain = getDomainByName(aliasDomain, ctxt);
+            Domain domain = getDomainByAsciiName(aliasDomain, ctxt);
             if (domain == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(aliasDomain);
             
@@ -1271,6 +1279,7 @@ public class LdapProvisioning extends Provisioning {
      */
     public Domain createDomain(String name, Map<String, Object> domainAttrs) throws ServiceException {
         name = name.toLowerCase().trim();
+        name = IDNUtil.toAsciiDomainName(name);
         
         validDomainName(name);
         
@@ -1278,7 +1287,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             ctxt = LdapUtil.getDirContext(true);
             
-            LdapDomain d = (LdapDomain) getDomainByName(name, ctxt);
+            LdapDomain d = (LdapDomain) getDomainByAsciiName(name, ctxt);
             if (d != null)
                 throw AccountServiceException.DOMAIN_EXISTS(name);
             
@@ -1431,10 +1440,11 @@ public class LdapProvisioning extends Provisioning {
      * @see com.zimbra.cs.account.Provisioning#getDomainByName(java.lang.String)
      */
     private Domain getDomainByName(String name) throws ServiceException {
-            return getDomainByName(name, null);
+        String asciiName = IDNUtil.toAsciiDomainName(name);
+        return getDomainByAsciiName(asciiName, null);
     }        
         
-   private Domain getDomainByName(String name, DirContext ctxt) throws ServiceException {
+    private Domain getDomainByAsciiName(String name, DirContext ctxt) throws ServiceException {
         LdapDomain domain = (LdapDomain) sDomainCache.getByName(name);
         if (domain == null) {
             name = LdapUtil.escapeSearchFilterArg(name);
@@ -1444,7 +1454,7 @@ public class LdapProvisioning extends Provisioning {
         return domain;        
     }
    
-   private Domain getDomainByVirtualHostname(String virtualHostname) throws ServiceException {
+    private Domain getDomainByVirtualHostname(String virtualHostname) throws ServiceException {
         LdapDomain domain = (LdapDomain) sDomainCache.getByVirtualHostname(virtualHostname);
         if (domain == null) {
             virtualHostname = LdapUtil.escapeSearchFilterArg(virtualHostname);
@@ -1741,7 +1751,7 @@ public class LdapProvisioning extends Provisioning {
             String newLocal = parts[0];
             String newDomain = parts[1];
             
-            Domain domain = getDomainByName(newDomain, ctxt);
+            Domain domain = getDomainByAsciiName(newDomain, ctxt);
             if (domain == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(newDomain);
             
@@ -2186,7 +2196,7 @@ public class LdapProvisioning extends Provisioning {
             String localPart = parts[0];
             String domain = parts[1];
 
-            Domain d = getDomainByName(domain, ctxt);
+            Domain d = getDomainByAsciiName(domain, ctxt);
             if (d == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
             String domainType = d.getAttr(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_LOCAL);
@@ -2285,7 +2295,7 @@ public class LdapProvisioning extends Provisioning {
 
             boolean domainChanged = !oldDomain.equals(newDomain);
 
-            Domain domain = getDomainByName(newDomain, ctxt);
+            Domain domain = getDomainByAsciiName(newDomain, ctxt);
             if (domain == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(newDomain);
     

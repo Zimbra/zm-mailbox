@@ -41,9 +41,15 @@ import com.zimbra.common.util.ZimbraLog;
  * Window - Preferences - Java - Code Style - Code Templates
  */
 public class Domain extends NamedEntry {
+    private String mUnicodeName;
  
     protected Domain(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults) {
         super(name, id, attrs, defaults);
+        mUnicodeName = IDNUtil.toUnicodeDomainName(name);
+    }
+    
+    public String getUnicodeName() {
+        return mUnicodeName;
     }
     
     public String getDomainStatus() {
@@ -76,4 +82,5 @@ public class Domain extends NamedEntry {
         String renameInfo = getAttr(Provisioning.A_zimbraDomainRenameInfo);
         return (!StringUtil.isNullOrEmpty(renameInfo));
     }
+
 }
