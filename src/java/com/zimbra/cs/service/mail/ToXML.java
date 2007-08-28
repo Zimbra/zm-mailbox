@@ -343,7 +343,7 @@ public class ToXML {
         }
 
         if (summary || !needToOutput(fields, Change.MODIFIED_CONTENT)) {
-            try {
+                try {
                 elem.addAttribute(MailService.A_FILE_AS_STR, contact.getFileAsString());
 
                 String email = contact.get(Contact.A_email);
@@ -353,7 +353,7 @@ public class ToXML {
                 email = contact.get(Contact.A_email2);
                 if (email != null)
                     elem.addAttribute(Contact.A_email2, email);
-
+    
                 email = contact.get(Contact.A_email3);
                 if (email != null)
                     elem.addAttribute(Contact.A_email3, email);
@@ -362,9 +362,9 @@ public class ToXML {
                 String dlist = contact.get(Contact.A_dlist);
                 if (type == null && dlist != null) type = Contact.TYPE_GROUP;
                 if (type != null)
-                    elem.addAttribute(Contact.A_type,  type);
+                elem.addAttribute(Contact.A_type, type);
                 if (dlist != null)
-                    elem.addAttribute(Contact.A_dlist,  dlist);
+                    elem.addAttribute(Contact.A_dlist, dlist);
                 
                 // send back date with summary via search results
                 elem.addAttribute(MailService.A_CHANGE_DATE, contact.getChangeDate() / 1000);
@@ -400,7 +400,7 @@ public class ToXML {
                 else
                     elem.addAttribute(name, value, Element.DISP_ELEMENT);
             }
-        }
+            }
         return elem;
     }
 
@@ -564,7 +564,7 @@ public class ToXML {
             if (count != nondeleted)
                 c.addAttribute(MailService.A_TOTAL_SIZE, count);
         }
-        recordItemTags(c, conv, fields);
+            recordItemTags(c, conv, fields);
         if (fields == NOTIFY_FIELDS)
             c.addAttribute(MailService.E_SUBJECT, conv.getSubject(), Element.DISP_CONTENT);
         return c;
@@ -663,7 +663,7 @@ public class ToXML {
         }
         return m;
     }
-
+    
     /**
      * Encode the metadata for a calendar item.
      * 
@@ -675,7 +675,7 @@ public class ToXML {
      * The client can ALSO request just the content for each individual invite using a
      * compound item-id request:
      *    http://servername/service/content/get?id=<calItemId>-<invite-mail-item-id>
-     *    
+     * 
      * DO NOT use the raw invite-mail-item-id to fetch the content: since the invite is a 
      * standard mail-message it can be deleted by the user at any time!
      * @param parent
@@ -713,8 +713,8 @@ public class ToXML {
             calItemElem.addAttribute(MailService.A_MODIFIED_SEQUENCE, calItem.getModifiedSequence());
         }
 
-        for (int i = 0; i < calItem.numInvites(); i++) {
-            Invite inv = calItem.getInvite(i);
+            for (int i = 0; i < calItem.numInvites(); i++) {
+                Invite inv = calItem.getInvite(i);
 
             Element ie = calItemElem.addElement(MailService.E_INVITE);
             setCalendarItemType(ie, calItem);
@@ -725,7 +725,7 @@ public class ToXML {
 
             ie.addAttribute(MailService.A_ID, lc.formatItemId(inv.getMailItemId()));
             ie.addAttribute(MailService.A_CAL_COMPONENT_NUM, inv.getComponentNum());
-            if (inv.hasRecurId())
+        if (inv.hasRecurId())
                 ie.addAttribute(MailService.A_CAL_RECURRENCE_ID, inv.getRecurId().toString());
 
             encodeInvite(ie, lc, calItem, inv, NOTIFY_FIELDS, false);
@@ -736,19 +736,19 @@ public class ToXML {
 
     private static void encodeReplies(Element parent, CalendarItem calItem, Invite inv) {
         Element repliesElt = parent.addElement(MailService.E_CAL_REPLIES);
-
+        
         List /*CalendarItem.ReplyInfo */ replies = calItem.getReplyInfo(inv);
         for (Iterator iter = replies.iterator(); iter.hasNext(); ) {
             CalendarItem.ReplyInfo repInfo = (CalendarItem.ReplyInfo) iter.next();
             ZAttendee attendee = repInfo.mAttendee;
-
+        
             Element curElt = repliesElt.addElement(MailService.E_CAL_REPLY);
             if (repInfo.mRecurId != null) {
                 repInfo.mRecurId.toXml(curElt);
-            }
+    }
             if (attendee.hasPartStat()) {
                 curElt.addAttribute(MailService.A_CAL_PARTSTAT, attendee.getPartStat());
-            }
+    }
             curElt.addAttribute(MailService.A_DATE, repInfo.mDtStamp);
             curElt.addAttribute(MailService.A_CAL_ATTENDEE, attendee.getAddress());
             if (attendee.hasSentBy())
@@ -804,18 +804,18 @@ public class ToXML {
             } else
                 part = "";
 
-            addEmails(m, Mime.parseAddressHeader(mm, "From"), EmailType.FROM);
-            addEmails(m, Mime.parseAddressHeader(mm, "Sender"), EmailType.SENDER);
-            addEmails(m, Mime.parseAddressHeader(mm, "Reply-To"), EmailType.REPLY_TO);
-            addEmails(m, Mime.parseAddressHeader(mm, "To"), EmailType.TO);
-            addEmails(m, Mime.parseAddressHeader(mm, "Cc"), EmailType.CC);
-            addEmails(m, Mime.parseAddressHeader(mm, "Bcc"), EmailType.BCC);
-
-            String subject = mm.getSubject();
-            if (subject != null)
+                addEmails(m, Mime.parseAddressHeader(mm, "From"), EmailType.FROM);
+                addEmails(m, Mime.parseAddressHeader(mm, "Sender"), EmailType.SENDER);
+                addEmails(m, Mime.parseAddressHeader(mm, "Reply-To"), EmailType.REPLY_TO);
+                addEmails(m, Mime.parseAddressHeader(mm, "To"), EmailType.TO);
+                addEmails(m, Mime.parseAddressHeader(mm, "Cc"), EmailType.CC);
+                addEmails(m, Mime.parseAddressHeader(mm, "Bcc"), EmailType.BCC);
+    
+                String subject = mm.getSubject();
+                if (subject != null)
                 m.addAttribute(MailService.E_SUBJECT, StringUtil.stripControlCharacters(subject), Element.DISP_CONTENT);
-            String messageID = mm.getMessageID();
-            if (messageID != null && !messageID.trim().equals(""))
+                String messageID = mm.getMessageID();
+                if (messageID != null && !messageID.trim().equals(""))
                 m.addAttribute(MailService.E_MSG_ID_HDR, StringUtil.stripControlCharacters(messageID), Element.DISP_CONTENT);
 
 //          if (wholeMessage && msg.isDraft()) {
@@ -827,12 +827,12 @@ public class ToXML {
 //              if (inReplyTo != null && !inReplyTo.equals(""))
 //                  m.addAttribute(MailService.E_IN_REPLY_TO, StringUtil.stripControlCharacters(inReplyTo), Element.DISP_CONTENT);
 //          }
-
-            if (!wholeMessage)
+    
+                if (!wholeMessage)
                 m.addAttribute(MailService.A_SIZE, mm.getSize());
-
-            java.util.Date sent = mm.getSentDate();
-            if (sent != null)
+    
+                java.util.Date sent = mm.getSentDate();
+                if (sent != null)
                 m.addAttribute(MailService.A_SENT_DATE, sent.getTime());
 
             Element invElt = m.addElement(MailService.E_INVITE);
@@ -840,10 +840,10 @@ public class ToXML {
             encodeTimeZoneMap(invElt, calItem.getTimeZoneMap());
             for (Invite inv : calItem.getInvites(invId))
                 encodeInvite(invElt, lc, calItem, inv, NOTIFY_FIELDS, repliesWithInvites);
-
-            List<MPartInfo> parts = Mime.getParts(mm);
-            if (parts != null && !parts.isEmpty()) {
-                Set<MPartInfo> bodies = Mime.getBody(parts, wantHTML);
+    
+                List<MPartInfo> parts = Mime.getParts(mm);
+                if (parts != null && !parts.isEmpty()) {
+                    Set<MPartInfo> bodies = Mime.getBody(parts, wantHTML);
                 addParts(m, parts.get(0), bodies, part, neuter);
             }
         } catch (IOException ex) {
@@ -1014,8 +1014,8 @@ public class ToXML {
 
     public static Element encodeInvite(Element parent,
                 ZimbraSoapContext lc,
-                CalendarItem calItem,
-                Invite invite,
+                                                CalendarItem calItem,
+                                                Invite invite,
                 int fields,
                 boolean includeReplies)
     throws ServiceException {
@@ -1033,7 +1033,7 @@ public class ToXML {
         e.addAttribute(MailService.A_CAL_COMPONENT_NUM, invite.getComponentNum());
 
         e.addAttribute(MailService.A_CAL_RSVP, invite.getRsvp());
-
+        
         if (allFields) {
             boolean isRecurring = false;
             e.addAttribute("x_uid", invite.getUid());
@@ -1059,6 +1059,13 @@ public class ToXML {
             String priority = invite.getPriority();
             if (priority != null)
                 e.addAttribute(MailService.A_CAL_PRIORITY, priority);
+
+            // Description
+            String desc = invite.getDescription();
+            if (desc != null) {
+                Element descElem = e.addElement(MailService.E_CAL_DESCRIPTION);
+                descElem.setText(desc);
+            }
 
             if (invite.isEvent()) {
                 e.addAttribute(MailService.A_APPT_FREEBUSY, invite.getFreeBusy());
@@ -1153,7 +1160,7 @@ public class ToXML {
                     orgElt.addAttribute(MailService.A_CAL_DIR, org.getDir());
                 if (org.hasLanguage())
                     orgElt.addAttribute(MailService.A_CAL_LANGUAGE, org.getLanguage());
-            }
+        }
 
             // Attendee(s)
             List<ZAttendee> attendees = invite.getAttendees();
