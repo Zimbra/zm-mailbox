@@ -125,7 +125,7 @@ Then run "sudo visudo" and add the following at the
 end of the file and save:
 
 <pre>
-{user_name}{TAB}ALL=NOPASSWD:/opt/zimbra/openldap/libexec/slapd
+{user_name}{TAB}ALL=NOPASSWD:/opt/zimbra/libexec/zmslapd
 <pre>
 
 
