@@ -1238,10 +1238,18 @@ public class ToXML {
 
                 // x-prop
                 encodeXProps(e, invite.xpropsIterator());
-                
+
+                // fragment
                 String fragment = invite.getFragment();
                 if (fragment != null && fragment.length() > 0) {
                     e.addAttribute(MailConstants.E_FRAG, fragment, Element.Disposition.CONTENT);
+                }
+
+                // Description
+                String desc = invite.getDescription();
+                if (desc != null) {
+                    Element descElem = e.addElement(MailConstants.E_CAL_DESCRIPTION);
+                    descElem.setText(desc);
                 }
 
                 if (invite.isEvent()) {

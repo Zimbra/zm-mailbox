@@ -26,6 +26,10 @@
 package com.zimbra.cs.mailbox.calendar;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringReader;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -54,6 +58,7 @@ import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
 import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
@@ -703,8 +708,46 @@ public class Invite {
     public static String getDescription(MimeMessage mmInv) throws ServiceException {
         if (mmInv == null) return null;
         try {
+            // If top-level is text/icalendar, parse the iCalendar object and return
+            // the DESCRIPTION of the first VEVENT/VTODO encountered.
+            String mmCtStr = mmInv.getContentType();
+            if (mmCtStr != null) {
+                ContentType mmCt = new ContentType(mmCtStr);
+                if (mmCt.match(Mime.CT_TEXT_CALENDAR)) {
+                    Object mmInvContent = mmInv.getContent();
+                    Reader reader = null;
+                    try {
+                        if (mmInvContent instanceof InputStream)
+                            reader = new InputStreamReader((InputStream) mmInvContent);
+                        else if (mmInvContent instanceof String)
+                            reader = new StringReader((String) mmInvContent);
+                        if (reader != null) {
+                            ZVCalendar iCal = ZCalendarBuilder.build(reader);
+                            for (Iterator<ZComponent> compIter = iCal.getComponentIterator(); compIter.hasNext(); ) {
+                                ZComponent component = compIter.next();
+                                ICalTok compTypeTok = component.getTok();
+                                if (compTypeTok == ICalTok.VEVENT || compTypeTok == ICalTok.VTODO) {
+                                    for (Iterator<ZProperty> propIter = component.getPropertyIterator(); propIter.hasNext(); ) {
+                                        ZProperty prop = propIter.next();
+                                        if (prop.getToken() == ICalTok.DESCRIPTION) {
+                                            return prop.getValue();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } finally {
+                        if (reader != null)
+                            reader.close();
+                    }
+                }
+            }
+
             Object mmInvContent = mmInv.getContent();
-            if (!(mmInvContent instanceof MimeMultipart)) return null;
+            if (!(mmInvContent instanceof MimeMultipart))
+                return null;
+
+            // If top-level is multipart, get description from text/plain part.
             MimeMultipart mm = (MimeMultipart) mmInvContent;
             int numParts = mm.getCount();
             BodyPart textPlain = null;
@@ -1101,7 +1144,6 @@ public class Invite {
     private List<ZAttendee> mAttendees = new ArrayList<ZAttendee>();
     private ZOrganizer mOrganizer;
     private boolean mIsOrganizer;
-//    private ArrayList /* VAlarm */ mAlarms = new ArrayList();
 
     private String mPriority;         // 0 .. 9
     private String mPercentComplete;  // 0 .. 100

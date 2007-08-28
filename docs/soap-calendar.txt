@@ -121,7 +121,7 @@
               <dur DURATION>   //<dur [neg="1|0"] [w="weeks"] [d="days"] [h="hours"] [m="mins"] [s="secs"]>  
            )   // one is required
 
-//           [ <desc>DESCRIPTION</desc> ]? // Will use message FRAGMENT if not specified
+           [<desc>DESCRIPTION</desc>]  // used in responses only
 
            // organizer
            <or a="address"         // email address (without "MAILTO:")
