@@ -186,10 +186,9 @@ public class DomainAccessManager extends AccessManager {
     private boolean isParentOf(Account credentials, Account target) {
         
         Set<String> childAccts = credentials.getMultiAttrSet(Provisioning.A_zimbraChildAccount);
-        Set<String> visibleChildAccts = credentials.getMultiAttrSet(Provisioning.A_zimbraChildVisibleAccount);
         String targetId = target.getId();
         
-        if (childAccts.contains(targetId) || visibleChildAccts.contains(targetId))
+        if (childAccts.contains(targetId))
             return true;
 
         return false;
