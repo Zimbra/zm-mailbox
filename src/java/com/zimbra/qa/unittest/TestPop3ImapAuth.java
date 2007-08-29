@@ -67,7 +67,7 @@ extends TestCase {
     private static final String IMAP_STARTTLS = "2 STARTTLS" + CRLF;
     private static final String IMAP_STARTTLS_RESPONSE = "2 OK Begin TLS negotiation now";
     private static final String IMAP_LOGOUT = "3 LOGOUT" + CRLF;
-    private static final String IMAP_LOGOUT_RESPONSE1 = "\\* BYE Zimbra IMAP4rev1 server terminating connection";
+    private static final String IMAP_LOGOUT_RESPONSE1 = "\\* BYE.*IMAP4rev1 server terminating connection";
     private static final String IMAP_LOGOUT_RESPONSE2 = "3 OK LOGOUT completed";
     
     private Provisioning mProv;
