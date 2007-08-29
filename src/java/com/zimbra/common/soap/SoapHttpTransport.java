@@ -38,6 +38,8 @@ import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpMethodRetryHandler;
 import org.apache.commons.httpclient.HttpRecoverableException;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.params.HttpClientParams;
@@ -77,9 +79,41 @@ public class SoapHttpTransport extends SoapTransport {
      * synchronization.
      */
     public SoapHttpTransport(String uri) {
+    	this(uri, null, 0);
+    }
+    
+    /**
+     * Create a new SoapHttpTransport object for the specified URI, with specific proxy information.
+     * 
+     * @param uri the origin server URL
+     * @param proxyHost hostname of proxy
+     * @param proxyPort port of proxy
+     */
+    public SoapHttpTransport(String uri, String proxyHost, int proxyPort) {
+    	this(uri, proxyHost, proxyPort, null, null);
+    }
+    
+    /**
+     * Create a new SoapHttpTransport object for the specified URI, with specific proxy information including
+     * proxy auth credentials.
+     * 
+     * @param uri the origin server URL
+     * @param proxyHost hostname of proxy
+     * @param proxyPort port of proxy
+     * @param proxyUser username for proxy auth
+     * @param proxyPass password for proxy auth
+     */
+    public SoapHttpTransport(String uri, String proxyHost, int proxyPort, String proxyUser, String proxyPass) {
     	super();
     	mClient = new HttpClient(sDefaultParams);
     	commonInit(uri);
+    	
+    	if (proxyHost != null && proxyPort > 0) {
+    		mClient.getHostConfiguration().setProxy(proxyHost, proxyPort);
+    		if (proxyUser != null && proxyPass != null) {
+    			mClient.getState().setProxyCredentials(new AuthScope(proxyHost, proxyPort), new UsernamePasswordCredentials(proxyUser, proxyPass));
+    		}
+    	}
     }
 
     /**
