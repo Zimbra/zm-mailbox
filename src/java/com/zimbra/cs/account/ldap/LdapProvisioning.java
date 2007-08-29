@@ -2259,7 +2259,7 @@ public class LdapProvisioning extends Provisioning {
             
             LdapUtil.createEntry(ctxt, dn, attrs, "createDistributionList");
 
-            DistributionList dlist = getDistributionListById(zimbraIdStr, ctxt, true);
+            DistributionList dlist = getDistributionListById(zimbraIdStr, ctxt);
             AttributeManager.getInstance().postModify(listAttrs, dlist, attrManagerContext, true);
             return dlist;
 
@@ -2277,11 +2277,11 @@ public class LdapProvisioning extends Provisioning {
         return getDistributionLists(addrs, directOnly, via, false);
     }
 
-    private DistributionList getDistributionListByQuery(String base, String query, DirContext initCtxt, boolean loadFromMaster) throws ServiceException {
+    private DistributionList getDistributionListByQuery(String base, String query, DirContext initCtxt) throws ServiceException {
         DirContext ctxt = initCtxt;
         try {
             if (ctxt == null)
-                ctxt = LdapUtil.getDirContext(loadFromMaster);
+                ctxt = LdapUtil.getDirContext();
             NamingEnumeration ne = LdapUtil.searchDir(ctxt, base, query, sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
@@ -2309,7 +2309,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             ctxt = LdapUtil.getDirContext(true);
             
-            LdapDistributionList dl = (LdapDistributionList) getDistributionListById(zimbraId, ctxt, true);
+            LdapDistributionList dl = (LdapDistributionList) getDistributionListById(zimbraId, ctxt);
             if (dl == null)
                 throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(zimbraId);
 
@@ -2358,7 +2358,7 @@ public class LdapProvisioning extends Provisioning {
             if (dnChanged)
                 LdapUtil.renameEntry(ctxt, oldDn, newDn);
             
-            dl = (LdapDistributionList) getDistributionListById(zimbraId, ctxt, true);
+            dl = (LdapDistributionList) getDistributionListById(zimbraId,ctxt);
             
             // rename the distribution list and all it's renamed aliases to the new name in all distribution lists
             // doesn't throw exceptions, just logs
@@ -2391,29 +2391,24 @@ public class LdapProvisioning extends Provisioning {
 
     @Override
     public DistributionList get(DistributionListBy keyType, String key) throws ServiceException {
-        return get(keyType, key, false);
-    }
-    
-    @Override
-    public DistributionList get(DistributionListBy keyType, String key, boolean loadFromMaster) throws ServiceException {
         switch(keyType) {
             case id: 
-                return getDistributionListById(key, null, loadFromMaster);
+                return getDistributionListById(key);
             case name: 
-                return getDistributionListByName(key, loadFromMaster);
+                return getDistributionListByName(key);
             default:
                     return null;
         }
     }
 
-    private DistributionList getDistributionListById(String zimbraId, DirContext ctxt, boolean loadFromMaster) throws ServiceException {
+    private DistributionList getDistributionListById(String zimbraId, DirContext ctxt) throws ServiceException {
         //zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
         return getDistributionListByQuery("","(&(zimbraId="+zimbraId+")" + 
-                                          FILTER_DISTRIBUTION_LIST_OBJECTCLASS+ ")", ctxt, loadFromMaster);
+                                          FILTER_DISTRIBUTION_LIST_OBJECTCLASS+ ")", ctxt);
     }
 
     private DistributionList getDistributionListById(String zimbraId) throws ServiceException {
-        return getDistributionListById(zimbraId, null, false);
+        return getDistributionListById(zimbraId, null);
     }
 
     public void deleteDistributionList(String zimbraId) throws ServiceException {
@@ -2439,7 +2434,7 @@ public class LdapProvisioning extends Provisioning {
         }
     }
 
-    private DistributionList getDistributionListByName(String listAddress, boolean loadFromMaster) throws ServiceException {
+    private DistributionList getDistributionListByName(String listAddress) throws ServiceException {
         String parts[] = listAddress.split("@");
         
         if (parts.length != 2)
@@ -2450,7 +2445,7 @@ public class LdapProvisioning extends Provisioning {
         return getDistributionListByQuery("", 
                                           "(&(zimbraMailAlias="+listAddress+")" +
                                           FILTER_DISTRIBUTION_LIST_OBJECTCLASS+ ")",
-                                          null, loadFromMaster);
+                                          null);
     }
     
     public Server getLocalServer() throws ServiceException {

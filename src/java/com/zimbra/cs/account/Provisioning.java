@@ -1783,9 +1783,6 @@ public abstract class Provisioning {
     }
     
     public abstract DistributionList get(DistributionListBy keyType, String key) throws ServiceException;
-    public DistributionList get(DistributionListBy keyType, String key, boolean loadFromMaster) throws ServiceException {
-        return get(keyType, key);
-    }
     
     public abstract void deleteDistributionList(String zimbraId) throws ServiceException;
 
