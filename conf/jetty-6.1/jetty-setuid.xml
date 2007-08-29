@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+<!DOCTYPE Configure PUBLIC "-//Mort Bay Consulting//DTD Configure//EN" "http://jetty.mortbay.org/configure.dtd">
+
+
+<!-- =============================================================== -->
+<!-- Configure the Jetty SetUIDServer                                 -->
+<!-- this configuration file should be used in combination with      -->
+<!-- other configuration files.  e.g.                                -->
+<!--    java -jar start.jar etc/jetty-setuid.xml etc/jetty.xml       -->
+<!-- =============================================================== -->
+<Configure id="Server" class="org.mortbay.setuid.SetUIDServer">
+  <Call class="com.zimbra.common.handlers.PrivilegedHandler" name="openPorts">
+    <Arg>
+      <Map>
+        <Entry>
+          <Item>zimbraLmtpBindAddress</Item>
+          <Item><New class="java.lang.String"><Arg><Property name="zimbraLmtpBindAddress"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraLmtpBindPort</Item>
+          <Item><New class="java.lang.Integer"><Arg><Property name="zimbraLmtpBindPort" default="7025"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraImapServerEnabled</Item>
+          <Item><New class="java.lang.Boolean"><Arg><Property name="zimbraImapServerEnabled" default="false"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraImapBindAddress</Item>
+          <Item><New class="java.lang.String"><Arg><Property name="zimbraImapBindAddress"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraImapBindPort</Item>
+          <Item><New class="java.lang.Integer"><Arg><Property name="zimbraImapBindPort" default="143"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraImapSSLServerEnabled</Item>
+          <Item><New class="java.lang.Boolean"><Arg><Property name="zimbraImapSSLServerEnabled" default="false"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraImapSSLBindAddress</Item>
+          <Item><New class="java.lang.String"><Arg><Property name="zimbraImapSSLBindAddress"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraImapSSLBindPort</Item>
+          <Item><New class="java.lang.Integer"><Arg><Property name="zimbraImapSSLBindPort" default="993"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraPop3ServerEnabled</Item>
+          <Item><New class="java.lang.Boolean"><Arg><Property name="zimbraPop3ServerEnabled" default="false"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraPop3BindAddress</Item>
+          <Item><New class="java.lang.String"><Arg><Property name="zimbraPop3BindAddress"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraPop3BindPort</Item>
+          <Item><New class="java.lang.Integer"><Arg><Property name="zimbraPop3BindPort" default="110"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraPop3SSLServerEnabled</Item>
+          <Item><New class="java.lang.Boolean"><Arg><Property name="zimbraPop3SSLServerEnabled" default="false"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraPop3SSLBindAddress</Item>
+          <Item><New class="java.lang.String"><Arg><Property name="zimbraPop3SSLBindAddress"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraPop3SSLBindPort</Item>
+          <Item><New class="java.lang.Integer"><Arg><Property name="zimbraPop3SSLBindPort" default="995"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>nio_imap_enabled</Item>
+          <Item><New class="java.lang.Boolean"><Arg><Property name="nio_imap_enabled" default="false"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>mailboxd_keystore</Item>
+          <Item><New class="java.lang.String"><Arg><Property name="mailboxd_keystore" default="/opt/zimbra/jetty/etc/keystore"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>mailboxd_keystore_password</Item>
+          <Item><New class="java.lang.String"><Arg><Property name="mailboxd_keystore_password"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>mailboxd_truststore_password</Item>
+          <Item><New class="java.lang.String"><Arg><Property name="mailboxd_truststore_password"/></Arg></New></Item>
+        </Entry>
+      </Map>
+    </Arg>
+  </Call>
+
+  <Set name="startServerAsPrivileged">false</Set>
+  <Set name="umask">2</Set>
+  <Set name="uid"><Property name="zimbra_uid"/></Set>
+  <Set name="gid"><Property name="zimbra_gid"/></Set>
+</Configure>
+

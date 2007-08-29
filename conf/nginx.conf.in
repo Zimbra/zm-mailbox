@@ -1,0 +1,59 @@
+user zimbra zimbra;
+worker_processes  1;
+
+#error_log  logs/error.log;
+#error_log  logs/error.log  notice;
+#error_log  logs/error.log  info;
+
+pid        /opt/zimbra/log/nginx.pid;
+error_log  /opt/zimbra/log/nginx.log info;
+
+
+events {
+    worker_connections  1024;
+}
+
+mail {
+
+#   Memcache configuration
+    memcache_servers localhost:11211;
+
+#   http authentication configuration
+    auth_http localhost:7072/service/extension/nginx-lookup;
+
+	pop3_capabilities        "TOP" "USER" "UIDL" "STLS" "EXPIRE 31 USER";
+	imap_capabilities        "IMAP4rev1" "STARTTLS" "BINARY" "CHILDREN" "ID" "LITERAL+" "LOGIN-REFERRALS" "NAMESPACE" "QUOTA" "SASL-IR" "UIDPLUS" "UNSELECT";
+
+#   TLS configuration
+    starttls on;
+    ssl_prefer_server_ciphers on;
+    ssl_certificate             /opt/zimbra/conf/nginx.crt;
+    ssl_certificate_key         /opt/zimbra/conf/nginx.key;
+
+    server {
+        listen %%zimbraPop3ProxyBindPort%%;
+        protocol pop3;
+        proxy on;
+    }
+
+    server {
+        listen %%zimbraPop3SSLProxyBindPort%%;
+        protocol pop3;
+        proxy on;
+		ssl on;
+    }
+
+#   IMAP proxy config
+    server {
+        listen %%zimbraImapProxyBindPort%%;
+        protocol imap;
+        proxy on;
+    }
+
+    server {
+        listen %%zimbraImapSSLProxyBindPort%%;
+        protocol imap;
+        proxy on;
+		ssl on;
+    }
+}

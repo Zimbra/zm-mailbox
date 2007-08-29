@@ -1,6 +1,7 @@
 reject_non_fqdn_recipient
 permit_sasl_authenticated
 permit_mynetworks
+reject_unauth_destination
 reject_unlisted_recipient
 %%contains VAR:zimbraMtaRestriction reject_invalid_hostname%%
 %%contains VAR:zimbraMtaRestriction reject_non_fqdn_hostname%%
@@ -11,10 +12,8 @@ reject_unlisted_recipient
 %%contains VAR:zimbraMtaRestriction reject_rbl_client dnsbl.njabl.org%%
 %%contains VAR:zimbraMtaRestriction reject_rbl_client cbl.abuseat.org%%
 %%contains VAR:zimbraMtaRestriction reject_rbl_client bl.spamcop.net%%
-%%contains VAR:zimbraMtaRestriction reject_rbl_client dnsbl.sorbs.net%%
 %%contains VAR:zimbraMtaRestriction reject_rbl_client sbl.spamhaus.org%%
 %%contains VAR:zimbraMtaRestriction reject_rbl_client xbl.spamhaus.org%%
 %%contains VAR:zimbraMtaRestriction reject_rbl_client sbl-xbl.spamhaus.org%%
 %%contains VAR:zimbraMtaRestriction reject_rbl_client relays.mail-abuse.org%%
-reject_unauth_destination
 permit
