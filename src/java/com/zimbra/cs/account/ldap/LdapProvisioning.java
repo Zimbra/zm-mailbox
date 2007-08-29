@@ -58,7 +58,6 @@ import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.IDNUtil;
-import com.zimbra.cs.account.krb5.Krb5Login;
 import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.NamedEntryCache;
@@ -444,16 +443,16 @@ public class LdapProvisioning extends Provisioning {
     	return listAllZimlets();
     }
 
-    private Account getAccountByQuery(String base, String query, DirContext initCtxt) throws ServiceException {
+    private Account getAccountByQuery(String base, String query, DirContext initCtxt, boolean loadFromMaster) throws ServiceException {
         DirContext ctxt = initCtxt;
         try {
             if (ctxt == null)
-                ctxt = LdapUtil.getDirContext();
+                ctxt = LdapUtil.getDirContext(loadFromMaster);
             NamingEnumeration ne = LdapUtil.searchDir(ctxt, base, query, sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 if (ne.hasMore()) {
-                    String dups = formatMultipleMatchEntries(sr, ne);
+                    String dups = formatMultipleMatchedEntries(sr, ne);
                     throw AccountServiceException.MULTIPLE_ACCOUNTS_MATCHED("getAccountByQuery: "+query+" returned multiple entries at "+dups);
                 }
                 ne.close();
@@ -472,7 +471,7 @@ public class LdapProvisioning extends Provisioning {
         return null;
     }
 
-    private Account getAccountById(String zimbraId, DirContext ctxt) throws ServiceException {
+    private Account getAccountById(String zimbraId, DirContext ctxt, boolean loadFromMaster) throws ServiceException {
         if (zimbraId == null)
             return null;
         Account a = sAccountCache.getById(zimbraId);
@@ -482,7 +481,7 @@ public class LdapProvisioning extends Provisioning {
                     "",
                     "(&(zimbraId=" + zimbraId + ")" +
                     FILTER_ACCOUNT_OBJECTCLASS + ")",
-                    ctxt);
+                    ctxt, loadFromMaster);
             sAccountCache.put(a);
         }
         return a;
@@ -490,36 +489,41 @@ public class LdapProvisioning extends Provisioning {
 
     @Override
     public Account get(AccountBy keyType, String key) throws ServiceException {
+        return get(keyType, key, false);
+    }
+    
+    @Override
+    public Account get(AccountBy keyType, String key, boolean loadFromMaster) throws ServiceException {
         switch(keyType) {
-            case adminName: 
-                return getAdminAccountByName(key);
-            case id: 
-                return getAccountById(key);
-            case foreignPrincipal: 
-                return getAccountByForeignPrincipal(key);
-            case name: 
-                return getAccountByName(key);
-            case krb5Principal:
-                return Krb5Principal.getAccountFromKrb5Principal(key);
-            default:
-                return null;
+        case adminName: 
+            return getAdminAccountByName(key, loadFromMaster);
+        case id: 
+            return getAccountById(key, null, loadFromMaster);
+        case foreignPrincipal: 
+            return getAccountByForeignPrincipal(key, loadFromMaster);
+        case name: 
+            return getAccountByName(key, loadFromMaster);
+        case krb5Principal:
+            return Krb5Principal.getAccountFromKrb5Principal(key, loadFromMaster);
+        default:
+            return null;
         }
     }
     
     protected Account getAccountById(String zimbraId) throws ServiceException {
-        return getAccountById(zimbraId, null);
+        return getAccountById(zimbraId, null, false);
     }
 
-    private Account getAccountByForeignPrincipal(String foreignPrincipal) throws ServiceException {
+    private Account getAccountByForeignPrincipal(String foreignPrincipal, boolean loadFromMaster) throws ServiceException {
         foreignPrincipal = LdapUtil.escapeSearchFilterArg(foreignPrincipal);
         return getAccountByQuery(
                 "",
                 "(&(zimbraForeignPrincipal=" + foreignPrincipal + ")" +
                 FILTER_ACCOUNT_OBJECTCLASS + ")",
-                null);
+                null, loadFromMaster);
     }
 
-    private Account getAdminAccountByName(String name) throws ServiceException {
+    private Account getAdminAccountByName(String name, boolean loadFromMaster) throws ServiceException {
         Account a = sAccountCache.getByName(name);
         if (a == null) {
             name = LdapUtil.escapeSearchFilterArg(name);
@@ -527,7 +531,7 @@ public class LdapProvisioning extends Provisioning {
                     mDIT.adminBaseDN(),
                     "(&(" + mDIT.accountNamingRdnAttr() + "=" + name + ")" +
                     FILTER_ACCOUNT_OBJECTCLASS + ")",
-                    null);
+                    null, loadFromMaster);
             sAccountCache.put(a);
         }
         return a;
@@ -536,7 +540,7 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#getDomainByName(java.lang.String)
      */
-    private Account getAccountByName(String emailAddress) throws ServiceException {
+    private Account getAccountByName(String emailAddress, boolean loadFromMaster) throws ServiceException {
         
         int index = emailAddress.indexOf('@');
         String domain = null;
@@ -561,7 +565,7 @@ public class LdapProvisioning extends Provisioning {
                     "(&(|(zimbraMailDeliveryAddress=" + emailAddress +
                     ")(zimbraMailAlias=" + emailAddress + "))" +
                     FILTER_ACCOUNT_OBJECTCLASS + ")",
-                    null);
+                    null, loadFromMaster);
             sAccountCache.put(account);
         }
         return account;
@@ -744,7 +748,7 @@ public class LdapProvisioning extends Provisioning {
             dn = mDIT.accountDNCreate(baseDn, attrs, localPart, domain);
             
             LdapUtil.createEntry(ctxt, dn, attrs, "createAccount");
-            Account acct = getAccountById(zimbraIdStr, ctxt);
+            Account acct = getAccountById(zimbraIdStr, ctxt, true);
             AttributeManager.getInstance().postModify(acctAttrs, acct, attrManagerContext, true);
 
             return acct;
@@ -1377,7 +1381,7 @@ public class LdapProvisioning extends Provisioning {
         }
     }
 
-    private String formatMultipleMatchEntries(SearchResult first, NamingEnumeration rest) throws NamingException {
+    private String formatMultipleMatchedEntries(SearchResult first, NamingEnumeration rest) throws NamingException {
         StringBuffer dups = new StringBuffer();
         dups.append("[" + first.getNameInNamespace() + "] ");
         while (rest.hasMore()) {
@@ -1397,7 +1401,7 @@ public class LdapProvisioning extends Provisioning {
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 if (ne.hasMore()) {
-                    String dups = formatMultipleMatchEntries(sr, ne);
+                    String dups = formatMultipleMatchedEntries(sr, ne);
                     throw AccountServiceException.MULTIPLE_DOMAINS_MATCHED("getDomainByQuery: "+query+" returned multiple entries at "+dups);
                 }
                 ne.close();
@@ -1759,7 +1763,7 @@ public class LdapProvisioning extends Provisioning {
         validEmailAddress(newName);
         
         DirContext ctxt = null;
-        Account acct = getAccountById(zimbraId, ctxt);
+        Account acct = getAccountById(zimbraId, ctxt, true);
         LdapEntry entry = (LdapEntry) acct;
         if (acct == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(zimbraId);
@@ -2255,7 +2259,7 @@ public class LdapProvisioning extends Provisioning {
             
             LdapUtil.createEntry(ctxt, dn, attrs, "createDistributionList");
 
-            DistributionList dlist = getDistributionListById(zimbraIdStr, ctxt);
+            DistributionList dlist = getDistributionListById(zimbraIdStr, ctxt, true);
             AttributeManager.getInstance().postModify(listAttrs, dlist, attrManagerContext, true);
             return dlist;
 
@@ -2273,11 +2277,11 @@ public class LdapProvisioning extends Provisioning {
         return getDistributionLists(addrs, directOnly, via, false);
     }
 
-    private DistributionList getDistributionListByQuery(String base, String query, DirContext initCtxt) throws ServiceException {
+    private DistributionList getDistributionListByQuery(String base, String query, DirContext initCtxt, boolean loadFromMaster) throws ServiceException {
         DirContext ctxt = initCtxt;
         try {
             if (ctxt == null)
-                ctxt = LdapUtil.getDirContext();
+                ctxt = LdapUtil.getDirContext(loadFromMaster);
             NamingEnumeration ne = LdapUtil.searchDir(ctxt, base, query, sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
@@ -2305,7 +2309,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             ctxt = LdapUtil.getDirContext(true);
             
-            LdapDistributionList dl = (LdapDistributionList) getDistributionListById(zimbraId, ctxt);
+            LdapDistributionList dl = (LdapDistributionList) getDistributionListById(zimbraId, ctxt, true);
             if (dl == null)
                 throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(zimbraId);
 
@@ -2354,7 +2358,7 @@ public class LdapProvisioning extends Provisioning {
             if (dnChanged)
                 LdapUtil.renameEntry(ctxt, oldDn, newDn);
             
-            dl = (LdapDistributionList) getDistributionListById(zimbraId,ctxt);
+            dl = (LdapDistributionList) getDistributionListById(zimbraId, ctxt, true);
             
             // rename the distribution list and all it's renamed aliases to the new name in all distribution lists
             // doesn't throw exceptions, just logs
@@ -2387,24 +2391,29 @@ public class LdapProvisioning extends Provisioning {
 
     @Override
     public DistributionList get(DistributionListBy keyType, String key) throws ServiceException {
+        return get(keyType, key, false);
+    }
+    
+    @Override
+    public DistributionList get(DistributionListBy keyType, String key, boolean loadFromMaster) throws ServiceException {
         switch(keyType) {
             case id: 
-                return getDistributionListById(key);
+                return getDistributionListById(key, null, loadFromMaster);
             case name: 
-                return getDistributionListByName(key);
+                return getDistributionListByName(key, loadFromMaster);
             default:
                     return null;
         }
     }
 
-    private DistributionList getDistributionListById(String zimbraId, DirContext ctxt) throws ServiceException {
+    private DistributionList getDistributionListById(String zimbraId, DirContext ctxt, boolean loadFromMaster) throws ServiceException {
         //zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
         return getDistributionListByQuery("","(&(zimbraId="+zimbraId+")" + 
-                                          FILTER_DISTRIBUTION_LIST_OBJECTCLASS+ ")", ctxt);
+                                          FILTER_DISTRIBUTION_LIST_OBJECTCLASS+ ")", ctxt, loadFromMaster);
     }
 
     private DistributionList getDistributionListById(String zimbraId) throws ServiceException {
-        return getDistributionListById(zimbraId, null);
+        return getDistributionListById(zimbraId, null, false);
     }
 
     public void deleteDistributionList(String zimbraId) throws ServiceException {
@@ -2430,7 +2439,7 @@ public class LdapProvisioning extends Provisioning {
         }
     }
 
-    private DistributionList getDistributionListByName(String listAddress) throws ServiceException {
+    private DistributionList getDistributionListByName(String listAddress, boolean loadFromMaster) throws ServiceException {
         String parts[] = listAddress.split("@");
         
         if (parts.length != 2)
@@ -2441,7 +2450,7 @@ public class LdapProvisioning extends Provisioning {
         return getDistributionListByQuery("", 
                                           "(&(zimbraMailAlias="+listAddress+")" +
                                           FILTER_DISTRIBUTION_LIST_OBJECTCLASS+ ")",
-                                          null);
+                                          null, loadFromMaster);
     }
     
     public Server getLocalServer() throws ServiceException {
@@ -3111,7 +3120,7 @@ public class LdapProvisioning extends Provisioning {
         createAccount(emailAddress, password, calResAttrs, specialAttrs,
                       new String[] { C_zimbraCalendarResource });
         LdapCalendarResource resource =
-            (LdapCalendarResource) getCalendarResourceByName(emailAddress);
+            (LdapCalendarResource) getCalendarResourceByName(emailAddress, true);
         AttributeManager.getInstance().
             postModify(calResAttrs, resource, attrManagerContext, true);
         return resource;
@@ -3129,19 +3138,24 @@ public class LdapProvisioning extends Provisioning {
 
     @Override
     public CalendarResource get(CalendarResourceBy keyType, String key) throws ServiceException {
+        return get(keyType, key, false);
+    }
+    
+    @Override
+    public CalendarResource get(CalendarResourceBy keyType, String key, boolean loadFromMaster) throws ServiceException {
         switch(keyType) {
             case id: 
-                return getCalendarResourceById(key);
+                return getCalendarResourceById(key, loadFromMaster);
             case foreignPrincipal: 
-                return getCalendarResourceByForeignPrincipal(key);
+                return getCalendarResourceByForeignPrincipal(key, loadFromMaster);
             case name: 
-                return getCalendarResourceByName(key);
+                return getCalendarResourceByName(key, loadFromMaster);
             default:
                     return null;
         }
     }
 
-    private CalendarResource getCalendarResourceById(String zimbraId)
+    private CalendarResource getCalendarResourceById(String zimbraId, boolean loadFromMaster)
     throws ServiceException {
         if (zimbraId == null)
             return null;
@@ -3153,13 +3167,13 @@ public class LdapProvisioning extends Provisioning {
                 "",
                 "(&(zimbraId=" + zimbraId + ")" +
                 FILTER_CALENDAR_RESOURCE_OBJECTCLASS + ")",
-                null);
+                null, loadFromMaster);
             sAccountCache.put(resource);
         }
         return resource;
     }
 
-    private CalendarResource getCalendarResourceByName(String emailAddress)
+    private CalendarResource getCalendarResourceByName(String emailAddress, boolean loadFromMaster)
     throws ServiceException {
         int index = emailAddress.indexOf('@');
         String domain = null;
@@ -3182,13 +3196,13 @@ public class LdapProvisioning extends Provisioning {
                 "(&(|(zimbraMailDeliveryAddress=" + emailAddress +
                 ")(zimbraMailAlias=" + emailAddress + "))" +
                 FILTER_CALENDAR_RESOURCE_OBJECTCLASS + ")",
-                null);
+                null, loadFromMaster);
             sAccountCache.put(resource);
         }
         return resource;
     }
 
-    private CalendarResource getCalendarResourceByForeignPrincipal(String foreignPrincipal)
+    private CalendarResource getCalendarResourceByForeignPrincipal(String foreignPrincipal, boolean loadFromMaster)
     throws ServiceException {
 //        LdapCalendarResource res = null;
         foreignPrincipal = LdapUtil.escapeSearchFilterArg(foreignPrincipal);
@@ -3197,7 +3211,7 @@ public class LdapProvisioning extends Provisioning {
                 "",
                 "(&(zimbraForeignPrincipal=" + foreignPrincipal + ")" +
                 FILTER_CALENDAR_RESOURCE_OBJECTCLASS + ")",
-                null);
+                null, loadFromMaster);
         sAccountCache.put(resource);
         return resource;
     }

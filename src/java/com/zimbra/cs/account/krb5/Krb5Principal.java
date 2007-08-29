@@ -36,7 +36,7 @@ import com.zimbra.cs.account.Provisioning.DomainBy;
 
 public class Krb5Principal {
     
-     public static Account getAccountFromKrb5Principal(String principal) throws ServiceException {
+     public static Account getAccountFromKrb5Principal(String principal, boolean loadFromMaster) throws ServiceException {
          Provisioning prov = Provisioning.getInstance();
          Account acct = null;
          
@@ -44,7 +44,7 @@ public class Krb5Principal {
           * first do a get account by foreign principal on "kerberos5:"+principal and use that if it exists
           */
          try {
-             acct = prov.get(AccountBy.foreignPrincipal, Provisioning.FP_PREFIX_KERBEROS5+principal);
+             acct = prov.get(AccountBy.foreignPrincipal, Provisioning.FP_PREFIX_KERBEROS5+principal, loadFromMaster);
          } catch (ServiceException e) {
              throw e;
          }
@@ -65,7 +65,7 @@ public class Krb5Principal {
                  if (domain != null) {
                      String localPart = principal.substring(0, idx);
                      String acctName = localPart +  "@" + domain.getName();
-                     acct = prov.get(AccountBy.name, acctName);
+                     acct = prov.get(AccountBy.name, acctName, loadFromMaster);
                  }
                  
              }

@@ -1573,6 +1573,18 @@ public abstract class Provisioning {
      * @throws ServiceException if the key is malformed
      */
     public abstract Account get(AccountBy keyType, String key) throws ServiceException;
+    
+    /**
+     * Like get(AccountBy keyType, String key), except that it takes an extra parameter:
+     * loadFromMaster that specifies if the account is not in cache whether it should be 
+     * loaded from the master store.
+     * 
+     * For implementations that do not support the loadFromMaster parameter, this method is 
+     * equivalent to get(AccountBy keyType, String key).
+     */
+    public Account get(AccountBy keyType, String key, boolean loadFromMaster) throws ServiceException {
+        return get(keyType, key);
+    }
 
     /**
      * return regular accounts from searchAccounts;
@@ -1771,6 +1783,9 @@ public abstract class Provisioning {
     }
     
     public abstract DistributionList get(DistributionListBy keyType, String key) throws ServiceException;
+    public DistributionList get(DistributionListBy keyType, String key, boolean loadFromMaster) throws ServiceException {
+        return get(keyType, key);
+    }
     
     public abstract void deleteDistributionList(String zimbraId) throws ServiceException;
 
@@ -1839,6 +1854,9 @@ public abstract class Provisioning {
     }
     
     public abstract CalendarResource get(CalendarResourceBy keyType, String key) throws ServiceException;
+    public CalendarResource get(CalendarResourceBy keyType, String key, boolean loadFromMaster) throws ServiceException {
+        return get(keyType, key);
+    }
 
     /**
      * @param filter search filter
