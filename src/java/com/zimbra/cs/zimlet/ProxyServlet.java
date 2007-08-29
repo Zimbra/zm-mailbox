@@ -49,7 +49,6 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.common.service.ServiceException;
@@ -230,9 +229,10 @@ public class ProxyServlet extends ZimbraServlet {
 				// workaround for Alexa Thumbnails paid web service, which doesn't bother to return a content-type line.
 				resp.setContentType("text/xml");
 			}
-                	for (Header h : method.getResponseHeaders())
-                		if (canProxyHeader(h.getName()))
-                        		resp.addHeader(h.getName(), h.getValue());
+			resp.setStatus(method.getStatusCode());
+			for (Header h : method.getResponseHeaders())
+				if (canProxyHeader(h.getName()))
+					resp.addHeader(h.getName(), h.getValue());
 			ByteUtil.copy(method.getResponseBodyAsStream(), false, resp.getOutputStream(), false);
 		} finally {
 			if (method != null)
