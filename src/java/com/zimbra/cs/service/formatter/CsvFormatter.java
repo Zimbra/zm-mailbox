@@ -85,7 +85,7 @@ public class CsvFormatter extends Formatter {
         context.resp.addHeader("Content-Disposition", cd);
         context.resp.setCharacterEncoding(Mime.P_CHARSET_UTF8);
         context.resp.setContentType("text/csv");
-        context.resp.getOutputStream().print(sb.toString());
+        context.resp.getWriter().print(sb.toString());
     }
 
     public boolean canBeBlocked() {
