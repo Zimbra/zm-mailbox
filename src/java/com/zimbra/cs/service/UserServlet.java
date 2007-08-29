@@ -48,6 +48,8 @@ import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.HttpURL;
 import org.apache.commons.httpclient.HttpsURL;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 
 import com.zimbra.cs.account.Account;
@@ -1043,14 +1045,24 @@ public class UserServlet extends ZimbraServlet {
     }
     
     public static Pair<Header[], HttpInputStream> getRemoteResourceAsStream(String authToken, String hostname, String url) throws ServiceException, IOException {
-    	Pair<Header[], GetMethod> pair = getRemoteResourceInternal(authToken, hostname, url);
+    	return getRemoteResourceAsStream(authToken, hostname, url, null, 0, null, null);
+    }
+    
+    public static Pair<Header[], HttpInputStream> getRemoteResourceAsStream(String authToken, String hostname, String url,
+    		String proxyHost, int proxyPort, String proxyUser, String proxyPass) throws ServiceException, IOException {
+    	Pair<Header[], GetMethod> pair = getRemoteResourceInternal(authToken, hostname, url, proxyHost, proxyPort, proxyUser, proxyPass);
     	return new Pair<Header[], HttpInputStream>(pair.getFirst(), new HttpInputStream(pair.getSecond()));
     }
     
     public static Pair<Header[], byte[]> getRemoteResource(String authToken, String hostname, String url) throws ServiceException {
+    	return getRemoteResource(authToken, hostname, url, null, 0, null, null);
+    }
+    
+    public static Pair<Header[], byte[]> getRemoteResource(String authToken, String hostname, String url,
+    		String proxyHost, int proxyPort, String proxyUser, String proxyPass) throws ServiceException {
     	GetMethod get = null;
     	try {
-    		Pair<Header[], GetMethod> pair = getRemoteResourceInternal(authToken, hostname, url);
+    		Pair<Header[], GetMethod> pair = getRemoteResourceInternal(authToken, hostname, url, proxyHost, proxyPort, proxyUser, proxyPass);
     		get = pair.getSecond();
     		return new Pair<Header[], byte[]>(pair.getFirst(), get.getResponseBody());
     	} catch (IOException x) {
@@ -1062,12 +1074,20 @@ public class UserServlet extends ZimbraServlet {
         }
     }
     
-    private static Pair<Header[], GetMethod> getRemoteResourceInternal(String authToken, String hostname, String url) throws ServiceException {
+    private static Pair<Header[], GetMethod> getRemoteResourceInternal(String authToken, String hostname, String url,
+    		String proxyHost, int proxyPort, String proxyUser, String proxyPass) throws ServiceException {
         // create an HTTP client with the same cookies
         HttpState state = new HttpState();
         state.addCookie(new org.apache.commons.httpclient.Cookie(hostname, COOKIE_ZM_AUTH_TOKEN, authToken, "/", null, false));
         HttpClient client = new HttpClient();
         client.setState(state);
+    	if (proxyHost != null && proxyPort > 0) {
+    		client.getHostConfiguration().setProxy(proxyHost, proxyPort);
+    		if (proxyUser != null && proxyPass != null) {
+    			client.getState().setProxyCredentials(new AuthScope(proxyHost, proxyPort), new UsernamePasswordCredentials(proxyUser, proxyPass));
+    		}
+    	}
+        
         GetMethod get = new GetMethod(url);
         try {
             int statusCode = client.executeMethod(get);

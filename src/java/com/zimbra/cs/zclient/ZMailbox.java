@@ -169,6 +169,10 @@ public class ZMailbox {
         private String mAuthToken;
         private String mVirtualHost;
         private String mUri;
+        private String mProxyHost;
+        private int mProxyPort;
+        private String mProxyUser;
+        private String mProxyPass;
         private int mTimeout = -1;
         private int mRetryCount;
         private SoapProtocol mResponseProtocol = SoapProtocol.Soap12;
@@ -195,6 +199,23 @@ public class ZMailbox {
             mAuthToken = authToken;
             mUri = uri;
         }
+        
+        public void setProxy(String proxyHost, int proxyPort) {
+        	mProxyHost = proxyHost;
+        	mProxyPort = proxyPort;
+        }
+        
+        public void setProxy(String proxyHost, int proxyPort, String proxyUser, String proxyPass) {
+        	mProxyHost = proxyHost;
+        	mProxyPort = proxyPort;
+        	mProxyUser = proxyUser;
+        	mProxyPass = proxyPass;
+        }
+        
+        public String getProxyHost() { return mProxyHost; }
+        public int getProxyPort() { return mProxyPort; }
+        public String getProxyUser() { return mProxyUser; }
+        public String getProxyPass() { return mProxyPass; }
 
         public String getAccount() { return mAccount; }
         public void setAccount(String account) { mAccount = account; }
@@ -291,7 +312,7 @@ public class ZMailbox {
     public static void changePassword(Options options) throws ServiceException {
         ZMailbox mailbox = new ZMailbox();
         mailbox.mNotifyPreference = NotifyPreference.fromOptions(options);
-        mailbox.initPreAuth(options.getUri(), options.getDebugListener(), options.getTimeout(), options.getRetryCount(), options.getResponseProtocol());
+        mailbox.initPreAuth(options);
         mailbox.changePassword(options.getAccount(), options.getAccountBy(), options.getPassword(), options.getNewPassword(), options.getVirtualHost());
     }
 
@@ -309,7 +330,7 @@ public class ZMailbox {
     		mHandlers.add(options.getEventHandler());
 
         mNotifyPreference = NotifyPreference.fromOptions(options);
-        initPreAuth(options.getUri(), options.getDebugListener(), options.getTimeout(), options.getRetryCount(), options.getResponseProtocol());
+        initPreAuth(options);
         if (options.getAuthToken() != null) {
             if (options.getAuthAuthToken())
                 mAuthResult = authByAuthToken(options);
@@ -343,16 +364,16 @@ public class ZMailbox {
         return mHandlers.remove(handler);
     }
 
-    public void initAuthToken(String authToken){
+    private void initAuthToken(String authToken){
         mAuthToken = authToken;
         mTransport.setAuthToken(mAuthToken);
     }
 
-    public void initPreAuth(String uri, SoapTransport.DebugListener listener, int timeout, int retryCount, SoapProtocol responseProto) {
+    private void initPreAuth(Options options) {
         mNameToTag = new HashMap<String, ZTag>();
         mIdToItem = new HashMap<String, ZItem>();
-        setSoapURI(uri, timeout, retryCount, responseProto);
-        if (listener != null) mTransport.setDebugListener(listener);
+        setSoapURI(options);
+        if (options.getDebugListener() != null) mTransport.setDebugListener(options.getDebugListener());
     }
 
     private void initTargetAccount(String key, AccountBy by) {
@@ -429,19 +450,21 @@ public class ZMailbox {
      * @param timeout timeout for HTTP connection or 0 for no timeout
      * @param retryCount max number of times to retry the call on connection failure
      */
-    private void setSoapURI(String uri, int timeout, int retryCount, SoapProtocol responseProto) {
+    private void setSoapURI(Options options) {
         if (mTransport != null) mTransport.shutdown();
-        mTransport = new SoapHttpTransport(uri);
+        mTransport = new SoapHttpTransport(options.getUri(),
+        		options.getProxyHost(), options.getProxyPort(),
+        		options.getProxyUser(), options.getProxyPass());
         mTransport.setUserAgent("zclient", BuildInfo.VERSION);
         mTransport.setMaxNotifySeq(0);
-        if (timeout > -1)
-            mTransport.setTimeout(timeout);
-        if (retryCount > 0)
-            mTransport.setRetryCount(retryCount);
+        if (options.getTimeout() > -1)
+            mTransport.setTimeout(options.getTimeout());
+        if (options.getRetryCount() > 0)
+            mTransport.setRetryCount(options.getRetryCount());
         if (mAuthToken != null)
             mTransport.setAuthToken(mAuthToken);
-        if (responseProto != null)
-            mTransport.setResponseProtocol(responseProto);
+        if (options.getResponseProtocol() != null)
+            mTransport.setResponseProtocol(options.getResponseProtocol());
     }
 
     public synchronized Element invoke(Element request) throws ServiceException {
