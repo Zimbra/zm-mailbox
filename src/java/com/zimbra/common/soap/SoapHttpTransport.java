@@ -108,9 +108,9 @@ public class SoapHttpTransport extends SoapTransport {
     	mClient = new HttpClient(sDefaultParams);
     	commonInit(uri);
     	
-    	if (proxyHost != null && proxyPort > 0) {
+    	if (proxyHost != null && proxyHost.length() > 0 && proxyPort > 0) {
     		mClient.getHostConfiguration().setProxy(proxyHost, proxyPort);
-    		if (proxyUser != null && proxyPass != null) {
+    		if (proxyUser != null && proxyUser.length() > 0 && proxyPass != null && proxyPass.length() > 0) {
     			mClient.getState().setProxyCredentials(new AuthScope(proxyHost, proxyPort), new UsernamePasswordCredentials(proxyUser, proxyPass));
     		}
     	}
