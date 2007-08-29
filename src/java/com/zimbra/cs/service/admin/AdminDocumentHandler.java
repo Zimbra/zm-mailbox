@@ -110,7 +110,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             String[] xpath = getProxiedAccountPath();
             String acctId = (xpath != null ? getXPath(request, xpath) : null);
             if (acctId != null) {
-                Account acct = prov.get(AccountBy.id, acctId);
+                Account acct = prov.get(AccountBy.id, acctId, true);
                 if (acct != null && !Provisioning.onLocalServer(acct))
                     return proxyRequest(request, context, acctId);
             }
@@ -118,7 +118,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             xpath = getProxiedAccountElementPath();
             Element elt = (xpath != null ? getXPathElement(request, xpath) : null);
             if (elt != null) {
-                Account acct = prov.get(AccountBy.fromString(elt.getAttribute(AdminConstants.A_BY)), elt.getText());
+                Account acct = prov.get(AccountBy.fromString(elt.getAttribute(AdminConstants.A_BY)), elt.getText(), true);
                 if (acct != null && !Provisioning.onLocalServer(acct))
                     return proxyRequest(request, context, acct.getId());
             }
@@ -127,7 +127,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             xpath = getProxiedResourcePath();
             String rsrcId = (xpath != null ? getXPath(request, xpath) : null);
             if (rsrcId != null) {
-                CalendarResource rsrc = prov.get(CalendarResourceBy.id, rsrcId);
+                CalendarResource rsrc = prov.get(CalendarResourceBy.id, rsrcId, true);
                 if (rsrc != null) {
                     Server server = prov.get(ServerBy.name, rsrc.getAttr(Provisioning.A_zimbraMailHost));
                     if (server != null && !LOCAL_HOST_ID.equalsIgnoreCase(server.getId()))
