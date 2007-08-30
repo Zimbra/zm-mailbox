@@ -54,12 +54,15 @@ import org.apache.lucene.search.spans.Spans;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.SingleInstanceLockFactory;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.db.DbSearchConstraints;
 import com.zimbra.cs.db.DbPool.Connection;
-import com.zimbra.common.localconfig.LC;
+import com.zimbra.cs.db.DbSearch.SearchResult;
 import com.zimbra.cs.im.interop.Interop.ServiceName;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.localconfig.DebugConfig;
@@ -79,8 +82,6 @@ import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.service.im.IMGatewayRegister;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.Volume;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.util.JMSession;
 
 /**
@@ -1243,12 +1244,12 @@ public final class MailboxIndex
                                                        SEARCH_FOR_WIKI;
 
     public static enum SortBy {
-        DATE_ASCENDING  ("dateAsc",  (byte) (DbMailItem.SORT_BY_DATE | DbMailItem.SORT_ASCENDING)), 
-        DATE_DESCENDING ("dateDesc", (byte) (DbMailItem.SORT_BY_DATE | DbMailItem.SORT_DESCENDING)),
-        SUBJ_ASCENDING  ("subjAsc",  (byte) (DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_ASCENDING)),
-        SUBJ_DESCENDING ("subjDesc", (byte) (DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_DESCENDING)),
-        NAME_ASCENDING  ("nameAsc",  (byte) (DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_ASCENDING)),
-        NAME_DESCENDING ("nameDesc", (byte) (DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_DESCENDING)),
+        DATE_ASCENDING  ("dateAsc",  (byte) (DbSearch.SORT_BY_DATE | DbSearch.SORT_ASCENDING)), 
+        DATE_DESCENDING ("dateDesc", (byte) (DbSearch.SORT_BY_DATE | DbSearch.SORT_DESCENDING)),
+        SUBJ_ASCENDING  ("subjAsc",  (byte) (DbSearch.SORT_BY_SUBJECT | DbSearch.SORT_ASCENDING)),
+        SUBJ_DESCENDING ("subjDesc", (byte) (DbSearch.SORT_BY_SUBJECT | DbSearch.SORT_DESCENDING)),
+        NAME_ASCENDING  ("nameAsc",  (byte) (DbSearch.SORT_BY_SENDER | DbSearch.SORT_ASCENDING)),
+        NAME_DESCENDING ("nameDesc", (byte) (DbSearch.SORT_BY_SENDER | DbSearch.SORT_DESCENDING)),
         SCORE_DESCENDING("score",    (byte) 0),
 
         // special TASK-only sorts
@@ -1282,7 +1283,7 @@ public final class MailboxIndex
         }
 
         public boolean isDescending() {
-            return (mSort & DbMailItem.SORT_ASCENDING) == 0;
+            return (mSort & DbSearch.SORT_ASCENDING) == 0;
         }
 
         public static SortBy lookup(String str) {
@@ -1350,7 +1351,7 @@ public final class MailboxIndex
         HashSet msgsInMailbox = new HashSet(); // hash of all messages in my mailbox
         private MailboxIndex idx = null;
         private ArrayList<Integer> toDelete = new ArrayList<Integer>(); // to be deleted from index
-        DbMailItem.SearchResult compareTo = new DbMailItem.SearchResult();  
+        SearchResult compareTo = new SearchResult();  
 
         ChkIndexStage1Callback(MailboxIndex idx) {
             this.idx = idx;
@@ -1384,7 +1385,7 @@ public final class MailboxIndex
             {
                 sLog.info("There are "+msgsInMailbox.size() + " msgs to be re-indexed");
                 for (Iterator iter = msgsInMailbox.iterator(); iter.hasNext();) {
-                    DbMailItem.SearchResult cur = (DbMailItem.SearchResult)iter.next();
+                    SearchResult cur = (SearchResult)iter.next();
 
                     try {
                         MailItem item = mbox.getItemById(null, cur.id, cur.type);
@@ -1419,7 +1420,7 @@ public final class MailboxIndex
         private ListIterator msgsIter;
 
         private String mSortField;
-        DbMailItem.SearchResult mCur = null;
+        SearchResult mCur = null;
 
 
         ChkIndexStage2Callback(MailboxIndex idx, String sortField, boolean reversed) {
@@ -1429,7 +1430,7 @@ public final class MailboxIndex
 
         boolean beginIterating() {
             msgsIter = msgsInMailbox.listIterator();
-            mCur = (DbMailItem.SearchResult)msgsIter.next();
+            mCur = (SearchResult)msgsIter.next();
             return (mCur!= null);
         }
 
@@ -1503,14 +1504,14 @@ public final class MailboxIndex
                                 sLog.info("ERROR4: DB no results INDEX has mailitem: "+idxId);
                                 return;
                             }
-                            mCur = (DbMailItem.SearchResult)msgsIter.next();
+                            mCur = (SearchResult)msgsIter.next();
 
                             continue; // try again!
                         } else { // same date!
                             // 1st,look backwards for a match
                             if (msgsIter.hasPrevious()) {
                                 do {
-                                    mCur = (DbMailItem.SearchResult)msgsIter.previous();
+                                    mCur = (SearchResult)msgsIter.previous();
                                     if (mCur.id == idxId) {
                                         continue retry;
                                     }
@@ -1518,14 +1519,14 @@ public final class MailboxIndex
                                 } while(msgsIter.hasPrevious() && curMsgDate == truncDocDate);
 
                                 // Move the iterator fwd one, so it is on the correct time...
-                                mCur = (DbMailItem.SearchResult)msgsIter.next();
+                                mCur = (SearchResult)msgsIter.next();
 
                             }
 
                             // now, look fwd.  Sure, we might check some twice here.  Oh well
                             if (msgsIter.hasNext()) {
                                 do {
-                                    mCur = (DbMailItem.SearchResult)msgsIter.next();
+                                    mCur = (SearchResult)msgsIter.next();
                                     if (mCur.id == idxId) {
                                         continue retry;
                                     }
@@ -1533,7 +1534,7 @@ public final class MailboxIndex
                                 } while (msgsIter.hasNext() && curMsgDate == truncDocDate);
 
                                 // Move the iterator back one, so it is on the correct time...
-                                mCur = (DbMailItem.SearchResult)msgsIter.previous();
+                                mCur = (SearchResult)msgsIter.previous();
                             }
 
 
@@ -1567,7 +1568,7 @@ public final class MailboxIndex
                 DbSearchConstraints c = new DbSearchConstraints();
 
                 c.mailbox = mbox;
-                c.sort = DbMailItem.SORT_BY_DATE;
+                c.sort = DbSearch.SORT_BY_DATE;
                 c.types = new HashSet<Byte>();
                 c.types.add(MailItem.TYPE_CONTACT); 
                 c.types.add(MailItem.TYPE_MESSAGE);
@@ -1575,7 +1576,7 @@ public final class MailboxIndex
 
                 ChkIndexStage1Callback callback = new ChkIndexStage1Callback(this);
 
-                DbMailItem.search(callback.msgsInMailbox, conn, c);
+                DbSearch.search(callback.msgsInMailbox, conn, c);
                 sLog.info("Verifying (repair="+(repair?"TRUE":"FALSE")+") Index for Mailbox "+this.mMailboxId+" with "+callback.msgsInMailbox.size()+" items.");
 
                 try {
@@ -1608,7 +1609,7 @@ public final class MailboxIndex
                 DbSearchConstraints c = new DbSearchConstraints();
 
                 c.mailbox = mbox;
-                c.sort = DbMailItem.SORT_BY_DATE | DbMailItem.SORT_ASCENDING;
+                c.sort = DbSearch.SORT_BY_DATE | DbSearch.SORT_ASCENDING;
                 c.types = new HashSet<Byte>();
                 c.types.add(MailItem.TYPE_CONTACT); 
                 c.types.add(MailItem.TYPE_MESSAGE);
@@ -1618,7 +1619,7 @@ public final class MailboxIndex
 
                 ChkIndexStage2Callback callback = new ChkIndexStage2Callback(this, lucSortField, false);
 
-                DbMailItem.search(callback.msgsInMailbox, conn, c);
+                DbSearch.search(callback.msgsInMailbox, conn, c);
                 RefCountedIndexSearcher searcher = null;
                 try {
                     callback.beginIterating();
@@ -1653,7 +1654,7 @@ public final class MailboxIndex
                 DbSearchConstraints c = new DbSearchConstraints();
 
                 c.mailbox = mbox;
-                c.sort = DbMailItem.SORT_BY_DATE | DbMailItem.SORT_DESCENDING;
+                c.sort = DbSearch.SORT_BY_DATE | DbSearch.SORT_DESCENDING;
 
                 c.types = new HashSet<Byte>();
                 c.types.add(MailItem.TYPE_CONTACT); 
@@ -1665,7 +1666,7 @@ public final class MailboxIndex
 
                 ChkIndexStage2Callback callback = new ChkIndexStage2Callback(this, lucSortField, true);
 
-                DbMailItem.search(callback.msgsInMailbox, conn, c);
+                DbSearch.search(callback.msgsInMailbox, conn, c);
                 RefCountedIndexSearcher searcher = null;
                 try {
                     callback.beginIterating();

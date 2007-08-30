@@ -37,7 +37,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -72,12 +72,12 @@ public class GetContacts extends MailDocumentHandler  {
 				throw ServiceException.FAILURE("Got remote folderId: " + folderIdStr + " but did not proxy", null);
 		}
 
-		byte sort = DbMailItem.SORT_NONE;
+		byte sort = DbSearch.SORT_NONE;
 		String sortStr = request.getAttribute(MailConstants.A_SORTBY, "");
 		if (sortStr.equals(MailboxIndex.SortBy.NAME_ASCENDING.toString()))
-			sort = DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_ASCENDING;
+			sort = DbSearch.SORT_BY_SENDER | DbSearch.SORT_ASCENDING;
 		else if (sortStr.equals(MailboxIndex.SortBy.NAME_DESCENDING.toString()))
-			sort = DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_DESCENDING;
+			sort = DbSearch.SORT_BY_SENDER | DbSearch.SORT_DESCENDING;
 
 		ArrayList<String> attrs = null;
 		ArrayList<ItemId> ids = null;

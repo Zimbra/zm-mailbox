@@ -33,15 +33,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.WikiItem;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
 import com.zimbra.cs.wiki.Wiki.WikiUrl;
 
@@ -522,7 +522,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
         		buf.append(">");
         	}
 	    	Mailbox mbox = ctxt.item.getMailbox();
-            for (Document doc : mbox.getDocumentList(ctxt.wctxt.octxt, folder.getId(), (byte)(DbMailItem.SORT_BY_NAME_NATURAL_ORDER | DbMailItem.SORT_ASCENDING))) {
+            for (Document doc : mbox.getDocumentList(ctxt.wctxt.octxt, folder.getId(), (byte)(DbSearch.SORT_BY_NAME_NATURAL_ORDER | DbSearch.SORT_ASCENDING))) {
             	buf.append("<");
         		buf.append(sTAGS[sINNER][style]);
             	buf.append(" class='zmwiki-pageLink'>");
@@ -548,9 +548,9 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 	    	
 	    	Mailbox mbox = ctxt.item.getMailbox();
 	    	if (ctxt.wctxt.view == null)
-	    		list.addAll(mbox.getItemList(ctxt.wctxt.octxt, MailItem.TYPE_WIKI, folder.getId(), (byte)(DbMailItem.SORT_BY_NAME_NATURAL_ORDER | DbMailItem.SORT_ASCENDING)));
+	    		list.addAll(mbox.getItemList(ctxt.wctxt.octxt, MailItem.TYPE_WIKI, folder.getId(), (byte)(DbSearch.SORT_BY_NAME_NATURAL_ORDER | DbSearch.SORT_ASCENDING)));
 	    	else
-	    		list.addAll(mbox.getItemList(ctxt.wctxt.octxt, MailItem.getTypeForName(ctxt.wctxt.view), folder.getId(), (byte)(DbMailItem.SORT_BY_NAME_NATURAL_ORDER | DbMailItem.SORT_ASCENDING)));
+	    		list.addAll(mbox.getItemList(ctxt.wctxt.octxt, MailItem.getTypeForName(ctxt.wctxt.view), folder.getId(), (byte)(DbSearch.SORT_BY_NAME_NATURAL_ORDER | DbSearch.SORT_ASCENDING)));
 
 			String bt = params.get(sBODYTEMPLATE);
 			String it = params.get(sITEMTEMPLATE);

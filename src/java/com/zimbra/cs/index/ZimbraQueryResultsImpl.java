@@ -29,8 +29,7 @@
 package com.zimbra.cs.index;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.db.DbMailItem.SearchResult;
+import com.zimbra.cs.db.DbSearch.SearchResult;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.MailItem;

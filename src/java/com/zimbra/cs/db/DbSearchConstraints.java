@@ -212,7 +212,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
     public Collection<StringRange> subjectRanges = new ArrayList<StringRange>(); /* optional */
     public Collection<StringRange> senderRanges = new ArrayList<StringRange>(); /* optional */
     
-    private Set<Byte>calcTypes() {
+    private Set<Byte> calcTypes() {
         if (excludeTypes.size() == 0)
             return types;
         
@@ -362,7 +362,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
      * DbMailItem.encodeConstraint, and then they are cached in this object.  This is pretty ugly
      * but works for now.  TODO cleanup.
      */
-    DbMailItem.TagConstraints tagConstraints;
+    DbSearch.TagConstraints tagConstraints;
 
     private static abstract class Printer<T> {
         void run(StringBuilder str, Collection<T> collect, String intro) {
@@ -842,15 +842,15 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
     }
 
     public static final class RemoteFolderDescriptor {
-        public RemoteFolderDescriptor(ItemId folderId, String subfolderPath) {
-            this.folderId = folderId;
-            this.subfolderPath = subfolderPath;
+        public RemoteFolderDescriptor(ItemId iidFolder, String subpath) {
+            this.folderId = iidFolder;
+            this.subfolderPath = subpath;
             if (this.subfolderPath == null)
                 this.subfolderPath = "";
         }
         
-        public RemoteFolderDescriptor(ItemId folderId) {
-            this(folderId, "");
+        public RemoteFolderDescriptor(ItemId iidFolder) {
+            this(iidFolder, "");
         }
         
         /** @return the folderId */

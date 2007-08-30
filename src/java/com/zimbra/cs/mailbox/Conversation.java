@@ -36,6 +36,7 @@ import java.util.List;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -225,7 +226,7 @@ public class Conversation extends MailItem {
 
         // failed to parse or too few senders are listed -- have to recalculate
         //   (go through the Mailbox because we need to be in a transaction)
-        List<Message> msgs = getMessages(DbMailItem.DEFAULT_SORT_ORDER);
+        List<Message> msgs = getMessages(DbSearch.DEFAULT_SORT_ORDER);
         recalculateMetadata(msgs);
         return true;
     }
@@ -257,8 +258,8 @@ public class Conversation extends MailItem {
         return mSenderList;
     }
 
-    public static final byte SORT_ID_ASCENDING   = DbMailItem.SORT_BY_ID | DbMailItem.SORT_ASCENDING;
-    public static final byte SORT_DATE_ASCENDING = DbMailItem.SORT_BY_DATE | DbMailItem.SORT_ASCENDING;
+    public static final byte SORT_ID_ASCENDING   = DbSearch.SORT_BY_ID | DbSearch.SORT_ASCENDING;
+    public static final byte SORT_DATE_ASCENDING = DbSearch.SORT_BY_DATE | DbSearch.SORT_ASCENDING;
 
     /** Returns all the {@link Message}s in this conversation.  The messages
      *  are fetched from the {@link Mailbox}'s cache, if possible; if not,
@@ -269,7 +270,7 @@ public class Conversation extends MailItem {
     List<Message> getMessages(byte sort) throws ServiceException {
         List<Message> msgs = new ArrayList<Message>(getMessageCount());
         Comparator<MailItem> cmp = getComparator(sort); 
-        if (mData.children != null && (cmp != null || (sort & DbMailItem.SORT_FIELD_MASK) == DbMailItem.SORT_NONE)) {
+        if (mData.children != null && (cmp != null || (sort & DbSearch.SORT_FIELD_MASK) == DbSearch.SORT_NONE)) {
             // try to get all our info from the cache to avoid a database trip
             for (int childId : mData.children) {
                 Message msg = mMailbox.getCachedMessage(childId);
@@ -401,7 +402,7 @@ public class Conversation extends MailItem {
         // and tags.
         TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
         List<Integer> targets = new ArrayList<Integer>();
-        for (Message msg : getMessages(DbMailItem.DEFAULT_SORT_ORDER)) {
+        for (Message msg : getMessages(DbSearch.DEFAULT_SORT_ORDER)) {
             // skip messages that don't need to be changed, or that the client can't modify, doesn't know about, or has explicitly excluded
             if (msg.isUnread() == unread ) {
                 continue;

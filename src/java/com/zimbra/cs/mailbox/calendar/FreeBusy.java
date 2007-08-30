@@ -33,7 +33,7 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
-import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Flag;
@@ -395,7 +395,7 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
 
         int exApptId = exAppt == null ? -1 : exAppt.getId();
 
-        List<Folder> folders = mbox.getFolderList(null, DbMailItem.SORT_NONE);
+        List<Folder> folders = mbox.getFolderList(null, DbSearch.SORT_NONE);
         List<Folder> excludeFolders = new ArrayList<Folder>();
         for (Folder f : folders) {
             if ((f.getFlagBitmask() & Flag.BITMASK_EXCLUDE_FREEBUSY)!= 0)

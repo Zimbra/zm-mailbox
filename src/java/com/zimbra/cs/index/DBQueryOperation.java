@@ -51,10 +51,10 @@ import org.apache.lucene.search.BooleanClause.Occur;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.Db;
-import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbMailItem.SearchResult;
+import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbSearch.SearchResult;
 import com.zimbra.cs.index.LuceneQueryOperation.LuceneResultsChunk;
 import com.zimbra.cs.index.LuceneQueryOperation.LuceneResultsChunk.ScoredLuceneHit;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
@@ -126,7 +126,7 @@ class DBQueryOperation extends QueryOperation
      */
     protected QueryTarget mQueryTarget = QueryTarget.UNSPECIFIED;
 
-    private DbMailItem.SearchResult.ExtraData mExtra = null;
+    private SearchResult.ExtraData mExtra = null;
     private QueryExecuteMode mExecuteMode = null; 
 
     private static enum QueryExecuteMode {
@@ -503,7 +503,7 @@ class DBQueryOperation extends QueryOperation
      * Return the next hit in our search.  If there are no hits buffered
      * then calculate the next hit and put it into the mNextHits list.
      * 
-     *   Step 1: Get the list of DbMailItem.SearchResults chunk-by-chunk 
+     *   Step 1: Get the list of DbSearch.searchResults chunk-by-chunk 
      *           (50 or 100 or whatever at a time)
      *            
      *   Step 2: As we need them, grab the next SearchResult and build a
@@ -523,23 +523,23 @@ class DBQueryOperation extends QueryOperation
             //
             if ((mDBHitsIter == null || !mDBHitsIter.hasNext()) && !mEndOfHits) {
                 if (mExtra == null) {
-                    mExtra = DbMailItem.SearchResult.ExtraData.NONE;
+                    mExtra = SearchResult.ExtraData.NONE;
                     switch (getResultsSet().getSearchMode()) {
                         case NORMAL:
                             if (isTopLevelQueryOp()) {
-                                mExtra = DbMailItem.SearchResult.ExtraData.MAIL_ITEM;
+                                mExtra = SearchResult.ExtraData.MAIL_ITEM;
                             } else {
-                                mExtra = DbMailItem.SearchResult.ExtraData.NONE;
+                                mExtra = SearchResult.ExtraData.NONE;
                             }
                             break;
                         case IMAP:
-                            mExtra = DbMailItem.SearchResult.ExtraData.IMAP_MSG;
+                            mExtra = SearchResult.ExtraData.IMAP_MSG;
                             break;
                         case IDS:
-                            mExtra = DbMailItem.SearchResult.ExtraData.NONE;
+                            mExtra = SearchResult.ExtraData.NONE;
                             break;
                         case MODSEQ:
-                            mExtra = DbMailItem.SearchResult.ExtraData.MODSEQ;
+                            mExtra = SearchResult.ExtraData.MODSEQ;
                             break;
                     }
                 }
@@ -737,9 +737,9 @@ class DBQueryOperation extends QueryOperation
 
     private void noLuceneGetNextChunk(Connection conn, Mailbox mbox, byte sort) throws ServiceException {
         if (mParams.getEstimateSize() && mSizeEstimate == -1)
-            mSizeEstimate = DbMailItem.countResults(conn, mConstraints, mbox);
+            mSizeEstimate = DbSearch.countResults(conn, mConstraints, mbox);
         
-        DbMailItem.search(mDBHits, conn, mConstraints, mbox, sort, mCurHitsOffset, mHitsPerChunk, mExtra);
+        DbSearch.search(mDBHits, conn, mConstraints, mbox, sort, mCurHitsOffset, mHitsPerChunk, mExtra);
 
         if (mDBHits.size() < mHitsPerChunk) {
             mEndOfHits = true;
@@ -763,10 +763,10 @@ class DBQueryOperation extends QueryOperation
             
             // FIXME TODO could do a better job here
             if (mParams.getEstimateSize() && mSizeEstimate == -1) {
-                mSizeEstimate = DbMailItem.countResults(conn, mConstraints, mbox);
+                mSizeEstimate = DbSearch.countResults(conn, mConstraints, mbox);
             }
             
-            DbMailItem.search(dbRes, conn, mConstraints, mbox, sort, mOffset, MAX_DBFIRST_RESULTS, mExtra);
+            DbSearch.search(dbRes, conn, mConstraints, mbox, sort, mOffset, MAX_DBFIRST_RESULTS, mExtra);
             
             if (dbRes.size() < MAX_DBFIRST_RESULTS) {
                 mEndOfHits = true;
@@ -854,8 +854,8 @@ class DBQueryOperation extends QueryOperation
             if (mParams.getEstimateSize() && mSizeEstimate==-1) {
                 // FIXME TODO should probably be a %age, this is worst-case
                 sc.indexIds = new HashSet<Integer>();
-                int dbResultCount = DbMailItem.countResults(conn, mConstraints, mbox);
-                
+                int dbResultCount = DbSearch.countResults(conn, mConstraints, mbox);
+
                 if (ZimbraLog.index.isDebugEnabled()) 
                     ZimbraLog.index.debug("LUCENE="+mLuceneOp.countHits()+"  DB="+dbResultCount);
                 mSizeEstimate = Math.min(dbResultCount, mLuceneOp.countHits());
@@ -875,7 +875,7 @@ class DBQueryOperation extends QueryOperation
                 mEndOfHits = true;
             } else {
                 // must not ask for offset,limit here b/c of indexId constraints!,  
-                DbMailItem.search(mDBHits, conn, mConstraints, mbox, sort, -1, -1, mExtra);
+                DbSearch.search(mDBHits, conn, mConstraints, mbox, sort, -1, -1, mExtra);
 
                 if (getSortBy() == SortBy.SCORE_DESCENDING) {
                     // We have to re-sort the chunk by score here b/c the DB doesn't
@@ -1196,9 +1196,8 @@ class DBQueryOperation extends QueryOperation
         return toRet;
     }
     
-    public int estimateResultSize() throws ServiceException {
+    public int estimateResultSize() {
         return mSizeEstimate;
     }
     
 }
-

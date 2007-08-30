@@ -59,10 +59,10 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.db.DbSearchConstraints;
-import com.zimbra.cs.db.DbMailItem.SearchResult;
-import com.zimbra.cs.db.DbMailItem.SearchResult.ExtraData;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbSearch.SearchResult;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.index.LuceneFields;
@@ -1564,14 +1564,14 @@ public class Mailbox {
 
                     DbSearchConstraints c = new DbSearchConstraints();
                     c.mailbox = this;
-                    c.sort = DbMailItem.SORT_BY_DATE;
+                    c.sort = DbSearch.SORT_BY_DATE;
                     if (itemIdsOrNull != null)
                         c.itemIds = itemIdsOrNull; 
                     else if (typesOrNull != null)
                         c.types = typesOrNull;
 
                     msgs = new ArrayList<SearchResult>();
-                    DbMailItem.search(msgs, getOperationConnection(), c, ExtraData.NONE);
+                    DbSearch.search(msgs, getOperationConnection(), c, SearchResult.ExtraData.NONE);
                     
                     if (itemIdsOrNull != null || typesOrNull != null) {
                         // NOT reindexing everything: delete manually
@@ -2120,7 +2120,7 @@ public class Mailbox {
     }
 
     public synchronized List<MailItem> getItemList(OperationContext octxt, byte type, int folderId) throws ServiceException {
-        return getItemList(octxt, type, folderId, DbMailItem.SORT_NONE);
+        return getItemList(octxt, type, folderId, DbSearch.SORT_NONE);
     }
 
     public synchronized List<MailItem> getItemList(OperationContext octxt, byte type, int folderId, byte sort) throws ServiceException {
@@ -2175,7 +2175,7 @@ public class Mailbox {
             			result.add(getItem(data));
             	// except for sort == SORT_BY_NAME_NAT,
             	// sort was already done by the DbMailItem call...
-            	if ((sort & DbMailItem.SORT_BY_NAME_NATURAL_ORDER) > 0)
+            	if ((sort & DbSearch.SORT_BY_NAME_NATURAL_ORDER) > 0)
                     Collections.sort(result, MailItem.getComparator(sort));
             	success = true;
             }
@@ -2193,11 +2193,11 @@ public class Mailbox {
             beginTransaction("listItemIds", octxt);
 
             Folder folder = getFolderById(folderId);
-            List<DbMailItem.SearchResult> idList = DbMailItem.listByFolder(folder, type, true);
-            if (idList == null)
+            List<SearchResult> srList = DbMailItem.listByFolder(folder, type, true);
+            if (srList == null)
                 return null;
-            int i = 0, result[] = new int[idList.size()];
-            for (DbMailItem.SearchResult sr : idList)
+            int i = 0, result[] = new int[srList.size()];
+            for (SearchResult sr : srList)
                 result[i++] = sr.id;
             success = true;
             return result;
@@ -2701,7 +2701,7 @@ public class Mailbox {
     }
 
     public synchronized List<Contact> getContactList(OperationContext octxt, int folderId) throws ServiceException {
-        return getContactList(octxt, folderId, DbMailItem.SORT_NONE);
+        return getContactList(octxt, folderId, DbSearch.SORT_NONE);
     }
 
     public synchronized List<Contact> getContactList(OperationContext octxt, int folderId, byte sort) throws ServiceException {
@@ -2815,7 +2815,7 @@ public class Mailbox {
     }
 
     public synchronized List<Document> getDocumentList(OperationContext octxt, int folderId) throws ServiceException {
-        return getDocumentList(octxt, folderId, DbMailItem.SORT_NONE);
+        return getDocumentList(octxt, folderId, DbSearch.SORT_NONE);
     }
 
     public synchronized List<Document> getDocumentList(OperationContext octxt, int folderId, byte sort) throws ServiceException {
