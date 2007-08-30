@@ -24,16 +24,18 @@
  */
 package com.zimbra.cs.mime;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.extension.ExtensionUtil;
 
@@ -45,13 +47,13 @@ public class MimeHandlerManager {
     
     static class HandlerInfo {
         MimeTypeInfo mMimeType;
-        Class mClass;
+        Class<MimeHandler> mClass;
         String mRealMimeType;
     
         public MimeHandler getInstance() throws MimeHandlerException {
             MimeHandler handler;
             try {
-                handler = (MimeHandler) mClass.newInstance();
+                handler = mClass.newInstance();
             } catch (InstantiationException e) {
                 throw new MimeHandlerException(e);
             } catch (IllegalAccessException e) {
@@ -167,25 +169,49 @@ public class MimeHandlerManager {
         Provisioning prov = Provisioning.getInstance();
         
         // Look up by both type and extension
-        List<MimeTypeInfo> mimeTypes = new ArrayList<MimeTypeInfo>();
-        if (!StringUtil.isNullOrEmpty(mimeType)) {
-            mimeTypes.addAll(prov.getMimeTypes(mimeType));
-        }
-        if (!StringUtil.isNullOrEmpty(ext)) {
-            mimeTypes.addAll(prov.getMimeTypesByExtension(ext));
-        }
+        List<MimeTypeInfo> mimeTypes = prov.getAllMimeTypes();
         if (mimeTypes.size() == 0) {
             return null;
         }
         
-        // Find the one with the highest priority
-        MimeTypeInfo retVal = mimeTypes.get(0);
+        MimeTypeInfo retVal = null;
+        int maxPriority = Integer.MIN_VALUE;
         for (MimeTypeInfo mti : mimeTypes) {
-            if (mti.getPriority() > retVal.getPriority()) {
+            if (matches(mti, mimeType, ext) && mti.getPriority() > maxPriority) {
                 retVal = mti;
+                maxPriority = mti.getPriority();
             }
         }
+        if (retVal != null && retVal.getHandlerClass() == null) {
+            ZimbraLog.mailbox.warn("%s not defined for MIME handler %s",
+                Provisioning.A_zimbraMimeHandlerClass, retVal.getDescription());
+        }
         return retVal;
+    }
+    
+    private static boolean matches(MimeTypeInfo mti, String mimeType, String ext) {
+        if (mti == null) {
+            return false;
+        }
+        if (mimeType == null) {
+            mimeType = "";
+        }
+        if (ext == null) {
+            ext = "";
+        }
+        mimeType = mimeType.toLowerCase();
+        ext = ext.toLowerCase();
+        if (mti.getFileExtensions().contains(ext)) {
+            return true;
+        }
+        for (String patternString : mti.getMimeTypes()) {
+            Pattern pattern = Pattern.compile(patternString);
+            Matcher matcher = pattern.matcher(mimeType);
+            if (matcher.find()) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

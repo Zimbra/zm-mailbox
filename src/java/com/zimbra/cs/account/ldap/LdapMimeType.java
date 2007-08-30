@@ -29,6 +29,9 @@
  */
 package com.zimbra.cs.account.ldap;
 
+import java.util.Set;
+import java.util.TreeSet;
+
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
@@ -45,7 +48,7 @@ class LdapMimeType extends Entry implements LdapEntry, MimeTypeInfo {
         mDn = dn;
     }
 
-    public String[] getTypes() {
+    public String[] getMimeTypes() {
         return super.getMultiAttr(Provisioning.A_zimbraMimeType);
     }
 
@@ -61,8 +64,15 @@ class LdapMimeType extends Entry implements LdapEntry, MimeTypeInfo {
         return super.getAttr(Provisioning.A_description, "");
     }
 
-    public String[] getFileExtensions() {
-        return super.getMultiAttr(Provisioning.A_zimbraMimeFileExtension);
+    public Set<String> getFileExtensions() {
+        String[] extensions = super.getMultiAttr(Provisioning.A_zimbraMimeFileExtension);
+        Set<String> extSet = new TreeSet<String>();
+        for (String ext : extensions) {
+            if (ext != null) {
+                extSet.add(ext.toLowerCase());
+            }
+        }
+        return extSet;
     }
 
     public String getExtension() {

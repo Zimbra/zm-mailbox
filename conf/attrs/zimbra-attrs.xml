@@ -752,8 +752,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>mail signature style outlook|internet (deprecatedSince 5.0 in identity)</desc>
 </attr>
 
-<attr id="157" name="zimbraMimeType" type="string" cardinality="multi" requiredIn="mimeEntry">
-  <desc>the MIME type (type/substype)</desc>
+<attr id="157" name="zimbraMimeType" type="string" cardinality="multi" optionalIn="mimeEntry">
+  <desc>the MIME type (type/substype) or a regular expression</desc>
 </attr>
 
 <attr id="158" name="zimbraMimeIndexingEnabled" type="boolean" cardinality="single" requiredIn="mimeEntry">

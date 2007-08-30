@@ -1503,7 +1503,7 @@ public abstract class Provisioning {
     
     public abstract List<MimeTypeInfo> getMimeTypes(String mimeType) throws ServiceException;
     
-    public abstract List<MimeTypeInfo> getMimeTypesByExtension(String ext) throws ServiceException;
+    public abstract List<MimeTypeInfo> getAllMimeTypes() throws ServiceException;
     
     public abstract List<Zimlet> getObjectTypes() throws ServiceException;
     

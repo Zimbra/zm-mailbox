@@ -393,9 +393,6 @@ public class TestProvisioning extends TestCase {
         
         List<MimeTypeInfo> mime = mProv.getMimeTypes("all"); 
         assertEquals(1, mime.size());
-        
-        mime = mProv.getMimeTypesByExtension("text");
-        assertEquals(1, mime.size());
     }
 
     private Server serverTest() throws Exception {

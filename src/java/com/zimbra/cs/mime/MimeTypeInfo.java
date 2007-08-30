@@ -29,13 +29,14 @@
  */
 package com.zimbra.cs.mime;
 
+import java.util.Set;
+
 public interface MimeTypeInfo {
     
     /**
-     * Gets the associated MIME types.
-     * @return
+     * Returns the associated MIME types.  The MIME type can be a regular expression.
      */
-    public String[] getTypes();
+    public String[] getMimeTypes();
     
     /**
      * Gets the name of the extension where the handler class is defined.
@@ -64,10 +65,10 @@ public interface MimeTypeInfo {
     public String getDescription();
     
     /**
-     * Gets a list of file extensions for this mime type.
-     * @return
+     * Returns the <tt>Set</tt> of file extensions.  Extensions are returned
+     * in lower case.
      */
-    public String[] getFileExtensions();
+    public Set<String> getFileExtensions();
 
     /**
      * Gets the priority.  In the case where multiple <tt>MimeTypeInfo</tt>s

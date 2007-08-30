@@ -42,25 +42,38 @@ public class TestMimeHandler extends TestCase {
     throws Exception {
         checkHandler("text/html", "html", TextHtmlHandler.class);
         checkHandler("text/html", "htm", TextHtmlHandler.class);
-        checkHandler("text/html", null, TextHtmlHandler.class);
-        checkHandler(null, "html", TextHtmlHandler.class);
-        checkHandler(null, "htm", TextHtmlHandler.class);
-        
         checkHandler("text/enriched", "txe", TextEnrichedHandler.class);
-        checkHandler(null, "txe", TextEnrichedHandler.class);
-        checkHandler("text/enriched", null, TextEnrichedHandler.class);
-        
         checkHandler("application/octet-stream", "exe", UnknownTypeHandler.class);
-        checkHandler("application/octet-stream", null, UnknownTypeHandler.class);
-        checkHandler(null, "exe", UnknownTypeHandler.class);
-        
         checkHandler(null, null, UnknownTypeHandler.class);
         checkHandler("", "", UnknownTypeHandler.class);
     }
     
-    private void checkHandler(String mimeType, String extension, Class handlerClass)
+    public static void checkHandler(String mimeType, String extension, Class<?> handlerClass)
     throws Exception {
+        String context = "mimeType=" + mimeType + ", ext=" + extension;
+        
+        // Get by both type and extension
         MimeHandler handler = MimeHandlerManager.getMimeHandler(mimeType, "filename." + extension);
-        assertEquals("mimeType=" + mimeType + ", ext=" + extension, handlerClass.getName(), handler.getClass().getName());
+        assertEquals(context, handlerClass.getName(), handler.getClass().getName());
+        
+        if (mimeType != null) {
+            // Get by type only
+            handler = MimeHandlerManager.getMimeHandler(mimeType, null);
+            assertEquals(context, handlerClass.getName(), handler.getClass().getName());
+
+            // Get by bogus extension
+            handler = MimeHandlerManager.getMimeHandler(mimeType, "filename.foobar");
+            assertEquals(context, handlerClass.getName(), handler.getClass().getName());
+        }
+        
+        if (extension != null) {
+            // Get by extension only
+            handler = MimeHandlerManager.getMimeHandler(null, extension);
+            assertEquals(context, handlerClass.getName(), handler.getClass().getName());
+
+            // Get by bogus type
+            handler = MimeHandlerManager.getMimeHandler("bogus/type", extension);
+            assertEquals(context, handlerClass.getName(), handler.getClass().getName());
+        }
     }
 }

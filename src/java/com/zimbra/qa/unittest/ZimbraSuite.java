@@ -43,56 +43,58 @@ import com.zimbra.common.soap.Element;
  */
 public class ZimbraSuite extends TestSuite
 {
-    private static List<Test> sAdditionalTests = new ArrayList<Test>();
-
+    private static final List<Class> sClasses = new ArrayList<Class>();
+    
+    static {
+        sClasses.add(TestWaitSet.class);
+        sClasses.add(TestUtilCode.class);
+        sClasses.add(TestEmailUtil.class);
+        sClasses.add(TestOutOfOffice.class);
+        sClasses.add(TestDbUtil.class);
+        sClasses.add(TestUnread.class);
+        sClasses.add(TestTags.class);
+        sClasses.add(TestItemCache.class);
+        sClasses.add(TestFolders.class);
+        sClasses.add(TestSpellCheck.class);
+        sClasses.add(TestAuthentication.class);
+        sClasses.add(TestAccount.class);
+        sClasses.add(TestConversion.class);
+        sClasses.add(TestMailItem.class);
+        sClasses.add(TestConcurrency.class);
+        sClasses.add(TestFolderFilterRules.class);
+        sClasses.add(TestTagFilterRules.class);
+        sClasses.add(TestPop3Import.class);
+        sClasses.add(TestFilter.class);
+        sClasses.add(TestPop3ImapAuth.class);
+        sClasses.add(TestContacts.class);
+        sClasses.add(TestTaskScheduler.class);
+        
+        // XXX bburtin: commenting out TestSearch until bug 18802 is fixed
+        // sClasses.add(TestSearch.class);
+        
+        sClasses.add(TestSendAndReceive.class);
+        sClasses.add(TestConnectionPool.class);
+        sClasses.add(TestLmtp.class);
+        sClasses.add(TestMimeHandler.class);
+        sClasses.add(TestScheduledTaskManager.class);
+        sClasses.add(TestDataSource.class);
+        sClasses.add(TestPurge.class);
+        sClasses.add(TestImapImport.class);
+        sClasses.add(TestImapImport.TearDown.class);
+        sClasses.add(TestNotification.class);
+    };
+    
     /**
      * Used by extensions to add additional tests to the main test suite.
      */
-    public static void addAdditionalTest(Test test) {
-        synchronized (sAdditionalTests) {
-            sAdditionalTests.add(test);
-        }
+    public static void addTest(Class clazz) {
+        sClasses.add(clazz);
+    }
+    
+    public static void removeTest(Class clazz) {
+        sClasses.remove(clazz);
     }
 
-    static final Class[] classes = {
-        TestWaitSet.class,
-        TestUtilCode.class,
-        TestEmailUtil.class,
-        TestOutOfOffice.class,
-        TestDbUtil.class,
-        TestUnread.class,
-        TestTags.class,
-        TestItemCache.class,
-        TestFolders.class,
-        TestSpellCheck.class,
-        TestAuthentication.class,
-        TestAccount.class,
-        TestConversion.class,
-        TestMailItem.class,
-        TestConcurrency.class,
-        TestFolderFilterRules.class,
-        TestTagFilterRules.class,
-        TestPop3Import.class,
-        TestFilter.class,
-        TestPop3ImapAuth.class,
-        TestContacts.class,
-        TestTaskScheduler.class,
-        
-        // XXX bburtin: commenting out TestSearch until bug 18802 is fixed
-        // TestSearch.class,
-        
-        TestSendAndReceive.class,
-        TestConnectionPool.class,
-        TestLmtp.class,
-        TestMimeHandler.class,
-        TestScheduledTaskManager.class,
-        TestDataSource.class,
-        TestPurge.class,
-        TestImapImport.class,
-        TestImapImport.TearDown.class,
-        TestNotification.class
-    };
-    
     public static TestResult runUserTests(Element response, List<String> tests) throws ServiceException {
         TestSuite suite = new TestSuite();
         
@@ -100,7 +102,7 @@ public class ZimbraSuite extends TestSuite
             try {
                 if (test.indexOf('.') < 0) {
                     // short name...check the suite
-                    for (Class c : ZimbraSuite.classes) {
+                    for (Class c : ZimbraSuite.sClasses) {
                         if (test.equals(c.getSimpleName()))
                             suite.addTest(new TestSuite(c));
                     }
@@ -123,13 +125,8 @@ public class ZimbraSuite extends TestSuite
     public static TestResult runTestSuite(Element response) {
         TestSuite suite = new TestSuite();
         
-        for (Class c : ZimbraSuite.classes) {
+        for (Class c : ZimbraSuite.sClasses) {
             suite.addTest(new TestSuite(c));
-        }
-        synchronized (sAdditionalTests) {
-            for (Test additional : sAdditionalTests) {
-                suite.addTest(additional);
-            }
         }
         
         return TestUtil.runTest(suite, response);

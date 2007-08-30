@@ -349,7 +349,7 @@ public class SoapProvisioning extends Provisioning {
     }
 
     /**
-     * unsuported
+     * Unsupported
      */
     @Override
     public Zimlet createZimlet(String name, Map<String, Object> attrs)
@@ -400,7 +400,7 @@ public class SoapProvisioning extends Provisioning {
     }
 
     /**
-     * unsuported
+     * Unsupported
      */
     @Override
     public void deleteZimlet(String name) throws ServiceException {
@@ -798,7 +798,7 @@ public class SoapProvisioning extends Provisioning {
     }
 
     /**
-     * unsuported
+     * Unsupported
      */
     @Override
     public List<MimeTypeInfo> getMimeTypes(String name) throws ServiceException {
@@ -806,16 +806,16 @@ public class SoapProvisioning extends Provisioning {
     }
 
     /**
-     * unsuported
+     * Unsupported
      */
     @Override
-    public List<MimeTypeInfo> getMimeTypesByExtension(String ext)
-            throws ServiceException {
+    public List<MimeTypeInfo> getAllMimeTypes()
+    throws ServiceException {
         throw new UnsupportedOperationException();
     }
 
     /**
-     * unsuported
+     * Unsupported
      */
     @Override
     public List<Zimlet> getObjectTypes() throws ServiceException {
@@ -839,7 +839,7 @@ public class SoapProvisioning extends Provisioning {
     }
 
     /**
-     * unsuported
+     * Unsupported
      */
     @Override
     public Zimlet getZimlet(String name) throws ServiceException {
@@ -854,7 +854,7 @@ public class SoapProvisioning extends Provisioning {
     }
 
     /**
-     * unsuported
+     * Unsupported
      */
     @Override
     public List<Zimlet> listAllZimlets() throws ServiceException {

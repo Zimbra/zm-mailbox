@@ -132,6 +132,7 @@ public class LdapProvisioning extends Provisioning {
     public static final String C_zimbraServer = "zimbraServer";
     public static final String C_zimbraCalendarResource = "zimbraCalendarResource";
     public static final String C_zimbraAlias = "zimbraAlias";
+    public static final String C_zimbraMimeEntry = "zimbraMimeEntry";
 
     private static final long ONE_DAY_IN_MILLIS = 1000*60*60*24;
 
@@ -390,6 +391,7 @@ public class LdapProvisioning extends Provisioning {
         return sConfig;
     }
 
+    @Override
     public List<MimeTypeInfo> getMimeTypes(String mimeType) throws ServiceException {
         DirContext ctxt = null;
         try {
@@ -413,14 +415,15 @@ public class LdapProvisioning extends Provisioning {
             LdapUtil.closeContext(ctxt);
         }
     }
-    
-    public List<MimeTypeInfo> getMimeTypesByExtension(String ext) throws ServiceException {
+
+    @Override
+    public List<MimeTypeInfo> getAllMimeTypes() throws ServiceException {
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
-            ext = LdapUtil.escapeSearchFilterArg(ext);
             List<MimeTypeInfo> mimeTypes = new ArrayList<MimeTypeInfo>();
-            NamingEnumeration ne = LdapUtil.searchDir(ctxt, mDIT.mimeBaseDN(), "(" + Provisioning.A_zimbraMimeFileExtension + "=" + ext + ")", sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, mDIT.mimeBaseDN(),
+                "(" + Provisioning.A_objectClass + "=" + C_zimbraMimeEntry + ")", sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 mimeTypes.add(new LdapMimeType(sr.getNameInNamespace(), sr.getAttributes()));
@@ -432,7 +435,7 @@ public class LdapProvisioning extends Provisioning {
         } catch (InvalidNameException e) {
             return null;                        
         } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to get mime type for file extension " + ext, e);
+            throw ServiceException.FAILURE("unable to get mime types", e);
         } finally {
             LdapUtil.closeContext(ctxt);
         }
