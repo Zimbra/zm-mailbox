@@ -391,7 +391,7 @@ public class Message extends MailItem {
         // process the components in this invite (must do this last so blob is created, etc)
         if (components != null) {
             try {
-                msg.processInvitesAfterCreate(methodStr, folder.getId(), volumeId, !noICal, pm, components);
+                msg.processInvitesAfterCreate(methodStr.toUpperCase(), folder.getId(), volumeId, !noICal, pm, components);
             } catch (Exception e) {
                 ZimbraLog.calendar.warn("Unable to process iCalendar attachment", e);
             }

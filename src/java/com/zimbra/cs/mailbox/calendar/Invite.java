@@ -445,12 +445,13 @@ public class Invite {
 
     public static ICalTok lookupMethod(String methodName) {
         ICalTok toRet;
+        String methodNameUpper = methodName.toUpperCase();  // work around livemeeting.com bug
         try {
-            toRet = ICalTok.valueOf(methodName);
+            toRet = ICalTok.valueOf(methodNameUpper);
         } catch (IllegalArgumentException e) {
             toRet = ICalTok.PUBLISH;
             // Apple iCal generates non-standard "METHOD:EXPORT".
-            if (methodName.compareToIgnoreCase("EXPORT") != 0)
+            if (methodNameUpper.compareToIgnoreCase("EXPORT") != 0)
                 sLog.warn("Invalid METHOD " + methodName +
                           "; assuming PUBLISH", e);
         }
