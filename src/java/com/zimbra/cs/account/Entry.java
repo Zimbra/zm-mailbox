@@ -280,14 +280,13 @@ public abstract class Entry {
         return mData.get(key);
     }
     
-    protected Map<String,Object> getDefaults(AttributeFlag flag) throws ServiceException {
-        Map<String,Object> defaults = new HashMap<String,Object>();
+    protected void getDefaults(AttributeFlag flag, Map<String,Object> defaults) throws ServiceException {
+        defaults.clear();
         Set<String> attrs = AttributeManager.getInstance().getAttrsWithFlag(flag);
         for (String a : attrs) {
             Object obj = getObject(a, true);
             if (obj != null) defaults.put(a, obj);
         }
-        return defaults;
         //return Collections.unmodifiableMap(defaults);
     }
 

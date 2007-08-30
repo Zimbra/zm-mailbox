@@ -42,8 +42,8 @@ import com.zimbra.common.service.ServiceException;
  */
 public class Config extends Entry {
     
-    private Map<String, Object> mDomainDefaults;
-    private Map<String, Object> mServerDefaults;    
+    private Map<String, Object> mDomainDefaults = new HashMap<String, Object>();
+    private Map<String, Object> mServerDefaults = new HashMap<String, Object>();    
 
     public Config(Map<String, Object> attrs) {
         super(attrs, null);
@@ -54,8 +54,8 @@ public class Config extends Entry {
     public void resetData() {
         super.resetData();
         try {
-            mDomainDefaults = getDefaults(AttributeFlag.domainInherited);
-            mServerDefaults = getDefaults(AttributeFlag.serverInherited);            
+            getDefaults(AttributeFlag.domainInherited, mDomainDefaults);
+            getDefaults(AttributeFlag.serverInherited, mServerDefaults);            
         } catch (ServiceException e) {
             // TODO log?
         }
