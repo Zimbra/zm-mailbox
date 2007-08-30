@@ -574,6 +574,7 @@ public class DbSearch {
         }
         return param;
     }
+
     private static final int setBytes(PreparedStatement stmt, int param, Collection<Byte> c) throws SQLException {
         if (!ListUtil.isEmpty(c)) {
             for (byte b: c)
@@ -581,6 +582,7 @@ public class DbSearch {
         }
         return param;
     }
+
     private static final int setIntegers(PreparedStatement stmt, int param, Collection<Integer> c) throws SQLException {
         if (!ListUtil.isEmpty(c)) {
             for (int i: c)
@@ -588,50 +590,55 @@ public class DbSearch {
         }
         return param;
     }
+
     private static final int setDateRange(PreparedStatement stmt, int param, Collection<NumericRange> c) throws SQLException {
         if (!ListUtil.isEmpty(c)) {
             for (NumericRange date : c) { 
-                if (date.lowest > 0)
+                if (date.lowest >= 1)
                     stmt.setInt(param++, (int) Math.min(date.lowest / 1000, Integer.MAX_VALUE)); 
-                if (date.highest > 0)
+                if (date.highest >= 1)
                     stmt.setInt(param++, (int) Math.min(date.highest / 1000, Integer.MAX_VALUE));
             }
         }
         return param;
     }
+
     private static final int setTimestampRange(PreparedStatement stmt, int param, Collection<NumericRange> c) throws SQLException {
         if (!ListUtil.isEmpty(c)) {
             for (NumericRange date : c) { 
-                if (date.lowest > 0)
+                if (date.lowest >= 1)
                     stmt.setTimestamp(param++, new Timestamp(date.lowest));
-                if (date.highest > 0)
+                if (date.highest >= 1)
                     stmt.setTimestamp(param++, new Timestamp(date.highest));
             }
         }
         return param;
     }
+
     private static final int setLongRangeWithMinimum(PreparedStatement stmt, int param, Collection<NumericRange> c, int minimum) throws SQLException {
         if (!ListUtil.isEmpty(c)) {
-            for (NumericRange r: c) { 
-                if (r.lowest > minimum)
+            for (NumericRange r : c) { 
+                if (r.lowest >= minimum)
                     stmt.setLong(param++, r.lowest);
-                if (r.highest > minimum)
+                if (r.highest >= minimum)
                     stmt.setLong(param++, r.highest);
             }
         }
         return param;
     }
+
     private static final int setIntRangeWithMinimum(PreparedStatement stmt, int param, Collection<NumericRange> c, int minimum) throws SQLException {
         if (!ListUtil.isEmpty(c)) {
-            for (NumericRange r: c) { 
-                if (r.lowest > minimum)
+            for (NumericRange r : c) { 
+                if (r.lowest >= minimum)
                     stmt.setInt(param++, (int)r.lowest);
-                if (r.highest > minimum)
+                if (r.highest >= minimum)
                     stmt.setInt(param++, (int)r.highest);
             }
         }
         return param;
     }
+
     private static final int setStringRange(PreparedStatement stmt, int param, Collection<StringRange> c) throws SQLException {
         if (!ListUtil.isEmpty(c)) {
             for (StringRange r: c) { 
@@ -643,6 +650,7 @@ public class DbSearch {
         }
         return param;
     }
+
     private static final int setLongs(PreparedStatement stmt, int param, Collection<Long> c) throws SQLException {
         if (!ListUtil.isEmpty(c)) {
             for (long l: c)
@@ -650,6 +658,7 @@ public class DbSearch {
         }
         return param;
     }
+
     private static final int setFolders(PreparedStatement stmt, int param, Collection<Folder> c) throws SQLException {
         if (!ListUtil.isEmpty(c)) {
             for (Folder f : c) 
@@ -657,6 +666,7 @@ public class DbSearch {
         }
         return param;
     }
+
     private static final int setBooleanAsInt(PreparedStatement stmt, int param, Boolean b) throws SQLException {
         if (b != null) {
             stmt.setInt(param++, b.booleanValue() ? 1 : 0);
@@ -759,30 +769,36 @@ public class DbSearch {
      * @return number of parameters bound
      */
     private static final int encodeRangeWithMinimum(StringBuilder statement, String column, Collection<? extends DbSearchConstraints.NumericRange> ranges, long lowestValue) {
-        int retVal = 0;
-        if (!ListUtil.isEmpty(ranges)) {
-            for (DbSearchConstraints.NumericRange r : ranges) {
-                statement.append(r.negated ? " AND NOT (" : " AND (");
-                if (r.lowest >= lowestValue) {
-                    if (r.lowestEqual)
-                        statement.append(" " + column + " >= ?");
-                    else
-                        statement.append(" " + column + " > ?");
-                    retVal++;
-                }
-                if (r.highest >= lowestValue) {
-                    if (r.lowest >= lowestValue)
-                        statement.append(" AND");
-                    if (r.highestEqual)
-                        statement.append(" " + column + " <= ?");
-                    else
-                        statement.append(" " + column + " < ?");
-                    retVal++;
-                }
-                statement.append(')');
+        if (ListUtil.isEmpty(ranges))
+            return 0;
+
+        int params = 0;
+        for (DbSearchConstraints.NumericRange r : ranges) {
+            boolean lowValid = r.lowest >= lowestValue;
+            boolean highValid = r.highest >= lowestValue;
+            if (!(lowValid || highValid))
+                continue;
+
+            statement.append(r.negated ? " AND NOT (" : " AND (");
+            if (lowValid) {
+                if (r.lowestEqual)
+                    statement.append(" " + column + " >= ?");
+                else
+                    statement.append(" " + column + " > ?");
+                params++;
             }
+            if (highValid) {
+                if (lowValid)
+                    statement.append(" AND");
+                if (r.highestEqual)
+                    statement.append(" " + column + " <= ?");
+                else
+                    statement.append(" " + column + " < ?");
+                params++;
+            }
+            statement.append(')');
         }
-        return retVal;
+        return params;
     }
 
     /**
