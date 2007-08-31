@@ -68,26 +68,43 @@ public final class SearchParams implements Cloneable {
     private static final int MAX_OFFSET = 10000000; // 10M
     private static final int MAX_LIMIT = 10000000; // 10M
     
-    public enum ExpandResults {
-        NONE, /// don't expand any hits
-        FIRST, // expand the first hit
-        HITS, // for searchConv, expand the members of the conversation that match the search
-        ALL; // expand ALL hits
+    public static final class ExpandResults {
+        public static ExpandResults NONE = new ExpandResults("none");    // don't expand any hits
+        public static ExpandResults FIRST = new ExpandResults("first");  // expand the first hit
+        public static ExpandResults HITS = new ExpandResults("hits");    // for searchConv, expand the members of the conversation that match the search
+        public static ExpandResults ALL = new ExpandResults("all");      // expand ALL hits
 
-        public static ExpandResults get(String value) throws ServiceException {
+        private final String mRep;
+        private ItemId mItemId;
+
+        private ExpandResults(String rep)       { mRep = rep; }
+        private ExpandResults setId(ItemId iid) { mItemId = iid;  return this; }
+        public boolean matches(MailItem item)   { return mItemId != null && item != null && matches(new ItemId(item)); }
+        public boolean matches(ItemId iid)      { return iid != null && iid.equals(mItemId); }
+
+        public static ExpandResults valueOf(String value) throws ServiceException {
             if (value == null)
                 return NONE;
-            value = value.toUpperCase();
-            try {
-                return valueOf(value);
-            } catch (IllegalArgumentException iae) {
-                if (value.equals("1") || value.equals("TRUE"))
-                    return FIRST;
-                if (value.equals("0") || value.equals("FALSE"))
-                    return NONE;
-                throw ServiceException.INVALID_REQUEST("unknown 'fetch' value: " + value, null);
-            }
+
+            value = value.trim().toLowerCase();
+            if (value.equals("none") || value.equals("0") || value.equals("false"))
+                return NONE;
+            else if (value.equals("first") || value.equals("1"))
+                return FIRST;
+            else if (value.equals("hits"))
+                return HITS;
+            else if (value.equals("all"))
+                return ALL;
+
+            ItemId iid = null;
+            try { iid = new ItemId(value, (String) null); } catch (Exception e) { }
+            if (iid != null)
+                return new ExpandResults(value).setId(iid);
+            else
+                throw ServiceException.INVALID_REQUEST("invalid 'fetch' value: " + value, null);
         }
+
+        public String toString()  { return mRep; }
     };
 
     public long getCalItemExpandStart() { return mCalItemExpandStart; }
@@ -97,7 +114,7 @@ public final class SearchParams implements Cloneable {
     public byte[] getTypes() { return types; }
     public String getSortByStr() { return mSortByStr; }
     public MailboxIndex.SortBy getSortBy() { return mSortBy; }
-    public ExpandResults getFetchFirst() { return mFetchFirst; }
+    public ExpandResults getInlineRule() { return mInlineRule; }
     public boolean getMarkRead() { return mMarkRead; }
     public boolean getWantHtml() { return mWantHtml; }
     public boolean getNeuterImages() { return mNeuterImages; }
@@ -184,7 +201,7 @@ public final class SearchParams implements Cloneable {
             mSortByStr = mSortBy.toString();
         }
     }
-    public void setFetchFirst(ExpandResults fetch) { mFetchFirst = fetch; }
+    public void setInlineRule(ExpandResults fetch) { mInlineRule = fetch; }
     public void setMarkRead(boolean read) { mMarkRead = read; }
     public void setWantHtml(boolean html) { mWantHtml = html; }
     public void setNeuterImages(boolean neuter) { mNeuterImages = neuter; }
@@ -255,8 +272,8 @@ public final class SearchParams implements Cloneable {
         searchElt.addAttribute(MailConstants.E_QUERY, getQueryStr(), Element.Disposition.CONTENT);
         searchElt.addAttribute(MailConstants.A_SEARCH_TYPES, getTypesStr());
         searchElt.addAttribute(MailConstants.A_SORTBY, getSortByStr());
-        if (getFetchFirst() != null) 
-            searchElt.addAttribute(MailConstants.A_FETCH, getFetchFirst().toString());
+        if (getInlineRule() != null) 
+            searchElt.addAttribute(MailConstants.A_FETCH, getInlineRule().toString());
         searchElt.addAttribute(MailConstants.A_MARK_READ, getMarkRead());
         searchElt.addAttribute(MailConstants.A_WANT_HTML, getWantHtml());
         searchElt.addAttribute(MailConstants.A_NEUTER, getNeuterImages());
@@ -307,8 +324,8 @@ public final class SearchParams implements Cloneable {
         params.setQueryStr(query);
         params.setTypesStr(request.getAttribute(MailConstants.A_SEARCH_TYPES, request.getAttribute(MailConstants.A_GROUPBY, Search.DEFAULT_SEARCH_TYPES)));
         params.setSortByStr(request.getAttribute(MailConstants.A_SORTBY, MailboxIndex.SortBy.DATE_DESCENDING.toString()));
-        params.setFetchFirst(ExpandResults.get(request.getAttribute(MailConstants.A_FETCH, null)));
-        if (params.getFetchFirst() != ExpandResults.NONE) {
+        params.setInlineRule(ExpandResults.valueOf(request.getAttribute(MailConstants.A_FETCH, null)));
+        if (params.getInlineRule() != ExpandResults.NONE) {
             params.setMarkRead(request.getAttributeBool(MailConstants.A_MARK_READ, false));
             params.setWantHtml(request.getAttributeBool(MailConstants.A_WANT_HTML, false));
             params.setNeuterImages(request.getAttributeBool(MailConstants.A_NEUTER, true));
@@ -460,7 +477,7 @@ public final class SearchParams implements Cloneable {
         o.mQueryStr = mQueryStr;
         o.mOffset = mOffset;
         o.mLimit = mLimit;
-        o.mFetchFirst = mFetchFirst;
+        o.mInlineRule = mInlineRule;
         o.mMarkRead = mMarkRead;
         o.mWantHtml = mWantHtml;
         o.mNeuterImages = mNeuterImages;
@@ -492,7 +509,7 @@ public final class SearchParams implements Cloneable {
     private String mQueryStr;
     private int mOffset;
     private int mLimit;
-    private ExpandResults mFetchFirst = null;
+    private ExpandResults mInlineRule = null;
     private boolean mMarkRead = false;
     private boolean mWantHtml = false;
     private boolean mNeuterImages = false;

@@ -36,6 +36,7 @@ import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.service.util.ItemId;
 
 /**
  * 
@@ -57,7 +58,7 @@ public abstract class ZimbraHit
      * @return
      * @throws ServiceException
      */
-    public String getAcctIdStr() throws ServiceException {
+    public String getAcctIdStr() {
     	if (mMailbox == null) return "NULL_ACCOUNTID";
     	return mMailbox.getAccountId(); 
     }
@@ -111,7 +112,11 @@ public abstract class ZimbraHit
     
     final public float getScore() { return mScore; }
     public abstract int getItemId() throws ServiceException;
-    
+
+    public ItemId getParsedItemID() throws ServiceException {
+        return new ItemId(mMailbox, getItemId());
+    }
+
     
     protected Mailbox mMailbox;
     protected ZimbraQueryResultsImpl mResults;

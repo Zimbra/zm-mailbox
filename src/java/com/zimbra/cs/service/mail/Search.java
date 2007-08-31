@@ -151,7 +151,7 @@ public class Search extends MailDocumentHandler  {
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         int totalNumHits = 0;
-        ExpandResults expand = params.getFetchFirst();
+        ExpandResults expand = params.getInlineRule();
         if (expand == ExpandResults.HITS)
             expand = ExpandResults.NONE;      // "hits" is not a valid value for Search...
         
@@ -162,7 +162,7 @@ public class Search extends MailDocumentHandler  {
                     mLog.debug("Search results limited to " + limit + " hits.");
                 break;
             }
-            boolean inline = (totalNumHits == 0 && expand == ExpandResults.FIRST) || expand == ExpandResults.ALL;
+            boolean inline = (totalNumHits == 0 && expand == ExpandResults.FIRST) || expand == ExpandResults.ALL || expand.matches(hit.getParsedItemID());
             boolean addSortField = true;
 
             Element e = null;

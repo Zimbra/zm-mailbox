@@ -1014,7 +1014,7 @@ Tags:
 ----------
 
 <SearchRequest [limit="..."] [offset="..."] [sortBy="{sort-by}"] [groupBy="{group-by}"]
-               [types="{types}"] [recip="*0|1"] [fetch="1|all"] [html="*0|1"]
+               [types="{types}"] [recip="*0|1"] [fetch="1|all|{item-id}"] [html="*0|1"]
                [read="*0|1"] [neuter="0|*1"] [field={default_field}]
                [calExpandInstStart=TIME_IN_MSEC] [calExpandInstEnd=TIME_IN_MSEC]
                >
@@ -1088,6 +1088,7 @@ For a response, the order of the returned results represents the sorted order.  
 	is not a separate index attribute or element.
 
 if fetch="1" (or fetch="first") is specified, the first hit will be expanded inline (messages only at present)
+if fetch="{item-id}", only the message with the given {item-id} is expanded inline
 if fetch="all", all hits are expanded inline
     + if html="1" is also specified, inlined hits will return HTML parts if available
     + if read="1" is also specified, inlined hits will be marked as read
@@ -1289,7 +1290,7 @@ message-part result:
 -----------
 
 <SearchConvRequest cid="conversation-id" [limit="..."] [offset="..."] [sortBy="{sort-by}"] [types="{types}"] [nest="0|1"]
-				   [fetch="1|hits|all"] [html="1"] [read="1"] [neuter="0"]>
+				   [fetch="1|hits|all|{item-id}"] [html="1"] [read="1"] [neuter="0"]>
   *(<header n="{header-name}/>)
   <query>{query-string}</query>
 </SearchConvRequest>
@@ -1299,6 +1300,7 @@ message-part result:
 if fetch="1" (or fetch="first"), the first matching message is expanded inline
 if fetch="hits", all matching messages are expanded inline
 if fetch="all", all messages are expanded inline
+if fetch="{item-id}", only the message with the given {item-id} is expanded inline
 
    SEE SearchRequest for more info
 
@@ -1412,7 +1414,7 @@ folder ID that folder element will represent the virtual root folder.
 ----------
 
 <GetConvRequest>
-  <c id="{conv-id}" [fetch="1|all" html="0|1"]>
+  <c id="{conv-id}" [fetch="1|all|{item-id}" html="0|1"]>
     *(<header n="{header-name}/>)
   </c>
 </GetConvRequest>
@@ -1422,6 +1424,7 @@ It will return exactly 1 conversation element.
 
 if fetch="1|all" is included, the full expanded message structure is inlined
     for the first (or for all) messages in the conversation
+if fetch="{item-id}", only the message with the given {item-id} is expanded inline
 
 if <header>s are requested, any matching headers are inlined into the response
     (not available when raw="1")

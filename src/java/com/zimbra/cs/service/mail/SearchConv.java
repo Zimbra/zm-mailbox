@@ -243,14 +243,18 @@ public class SearchConv extends Search {
             // Okay, we've built the matched[] array.  Now iterate through all the messages, and put the message
             // or the MATCHED entry into the result
             //
-            ExpandResults expand = params.getFetchFirst();
+            ExpandResults expand = params.getInlineRule();
             for (int i = offset; i < offset + iterLen; i++) {
                 if (matched[i-offset] != null) {
-                    addMessageHit((MessageHit) matched[i-offset], response, octxt, ifmt, expand != ExpandResults.NONE, params);
+                    MessageHit mhit = (MessageHit) matched[i-offset];
+                    boolean inline = expand == ExpandResults.FIRST || expand == ExpandResults.ALL || expand == ExpandResults.HITS || expand.matches(mhit.getParsedItemID());
+                    addMessageHit(mhit, response, octxt, ifmt, inline, params);
                     if (expand == ExpandResults.FIRST)
                         expand = ExpandResults.NONE;
                 } else {
-                    addMessageMiss(msgs.get(i), response, octxt, ifmt, expand == ExpandResults.ALL, params);
+                    Message msg = msgs.get(i);
+                    boolean inline = expand == ExpandResults.ALL || expand.matches(msg);
+                    addMessageMiss(msg, response, octxt, ifmt, inline, params);
                 }
             }
         }

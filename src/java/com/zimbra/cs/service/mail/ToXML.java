@@ -476,11 +476,11 @@ public class ToXML {
         c.addAttribute(MailConstants.E_SUBJECT, msgs.get(0).getSubject(), Element.Disposition.CONTENT);
 
         Mailbox mbox = conv.getMailbox();
-        ExpandResults expand = params.getFetchFirst();
+        ExpandResults expand = params.getInlineRule();
         for (Message msg : msgs) {
             if (msg.isTagged(mbox.mDeletedFlag))
                 continue;
-            if (expand == ExpandResults.FIRST || expand == ExpandResults.ALL) {
+            if (expand == ExpandResults.FIRST || expand == ExpandResults.ALL || expand.matches(msg)) {
                 encodeMessageAsMP(c, ifmt, octxt, msg, null, params.getWantHtml(), params.getNeuterImages(), params.getInlinedHeaders(), true);
                 if (expand == ExpandResults.FIRST)
                     expand = ExpandResults.NONE;

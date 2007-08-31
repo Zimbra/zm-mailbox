@@ -53,7 +53,7 @@ public class ProxiedHit extends ZimbraHit
 
     protected Element mElement;
 
-    public ItemId getParsedItemID() throws ServiceException {
+    @Override public ItemId getParsedItemID() throws ServiceException {
         if (itemID == null)
             itemID = new ItemId(mElement.getAttribute(MailConstants.A_ID), (String) null);
         return itemID;
