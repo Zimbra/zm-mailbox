@@ -1,11 +1,33 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1
+ *
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 ("License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.zimbra.com/license
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+ * the License for the specific language governing rights and limitations
+ * under the License.
+ *
+ * The Original Code is: Zimbra Collaboration Suite Server.
+ *
+ * The Initial Developer of the Original Code is Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2007 Zimbra, Inc.
+ * All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK *****
+ */
+
 package com.zimbra.qa.unittest;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,7 +39,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.*;
@@ -462,11 +484,28 @@ public class TestProvisioning extends TestCase {
         attrsToMod.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_KERBEROS5);
         attrsToMod.put(Provisioning.A_zimbraAuthKerberos5Realm, "PHOEBE.LOCAL");
         mProv.modifyAttrs(domain, attrsToMod, true);
+        // by domain realm mapping    acct-1@PHOEBE.LOCAL has to be created (sudo /usr/local/sbin/kadmin.local addprinc command)
+        mProv.authAccount(account, PASSWORD, "unittest");
         attrsToMod.clear();
-        attrsToMod.put(Provisioning.A_zimbraForeignPrincipal, "kerberos5: user1@PHOEBE.LOCAL");
+        attrsToMod.put(Provisioning.A_zimbraForeignPrincipal, "kerberos5:user1@PHOEBE.LOCAL");
         mProv.modifyAttrs(account, attrsToMod, true);
+        // by specific foreignPrincipal   user1-1@PHOEBE.LOCAL has to be created (sudo /usr/local/sbin/kadmin.local addprinc command)
         mProv.authAccount(account, PASSWORD, "unittest");
         
+        // skip these tests, as there could be multiple domain with PHOEBE.LOCAL in zimbraAuthKerberos5Realm  from previous test
+        // to test, remove all previous test domains and uncomment the following.
+        /*
+        Account acctNonExist = mProv.get(Provisioning.AccountBy.krb5Principal, "bad@PHOEBE.LOCAL");
+        assertNull(acctNonExist);
+        
+        Account acctByRealm = mProv.get(Provisioning.AccountBy.krb5Principal, ACCT_USER+"@PHOEBE.LOCAL");
+        assertNotNull(acctByRealm);
+        assertEquals(acctByRealm.getName(), ACCT_EMAIL);
+        
+        Account acctByFP = mProv.get(Provisioning.AccountBy.krb5Principal, "user1@PHOEBE.LOCAL");
+        assertNotNull(acctByFP);
+        assertEquals(acctByFP.getName(), ACCT_EMAIL);
+        */
         
         // custom auth
         attrsToMod.clear();
@@ -1185,6 +1224,110 @@ public class TestProvisioning extends TestCase {
         TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{acct}, true);
     }
     
+    private Domain aliasTest() throws Exception {
+        System.out.println("Testing alias");
+        
+        // create a new domain
+        String domainName = "alias-test." + DOMAIN_NAME;
+        Domain domain = mProv.createDomain(domainName, new HashMap<String, Object>());
+        
+        /*
+        int numAccts = 10;
+        int numAliases = 500;
+        for (int a=0; a<numAccts; a++) {
+            String acctName = "acct-" + (a+1) + "@" + domainName;
+            Account acct = mProv.createAccount(acctName, PASSWORD, new HashMap<String, Object>());
+            
+            for (int i=0; i<numAliases; i++) {
+                String aliasName = "a-" + (a+1) + "-" + (i+1) + "@" + domainName;
+                System.out.println("Creating alias " + aliasName);
+                mProv.addAlias(acct, aliasName);
+            }
+        }
+        */
+        
+        return domain;
+    }
+    
+    private void familyTest() throws Exception {
+        System.out.println("Testing family accounts");
+        
+        Set<String> visibleCids = new HashSet<String>();
+        Set<String> invisibleCids = new HashSet<String>();
+        Set<String> cids = new HashSet<String>();
+        for (int i=0; i<5; i++) {
+            String childName = "v-child-"+i + "@" + DOMAIN_NAME;
+            Account acct = mProv.createAccount(childName, PASSWORD, new HashMap<String, Object>());
+            visibleCids.add(acct.getId());
+            cids.add(acct.getId());
+            
+            childName = "iv-child-"+i + "@" + DOMAIN_NAME;
+            acct = mProv.createAccount(childName, PASSWORD, new HashMap<String, Object>());
+            invisibleCids.add(acct.getId());
+            cids.add(acct.getId());
+        }
+        
+        Account acctNotChild = mProv.createAccount("not-child@"+DOMAIN_NAME, PASSWORD, new HashMap<String, Object>());
+        String idNotChild = acctNotChild.getId();
+        Set<String> idsNotChild = new HashSet<String>();
+        idsNotChild.add(idNotChild);
+        
+        Set<String> temp = new HashSet<String>();
+        Account parent;
+        Map attrs = new HashMap<String, Object>();;
+        
+        // should fail: adding an non child as visible child
+        try {
+            attrs.put(Provisioning.A_zimbraChildAccount, cids);
+            attrs.put(Provisioning.A_zimbraPrefChildVisibleAccount, SetUtil.union(temp, visibleCids, idsNotChild));
+            parent = mProv.createAccount("parent@"+DOMAIN_NAME, PASSWORD, attrs);
+            fail();
+        } catch (ServiceException e) {
+            if (!e.getCode().equals(ServiceException.INVALID_REQUEST))
+                fail();
+        }
+        
+        // should pass
+        attrs.clear();
+        attrs.put(Provisioning.A_zimbraChildAccount, cids);
+        attrs.put(Provisioning.A_zimbraPrefChildVisibleAccount, visibleCids);
+        parent = mProv.createAccount("parent@"+DOMAIN_NAME, PASSWORD, attrs);
+        
+        // add a non child as visible
+        try {
+            attrs.clear();
+            attrs.put("+" + Provisioning.A_zimbraPrefChildVisibleAccount, idsNotChild);
+            
+            mProv.modifyAttrs(parent, attrs);
+            fail();
+        } catch (ServiceException e) {
+            if (!e.getCode().equals(ServiceException.INVALID_REQUEST))
+                fail();
+        }
+        
+        // add a child and set to visible in same request
+        attrs.clear();
+        attrs.put("+" + Provisioning.A_zimbraChildAccount, idsNotChild);
+        attrs.put("+" + Provisioning.A_zimbraPrefChildVisibleAccount, idsNotChild);
+        mProv.modifyAttrs(parent, attrs);
+        
+        // remove a child, it should be automaticatlly removed from the visible children
+        attrs.clear();    
+        attrs.put("-" + Provisioning.A_zimbraChildAccount, idsNotChild);
+        mProv.modifyAttrs(parent, attrs);
+        // verify it
+        Set<String> curAttrs = parent.getMultiAttrSet(Provisioning.A_zimbraPrefChildVisibleAccount);
+        assertFalse(curAttrs.contains(idsNotChild));
+        
+        // delete all accounts
+        for (String childId : cids)
+            mProv.deleteAccount(childId);
+        for (String childId : idsNotChild)
+            mProv.deleteAccount(childId);
+        mProv.deleteAccount(parent.getId());
+        
+    }
+    
     private String execute() throws Exception {
         
         mCustomProvTester.cleanup();
@@ -1215,6 +1358,9 @@ public class TestProvisioning extends TestCase {
         entryTest(account);
         galTest(domain);
         searchTest(domain);
+        
+        Domain aliasTestDomain = aliasTest();
+        familyTest();
 
         // ========================================================================
         System.out.println("\nPress enter to delete entries created by the test");
@@ -1252,6 +1398,7 @@ public class TestProvisioning extends TestCase {
         mProv.deleteDomain(domain.getId());
         mProv.deleteDomain(otherDomain.getId());
         mProv.deleteDomain(specialCharDomain.getId());
+        mProv.deleteDomain(aliasTestDomain.getId());
         mProv.deleteCos(cos.getId());
         
         return TEST_ID;
@@ -1279,6 +1426,10 @@ public class TestProvisioning extends TestCase {
    
     public static void main(String[] args) throws Exception {
         // CliUtil.toolSetup("INFO");
-        TestUtil.runTest(new TestSuite(TestProvisioning.class));
+        // TestUtil.runTest(new TestSuite(TestProvisioning.class));
+        
+        TestProvisioning t = new TestProvisioning();
+        t.setUp();
+        t.execute();
     }
 }

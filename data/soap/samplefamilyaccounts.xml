@@ -139,9 +139,9 @@
                 <a n="zimbraChildAccount">${child4.id}</a>
                 <a n="zimbraChildAccount">${child5.id}</a>
                 <a n="zimbraChildAccount">${child6.id}</a>
-                <a n="zimbraChildVisibleAccount">${child1.id}</a>
-                <a n="zimbraChildVisibleAccount">${child2.id}</a>
-                <a n="zimbraChildVisibleAccount">${child3.id}</a>
+                <a n="zimbraPrefChildVisibleAccount">${child1.id}</a>
+                <a n="zimbraPrefChildVisibleAccount">${child2.id}</a>
+                <a n="zimbraPrefChildVisibleAccount">${child3.id}</a>
             </CreateAccountRequest>
         </t:request>
         <t:response>

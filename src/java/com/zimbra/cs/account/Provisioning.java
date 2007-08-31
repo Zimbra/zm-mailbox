@@ -1284,9 +1284,9 @@ public abstract class Provisioning {
     /*
      * family mailboxes
      */
-    public static final String A_zimbraChildAccount          = "zimbraChildAccount";
-    public static final String A_zimbraChildVisibleAccount   = "zimbraChildVisibleAccount";
-    public static final String A_zimbraFeatureOptionsEnabled = "zimbraFeatureOptionsEnabled";
+    public static final String A_zimbraChildAccount              = "zimbraChildAccount";
+    public static final String A_zimbraPrefChildVisibleAccount   = "zimbraPrefChildVisibleAccount";
+    public static final String A_zimbraFeatureOptionsEnabled     = "zimbraFeatureOptionsEnabled";
 
     /*
      * Backup/Restore

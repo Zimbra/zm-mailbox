@@ -240,7 +240,7 @@ public class GetInfo extends AccountDocumentHandler  {
  
     private static void doChildAccounts(Element response, Account acct) throws ServiceException {
         String[] childAccounts = acct.getMultiAttr(Provisioning.A_zimbraChildAccount);
-        String[] visibleChildAccounts = acct.getMultiAttr(Provisioning.A_zimbraChildVisibleAccount);
+        String[] visibleChildAccounts = acct.getMultiAttr(Provisioning.A_zimbraPrefChildVisibleAccount);
 
         if (childAccounts.length == 0 && visibleChildAccounts.length == 0)
             return;

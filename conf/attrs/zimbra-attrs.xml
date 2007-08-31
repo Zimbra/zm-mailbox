@@ -2043,11 +2043,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>portal name</desc>
 </attr>
 
-<attr id="449" name="zimbraChildAccount" type="id" cardinality="multi" optionalIn="account" flags="domainAdminModifiable">
+<attr id="449" name="zimbraChildAccount" type="id" cardinality="multi" optionalIn="account" flags="domainAdminModifiable" callback="ChildAccount">
   <desc>zimbraId of child accounts</desc>
 </attr>
 
-<attr id="450" name="zimbraChildVisibleAccount" type="id" cardinality="multi" optionalIn="account" flags="domainAdminModifiable">
+<attr id="450" name="zimbraChildVisibleAccount" type="id" cardinality="multi" optionalIn="account" flags="domainAdminModifiable" deprecatedSince="5.0 D4">
+  <deprecateDesc> deprecated in favor of user-settable attribute zimbraPrefChildVisibleAccount </deprecateDesc>
   <desc>zimbraId of visible child accounts</desc>
 </attr>
 
@@ -2593,6 +2594,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether IM log chats is enabled</desc>
 </attr>
 
+<attr id="553" name="zimbraPrefChildVisibleAccount" type="id" cardinality="multi" optionalIn="account" flags="domainAdminModifiable" callback="ChildAccount">
+  <desc>zimbraId of visible child accounts</desc>
+</attr>
 
 </attrs>
 
