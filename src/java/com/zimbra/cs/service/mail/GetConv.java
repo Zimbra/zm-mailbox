@@ -62,7 +62,7 @@ public class GetConv extends MailDocumentHandler  {
         ItemId iid = new ItemId(econv.getAttribute(MailConstants.A_ID), zsc);
 
         SearchParams params = new SearchParams();
-        params.setInlineRule(ExpandResults.valueOf(econv.getAttribute(MailConstants.A_FETCH, null)));
+        params.setInlineRule(ExpandResults.valueOf(econv.getAttribute(MailConstants.A_FETCH, null), zsc));
         if (params.getInlineRule() != ExpandResults.NONE) {
             params.setWantHtml(econv.getAttributeBool(MailConstants.A_WANT_HTML, false));
 //          params.setMarkRead(econv.getAttributeBool(MailConstants.A_MARK_READ, false));

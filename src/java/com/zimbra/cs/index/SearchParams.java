@@ -82,7 +82,7 @@ public final class SearchParams implements Cloneable {
         public boolean matches(MailItem item)   { return mItemId != null && item != null && matches(new ItemId(item)); }
         public boolean matches(ItemId iid)      { return iid != null && iid.equals(mItemId); }
 
-        public static ExpandResults valueOf(String value) throws ServiceException {
+        public static ExpandResults valueOf(String value, ZimbraSoapContext zsc) throws ServiceException {
             if (value == null)
                 return NONE;
 
@@ -97,7 +97,7 @@ public final class SearchParams implements Cloneable {
                 return ALL;
 
             ItemId iid = null;
-            try { iid = new ItemId(value, (String) null); } catch (Exception e) { }
+            try { iid = new ItemId(value, zsc); } catch (Exception e) { }
             if (iid != null)
                 return new ExpandResults(value).setId(iid);
             else
@@ -324,7 +324,7 @@ public final class SearchParams implements Cloneable {
         params.setQueryStr(query);
         params.setTypesStr(request.getAttribute(MailConstants.A_SEARCH_TYPES, request.getAttribute(MailConstants.A_GROUPBY, Search.DEFAULT_SEARCH_TYPES)));
         params.setSortByStr(request.getAttribute(MailConstants.A_SORTBY, MailboxIndex.SortBy.DATE_DESCENDING.toString()));
-        params.setInlineRule(ExpandResults.valueOf(request.getAttribute(MailConstants.A_FETCH, null)));
+        params.setInlineRule(ExpandResults.valueOf(request.getAttribute(MailConstants.A_FETCH, null), zsc));
         if (params.getInlineRule() != ExpandResults.NONE) {
             params.setMarkRead(request.getAttributeBool(MailConstants.A_MARK_READ, false));
             params.setWantHtml(request.getAttributeBool(MailConstants.A_WANT_HTML, false));
