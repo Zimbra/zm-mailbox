@@ -29,7 +29,6 @@
 package com.zimbra.cs.imap;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.stats.RealtimeStatsCallback;
 import com.zimbra.cs.stats.ZimbraPerf;
