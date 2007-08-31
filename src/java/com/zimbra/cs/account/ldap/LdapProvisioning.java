@@ -539,12 +539,8 @@ public class LdapProvisioning extends Provisioning {
         }
         return a;
     }
-
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Provisioning#getDomainByName(java.lang.String)
-     */
-    private Account getAccountByName(String emailAddress, boolean loadFromMaster) throws ServiceException {
-        
+    
+    private String fixupAccountName(String emailAddress) throws ServiceException {
         int index = emailAddress.indexOf('@');
         String domain = null;
         if (index == -1) {
@@ -554,11 +550,18 @@ public class LdapProvisioning extends Provisioning {
                 throw ServiceException.INVALID_REQUEST("must be valid email address: "+emailAddress, null);
             else
                 emailAddress = emailAddress + "@" + domain;            
-        } else {
-            String localPart = emailAddress.substring(0, index);
-            domain = emailAddress.substring(index+1);
-            emailAddress = localPart + "@" + IDNUtil.toAsciiDomainName(domain);
-        }
+        } else
+            emailAddress = IDNUtil.toAsciiEmail(emailAddress);
+
+        return emailAddress;
+    }
+
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.account.Provisioning#getDomainByName(java.lang.String)
+     */
+    private Account getAccountByName(String emailAddress, boolean loadFromMaster) throws ServiceException {
+        
+        emailAddress = fixupAccountName(emailAddress);
         
         Account account = sAccountCache.getByName(emailAddress);
         if (account == null) {
@@ -1129,13 +1132,12 @@ public class LdapProvisioning extends Provisioning {
             assert(false);
         
         alias = alias.toLowerCase().trim();
-        int loc = alias.indexOf("@"); 
-        if (loc == -1)
-            throw ServiceException.INVALID_REQUEST("alias must include the domain", null);
+        alias = IDNUtil.toAsciiEmail(alias);
         
-        String aliasDomain = alias.substring(loc+1);
-        String aliasName = alias.substring(0, loc);
-        
+        String parts[] = alias.split("@");
+        String aliasName = parts[0];
+        String aliasDomain = parts[1];
+                
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(true);
@@ -1205,12 +1207,13 @@ public class LdapProvisioning extends Provisioning {
         try {
             ctxt = LdapUtil.getDirContext(true);
             
-            int loc = alias.indexOf("@"); 
-            if (loc == -1)
-                throw ServiceException.INVALID_REQUEST("alias must include the domain", null);
-
             alias = alias.toLowerCase();
-
+            alias = IDNUtil.toAsciiEmail(alias);
+            
+            String parts[] = alias.split("@");
+            String aliasName = parts[0];
+            String aliasDomain = parts[1];
+            
             if (entry != null) { 
                 boolean found = false;
                 for (int i=0; !found && i < aliases.length; i++) {
@@ -1220,9 +1223,6 @@ public class LdapProvisioning extends Provisioning {
                 if (!found)
                     throw AccountServiceException.NO_SUCH_ALIAS(alias);
             }
-            
-            String aliasDomain = alias.substring(loc+1);
-            String aliasName = alias.substring(0, loc);
 
             Domain domain = getDomainByAsciiName(aliasDomain, ctxt);
             if (domain == null)
@@ -2214,20 +2214,22 @@ public class LdapProvisioning extends Provisioning {
         String baseDn = specialAttrs.getLdapBaseDn();
         
         listAddress = listAddress.toLowerCase().trim();
+        
+        String parts[] = listAddress.split("@");
+        if (parts.length != 2)
+            throw ServiceException.INVALID_REQUEST("must be valid list address: " + listAddress, null);
 
+        String localPart = parts[0];
+        String domain = parts[1];
+        domain = IDNUtil.toAsciiDomainName(domain);
+        listAddress = localPart + "@" + domain;    
+        
         HashMap attrManagerContext = new HashMap();
         AttributeManager.getInstance().preModify(listAttrs, null, attrManagerContext, true, true);
 
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(true);
-
-            String parts[] = listAddress.split("@");
-            if (parts.length != 2)
-                throw ServiceException.INVALID_REQUEST("must be valid list address: " + listAddress, null);
-
-            String localPart = parts[0];
-            String domain = parts[1];
 
             Domain d = getDomainByAsciiName(domain, ctxt);
             if (d == null)
@@ -2438,13 +2440,9 @@ public class LdapProvisioning extends Provisioning {
     }
 
     private DistributionList getDistributionListByName(String listAddress) throws ServiceException {
-        String parts[] = listAddress.split("@");
+        listAddress = IDNUtil.toAsciiEmail(listAddress);
         
-        if (parts.length != 2)
-            throw ServiceException.INVALID_REQUEST("must be valid list address: "+listAddress, null);
-
-        String uid = LdapUtil.escapeSearchFilterArg(parts[0]);
-        String domain = parts[1];
+        listAddress = LdapUtil.escapeSearchFilterArg(listAddress);
         return getDistributionListByQuery("", 
                                           "(&(zimbraMailAlias="+listAddress+")" +
                                           FILTER_DISTRIBUTION_LIST_OBJECTCLASS+ ")",
@@ -3115,10 +3113,10 @@ public class LdapProvisioning extends Provisioning {
         HashMap attrManagerContext = new HashMap();
         AttributeManager.getInstance().
             preModify(calResAttrs, null, attrManagerContext, true, true);
-        createAccount(emailAddress, password, calResAttrs, specialAttrs,
-                      new String[] { C_zimbraCalendarResource });
+        Account acct = createAccount(emailAddress, password, calResAttrs, specialAttrs,
+                                     new String[] { C_zimbraCalendarResource });
         LdapCalendarResource resource =
-            (LdapCalendarResource) getCalendarResourceByName(emailAddress, true);
+            (LdapCalendarResource) getCalendarResourceById(acct.getId(), true);
         AttributeManager.getInstance().
             postModify(calResAttrs, resource, attrManagerContext, true);
         return resource;
@@ -3173,17 +3171,8 @@ public class LdapProvisioning extends Provisioning {
 
     private CalendarResource getCalendarResourceByName(String emailAddress, boolean loadFromMaster)
     throws ServiceException {
-        int index = emailAddress.indexOf('@');
-        String domain = null;
-        if (index == -1) {
-             domain = getConfig().getAttr(
-                     Provisioning.A_zimbraDefaultDomainName, null);
-            if (domain == null)
-                throw ServiceException.INVALID_REQUEST(
-                        "must be valid email address: "+ emailAddress, null);
-            else
-                emailAddress = emailAddress + "@" + domain;
-         }
+        
+        emailAddress = fixupAccountName(emailAddress);
 
         LdapCalendarResource resource =
             (LdapCalendarResource) sAccountCache.getByName(emailAddress);

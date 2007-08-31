@@ -28,6 +28,7 @@ package com.zimbra.cs.account;
 import gnu.inet.encoding.IDNA;
 import gnu.inet.encoding.IDNAException;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 public class IDNUtil {
@@ -37,7 +38,7 @@ public class IDNUtil {
      * convert an unicode domain name to ACE(ASCII Compatible Encoding)
      */
     public static String toAsciiDomainName(String name) {
-        // a little optimization, don't need to convert if it is already ACE
+        // a minor optimization, don't need to convert if it is already ACE
         if (isACE(name))
             return name;
             
@@ -51,25 +52,29 @@ public class IDNUtil {
     }
     
     /*
-     * convert an  ASCII domain name to unicide
+     * convert an  ASCII domain name to unicode
      */
     public static String toUnicodeDomainName(String name) {
-        if (isACE(name))  // a little optimization, convert only if it is ACE
+        if (isACE(name))  // a minor optimization, convert only if it is ACE
             return IDNA.toUnicode(name);
         else
             return name;
     }
     
-    private static boolean isACE(String name) {
-         return name.startsWith(ACE_PREFIX);
+    public static String toAsciiEmail(String emailAddress) throws ServiceException {
+        String parts[] = emailAddress.split("@");
+        
+        if (parts.length != 2)
+            throw ServiceException.INVALID_REQUEST("must be valid list address: "+emailAddress, null);
+
+        String localPart = parts[0];
+        String domain = parts[1];
+        emailAddress = localPart + "@" + IDNUtil.toAsciiDomainName(domain);
+        return emailAddress;
     }
     
-    public static String toASCIIEmail(String emailAddress) {
-        int index = emailAddress.indexOf('@');
-        String local = emailAddress.substring(0, index);
-        String domainName = emailAddress.substring(index+1);
-        String ace = IDNUtil.toAsciiDomainName(domainName);
-        return local + "@" + ace;
+    private static boolean isACE(String name) {
+         return name.startsWith(ACE_PREFIX);
     }
     
     public static void main(String arsg[]) {

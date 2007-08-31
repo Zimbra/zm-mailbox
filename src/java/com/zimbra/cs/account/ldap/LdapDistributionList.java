@@ -40,6 +40,7 @@ import javax.naming.directory.Attributes;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
@@ -59,16 +60,10 @@ class LdapDistributionList extends DistributionList implements LdapEntry {
     	Set<String> mods = new HashSet<String>();
     	
         for (int i = 0; i < members.length; i++) { 
-        	members[i] = members[i].toLowerCase();
-        	String[] parts = members[i].split("@");
-        	if (parts.length != 2) {
-        		throw ServiceException.INVALID_REQUEST("invalid member email address: " + members[i], null);
-        	}
-        	if (!EmailUtil.validDomain(parts[1])) {
-        		throw ServiceException.INVALID_REQUEST("invalid domain in member email address: " + members[i], null);
-        	}
-        	if (!existing.contains(members[i])) {
-        		mods.add(members[i]);
+            String memberName = members[i].toLowerCase();
+        	memberName = IDNUtil.toAsciiEmail(members[i]);
+        	if (!existing.contains(memberName)) {
+        		mods.add(memberName);
         	}
         }
 
@@ -88,9 +83,10 @@ class LdapDistributionList extends DistributionList implements LdapEntry {
     	HashSet<String> failed = new HashSet<String>();
     	
         for (int i = 0; i < members.length; i++) { 
-            members[i] = members[i].toLowerCase();
-            if (members[i].length() == 0) {
-                throw ServiceException.INVALID_REQUEST("invalid member email address: " + members[i], null);
+            String memberName = members[i].toLowerCase();
+            memberName = IDNUtil.toAsciiEmail(members[i]);
+            if (memberName.length() == 0) {
+                throw ServiceException.INVALID_REQUEST("invalid member email address: " + memberName, null);
             }
             // We do not do any further validation of the remove address for
             // syntax - removes should be liberal so any bad entries added by
@@ -100,15 +96,15 @@ class LdapDistributionList extends DistributionList implements LdapEntry {
             //   - the primary address of an account or another DL
             //   - an alias of an account or another DL
             //   - junk (allAddrs will be returned as null)
-            List<String> allAddrs = getAllAddressesOfEntry(prov, members[i]);
+            List<String> allAddrs = getAllAddressesOfEntry(prov, memberName);
             
-            if (mods.contains(members[i])) {
+            if (mods.contains(memberName)) {
                 // already been added in mods (is the primary or alias of previous entries in members[])
-            } else if (existing.contains(members[i])) {
+            } else if (existing.contains(memberName)) {
                 if (allAddrs != null)
                     mods.addAll(allAddrs);
                 else
-                    mods.add(members[i]);  // just get rid of it regardless what it is
+                    mods.add(memberName);  // just get rid of it regardless what it is
             } else {
                 boolean inList = false;
                 if (allAddrs != null) {
@@ -122,7 +118,7 @@ class LdapDistributionList extends DistributionList implements LdapEntry {
                     }
                 }
                 if (!inList)
-                    failed.add(members[i]);
+                    failed.add(memberName);
             }
         }
 

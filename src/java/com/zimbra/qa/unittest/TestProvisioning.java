@@ -36,7 +36,6 @@ import java.util.Set;
 
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.SetUtil;
@@ -1401,6 +1400,7 @@ public class TestProvisioning extends TestCase {
         mProv.deleteDomain(aliasTestDomain.getId());
         mProv.deleteCos(cos.getId());
         
+        System.out.println("\nAll done");
         return TEST_ID;
     }
     
