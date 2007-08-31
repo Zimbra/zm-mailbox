@@ -45,7 +45,7 @@ public class ImapServiceException extends ServiceException {
 //  }
 
     public static ImapServiceException CANNOT_DELETE_SYSTEM_FOLDER(String folderName) {
-        return new ImapServiceException("cannot delete system folder: ", CANT_RENAME_INBOX, SENDERS_FAULT, new Argument(FOLDER_NAME, folderName, Argument.Type.STR));
+        return new ImapServiceException("cannot delete system folder: ", CANT_DELETE_SYSTEM_FOLDER, SENDERS_FAULT, new Argument(FOLDER_NAME, folderName, Argument.Type.STR));
     }
 
     public static ImapServiceException CANT_RENAME_INBOX() {

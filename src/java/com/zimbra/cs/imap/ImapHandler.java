@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
@@ -57,6 +58,7 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
@@ -1083,6 +1085,14 @@ public abstract class ImapHandler extends ProtocolHandler {
         } catch (ServiceException e) {
             if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER))
                 ZimbraLog.imap.info("DELETE failed: no such folder: " + path);
+            else if (e.getCode().equals(AccountServiceException.NO_SUCH_ACCOUNT))
+                ZimbraLog.imap.info("DELETE failed: no such account: " + path);
+            else if (e.getCode().equals(ImapServiceException.FOLDER_NOT_VISIBLE))
+                ZimbraLog.imap.info("DELETE failed: folder not visible: " + path);
+            else if (e.getCode().equals(ImapServiceException.CANT_DELETE_SYSTEM_FOLDER))
+                ZimbraLog.imap.info("DELETE failed: system folder cannot be deleted: " + path);
+            else if (e.getCode().equals(ServiceException.PERM_DENIED))
+                ZimbraLog.imap.info("DELETE failed: permission denied: " + path);
             else
                 ZimbraLog.imap.warn("DELETE failed", e);
             sendNO(tag, "DELETE failed");
@@ -1266,12 +1276,11 @@ public abstract class ImapHandler extends ProtocolHandler {
                 if (mailboxName.equals(""))
                     continue;
 
-                String pattern = mailboxName;
-                if (!mailboxName.startsWith("/")) {
-                    if (referenceName.endsWith("/"))  pattern = referenceName + mailboxName;
-                    else                              pattern = referenceName + '/' + mailboxName;
-                }
-                ImapPath patternPath = new ImapPath(pattern, mCredentials, ImapPath.Scope.UNPARSED);
+                Pair<String, Pattern> resolved = resolvePath(referenceName, mailboxName);
+                String resolvedPath = resolved.getFirst();
+                Pattern pattern = resolved.getSecond();
+
+                ImapPath patternPath = new ImapPath(resolvedPath, mCredentials, ImapPath.Scope.UNPARSED);
                 String owner = patternPath.getOwner();
 
                 if (owner != null && (owner.indexOf('*') != -1 || owner.indexOf('%') != -1)) {
@@ -1288,7 +1297,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                     continue;
 
                 // make sure we can do a  LIST "" "/home/user1"
-                if (owner != null && (ImapPath.NAMESPACE_PREFIX + owner).toUpperCase().equals(pattern)) {
+                if (owner != null && (ImapPath.NAMESPACE_PREFIX + owner).toUpperCase().equals(resolvedPath)) {
                     matches.put(patternPath, "LIST (\\NoSelect) \"/\" " + patternPath.asUtf7String());
                     continue;
                 }
@@ -1325,7 +1334,7 @@ public abstract class ImapHandler extends ProtocolHandler {
 
                 // return only the selected folders (and perhaps their parents) matching the pattern
                 for (ImapPath path : selected) {
-                    if (!matches.containsKey(path) && patternPath.matches(path))
+                    if (!matches.containsKey(path) && pathMatches(path, pattern))
                         matches.put(path, "LIST (" + getFolderAttrs(path, returnOptions, paths, remoteSubscriptions) + ") \"/\" " + path.asUtf7String());
 
                     if (!selectRecursive)
@@ -1333,7 +1342,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                     String folderName = path.asZimbraPath();
                     for (int index = folderName.length() + 1; (index = folderName.lastIndexOf('/', index - 1)) != -1; ) {
                         ImapPath parent = new ImapPath(path.getOwner(), folderName.substring(0, index), mCredentials);
-                        if (patternPath.matches(parent)) {
+                        if (pathMatches(parent, pattern)) {
                             // use the already-resolved version of the parent ImapPath from the "paths" map if possible
                             for (ImapPath cached : paths.keySet()) {
                                 if (cached.equals(parent)) {
@@ -1359,6 +1368,40 @@ public abstract class ImapHandler extends ProtocolHandler {
         sendNotifications(true, false);
         sendOK(tag, "LIST completed");
         return CONTINUE_PROCESSING;
+    }
+
+    private static final boolean[] REGEXP_ESCAPED = new boolean[128];
+        static {
+            REGEXP_ESCAPED['('] = REGEXP_ESCAPED[')'] = REGEXP_ESCAPED['.'] = true;
+            REGEXP_ESCAPED['['] = REGEXP_ESCAPED[']'] = REGEXP_ESCAPED['|'] = true;
+            REGEXP_ESCAPED['^'] = REGEXP_ESCAPED['$'] = REGEXP_ESCAPED['?'] = true;
+            REGEXP_ESCAPED['{'] = REGEXP_ESCAPED['}'] = REGEXP_ESCAPED['*'] = true;
+            REGEXP_ESCAPED['\\'] = true;
+        }
+
+    private static Pair<String, Pattern> resolvePath(String referenceName, String mailboxName) {
+        int startWildcards = referenceName.length();
+        String resolved = mailboxName;
+        if (!mailboxName.startsWith("/") && !referenceName.trim().equals("")) {
+            if (referenceName.endsWith("/"))  resolved = referenceName + mailboxName;
+            else                              resolved = referenceName + '/' + mailboxName;
+        } else {
+            startWildcards = 0;
+        }
+
+        String unescaped = resolved.toUpperCase();
+        StringBuffer escaped = new StringBuffer();
+        for (int i = 0; i < unescaped.length(); i++) {
+            char c = unescaped.charAt(i);
+            // 6.3.8: "The character "*" is a wildcard, and matches zero or more characters at this position.
+            //         The character "%" is similar to "*", but it does not match a hierarchy delimiter."
+            if (c == '*' && i >= startWildcards)       escaped.append(".*");
+            else if (c == '%' && i >= startWildcards)  escaped.append("[^/]*");
+            else if (c > 0x7f || !REGEXP_ESCAPED[c])   escaped.append(c);
+            else                                       escaped.append('\\').append(c);
+        }
+
+        return new Pair<String, Pattern>(resolved, Pattern.compile(escaped.toString()));
     }
 
     private void accumulatePaths(Object mboxobj, String owner, ImapPath relativeTo, Map<ImapPath, ItemId> paths) throws ServiceException {
@@ -1388,6 +1431,10 @@ public abstract class ImapHandler extends ProtocolHandler {
                     paths.put(path, path.asItemId());
             }
         }
+    }
+
+    private static boolean pathMatches(ImapPath path, Pattern pattern) {
+        return pattern.matcher(path.asImapPath().toUpperCase()).matches();
     }
 
     private String getFolderAttrs(ImapPath path, byte returnOptions, Map<ImapPath, ItemId> paths, Set<String> subscriptions)
@@ -1442,13 +1489,12 @@ public abstract class ImapHandler extends ProtocolHandler {
         if (!checkState(tag, State.AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
-        String pattern = mailboxName;
-        if (!mailboxName.startsWith("/")) {
-            if (referenceName.endsWith("/"))  pattern = referenceName + mailboxName;
-            else                              pattern = referenceName + '/' + mailboxName;
-        }
-        ImapPath patternPath = new ImapPath(pattern, mCredentials, ImapPath.Scope.UNPARSED);
-        ImapPath childPattern = new ImapPath(patternPath.asImapPath() + "/*", mCredentials, ImapPath.Scope.UNPARSED);
+        Pair<String, Pattern> resolved = resolvePath(referenceName, mailboxName);
+        String resolvedPath = resolved.getFirst();
+        Pattern pattern = resolved.getSecond();
+        Pattern childPattern = Pattern.compile(pattern.pattern() + "/.*");
+
+        ImapPath patternPath = new ImapPath(resolvedPath, mCredentials, ImapPath.Scope.UNPARSED);
 
         List<String> subscriptions = null;
         try {
@@ -1460,7 +1506,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                     Mailbox mbox = mCredentials.getMailbox();
                     for (Folder folder : mbox.getFolderById(getContext(), Mailbox.ID_FOLDER_USER_ROOT).getSubfolderHierarchy()) {
                         if (folder.isTagged(mbox.mSubscribedFlag))
-                            checkSubscription(new ImapPath(null, folder, mCredentials), patternPath, childPattern, hits);
+                            checkSubscription(new ImapPath(null, folder, mCredentials), pattern, childPattern, hits);
                     }
                 }
 
@@ -1470,7 +1516,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                     for (String sub : remoteSubscriptions) {
                         ImapPath subscribed = new ImapPath(sub, mCredentials);
                         if ((owner == null) == (subscribed.getOwner() == null))
-                            checkSubscription(subscribed, patternPath, childPattern, hits);
+                            checkSubscription(subscribed, pattern, childPattern, hits);
                     }
                 }
 
@@ -1496,10 +1542,10 @@ public abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    private boolean checkSubscription(ImapPath path, ImapPath pattern, ImapPath childPattern, Map<ImapPath, Boolean> hits) {
-        if (pattern.matches(path)) {
+    private boolean checkSubscription(ImapPath path, Pattern pattern, Pattern childPattern, Map<ImapPath, Boolean> hits) {
+        if (pathMatches(path, pattern)) {
             hits.put(path, Boolean.TRUE);  return true;
-        } else if (!childPattern.matches(path)) {
+        } else if (!pathMatches(path, childPattern)) {
             return false;
         }
 
@@ -1513,7 +1559,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         int delimiter = path.asImapPath().lastIndexOf('/');
         while (delimiter > 0) {
             path = new ImapPath(path.asImapPath().substring(0, delimiter), mCredentials);
-            if (!hits.containsKey(path) && pattern.matches(path)) {
+            if (!hits.containsKey(path) && pathMatches(path, pattern)) {
                 hits.put(path, Boolean.FALSE);  matched = true;
             }
             delimiter = path.asImapPath().lastIndexOf('/');

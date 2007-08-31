@@ -25,7 +25,6 @@
 package com.zimbra.cs.imap;
 
 import java.io.UnsupportedEncodingException;
-import java.util.regex.Pattern;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
@@ -64,7 +63,6 @@ public class ImapPath {
     private ItemId mItemId;
     private Scope mScope = Scope.CONTENT;
     private ImapPath mReferent;
-    private Object mPattern;
 
     /** Takes a user-supplied IMAP mailbox path and converts it to a Zimbra
      *  folder pathname.  Applies all special, hack-specific folder mappings.
@@ -194,41 +192,6 @@ public class ImapPath {
         else
             mPath = path + "/" + mReferent.canonicalize().mPath.substring(mReferent.mPath.length() - excess + 1);
         return this;
-    }
-
-    private static final boolean[] REGEXP_ESCAPED = new boolean[128];
-        static {
-            REGEXP_ESCAPED['('] = REGEXP_ESCAPED[')'] = REGEXP_ESCAPED['.'] = true;
-            REGEXP_ESCAPED['['] = REGEXP_ESCAPED[']'] = REGEXP_ESCAPED['|'] = true;
-            REGEXP_ESCAPED['^'] = REGEXP_ESCAPED['$'] = REGEXP_ESCAPED['?'] = true;
-            REGEXP_ESCAPED['{'] = REGEXP_ESCAPED['}'] = REGEXP_ESCAPED['*'] = true;
-            REGEXP_ESCAPED['\\'] = true;
-        }
-
-    boolean matches(ImapPath path) {
-        return matches(path.asImapPath());
-    }
-
-    boolean matches(String path) {
-        if (mPattern == null) {
-            String unescaped = asImapPath().toUpperCase();
-            StringBuffer escaped = new StringBuffer();
-            for (int i = 0; i < unescaped.length(); i++) {
-                char c = unescaped.charAt(i);
-                // 6.3.8: "The character "*" is a wildcard, and matches zero or more characters at this position.
-                //         The character "%" is similar to "*", but it does not match a hierarchy delimiter."
-                if (c == '*')                             escaped.append(".*");
-                else if (c == '%')                        escaped.append("[^/]*");
-                else if (c > 0x7f || !REGEXP_ESCAPED[c])  escaped.append(c);
-                else                                      escaped.append('\\').append(c);
-            }
-
-            mPattern = escaped.toString();
-            if (!mPattern.equals(unescaped))
-                mPattern = Pattern.compile((String) mPattern);
-        }
-
-        return (mPattern instanceof Pattern ? ((Pattern) mPattern).matcher(path.toUpperCase()).matches() : mPattern.equals(path.toUpperCase()));
     }
 
 
