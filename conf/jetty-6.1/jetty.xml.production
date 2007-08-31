@@ -54,7 +54,7 @@
 	  <Set name="lowResourceMaxIdleTime">1000</Set>
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
-          <Set name="password">zimbra</Set>
+          <Set name="password">@@mailboxd_keystore_password@@</Set>
         </New>
       </Arg>
     </Call>
@@ -71,7 +71,7 @@
 	  <Set name="lowResourceMaxIdleTime">1000</Set>
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
-          <Set name="password">zimbra</Set>
+          <Set name="password">@@mailboxd_keystore_password@@</Set>
         </New>
       </Arg>
     </Call>
