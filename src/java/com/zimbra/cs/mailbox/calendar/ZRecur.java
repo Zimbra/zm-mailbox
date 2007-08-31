@@ -760,10 +760,11 @@ public class ZRecur {
                 // count it twice.
                 if (toAdd.compareTo(dtStartDate) == 0)
                     continue;
-                
-                // we still have expanded this instance, even if it isn't in our 
+
+                // we still have expanded this instance, even if it isn't in our
                 // current date window
-                expansionsLeft--;
+                if (toAdd.after(dtStartDate))
+                    expansionsLeft--;
 
                 if (!toAdd.after(rangeEndDate)) {
                     if (!toAdd.before(earliestDate)) {
