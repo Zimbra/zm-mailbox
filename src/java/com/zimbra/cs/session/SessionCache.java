@@ -46,12 +46,12 @@ import com.zimbra.cs.util.Zimbra;
 public final class SessionCache {
 
     /** Adds a {@link Session} to the cache and assigns it a session ID if it
-     *  doesn't already have one.  When a reigistered <tt>Session</tt> ages out
-     *  of the cache due to extended idle time, its {@link Session#doCleanup()}
+     *  doesn't already have one.  When a reigistered <code>Session</code> ages
+     *  out of the cache due to extended idle time, its {@link Session#doCleanup()}
      *  method is invoked and its session ID is unset.
      *  
-     * @param session  The <tt>Session</tt> to add to the cache
-     * @return the session ID assigned to the <tt>Session</tt>
+     * @param session  The <code>Session</code> to add to the cache
+     * @return the session ID assigned to the <code>Session</code>
      * @see Session#getSessionIdleLifetime() */
     static String registerSession(Session session) {
         if (sShutdown || session == null)
@@ -73,7 +73,7 @@ public final class SessionCache {
      * 
      * @param sessionId  The identifier for the requested Session.
      * @param accountId  The owner of the requested Session.
-     * @return The matching cached Session, or <code>null</code> if no session
+     * @return The matching cached Session, or <tt>null</tt> if no session
      *         exists with the specified ID and owner. */
     public static Session lookup(String sessionId, String accountId) {
         if (sShutdown)
@@ -157,21 +157,22 @@ public final class SessionCache {
     static Log sLog = LogFactory.getLog(SessionCache.class);
 
     private static final Session.Type getSessionTypeFromId(String sessionId) {
-        if (sessionId.length() < 2)
+        if (sessionId == null || sessionId.length() < 2)
             return Session.Type.NULL; // invalid session id
         
         return Session.Type.values()[Character.digit(sessionId.charAt(0),10)];
     }
     
+    static final SessionMap[] sSessionMaps;
+        static {
+            sSessionMaps = new SessionMap[Session.Type.values().length];
+            for (Session.Type type : Session.Type.values()) {
+                sSessionMaps[type.getIndex()] = new SessionMap(type);
+            }
+        }
+
     private static final SessionMap getSessionMap(Session.Type type) {
         return sSessionMaps[type.getIndex()];
-    }
-    private static final SessionMap[] sSessionMaps;
-    static {
-        sSessionMaps = new SessionMap[Session.Type.values().length];
-        for (Session.Type type : Session.Type.values()) {
-            sSessionMaps[type.getIndex()] = new SessionMap(type);
-        }
     }
 
     /** Whether we've received a {@link #shutdown()} call to kill the cache. */
@@ -184,7 +185,7 @@ public final class SessionCache {
         return Integer.toString(type.getIndex())+Long.toString(sContextSeqNo++);
     }
 
-    private static void logActiveSessions() {
+    static void logActiveSessions() {
         StringBuilder accountList = new StringBuilder();
         StringBuilder manySessionsList = new StringBuilder();
         int totalSessions = 0;
