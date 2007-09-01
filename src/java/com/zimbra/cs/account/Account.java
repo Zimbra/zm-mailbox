@@ -33,45 +33,15 @@ import com.zimbra.common.util.ZimbraLog;
 /**
  * @author schemers
  */
-public class Account extends NamedEntry {
-
-    private String mDomain;
-    private String mUnicodeName;
-    private String mUnicodeDomain;
+public class Account extends MailTarget {
     
     public Account(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults) {
         super(name, id, attrs, defaults);
-        
-        int index = name.indexOf('@');
-        if (index != -1)  {
-            String local = name.substring(0, index);
-            mDomain = name.substring(index+1);
-            mUnicodeDomain = IDNUtil.toUnicodeDomainName(mDomain);
-            mUnicodeName = local + "@" + mUnicodeDomain;
-        } else
-            mUnicodeName = name;
     }
 
     public static enum CalendarUserType {
         USER,       // regular person account
         RESOURCE    // calendar resource
-    }
-
-    /**
-     * @return the domain name for this account (foo.com), or null if an admin account. 
-     */
-    public String getDomainName() {
-        return mDomain;
-    }
-    
-    /*
-    public String getUnicodeDomainName() {
-        return mUnicodeDomain;
-    }
-    */  
-    
-    public String getUnicodeName() {
-        return mUnicodeName;
     }
 
 

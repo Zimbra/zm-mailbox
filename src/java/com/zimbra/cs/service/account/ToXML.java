@@ -50,7 +50,7 @@ public class ToXML {
 
     public static Element encodeAccount(Element parent, Account account, boolean applyCos) {
         Element acctElem = parent.addElement(AccountConstants.E_ACCOUNT);
-        acctElem.addAttribute(AccountConstants.A_NAME, account.getName());
+        acctElem.addAttribute(AccountConstants.A_NAME, account.getUnicodeName());
         acctElem.addAttribute(AccountConstants.A_ID, account.getId());
         Map attrs = account.getAttrs(applyCos);
         addAccountAttrs(acctElem, attrs, AccountConstants.A_N);
@@ -63,7 +63,7 @@ public class ToXML {
     
     public static Element encodeAccountOld(Element parent, Account account, boolean applyCos, Set<String> reqAttrs) {
         Element acctElem = parent.addElement(AccountConstants.E_ACCOUNT);
-        acctElem.addAttribute(AccountConstants.A_NAME, account.getName());
+        acctElem.addAttribute(AccountConstants.A_NAME, account.getUnicodeName());
         acctElem.addAttribute(AccountConstants.A_ID, account.getId());
         Map attrs = account.getAttrs(applyCos);
         addAccountAttrsOld(acctElem, attrs, AccountConstants.A_N, applyCos?null:reqAttrs);
@@ -76,7 +76,7 @@ public class ToXML {
 
     public static Element encodeCalendarResource(Element parent, CalendarResource resource, boolean applyCos) {
         Element resElem = parent.addElement(AccountConstants.E_CALENDAR_RESOURCE);
-        resElem.addAttribute(AccountConstants.A_NAME, resource.getName());
+        resElem.addAttribute(AccountConstants.A_NAME, resource.getUnicodeName());
         resElem.addAttribute(AccountConstants.A_ID, resource.getId());
         Map attrs = resource.getAttrs(applyCos);
         addAccountAttrs(resElem, attrs, AccountConstants.A_N);
@@ -89,7 +89,7 @@ public class ToXML {
     
     public static Element encodeCalendarResourceOld(Element parent, CalendarResource resource, boolean applyCos,  Set<String> reqAttrs) {
         Element resElem = parent.addElement(AccountConstants.E_CALENDAR_RESOURCE);
-        resElem.addAttribute(AccountConstants.A_NAME, resource.getName());
+        resElem.addAttribute(AccountConstants.A_NAME, resource.getUnicodeName());
         resElem.addAttribute(AccountConstants.A_ID, resource.getId());
         Map attrs = resource.getAttrs(applyCos);
         addAccountAttrsOld(resElem, attrs, AccountConstants.A_N, applyCos?null:reqAttrs);

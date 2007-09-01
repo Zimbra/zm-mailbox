@@ -38,10 +38,6 @@ public class IDNUtil {
      * convert an unicode domain name to ACE(ASCII Compatible Encoding)
      */
     public static String toAsciiDomainName(String name) {
-        // a minor optimization, don't need to convert if it is already ACE
-        if (isACE(name))
-            return name;
-            
         String ascii = name;
         try {
             ascii = IDNA.toASCII(name);
@@ -55,10 +51,7 @@ public class IDNUtil {
      * convert an  ASCII domain name to unicode
      */
     public static String toUnicodeDomainName(String name) {
-        if (isACE(name))  // a minor optimization, convert only if it is ACE
-            return IDNA.toUnicode(name);
-        else
-            return name;
+        return IDNA.toUnicode(name);
     }
     
     public static String toAsciiEmail(String emailAddress) throws ServiceException {
@@ -73,9 +66,11 @@ public class IDNUtil {
         return emailAddress;
     }
     
+    /*
     private static boolean isACE(String name) {
          return name.startsWith(ACE_PREFIX);
     }
+    */
     
     public static void main(String arsg[]) {
         String u1 = "abc.\u5f35\u611b\u73b2" + ".jp";

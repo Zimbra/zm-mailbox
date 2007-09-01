@@ -89,7 +89,7 @@ public class GetDomain extends AdminDocumentHandler {
     
     public static void doDomain(Element e, Domain d, boolean applyConfig, Set<String> reqAttrs) throws ServiceException {
         Element domain = e.addElement(AdminConstants.E_DOMAIN);
-        domain.addAttribute(AdminConstants.A_NAME,d.getName());
+        domain.addAttribute(AdminConstants.A_NAME,d.getUnicodeName());
         domain.addAttribute(AdminConstants.A_ID,d.getId());
         Map attrs = d.getAttrs(applyConfig);
         for (Iterator mit = attrs.entrySet().iterator(); mit.hasNext(); ) {

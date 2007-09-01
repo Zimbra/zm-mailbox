@@ -43,7 +43,7 @@ import com.zimbra.common.service.ServiceException;
  * TODO To change the template for this generated type comment go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-public class Alias extends NamedEntry {
+public class Alias extends MailTarget {
     
     private static final String ALIAS_TARGET_NAME = "targetName";
     private static final String ALIAS_TARGET_TYPE = "targetType";

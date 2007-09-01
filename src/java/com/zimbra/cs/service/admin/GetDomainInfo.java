@@ -45,7 +45,7 @@ public class GetDomainInfo extends AdminDocumentHandler {
     
     private void doDomain(Element e, Domain d, boolean applyConfig) throws ServiceException {
         Element domain = e.addElement(AdminConstants.E_DOMAIN);
-        domain.addAttribute(AdminConstants.A_NAME,d.getName());
+        domain.addAttribute(AdminConstants.A_NAME,d.getUnicodeName());
         domain.addAttribute(AdminConstants.A_ID,d.getId());
         Set<String> attrList = AttributeManager.getInstance().getAttrsWithFlag(AttributeFlag.domainInfo);
         Map attrsMap = d.getAttrs(applyConfig);

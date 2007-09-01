@@ -161,7 +161,7 @@ public class SearchDirectory extends AdminDocumentHandler {
 
     static void doDistributionList(Element e, DistributionList list) {
         Element elist = e.addElement(AdminConstants.E_DL);
-        elist.addAttribute(AdminConstants.A_NAME, list.getName());
+        elist.addAttribute(AdminConstants.A_NAME, list.getUnicodeName());
         elist.addAttribute(AdminConstants.A_ID, list.getId());
         Map attrs = list.getAttrs();
         doAttrs(elist, attrs);
@@ -169,7 +169,7 @@ public class SearchDirectory extends AdminDocumentHandler {
 
     static void doAlias(Element e, Alias a) throws ServiceException {
         Element ealias = e.addElement(AdminConstants.E_ALIAS);
-        ealias.addAttribute(AdminConstants.A_NAME, a.getName());
+        ealias.addAttribute(AdminConstants.A_NAME, a.getUnicodeName());
         ealias.addAttribute(AdminConstants.A_ID, a.getId());
         ealias.addAttribute(AdminConstants.A_TARGETNAME, a.getTargetName());
         ealias.addAttribute(AdminConstants.A_TYPE, a.getTargetType());
