@@ -39,8 +39,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.collections.Factory;
 import org.apache.commons.collections.map.LazyMap;
 import org.apache.log4j.PropertyConfigurator;
-import org.mortbay.util.ajax.Continuation;
-import org.mortbay.util.ajax.ContinuationSupport;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -59,6 +57,7 @@ import com.zimbra.cs.util.Zimbra;
  */
 
 public class SoapServlet extends ZimbraServlet {
+    private static final long serialVersionUID = 38710345271877593L;
 
     private static final String PARAM_ENGINE_HANDLER = "engine.handler.";
 
@@ -79,13 +78,12 @@ public class SoapServlet extends ZimbraServlet {
     /**
      * Keeps track of extra services added by extensions.
      */
-    private static Map<String, List<DocumentService>> sExtraServices =
-        LazyMap.decorate(new HashMap(), sListFactory);
+    private static Map<String, List<DocumentService>> sExtraServices = LazyMap.decorate(new HashMap(), sListFactory);
     
     private static Log sLog = LogFactory.getLog(SoapServlet.class);
     private SoapEngine mEngine;
 
-    public void init() throws ServletException {
+    @Override public void init() throws ServletException {
         // TODO we should have a ReloadConfig soap command that will reload
         // on demand, instead of modifying and waiting for some time.
         PropertyConfigurator.configureAndWatch(LC.zimbra_log4j_properties.value());
@@ -96,7 +94,7 @@ public class SoapServlet extends ZimbraServlet {
 
         mEngine = new SoapEngine();
 
-        int i=0;
+        int i = 0;
         String cname;
         while ((cname = getInitParameter(PARAM_ENGINE_HANDLER+i)) != null) {
             loadHandler(cname);
@@ -112,7 +110,7 @@ public class SoapServlet extends ZimbraServlet {
             }
         }
         
-        if (i==0)
+        if (i == 0)
             throw new ServletException("Must specify at least one handler "+PARAM_ENGINE_HANDLER+i);
 
         try {
@@ -123,7 +121,7 @@ public class SoapServlet extends ZimbraServlet {
         }
     }
 
-    public void destroy() {
+    @Override public void destroy() {
         String name = getServletName();
         ZimbraLog.soap.info("Servlet " + name + " shutting down");
         try {
@@ -147,8 +145,7 @@ public class SoapServlet extends ZimbraServlet {
         try {
             dispatcherClass = Class.forName(cname);
         } catch (ClassNotFoundException cnfe) {
-            throw new ServletException("can't find handler initializer class "+cname,
-                                       cnfe);
+            throw new ServletException("can't find handler initializer class " + cname, cnfe);
         } catch (Throwable t) {
             throw new ServletException("can't find handler initializer class " + cname, t);
         }
@@ -158,14 +155,13 @@ public class SoapServlet extends ZimbraServlet {
         try {
             dispatcher = dispatcherClass.newInstance();
         } catch (InstantiationException ie) {
-            throw new ServletException("can't instantiate class "+cname, ie);
+            throw new ServletException("can't instantiate class " + cname, ie);
         } catch (IllegalAccessException iae) {
-            throw new ServletException("can't instantiate class "+cname, iae);
+            throw new ServletException("can't instantiate class " + cname, iae);
         }
 
         if (!(dispatcher instanceof DocumentService)) {
-            throw new ServletException(
-                   "class not an instanceof HandlerInitializer: "+cname);
+            throw new ServletException("class not an instanceof HandlerInitializer: " + cname);
         }
 
         DocumentService hi = (DocumentService) dispatcher;
@@ -192,12 +188,11 @@ public class SoapServlet extends ZimbraServlet {
     }
     
     private void addService(DocumentService service) {
-        ZimbraLog.soap.info("Adding service " + StringUtil.getSimpleClassName(service) +
-            " to " + getServletName());
+        ZimbraLog.soap.info("Adding service " + StringUtil.getSimpleClassName(service) + " to " + getServletName());
         service.registerHandlers(mEngine.getDocumentDispatcher());
     }
-    
-    public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+
+    @Override public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         ZimbraLog.clearContext();
         long startTime = ZimbraPerf.STOPWATCH_SOAP.start();  
         
