@@ -38,6 +38,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PipedInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.zip.GZIPInputStream;
@@ -53,6 +54,8 @@ import org.apache.commons.codec.binary.Hex;
  * @author schemers
  */
 public class ByteUtil {
+
+    private static Log sLog = LogFactory.getLog(ByteUtil.class);
 	
 	/**
 	 * write the data to the specified path.
@@ -143,7 +146,54 @@ public class ByteUtil {
                 baos.close();
     	}
     }
-    
+
+    // When this method is called from SendMsg SOAP command path
+    // the getDataSource().getInputStream() call descends into
+    // Java Activation Framework to set up the input stream as
+    // a PipedInputStream that is fed from a PipedOutputStream
+    // using a new thread named "DataHandler.getInputStream".
+    // This thread lives on until the PipedInputStream is drained.
+    // (See javax.activation.DataHandler.getInputStream(),
+    // line 242 in JAF 1.0.2 DataHandler.java)
+    //
+    // A problem occurs when the above try block throws an
+    // exception, such as when the transformation server is down.
+    // If we don't drain the PipedInputStream, the getInputStream
+    // thread will spin forever waiting for the PipedInputStream's
+    // internal circular buffer to free up some space, which it
+    // won't after filling up initially because no one is reading
+    // from the input stream.  The input stream won't get garbage
+    // collected because the getInputStream thread has a reference
+    // to it.
+    //
+    // When the transformation server remains down, more and more
+    // getInputStream threads will pile up, and with each thread
+    // grabbing memory for stack, the JVM process will grow and
+    // eventually will start throwing OutOfMemoryError.
+    //
+    // To avoid this mess, we must drain the PipedInputStream if
+    // the try block doesn't complete successfully.
+    //
+    // If this method is called from LMTP path the input stream
+    // returned is a FileInputStream, and no special clean up is
+    // necessary.
+    public static void closeStream(InputStream is) {
+        if (is == null)
+            return;
+
+        if (is instanceof PipedInputStream) {
+            try {
+                while (is.read() != -1);
+            } catch (IOException e) {
+                sLog.debug("IOException while draining PipedInputStream", e);
+            }
+        }
+
+        try {
+            is.close();
+        } catch (IOException e) { }
+    }
+
     /**
      * find the index of "target" within "source".
      * @param source the array being searched
@@ -197,10 +247,10 @@ public class ByteUtil {
         GZIPOutputStream gos = null;
         try {
             baos = new ByteArrayOutputStream(data.length); //data.length overkill
-    		    gos = new GZIPOutputStream(baos);
-    		    gos.write(data);
-    		    gos.finish();            
-    		    return baos.toByteArray();
+		    gos = new GZIPOutputStream(baos);
+		    gos.write(data);
+		    gos.finish();            
+		    return baos.toByteArray();
         } finally {
         	    if (gos != null) {
                 gos.close();
@@ -440,17 +490,17 @@ public class ByteUtil {
             stream1 = one;  stream2 = two;
         }
 
-        public void write(int b) throws IOException {
+        @Override public void write(int b) throws IOException {
             if (stream1 != null)  stream1.write(b);
             if (stream2 != null)  stream2.write(b);
         }
 
-        public void flush() throws IOException {
+        @Override public void flush() throws IOException {
             if (stream1 != null)  stream1.flush();
             if (stream2 != null)  stream2.flush();
         }
 
-        public void write(byte b[], int off, int len) throws IOException {
+        @Override public void write(byte b[], int off, int len) throws IOException {
             if (stream1 != null)  stream1.write(b, off, len);
             if (stream2 != null)  stream2.write(b, off, len);
         }
