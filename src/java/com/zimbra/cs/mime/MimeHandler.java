@@ -46,6 +46,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.convert.AttachmentInfo;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.extension.ExtensionUtil;
@@ -201,7 +202,7 @@ public abstract class MimeHandler {
      * @see #getContentImpl()
      * @see #addFields(Document)
      */
-    public void init(DataSource source) throws MimeHandlerException {
+    public void init(DataSource source) {
         mDataSource = source;
     }
     
@@ -249,12 +250,13 @@ public abstract class MimeHandler {
      * @throws MimeHandlerException
      */
     public final String getContent() throws MimeHandlerException {
-    	if (!DebugConfig.disableMimePartExtraction)
+        if (!DebugConfig.disableMimePartExtraction) {
             return getContentImpl();
-        else {
+        } else {
             if (!mDrainedContent) {
+                InputStream is = null;
                 try {
-                    InputStream is = getDataSource().getInputStream();
+                    is = getDataSource().getInputStream();
                     // Read all bytes from the input stream and discard them.
                     // This is useful for testing MIME parser performance, as
                     // the parser may not fully parse the message unless the
@@ -265,6 +267,8 @@ public abstract class MimeHandler {
                     while (is.read(sDrainBuffer) != -1) {}
                 } catch (IOException e) {
                     throw new MimeHandlerException("cannot extract text", e);
+                } finally {
+                    ByteUtil.closeStream(is);
                 }
                 mDrainedContent = true;
             }
@@ -327,10 +331,10 @@ public abstract class MimeHandler {
     	String contentType = getContentType();
     	doc.add(Field.Text(LuceneFields.L_MIMETYPE, contentType));
     	addFields(doc);
-        String content;
-    	content = getContent();
+        String content = getContent();
     	doc.add(Field.UnStored(LuceneFields.L_CONTENT, content));
         getObjects(content, doc);
+
 //        if (mPartName.equals("")) {
 //            doc.add(Field.Keyword(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_NONE));
 //        } else {
