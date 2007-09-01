@@ -25,27 +25,21 @@
 package com.zimbra.cs.mime.handler;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.activation.DataSource;
-
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.mime.MimeHandlerException;
 
 public class TextEnrichedHandler extends TextHtmlHandler {
 
-    public void init(DataSource source) throws MimeHandlerException {
-        super.init(source);
-        try {
-            String content = Mime.decodeText(source.getInputStream(), source.getContentType());
-            mReader = new StringReader(convertToHTML(content));
-        } catch (IOException e) {
-            throw new MimeHandlerException(e);
-        }
+    @Override protected Reader getReader(InputStream is, String ctype) throws IOException {
+        String content = Mime.decodeText(is, ctype);
+        return new StringReader(convertToHTML(content));
     }
 
     private static Map<String,String> sConversions = new HashMap<String,String>();

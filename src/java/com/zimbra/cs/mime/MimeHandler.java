@@ -43,6 +43,7 @@ import org.apache.lucene.document.Field;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.BlobMetaData;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.convert.AttachmentInfo;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.index.LuceneFields;
@@ -103,8 +104,7 @@ public abstract class MimeHandler {
      * @see #getContentImpl()
      * @see #addFields(Document)
      */
-    @SuppressWarnings("unused")
-    public void init(DataSource source) throws MimeHandlerException {
+    public void init(DataSource source) {
         mDataSource = source;
     }
 
@@ -152,12 +152,13 @@ public abstract class MimeHandler {
      * @throws MimeHandlerException
      */
     public final String getContent() throws MimeHandlerException {
-        if (!DebugConfig.disableMimePartExtraction)
+        if (!DebugConfig.disableMimePartExtraction) {
             return getContentImpl();
-        else {
+        } else {
             if (!mDrainedContent) {
+                InputStream is = null;
                 try {
-                    InputStream is = getDataSource().getInputStream();
+                    is = getDataSource().getInputStream();
                     // Read all bytes from the input stream and discard them.
                     // This is useful for testing MIME parser performance, as
                     // the parser may not fully parse the message unless the
@@ -168,6 +169,8 @@ public abstract class MimeHandler {
                     while (is.read(sDrainBuffer) != -1) {}
                 } catch (IOException e) {
                     throw new MimeHandlerException("cannot extract text", e);
+                } finally {
+                    ByteUtil.closeStream(is);
                 }
                 mDrainedContent = true;
             }
@@ -221,13 +224,13 @@ public abstract class MimeHandler {
          */
 
         Document doc = new Document();
-        String contentType = getContentType();
-        doc.add(new Field(LuceneFields.L_MIMETYPE, contentType, Field.Store.YES, Field.Index.TOKENIZED));
+        doc.add(new Field(LuceneFields.L_MIMETYPE, getContentType(), Field.Store.YES, Field.Index.TOKENIZED));
+
         addFields(doc);
-        String content;
-        content = getContent();
+        String content = getContent();
         doc.add(new Field(LuceneFields.L_CONTENT, content, Field.Store.NO, Field.Index.TOKENIZED));
         getObjects(content, doc);
+
 //      if (mPartName.equals("")) {
 //      doc.add(Field.Keyword(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_NONE));
 //      } else {

@@ -29,6 +29,7 @@
 package com.zimbra.cs.service.mail;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,6 +46,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
@@ -254,7 +256,7 @@ public class SendMsg extends MailDocumentHandler {
         try {
             mv.accept(mm);
         } catch (MessagingException e) {
-             throw ServiceException.PARSE_ERROR("Error while fixing up SendMsg for SENT-BY", e);
+            throw ServiceException.PARSE_ERROR("Error while fixing up SendMsg for SENT-BY", e);
         }
     }
 
@@ -342,12 +344,15 @@ public class SendMsg extends MailDocumentHandler {
                 return false;
 
             ZVCalendar ical;
+            InputStream is = null;
             try {
-                DataSource ds = bp.getDataHandler().getDataSource();
-                Reader reader = Mime.getTextReader(ds.getInputStream(), ds.getContentType());
+                DataSource source = bp.getDataHandler().getDataSource();
+                Reader reader = Mime.getTextReader(is = source.getInputStream(), source.getContentType());
                 ical = ZCalendarBuilder.build(reader);
             } catch (Exception e) {
                 throw new MessagingException("Unable to parse iCalendar part: " + e.getMessage(), e);
+            } finally {
+                ByteUtil.closeStream(is);
             }
 
             String uid = null;

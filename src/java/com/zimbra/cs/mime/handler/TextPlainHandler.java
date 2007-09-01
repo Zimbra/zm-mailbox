@@ -30,11 +30,13 @@
 package com.zimbra.cs.mime.handler;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 import javax.activation.DataSource;
 
 import org.apache.lucene.document.Document;
 
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.convert.AttachmentInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeHandler;
@@ -63,10 +65,13 @@ public class TextPlainHandler extends MimeHandler {
     protected String getContentImpl() throws MimeHandlerException {
         if (mContent == null) {
             DataSource source = getDataSource();
+            InputStream is = null;
             try {
-                mContent = Mime.decodeText(source.getInputStream(), source.getContentType());
+                mContent = Mime.decodeText(is = source.getInputStream(), source.getContentType());
             } catch (IOException e) {
                 throw new MimeHandlerException(e);
+            } finally {
+                ByteUtil.closeStream(is);
             }
         }
         if (mContent == null)

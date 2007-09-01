@@ -29,12 +29,15 @@
  */
 package com.zimbra.cs.mime.handler;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
 
 import javax.activation.DataSource;
 
 import org.apache.lucene.document.Document;
 
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.convert.AttachmentInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeHandler;
@@ -48,9 +51,6 @@ import com.zimbra.cs.mime.MimeHandlerException;
 public class TextHtmlHandler extends MimeHandler {
 
     String mContent;
-    private org.xml.sax.XMLReader mParser;
-    private ContentExtractor mHandler;
-    protected Reader mReader;
 
     private class ContentExtractor extends org.xml.sax.helpers.DefaultHandler {
         private StringBuffer sb = new StringBuffer();
@@ -59,14 +59,14 @@ public class TextHtmlHandler extends MimeHandler {
         boolean inCharacters = false;
         int skipping = 0;
 
-        public void startDocument() { sb.setLength(0); }
-        public void startElement(String uri, String localName, String qName, org.xml.sax.Attributes attributes) {
+        @Override public void startDocument() { sb.setLength(0); }
+        @Override public void startElement(String uri, String localName, String qName, org.xml.sax.Attributes attributes) {
             String element = localName.toUpperCase();
-            if ("TITLE".equals(element))
+            if ("TITLE".equals(element)) {
                 inTitle = true;
-            else if ("STYLE".equals(element) || "SCRIPT".equals(element))
+            } else if ("STYLE".equals(element) || "SCRIPT".equals(element)) {
                 skipping++;
-            else if ("IMG".equals(element) && attributes != null) {
+            } else if ("IMG".equals(element) && attributes != null) {
                 String altText = attributes.getValue("alt");
                 if (altText != null && !altText.equals("")) {
                     if (sb.length() > 0)
@@ -76,7 +76,7 @@ public class TextHtmlHandler extends MimeHandler {
             }
             inCharacters = false;
         }
-        public void characters(char[] ch, int offset, int length) {
+        @Override public void characters(char[] ch, int offset, int length) {
             if (skipping > 0 || length == 0) {
                 return;
             } else if (inTitle) {
@@ -105,7 +105,7 @@ public class TextHtmlHandler extends MimeHandler {
             }
             inCharacters = (length > 0);
         }
-        public void endElement(String uri, String localName, String qName) {
+        @Override public void endElement(String uri, String localName, String qName) {
             String element = localName.toUpperCase();
             if ("TITLE".equals(element))
                 inTitle = false;
@@ -114,7 +114,7 @@ public class TextHtmlHandler extends MimeHandler {
             inCharacters = false;
         }
 
-        public String toString()  { return sb.toString(); }
+        @Override public String toString()  { return sb.toString(); }
         public String getTitle()  { return title == null ? "" : title; }
         public String getSummary() {
             if (title != null && mContent.startsWith(title))
@@ -126,37 +126,32 @@ public class TextHtmlHandler extends MimeHandler {
         }
     }
 
-    @Override
-    protected boolean runsExternally() {
+    @Override protected boolean runsExternally() {
         return false;
     }
 
-    public void init(DataSource source) throws MimeHandlerException {
-        super.init(source);
-        try {
-            mContent = null;
-            mReader = Mime.getTextReader(source.getInputStream(), source.getContentType());
-            mParser = new org.cyberneko.html.parsers.SAXParser();
-            mHandler = new ContentExtractor();
-            mParser.setContentHandler(mHandler);
-            mParser.setFeature("http://cyberneko.org/html/features/balance-tags", false); 
-        } catch (Exception e) {
-            throw new MimeHandlerException(e);
-        }
-    }
-
-    public void addFields(Document doc) throws MimeHandlerException {
+    @Override public void addFields(Document doc) throws MimeHandlerException {
         // make sure we've parsed the document
         getContentImpl();
     }
 
-    protected String getContentImpl() throws MimeHandlerException {
+    @Override protected String getContentImpl() throws MimeHandlerException {
         if (mContent == null) {
+            DataSource source = getDataSource();
+            InputStream is = null;
             try {
-                mParser.parse(new org.xml.sax.InputSource(mReader));
-                mContent = mHandler.toString();
+                org.xml.sax.XMLReader parser = new org.cyberneko.html.parsers.SAXParser();
+                ContentExtractor handler = new ContentExtractor();
+                parser.setContentHandler(handler);
+                parser.setFeature("http://cyberneko.org/html/features/balance-tags", false); 
+
+                Reader reader = getReader(is = source.getInputStream(), source.getContentType());
+                parser.parse(new org.xml.sax.InputSource(reader));
+                mContent = handler.toString();
             } catch (Exception e) {
                 throw new MimeHandlerException(e);
+            } finally {
+                ByteUtil.closeStream(is);
             }
         }
         if (mContent == null)
@@ -164,15 +159,20 @@ public class TextHtmlHandler extends MimeHandler {
         
         return mContent;
     }
+
+    @SuppressWarnings("unused")
+    protected Reader getReader(InputStream is, String ctype) throws IOException {
+        return Mime.getTextReader(is, ctype);
+    }
     
     /**
      * No need to convert text/html document ever.
      */
-    public boolean doConversion() {
+    @Override public boolean doConversion() {
         return false;
     }
 
-    public String convert(AttachmentInfo doc, String baseURL) {
+    @Override public String convert(AttachmentInfo doc, String baseURL) {
         throw new UnsupportedOperationException();
     }
 }

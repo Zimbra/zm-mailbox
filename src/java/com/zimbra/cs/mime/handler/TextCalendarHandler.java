@@ -24,6 +24,7 @@
  */
 package com.zimbra.cs.mime.handler;
 
+import java.io.InputStream;
 import java.io.Reader;
 
 import javax.activation.DataSource;
@@ -38,32 +39,23 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeHandler;
 import com.zimbra.cs.mime.MimeHandlerException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 public class TextCalendarHandler extends MimeHandler {
     private String mContent;
     private ZVCalendar miCalendar;
 
-    @Override
-    protected boolean runsExternally() {
+    @Override protected boolean runsExternally() {
         return false;
     }
 
-    @Override
-    public void init(DataSource source) throws MimeHandlerException {
-        super.init(source);
-        mContent = null;
-        miCalendar = null;
-    }
-
-    @Override
-    public ZVCalendar getICalendar() throws MimeHandlerException {
+    @Override public ZVCalendar getICalendar() throws MimeHandlerException {
         analyze();
         return miCalendar;
     }
 
-    @Override
-    protected String getContentImpl() throws MimeHandlerException {
+    @Override protected String getContentImpl() throws MimeHandlerException {
         analyze();
         return mContent;
     }
@@ -73,9 +65,11 @@ public class TextCalendarHandler extends MimeHandler {
     private void analyze() throws MimeHandlerException {
         if (mContent != null)
             return;
+
+        DataSource source = getDataSource();
+        InputStream is = null;
         try {
-            DataSource source = getDataSource();
-            Reader reader = Mime.getTextReader(source.getInputStream(), source.getContentType());
+            Reader reader = Mime.getTextReader(is = source.getInputStream(), source.getContentType());
             miCalendar = ZCalendarBuilder.build(reader);
 
             mContent = "";
@@ -98,22 +92,19 @@ public class TextCalendarHandler extends MimeHandler {
             mContent = "";
             ZimbraLog.index.warn("error reading text/calendar mime part", e);
             throw new MimeHandlerException(e);
+        } finally {
+            ByteUtil.closeStream(is);
         }
     }
 
-    @Override
-    public void addFields(Document doc) {
-        
+    @Override public void addFields(Document doc) {
     }
 
-    @Override
-    public String convert(AttachmentInfo doc, String baseURL) {
+    @Override public String convert(AttachmentInfo doc, String baseURL) {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public boolean doConversion() {
+    @Override public boolean doConversion() {
         return false;
     }
-
 }
