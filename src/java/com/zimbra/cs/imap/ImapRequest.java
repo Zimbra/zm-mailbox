@@ -34,10 +34,13 @@ import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -367,6 +370,8 @@ abstract class ImapRequest {
         }
     }
 
+    private static Set<String> SYSTEM_FLAGS = new HashSet<String>(Arrays.asList("ANSWERED", "FLAGGED", "DELETED", "SEEN", "DRAFT"));
+
     List<String> readFlags() throws ImapParseException {
         List<String> tags = new ArrayList<String>();
         String content = getCurrentLine();
@@ -378,13 +383,21 @@ abstract class ImapRequest {
 
         if (!parens || peekChar() != ')') {
             while (mOffset < content.length()) {
+                if (!tags.isEmpty())
+                    skipSpace();
+
                 if (peekChar() == '\\') {
-                    skipChar('\\');  tags.add('\\' + readAtom());
+                    skipChar('\\');
+                    String name = readAtom();
+                    if (!SYSTEM_FLAGS.contains(name.toUpperCase()))
+                        throw new ImapParseException(mTag, "invalid flag: \\" + name);
+                    tags.add('\\' + name);
                 } else {
                     tags.add(readAtom());
                 }
-                if (parens && peekChar() == ')')      break;
-                else if (mOffset < content.length())  skipSpace();
+
+                if (parens && peekChar() == ')')
+                    break;
             }
         }
 
