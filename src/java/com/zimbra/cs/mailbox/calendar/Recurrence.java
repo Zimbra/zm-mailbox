@@ -475,7 +475,7 @@ public class Recurrence
             private ParsedDateTime mEnd;
 
             public DateValue(ParsedDateTime start, ParsedDateTime end) {
-                assert(mStart != null && mEnd != null);
+                assert(start != null && end != null);
                 mStart = start;
                 mEnd = end;
             }
