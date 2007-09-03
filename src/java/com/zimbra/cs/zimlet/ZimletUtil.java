@@ -526,12 +526,6 @@ public class ZimletUtil {
 									"service" + File.separator + 
 									"WEB-INF" + File.separator + 
 									"lib");
-		File msgPropDir = new File(LC.mailboxd_directory.value() + File.separator + 
-									"webapps" + File.separator + 
-									"zimbra"  + File.separator + 
-									"WEB-INF" + File.separator + 
-									"classes" + File.separator + 
-									"msgs");
 
 		Iterator files = zf.getAllEntries().entrySet().iterator();
 		while (files.hasNext()) {
@@ -543,8 +537,6 @@ public class ZimletUtil {
 				continue;
 			} else if (fname.endsWith(".jar")) {
 				rootDir = serviceLibDir;
-			} else if (fname.endsWith(".properties")) {
-				rootDir = msgPropDir;
 			}
 			File file = new File(rootDir, fname);
 			file.getParentFile().mkdirs();
