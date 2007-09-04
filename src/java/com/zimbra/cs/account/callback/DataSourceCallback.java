@@ -48,7 +48,7 @@ import com.zimbra.cs.db.DbPool.Connection;
  * 
  * @author bburtin
  */
-public class DataSourceCallback implements AttributeCallback {
+public class DataSourceCallback extends AttributeCallback {
 
     private static final String KEY_INTERVAL_CHANGED = "IntervalChanged";
     

@@ -36,7 +36,7 @@ import com.zimbra.cs.mailbox.PurgeThread;
  * Starts the mailbox purge thread if it is not running and the purge sleep
  * interval is set to a non-zero value.  
  */
-public class MailboxPurge implements AttributeCallback {
+public class MailboxPurge extends AttributeCallback {
 
     public void preModify(Map context, String attrName, Object attrValue, Map attrsToModify,
                           Entry entry, boolean isCreate) {

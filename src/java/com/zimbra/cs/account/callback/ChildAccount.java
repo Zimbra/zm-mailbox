@@ -26,6 +26,7 @@
 package com.zimbra.cs.account.callback;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -39,7 +40,7 @@ import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
  
-public class ChildAccount implements AttributeCallback {
+public class ChildAccount extends AttributeCallback {
 
     private static final String KEY = ChildAccount.class.getName();
     
@@ -110,72 +111,10 @@ public class ChildAccount implements AttributeCallback {
         
         return newValues;
     }
-    
-    static class MultiValueMod {
-        // only one of add, removing, replacing can be true
-        boolean mAdding;
-        boolean mRemoving;
-        boolean mReplacing;
-        List<String> mValues;
-        
-        public boolean adding() { return mAdding; }
-        public boolean removing() { return mRemoving; }
-        public boolean replacing() { return mReplacing; }
-        public List<String> values() { return mValues; }
-        public Set<String> valuesSet() { return new HashSet<String>(mValues); }
-    }
-    
-    protected MultiValueMod getMultiValue(Map attrsToModify, String attrName) {
-        MultiValueMod mvm = new MultiValueMod();
-        Object v = attrsToModify.get(attrName);
-        if (v != null) {
-            mvm.mReplacing = true;
-        }
-        if (v == null) {
-            v = attrsToModify.get("+" + attrName);
-            if (v != null)
-                mvm.mAdding = true;
-        }
-        if (v == null) {
-            v = attrsToModify.get("-" + attrName);
-            if (v != null)
-                mvm.mRemoving = true;
-        }
-        
-        if (v != null)
-            mvm.mValues = getMultiValue(v);
-        
-        return (v == null?null:mvm);
-    }
-    
-    private List<String> getMultiValue(Object v) {
-        
-        List<String> list = null;
-        
-        // Convert array to List so it can be treated as a Collection
-        if (v instanceof Object[]) {
-            Object[] oa = (Object[]) v;
-            list = new ArrayList<String>(oa.length);
-            for (int i=0; i<oa.length; i++)
-                list.add(oa[i] == null ? null : oa[i].toString());
-            
-        } else if (v instanceof Collection) {
-            Collection c = (Collection) v;
-            list = new ArrayList<String>(c.size());
-            int i = 0;
-            for (Object o : c)
-                list.add(o == null ? null : o.toString());
-            
-        } else {
-            list = new ArrayList<String>(1);
-            list.add(v.toString());
-        }
-        
-        return list;
-    }
 
     
     public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
 
     }
 }
+

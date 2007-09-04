@@ -35,7 +35,7 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
  
-public class DisplayName implements AttributeCallback {
+public class DisplayName extends AttributeCallback {
 
     /**
      * check to make sure zimbraMailHost points to a valid server zimbraServiceHostname

@@ -8,7 +8,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 
-public class DomainStatus implements AttributeCallback {
+public class DomainStatus extends AttributeCallback {
 
     public void preModify(Map context, String attrName, Object value,
             Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {

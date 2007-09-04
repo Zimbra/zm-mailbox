@@ -38,7 +38,7 @@ import com.zimbra.cs.mailbox.Notification;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
-public class OutOfOfficeCallback implements AttributeCallback {
+public class OutOfOfficeCallback extends AttributeCallback {
 
     private static final String KEY = OutOfOfficeCallback.class.getName();
 

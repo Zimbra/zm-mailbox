@@ -18,7 +18,7 @@ import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 
-public class CheckPortConflict implements AttributeCallback {
+public class CheckPortConflict extends AttributeCallback {
 
     private static final String KEY = CheckPortConflict.class.getName();
     private static final Set<String> sPortAttrs = new HashSet<String>();

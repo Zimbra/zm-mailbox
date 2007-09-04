@@ -36,7 +36,7 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Signature;
  
-public class MailSignature implements AttributeCallback {
+public class MailSignature extends AttributeCallback {
     
     /*
      * for modifying signature, we can get the max len from entry.getAccount

@@ -25,14 +25,20 @@
 
 package com.zimbra.cs.account;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 
 /**
  * @author schemers
  */
-public interface AttributeCallback {
+public abstract class AttributeCallback {
 
     /**
      * called before an attribute is modified. If a ServiceException is thrown, no attributes will
@@ -50,7 +56,7 @@ public interface AttributeCallback {
      * @param isCreate set to true if called during create
      * @throws ServiceException causes the whole transaction to abort.
      */
-    void preModify(
+    public abstract void preModify(
             Map context,
             String attrName,
             Object attrValue,
@@ -66,9 +72,70 @@ public interface AttributeCallback {
      * @param entry Set on modify and create.
      * @param isCreate set to true if called during create
      */
-    void postModify(
+    public abstract void postModify(
             Map context,
             String attrName,
             Entry entry,
             boolean isCreate);
+    
+    
+    protected static class MultiValueMod {
+        
+        static enum Mod {
+            ADDING,
+            REMOVING,
+            REPLACING
+        }
+        
+        Mod mMod;
+        List<String> mValues;
+        
+        public boolean adding() { return mMod==Mod.ADDING; }
+        public boolean removing() { return mMod==Mod.REMOVING; }
+        public boolean replacing() { return mMod==Mod.REPLACING; }
+        public List<String> values() { return mValues; }
+        public Set<String> valuesSet() { return new HashSet<String>(mValues); }
+    }
+    
+    protected MultiValueMod getMultiValue(Map attrsToModify, String attrName)  throws ServiceException {
+        MultiValueMod mvm = new MultiValueMod();
+        Object v = attrsToModify.get(attrName);
+        if (v != null) {
+            mvm.mMod = MultiValueMod.Mod.REPLACING;
+        }
+        if (v == null) {
+            v = attrsToModify.get("+" + attrName);
+            if (v != null)
+                mvm.mMod = MultiValueMod.Mod.ADDING;
+        }
+        if (v == null) {
+            v = attrsToModify.get("-" + attrName);
+            if (v != null)
+                mvm.mMod = MultiValueMod.Mod.REMOVING;
+        }
+        
+        if (v != null)
+            mvm.mValues = getMultiValue(v);
+        
+        return (v == null?null:mvm);
+    }
+
+    protected List<String> getMultiValue(Object value) throws ServiceException {
+        
+        List<String> list = null;
+        
+        if (value instanceof String) {
+            list = new ArrayList<String>(1);
+            list.add((String)value);
+        } else if (value instanceof String[]) {
+            list = new ArrayList<String>(Arrays.asList((String[])value));
+        } else if (value instanceof Collection) {
+            list = new ArrayList<String>();
+            for (Object o : (Collection)value)
+                list.add(o.toString());
+        } else
+            throw ServiceException.INVALID_REQUEST("value not a String or String[]", null);
+
+        return list;
+    }
 }

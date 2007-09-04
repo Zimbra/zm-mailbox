@@ -25,6 +25,7 @@
 
 package com.zimbra.cs.account.callback;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -33,27 +34,24 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 
-public class MailHostPool implements AttributeCallback {
+public class MailHostPool extends AttributeCallback {
 
     /**
      * check to make sure zimbraMailHostPool points to a valid server id
      */
     public void preModify(Map context, String attrName, Object value,
             Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
-        String[] pool;
         
-        if (value instanceof String)
-            pool = new String[] { (String) value };
-        else if (value instanceof String[])
-            pool = (String[]) value;
-        else 
-            throw ServiceException.INVALID_REQUEST(Provisioning.A_zimbraMailHostPool+" not a String or String[]", null);
-
-        Provisioning prov = Provisioning.getInstance();
-        for (int i=0; i < pool.length; i++) {
-            if (pool[i] == null || pool[i].equals("")) continue;
-            if (prov.get(ServerBy.id, pool[i]) == null)
-                    throw ServiceException.INVALID_REQUEST("specified "+Provisioning.A_zimbraMailHostPool+" does not correspond to a valid server: "+pool[i], null);
+        MultiValueMod mod = getMultiValue(attrsToModify, Provisioning.A_zimbraMailHostPool);
+        
+        if (mod.adding() || mod.replacing()) {
+            Provisioning prov = Provisioning.getInstance();
+            List<String> pool = mod.values();
+            for (String host : pool) {
+                if (host == null || host.equals("")) continue;
+                if (prov.get(ServerBy.id, host) == null)
+                    throw ServiceException.INVALID_REQUEST("specified "+Provisioning.A_zimbraMailHostPool+" does not correspond to a valid server: "+host, null);
+            }
         }
     }
 

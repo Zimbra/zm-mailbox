@@ -37,7 +37,7 @@ import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
  
-public class MailCharset implements AttributeCallback {
+public class MailCharset extends AttributeCallback {
 
     /**
      * check to make sure zimbraPrefMailSignature is shorter than the limit

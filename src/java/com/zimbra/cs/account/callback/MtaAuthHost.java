@@ -33,7 +33,7 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.httpclient.URLUtil;
 
-public class MtaAuthHost implements AttributeCallback {
+public class MtaAuthHost extends AttributeCallback {
 
     /**
      * check to make sure zimbraMtaAuthHost points to a valid server zimbraServiceHostname

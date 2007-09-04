@@ -35,7 +35,7 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 
-public class AccountStatus implements AttributeCallback {
+public class AccountStatus extends AttributeCallback {
 	
     private static final String KEY = AccountStatus.class.getName();
 

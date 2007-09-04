@@ -36,7 +36,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.util.Config;
 
-public class MailHost implements AttributeCallback {
+public class MailHost extends AttributeCallback {
 
     /**
      * check to make sure zimbraMailHost points to a valid server zimbraServiceHostname
