@@ -98,7 +98,7 @@ public class GetInfo extends AccountDocumentHandler  {
         Element response = zsc.createElement(AccountConstants.GET_INFO_RESPONSE);
         response.addAttribute(AccountConstants.E_VERSION, BuildInfo.FULL_VERSION, Element.Disposition.CONTENT);
         response.addAttribute(AccountConstants.E_ID, account.getId(), Element.Disposition.CONTENT);
-        response.addAttribute(AccountConstants.E_NAME, account.getName(), Element.Disposition.CONTENT);
+        response.addAttribute(AccountConstants.E_NAME, account.getUnicodeName(), Element.Disposition.CONTENT);
         long lifetime = zsc.getAuthToken().getExpires() - System.currentTimeMillis();
         response.addAttribute(AccountConstants.E_LIFETIME, lifetime, Element.Disposition.CONTENT);
 
@@ -270,7 +270,7 @@ public class GetInfo extends AccountDocumentHandler  {
     private static void encodeChildAccount(Element parent, Account child, boolean isVisible) {
         Element elem = parent.addElement(AccountConstants.E_CHILD_ACCOUNT);
         elem.addAttribute(AccountConstants.A_ID, child.getId());
-        elem.addAttribute(AccountConstants.A_NAME, child.getName());
+        elem.addAttribute(AccountConstants.A_NAME, child.getUnicodeName());
         elem.addAttribute(AccountConstants.A_VISIBLE, isVisible);
 
         String displayName = child.getAttr(Provisioning.A_displayName);
