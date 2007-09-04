@@ -9,7 +9,7 @@ public abstract class MailTarget extends NamedEntry {
     protected String mUnicodeName;
     
     public MailTarget(String name, String id, Map<String,Object> attrs, Map<String, Object> defaults) {
-        super(name, id, attrs, null);
+        super(name, id, attrs, defaults);
         int index = name.indexOf('@');
         if (index != -1)  {
             String local = name.substring(0, index);
