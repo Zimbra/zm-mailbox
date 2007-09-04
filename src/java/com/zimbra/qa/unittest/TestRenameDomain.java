@@ -28,6 +28,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.qa.unittest.TestProvisioningUtil.IDNName;
 
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
@@ -59,9 +60,9 @@ public class TestRenameDomain  extends TestCase {
     private static int NUM_IDENTITIES  = 2;
     private static int NUM_DATASOURCES = 2;
     
-    
     private static String NAME_LEAF_OLD_DOMAIN = "olddomain";
     private static String NAME_LEAF_NEW_DOMAIN = "newdomain";
+    private static String UNICODESTR = "\u4e2d\u6587";   // \u5f35\u611b\u73b2   // for testing IDN
     
     private static String NAMEPREFIX_ACCOUNT     = "acct-";
     private static String NAMEPREFIX_ALIAS       = "alias-";
@@ -185,7 +186,7 @@ public class TestRenameDomain  extends TestCase {
     }
     
     private String DOMAIN_NAME(String leafDomainName) {
-        return leafDomainName + "." + TestProvisioningUtil.baseDomainName("renamedomain", TEST_ID);
+        return leafDomainName + "." + UNICODESTR + "." + TestProvisioningUtil.baseDomainName("renamedomain", TEST_ID);
     }
     
     private String SUB_DOMAIN_NAME(int index, int parentDomain) {
@@ -368,15 +369,18 @@ public class TestRenameDomain  extends TestCase {
         }
     }
     
-    private Account createAccount(String acctName, String domainName) throws Exception {
+    private Account createAccount(String acctName, IDNName domainName) throws Exception {
         Map<String, Object> acctAttrs = new HashMap<String, Object>();
         
-        acctAttrs.put(Provisioning.A_zimbraMailCanonicalAddress, "canonical-address" + "@" + domainName);
-        // acctAttrs.put(Provisioning.A_zimbraMailDeliveryAddress, "delivery-address" + "@" + domainName);
-        acctAttrs.put(Provisioning.A_zimbraMailForwardingAddress, "forwarding-address" + "@" + domainName);
-        acctAttrs.put(Provisioning.A_zimbraMailCatchAllAddress, "" + "@" + domainName);
-        acctAttrs.put(Provisioning.A_zimbraMailCatchAllCanonicalAddress, "" + "@" + domainName);
-        acctAttrs.put(Provisioning.A_zimbraMailCatchAllForwardingAddress, "" + "@" + domainName);
+        // IDN TODO: MailAddress callback needs to handle multi-valued attrs, ..., use aname for now
+        acctAttrs.put(Provisioning.A_zimbraMailCanonicalAddress, "canonical-address" + "@" + domainName.aName());
+        // acctAttrs.put(Provisioning.A_zimbraMailDeliveryAddress, "delivery-address" + "@" + domainName.aName());
+        acctAttrs.put(Provisioning.A_zimbraMailForwardingAddress, "forwarding-address" + "@" + domainName.aName());
+        
+        // IDN TODO: checkValue is called before callback, the catchall addresses are of type regex, ..., use aname for now
+        acctAttrs.put(Provisioning.A_zimbraMailCatchAllAddress, "" + "@" + domainName.aName());
+        acctAttrs.put(Provisioning.A_zimbraMailCatchAllCanonicalAddress, "" + "@" + domainName.aName());
+        acctAttrs.put(Provisioning.A_zimbraMailCatchAllForwardingAddress, "" + "@" + domainName.aName());
         
         Account acct = mProv.createAccount(acctName, PASSWORD, acctAttrs);
         return acct;
@@ -387,8 +391,8 @@ public class TestRenameDomain  extends TestCase {
      */
     private void populateDomain(int domainIdx) throws Exception {
         
-        String domainName = DOMAIN_NAME(domainIdx);
-        System.out.println("setupDomain: " + domainName);
+        IDNName domainName = new IDNName(DOMAIN_NAME(domainIdx));
+        System.out.println("setupDomain: " + domainName.uName());
         
         // create accounts and their aliases
         for (int a = 0; a < NUM_ACCOUNTS; a++) {
@@ -637,32 +641,31 @@ public class TestRenameDomain  extends TestCase {
         // come up with all expected entries
         Set<String> expectedEntries = new HashSet<String>();
         for (int a = 0; a < NUM_ACCOUNTS; a++) {
-            String name = ACCOUNT_NAME(a, domainIdx);
-            Account entry = mProv.get(Provisioning.AccountBy.name, name);
+            IDNName name = new IDNName(ACCOUNT_NAME(a, domainIdx));
+            Account entry = mProv.get(Provisioning.AccountBy.name, name.uName());
             assertNotNull(entry);
-            expectedEntries.add(name);
+            expectedEntries.add(name.aName());
         }
             
         for (int nd = 0; nd < NUM_DLS_NESTED; nd++) {
-            String name = NESTED_DL_NAME(nd, domainIdx);
-            DistributionList entry = mProv.get(Provisioning.DistributionListBy.name, name);
+            IDNName name = new IDNName(NESTED_DL_NAME(nd, domainIdx));
+            DistributionList entry = mProv.get(Provisioning.DistributionListBy.name, name.uName());
             assertNotNull(entry);
-            expectedEntries.add(name);
+            expectedEntries.add(name.aName());
         }
             
         for (int td = 0; td < NUM_DLS_NESTED; td++){
-            String name = TOP_DL_NAME(td, domainIdx);
-            DistributionList entry = mProv.get(Provisioning.DistributionListBy.name, name);
+            IDNName name = new IDNName(TOP_DL_NAME(td, domainIdx));
+            DistributionList entry = mProv.get(Provisioning.DistributionListBy.name, name.uName());
             assertNotNull(entry);
-            expectedEntries.add(name);
+            expectedEntries.add(name.aName());
         }
-      
-        
-        // dumpStrings(expectedAliases);
-        // dumpStrings(namedEntryListToNameSet(list));
-        
+       
         // verify all our aliases are there
         Set<String> actualEntries = namedEntryListToNameSet(list);
+        
+        // dumpStrings(expectedEntries);
+        // dumpStrings(actualEntries);
         TestProvisioningUtil.verifyEquals(expectedEntries, actualEntries);
         
         verifyEntryAttrs(list);
@@ -684,20 +687,20 @@ public class TestRenameDomain  extends TestCase {
         Set<String> expectedAliases = new HashSet<String>();
         for (int d = 0; d < NUM_DOMAINS; d++) {
             for (int a = 0; a < NUM_ACCOUNTS; a++)
-                expectedAliases.add(ACCOUNT_ALIAS_NAME(a, d, domainIdx));
+                expectedAliases.add(new IDNName(ACCOUNT_ALIAS_NAME(a, d, domainIdx)).aName());
             
             for (int nd = 0; nd < NUM_DLS_NESTED; nd++)
-                expectedAliases.add(NESTED_DL_ALIAS_NAME(nd, d, domainIdx));
+                expectedAliases.add(new IDNName(NESTED_DL_ALIAS_NAME(nd, d, domainIdx)).aName());
             
             for (int td = 0; td < NUM_DLS_NESTED; td++)
-                expectedAliases.add(TOP_DL_ALIAS_NAME(td, d, domainIdx));
+                expectedAliases.add(new IDNName(TOP_DL_ALIAS_NAME(td, d, domainIdx)).aName());
         }
         
-        // dumpStrings(expectedAliases);
-        // dumpStrings(namedEntryListToNameSet(list));
         
         // verify all our aliases are there
         Set<String> actualAliases = namedEntryListToNameSet(list);
+        // dumpStrings(expectedAliases);
+        // dumpStrings(actualAliases);
         TestProvisioningUtil.verifyEquals(expectedAliases, actualAliases);
         
         // verify the target of each alias can be found
@@ -753,12 +756,12 @@ public class TestRenameDomain  extends TestCase {
                 int dIdx = DOMAIN_INDEX_AFTER_RENAME(d);
                 if ((dlTypes & OBJ_DL_NESTED) != 0) {
                     for (int dlIdx = 0; dlIdx < NUM_DLS_NESTED; dlIdx++)
-                        expectedNames.add(NESTED_DL_NAME(dlIdx, dIdx));
+                        expectedNames.add(new IDNName(NESTED_DL_NAME(dlIdx, dIdx)).aName());
                 } 
 
                 if ((dlTypes & OBJ_DL_TOP) != 0) {
                     for (int dlIdx = 0; dlIdx < NUM_DLS_TOP; dlIdx++)
-                        expectedNames.add(TOP_DL_NAME(dlIdx, dIdx));
+                        expectedNames.add(new IDNName(TOP_DL_NAME(dlIdx, dIdx)).aName());
                 } 
             }
             
@@ -792,7 +795,7 @@ public class TestRenameDomain  extends TestCase {
                     for (int i = 0; i < NUM_ACCOUNTS; i++) {
                         Set<String> names = ACCOUNT_NAMES(i, dIdx, true);
                         for (String n : names)
-                            expectedNames.add(n);
+                            expectedNames.add(new IDNName(n).aName());
                     }
                 } 
                 
@@ -800,7 +803,7 @@ public class TestRenameDomain  extends TestCase {
                     for (int i = 0; i < NUM_DLS_NESTED; i++) {
                         Set<String> names = NESTED_DL_NAMES(i, dIdx, true);
                         for (String n : names)
-                            expectedNames.add(n);
+                            expectedNames.add(new IDNName(n).aName());
                     }
                 } 
 
@@ -808,7 +811,7 @@ public class TestRenameDomain  extends TestCase {
                     for (int i = 0; i < NUM_DLS_TOP; i++) {
                         Set<String> names = TOP_DL_NAMES(i, dIdx, true);
                         for (String n : names)
-                            expectedNames.add(n);
+                            expectedNames.add(new IDNName(n).aName());
                     }
                 } 
             }

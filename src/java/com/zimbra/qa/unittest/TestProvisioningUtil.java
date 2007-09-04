@@ -35,6 +35,7 @@ import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 
 import com.zimbra.common.util.SetUtil;
+import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.NamedEntry;
 
 public class TestProvisioningUtil extends TestCase {
@@ -148,5 +149,29 @@ public class TestProvisioningUtil extends TestCase {
     public static void verifyEquals(Set<String> expected, Set<String> atual) throws Exception {
         assertEquals(0, SetUtil.subtract(expected, atual).size());
         assertEquals(0, SetUtil.subtract(atual, expected).size());
+    }
+    
+    
+    public static class IDNName {
+        String mUincodeName;
+        String mAsciiName;
+        
+        IDNName(String uName) {
+            mUincodeName = uName;
+            
+            String[] parts = uName.split("@");
+            if (parts.length == 2)
+                mAsciiName = parts[0] + "@" + IDNUtil.toAsciiDomainName(parts[1]);
+            else
+                mAsciiName = IDNUtil.toAsciiDomainName(uName);
+        }
+        
+        IDNName(String localPart, String uName) {
+            mUincodeName = localPart + "@" + uName;
+            mAsciiName = localPart + "@" + IDNUtil.toAsciiDomainName(uName);
+        }
+        
+        String uName() { return mUincodeName; } 
+        String aName() { return mAsciiName; }
     }
 }

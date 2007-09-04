@@ -37,7 +37,6 @@ import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Account.CalendarUserType;
@@ -1762,7 +1761,7 @@ public class LdapProvisioning extends Provisioning {
      * @see com.zimbra.cs.account.Provisioning#deleteAccountById(java.lang.String)
      */
     public void renameAccount(String zimbraId, String newName) throws ServiceException {
-        
+        newName = IDNUtil.toAsciiEmail(newName);
         validEmailAddress(newName);
         
         DirContext ctxt = null;
@@ -1771,6 +1770,7 @@ public class LdapProvisioning extends Provisioning {
         if (acct == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(zimbraId);
         String oldEmail = acct.getName();
+        
         try {
             ctxt = LdapUtil.getDirContext(true);
 
@@ -1916,6 +1916,7 @@ public class LdapProvisioning extends Provisioning {
     
     public void renameDomain(String zimbraId, String newDomainName) throws ServiceException {
         newDomainName = newDomainName.toLowerCase().trim();
+        newDomainName = IDNUtil.toAsciiDomainName(newDomainName);
         validDomainName(newDomainName);
         
         DirContext ctxt = null;
@@ -2307,7 +2308,7 @@ public class LdapProvisioning extends Provisioning {
     }
 
     public void renameDistributionList(String zimbraId, String newEmail) throws ServiceException {
-        
+        newEmail = IDNUtil.toAsciiEmail(newEmail);
         validEmailAddress(newEmail);
         
         DirContext ctxt = null;

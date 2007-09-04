@@ -42,11 +42,15 @@ import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
+import com.zimbra.qa.unittest.TestProvisioningUtil.IDNName;
 
 public class TestIDN extends TestCase {
     private String TEST_ID;
     private static String TEST_NAME = "test-IDN";
+    private static String UNICODESTR = "\u4e2d\u6587";   // \u5f35\u611b\u73b2
     private static String PASSWORD = "test123";
    
     
@@ -62,23 +66,10 @@ public class TestIDN extends TestCase {
         BASE_DOMAIN_NAME = "." + TestProvisioningUtil.baseDomainName(TEST_NAME, TEST_ID);
     }
     
-    class IDNName {
-        String mUincodeName;
-        String mAsciiName;
-        
-        IDNName(String uName) {
-            mUincodeName = uName;
-            mAsciiName = IDNUtil.toAsciiDomainName(uName);
-        }
-        
-        IDNName(String localPart, String uName) {
-            mUincodeName = localPart + "@" + uName;
-            mAsciiName = localPart + "@" + IDNUtil.toAsciiDomainName(uName);
-        }
-        
-        String uName() { return mUincodeName; } 
-        String aName() { return mAsciiName; }
+    private String makeDomainName(String prefix) {
+        return prefix + UNICODESTR + BASE_DOMAIN_NAME;
     }
+
     
     private Domain createDomain(String domainName, String description) throws Exception {
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -114,177 +105,258 @@ public class TestIDN extends TestCase {
         return dl;
     }
     
-    Domain domainTest() throws Exception {
-        // String domainName = "abc.\u5f35\u611b\u73b2" + BASE_DOMAIN_NAME;
+    static enum EntryType {
+        DOMAIN,
+        ACCOUNT,
+        CR,
+        DL
+    }
+    
+    static enum IDNType {
+        UNAME,
+        ANAME,
+    }
+    
+    private NamedEntry createTest(EntryType entryType, IDNType by, IDNName name) throws Exception {
         
-        IDNName d1Name = new IDNName("domain-1.\u4e2d\u6587" + BASE_DOMAIN_NAME);
-        IDNName d2Name = new IDNName("domain-2.\u4e2d\u6587" + BASE_DOMAIN_NAME);
+        NamedEntry created = null;
+        NamedEntry notCreated = null;
+        
+        String firstCreateBy = null;
+        String thenCreateBy = null;
+        if (by == IDNType.UNAME) {
+            firstCreateBy = name.uName();
+            thenCreateBy = name.aName();
+        } else {
+            firstCreateBy = name.aName();
+            thenCreateBy = name.uName();
+        }
+        
+        String desc = name.uName();
+        
+        switch (entryType) {
+        case DOMAIN:
+            created = createDomain(firstCreateBy, desc);
+            break;
+        case ACCOUNT:
+            created = createAccount(firstCreateBy, desc);
+            break;
+        case CR:
+            created = createCalendarResource(firstCreateBy, desc);
+            break;
+        case DL:
+            created = createDistributionList(firstCreateBy, desc);
+            break;
+        }
+        
+        assertNotNull(created);
+        
+        try {
+            // entry should have existed
+            switch (entryType) {
+            case DOMAIN:
+                notCreated = createDomain(thenCreateBy, desc);
+                break;
+            case ACCOUNT:
+                notCreated = createAccount(thenCreateBy, desc);
+                break;
+            case CR:
+                notCreated = createCalendarResource(thenCreateBy, desc);
+                break;
+            case DL:
+                notCreated = createDistributionList(thenCreateBy, desc);
+                break;
+            }
+            fail();
+        } catch (ServiceException e) {
+            String expectedExceptionCode = null;
+            switch (entryType) {
+            case DOMAIN:
+                expectedExceptionCode = AccountServiceException.DOMAIN_EXISTS;
+                break;
+            case ACCOUNT:
+                expectedExceptionCode = AccountServiceException.ACCOUNT_EXISTS;
+                break;
+            case CR:
+                expectedExceptionCode = AccountServiceException.ACCOUNT_EXISTS;
+                break;
+            case DL:
+                expectedExceptionCode = AccountServiceException.DISTRIBUTION_LIST_EXISTS;
+                break;
+            }
+            if (!e.getCode().equals(expectedExceptionCode))
+                fail();
+        }
+        
+        return created;
+    }
+    
+    private void getTest(EntryType entryType, NamedEntry expectedEntry, IDNName name) throws Exception {
+        
+        NamedEntry gotByUName = null;
+        NamedEntry gotByAName = null;
+        
+        switch (entryType) {
+        case DOMAIN:
+            gotByUName = mProv.get(Provisioning.DomainBy.name, name.uName());
+            gotByAName = mProv.get(Provisioning.DomainBy.name, name.aName());
+            break;
+        case ACCOUNT:
+            gotByUName = mProv.get(Provisioning.AccountBy.name, name.uName());
+            gotByAName = mProv.get(Provisioning.AccountBy.name, name.aName());
+            break;
+        case CR:
+            gotByUName = mProv.get(Provisioning.CalendarResourceBy.name, name.uName());
+            gotByAName = mProv.get(Provisioning.CalendarResourceBy.name, name.aName());
+            break;
+        case DL:
+            gotByUName = mProv.get(Provisioning.DistributionListBy.name, name.uName());
+            gotByAName = mProv.get(Provisioning.DistributionListBy.name, name.aName());
+            break;
+        }
+        
+        if (expectedEntry == null) {
+            assertNull(gotByUName);
+            assertNull(gotByAName);
+        } else {
+            assertNotNull(gotByUName);
+            assertNotNull(gotByAName);
+            assertEquals(expectedEntry.getId(), gotByUName.getId());
+            assertEquals(expectedEntry.getId(), gotByAName.getId());
+        }
+    }
+    
+    private void renameTest(EntryType entryType, NamedEntry entry, IDNName name) throws Exception {
+
+        switch (entryType) {
+        case DOMAIN:
+            assertTrue(mProv instanceof LdapProvisioning);
+            ((LdapProvisioning)mProv).renameDomain(entry.getId(), name.uName());
+            break;
+        case ACCOUNT:
+            mProv.renameAccount(entry.getId(), name.uName());
+            break;
+        case CR:
+            mProv.renameCalendarResource(entry.getId(), name.uName());
+            break;
+        case DL:
+            mProv.renameDistributionList(entry.getId(), name.uName());
+            break;
+        }
+    }
+    
+    Domain domainTest() throws Exception {
+        IDNName d1Name = new IDNName(makeDomainName("domain-1."));
+        IDNName d2Name = new IDNName(makeDomainName("domain-2."));
+        IDNName d2RenamedName = new IDNName(makeDomainName("domain-2-renamed."));
         
         // create domain with unicode name
-        Domain domain1 = createDomain(d1Name.uName(), d1Name.uName());
-        assertNotNull(domain1);
-        try {
-            // domain should have existed
-            createDomain(d1Name.aName(), "domain " + d1Name.uName());
-            fail();
-        } catch (ServiceException e) {
-            if (!e.getCode().equals(AccountServiceException.DOMAIN_EXISTS))
-                fail();
-        }
+        Domain domain1 = (Domain)createTest(EntryType.DOMAIN, IDNType.UNAME, d1Name);
+        Domain domain2 = (Domain)createTest(EntryType.DOMAIN, IDNType.ANAME, d2Name);
         
-        // create domain with ascii name
-        Domain domain2 = createDomain(d2Name.aName(), d2Name.uName());
-        assertNotNull(domain2);
-        try {
-            // domain should have existed
-            createDomain(d2Name.uName(), d2Name.uName());
-            fail();
-        } catch (ServiceException e) {
-            if (!e.getCode().equals(AccountServiceException.DOMAIN_EXISTS))
-                fail();
-        }
+        // get by name test
+        getTest(EntryType.DOMAIN, domain1, d1Name);
+        getTest(EntryType.DOMAIN, domain2, d2Name);
         
-        // get domain by ascii name
-        Domain d1Get = mProv.get(Provisioning.DomainBy.name, d1Name.aName());
-        assertEquals(domain1.getId(), d1Get.getId());
-        
-        // get domain by unicode name
-        Domain d2Get = mProv.get(Provisioning.DomainBy.name, d2Name.uName());
-        assertEquals(domain2.getId(), d2Get.getId());
+        // rename test
+        renameTest(EntryType.DOMAIN, domain2, d2RenamedName);
+        getTest(EntryType.DOMAIN, domain2, d2RenamedName);
         
         return domain1;
     }
     
     public void accountTest() throws Exception {
         
-        IDNName domainName = new IDNName("domain-acct-test.\u4e2d\u6587" + BASE_DOMAIN_NAME);
+        IDNName domainName = new IDNName(makeDomainName("domain-acct-test."));
         Domain domain = createDomain(domainName.uName(), domainName.uName());
         
         IDNName acct1Name = new IDNName("acct-1", domainName.uName());
         IDNName acct2Name = new IDNName("acct-2", domainName.uName());
-        IDNName cr1Name = new IDNName("cr-1", domainName.uName());
-        IDNName cr2Name = new IDNName("cr-2", domainName.uName());
+        IDNName acct2RenamedName = new IDNName("acct-2-renamed", domainName.uName());
         IDNName alias1Name = new IDNName("alias-1-of-acct-1", domainName.uName());
         IDNName alias2Name = new IDNName("alias-2-of-acct-1", domainName.uName());
+        IDNName cr1Name = new IDNName("cr-1", domainName.uName());
+        IDNName cr2Name = new IDNName("cr-2", domainName.uName());
+        IDNName cr2RenamedName = new IDNName("cr-2-renamed", domainName.uName());
+        
         /*
          * account
          */
-        Account acct1 = createAccount(acct1Name.uName(), acct1Name.uName());
-        assertNotNull(acct1);
-        try {
-            createAccount(acct1Name.aName(), acct1Name.uName());
-            fail();
-        } catch (ServiceException e) {
-            if (!e.getCode().equals(AccountServiceException.ACCOUNT_EXISTS))
-                fail();
-        }
+        // create test
+        Account acct1 = (Account)createTest(EntryType.ACCOUNT, IDNType.UNAME, acct1Name);
+        Account acct2 = (Account)createTest(EntryType.ACCOUNT, IDNType.ANAME, acct2Name);
+
+        // get by name test
+        getTest(EntryType.ACCOUNT, acct1, acct1Name);
+        getTest(EntryType.ACCOUNT, acct2, acct2Name);
         
-        Account acct2 = createAccount(acct2Name.aName(), acct2Name.uName());
-        assertNotNull(acct2);
-        try {
-            createAccount(acct2Name.uName(), acct2Name.uName());
-            fail();
-        } catch (ServiceException e) {
-            if (!e.getCode().equals(AccountServiceException.ACCOUNT_EXISTS))
-                fail();
-        }
-        
-        // get by name
-        Account a1GetByUName = mProv.get(Provisioning.AccountBy.name, acct1Name.uName());
-        assertEquals(acct1.getId(), a1GetByUName.getId());
-        Account a1GetByAName = mProv.get(Provisioning.AccountBy.name, acct1Name.aName());
-        assertEquals(acct1.getId(), a1GetByAName.getId());
-        
-        //aliases
+        // add aliases
         mProv.addAlias(acct1, alias1Name.uName());  // add alias by uname
         mProv.addAlias(acct1, alias2Name.aName());  // add alias by aname
-        // get by alias
-        Account a1GetByAliasAName = mProv.get(Provisioning.AccountBy.name, alias1Name.aName());
-        assertEquals(acct1.getId(), a1GetByAliasAName.getId());
-        Account a1GetByAliasUName = mProv.get(Provisioning.AccountBy.name, alias2Name.uName());
-        assertEquals(acct1.getId(), a1GetByAliasUName.getId());
-        
+        // get by alias name test
+        getTest(EntryType.ACCOUNT, acct1, alias1Name);
+        getTest(EntryType.ACCOUNT, acct1, alias2Name);
+
+        // remove aliases
         mProv.removeAlias(acct1, alias1Name.aName());
         mProv.removeAlias(acct1, alias2Name.uName());
-        a1GetByAliasAName = mProv.get(Provisioning.AccountBy.name, alias1Name.aName());
-        assertNull(a1GetByAliasAName);
-        a1GetByAliasUName = mProv.get(Provisioning.AccountBy.name, alias2Name.uName());
-        assertNull(a1GetByAliasUName);
+        getTest(EntryType.ACCOUNT, null, alias1Name);
+        getTest(EntryType.ACCOUNT, null, alias2Name);
+        
+        // add aliases back so we can view them after the test
+        mProv.addAlias(acct1, alias1Name.uName());  // add alias by uname
+        mProv.addAlias(acct1, alias2Name.aName());  // add alias by aname
+        
+        // rename test
+        renameTest(EntryType.ACCOUNT, acct2, acct2RenamedName);
+        getTest(EntryType.ACCOUNT, acct2, acct2RenamedName);
         
         /*
          * cr
          */
-        CalendarResource cr1 = createCalendarResource(cr1Name.uName(), cr1Name.uName());
-        assertNotNull(cr1);
-        try {
-            createCalendarResource(cr1Name.aName(), cr1Name.uName());
-            fail();
-        } catch (ServiceException e) {
-            if (!e.getCode().equals(AccountServiceException.ACCOUNT_EXISTS))
-                fail();
-        }
+        // create test
+        CalendarResource cr1 = (CalendarResource)createTest(EntryType.CR, IDNType.UNAME, cr1Name);
+        CalendarResource cr2 = (CalendarResource)createTest(EntryType.CR, IDNType.ANAME, cr2Name);
+
+        // get by name test
+        getTest(EntryType.CR, cr1, cr1Name);
+        getTest(EntryType.CR, cr2, cr2Name);
         
-        CalendarResource cr2 = createCalendarResource(cr2Name.aName(), cr2Name.uName());
-        assertNotNull(cr2);
-        try {
-            createCalendarResource(cr2Name.uName(), cr2Name.uName());
-            fail();
-        } catch (ServiceException e) {
-            if (!e.getCode().equals(AccountServiceException.ACCOUNT_EXISTS))
-                fail();
-        }
-        
-        // get by name
-        CalendarResource cr1GetByUName = mProv.get(Provisioning.CalendarResourceBy.name, cr1Name.uName());
-        assertEquals(cr1.getId(), cr1GetByUName.getId());
-        CalendarResource cr1GetByAName = mProv.get(Provisioning.CalendarResourceBy.name, cr1Name.aName());
-        assertEquals(cr1.getId(), cr1GetByAName.getId());
+        // rename test
+        renameTest(EntryType.CR, cr2, cr2RenamedName);
+        getTest(EntryType.CR, cr2, cr2RenamedName);
     }
     
     public void distributionListTest() throws Exception {
         
-        IDNName domainName = new IDNName("domain-dl-test.\u4e2d\u6587" + BASE_DOMAIN_NAME);
+        IDNName domainName = new IDNName(makeDomainName("domain-dl-test."));
         Domain domain = createDomain(domainName.uName(), domainName.uName());
         
         IDNName acct1Name = new IDNName("acct-1", domainName.uName());
         IDNName acct2Name = new IDNName("acct-2", domainName.uName());
-        IDNName cr1Name = new IDNName("cr-1", domainName.uName());
-        IDNName cr2Name = new IDNName("cr-2", domainName.uName());
         IDNName dl1Name = new IDNName("dl-1", domainName.uName());
         IDNName dl2Name = new IDNName("dl-2", domainName.uName());
+        IDNName dl2RenamedName = new IDNName("dl-2-renamed", domainName.uName());
         IDNName nestedDl1Name = new IDNName("nested-dl-1", domainName.uName());
         IDNName nestedDl2Name = new IDNName("nested-dl-2", domainName.uName());
 
         /*
          * dl
          */
-        DistributionList dl1 = createDistributionList(dl1Name.uName(), dl1Name.uName());
-        assertNotNull(dl1);
-        try {
-            createDistributionList(dl1Name.aName(), dl1Name.uName());
-            fail();
-        } catch (ServiceException e) {
-            if (!e.getCode().equals(AccountServiceException.DISTRIBUTION_LIST_EXISTS))
-                fail();
-        }
+        // create test
+        DistributionList dl1 = (DistributionList)createTest(EntryType.DL, IDNType.UNAME, dl1Name);
+        DistributionList dl2 = (DistributionList)createTest(EntryType.DL, IDNType.ANAME, dl2Name);
+
+        // get by name test
+        getTest(EntryType.DL, dl1, dl1Name);
+        getTest(EntryType.DL, dl2, dl2Name);
         
-        DistributionList dl2 = createDistributionList(dl2Name.aName(), dl2Name.uName());
-        assertNotNull(dl2);
-        try {
-            createDistributionList(dl2Name.uName(), dl2Name.uName());
-            fail();
-        } catch (ServiceException e) {
-            if (!e.getCode().equals(AccountServiceException.DISTRIBUTION_LIST_EXISTS))
-                fail();
-        }
-        
-        DistributionList dl1GetByUName = mProv.get(Provisioning.DistributionListBy.name, dl1Name.uName());
-        assertEquals(dl1.getId(), dl1GetByUName.getId());
-        DistributionList dl1GetByAName = mProv.get(Provisioning.DistributionListBy.name, dl1Name.aName());
-        assertEquals(dl1.getId(), dl1GetByAName.getId());
+        // rename test
+        renameTest(EntryType.DL, dl2, dl2RenamedName);
+        getTest(EntryType.DL, dl2, dl2RenamedName);
         
         /*
-         * test dl members
+         * member test
          */
         Account a1 = createAccount(acct1Name.uName(), acct1Name.uName());
         Account a2 = createAccount(acct2Name.uName(), acct2Name.uName());
