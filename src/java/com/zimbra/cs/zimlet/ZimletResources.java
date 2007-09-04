@@ -108,7 +108,7 @@ extends ZimbraServlet {
 
             // minimize javascript
             String text = writer.toString();
-            if (type.equals(T_JAVASCRIPT)) {
+            if (type.equals(T_JAVASCRIPT) && !debug) {
                 Context context = Context.enter();
                 context.setOptimizationLevel(-1);
                 Scriptable scriptable = context.initStandardObjects();
