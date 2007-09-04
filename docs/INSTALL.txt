@@ -155,3 +155,12 @@ Zimbra network you can get to this with http://kenny/public
 	run ZimbraServer\src\perl\zMTAHack.pl
 
 12. See jetty.txt for details on how to start/stop jetty server and how to debug zimbra server.
+
+Troubleshooting:
+
+1. Jetty service fails to start/stop throwing some exception:
+       When the system crashes or force powered off the ldap gets uncomfortable and locks its primary db
+       as well as the log files. 
+   Solution:    
+       You can  stop the ldap service. Then get into \opt\zimbra\openldap\var\openldap-data and remove
+       __*db.* and restart as usual.
