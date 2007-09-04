@@ -508,7 +508,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>name of folder to save sent mail in (deprecatedSince 5.0 in identity)</desc>
 </attr>
 
-<attr id="104" name="zimbraMailTrashLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="104" name="zimbraMailTrashLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable,accountInfo">
   <defaultCOSValue>30d</defaultCOSValue>
   <desc>
     Retention period of messages in the Trash folder.  0 means that all messages
@@ -518,7 +518,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="105" name="zimbraMailSpamLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="105" name="zimbraMailSpamLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable,accountInfo">
   <defaultCOSValue>30d</defaultCOSValue>
   <desc>
     Retention period of messages in the Junk folder.  0 means that all messages
@@ -528,7 +528,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="106" name="zimbraMailMessageLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="106" name="zimbraMailMessageLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable,accountInfo">
   <defaultCOSValue>0</defaultCOSValue>
   <desc>lifetime (nnnnn[hmsd]) of a mail message regardless of location</desc>
 </attr>
