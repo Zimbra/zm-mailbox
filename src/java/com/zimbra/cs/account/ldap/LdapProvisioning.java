@@ -1821,25 +1821,29 @@ public class LdapProvisioning extends Provisioning {
 
             if (dnChanged) {
                 LdapUtil.createEntry(ctxt, newDn, attributes, "createAccount");         
-
-                // MOVE OVER the account and all identities/sources/signatures etc. doesn't throw an exception, just logs
-                LdapUtil.moveChildren(ctxt, oldDn, newDn);
             }
             
-            // rename the account and all it's renamed aliases to the new name in all distribution lists
-            // doesn't throw exceptions, just logs
-            renameAddressesInAllDistributionLists(oldEmail, newName, replacedAliases);
-            
-            // MOVE OVER ALL aliases
-            // doesn't throw exceptions, just logs
-            if (domainChanged)
-                moveAliases(ctxt, replacedAliases, newDomain, null, oldDn, newDn, oldDomain, newDomain);
-            
-            // unbind old dn
-            if (dnChanged)
-                LdapUtil.unbindEntry(ctxt, oldDn);
-            else
-                modifyAttrs(acct, newAttrs);
+            try {
+                if (dnChanged)
+                    LdapUtil.moveChildren(ctxt, oldDn, newDn);
+                
+                // rename the account and all it's renamed aliases to the new name in all distribution lists
+                // doesn't throw exceptions, just logs
+                renameAddressesInAllDistributionLists(oldEmail, newName, replacedAliases);
+                
+                // MOVE OVER ALL aliases
+                // doesn't throw exceptions, just logs
+                if (domainChanged)
+                    moveAliases(ctxt, replacedAliases, newDomain, null, oldDn, newDn, oldDomain, newDomain);
+                
+                if (!dnChanged)
+                    modifyAttrs(acct, newAttrs);
+            } catch (ServiceException e) {
+                throw e;
+            } finally {
+                if (dnChanged)
+                    LdapUtil.unbindEntry(ctxt, oldDn);  // unbind old dn
+            }
             
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.ACCOUNT_EXISTS(newName);            
