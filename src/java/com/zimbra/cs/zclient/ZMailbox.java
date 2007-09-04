@@ -3381,9 +3381,11 @@ public class ZMailbox {
         phoneEl = response.getElement(VoiceConstants.E_PHONE);
         for (ZCallFeature feature : featureList) {
             String name = feature.getName();
-            Element element = phoneEl.getElement(name);
-            feature.fromElement(element);
-        }
+            Element element = phoneEl.getOptionalElement(name);
+			if (element != null) {
+				feature.fromElement(element);
+			}
+		}
     }
 
     public void saveCallFeatures(ZCallFeatures newFeatures) throws ServiceException {
