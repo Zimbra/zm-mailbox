@@ -80,7 +80,7 @@ public class SaveDocument extends WikiDocumentHandler {
 	        MimePart mp = Mime.getMimePart(mm, part);
 			doc.contents = ByteUtil.getContent(mp.getInputStream(), 0);
 			doc.name = Mime.getFilename(mp);
-			doc.contentType = mp.getContentType();
+			doc.contentType = Mime.getContentType(mp);
 		} catch (Exception e) {
 			throw ServiceException.FAILURE("cannot get part "+part+" from message "+msgid, e);
 		}
