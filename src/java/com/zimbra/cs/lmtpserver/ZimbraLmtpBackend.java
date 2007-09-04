@@ -320,6 +320,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                 ZimbraLog.addAccountNameToContext(account.getName());
                                 if (dedupe(pm, mbox)) {
                                     // message was already delivered to this mailbox
+                                    ZimbraLog.lmtp.info("Not delivering message with duplicate Message-ID %s", pm.getMessageID());
                                     msg = null;
                                 } else if (!DebugConfig.disableFilter) {
                                     msg = RuleManager.getInstance().applyRules(account, mbox, pm, pm.getRawData().length,
