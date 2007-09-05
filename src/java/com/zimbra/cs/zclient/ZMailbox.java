@@ -76,6 +76,7 @@ import com.zimbra.cs.zclient.event.ZModifyTagEvent;
 import com.zimbra.cs.zclient.event.ZRefreshEvent;
 import com.zimbra.cs.zclient.event.ZModifyTaskEvent;
 import com.zimbra.cs.zclient.event.ZCreateTaskEvent;
+import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemEvent;
 import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
@@ -546,12 +547,16 @@ public class ZMailbox {
                 event = new ZModifyTaskEvent(e);
             }
             if (event != null)
-            	for (ZEventHandler handler : mHandlers)
-            		handler.handleModify(event, this);
-        }
+				handleEvent(event);
+		}
     }
 
-    private List<ZFolder> parentCheck(List<ZFolder> list, ZFolder f, ZFolder parent) {
+	private void handleEvent(ZModifyEvent event) throws ServiceException {
+		for (ZEventHandler handler : mHandlers)
+			handler.handleModify(event, this);
+	}
+
+	private List<ZFolder> parentCheck(List<ZFolder> list, ZFolder f, ZFolder parent) {
         if (parent != null) {
             parent.addChild(f);
         } else {
@@ -3413,9 +3418,14 @@ public class ZMailbox {
         return doAction(voiceAction("move", phone, id, VoiceConstants.FID_TRASH));
     }
 
-    public ZActionResult markVoiceMailHeard(String phone, String id, boolean heard) throws ServiceException {
+	public ZActionResult markVoiceMailHeard(String phone, String idList, boolean heard) throws ServiceException {
         String op = heard ? "read" : "!read";
-        return doAction(voiceAction(op, phone, id, 0));
+		ZActionResult result = doAction(voiceAction(op, phone, idList, 0));
+		for (String id : sCOMMA.split(idList)) {
+			ZModifyVoiceMailItemEvent event = new ZModifyVoiceMailItemEvent(id, heard);
+			handleEvent(event);
+		}
+		return result;
     }
 
     private Element voiceAction(String op, String phone, String id, int folderId) {

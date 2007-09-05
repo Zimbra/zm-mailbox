@@ -29,6 +29,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.VoiceConstants;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
+import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemEvent;
 
 public class ZVoiceMailItemHit implements ZSearchHit {
 
@@ -103,7 +104,11 @@ public class ZVoiceMailItemHit implements ZSearchHit {
         return hasFlags() && mFlags.indexOf(VoiceConstants.FLAG_UNFORWARDABLE) != -1;
     }
 
-    public ZPhone getCaller() { return mCaller; }
+    public boolean isUnheard() {
+		return hasFlags() && mFlags.indexOf(ZMessage.Flag.unread.getFlagChar()) != -1;
+	}
+
+	public ZPhone getCaller() { return mCaller; }
 
     public String getDisplayCaller() { return mCaller.getDisplay(); }
 
@@ -114,8 +119,10 @@ public class ZVoiceMailItemHit implements ZSearchHit {
     public long getDuration() { return mDuration; }
 
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
-        // No-op.
-    }
+		if (event instanceof ZModifyVoiceMailItemEvent) {
+			setFlag(ZMessage.Flag.unread.getFlagChar(), !((ZModifyVoiceMailItemEvent) event).getIsHeard());
+		}
+	}
 
     public String serialize() {
         return  mId + "/" +
@@ -125,4 +132,13 @@ public class ZVoiceMailItemHit implements ZSearchHit {
                 mDuration + "/" +
                 mCaller.getName();
     }
+
+	private void setFlag(char flagChar, boolean on) {
+		if (on) {
+			mFlags += flagChar;
+		} else {
+			mFlags = mFlags.replace(Character.toString(flagChar), "");
+		}
+	}
+
 }
