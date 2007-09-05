@@ -2217,6 +2217,7 @@ public abstract class Provisioning {
     
     public static enum CacheEntryType {
         account,
+        config,
         cos,
         domain,
         server,

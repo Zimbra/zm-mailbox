@@ -4780,6 +4780,13 @@ public class LdapProvisioning extends Provisioning {
                 }
             }
             break;
+        /*    
+        case config:
+            // TODO
+            if (entries != null)
+                throw ServiceException.INVALID_REQUEST("cannot specify entry for flushing global config", null);
+            break;
+        */    
         case cos:
             cache = sCosCache;
             if (entries != null) {

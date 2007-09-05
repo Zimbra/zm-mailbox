@@ -194,7 +194,7 @@ public class ProvUtil implements DebugListener {
         DELETE_SIGNATURE("deleteSignature", "dsig", "{name@domain|id} {signature-name}", Category.ACCOUNT, 2, 2),
         DELETE_SERVER("deleteServer", "ds", "{name|id}", Category.SERVER, 1, 1),
         EXIT("exit", "quit", "", Category.MISC, 0, 0),
-        FLUSH_CACHE("flushCache", "fc", "{skin|locale|account|cos|domain|server|zimlet} [name1|id1 [name2|id2...]]", Category.MISC, 1, Integer.MAX_VALUE),
+        FLUSH_CACHE("flushCache", "fc", "{skin|locale|account|config|cos|domain|server|zimlet} [name1|id1 [name2|id2...]]", Category.MISC, 1, Integer.MAX_VALUE),
         GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa", "{domain|id} {name} {name|id|foreignPrincipal} {timestamp|0} {expires|0}", Category.MISC, 5, 5),
         GENERATE_DOMAIN_PRE_AUTH_KEY("generateDomainPreAuthKey", "gdpak", "{domain|id}", Category.MISC, 1, 1),
         GET_ACCOUNT("getAccount", "ga", "{name@domain|id} [attr1 [attr2...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
@@ -1684,7 +1684,7 @@ public class ProvUtil implements DebugListener {
         if (mProv instanceof SoapProvisioning) {
             SoapProvisioning sp = (SoapProvisioning)mProv;
             
-            // use this interface to accomadate skin and locale caches
+            // use this interface to accommodate skin and locale caches
             sp.flushCache(args[1], entries);
         } else {
             if (args[1].equals("skin") || args[1].equals("locale"))
