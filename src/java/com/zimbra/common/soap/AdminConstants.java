@@ -307,8 +307,7 @@ public class AdminConstants {
     public static final String A_ACTIVE_SESSIONS = "activeSessions";
     public static final String A_CREATED_DATE = "cd";
     public static final String A_LAST_ACCESSED_DATE = "ld";
-    public static final String A_NOTIFY = "notify";
-    
+
     public static final String E_ACCOUNT = "account";
     public static final String E_CALENDAR_RESOURCE = "calresource";
     public static final String E_AUTH_TOKEN = "authToken";
