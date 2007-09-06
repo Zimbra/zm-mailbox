@@ -312,6 +312,8 @@ public class UrlNamespace {
 			}
 			Mailbox.OperationContext octxt = ctxt.getOperationContext();
 
+			if (path.equals("/"))
+			    return mbox.getFolderByPath(octxt, "/");
 			if (id != null)
 				return mbox.getItemById(octxt, Integer.parseInt(id), MailItem.TYPE_UNKNOWN);
 

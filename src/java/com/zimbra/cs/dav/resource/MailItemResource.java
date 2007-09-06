@@ -81,6 +81,7 @@ public abstract class MailItemResource extends DavResource {
 	
 	private static final String CONFIG_KEY = "caldav";
 	private static final int PROP_LENGTH_LIMIT = 1024;
+    private static final String TEXT_PLAIN = "text/plain";
 	
 	public MailItemResource(DavContext ctxt, MailItem item) throws ServiceException {
 		this(ctxt, getItemPath(item), item);
@@ -284,6 +285,11 @@ public abstract class MailItemResource extends DavResource {
 		return null;
 	}
 	
+    public String getContentType(DavContext ctxt) {
+        if (isWebRequest(ctxt))
+            return TEXT_PLAIN;
+        return super.getContentType(ctxt);
+    }
 	protected InputStream getTextContent(DavContext ctxt) throws IOException {
 		StringBuilder buf = new StringBuilder();
 		buf.append("Request\n\n");

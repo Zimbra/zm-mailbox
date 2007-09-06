@@ -153,7 +153,7 @@ public abstract class DavResource {
 		return false;
 	}
 	
-	public String getContentType() {
+	public String getContentType(DavContext ctxt) {
 		ResourceProperty prop = getProperty(DavElements.E_GETCONTENTTYPE);
 		if (prop != null)
 			return prop.getStringValue();

@@ -110,6 +110,10 @@ public class DavServlet extends ZimbraServlet {
 				return;
 			ZimbraLog.addToContext(ZimbraLog.C_ANAME, authUser.getName());
 			ctxt = new DavContext(req, resp, authUser);
+            if (ctxt.getUser() == null) {
+                resp.sendRedirect(DAV_PATH + "/" + authUser.getName() + "/");
+                return;
+            }
 		} catch (ServiceException e) {
 			ZimbraLog.dav.error("error getting authenticated user", e);
 			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

@@ -67,10 +67,15 @@ public class DavContext {
 	public DavContext(HttpServletRequest req, HttpServletResponse resp, Account authUser) {
 		mReq = req;  mResp = resp;
 		mUri = req.getPathInfo();
-		int index = mUri.indexOf('/', 1);
-		if (index != -1) {
-			mUser = mUri.substring(1, index);
-			mPath = mUri.substring(index);
+		if (mUri != null && mUri.length() > 1) {
+		    int index = mUri.indexOf('/', 1);
+		    if (index != -1) {
+		        mUser = mUri.substring(1, index);
+		        mPath = mUri.substring(index);
+		    } else {
+                mUser = mUri.substring(1);
+                mPath = "/";
+		    }
 		}
 		mStatus = HttpServletResponse.SC_OK;
 		mAuthAccount = authUser;

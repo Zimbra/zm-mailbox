@@ -44,7 +44,9 @@ public class Get extends DavMethod {
 	public void handle(DavContext ctxt) throws DavException, IOException, ServiceException {
 		DavResource resource = ctxt.getRequestedResource();
 		HttpServletResponse resp = ctxt.getResponse();
-		resp.setContentType(resource.getContentType());
+		String contentType = resource.getContentType(ctxt);
+        if (contentType != null)
+            resp.setContentType(contentType);
 		
 		// in some cases getContentLength() returns an estimate, and the exact 
 		// content length is not known until DavResource.getContent() is called.
@@ -58,7 +60,7 @@ public class Get extends DavMethod {
 			return;
 		if (ZimbraLog.dav.isDebugEnabled()) {
 			ZimbraLog.dav.debug("GET "+ctxt.getUri());
-			if (resource.getContentType().startsWith("text"))
+			if (contentType != null && contentType.startsWith("text"))
 				ZimbraLog.dav.debug(new String(ByteUtil.getContent(resource.getContent(ctxt), 0), "UTF-8"));
 		}
 		ByteUtil.copy(resource.getContent(ctxt), true, ctxt.getResponse().getOutputStream(), false);
