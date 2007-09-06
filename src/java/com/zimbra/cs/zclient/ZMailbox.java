@@ -174,6 +174,8 @@ public class ZMailbox {
         private int mProxyPort;
         private String mProxyUser;
         private String mProxyPass;
+        private String mUserAgentName;
+        private String mUserAgentVersion;
         private int mTimeout = -1;
         private int mRetryCount;
         private SoapProtocol mResponseProtocol = SoapProtocol.Soap12;
@@ -245,6 +247,13 @@ public class ZMailbox {
         public String getUri() { return mUri; }
         public void setUri(String uri) { mUri = uri; }
 
+        public String getUserAgentName() { return mUserAgentName; }
+        public String getUserAgentVersion() { return mUserAgentVersion; }
+        public void setUserAgent(String name, String version) {
+        	mUserAgentName = name;
+        	mUserAgentVersion = version;
+        }
+        
         public int getTimeout() { return mTimeout; }
         public void setTimeout(int timeout) { mTimeout = timeout; }
 
@@ -458,6 +467,9 @@ public class ZMailbox {
         		options.getProxyUser(), options.getProxyPass());
         mTransport.setUserAgent("zclient", BuildInfo.VERSION);
         mTransport.setMaxNotifySeq(0);
+        if (options.getUserAgentName() != null && options.getUserAgentVersion() != null) {
+        	mTransport.setUserAgent(options.getUserAgentName(), options.getUserAgentVersion());
+        }
         if (options.getTimeout() > -1)
             mTransport.setTimeout(options.getTimeout());
         if (options.getRetryCount() > 0)
