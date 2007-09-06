@@ -74,10 +74,12 @@ public class VoiceConstants {
     public static final String E_PHONE         = "phone";
     public static final String E_CALLLOG       = "cl";
     public static final String E_CALLPARTY     = "cp";
+    public static final String E_STOREPRINCIPAL= "storeprincipal";
     public static final String E_VOICEMSG      = "vm";
     public static final String E_UPLOAD        = "upload";
  
     public static final String A_NAME          = "name";
+    public static final String A_ID            = "id";
     public static final String A_VMSG_DURATION = "du";
     public static final String A_PHONE         = "phone";
     public static final String A_PHONENUM      = "n";
