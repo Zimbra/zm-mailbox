@@ -63,10 +63,14 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -1569,8 +1573,15 @@ public class ProvUtil implements DebugListener {
                 }
             } catch (ServiceException e) {
                 Throwable cause = e.getCause();
+                String errText = "ERROR: " + e.getCode() + " (" + e.getMessage() + ")" + 
+                        (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")");
+
+                /*
                 System.err.println("ERROR: " + e.getCode() + " (" + e.getMessage() + ")" + 
                         (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")"));
+                */
+                doOutput(System.err, errText);
+                
                 if (mVerbose) e.printStackTrace(System.err);
             } catch (ArgException e) {
                     usage();
@@ -1578,6 +1589,19 @@ public class ProvUtil implements DebugListener {
         }
     }
 
+    private static void doOutput(PrintStream ps, String text) {
+        try {
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(ps, "UTF-8"));
+            writer.write(text+"\n");
+            writer.flush();
+        } catch (UnsupportedEncodingException e) {
+            ps.println(text);
+        } catch (IOException e) {
+            ps.println(text);
+        }
+        
+    }
+    
     public static void main(String args[]) throws IOException, ParseException {
         CliUtil.toolSetup();
         
@@ -1635,7 +1659,7 @@ public class ProvUtil implements DebugListener {
             if (args.length < 1) {
                 pu.initProvisioning();
                 InputStream is = cl.hasOption('f') ? new FileInputStream(cl.getOptionValue('f')) : System.in;
-                pu.interactive(new BufferedReader(new InputStreamReader(is)));
+                pu.interactive(new BufferedReader(new InputStreamReader(is, "UTF-8")));
             } else {
                 Command cmd = pu.lookupCommand(args[0]);
                 if (cmd == null)
@@ -1652,8 +1676,15 @@ public class ProvUtil implements DebugListener {
             }
         } catch (ServiceException e) {
             Throwable cause = e.getCause();
+            String errText = "ERROR: " + e.getCode() + " (" + e.getMessage() + ")" + 
+                    (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")");  
+            
+            /*
             System.err.println("ERROR: " + e.getCode() + " (" + e.getMessage() + ")" + 
                     (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")"));  
+            */
+            doOutput(System.err, errText);
+            
             if (pu.mVerbose) e.printStackTrace(System.err);
             System.exit(2);
         }
