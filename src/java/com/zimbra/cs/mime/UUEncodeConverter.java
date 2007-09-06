@@ -63,11 +63,11 @@ public class UUEncodeConverter extends MimeVisitor {
             boolean initial = text.startsWith("begin ");
             for (int location = 0; initial || (location = text.indexOf("\nbegin ", location)) != -1; initial = false, location++) {
                 // find the end of the uuencoded block
-                int end = text.indexOf("\nend");
+                int end = text.indexOf("\nend", location);
                 if (end != -1) {
                     try {
                         // parse the uuencoded content into a String
-                        int start = initial ? location: location + 1;
+                        int start = initial ? location : location + 1;
                         UUDecodedFile uu = new UUDecodedFile(text.substring(start, end + 4));
     
                         MimeBodyPart mbp = new MimeBodyPart();
