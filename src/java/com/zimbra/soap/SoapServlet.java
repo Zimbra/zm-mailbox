@@ -251,7 +251,7 @@ public class SoapServlet extends ZimbraServlet {
         
         byte[] soapBytes = envelope.toUTF8();
         if (ZimbraLog.soap.isDebugEnabled()) {
-            ZimbraLog.soap.debug("SOAP response: \n" + new String(soapBytes, "utf8"));
+            ZimbraLog.soap.debug("SOAP response: \n" + envelope.prettyPrint());
         }
         
         resp.setContentType(soapProto.getContentType());
