@@ -282,7 +282,7 @@ public abstract class Element {
      * Return the attribute value that is at the specified path, or null if
      * one could not be found
      * 
-     * @param xpath
+     * @param xpath an array of names to traverse in the element tree
      * @return
      */
     public String getPathAttribute(String[] xpath) {
@@ -296,7 +296,7 @@ public abstract class Element {
     /**
      * Return the first Element matching the specified path, or null if none was found
      * 
-     * @param xpath
+     * @param xpath an array of names to traverse in the element tree
      * @return
      */
     public Element getPathElement(String[] xpath) {
@@ -312,7 +312,7 @@ public abstract class Element {
      * Return the list of Elements matching the specified path, or null
      * if none were found.
      * 
-     * @param xpath
+     * @param xpath an array of names to traverse in the element tree
      * @return
      */
     public List<Element> getPathElementList(String[] xpath) {
@@ -332,7 +332,7 @@ public abstract class Element {
      * Set the attribute at the specified path, thowing an exception if the
      * parent Element does not exist.
      * 
-     * @param xpath
+     * @param xpath an array of names to traverse in the element tree
      * @param value
      * @throws ServiceException
      */

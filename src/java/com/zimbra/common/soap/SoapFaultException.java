@@ -25,8 +25,10 @@
 
 package com.zimbra.common.soap;
 
+import java.util.List;
+
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.ZimbraNamespace;
+import com.zimbra.common.util.StringUtil;
 
 public class SoapFaultException extends ServiceException {
 
@@ -94,6 +96,68 @@ public class SoapFaultException extends ServiceException {
                 return code.getText();
         }
         return UNKNOWN;
+    }
+    
+    /**
+     * Returns the error code.
+     */
+    public String getCode() {
+        if (mFault == null) {
+            return null;
+        }
+        String[] path = new String[] {
+            ZimbraNamespace.E_DETAIL.getName(),
+            ZimbraNamespace.E_ERROR.getName(),
+            ZimbraNamespace.E_CODE.getName()
+        };
+        Element code = mFault.getPathElement(path);
+        if (code == null) {
+            return null;
+        }
+        return code.getText();
+    }
+    
+    /**
+     * Returns the value for the given argument, or <tt>null</tt> if the
+     * argument could not be found.
+     */
+    public String getArgumentValue(String argumentName) {
+        if (mFault == null) {
+            return null;
+        }
+        String[] path = new String[] {
+            ZimbraNamespace.E_DETAIL.getName(),
+            ZimbraNamespace.E_ERROR.getName(),
+            ZimbraNamespace.E_ARGUMENT.getName()
+        };
+        List<Element> arguments = mFault.getPathElementList(path);
+        if (arguments == null) {
+            return null;
+        }
+        for (Element argument : arguments) {
+            String name = argument.getAttribute(ZimbraNamespace.A_NAME, null);
+            if (StringUtil.equal(name, argumentName)) {
+                return argument.getText();
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Returns the reason for the fault. 
+     */
+    public String getReason() {
+        if (mFault == null) {
+            return null;
+        }
+        String[] path = new String[] {
+            ZimbraNamespace.E_REASON.getName(),
+            ZimbraNamespace.E_TEXT.getName() };
+        Element text = mFault.getPathElement(path);
+        if (text == null) {
+            return null;
+        }
+        return text.getText();
     }
     
     /*
