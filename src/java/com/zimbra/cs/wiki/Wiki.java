@@ -334,6 +334,8 @@ public abstract class Wiki {
                 throw WikiServiceException.ERROR("mailbox not found for account " + mWikiAccount);
             try {
                 MailItem item = mbox.getItemByPath(ctxt.octxt, wikiWord, mFolderId);
+                if (!(item instanceof Document))
+                    throw WikiServiceException.NOT_WIKI_ITEM(wikiWord);
                 if (rev == -1)
                     return WikiPage.create((Document) item);
                 else
