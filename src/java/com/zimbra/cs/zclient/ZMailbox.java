@@ -283,6 +283,15 @@ public class ZMailbox {
         public void setAttrs(List<String> attrs) { mAttrs = attrs; }
     }
 
+	private static class VoiceStorePrincipal {
+		private String mId;
+		private String mName;
+		public VoiceStorePrincipal(String id, String name) {
+			mId = id;
+			mName = name;
+		}
+	}
+
     private String mAuthToken;
     private SoapHttpTransport mTransport;
     private NotifyPreference mNotifyPreference;
@@ -301,7 +310,8 @@ public class ZMailbox {
     private ZContactAutoCompleteCache mAutoCompleteCache;
     private List<ZPhoneAccount> mPhoneAccounts;
     private Map<String, ZPhoneAccount> mPhoneAccountMap;
-    private long mSize;
+	private VoiceStorePrincipal mVoiceStorePrincipal;
+	private long mSize;
 
     private List<ZEventHandler> mHandlers = new ArrayList<ZEventHandler>();
 
@@ -2323,7 +2333,13 @@ public class ZMailbox {
             if (cursor.getPreviousId() != null) cursorEl.addAttribute(MailConstants.A_ID, cursor.getPreviousId());
             if (cursor.getPreviousSortValue() != null) cursorEl.addAttribute(MailConstants.A_SORTVAL, cursor.getPreviousSortValue());
         }
-        return new ZSearchResult(invoke(req), nest, params.getTimeZone() != null ? params.getTimeZone() : getPrefs().getTimeZone());
+
+		if (params.getTypes().equals(ZSearchParams.TYPE_VOICE_MAIL) ||
+			params.getTypes().equals(ZSearchParams.TYPE_CALL)) {
+			setVoiceStorePrincipal(req);
+		}
+
+		return new ZSearchResult(invoke(req), nest, params.getTimeZone() != null ? params.getTimeZone() : getPrefs().getTimeZone());
     }
 
     /**
@@ -3389,31 +3405,42 @@ public class ZMailbox {
 
         invoke(req);
     }
-    
-    public synchronized List<ZPhoneAccount> getAllPhoneAccounts() throws ServiceException {
+
+	public synchronized List<ZPhoneAccount> getAllPhoneAccounts() throws ServiceException {
         if (mPhoneAccounts == null) {
             mPhoneAccounts = new ArrayList<ZPhoneAccount>();
             mPhoneAccountMap = new HashMap<String, ZPhoneAccount>(); 
             XMLElement req = new XMLElement(VoiceConstants.GET_VOICE_INFO_REQUEST);
             Element response = invoke(req);
-            List<Element> phoneElements = response.listElements(VoiceConstants.E_PHONE);
+			Element storePrincipalEl = response.getElement(VoiceConstants.E_STOREPRINCIPAL);
+			String id = storePrincipalEl.getAttribute(VoiceConstants.A_ID);
+			String name = storePrincipalEl.getAttribute(VoiceConstants.A_NAME);
+			mVoiceStorePrincipal = new VoiceStorePrincipal(id, name);
+			List<Element> phoneElements = response.listElements(VoiceConstants.E_PHONE);
             for (Element element : phoneElements) {
                 ZPhoneAccount account = new ZPhoneAccount(element, this);
                 mPhoneAccounts.add(account);
                 mPhoneAccountMap.put(account.getPhone().getName(), account);
             }
-        }
+		}
         return mPhoneAccounts;
     }
 
-    public ZPhoneAccount getPhoneAccount(String name) throws ServiceException {
+	private void setVoiceStorePrincipal(XMLElement req) {
+		Element el = req.addElement(VoiceConstants.E_STOREPRINCIPAL);
+		el.addAttribute(MailConstants.A_ID, mVoiceStorePrincipal.mId);
+		el.addAttribute(MailConstants.A_NAME, mVoiceStorePrincipal.mName);
+	}
+
+	public ZPhoneAccount getPhoneAccount(String name) throws ServiceException {
         getAllPhoneAccounts(); // Make sure they're loaded.
         return mPhoneAccountMap.get(name);
     }
 
     public String uploadVoiceMail(String phone, String id) throws ServiceException {
         XMLElement req = new XMLElement(VoiceConstants.UPLOAD_VOICE_MAIL_REQUEST);
-        Element actionEl = req.addElement(VoiceConstants.E_VOICEMSG);
+		setVoiceStorePrincipal(req);
+		Element actionEl = req.addElement(VoiceConstants.E_VOICEMSG);
         actionEl.addAttribute(MailConstants.A_ID, id);
         actionEl.addAttribute(VoiceConstants.A_PHONE, phone);
         Element response = invoke(req);
@@ -3422,6 +3449,7 @@ public class ZMailbox {
 
     public void loadCallFeatures(ZCallFeatures features) throws ServiceException {
         XMLElement req = new XMLElement(VoiceConstants.GET_VOICE_FEATURES_REQUEST);
+		setVoiceStorePrincipal(req);
         Element phoneEl = req.addElement(VoiceConstants.E_PHONE);
         phoneEl.addAttribute(MailConstants.A_NAME, features.getPhone().getName());
         Collection<ZCallFeature> featureList = features.getSubscribedFeatures();
@@ -3443,6 +3471,7 @@ public class ZMailbox {
     public void saveCallFeatures(ZCallFeatures newFeatures) throws ServiceException {
         // Build up the soap request.
         XMLElement req = new XMLElement(VoiceConstants.MODIFY_VOICE_FEATURES_REQUEST);
+		setVoiceStorePrincipal(req);
         Element phoneEl = req.addElement(VoiceConstants.E_PHONE);
         phoneEl.addAttribute(MailConstants.A_NAME, newFeatures.getPhone().getName());
         Collection<ZCallFeature> list = newFeatures.getAllFeatures();
@@ -3477,6 +3506,7 @@ public class ZMailbox {
 
     private Element voiceAction(String op, String phone, String id, int folderId) {
         XMLElement req = new XMLElement(VoiceConstants.VOICE_MSG_ACTION_REQUEST);
+		setVoiceStorePrincipal(req);
         Element actionEl = req.addElement(MailConstants.E_ACTION);
         actionEl.addAttribute(MailConstants.A_ID, id);
         actionEl.addAttribute(MailConstants.A_OPERATION, op);
