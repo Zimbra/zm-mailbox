@@ -480,8 +480,14 @@ public class FileUploadServlet extends ZimbraServlet {
 
     public static void sendResponse(HttpServletResponse resp, int status, String fmt, String reqId, List<Upload> uploads, List<FileItem> items)
     throws IOException {
-        boolean raw = ContentServlet.FORMAT_RAW.equals(fmt);
-        boolean extended = "extended".equals(fmt);
+        boolean raw = false, extended = false;
+        if (fmt != null && !fmt.trim().equals("")) {
+            // parse out the comma-separated "fmt" options
+            for (String foption : fmt.toLowerCase().split(",")) {
+                raw      |= ContentServlet.FORMAT_RAW.equals(foption);
+                extended |= "extended".equals(foption);
+            }
+        }
 
         StringBuffer results = new StringBuffer();
         results.append(status).append(",'").append(reqId != null ? reqId : "null").append('\'');

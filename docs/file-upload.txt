@@ -46,6 +46,10 @@ The extended output looks like this:
 
 	<html><head></head><body onload="window.parent._uploadManager.loaded(200,'client_token',[{"aid":"server_token","filename":"image.jpeg","ct":"image/jpeg"}]);"></body></html>
 
+You can combine these options (fmt=raw,extended) and get the structured JS data without the surrounding HTML.
+The raw,extended output looks like this:
+
+    200,'client_token',[{"aid":"server_token","filename":"image.jpeg","ct":"image/jpeg"}]
 
 
 To see the different responses, cut and paste this html and give it a shot:
