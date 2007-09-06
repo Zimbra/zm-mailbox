@@ -727,7 +727,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         // [SASL-IR]          draft-siemborski-imap-sasl-initial-response-06: IMAP Extension for SASL Initial Client Response
         // [UIDPLUS]          RFC 4315: Internet Message Access Protocol (IMAP) - UIDPLUS extension
         // [UNSELECT]         RFC 3691: IMAP UNSELECT command
-        // [WITHIN]           draft-ietf-lemonade-search-within-03: WITHIN Search extension to the IMAP Protocol
+        // [WITHIN]           RFC 5032: WITHIN Search Extension to the IMAP Protocol
         // [X-DRAFT-I05-SEARCHRES]  draft-melnikov-imap-search-res-05: IMAP extension for referencing the last SEARCH result
 
         boolean authenticated = mCredentials != null;
