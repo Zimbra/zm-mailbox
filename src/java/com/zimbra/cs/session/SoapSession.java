@@ -44,13 +44,11 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
-
 
 /**
  * @author tim
@@ -64,8 +62,6 @@ public class SoapSession extends Session {
     private String mGroupBy  = "";
     private String mSortBy   = "";
     private ZimbraQueryResults mQueryResults;
-
-    private boolean mNotify = true;
 
     private int  mRecentMessages;
     private long mPreviousAccess = -1;
@@ -93,16 +89,14 @@ public class SoapSession extends Session {
         super(authenticatedId, requestedId, Session.Type.SOAP);
     }
 
-    @Override
-    public Session register() throws ServiceException {
+    @Override public Session register() throws ServiceException {
         super.register();
         mRecentMessages = mMailbox.getRecentMessageCount();
         mPreviousAccess = mMailbox.getLastSoapAccessTime();
         return this;
     }
 
-    @Override
-    public Session unregister() {
+    @Override public Session unregister() {
         // when the session goes away, record the timestamp of the last write op to the database
         if (mLastWrite != -1 && mMailbox != null) {
             try {
@@ -116,19 +110,16 @@ public class SoapSession extends Session {
         return super.unregister();
     }
 
-    @Override
-    protected boolean isMailboxListener() {
+    @Override protected boolean isMailboxListener() {
         return true;
     }
 
-    @Override
-    protected boolean isRegisteredInCache() {
+    @Override protected boolean isRegisteredInCache() {
         return true;
     }
     
 
-    @Override
-    protected long getSessionIdleLifetime() {
+    @Override protected long getSessionIdleLifetime() {
         return SOAP_SESSION_TIMEOUT_MSEC;
     }
 
@@ -154,42 +145,18 @@ public class SoapSession extends Session {
         return mLastWrite == -1 ? mPreviousAccess : mLastWrite;
     }
 
-    @Override
-    public void doEncodeState(Element parent) {
-        parent.addAttribute(AdminConstants.A_NOTIFY, mNotify);
-        if (mPushChannel != null) {
+    @Override public void doEncodeState(Element parent) {
+        if (mPushChannel != null)
             parent.addAttribute("push", true);
-        }
     }
 
-    /** Clears all cached notifications and stops recording future notifications
-     *  for this session. */
-    public void haltNotifications() {
-        synchronized (this) {
-            mChanges.clear();
-            mNotify = false;
-        }
-    }
-
-    /** Resumes caching notifications for this session. */
-    public void resumeNotifications() {
-        synchronized (this) {
-            mNotify = true;
-        }
-    }
-
-    @Override
-    public void notifyIM(IMNotification imn) {
-        if (!mNotify)
-            return;
-
+    @Override public void notifyIM(IMNotification imn) {
         PendingModifications pms = new PendingModifications();
         pms.addIMNotification(imn);
         notifyPendingChanges(pms, -1, null);
     }
 
-    @Override
-    protected boolean isIMListener() {
+    @Override protected boolean isIMListener() {
         return true;
 //        try {
 //            return Provisioning.getInstance().get(AccountBy.id, this.getTargetAccountId()).getBooleanAttr(Provisioning.A_zimbraPrefIMAutoLogin, false);
@@ -234,7 +201,7 @@ public class SoapSession extends Session {
                     mPushChannel = null;
                 }
                 
-                if (!mNotify || mMailbox == null) {
+                if (mMailbox == null) {
                     sc.closePushChannel();
                     return RegisterNotificationResult.NO_NOTIFY;
                 }
@@ -265,9 +232,8 @@ public class SoapSession extends Session {
      *  *All* changes are currently cached, regardless of the client's state/views.
      * @param changeId  The sync-token change id of the change.
      * @param pms       A set of new change notifications from our Mailbox. */
-    @Override
-    public void notifyPendingChanges(PendingModifications pms, int changeId, Session source) {
-        if (!pms.hasNotifications() || !mNotify || mMailbox == null)
+    @Override public void notifyPendingChanges(PendingModifications pms, int changeId, Session source) {
+        if (!pms.hasNotifications() || mMailbox == null)
             return;
 
         if (source == this && mAuthenticatedAccountId.equalsIgnoreCase(mTargetAccountId)) {
@@ -339,7 +305,7 @@ public class SoapSession extends Session {
      * @param zsc   The SOAP request's encapsulated context */
     public void putRefresh(Element ctxt, ZimbraSoapContext zsc) throws ServiceException {
         synchronized (this) {
-            if (!mNotify || mMailbox == null)
+            if (mMailbox == null)
                 return;
             mSentChanges.clear();
         }
@@ -442,7 +408,7 @@ public class SoapSession extends Session {
                     ZimbraLog.session.warn("Notification Change List abnormally long, misbehaving client.");
                     mSentChanges.clear();
                 }
-                
+
                 if (lastSequence <= 0) {
                     // if the client didn't send a valid "last sequence number", *don't* keep old changes around
                     mSentChanges.clear();
@@ -455,31 +421,29 @@ public class SoapSession extends Session {
                         // assert(pm.getSeqNo() > lastKnownSeqno);
                     }
                 }
-                
-                if (mNotify) {
-                    if (mChanges.hasNotifications()) {
-                        assert(mChanges.getSequence() >= 1);
-                        int newSeqNo = mChanges.getSequence() + 1;
-                        mSentChanges.add(mChanges);
-                        mChanges = new PendingModifications(newSeqNo); 
-                    }
 
-                    // drop out if notify is off or if there is nothing to send
-                    if (mSentChanges.isEmpty())
-                        return ctxt;
-                
-                    // mChanges must be empty at this point (everything moved into the mSentChanges list)
-                    assert(!mChanges.hasNotifications());
-                
-                    // send all the old changes
-                    for (PendingModifications pms : mSentChanges)
-                        putPendingModifications(pms, ctxt, zsc, mMailbox, explicitAcct);
+                if (mChanges.hasNotifications()) {
+                    assert(mChanges.getSequence() >= 1);
+                    int newSeqNo = mChanges.getSequence() + 1;
+                    mSentChanges.add(mChanges);
+                    mChanges = new PendingModifications(newSeqNo); 
                 }
+
+                // drop out if notify is off or if there is nothing to send
+                if (mSentChanges.isEmpty())
+                    return ctxt;
+
+                // mChanges must be empty at this point (everything moved into the mSentChanges list)
+                assert(!mChanges.hasNotifications());
+
+                // send all the old changes
+                for (PendingModifications pms : mSentChanges)
+                    putPendingModifications(pms, ctxt, zsc, mMailbox, explicitAcct);
             }
         }
         return ctxt;
     }
-    
+
     /**
      * Write a single instance of the PendingModifications structure into the 
      * passed-in <notify> block 

@@ -111,7 +111,6 @@ public class ZimbraSoapContext {
 
     private List<SessionInfo> mSessionInfo = new ArrayList<SessionInfo>();
     private boolean mSessionSuppressed; // don't create a new session for this request
-    private boolean mHaltNotifications; // if true, then no notifications are sent to this context
     private boolean mUnqualifiedItemIds;
     private boolean mWaitForNotifications;
     private boolean mCanceledWaitForNotifications = false;
@@ -122,8 +121,8 @@ public class ZimbraSoapContext {
     private int         mHopCount;
     private boolean     mMountpointTraversed;
 
-    private String      mUserAgent;
-    private String      mRequestIP;
+    private String mUserAgent;
+    private String mRequestIP;
 
     //zdsync: for parsing locally constructed soap requests
     public ZimbraSoapContext(AuthToken authToken, String accountId, SoapProtocol reqProtocol, SoapProtocol respProtocol) throws ServiceException {
@@ -143,22 +142,22 @@ public class ZimbraSoapContext {
     
     /** Creates a <code>ZimbraSoapContext</code> from another existing
      *  <code>ZimbraSoapContext</code> for use in proxying. */
-    public ZimbraSoapContext(ZimbraSoapContext lc, String targetAccountId) throws ServiceException {
-        mRawAuthToken = lc.mRawAuthToken;
-        mAuthToken = lc.mAuthToken;
-        mAuthTokenAccountId = lc.mAuthTokenAccountId;
+    public ZimbraSoapContext(ZimbraSoapContext zsc, String targetAccountId) throws ServiceException {
+        mRawAuthToken = zsc.mRawAuthToken;
+        mAuthToken = zsc.mAuthToken;
+        mAuthTokenAccountId = zsc.mAuthTokenAccountId;
         mRequestedAccountId = targetAccountId;
 
-        mRequestProtocol = lc.mRequestProtocol;
-        mResponseProtocol = lc.mResponseProtocol;
+        mRequestProtocol = zsc.mRequestProtocol;
+        mResponseProtocol = zsc.mResponseProtocol;
 
         mSessionSuppressed = true;
-        mUnqualifiedItemIds = lc.mUnqualifiedItemIds;
+        mUnqualifiedItemIds = zsc.mUnqualifiedItemIds;
 
-        mHopCount = lc.mHopCount + 1;
+        mHopCount = zsc.mHopCount + 1;
         if (mHopCount > MAX_HOP_COUNT)
             throw ServiceException.TOO_MANY_HOPS();
-        mMountpointTraversed = lc.mMountpointTraversed;
+        mMountpointTraversed = zsc.mMountpointTraversed;
     }
 
     /** Creates a <code>ZimbraSoapContext</code> from the <tt>&lt;context></tt>
@@ -272,10 +271,10 @@ public class ZimbraSoapContext {
         // record session-related info and validate any specified sessions
         //   (don't create new sessions yet)
         if (ctxt != null) {
-            mHaltNotifications = ctxt.getOptionalElement(HeaderConstants.E_NO_NOTIFY) != null;
-            mSessionSuppressed = ctxt.getOptionalElement(HeaderConstants.E_NO_SESSION) != null;
+            mSessionSuppressed  = ctxt.getOptionalElement(HeaderConstants.E_NO_NOTIFY) != null;
+            mSessionSuppressed |= ctxt.getOptionalElement(HeaderConstants.E_NO_SESSION) != null;
             // if sessions are enabled, create a SessionInfo to encapsulate (will fetch the Session object during the request)
-            if (!mHaltNotifications && !mSessionSuppressed) {
+            if (!mSessionSuppressed) {
                 for (Element session : ctxt.listElements(HeaderConstants.E_SESSION_ID)) {
                     String sessionId = null;
                     if ("".equals(sessionId = session.getTextTrim()))
@@ -357,7 +356,7 @@ public class ZimbraSoapContext {
     }
 
     public boolean isNotificationEnabled() {
-        return !mHaltNotifications && !mSessionSuppressed;
+        return !mSessionSuppressed;
     }
 
     /** Returns a list of the {@link SessionInfo} items associated with this
