@@ -96,7 +96,7 @@ public class MailServiceException extends ServiceException {
     public static final String SEND_PARTIAL_ADDRESS_FAILURE = "mail.SEND_PARTIAL_ADDRESS_FAILURE";
     public static final String SEND_FAILURE = "mail.SEND_FAILURE";
     public static final String TOO_MANY_QUERY_TERMS_EXPANDED = "mail.TOO_MANY_QUERY_TERMS_EXPANDED";
-
+    public static final String MESSAGE_TOO_BIG = "mail.MESSAGE_TOO_BIG";
 
     public static final String INVALID_COMMIT_ID = "mail.INVALID_COMMIT_ID";
     
@@ -444,4 +444,8 @@ public class MailServiceException extends ServiceException {
         return new MailServiceException("CommitId " + commitId + " not found in redo logs", INVALID_COMMIT_ID, SENDERS_FAULT);
     }
     
+    public static MailServiceException MESSAGE_TOO_BIG(long maxSize) {
+        Argument arg = new Argument("maxSize", maxSize, Argument.Type.NUM);
+        return new MailServiceException("Message exceeded allowed size", MESSAGE_TOO_BIG, false, arg);
+    }
 }

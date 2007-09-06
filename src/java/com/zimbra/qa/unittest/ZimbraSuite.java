@@ -82,6 +82,7 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestImapImport.class);
         sClasses.add(TestImapImport.TearDown.class);
         sClasses.add(TestNotification.class);
+        sClasses.add(TestMaxMessageSize.class);
     };
     
     /**

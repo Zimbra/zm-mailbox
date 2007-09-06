@@ -1500,6 +1500,10 @@ public class ZMailbox {
 
     /* ------------------------------------------------- */
 
+    /**
+     * Uploads files to <tt>FileUploadServlet</tt>.
+     * @return the attachment id
+     */
     public String uploadAttachments(File[] files, int msTimeout) throws ServiceException {
         Part[] parts = new Part[files.length];
         for (int i = 0; i < files.length; i++) {
@@ -1515,13 +1519,44 @@ public class ZMailbox {
         return uploadAttachments(parts, msTimeout);
     }
 
+    /**
+     * Uploads a byte array to <tt>FileUploadServlet</tt>.
+     * @return the attachment id
+     */
     public String uploadAttachment(String name, byte[] content, String contentType, int msTimeout) throws ServiceException {
         FilePart part = new FilePart(name, new ByteArrayPartSource(name, content));
         part.setContentType(contentType);
 
         return uploadAttachments(new Part[] { part }, msTimeout);
     }
+    
+    /**
+     * Uploads multiple byte arrays to <tt>FileUploadServlet</tt>.
+     * @param attachments the attachments.  The key to the <tt>Map</tt> is the attachment
+     * name and the value is the content. 
+     * @return the attachment id
+     */
+    public String uploadAttachments(Map<String, byte[]> attachments, int msTimeout) throws ServiceException {
+        if (attachments == null || attachments.size() == 0) {
+            return null;
+        }
+        Part[] parts = new Part[attachments.size()];
+        int i = 0;
+        for (String name : attachments.keySet()) {
+            byte[] content = attachments.get(name);
+            FilePart part = new FilePart(name, new ByteArrayPartSource(name, content));
+            String contentType = URLConnection.getFileNameMap().getContentTypeFor(name);
+            part.setContentType(contentType);
+            parts[i++] = part;
+        }
 
+        return uploadAttachments(parts, msTimeout);
+    }
+
+    /**
+     * Uploads HTTP post parts to <tt>FileUploadServlet</tt>.
+     * @return the attachment id
+     */
     public String uploadAttachments(Part[] parts, int msTimeout) throws ServiceException {
         String aid = null;
 

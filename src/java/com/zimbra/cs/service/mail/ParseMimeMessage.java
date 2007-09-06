@@ -32,6 +32,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ExceptionToString;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.Fragment;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -85,6 +86,7 @@ import javax.mail.internet.MimePart;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.MailConstants;
 
 
@@ -198,6 +200,27 @@ public class ParseMimeMessage {
         Mailbox mbox;
         boolean use2231;
         String defaultCharset;
+        long size;
+        long maxSize;
+        
+        ParseMessageContext() {
+            try {
+                Config config = Provisioning.getInstance().getConfig();
+                maxSize = config.getIntAttr(Provisioning.A_zimbraMtaMaxMessageSize, -1);
+            } catch (ServiceException e) {
+                ZimbraLog.mailbox.warn("Unable to determine max message size.  Disabling limit check.", e);
+            }
+            if (maxSize < 0) {
+                maxSize = Long.MAX_VALUE;
+            }
+        }
+        
+        void incrementSize(long numBytes) throws MailServiceException {
+            size += numBytes;
+            if (size > maxSize) {
+                throw MailServiceException.MESSAGE_TOO_BIG(maxSize);
+            }
+        }
     }
 
     /**
@@ -258,6 +281,7 @@ public class ParseMimeMessage {
 
                 // goes into the "content" subpart
                 InviteParserResult result = inviteParser.parse(zsc, octxt, mbox.getAccount(), inviteElem);
+                
                 if (partElem != null && result.mCal != null) {
                     // If textual content is provided and there's an invite,
                     // set the text as DESCRIPTION of the iCalendar.  This helps
@@ -397,7 +421,7 @@ public class ParseMimeMessage {
                 }
             } else if (eName.equals(MailConstants.E_MSG)) {
                 int messageId = (int) elem.getAttributeLong(MailConstants.A_ID);
-                attachMessage(mmp, ctxt.mbox.getMessageById(ctxt.octxt, messageId), contentID);
+                attachMessage(mmp, ctxt.mbox.getMessageById(ctxt.octxt, messageId), contentID, ctxt);
             } else if (eName.equals(MailConstants.E_CONTACT)) {
                 int contactId = (int) elem.getAttributeLong(MailConstants.A_ID);
                 attachContact(mmp, ctxt.mbox.getContactById(ctxt.octxt, contactId), contentID, ctxt);
@@ -458,6 +482,7 @@ public class ParseMimeMessage {
         // or a multipart/alternative created just above....either way we are safe to stick
         // the client's nice and simple body right here
         String data = elem.getAttribute(MailConstants.E_CONTENT, "");
+        ctxt.incrementSize(data.getBytes().length);
 
         // if the user has specified an alternative charset, make sure it exists and can encode the content
         String charset = StringUtil.checkCharset(data, ctxt.defaultCharset);
@@ -474,8 +499,10 @@ public class ParseMimeMessage {
         }
 
         if (alternatives != null) {
-            for (int i = 0; i < alternatives.length; i++)
+            for (int i = 0; i < alternatives.length; i++) {
+                ctxt.incrementSize(alternatives[i].getSize());
                 mmp.addBodyPart(alternatives[i]);
+            }
         }
     }
 
@@ -503,8 +530,10 @@ public class ParseMimeMessage {
 
             // finally, add the alternatives if there are any...
             if (alternatives != null) {
-                for (int i = 0; i < alternatives.length; i++)
+                for (int i = 0; i < alternatives.length; i++) {
+                    ctxt.incrementSize(alternatives[i].getSize());
                     mmpNew.addBodyPart(alternatives[i]);
+                }
             }
         } else {
             // create a multipart/alternative to hold all the client's struct + the alternatives
@@ -522,8 +551,10 @@ public class ParseMimeMessage {
 
             // add all the alternatives
             if (alternatives != null) {
-                for (int i = 0; i < alternatives.length; i++)
+                for (int i = 0; i < alternatives.length; i++) {
+                    ctxt.incrementSize(alternatives[i].getSize());
                     mmpNew.addBodyPart(alternatives[i]);
+                }
             }
         }
     }
@@ -537,6 +568,9 @@ public class ParseMimeMessage {
             Upload up = FileUploadServlet.fetchUpload(ctxt.zsc.getAuthtokenAccountId(), uploadIds[i], ctxt.zsc.getRawAuthToken());
             if (up == null)
                 throw MailServiceException.NO_SUCH_UPLOAD(uploadIds[i]);
+            
+            // Make sure we haven't exceeded the max size
+            ctxt.incrementSize((long) (up.getSize() * 1.33));
             uploads.add(up);
 
             // scan upload for viruses
@@ -561,8 +595,9 @@ public class ParseMimeMessage {
         return uploads;
     }
 
-    private static void attachMessage(MimeMultipart mmp, com.zimbra.cs.mailbox.Message message, String contentID)
+    private static void attachMessage(MimeMultipart mmp, com.zimbra.cs.mailbox.Message message, String contentID, ParseMessageContext ctxt)
     throws MessagingException, ServiceException {
+        ctxt.incrementSize(message.getSize());
         MailboxBlob blob = message.getBlob();
 
         MimeBodyPart mbp = new MimeBodyPart();
@@ -574,7 +609,8 @@ public class ParseMimeMessage {
     }
 
     private static void attachContact(MimeMultipart mmp, com.zimbra.cs.mailbox.Contact contact, String contentID, ParseMessageContext ctxt)
-    throws MessagingException {
+    throws MessagingException, MailServiceException {
+        ctxt.incrementSize(contact.getSize());
         VCard vcf = VCard.formatContact(contact);
         String filename = vcf.fn + ".vcf";
         String charset = StringUtil.checkCharset(vcf.formatted, ctxt.defaultCharset);
@@ -624,6 +660,7 @@ public class ParseMimeMessage {
         MimePart mp = ContentServlet.getMimePart(message, part);
         if (mp == null)
             throw MailServiceException.NO_SUCH_PART(part);
+        ctxt.incrementSize((long) (mp.getSize() * 1.33));
         String filename = Mime.getFilename(mp);
 
         MimeBodyPart mbp = new MimeBodyPart();
@@ -645,7 +682,8 @@ public class ParseMimeMessage {
     }
 
     private static void attachPart(MimeMultipart mmp, MimePart mp, String contentID, ParseMessageContext ctxt)
-    throws MessagingException {
+    throws MessagingException, MailServiceException {
+        ctxt.incrementSize((long) (mp.getSize() * 1.33));
         String filename = Mime.getFilename(mp);
 
         MimeBodyPart mbp = new MimeBodyPart();

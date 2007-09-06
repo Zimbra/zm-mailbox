@@ -117,6 +117,13 @@ public class FileUploadServlet extends ZimbraServlet {
         public InputStream getInputStream() throws IOException {
             return file.getInputStream();
         }
+        
+        public long getSize() {
+            if (this.file == null) {
+                return 0;
+            }
+            return this.file.getSize();
+        }
 
         boolean accessedAfter(long checkpoint)  { return time > checkpoint; }
 
