@@ -2,6 +2,7 @@ package com.zimbra.cs.zimlet;
 
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.common.util.ZimbraLog;
+import com.yahoo.platform.yui.compressor.CssCompressor;
 
 import java.io.*;
 import java.util.*;
@@ -29,8 +30,6 @@ extends ZimbraServlet {
     private static final String T_CSS = "css";
     private static final String T_JAVASCRIPT = "javascript";
     private static final String T_PLAIN = "plain";
-
-    private static final boolean DEBUG = false;
 
     private static final Map<String,String> TYPES = new HashMap<String,String>();
 
@@ -70,11 +69,11 @@ extends ZimbraServlet {
 
         String cacheId = getCacheId(req, type);
 
-        if (DEBUG) {
-            System.err.println("DEBUG: uri="+uri);
-            System.err.println("DEBUG: cacheId="+cacheId);
-            System.err.println("DEBUG: contentType="+contentType);
-            System.err.println("DEBUG: type="+type);
+        if (ZimbraLog.zimlet.isDebugEnabled()) {
+            ZimbraLog.zimlet.debug("DEBUG: uri="+uri);
+            ZimbraLog.zimlet.debug("DEBUG: cacheId="+cacheId);
+            ZimbraLog.zimlet.debug("DEBUG: contentType="+contentType);
+            ZimbraLog.zimlet.debug("DEBUG: type="+type);
         }
 
         // generate buffer
@@ -103,27 +102,36 @@ extends ZimbraServlet {
             }
 
             // zimlet resources
-            if (DEBUG) System.err.println("DEBUG: generating buffer");
+            if (ZimbraLog.zimlet.isDebugEnabled()) ZimbraLog.zimlet.debug("DEBUG: generating buffer");
             generate(req, type, printer);
 
-            // minimize javascript
             String text = writer.toString();
+
+            // minimize css
+            if (type.equals(T_CSS) && !debug) {
+                CssCompressor compressor = new CssCompressor(new StringReader(text));
+                StringWriter out = new StringWriter();
+                // Break lines every 2K characters to make it easier to read
+                compressor.compress(out, 2048);
+                text = out.toString();
+            }
+
+            // minimize javascript
             if (type.equals(T_JAVASCRIPT) && !debug) {
                 Context context = Context.enter();
                 context.setOptimizationLevel(-1);
                 Scriptable scriptable = context.initStandardObjects();
                 Reader reader = new StringReader(text);
                 String script = null;
-                String sourceName = uri;
                 int lineNum = 0;
                 Object securityDomain = null;
 
                 String mintext = org.mozilla.javascript.tools.shell.Main.compressScript(
                     context, scriptable, reader,
-                    script, sourceName, lineNum, securityDomain
+                    script, uri, lineNum, securityDomain
                 );
                 if (mintext == null) {
-                    System.err.println("unable to minimize zimlet JS source");
+                    ZimbraLog.zimlet.debug("unable to minimize zimlet JS source");
                 }
                 else {
                     text = mintext;
@@ -146,7 +154,7 @@ extends ZimbraServlet {
             }
         }
         else {
-            if (DEBUG) System.err.println("DEBUG: using previous buffer");
+            if (ZimbraLog.zimlet.isDebugEnabled()) ZimbraLog.zimlet.debug("DEBUG: using previous buffer");
         }
 
         // write buffer
@@ -163,8 +171,8 @@ extends ZimbraServlet {
         }
         catch (IllegalStateException e) {
             // ignore -- thrown if called from including JSP
-            System.err.println("zimletres: "+cacheId);
-            System.err.println("zimletres: "+e.getMessage());
+            ZimbraLog.zimlet.debug("zimletres: "+cacheId);
+            ZimbraLog.zimlet.debug("zimletres: "+e.getMessage());
         }
 
         try {
@@ -174,7 +182,7 @@ extends ZimbraServlet {
             out.flush();
         }
         catch (IllegalStateException e) {
-            System.err.println("!!! illegal state: "+e.getMessage());
+            ZimbraLog.zimlet.debug("!!! illegal state: "+e.getMessage());
             // use writer if called from including JSP
             PrintWriter out = resp.getWriter();
             out.print(buffer);
@@ -206,8 +214,8 @@ extends ZimbraServlet {
             out.println(commentStart);
             out.print(commentContinue);
             out.print("File: ");
-            // NOTE: Hide base directory but show which file is being included
-            out.println(filename.replaceAll("^.*?/zimlet/", ""));
+            // NOTE: Show entire path for easy debugging, comments are stripped in prod mode
+            out.println(filename);
             out.println(commentEnd);
             out.println();
 
@@ -217,7 +225,7 @@ extends ZimbraServlet {
             }
             else {
                 out.print(commentStart);
-                out.print("Error: file doesn't exist");
+                out.print("Error: file doesn't exist " + filename);
                 out.println(commentEnd);
             }
             out.println();
