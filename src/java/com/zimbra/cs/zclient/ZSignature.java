@@ -1,8 +1,12 @@
 package com.zimbra.cs.zclient;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.Provisioning;
 
 public class ZSignature implements Comparable {
 
@@ -41,7 +45,15 @@ public class ZSignature implements Comparable {
     }
 
     public String getValue() { return mValue; }
-
+    
+    public Map<String, Object> getAttrs() {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraSignatureId, mId);
+        attrs.put(Provisioning.A_zimbraSignatureName, mName);
+        attrs.put(Provisioning.A_zimbraPrefMailSignature, mValue);
+        return attrs;
+    }
+    
     public Element toElement(Element parent) {
         Element sig = parent.addElement(AccountConstants.E_SIGNATURE);
         sig.addAttribute(AccountConstants.A_NAME, mName);
