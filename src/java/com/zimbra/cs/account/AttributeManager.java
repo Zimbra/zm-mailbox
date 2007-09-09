@@ -556,7 +556,7 @@ public class AttributeManager {
             Object value = attrs.get(name);
             if (name.charAt(0) == '-' || name.charAt(0) == '+') name = name.substring(1);
             AttributeInfo info = mAttrs.get(name.toLowerCase());
-            if (info != null) {
+            if (info != null && value != null) {
                 info.checkValue(value, checkImmutable);
                 if (allowCallback && info.getCallback() != null)
                     info.getCallback().preModify(context, name, value, attrs, entry, isCreate);
