@@ -839,7 +839,7 @@ public abstract class CalendarItem extends MailItem {
                 // part, the RECURRENCE-ID need to be adjusted by the diff of
                 // old and new recurrence DTSTART.
                 RecurId rid = cur.getRecurId();
-                if (rid != null && rid.getDt() != null) {
+                if (rid != null && rid.getDt() != null && oldDtStart != null) {
                     ParsedDateTime ridDt = (ParsedDateTime) rid.getDt().clone();
                     ICalTimeZone oldTz = oldDtStart.getTimeZone();
                     if (oldTz != null) {
