@@ -226,9 +226,23 @@ public class ParseMailboxID
         }
     }
     
+    protected void initFromAccount(Account account, String idStr, boolean forceRemote) throws ServiceException, IllegalArgumentException {
+        mHostName = account.getAttr(Provisioning.A_zimbraMailHost);
+        mInitialString = idStr;             
+    	if (!forceRemote &&  Provisioning.onLocalServer(account)) {
+    		ZimbraLog.misc.info("Account %s is local", account.getId());
+            mIsLocal = true;
+            mMailbox = MailboxManager.getInstance().getMailboxByAccountId(account.getId());
+            mMailboxId = mMailbox.getId();
+    		ZimbraLog.misc.info("Account id %s, mailbox id %s", account.getId(),mMailbox.getId());
+        } else {
+        	ZimbraLog.misc.info("Account %s is not local", account.getId());
+        }
+    }
+    
+    
     protected ParseMailboxID(String idStr, boolean forceRemote) throws ServiceException, IllegalArgumentException {
-        mInitialString = idStr;
-        
+           
         Account acct = null;  
         if (idStr.indexOf('@') >= 0) {
             // account
@@ -237,7 +251,7 @@ public class ParseMailboxID
                 throw AccountServiceException.NO_SUCH_ACCOUNT(idStr);
             }
             
-            this.initFromAccount(acct,forceRemote);
+            this.initFromAccount(acct,idStr,forceRemote);
             
         } else if (idStr.indexOf('/') >= 0) {
             /* /server/mailboxid */
@@ -281,7 +295,7 @@ public class ParseMailboxID
             if (acct == null)
                 throw AccountServiceException.NO_SUCH_ACCOUNT(idStr);
 
-            this.initFromAccount(acct,forceRemote);
+            this.initFromAccount(acct,idStr,forceRemote);
             
         }  else {
             if (idStr.equals("*")) {
