@@ -380,7 +380,7 @@ class LuceneQueryOperation extends QueryOperation
 
     public String toString()
     {
-        return "LUCENE(" + mQuery.toString() + ")";
+        return "LUCENE(" + mQuery.toString() + (mHasSpamTrashSetting ? " <ANYWHERE>" : "") + ")";
     }
 
     private LuceneQueryOperation cloneInternal() throws CloneNotSupportedException {

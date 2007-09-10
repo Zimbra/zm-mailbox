@@ -182,7 +182,10 @@ class DBQueryOperation extends QueryOperation
      * @see com.zimbra.cs.index.QueryOperation#hasSpamTrashSetting()
      */
     boolean hasSpamTrashSetting() {
-        return mConstraints.hasSpamTrashSetting();
+        if (mLuceneOp != null && mLuceneOp.hasSpamTrashSetting())
+            return true;
+        else
+            return mConstraints.hasSpamTrashSetting();
     }
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.QueryOperation#forceHasSpamTrashSetting()
