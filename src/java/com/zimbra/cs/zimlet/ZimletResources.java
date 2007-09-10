@@ -111,8 +111,7 @@ extends ZimbraServlet {
             if (type.equals(T_CSS) && !debug) {
                 CssCompressor compressor = new CssCompressor(new StringReader(text));
                 StringWriter out = new StringWriter();
-                // Break lines every 2K characters to make it easier to read
-                compressor.compress(out, 2048);
+                compressor.compress(out, 0);
                 text = out.toString();
             }
 
