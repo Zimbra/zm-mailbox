@@ -57,7 +57,10 @@ public class IMModifyChat extends IMDocumentHandler {
         synchronized(lock) {
             IMPersona persona = super.getRequestedPersona(zsc, context, lock);
             
-            IMChat chat = persona.getChat(threadId);
+            IMChat chat = null;
+            
+            if (persona != null)
+                persona.getChat(threadId);
             
             if (chat == null) {
                 response.addAttribute(IMConstants.A_ERROR, "not_found");
