@@ -109,10 +109,10 @@ extends ZimbraServlet {
 
             // minimize css
             if (type.equals(T_CSS) && !debug) {
-                CssCompressor compressor = new CssCompressor(new StringReader(text));
+/*                CssCompressor compressor = new CssCompressor(new StringReader(text));
                 StringWriter out = new StringWriter();
                 compressor.compress(out, 0);
-                text = out.toString();
+                text = out.toString();*/
             }
 
             // minimize javascript
