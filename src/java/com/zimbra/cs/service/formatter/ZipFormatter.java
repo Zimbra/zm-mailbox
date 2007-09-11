@@ -207,8 +207,7 @@ public class ZipFormatter extends Formatter {
             // add ZIP entry to output stream
             out.putNextEntry(new ZipEntry(getZipEntryName(null, partname, extension, context, usedNames)));
             try {
-                InputStream is = mp.getInputStream();
-                ByteUtil.copy(is, true, out, false);
+                ByteUtil.copy(mp.getInputStream(), true, out, false);
             } finally {
                 out.closeEntry();
             }

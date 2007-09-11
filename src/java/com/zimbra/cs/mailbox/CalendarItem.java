@@ -75,6 +75,7 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -1822,7 +1823,7 @@ public abstract class CalendarItem extends MailItem {
         try {
             is = getRawMessage();
             mm = new MimeMessage(JMSession.getSession(), is);
-            is.close();
+            ByteUtil.closeStream(is);
 
             try {
                 for (Class visitor : MimeVisitor.getConverters())
@@ -1833,14 +1834,14 @@ public abstract class CalendarItem extends MailItem {
                     "MIME converter failed for message " + getId(), e);
                 is = getRawMessage();
                 mm = new MimeMessage(JMSession.getSession(), is);
-                is.close();
+                ByteUtil.closeStream(is);
             }
             
             return mm;
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("IOException while getting MimeMessage for item " + mId, e);
         } catch (MessagingException e) {
             throw ServiceException.FAILURE("MessagingException while getting MimeMessage for item " + mId, e);
+        } finally {
+            ByteUtil.closeStream(is);
         }
     }
     
@@ -1879,7 +1880,7 @@ public abstract class CalendarItem extends MailItem {
         try {
             is = getRawMessage();
             mm = new MimeMessage(JMSession.getSession(), is);
-            is.close();
+            ByteUtil.closeStream(is);
 
             try {
                 for (Class visitor : MimeVisitor.getConverters())
@@ -1889,7 +1890,7 @@ public abstract class CalendarItem extends MailItem {
                 ZimbraLog.mailbox.warn("MIME converter failed for message " + getId(), e);
                 is = getRawMessage();
                 mm = new MimeMessage(JMSession.getSession(), is);
-                is.close();
+                ByteUtil.closeStream(is);
             }
             
             // it'll be multipart/digest
@@ -1910,6 +1911,8 @@ public abstract class CalendarItem extends MailItem {
             throw ServiceException.FAILURE("IOException while getting MimeMessage for item " + mId, e);
         } catch (MessagingException e) {
             throw ServiceException.FAILURE("MessagingException while getting MimeMessage for item " + mId, e);
+        } finally {
+            ByteUtil.closeStream(is);
         }
     }
 

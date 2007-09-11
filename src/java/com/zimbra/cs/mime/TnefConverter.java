@@ -26,6 +26,7 @@
 package com.zimbra.cs.mime;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,6 +38,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 import net.freeutils.tnef.TNEFInputStream;
@@ -174,12 +176,15 @@ public class TnefConverter extends MimeVisitor {
         MimeMessage converted = null;
         
         // convert TNEF to a MimeMessage and remove it from the parent
+        InputStream is = null;
         try {
-            TNEFInputStream in = new TNEFInputStream(bp.getInputStream());
-            converted = TNEFMime.convert(JMSession.getSession(), in);
+            TNEFInputStream tnefis = new TNEFInputStream(is = bp.getInputStream());
+            converted = TNEFMime.convert(JMSession.getSession(), tnefis);
         } catch (Throwable t) {
             ZimbraLog.extensions.warn("Conversion failed.  TNEF attachment will not be expanded.", t);
             return null;
+        } finally {
+            ByteUtil.closeStream(is);
         }
 
         MimeMultipart convertedMulti = (MimeMultipart) converted.getContent();

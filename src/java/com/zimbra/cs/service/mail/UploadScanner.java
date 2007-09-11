@@ -33,6 +33,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.zimbra.cs.service.FileUploadServlet.Upload;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 public abstract class UploadScanner {
@@ -83,11 +84,7 @@ public abstract class UploadScanner {
     		try {
     			result = scanner.accept(is, info); 
     		} finally {
-    			try {
-    				is.close();
-    			} catch (IOException ioe) {
-    				ZimbraLog.misc.warn("exception closing scanned input stream", ioe);
-    			}
+                ByteUtil.closeStream(is);
     		}
 			if (result == REJECT || result == ERROR) {
 				// Fail on the first scanner that says it was bad,

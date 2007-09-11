@@ -56,6 +56,8 @@ import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.protocol.Protocol;
+
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.CliUtil;
@@ -70,8 +72,6 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.mail.ItemAction;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.*;
 
 public class SpamExtract {
@@ -323,7 +323,7 @@ public class SpamExtract {
             is = gm.getResponseBodyAsStream();
             mm = new MimeMessage(mJMSession, is);
         } finally {
-            is.close();
+            ByteUtil.closeStream(is);
         }
         
         if (raw) {

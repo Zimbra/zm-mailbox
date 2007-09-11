@@ -65,6 +65,7 @@ import com.zimbra.cs.mime.MimeCompoundHeader.*;
 import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 
 public class ImapMessage implements Comparable<ImapMessage> {
     static class ImapMessageSet extends TreeSet<ImapMessage> {
@@ -172,15 +173,15 @@ public class ImapMessage implements Comparable<ImapMessage> {
         if (item instanceof Message)
             return ((Message) item).getMimeMessage(false);
 
+        InputStream is = null;
         try {
-            InputStream is = raw != null ? new ByteArrayInputStream(raw) : new ByteArrayInputStream(getContent(item));
+            is = raw != null ? new ByteArrayInputStream(raw) : new ByteArrayInputStream(getContent(item));
             MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
-            is.close();
             return mm;
         } catch (MessagingException e) {
             throw ServiceException.FAILURE("error creating MimeMessage for " + MailItem.getNameForType(item.getType()) + ' ' + item.getId(), e);
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("error closing stream for " + MailItem.getNameForType(item.getType()) + ' ' + item.getId(), e);
+        } finally {
+            ByteUtil.closeStream(is);
         }
     }
 
@@ -504,6 +505,8 @@ public class ImapMessage implements Comparable<ImapMessage> {
             return 0;
         } catch (IOException e) {
             return 0;
+        } finally {
+            ByteUtil.closeStream(is);
         }
     }
 

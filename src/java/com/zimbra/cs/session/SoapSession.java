@@ -67,6 +67,7 @@ public class SoapSession extends Session {
     private long mPreviousAccess = -1;
     private long mLastWrite      = -1;
 
+    private boolean mForceRefresh;
     private List<PendingModifications> mSentChanges = new LinkedList<PendingModifications>();
     private PendingModifications mChanges = new PendingModifications(1);
 
@@ -145,10 +146,12 @@ public class SoapSession extends Session {
         return mLastWrite == -1 ? mPreviousAccess : mLastWrite;
     }
 
+
     @Override public void doEncodeState(Element parent) {
         if (mPushChannel != null)
             parent.addAttribute("push", true);
     }
+
 
     @Override public void notifyIM(IMNotification imn) {
         PendingModifications pms = new PendingModifications();
@@ -257,22 +260,26 @@ public class SoapSession extends Session {
         }
 
         try {
+            // update the set of notifications not yet sent to the client
+            cacheNotifications(pms);
+            // if we're in a hanging no-op, alert the client that there are changes
         	notifyPushChannel(pms);
+            // FIXME: this query result cache purge seems a little aggressive
         	clearCachedQueryResults();
         } catch (ServiceException e) {
             ZimbraLog.session.warn("ServiceException in notifyPendingChanges ", e);
         }
     }
-    
+
+    private synchronized void cacheNotifications(PendingModifications pms) {
+        
+    }
+
     private void notifyPushChannel(PendingModifications pms) throws ServiceException {
         // must lock the Mailbox before locking the Session to avoid deadlock
         //   because ToXML functions can now call back into the Mailbox
         synchronized (mMailbox) {
             synchronized (this) {
-                // XXX: should constrain to folders, tags, and stuff relevant to the current query??
-            	if (pms != null)
-            		mChanges.add(pms);
-                
                 if (mPushChannel != null) {
                     mPushChannel.notificationsReady();
                     if (pms != null)
@@ -281,13 +288,18 @@ public class SoapSession extends Session {
             }
         }
     }
-    
+
     public void forcePush() {
     	try {
     		notifyPushChannel(null);
         } catch (ServiceException e) {
             ZimbraLog.session.warn("ServiceException in forcePush ", e);
         }
+    }
+
+
+    public boolean requiresRefresh() {
+        return mForceRefresh;
     }
 
     private static final String A_ID = "id";

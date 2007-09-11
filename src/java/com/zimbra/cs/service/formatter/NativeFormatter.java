@@ -181,13 +181,17 @@ public class NativeFormatter extends Formatter {
     }
     
     private void handleConversion(Context ctxt, InputStream is, String filename, String ct, String digest) throws IOException, ServletException {
-        ctxt.req.setAttribute(ATTR_INPUTSTREAM, is);
-        ctxt.req.setAttribute(ATTR_MSGDIGEST, digest);
-        ctxt.req.setAttribute(ATTR_FILENAME, filename);
-        ctxt.req.setAttribute(ATTR_CONTENTTYPE, ct);
-        ctxt.req.setAttribute(ATTR_CONTENTURL, ctxt.req.getRequestURL().toString());
-        RequestDispatcher dispatcher = ctxt.req.getRequestDispatcher(CONVERSION_PATH);
-        dispatcher.forward(ctxt.req, ctxt.resp);
+        try {
+            ctxt.req.setAttribute(ATTR_INPUTSTREAM, is);
+            ctxt.req.setAttribute(ATTR_MSGDIGEST, digest);
+            ctxt.req.setAttribute(ATTR_FILENAME, filename);
+            ctxt.req.setAttribute(ATTR_CONTENTTYPE, ct);
+            ctxt.req.setAttribute(ATTR_CONTENTURL, ctxt.req.getRequestURL().toString());
+            RequestDispatcher dispatcher = ctxt.req.getRequestDispatcher(CONVERSION_PATH);
+            dispatcher.forward(ctxt.req, ctxt.resp);
+        } finally {
+            ByteUtil.closeStream(is);
+        }
     }
     
     public static MimePart getMimePart(CalendarItem calItem, String part) throws IOException, MessagingException, ServiceException {
@@ -202,22 +206,19 @@ public class NativeFormatter extends Formatter {
         sendbackOriginalDoc(mp.getInputStream(), contentType, Mime.getFilename(mp), mp.getDescription(), req, resp);
     }
 
-    public static void sendbackOriginalDoc(InputStream is,
-                                           String contentType,
-                                           String filename,
-                                           String desc,
-                                           HttpServletRequest req,
-                                           HttpServletResponse resp)
+    public static void sendbackOriginalDoc(InputStream is, String contentType, String filename, String desc,
+                                           HttpServletRequest req, HttpServletResponse resp)
     throws IOException {
-        if (filename == null)
-            filename = "unknown";
         String disp = req.getParameter(UserServlet.QP_DISP);
-        disp = (disp == null || disp.startsWith("i") ) ? Part.INLINE : Part.ATTACHMENT;
-        String cd = disp + "; filename=" + HttpUtil.encodeFilename(req, filename);
+        disp = (disp == null || disp.toLowerCase().startsWith("i") ) ? Part.INLINE : Part.ATTACHMENT;
+        String cd = disp + "; filename=" + HttpUtil.encodeFilename(req, filename == null ? "unknown" : filename);
         resp.addHeader("Content-Disposition", cd);
+
         if (desc != null)
             resp.addHeader("Content-Description", desc);
+
         resp.setContentType(contentType);
+
         ByteUtil.copy(is, true, resp.getOutputStream(), false);
     }
 

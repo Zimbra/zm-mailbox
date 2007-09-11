@@ -1923,10 +1923,9 @@ public class ZMailbox {
         } catch (IOException e) {
             throw ZClientException.IO_ERROR(e.getMessage(), e);
         } finally {
-            if (is != null)
-                try { is.close(); } catch (IOException e) { }
-            if (closeOs && os != null)
-                try { os.close(); } catch (IOException e) { }
+            ByteUtil.closeStream(is);
+            if (closeOs)
+                ByteUtil.closeStream(os);
             if (get != null)
                 get.releaseConnection();
         }
@@ -1968,8 +1967,10 @@ public class ZMailbox {
         } catch (IOException e) {
             throw ZClientException.IO_ERROR(e.getMessage(), e);
         } finally {
-            if (is != null && closeIs) try { is.close(); } catch (IOException e) {}
-            if (post != null) post.releaseConnection();
+            if (closeIs)
+                ByteUtil.closeStream(is);
+            if (post != null)
+                post.releaseConnection();
         }
     }
 

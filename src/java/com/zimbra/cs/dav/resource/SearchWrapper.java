@@ -24,7 +24,6 @@
  */
 package com.zimbra.cs.dav.resource;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,7 +37,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.dav.DavContext;
-import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.SearchParams;
@@ -122,7 +120,7 @@ public class SearchWrapper extends PhantomResource {
 	}
 	
 	@Override
-	public InputStream getContent(DavContext ctxt) throws IOException, DavException {
+	public InputStream getContent(DavContext ctxt) {
 		return null;
 	}
 
@@ -132,7 +130,7 @@ public class SearchWrapper extends PhantomResource {
 	}
 	
 	@Override
-	public Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
+	public Collection<DavResource> getChildren(DavContext ctxt) {
 		ArrayList<DavResource> children = new ArrayList<DavResource>();
 		String user = ctxt.getUser();
 		Provisioning prov = Provisioning.getInstance();

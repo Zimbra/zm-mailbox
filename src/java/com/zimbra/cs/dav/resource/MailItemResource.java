@@ -120,7 +120,7 @@ public abstract class MailItemResource extends DavResource {
 		return true;
 	}
 	
-	public String getEtag() {
+	@Override public String getEtag() {
 		return mEtag;
 	}
 	
@@ -215,7 +215,8 @@ public abstract class MailItemResource extends DavResource {
 	 * Properties in the parameter 'set' are added to the existing properties.
 	 * Properties in 'remove' are removed.
 	 */
-	public void patchProperties(DavContext ctxt, java.util.Collection<Element> set, java.util.Collection<QName> remove) throws DavException, IOException {
+	@Override
+    public void patchProperties(DavContext ctxt, java.util.Collection<Element> set, java.util.Collection<QName> remove) throws DavException, IOException {
 		for (QName n : remove)
 				mDeadProps.remove(n);
 		for (Element e : set)
@@ -271,25 +272,26 @@ public abstract class MailItemResource extends DavResource {
 		}
 		return false;
 	}
-	
-	public boolean hasContent(DavContext ctxt) {
+
+    @Override public boolean hasContent(DavContext ctxt) {
 		if (isWebRequest(ctxt))
 			return true;
 		return super.hasContent(ctxt);
 	}
-	
-	@Override
-	public InputStream getContent(DavContext ctxt) throws IOException, DavException {
+
+    @SuppressWarnings("unused")
+    @Override public InputStream getContent(DavContext ctxt) throws IOException, DavException {
 		if (isWebRequest(ctxt))
 			return getTextContent(ctxt);
 		return null;
 	}
-	
-    public String getContentType(DavContext ctxt) {
+
+    @Override public String getContentType(DavContext ctxt) {
         if (isWebRequest(ctxt))
             return TEXT_PLAIN;
         return super.getContentType(ctxt);
     }
+
 	protected InputStream getTextContent(DavContext ctxt) throws IOException {
 		StringBuilder buf = new StringBuilder();
 		buf.append("Request\n\n");

@@ -37,6 +37,7 @@ import java.util.List;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.SharedInputStream;
 
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -399,7 +400,7 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
             InputStream is = StoreManager.getInstance().getContent(src);
             MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
             if (!(is instanceof SharedInputStream)) {
-                is.close();
+                ByteUtil.closeStream(is);
             }
             pm = new ParsedMessage(mm, mReceivedDate, mbox.attachmentsIndexingEnabled());
         } else { // mMsgBodyType == MSGBODY_INLINE
@@ -412,8 +413,9 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
             if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                 mLog.info("Message " + mMsgId + " is already in mailbox " + mboxId);
                 return;
-            } else
+            } else {
                 throw e;
+            }
         }
     }
 }

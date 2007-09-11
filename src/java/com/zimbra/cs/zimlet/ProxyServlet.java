@@ -140,8 +140,7 @@ public class ProxyServlet extends ZimbraServlet {
             }
             return baos.toByteArray();
         } finally {
-            if (baos != null)
-                baos.close();
+            ByteUtil.closeStream(baos);
         }
     }
 

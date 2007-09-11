@@ -34,6 +34,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
@@ -70,7 +71,7 @@ public class ExecUtil {
             else
                 return null;
         } finally {
-            is.close();
+            ByteUtil.closeStream(is);
         }
     }
 

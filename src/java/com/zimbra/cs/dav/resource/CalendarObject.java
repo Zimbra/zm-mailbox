@@ -34,7 +34,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
-import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.caldav.Filter;
 import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -146,7 +145,7 @@ public class CalendarObject extends MailItemResource {
 	}
 	
 	@Override
-	public InputStream getContent(DavContext ctxt) throws IOException, DavException {
+	public InputStream getContent(DavContext ctxt) throws IOException {
 		return new ByteArrayInputStream(getVcalendar(ctxt, null).getBytes());
 	}
 

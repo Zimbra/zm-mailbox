@@ -63,6 +63,8 @@ import javax.mail.internet.ParseException;
 
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.net.QCodec;
+
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
@@ -143,8 +145,7 @@ public class Mime {
 
         public void setSession(Session s)  { session = s; }
 
-        @Override
-        protected void updateHeaders() throws MessagingException {
+        @Override protected void updateHeaders() throws MessagingException {
             String msgid = getMessageID();
             super.updateHeaders();
             if (msgid != null)
@@ -256,7 +257,7 @@ public class Mime {
     /** Returns whether the given "boundary" string occurs within the first
      *  {@link #MAX_PREAMBLE_LENGTH} bytes of the {@link MimePart}'s content.*/
     private static boolean findStartBoundary(MimePart mp, String boundary) throws IOException {
-        InputStream is;
+        InputStream is = null;
         try {
             is = getRawInputStream(mp);
         } catch (MessagingException me) {
@@ -265,29 +266,33 @@ public class Mime {
         final int blength = boundary == null ? 0 : boundary.length();
         int bindex = 0, dashes = 0;
         boolean failed = false;
-        for (int i = 0; i < MAX_PREAMBLE_LENGTH; i++) {
-            int c = is.read();
-            if (c == -1) {
-                return false;
-            } else if (c == '\r' || c == '\n') {
-                if (!failed && (boundary == null ? bindex > 0 : bindex == blength))
-                    return true;
-                bindex = dashes = 0;  failed = false;
-            } else if (failed) {
-                continue;
-            } else if (dashes != 2) {
-                if (c == '-')
-                    dashes++;
-                else
-                    failed = true;
-            } else if (boundary == null) {
-                if (Character.isWhitespace(c))
-                    failed = true;
-                bindex++;
-            } else {
-                if (bindex >= blength || c != boundary.charAt(bindex++))
-                    failed = true;
+        try {
+            for (int i = 0; i < MAX_PREAMBLE_LENGTH; i++) {
+                int c = is.read();
+                if (c == -1) {
+                    return false;
+                } else if (c == '\r' || c == '\n') {
+                    if (!failed && (boundary == null ? bindex > 0 : bindex == blength))
+                        return true;
+                    bindex = dashes = 0;  failed = false;
+                } else if (failed) {
+                    continue;
+                } else if (dashes != 2) {
+                    if (c == '-')
+                        dashes++;
+                    else
+                        failed = true;
+                } else if (boundary == null) {
+                    if (Character.isWhitespace(c))
+                        failed = true;
+                    bindex++;
+                } else {
+                    if (bindex >= blength || c != boundary.charAt(bindex++))
+                        failed = true;
+                }
             }
+        } finally {
+            ByteUtil.closeStream(is);
         }
         return false;
     }
@@ -329,7 +334,7 @@ public class Mime {
             super(mp, ctype);
         }
 
-        public InputStream getInputStream() throws IOException {
+        @Override public InputStream getInputStream() throws IOException {
             return new RawContentInputStream(super.getInputStream());
         }
 
@@ -363,13 +368,11 @@ public class Mime {
                 mEpilogue[boundary.length + 4] = mEpilogue[boundary.length + 5] = '-';
             }
 
-            @Override
-            public int available() throws IOException {
+            @Override public int available() throws IOException {
                 return mPrologue.length - mPrologueIndex + mInputStream.available() + mEpilogue.length - mEpilogueIndex;
             }
 
-            @Override
-            public int read() throws IOException {
+            @Override public int read() throws IOException {
                 int c;
                 if (mInPrologue) {
                     c = mPrologue[mPrologueIndex++];
@@ -397,8 +400,7 @@ public class Mime {
                 return c;
             }
 
-            @Override
-            public int read(byte[] b, int off, int len) throws IOException {
+            @Override public int read(byte[] b, int off, int len) throws IOException {
                 int remaining = len;
                 if (remaining == 0)
                     return len;
@@ -442,11 +444,15 @@ public class Mime {
      *  proper MIME format and failure to support RFC 2184. */
     public static Object getMessageContent(MimePart message822Part) throws IOException, MessagingException {
         Object content = message822Part.getContent();
-        if (content instanceof InputStream)
+        if (content instanceof InputStream) {
             try {
                 // handle unparsed content due to miscapitalization of content-type value
                 content = new FixedMimeMessage(JMSession.getSession(), (InputStream) content);
-            } catch (Exception e) {}
+            } catch (Exception e) {
+            } finally {
+                ByteUtil.closeStream((InputStream) content);
+            }
+        }
         return content;
     }
 
@@ -460,7 +466,10 @@ public class Mime {
             try {
                 // handle unparsed content due to miscapitalization of content-type value
                 content = new MimeMultipart(new InputStreamDataSource((InputStream) content, contentType));
-            } catch (Exception e) {}
+            } catch (Exception e) {
+            } finally {
+                ByteUtil.closeStream((InputStream) content);
+            }
         }
         if (content instanceof MimeMultipart)
             content = validateMultipart((MimeMultipart) content, multipartPart);
@@ -708,11 +717,14 @@ public class Mime {
 	 */
 	public static String decodeText(InputStream input, String contentType) throws IOException {
         StringBuilder buffer = new StringBuilder();
-    	Reader reader = getTextReader(input, contentType);
-        char [] cbuff = new char[MAX_DECODE_BUFFER];
-        int num;
-        while ( (num = reader.read(cbuff, 0, cbuff.length)) != -1) {
-            buffer.append(cbuff, 0, num);
+        try {
+        	Reader reader = getTextReader(input, contentType);
+            char [] cbuff = new char[MAX_DECODE_BUFFER];
+            int num;
+            while ( (num = reader.read(cbuff, 0, cbuff.length)) != -1)
+                buffer.append(cbuff, 0, num);
+        } finally {
+            ByteUtil.closeStream(input);
         }
         return buffer.toString();
 	}

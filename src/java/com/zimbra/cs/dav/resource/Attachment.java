@@ -25,7 +25,6 @@
 package com.zimbra.cs.dav.resource;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
@@ -136,7 +135,7 @@ public class Attachment extends PhantomResource {
 	}
 	
 	@Override
-	public InputStream getContent(DavContext ctxt) throws IOException, DavException {
+	public InputStream getContent(DavContext ctxt) {
 		return new ByteArrayInputStream(mContent);
 	}
 

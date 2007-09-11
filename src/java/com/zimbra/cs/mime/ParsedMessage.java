@@ -686,14 +686,19 @@ public class ParsedMessage {
         if (!ignoreCalendar && miCalendar == null && ctype.equals(Mime.CT_TEXT_CALENDAR)) {
             if (handler.isIndexingEnabled())
                 ZimbraLog.index.warn("TextCalendarHandler not correctly installed");
+
+            InputStream is = null;
             try {
                 String charset = mpi.getContentTypeParameter(Mime.P_CHARSET);
                 if (charset == null || charset.trim().equals(""))
                     charset = Mime.P_CHARSET_DEFAULT;
-                Reader reader = new InputStreamReader(mpi.getMimePart().getInputStream(), charset);
+
+                Reader reader = new InputStreamReader(is = mpi.getMimePart().getInputStream(), charset);
                 miCalendar = ZCalendarBuilder.build(reader);
             } catch (IOException ioe) {
                 ZimbraLog.index.warn("error reading text/calendar mime part", ioe);
+            } finally {
+                ByteUtil.closeStream(is);
             }
         }
     }

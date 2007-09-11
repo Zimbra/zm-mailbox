@@ -96,10 +96,9 @@ public class MessageCache {
         }
     }
 
-    /** Returns an {@link InputStream} of the raw, uncompressed content of
-     *  the item.  For messages, this is the body as received via SMTP; no
-     *  postprocessing has been performed to make opaque attachments (e.g.
-     *  TNEF) visible.
+    /** Returns the raw, uncompressed content of the item.  For messages,
+     *  this is the body as received via SMTP; no postprocessing has been
+     *  performed to make opaque attachments (e.g. TNEF) visible.
      * 
      * @throws ServiceException when the message file does not exist.
      * @see #getMimeMessage()
@@ -242,10 +241,8 @@ public class MessageCache {
             } catch (MessagingException e) {
                 throw ServiceException.FAILURE("MessagingException while creating MimeMessage for item " + item.getId(), e);
             } finally {
-            	if (is != null && !(is instanceof SharedInputStream))
-            		try {
-            			is.close();
-            		} catch (IOException e) {}
+            	if (!(is instanceof SharedInputStream))
+            		ByteUtil.closeStream(is);
             }
         } else {
             if (ZimbraLog.cache.isDebugEnabled())

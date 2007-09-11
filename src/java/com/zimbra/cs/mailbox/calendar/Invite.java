@@ -230,7 +230,7 @@ public class Invite {
             int sequenceNoOrZero,
             String partStat,
             boolean rsvp,
-            boolean sentByMe) throws ServiceException
+            boolean sentByMe)
     {
         return new Invite(
                 itemType,
@@ -335,7 +335,7 @@ public class Invite {
     public static Metadata encodeMetadata(Invite inv) {
         Metadata meta = new Metadata();
 
-        meta.put(FN_ITEMTYPE, (byte) inv.getItemType());
+        meta.put(FN_ITEMTYPE, inv.getItemType());
         meta.put(FN_UID, inv.getUid());
         meta.put(FN_INVMSGID, inv.getMailItemId());
         meta.put(FN_COMPNUM, inv.getComponentNum());
@@ -765,8 +765,7 @@ public class Invite {
             }
             if (textPlain == null) return null;
 
-            byte[] descBytes = ByteUtil.getContent(textPlain.getInputStream(),
-                                                    textPlain.getSize());
+            byte[] descBytes = ByteUtil.getContent(textPlain.getInputStream(), textPlain.getSize());
             return new String(descBytes, charset);
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to get calendar item notes MIME part", e);

@@ -68,8 +68,7 @@ public class WikiDigestFixup {
         public String getEmail() { return mEmail; }
     }
 
-    private static List<Mbox> getMboxList(Connection conn)
-    throws SQLException, ServiceException {
+    private static List<Mbox> getMboxList(Connection conn) throws SQLException {
         List<Mbox> list = new ArrayList<Mbox>(1000);
         String sql = "SELECT id, comment FROM mailbox ORDER BY id";
         PreparedStatement stmt = null;
@@ -147,8 +146,7 @@ public class WikiDigestFixup {
                         System.out.println("Found id " + id + " but skipping because digest is correct.");
                     }
                 } finally {
-                    if (is != null)
-                        is.close();
+                    ByteUtil.closeStream(is);
                 }
             }
         }

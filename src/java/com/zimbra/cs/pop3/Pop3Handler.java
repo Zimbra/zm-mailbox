@@ -35,6 +35,7 @@ import java.io.PushbackInputStream;
 import java.net.InetAddress;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -580,8 +581,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
             sendOK("message follows", false);
             sendMessage(is, Integer.MAX_VALUE);
         } finally {
-            if (is != null)
-                is.close();
+            ByteUtil.closeStream(is);
         }
     }
 
@@ -609,9 +609,8 @@ public abstract class Pop3Handler extends ProtocolHandler {
             sendOK("message top follows", false);
             sendMessage(is, n);
         } finally {
-            if (is != null)
-                is.close();
-        }        
+            ByteUtil.closeStream(is);
+        }
     }
 
     private void doDELE(String msg) throws Pop3CmdException, IOException {

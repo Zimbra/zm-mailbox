@@ -36,7 +36,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.dav.DavContext;
-import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.mailbox.BrowseResult;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -78,7 +77,7 @@ public class BrowseWrapper extends PhantomResource {
 	}
 	
 	@Override
-	public InputStream getContent(DavContext ctxt) throws IOException, DavException {
+	public InputStream getContent(DavContext ctxt) {
 		return null;
 	}
 
@@ -88,7 +87,7 @@ public class BrowseWrapper extends PhantomResource {
 	}
 	
 	@Override
-	public List<DavResource> getChildren(DavContext ctxt) throws DavException {
+	public List<DavResource> getChildren(DavContext ctxt) {
 		try {
 			switch (mAction) {
 			case menu:

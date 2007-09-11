@@ -1597,8 +1597,7 @@ public class ToXML {
                     }
                 }
             } finally {
-                if (stream != null)
-                    stream.close();
+                ByteUtil.closeStream(stream);
             }
         } else if (ctype.equals(Mime.CT_TEXT_ENRICHED)) {
             data = TextEnrichedHandler.convertToHTML(Mime.getStringContent(mp));
