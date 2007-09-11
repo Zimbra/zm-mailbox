@@ -65,6 +65,7 @@ public class ZimbraPerf {
     public static final String RTS_POP_SSL_CONN = "pop_ssl_conn";
     public static final String RTS_IMAP_CONN = "imap_conn";
     public static final String RTS_IMAP_SSL_CONN = "imap_ssl_conn";
+    public static final String RTS_SOAP_SESSIONS = "soap_sessions";
 
     // Accumulators.  To add a new accumulator, create a static instance here,
     // add it to the CORE_ACCUMULATORS array and if necessary, set options
@@ -91,7 +92,7 @@ public class ZimbraPerf {
     private static RealtimeStats sRealtimeStats = 
         new RealtimeStats(new String[] {
             RTS_DB_POOL_SIZE, RTS_INNODB_BP_HIT_RATE,
-            RTS_POP_CONN, RTS_POP_SSL_CONN, RTS_IMAP_CONN, RTS_IMAP_SSL_CONN 
+            RTS_POP_CONN, RTS_POP_SSL_CONN, RTS_IMAP_CONN, RTS_IMAP_SSL_CONN, RTS_SOAP_SESSIONS, 
             }
         );
 

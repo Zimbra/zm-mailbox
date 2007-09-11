@@ -28,7 +28,9 @@
  */
 package com.zimbra.cs.session;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TimerTask;
 
 import com.zimbra.common.util.Log;
@@ -36,6 +38,8 @@ import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.stats.RealtimeStatsCallback;
+import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.Zimbra;
 
 /** A Simple Cache with timeout (based on last-accessed time) for a {@link Session}. objects<p>
@@ -126,6 +130,7 @@ public final class SessionCache {
     /** Inintializes the session cache and starts the sweeper timer. */
     public static void startup() {
         Zimbra.sTimer.schedule(new SweepMapTimerTask(), 30000, SESSION_SWEEP_INTERVAL_MSEC);
+        ZimbraPerf.addStatsCallback(new StatsCallback());
     }
 
     /** Empties the session cache and cleans up any existing {@link Session}s.
@@ -255,6 +260,16 @@ public final class SessionCache {
             toRet[1] = sessionMap.totalActiveSessions();
         }
         return toRet;
+    }
+    
+    private static final class StatsCallback implements RealtimeStatsCallback {
+        /* @see com.zimbra.cs.stats.RealtimeStatsCallback#getStatData() */
+        public Map<String, Object> getStatData() {
+            Map<String, Object> data = new HashMap<String, Object>();
+            SessionMap soapMap = getSessionMap(Session.Type.SOAP);
+            data.put(ZimbraPerf.RTS_SOAP_SESSIONS, soapMap.totalActiveSessions());
+            return data;
+        }
     }
     
     private static final class SweepMapTimerTask extends TimerTask {

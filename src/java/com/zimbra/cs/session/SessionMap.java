@@ -194,7 +194,7 @@ final class SessionMap {
      *  
      * @return any already-cached <tt>Session</tt> with the same owner and
      *         session ID */
-    public synchronized Session put(String accountId, String sessionId, Session session) {
+    synchronized private Session put(String accountId, String sessionId, Session session) {
         assert(session != null);
         AccountSessionMap acctMap = mAcctSessionMap.get(accountId);
         if (acctMap == null) {
