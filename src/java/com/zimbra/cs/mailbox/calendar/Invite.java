@@ -1554,7 +1554,14 @@ public class Invite {
                             newInv.setLocation(prop.getValue());
                             break;
                         case SUMMARY:
-                            newInv.setName(prop.mValue);
+                            String summary = prop.getValue();
+                            if (summary != null) {
+                                // Make sure SUMMARY is a single line.
+                                summary = ZCalendar.unescape(summary);
+                                summary = summary.replaceAll("[\\\r\\\n]+", " ");
+                            }
+                            prop.setValue(summary);
+                            newInv.setName(summary);
                             break;
                         case DESCRIPTION:
                             newInv.setDescription(prop.mValue);
