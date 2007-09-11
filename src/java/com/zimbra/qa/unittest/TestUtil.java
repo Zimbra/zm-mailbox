@@ -212,6 +212,11 @@ public class TestUtil {
 
     public static void sendMessage(ZMailbox senderMbox, String recipientName, String subject, String body)
     throws Exception {
+        sendMessage(senderMbox, recipientName, subject, body, null);
+    }
+    
+    public static void sendMessage(ZMailbox senderMbox, String recipientName, String subject, String body, String attachmentUploadId)
+    throws Exception {
         ZOutgoingMessage msg = new ZOutgoingMessage();
         List<ZEmailAddress> addresses = new ArrayList<ZEmailAddress>();
         addresses.add(new ZEmailAddress(TestUtil.getAddress(recipientName),
@@ -221,6 +226,7 @@ public class TestUtil {
         List<MessagePart> parts = new ArrayList<MessagePart>();
         parts.add(new MessagePart("text/plain", body));
         msg.setMessageParts(parts);
+        msg.setAttachmentUploadId(attachmentUploadId);
         senderMbox.sendMessage(msg, null, false);
     }
 

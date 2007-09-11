@@ -87,7 +87,7 @@ public class MailServiceException extends ServiceException {
     public static final String SEND_FAILURE = "mail.SEND_FAILURE";
     public static final String TRY_AGAIN = "mail.TRY_AGAIN";
     public static final String TOO_MANY_QUERY_TERMS_EXPANDED = "mail.TOO_MANY_QUERY_TERMS_EXPANDED"; 
-
+    public static final String MESSAGE_TOO_BIG = "mail.MESSAGE_TOO_BIG";
     
     
     public static final String ITEM_ID         = "itemId";
@@ -393,5 +393,9 @@ public class MailServiceException extends ServiceException {
 
     public static MailServiceException TOO_MANY_QUERY_TERMS_EXPANDED(String msg, String token, int max) {
         return new MailServiceException(msg, TOO_MANY_QUERY_TERMS_EXPANDED, SENDERS_FAULT, new Argument("TOKEN", token, Argument.Type.STR), new Argument("MAX", max, Argument.Type.NUM));
+    }
+    public static MailServiceException MESSAGE_TOO_BIG(long maxSize) {
+        Argument arg = new Argument("maxSize", maxSize, Argument.Type.NUM);
+        return new MailServiceException("Message exceeded allowed size", MESSAGE_TOO_BIG, false, arg);
     }
 }
