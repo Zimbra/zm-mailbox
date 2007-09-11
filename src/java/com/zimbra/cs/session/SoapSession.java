@@ -272,7 +272,9 @@ public class SoapSession extends Session {
     }
 
     private synchronized void cacheNotifications(PendingModifications pms) {
-        
+        // XXX: should constrain to folders, tags, and stuff relevant to the current query??
+        if (pms != null)
+            mChanges.add(pms);
     }
 
     private void notifyPushChannel(PendingModifications pms) throws ServiceException {
