@@ -278,7 +278,12 @@ public class TestAccess extends TestCase {
         XMLElement req = new XMLElement(AccountConstants.GET_ACCOUNT_INFO_REQUEST);
         Element a = req.addElement(AccountConstants.E_ACCOUNT);
         a.addAttribute(AccountConstants.A_BY, "name");
-        a.setText(ACCT_1_EMAIL);
+        
+        if (role == Role.R_USER || role == Role.R_USER_TARGET_SELF)
+            a.setText(ACCT_1_EMAIL);
+        else
+            a.setText(ACCT_2_EMAIL);
+        
         accessTest(role, perm, req);
     }
     

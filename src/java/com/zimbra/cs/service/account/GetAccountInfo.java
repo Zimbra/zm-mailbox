@@ -58,8 +58,6 @@ public class GetAccountInfo extends AccountDocumentHandler  {
 
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(value);
-        if (!canAccessAccount(zsc, account))
-            throw ServiceException.PERM_DENIED("can not access account");
 
         Element response = zsc.createElement(AccountConstants.GET_ACCOUNT_INFO_RESPONSE);
         response.addAttribute(AccountConstants.E_NAME, account.getName(), Element.Disposition.CONTENT);
