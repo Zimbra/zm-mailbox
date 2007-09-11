@@ -36,23 +36,31 @@ import java.util.Set;
 
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.*;
+import com.zimbra.cs.account.Provisioning.CacheEntry;
+import com.zimbra.cs.account.Provisioning.CacheEntryBy;
+import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraCustomAuth;
 import com.zimbra.cs.account.ldap.custom.CustomLdapProvisioning;
+import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.mime.MimeTypeInfo;
+import com.zimbra.cs.servlet.ZimbraServlet;
 
 public class TestProvisioning extends TestCase {
     
     private Provisioning mProv;
     LdapProvisioning mLdapProv;
     CustomProvTester mCustomProvTester;
+    SoapProvisioning mSoapProv;
     
     private String TEST_ID;
     
@@ -122,13 +130,14 @@ public class TestProvisioning extends TestCase {
     
     public void setUp() throws Exception {
         mProv = Provisioning.getInstance();
-        
-        // if we are a ldapProvisioning, cast the prov obj and save it once here
-        // ldapProv is used for several LDAP specific tests
-        if (mProv instanceof LdapProvisioning)
-            mLdapProv = (LdapProvisioning)mProv;
-        
+        assertTrue(mProv instanceof LdapProvisioning);
+        mLdapProv = (LdapProvisioning)mProv;
         mCustomProvTester = new CustomProvTester(mProv);
+        
+        mSoapProv = new SoapProvisioning();
+        mSoapProv.soapSetURI(TestUtil.getAdminSoapUrl());
+        mSoapProv.soapZimbraAdminAuthenticate();
+      
         
         TEST_ID = TestProvisioningUtil.genTestId();
         
@@ -164,7 +173,7 @@ public class TestProvisioning extends TestCase {
         ACCT_ALIAS_IN_OTHER_DOMAIN_AFTER_ACCOUNT_RENAME_TO_ORIG_DOMAIN_EMAIL = ACCT_ALIAS_IN_OTHER_DOMAIN_USER + "@" + DOMAIN_NAME;
         ACCT_FULL_NAME = "Phoebe Shao";
         
-        ACCT_NAMING_ATTR = LC.get("ldap_user_naming_rdn_attr");
+        ACCT_NAMING_ATTR = LC.get("dap_dit_naming_rdn_attr_user");
         if (StringUtil.isNullOrEmpty(ACCT_NAMING_ATTR))
             ACCT_NAMING_ATTR = "uid";
         ACCT_NAMING_ATTR_VALUE = namingAttrValue(ACCT_USER);
@@ -219,7 +228,8 @@ public class TestProvisioning extends TestCase {
                      Provisioning.SA_CALENDAR_RESOURCE_FLAG |
                      Provisioning.SA_DISTRIBUTION_LIST_FLAG);
             options.setFlags(flags);
-            options.setBase(ACCT_BASE_DN);
+            if (isCustom())
+                options.setBase(ACCT_BASE_DN);
             List<NamedEntry> list = mProv.searchDirectory(options);
             
             for (NamedEntry entry : list) {
@@ -1327,9 +1337,133 @@ public class TestProvisioning extends TestCase {
         
     }
     
+    private void flushCacheTest() throws Exception {
+        System.out.println("Testing flush cache");
+        // skin|locale|account|config|cos|domain|server|zimlet
+        
+        String value = null;
+        String newVal = "new value";
+        String oldVal = "old value";
+        Map<String, Object> attrs = new HashMap<String, Object>();
+       
+        
+        /*
+         * account
+         */
+        String acctAttr = Provisioning.A_description;
+        Account acct = mSoapProv.get(Provisioning.AccountBy.name, ACCT_EMAIL);
+        assertNotNull(acct);
+           
+        // write the old value
+        attrs.clear();
+        attrs.put(acctAttr, oldVal);
+        mSoapProv.modifyAttrs(acct, attrs); // modify via soap 
+        acct = mSoapProv.get(Provisioning.AccountBy.name, ACCT_EMAIL); // get the entry
+        value = acct.getAttr(acctAttr); // get the attr
+        assertEquals(oldVal, value);  // make sure the attr is updated
+        
+        // update with the new values via ldap
+        attrs.clear();
+        attrs.put(acctAttr, newVal);
+        acct = mProv.get(Provisioning.AccountBy.name, ACCT_EMAIL);
+        mProv.modifyAttrs(acct, attrs); // modify via ldap prov 
+        
+        // ensure it is still the old value
+        acct = mSoapProv.get(Provisioning.AccountBy.name, ACCT_EMAIL); // get the entry via soap
+        value = acct.getAttr(acctAttr); // get the attr
+        assertEquals(oldVal, value); // the value should be still old value
+        
+        // flush the account
+        mSoapProv.flushCache(CacheEntryType.account, new CacheEntry[]{new CacheEntry(CacheEntryBy.id, acct.getId())});
+        
+        // ensure it is the new value
+        acct = mSoapProv.get(Provisioning.AccountBy.name, ACCT_EMAIL); // get he entry via soap
+        value = acct.getAttr(acctAttr); // get the attr
+        assertEquals(newVal, value); // now we should see the new value
+        
+        
+        /* 
+         * cos
+         */
+        String cosAttr = Provisioning.A_zimbraPrefSkin;
+        Cos cos = mSoapProv.get(Provisioning.CosBy.name, COS_NAME);
+        assertNotNull(cos);
+        
+        // write the old value
+        attrs.clear();
+        attrs.put(cosAttr, oldVal);
+        mSoapProv.modifyAttrs(cos, attrs); // modify via soap 
+        cos = mSoapProv.get(Provisioning.CosBy.name, COS_NAME); // get the entry
+        value = cos.getAttr(cosAttr); // get the attr
+        assertEquals(oldVal, value);  // make sure the attr is updated
+        
+        // update with the new values via ldap
+        attrs.clear();
+        attrs.put(cosAttr, newVal);
+        cos = mProv.get(Provisioning.CosBy.name, COS_NAME);
+        mProv.modifyAttrs(cos, attrs); // modify via ldap prov 
+        
+        // ensure it is still the old value
+        cos = mSoapProv.get(Provisioning.CosBy.name, COS_NAME); // get he entry via soap
+        value = cos.getAttr(cosAttr); // get the attr
+        assertEquals(oldVal, value); // the value should be still old value
+        
+        // ensure the account is also still the old value
+        acct = mSoapProv.get(Provisioning.AccountBy.name, ACCT_EMAIL); // get the entry via soap
+        value = acct.getAttr(cosAttr); // get the attr
+        assertEquals(oldVal, value); // the value should be still old value
+        
+        // flush the cos
+        mSoapProv.flushCache(CacheEntryType.cos, new CacheEntry[]{new CacheEntry(CacheEntryBy.id, cos.getId())});
+        
+        // ensure it is the new value
+        cos = mSoapProv.get(Provisioning.CosBy.name, COS_NAME); // get he entry via soap
+        value = cos.getAttr(cosAttr); // get the attr
+        assertEquals(newVal, value); // now we should see the new value
+        
+        // ensure the account also gets the new value
+        acct = mSoapProv.get(Provisioning.AccountBy.name, ACCT_EMAIL); // get he entry via soap
+        value = acct.getAttr(cosAttr); // get the attr
+        assertEquals(newVal, value); // now we should see the new value
+        
+        /*
+         * config
+         */
+        String configAttr = "zimbraWebClientLoginUrl";
+        Config config = mSoapProv.getConfig();
+        assertNotNull(config);
+
+        // write the old value
+        attrs.clear();
+        attrs.put(configAttr, oldVal);
+        mSoapProv.modifyAttrs(config, attrs); // modify via soap 
+        config = mSoapProv.getConfig(); // get the entry
+        value = config.getAttr(configAttr); // get the attr
+        assertEquals(oldVal, value);  // make sure the attr is updated
+        
+        // update with the new values via ldap
+        attrs.clear();
+        attrs.put(configAttr, newVal);
+        config = mProv.getConfig();
+        mProv.modifyAttrs(config, attrs); // modify via ldap prov 
+        
+        // ensure it is still the old value
+        config = mSoapProv.getConfig(); // get the entry via soap
+        value = config.getAttr(configAttr); // get the attr
+        assertEquals(oldVal, value); // the value should be still old value
+        
+        // flush the account
+        mSoapProv.flushCache(CacheEntryType.config, null);
+        
+        // ensure it is the new value
+        config = mSoapProv.getConfig(); // get he entry via soap
+        value = config.getAttr(configAttr); // get the attr
+        assertEquals(newVal, value); // now we should see the new value
+    }
+    
     private String execute() throws Exception {
         
-        mCustomProvTester.cleanup();
+        // mCustomProvTester.cleanup();
         
         healthTest();
         Config config = configTest();
@@ -1360,6 +1494,7 @@ public class TestProvisioning extends TestCase {
         
         Domain aliasTestDomain = aliasTest();
         familyTest();
+        flushCacheTest();
 
         // ========================================================================
         System.out.println("\nPress enter to delete entries created by the test");
@@ -1425,11 +1560,13 @@ public class TestProvisioning extends TestCase {
     }
    
     public static void main(String[] args) throws Exception {
-        // CliUtil.toolSetup("INFO");
+        // CliUtil.toolSetup("INFO");  // need to invoke this or else soap provisioning can't talk to server because SSL is not inited
+        CliUtil.toolSetup();
         // TestUtil.runTest(new TestSuite(TestProvisioning.class));
-        
+
         TestProvisioning t = new TestProvisioning();
         t.setUp();
         t.execute();
+
     }
 }
