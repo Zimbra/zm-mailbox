@@ -54,7 +54,6 @@ import com.zimbra.cs.stats.ZimbraPerf;
  */
 public class DbPool {
 
-    private static int sConnectionPoolSize;
     private static PoolingDataSource sPoolingDataSource;
     private static String sRootUrl;
     private static String sLoggerRootUrl;
@@ -172,6 +171,17 @@ public class DbPool {
         Properties mDatabaseProperties;
     }
 
+    static {
+        PoolConfig pconfig = Db.getInstance().getPoolConfig();
+
+        String drivers = System.getProperty("jdbc.drivers");
+        if (drivers == null)
+            System.setProperty("jdbc.drivers", pconfig.mDriverClassName);
+
+        sRootUrl = pconfig.mRootUrl;
+        sLoggerRootUrl = pconfig.mLoggerUrl;
+    }
+
     /**
      * Initializes the connection pool.
      */
@@ -180,15 +190,7 @@ public class DbPool {
             return sPoolingDataSource;
 
         PoolConfig pconfig = Db.getInstance().getPoolConfig();
-
-	    String drivers = System.getProperty("jdbc.drivers");
-	    if (drivers == null)
-	        System.setProperty("jdbc.drivers", pconfig.mDriverClassName);
-
-        sRootUrl = pconfig.mRootUrl;
-        sLoggerRootUrl = pconfig.mLoggerUrl;
-        sConnectionPoolSize = pconfig.mPoolSize;
-	    sConnectionPool = new GenericObjectPool(null, sConnectionPoolSize, GenericObjectPool.WHEN_EXHAUSTED_BLOCK, -1, sConnectionPoolSize);
+	    sConnectionPool = new GenericObjectPool(null, pconfig.mPoolSize, GenericObjectPool.WHEN_EXHAUSTED_BLOCK, -1, pconfig.mPoolSize);
 	    ConnectionFactory cfac = new DriverManagerConnectionFactory(pconfig.mConnectionUrl, pconfig.mDatabaseProperties);
 
 	    boolean defAutoCommit = false, defReadOnly = false;
