@@ -54,8 +54,6 @@ import org.apache.commons.codec.binary.Hex;
  * @author schemers
  */
 public class ByteUtil {
-
-    private static Log sLog = LogFactory.getLog(ByteUtil.class);
 	
 	/**
 	 * write the data to the specified path.
@@ -91,13 +89,12 @@ public class ByteUtil {
 			
 			int num_left = buffer.length;
 			
-			while ((num_left > 0) && ((num_read = is.read(buffer, total_read, num_left)) != -1)) {
+			while (num_left > 0 && (num_read = is.read(buffer, total_read, num_left)) != -1) {
 				total_read += num_read;
 				num_left -= num_read;
 			}
 		} finally {
-			if (is != null) 
-				is.close();
+            closeStream(is);
 		}
 		return buffer;
 	}
@@ -141,8 +138,8 @@ public class ByteUtil {
     		}
     		return baos.toByteArray();
     	} finally {
-    		is.close();
-            if (baos != null)
+    		closeStream(is);
+    	    if (baos != null)
                 baos.close();
     	}
     }
@@ -184,14 +181,27 @@ public class ByteUtil {
         if (is instanceof PipedInputStream) {
             try {
                 while (is.read() != -1);
-            } catch (IOException e) {
-                sLog.debug("IOException while draining PipedInputStream", e);
+            } catch (Exception e) {
+                ZimbraLog.misc.warn("exception while draining PipedInputStream", e);
             }
         }
 
         try {
             is.close();
-        } catch (IOException e) { }
+        } catch (Exception e) {
+            ZimbraLog.misc.warn("ignoring exception while closing input stream", e);
+        }
+    }
+
+    public static void closeStream(OutputStream os) {
+        if (os == null)
+            return;
+
+        try {
+            os.close();
+        } catch (Exception e) {
+            ZimbraLog.misc.warn("ignoring exception while closing output stream", e);
+        }
     }
 
     /**
@@ -425,20 +435,10 @@ public class ByteUtil {
             }
             return transferred;
         } finally {
-            if (closeIn) {
-                try {
-                    in.close();
-                } catch (IOException e) {
-                    ZimbraLog.misc.warn("Ignoring exception while closing input stream", e);
-                }
-            }
-            if (closeOut) {
-                try {
-                    out.close();
-                } catch (IOException e) {
-                    ZimbraLog.misc.warn("Ignoring exception while closing output stream", e);
-                }
-            }
+            if (closeIn)
+                closeStream(in);
+            if (closeOut)
+                closeStream(out);
         }
     }
 
@@ -467,18 +467,19 @@ public class ByteUtil {
 
     public static String readUTF8(DataInput in) throws IOException {
         int len = in.readInt();
-        if (len > MAX_STRING_LEN)
+        if (len > MAX_STRING_LEN) {
             throw new IOException("String length " + len + " is too long in ByteUtil.writeUTF8(); max=" + MAX_STRING_LEN);
-        if (len > 0) {
+        } else if (len > 0) {
             byte[] buf = new byte[len];
             in.readFully(buf, 0, len);
             return new String(buf, "UTF-8");
-        } else if (len == 0)
+        } else if (len == 0) {
             return "";
-        else if (len == -1)
+        } else if (len == -1) {
             return null;
-        else
+        } else {
             throw new IOException("Invalid length " + len + " in ByteUtil.readUTF8()");
+        }
     }
 
     public static class TeeOutputStream extends OutputStream {

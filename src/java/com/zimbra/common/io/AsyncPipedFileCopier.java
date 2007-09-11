@@ -35,6 +35,7 @@ import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.znative.IO;
@@ -352,16 +353,7 @@ class AsyncPipedFileCopier extends AbstractAsyncFileCopier implements FileCopier
                                     expected + " written=" + written); 
                         }
                     } finally {
-                        if (fin != null) {
-                            try {
-                                fin.close();
-                            } catch (IOException ioe) {
-                                System.err.println(
-                                        "copy(" + src + ", " + dest +
-                                        "): ignoring exception while closing input channel: " +
-                                        ioe.getMessage());
-                            }
-                        }
+                        ByteUtil.closeStream(fin);
                     }
                 } catch (Throwable t) {
                     if (callbackId != -1)
@@ -376,7 +368,7 @@ class AsyncPipedFileCopier extends AbstractAsyncFileCopier implements FileCopier
                 int bytesRead;
                 long bytesWritten = 0;
                 while (bytesWritten < expected && (bytesRead = is.read(mCopyBuffer)) != -1)
-                    bytesWritten += (long) mChannel.write(mCopyBuffer, 0, bytesRead);
+                    bytesWritten += mChannel.write(mCopyBuffer, 0, bytesRead);
                 return bytesWritten;
             }
 

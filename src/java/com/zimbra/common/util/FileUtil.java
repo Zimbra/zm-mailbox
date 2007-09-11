@@ -151,13 +151,8 @@ public class FileUtil {
                 fos.close();
             }
         } finally {
-            if (closeIn) {
-                try {
-                    in.close();
-                } catch (IOException e) {
-                    ZimbraLog.misc.warn("Ignoring exception while closing input stream", e);
-                }
-            }
+            if (closeIn)
+                ByteUtil.closeStream(in);
         }
     }
 

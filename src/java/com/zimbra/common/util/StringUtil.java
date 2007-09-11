@@ -169,7 +169,7 @@ public class StringUtil {
             BufferedReader in = new BufferedReader(new InputStreamReader(is));            
             return in.readLine();
         } finally {
-            if (is != null) is.close();
+            ByteUtil.closeStream(is);
         }
     }
     
