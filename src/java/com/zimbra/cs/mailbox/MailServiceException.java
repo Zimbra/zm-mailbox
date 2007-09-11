@@ -56,6 +56,7 @@ public class MailServiceException extends ServiceException {
     public static final String NO_SUCH_TAG     = "mail.NO_SUCH_TAG";
     public static final String NO_SUCH_UPLOAD  = "mail.NO_SUCH_UPLOAD";
     public static final String NO_SUCH_WAITSET = "mail.NO_SUCH_WAITSET";
+    public static final String NO_SUCH_BLOB    = "mail.NO_SUCH_BLOB";
     
     public static final String ALREADY_EXISTS  = "mail.ALREADY_EXISTS";
 
@@ -251,6 +252,10 @@ public class MailServiceException extends ServiceException {
     
     public static MailServiceException NO_SUCH_WAITSET(String id) {
         return new MailServiceException("WaitSet not found: " + id, NO_SUCH_WAITSET, SENDERS_FAULT, new Argument(ID, id, Argument.Type.STR));
+    }
+
+    public static MailServiceException NO_SUCH_BLOB(int mboxId, int itemId, int revision) {
+        return new MailServiceException("No such blob: mailbox=" + mboxId + ", item=" + itemId + ", change=" + revision, NO_SUCH_BLOB, SENDERS_FAULT);
     }
 
     public static MailServiceException SCAN_ERROR(String file) {

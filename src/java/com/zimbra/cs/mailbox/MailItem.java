@@ -812,12 +812,14 @@ public abstract class MailItem implements Comparable<MailItem> {
      *  representation.  If the item is memory- or database-only, returns
      *  <tt>null</tt>.
      * 
-     * @throws ServiceException if the file cannot be found. */
+     * @throws MailServiceException.NO_SUCH_BLOB if the file cannot be found.
+     * @throws ServiceException
+     * */
     public synchronized MailboxBlob getBlob() throws ServiceException {
         if (mBlob == null && getDigest() != null) {
             mBlob = StoreManager.getInstance().getMailboxBlob(mMailbox, mId, mData.modContent, mData.volumeId);
             if (mBlob == null)
-                throw ServiceException.FAILURE("missing blob for id: " + mId + ", change: " + mData.modContent, null);
+                throw MailServiceException.NO_SUCH_BLOB(mMailbox.getId(), mId, mData.modContent);
         }
         return mBlob;
     }
