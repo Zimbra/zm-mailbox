@@ -4780,13 +4780,12 @@ public class LdapProvisioning extends Provisioning {
                 }
             }
             break;
-        /*    
         case config:
-            // TODO
             if (entries != null)
                 throw ServiceException.INVALID_REQUEST("cannot specify entry for flushing global config", null);
-            break;
-        */    
+            Config config = getConfig();
+            reload(config);
+            return;
         case cos:
             cache = sCosCache;
             if (entries != null) {
@@ -4855,11 +4854,13 @@ public class LdapProvisioning extends Provisioning {
             throw ServiceException.INVALID_REQUEST("invalid cache type "+type, null);
         }
         
-        if (namedEntries == null)
+        if (namedEntries == null)  // clear all entries
             cache.clear();
         else {
             for (NamedEntry entry : namedEntries) {
-                cache.remove(entry);
+                // reload selected entries
+                // cache.remove(entry);
+                reload(entry);
             }
         }
         
