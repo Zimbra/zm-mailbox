@@ -336,9 +336,10 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 } catch (MessagingException e) {}
             }
 
-            // DON'T try to do a full text-extraction attachments: if the calendar message doesn't 
-            // have useful text in the body, then so be it
             ParsedMessage pm = new ParsedMessage(csd.mMm, false);
+            // We must force JavaMail processing of pm/mMm right here so as to avoid doing so later
+            // after any attachments have been deleted already. (bug 19234)
+            pm.analyze();
             
             if (csd.mInvite.getFragment() == null || csd.mInvite.getFragment().equals("")) {
                 csd.mInvite.setFragment(pm.getFragment());
