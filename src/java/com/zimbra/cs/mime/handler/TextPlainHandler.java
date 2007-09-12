@@ -30,13 +30,11 @@
 package com.zimbra.cs.mime.handler;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 import javax.activation.DataSource;
 
 import org.apache.lucene.document.Document;
 
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.convert.AttachmentInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeHandler;
@@ -45,33 +43,29 @@ import com.zimbra.cs.mime.MimeHandlerException;
 /**
  * @author schemers
  *
- *  class that creates a Lucene document from a Java Mail Message
+ *  class that creates a Lucene document from a plain text part
  */
 public class TextPlainHandler extends MimeHandler {
 
     private String mContent;
 
-    @Override
-    protected boolean runsExternally() {
+    @Override protected boolean runsExternally() {
         return false;
     }
 
-    @Override
-    public void addFields(Document doc) {
+    @Override public void addFields(Document doc) {
         // we add no type-specific fields to the doc
     }
 
-    @Override
-    protected String getContentImpl() throws MimeHandlerException {
+    @Override protected String getContentImpl() throws MimeHandlerException {
         if (mContent == null) {
             DataSource source = getDataSource();
-            InputStream is = null;
+            String ctype = source.getContentType();
             try {
-                mContent = Mime.decodeText(is = source.getInputStream(), source.getContentType());
+                // decodeText always closes the input stream
+                mContent = Mime.decodeText(source.getInputStream(), ctype);
             } catch (IOException e) {
                 throw new MimeHandlerException(e);
-            } finally {
-                ByteUtil.closeStream(is);
             }
         }
         if (mContent == null)
@@ -79,20 +73,13 @@ public class TextPlainHandler extends MimeHandler {
         
         return mContent;
     }
-    
-    /**
-     * No need to convert plain text document ever.
-     */
-    @Override
-    public boolean doConversion() {
+
+    /** No need to convert plain text document ever. */
+    @Override public boolean doConversion() {
         return false;
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.mime.MimeHandler#convert(com.zimbra.cs.convert.AttachmentInfo, java.lang.String)
-     */
-    @Override
-    public String convert(AttachmentInfo doc, String baseURL) {
+    @Override public String convert(AttachmentInfo doc, String baseURL) {
         throw new IllegalStateException("No need to convert plain text");
     }
 
