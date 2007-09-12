@@ -1584,7 +1584,13 @@ public class ToXML {
             try {
                 if (charset != null && !charset.trim().equals("")) {
                     stream = mp.getInputStream();
-                    Reader reader = Mime.getTextReader(stream, mpi.getContentType());
+                    // MimePart.getContentType() returns the entire content-type line
+                    // including charset attribute.
+                    // MPartInfo.getContentType() returns just type/subtype part.
+                    // Mime.getTextReader() expects charset attribute in the content type
+                    // otherwise it defaults to us-ascii, and that's not what we
+                    // want.
+                    Reader reader = Mime.getTextReader(stream, mp.getContentType());
                     data = HtmlDefang.defang(reader, neuter);
                 } else {
                     String cte = mp.getEncoding();
