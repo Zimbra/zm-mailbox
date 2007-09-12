@@ -98,12 +98,12 @@ class ZSearchPagerCache extends ZEventHandler {
 
 
     public synchronized void handleModify(ZModifyEvent event, ZMailbox mailbox) throws ServiceException {
-        if (event instanceof ZModifyItemEvent) {
-            if (mClearOnModifyItemFolder && event instanceof ZModifyItemFolderEvent) {
-                ZModifyItemFolderEvent mif = (ZModifyItemFolderEvent) event;
-                if (mif.getFolderId(null) != null)
-                    mSearchPagerCache.clear();
-            }
+		if (mClearOnModifyItemFolder && event instanceof ZModifyItemFolderEvent) {
+			ZModifyItemFolderEvent mif = (ZModifyItemFolderEvent) event;
+			if (mif.getFolderId(null) != null)
+				mSearchPagerCache.clear();
+		}
+		if (event instanceof ZModifyItemEvent) {
             for (Object obj : mSearchPagerCache.values()) {
                 ((ZSearchPager)obj).modifyNotification((ZModifyItemEvent)event);
             }

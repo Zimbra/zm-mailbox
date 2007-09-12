@@ -77,6 +77,7 @@ import com.zimbra.cs.zclient.event.ZRefreshEvent;
 import com.zimbra.cs.zclient.event.ZModifyTaskEvent;
 import com.zimbra.cs.zclient.event.ZCreateTaskEvent;
 import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemEvent;
+import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemFolderEvent;
 import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
@@ -3500,8 +3501,20 @@ public class ZMailbox {
     }
 
     public ZActionResult trashVoiceMail(String phone, String id) throws ServiceException {
-        return doAction(voiceAction("move", phone, id, VoiceConstants.FID_TRASH));
-    }
+		ZActionResult result = doAction(voiceAction("move", phone, id, VoiceConstants.FID_TRASH));
+		ZModifyEvent event = new ZModifyVoiceMailItemFolderEvent(Integer.toString(VoiceConstants.FID_TRASH));
+		handleEvent(event);
+		return result;
+	}
+
+    public ZActionResult emptyVoiceMailTrash(String phone, String folderId) throws ServiceException {
+		ZActionResult result = doAction(voiceAction("empty", phone, folderId, 0));
+
+		// Don't use a delete event, since it deals with the ids of the deleted items and we don't have those.
+		// Instead just clear the cache that we know know of that might need to be rebuilt.
+		mSearchPagerCache.clear(null);
+		return result;
+	}
 
 	public ZActionResult markVoiceMailHeard(String phone, String idList, boolean heard) throws ServiceException {
         String op = heard ? "read" : "!read";
@@ -3526,7 +3539,7 @@ public class ZMailbox {
         return actionEl;
     }
 
-    private void updateSigs() {
+	private void updateSigs() {
         try {
             if (mGetInfoResult != null)
                 mGetInfoResult.setSignatures(getSignatures());
