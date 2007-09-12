@@ -1,37 +1,45 @@
 package com.zimbra.cs.zimlet;
 
-import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.common.util.ZimbraLog;
 import com.yahoo.platform.yui.compressor.CssCompressor;
+import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.servlet.ZimbraServlet;
+import org.mozilla.javascript.ErrorReporter;
+import org.mozilla.javascript.EvaluatorException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.*;
 import java.util.*;
-import java.util.regex.*;
-import java.util.zip.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import javax.xml.parsers.*;
-
-import org.w3c.dom.*;
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.Scriptable;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.GZIPOutputStream;
 
 public class ZimletResources
-extends ZimbraServlet {
+        extends ZimbraServlet {
 
     //
     // Constants
     //
 
     private static final String COMPRESSED_EXT = ".zgz";
-    
+
     private static final String P_DEBUG = "debug";
 
     private static final String T_CSS = "css";
     private static final String T_JAVASCRIPT = "javascript";
     private static final String T_PLAIN = "plain";
 
-    private static final Map<String,String> TYPES = new HashMap<String,String>();
+    private static final Map<String, String> TYPES = new HashMap<String, String>();
 
     private static final Pattern RE_REMOTE = Pattern.compile("^((https?|ftps?)://|/)");
     private static final Pattern RE_CSS_URL = Pattern.compile("(url\\(['\"]?)([^'\"\\)]*)", Pattern.CASE_INSENSITIVE);
@@ -52,16 +60,16 @@ extends ZimbraServlet {
      * <li>Value: String buffer
      * </ul>
      */
-    private Map<String,byte[]> cache = new HashMap<String,byte[]>();
+    private Map<String, byte[]> cache = new HashMap<String, byte[]>();
 
     //
     // HttpServlet methods
     //
 
     public void doGet(HttpServletRequest req, HttpServletResponse resp)
-    throws IOException, ServletException {
+            throws IOException, ServletException {
         ZimbraLog.clearContext();
-        
+
         String uri = req.getRequestURI();
         String contentType = getContentType(uri);
         String type = contentType.replaceAll("^.*/", "");
@@ -70,10 +78,10 @@ extends ZimbraServlet {
         String cacheId = getCacheId(req, type);
 
         if (ZimbraLog.zimlet.isDebugEnabled()) {
-            ZimbraLog.zimlet.debug("DEBUG: uri="+uri);
-            ZimbraLog.zimlet.debug("DEBUG: cacheId="+cacheId);
-            ZimbraLog.zimlet.debug("DEBUG: contentType="+contentType);
-            ZimbraLog.zimlet.debug("DEBUG: type="+type);
+            ZimbraLog.zimlet.debug("DEBUG: uri=" + uri);
+            ZimbraLog.zimlet.debug("DEBUG: cacheId=" + cacheId);
+            ZimbraLog.zimlet.debug("DEBUG: contentType=" + contentType);
+            ZimbraLog.zimlet.debug("DEBUG: type=" + type);
         }
 
         // generate buffer
@@ -104,35 +112,50 @@ extends ZimbraServlet {
             // zimlet resources
             if (ZimbraLog.zimlet.isDebugEnabled()) ZimbraLog.zimlet.debug("DEBUG: generating buffer");
             generate(req, type, printer);
-
             String text = writer.toString();
 
             // minimize css
             if (type.equals(T_CSS) && !debug) {
-/*                CssCompressor compressor = new CssCompressor(new StringReader(text));
+                CssCompressor compressor = new CssCompressor(new StringReader(text));
                 StringWriter out = new StringWriter();
                 compressor.compress(out, 0);
-                text = out.toString();*/
+                text = out.toString();
             }
 
-            // minimize javascript
             if (type.equals(T_JAVASCRIPT) && !debug) {
-                Context context = Context.enter();
-                context.setOptimizationLevel(-1);
-                Scriptable scriptable = context.initStandardObjects();
-                Reader reader = new StringReader(text);
-                String script = null;
-                int lineNum = 0;
-                Object securityDomain = null;
+                // compress JS code
+                JavaScriptCompressor compressor = new JavaScriptCompressor(new StringReader(text), new ErrorReporter() {
 
-                String mintext = org.mozilla.javascript.tools.shell.Main.compressScript(
-                    context, scriptable, reader,
-                    script, uri, lineNum, securityDomain
-                );
+                    public void warning(String message, String sourceName,
+                                        int line, String lineSource, int lineOffset) {
+                        if (line < 0) {
+                            ZimbraLog.zimlet.warn("\n" + message);
+                        } else {
+                            ZimbraLog.zimlet.warn("\n" + line + ':' + lineOffset + ':' + message);
+                        }
+                    }
+
+                    public void error(String message, String sourceName,
+                                      int line, String lineSource, int lineOffset) {
+                        if (line < 0) {
+                            ZimbraLog.zimlet.error("\n" + message);
+                        } else {
+                            ZimbraLog.zimlet.error("\n" + line + ':' + lineOffset + ':' + message);
+                        }
+                    }
+
+                    public EvaluatorException runtimeError(String message, String sourceName,
+                                                           int line, String lineSource, int lineOffset) {
+                        error(message, sourceName, line, lineSource, lineOffset);
+                        return new EvaluatorException(message);
+                    }
+                });
+                StringWriter out = new StringWriter();
+                compressor.compress(out, 0, true, false, false);
+                String mintext = out.toString();
                 if (mintext == null) {
                     ZimbraLog.zimlet.debug("unable to minimize zimlet JS source");
-                }
-                else {
+                } else {
                     text = mintext;
                 }
             }
@@ -151,15 +174,14 @@ extends ZimbraServlet {
             if (!debug) {
                 cache.put(cacheId, buffer);
             }
-        }
-        else {
+        } else {
             if (ZimbraLog.zimlet.isDebugEnabled()) ZimbraLog.zimlet.debug("DEBUG: using previous buffer");
         }
 
         // write buffer
         try {
             // We browser sniff so need to make sure any caches do the same.
-            resp.addHeader("Vary","User-Agent");
+            resp.addHeader("Vary", "User-Agent");
             // Cache It!
             resp.setHeader("Cache-control", "public, max-age=604800");
             resp.setContentType(contentType);
@@ -170,8 +192,8 @@ extends ZimbraServlet {
         }
         catch (IllegalStateException e) {
             // ignore -- thrown if called from including JSP
-            ZimbraLog.zimlet.debug("zimletres: "+cacheId);
-            ZimbraLog.zimlet.debug("zimletres: "+e.getMessage());
+            ZimbraLog.zimlet.debug("zimletres: " + cacheId);
+            ZimbraLog.zimlet.debug("zimletres: " + e.getMessage());
         }
 
         try {
@@ -181,7 +203,7 @@ extends ZimbraServlet {
             out.flush();
         }
         catch (IllegalStateException e) {
-            ZimbraLog.zimlet.debug("!!! illegal state: "+e.getMessage());
+            ZimbraLog.zimlet.debug("!!! illegal state: " + e.getMessage());
             // use writer if called from including JSP
             PrintWriter out = resp.getWriter();
             out.print(buffer);
@@ -189,13 +211,13 @@ extends ZimbraServlet {
         }
 
     } // doGet(HttpServletRequest,HttpServletResponse)
-    
+
     //
     // Private methods
     //
 
     private void generate(HttpServletRequest req, String type, PrintWriter out)
-    throws IOException {
+            throws IOException {
         boolean isCSS = type.equals(T_CSS);
 
         String commentStart = "/* ";
@@ -221,8 +243,7 @@ extends ZimbraServlet {
             // print file
             if (file.exists()) {
                 printFile(out, file, file.zimletName, isCSS);
-            }
-            else {
+            } else {
                 out.print(commentStart);
                 out.print("Error: file doesn't exist " + filename);
                 out.println(commentEnd);
@@ -235,7 +256,7 @@ extends ZimbraServlet {
 
     private void printFile(PrintWriter out, File file,
                            String zimletName, boolean isCSS)
-    throws IOException {
+            throws IOException {
         BufferedReader in = new BufferedReader(new FileReader(file));
         String line;
         while ((line = in.readLine()) != null) {
@@ -254,7 +275,7 @@ extends ZimbraServlet {
                         String s = url.group(2);
                         Matcher remote = RE_REMOTE.matcher(s);
                         if (!remote.find()) {
-                            out.print("/service/zimlet/"+zimletName+"/");
+                            out.print("/service/zimlet/" + zimletName + "/");
                         }
                         out.print(s);
 
@@ -286,7 +307,7 @@ extends ZimbraServlet {
     }
 
     private String getCacheId(HttpServletRequest req, String type) {
-        List<String> zimletNames = (List<String>)req.getAttribute(ZimletFilter.ALLOWED_ZIMLETS);
+        List<String> zimletNames = (List<String>) req.getAttribute(ZimletFilter.ALLOWED_ZIMLETS);
 
         StringBuilder str = new StringBuilder();
         str.append(getLocale(req).toString());
@@ -325,11 +346,11 @@ extends ZimbraServlet {
 
     private List<ZimletFile> getZimletFiles(HttpServletRequest req, String type) {
         List<ZimletFile> files = new LinkedList<ZimletFile>();
-        List<String> zimletNames = (List<String>)req.getAttribute(ZimletFilter.ALLOWED_ZIMLETS);
+        List<String> zimletNames = (List<String>) req.getAttribute(ZimletFilter.ALLOWED_ZIMLETS);
         for (String zimletName : zimletNames) {
             // read zimlet manifest
-            String dirname = getServletContext().getRealPath("/zimlet/"+zimletName);
-            String manifest = dirname+"/"+zimletName+".xml";
+            String dirname = getServletContext().getRealPath("/zimlet/" + zimletName);
+            String manifest = dirname + "/" + zimletName + ".xml";
             File file = new File(manifest);
 
             Document document = parseDocument(file, zimletName);
@@ -340,7 +361,7 @@ extends ZimbraServlet {
             // add properties files
             boolean isJavaScript = type.equals(T_JAVASCRIPT);
             if (isJavaScript) {
-                files.add(new ZimletFile(zimletName, "/messages/"+zimletName));
+                files.add(new ZimletFile(zimletName, "/messages/" + zimletName));
             }
 
             // add included files
@@ -355,7 +376,7 @@ extends ZimbraServlet {
                 if (RE_REMOTE.matcher(filename).matches()) {
                     continue;
                 }
-                files.add(new ZimletFile(zimletName, dirname+"/"+filename));
+                files.add(new ZimletFile(zimletName, dirname + "/" + filename));
             }
         }
         return files;
@@ -369,7 +390,7 @@ extends ZimbraServlet {
             document = builder.parse(file);
         }
         catch (Exception e) {
-            ZimbraLog.zimlet.info("error loading "+zimletName+" manifest: "+e.getMessage());
+            ZimbraLog.zimlet.info("error loading " + zimletName + " manifest: " + e.getMessage());
         }
         return document;
     }
@@ -390,6 +411,7 @@ extends ZimbraServlet {
 
     static class ZimletFile extends File {
         public String zimletName;
+
         public ZimletFile(String zimletName, String filename) {
             super(filename);
             this.zimletName = zimletName;
@@ -398,27 +420,33 @@ extends ZimbraServlet {
 
     static class RequestWrapper extends HttpServletRequestWrapper {
         private String filename;
+
         public RequestWrapper(HttpServletRequest req, String filename) {
             super(req);
             this.filename = filename;
         }
+
         public String getRequestURI() {
-            return filename+".js";
+            return filename + ".js";
         }
     }
 
     static class ResponseWrapper extends HttpServletResponseWrapper {
         private PrintWriter out;
+
         public ResponseWrapper(HttpServletResponse resp, PrintWriter out) {
             super(resp);
             this.out = out;
         }
+
         public void setHeader(String name, String value) { /* NOP */ }
+
         public void addHeader(String name, String value) { /* NOP */ }
 
         public ServletOutputStream getOutputStream() throws IOException {
             return new ServletStream(getWriter());
         }
+
         public PrintWriter getWriter() throws IOException {
             return out;
         }
@@ -426,23 +454,66 @@ extends ZimbraServlet {
 
     static class ServletStream extends ServletOutputStream {
         private PrintWriter out;
+
         public ServletStream(PrintWriter out) {
             this.out = out;
         }
-        public void write(int i) throws IOException { out.write(i); }
-        public void print(boolean b) throws IOException { out.print(b); }
-        public void print(char c) throws IOException { out.print(c); }
-        public void print(float f) throws IOException { out.print(f); }
-        public void print(int i) throws IOException { out.print(i); }
-        public void print(long l) throws IOException { out.print(l); }
-        public void print(String s) throws IOException { out.print(s); }
-        public void println() throws IOException { out.println(); }
-        public void println(boolean b) throws IOException { out.println(b); }
-        public void println(char c) throws IOException { out.println(c); }
-        public void println(float f) throws IOException { out.println(f); }
-        public void println(int i) throws IOException { out.println(i); }
-        public void println(long l) throws IOException { out.println(l); }
-        public void println(String s) throws IOException { out.println(s); }
+
+        public void write(int i) throws IOException {
+            out.write(i);
+        }
+
+        public void print(boolean b) throws IOException {
+            out.print(b);
+        }
+
+        public void print(char c) throws IOException {
+            out.print(c);
+        }
+
+        public void print(float f) throws IOException {
+            out.print(f);
+        }
+
+        public void print(int i) throws IOException {
+            out.print(i);
+        }
+
+        public void print(long l) throws IOException {
+            out.print(l);
+        }
+
+        public void print(String s) throws IOException {
+            out.print(s);
+        }
+
+        public void println() throws IOException {
+            out.println();
+        }
+
+        public void println(boolean b) throws IOException {
+            out.println(b);
+        }
+
+        public void println(char c) throws IOException {
+            out.println(c);
+        }
+
+        public void println(float f) throws IOException {
+            out.println(f);
+        }
+
+        public void println(int i) throws IOException {
+            out.println(i);
+        }
+
+        public void println(long l) throws IOException {
+            out.println(l);
+        }
+
+        public void println(String s) throws IOException {
+            out.println(s);
+        }
     }
 
 } // class ZimletResources

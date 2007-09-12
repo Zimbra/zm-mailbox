@@ -1,739 +1,891 @@
 <project name="ZimbraServer" default="jar">
 
-    <property file='build-custom.properties' />
+    <property file='build-custom.properties'/>
 
-	<property environment="env"/>
+    <property environment="env"/>
 
-	<!-- The OS user running ZCS.  Use ZIMBRA_USER environment variable
-	     if set.  If not, default to "zimbra". -->
-	<condition property="zimbra.user" value="${env.ZIMBRA_USER}">
-		<isset property="env.ZIMBRA_USER"/>
-	</condition>
-	<condition property="zimbra.user" value="zimbra">
-		<not><isset property="zimbra.user"/></not>
-	</condition>
+    <!-- The OS user running ZCS.  Use ZIMBRA_USER environment variable
+          if set.  If not, default to "zimbra". -->
+    <condition property="zimbra.user" value="${env.ZIMBRA_USER}">
+        <isset property="env.ZIMBRA_USER"/>
+    </condition>
+    <condition property="zimbra.user" value="zimbra">
+        <not>
+            <isset property="zimbra.user"/>
+        </not>
+    </condition>
 
-	<!-- This machine's hostname.  Use ZIMBRA_HOSTNAME environment variable
-	     if set.  If not, use "hostname" command output. -->
-	<exec executable="hostname" outputproperty="exec.hostname"/>
-	<condition property="zimbra.server.hostname" value="${env.ZIMBRA_HOSTNAME}">
-		<isset property="env.ZIMBRA_HOSTNAME"/>
-	</condition>
-	<condition property="zimbra.server.hostname" value="${exec.hostname}">
-		<not><isset property="zimbra.server.hostname"/></not>
-	</condition>
+    <!-- This machine's hostname.  Use ZIMBRA_HOSTNAME environment variable
+          if set.  If not, use "hostname" command output. -->
+    <exec executable="hostname" outputproperty="exec.hostname"/>
+    <condition property="zimbra.server.hostname" value="${env.ZIMBRA_HOSTNAME}">
+        <isset property="env.ZIMBRA_HOSTNAME"/>
+    </condition>
+    <condition property="zimbra.server.hostname" value="${exec.hostname}">
+        <not>
+            <isset property="zimbra.server.hostname"/>
+        </not>
+    </condition>
 
-	<!-- SMTP server for outgoing email.  Use ZIMBRA_SMTP_HOST environment
-	     variable if set.  Otherwise default to "localhost". -->
-	<condition property="zimbra.smtp.host" value="${env.ZIMBRA_SMTP_HOST}">
-		<isset property="env.ZIMBRA_SMTP_HOST"/>
-	</condition>
-	<condition property="zimbra.smtp.host" value="localhost">
-		<not><isset property="zimbra.smtp.host"/></not>
-	</condition>
+    <!-- SMTP server for outgoing email.  Use ZIMBRA_SMTP_HOST environment
+          variable if set.  Otherwise default to "localhost". -->
+    <condition property="zimbra.smtp.host" value="${env.ZIMBRA_SMTP_HOST}">
+        <isset property="env.ZIMBRA_SMTP_HOST"/>
+    </condition>
+    <condition property="zimbra.smtp.host" value="localhost">
+        <not>
+            <isset property="zimbra.smtp.host"/>
+        </not>
+    </condition>
 
-	<!-- Default email view, group by conversation or by message -->
-	<condition property="zimbra.prefGroupMailBy" value="${env.ZIMBRA_GROUP_MAIL_BY}">
-		<isset property="env.ZIMBRA_GROUP_MAIL_BY"/>
-	</condition>
-	<condition property="zimbra.prefGroupMailBy" value="conversation">
-		<not><isset property="zimbra.prefGroupMailBy"/></not>
-	</condition>
+    <!-- Default email view, group by conversation or by message -->
+    <condition property="zimbra.prefGroupMailBy" value="${env.ZIMBRA_GROUP_MAIL_BY}">
+        <isset property="env.ZIMBRA_GROUP_MAIL_BY"/>
+    </condition>
+    <condition property="zimbra.prefGroupMailBy" value="conversation">
+        <not>
+            <isset property="zimbra.prefGroupMailBy"/>
+        </not>
+    </condition>
 
-	<property name="build.dir" location="build" />
-	<property name="build.classes.dir" location="${build.dir}/classes" />
-	<property name="build.zmprov" location="${build.dir}/data/zmprov.txt" />
-	<property name="dist.dir" location="build/dist" />
-	<property name="generated.java.dir" location="${build.dir}/generated/src/java" />
-    <property name='warfilename' value='service.war' />
-    <property name="warfile" location="${build.dir}/${warfilename}" />
-	<property name="jarfile" location="${build.dir}/zimbrastore.jar" />
-	<property name="common.dir" location="../ZimbraCommon" />
-	<property name="common.classes.dir" location="${common.dir}/build/classes" />
-	<property name="common.jarfile" location="${common.dir}/build/zimbracommon.jar" />
-	<property name="common.jars.dir" location="${common.dir}/jars" />
+    <property name="build.dir" location="build"/>
+    <property name="build.classes.dir" location="${build.dir}/classes"/>
+    <property name="build.zmprov" location="${build.dir}/data/zmprov.txt"/>
+    <property name="dist.dir" location="build/dist"/>
+    <property name="generated.java.dir" location="${build.dir}/generated/src/java"/>
+    <property name='warfilename' value='service.war'/>
+    <property name="warfile" location="${build.dir}/${warfilename}"/>
+    <property name="jarfile" location="${build.dir}/zimbrastore.jar"/>
+    <property name="common.dir" location="../ZimbraCommon"/>
+    <property name="common.classes.dir" location="${common.dir}/build/classes"/>
+    <property name="common.jarfile" location="${common.dir}/build/zimbracommon.jar"/>
+    <property name="common.jars.dir" location="${common.dir}/jars"/>
 
-	<property name="im.dir" location="../ZimbraIM" />
-	<property name="im.classes.dir" location="${im.dir}/build/classes" />
-	<property name="im.jarfile" location="${im.dir}/build/zimbraim.jar" />
-	<property name="im.jars.dir" location="${im.dir}/jars" />
-	
-	<property name="jars.dir" location="jars" />
-	<property name="lib.dir" location="lib" />
-	<property name="src.dir" location="src" />
-	<property name="src.java.dir" location="${src.dir}/java" />
-	<property name="config.dir" location="conf" />
-	<property name="zimlet.dir" location="../Zimlet/build/dist" />
-	<property file="${zimlet.dir}/build.properties" />
+    <property name="im.dir" location="../ZimbraIM"/>
+    <property name="im.classes.dir" location="${im.dir}/build/classes"/>
+    <property name="im.jarfile" location="${im.dir}/build/zimbraim.jar"/>
+    <property name="im.jars.dir" location="${im.dir}/jars"/>
 
-	<property name="deploy.war" value="${warfile}" />
-	<property name="deploy.host" value="localhost" />
-	<property name="deploy.port" value="7070" />
+    <property name="jars.dir" location="jars"/>
+    <property name="lib.dir" location="lib"/>
+    <property name="src.dir" location="src"/>
+    <property name="src.java.dir" location="${src.dir}/java"/>
+    <property name="config.dir" location="conf"/>
+    <property name="zimlet.dir" location="../Zimlet/build/dist"/>
+    <property file="${zimlet.dir}/build.properties"/>
+
+    <property name="deploy.war" value="${warfile}"/>
+    <property name="deploy.host" value="localhost"/>
+    <property name="deploy.port" value="7070"/>
 
     <condition property="remote.deploy.host" value="${env.ZIMBRA_REMOTE_DEPLOY_HOST}">
-      <isset property="env.ZIMBRA_REMOTE_DEPLOY_HOST"/>
+        <isset property="env.ZIMBRA_REMOTE_DEPLOY_HOST"/>
     </condition>
     <condition property="remote.deploy.port" value="${env.ZIMBRA_REMOTE_DEPLOY_PORT}">
-      <isset property="env.ZIMBRA_REMOTE_DEPLOY_PORT"/>
+        <isset property="env.ZIMBRA_REMOTE_DEPLOY_PORT"/>
     </condition>
-    
-	<property name="lmtp.host" value="localhost" />
-	<property name="lmtp.port" value="7025" />
-	<property name="lmtpinject.numthreads" value="2" />
 
-	<property name="zimbra.home.dir" location="/opt/zimbra" />
-	<property name="jetty.home.dir" location="${zimbra.home.dir}/jetty" />
-	<property name="jetty.src.dir" location="../ThirdParty/jetty" />
-	<property name="jetty.version" value="6.1.5" />
-	<available property="jetty.start.jar.exists" file="${jetty.home.dir}/start.jar"/>
-	
-	<property name="ical4j.jar" value="ical4j-0.9.16-patched.jar" />
+    <property name="lmtp.host" value="localhost"/>
+    <property name="lmtp.port" value="7025"/>
+    <property name="lmtpinject.numthreads" value="2"/>
 
-	<condition property="is-windows"><os family="windows"/></condition>
-	<condition property="is-unix"><not><os family="windows"/></not></condition>
-	
-	<condition property="jetty-use-service"><isset property="env.ZIMBRA_JETTY_USE_SERVICE"/></condition>
-	
-	<property name="webserver.name" value="jetty"/>
-	<property name="webserver.root.dir" location="${zimbra.home.dir}/${webserver.name}"/>
-	<property name="webserver.conf.dir" value="${webserver.root.dir}/etc"/>
+    <property name="zimbra.home.dir" location="/opt/zimbra"/>
+    <property name="jetty.home.dir" location="${zimbra.home.dir}/jetty"/>
+    <property name="jetty.src.dir" location="../ThirdParty/jetty"/>
+    <property name="jetty.version" value="6.1.5"/>
+    <available property="jetty.start.jar.exists" file="${jetty.home.dir}/start.jar"/>
 
-	<condition property="deploy.dir" value="${env.DEPLOY_DIR}">
-	    <isset property="env.DEPLOY_DIR" />
-	</condition>
+    <property name="ical4j.jar" value="ical4j-0.9.16-patched.jar"/>
 
-	<condition property="deploy.dir" value="${webserver.root.dir}/webapps">
-	  <not><isset property="env.DEPLOY_DIR"/></not>
-	</condition>	
-	
-	<property name="deploy.path" value="/service" />
-	
-	<condition property="native.os" value="MacOSX"><os name="Mac OS X"/></condition>
-	<condition property="native.os" value="Linux"><os name="Linux"/></condition>
-	<condition property="native.so" value="jnilib"><os name="Mac OS X"/></condition>
-	<condition property="native.so" value="so"><not><os name="Mac OS X"/></not></condition>
+    <condition property="is-windows">
+        <os family="windows"/>
+    </condition>
+    <condition property="is-unix">
+        <not>
+            <os family="windows"/>
+        </not>
+    </condition>
 
-	<condition property="production.suffix" value=".production"><isset property="is-production"/></condition>
-	<condition property="production.suffix" value=""><not><isset property="is-production"/></not></condition>
+    <condition property="jetty-use-service">
+        <isset property="env.ZIMBRA_JETTY_USE_SERVICE"/>
+    </condition>
 
-	<condition property="slapd.conf.src" value="${config.dir}/ldap/slapd.win.conf"><isset property="is-windows" /></condition>
-	<condition property="slapd.conf.src" value="${config.dir}/ldap/slapd.conf${production.suffix}"><isset property="is-unix"/></condition>
-	<condition property="slapd.conf.dir" value="openldap"><isset property="is-windows"/></condition>
-	<condition property="slapd.conf.dir" value="conf"><isset property="is-unix"/></condition>
-	<condition property="slapd.etc.dir" value="openldap/etc"><isset property="is-windows"/></condition>
-	<condition property="slapd.etc.dir" value="openldap/etc/openldap"><isset property="is-unix"/></condition>
+    <property name="webserver.name" value="jetty"/>
+    <property name="webserver.root.dir" location="${zimbra.home.dir}/${webserver.name}"/>
+    <property name="webserver.conf.dir" value="${webserver.root.dir}/etc"/>
 
-	<condition property="ldapmodify" value="${zimbra.home.dir}/openldap/ldapmodify"><isset property="is-windows"/></condition>
-	<condition property="ldapmodify" value="${zimbra.home.dir}/openldap/bin/ldapmodify"><isset property="is-unix"/></condition>
+    <condition property="deploy.dir" value="${env.DEPLOY_DIR}">
+        <isset property="env.DEPLOY_DIR"/>
+    </condition>
 
-	<condition property="ldapdelete" value="${zimbra.home.dir}/openldap/ldapdelete"><isset property="is-windows" /></condition>
-	<condition property="ldapdelete" value="${zimbra.home.dir}/openldap/bin/ldapdelete"><isset property="is-unix" /></condition>
+    <condition property="deploy.dir" value="${webserver.root.dir}/webapps">
+        <not>
+            <isset property="env.DEPLOY_DIR"/>
+        </not>
+    </condition>
 
-	<property name="defaultdomain.name" value="${zimbra.server.hostname}"/>
-	<property name="wiki.user.default" value="wiki@${defaultdomain.name}" /><!-- global wiki account -->
-	<property name="samplefamilyaccounts.file" location="data/soap/samplefamilyaccounts.xml"/>
-	
-	<taskdef resource="net/sf/antcontrib/antlib.xml">
-		<classpath>
-			<pathelement location="${common.jars.dir}/ant-contrib-1.0b1.jar"/>
-		</classpath>
-	</taskdef>
+    <property name="deploy.path" value="/service"/>
 
-	<path id="class.path">
-		<pathelement location="${common.classes.dir}" />
-		<pathelement location="${im.classes.dir}" />
-		<pathelement location="${build.classes.dir}" />
-		<fileset dir="${jars.dir}">
-			<include name="**/*.jar" />
-		</fileset>
-		<fileset dir="${common.jars.dir}">
-			<include name="**/*.jar" />
-		</fileset>
-		<fileset dir="${im.jars.dir}">
-			<include name="**/*.jar" />
-		</fileset>
-	</path>
+    <condition property="native.os" value="MacOSX">
+        <os name="Mac OS X"/>
+    </condition>
+    <condition property="native.os" value="Linux">
+        <os name="Linux"/>
+    </condition>
+    <condition property="native.so" value="jnilib">
+        <os name="Mac OS X"/>
+    </condition>
+    <condition property="native.so" value="so">
+        <not>
+            <os name="Mac OS X"/>
+        </not>
+    </condition>
 
-	<taskdef name="deploy" classname="org.apache.catalina.ant.DeployTask" classpathref="class.path" />
-	
-	<path id="all.java.path">
-		<pathelement location="${src.java.dir}" />
-		<pathelement location="${generated.java.dir}" />
-	</path>
+    <condition property="production.suffix" value=".production">
+        <isset property="is-production"/>
+    </condition>
+    <condition property="production.suffix" value="">
+        <not>
+            <isset property="is-production"/>
+        </not>
+    </condition>
 
-	<fileset dir="${src.java.dir}" id="src.java.files">
-		<include name="**/*.java" />
-	</fileset>
+    <condition property="slapd.conf.src" value="${config.dir}/ldap/slapd.win.conf">
+        <isset property="is-windows"/>
+    </condition>
+    <condition property="slapd.conf.src" value="${config.dir}/ldap/slapd.conf${production.suffix}">
+        <isset property="is-unix"/>
+    </condition>
+    <condition property="slapd.conf.dir" value="openldap">
+        <isset property="is-windows"/>
+    </condition>
+    <condition property="slapd.conf.dir" value="conf">
+        <isset property="is-unix"/>
+    </condition>
+    <condition property="slapd.etc.dir" value="openldap/etc">
+        <isset property="is-windows"/>
+    </condition>
+    <condition property="slapd.etc.dir" value="openldap/etc/openldap">
+        <isset property="is-unix"/>
+    </condition>
 
-	<fileset dir="${generated.java.dir}" id="generated.java.files">
-		<include name="**/*.java" />
-	</fileset>
+    <condition property="ldapmodify" value="${zimbra.home.dir}/openldap/ldapmodify">
+        <isset property="is-windows"/>
+    </condition>
+    <condition property="ldapmodify" value="${zimbra.home.dir}/openldap/bin/ldapmodify">
+        <isset property="is-unix"/>
+    </condition>
 
-	<target name="make-dirs">
-		<!-- take advantage of the fact that mkdir uses File.mkdirs() and creates inbetween dirs -->
-		<echo>Creating dirs under ${base.dir}</echo>
-		<mkdir dir="${base.dir}/${slapd.conf.dir}"/>
-		<mkdir dir="${base.dir}/${slapd.etc.dir}/schema"/>
-		<mkdir dir="${base.dir}/bin"/>
-		<mkdir dir="${base.dir}/conf/msgs"/>
-		<mkdir dir="${base.dir}/db"/>
-		<mkdir dir="${base.dir}/lib/ext"/>
-		<mkdir dir="${base.dir}/lib/jars"/>
-		<mkdir dir="${base.dir}/libexec"/>
-		<mkdir dir="${base.dir}/wiki"/>
-	</target>
+    <condition property="ldapdelete" value="${zimbra.home.dir}/openldap/ldapdelete">
+        <isset property="is-windows"/>
+    </condition>
+    <condition property="ldapdelete" value="${zimbra.home.dir}/openldap/bin/ldapdelete">
+        <isset property="is-unix"/>
+    </condition>
 
-	<target name="build-init">
-		<mkdir dir="${build.classes.dir}"/>
-		<mkdir dir="${generated.java.dir}"/>
-		<mkdir dir="${build.dir}/wiki"/>
-		<mkdir dir="${build.dir}/data"/>
-		<antcall target="make-dirs"><param name="base.dir" value="${dist.dir}"/></antcall>
-	</target>
+    <property name="defaultdomain.name" value="${zimbra.server.hostname}"/>
+    <property name="wiki.user.default" value="wiki@${defaultdomain.name}"/>
+    <!-- global wiki account -->
+    <property name="samplefamilyaccounts.file" location="data/soap/samplefamilyaccounts.xml"/>
 
-	<target name="javadoc" depends="set-buildinfo-vars">
-		<javadoc sourcepath="src/java" destdir="docs/api" classpathref="class.path" access="private"
-			 packagenames="com.zimbra.*" additionalparam='-tag perms:m:"Permissions Required:"'
-			 breakiterator="yes" windowtitle="ZimbraServer v${zimbra.buildinfo.version}">
-			<link href="http://java.sun.com/j2se/1.5.0/docs/api/"/>
-			<link href="http://java.sun.com/products/javamail/javadocs/"/>
-			<link href="http://jakarta.apache.org/commons/logging/api/"/>
-			<link href="http://ical4j.sourceforge.net/api/"/>
-		</javadoc>
-	</target>
+    <taskdef resource="net/sf/antcontrib/antlib.xml">
+        <classpath>
+            <pathelement location="${common.jars.dir}/ant-contrib-1.0b1.jar"/>
+        </classpath>
+    </taskdef>
 
-	<target name="javacc-internal">
-		<mkdir dir="${output.dir}" />
-		<java classname="org.javacc.parser.Main" fork="true" classpathref="class.path" failonerror="true">
-			<sysproperty key="install.root" file="${javacc.home}" />
-			<arg value="-OUTPUT_DIRECTORY=${output.dir}" />
-			<arg value="${target}" />
-		</java>
-	</target>
+    <path id="class.path">
+        <pathelement location="${common.classes.dir}"/>
+        <pathelement location="${im.classes.dir}"/>
+        <pathelement location="${build.classes.dir}"/>
+        <fileset dir="${jars.dir}">
+            <include name="**/*.jar"/>
+        </fileset>
+        <fileset dir="${common.jars.dir}">
+            <include name="**/*.jar"/>
+        </fileset>
+        <fileset dir="${im.jars.dir}">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
 
-	<!-- invoke the "javacc" task with (target.classdir=com/foo/bar and target="gub.jj")  -->
-	<target name="javacc">
-		<antcall target="javacc-internal">
-			<!-- <param name="output.dir" location="${generated.java.dir}/${target.classdir}"/> -->
-			<param name="output.dir" location="${src.java.dir}/${target.classdir}" />
-			<param name="target" location="${src.java.dir}/${target.classdir}/${target}" />
-		</antcall>
-	</target>
+    <taskdef name="deploy" classname="org.apache.catalina.ant.DeployTask" classpathref="class.path"/>
 
-	<target name="javacc-ZimbraQueryParser">
-		<antcall target="javacc">
-			<param name="target.classdir" value="com/zimbra/cs/index/queryparser" />
-			<param name="target" value="ZimbraQueryParser.jj" />
-		</antcall>
-	</target>
+    <path id="all.java.path">
+        <pathelement location="${src.java.dir}"/>
+        <pathelement location="${generated.java.dir}"/>
+    </path>
 
-	<target name="set-buildinfo-vars">
-		<tstamp />
-		<condition property="zimbra.buildinfo.version" value="5.0">
-			<not>
-				<isset property="${zimbra.buildinfo.version}" />
-			</not>
-		</condition>
-		<condition property="zimbra.buildinfo.type" value="">
-			<not>
-				<isset property="${zimbra.buildinfo.type}" />
-			</not>
-		</condition>
-		<condition property="zimbra.buildinfo.release" value="${user.name}">
-			<not>
-				<isset property="${zimbra.buildinfo.release}" />
-			</not>
-		</condition>
-		<condition property="zimbra.buildinfo.date" value="${DSTAMP}-${TSTAMP}">
-			<not>
-				<isset property="${zimbra.buildinfo.date}" />
-			</not>
-		</condition>
-		<condition property="zimbra.buildinfo.host" value="${zimbra.server.hostname}">
-			<not>
-				<isset property="${zimbra.buildinfo.host}" />
-			</not>
-		</condition>
-		<property name="zimbra.buildinfo.all" value="Version: ${zimbra.buildinfo.version}; Type: ${zimbra.buildinfo.type}; Release: ${zimbra.buildinfo.release}; Built: ${zimbra.buildinfo.date}; Host: ${zimbra.buildinfo.host}"/>
-		<echo>Version: ${zimbra.buildinfo.version} Date: ${zimbra.buildinfo.date}</echo>
-	</target>
+    <fileset dir="${src.java.dir}" id="src.java.files">
+        <include name="**/*.java"/>
+    </fileset>
 
-	<target name="generate-buildinfo" depends="set-buildinfo-vars">
-		<mkdir dir="${build.dir}/buildinfo" />
-		<echo file="${build.dir}/buildinfo/BuildInfoGenerated.java">
-			package com.zimbra.cs.util;
-			class BuildInfoGenerated {
-				public static final String VERSION = "${zimbra.buildinfo.version}";
-				public static final String TYPE = "${zimbra.buildinfo.type}";
-				public static final String RELEASE = "${zimbra.buildinfo.release}";
-				public static final String DATE = "${DSTAMP}-${TSTAMP}";
-				public static final String HOST = "${zimbra.buildinfo.host}";
-			}
-		</echo>
-		<javac destdir="${build.classes.dir}" debug="true" srcdir="${build.dir}/buildinfo">
-		</javac>
-	</target>
+    <fileset dir="${generated.java.dir}" id="generated.java.files">
+        <include name="**/*.java"/>
+    </fileset>
 
-	<!-- You can add more attrs.xml files from outside this project and invoke this target. -->
-	<target name="generate-ldap-config" depends="set-buildinfo-vars">
-		<dependset>
-			<srcfileset dir="${config.dir}/attrs" includes="*.xml"/>
-			<targetfileset dir='${build.dir}/ldap-config' includes='*'/>
-		</dependset>
+    <target name="make-dirs">
+        <!-- take advantage of the fact that mkdir uses File.mkdirs() and creates inbetween dirs -->
+        <echo>Creating dirs under ${base.dir}</echo>
+        <mkdir dir="${base.dir}/${slapd.conf.dir}"/>
+        <mkdir dir="${base.dir}/${slapd.etc.dir}/schema"/>
+        <mkdir dir="${base.dir}/bin"/>
+        <mkdir dir="${base.dir}/conf/msgs"/>
+        <mkdir dir="${base.dir}/db"/>
+        <mkdir dir="${base.dir}/lib/ext"/>
+        <mkdir dir="${base.dir}/lib/jars"/>
+        <mkdir dir="${base.dir}/libexec"/>
+        <mkdir dir="${base.dir}/wiki"/>
+    </target>
 
-		<if>
-			<not>
-				<available file="${build.dir}/ldap-config/zimbra.schema"/>
-			</not>
-			<then>
-				<mkdir dir="${build.dir}/attrs"/>
-				<copy todir="${build.dir}/attrs" overwrite="true">
-					<fileset dir="${config.dir}/attrs" includes="*.xml"/>
-				</copy>
-				<mkdir dir="${build.dir}/ldap-config"/>
-				<java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path"
-					  failonerror="true">
-					<sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
-					<arg line="-a generateLdapSchema -i ${build.dir}/attrs -t ${config.dir}/ldap/zimbra.schema-template -o ${build.dir}/ldap-config/zimbra.schema"/>
-				</java>
-				<java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path"
-					  failonerror="true">
-					<sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
-					<arg line="-a generateGlobalConfigLdif -i ${build.dir}/attrs -o ${build.dir}/ldap-config/zimbra_globalconfig.ldif"/>
-				</java>
-				<java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path"
-					  failonerror="true">
-					<sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
-					<arg line="-a generateDefaultCOSLdif -i ${build.dir}/attrs -o ${build.dir}/ldap-config/zimbra_defaultcos.ldif"/>
-				</java>
-				<copy todir="${build.dir}/ldap-config" file="${config.dir}/ldap/zimbra.ldif"/>
-				<copy todir="${build.dir}/ldap-config" file="${config.dir}/ldap/zimbra_mimehandlers.ldif"/>
-				<copy todir="${build.dir}/ldap-config" file="${config.dir}/ldap/amavisd.schema"/>
-			</then>
-		</if>
-	</target>
+    <target name="build-init">
+        <mkdir dir="${build.classes.dir}"/>
+        <mkdir dir="${generated.java.dir}"/>
+        <mkdir dir="${build.dir}/wiki"/>
+        <mkdir dir="${build.dir}/data"/>
+        <antcall target="make-dirs">
+            <param name="base.dir" value="${dist.dir}"/>
+        </antcall>
+    </target>
 
-	<target name="compile" depends="build-init">
-		<ant dir="${common.dir}" target="jar" inheritAll="false" />
-		<ant dir="${im.dir}" target="jar" inheritAll="false" />
-		<javac fork="true" memorymaximumsize="256m" destdir="${build.classes.dir}" debug="true" classpathref="class.path">
-			<src refid="all.java.path" />
-		</javac>
-		<antcall target="generate-buildinfo"/>
-		<java classname="com.zimbra.cs.db.Versions" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-o ${build.dir}"/>
-		</java>
-	</target>
+    <target name="javadoc" depends="set-buildinfo-vars">
+        <javadoc sourcepath="src/java" destdir="docs/api" classpathref="class.path" access="private"
+                 packagenames="com.zimbra.*" additionalparam='-tag perms:m:"Permissions Required:"'
+                 breakiterator="yes" windowtitle="ZimbraServer v${zimbra.buildinfo.version}">
+            <link href="http://java.sun.com/j2se/1.5.0/docs/api/"/>
+            <link href="http://java.sun.com/products/javamail/javadocs/"/>
+            <link href="http://jakarta.apache.org/commons/logging/api/"/>
+            <link href="http://ical4j.sourceforge.net/api/"/>
+        </javadoc>
+    </target>
 
-	<target name="jar" depends="compile">
-		<echo>Hostname: ${zimbra.server.hostname}</echo>
-		<jar destfile="${jarfile}" basedir="${build.classes.dir}" />
-		<antcall target="generate-ldap-config"/>
-	</target>
+    <target name="javacc-internal">
+        <mkdir dir="${output.dir}"/>
+        <java classname="org.javacc.parser.Main" fork="true" classpathref="class.path" failonerror="true">
+            <sysproperty key="install.root" file="${javacc.home}"/>
+            <arg value="-OUTPUT_DIRECTORY=${output.dir}"/>
+            <arg value="${target}"/>
+        </java>
+    </target>
 
-	<target name="clean" description="Removes any temporary files">
-		<ant dir="${common.dir}" target="clean" inheritAll="false" />
-		<ant dir="${im.dir}" target="clean" inheritAll="false" />
-        <delete dir="${build.dir}" />
-	</target>
+    <!-- invoke the "javacc" task with (target.classdir=com/foo/bar and target="gub.jj")  -->
+    <target name="javacc">
+        <antcall target="javacc-internal">
+            <!-- <param name="output.dir" location="${generated.java.dir}/${target.classdir}"/> -->
+            <param name="output.dir" location="${src.java.dir}/${target.classdir}"/>
+            <param name="target" location="${src.java.dir}/${target.classdir}/${target}"/>
+        </antcall>
+    </target>
 
-	<!-- jetty loads jetty-util*.jar, log4j*.jar and slf4j*.jar -->
-	<property name="war.include" value="slf4j*.jar, jsieve*.jar"/>
+    <target name="javacc-ZimbraQueryParser">
+        <antcall target="javacc">
+            <param name="target.classdir" value="com/zimbra/cs/index/queryparser"/>
+            <param name="target" value="ZimbraQueryParser.jj"/>
+        </antcall>
+    </target>
 
-	<target name="war" depends="jar">
-		<echo>war.include=${war.include}</echo>
-		<war warfile="${warfile}" webxml="${config.dir}/web.xml${production.suffix}">
-			<fileset dir="WebRoot"/>
-			<lib file="${im.jarfile}" />
-			<lib file="${jarfile}" />
-			<lib dir="${common.jars.dir}" includes="${war.include}"/>
-			<lib dir="${im.jars.dir}" includes="*.jar"/>
-			<classes dir="${config.dir}" includes="sieveConfig.xml" />
-		</war>
-	</target>
+    <target name="set-buildinfo-vars">
+        <tstamp/>
+        <condition property="zimbra.buildinfo.version" value="5.0">
+            <not>
+                <isset property="${zimbra.buildinfo.version}"/>
+            </not>
+        </condition>
+        <condition property="zimbra.buildinfo.type" value="">
+            <not>
+                <isset property="${zimbra.buildinfo.type}"/>
+            </not>
+        </condition>
+        <condition property="zimbra.buildinfo.release" value="${user.name}">
+            <not>
+                <isset property="${zimbra.buildinfo.release}"/>
+            </not>
+        </condition>
+        <condition property="zimbra.buildinfo.date" value="${DSTAMP}-${TSTAMP}">
+            <not>
+                <isset property="${zimbra.buildinfo.date}"/>
+            </not>
+        </condition>
+        <condition property="zimbra.buildinfo.host" value="${zimbra.server.hostname}">
+            <not>
+                <isset property="${zimbra.buildinfo.host}"/>
+            </not>
+        </condition>
+        <property name="zimbra.buildinfo.all"
+                  value="Version: ${zimbra.buildinfo.version}; Type: ${zimbra.buildinfo.type}; Release: ${zimbra.buildinfo.release}; Built: ${zimbra.buildinfo.date}; Host: ${zimbra.buildinfo.host}"/>
+        <echo>Version: ${zimbra.buildinfo.version} Date: ${zimbra.buildinfo.date}</echo>
+    </target>
 
-	<target name="service-deploy" depends="refresh-opt-zimbra,deploy-war,deploy-zimlets" description="Not just war file deployment, but a /opt/zimbra refresh as well!"/>
+    <target name="generate-buildinfo" depends="set-buildinfo-vars">
+        <mkdir dir="${build.dir}/buildinfo"/>
+        <echo file="${build.dir}/buildinfo/BuildInfoGenerated.java">
+            package com.zimbra.cs.util;
+            class BuildInfoGenerated {
+            public static final String VERSION = "${zimbra.buildinfo.version}";
+            public static final String TYPE = "${zimbra.buildinfo.type}";
+            public static final String RELEASE = "${zimbra.buildinfo.release}";
+            public static final String DATE = "${DSTAMP}-${TSTAMP}";
+            public static final String HOST = "${zimbra.buildinfo.host}";
+            }
+        </echo>
+        <javac destdir="${build.classes.dir}" debug="true" srcdir="${build.dir}/buildinfo">
+        </javac>
+    </target>
 
-	<target name="deploy-war" depends="war">
-		<antcall target="stop-jetty"/>
-	    <delete dir="${webserver.root.dir}/webapps/service"/>
-	    <delete file="${webserver.root.dir}/webapps/service.war"/>
-		<copy file="${warfile}" todir="${webserver.root.dir}/webapps"/>
-        <mkdir dir='${webserver.root.dir}/webapps/service' />
-        <unzip dest="${webserver.root.dir}/webapps/service" src="${webserver.root.dir}/webapps/${warfilename}" />
-		<antcall target="start-jetty"/>
-	</target>
+    <!-- You can add more attrs.xml files from outside this project and invoke this target. -->
+    <target name="generate-ldap-config" depends="set-buildinfo-vars">
+        <dependset>
+            <srcfileset dir="${config.dir}/attrs" includes="*.xml"/>
+            <targetfileset dir='${build.dir}/ldap-config' includes='*'/>
+        </dependset>
 
-	<target name="init-opt-zimbra" depends="dev-dist,localhost-ssl-cert">
-		<copy todir="${zimbra.home.dir}">
-			<fileset dir="${dist.dir}"/>
-		</copy>	
-		<chmod perm="a+rx"><fileset dir="${zimbra.home.dir}/bin"/><fileset dir="${zimbra.home.dir}/libexec"/></chmod><!-- ant does not preserve perms on copy -->
-	</target>
+        <if>
+            <not>
+                <available file="${build.dir}/ldap-config/zimbra.schema"/>
+            </not>
+            <then>
+                <mkdir dir="${build.dir}/attrs"/>
+                <copy todir="${build.dir}/attrs" overwrite="true">
+                    <fileset dir="${config.dir}/attrs" includes="*.xml"/>
+                </copy>
+                <mkdir dir="${build.dir}/ldap-config"/>
+                <java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path"
+                      failonerror="true">
+                    <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
+                    <arg line="-a generateLdapSchema -i ${build.dir}/attrs -t ${config.dir}/ldap/zimbra.schema-template -o ${build.dir}/ldap-config/zimbra.schema"/>
+                </java>
+                <java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path"
+                      failonerror="true">
+                    <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
+                    <arg line="-a generateGlobalConfigLdif -i ${build.dir}/attrs -o ${build.dir}/ldap-config/zimbra_globalconfig.ldif"/>
+                </java>
+                <java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path"
+                      failonerror="true">
+                    <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
+                    <arg line="-a generateDefaultCOSLdif -i ${build.dir}/attrs -o ${build.dir}/ldap-config/zimbra_defaultcos.ldif"/>
+                </java>
+                <copy todir="${build.dir}/ldap-config" file="${config.dir}/ldap/zimbra.ldif"/>
+                <copy todir="${build.dir}/ldap-config" file="${config.dir}/ldap/zimbra_mimehandlers.ldif"/>
+                <copy todir="${build.dir}/ldap-config" file="${config.dir}/ldap/amavisd.schema"/>
+            </then>
+        </if>
+    </target>
 
-	<target name="refresh-opt-zimbra" depends="dev-dist">
-		<copy todir="${zimbra.home.dir}" overwrite="true">
-			<fileset dir="${dist.dir}">
-				<exclude name="conf/localconfig.xml"/> <!-- don't trash zimbra_server_hostname -->
-				<exclude name="${webserver.name}/webapps/**"/> <!-- deploy-war covers these -->
-			</fileset>
-		</copy>
-		<chmod perm="a+rx"><fileset dir="${zimbra.home.dir}/bin"/><fileset dir="${zimbra.home.dir}/libexec"/></chmod>
-	</target>
+    <target name="compile" depends="build-init">
+        <ant dir="${common.dir}" target="jar" inheritAll="false"/>
+        <ant dir="${im.dir}" target="jar" inheritAll="false"/>
+        <javac fork="true" memorymaximumsize="256m" destdir="${build.classes.dir}" debug="true"
+               classpathref="class.path">
+            <src refid="all.java.path"/>
+        </javac>
+        <antcall target="generate-buildinfo"/>
+        <java classname="com.zimbra.cs.db.Versions" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="-o ${build.dir}"/>
+        </java>
+    </target>
+
+    <target name="jar" depends="compile">
+        <echo>Hostname: ${zimbra.server.hostname}</echo>
+        <jar destfile="${jarfile}" basedir="${build.classes.dir}"/>
+        <antcall target="generate-ldap-config"/>
+    </target>
+
+    <target name="clean" description="Removes any temporary files">
+        <ant dir="${common.dir}" target="clean" inheritAll="false"/>
+        <ant dir="${im.dir}" target="clean" inheritAll="false"/>
+        <delete dir="${build.dir}"/>
+    </target>
+
+    <!-- jetty loads jetty-util*.jar, log4j*.jar and slf4j*.jar -->
+    <property name="war.include" value="slf4j*.jar, jsieve*.jar"/>
+
+    <target name="war" depends="jar">
+        <echo>war.include=${war.include}</echo>
+        <war warfile="${warfile}" webxml="${config.dir}/web.xml${production.suffix}">
+            <fileset dir="WebRoot"/>
+            <lib file="${im.jarfile}"/>
+            <lib file="${jarfile}"/>
+            <lib dir="${common.jars.dir}" includes="${war.include}"/>
+            <lib dir="${im.jars.dir}" includes="*.jar"/>
+            <classes dir="${config.dir}" includes="sieveConfig.xml"/>
+        </war>
+    </target>
+
+    <target name="service-deploy" depends="refresh-opt-zimbra,deploy-war,deploy-zimlets"
+            description="Not just war file deployment, but a /opt/zimbra refresh as well!"/>
+
+    <target name="deploy-war" depends="war">
+        <antcall target="stop-jetty"/>
+        <delete dir="${webserver.root.dir}/webapps/service"/>
+        <delete file="${webserver.root.dir}/webapps/service.war"/>
+        <copy file="${warfile}" todir="${webserver.root.dir}/webapps"/>
+        <mkdir dir='${webserver.root.dir}/webapps/service'/>
+        <unzip dest="${webserver.root.dir}/webapps/service" src="${webserver.root.dir}/webapps/${warfilename}"/>
+        <antcall target="start-jetty"/>
+    </target>
+
+    <target name="init-opt-zimbra" depends="dev-dist,localhost-ssl-cert">
+        <copy todir="${zimbra.home.dir}">
+            <fileset dir="${dist.dir}"/>
+        </copy>
+        <chmod perm="a+rx">
+            <fileset dir="${zimbra.home.dir}/bin"/>
+            <fileset dir="${zimbra.home.dir}/libexec"/>
+        </chmod>
+        <!-- ant does not preserve perms on copy -->
+    </target>
+
+    <target name="refresh-opt-zimbra" depends="dev-dist">
+        <copy todir="${zimbra.home.dir}" overwrite="true">
+            <fileset dir="${dist.dir}">
+                <exclude name="conf/localconfig.xml"/>
+                <!-- don't trash zimbra_server_hostname -->
+                <exclude name="${webserver.name}/webapps/**"/>
+                <!-- deploy-war covers these -->
+            </fileset>
+        </copy>
+        <chmod perm="a+rx">
+            <fileset dir="${zimbra.home.dir}/bin"/>
+            <fileset dir="${zimbra.home.dir}/libexec"/>
+        </chmod>
+    </target>
 
     <target name="enable-im">
-      <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-        <arg line="-l -v mcf zimbraXMPPEnabled TRUE" />
-      </java>
-      <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-        <arg line="-l -v mc default zimbraFeatureIMEnabled TRUE" />
-      </java>
-      <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-        <arg line="-l -v mc default zimbraFeatureInstantNotify TRUE" />
-      </java>
-      <antcall target="stop-webserver"/>
-      <antcall target="start-webserver"/>
+        <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="-l -v mcf zimbraXMPPEnabled TRUE"/>
+        </java>
+        <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="-l -v mc default zimbraFeatureIMEnabled TRUE"/>
+        </java>
+        <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="-l -v mc default zimbraFeatureInstantNotify TRUE"/>
+        </java>
+        <antcall target="stop-webserver"/>
+        <antcall target="start-webserver"/>
     </target>
 
     <target name="disable-im">
-      <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-        <arg line="-l -v mc default zimbraFeatureIMEnabled FALSE" />
-      </java>
-      <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-        <arg line="-l -v mcf zimbraXMPPEnabled FALSE" />
-      </java>
-      <antcall target="stop-webserver"/>
-      <antcall target="start-webserver"/>
+        <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="-l -v mc default zimbraFeatureIMEnabled FALSE"/>
+        </java>
+        <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="-l -v mcf zimbraXMPPEnabled FALSE"/>
+        </java>
+        <antcall target="stop-webserver"/>
+        <antcall target="start-webserver"/>
     </target>
 
     <target name="reset-im" depends="disable-im">
-      <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
-           classpathref="class.path" onerror="abort" src="${im.dir}/src/db/wildfireDrop.sql" />
-      <antcall target="enable-im" />
+        <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
+             classpathref="class.path" onerror="abort" src="${im.dir}/src/db/wildfireDrop.sql"/>
+        <antcall target="enable-im"/>
     </target>
-    
-	<target name="dev-dist" depends="war,dev-dist-unix,choose-db-schema">
-		<!-- bin, libexec -->
-		<copy todir="${dist.dir}/bin" overwrite="true"><fileset dir="${src.dir}/bin" excludes="*.production,zmmailboxdctl,jetty"/></copy>
-		<copy todir="${dist.dir}/libexec" overwrite="true"><fileset dir="${src.dir}/libexec" excludes="*.production"/></copy>
-		<if><isset property="is-production"/><then>
-		    <copy tofile="${dist.dir}/bin/zmmailboxdctl" file="${src.dir}/bin/zmmailboxdctl" overwrite="true"/>
-		</then><else>
-		    <copy tofile="${dist.dir}/bin/${webserver.name}" file="${src.dir}/bin/${webserver.name}" overwrite="true"/>
-		</else></if>
-		<copy tofile="${dist.dir}/bin/ldap" file="${src.dir}/bin/ldap${production.suffix}" overwrite="true"/>
-		<fixcrlf srcdir="${dist.dir}/bin" eol="unix"/>
-		<fixcrlf srcdir="${dist.dir}/libexec" eol="unix"/>
-		<chmod perm="a+rx"><fileset dir="${dist.dir}/bin"/><fileset dir="${dist.dir}/libexec"/></chmod>
 
-		<!-- conf -->
-		<copy tofile="${dist.dir}/conf/localconfig.xml" file="${config.dir}/localconfig.xml${production.suffix}" overwrite="true" />
-		<copy tofile="${dist.dir}/conf/zimbra-contact-fields.xml" file="${config.dir}/contacts/zimbra-contact-fields.xml" overwrite="true" />
-		<if><not><isset property="is-production"/></not><then>
-			<java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-                        	<sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
-                        	<arg line="-e mailboxd_directory=/opt/zimbra/jetty"/>
-                	</java>
-			<java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-                        	<sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
-                        	<arg line="-e mailboxd_keystore=/opt/zimbra/jetty/etc/keystore"/>
-                	</java>
-		</then></if>	
-		<copy tofile="${dist.dir}/conf/log4j.properties" file="${config.dir}/log4j.properties${production.suffix}" overwrite="true"/>
-		<copy tofile="${dist.dir}/conf/timezones.ics" file="${config.dir}/timezones.ics" overwrite="true"/>
-		<copy todir="${dist.dir}/conf/msgs" overwrite="true"><fileset dir="${config.dir}/msgs"/></copy>
-        <copy todir="${dist.dir}/conf/msgs" overwrite="true"><fileset dir="${im.dir}/src/i18n"/></copy>
-		<copy todir="${dist.dir}/conf/attrs" overwrite="true"><fileset dir="${build.dir}/attrs"/></copy>
-		<fixcrlf srcdir="${dist.dir}/conf" eol="unix" includes="**" />
+    <target name="dev-dist" depends="war,dev-dist-unix,choose-db-schema">
+        <!-- bin, libexec -->
+        <copy todir="${dist.dir}/bin" overwrite="true">
+            <fileset dir="${src.dir}/bin" excludes="*.production,zmmailboxdctl,jetty"/>
+        </copy>
+        <copy todir="${dist.dir}/libexec" overwrite="true">
+            <fileset dir="${src.dir}/libexec" excludes="*.production"/>
+        </copy>
+        <if>
+            <isset property="is-production"/>
+            <then>
+                <copy tofile="${dist.dir}/bin/zmmailboxdctl" file="${src.dir}/bin/zmmailboxdctl" overwrite="true"/>
+            </then>
+            <else>
+                <copy tofile="${dist.dir}/bin/${webserver.name}" file="${src.dir}/bin/${webserver.name}"
+                      overwrite="true"/>
+            </else>
+        </if>
+        <copy tofile="${dist.dir}/bin/ldap" file="${src.dir}/bin/ldap${production.suffix}" overwrite="true"/>
+        <fixcrlf srcdir="${dist.dir}/bin" eol="unix"/>
+        <fixcrlf srcdir="${dist.dir}/libexec" eol="unix"/>
+        <chmod perm="a+rx">
+            <fileset dir="${dist.dir}/bin"/>
+            <fileset dir="${dist.dir}/libexec"/>
+        </chmod>
 
-		<!-- lib: ignore absence of DLL for windows -->
-		<copy todir="${dist.dir}/lib/jars" overwrite="true"><fileset dir="${common.jars.dir}" includes="*.jar" excludes="servlet-api.jar" /></copy>
-		<copy todir="${dist.dir}/lib/jars" overwrite="true"><fileset dir="${im.jars.dir}" includes="*.jar" /></copy>
-		<copy todir="${dist.dir}/lib/jars" file="${common.jarfile}" overwrite="true"/>
-		<copy todir="${dist.dir}/lib/jars" file="${im.jarfile}" overwrite="true"/>
-		<copy todir="${dist.dir}/lib/jars" file="${jarfile}" overwrite="true"/>
-		
-			<copy todir="${dist.dir}/jetty/webapps" file="${warfile}" overwrite="true"/>
-			<copy tofile="${dist.dir}/jetty/etc/jettyrc" file="${config.dir}/jetty-6.1/jettyrc" overwrite="true"/>
-			<copy tofile="${dist.dir}/jetty/etc/jetty.xml" file="${config.dir}/jetty-6.1/jetty.xml" overwrite="true"/>
-			<copy tofile="${dist.dir}/jetty/etc/start.config" file="${config.dir}/jetty-6.1/start.config" overwrite="true"/>
-			<copy tofile="${dist.dir}/jetty/etc/webdefault.xml" file="${config.dir}/jetty-6.1/webdefault.xml${production.suffix}" overwrite="true"/>
-			<if><isset property="is-windows"/><then>
-				<copy tofile="${dist.dir}/jetty/etc/wrapper.conf" file="${config.dir}/jetty-6.1/wrapper.conf"/>
-			</then></if>
-			<copy tofile="${dist.dir}/jetty/resources/log4j.properties" file="${config.dir}/jetty-6.1/log4j.properties${production.suffix}" overwrite="true"/>
-			<copy todir="${dist.dir}/jetty/common/lib" overwrite="true"><fileset dir="${common.jars.dir}" includes="${ical4j.jar},mail.jar,activation.jar,zimbra-native.jar,zimbra-charset.jar,bouncycastle.jar,commons-beanutils*.jar,commons-cli*.jar,commons-codec*.jar,commons-collections*.jar,commons-dbcp*.jar,commons-digester*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-logging.jar,commons-pool*.jar,concurrent*.jar,custom_rhino.jar,dom4j*.jar,ganymed-ssh2*.jar,jakarta-oro*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,lucene-core*.jar,mina*.jar,mysql-connector-java*.jar,nekohtml.jar,tnef*.jar,xercesImpl.jar,xpp3.jar,libidn*.jar"/></copy>
-			<copy todir="${dist.dir}/jetty/common/lib" file="${common.jarfile}" overwrite="true"/>
-			<copy todir="${dist.dir}/jetty/lib" overwrite="true">
-			    <fileset dir="${common.jars.dir}" includes="log4j*.jar"/>
-			</copy>
-		
-		<!-- openldap -->
-		<copy tofile="${dist.dir}/${slapd.conf.dir}/slapd.conf" file="${slapd.conf.src}" overwrite="true"/> <!-- CHECK this is ok with dev build -->
-		<copy todir="${dist.dir}/${slapd.etc.dir}" overwrite="true"><fileset dir="${build.dir}/ldap-config" includes="*.ldif"/></copy>
-		<copy todir="${dist.dir}/${slapd.etc.dir}/schema" overwrite="true"><fileset dir="${build.dir}/ldap-config" includes="*.schema"/></copy>
+        <!-- conf -->
+        <copy tofile="${dist.dir}/conf/localconfig.xml" file="${config.dir}/localconfig.xml${production.suffix}"
+              overwrite="true"/>
+        <copy tofile="${dist.dir}/conf/zimbra-contact-fields.xml"
+              file="${config.dir}/contacts/zimbra-contact-fields.xml" overwrite="true"/>
+        <if>
+            <not>
+                <isset property="is-production"/>
+            </not>
+            <then>
+                <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path"
+                      failonerror="true">
+                    <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
+                    <arg line="-e mailboxd_directory=/opt/zimbra/jetty"/>
+                </java>
+                <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path"
+                      failonerror="true">
+                    <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
+                    <arg line="-e mailboxd_keystore=/opt/zimbra/jetty/etc/keystore"/>
+                </java>
+            </then>
+        </if>
+        <copy tofile="${dist.dir}/conf/log4j.properties" file="${config.dir}/log4j.properties${production.suffix}"
+              overwrite="true"/>
+        <copy tofile="${dist.dir}/conf/timezones.ics" file="${config.dir}/timezones.ics" overwrite="true"/>
+        <copy todir="${dist.dir}/conf/msgs" overwrite="true">
+            <fileset dir="${config.dir}/msgs"/>
+        </copy>
+        <copy todir="${dist.dir}/conf/msgs" overwrite="true">
+            <fileset dir="${im.dir}/src/i18n"/>
+        </copy>
+        <copy todir="${dist.dir}/conf/attrs" overwrite="true">
+            <fileset dir="${build.dir}/attrs"/>
+        </copy>
+        <fixcrlf srcdir="${dist.dir}/conf" eol="unix" includes="**"/>
 
-		<!-- db schema -->
-		<copy todir="${dist.dir}/db" overwrite="true"><fileset dir="${src.dir}/db" includes="*.sql" excludes="db.sql,create_database.sql"/></copy>
-		<copy todir="${dist.dir}/db" overwrite="true"><fileset dir="${db.schema.dir}" includes="db.sql,create_database.sql"/></copy>
-		<copy todir="${dist.dir}/db" file="${build.dir}/versions-init.sql" overwrite="true"/>
+        <!-- lib: ignore absence of DLL for windows -->
+        <copy todir="${dist.dir}/lib/jars" overwrite="true">
+            <fileset dir="${common.jars.dir}" includes="*.jar" excludes="servlet-api.jar"/>
+        </copy>
+        <copy todir="${dist.dir}/lib/jars" overwrite="true">
+            <fileset dir="${im.jars.dir}" includes="*.jar"/>
+        </copy>
+        <copy todir="${dist.dir}/lib/jars" file="${common.jarfile}" overwrite="true"/>
+        <copy todir="${dist.dir}/lib/jars" file="${im.jarfile}" overwrite="true"/>
+        <copy todir="${dist.dir}/lib/jars" file="${jarfile}" overwrite="true"/>
 
-		<!-- wikis -->
-		<copy todir="${dist.dir}/wiki" overwrite="true"><fileset dir="data/wiki" includes="**"/></copy>
-	</target>
+        <copy todir="${dist.dir}/jetty/webapps" file="${warfile}" overwrite="true"/>
+        <copy tofile="${dist.dir}/jetty/etc/jettyrc" file="${config.dir}/jetty-6.1/jettyrc" overwrite="true"/>
+        <copy tofile="${dist.dir}/jetty/etc/jetty.xml" file="${config.dir}/jetty-6.1/jetty.xml" overwrite="true"/>
+        <copy tofile="${dist.dir}/jetty/etc/start.config" file="${config.dir}/jetty-6.1/start.config" overwrite="true"/>
+        <copy tofile="${dist.dir}/jetty/etc/webdefault.xml"
+              file="${config.dir}/jetty-6.1/webdefault.xml${production.suffix}" overwrite="true"/>
+        <if>
+            <isset property="is-windows"/>
+            <then>
+                <copy tofile="${dist.dir}/jetty/etc/wrapper.conf" file="${config.dir}/jetty-6.1/wrapper.conf"/>
+            </then>
+        </if>
+        <copy tofile="${dist.dir}/jetty/resources/log4j.properties"
+              file="${config.dir}/jetty-6.1/log4j.properties${production.suffix}" overwrite="true"/>
+        <copy todir="${dist.dir}/jetty/common/lib" overwrite="true">
+            <fileset dir="${common.jars.dir}"
+                     includes="${ical4j.jar},mail.jar,activation.jar,zimbra-native.jar,zimbra-charset.jar,bouncycastle.jar,commons-beanutils*.jar,commons-cli*.jar,commons-codec*.jar,commons-collections*.jar,commons-dbcp*.jar,commons-digester*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-logging.jar,commons-pool*.jar,concurrent*.jar,yuicompressor-2.1.2.jar,dom4j*.jar,ganymed-ssh2*.jar,jakarta-oro*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,lucene-core*.jar,mina*.jar,mysql-connector-java*.jar,nekohtml.jar,tnef*.jar,xercesImpl.jar,xpp3.jar,libidn*.jar"/>
+        </copy>
+        <copy todir="${dist.dir}/jetty/common/lib" file="${common.jarfile}" overwrite="true"/>
+        <copy todir="${dist.dir}/jetty/lib" overwrite="true">
+            <fileset dir="${common.jars.dir}" includes="log4j*.jar"/>
+        </copy>
 
-	<target name="dev-dist-unix" if="is-unix">
-		<copy tofile="${dist.dir}/lib/libzimbra-native.${native.so}" file="${lib.dir}/libzimbra-native.${native.so}.${native.os}.${os.arch}" verbose="true" failonerror="false" overwrite="true"/>	
-	</target>
+        <!-- openldap -->
+        <copy tofile="${dist.dir}/${slapd.conf.dir}/slapd.conf" file="${slapd.conf.src}" overwrite="true"/>
+        <!-- CHECK this is ok with dev build -->
+        <copy todir="${dist.dir}/${slapd.etc.dir}" overwrite="true">
+            <fileset dir="${build.dir}/ldap-config" includes="*.ldif"/>
+        </copy>
+        <copy todir="${dist.dir}/${slapd.etc.dir}/schema" overwrite="true">
+            <fileset dir="${build.dir}/ldap-config" includes="*.schema"/>
+        </copy>
 
-	<target name="reset-all" description="Reset the world plus jetty">
-		<if><isset property="jetty.start.jar.exists"/>
-            <then><antcall target="stop-webserver"/></then>
-		</if>            	
-		<antcall target="clean"/>
-			<mkdir dir="${build.dir}"/>
-			<delete dir="${jetty.home.dir}" />
-			<gunzip src="${jetty.src.dir}/jetty-${jetty.version}.tar.gz" dest="${build.dir}/jetty-${jetty.version}.tar"/>
-			<untar src="${build.dir}/jetty-${jetty.version}.tar" dest="${zimbra.home.dir}" overwrite="true" />
-			<move file="${zimbra.home.dir}/jetty-${jetty.version}" tofile="${jetty.home.dir}" />
-			<delete file="${build.dir}/jetty-${jetty.version}.tar"/>
-			<mkdir dir="${jetty.home.dir}/logs"/>
-			<mkdir dir="${jetty.home.dir}/webapps"/>
-			<mkdir dir="${jetty.home.dir}/work"/>
+        <!-- db schema -->
+        <copy todir="${dist.dir}/db" overwrite="true">
+            <fileset dir="${src.dir}/db" includes="*.sql" excludes="db.sql,create_database.sql"/>
+        </copy>
+        <copy todir="${dist.dir}/db" overwrite="true">
+            <fileset dir="${db.schema.dir}" includes="db.sql,create_database.sql"/>
+        </copy>
+        <copy todir="${dist.dir}/db" file="${build.dir}/versions-init.sql" overwrite="true"/>
+
+        <!-- wikis -->
+        <copy todir="${dist.dir}/wiki" overwrite="true">
+            <fileset dir="data/wiki" includes="**"/>
+        </copy>
+    </target>
+
+    <target name="dev-dist-unix" if="is-unix">
+        <copy tofile="${dist.dir}/lib/libzimbra-native.${native.so}"
+              file="${lib.dir}/libzimbra-native.${native.so}.${native.os}.${os.arch}" verbose="true" failonerror="false"
+              overwrite="true"/>
+    </target>
+
+    <target name="reset-all" description="Reset the world plus jetty">
+        <if>
+            <isset property="jetty.start.jar.exists"/>
+            <then>
+                <antcall target="stop-webserver"/>
+            </then>
+        </if>
+        <antcall target="clean"/>
+        <mkdir dir="${build.dir}"/>
+        <delete dir="${jetty.home.dir}"/>
+        <gunzip src="${jetty.src.dir}/jetty-${jetty.version}.tar.gz" dest="${build.dir}/jetty-${jetty.version}.tar"/>
+        <untar src="${build.dir}/jetty-${jetty.version}.tar" dest="${zimbra.home.dir}" overwrite="true"/>
+        <move file="${zimbra.home.dir}/jetty-${jetty.version}" tofile="${jetty.home.dir}"/>
+        <delete file="${build.dir}/jetty-${jetty.version}.tar"/>
+        <mkdir dir="${jetty.home.dir}/logs"/>
+        <mkdir dir="${jetty.home.dir}/webapps"/>
+        <mkdir dir="${jetty.home.dir}/work"/>
 
         <antcall target="reset-the-world"/>
-        <ant dir="../Zimlet" 		  target="clean" inheritAll="false"/>
+        <ant dir="../Zimlet" target="clean" inheritAll="false"/>
         <ant dir="../ZimbraWebClient" target="clean" inheritAll="false"/>
         <ant dir="../ZimbraWebClient" target="admin-deploy" inheritAll="false"/>
         <ant dir="../ZimbraWebClient" target="clean" inheritAll="false"/>
         <ant dir="../ZimbraWebClient" target="deploy" inheritAll="false"/>
-        <ant dir="../Zimlet" 		  target="deploy-zimlets" inheritAll="false"/>
-	</target>
+        <ant dir="../Zimlet" target="deploy-zimlets" inheritAll="false"/>
+    </target>
 
-	<!-- There are two ways to reset the world:
-  		(a) If your webserver is a service, use "reset-the-world".
- 		(b) If your webserver  container  is inside eclipse then do this:
-			1. stop web server
-			2. run the target "reset-the-world-stage1"
-			3. start web server
-			4. run the target "reset-the-world-stage2" -->
-	<target name="reset-the-world" description="Reset the world">
-		<antcall target="reset-the-world-stage1"/>
-		<antcall target="reset-the-world-stage2"/>
-	</target>
+    <!-- There are two ways to reset the world:
+           (a) If your webserver is a service, use "reset-the-world".
+          (b) If your webserver  container  is inside eclipse then do this:
+             1. stop web server
+             2. run the target "reset-the-world-stage1"
+             3. start web server
+             4. run the target "reset-the-world-stage2" -->
+    <target name="reset-the-world" description="Reset the world">
+        <antcall target="reset-the-world-stage1"/>
+        <antcall target="reset-the-world-stage2"/>
+    </target>
 
-	<target name="reset-the-world-stage1" depends="clean,jar,init" description="Run when web server is stopped." />
-	
-	<target name="reset-the-world-stage2" depends="service-deploy,import-wiki-templates" description="Run when web server is running.">
-		<antcall target="inject">
-			<param name="account-to-inject.email" value="user1@${defaultdomain.name}"/>
-		</antcall>
-	</target>    
+    <target name="reset-the-world-stage1" depends="clean,jar,init" description="Run when web server is stopped."/>
 
-	<target name="init" depends="stop-servers,db-init,dir-init,init-opt-zimbra,start-ldap,ldap-load" />
+    <target name="reset-the-world-stage2" depends="service-deploy,import-wiki-templates"
+            description="Run when web server is running.">
+        <antcall target="inject">
+            <param name="account-to-inject.email" value="user1@${defaultdomain.name}"/>
+        </antcall>
+    </target>
 
-	<target name="inject" depends="compile">
-		<echo>Inserting default contacts: ${account-to-inject.email}</echo>
-		<java classname="com.zimbra.common.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
-			<sysproperty key="SAMPLE_USER" value="${account-to-inject.email}"/>
-			<arg line="-s -f data/soap/samplecontacts.xml" />
-		</java>
-		<echo>Creating default search folders: ${account-to-inject.email}</echo>
-		<java classname="com.zimbra.common.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
-			<sysproperty key="SAMPLE_USER" value="${account-to-inject.email}"/>
-			<arg line="-s -f data/soap/samplesearchfolders.xml" />
-		</java>
-		<echo message="Wait for lmtp host=${lmtp.host} port=${lmtp.port}" />
-		<waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
-			<socket server="${lmtp.host}" port="${lmtp.port}" />
-		</waitfor>
-		<echo>LmtpInject messages for ${account-to-inject.email}</echo>
-		<java classname="com.zimbra.cs.lmtpserver.utils.LmtpInject" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r ${account-to-inject.email} -s ho@example.zimbra.com -d" />
-			<arg path="data/TestMailRaw" />
-		</java>
-		<echo>Importing Wiki documents for ${account-to-inject.email}</echo>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="impn ${account-to-inject.email} data/wiki/user1 /" />
-		</java>
-		<echo>Importing files into Briefcase for ${account-to-inject.email}</echo>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="impn ${account-to-inject.email} data/briefcase/user1 Briefcase" />
-		</java>
-	</target>
+    <target name="init" depends="stop-servers,db-init,dir-init,init-opt-zimbra,start-ldap,ldap-load"/>
 
-	<target name="inject-npscontacts" depends="compile">
-		<echo>Inserting NPS contacts: user4@${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.common.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-f data/soap/nps-contacts-orig.xml" />
-		</java>
-	</target>
+    <target name="inject" depends="compile">
+        <echo>Inserting default contacts: ${account-to-inject.email}</echo>
+        <java classname="com.zimbra.common.soap.SoapTestHarness" fork="true" classpathref="class.path"
+              failonerror="true">
+            <sysproperty key="SAMPLE_USER" value="${account-to-inject.email}"/>
+            <arg line="-s -f data/soap/samplecontacts.xml"/>
+        </java>
+        <echo>Creating default search folders: ${account-to-inject.email}</echo>
+        <java classname="com.zimbra.common.soap.SoapTestHarness" fork="true" classpathref="class.path"
+              failonerror="true">
+            <sysproperty key="SAMPLE_USER" value="${account-to-inject.email}"/>
+            <arg line="-s -f data/soap/samplesearchfolders.xml"/>
+        </java>
+        <echo message="Wait for lmtp host=${lmtp.host} port=${lmtp.port}"/>
+        <waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
+            <socket server="${lmtp.host}" port="${lmtp.port}"/>
+        </waitfor>
+        <echo>LmtpInject messages for ${account-to-inject.email}</echo>
+        <java classname="com.zimbra.cs.lmtpserver.utils.LmtpInject" fork="true" classpathref="class.path"
+              failonerror="true">
+            <arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r ${account-to-inject.email} -s ho@example.zimbra.com -d"/>
+            <arg path="data/TestMailRaw"/>
+        </java>
+        <echo>Importing Wiki documents for ${account-to-inject.email}</echo>
+        <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="impn ${account-to-inject.email} data/wiki/user1 /"/>
+        </java>
+        <echo>Importing files into Briefcase for ${account-to-inject.email}</echo>
+        <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="impn ${account-to-inject.email} data/briefcase/user1 Briefcase"/>
+        </java>
+    </target>
 
-	<target name="import-wiki-templates" depends="init-wiki">
-		<echo>Importing Wiki templates from ${data.wiki.dir}/Template</echo>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="impn ${wiki.user.default} data/wiki/Template Template" />
-		</java>
-	</target>
+    <target name="inject-npscontacts" depends="compile">
+        <echo>Inserting NPS contacts: user4@${zimbra.server.hostname}</echo>
+        <java classname="com.zimbra.common.soap.SoapTestHarness" fork="true" classpathref="class.path"
+              failonerror="true">
+            <arg line="-f data/soap/nps-contacts-orig.xml"/>
+        </java>
+    </target>
 
-	<target name="init-wiki">
-		<echo>Initializing wiki@${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="in ${wiki.user.default}" />
-		</java>
-	</target>
+    <target name="import-wiki-templates" depends="init-wiki">
+        <echo>Importing Wiki templates from ${data.wiki.dir}/Template</echo>
+        <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="impn ${wiki.user.default} data/wiki/Template Template"/>
+        </java>
+    </target>
 
-	<!-- Insert one directory (data/testmsgs) of mail -->
-	<target name="inject1" depends="compile">
-		<echo message="Wait for lmtp host=${lmtp.host} port=${lmtp.port}" />
-		<waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
-			<socket server="${lmtp.host}" port="${lmtp.port}" />
-		</waitfor>
-		<echo>LmtpInject messages</echo>
-		<java classname="com.zimbra.cs.lmtpserver.utils.LmtpInject" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r user1@${zimbra.server.hostname} -s user1@example.zimbra.com -d" />
-			<arg path="data/TestMailRaw" />
-		</java>
-	</target>
+    <target name="init-wiki">
+        <echo>Initializing wiki@${zimbra.server.hostname}</echo>
+        <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="in ${wiki.user.default}"/>
+        </java>
+    </target>
 
-	<target name="localhost-ssl-cert">
-		<delete failonerror="no">
-			<fileset dir="${webserver.conf.dir}" includes="keystore" />
-		</delete>
-		<genkey alias="${webserver.name}" storepass="zimbra" keyalg="rsa" verbose="false" keystore="${webserver.conf.dir}/keystore" validity="365">
-			<dname>
-				<param name="CN" value="localhost" />
-				<param name="OU" value="Engineering" />
-				<param name="O" value="Zimbra Systems" />
-				<param name="C" value="US" />
-			</dname>
-		</genkey>
-		<genkey alias="${webserver.name}-dsa" storepass="zimbra" keyalg="dsa" verbose="false" keystore="${webserver.conf.dir}/keystore" validity="365">
-			<dname>
-				<param name="CN" value="localhost" />
-				<param name="OU" value="Engineering" />
-				<param name="O" value="Zimbra Systems" />
-				<param name="C" value="US" />
-			</dname>
-		</genkey>
-	</target>
+    <!-- Insert one directory (data/testmsgs) of mail -->
+    <target name="inject1" depends="compile">
+        <echo message="Wait for lmtp host=${lmtp.host} port=${lmtp.port}"/>
+        <waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
+            <socket server="${lmtp.host}" port="${lmtp.port}"/>
+        </waitfor>
+        <echo>LmtpInject messages</echo>
+        <java classname="com.zimbra.cs.lmtpserver.utils.LmtpInject" fork="true" classpathref="class.path"
+              failonerror="true">
+            <arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r user1@${zimbra.server.hostname} -s user1@example.zimbra.com -d"/>
+            <arg path="data/TestMailRaw"/>
+        </java>
+    </target>
 
-	<target name="dir-init">
-		<echo message="If the following deletes fail, wait for your web server" />
-		<echo message="to stop (or stop jetty manually)" />
-		<echo message="and try again later." />
-		<delete failonerror="no">
-			<fileset dir="${zimbra.home.dir}/db" excludes="data/**"/>
-		</delete>
+    <target name="localhost-ssl-cert">
+        <delete failonerror="no">
+            <fileset dir="${webserver.conf.dir}" includes="keystore"/>
+        </delete>
+        <genkey alias="${webserver.name}" storepass="zimbra" keyalg="rsa" verbose="false"
+                keystore="${webserver.conf.dir}/keystore" validity="365">
+            <dname>
+                <param name="CN" value="localhost"/>
+                <param name="OU" value="Engineering"/>
+                <param name="O" value="Zimbra Systems"/>
+                <param name="C" value="US"/>
+            </dname>
+        </genkey>
+        <genkey alias="${webserver.name}-dsa" storepass="zimbra" keyalg="dsa" verbose="false"
+                keystore="${webserver.conf.dir}/keystore" validity="365">
+            <dname>
+                <param name="CN" value="localhost"/>
+                <param name="OU" value="Engineering"/>
+                <param name="O" value="Zimbra Systems"/>
+                <param name="C" value="US"/>
+            </dname>
+        </genkey>
+    </target>
 
-		<delete dir="${zimbra.home.dir}/zmstat" />
-		<delete dir="${zimbra.home.dir}/store" />
-		<delete dir="${zimbra.home.dir}/index" />
-		<delete dir="${zimbra.home.dir}/redolog" />
-		<delete dir="${zimbra.home.dir}/backup" />
-		<delete dir="${zimbra.home.dir}/lib/ext" />
-		<delete dir="${zimbra.home.dir}/conf/attrs" />
-		<delete dir="${zimbra.home.dir}/conf/msgs" />
-		<delete failonerror="no">
-			<fileset dir="${zimbra.home.dir}/log" includes="*.log" />
-		</delete>
-		<delete failonerror="no">
-			<fileset dir="${webserver.root.dir}/logs" includes="*" />
-		</delete>
-		<delete dir="${webserver.root.dir}/webapps/service"/>
-		<delete file="${webserver.root.dir}/webapps/service.war"/>
-	
-		<delete dir="${zimbra.home.dir}/openldap/var/openldap-data" />
+    <target name="dir-init">
+        <echo message="If the following deletes fail, wait for your web server"/>
+        <echo message="to stop (or stop jetty manually)"/>
+        <echo message="and try again later."/>
+        <delete failonerror="no">
+            <fileset dir="${zimbra.home.dir}/db" excludes="data/**"/>
+        </delete>
 
-		<mkdir dir="${zimbra.home.dir}/openldap/var/openldap-data" />
-		<mkdir dir="${zimbra.home.dir}/log" />
-		<mkdir dir="${zimbra.home.dir}/zmstat" />
-		<mkdir dir="${zimbra.home.dir}/store" />
-		<mkdir dir="${zimbra.home.dir}/index" />
-		<mkdir dir="${zimbra.home.dir}/redolog" />
-		<mkdir dir="${zimbra.home.dir}/redolog/archive" />
-		<mkdir dir="${zimbra.home.dir}/backup" />
-		<antcall target="make-dirs"><param name="base.dir" value="${zimbra.home.dir}"/></antcall>
-	</target>
+        <delete dir="${zimbra.home.dir}/zmstat"/>
+        <delete dir="${zimbra.home.dir}/store"/>
+        <delete dir="${zimbra.home.dir}/index"/>
+        <delete dir="${zimbra.home.dir}/redolog"/>
+        <delete dir="${zimbra.home.dir}/backup"/>
+        <delete dir="${zimbra.home.dir}/lib/ext"/>
+        <delete dir="${zimbra.home.dir}/conf/attrs"/>
+        <delete dir="${zimbra.home.dir}/conf/msgs"/>
+        <delete failonerror="no">
+            <fileset dir="${zimbra.home.dir}/log" includes="*.log"/>
+        </delete>
+        <delete failonerror="no">
+            <fileset dir="${webserver.root.dir}/logs" includes="*"/>
+        </delete>
+        <delete dir="${webserver.root.dir}/webapps/service"/>
+        <delete file="${webserver.root.dir}/webapps/service.war"/>
 
-	<target name="choose-db-schema">
-		<java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path"
-			  outputproperty="LC.mbox.group.disabled" failonerror="true">
-			<arg line="-q -c conf/localconfig.xml -m nokey debug_disable_mailbox_group"/>
-		</java>
-		<condition property="db.schema.dir" value="src/db/old_schema">
-			<equals arg1="${LC.mbox.group.disabled}" arg2="true" casesensitive="false" trim="true"/>
-		</condition>
-		<condition property="db.schema.dir" value="src/db">
-			<not><isset property="db.schema.dir"/></not>
-		</condition>
-		<echo>Using database schema in ${db.schema.dir}</echo>
-	</target>
+        <delete dir="${zimbra.home.dir}/openldap/var/openldap-data"/>
 
-	<target name="db-init" depends="choose-db-schema" >
-		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
-			 classpathref="class.path" onerror="continue" src="src/db/dropdb.sql" />
-		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
-			 classpathref="class.path" onerror="abort" src="${db.schema.dir}/db.sql" />
-		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
-			 classpathref="class.path" onerror="abort" src="${build.dir}/versions-init.sql" />
-	</target>
+        <mkdir dir="${zimbra.home.dir}/openldap/var/openldap-data"/>
+        <mkdir dir="${zimbra.home.dir}/log"/>
+        <mkdir dir="${zimbra.home.dir}/zmstat"/>
+        <mkdir dir="${zimbra.home.dir}/store"/>
+        <mkdir dir="${zimbra.home.dir}/index"/>
+        <mkdir dir="${zimbra.home.dir}/redolog"/>
+        <mkdir dir="${zimbra.home.dir}/redolog/archive"/>
+        <mkdir dir="${zimbra.home.dir}/backup"/>
+        <antcall target="make-dirs">
+            <param name="base.dir" value="${zimbra.home.dir}"/>
+        </antcall>
+    </target>
 
-	<target name="ldap-setup-preauth">
-		<echo>Creating preauth key: ${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="gdpak ${zimbra.server.hostname}" />
-		</java>
-	</target>
+    <target name="choose-db-schema">
+        <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path"
+              outputproperty="LC.mbox.group.disabled" failonerror="true">
+            <arg line="-q -c conf/localconfig.xml -m nokey debug_disable_mailbox_group"/>
+        </java>
+        <condition property="db.schema.dir" value="src/db/old_schema">
+            <equals arg1="${LC.mbox.group.disabled}" arg2="true" casesensitive="false" trim="true"/>
+        </condition>
+        <condition property="db.schema.dir" value="src/db">
+            <not>
+                <isset property="db.schema.dir"/>
+            </not>
+        </condition>
+        <echo>Using database schema in ${db.schema.dir}</echo>
+    </target>
+
+    <target name="db-init" depends="choose-db-schema">
+        <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
+             classpathref="class.path" onerror="continue" src="src/db/dropdb.sql"/>
+        <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
+             classpathref="class.path" onerror="abort" src="${db.schema.dir}/db.sql"/>
+        <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
+             classpathref="class.path" onerror="abort" src="${build.dir}/versions-init.sql"/>
+    </target>
+
+    <target name="ldap-setup-preauth">
+        <echo>Creating preauth key: ${zimbra.server.hostname}</echo>
+        <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="gdpak ${zimbra.server.hostname}"/>
+        </java>
+    </target>
     <!-- description="run this target if you have updated the schema files in /opt/zimbra, and you have generated new ldifs" -->
-	<target name="refresh-ldap" >
-		<antcall target="stop-webserver"/>
-		<antcall target="stop-ldap"/>
-		<sleep seconds="2"/> <!-- sometimes start occurs too fast... -->
-		<antcall target="start-ldap"/>
-		<antcall target="start-webserver"/>
-		<antcall target="ldap-modify"><param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_globalconfig.ldif"/></antcall>
-		<antcall target="ldap-modify"><param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_defaultcos.ldif"/></antcall>
-		<antcall target="ldap-modify"><param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_mimehandlers.ldif"/></antcall>
-	</target>
-	
-	<target name="ldap-add">
-		<echo>Loading ${ldif.file}</echo>
-		<exec failonerror="true" executable="${ldapmodify}" >
-			<arg line="-a -c -w zimbra -D uid=zimbra,cn=admins,cn=zimbra -x -f ${ldif.file}"/>
-		</exec>
-	</target>
-	
-	<target name="ldap-modify">
-		<echo>Loading ${ldif.file}</echo>
-		<exec failonerror="true" executable="${ldapmodify}" >
-			<arg line="-c -w zimbra -D uid=zimbra,cn=admins,cn=zimbra -x -f ${ldif.file}"/>
-		</exec>
-	</target>
-	
-	<target name="ldap-load" depends="zmprov-commands">
-		<antcall target="ldap-add"><param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra.ldif"/></antcall>
-		<antcall target="ldap-add"><param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_globalconfig.ldif"/></antcall>
-		<antcall target="ldap-add"><param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_defaultcos.ldif"/></antcall>
-		<antcall target="ldap-add"><param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_mimehandlers.ldif"/></antcall>
-		<echo>Editing localconfig zimbra_server_hostname to be ${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-e zimbra_server_hostname=${zimbra.server.hostname}"/>
-		</java>
-		<echo>Editing localconfig zimbra_user to be ${zimbra.user}</echo>
-		<java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-e zimbra_user=${zimbra.user}"/>
-		</java>
-		<echo>Running zmprov commands</echo>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-l -f ${build.zmprov} -v" />
-		</java>
-	</target>
-	
-	<target name="zmprov-commands" depends="build-init">
-	    <antcall target="generate-zmprov-commands"/>
-	</target>
-    
+    <target name="refresh-ldap">
+        <antcall target="stop-webserver"/>
+        <antcall target="stop-ldap"/>
+        <sleep seconds="2"/>
+        <!-- sometimes start occurs too fast... -->
+        <antcall target="start-ldap"/>
+        <antcall target="start-webserver"/>
+        <antcall target="ldap-modify">
+            <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_globalconfig.ldif"/>
+        </antcall>
+        <antcall target="ldap-modify">
+            <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_defaultcos.ldif"/>
+        </antcall>
+        <antcall target="ldap-modify">
+            <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_mimehandlers.ldif"/>
+        </antcall>
+    </target>
+
+    <target name="ldap-add">
+        <echo>Loading ${ldif.file}</echo>
+        <exec failonerror="true" executable="${ldapmodify}">
+            <arg line="-a -c -w zimbra -D uid=zimbra,cn=admins,cn=zimbra -x -f ${ldif.file}"/>
+        </exec>
+    </target>
+
+    <target name="ldap-modify">
+        <echo>Loading ${ldif.file}</echo>
+        <exec failonerror="true" executable="${ldapmodify}">
+            <arg line="-c -w zimbra -D uid=zimbra,cn=admins,cn=zimbra -x -f ${ldif.file}"/>
+        </exec>
+    </target>
+
+    <target name="ldap-load" depends="zmprov-commands">
+        <antcall target="ldap-add">
+            <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra.ldif"/>
+        </antcall>
+        <antcall target="ldap-add">
+            <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_globalconfig.ldif"/>
+        </antcall>
+        <antcall target="ldap-add">
+            <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_defaultcos.ldif"/>
+        </antcall>
+        <antcall target="ldap-add">
+            <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_mimehandlers.ldif"/>
+        </antcall>
+        <echo>Editing localconfig zimbra_server_hostname to be ${zimbra.server.hostname}</echo>
+        <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="-e zimbra_server_hostname=${zimbra.server.hostname}"/>
+        </java>
+        <echo>Editing localconfig zimbra_user to be ${zimbra.user}</echo>
+        <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="-e zimbra_user=${zimbra.user}"/>
+        </java>
+        <echo>Running zmprov commands</echo>
+        <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="-l -f ${build.zmprov} -v"/>
+        </java>
+    </target>
+
+    <target name="zmprov-commands" depends="build-init">
+        <antcall target="generate-zmprov-commands"/>
+    </target>
+
     <target name="generate-zmprov-commands">
         <!--
            params/properties:
@@ -742,389 +894,399 @@
                zimbra.smtp.host
                zimbra.prefGroupMailBy
                defaultdomain.name
-        -->    
-		<echo file="${build.zmprov}">		
-		ModifyConfig zimbraLogHostname ${zimbra.server.hostname}
-		ModifyConfig zimbraRemoteManagementUser ${zimbra.user}
-		ModifyConfig zimbraBackupReportEmailRecipients '"Backup Admin" &lt;user2@${defaultdomain.name}&gt;'
-		ModifyConfig zimbraBackupReportEmailSender '"Backup Daemon" &lt;admin@${defaultdomain.name}&gt;'
-		CreateServer ${zimbra.server.hostname} \
-			zimbraSmtpHostname ${zimbra.smtp.host} \
-			zimbraMailPort 7070 \
-			zimbraMailMode http \
-			zimbraImapCleartextLoginEnabled TRUE
-		ModifyServer ${zimbra.server.hostname} \
-			zimbraServiceInstalled ldap \
-			zimbraServiceInstalled mta \
-			zimbraServiceInstalled mailbox
-		ModifyServer ${zimbra.server.hostname} \
-			zimbraServiceEnabled ldap \
-			zimbraServiceEnabled mta \
-			zimbraServiceEnabled mailbox
-		cd ${defaultdomain.name}
-		mcf zimbraDefaultDomainName ${defaultdomain.name}
-		mc default zimbraFeatureIMEnabled FALSE
-		ca admin@${defaultdomain.name} test123 \
-			zimbraMailHost ${zimbra.server.hostname} \
-			cn 'Administrator' displayName 'Administrator' \
-			zimbraIsAdminAccount TRUE \
-			zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
-			zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
-			telephoneNumber '+1 650 555 0000'
-		ca user1@${defaultdomain.name} test123 \
-			zimbraMailHost ${zimbra.server.hostname} \
-			cn 'Demo User One' \
-			displayName 'Demo User One' \
-			zimbraMailQuota 62914560 \
-			zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
-			zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
-			zimbraPrefMailPollingInterval 12h \
-			zimbraPrefWarnOnExit FALSE \
-			telephoneNumber '+1 650 555 1111'
-			ca user2@${defaultdomain.name} test123 \
-			zimbraMailHost ${zimbra.server.hostname} \
-			cn 'Demo User Two' \
-			displayName 'Demo User Two' \
-			zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
-			zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
-			zimbraPrefMailPollingInterval 12h \
-			zimbraPrefWarnOnExit FALSE \
-			telephoneNumber '+1 650 555 2222'
-		ca user3@${defaultdomain.name} test123 \
-			zimbraMailHost ${zimbra.server.hostname} \
-			cn 'Demo User Three' \
-			displayName 'Demo User Three' \
-			zimbraAttachmentsIndexingEnabled FALSE \
-			zimbraPrefTimeZoneId '(GMT-05.00) Eastern Time (US &amp; Canada)' \
-			zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
-			zimbraPrefMailPollingInterval 12h \
-			zimbraPrefWarnOnExit FALSE \
-			telephoneNumber '+1 650 555 3333'
-		ca user4@${defaultdomain.name} test123 \
-			zimbraMailHost ${zimbra.server.hostname} \
-			cn 'Demo User Four' \
-			displayName 'Demo User Four' \
-			zimbraAttachmentsIndexingEnabled FALSE \
-			zimbraPrefTimeZoneId '(GMT-07.00) Arizona' \
-			zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
-			zimbraPrefMailPollingInterval 12h \
-			zimbraPrefWarnOnExit FALSE \
-			telephoneNumber '+1 650 555 4444'
-		ca spam-sink@${defaultdomain.name} test123 \
-			zimbraMailHost ${zimbra.server.hostname} \
-			zimbraAttachmentsIndexingEnabled FALSE \
-			zimbraMailQuota 0 \
-			zimbraHideInGal TRUE
-		mcf zimbraSpamIsSpamAccount spam-sink@${defaultdomain.name}
-		ca ham-sink@${defaultdomain.name} test123 \
-			zimbraMailHost ${zimbra.server.hostname} \
-			zimbraAttachmentsIndexingEnabled FALSE \
-			zimbraMailQuota 0 \
-			zimbraHideInGal TRUE
-		mcf zimbraSpamIsNotSpamAccount ham-sink@${defaultdomain.name}
-		ccr room-mississippi@${defaultdomain.name} test123 \
-					       displayName 'Mississippi Conference Room' \
-						   description 'Projector, DVD' \
-						   zimbraNotes 'The door squeaks.' \
-					       zimbraCalResType Location \
-						   zimbraCalResAutoAcceptDecline TRUE \
-						   zimbraCalResAutoDeclineIfBusy TRUE \
-						   zimbraCalResAutoDeclineRecurring FALSE \
-						   zimbraCalResLocationDisplayName 'Site: HQ, Building: A, Floor: 11, Room 1101' \
-						   zimbraCalResSite HQ \
-						   zimbraCalResBuilding A \
-						   zimbraCalResFloor 11 \
-						   zimbraCalResRoom 1101 \
-						   zimbraCalResCapacity 10 \
-						   zimbraCalResContactName 'Administrator' \
-						   zimbraCalResContactEmail admin@${defaultdomain.name} \
-						   zimbraCalResContactPhone '(650)555-1212' \
-						   street '1500 Fashion Island Blvd., Suite 100' \
-						   l 'San Mateo' \
-						   st 'California' \
-						   postalCode 94404 \
-						   co USA \
-					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
-					       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
-		ccr room-amazon@${defaultdomain.name} test123 \
-					       displayName 'Amazon Conference Room' \
-						   description 'TV, VCR; room is always available' \
-					       zimbraNotes 'A/C not working well' \
-					       zimbraCalResType Location \
-						   zimbraCalResAutoAcceptDecline TRUE \
-						   zimbraCalResAutoDeclineIfBusy FALSE \
-						   zimbraCalResAutoDeclineRecurring FALSE \
-						   zimbraCalResLocationDisplayName 'Room 1201, 2nd Floor of Building A at HQ' \
-						   zimbraCalResSite HQ \
-						   zimbraCalResBuilding A \
-						   zimbraCalResFloor 12 \
-						   zimbraCalResRoom 1202 \
-						   zimbraCalResCapacity 20 \
-						   zimbraCalResContactName 'Administrator' \
-						   zimbraCalResContactEmail admin@${defaultdomain.name} \
-						   zimbraCalResContactPhone '(650)555-1212' \
-					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
-					       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
-		ccr room-nile@${defaultdomain.name} test123 \
-					       displayName 'Nile Conference Room' \
-						   description 'Projector; for single meetings only' \
-						   zimbraNotes 'need to get some more chairs in here' \
-					       zimbraCalResType Location \
-						   zimbraCalResAutoAcceptDecline TRUE \
-						   zimbraCalResAutoDeclineIfBusy TRUE \
-						   zimbraCalResAutoDeclineRecurring TRUE \
-						   zimbraCalResLocationDisplayName 'Room B201, 2nd basement floor, HQ Building B' \
-						   zimbraCalResSite HQ \
-						   zimbraCalResBuilding B \
-						   zimbraCalResFloor B2 \
-						   zimbraCalResRoom B201 \
-						   zimbraCalResCapacity 100 \
-						   zimbraCalResContactName 'Administrator' \
-						   zimbraCalResContactEmail admin@${defaultdomain.name} \
-						   zimbraCalResContactPhone '(650)555-1212' \
-					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
-					       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
-		ccr projector1@${defaultdomain.name} test123 \
-					       displayName 'Projector' \
-						   description '800x600 max resolution' \
-						   zimbraNotes 'usually works okay' \
-					       zimbraCalResType Equipment \
-						   zimbraCalResAutoAcceptDecline FALSE \
-						   zimbraCalResAutoDeclineIfBusy FALSE \
-						   zimbraCalResAutoDeclineRecurring FALSE \
-						   zimbraCalResLocationDisplayName 'HQ Building B, B2 floor' \
-						   zimbraCalResSite HQ \
-						   zimbraCalResBuilding B \
-						   zimbraCalResFloor B2 \
-						   zimbraCalResRoom B201 \
-						   zimbraCalResContactName 'Administrator' \
-						   zimbraCalResContactEmail admin@${defaultdomain.name} \
-						   zimbraCalResContactPhone '(650)555-1212' \
-					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
-					       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
-		ccr pencil1@${defaultdomain.name} test123 \
-					       displayName '#2 pencil' \
-						   description 'a writing tool' \
-					       zimbraNotes 'must occasionally be sharpened' \
-					       zimbraCalResType Equipment \
-						   zimbraCalResAutoAcceptDecline TRUE \
-						   zimbraCalResAutoDeclineIfBusy TRUE \
-						   zimbraCalResAutoDeclineRecurring TRUE \
-						   street '1500 Fashion Island Blvd, Suite 100' \
-						   l 'San Mateo' \
-					       st CA \
-					       postalCode 94404 \
-					       co USA \
-						   zimbraCalResContactName 'Administrator' \
-						   zimbraCalResContactEmail admin@${defaultdomain.name} \
-						   zimbraCalResContactPhone '(650)555-1212' \
-					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
-					       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
-		ca wiki@${defaultdomain.name} test123 \
-			zimbraMailHost ${zimbra.server.hostname} \
-			zimbraMailQuota 0
-		</echo>
-	</target>
-	
-	<target name="family-delete" depends="compile">
-		<property name="data.dir" value="${build.dir}/data"/>
-		<property name="family.delete" value="${data.dir}/zmprov-family-delete.txt"/>
-		<property name="family.delete.out" value="${data.dir}/zmprov-family-delete-out.txt"/>
-			
-		<echo file="${family.delete}"/>
-			
-		<!-- child accounts -->
-		<for list="1,2,3" param="idx">
-			<sequential>
-				<echo file="${family.delete}" append="true">da family-child@{idx}-visible@${defaultdomain.name}
-				</echo>
-			</sequential>	
-		</for>
-		<for list="4,5,6" param="idx">
-			<sequential>
-				<echo file="${family.delete}" append="true">da family-child@{idx}-invisible@${defaultdomain.name}
-				</echo>
-			</sequential>	
-		</for>
-			
-		<!-- parent account -->
-		<echo file="${family.delete}" append="true">
-			da family-parent@${defaultdomain.name}
-		</echo>
-			
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true" output="${family.delete.out}">
-			<arg line="-l -f ${family.delete}" />
-		</java>
-	</target>
-	
-	<target name="family-init" depends="compile">
-		<echo>Deleting family accounts</echo>
-		<antcall target="family-delete"/>
-		
-		<echo>Creating family accounts</echo>
-		<java classname="com.zimbra.common.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
-			<sysproperty key="DOMAIN_NAME" value="${defaultdomain.name}"/>
-			<sysproperty key="ADMIN_USER" value="admin@${defaultdomain.name}"/>
-			<sysproperty key="ADMIN_PASSWORD" value="test123"/>
-			<arg line="-s -d -f ${samplefamilyaccounts.file}"/>
-	    </java>
-		
-		<!-- inject test data for family parent and child -->
-		<for list="family-parent,family-child1-visible" param="accountName">
-			<sequential>
-				<antcall target="inject">
-					<param name="account-to-inject.email" value="@{accountName}@${defaultdomain.name}"/>
-				</antcall>	
-			</sequential>	
-		</for>
+        -->
+        <echo file="${build.zmprov}">
+            ModifyConfig zimbraLogHostname ${zimbra.server.hostname}
+            ModifyConfig zimbraRemoteManagementUser ${zimbra.user}
+            ModifyConfig zimbraBackupReportEmailRecipients '"Backup Admin" &lt;user2@${defaultdomain.name}&gt;'
+            ModifyConfig zimbraBackupReportEmailSender '"Backup Daemon" &lt;admin@${defaultdomain.name}&gt;'
+            CreateServer ${zimbra.server.hostname} \
+            zimbraSmtpHostname ${zimbra.smtp.host} \
+            zimbraMailPort 7070 \
+            zimbraMailMode http \
+            zimbraImapCleartextLoginEnabled TRUE
+            ModifyServer ${zimbra.server.hostname} \
+            zimbraServiceInstalled ldap \
+            zimbraServiceInstalled mta \
+            zimbraServiceInstalled mailbox
+            ModifyServer ${zimbra.server.hostname} \
+            zimbraServiceEnabled ldap \
+            zimbraServiceEnabled mta \
+            zimbraServiceEnabled mailbox
+            cd ${defaultdomain.name}
+            mcf zimbraDefaultDomainName ${defaultdomain.name}
+            mc default zimbraFeatureIMEnabled FALSE
+            ca admin@${defaultdomain.name} test123 \
+            zimbraMailHost ${zimbra.server.hostname} \
+            cn 'Administrator' displayName 'Administrator' \
+            zimbraIsAdminAccount TRUE \
+            zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
+            zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
+            telephoneNumber '+1 650 555 0000'
+            ca user1@${defaultdomain.name} test123 \
+            zimbraMailHost ${zimbra.server.hostname} \
+            cn 'Demo User One' \
+            displayName 'Demo User One' \
+            zimbraMailQuota 62914560 \
+            zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
+            zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
+            zimbraPrefMailPollingInterval 12h \
+            zimbraPrefWarnOnExit FALSE \
+            telephoneNumber '+1 650 555 1111'
+            ca user2@${defaultdomain.name} test123 \
+            zimbraMailHost ${zimbra.server.hostname} \
+            cn 'Demo User Two' \
+            displayName 'Demo User Two' \
+            zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
+            zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
+            zimbraPrefMailPollingInterval 12h \
+            zimbraPrefWarnOnExit FALSE \
+            telephoneNumber '+1 650 555 2222'
+            ca user3@${defaultdomain.name} test123 \
+            zimbraMailHost ${zimbra.server.hostname} \
+            cn 'Demo User Three' \
+            displayName 'Demo User Three' \
+            zimbraAttachmentsIndexingEnabled FALSE \
+            zimbraPrefTimeZoneId '(GMT-05.00) Eastern Time (US &amp; Canada)' \
+            zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
+            zimbraPrefMailPollingInterval 12h \
+            zimbraPrefWarnOnExit FALSE \
+            telephoneNumber '+1 650 555 3333'
+            ca user4@${defaultdomain.name} test123 \
+            zimbraMailHost ${zimbra.server.hostname} \
+            cn 'Demo User Four' \
+            displayName 'Demo User Four' \
+            zimbraAttachmentsIndexingEnabled FALSE \
+            zimbraPrefTimeZoneId '(GMT-07.00) Arizona' \
+            zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
+            zimbraPrefMailPollingInterval 12h \
+            zimbraPrefWarnOnExit FALSE \
+            telephoneNumber '+1 650 555 4444'
+            ca spam-sink@${defaultdomain.name} test123 \
+            zimbraMailHost ${zimbra.server.hostname} \
+            zimbraAttachmentsIndexingEnabled FALSE \
+            zimbraMailQuota 0 \
+            zimbraHideInGal TRUE
+            mcf zimbraSpamIsSpamAccount spam-sink@${defaultdomain.name}
+            ca ham-sink@${defaultdomain.name} test123 \
+            zimbraMailHost ${zimbra.server.hostname} \
+            zimbraAttachmentsIndexingEnabled FALSE \
+            zimbraMailQuota 0 \
+            zimbraHideInGal TRUE
+            mcf zimbraSpamIsNotSpamAccount ham-sink@${defaultdomain.name}
+            ccr room-mississippi@${defaultdomain.name} test123 \
+            displayName 'Mississippi Conference Room' \
+            description 'Projector, DVD' \
+            zimbraNotes 'The door squeaks.' \
+            zimbraCalResType Location \
+            zimbraCalResAutoAcceptDecline TRUE \
+            zimbraCalResAutoDeclineIfBusy TRUE \
+            zimbraCalResAutoDeclineRecurring FALSE \
+            zimbraCalResLocationDisplayName 'Site: HQ, Building: A, Floor: 11, Room 1101' \
+            zimbraCalResSite HQ \
+            zimbraCalResBuilding A \
+            zimbraCalResFloor 11 \
+            zimbraCalResRoom 1101 \
+            zimbraCalResCapacity 10 \
+            zimbraCalResContactName 'Administrator' \
+            zimbraCalResContactEmail admin@${defaultdomain.name} \
+            zimbraCalResContactPhone '(650)555-1212' \
+            street '1500 Fashion Island Blvd., Suite 100' \
+            l 'San Mateo' \
+            st 'California' \
+            postalCode 94404 \
+            co USA \
+            zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
+            zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
+            ccr room-amazon@${defaultdomain.name} test123 \
+            displayName 'Amazon Conference Room' \
+            description 'TV, VCR; room is always available' \
+            zimbraNotes 'A/C not working well' \
+            zimbraCalResType Location \
+            zimbraCalResAutoAcceptDecline TRUE \
+            zimbraCalResAutoDeclineIfBusy FALSE \
+            zimbraCalResAutoDeclineRecurring FALSE \
+            zimbraCalResLocationDisplayName 'Room 1201, 2nd Floor of Building A at HQ' \
+            zimbraCalResSite HQ \
+            zimbraCalResBuilding A \
+            zimbraCalResFloor 12 \
+            zimbraCalResRoom 1202 \
+            zimbraCalResCapacity 20 \
+            zimbraCalResContactName 'Administrator' \
+            zimbraCalResContactEmail admin@${defaultdomain.name} \
+            zimbraCalResContactPhone '(650)555-1212' \
+            zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
+            zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
+            ccr room-nile@${defaultdomain.name} test123 \
+            displayName 'Nile Conference Room' \
+            description 'Projector; for single meetings only' \
+            zimbraNotes 'need to get some more chairs in here' \
+            zimbraCalResType Location \
+            zimbraCalResAutoAcceptDecline TRUE \
+            zimbraCalResAutoDeclineIfBusy TRUE \
+            zimbraCalResAutoDeclineRecurring TRUE \
+            zimbraCalResLocationDisplayName 'Room B201, 2nd basement floor, HQ Building B' \
+            zimbraCalResSite HQ \
+            zimbraCalResBuilding B \
+            zimbraCalResFloor B2 \
+            zimbraCalResRoom B201 \
+            zimbraCalResCapacity 100 \
+            zimbraCalResContactName 'Administrator' \
+            zimbraCalResContactEmail admin@${defaultdomain.name} \
+            zimbraCalResContactPhone '(650)555-1212' \
+            zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
+            zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
+            ccr projector1@${defaultdomain.name} test123 \
+            displayName 'Projector' \
+            description '800x600 max resolution' \
+            zimbraNotes 'usually works okay' \
+            zimbraCalResType Equipment \
+            zimbraCalResAutoAcceptDecline FALSE \
+            zimbraCalResAutoDeclineIfBusy FALSE \
+            zimbraCalResAutoDeclineRecurring FALSE \
+            zimbraCalResLocationDisplayName 'HQ Building B, B2 floor' \
+            zimbraCalResSite HQ \
+            zimbraCalResBuilding B \
+            zimbraCalResFloor B2 \
+            zimbraCalResRoom B201 \
+            zimbraCalResContactName 'Administrator' \
+            zimbraCalResContactEmail admin@${defaultdomain.name} \
+            zimbraCalResContactPhone '(650)555-1212' \
+            zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
+            zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
+            ccr pencil1@${defaultdomain.name} test123 \
+            displayName '#2 pencil' \
+            description 'a writing tool' \
+            zimbraNotes 'must occasionally be sharpened' \
+            zimbraCalResType Equipment \
+            zimbraCalResAutoAcceptDecline TRUE \
+            zimbraCalResAutoDeclineIfBusy TRUE \
+            zimbraCalResAutoDeclineRecurring TRUE \
+            street '1500 Fashion Island Blvd, Suite 100' \
+            l 'San Mateo' \
+            st CA \
+            postalCode 94404 \
+            co USA \
+            zimbraCalResContactName 'Administrator' \
+            zimbraCalResContactEmail admin@${defaultdomain.name} \
+            zimbraCalResContactPhone '(650)555-1212' \
+            zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
+            zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
+            ca wiki@${defaultdomain.name} test123 \
+            zimbraMailHost ${zimbra.server.hostname} \
+            zimbraMailQuota 0
+        </echo>
     </target>
-	
-	<target name="deploy-zimlets" if="dist.zimlet.dir">
-		<foreach target="install-zimlet" param="zimlet">
-			<path>
-				<fileset dir="${zimlet.dir}/zimlets" includes="**/*.zip"/>
-			</path>
-			<param name="action" value="deploy"/>
-		</foreach>
-	</target>
 
-	<target name="install-zimlet">
-		<echo>${action} ${zimlet}</echo>
-		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-q" />
-			<arg line="${action}" />
-			<arg file="${zimlet}" />
-		</java>
-	</target>
-	
-	<target name="stop-servers" depends="stop-webserver,stop-ldap" />
+    <target name="family-delete" depends="compile">
+        <property name="data.dir" value="${build.dir}/data"/>
+        <property name="family.delete" value="${data.dir}/zmprov-family-delete.txt"/>
+        <property name="family.delete.out" value="${data.dir}/zmprov-family-delete-out.txt"/>
 
-	<!-- LDAP service control -->
-	<target name="stop-ldap" depends="stop-ldap-windows,stop-ldap-unix" />
+        <echo file="${family.delete}"/>
 
-	<target name="stop-ldap-windows" if="is-windows">
-		<exec executable="net">
-			<arg value="stop" />
-			<arg value="openldap directory service" />
-		</exec>
-	</target>
+        <!-- child accounts -->
+        <for list="1,2,3" param="idx">
+            <sequential>
+                <echo file="${family.delete}" append="true">da family-child@{idx}-visible@${defaultdomain.name}
+                </echo>
+            </sequential>
+        </for>
+        <for list="4,5,6" param="idx">
+            <sequential>
+                <echo file="${family.delete}" append="true">da family-child@{idx}-invisible@${defaultdomain.name}
+                </echo>
+            </sequential>
+        </for>
 
-	<target name="stop-ldap-unix" if="is-unix">
-		<if>
-			<available file="${zimbra.home.dir}/bin/ldap" type="file"/>
- 		<then>
- 		<exec executable="${zimbra.home.dir}/bin/ldap">
-			<arg value="stop" />
-		</exec>
-		</then>
-		<else>
-			<echo>OpenLDAP not installed; skipping OpenLDAP stop</echo>
-		</else>
-		</if>
-	</target>
+        <!-- parent account -->
+        <echo file="${family.delete}" append="true">
+            da family-parent@${defaultdomain.name}
+        </echo>
 
-	<target name="start-ldap" depends="start-ldap-windows,start-ldap-unix" />
+        <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true"
+              output="${family.delete.out}">
+            <arg line="-l -f ${family.delete}"/>
+        </java>
+    </target>
 
-	<target name="start-ldap-windows" if="is-windows">
-		<exec executable="net">
-			<arg value="start" />
-			<arg value="openldap directory service" />
-		</exec>
-	</target>
+    <target name="family-init" depends="compile">
+        <echo>Deleting family accounts</echo>
+        <antcall target="family-delete"/>
 
-	<target name="start-ldap-unix" if="is-unix">
-		<exec executable="${zimbra.home.dir}/bin/ldap">
-			<arg value="start" />
-		</exec>
-	</target>
+        <echo>Creating family accounts</echo>
+        <java classname="com.zimbra.common.soap.SoapTestHarness" fork="true" classpathref="class.path"
+              failonerror="true">
+            <sysproperty key="DOMAIN_NAME" value="${defaultdomain.name}"/>
+            <sysproperty key="ADMIN_USER" value="admin@${defaultdomain.name}"/>
+            <sysproperty key="ADMIN_PASSWORD" value="test123"/>
+            <arg line="-s -d -f ${samplefamilyaccounts.file}"/>
+        </java>
 
-	<target name="start-jetty-windows" if="is-windows">
-	    <if><isset property="jetty-use-service"/><then>
-	        <exec executable="net">
-	              <arg value="start" />
-	              <arg value="jetty" />
-	        </exec>
-	    </then><else>
-	    	<antcall target="start-jetty-java"/>
-	    </else></if>
-	</target>
-		
-	<target name="start-jetty-unix" if="is-unix">
-		<exec executable="${zimbra.home.dir}/bin/jetty">
-			<arg value="start" />
-		</exec>
-	</target>
+        <!-- inject test data for family parent and child -->
+        <for list="family-parent,family-child1-visible" param="accountName">
+            <sequential>
+                <antcall target="inject">
+                    <param name="account-to-inject.email" value="@{accountName}@${defaultdomain.name}"/>
+                </antcall>
+            </sequential>
+        </for>
+    </target>
 
-	<target name="start-jetty" depends="start-jetty-windows,start-jetty-unix">
-		<echo>Waiting for jetty to start</echo>
-		<waitfor checkevery="5" checkeveryunit="second" maxwait="60" maxwaitunit="second">
-			<http url="http://${deploy.host}:${deploy.port}/service/soap" errorsBeginAt="500"/>
-		</waitfor>
-	</target>
-	
-	<target name="stop-jetty-windows" if="is-windows">
-	    <if><isset property="jetty-use-service"/><then>
-	    	<exec executable="net">
-	    		<arg value="stop" />
-	    		<arg value="jetty" />
-	    	</exec>
-	    </then><else>
-	    	<antcall target="stop-jetty-java"/>
-	    </else></if>
-	</target>
-	
-	<target name="stop-jetty-unix" if="is-unix">
-		<if>
-			<available file="${zimbra.home.dir}/bin/jetty" type="file"/>
- 		<then>
-			<exec executable="${zimbra.home.dir}/bin/jetty">
-				<arg value="stop" />
-			</exec>
-		</then>
-		<else>
-			<echo>Jetty not installed; skipping jetty stop</echo>
-		</else>
-		</if>
-	</target>
-	
-	<target name="stop-jetty" depends="stop-jetty-windows,stop-jetty-unix">
-		<echo>Waiting for jetty to stop</echo>
-		<waitfor checkevery="1" checkeveryunit="second" maxwait="10" maxwaitunit="second">
-			<not>
-				<http url="http://${deploy.host}:${deploy.port}/" />
-			</not>
-		</waitfor>
-	</target>
-	
-	<target name="start-jetty-java">
-		<java dir="${jetty.home.dir}" jar="${jetty.home.dir}/start.jar" fork="true" spawn="true">
-			<sysproperty key="java.library.path" value="${zimbra.home.dir}/lib"/>
-			<sysproperty key="START" value="${jetty.home.dir}/etc/start.config"/>
-			<sysproperty key="STOP.PORT" value="7867"/>
-			<sysproperty key="STOP.KEY" value="stop"/>
-			<sysproperty key="zimbra.config" value="${zimbra.home.dir}/conf/localconfig.xml"/>
-		</java>
-	</target>
+    <target name="deploy-zimlets" if="dist.zimlet.dir">
+        <foreach target="install-zimlet" param="zimlet">
+            <path>
+                <fileset dir="${zimlet.dir}/zimlets" includes="**/*.zip"/>
+            </path>
+            <param name="action" value="deploy"/>
+        </foreach>
+    </target>
 
-	<target name="stop-jetty-java">
-		<java dir="${jetty.home.dir}" jar="${jetty.home.dir}/start.jar" fork="true" failonerror="true">
-			<sysproperty key="STOP.PORT" value="7867"/>
-			<sysproperty key="STOP.KEY" value="stop"/>
-			<arg value="--stop"/>
-		</java>
-	</target>
-	
-	<target name="restart-jetty" depends="stop-jetty,start-jetty"/>
-	
-	<target name="start-webserver">
-		<antcall target="start-jetty"/>
-	</target>
-	
-	<target name="stop-webserver">
-		<antcall target="stop-jetty"/>
-	</target>
-	
-	<target name="restart-webserver" depends="stop-webserver,start-webserver"/>
+    <target name="install-zimlet">
+        <echo>${action} ${zimlet}</echo>
+        <java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="-q"/>
+            <arg line="${action}"/>
+            <arg file="${zimlet}"/>
+        </java>
+    </target>
 
-	<target name="empty" />
+    <target name="stop-servers" depends="stop-webserver,stop-ldap"/>
+
+    <!-- LDAP service control -->
+    <target name="stop-ldap" depends="stop-ldap-windows,stop-ldap-unix"/>
+
+    <target name="stop-ldap-windows" if="is-windows">
+        <exec executable="net">
+            <arg value="stop"/>
+            <arg value="openldap directory service"/>
+        </exec>
+    </target>
+
+    <target name="stop-ldap-unix" if="is-unix">
+        <if>
+            <available file="${zimbra.home.dir}/bin/ldap" type="file"/>
+            <then>
+                <exec executable="${zimbra.home.dir}/bin/ldap">
+                    <arg value="stop"/>
+                </exec>
+            </then>
+            <else>
+                <echo>OpenLDAP not installed; skipping OpenLDAP stop</echo>
+            </else>
+        </if>
+    </target>
+
+    <target name="start-ldap" depends="start-ldap-windows,start-ldap-unix"/>
+
+    <target name="start-ldap-windows" if="is-windows">
+        <exec executable="net">
+            <arg value="start"/>
+            <arg value="openldap directory service"/>
+        </exec>
+    </target>
+
+    <target name="start-ldap-unix" if="is-unix">
+        <exec executable="${zimbra.home.dir}/bin/ldap">
+            <arg value="start"/>
+        </exec>
+    </target>
+
+    <target name="start-jetty-windows" if="is-windows">
+        <if>
+            <isset property="jetty-use-service"/>
+            <then>
+                <exec executable="net">
+                    <arg value="start"/>
+                    <arg value="jetty"/>
+                </exec>
+            </then>
+            <else>
+                <antcall target="start-jetty-java"/>
+            </else>
+        </if>
+    </target>
+
+    <target name="start-jetty-unix" if="is-unix">
+        <exec executable="${zimbra.home.dir}/bin/jetty">
+            <arg value="start"/>
+        </exec>
+    </target>
+
+    <target name="start-jetty" depends="start-jetty-windows,start-jetty-unix">
+        <echo>Waiting for jetty to start</echo>
+        <waitfor checkevery="5" checkeveryunit="second" maxwait="60" maxwaitunit="second">
+            <http url="http://${deploy.host}:${deploy.port}/service/soap" errorsBeginAt="500"/>
+        </waitfor>
+    </target>
+
+    <target name="stop-jetty-windows" if="is-windows">
+        <if>
+            <isset property="jetty-use-service"/>
+            <then>
+                <exec executable="net">
+                    <arg value="stop"/>
+                    <arg value="jetty"/>
+                </exec>
+            </then>
+            <else>
+                <antcall target="stop-jetty-java"/>
+            </else>
+        </if>
+    </target>
+
+    <target name="stop-jetty-unix" if="is-unix">
+        <if>
+            <available file="${zimbra.home.dir}/bin/jetty" type="file"/>
+            <then>
+                <exec executable="${zimbra.home.dir}/bin/jetty">
+                    <arg value="stop"/>
+                </exec>
+            </then>
+            <else>
+                <echo>Jetty not installed; skipping jetty stop</echo>
+            </else>
+        </if>
+    </target>
+
+    <target name="stop-jetty" depends="stop-jetty-windows,stop-jetty-unix">
+        <echo>Waiting for jetty to stop</echo>
+        <waitfor checkevery="1" checkeveryunit="second" maxwait="10" maxwaitunit="second">
+            <not>
+                <http url="http://${deploy.host}:${deploy.port}/"/>
+            </not>
+        </waitfor>
+    </target>
+
+    <target name="start-jetty-java">
+        <java dir="${jetty.home.dir}" jar="${jetty.home.dir}/start.jar" fork="true" spawn="true">
+            <sysproperty key="java.library.path" value="${zimbra.home.dir}/lib"/>
+            <sysproperty key="START" value="${jetty.home.dir}/etc/start.config"/>
+            <sysproperty key="STOP.PORT" value="7867"/>
+            <sysproperty key="STOP.KEY" value="stop"/>
+            <sysproperty key="zimbra.config" value="${zimbra.home.dir}/conf/localconfig.xml"/>
+        </java>
+    </target>
+
+    <target name="stop-jetty-java">
+        <java dir="${jetty.home.dir}" jar="${jetty.home.dir}/start.jar" fork="true" failonerror="true">
+            <sysproperty key="STOP.PORT" value="7867"/>
+            <sysproperty key="STOP.KEY" value="stop"/>
+            <arg value="--stop"/>
+        </java>
+    </target>
+
+    <target name="restart-jetty" depends="stop-jetty,start-jetty"/>
+
+    <target name="start-webserver">
+        <antcall target="start-jetty"/>
+    </target>
+
+    <target name="stop-webserver">
+        <antcall target="stop-jetty"/>
+    </target>
+
+    <target name="restart-webserver" depends="stop-webserver,start-webserver"/>
+
+    <target name="empty"/>
 </project>
