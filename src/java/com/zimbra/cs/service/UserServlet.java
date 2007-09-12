@@ -143,7 +143,9 @@ public class UserServlet extends ZimbraServlet {
     public static final String QP_START = "start"; // start time
 
     public static final String QP_END = "end"; // end time
-    
+
+    public static final String QP_IGNORE_ERROR = "ignore";  // ignore and continue on error during ics import
+
     public static final String QP_OFFSET = "offset"; // offset into results
     
     public static final String QP_LIMIT = "limit"; // offset into results
@@ -783,6 +785,17 @@ public class UserServlet extends ZimbraServlet {
                 mEndTime = (et != null) ? DateUtil.parseDateSpecifier(et, defaultEndTime) : defaultEndTime;
             }
             return mEndTime;
+        }
+
+        public boolean ignoreAndContinueOnError() {
+            String val = params.get(QP_IGNORE_ERROR);
+            if (val != null) {
+                try {
+                    int n = Integer.parseInt(val);
+                    return n != 0;
+                } catch (NumberFormatException e) {}
+            }
+            return false;
         }
 
         public String getQueryString() {

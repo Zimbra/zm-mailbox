@@ -1413,33 +1413,45 @@ public class Invite {
         return vcal;
     }
 
+    public static interface InviteVisitor {
+        public void visit(Invite inv) throws ServiceException;
+    }
+
     public static List<Invite> createFromCalendar(Account account, String fragment, ZVCalendar cal, boolean sentByMe)
     throws ServiceException {
         return createFromCalendar(account, fragment, cal, sentByMe, null, 0);
     }
 
-    public static List<Invite> createFromCalendar(Account account, String fragment, ZVCalendar cal, boolean sentByMe, Mailbox mbx, int mailItemId)
+    public static List<Invite> createFromCalendar(
+            Account account, String fragment, ZVCalendar cal, boolean sentByMe, Mailbox mbx, int mailItemId)
     throws ServiceException {
         List<Invite> list = new ArrayList<Invite>();
-        createFromCalendar(list, account, fragment, cal, sentByMe, mbx, mailItemId);
+        createFromCalendar(list, account, fragment, cal, sentByMe, mbx, mailItemId, false, null);
         return list;
     }
 
-    public static List<Invite> createFromCalendar(Account account, String fragment, List<ZVCalendar> cals, boolean sentByMe)
+    public static List<Invite> createFromCalendar(
+            Account account, String fragment, List<ZVCalendar> cals, boolean sentByMe)
     throws ServiceException {
-        return createFromCalendar(account, fragment, cals, sentByMe, null, 0);
+        return createFromCalendar(account, fragment, cals, sentByMe, false, null);
     }
 
-    public static List<Invite> createFromCalendar(Account account, String fragment, List<ZVCalendar> cals, boolean sentByMe, Mailbox mbx, int mailItemId)
+    public static List<Invite> createFromCalendar(
+            Account account, String fragment, List<ZVCalendar> cals, boolean sentByMe,
+            boolean continueOnError, InviteVisitor visitor)
     throws ServiceException {
         List<Invite> list = new ArrayList<Invite>();
         for (ZVCalendar cal : cals) {
-            createFromCalendar(list, account, fragment, cal, sentByMe, mbx, mailItemId);
+            createFromCalendar(list, account, fragment, cal, sentByMe, null, 0,
+                               continueOnError, visitor);
         }
         return list;
     }
 
-    private static void createFromCalendar(List<Invite> toAdd, Account account, String fragment, ZVCalendar cal, boolean sentByMe, Mailbox mbx, int mailItemId)
+    private static void createFromCalendar(
+            List<Invite> toAdd, Account account, String fragment, ZVCalendar cal, boolean sentByMe,
+            Mailbox mbx, int mailItemId,
+            boolean continueOnError, InviteVisitor visitor)
     throws ServiceException {
         TimeZoneMap tzmap = new TimeZoneMap(ICalTimeZone.getAccountTimeZone(account));
         
@@ -1460,267 +1472,300 @@ public class Invite {
         
         // now, process the other components (currently, only VEVENT and VTODO)
         for (ZComponent comp : cal.mComponents) {
-            byte type;
-            ICalTok compTypeTok = comp.getTok();
-            if (ICalTok.VTODO.equals(compTypeTok))
-                type = MailItem.TYPE_TASK;
-            else
-                type = MailItem.TYPE_APPOINTMENT;
-
-            switch (compTypeTok) {
-            case VEVENT:
-            case VTODO:
-                boolean isEvent = ICalTok.VEVENT.equals(compTypeTok);
-                boolean isTodo = ICalTok.VTODO.equals(compTypeTok);
-                try {
-                    Invite newInv = new Invite(type, methodStr, tzmap, false);
-
-                    toAdd.add(newInv);
-
-                    List<Object> addRecurs = new ArrayList<Object>();
-                    List<Object> subRecurs = new ArrayList<Object>();
-
-                    newInv.setComponentNum(compNum);
-                    if (mbx != null)
-                        newInv.setMailboxId(mbx.getId());
-                    newInv.setMailItemId(mailItemId);
-                    newInv.setSentByMe(sentByMe);
-                    compNum++;
-
-                    for (ZComponent subcomp : comp.mComponents) {
-                        ICalTok subCompTypeTok = subcomp.getTok();
-                        switch (subCompTypeTok) {
-                        case VALARM:
-                            Alarm alarm = Alarm.parse(subcomp);
-                            if (alarm != null)
-                                newInv.addAlarm(alarm);
-                            break;
-                        default:
-                            // ignore all other sub components
+            Invite newInv = null;
+            try {
+                byte type;
+                ICalTok compTypeTok = comp.getTok();
+                if (ICalTok.VTODO.equals(compTypeTok))
+                    type = MailItem.TYPE_TASK;
+                else
+                    type = MailItem.TYPE_APPOINTMENT;
+    
+                switch (compTypeTok) {
+                case VEVENT:
+                case VTODO:
+                    boolean isEvent = ICalTok.VEVENT.equals(compTypeTok);
+                    boolean isTodo = ICalTok.VTODO.equals(compTypeTok);
+                    try {
+                        newInv = new Invite(type, methodStr, tzmap, false);
+    
+                        toAdd.add(newInv);
+    
+                        List<Object> addRecurs = new ArrayList<Object>();
+                        List<Object> subRecurs = new ArrayList<Object>();
+    
+                        newInv.setComponentNum(compNum);
+                        if (mbx != null)
+                            newInv.setMailboxId(mbx.getId());
+                        newInv.setMailItemId(mailItemId);
+                        newInv.setSentByMe(sentByMe);
+                        compNum++;
+    
+                        for (ZComponent subcomp : comp.mComponents) {
+                            ICalTok subCompTypeTok = subcomp.getTok();
+                            switch (subCompTypeTok) {
+                            case VALARM:
+                                Alarm alarm = Alarm.parse(subcomp);
+                                if (alarm != null)
+                                    newInv.addAlarm(alarm);
+                                break;
+                            default:
+                                // ignore all other sub components
+                            }
                         }
-                    }
-
-                    for (ZProperty prop : comp.mProperties) {
-                        if (prop.mTok == null) {
-                            String name = prop.getName();
-                            if (name.startsWith("X-")) {
-                                newInv.addXProp(prop);
+    
+                        for (ZProperty prop : comp.mProperties) {
+                            if (prop.mTok == null) {
+                                String name = prop.getName();
+                                if (name.startsWith("X-")) {
+                                    newInv.addXProp(prop);
+                                }
+                                continue;
                             }
-                            continue;
-                        }
-
-                        switch (prop.mTok) {
-                        case ORGANIZER:
-                            newInv.setOrganizer(new ZOrganizer(prop));
-                            break;
-                        case ATTENDEE:
-                            newInv.addAttendee(new ZAttendee(prop));
-                            break;
-                        case DTSTAMP:
-                            ParsedDateTime dtstamp = ParsedDateTime.parse(prop, tzmap);
-                            newInv.setDtStamp(dtstamp.getUtcTime());
-                            break;
-                        case RECURRENCE_ID:
-                            ParsedDateTime rid = ParsedDateTime.parse(prop, tzmap);
-                            newInv.setRecurId(new RecurId(rid, RecurId.RANGE_NONE));
-                            break;
-                        case SEQUENCE:
-                            newInv.setSeqNo(prop.getIntValue());
-                            break;
-                        case DTSTART:
-                            ParsedDateTime dtstart = ParsedDateTime.parse(prop, tzmap);
-                            newInv.setDtStart(dtstart);
-                            if (!dtstart.hasTime()) 
-                            	newInv.setIsAllDayEvent(true);
-                            break;
-                        case DTEND:
-                            if (isEvent) {
-                                ParsedDateTime dtend = ParsedDateTime.parse(prop, tzmap);
-                                newInv.setDtEnd(dtend);
-                            }
-                            break;
-                        case DUE:
-                            if (isTodo) {
-                                ParsedDateTime due = ParsedDateTime.parse(prop, tzmap);
-                                // DUE is for VTODO what DTEND is for VEVENT.
-                                newInv.setDtEnd(due);
-                            }
-                            break;
-                        case DURATION:
-                            ParsedDuration dur = ParsedDuration.parse(prop.getValue());
-                            newInv.setDuration(dur);
-                            break;
-                        case LOCATION:
-                            newInv.setLocation(prop.getValue());
-                            break;
-                        case SUMMARY:
-                            String summary = prop.getValue();
-                            if (summary != null) {
-                                // Make sure SUMMARY is a single line.
-                                summary = ZCalendar.unescape(summary);
-                                summary = summary.replaceAll("[\\\r\\\n]+", " ");
-                            }
-                            prop.setValue(summary);
-                            newInv.setName(summary);
-                            break;
-                        case DESCRIPTION:
-                            newInv.setDescription(prop.mValue);
-                            newInv.setFragment(Fragment.getFragment(prop.mValue, true));
-                            break;
-                        case COMMENT:
-                            newInv.setComment(prop.getValue());
-                            break;
-                        case UID:
-                            newInv.setUid(prop.getValue());
-                            break;
-                        case RRULE:
-                            ZRecur recur = new ZRecur(prop.getValue(), tzmap);
-                            addRecurs.add(recur);
-                            newInv.setIsRecurrence(true);
-                            break;
-                        case RDATE:
-                            RdateExdate rdate = RdateExdate.parse(prop, tzmap);
-                            addRecurs.add(rdate);
-                            newInv.setIsRecurrence(true);
-                            break;
-                        case EXRULE:
-                            ZRecur exrecur = new ZRecur(prop.getValue(), tzmap);
-                            subRecurs.add(exrecur);
-                            newInv.setIsRecurrence(true);                            
-                            break;
-                        case EXDATE:
-                            RdateExdate exdate = RdateExdate.parse(prop, tzmap);
-                            subRecurs.add(exdate);
-                            newInv.setIsRecurrence(true);
-                            break;
-                        case STATUS:
-                            String status = IcalXmlStrMap.sStatusMap.toXml(prop.getValue());
-                            if (status != null) {
-                                if (IcalXmlStrMap.STATUS_IN_PROCESS.equals(status)) {
-                                    String zstatus = prop.getParameterVal(ICalTok.X_ZIMBRA_STATUS, null);
-                                    if (ICalTok.X_ZIMBRA_STATUS_WAITING.toString().equals(zstatus) ||
-                                        ICalTok.X_ZIMBRA_STATUS_DEFERRED.toString().equals(zstatus)) {
-                                        newInv.setStatus(IcalXmlStrMap.sStatusMap.toXml(zstatus));
+    
+                            switch (prop.mTok) {
+                            case ORGANIZER:
+                                newInv.setOrganizer(new ZOrganizer(prop));
+                                break;
+                            case ATTENDEE:
+                                newInv.addAttendee(new ZAttendee(prop));
+                                break;
+                            case DTSTAMP:
+                                ParsedDateTime dtstamp = ParsedDateTime.parse(prop, tzmap);
+                                newInv.setDtStamp(dtstamp.getUtcTime());
+                                break;
+                            case RECURRENCE_ID:
+                                ParsedDateTime rid = ParsedDateTime.parse(prop, tzmap);
+                                newInv.setRecurId(new RecurId(rid, RecurId.RANGE_NONE));
+                                break;
+                            case SEQUENCE:
+                                newInv.setSeqNo(prop.getIntValue());
+                                break;
+                            case DTSTART:
+                                ParsedDateTime dtstart = ParsedDateTime.parse(prop, tzmap);
+                                newInv.setDtStart(dtstart);
+                                if (!dtstart.hasTime()) 
+                                	newInv.setIsAllDayEvent(true);
+                                break;
+                            case DTEND:
+                                if (isEvent) {
+                                    ParsedDateTime dtend = ParsedDateTime.parse(prop, tzmap);
+                                    newInv.setDtEnd(dtend);
+                                }
+                                break;
+                            case DUE:
+                                if (isTodo) {
+                                    ParsedDateTime due = ParsedDateTime.parse(prop, tzmap);
+                                    // DUE is for VTODO what DTEND is for VEVENT.
+                                    newInv.setDtEnd(due);
+                                }
+                                break;
+                            case DURATION:
+                                ParsedDuration dur = ParsedDuration.parse(prop.getValue());
+                                newInv.setDuration(dur);
+                                break;
+                            case LOCATION:
+                                newInv.setLocation(prop.getValue());
+                                break;
+                            case SUMMARY:
+                                String summary = prop.getValue();
+                                if (summary != null) {
+                                    // Make sure SUMMARY is a single line.
+                                    summary = ZCalendar.unescape(summary);
+                                    summary = summary.replaceAll("[\\\r\\\n]+", " ");
+                                }
+                                prop.setValue(summary);
+                                newInv.setName(summary);
+                                break;
+                            case DESCRIPTION:
+                                newInv.setDescription(prop.mValue);
+                                newInv.setFragment(Fragment.getFragment(prop.mValue, true));
+                                break;
+                            case COMMENT:
+                                newInv.setComment(prop.getValue());
+                                break;
+                            case UID:
+                                newInv.setUid(prop.getValue());
+                                break;
+                            case RRULE:
+                                ZRecur recur = new ZRecur(prop.getValue(), tzmap);
+                                addRecurs.add(recur);
+                                newInv.setIsRecurrence(true);
+                                break;
+                            case RDATE:
+                                RdateExdate rdate = RdateExdate.parse(prop, tzmap);
+                                addRecurs.add(rdate);
+                                newInv.setIsRecurrence(true);
+                                break;
+                            case EXRULE:
+                                ZRecur exrecur = new ZRecur(prop.getValue(), tzmap);
+                                subRecurs.add(exrecur);
+                                newInv.setIsRecurrence(true);                            
+                                break;
+                            case EXDATE:
+                                RdateExdate exdate = RdateExdate.parse(prop, tzmap);
+                                subRecurs.add(exdate);
+                                newInv.setIsRecurrence(true);
+                                break;
+                            case STATUS:
+                                String status = IcalXmlStrMap.sStatusMap.toXml(prop.getValue());
+                                if (status != null) {
+                                    if (IcalXmlStrMap.STATUS_IN_PROCESS.equals(status)) {
+                                        String zstatus = prop.getParameterVal(ICalTok.X_ZIMBRA_STATUS, null);
+                                        if (ICalTok.X_ZIMBRA_STATUS_WAITING.toString().equals(zstatus) ||
+                                            ICalTok.X_ZIMBRA_STATUS_DEFERRED.toString().equals(zstatus)) {
+                                            newInv.setStatus(IcalXmlStrMap.sStatusMap.toXml(zstatus));
+                                        } else {
+                                            newInv.setStatus(status);
+                                        }
                                     } else {
                                         newInv.setStatus(status);
                                     }
-                                } else {
-                                    newInv.setStatus(status);
+                                }
+                                break;
+                            case TRANSP:
+                                if (isEvent) {
+                                    String transp = IcalXmlStrMap.sTranspMap.toXml(prop.getValue());
+                                    if (transp!=null) {
+                                        newInv.setTransparency(transp);
+                                    }
+                                }
+                                break;
+                            case CLASS:
+                                String classProp = IcalXmlStrMap.sClassMap.toXml(prop.getValue());
+                                if (classProp != null)
+                                    newInv.setClassProp(classProp);
+                                break;
+                            case X_MICROSOFT_CDO_ALLDAYEVENT:
+                                if (isEvent) {
+                                    if (prop.getBoolValue()) 
+                                        newInv.setIsAllDayEvent(true);
+                                }
+                                break;
+                            case X_MICROSOFT_CDO_BUSYSTATUS:
+                                if (isEvent) {
+                                    String fb = IcalXmlStrMap.sOutlookFreeBusyMap.toXml(prop.getValue());
+                                    if (fb != null)
+                                        newInv.setFreeBusy(fb);
+                                }
+                                break;
+                            case PRIORITY:
+                                String prio = prop.getValue();
+                                if (prio != null)
+                                    newInv.setPriority(prio);
+                                break;
+                            case PERCENT_COMPLETE:
+                                if (isTodo) {
+                                    String pctComplete = prop.getValue();
+                                    if (pctComplete != null)
+                                        newInv.setPercentComplete(pctComplete);
+                                }
+                                break;
+                            case COMPLETED:
+                                if (isTodo) {
+                                    ParsedDateTime completed = ParsedDateTime.parseUtcOnly(prop.getValue());
+                                    newInv.setCompleted(completed.getUtcTime());
+                                }
+                                break;
+                            }
+                        }
+    
+                        newInv.setIsOrganizer(account);
+    
+                        newInv.validateDuration();
+    
+                        ParsedDuration duration = newInv.getDuration();
+                        
+                        if (duration == null) {
+                            ParsedDateTime end = newInv.getEndTime();
+                            if (end != null && newInv.getStartTime() != null) {
+                                duration = end.difference(newInv.getStartTime());
+                            }
+                        }
+    
+                        InviteInfo inviteInfo = new InviteInfo(newInv);
+                        List<IRecurrence> addRules = new ArrayList<IRecurrence>();
+                        if (addRecurs.size() > 0) {
+                            for (Iterator iter = addRecurs.iterator(); iter.hasNext();) {
+                                Object next = iter.next();
+                                if (next instanceof ZRecur) {
+                                    ZRecur cur = (ZRecur) next;
+                                    addRules.add(new Recurrence.SimpleRepeatingRule(newInv.getStartTime(), duration, cur, inviteInfo));
+                                } else if (next instanceof RdateExdate) {
+                                    RdateExdate rdate = (RdateExdate) next;
+                                    addRules.add(new Recurrence.SingleDates(rdate, duration, inviteInfo));
                                 }
                             }
-                            break;
-                        case TRANSP:
-                            if (isEvent) {
-                                String transp = IcalXmlStrMap.sTranspMap.toXml(prop.getValue());
-                                if (transp!=null) {
-                                    newInv.setTransparency(transp);
+                        }
+                        List<IRecurrence> subRules = new ArrayList<IRecurrence>();
+                        if (subRecurs.size() > 0) {
+                            for (Iterator iter = subRecurs.iterator(); iter.hasNext();) {
+                                Object next = iter.next();
+                                if (next instanceof ZRecur) {
+                                    ZRecur cur = (ZRecur) iter.next();
+                                    subRules.add(new Recurrence.SimpleRepeatingRule(newInv.getStartTime(), duration, cur, inviteInfo));
+                                } else if (next instanceof RdateExdate) {
+                                    RdateExdate exdate = (RdateExdate) next;
+                                    subRules.add(new Recurrence.SingleDates(exdate, duration, inviteInfo));
                                 }
                             }
-                            break;
-                        case CLASS:
-                            String classProp = IcalXmlStrMap.sClassMap.toXml(prop.getValue());
-                            if (classProp != null)
-                                newInv.setClassProp(classProp);
-                            break;
-                        case X_MICROSOFT_CDO_ALLDAYEVENT:
-                            if (isEvent) {
-                                if (prop.getBoolValue()) 
-                                    newInv.setIsAllDayEvent(true);
-                            }
-                            break;
-                        case X_MICROSOFT_CDO_BUSYSTATUS:
-                            if (isEvent) {
-                                String fb = IcalXmlStrMap.sOutlookFreeBusyMap.toXml(prop.getValue());
-                                if (fb != null)
-                                    newInv.setFreeBusy(fb);
-                            }
-                            break;
-                        case PRIORITY:
-                            String prio = prop.getValue();
-                            if (prio != null)
-                                newInv.setPriority(prio);
-                            break;
-                        case PERCENT_COMPLETE:
-                            if (isTodo) {
-                                String pctComplete = prop.getValue();
-                                if (pctComplete != null)
-                                    newInv.setPercentComplete(pctComplete);
-                            }
-                            break;
-                        case COMPLETED:
-                            if (isTodo) {
-                                ParsedDateTime completed = ParsedDateTime.parseUtcOnly(prop.getValue());
-                                newInv.setCompleted(completed.getUtcTime());
-                            }
-                            break;
                         }
-                    }
-
-                    newInv.setIsOrganizer(account);
-
-                    newInv.validateDuration();
-
-                    ParsedDuration duration = newInv.getDuration();
-                    
-                    if (duration == null) {
-                        ParsedDateTime end = newInv.getEndTime();
-                        if (end != null && newInv.getStartTime() != null) {
-                            duration = end.difference(newInv.getStartTime());
-                        }
-                    }
-
-                    InviteInfo inviteInfo = new InviteInfo(newInv);
-                    List<IRecurrence> addRules = new ArrayList<IRecurrence>();
-                    if (addRecurs.size() > 0) {
-                        for (Iterator iter = addRecurs.iterator(); iter.hasNext();) {
-                            Object next = iter.next();
-                            if (next instanceof ZRecur) {
-                                ZRecur cur = (ZRecur) next;
-                                addRules.add(new Recurrence.SimpleRepeatingRule(newInv.getStartTime(), duration, cur, inviteInfo));
-                            } else if (next instanceof RdateExdate) {
-                                RdateExdate rdate = (RdateExdate) next;
-                                addRules.add(new Recurrence.SingleDates(rdate, duration, inviteInfo));
+                        
+                        if (newInv.hasRecurId()) {
+                            if (addRules.size() > 0) {
+                                newInv.setRecurrence(new Recurrence.ExceptionRule(newInv.getRecurId(),
+                                        newInv.getStartTime(), duration, new InviteInfo(newInv), addRules, subRules));
+                            }
+                        } else {
+                            if (addRules.size() > 0) { // since exclusions can't affect DtStart, just ignore them if there are no add rules
+                                newInv.setRecurrence(new Recurrence.RecurrenceRule(newInv.getStartTime(), duration, new InviteInfo(newInv), addRules, subRules));
                             }
                         }
-                    }
-                    List<IRecurrence> subRules = new ArrayList<IRecurrence>();
-                    if (subRecurs.size() > 0) {
-                        for (Iterator iter = subRecurs.iterator(); iter.hasNext();) {
-                            Object next = iter.next();
-                            if (next instanceof ZRecur) {
-                                ZRecur cur = (ZRecur) iter.next();
-                                subRules.add(new Recurrence.SimpleRepeatingRule(newInv.getStartTime(), duration, cur, inviteInfo));
-                            } else if (next instanceof RdateExdate) {
-                                RdateExdate exdate = (RdateExdate) next;
-                                subRules.add(new Recurrence.SingleDates(exdate, duration, inviteInfo));
-                            }
-                        }
+                        
+                        String location = newInv.getLocation();
+                        if (location == null)
+                        	newInv.setLocation("");
+    
+                        // Process callback.
+                        if (visitor != null)
+                            visitor.visit(newInv);
+                    } catch (ParseException e) {
+                        throw ServiceException.PARSE_ERROR(
+                            "Unable to parse iCalendar data: " + e.getMessage(), e);
                     }
                     
-                    if (newInv.hasRecurId()) {
-                        if (addRules.size() > 0) {
-                            newInv.setRecurrence(new Recurrence.ExceptionRule(newInv.getRecurId(),
-                                    newInv.getStartTime(), duration, new InviteInfo(newInv), addRules, subRules));
-                        }
-                    } else {
-                        if (addRules.size() > 0) { // since exclusions can't affect DtStart, just ignore them if there are no add rules
-                            newInv.setRecurrence(new Recurrence.RecurrenceRule(newInv.getStartTime(), duration, new InviteInfo(newInv), addRules, subRules));
-                        }
-                    }
-                    
-                    String location = newInv.getLocation();
-                    if (location == null)
-                    	newInv.setLocation("");
-                } catch (ParseException e) {
-                    throw ServiceException.PARSE_ERROR(
-                        "Unable to parse iCalendar data: " + e.getMessage(), e);
+                    break;
                 }
-                
-                break;
+            } catch (ServiceException e) {
+                if (!continueOnError) throw e;
+                if (newInv != null)
+                    logIcsParseImportError(newInv, e);
+                else
+                    ZimbraLog.calendar.warn("Skipping error during ics parse/import", e);
+            } catch (RuntimeException e) {
+                if (!continueOnError) throw e;
+                if (newInv != null)
+                    logIcsParseImportError(newInv, e);
+                else
+                    ZimbraLog.calendar.warn("Skipping error during ics parse/import", e);
             }
         }
     }
-    
+
+    private static void logIcsParseImportError(Invite inv, Exception e) {
+        String uid = inv.getUid();
+        String recurrenceId = inv.hasRecurId() ? inv.getRecurId().toString() : null;
+        int seq = inv.getSeqNo();
+        String dtStart = inv.getStartTime() != null ? inv.getStartTime().toString() : null;
+        String summary = inv.getName();
+        ZimbraLog.calendar.warn(
+                "Skipping error during ics parse/import: UID:" + uid +
+                (recurrenceId != null ? ", RECURRENCE-ID:" + recurrenceId : "") +
+                ", SEQUENCE:" + seq +
+                (dtStart != null ? ", DTSTART:" + dtStart : "") +
+                (summary != null ? ", SUMMARY:" + summary : ""),
+                e);
+    }
     
     public ZComponent newToVComponent(boolean useOutlookCompatMode, boolean isOwner)
     throws ServiceException {

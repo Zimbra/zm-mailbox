@@ -27,6 +27,7 @@ package com.zimbra.cs.service.formatter;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.HttpUtil.Browser;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.index.MailboxIndex;
@@ -34,6 +35,7 @@ import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.Invite.InviteVisitor;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
@@ -121,18 +123,31 @@ public class IcsFormatter extends Formatter {
         return false;
     }
 
-    public void saveCallback(byte[] body, Context context, String contentType, Folder folder, String filename) throws ServiceException, IOException {
-        // TODO: Modify Formatter.save() API to pass in charset of body, then
-        // use that charset in String() constructor.
-        Reader reader = new StringReader(new String(body, Mime.P_CHARSET_UTF8));
-        List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(reader);
-        List<Invite> invites = Invite.createFromCalendar(context.authAccount, null, icals, true);
-        for (Invite inv : invites) {
+    private static class ImportInviteVisitor implements InviteVisitor {
+        private Context mCtxt;
+        private Folder mFolder;
+
+        public ImportInviteVisitor(Context ctxt, Folder folder) {
+            mCtxt = ctxt;
+            mFolder = folder;
+        }
+
+        public void visit(Invite inv) throws ServiceException {
             // handle missing UIDs on remote calendars by generating them as needed
             if (inv.getUid() == null)
                 inv.setUid(LdapUtil.generateUUID());
             // and add the invite to the calendar!
-            folder.getMailbox().addInvite(context.opContext, inv, folder.getId(), false, null);
+            mFolder.getMailbox().addInvite(mCtxt.opContext, inv, mFolder.getId(), false, null);
         }
+    }
+
+    public void saveCallback(byte[] body, Context context, String contentType, Folder folder, String filename) throws ServiceException, IOException {
+        boolean continueOnError = context.ignoreAndContinueOnError();
+        // TODO: Modify Formatter.save() API to pass in charset of body, then
+        // use that charset in String() constructor.
+        Reader reader = new StringReader(new String(body, Mime.P_CHARSET_UTF8));
+        List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(reader);
+        ImportInviteVisitor visitor = new ImportInviteVisitor(context, folder);
+        Invite.createFromCalendar(context.authAccount, null, icals, true, continueOnError, visitor);
     }
 }

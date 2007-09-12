@@ -1938,14 +1938,23 @@ public class ZMailbox {
      * @param closeIs whether to close the input stream when done
      * @param length length of inputstream, or 0/-1 if length is unknown.
      * @param contentType optional content-type header value (defaults to "application/octect-stream")
+     * @param continueOnError if true, set optional continue=1 query string parameter
      * @param msecTimeout connection timeout
      * @throws ServiceException on error
      */
     @SuppressWarnings({"EmptyCatchBlock"})
-    public void postRESTResource(String relativePath, InputStream is, boolean closeIs, long length, String contentType, int msecTimeout) throws ServiceException {
+    public void postRESTResource(String relativePath, InputStream is, boolean closeIs, long length,
+                                 String contentType, boolean ignoreAndContinueOnError, int msecTimeout)
+    throws ServiceException {
         PostMethod post = null;
 
         try {
+            if (ignoreAndContinueOnError) {
+                if (!relativePath.contains("?"))
+                    relativePath = relativePath + "?ignore=1";
+                else
+                    relativePath = relativePath + "&ignore=1";
+            }
             URI uri = getRestURI(relativePath);
             HttpClient client = getHttpClient(uri);
 

@@ -293,12 +293,13 @@ public class ZMailboxUtil implements DebugListener {
     private static Option O_DATE = new Option("d", "date", true,  "received date (msecs since epoch)");
     private static Option O_FIRST = new Option("f", "first", false, "add as first filter rule");
     private static Option O_FLAGS = new Option("F", "flags", true, "flags");
-    private static Option O_OUTPUT_FILE = new Option("o", "output", true, "output filename");
     private static Option O_FOLDER = new Option("f", "folder", true, "folder-path-or-id");
     private static Option O_IGNORE = new Option("i", "ignore", false, "ignore unknown contact attrs");
+    private static Option O_IGNORE_ERROR = new Option("i", "ignore", false, "ignore and continue on error during ics import");
     private static Option O_LAST = new Option("l", "last", false, "add as last filter rule");    
     private static Option O_LIMIT = new Option("l", "limit", true, "max number of results to return");
     private static Option O_NEXT = new Option("n", "next", false, "next page of search results");
+    private static Option O_OUTPUT_FILE = new Option("o", "output", true, "output filename");
     private static Option O_PREVIOUS = new Option("p", "previous", false,  "previous page of search results");
     private static Option O_SORT = new Option("s", "sort", true, "sort order TODO");
     private static Option O_REPLACE = new Option("r", "replace", false, "replace contact (default is to merge)");
@@ -375,7 +376,7 @@ public class ZMailboxUtil implements DebugListener {
         MOVE_ITEM("moveItem", "mi", "{item-ids} {dest-folder-path}", "move item(s) to a new folder", Category.ITEM, 2, 2),
         MOVE_MESSAGE("moveMessage", "mm", "{msg-ids} {dest-folder-path}", "move message(s) to a new folder", Category.MESSAGE, 2, 2),
         NOOP("noOp", "no", "", "do a NoOp SOAP call to the server", Category.MISC, 0, 1),
-        POST_REST_URL("postRestURL", "pru", "{relative-path} {file-name}", "do a POST on a REST URL relative to the mailbox", Category.MISC, 2, 2, O_CONTENT_TYPE),
+        POST_REST_URL("postRestURL", "pru", "{relative-path} {file-name}", "do a POST on a REST URL relative to the mailbox", Category.MISC, 2, 2, O_CONTENT_TYPE, O_IGNORE_ERROR),
         RENAME_FOLDER("renameFolder", "rf", "{folder-path} {new-folder-path}", "rename folder", Category.FOLDER, 2, 2),
         RENAME_SIGNATURE("renameSignature", "rsig", "{signature-name|signature-id} {new-name}", "rename signature", Category.ACCOUNT, 2, 2),
         RENAME_TAG("renameTag", "rt", "{tag-name} {new-tag-name}", "rename tag", Category.TAG, 2, 2),
@@ -754,6 +755,10 @@ public class ZMailboxUtil implements DebugListener {
 
     private String contentTypeOpt() throws SoapFaultException {
         return mCommandLine.getOptionValue(O_CONTENT_TYPE.getOpt());
+    }
+
+    private boolean ignoreAndContinueOnErrorOpt() throws SoapFaultException {
+        return mCommandLine.hasOption(O_IGNORE_ERROR.getOpt());
     }
 
     private String typesOpt() throws ServiceException {
@@ -2300,7 +2305,7 @@ public class ZMailboxUtil implements DebugListener {
     private void doPostRestURL(String args[]) throws ServiceException {
         try {
             File file = new File(args[1]);
-            mMbox.postRESTResource(args[0], new FileInputStream(file), true, file.length(), contentTypeOpt(), 0);
+            mMbox.postRESTResource(args[0], new FileInputStream(file), true, file.length(), contentTypeOpt(), ignoreAndContinueOnErrorOpt(), 0);
         } catch (FileNotFoundException e) {
             throw ZClientException.CLIENT_ERROR("file not found: "+args[1], e);
         }
