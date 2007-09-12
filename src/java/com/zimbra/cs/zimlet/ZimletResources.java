@@ -95,12 +95,12 @@ public class ZimletResources
                 ServletConfig config = this.getServletConfig();
                 ServletContext baseContext = config.getServletContext();
                 ServletContext clientContext = baseContext.getContext("/zimbra/");
-                RequestDispatcher dispatcher = clientContext.getRequestDispatcher("/messages/");
+                RequestDispatcher dispatcher = clientContext.getRequestDispatcher("/res/");
 
                 List<ZimletFile> files = getZimletFiles(req, type);
                 for (ZimletFile file : files) {
                     String filename = file.getAbsolutePath();
-                    if (!filename.startsWith("/messages/")) {
+                    if (!filename.startsWith("/res/")) {
                         continue;
                     }
                     HttpServletRequest wrappedReq = new RequestWrapper(req, filename);
@@ -228,7 +228,7 @@ public class ZimletResources
         List<ZimletFile> files = getZimletFiles(req, type);
         for (ZimletFile file : files) {
             String filename = file.getAbsolutePath();
-            if (filename.startsWith("/messages/")) {
+            if (filename.startsWith("/res/")) {
                 continue;
             }
 
@@ -361,7 +361,7 @@ public class ZimletResources
             // add properties files
             boolean isJavaScript = type.equals(T_JAVASCRIPT);
             if (isJavaScript) {
-                files.add(new ZimletFile(zimletName, "/messages/" + zimletName));
+                files.add(new ZimletFile(zimletName, "/res/"+zimletName));
             }
 
             // add included files
