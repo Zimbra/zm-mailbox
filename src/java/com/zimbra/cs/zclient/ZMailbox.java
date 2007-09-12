@@ -36,6 +36,7 @@ import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
+import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.soap.VoiceConstants;
 import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.util.ByteUtil;
@@ -61,6 +62,7 @@ import com.zimbra.cs.zclient.event.ZCreateMessageEvent;
 import com.zimbra.cs.zclient.event.ZCreateMountpointEvent;
 import com.zimbra.cs.zclient.event.ZCreateSearchFolderEvent;
 import com.zimbra.cs.zclient.event.ZCreateTagEvent;
+import com.zimbra.cs.zclient.event.ZCreateTaskEvent;
 import com.zimbra.cs.zclient.event.ZDeleteEvent;
 import com.zimbra.cs.zclient.event.ZEventHandler;
 import com.zimbra.cs.zclient.event.ZModifyAppointmentEvent;
@@ -73,11 +75,10 @@ import com.zimbra.cs.zclient.event.ZModifyMessageEvent;
 import com.zimbra.cs.zclient.event.ZModifyMountpointEvent;
 import com.zimbra.cs.zclient.event.ZModifySearchFolderEvent;
 import com.zimbra.cs.zclient.event.ZModifyTagEvent;
-import com.zimbra.cs.zclient.event.ZRefreshEvent;
 import com.zimbra.cs.zclient.event.ZModifyTaskEvent;
-import com.zimbra.cs.zclient.event.ZCreateTaskEvent;
 import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemEvent;
 import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemFolderEvent;
+import com.zimbra.cs.zclient.event.ZRefreshEvent;
 import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
@@ -106,9 +107,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -203,19 +204,19 @@ public class ZMailbox {
             mAuthToken = authToken;
             mUri = uri;
         }
-        
+
         public void setProxy(String proxyHost, int proxyPort) {
         	mProxyHost = proxyHost;
         	mProxyPort = proxyPort;
         }
-        
+
         public void setProxy(String proxyHost, int proxyPort, String proxyUser, String proxyPass) {
         	mProxyHost = proxyHost;
         	mProxyPort = proxyPort;
         	mProxyUser = proxyUser;
         	mProxyPass = proxyPass;
         }
-        
+
         public String getProxyHost() { return mProxyHost; }
         public int getProxyPort() { return mProxyPort; }
         public String getProxyUser() { return mProxyUser; }
@@ -254,7 +255,7 @@ public class ZMailbox {
         	mUserAgentName = name;
         	mUserAgentVersion = version;
         }
-        
+
         public int getTimeout() { return mTimeout; }
         public void setTimeout(int timeout) { mTimeout = timeout; }
 
@@ -431,7 +432,7 @@ public class ZMailbox {
                 attrsEl.addElement(AccountConstants.E_ATTR).addAttribute(AccountConstants.A_NAME, a);
         }
     }
-    
+
     private ZAuthResult authByPassword(Options options, String password) throws ServiceException {
         if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling authenticate", null);
         XMLElement req = new XMLElement(AccountConstants.AUTH_REQUEST);
@@ -461,7 +462,7 @@ public class ZMailbox {
     public ZAuthResult getAuthResult() {
         return mAuthResult;
     }
-    
+
     public String getAuthToken() {
         return mAuthToken;
     }
@@ -504,6 +505,7 @@ public class ZMailbox {
             handleResponseContext(mTransport.getZimbraContext());
         }
     }
+
 
     private void handleResponseContext(Element context) throws ServiceException {
         if (context == null) return;
@@ -587,7 +589,7 @@ public class ZMailbox {
         }
         return list;
     }
-    
+
     private void handleCreated(Element created) throws ServiceException {
         if (created == null) return;
         List<ZCreateEvent> events = null;
@@ -616,7 +618,7 @@ public class ZMailbox {
                 ZFolder parent = getFolderById(parentId);
                 ZMountpoint child = new ZMountpoint(e, parent);
              	addItemIdMapping(child);
-            	addRemoteItemIdMapping(child.getCanonicalRemoteId(), child);               
+            	addRemoteItemIdMapping(child.getCanonicalRemoteId(), child);
                 parentFixup = parentCheck(parentFixup, child, parent);
                 event = new ZCreateMountpointEvent(child);
             } else if (e.getName().equals(MailConstants.E_SEARCH)) {
@@ -853,6 +855,37 @@ public class ZMailbox {
             mGetInfoResult = new ZGetInfoResult(invoke(req));
         }
         return mGetInfoResult;
+    }
+
+    public static class JsonDebugListener implements DebugListener {
+            Element env;
+            public void sendSoapMessage(Element envelope) {}
+            public void receiveSoapMessage(Element envelope) {env = envelope; }
+            public Element getEnvelope(){ return env; }
+    }
+
+    /**
+     * used when bootstrapping AJAX client.
+     * 
+     * @param url url to connect to
+     * @param authToken auth token to use
+     * @return top-level JSON respsonse
+     * @throws ServiceException
+     */
+    public static Element getInfoJSON(String url, String authToken) throws ServiceException {
+        ZMailbox.Options options = new ZMailbox.Options(authToken, url);
+        JsonDebugListener debug = new JsonDebugListener();
+        options.setNoSession(false);
+        options.setAuthAuthToken(false);
+        options.setDebugListener(debug);
+        options.setResponseProtocol(SoapProtocol.SoapJS);
+        ZMailbox mbox = getMailbox(options);
+        try {
+            Element resp = mbox.mTransport.invoke(new XMLElement(AccountConstants.GET_INFO_REQUEST));
+            return debug.getEnvelope();
+        } catch (IOException e) {
+            throw ZClientException.IO_ERROR("invoke "+e.getMessage(), e);
+        }
     }
 
     //  ------------------------
