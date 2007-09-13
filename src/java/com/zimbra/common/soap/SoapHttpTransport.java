@@ -217,40 +217,45 @@ public class SoapHttpTransport extends SoapTransport {
 	throws SoapFaultException, IOException, HttpException {
     	int statusCode = -1;
 
-    	// the content-type charset will determine encoding used
-    	// when we set the request body
-    	PostMethod method = new PostMethod(mUri);
-    	method.setRequestHeader("Content-Type", getRequestProtocol().getContentType());
-    	String soapMessage = generateSoapMessage(document, raw, noSession, requestedAccountId, changeToken, tokenType);
-    	method.setRequestBody(soapMessage);
-    	method.setRequestContentLength(EntityEnclosingMethod.CONTENT_LENGTH_AUTO);
+        try {
+            // the content-type charset will determine encoding used
+            // when we set the request body
+            PostMethod method = new PostMethod(mUri);
+            method.setRequestHeader("Content-Type", getRequestProtocol().getContentType());
+            String soapMessage = generateSoapMessage(document, raw, noSession, requestedAccountId, changeToken, tokenType);
+            method.setRequestBody(soapMessage);
+            method.setRequestContentLength(EntityEnclosingMethod.CONTENT_LENGTH_AUTO);
     	
-    	if (getRequestProtocol().hasSOAPActionHeader())
-    		method.setRequestHeader("SOAPAction", mUri);
+            if (getRequestProtocol().hasSOAPActionHeader())
+                method.setRequestHeader("SOAPAction", mUri);
 
-    	for (int attempt = 0; statusCode == -1 && attempt < mRetryCount; attempt++) {
-    		try {
-    			// execute the method.
-    			statusCode = mClient.executeMethod(method);
-    		} catch (HttpRecoverableException e) {
-                if (attempt == mRetryCount - 1)
-                    throw e;
-    			System.err.println("A recoverable exception occurred, retrying." + e.getMessage());
-    		}
-    	}
+            for (int attempt = 0; statusCode == -1 && attempt < mRetryCount; attempt++) {
+                try {
+                    // execute the method.
+                    statusCode = mClient.executeMethod(method);
+                } catch (HttpRecoverableException e) {
+                    if (attempt == mRetryCount - 1)
+                        throw e;
+                    System.err.println("A recoverable exception occurred, retrying." + e.getMessage());
+                }
+            }
 
-    	// Read the response body.
-    	byte[] responseBody = method.getResponseBody();
+            // Read the response body.
+            byte[] responseBody = method.getResponseBody();
 
-    	// Release the connection.
-    	method.releaseConnection();
 
-    	// Deal with the response.
-    	// Use caution: ensure correct character encoding and is not binary data
-    	String responseStr = SoapProtocol.toString(responseBody);
 
-    	return parseSoapResponse(responseStr, raw);
-    }    
+            // Deal with the response.
+            // Use caution: ensure correct character encoding and is not binary data
+            String responseStr = SoapProtocol.toString(responseBody);
+
+            return parseSoapResponse(responseStr, raw);
+        } finally {
+            // Release the connection.
+            if (method != null)
+                method.releaseConnection();        
+        }
+    }
 
 }
 
