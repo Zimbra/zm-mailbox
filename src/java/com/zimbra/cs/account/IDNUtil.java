@@ -66,6 +66,19 @@ public class IDNUtil {
         return emailAddress;
     }
     
+    public static String toUnicodeEmail(String emailAddress) throws ServiceException {
+        String parts[] = emailAddress.split("@");
+        
+        if (parts.length != 2)
+            throw ServiceException.INVALID_REQUEST("must be valid list address: "+emailAddress, null);
+
+        String localPart = parts[0];
+        String domain = parts[1];
+        emailAddress = localPart + "@" + IDNUtil.toUnicodeDomainName(domain);
+        return emailAddress;
+    }
+    
+    
     /*
     private static boolean isACE(String name) {
          return name.startsWith(ACE_PREFIX);

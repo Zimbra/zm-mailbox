@@ -119,6 +119,11 @@ public class Alias extends MailTarget {
         return getTargetInfo(ALIAS_TARGET_NAME);
     }
     
+    public String getTargetUnicodeName() throws ServiceException {
+        String targetName =  getTargetInfo(ALIAS_TARGET_NAME);
+        return IDNUtil.toUnicodeEmail(targetName);
+    }
+    
     public String getTargetType() throws ServiceException {
         return getTargetInfo(ALIAS_TARGET_TYPE);
     }

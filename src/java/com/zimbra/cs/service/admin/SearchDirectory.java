@@ -171,7 +171,7 @@ public class SearchDirectory extends AdminDocumentHandler {
         Element ealias = e.addElement(AdminConstants.E_ALIAS);
         ealias.addAttribute(AdminConstants.A_NAME, a.getUnicodeName());
         ealias.addAttribute(AdminConstants.A_ID, a.getId());
-        ealias.addAttribute(AdminConstants.A_TARGETNAME, a.getTargetName());
+        ealias.addAttribute(AdminConstants.A_TARGETNAME, a.getTargetUnicodeName());
         ealias.addAttribute(AdminConstants.A_TYPE, a.getTargetType());
         
         Map attrs = a.getAttrs();
