@@ -625,6 +625,9 @@
         <mkdir dir="${jetty.home.dir}/logs"/>
         <mkdir dir="${jetty.home.dir}/webapps"/>
         <mkdir dir="${jetty.home.dir}/work"/>
+        <mkdir dir="${jetty.home.dir}/work/service"/>
+        <mkdir dir="${jetty.home.dir}/work/zimbra"/>
+        <mkdir dir="${jetty.home.dir}/work/zimbraAdmin"/>
 
         <antcall target="reset-the-world"/>
         <ant dir="../Zimlet" target="clean" inheritAll="false"/>
@@ -1287,6 +1290,6 @@
     </target>
 
     <target name="restart-webserver" depends="stop-webserver,start-webserver"/>
-
+	
     <target name="empty"/>
 </project>

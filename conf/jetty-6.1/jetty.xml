@@ -125,6 +125,7 @@
       <Arg>/service</Arg>
       <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
       <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
+      <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/service</Set>
     </New>
 
     <New id="zimbra" class="org.mortbay.jetty.webapp.WebAppContext">
@@ -133,6 +134,7 @@
       <Arg>/zimbra</Arg>
       <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
       <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
+      <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/zimbra</Set>
     </New>
 
     <New id="zimbraAdmin" class="org.mortbay.jetty.webapp.WebAppContext">
@@ -141,6 +143,7 @@
       <Arg>/zimbraAdmin</Arg>
       <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
       <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
+      <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/zimbraAdmin</Set>
     </New>
     
     <!-- =========================================================== -->
