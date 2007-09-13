@@ -123,7 +123,6 @@ public class LdapProvisioning extends Provisioning {
 
     // object classes
     public static final String C_zimbraAccount = "zimbraAccount";
-    public static final String C_amavisAccount = "amavisAccount";
     public static final String C_zimbraCOS = "zimbraCOS";
     public static final String C_zimbraDomain = "zimbraDomain";
     public static final String C_zimbraMailList = "zimbraDistributionList";
@@ -665,7 +664,6 @@ public class LdapProvisioning extends Provisioning {
             for (String eoc : extraObjectClasses) {
                 oc.add(eoc);
             }
-            oc.add(C_amavisAccount);
             
             if (additionalObjectClasses != null) {
                 for (int i = 0; i < additionalObjectClasses.length; i++)
