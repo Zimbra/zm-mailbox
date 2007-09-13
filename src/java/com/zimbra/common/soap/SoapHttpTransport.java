@@ -217,10 +217,11 @@ public class SoapHttpTransport extends SoapTransport {
 	throws SoapFaultException, IOException, HttpException {
     	int statusCode = -1;
 
+        PostMethod method = null;
         try {
             // the content-type charset will determine encoding used
             // when we set the request body
-            PostMethod method = new PostMethod(mUri);
+            method = new PostMethod(mUri);
             method.setRequestHeader("Content-Type", getRequestProtocol().getContentType());
             String soapMessage = generateSoapMessage(document, raw, noSession, requestedAccountId, changeToken, tokenType);
             method.setRequestBody(soapMessage);
