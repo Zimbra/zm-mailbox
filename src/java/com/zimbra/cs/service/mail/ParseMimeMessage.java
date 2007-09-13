@@ -713,6 +713,7 @@ public class ParseMimeMessage {
             newContacts = contacts;
         }
 
+        @SuppressWarnings("unchecked")
         public void add(Element elem, String defaultCharset) throws ServiceException, UnsupportedEncodingException {
             String emailAddress = elem.getAttribute(MailConstants.A_ADDRESS);
             String personalName = elem.getAttribute(MailConstants.A_PERSONAL, null);
@@ -723,7 +724,7 @@ public class ParseMimeMessage {
                 newContacts.add(addr);
 
             Object content = addrs.get(addressType);
-            if (content == null || addressType.equals(EmailType.FROM.toString())) {
+            if (content == null || addressType.equals(EmailType.FROM.toString()) || addressType.equals(EmailType.SENDER.toString())) {
                 addrs.put(addressType, addr);
             } else if (content instanceof List) {
                 ((List<InternetAddress>) content).add(addr);
@@ -779,6 +780,12 @@ public class ParseMimeMessage {
         if (addrs != null && addrs.length == 1) {
             mm.setFrom(addrs[0]);
             mLog.debug("\t\tFrom: " + addrs[0]);
+        }
+
+        addrs = maddrs.get(EmailType.SENDER.toString());
+        if (addrs != null && addrs.length == 1) {
+            mm.setSender(addrs[0]);
+            mLog.debug("\t\tSender: " + addrs[0]);
         }
 
         addrs = maddrs.get(EmailType.REPLY_TO.toString());
