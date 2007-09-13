@@ -43,8 +43,8 @@ import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.ZimbraSoapContext;
 
 
-public class CreateCalendarItemException extends CreateCalendarItem {
-    
+public class CreateCalendarItemException extends CalendarRequest {
+
     protected class CreateCalendarItemExceptionInviteParser extends ParseMimeMessage.InviteParser
     {
         private String mUid;
