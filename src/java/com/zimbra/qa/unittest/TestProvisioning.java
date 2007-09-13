@@ -204,6 +204,40 @@ public class TestProvisioning extends TestCase {
         SIGNATURE_VALUE_MODIFIED = "this is my signature MODIFIED";
     }
     
+    static class Flag {
+        private static Set<String> sNeedLdapPaging = new HashSet<String>();
+        
+        static {
+            sNeedLdapPaging.add("getAllAdminAccounts");
+            sNeedLdapPaging.add("getAllAccounts_domain");
+            sNeedLdapPaging.add("getAllAccounts_domain_visitor");
+            sNeedLdapPaging.add("getAllCalendarResources_domain");
+            sNeedLdapPaging.add("getAllCalendarResources_domain_visitor");
+            sNeedLdapPaging.add("getAllDistributionLists");
+            sNeedLdapPaging.add("getDistributionLists_account");
+            sNeedLdapPaging.add("getDistributionLists_account_directonly_via");
+            sNeedLdapPaging.add("inDistributionList");  // com.zimbra.cs.mailbox.ACL.Grant.matches
+            sNeedLdapPaging.add("searchAccounts");      // com.zimbra.cs.backup.BackupManager.getAccountsOnServer, com.zimbra.cs.service.admin.FixCalendarTimeZone.getAccountsOnServer
+            sNeedLdapPaging.add("searchAccounts_domain");
+            sNeedLdapPaging.add("searchCalendarResources");
+            sNeedLdapPaging.add("searchCalendarResources_domain");  // com.zimbra.cs.service.account.SearchCalendarResources
+            sNeedLdapPaging.add("searchDirectory");
+        }
+        
+        static boolean needLdapPaging(String methodName) {
+            /*
+             * turn on for checking if a call would end up in 
+             * LdapProvisioning.searchObjects(String query, String returnAttrs[], String base, int flags, NamedEntry.Visitor visitor, int maxResults)
+             * 
+             * to do this, add 
+             * throw ServiceException.INVALID_REQUEST("paging NOT SUPPORTED", null);  
+             * as the only line in searchObjects and comment out all the code in searchObjects.
+             */
+             // return sNeedLdapPaging.contains(methodName);  .searchObject
+            return false;
+        }
+    }
+    
     class CustomProvTester {
         Provisioning mProv;
         boolean mIsCustomProv;
@@ -587,10 +621,11 @@ public class TestProvisioning extends TestCase {
         Account entryGotByuser = mProv.get(Provisioning.AccountBy.name, ADMIN_USER);
         TestProvisioningUtil.verifySameEntry(entryGot, entryGotByuser);
         
+        if (!Flag.needLdapPaging("getAllAdminAccounts")) {
+            List list = mProv.getAllAdminAccounts();
+            TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{entry}, false);
+        }
         
-        List list = mProv.getAllAdminAccounts();
-        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{entry}, false);
-
         return entry;
     }
     
@@ -653,14 +688,20 @@ public class TestProvisioning extends TestCase {
         else
             TestProvisioningUtil.verifySameEntry(entry, entryGot);        
                 
+        List list = null;
+        
         // get all accounts in a domain
-        List list = mProv.getAllAccounts(domain);
-        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{entry, adminAcct}, mCustomProvTester.verifyAccountCountForDomainBasedSearch());
+        if (!Flag.needLdapPaging("getAllAccounts_domain")) {
+            list = mProv.getAllAccounts(domain);
+            TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{entry, adminAcct}, mCustomProvTester.verifyAccountCountForDomainBasedSearch());
+        }
         
         // get all accounts in a domain, visitor version
-        TestVisitor visitor = new TestVisitor();
-        mProv.getAllAccounts(domain, visitor);
-        TestProvisioningUtil.verifyEntries(visitor.visited(), new NamedEntry[]{entry, adminAcct}, mCustomProvTester.verifyAccountCountForDomainBasedSearch());
+        if (!Flag.needLdapPaging("getAllAccounts_domain_visitor")) {
+            TestVisitor visitor = new TestVisitor();
+            mProv.getAllAccounts(domain, visitor);
+            TestProvisioningUtil.verifyEntries(visitor.visited(), new NamedEntry[]{entry, adminAcct}, mCustomProvTester.verifyAccountCountForDomainBasedSearch());
+        }
         
         // modify account status
         mProv.modifyAccountStatus(entry, "maintenance");
@@ -670,27 +711,29 @@ public class TestProvisioning extends TestCase {
          * rename account, same domain
          */ 
         mProv.renameAccount(entryId, NEW_EMAIL);
-        // make sure the account is still in the same domain
-        list = searchAccountsInDomain(domain);
-        TestProvisioningUtil.verifyEntriesById(list, new String[]{entryId}, false);
-        TestProvisioningUtil.verifyEntriesByName(list, new String[]{NEW_EMAIL}, false);
-        // re-get the entry since it might've been changed after the rename
-        entry = mProv.get(Provisioning.AccountBy.id, entryId);
-        if (mCustomProvTester.isCustom()) {
-            // make sure it is still in the same dn
-            mCustomProvTester.verifyDn(entry, acctDn);
-            // make sure both aliases are not moved or changed
-            // actually the following just verifies that they are not changed, 
-            // for now can't verify if they are moved unless we improve the test
-            list = searchAliasesInDomain(domain);
-            TestProvisioningUtil.verifyEntriesByName(list, new String[]{ACCT_ALIAS_EMAIL}, true);
-        } else {
-            // make sure the alias is still in the same domain
-            list = searchAliasesInDomain(domain);
-            TestProvisioningUtil.verifyEntriesByName(list, new String[]{ACCT_ALIAS_EMAIL}, true);
-            // make sure the alias in the other domain is still in the other domain
-            list = searchAliasesInDomain(otherDomain);
-            TestProvisioningUtil.verifyEntriesByName(list, new String[]{ACCT_ALIAS_IN_OTHER_DOMAIN_EMAIL}, true);
+        if (!Flag.needLdapPaging("searchDirectory")) {
+            // make sure the account is still in the same domain
+            list = searchAccountsInDomain(domain);
+            TestProvisioningUtil.verifyEntriesById(list, new String[]{entryId}, false);
+            TestProvisioningUtil.verifyEntriesByName(list, new String[]{NEW_EMAIL}, false);
+            // re-get the entry since it might've been changed after the rename
+            entry = mProv.get(Provisioning.AccountBy.id, entryId);
+            if (mCustomProvTester.isCustom()) {
+                // make sure it is still in the same dn
+                mCustomProvTester.verifyDn(entry, acctDn);
+                // make sure both aliases are not moved or changed
+                // actually the following just verifies that they are not changed, 
+                // for now can't verify if they are moved unless we improve the test
+                list = searchAliasesInDomain(domain);
+                TestProvisioningUtil.verifyEntriesByName(list, new String[]{ACCT_ALIAS_EMAIL}, true);
+            } else {
+                // make sure the alias is still in the same domain
+                list = searchAliasesInDomain(domain);
+                TestProvisioningUtil.verifyEntriesByName(list, new String[]{ACCT_ALIAS_EMAIL}, true);
+                // make sure the alias in the other domain is still in the other domain
+                list = searchAliasesInDomain(otherDomain);
+                TestProvisioningUtil.verifyEntriesByName(list, new String[]{ACCT_ALIAS_IN_OTHER_DOMAIN_EMAIL}, true);
+            }
         }
         
         /*
@@ -709,41 +752,45 @@ public class TestProvisioning extends TestCase {
         entry = mProv.get(Provisioning.AccountBy.id, entryId);
 
         if (!mCustomProvTester.isCustom()) {
-            // make sure the account is now in the other domain
-            list = searchAccountsInDomain(otherDomain);
-            TestProvisioningUtil.verifyEntriesById(list, new String[]{entryId}, true);
-            TestProvisioningUtil.verifyEntriesByName(list, new String[]{NEW_EMAIL_IN_OTHER_DOMAIN}, true);
-            // make sure the alias is now moved to the other domain and there shouldn't be any let in the old domain
-            list = searchAliasesInDomain(domain);
-            assertEquals(0, list.size());
-            // make sure both aliases are now in the other doamin
-            list = searchAliasesInDomain(otherDomain);
-            TestProvisioningUtil.verifyEntriesByName(list, new String[]{ACCT_ALIAS_AFTER_ACCOUNT_RENAME_TO_OTHER_DMAIN_EMAIL,
-                                ACCT_ALIAS_IN_OTHER_DOMAIN_EMAIL}, true);
+            if (!Flag.needLdapPaging("searchDirectory")) {
+                // make sure the account is now in the other domain
+                list = searchAccountsInDomain(otherDomain);
+                TestProvisioningUtil.verifyEntriesById(list, new String[]{entryId}, true);
+                TestProvisioningUtil.verifyEntriesByName(list, new String[]{NEW_EMAIL_IN_OTHER_DOMAIN}, true);
+                // make sure the alias is now moved to the other domain and there shouldn't be any let in the old domain
+                list = searchAliasesInDomain(domain);
+                assertEquals(0, list.size());
+                // make sure both aliases are now in the other doamin
+                list = searchAliasesInDomain(otherDomain);
+                TestProvisioningUtil.verifyEntriesByName(list, new String[]{ACCT_ALIAS_AFTER_ACCOUNT_RENAME_TO_OTHER_DMAIN_EMAIL,
+                                    ACCT_ALIAS_IN_OTHER_DOMAIN_EMAIL}, true);
+            }
         }
         
         /*
          * rename it back
          */
         mProv.renameAccount(entryId, ACCT_EMAIL);
-        // make sure the account is moved back to the orig domain
-        list = searchAccountsInDomain(domain);
-        TestProvisioningUtil.verifyEntriesById(list, new String[]{entryId}, false);
-        TestProvisioningUtil.verifyEntriesByName(list, new String[]{ACCT_EMAIL}, false);
-        // re-get the entry since it might've been changed after the rename
-        entry = mProv.get(Provisioning.AccountBy.id, entryId);
-
-        if (mCustomProvTester.isCustom()) {
-            list = searchAliasesInDomain(domain);
-            TestProvisioningUtil.verifyEntriesByName(list, new String[]{ACCT_ALIAS_EMAIL}, true);
-
-        } else {
-            // now, both aliases should be moved to the orig domain
-            list = searchAliasesInDomain(otherDomain);
-            assertEquals(0, list.size());
-            list = searchAliasesInDomain(domain);
-            TestProvisioningUtil.verifyEntriesByName(list, new String[]{ACCT_ALIAS_EMAIL,
-                                ACCT_ALIAS_IN_OTHER_DOMAIN_AFTER_ACCOUNT_RENAME_TO_ORIG_DOMAIN_EMAIL}, true);
+        if (!Flag.needLdapPaging("searchDirectory")) {
+            // make sure the account is moved back to the orig domain
+            list = searchAccountsInDomain(domain);
+            TestProvisioningUtil.verifyEntriesById(list, new String[]{entryId}, false);
+            TestProvisioningUtil.verifyEntriesByName(list, new String[]{ACCT_EMAIL}, false);
+            // re-get the entry since it might've been changed after the rename
+            entry = mProv.get(Provisioning.AccountBy.id, entryId);
+    
+            if (mCustomProvTester.isCustom()) {
+                list = searchAliasesInDomain(domain);
+                TestProvisioningUtil.verifyEntriesByName(list, new String[]{ACCT_ALIAS_EMAIL}, true);
+    
+            } else {
+                // now, both aliases should be moved to the orig domain
+                list = searchAliasesInDomain(otherDomain);
+                assertEquals(0, list.size());
+                list = searchAliasesInDomain(domain);
+                TestProvisioningUtil.verifyEntriesByName(list, new String[]{ACCT_ALIAS_EMAIL,
+                                    ACCT_ALIAS_IN_OTHER_DOMAIN_AFTER_ACCOUNT_RENAME_TO_ORIG_DOMAIN_EMAIL}, true);
+            }
         }
         
         
@@ -753,12 +800,16 @@ public class TestProvisioning extends TestCase {
         if (!mCustomProvTester.isCustom()) {
             mProv.removeAlias(entry, ACCT_ALIAS_IN_OTHER_DOMAIN_AFTER_ACCOUNT_RENAME_TO_ORIG_DOMAIN_EMAIL);
         }
-        list = searchAliasesInDomain(domain);
-        assertEquals(0, list.size());
-        list = searchAliasesInDomain(otherDomain);
-        assertEquals(0, list.size());
+        if (!Flag.needLdapPaging("searchDirectory")) {
+            // verify it
+            list = searchAliasesInDomain(domain);
+            assertEquals(0, list.size());
+            list = searchAliasesInDomain(otherDomain);
+            assertEquals(0, list.size());
+        }
         
         // set cos
+        entry = mProv.get(Provisioning.AccountBy.id, entryId);
         mProv.setCOS(entry, cos);
                 
         return new Account[]{entry,entrySpecialChars};
@@ -792,12 +843,18 @@ public class TestProvisioning extends TestCase {
         entryGot = mProv.get(Provisioning.CalendarResourceBy.name, CR_ALIAS_EMAIL);
         TestProvisioningUtil.verifySameEntry(entry, entryGot);
         
-        List list = mProv.getAllCalendarResources(domain); 
-        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{entry}, mCustomProvTester.verifyAccountCountForDomainBasedSearch());
+        List list = null;
         
-        TestVisitor visitor = new TestVisitor();
-        mProv.getAllCalendarResources(domain, visitor);
-        TestProvisioningUtil.verifyEntries(visitor.visited(), new NamedEntry[]{entry}, mCustomProvTester.verifyAccountCountForDomainBasedSearch());
+        if (!Flag.needLdapPaging("getAllCalendarResources_domain")) {
+            list = mProv.getAllCalendarResources(domain); 
+            TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{entry}, mCustomProvTester.verifyAccountCountForDomainBasedSearch());
+        }
+        
+        if (!Flag.needLdapPaging("getAllCalendarResources_domain_visitor")) {
+            TestVisitor visitor = new TestVisitor();
+            mProv.getAllCalendarResources(domain, visitor);
+            TestProvisioningUtil.verifyEntries(visitor.visited(), new NamedEntry[]{entry}, mCustomProvTester.verifyAccountCountForDomainBasedSearch());
+        }
         
         mProv.renameCalendarResource(entry.getId(), NEW_EMAIL);
         mProv.renameCalendarResource(entry.getId(), CR_EMAIL);
@@ -850,26 +907,40 @@ public class TestProvisioning extends TestCase {
         mProv.addMembers(entry, new String[]{DL_NESTED_EMAIL});
         mProv.addMembers(dlNested, new String[]{ACCT_EMAIL});
         
-        List list = mProv.getAllDistributionLists(domain);
-        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{entry, dlNested}, mCustomProvTester.verifyDLCountForDomainBasedSearch());
+        List list = null;
+        
+        if (!Flag.needLdapPaging("getAllDistributionLists")) {
+            list = mProv.getAllDistributionLists(domain);
+            TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{entry, dlNested}, mCustomProvTester.verifyDLCountForDomainBasedSearch());
+        }
         
         Account account = mProv.get(Provisioning.AccountBy.name, ACCT_EMAIL);
-        Set<String> set = mProv.getDistributionLists(account);
-        assertEquals(2, set.size());
-        assertTrue(set.contains(entry.getId()));
-        assertTrue(set.contains(dlNested.getId()));
+        Set<String> set = null;
         
-        Map<String, String> via = new HashMap<String, String>();
-        list = mProv.getDistributionLists(account, false, via);
-        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{entry, dlNested}, true);
-        assertEquals(1, via.size());
-        assertEquals(dlNested.getName(), via.get(entry.getName()));
+        if (!Flag.needLdapPaging("getDistributionLists_account")) {
+            set = mProv.getDistributionLists(account);
+            assertEquals(2, set.size());
+            assertTrue(set.contains(entry.getId()));
+            assertTrue(set.contains(dlNested.getId()));
+        }
         
-        list = mProv.getDistributionLists(account, true, null);
-        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{dlNested}, true);
+        if (!Flag.needLdapPaging("getDistributionLists_account_directonly_via")) {
+            Map<String, String> via = new HashMap<String, String>();
+            list = mProv.getDistributionLists(account, false, via);
+            TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{entry, dlNested}, true);
+            assertEquals(1, via.size());
+            assertEquals(dlNested.getName(), via.get(entry.getName()));
+        }
         
-        boolean inList = mProv.inDistributionList(account, entry.getId());
-        assertTrue(inList);
+        if (!Flag.needLdapPaging("getDistributionLists_account_directonly_via")) {
+            list = mProv.getDistributionLists(account, true, null);
+            TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{dlNested}, true);
+        }
+        
+        if (!Flag.needLdapPaging("inDistributionList")) {
+            boolean inList = mProv.inDistributionList(account, entry.getId());
+            assertTrue(inList);
+        }
                 
         mProv.removeAlias(entry, DL_ALIAS_EMAIL);
         
@@ -1194,43 +1265,55 @@ public class TestProvisioning extends TestCase {
         Account cr = mProv.get(Provisioning.AccountBy.name, CR_EMAIL);
         
         String query = "(" + Provisioning.A_zimbraMailDeliveryAddress + "=" + ACCT_EMAIL + ")";
-        List list = mProv.searchAccounts(query, 
-                                        new String[]{Provisioning.A_zimbraMailDeliveryAddress}, 
-                                        Provisioning.A_zimbraMailDeliveryAddress, 
-                                        true,
-                                        Provisioning.SA_ACCOUNT_FLAG); 
-        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{acct}, true);
-               
-        list = mProv.searchAccounts(domain, query, 
-                                   new String[]{Provisioning.A_zimbraMailDeliveryAddress}, 
-                                   Provisioning.A_zimbraMailDeliveryAddress, 
-                                   true,
-                                   Provisioning.SA_ACCOUNT_FLAG); 
-        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{acct}, true);
+        List list = null;
+        
+        if (!Flag.needLdapPaging("searchAccounts")) {
+            list = mProv.searchAccounts(query, 
+                                            new String[]{Provisioning.A_zimbraMailDeliveryAddress}, 
+                                            Provisioning.A_zimbraMailDeliveryAddress, 
+                                            true,
+                                            Provisioning.SA_ACCOUNT_FLAG); 
+            TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{acct}, true);
+        }
+        
+        if (!Flag.needLdapPaging("searchAccounts_domain")) {
+            list = mProv.searchAccounts(domain, query, 
+                                       new String[]{Provisioning.A_zimbraMailDeliveryAddress}, 
+                                       Provisioning.A_zimbraMailDeliveryAddress, 
+                                       true,
+                                       Provisioning.SA_ACCOUNT_FLAG); 
+            TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{acct}, true);
+        }
         
         EntrySearchFilter.Term term = new EntrySearchFilter.Single(false, 
                                                                    Provisioning.A_zimbraMailDeliveryAddress, 
                                                                    EntrySearchFilter.Operator.eq,
                                                                    CR_EMAIL);
         EntrySearchFilter filter = new EntrySearchFilter(term);
-        list = mProv.searchCalendarResources(filter,
-                                            new String[]{Provisioning.A_zimbraMailDeliveryAddress}, 
-                                            Provisioning.A_zimbraMailDeliveryAddress, 
-                                            true);
-        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{cr}, true);       
+        if (!Flag.needLdapPaging("searchCalendarResources")) {
+            list = mProv.searchCalendarResources(filter,
+                                                new String[]{Provisioning.A_zimbraMailDeliveryAddress}, 
+                                                Provisioning.A_zimbraMailDeliveryAddress, 
+                                                true);
+            TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{cr}, true);       
+        }
         
-        list = mProv.searchCalendarResources(domain,
-                                            filter,
-                                            new String[]{Provisioning.A_zimbraMailDeliveryAddress}, 
-                                            Provisioning.A_zimbraMailDeliveryAddress, 
-                                            true);
-        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{cr}, true);
+        if (!Flag.needLdapPaging("searchCalendarResources_domain")) {
+            list = mProv.searchCalendarResources(domain,
+                                                filter,
+                                                new String[]{Provisioning.A_zimbraMailDeliveryAddress}, 
+                                                Provisioning.A_zimbraMailDeliveryAddress, 
+                                                true);
+            TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{cr}, true);
+        }
         
-        Provisioning.SearchOptions options = new Provisioning.SearchOptions();
-        options.setDomain(domain);
-        options.setQuery(query);
-        list = mProv.searchDirectory(options);
-        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{acct}, true);
+        if (!Flag.needLdapPaging("searchDirectory")) {
+            Provisioning.SearchOptions options = new Provisioning.SearchOptions();
+            options.setDomain(domain);
+            options.setQuery(query);
+            list = mProv.searchDirectory(options);
+            TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{acct}, true);
+        }
     }
     
     private Domain aliasTest() throws Exception {
