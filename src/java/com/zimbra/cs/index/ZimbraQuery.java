@@ -2379,8 +2379,22 @@ public final class ZimbraQuery {
             mOp.doneWithSearchResults();
     }
 
-    public void executeRemoteOps(SoapProtocol proto, OperationContext octxt) throws ServiceException, IOException
+    /**
+     * Runs the search and gets an open result set.
+     * 
+     * WARNING: You **MUST** call ZimbraQueryResults.doneWithSearchResults() when you are done with them!
+     * 
+     * @param octxt The operation context 
+     * @param proto The soap protocol the response should be returned with
+     * @return Open ZimbraQueryResults -- YOU MUST CALL doneWithSearchResults() to release the results set! 
+     * @throws ServiceException
+     * @throws IOException
+     */
+    public ZimbraQueryResults execute(OperationContext octxt, SoapProtocol proto) throws ServiceException, IOException
     {
+        // 
+        // STEP 1: use the OperationContext to update the set of visible referenced folders, local AND remote
+        //
         if (mOp!= null) {
             QueryTargetSet targets = mOp.getQueryTargets();
             assert(mOp instanceof UnionQueryOperation || targets.countExplicitTargets() <=1);
@@ -2408,20 +2422,10 @@ public final class ZimbraQuery {
                 }
             }
         }
-    }
-
-    /**
-     * Runs the search and gets an open result set.
-     * 
-     * WARNING: You **MUST** call ZimbraQueryResults.doneWithSearchResults() when you are done with them!
-     * 
-     * @param mbox
-     * @return Open ZimbraQueryResults -- YOU MUST CALL doneWithSearchResults() to release the results set! 
-     * @throws ServiceException
-     * @throws IOException
-     */
-    public ZimbraQueryResults execute() throws ServiceException, IOException
-    {
+        
+        //
+        // STEP 2: run the query
+        // 
         MailboxIndex mbidx = mMbox.getMailboxIndex();
 
         if (ZimbraLog.index.isDebugEnabled()) {

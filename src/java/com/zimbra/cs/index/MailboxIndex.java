@@ -113,11 +113,13 @@ public final class MailboxIndex
         }
         
         if ((params.getCalItemExpandStart() > 0) || (params.getCalItemExpandEnd() > 0)) {
-            qs = '(' + qs + ')';
+            StringBuilder toAdd = new StringBuilder();
+            toAdd.append('(').append(qs).append(')');
             if (params.getCalItemExpandStart() > 0) 
-                qs = qs + " appt-end:>=" + params.getCalItemExpandStart();
+                toAdd.append(" appt-end:>=").append(params.getCalItemExpandStart());
             if (params.getCalItemExpandEnd() > 0)
-                qs = qs + " appt-start:<=" + params.getCalItemExpandEnd();
+                toAdd.append(" appt-start:<=").append(params.getCalItemExpandEnd());
+            qs = toAdd.toString();
             params.setQueryStr(qs);
         }
         
@@ -154,8 +156,7 @@ public final class MailboxIndex
         
         ZimbraQuery zq = new ZimbraQuery(mbox, params, includeTrashByDefault, includeSpamByDefault);
         try {
-            zq.executeRemoteOps(proto, octxt);
-            ZimbraQueryResults results = zq.execute();
+            ZimbraQueryResults results = zq.execute(octxt, proto);
             
             if (isTaskSort) {
                 results = new TaskSortingQueryResults(results, originalSort);

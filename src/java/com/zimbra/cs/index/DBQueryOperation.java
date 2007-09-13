@@ -519,7 +519,7 @@ class DBQueryOperation extends QueryOperation
             // already have some hits, so our job is easy!
             toRet = mNextHits.get(0);
         } else {
-            // we don't have any SearchResults, try to get more
+            // we don't have any buffered SearchResults, try to get more
 
             //
             // Check to see if we need to refil mDBHits

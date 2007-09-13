@@ -55,6 +55,7 @@ import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Mailbox.SearchResultMode;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.index.ResultValidator.QueryResult;
@@ -483,7 +484,7 @@ public class TestSearch extends TestCase {
         params.setPrefetch(true);
         params.setMode(SearchResultMode.NORMAL);
         ZimbraQuery zq = new ZimbraQuery(mbox, params, false, false);
-        ZimbraQueryResults res = zq.execute();
+        ZimbraQueryResults res = zq.execute(null, SoapProtocol.Soap12);
 
         try {
             if (true) {

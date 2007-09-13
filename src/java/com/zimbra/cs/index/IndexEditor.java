@@ -73,8 +73,8 @@ import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
 import com.zimbra.cs.tcpserver.TcpServerInputStream;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.*;
-import com.zimbra.common.util.NetUtil;
 
 
 /**
@@ -192,10 +192,7 @@ public class IndexEditor {
             params.setPrefetch(true);
             params.setMode(SearchResultMode.NORMAL);
             ZimbraQuery zq = new ZimbraQuery(mbox, params, false, false);
-
-//            ZimbraQuery zq = new ZimbraQuery(qstr, null, null, mbox, types, sortBy, false, false, 100, true, Mailbox.SearchResultMode.NORMAL);
-
-            return zq.execute();
+            return zq.execute(null, SoapProtocol.Soap12);
         }
     }
 
@@ -232,9 +229,7 @@ public class IndexEditor {
                 params.setPrefetch(true);
                 params.setMode(SearchResultMode.NORMAL);
                 ZimbraQuery zq = new ZimbraQuery(mbox, params, false, false);
-
-//                ZimbraQuery zq = new ZimbraQuery(qstr, null, null, mbox, types, sortBy, false, false, 100, true, Mailbox.SearchResultMode.NORMAL);
-                res[i] = zq.execute();
+                res[i] = zq.execute(null, SoapProtocol.Soap12);
             }
             return new HitIdGrouper(new MultiQueryResults(res, sortBy), sortBy);
         }
