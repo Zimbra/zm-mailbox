@@ -866,22 +866,35 @@ public class ZMailbox {
 
     /**
      * used when bootstrapping AJAX client.
-     * 
+     *
      * @param url url to connect to
      * @param authToken auth token to use
+     * @param itemsPerPage number of search items to return
+     * @param doSearch whether or not to also do the intial search
+     * @param searchTypes what to search for
      * @return top-level JSON respsonse
-     * @throws ServiceException
+     * @throws ServiceException on error
      */
-    public static Element getInfoJSON(String url, String authToken) throws ServiceException {
+    public static Element getBootstrapJSON(String url, String authToken, boolean doSearch, String itemsPerPage, String searchTypes) throws ServiceException {
         ZMailbox.Options options = new ZMailbox.Options(authToken, url);
         JsonDebugListener debug = new JsonDebugListener();
         options.setNoSession(false);
         options.setAuthAuthToken(false);
         options.setDebugListener(debug);
         options.setResponseProtocol(SoapProtocol.SoapJS);
+
         ZMailbox mbox = getMailbox(options);
         try {
-            Element resp = mbox.mTransport.invoke(new XMLElement(AccountConstants.GET_INFO_REQUEST));
+            XMLElement batch = new XMLElement(ZimbraNamespace.E_BATCH_REQUEST);
+            batch.addElement(AccountConstants.GET_INFO_REQUEST);
+            if (doSearch) {
+                Element search = batch.addElement(MailConstants.SEARCH_REQUEST);
+                if (itemsPerPage != null && itemsPerPage.length() > 0)
+                    search.addAttribute(MailConstants.A_QUERY_LIMIT, itemsPerPage);
+                if (searchTypes != null && searchTypes.length() > 0) 
+                    search.addAttribute(MailConstants.A_SEARCH_TYPES, searchTypes);
+            }
+            Element resp = mbox.mTransport.invoke(batch);
             return debug.getEnvelope();
         } catch (IOException e) {
             throw ZClientException.IO_ERROR("invoke "+e.getMessage(), e);
