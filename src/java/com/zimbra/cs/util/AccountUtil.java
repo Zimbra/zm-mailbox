@@ -45,7 +45,7 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 
 public class AccountUtil {
 
-    public static InternetAddress getFriendlyEmailAddress(Account acct) throws UnsupportedEncodingException {
+    public static InternetAddress getFriendlyEmailAddress(Account acct) {
         // check "displayName" for personal part, and fall back to "cn" if not present
         String personalPart = acct.getAttr(Provisioning.A_displayName);
         if (personalPart == null)
@@ -62,7 +62,20 @@ public class AccountUtil {
             address = acct.getName();
         }
 
-        return new InternetAddress(address, personalPart, Mime.P_CHARSET_UTF8);
+        try {
+            return new InternetAddress(address, personalPart, Mime.P_CHARSET_UTF8);
+        } catch (UnsupportedEncodingException e) { }
+
+        // UTF-8 should *always* be supported (i.e. this is actually unreachable)
+        try {
+            // fall back to using the system's default charset (also pretty much guaranteed not to be "unsupported")
+            return new InternetAddress(address, personalPart);
+        } catch (UnsupportedEncodingException e) { }
+
+        // if we ever reached this point (which we won't), just return an address with no personal part
+        InternetAddress ia = new InternetAddress();
+        ia.setAddress(address);
+        return ia;
     }
 
     public static boolean isDirectRecipient(Account acct, MimeMessage mm) throws ServiceException, MessagingException {

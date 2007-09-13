@@ -25,7 +25,6 @@
 
 package com.zimbra.cs.mailbox;
 
-import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -306,9 +305,6 @@ implements LmtpCallback {
             }
         } catch (MessagingException me) {
             ofailed("send failed", destination, rcpt, msg, me);
-            return;
-        } catch (UnsupportedEncodingException uee) {
-            ofailed("send failed", destination, rcpt, msg, uee);
             return;
         }
     }

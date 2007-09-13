@@ -2115,14 +2115,9 @@ public abstract class Provisioning {
         String fromDisplay = (String) attrs.get(A_zimbraPrefFromDisplay);
         
         if (fromAddress == null || fromDisplay == null) { 
-            try {
-                InternetAddress ia = AccountUtil.getFriendlyEmailAddress(account);
-                if (fromAddress == null) attrs.put(A_zimbraPrefFromAddress, ia.getAddress());
-                if (fromDisplay == null) attrs.put(A_zimbraPrefFromDisplay, ia.getPersonal());
-            } catch (UnsupportedEncodingException e) {
-                if (fromAddress == null) attrs.put(A_zimbraPrefFromAddress, account.getName());
-                if (fromDisplay == null) attrs.put(A_zimbraPrefFromDisplay, account.getUid());
-            }
+            InternetAddress ia = AccountUtil.getFriendlyEmailAddress(account);
+            if (fromAddress == null) attrs.put(A_zimbraPrefFromAddress, ia.getAddress());
+            if (fromDisplay == null) attrs.put(A_zimbraPrefFromDisplay, ia.getPersonal());
         }
         attrs.put(A_zimbraPrefIdentityId, account.getId());
         

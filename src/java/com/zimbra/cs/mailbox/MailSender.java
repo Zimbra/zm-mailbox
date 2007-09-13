@@ -26,7 +26,6 @@
 package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -73,10 +72,11 @@ public class MailSender {
     public static int getSentFolderId(Mailbox mbox, Identity identity) throws ServiceException {
         int folderId = Mailbox.ID_FOLDER_SENT;
         String sentFolder = identity.getAttr(Provisioning.A_zimbraPrefSentMailFolder, null);
-        if (sentFolder != null)
+        if (sentFolder != null) {
             try {
                 folderId = mbox.getFolderByPath(null, sentFolder).getId();
             } catch (NoSuchItemException nsie) { }
+        }
         return folderId;
     }
 
@@ -245,9 +245,9 @@ public class MailSender {
                 }
             }
 
-            // if this is a non-admin delegated send, automatically save a copy to the "From" user's mailbox
-            boolean adminSendAs = AccessManager.getInstance().canAccessAccount(authuser, acct, isAdminRequest);
-            if (hasRecipients && isDelegatedRequest && !adminSendAs && acct.getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, true)) {
+            // for delegated sends where the authenticated user is reflected in the Sender header (c.f. updateHeaders),
+            //   automatically save a copy to the "From" user's mailbox
+            if (hasRecipients && isDelegatedRequest && mm.getSender() != null && acct.getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, true)) {
                 int flags = Flag.BITMASK_UNREAD | Flag.BITMASK_FROM_ME;
                 // save the sent copy using the target's credentials, as the sender doesn't necessarily have write access
                 OperationContext octxtTarget = new OperationContext(acct);
@@ -346,14 +346,14 @@ public class MailSender {
     private static final String X_ORIGINATING_IP = "X-Originating-IP";
 
     void updateHeaders(MimeMessage mm, Account acct, Account authuser, OperationContext octxt, String originIP, boolean replyToSender)
-    throws UnsupportedEncodingException, MessagingException, ServiceException {
+    throws MessagingException, ServiceException {
         if (originIP != null) {
             Provisioning prov = Provisioning.getInstance();
             boolean addOriginatingIP = prov.getConfig().getBooleanAttr(Provisioning.A_zimbraSmtpSendAddOriginatingIP, true);
             if (addOriginatingIP)
                 mm.addHeader(X_ORIGINATING_IP, "[" + originIP + "]");
         }
-        
+
         boolean overrideFromHeader = true;
         try {
             String fromHdr = mm.getHeader("From", null);
@@ -369,6 +369,15 @@ public class MailSender {
         boolean isDelegatedRequest = !acct.getId().equalsIgnoreCase(authuser.getId());
         boolean noSenderRequired = !isDelegatedRequest || AccessManager.getInstance().canAccessAccount(authuser, acct, isAdminRequest);
         InternetAddress sender = noSenderRequired ? null : AccountUtil.getFriendlyEmailAddress(authuser);
+
+        // if the call doesn't require a Sender but the caller supplied one, pass it through if it's acceptable
+        if (noSenderRequired) {
+            Address addr = mm.getSender();
+            if (addr != null && addr instanceof InternetAddress) {
+                if (AccountUtil.addressMatchesAccount(authuser, ((InternetAddress) addr).getAddress()))
+                    sender = (InternetAddress) addr;
+            }
+        }
 
         // set various headers on the outgoing message
         if (overrideFromHeader)

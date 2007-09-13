@@ -27,7 +27,6 @@ package com.zimbra.cs.dav.resource;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -117,7 +116,7 @@ public class ScheduleOutbox extends CalendarCollection {
 		}
 	}
 	
-	private void handleFreebusyRequest(DavContext ctxt, ZComponent vfreebusy, String originator, String rcpt, Element resp) throws DavException, ServiceException, IOException {
+	private void handleFreebusyRequest(DavContext ctxt, ZComponent vfreebusy, String originator, String rcpt, Element resp) throws DavException, ServiceException {
 		ZProperty dtstartProp = vfreebusy.getProperty(ICalTok.DTSTART);
 		ZProperty dtendProp = vfreebusy.getProperty(ICalTok.DTEND);
 		ZProperty durationProp = vfreebusy.getProperty(ICalTok.DURATION);
@@ -154,18 +153,14 @@ public class ScheduleOutbox extends CalendarCollection {
 			// XXX get the freebusy information from remote server
 		}
 	}
-	
-	private void handleEventRequest(DavContext ctxt, ZCalendar.ZVCalendar cal, ZComponent req, String originator, String rcpt, Element resp) throws DavException, ServiceException {
+
+	private void handleEventRequest(DavContext ctxt, ZCalendar.ZVCalendar cal, ZComponent req, String originator, String rcpt, Element resp) {
         Address from, to;
         try {
             from = AccountUtil.getFriendlyEmailAddress(ctxt.getAuthAccount());
             if (rcpt.toLowerCase().startsWith("mailto:"))
             	rcpt = rcpt.substring(7);
             to = new InternetAddress(rcpt);
-        } catch (UnsupportedEncodingException e) {
-			resp.addElement(DavElements.E_RECIPIENT).setText(rcpt);
-			resp.addElement(DavElements.E_REQUEST_STATUS).setText("3.1;ORGANIZER");
-			return;
         } catch (AddressException e) {
 			resp.addElement(DavElements.E_RECIPIENT).setText(rcpt);
 			resp.addElement(DavElements.E_REQUEST_STATUS).setText("3.7;"+rcpt);

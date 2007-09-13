@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -154,12 +153,7 @@ public class CalendarMailSender {
 
         ZVCalendar iCal = inv.newToICalendar();
 
-        Address from;
-        try {
-            from = AccountUtil.getFriendlyEmailAddress(fromAccount);
-        } catch (UnsupportedEncodingException e) {
-            throw MailServiceException.ADDRESS_PARSE_ERROR(e);
-        }
+        Address from = AccountUtil.getFriendlyEmailAddress(fromAccount);
         Address sender = null;
         if (onBehalfOf) {
             try {
@@ -168,8 +162,7 @@ public class CalendarMailSender {
                 throw MailServiceException.ADDRESS_PARSE_ERROR(e);
             }
         }
-        return createCalendarMessage(
-                from, sender, rcpts, subject, sb.toString(), inv.getUid(), iCal);
+        return createCalendarMessage(from, sender, rcpts, subject, sb.toString(), inv.getUid(), iCal);
     }
 
     public static MimeMessage createDefaultReply(Account fromAccount,
@@ -183,76 +176,65 @@ public class CalendarMailSender {
                                                  String additionalMsgBody,
                                                  ZVCalendar iCal)
     throws ServiceException {
-        try {
-            Locale lc;
-            InternetAddress organizerAddress;
-            if (inv.hasOrganizer()) {
-                ZOrganizer org = inv.getOrganizer();
-                organizerAddress = org.getReplyAddress();  // organizer or sent-by
-                Account organizer = Provisioning.getInstance().get(AccountBy.name, organizerAddress.getAddress());
-                lc = organizer != null ? organizer.getLocale() : authAccount.getLocale();
-            } else {
-                organizerAddress = null;
-                lc = authAccount.getLocale();
-            }
-
-            String fromDisplayName =
-                fromAccount.getAttr(Provisioning.A_displayName,
-                                    fromAccount.getName());
-            StringBuilder replyText = new StringBuilder();
-            MsgKey statusMsgKey;
-            boolean isResourceAccount = fromAccount instanceof CalendarResource;
-            if (VERB_ACCEPT.equals(verb)) {
-                if (isResourceAccount)
-                    statusMsgKey = MsgKey.calendarResourceDefaultReplyAccept;
-                else
-                    statusMsgKey = MsgKey.calendarDefaultReplyAccept;
-            } else if (VERB_DECLINE.equals(verb)) {
-                if (isResourceAccount)
-                    statusMsgKey = MsgKey.calendarResourceDefaultReplyDecline;
-                else
-                    statusMsgKey = MsgKey.calendarDefaultReplyDecline;
-            } else if (VERB_TENTATIVE.equals(verb)) {
-                if (isResourceAccount)
-                    statusMsgKey = MsgKey.calendarResourceDefaultReplyTentativelyAccept;
-                else
-                    statusMsgKey = MsgKey.calendarDefaultReplyTentativelyAccept;
-            } else
-                statusMsgKey = MsgKey.calendarDefaultReplyOther;
-            String statusMsg;
-            if (!statusMsgKey.equals(MsgKey.calendarDefaultReplyOther))
-                statusMsg = L10nUtil.getMessage(statusMsgKey,
-                                                lc,
-                                                fromDisplayName);
-            else
-                statusMsg = L10nUtil.getMessage(statusMsgKey,
-                                                lc,
-                                                fromDisplayName,
-                                                verb.toString());
-            replyText.append(statusMsg).append("\r\n\r\n");
-
-            if (additionalMsgBody != null) {
-                replyText.append(additionalMsgBody).append("\r\n");
-            }
-
-            boolean hidePrivate = onBehalfOf && !inv.isPublic();
-            if (!hidePrivate && mmInv != null)
-                attachInviteSummary(replyText, mmInv, lc);
-
-            List<Address> toList = new ArrayList<Address>(1);
-            if (organizerAddress != null)
-                toList.add(organizerAddress);
-            Address senderAddr = null;
-            if (onBehalfOf)
-                senderAddr = AccountUtil.getFriendlyEmailAddress(authAccount);
-            return createCalendarMessage(
-                    AccountUtil.getFriendlyEmailAddress(fromAccount),
-                    senderAddr,
-                    toList, replySubject,
-                    replyText.toString(), inv.getUid(), iCal);
-        } catch (UnsupportedEncodingException e) {
-            throw MailServiceException.ADDRESS_PARSE_ERROR(e);
+        Locale lc;
+        InternetAddress organizerAddress;
+        if (inv.hasOrganizer()) {
+            ZOrganizer org = inv.getOrganizer();
+            organizerAddress = org.getReplyAddress();  // organizer or sent-by
+            Account organizer = Provisioning.getInstance().get(AccountBy.name, organizerAddress.getAddress());
+            lc = organizer != null ? organizer.getLocale() : authAccount.getLocale();
+        } else {
+            organizerAddress = null;
+            lc = authAccount.getLocale();
         }
+
+        String fromDisplayName = fromAccount.getAttr(Provisioning.A_displayName, fromAccount.getName());
+        StringBuilder replyText = new StringBuilder();
+        boolean isResourceAccount = fromAccount instanceof CalendarResource;
+
+        MsgKey statusMsgKey;
+        if (VERB_ACCEPT.equals(verb)) {
+            if (isResourceAccount)
+                statusMsgKey = MsgKey.calendarResourceDefaultReplyAccept;
+            else
+                statusMsgKey = MsgKey.calendarDefaultReplyAccept;
+        } else if (VERB_DECLINE.equals(verb)) {
+            if (isResourceAccount)
+                statusMsgKey = MsgKey.calendarResourceDefaultReplyDecline;
+            else
+                statusMsgKey = MsgKey.calendarDefaultReplyDecline;
+        } else if (VERB_TENTATIVE.equals(verb)) {
+            if (isResourceAccount)
+                statusMsgKey = MsgKey.calendarResourceDefaultReplyTentativelyAccept;
+            else
+                statusMsgKey = MsgKey.calendarDefaultReplyTentativelyAccept;
+        } else {
+            statusMsgKey = MsgKey.calendarDefaultReplyOther;
+        }
+
+        String statusMsg;
+        if (!statusMsgKey.equals(MsgKey.calendarDefaultReplyOther))
+            statusMsg = L10nUtil.getMessage(statusMsgKey, lc, fromDisplayName);
+        else
+            statusMsg = L10nUtil.getMessage(statusMsgKey, lc, fromDisplayName, verb.toString());
+        replyText.append(statusMsg).append("\r\n\r\n");
+
+        if (additionalMsgBody != null) {
+            replyText.append(additionalMsgBody).append("\r\n");
+        }
+
+        boolean hidePrivate = onBehalfOf && !inv.isPublic();
+        if (!hidePrivate && mmInv != null)
+            attachInviteSummary(replyText, mmInv, lc);
+
+        List<Address> toList = new ArrayList<Address>(1);
+        if (organizerAddress != null)
+            toList.add(organizerAddress);
+        Address senderAddr = null;
+        if (onBehalfOf)
+            senderAddr = AccountUtil.getFriendlyEmailAddress(authAccount);
+        return createCalendarMessage(AccountUtil.getFriendlyEmailAddress(fromAccount),
+                senderAddr, toList, replySubject, replyText.toString(), inv.getUid(), iCal);
     }
 
     private static void attachInviteSummary(StringBuilder sb,
@@ -346,20 +328,10 @@ public class CalendarMailSender {
                 attachInviteSummary(sb, mmInv, locale);
         }
         
-        Address from;
-        try {
-            from = AccountUtil.getFriendlyEmailAddress(fromAccount);
-        } catch (UnsupportedEncodingException e) {
-            throw MailServiceException.ADDRESS_PARSE_ERROR(e);
-        }
+        Address from = AccountUtil.getFriendlyEmailAddress(fromAccount);
         Address sender = null;
-        if (onBehalfOf) {
-            try {
-                sender = AccountUtil.getFriendlyEmailAddress(senderAccount);
-            } catch (UnsupportedEncodingException e) {
-                throw MailServiceException.ADDRESS_PARSE_ERROR(e);
-            }
-        }
+        if (onBehalfOf)
+            sender = AccountUtil.getFriendlyEmailAddress(senderAccount);
 
         return createCalendarMessage(
                 from, sender, toAddrs, sbj, sb.toString(),
@@ -645,7 +617,7 @@ public class CalendarMailSender {
             return NAME;
         }
 
-        public OutputStream getOutputStream() throws IOException {
+        public OutputStream getOutputStream() {
             throw new UnsupportedOperationException();
         }
         
