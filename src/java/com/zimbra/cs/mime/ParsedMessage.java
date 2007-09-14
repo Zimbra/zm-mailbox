@@ -38,7 +38,9 @@ import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.util.*;
 
+import javax.mail.Address;
 import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MailDateFormat;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeUtility;
@@ -454,6 +456,18 @@ public class ParsedMessage {
             }
         }
         return mSender;
+    }
+
+    public String getSenderEmail() {
+        try {
+            Address[] froms = mMimeMessage.getFrom();
+            if (froms != null && froms.length > 0 && froms[0] instanceof InternetAddress)
+                return ((InternetAddress) froms[0]).getAddress();
+            Address sender = mMimeMessage.getSender();
+            if (sender instanceof InternetAddress)
+                return ((InternetAddress) sender).getAddress();
+        } catch (MessagingException e) {}
+        return null;
     }
 
     public ParsedAddress getParsedSender() {

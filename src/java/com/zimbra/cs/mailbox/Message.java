@@ -34,8 +34,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.cs.account.Account;
@@ -345,15 +343,9 @@ public class Message extends MailItem {
             // XXX: shouldn't we just be checking flags for Flag.FLAG_FROM_ME?
             //   boolean sentByMe = (flags & Flag.FLAG_FROM_ME) != 0;
             boolean sentByMe = false;
-            try {
-                String pmSender = pm.getSender();
-                if (pmSender != null && pmSender.length() > 0) {
-                    String sender = new InternetAddress(pmSender).getAddress();
-                    sentByMe = AccountUtil.addressMatchesAccount(acct, sender);
-                }
-            } catch (AddressException e) {
-                throw ServiceException.INVALID_REQUEST("unable to parse invite sender: " + pm.getSender(), e);
-            }
+            String pmSender = pm.getSenderEmail();
+            if (pmSender != null && pmSender.length() > 0)
+                sentByMe = AccountUtil.addressMatchesAccount(acct, pmSender);
 
             try {
                 components = Invite.createFromCalendar(acct, pm.getFragment(), cal, sentByMe, mbox, id);
