@@ -90,6 +90,10 @@ public class DbMailbox {
         CI_COMMENT = pos++;
         CI_LAST_SOAP_ACCESS = pos++;
         CI_NEW_MESSAGES = pos++;
+        
+        // XXX bburtin: remove after bug 19404 has been verified
+        ZimbraLog.test.info("%s = %s", LC.debug_update_config_use_old_scheme.key(),
+            LC.debug_update_config_use_old_scheme.value());
     }
 
     public static final int CI_METADATA_MAILBOX_ID = 1;
