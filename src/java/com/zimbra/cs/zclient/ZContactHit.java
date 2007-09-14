@@ -48,6 +48,7 @@ public class ZContactHit implements ZSearchHit {
     private String mDlist;
     private float mScore;
     private long mMetaDataDate;
+    private String mFullName;
         
     public ZContactHit(Element e) throws ServiceException {
         mId = e.getAttribute(MailConstants.A_ID);
@@ -64,6 +65,7 @@ public class ZContactHit implements ZSearchHit {
         mEmail3 = e.getAttribute(Contact.A_email3, null);
         mMetaDataDate = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0) * 1000;
         mDlist = e.getAttribute(Contact.A_dlist, null);
+        mFullName = e.getAttribute(Contact.A_fullName,null);
     }
 
     public String toString() {
@@ -82,6 +84,7 @@ public class ZContactHit implements ZSearchHit {
         sb.add(Contact.A_email, mEmail);
         sb.add(Contact.A_email2, mEmail2);
         sb.add(Contact.A_email3, mEmail3);
+        sb.add(Contact.A_fullName, mFullName);
         sb.endStruct();
         return sb.toString();
     }
@@ -146,7 +149,11 @@ public class ZContactHit implements ZSearchHit {
         return mMetaDataDate;
     }
 
-	public void modifyNotification(ZModifyEvent event) throws ServiceException {
+    public String getFullName() {
+        return mFullName;
+    }
+
+    public void modifyNotification(ZModifyEvent event) throws ServiceException {
 		if (event instanceof ZModifyContactEvent) {
 			ZModifyContactEvent cevent = (ZModifyContactEvent) event;
             if (cevent.getId().equals(mId)) {

@@ -133,7 +133,31 @@ public class Contact extends MailItem {
     public static final String A_workStreet = "workStreet";
     public static final String A_workURL = "workURL";
     public static final String A_type = "type";
-    
+    // Comcast specific fields
+    public static final String A_homeAddress = "homeAddress";
+    public static final String A_imAddress1 = "imAddress1";
+    public static final String A_imAddress2 = "imAddress2";
+    public static final String A_workAddress = "workAddress";
+    public static final String A_workEmail1 = "workEmail1";
+    public static final String A_workEmail2 = "workEmail2";
+    public static final String A_workEmail3 = "workEmail3";
+    public static final String A_workMobile = "workMobile";
+    public static final String A_workIM1 = "workIM1";
+    public static final String A_workIM2 = "workIM2";
+    public static final String A_workAltPhone = "workAltPhone";
+    public static final String A_otherDepartment = "otherDepartment";
+    public static final String A_otherOffice = "otherOffice";
+    public static final String A_otherProfession = "otherProfession";
+    public static final String A_otherAddress = "otherAddress";
+    public static final String A_otherMgrName = "otherMgrName";
+    public static final String A_otherAsstName = "otherAsstName";
+    public static final String A_otherAnniversary = "otherAnniversary";
+    public static final String A_otherCustom1 = "otherCustom1";
+    public static final String A_otherCustom2 = "otherCustom2";
+    public static final String A_otherCustom3 = "otherCustom3";
+    public static final String A_otherCustom4 = "otherCustom4";
+    // end
+
     public static final String TYPE_GROUP = "group";
  
     // these are the "well known attrs". keep in sync with A_* above.
@@ -191,8 +215,30 @@ public class Contact extends MailItem {
         workState,
         workStreet,
         workURL,
-        type;
-
+        type,
+        homeAddress,
+        imAddress1,
+        imAddress2,
+        workAddress,
+        workEmail1,
+        workEmail2,
+        workEmail3,
+        workMobile,
+        workIM1,
+        workIM2,
+        workAltPhone,
+        otherDepartment,
+        otherOffice,
+        otherProfession,
+        otherAddress,
+        otherMgrName,
+        otherAsstName,
+        otherAnniversary,
+        otherCustom1,
+        otherCustom2,
+        otherCustom3,
+        otherCustom4;
+      
         public static Attr fromString(String s) throws ServiceException {
             try {
                 return Attr.valueOf(s);
