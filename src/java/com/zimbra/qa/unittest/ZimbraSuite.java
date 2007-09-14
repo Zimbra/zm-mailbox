@@ -34,6 +34,7 @@ import junit.framework.TestSuite;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * Complete unit test suite for the Zimbra code base.
@@ -83,6 +84,7 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestImapImport.TearDown.class);
         sClasses.add(TestNotification.class);
         sClasses.add(TestMaxMessageSize.class);
+        sClasses.add(TestMetadata.class);
     };
     
     /**
@@ -103,9 +105,15 @@ public class ZimbraSuite extends TestSuite
             try {
                 if (test.indexOf('.') < 0) {
                     // short name...check the suite
-                    for (Class c : ZimbraSuite.sClasses) {
-                        if (test.equals(c.getSimpleName()))
+                    boolean found = false;
+                    for (Class<Test> c : ZimbraSuite.sClasses) {
+                        if (test.equals(c.getSimpleName())) {
                             suite.addTest(new TestSuite(c));
+                        }
+                    }
+                    if (!found) {
+                        ZimbraLog.test.warn("Could not find test %s.  Make sure it's registered with %s.",
+                            test, ZimbraSuite.class.getName());
                     }
                 } else {
                     // look it up by the full name

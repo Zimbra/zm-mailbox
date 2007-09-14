@@ -1507,7 +1507,7 @@ public class Mailbox {
                     try {
                         updateVersion(new MailboxVersion((short)1,(short)2));
                     } catch (ServiceException e) {
-                        ZimbraLog.mailbox.warn("Could not update version in Mailbox v1.2 schema upgrade: "+e, e);
+                        ZimbraLog.mailbox.warn("Could not update version in Mailbox v1.2 schema upgrade.", e);
                     }
                 }
                 break;

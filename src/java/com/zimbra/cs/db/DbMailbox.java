@@ -45,6 +45,7 @@ import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.util.Config;
@@ -384,20 +385,51 @@ public class DbMailbox {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement("DELETE FROM mailbox_metadata" +
+            // XXX bburtin: remove the old scheme once we're convinced that the new one works and avoids deadlock
+            if (LC.debug_update_config_use_old_scheme.booleanValue()) {
+                stmt = conn.prepareStatement("DELETE FROM mailbox_metadata" +
                     " WHERE mailbox_id = ? AND " + Db.equalsSTRING("section"));
-            stmt.setInt(1, mbox.getId());
-            stmt.setString(2, section.toUpperCase());
-            stmt.executeUpdate();
-            stmt.close();
-
-            if (config != null) {
-                stmt = conn.prepareStatement("INSERT INTO mailbox_metadata (mailbox_id, section, metadata)" +
-                        " VALUES (?, ?, ?)");
                 stmt.setInt(1, mbox.getId());
-                stmt.setString(2, section);
-                stmt.setString(3, config.toString());
+                stmt.setString(2, section.toUpperCase());
                 stmt.executeUpdate();
+                stmt.close();
+
+                if (config != null) {
+                    stmt = conn.prepareStatement("INSERT INTO mailbox_metadata (mailbox_id, section, metadata)" +
+                    " VALUES (?, ?, ?)");
+                    stmt.setInt(1, mbox.getId());
+                    stmt.setString(2, section);
+                    stmt.setString(3, config.toString());
+                    stmt.executeUpdate();
+                }
+            } else {
+                if (config == null) {
+                    stmt = conn.prepareStatement("DELETE FROM mailbox_metadata" +
+                        " WHERE mailbox_id = ? AND " + Db.equalsSTRING("section"));
+                    stmt.setInt(1, mbox.getId());
+                    stmt.setString(2, section.toUpperCase());
+                    stmt.executeUpdate();
+                    stmt.close();
+                } else {
+                    // New scheme: try update first, then insert if no rows were updated
+                    stmt = conn.prepareStatement("UPDATE mailbox_metadata" +
+                        " SET metadata = ?" +
+                        " WHERE mailbox_id = ? AND " + Db.equalsSTRING("section"));
+                    stmt.setString(1, config.toString());
+                    stmt.setInt(2, mbox.getId());
+                    stmt.setString(3, section.toUpperCase());
+                    int numRows = stmt.executeUpdate();
+                    stmt.close();
+                    
+                    if (numRows == 0) {
+                        stmt = conn.prepareStatement("INSERT INTO mailbox_metadata (mailbox_id, section, metadata)" +
+                        " VALUES (?, ?, ?)");
+                        stmt.setInt(1, mbox.getId());
+                        stmt.setString(2, section);
+                        stmt.setString(3, config.toString());
+                        stmt.executeUpdate();
+                    }
+                }
             }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("setting metadata section '" + section + "' in mailbox " + mbox.getId(), e);
