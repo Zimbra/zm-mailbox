@@ -414,8 +414,7 @@
     <target name="service-deploy" depends="refresh-opt-zimbra,deploy-war,deploy-zimlets"
             description="Not just war file deployment, but a /opt/zimbra refresh as well!"/>
 
-    <target name="deploy-war" depends="war">
-        <antcall target="stop-jetty"/>
+    <target name="deploy-war" depends="stop-jetty,war">
         <delete dir="${webserver.root.dir}/webapps/service"/>
         <delete file="${webserver.root.dir}/webapps/service.war"/>
         <copy file="${warfile}" todir="${webserver.root.dir}/webapps"/>
