@@ -29,16 +29,8 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 /**
- * Provide convenient means to get at local configuration - stuff that
- * we do not want in LDAP.  Use one of these methods:
- * 
- *      String v = LC.get("my_config_param");
- * 
- * or 
- * 
- *      String v = LC.my_config_param.value();
- * 
- * The latter ofcourse is better.
+ * Provides convenient means to get at local configuration - stuff that
+ * we do not want in LDAP.
  */
 public class LC {
 
@@ -269,6 +261,8 @@ public class LC {
     public static final KnownKey debug_lmtp_use_shared_stream;
     public static final KnownKey debug_blob_store_use_shared_stream;
     public static final KnownKey debug_message_cache_use_shared_stream;
+    
+    public static final KnownKey debug_update_config_use_old_scheme;
     
     static {
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
@@ -957,5 +951,9 @@ public class LC {
         debug_message_cache_use_shared_stream.setDefault("false");
         debug_message_cache_use_shared_stream.setDoc(
             "If true, SharedFileInputStream will be used when instantiating a message from the message cache");
+        
+        debug_update_config_use_old_scheme = new KnownKey("debug_update_config_use_old_scheme");
+        debug_update_config_use_old_scheme.setDefault("false");
+        debug_update_config_use_old_scheme.setDoc("If true, DbMailbox.updateConfig() will do DELETE/INSERT instead of UPDATE.");
     }
 }
