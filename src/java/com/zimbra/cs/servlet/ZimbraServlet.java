@@ -28,35 +28,44 @@
  */
 package com.zimbra.cs.servlet;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.util.Zimbra;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.httpclient.Cookie;
+import org.apache.commons.httpclient.Header;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.HttpRecoverableException;
+import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
+import org.apache.commons.httpclient.methods.PostMethod;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.httpclient.*;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
-import org.apache.commons.httpclient.methods.PostMethod;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
-
-import com.zimbra.cs.account.*;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.mailbox.ACL;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.soap.SoapProtocol;
-import com.zimbra.cs.util.Zimbra;
-import com.zimbra.common.soap.Element;
 
 /**
  * @author jhahm
@@ -386,12 +395,9 @@ public class ZimbraServlet extends HttpServlet {
         Provisioning prov = Provisioning.getInstance();
         
         if (user.indexOf('@') == -1) {
-            String hostHeader = req.getHeader("Host");
-            if (hostHeader != null && hostHeader.length() > 1) {
-                int i = hostHeader.indexOf(':');
-                if (i != -1) hostHeader = hostHeader.substring(0, i);
-
-                Domain d = prov.get(DomainBy.virtualHostname, hostHeader.toLowerCase());
+            String host = req.getServerName();
+            if (host != null) {
+                Domain d = prov.get(DomainBy.virtualHostname, host.toLowerCase());
                 if (d != null) user += "@" + d.getName();
             }
         }
