@@ -292,6 +292,7 @@ public class MailConstants {
     public static final String E_MSG_ID_HDR = "mid";
     public static final String E_IN_REPLY_TO = "irt";
     public static final String E_CONTENT = "content";
+    public static final String E_SHARE_NOTIFICATION = "shr";
     public static final String A_PART = "part";
     public static final String A_BODY = "body";
     public static final String A_CONTENT_TYPE = "ct";
