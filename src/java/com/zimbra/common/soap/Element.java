@@ -31,7 +31,6 @@ package com.zimbra.common.soap;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -481,6 +480,7 @@ public abstract class Element {
 
         public Element addElement(QName qname) throws ContainerException  { return addElement(new JSONElement(qname)); }
 
+        @SuppressWarnings("unchecked")
         public Element addElement(Element elt) throws ContainerException {
             if (elt == null || elt.mParent == this)
                 return elt;
@@ -561,6 +561,7 @@ public abstract class Element {
                 throw new ContainerException("already stored element with name: " + key);
         }
 
+        @SuppressWarnings("unchecked")
         public KeyValuePair addKeyValuePair(String key, String value, String eltname, String attrname) {
             JSONElement attrs = (JSONElement) addUniqueElement(E_ATTRS);
             Object existing = attrs.mAttributes.get(key);
@@ -614,6 +615,7 @@ public abstract class Element {
             return set;
         }
 
+        @SuppressWarnings("unchecked")
         public List<Element> listElements(String name) {
             if (mAttributes.isEmpty())
                 return Collections.emptyList();
@@ -843,7 +845,7 @@ public abstract class Element {
                 for (Iterator it = mAttributes.entrySet().iterator(); it.hasNext(); index++) {
                     indent(sb, indent, true);
                     Map.Entry attr = (Map.Entry) it.next();
-                    sb.append('"').append(attr.getKey()).append(indent >= 0 ? "\": " : "\":");
+                    sb.append('"').append(StringUtil.jsEncode(attr.getKey())).append(indent >= 0 ? "\": " : "\":");
 
                     Object value = attr.getValue();
                     if (value instanceof String)                 sb.append('"').append(StringUtil.jsEncode(value)).append('"');
