@@ -1475,6 +1475,7 @@ if <header>s are requested, any matching headers are inlined into the response
     <mid>{Message-ID header}</mid>
     *(<header n="{header-name}">header content</header>)
     [<mp>...</mp>]
+    [<shr><content>{share-announcement-in-xml}</content</shr>]
     [<content (url="...")>...</content>]
   </m>
 </GetMsgResponse>

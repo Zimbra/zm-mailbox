@@ -719,7 +719,7 @@ public class ToXML {
             List<MPartInfo> parts = Mime.getParts(mm);
             if (parts != null && !parts.isEmpty()) {
                 Set<MPartInfo> bodies = Mime.getBody(parts, wantHTML);
-                addParts(m, parts.get(0), bodies, part, neuter, false);
+                addParts(m, m, parts.get(0), bodies, part, neuter, false);
             }
         } catch (IOException ex) {
             throw ServiceException.FAILURE(ex.getMessage(), ex);
@@ -807,9 +807,7 @@ public class ToXML {
             int invId = inv.getMailItemId();
             MimeMessage mm = cal.getSubpartMessage(invId);
             if (mm == null)
-                throw MailServiceException.INVITE_OUT_OF_DATE(
-                        "Invite id=" +
-                        ifmt.formatItemId(cal.getId(), invId));
+                throw MailServiceException.INVITE_OUT_OF_DATE("Invite id=" + ifmt.formatItemId(cal.getId(), invId));
             List<MPartInfo> parts;
             try {
                 parts = Mime.getParts(mm);
@@ -819,7 +817,7 @@ public class ToXML {
                 throw ServiceException.FAILURE(ex.getMessage(), ex);
             }
             if (parts != null && !parts.isEmpty())
-                addParts(ie, parts.get(0), null, "", false, true);
+                addParts(ie, ie, parts.get(0), null, "", false, true);
         }
 
         return ie;
@@ -1002,7 +1000,7 @@ public class ToXML {
                 List<MPartInfo> parts = Mime.getParts(mm);
                 if (parts != null && !parts.isEmpty()) {
                     Set<MPartInfo> bodies = Mime.getBody(parts, wantHTML);
-                    addParts(m, parts.get(0), bodies, part, neuter, true);
+                    addParts(m, m, parts.get(0), bodies, part, neuter, true);
                 }
             }
         } catch (IOException ex) {
@@ -1435,18 +1433,11 @@ public class ToXML {
         return ie;
     }
 
+    private static void addParts(Element parent, Element root, MPartInfo mpi, Set<MPartInfo> bodies, String prefix, boolean neuter, boolean excludeCalendarParts) {
+        String ctype = StringUtil.stripControlCharacters(mpi.getContentType());
 
-    private static void addParts(Element parent,
-                                 MPartInfo mpi,
-                                 Set<MPartInfo> bodies,
-                                 String prefix,
-                                 boolean neuter,
-                                 boolean excludeCalendarParts) {
-        if (excludeCalendarParts) {
-            String ct = mpi.getContentType();
-            if (Mime.CT_TEXT_CALENDAR.compareToIgnoreCase(ct) == 0)
-                return;
-        }
+        if (excludeCalendarParts && Mime.CT_TEXT_CALENDAR.equalsIgnoreCase(ctype))
+            return;
 
         Element elem = parent.addElement(MailConstants.E_MIMEPART);
         MimePart mp = mpi.getMimePart();
@@ -1455,9 +1446,9 @@ public class ToXML {
         part = prefix + (prefix.equals("") || part.equals("") ? "" : ".") + part;
         elem.addAttribute(MailConstants.A_PART, part);
 
-        String ctype = StringUtil.stripControlCharacters(mpi.getContentType());
         if (Mime.CT_XML_ZIMBRA_SHARE.equals(ctype)) {
-            Element shr = parent.getParent().addElement("shr");
+            // the <shr> share info goes underneath the top-level <m>
+            Element shr = root.addElement(MailConstants.E_SHARE_NOTIFICATION);
             try {
                 addContent(shr, mpi);
             } catch (IOException e) {
@@ -1543,7 +1534,7 @@ public class ToXML {
         if (mpi.hasChildren()) {
             for (Iterator it = mpi.getChildren().iterator(); it.hasNext();) {
                 MPartInfo cp = (MPartInfo) it.next();
-                addParts(elem, cp, bodies, prefix, neuter, excludeCalendarParts);
+                addParts(elem, root, cp, bodies, prefix, neuter, excludeCalendarParts);
             }
         }
     }
