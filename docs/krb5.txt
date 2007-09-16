@@ -27,15 +27,20 @@ To install, read the install guide (currently online at http://web.mit.edu/Kerbe
                 admin_server = macpro.local
          }
 
+[domain_realm]
+	.local = MACPRO.LOCAL
+
 [logging]
     kdc = FILE:/var/log/krb5kdc.log
     admin_server = FILE:/var/log/kadmin.log
     default = FILE:/var/log/krb5lib.log
 
-Substitue MACPRO.LOCAL for your Kerberos Realm name (can be whatever you want, typically your domain name uppercased though),
+Substitute MACPRO.LOCAL for your Kerberos Realm name (can be whatever you want, typically your domain name uppercased though),
 and "macpro.local" with the server you are installing the Kerberos KDC on.
 
 Make sure the specified log directory exists.
+
+The [domain_realm] section is used to map domain names to Kerberos realms.
 
 NOTE: the /etc/krb5.conf file should get installed on any client machines using Kerberos (i.e., all the mailbox servers)
 
@@ -78,7 +83,7 @@ kadmin.local:  exit
 
 The second user (user1@MACPRO.LOCAL) we created will be used for testing. First user is an admin user, and only needed for remote admin.
 
-12. start up the KDC and the kadmind:
+12. Start up the KDC and the kadmind:
 
   /usr/local/sbin/krb5kdc
   /usr/local/sbin/kadmind
@@ -86,3 +91,30 @@ The second user (user1@MACPRO.LOCAL) we created will be used for testing. First 
 You should be able to now config external Kerberos AUTH for passwords.
 
 This document should get updated when we add SASL IMAP support, etc.
+
+13. Create IMAP service principle
+
+For each server, create a service principle for the Zimbra IMAP service.
+This should be of the form "imap/<host>@<realm>" where <host> is the fully
+qualified host name of the Zimbra server and <realm> is the Kerberos
+realm name. The server host name *must* match the the value of the
+"zimbra_server_hostname" local configuration property. For example:
+
+macpro:/usr/local schemers$ /usr/local/sbin/kadmin.local
+Authenticating as principal schemers/admin@MACPRO.LOCAL with password.
+kadmin.local:  addprinc -randkey imap/macpro.local@MACPRO.LOCAL
+WARNING: no policy specified for imap/macpro.local@MACPRO.LOCAL; defaulting to no policy
+Principal "imap/macpro.local@MACPRO.LOCAL" created.
+
+14. Create local keytab for service principle
+
+For each server, a keytab file must be created with the service principle
+key. This file should be located in $ZIMBRA_ROOT/conf/krb5.keytab where
+ZIMBRA_ROOT is the Zimbra installation directory (i.e. /opt/zimbra).
+
+macpro:/usr/local schemers$ /usr/local/sbin/kadmin.local
+Authenticating as principal schemers/admin@MACPRO.LOCAL with password.
+kadmin:  ktadd -keytab /opt/zimbra/conf/krb5.keytab imap/macpro.local@MACPRO.LOCAL
+Entry for principal imap/macpro.local@MACPRO.LOCAL with kvno 3, encryption type Triple DES cbc mode with HMAC/sha1 added to keytab WRFILE:/opt/zimbra/conf/krb5.keytab.
+Entry for principal imap/macpro.local@MACPRO.LOCAL with kvno 3, encryption type DES cbc mode with CRC-32 added to keytab WRFILE:/opt/zimbra/conf/krb5.
+

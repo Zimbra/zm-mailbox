@@ -24,8 +24,63 @@
  */
 package com.zimbra.cs.imap;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.util.ArrayUtil;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AccessManager;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.NamedEntry;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.DistributionListBy;
+import com.zimbra.cs.imap.Authenticator.Mechanism;
+import com.zimbra.cs.imap.ImapCredentials.ActivatedExtension;
+import com.zimbra.cs.imap.ImapCredentials.EnabledHack;
+import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
+import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
+import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.index.ZimbraHit;
+import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.index.queryparser.ParseException;
+import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.mailbox.SearchFolder;
+import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.mail.FolderAction;
+import com.zimbra.cs.service.mail.ItemActionHelper;
+import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.stats.ActivityTracker;
+import com.zimbra.cs.tcpserver.ProtocolHandler;
+import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.BuildInfo;
+import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZGrant;
+import com.zimbra.cs.zclient.ZMailbox;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -49,99 +104,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.SoapProtocol;
-import com.zimbra.common.util.ArrayUtil;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.Pair;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.AccessManager;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.NamedEntry;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
-import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
-import com.zimbra.cs.imap.ImapCredentials.ActivatedExtension;
-import com.zimbra.cs.imap.ImapCredentials.EnabledHack;
-import com.zimbra.cs.index.SearchParams;
-import com.zimbra.cs.index.ZimbraHit;
-import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.index.MailboxIndex;
-import com.zimbra.cs.index.queryparser.ParseException;
-import com.zimbra.cs.mailbox.ACL;
-import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.Mountpoint;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.mailbox.SearchFolder;
-import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.service.mail.FolderAction;
-import com.zimbra.cs.service.mail.ItemActionHelper;
-import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.tcpserver.ProtocolHandler;
-import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.util.BuildInfo;
-import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZGrant;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.stats.ActivityTracker;
-
 /**
  * @author dkarp
  */
 public abstract class ImapHandler extends ProtocolHandler {
-
-    abstract class Authenticator {
-        String mTag;
-        boolean mContinue = true;
-        Authenticator(String tag)  { mTag = tag; }
-        abstract boolean handle(byte[] data) throws IOException;
-    }
-    private class AuthPlain extends Authenticator {
-        AuthPlain(String tag)  { super(tag); }
-        boolean handle(byte[] response) throws IOException {
-            // RFC 2595 6: "Non-US-ASCII characters are permitted as long as they are
-            //              represented in UTF-8 [UTF-8]."
-            String message = new String(response, "utf-8");
-
-            // RFC 2595 6: "The client sends the authorization identity (identity to
-            //              login as), followed by a US-ASCII NUL character, followed by the
-            //              authentication identity (identity whose password will be used),
-            //              followed by a US-ASCII NUL character, followed by the clear-text
-            //              password.  The client may leave the authorization identity empty to
-            //              indicate that it is the same as the authentication identity."
-            int nul1 = message.indexOf('\0'), nul2 = message.indexOf('\0', nul1 + 1);
-            if (nul1 == -1 || nul2 == -1) {
-                sendNO(mTag, "malformed authentication message");
-                return true;
-            }
-            String authorizeId = message.substring(0, nul1);
-            String authenticateId = message.substring(nul1 + 1, nul2);
-            String password = message.substring(nul2 + 1);
-            if (authorizeId.equals(""))
-                authorizeId = authenticateId;
-
-            mContinue = login(authorizeId, authenticateId, password, "AUTHENTICATE", mTag);
-            return true;
-        }
-    }
-
     enum State { NOT_AUTHENTICATED, AUTHENTICATED, SELECTED, LOGOUT }
 
     private static final long MAXIMUM_IDLE_PROCESSING_MILLIS = 15 * Constants.MILLIS_PER_SECOND;
@@ -197,9 +163,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     boolean continueAuthentication(ImapRequest req) throws IOException {
-        String tag = mAuthenticator.mTag;
-        boolean authFinished = true;
-
+        String tag = mAuthenticator.getTag();
         try {
             // use the tag from the original AUTHENTICATE command
             req.setTag(tag);
@@ -218,19 +182,23 @@ public abstract class ImapHandler extends ProtocolHandler {
 
             byte[] response = req.readBase64(false);
             checkEOF(tag, req);
-            authFinished = mAuthenticator.handle(response);
-            return mAuthenticator.mContinue;
+            return continueAuthentication(response);
         } catch (ImapParseException ipe) {
             sendBAD(tag, ipe.getMessage());
             return CONTINUE_PROCESSING;
-        } finally {
-            if (authFinished) {
-                mAuthenticator = null;
-                enableInactivityTimer();
-            }
         }
     }
-
+    
+    private boolean continueAuthentication(byte[] response) throws IOException {
+        mAuthenticator.handle(response);
+        if (mAuthenticator.isComplete()) {
+            boolean canContinue = mAuthenticator.canContinue();
+            mAuthenticator = null;
+            return canContinue;
+        }
+        return CONTINUE_PROCESSING;
+    }
+    
     boolean isIdle() {
         return mIdleTag != null;
     }
@@ -681,7 +649,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         mSelectedFolder = i4folder;
     }
 
-    private boolean canContinue(ServiceException e) {
+    boolean canContinue(ServiceException e) {
         return e.getCode().equals(MailServiceException.MAINTENANCE) ? STOP_PROCESSING : CONTINUE_PROCESSING;
     }
 
@@ -709,6 +677,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         // [LOGINDISABLED]    RFC 3501: Internet Message Access Protocol - Version 4rev1
         // [STARTTLS]         RFC 3501: Internet Message Access Protocol - Version 4rev1
         // [AUTH=PLAIN]       RFC 2595: Using TLS with IMAP, POP3 and ACAP
+        // [AUTH=GSSAPI]      RFC 1731: IMAP4 Authentication Mechanisms
         // [ACL]              RFC 4314: IMAP4 Access Control List (ACL) Extension
         // [BINARY]           RFC 3516: IMAP4 Binary Content Extension
         // [CATENATE]         RFC 4469: Internet Message Access Protocol (IMAP) CATENATE Extension
@@ -734,8 +703,8 @@ public abstract class ImapHandler extends ProtocolHandler {
         String nologin  = mStartedTLS || authenticated || mConfig.allowCleartextLogins() ? "" : " LOGINDISABLED";
         String starttls = mStartedTLS || authenticated || !extensionEnabled("STARTTLS")     ? "" : " STARTTLS";
         String plain    = !mStartedTLS || authenticated || !extensionEnabled("AUTH=PLAIN")  ? "" : " AUTH=PLAIN";
-
-        StringBuilder capability = new StringBuilder("CAPABILITY IMAP4rev1" + nologin + starttls + plain);
+        String gss      = authenticated || !gssEnabled() ? "" : " AUTH=GSSAPI";
+        StringBuilder capability = new StringBuilder("CAPABILITY IMAP4rev1" + nologin + starttls + plain + gss);
         for (String extension : SUPPORTED_EXTENSIONS)
             if (extensionEnabled(extension))
                 capability.append(' ').append(extension);
@@ -743,6 +712,20 @@ public abstract class ImapHandler extends ProtocolHandler {
         sendUntagged(capability.toString());
     }
 
+    // TODO Remove this debugging option for final release
+    private static final Boolean GSS_ENABLED = Boolean.getBoolean("ZimbraGssEnabled");
+    
+    private boolean gssEnabled() {
+        if (!GSS_ENABLED || !extensionEnabled("AUTH=GSSAPI")) return false;
+        File keytab = new File(LC.krb5_keytab.value());
+        if (!keytab.exists()) {
+            ZimbraLog.imap.warn(
+                "GSS authentication disabled because keytab file '" + keytab + "' not found.");
+            return false;
+        }
+        return true;
+    }
+    
     boolean extensionEnabled(String extension) {
         // check whether the extension is explicitly disabled on the server
         if (mConfig.isExtensionDisabled(extension))
@@ -789,10 +772,8 @@ public abstract class ImapHandler extends ProtocolHandler {
     boolean doAUTHENTICATE(String tag, String mechanism, byte[] response) throws IOException {
         if (!checkState(tag, State.NOT_AUTHENTICATED))
             return CONTINUE_PROCESSING;
-
-        boolean finished = false;
-
-        if (mechanism.equals("PLAIN") && extensionEnabled("AUTH=PLAIN")) {
+        Mechanism m = Mechanism.valueOf(mechanism);
+        if (m == Mechanism.PLAIN && mechanismEnabled(m)) {
             // RFC 2595 6: "The PLAIN SASL mechanism MUST NOT be advertised or used
             //              unless a strong encryption layer (such as the provided by TLS)
             //              is active or backwards compatibility dictates otherwise."
@@ -800,10 +781,17 @@ public abstract class ImapHandler extends ProtocolHandler {
                 sendNO(tag, "cleartext logins disabled");
                 return CONTINUE_PROCESSING;
             }
-            mAuthenticator = new AuthPlain(tag);
+            mAuthenticator = new PlainAuthenticator(this, tag);
+        } else if (m == Mechanism.GSSAPI && gssEnabled()) {
+            mAuthenticator = new GssAuthenticator(this, tag);
         } else {
             // no other AUTHENTICATE mechanisms are supported yet
             sendNO(tag, "mechanism not supported");
+            return CONTINUE_PROCESSING;
+        }
+        
+        if (!mAuthenticator.initialize()) {
+            mAuthenticator = null;
             return CONTINUE_PROCESSING;
         }
 
@@ -812,16 +800,23 @@ public abstract class ImapHandler extends ProtocolHandler {
         //       command that is defined in Section 6.2.2 of [IMAP4].  If this second
         //       argument is present, it represents the contents of the "initial
         //       client response" defined in section 5.1 of [SASL]."
-        if (response != null)
-            finished = mAuthenticator.handle(response);
-
-        if (finished)
-            mAuthenticator = null;
-        else
-            sendContinuation("");
+        if (response != null) {
+            mAuthenticator.handle(response);
+            if (mAuthenticator.isComplete()) {
+                boolean canContinue = mAuthenticator.canContinue();
+                mAuthenticator = null;
+                return canContinue;
+            }
+            return CONTINUE_PROCESSING;
+        }
+        sendContinuation("");
         return CONTINUE_PROCESSING;
     }
 
+    private boolean mechanismEnabled(Mechanism mechanism) {
+        return extensionEnabled("AUTH=" + mechanism.name());
+    }
+    
     boolean doLOGIN(String tag, String username, String password) throws IOException {
         if (!checkState(tag, State.NOT_AUTHENTICATED))
             return CONTINUE_PROCESSING;
@@ -829,12 +824,14 @@ public abstract class ImapHandler extends ProtocolHandler {
             sendNO(tag, "cleartext logins disabled");
             return CONTINUE_PROCESSING;
         }
-
-        return login(username, "", password, "LOGIN", tag);
+        return login(username, "", password, "LOGIN", tag, null);
     }
 
-    boolean login(String username, String authenticateId, String password, String command, String tag) throws IOException {
+    boolean login(String username, String authenticateId, String password,
+                  String command, String tag, Mechanism mechanism) throws IOException {
         // the Windows Mobile 5 hacks are enabled by appending "/wm" to the username, etc.
+        // TODO For GSSAPI, should enabled hack be applied to authenticateId
+        // instead?
         EnabledHack enabledHack = EnabledHack.NONE;
         for (EnabledHack hack : EnabledHack.values()) {
             if (hack.toString() != null && username.endsWith(hack.toString())) {
@@ -845,10 +842,12 @@ public abstract class ImapHandler extends ProtocolHandler {
         }
 
         try {
-            Account account = authenticate(authenticateId, username, password, command, tag);
+            Account account = mechanism == Mechanism.GSSAPI ?
+                authenticateKrb5(authenticateId, tag) :
+                authenticate(authenticateId, username, password, command, tag);
+            if (account == null) return CONTINUE_PROCESSING;
             ImapCredentials session = startSession(account, enabledHack, command, tag);
-            if (session == null)
-                return CONTINUE_PROCESSING;
+            if (session == null) return CONTINUE_PROCESSING;
         } catch (ServiceException e) {
             ZimbraLog.imap.warn(command + " failed", e);
             if (e.getCode().equals(AccountServiceException.CHANGE_PASSWORD))
@@ -866,7 +865,8 @@ public abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    private Account authenticate(String authenticateId, String username, String password, String command, String tag) throws ServiceException, IOException {
+    private Account authenticate(String authenticateId, String username,
+                                 String password, String command, String tag) throws ServiceException, IOException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(AccountBy.name, username);
         Account authacct = authenticateId.equals("") ? account : prov.get(AccountBy.name, authenticateId);
@@ -887,10 +887,16 @@ public abstract class ImapHandler extends ProtocolHandler {
         return account;
     }
 
+    private Account authenticateKrb5(String principle, String tag)
+            throws ServiceException, IOException {
+        System.out.println("XXX PRINCE = " + principle);
+        Account account = Provisioning.getInstance().get(
+            Provisioning.AccountBy.krb5Principal, principle);
+        if (account == null) sendNO(tag, "authentication failed");
+        return account;
+    }
+    
     private ImapCredentials startSession(Account account, EnabledHack hack, String command, String tag) throws ServiceException, IOException {
-        if (account == null)
-            return null;
-
         // make sure we can actually login via IMAP on this host
         if (!account.getBooleanAttr(Provisioning.A_zimbraImapEnabled, false)) {
             sendNO(tag, "account does not have IMAP access enabled");

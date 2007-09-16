@@ -1,0 +1,63 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1
+ *
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 ("License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.zimbra.com/license
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+ * the License for the specific language governing rights and limitations
+ * under the License.
+ *
+ * The Original Code is: Zimbra Collaboration Suite Server.
+ *
+ * The Initial Developer of the Original Code is Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2004, 2005, 2006 Zimbra, Inc.
+ * All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK *****
+ */
+
+package com.zimbra.cs.imap;
+
+import java.io.IOException;
+
+class PlainAuthenticator extends Authenticator {
+    PlainAuthenticator(ImapHandler handler, String tag)  {
+        super(handler, tag, Mechanism.PLAIN);
+    }
+
+    public boolean initialize() { return true; }
+    
+    public void handle(byte[] data) throws IOException {
+        if (isComplete()) {
+            throw new IllegalStateException("Authentication already completed");
+        }
+        
+        // RFC 2595 6: "Non-US-ASCII characters are permitted as long as they are
+        //              represented in UTF-8 [UTF-8]."
+        String message = new String(data, "utf-8");
+
+        // RFC 2595 6: "The client sends the authorization identity (identity to
+        //              login as), followed by a US-ASCII NUL character, followed by the
+        //              authentication identity (identity whose password will be used),
+        //              followed by a US-ASCII NUL character, followed by the clear-text
+        //              password.  The client may leave the authorization identity empty to
+        //              indicate that it is the same as the authentication identity."
+        int nul1 = message.indexOf('\0'), nul2 = message.indexOf('\0', nul1 + 1);
+        if (nul1 == -1 || nul2 == -1) {
+            sendBadRequest();
+            return;
+        }
+        String authorizeId = message.substring(0, nul1);
+        String authenticateId = message.substring(nul1 + 1, nul2);
+        String password = message.substring(nul2 + 1);
+        if (authorizeId.equals("")) authorizeId = authenticateId;
+        login(authorizeId, authenticateId, password);
+    }
+}

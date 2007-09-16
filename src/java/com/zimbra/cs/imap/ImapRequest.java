@@ -154,7 +154,8 @@ abstract class ImapRequest {
             mOffset++;
         else
             throw new ImapParseException(mTag, "end of line or wrong character; expected '" + c + '\'');
-    }
+
+    }                                       
 
     void skipNIL() throws ImapParseException { skipAtom("NIL"); }
     void skipAtom(String atom) throws ImapParseException {
@@ -183,12 +184,22 @@ abstract class ImapRequest {
             if (c > 0x7F || !acceptable[c])
                 break;
         }
-        if (i == offset)
-            throw new ImapParseException(tag, "zero-length content");
+        // An empty request is possible during GSSAPI authentication exchange,
+        // so this check as been moved to readTag() below.
+        // if (i == offset)
+        //    throw new ImapParseException(tag, "zero-length content");
         return content.substring(offset, i);
     }
 
-    String readTag() throws ImapParseException   { mTag = readContent(TAG_CHARS);  return mTag; }
+    String readTag() throws ImapParseException   {
+        String tag = readContent(TAG_CHARS);
+        if (tag.length() == 0) {
+            throw new ImapParseException(mTag, "zero-length content");
+        }
+        mTag = tag;
+        return mTag;
+    }
+    
     String readAtom() throws ImapParseException  { return readContent(ATOM_CHARS); }
     String readATOM() throws ImapParseException  { return readContent(ATOM_CHARS).toUpperCase(); }
 
