@@ -118,3 +118,6 @@ kadmin:  ktadd -keytab /opt/zimbra/conf/krb5.keytab imap/macpro.local@MACPRO.LOC
 Entry for principal imap/macpro.local@MACPRO.LOCAL with kvno 3, encryption type Triple DES cbc mode with HMAC/sha1 added to keytab WRFILE:/opt/zimbra/conf/krb5.keytab.
 Entry for principal imap/macpro.local@MACPRO.LOCAL with kvno 3, encryption type DES cbc mode with CRC-32 added to keytab WRFILE:/opt/zimbra/conf/krb5.
 
+15. Set ZIMBRA_KERBEROS_REALM environment variable
+
+This is used by the build script to automatically provision zimbraForeignPrinciple for the 'user1' test user account. Otherwise, the default is to use the ZIMBRA.COM realm.
