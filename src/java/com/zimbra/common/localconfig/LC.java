@@ -219,6 +219,8 @@ public class LC {
     public static final KnownKey nio_pop3_enabled;
     public static final KnownKey nio_lmtp_enabled;
 
+    public static final KnownKey krb5_keytab;
+    
     public static final KnownKey zimbra_mtareport_max_recipients;
     public static final KnownKey zimbra_mtareport_max_senders;
 
@@ -841,6 +843,10 @@ public class LC {
         nio_debug_enabled = new KnownKey("nio_debug_enabled");
         nio_debug_enabled.setDefault("false");
         nio_debug_enabled.setDoc("Enable debug logging for NIO-based IMAP/POP3/LMTP servers.");
+
+        krb5_keytab = new KnownKey("krb5_keytab");
+        krb5_keytab.setDefault("${zimbra_home}" + FS + "conf" + FS + "krb5.keytab");
+        krb5_keytab.setDoc("Zimbra Kerberos 5 keytab file location");
 
         zimbra_mtareport_max_recipients = new KnownKey("zimbra_mtareport_max_recipients");
         zimbra_mtareport_max_recipients.setDefault("50");
