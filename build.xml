@@ -48,6 +48,12 @@
         </not>
     </condition>
 
+    <!-- Optional Kerberos authentication realm -->
+    <condition property="zimbra.kerberos.realm" value="${env.ZIMBRA_KERBEROS_REALM}">
+	<isset property="env.ZIMBRA_KERBEROS_REALM"/>
+    </condition>
+    <property name="zimbra.kerberos.realm" value="ZIMBRA.COM"/>
+ 
     <property name="build.dir" location="build"/>
     <property name="build.classes.dir" location="${build.dir}/classes"/>
     <property name="build.zmprov" location="${build.dir}/data/zmprov.txt"/>
@@ -934,6 +940,7 @@
             zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
             zimbraPrefMailPollingInterval 12h \
             zimbraPrefWarnOnExit FALSE \
+	    zimbraForeignPrincipal kerberos5:user1@${zimbra.kerberos.realm} \
             telephoneNumber '+1 650 555 1111'
             ca user2@${defaultdomain.name} test123 \
             zimbraMailHost ${zimbra.server.hostname} \
