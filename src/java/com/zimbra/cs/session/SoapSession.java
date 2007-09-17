@@ -41,6 +41,7 @@ import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.mail.GetFolder.FolderNode;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
@@ -111,7 +112,8 @@ public class SoapSession extends Session {
     private PushChannel mPushChannel = null;
 
     private static final long SOAP_SESSION_TIMEOUT_MSEC = 10 * Constants.MILLIS_PER_MINUTE;
-    private static final int MAX_QUEUED_NOTIFICATIONS = 400;
+
+    private static final int MAX_QUEUED_NOTIFICATIONS = LC.zimbra_session_max_pending_notifications.intValue();
 
 
     /** Creates a <tt>SoapSession</tt> owned by the given account and
@@ -325,7 +327,7 @@ public class SoapSession extends Session {
         // XXX: should constrain to folders, tags, and stuff relevant to the current query?
 
         // determine whether this set of notifications would cause the cached set to overflow
-        if (!mForceRefresh) {
+        if (!mForceRefresh && MAX_QUEUED_NOTIFICATIONS > 0) {
             // XXX: more accurate would be to combine pms and mChanges and take the count...
             int count = pms.getNotificationCount() + mChanges.getNotificationCount();
             if (!mSentChanges.isEmpty()) {
