@@ -96,11 +96,6 @@ Zimbra network you can get to this with http://kenny/public
    On Windows, install to c:\opt\zimbra\openldap. Then go to the
    openldap directory and run "slapd install" to install it as a
    Windows service.
-   
-   The location of the schema files changed in OpenLDAP 2.2.29.
-   If you're using 2.2.29 or later, you'll have to manually edit
-   slapd.win.conf and change the paths to the schema files from
-   /opt/zimbra/openldap/etc/schema to /opt/zimbra/openldap/schema.
 
 7. On Linux, probably want to chown /opt to yourself and/or give group
    write access to /opt, so you don't have to worry about running as
