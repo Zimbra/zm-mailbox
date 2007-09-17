@@ -42,8 +42,12 @@ import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
+import java.util.HashMap;
+import java.util.Map;
 
 public class GssAuthenticator extends Authenticator {
     private SaslServer mSaslServer;
@@ -51,10 +55,20 @@ public class GssAuthenticator extends Authenticator {
 
     private static final String MECHANISM = "GSSAPI";
     private static final String PROTOCOL = "imap";
+    
+    private static final String QOP_AUTH = "auth";
+    private static final String QOP_AUTH_INT = "auth-int";
+    private static final String QOP_AUTH_CONF = "auth-conf";
 
     private static final boolean DEBUG = true;
 
+    // SASL properties to enable encryption
+    private static final Map<String, String> ENCRYPTION_SASL_PROPS =
+        new HashMap<String, String>();
+    
     static {
+        ENCRYPTION_SASL_PROPS.put(Sasl.QOP,
+            QOP_AUTH + "," + QOP_AUTH_INT + "," + QOP_AUTH_CONF);
         if (DEBUG) {
             System.setProperty("sun.security.krb5.debug", "true");
             System.setProperty("sun.security.jgss.debug", "true");
@@ -65,6 +79,7 @@ public class GssAuthenticator extends Authenticator {
         super(handler, tag, Mechanism.GSSAPI);
     }                                    
 
+    @Override
     public boolean initialize() throws IOException {
         final String host = LC.zimbra_server_hostname.value();
         String principle = PROTOCOL + "/" + host;
@@ -83,13 +98,17 @@ public class GssAuthenticator extends Authenticator {
             ZimbraLog.imap.warn("Login failed", e);
             return false;
         }
+        final Map<String, String> props = getSaslProperties();
+        if (DEBUG) {
+            String qop = props.get(Sasl.QOP);
+            debug("Sent QOP = " + (qop != null ? qop : "auth"));
+        }
         try {
             mSaslServer = (SaslServer) Subject.doAs(mLoginContext.getSubject(),
                 new PrivilegedExceptionAction() {
                     public Object run() throws SaslException {
                         return Sasl.createSaslServer(
-                            MECHANISM, PROTOCOL, host, null,
-                            new GssCallbackHandler());
+                            MECHANISM, PROTOCOL, host, props, new GssCallbackHandler());
                     }
                 });
         } catch (PrivilegedActionException e) {
@@ -100,7 +119,15 @@ public class GssAuthenticator extends Authenticator {
         }
         return true;
     }
+
+    private Map<String, String> getSaslProperties() {
+        // Don't enable encryption if SSL is being used
+        // TODO Enable encryption for MinaImapHandler
+        return mHandler.isSSLEnabled() || mHandler instanceof MinaImapHandler ?
+            null : ENCRYPTION_SASL_PROPS;
+    }
     
+    @Override
     public void handle(final byte[] data) throws IOException {
         if (isComplete()) {
             throw new IllegalStateException("Authentication already completed");
@@ -116,6 +143,7 @@ public class GssAuthenticator extends Authenticator {
         }
         if (isComplete()) {
             // Authentication successful
+            debug("QOP = %s", mSaslServer.getNegotiatedProperty(Sasl.QOP));
             logout();
         } else {
             assert !mSaslServer.isComplete();
@@ -124,6 +152,22 @@ public class GssAuthenticator extends Authenticator {
         }
     }
 
+    @Override
+    public boolean isEncryptionEnabled() {
+        String qop = (String) mSaslServer.getNegotiatedProperty(Sasl.QOP);
+        return QOP_AUTH_INT.equals(qop) || QOP_AUTH_CONF.equals(qop);
+    }
+
+    @Override
+    public InputStream unwrap(InputStream is) {
+        return new SaslInputStream(is, mSaslServer);
+    }
+
+    @Override
+    public OutputStream wrap(OutputStream os) {
+        return new SaslOutputStream(os, mSaslServer);
+    }
+    
     private void logout() {
         try {
             mLoginContext.logout();

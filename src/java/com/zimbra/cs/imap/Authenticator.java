@@ -26,6 +26,8 @@
 package com.zimbra.cs.imap;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 abstract class Authenticator {
     protected final ImapHandler mHandler;
@@ -46,6 +48,16 @@ abstract class Authenticator {
 
     public abstract void handle(byte[] data) throws IOException;
 
+    public boolean isEncryptionEnabled() { return false; }
+
+    public InputStream unwrap(InputStream is) {
+        throw new UnsupportedOperationException();
+    }
+
+    public OutputStream wrap(OutputStream os) {
+        throw new UnsupportedOperationException();
+    }
+    
     public String getTag() {
         return mTag;
     }

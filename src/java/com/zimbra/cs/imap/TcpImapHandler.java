@@ -46,6 +46,7 @@ import com.zimbra.cs.tcpserver.TcpServerInputStream;
 import com.zimbra.cs.util.Config;
 
 public class TcpImapHandler extends ImapHandler {
+    private Socket mConnection;
     private TcpServerInputStream mInputStream;
     private String         mRemoteAddress;
     private TcpImapRequest mIncompleteRequest = null;
@@ -56,6 +57,7 @@ public class TcpImapHandler extends ImapHandler {
                                                       
     @Override
     protected boolean setupConnection(Socket connection) throws IOException {
+        mConnection = connection;
         mRemoteAddress = connection.getInetAddress().getHostAddress();
         INFO("connected");
 
@@ -237,6 +239,16 @@ public class TcpImapHandler extends ImapHandler {
         dropConnection();
     }
 
+    @Override
+    protected void authenticated(Authenticator auth) throws IOException {
+        if (auth.isEncryptionEnabled()) {
+            // Switch to encrypted streams
+            mInputStream = new TcpServerInputStream(
+                auth.unwrap(mConnection.getInputStream()));
+            mOutputStream = auth.wrap(mConnection.getOutputStream());
+        }
+    }
+    
     @Override
     protected void enableInactivityTimer() {
         // Already enabled when connection was established.

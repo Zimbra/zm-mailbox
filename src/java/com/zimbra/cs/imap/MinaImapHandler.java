@@ -227,6 +227,11 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
     }
 
     @Override
+    protected void authenticated(Authenticator auth) {
+        // TODO Enable Sasl filter
+    }
+
+    @Override
     protected void flushOutput() {
         // TODO Do we need to do anything here?
     }

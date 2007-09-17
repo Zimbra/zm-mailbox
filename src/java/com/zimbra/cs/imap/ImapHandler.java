@@ -155,6 +155,8 @@ public abstract class ImapHandler extends ProtocolHandler {
 
     ImapCredentials getCredentials()  { return mCredentials; }
 
+    public boolean isSSLEnabled() { return mConfig.isSSLEnabled(); }
+    
     static final boolean STOP_PROCESSING = false, CONTINUE_PROCESSING = true;
     
     void checkEOF(String tag, ImapRequest req) throws ImapParseException {
@@ -192,6 +194,10 @@ public abstract class ImapHandler extends ProtocolHandler {
     private boolean continueAuthentication(byte[] response) throws IOException {
         mAuthenticator.handle(response);
         if (mAuthenticator.isComplete()) {
+            if (mCredentials != null) {
+                // Authentication successful
+                authenticated(mAuthenticator);
+            }
             boolean canContinue = mAuthenticator.canContinue();
             mAuthenticator = null;
             return canContinue;
@@ -801,13 +807,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         //       argument is present, it represents the contents of the "initial
         //       client response" defined in section 5.1 of [SASL]."
         if (response != null) {
-            mAuthenticator.handle(response);
-            if (mAuthenticator.isComplete()) {
-                boolean canContinue = mAuthenticator.canContinue();
-                mAuthenticator = null;
-                return canContinue;
-            }
-            return CONTINUE_PROCESSING;
+            return continueAuthentication(response);
         }
         sendContinuation("");
         return CONTINUE_PROCESSING;
@@ -889,7 +889,6 @@ public abstract class ImapHandler extends ProtocolHandler {
 
     private Account authenticateKrb5(String principle, String tag)
             throws ServiceException, IOException {
-        System.out.println("XXX PRINCE = " + principle);
         Account account = Provisioning.getInstance().get(
             Provisioning.AccountBy.krb5Principal, principle);
         if (account == null) sendNO(tag, "authentication failed");
@@ -3170,6 +3169,8 @@ public abstract class ImapHandler extends ProtocolHandler {
     abstract protected void flushOutput() throws IOException;
 
     abstract protected void enableInactivityTimer();
+
+    abstract protected void authenticated(Authenticator auth) throws IOException;
     
     void sendIdleUntagged() throws IOException                   { sendUntagged("NOOP", true); }
 
