@@ -176,6 +176,9 @@ public class SoapEngine {
 
         Element responseBody = null;
         if (!zsc.isProxyRequest()) {
+            // if the client's told us that they've seen through notification block 50, we can drop old notifications up to that point
+            acknowledgeNotifications(zsc);
+
             if (doc.getQName().equals(ZimbraNamespace.E_BATCH_REQUEST)) {
                 boolean contOnError = doc.getAttribute(ZimbraNamespace.A_ONERROR, ZimbraNamespace.DEF_ONERROR).equals("continue");
                 responseBody = zsc.createElement(ZimbraNamespace.E_BATCH_RESPONSE);
@@ -366,6 +369,17 @@ public class SoapEngine {
 		return mDispatcher;
 	}
 
+    private void acknowledgeNotifications(ZimbraSoapContext zsc) {
+        String authAccountId = zsc.getAuthtokenAccountId();
+        for (SessionInfo sinfo : zsc.getReferencedSessionsInfo()) {
+            if (sinfo.sequence <= 0)
+                continue;
+            Session session = SessionCache.lookup(sinfo.sessionId, authAccountId);
+            if (session instanceof SoapSession)
+                ((SoapSession) session).acknowledgeNotifications(sinfo.sequence);
+        }
+    }
+
     /** Creates a <tt>&lt;context></tt> element for the SOAP Header containing
      *  session information and change notifications.<p>
      * 
@@ -378,8 +392,9 @@ public class SoapEngine {
      *         if there is no relevant information to encapsulate. */
     private Element generateResponseHeader(ZimbraSoapContext zsc) {
         String authAccountId = zsc.getAuthtokenAccountId();
-        Element ctxt = null;
-        ctxt = zsc.createElement(HeaderConstants.CONTEXT);
+        String requestedAccountId = zsc.getRequestedAccountId();
+
+        Element ctxt = zsc.createElement(HeaderConstants.CONTEXT);
         boolean foundSessionForRequestedAccount = false;
         try {
             for (SessionInfo sinfo : zsc.getReferencedSessionsInfo()) {
@@ -391,15 +406,16 @@ public class SoapEngine {
                 ZimbraSoapContext.encodeSession(ctxt, session.getSessionId(), session.getSessionType(), false);
 
                 if (session instanceof SoapSession) {
-                    if (session.getMailbox() != null && session.getMailbox().getAccountId().equals(zsc.getRequestedAccountId()))
+                    SoapSession soap = (SoapSession) session;
+                    if (session.getTargetAccountId().equals(requestedAccountId))
                         foundSessionForRequestedAccount = true;
+
                     // put <refresh> blocks back for any newly-created SoapSession objects
-                    if (sinfo.created)
-                        ((SoapSession) session).putRefresh(ctxt, zsc);
+                    if (sinfo.created || soap.requiresRefresh(sinfo.sequence))
+                        soap.putRefresh(ctxt, zsc);
                     // put <notify> blocks back for any SoapSession objects
-                    ((SoapSession) session).putNotifications(ctxt, zsc, sinfo.sequence);
-                    
-                    //Add any extension headers
+                    soap.putNotifications(ctxt, zsc, sinfo.sequence);
+                    // add any extension headers
                     SoapContextExtension.addExtensionHeaders(ctxt, zsc, session);
                 }
             }
@@ -407,10 +423,9 @@ public class SoapEngine {
             // bug: 17481 if <nosession> is specified, then the SessionInfo list will be empty...but
             // we still want to encode the <change> element at least for the directly-requested accountId...
             // so encode it here as a last resort
-            if (!foundSessionForRequestedAccount && zsc.getRequestedAccountId()!=null) {
+            if (!foundSessionForRequestedAccount && requestedAccountId != null) {
                 try {
-                    String explicitAcct = zsc.getRequestedAccountId().equals(zsc.getAuthtokenAccountId()) ? 
-                        null : zsc.getRequestedAccountId();
+                    String explicitAcct = requestedAccountId.equals(authAccountId) ? null : requestedAccountId;
                     // send the <change> block
                     // <change token="555" [acct="4f778920-1a84-11da-b804-6b188d2a20c4"]/>
                     Mailbox mbox = DocumentHandler.getRequestedMailbox(zsc);

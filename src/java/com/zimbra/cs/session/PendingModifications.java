@@ -30,10 +30,8 @@ package com.zimbra.cs.session;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 
-import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
@@ -83,30 +81,22 @@ public final class PendingModifications {
     public HashMap<Integer, Change> modified;
     public HashMap<Integer, Object> deleted;
 
-    /** IMNotifications are strictly sequential right now */
-    public List<IMNotification> imNotifications;
-
-    /** used by the Session object to ensure that notifications are reliably
-     * received by the listener */
-    private int mSequence;
-    public int getSequence() { return mSequence; }
-
     public PendingModifications() { }
-    public PendingModifications(int seqno) { mSequence = seqno; }
 
     public boolean hasNotifications() {
-        return ((imNotifications != null && imNotifications.size() > 0) ||
-                (deleted  != null && deleted.size() > 0) ||
-                (created  != null && created.size() > 0) ||
-                (modified != null && modified.size() > 0));
+        return (deleted  != null && deleted.size() > 0) ||
+               (created  != null && created.size() > 0) ||
+               (modified != null && modified.size() > 0);
     }
 
-    public void addIMNotification(IMNotification not) {
-        if (imNotifications == null) 
-            imNotifications = new LinkedList<IMNotification>();
-        imNotifications.add(not);
+    public int getNotificationCount() {
+        int count = 0;
+        if (deleted != null)   count += deleted.size();
+        if (created != null)   count += created.size();
+        if (modified != null)  count += modified.size();
+        return count;
     }
-    
+
     public void recordCreated(MailItem item) {
 //        ZimbraLog.mailbox.debug("--> NOTIFY: created " + item.getId());
         if (created == null)
@@ -125,7 +115,7 @@ public final class PendingModifications {
     public void recordDeleted(List<Integer> ids, int typesMask) {
         changedTypes |= typesMask;
         for (Integer id : ids) 
-            delete(id,id);
+            delete(id, id);
     }
 
     public void recordDeleted(MailItem item) {
@@ -135,14 +125,13 @@ public final class PendingModifications {
 
     private void delete(Integer key, Object value) {
 //      ZimbraLog.mailbox.debug("--> NOTIFY: deleted " + key);
-      if (created != null)
-          if (created.remove(key) != null)
-              return;
-      if (modified != null)
-          modified.remove(key);
-      if (deleted == null)
-          deleted = new HashMap<Integer, Object>();
-      deleted.put(key, value);
+        if (created != null && created.remove(key) != null)
+            return;
+        if (modified != null)
+            modified.remove(key);
+        if (deleted == null)
+            deleted = new HashMap<Integer, Object>();
+        deleted.put(key, value);
     }
 
     public void recordModified(Mailbox mbox, int reason) {
@@ -157,13 +146,13 @@ public final class PendingModifications {
     private void recordModified(Integer key, Object item, int reason) {
 //        ZimbraLog.mailbox.debug("--> NOTIFY: modified " + key + " (" + reason + ')');
         Change chg = null;
-        if (created != null && created.containsKey(key))
+        if (created != null && created.containsKey(key)) {
             return;
-        else if (deleted != null && deleted.containsKey(key))
+        } else if (deleted != null && deleted.containsKey(key)) {
             return;
-        else if (modified == null)
+        } else if (modified == null) {
             modified = new HashMap<Integer, Change>();
-        else {
+        } else {
             chg = modified.get(key);
             if (chg != null) {
                 chg.what = item;
@@ -174,17 +163,18 @@ public final class PendingModifications {
             chg = new Change(item, reason);
         modified.put(key, chg);
     }
-    
-    public void add(PendingModifications other) {
+
+    void add(PendingModifications other) {
         changedTypes |= other.changedTypes;
         
-        // XXX: should constrain to folders, tags, and stuff relevant to the current query?
         if (other.deleted != null) {
-            for (Object obj : other.deleted.values())
+            for (Object obj : other.deleted.values()) {
+                // note that deleted MailItems are just added as IDs for concision
                 if (obj instanceof MailItem)
-                    recordDeleted((MailItem) obj);
+                    recordDeleted(((MailItem) obj).getId(), (byte) 0);
                 else if (obj instanceof Integer)
                     recordDeleted((Integer) obj, (byte) 0);
+            }
         }
 
         if (other.created != null) {
@@ -193,16 +183,12 @@ public final class PendingModifications {
         }
 
         if (other.modified != null) {
-            for (Change chg : other.modified.values())
+            for (Change chg : other.modified.values()) {
                 if (chg.what instanceof MailItem)
                     recordModified((MailItem) chg.what, chg.why);
                 else if (chg.what instanceof Mailbox)
                     recordModified((Mailbox) chg.what, chg.why);
-        }
-        
-        if (other.imNotifications != null) {
-            for (IMNotification not : other.imNotifications) 
-                addIMNotification(not);
+            }
         }
     }
     
@@ -211,6 +197,5 @@ public final class PendingModifications {
         deleted = null;  
         modified = null;
         changedTypes = 0;
-        imNotifications = null;
     }
 }
