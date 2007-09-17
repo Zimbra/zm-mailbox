@@ -116,6 +116,8 @@ public class LC {
     public static final KnownKey zimbra_im_chat_flush_time;
     public static final KnownKey zimbra_im_chat_close_time;
 
+    public static final KnownKey zimbra_session_max_pending_notifications;
+
     public static final KnownKey stats_img_folder;
 
     public static final KnownKey ldap_host;
@@ -458,6 +460,11 @@ public class LC {
              "How frequently (seconds) are open IM chats written to the store");
         zimbra_im_chat_close_time = new KnownKey("zimbra_im_chat_close_time", "3600", 
              "How long (seconds) will the server wait to close idle IM chat sessions");
+
+        zimbra_session_max_pending_notifications = new KnownKey("zimbra_session_max_pending_notifications");
+        zimbra_session_max_pending_notifications.setDefault("400");
+        zimbra_session_max_pending_notifications.setDoc("Maximum number of pending notifications that can be queued " +
+                "in a SOAP session before the queue is purged and the client is told their state is invalid");
 
         stats_img_folder = new KnownKey("stats_img_folder");
         stats_img_folder.setDefault("${zimbra_home}" + FS + "logger" + FS + "db" + FS + "work");
