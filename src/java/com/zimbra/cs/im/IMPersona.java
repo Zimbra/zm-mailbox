@@ -901,13 +901,21 @@ public class IMPersona extends ClassLogger {
     }
     
     public void setPrivacyList(PrivacyList pl) {
+        // figure out what name to use
+        String plName = pl.getName();
+        if (plName == null) {
+            plName = mDefaultPrivacyListName;
+            if (plName == null)
+                plName = "default";
+        }
+        
         // update privacy list
         {
             IQ set = new IQ();
             set.setType(Type.set);
             org.dom4j.Element query = set.setChildElement("query", "jabber:iq:privacy");
             org.dom4j.Element list= query.addElement("list");
-            list.addAttribute("name", pl.getName());
+            list.addAttribute("name", plName);
             for (PrivacyListEntry e : pl) {
                 org.dom4j.Element item = list.addElement("item");
                 item.addAttribute("type", "jid");
@@ -927,13 +935,14 @@ public class IMPersona extends ClassLogger {
             }
             xmppRoute(set);
         }
-        
+
+        // if the default list wasn't already set, then set this list as the default
         if (mDefaultPrivacyListName == null) {
             IQ set = new IQ();
             set.setType(Type.set);
             org.dom4j.Element query = set.setChildElement("query", "jabber:iq:privacy");
             org.dom4j.Element defaultElt = query.addElement("default");
-            defaultElt.addAttribute("name", pl.getName());
+            defaultElt.addAttribute("name", plName);
             xmppRoute(set);
         }
     }

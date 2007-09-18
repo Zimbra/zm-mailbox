@@ -48,7 +48,7 @@ public class IMSetPrivacyList extends IMDocumentHandler {
         
         Element list = request.getElement(IMConstants.E_LIST);
         
-        PrivacyList pl = new PrivacyList(list.getAttribute(IMConstants.A_NAME));
+        PrivacyList pl = new PrivacyList(list.getAttribute(IMConstants.A_NAME, null));
         
         for (Iterator<Element> iter = list.elementIterator(IMConstants.E_ITEM); iter.hasNext();) {
             Element item = iter.next();
@@ -76,6 +76,6 @@ public class IMSetPrivacyList extends IMDocumentHandler {
             persona.setPrivacyList(pl);
         }
         
-        return zsc.createElement(IMConstants.IM_UPDATE_PRIVACY_LIST_RESPONSE);
+        return zsc.createElement(IMConstants.IM_SET_PRIVACY_LIST_RESPONSE);
     }
 }

@@ -129,15 +129,16 @@ IMJoinChat -- join a multi-user chat you have been invited to
 
 IMGetPrivacyList -- request the privacy list
 -----------------
-<IMGetPrivacyListRequest/>
-// response in 'privacy' notification below
+<IMGetPrivacyListRequest [name="list_name"]/> // gets default list if
+                                              // no name specified
+   // response in 'privacy' notification below
 <IMGetPrivacyListResponse/>
 
 
 IMSetPrivacyList -- sets the list
 -------------------
-<IMUpdatePrivacyListRequest>
-   <list name="name">
+<IMSetPrivacyListRequest>
+   <list [name="name"]> // use default list if no name specified
       [
          // Entries are evaluated by the server in increasing order (1 then 2 then 3 ...)
          //
@@ -148,9 +149,9 @@ IMSetPrivacyList -- sets the list
          <item action="allow|deny" order="UNIQUE_POSITIVE_INTEGER" addr="address OR domain"/>
       ]*
    </list>
-</IMUpdatePrivacyListRequest>
+</IMSetPrivacyListRequest>
 
-<IMUpdatePrivacyListResponse/>
+<IMSetPrivacyListResponse/>
 
 
 IMGatewayList - gateways to external IM services
