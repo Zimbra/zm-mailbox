@@ -116,6 +116,8 @@ public class UserServlet extends ZimbraServlet {
 
     public static final String SERVLET_PATH = "/home";
 
+    public static final String QP_AUTHTOKEN = "authToken";
+    
     public static final String QP_FMT = "fmt"; // format query param
     
     public static final String QP_ZLV = "zlv"; // zip level query param
@@ -166,9 +168,11 @@ public class UserServlet extends ZimbraServlet {
 
     public static final String AUTH_BASIC = "ba"; // basic auth
 
+    public static final String AUTH_QUERYPARAM = "qp"; // query parameter
+
     public static final String AUTH_NO_SET_COOKIE = "nsc"; // don't set auth token cookie after basic auth
 
-    public static final String AUTH_DEFAULT = "co,ba"; // both
+    public static final String AUTH_DEFAULT = "co,ba,qp"; // all three
 
     private HashMap<String, Formatter> mFormatters;
     private HashMap<String, Formatter> mDefaultFormatters;
@@ -264,6 +268,23 @@ public class UserServlet extends ZimbraServlet {
                 }
             }
 
+            // check query string
+            if (context.queryParamAuthAllowed()) {
+                String auth = context.params.get(QP_AUTHTOKEN);
+                if (auth != null) {
+                    try {
+                        AuthToken at = AuthToken.getAuthToken(auth);
+                        if (!at.isExpired()) {
+                            context.qpAuthHappened = true;
+                            context.authTokenCookie = at.getEncoded();
+                            context.authAccount = Provisioning.getInstance().get(AccountBy.id, at.getAccountId());
+                        }
+                    } catch (AuthTokenException e) {
+                    }
+                    return;
+                }
+            }
+            
             // fallback to basic auth
             if (context.basicAuthAllowed()) {
                 context.authAccount = basicAuthRequest(context.req, context.resp, false);
@@ -674,6 +695,7 @@ public class UserServlet extends ZimbraServlet {
         public Formatter formatter;        
         public boolean cookieAuthHappened;
         public boolean basicAuthHappened;
+        public boolean qpAuthHappened;
         public String accountPath;
         public String authTokenCookie;
         public String itemPath;
@@ -815,6 +837,10 @@ public class UserServlet extends ZimbraServlet {
             return getAuth().indexOf(AUTH_BASIC) != -1;
         }
 
+        public boolean queryParamAuthAllowed() {
+            return getAuth().indexOf(AUTH_QUERYPARAM) != -1;
+        }
+        
         public String getAuth() {
             String a = params.get(QP_AUTH);
             return (a == null || a.length() == 0) ? AUTH_DEFAULT : a;
