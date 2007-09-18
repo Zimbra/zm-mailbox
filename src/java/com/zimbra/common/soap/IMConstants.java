@@ -52,8 +52,8 @@ public class IMConstants {
     public static final QName IM_GET_PRIVACY_LIST_REQUEST = QName.get("IMGetPrivacyListRequest", NAMESPACE);
     public static final QName IM_GET_PRIVACY_LIST_RESPONSE = QName.get("IMGetPrivacyListResponse", NAMESPACE);
     
-    public static final QName IM_UPDATE_PRIVACY_LIST_REQUEST = QName.get("IMUpdatePrivacyListRequest", NAMESPACE);
-    public static final QName IM_UPDATE_PRIVACY_LIST_RESPONSE = QName.get("IMUpdatePrivacyListResponse", NAMESPACE);
+    public static final QName IM_SET_PRIVACY_LIST_REQUEST = QName.get("IMSetPrivacyListRequest", NAMESPACE);
+    public static final QName IM_SET_PRIVACY_LIST_RESPONSE = QName.get("IMSetPrivacyListResponse", NAMESPACE);
 
     public static final QName IM_GATEWAY_LIST_REQUEST = QName.get("IMGatewayListRequest", NAMESPACE);
     public static final QName IM_GATEWAY_LIST_RESPONSE = QName.get("IMGatewayListResponse", NAMESPACE);
