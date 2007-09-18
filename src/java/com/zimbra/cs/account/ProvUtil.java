@@ -1766,9 +1766,10 @@ public class ProvUtil implements DebugListener {
             boolean isTarget = server.getBooleanAttr(Provisioning.A_zimbraReverseProxyLookupTarget, true);
             if (isTarget) {
                 String serviceName = server.getAttr(Provisioning.A_zimbraServiceHostname, null);
-                System.out.println(REVERSE_PROXY_PROTO + serviceName + ":" + REVERSE_PROXY_PORT + REVERSE_PROXY_PATH);
+                System.out.print(REVERSE_PROXY_PROTO + serviceName + ":" + REVERSE_PROXY_PORT + REVERSE_PROXY_PATH + " ");
             }
         }
+        System.out.println();
     }
     
     private void doGetAllMtaAuthURLs(String[] args) throws ServiceException {
@@ -1776,9 +1777,10 @@ public class ProvUtil implements DebugListener {
         for (Server server : servers ) {
             boolean isTarget = server.getBooleanAttr(Provisioning.A_zimbraMtaAuthTarget, true);
             if (isTarget) {
-                System.out.println(URLUtil.getAdminURL(server));
+                System.out.print(URLUtil.getAdminURL(server) + " ");
             }
         }
+        System.out.println();
     }
 
     private void doHelp(String[] args) {
