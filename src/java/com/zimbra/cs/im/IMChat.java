@@ -47,6 +47,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ClassLogger;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.im.IMMessage.Lang;
 import com.zimbra.cs.im.IMMessage.TextPart;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -777,18 +779,22 @@ public class IMChat extends ClassLogger {
         if (mLastFlushSeqNo >= getHighestSeqNo())
             return;
 
-        ZimbraLog.im.info("Flushing chat: "+toString());
-
         try {
-            ParsedMessage pm  = ChatWriter.writeChat(this);
-            Message msg;
-            try {
-                msg = mMailbox.updateOrCreateChat(null, pm, mSavedChatId);
-            } catch(NoSuchItemException e) {
-                // they deleted the chat from their mailbox.  Bad user.
-                msg = mMailbox.updateOrCreateChat(null, pm, -1);
+            Account acct = mMailbox.getAccount();
+            if (acct.getBooleanAttr(Provisioning.A_zimbraPrefIMLogChats, true)) {
+
+                ZimbraLog.im.debug("Flushing chat: "+toString());
+                
+                ParsedMessage pm  = ChatWriter.writeChat(this);
+                Message msg;
+                try {
+                    msg = mMailbox.updateOrCreateChat(null, pm, mSavedChatId);
+                } catch(NoSuchItemException e) {
+                    // they deleted the chat from their mailbox.  Bad user.
+                    msg = mMailbox.updateOrCreateChat(null, pm, -1);
+                }
+                mSavedChatId = msg.getId();
             }
-            mSavedChatId = msg.getId();
         } catch (ServiceException e) {
             System.out.println("Caught ServiceException " + e);
             e.printStackTrace();

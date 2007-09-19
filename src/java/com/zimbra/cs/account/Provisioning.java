@@ -1308,6 +1308,7 @@ public abstract class Provisioning {
     public static final String A_zimbraPrefIMNotifyStatus   = "zimbraPrefIMNotifyStatus";
     public static final String A_zimbraPrefIMAutoLogin      = "zimbraPrefIMAutoLogin";
     public static final String A_zimbraPrefIMInstantNotify  = "zimbraPrefIMInstantNotify";
+    public static final String A_zimbraPrefIMLogChats       = "zimbraPrefIMLogChats";
     
     /*
      * spam report headers

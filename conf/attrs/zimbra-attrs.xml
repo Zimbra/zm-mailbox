@@ -2631,6 +2631,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether POP3 SASL GSSAPI is enabled for a given server</desc>
 </attr>
 
+<attr id="556" name="zimbraPrefIMLogChats" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether to log IM chats to the Chats folder</desc>
+</attr>  
+
 
 </attrs>
 
