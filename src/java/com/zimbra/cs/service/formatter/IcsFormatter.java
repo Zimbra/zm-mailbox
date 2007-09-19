@@ -125,7 +125,7 @@ public class IcsFormatter extends Formatter {
         // use that charset in String() constructor.
         Reader reader = new StringReader(new String(body, Mime.P_CHARSET_UTF8));
         ZVCalendar ical = ZCalendarBuilder.build(reader);
-        List<Invite> invites = Invite.createFromCalendar(context.authAccount, null, ical, false);
+        List<Invite> invites = Invite.createFromCalendar(context.targetAccount, null, ical, false);
         for (Invite inv : invites) {
             // handle missing UIDs on remote calendars by generating them as needed
             if (inv.getUid() == null)

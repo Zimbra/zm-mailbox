@@ -206,16 +206,17 @@ public class CalendarCollection extends Collection {
 		
 		Provisioning prov = Provisioning.getInstance();
 		try {
-			byte[] item = ByteUtil.getContent(req.getInputStream(), req.getContentLength());
+            String user = ctxt.getUser();
+            Account account = prov.get(AccountBy.name, user);
+            if (account == null)
+                throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
+
+            byte[] item = ByteUtil.getContent(req.getInputStream(), req.getContentLength());
 			ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(new InputStreamReader(new ByteArrayInputStream(item)));
-			List<Invite> invites = Invite.createFromCalendar(ctxt.getAuthAccount(), 
+			List<Invite> invites = Invite.createFromCalendar(account,
 					findSummary(vcalendar), 
 					vcalendar, 
 					true);
-			String user = ctxt.getUser();
-			Account account = prov.get(AccountBy.name, user);
-			if (account == null)
-				throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
 
 			String uid = findEventUid(invites);
 			if (!uid.equals(name)) {
