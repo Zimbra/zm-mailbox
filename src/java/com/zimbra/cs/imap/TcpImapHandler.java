@@ -229,7 +229,7 @@ public class TcpImapHandler extends ImapHandler {
                     } catch (IOException ioe) { }
                 }
             }
-        }.run();
+        }.start();
 
         try {
             if (mOutputStream != null) {
