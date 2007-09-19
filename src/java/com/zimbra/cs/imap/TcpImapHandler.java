@@ -26,6 +26,7 @@ package com.zimbra.cs.imap;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -37,6 +38,7 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -210,11 +212,33 @@ public class TcpImapHandler extends ImapHandler {
             mSelectedFolder = null;
         }
 
+        // wait at most 10 seconds for the untagged BYE to be sent, then force the stream closed
+        new Thread() {
+            @Override public void run() {
+                if (mOutputStream == null)
+                    return;
+
+                try {
+                    sleep(10 * Constants.MILLIS_PER_SECOND);
+                } catch (InterruptedException ie) { }
+
+                OutputStream os = mOutputStream;
+                if (os != null) {
+                    try {
+                        os.close();
+                    } catch (IOException ioe) { }
+                }
+            }
+        }.run();
+
         try {
             if (mOutputStream != null) {
                 if (sendBanner) {
-                    if (!mGoodbyeSent)
-                         sendUntagged(mConfig.getGoodbye(), true);
+                    if (!mGoodbyeSent) {
+                        try {
+                            sendUntagged(mConfig.getGoodbye(), true);
+                        } catch (IOException ioe) { }
+                    }
                     mGoodbyeSent = true;
                 }
                 mOutputStream.close();
