@@ -183,7 +183,7 @@ public class CalendarCollection extends Collection {
 		 */
 		String etag = req.getHeader(DavProtocol.HEADER_IF_MATCH);
 		boolean useEtag = (etag != null);
-		
+
 		//String noneMatch = req.getHeader(DavProtocol.HEADER_IF_NONE_MATCH);
 		
 		if (name.endsWith(CalendarObject.CAL_EXTENSION))
@@ -192,15 +192,16 @@ public class CalendarCollection extends Collection {
 		Provisioning prov = Provisioning.getInstance();
 		try {
 			byte[] item = ctxt.getRequestData();
+            String user = ctxt.getUser();
+            Account account = prov.get(AccountBy.name, user);
+            if (account == null)
+                throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
+
 			ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(new InputStreamReader(new ByteArrayInputStream(item)));
-			List<Invite> invites = Invite.createFromCalendar(ctxt.getAuthAccount(), 
+			List<Invite> invites = Invite.createFromCalendar(account,
 					findSummary(vcalendar), 
 					vcalendar, 
 					true);
-			String user = ctxt.getUser();
-			Account account = prov.get(AccountBy.name, user);
-			if (account == null)
-				throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
 
 			String uid = findEventUid(invites);
 			if (!uid.equals(name)) {
@@ -277,7 +278,7 @@ public class CalendarCollection extends Collection {
 		FreeBusy fb = mbox.getFreeBusy(range.getStart(), range.getEnd());
 		return fb.toVCalendar(FreeBusy.Method.REPLY, ctxt.getAuthAccount().getName(), mbox.getAccount().getName(), null);
 	}
-	
+		
 	/*
 	 * to workaround the pre release iCal bugs
 	 */

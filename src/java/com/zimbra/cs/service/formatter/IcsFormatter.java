@@ -27,7 +27,6 @@ package com.zimbra.cs.service.formatter;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.HttpUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.HttpUtil.Browser;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.index.MailboxIndex;
@@ -83,7 +82,7 @@ public class IcsFormatter extends Formatter {
             if (iterator instanceof QueryResultIterator)
                 ((QueryResultIterator) iterator).finished();
         }
-
+        
         // todo: get from folder name
         String filename = context.itemPath;
         if (filename == null || filename.length() == 0)
@@ -139,7 +138,7 @@ public class IcsFormatter extends Formatter {
             // and add the invite to the calendar!
             mFolder.getMailbox().addInvite(mCtxt.opContext, inv, mFolder.getId(), false, null);
         }
-    }
+        }
 
     public void saveCallback(byte[] body, Context context, String contentType, Folder folder, String filename) throws ServiceException, IOException {
         boolean continueOnError = context.ignoreAndContinueOnError();
@@ -148,6 +147,6 @@ public class IcsFormatter extends Formatter {
         Reader reader = new StringReader(new String(body, Mime.P_CHARSET_UTF8));
         List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(reader);
         ImportInviteVisitor visitor = new ImportInviteVisitor(context, folder);
-        Invite.createFromCalendar(context.authAccount, null, icals, true, continueOnError, visitor);
+        Invite.createFromCalendar(context.targetAccount, null, icals, true, continueOnError, visitor);
     }
 }
