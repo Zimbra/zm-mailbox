@@ -172,6 +172,7 @@ public class ZMailbox {
         private String mAuthToken;
         private String mVirtualHost;
         private String mUri;
+        private String mClientIp;
         private String mProxyHost;
         private int mProxyPort;
         private String mProxyUser;
@@ -221,6 +222,9 @@ public class ZMailbox {
         public int getProxyPort() { return mProxyPort; }
         public String getProxyUser() { return mProxyUser; }
         public String getProxyPass() { return mProxyPass; }
+
+        public String getClientIp() { return mClientIp; }
+        public void setClientIp(String clientIp) { mClientIp = clientIp; }
 
         public String getAccount() { return mAccount; }
         public void setAccount(String account) { mAccount = account; }
@@ -309,6 +313,7 @@ public class ZMailbox {
     private LRUMap mContactCache;
     private ZFilterRules mRules;
     private ZAuthResult mAuthResult;
+    private String mClientIp;
     private ZContactAutoCompleteCache mAutoCompleteCache;
     private List<ZPhoneAccount> mPhoneAccounts;
     private Map<String, ZPhoneAccount> mPhoneAccountMap;
@@ -333,6 +338,7 @@ public class ZMailbox {
      */
     public static void changePassword(Options options) throws ServiceException {
         ZMailbox mailbox = new ZMailbox();
+        mailbox.mClientIp = options.getClientIp(); 
         mailbox.mNotifyPreference = NotifyPreference.fromOptions(options);
         mailbox.initPreAuth(options);
         mailbox.changePassword(options.getAccount(), options.getAccountBy(), options.getPassword(), options.getNewPassword(), options.getVirtualHost());
@@ -352,6 +358,9 @@ public class ZMailbox {
     		mHandlers.add(options.getEventHandler());
 
         mNotifyPreference = NotifyPreference.fromOptions(options);
+
+        mClientIp = options.getClientIp();
+        
         initPreAuth(options);
         if (options.getAuthToken() != null) {
             if (options.getAuthAuthToken())
@@ -479,6 +488,7 @@ public class ZMailbox {
         		options.getProxyUser(), options.getProxyPass());
         mTransport.setUserAgent("zclient", BuildInfo.VERSION);
         mTransport.setMaxNotifySeq(0);
+        mTransport.setClientIp(mClientIp);
         if (options.getUserAgentName() != null && options.getUserAgentVersion() != null)
         	mTransport.setUserAgent(options.getUserAgentName(), options.getUserAgentVersion());
         if (options.getTimeout() > -1)
