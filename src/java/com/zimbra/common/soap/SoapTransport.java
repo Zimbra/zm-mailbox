@@ -29,10 +29,9 @@
 
 package com.zimbra.common.soap;
 
-import org.dom4j.DocumentException;
-
 import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.Element.XMLElement;
+import org.dom4j.DocumentException;
 
 import java.io.IOException;
 
@@ -49,6 +48,7 @@ public abstract class SoapTransport {
     private String mTargetAcctId = null;
     private String mTargetAcctName = null;    
     private String mSessionId = null;
+    private String mClientIp = null;
     private long mMaxNotifySeq = -1;
     private Element mContext = null;
     private String mUserAgentName;
@@ -119,11 +119,19 @@ public abstract class SoapTransport {
     public void setSessionId(String sessionId) {
         mSessionId = sessionId;
     }
+
     public String getSessionId() { return mSessionId; }
 
+    public void setClientIp(String clientIp) {
+        mClientIp = clientIp;
+    }
+
+    public String getClientIp() { return mClientIp; }
+    
     public void setMaxNotifySeq(long seq) {
         mMaxNotifySeq = seq;
     }
+
     public long getMaxNotifySeq() { return mMaxNotifySeq; }
     
     /**
@@ -131,7 +139,8 @@ public abstract class SoapTransport {
      * @param name the SOAP client name
      * @param version the SOAP client version number, or <code>null</code>
      */
-    public void setUserAgent(String name, String version) {
+    public void setUserAgent(String name, String
+        version) {
         mUserAgentName = name;
         mUserAgentVersion = version;
     }
