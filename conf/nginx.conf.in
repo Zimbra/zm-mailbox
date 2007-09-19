@@ -18,6 +18,17 @@ mail {
 #   Memcache configuration
     memcache_servers localhost:11211;
 
+#   The time to live (TTL) for an entry added to the memcached server
+#   This value represents the amount of time that the route information
+#   that is cached into the memcached servers will be available, before
+#   the memcached daemon expires it
+#   Memcached expects the TTL for an entry to be specified in seconds,
+#   therefore any value specified in milliseconds here will be rounded
+#   up to the next integer value in seconds. If not specified, the TTL
+#   defaults to 0, which indicates an infinite time to live for the
+#   routing information
+#    memcache_entry_ttl             3600s;
+
 #   http authentication configuration
     auth_http localhost:7072/service/extension/nginx-lookup;
 
