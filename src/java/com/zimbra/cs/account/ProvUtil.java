@@ -200,7 +200,7 @@ public class ProvUtil implements DebugListener {
         EXIT("exit", "quit", "", Category.MISC, 0, 0),
         FLUSH_CACHE("flushCache", "fc", "{skin|locale|account|config|cos|domain|server|zimlet} [name1|id1 [name2|id2...]]", Category.MISC, 1, Integer.MAX_VALUE),
         GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa", "{domain|id} {name} {name|id|foreignPrincipal} {timestamp|0} {expires|0}", Category.MISC, 5, 5),
-        GENERATE_DOMAIN_PRE_AUTH_KEY("generateDomainPreAuthKey", "gdpak", "{domain|id}", Category.MISC, 1, 1),
+        GENERATE_DOMAIN_PRE_AUTH_KEY("generateDomainPreAuthKey", "gdpak", "[-f] {domain|id}", Category.MISC, 1, 2),
         GET_ACCOUNT("getAccount", "ga", "{name@domain|id} [attr1 [attr2...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
         GET_DATA_SOURCES("getDataSources", "gds", "{name@domain|id} [arg1 [arg2...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),                
         GET_IDENTITIES("getIdentities", "gid", "{name@domain|id} [arg1 [arg...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
@@ -1726,13 +1726,32 @@ public class ProvUtil implements DebugListener {
     }
 
     private void doGenerateDomainPreAuthKey(String[] args) throws ServiceException {
-        String key = args[1];
+        String key = null;
+        boolean force = false;
+        if (args.length == 3) {
+            if (args[1].equals("-f")) 
+                force = true;
+            else  {
+                usage();
+                return;
+            }
+            key = args[2];            
+        } else {
+            key = args[1];  
+        }
+        
         Domain domain = lookupDomain(key);
+        String curPreAuthKey = domain.getAttr(Provisioning.A_zimbraPreAuthKey);
+        if (curPreAuthKey != null && !force)
+            throw ServiceException.INVALID_REQUEST("pre auth key exists for doamin " + key + ", use command -f option to force overwriting the existing key", null);
+        
         String preAuthKey = PreAuthKey.generateRandomPreAuthKey();
         HashMap<String,String> attrs = new HashMap<String,String>();
         attrs.put(Provisioning.A_zimbraPreAuthKey, preAuthKey);
         mProv.modifyAttrs(domain, attrs);
         System.out.printf("preAuthKey: %s\n", preAuthKey);
+        if (curPreAuthKey != null)
+            System.out.printf("previous preAuthKey: %s\n", curPreAuthKey);
     }
 
     private void doGenerateDomainPreAuth(String[] args) throws ServiceException {
