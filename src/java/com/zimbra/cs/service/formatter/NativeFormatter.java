@@ -27,6 +27,7 @@ package com.zimbra.cs.service.formatter;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.util.List;
 
 import javax.mail.MessagingException;
@@ -39,6 +40,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Contact;
@@ -219,7 +221,20 @@ public class NativeFormatter extends Formatter {
 
         resp.setContentType(contentType);
 
-        ByteUtil.copy(is, true, resp.getOutputStream(), false);
+        // defang when the html attachment was requested with disposition inline
+        if (contentType.startsWith(Mime.CT_TEXT_HTML) &&
+                disp.equals(Part.INLINE)) {
+            String charset = Mime.getCharset(contentType);
+            String content;
+            if (charset != null && !charset.equals("")) {
+                Reader reader = Mime.getTextReader(is, contentType);
+                content = HtmlDefang.defang(reader, false);
+            } else {
+                content = HtmlDefang.defang(is, false);
+            }
+            resp.getWriter().write(content);
+        } else
+            ByteUtil.copy(is, true, resp.getOutputStream(), false);
     }
 
     public boolean canBeBlocked() {
