@@ -148,6 +148,7 @@ public class ZMailbox {
         private String mAuthToken;
         private String mVirtualHost;
         private String mUri;
+        private String mClientIp;
         private SoapTransport.DebugListener mDebugListener;
         private String mTargetAccount;
         private AccountBy mTargetAccountBy = AccountBy.name;
@@ -170,6 +171,9 @@ public class ZMailbox {
             mAuthToken = authToken;
             mUri = uri;
         }
+
+        public String getClientIp() { return mClientIp; }
+        public void setClientIp(String clientIp) { mClientIp = clientIp; }
 
         public String getAccount() { return mAccount; }
         public void setAccount(String account) { mAccount = account; }
@@ -233,6 +237,7 @@ public class ZMailbox {
     private LRUMap mContactCache;
     private ZFilterRules mRules;
     private ZAuthResult mAuthResult;
+    private String mClientIp;
     
     private long mSize;
 
@@ -254,6 +259,7 @@ public class ZMailbox {
      */
     public static void changePassword(Options options) throws ServiceException {
         ZMailbox mailbox = new ZMailbox();
+        mailbox.mClientIp = options.getClientIp();
         mailbox.initPreAuth(options.getUri(), options.getDebugListener());
         mailbox.changePassword(options.getAccount(), options.getAccountBy(), options.getPassword(), options.getNewPassword(), options.getVirtualHost());
     }
@@ -265,7 +271,8 @@ public class ZMailbox {
         mSearchConvPagerCache = new ZSearchPagerCache(MAX_NUM_CACHED_SEARCH_CONV_PAGERS, false);
         mHandlers.add(mSearchConvPagerCache);
         mMessageCache = new LRUMap(MAX_NUM_CACHED_MESSAGES);
-        mContactCache = new LRUMap(MAX_NUM_CACHED_CONTACTS);        
+        mContactCache = new LRUMap(MAX_NUM_CACHED_CONTACTS);
+        mClientIp = options.getClientIp();
         
         if (options.getEventHandler() != null)
     		mHandlers.add(options.getEventHandler());
@@ -371,6 +378,7 @@ public class ZMailbox {
         mTransport = new SoapHttpTransport(uri);
         mTransport.setUserAgent("zclient", BuildInfo.VERSION);
         mTransport.setMaxNoitfySeq(0);
+        mTransport.setClientIp(mClientIp);
         if (mAuthToken != null)
             mTransport.setAuthToken(mAuthToken);
     }    

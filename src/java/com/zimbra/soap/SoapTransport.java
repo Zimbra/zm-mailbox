@@ -29,12 +29,9 @@
 
 package com.zimbra.soap;
 
-import com.zimbra.soap.SoapProtocol;
-import com.zimbra.soap.SoapFaultException;
+import org.dom4j.DocumentException;
 
 import java.io.IOException;
-
-import org.dom4j.DocumentException;
 
 /**
  * Abstract class for sending a soap message.
@@ -48,6 +45,7 @@ public abstract class SoapTransport {
     private String mTargetAcctId = null;
     private String mTargetAcctName = null;    
     private String mSessionId = null;
+    private String mClientIp = null;
     private long mMaxNotifySeq = -1;
     private Element mContext = null;
     private String mUserAgentName;
@@ -119,6 +117,12 @@ public abstract class SoapTransport {
         mSessionId = sessionId;
     }
     public String getSessionId() { return mSessionId; }
+
+    public void setClientIp(String clientIp) {
+        mClientIp = clientIp;
+    }
+
+    public String getClientIp() { return mClientIp; }
 
     public void setMaxNoitfySeq(long seq) {
         mMaxNotifySeq = seq;

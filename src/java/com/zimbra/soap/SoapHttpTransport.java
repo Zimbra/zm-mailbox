@@ -29,8 +29,6 @@
 
 package com.zimbra.soap;
 
-import java.io.IOException;
-
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpConnectionManager;
 import org.apache.commons.httpclient.HttpException;
@@ -39,7 +37,7 @@ import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 
-import com.zimbra.soap.SoapProtocol;
+import java.io.IOException;
 
 /**
  */
@@ -179,7 +177,10 @@ public class SoapHttpTransport extends SoapTransport {
     	// when we set the request body
     	PostMethod method = new PostMethod(mUri);
     	method.setRequestHeader("Content-type", getSoapProtocol().getContentType());
-    	String soapMessage = generateSoapMessage(document, raw, noSession, noNotify, requestedAccountId);
+        if (getClientIp() != null)
+            method.setRequestHeader("X-Originating-IP", getClientIp());
+        
+        String soapMessage = generateSoapMessage(document, raw, noSession, noNotify, requestedAccountId);
     	method.setRequestBody(soapMessage);
     	method.setRequestContentLength(EntityEnclosingMethod.CONTENT_LENGTH_AUTO);
     	
