@@ -159,8 +159,9 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
      *  messages as \Recent. */
     private void snapshotRECENT() {
         try {
-            if (isWritable())
-                mMailbox.recordImapSession(mFolderId);
+            Mailbox mbox = mMailbox;
+            if (mbox != null && isWritable())
+                mbox.recordImapSession(mFolderId);
         } catch (MailServiceException.NoSuchItemException nsie) {
             // don't log if the session expires because the folder was deleted out from under it
         } catch (Throwable t) {

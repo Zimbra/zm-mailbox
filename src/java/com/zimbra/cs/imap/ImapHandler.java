@@ -3116,43 +3116,48 @@ public abstract class ImapHandler extends ProtocolHandler {
 
 
     public void sendNotifications(boolean notifyExpunges, boolean flush) throws IOException {
-        if (mSelectedFolder == null)
+        ImapFolder i4folder = mSelectedFolder;
+        if (i4folder == null)
+            return;
+
+        Mailbox mbox = i4folder.getMailbox();
+        if (mbox == null)
             return;
 
         // is this the right thing to synchronize on?
-        synchronized (mSelectedFolder.getMailbox()) {
+        synchronized (mbox) {
             // FIXME: notify untagged NO if close to quota limit
 
-            if (mSelectedFolder.areTagsDirty()) {
-                sendUntagged("FLAGS (" + StringUtil.join(" ", mSelectedFolder.getFlagList(false)) + ')');
-                mSelectedFolder.cleanTags();
+            if (i4folder.areTagsDirty()) {
+                sendUntagged("FLAGS (" + StringUtil.join(" ", i4folder.getFlagList(false)) + ')');
+                i4folder.cleanTags();
             }
 
-            int oldRecent = mSelectedFolder.getRecentCount();
-            boolean removed = false, received = mSelectedFolder.checkpointSize();
+            int oldRecent = i4folder.getRecentCount();
+            boolean removed = false, received = i4folder.checkpointSize();
             if (notifyExpunges) {
-                for (Integer index : mSelectedFolder.collapseExpunged()) {
+                for (Integer index : i4folder.collapseExpunged()) {
                     sendUntagged(index + " EXPUNGE");  removed = true;
                 }
             }
-            mSelectedFolder.checkpointSize();
+            i4folder.checkpointSize();
 
             // notify of any message flag changes
-            boolean sendModseq = mSelectedFolder.isExtensionActivated(ActivatedExtension.CONDSTORE);
-            for (Iterator<ImapFolder.DirtyMessage> it = mSelectedFolder.dirtyIterator(); it.hasNext(); ) {
+            boolean sendModseq = i4folder.isExtensionActivated(ActivatedExtension.CONDSTORE);
+            for (Iterator<ImapFolder.DirtyMessage> it = i4folder.dirtyIterator(); it.hasNext(); ) {
                 ImapFolder.DirtyMessage dirty = it.next();
                 if (dirty.i4msg.isAdded())
                     dirty.i4msg.setAdded(false);
                 else
-                    sendUntagged(dirty.i4msg.sequence + " FETCH (" + dirty.i4msg.getFlags(mSelectedFolder) +
+                    sendUntagged(dirty.i4msg.sequence + " FETCH (" + dirty.i4msg.getFlags(i4folder) +
                                  (sendModseq && dirty.modseq > 0 ? " MODSEQ (" + dirty.modseq + ')' : "") + ')');
             }
-            mSelectedFolder.clearDirty();
+            i4folder.clearDirty();
 
             if (received || removed)
-                sendUntagged(mSelectedFolder.getSize() + " EXISTS");
-            if (received || oldRecent != mSelectedFolder.getRecentCount())
-                sendUntagged(mSelectedFolder.getRecentCount() + " RECENT");
+                sendUntagged(i4folder.getSize() + " EXISTS");
+            if (received || oldRecent != i4folder.getRecentCount())
+                sendUntagged(i4folder.getRecentCount() + " RECENT");
 
             if (flush)
                 flushOutput();
