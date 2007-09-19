@@ -87,8 +87,12 @@ class Soap12Protocol extends SoapProtocol {
     	if (!isFault(fault))
     		return new SoapFaultException("not a soap fault ", fault);
     	
+    	boolean isReceiversFault = false;
     	Element code = fault.getOptionalElement(CODE);
-        boolean isReceiversFault = RECEIVER_CODE.equals(code == null ? null : code.getQName());
+    	if (code != null) {
+    		Element value = code.getOptionalElement(VALUE);
+    		isReceiversFault = RECEIVER_CODE.getQualifiedName().equals(value == null ? null : value.getTextTrim());
+    	}
 
     	String reasonValue;
     	Element reason = fault.getOptionalElement(REASON);
