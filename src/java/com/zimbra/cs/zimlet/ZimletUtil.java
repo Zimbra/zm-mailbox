@@ -1402,6 +1402,9 @@ public class ZimletUtil {
 			localInstall = true;
 			argPos++;
 		}
+        if (argPos >= args.length)
+            usage();
+
 		int cmd = lookupCmd(args[argPos++]);
 		try {
 			switch (cmd) {
