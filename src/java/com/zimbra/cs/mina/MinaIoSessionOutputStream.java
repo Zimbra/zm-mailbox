@@ -61,7 +61,7 @@ public class MinaIoSessionOutputStream extends MinaOutputStream {
 
     @Override
     protected void flushBytes(ByteBuffer bb) {
-        mSession.write(bb);
+        mSession.write(MinaUtil.toMinaByteBuffer(bb));
     }
     
 }

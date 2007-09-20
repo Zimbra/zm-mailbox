@@ -265,6 +265,8 @@ public class TcpImapHandler extends ImapHandler {
 
     @Override
     protected void authenticated(Authenticator auth) throws IOException {
+        sendCapability();
+        auth.sendSuccess();
         if (auth.isEncryptionEnabled()) {
             // Switch to encrypted streams
             mInputStream = new TcpServerInputStream(

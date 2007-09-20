@@ -28,7 +28,9 @@ package com.zimbra.cs.imap;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.krb5.Krb5Login;
+import com.zimbra.cs.mina.MinaServer;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.mina.common.IoSession;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
@@ -63,12 +65,11 @@ public class GssAuthenticator extends Authenticator {
     private static final boolean DEBUG = true;
 
     // SASL properties to enable encryption
-    private static final Map<String, String> ENCRYPTION_SASL_PROPS =
+    private static final Map<String, String> QOP_PROPS =
         new HashMap<String, String>();
     
     static {
-        ENCRYPTION_SASL_PROPS.put(Sasl.QOP,
-            QOP_AUTH + "," + QOP_AUTH_INT + "," + QOP_AUTH_CONF);
+        QOP_PROPS.put(Sasl.QOP, QOP_AUTH + "," + QOP_AUTH_INT + "," + QOP_AUTH_CONF);
         if (DEBUG) {
             System.setProperty("sun.security.krb5.debug", "true");
             System.setProperty("sun.security.jgss.debug", "true");
@@ -99,7 +100,7 @@ public class GssAuthenticator extends Authenticator {
             return false;
         }
         final Map<String, String> props = getSaslProperties();
-        if (DEBUG) {
+        if (DEBUG && props != null) {
             String qop = props.get(Sasl.QOP);
             debug("Sent QOP = " + (qop != null ? qop : "auth"));
         }
@@ -122,9 +123,7 @@ public class GssAuthenticator extends Authenticator {
 
     private Map<String, String> getSaslProperties() {
         // Don't enable encryption if SSL is being used
-        // TODO Enable encryption for MinaImapHandler
-        return mHandler.isSSLEnabled() || mHandler instanceof MinaImapHandler ?
-            null : ENCRYPTION_SASL_PROPS;
+        return mHandler.isSSLEnabled() ? null : QOP_PROPS;
     }
     
     @Override
@@ -143,7 +142,10 @@ public class GssAuthenticator extends Authenticator {
         }
         if (isComplete()) {
             // Authentication successful
-            debug("QOP = %s", mSaslServer.getNegotiatedProperty(Sasl.QOP));
+            debug("Negitiated QOP = %s",
+                mSaslServer.getNegotiatedProperty(Sasl.QOP));
+            debug("Raw send size = %s",
+                mSaslServer.getNegotiatedProperty(Sasl.RAW_SEND_SIZE));
             logout();
         } else {
             assert !mSaslServer.isComplete();
@@ -167,7 +169,12 @@ public class GssAuthenticator extends Authenticator {
     public OutputStream wrap(OutputStream os) {
         return new SaslOutputStream(os, mSaslServer);
     }
-    
+
+    @Override
+    public void addSaslFilter(IoSession session) {
+        MinaServer.addSaslFilter(session, mSaslServer);
+    }
+
     private void logout() {
         try {
             mLoginContext.logout();

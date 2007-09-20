@@ -25,16 +25,16 @@
 
 package com.zimbra.cs.mina;
 
+import org.apache.mina.common.ByteBuffer;
+import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
-import org.apache.mina.filter.codec.ProtocolEncoder;
 import org.apache.mina.filter.codec.ProtocolDecoder;
-import org.apache.mina.filter.codec.ProtocolEncoderAdapter;
-import org.apache.mina.filter.codec.ProtocolEncoderOutput;
 import org.apache.mina.filter.codec.ProtocolDecoderAdapter;
 import org.apache.mina.filter.codec.ProtocolDecoderOutput;
-import org.apache.mina.common.IoSession;
+import org.apache.mina.filter.codec.ProtocolEncoder;
+import org.apache.mina.filter.codec.ProtocolEncoderAdapter;
+import org.apache.mina.filter.codec.ProtocolEncoderOutput;
 
-import java.nio.ByteBuffer;
 import java.io.IOException;
 
 /*
@@ -59,15 +59,7 @@ class MinaCodecFactory implements ProtocolCodecFactory {
     private class Encoder extends ProtocolEncoderAdapter {
         public void encode(IoSession session, Object msg,
                            ProtocolEncoderOutput out) {
-            ByteBuffer bb;
-            if (msg instanceof String) {
-                bb = MinaUtil.toByteBuffer((String) msg);
-            } else if (msg instanceof ByteBuffer) {
-                bb = (ByteBuffer) msg;
-            } else {
-                throw new AssertionError();
-            }
-            out.write(org.apache.mina.common.ByteBuffer.wrap(bb));
+            out.write((ByteBuffer) msg);
         }
     }
 
@@ -77,7 +69,7 @@ class MinaCodecFactory implements ProtocolCodecFactory {
         public void decode(IoSession session,
                            org.apache.mina.common.ByteBuffer in,
                            ProtocolDecoderOutput out) throws IOException {
-            ByteBuffer bb = in.buf();
+            java.nio.ByteBuffer bb = in.buf();
             while (bb.hasRemaining()) {
                 if (req == null) {
                     req = mServer.createRequest(MinaIoHandler.getHandler(session));

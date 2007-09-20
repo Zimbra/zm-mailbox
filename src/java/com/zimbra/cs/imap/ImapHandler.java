@@ -194,7 +194,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     private boolean continueAuthentication(byte[] response) throws IOException {
         mAuthenticator.handle(response);
         if (mAuthenticator.isComplete()) {
-            if (mCredentials != null) {
+            if (isAuthenticated()) {
                 // Authentication successful
                 authenticated(mAuthenticator);
             }
@@ -606,10 +606,14 @@ public abstract class ImapHandler extends ProtocolHandler {
             return State.LOGOUT;
         else if (mSelectedFolder != null)
             return State.SELECTED;
-        else if (mCredentials != null)
+        else if (isAuthenticated())
             return State.AUTHENTICATED;
         else
             return State.NOT_AUTHENTICATED;
+    }
+
+    protected boolean isAuthenticated() {
+        return mCredentials != null;
     }
 
     boolean checkState(String tag, State required) throws IOException {
@@ -660,7 +664,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     private OperationContext getContext() throws ServiceException {
-        if (mCredentials == null)
+        if (!isAuthenticated())
             throw ServiceException.AUTH_REQUIRED();
         return mCredentials.getContext().setSession(mSelectedFolder);
     }
@@ -678,7 +682,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         "RIGHTS=ektx", "SASL-IR", "UIDPLUS", "UNSELECT", "WITHIN", "X-DRAFT-I05-SEARCHRES"
     };
 
-    private void sendCapability() throws IOException {
+    protected void sendCapability() throws IOException {
         // [IMAP4rev1]        RFC 3501: Internet Message Access Protocol - Version 4rev1
         // [LOGINDISABLED]    RFC 3501: Internet Message Access Protocol - Version 4rev1
         // [STARTTLS]         RFC 3501: Internet Message Access Protocol - Version 4rev1
@@ -705,7 +709,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         // [WITHIN]           RFC 5032: WITHIN Search Extension to the IMAP Protocol
         // [X-DRAFT-I05-SEARCHRES]  draft-melnikov-imap-search-res-05: IMAP extension for referencing the last SEARCH result
 
-        boolean authenticated = mCredentials != null;
+        boolean authenticated = isAuthenticated();
         String nologin  = mStartedTLS || authenticated || mConfig.allowCleartextLogins() ? "" : " LOGINDISABLED";
         String starttls = mStartedTLS || authenticated || !extensionEnabled("STARTTLS")     ? "" : " STARTTLS";
         String plain    = !mStartedTLS || authenticated || !extensionEnabled("AUTH=PLAIN")  ? "" : " AUTH=PLAIN";
@@ -824,11 +828,21 @@ public abstract class ImapHandler extends ProtocolHandler {
             sendNO(tag, "cleartext logins disabled");
             return CONTINUE_PROCESSING;
         }
-        return login(username, "", password, "LOGIN", tag, null);
+        return login(username, password, tag);
     }
 
-    boolean login(String username, String authenticateId, String password,
-                  String command, String tag, Mechanism mechanism) throws IOException {
+    private boolean login(String username, String password, String tag) throws IOException {
+        boolean cont = authenticate(username, "", password, "LOGIN", tag, null);
+        if (isAuthenticated()) {
+            sendCapability();
+            sendOK(tag, "LOGIN completed");
+            enableInactivityTimer();
+        }
+        return cont;
+    }
+    
+    boolean authenticate(String username, String authenticateId, String password,
+                         String command, String tag, Mechanism mechanism) throws IOException {
         // the Windows Mobile 5 hacks are enabled by appending "/wm" to the username, etc.
         // TODO For GSSAPI, should enabled hack be applied to authenticateId
         // instead?
@@ -844,7 +858,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         try {
             Account account = mechanism == Mechanism.GSSAPI ?
                 authenticateKrb5(authenticateId, tag) :
-                authenticate(authenticateId, username, password, command, tag);
+                authenticate(username, authenticateId, password, command, tag);
             if (account == null) return CONTINUE_PROCESSING;
             ImapCredentials session = startSession(account, enabledHack, command, tag);
             if (session == null) return CONTINUE_PROCESSING;
@@ -859,17 +873,19 @@ public abstract class ImapHandler extends ProtocolHandler {
             return canContinue(e);
         }
 
-        sendCapability();
-        sendOK(tag, command + " completed");
-        enableInactivityTimer();
+        // sendCapability();
+        // sendOK(tag, command + " completed");
+        // enableInactivityTimer();
         return CONTINUE_PROCESSING;
     }
 
-    private Account authenticate(String authenticateId, String username,
-                                 String password, String command, String tag) throws ServiceException, IOException {
+    private Account authenticate(String username, String authenticateId,
+                                 String password, String command, String tag)
+            throws ServiceException, IOException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(AccountBy.name, username);
-        Account authacct = authenticateId.equals("") ? account : prov.get(AccountBy.name, authenticateId);
+        Account authacct = authenticateId.equals("") ?
+            account : prov.get(AccountBy.name, authenticateId);
         if (account == null || authacct == null) {
             sendNO(tag, command + " failed");
             return null;

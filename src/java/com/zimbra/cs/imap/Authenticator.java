@@ -25,6 +25,8 @@
 
 package com.zimbra.cs.imap;
 
+import org.apache.mina.common.IoSession;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -57,6 +59,10 @@ abstract class Authenticator {
     public OutputStream wrap(OutputStream os) {
         throw new UnsupportedOperationException();
     }
+
+    public void addSaslFilter(IoSession session) {
+        throw new UnsupportedOperationException();
+    }
     
     public String getTag() {
         return mTag;
@@ -76,19 +82,24 @@ abstract class Authenticator {
 
     protected boolean login(String authorizeId, String authenticateId,
                             String password) throws IOException {
-        mCanContinue = mHandler.login(authorizeId, authenticateId, password,
+        mCanContinue = mHandler.authenticate(authorizeId, authenticateId, password,
                                       "authentication", mTag, mMechanism);
         mComplete = true;
         return mHandler.getCredentials() != null;
     }
 
     protected void sendBadRequest() throws IOException {
-        mHandler.sendBAD(mTag, "malformed authentication request");
+        mHandler.sendBAD(mTag, "malformed GSSAPI authentication request");
         mComplete = true;
     }
 
     protected void sendFailed() throws IOException {
-        mHandler.sendNO(mTag, "authentication failed");
+        mHandler.sendNO(mTag, "GSSAPI authentication failed");
         mComplete = true;
     }
+
+    public void sendSuccess() throws IOException {
+        mHandler.sendOK(mTag, "GSSAPI authentication successful");
+    }
 }
+

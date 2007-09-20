@@ -80,7 +80,7 @@ public final class MinaUtil {
     public static ByteBuffer toByteBuffer(String s) {
         return put(ByteBuffer.allocate(s.length()), s);
     }
-    
+
     public static ByteBuffer put(ByteBuffer bb, String s) {
         bb = expand(bb, s.length());
         for (int i = 0; i < s.length(); i++) {
@@ -97,5 +97,9 @@ public final class MinaUtil {
         byte[] b = new byte[bb.limit() - bb.position()];
         bb.duplicate().get(b);
         return b;
+    }
+
+    public static org.apache.mina.common.ByteBuffer toMinaByteBuffer(ByteBuffer bb) {
+        return org.apache.mina.common.ByteBuffer.wrap(bb);
     }
 }

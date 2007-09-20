@@ -25,32 +25,32 @@
 
 package com.zimbra.cs.mina;
 
-import com.zimbra.cs.util.Zimbra;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Log;
 import com.zimbra.cs.server.Server;
 import com.zimbra.cs.server.ServerConfig;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.util.Zimbra;
+import org.apache.mina.common.DefaultIoFilterChainBuilder;
+import org.apache.mina.common.IoHandler;
+import org.apache.mina.common.IoSession;
+import org.apache.mina.filter.SSLFilter;
+import org.apache.mina.filter.codec.ProtocolCodecFilter;
+import org.apache.mina.filter.executor.ExecutorFilter;
+import org.apache.mina.transport.socket.nio.SocketAcceptor;
+import org.apache.mina.transport.socket.nio.SocketAcceptorConfig;
 
-import javax.net.ssl.SSLContext;
 import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
-import java.security.KeyStore;
+import javax.security.sasl.SaslServer;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.channels.ServerSocketChannel;
+import java.security.KeyStore;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import org.apache.mina.transport.socket.nio.SocketAcceptorConfig;
-import org.apache.mina.transport.socket.nio.SocketAcceptor;
-import org.apache.mina.filter.SSLFilter;
-import org.apache.mina.filter.executor.ExecutorFilter;
-import org.apache.mina.filter.codec.ProtocolCodecFilter;
-import org.apache.mina.common.IoHandler;
-import org.apache.mina.common.DefaultIoFilterChainBuilder;
-import org.apache.mina.common.IoSession;
 
 /**
  * Base class for MINA-based IMAP/POP3/LMTP servers. Handles creation of new
@@ -178,6 +178,12 @@ public abstract class MinaServer implements Server {
         SSLFilter filter = new SSLFilter(getSSLContext());
         session.getFilterChain().addFirst("ssl", filter);
         session.setAttribute(SSLFilter.DISABLE_ENCRYPTION_ONCE, true);
+    }
+
+    public static void addSaslFilter(IoSession session, SaslServer server) {
+        SaslFilter filter = new SaslFilter(server);
+        session.getFilterChain().addFirst("sasl", filter);
+        session.setAttribute(SaslFilter.DISABLE_ENCRYPTION_ONCE, true);
     }
     
     /**

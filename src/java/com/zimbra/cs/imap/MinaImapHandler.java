@@ -33,6 +33,7 @@ import com.zimbra.cs.mina.MinaHandler;
 import com.zimbra.cs.mina.MinaIoSessionOutputStream;
 import com.zimbra.cs.mina.MinaRequest;
 import com.zimbra.cs.mina.MinaServer;
+import com.zimbra.cs.mina.MinaUtil;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.Config;
@@ -41,6 +42,7 @@ import org.apache.mina.common.IoSession;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 
 public class MinaImapHandler extends ImapHandler implements MinaHandler {
     private IoSession mSession;
@@ -227,8 +229,12 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
     }
 
     @Override
-    protected void authenticated(Authenticator auth) {
-        // TODO Enable Sasl filter
+    protected void authenticated(Authenticator auth) throws IOException {
+        sendCapability();
+        if (auth.isEncryptionEnabled()) {
+            auth.addSaslFilter(mSession);
+        }
+        auth.sendSuccess();
     }
 
     @Override
@@ -239,8 +245,8 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
     @Override
     void sendLine(String line, boolean flush) throws IOException {
         if (mSession == null) throw new IOException("Stream is closed");
-        mSession.write(line + "\r\n");
-        if (flush) flushOutput();
+        ByteBuffer bb = MinaUtil.toByteBuffer(line + "\r\n");
+        mSession.write(MinaUtil.toMinaByteBuffer(bb));
     }
 
     private void info(String msg, Throwable e) {
