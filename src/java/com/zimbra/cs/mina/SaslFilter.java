@@ -27,9 +27,11 @@ package com.zimbra.cs.mina;
 
 import org.apache.mina.common.ByteBuffer;
 import org.apache.mina.common.IoFilterAdapter;
+import org.apache.mina.common.IoFilterChain;
 import org.apache.mina.common.IoSession;
 
 import javax.security.sasl.Sasl;
+import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -161,13 +163,12 @@ public class SaslFilter extends IoFilterAdapter {
     }
 
     @Override
-    public void filterClose(NextFilter nextFilter, IoSession session)
-            throws IOException {
-        debug("filterClose: enter");
+    public void onPostRemove(IoFilterChain parent, String name,
+                             NextFilter nextFilter) throws IOException {
+        debug("onPostRemove: enter");
         mSaslServer.dispose();
-        nextFilter.filterClose(session);
     }
-    
+
     private static void debug(String format, Object... args) {
         if (DEBUG) {
             System.out.printf("[DEBUG SaslFilter] " + format + "\n", args);

@@ -25,8 +25,7 @@
 
 package com.zimbra.cs.imap;
 
-import org.apache.mina.common.IoSession;
-
+import javax.security.sasl.SaslServer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -60,9 +59,9 @@ abstract class Authenticator {
         throw new UnsupportedOperationException();
     }
 
-    public void addSaslFilter(IoSession session) {
-        throw new UnsupportedOperationException();
-    }
+    public SaslServer getSaslServer() { return null; }
+
+    public void dispose() {}
     
     public String getTag() {
         return mTag;
@@ -80,26 +79,35 @@ abstract class Authenticator {
         return mMechanism;
     }
 
-    protected boolean login(String authorizeId, String authenticateId,
-                            String password) throws IOException {
-        mCanContinue = mHandler.authenticate(authorizeId, authenticateId, password,
-                                      "authentication", mTag, mMechanism);
+    public boolean isAuthenticated() {
+        return isComplete() && mHandler.getCredentials() != null;
+    }
+    
+    protected boolean authenticate(String authorizeId, String authenticateId,
+                                   String password) throws IOException {
+        mCanContinue = mHandler.authenticate(
+            authorizeId, authenticateId, password, description(), mTag, mMechanism);
         mComplete = true;
-        return mHandler.getCredentials() != null;
+        return isAuthenticated();
     }
 
+    protected String description() {
+        return getMechanism() + " authentication";
+    }
+    
     protected void sendBadRequest() throws IOException {
-        mHandler.sendBAD(mTag, "malformed GSSAPI authentication request");
+        mHandler.sendBAD(mTag, "malformed " + description() + " request");
         mComplete = true;
     }
 
     protected void sendFailed() throws IOException {
-        mHandler.sendNO(mTag, "GSSAPI authentication failed");
+        mHandler.sendNO(mTag, description() + " failed");
         mComplete = true;
     }
 
     public void sendSuccess() throws IOException {
-        mHandler.sendOK(mTag, "GSSAPI authentication successful");
+        assert isAuthenticated();
+        mHandler.sendOK(mTag, description() + " successful");
     }
 }
 

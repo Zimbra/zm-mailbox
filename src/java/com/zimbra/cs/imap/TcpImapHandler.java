@@ -142,7 +142,7 @@ public class TcpImapHandler extends ImapHandler {
                 }
             }
 
-            if (mAuthenticator != null)
+            if (mAuthenticator != null && !mAuthenticator.isComplete())
                 keepGoing = continueAuthentication(req);
             else
                 keepGoing = executeRequest(req);
@@ -248,6 +248,10 @@ public class TcpImapHandler extends ImapHandler {
                 mInputStream.close();
                 mInputStream = null;
             }
+            if (mAuthenticator != null) {
+                mAuthenticator.dispose();
+                mAuthenticator = null;
+            }
         } catch (IOException e) {
             INFO("exception while closing connection", e);
         }
@@ -264,7 +268,7 @@ public class TcpImapHandler extends ImapHandler {
     }
 
     @Override
-    protected void authenticated(Authenticator auth) throws IOException {
+    protected void completeAuthentication(Authenticator auth) throws IOException {
         sendCapability();
         auth.sendSuccess();
         if (auth.isEncryptionEnabled()) {

@@ -194,10 +194,12 @@ public abstract class ImapHandler extends ProtocolHandler {
     private boolean continueAuthentication(byte[] response) throws IOException {
         mAuthenticator.handle(response);
         if (mAuthenticator.isComplete()) {
-            if (isAuthenticated()) {
+            if (mAuthenticator.isAuthenticated()) {
                 // Authentication successful
-                authenticated(mAuthenticator);
+                completeAuthentication(mAuthenticator);
+                return CONTINUE_PROCESSING;
             }
+            // Authentication failed
             boolean canContinue = mAuthenticator.canContinue();
             mAuthenticator = null;
             return canContinue;
@@ -873,9 +875,6 @@ public abstract class ImapHandler extends ProtocolHandler {
             return canContinue(e);
         }
 
-        // sendCapability();
-        // sendOK(tag, command + " completed");
-        // enableInactivityTimer();
         return CONTINUE_PROCESSING;
     }
 
@@ -3191,7 +3190,7 @@ public abstract class ImapHandler extends ProtocolHandler {
 
     abstract protected void enableInactivityTimer();
 
-    abstract protected void authenticated(Authenticator auth) throws IOException;
+    abstract protected void completeAuthentication(Authenticator auth) throws IOException;
     
     void sendIdleUntagged() throws IOException                   { sendUntagged("NOOP", true); }
 

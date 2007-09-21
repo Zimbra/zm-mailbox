@@ -109,7 +109,9 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
 
     private boolean processRequest(MinaImapRequest req) throws IOException {
         if (!checkAccountStatus()) return false;
-        if (mAuthenticator != null) return continueAuthentication(req);
+        if (mAuthenticator != null && !mAuthenticator.isComplete()) {
+            return continueAuthentication(req);
+        }
         try {
             return executeRequest(req);
         } catch (ImapParseException e) {
@@ -229,10 +231,10 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
     }
 
     @Override
-    protected void authenticated(Authenticator auth) throws IOException {
+    protected void completeAuthentication(Authenticator auth) throws IOException {
         sendCapability();
         if (auth.isEncryptionEnabled()) {
-            auth.addSaslFilter(mSession);
+            MinaServer.addSaslFilter(mSession, auth.getSaslServer());
         }
         auth.sendSuccess();
     }

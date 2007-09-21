@@ -28,9 +28,7 @@ package com.zimbra.cs.imap;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.krb5.Krb5Login;
-import com.zimbra.cs.mina.MinaServer;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.mina.common.IoSession;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
@@ -54,6 +52,7 @@ import java.util.Map;
 public class GssAuthenticator extends Authenticator {
     private SaslServer mSaslServer;
     private LoginContext mLoginContext;
+    private boolean mEncryptionEnabled;
 
     private static final String MECHANISM = "GSSAPI";
     private static final String PROTOCOL = "imap";
@@ -72,8 +71,8 @@ public class GssAuthenticator extends Authenticator {
         new HashMap<String, String>();
     
     static {
-        ENCRYPTION_PROPS.put(Sasl.QOP, QOP_AUTH + "," + QOP_AUTH_INT + "," +
-                                       QOP_AUTH_CONF);
+        ENCRYPTION_PROPS.put(Sasl.QOP,
+            QOP_AUTH + "," + QOP_AUTH_INT + "," + QOP_AUTH_CONF);
         ENCRYPTION_PROPS.put(Sasl.MAX_BUFFER, String.valueOf(MAX_RECEIVE_SIZE));
         ENCRYPTION_PROPS.put(Sasl.RAW_SEND_SIZE, String.valueOf(MAX_SEND_SIZE));
         if (DEBUG) {
@@ -129,7 +128,7 @@ public class GssAuthenticator extends Authenticator {
     }
 
     protected Map<String, String> getSaslProperties() {
-        // Don't enable encryption if SSL is being used
+        // Don't offer encryption if SSL is enabled
         return mHandler.isSSLEnabled() ? null : ENCRYPTION_PROPS;
     }
     
@@ -138,6 +137,7 @@ public class GssAuthenticator extends Authenticator {
         if (isComplete()) {
             throw new IllegalStateException("Authentication already completed");
         }
+        // Evaluate client response and get challenge bytes
         byte[] bytes;
         try {
             bytes = mSaslServer.evaluateResponse(data);
@@ -147,26 +147,42 @@ public class GssAuthenticator extends Authenticator {
             logout();
             return;
         }
-        if (isComplete()) {
-            // Authentication successful
-            if (DEBUG) {
-                for (String name : getSaslProperties().keySet()) {
-                    debug("Negotiated property %s = %s", name,
-                          mSaslServer.getNegotiatedProperty(name));
-                }
-            }
-            logout();
-        } else {
+        // If exchange not complete, send additional challenge
+        if (!isComplete()) {
             assert !mSaslServer.isComplete();
-            String s = new String(Base64.encodeBase64(bytes), "utf-8");
+            String s = new String(Base64.encodeBase64(bytes), "US-ASCII");
             mHandler.sendContinuation(s);
+            return;
+        }
+        // Authentication complete, so finish up
+        assert mSaslServer.isComplete();
+        if (DEBUG) {
+            for (String name : getSaslProperties().keySet()) {
+                debug("Negotiated property %s = %s", name,
+                    mSaslServer.getNegotiatedProperty(name));
+            }
+        }
+        // Log ourselves out of the KDC
+        logout();
+        // If authentication failed, dispose of SaslServer instance
+        if (!isAuthenticated()) {
+            debug("Authentication failed");
+            dispose();
+            return;
+        }
+        // Authentication successful, so check if encryption enabled
+        String qop = (String) mSaslServer.getNegotiatedProperty(Sasl.QOP);
+        if (QOP_AUTH_INT.equals(qop) || QOP_AUTH_CONF.equals(qop)) {
+            debug("SASL encryption enabled (%s)", qop);
+            mEncryptionEnabled = true;
+        } else {
+            dispose(); // No need for SaslServer any longer
         }
     }
 
     @Override
     public boolean isEncryptionEnabled() {
-        String qop = (String) mSaslServer.getNegotiatedProperty(Sasl.QOP);
-        return QOP_AUTH_INT.equals(qop) || QOP_AUTH_CONF.equals(qop);
+        return mEncryptionEnabled;
     }
 
     @Override                       
@@ -180,10 +196,20 @@ public class GssAuthenticator extends Authenticator {
     }
 
     @Override
-    public void addSaslFilter(IoSession session) {
-        MinaServer.addSaslFilter(session, mSaslServer);
+    public SaslServer getSaslServer() {
+        return mSaslServer;
     }
 
+    @Override
+    public void dispose() {
+        debug("dispose called");
+        try {
+            mSaslServer.dispose();
+        } catch (SaslException e) {
+            ZimbraLog.imap.warn("SaslServer.dispose() failed", e);
+        }
+    }
+    
     private void logout() {
         try {
             mLoginContext.logout();
@@ -204,8 +230,8 @@ public class GssAuthenticator extends Authenticator {
             AuthorizeCallback cb = (AuthorizeCallback) cbs[0];
             debug("gss authorization_id = %s", cb.getAuthorizationID());
             debug("gss authentication_id = %s", cb.getAuthenticationID());
-            cb.setAuthorized(
-                login(cb.getAuthorizationID(), cb.getAuthenticationID(), null));
+            cb.setAuthorized(authenticate(cb.getAuthorizationID(),
+                                          cb.getAuthenticationID(), null));
         }
     }
 
