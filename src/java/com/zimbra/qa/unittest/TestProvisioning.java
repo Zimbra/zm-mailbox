@@ -148,8 +148,12 @@ public class TestProvisioning extends TestCase {
         SPECIAL_CHARS_ALLOWED_IN_USER_PART = "/";
         
         COS_NAME = "cos-" + TEST_ID;
-        DOMAIN_NAME = "domain-" + TEST_ID + ".ldap-test-domain";
-        DOMAIN_NAME_SPECIAL_CHARS = "domain-" + SPECIAL_CHARS_ALLOWED_IN_DOMAIN + "-" + TEST_ID + ".ldap-test-domain";
+        // DOMAIN_NAME = "domain-" + TEST_ID + ".ldap-test-domain";
+        // DOMAIN_NAME_SPECIAL_CHARS = "domain-" + SPECIAL_CHARS_ALLOWED_IN_DOMAIN + "-" + TEST_ID + ".ldap-test-domain";
+        DOMAIN_NAME = TestProvisioningUtil.baseDomainName("domain", TEST_ID);
+        DOMAIN_NAME_SPECIAL_CHARS = TestProvisioningUtil.baseDomainName("domain-" + SPECIAL_CHARS_ALLOWED_IN_DOMAIN, TEST_ID);
+
+        
         OTHER_DOMAIN_NAME = "other-" + DOMAIN_NAME;
         SERVER_NAME = "server-" + TEST_ID;
         ZIMLET_NAME = "zimlet-" + TEST_ID;
@@ -1544,6 +1548,21 @@ public class TestProvisioning extends TestCase {
         assertEquals(newVal, value); // now we should see the new value
     }
     
+    private void loadTest() throws Exception {
+        System.out.println("Testing load");
+        
+        // create a new domain
+        String domainName = "load-test." + DOMAIN_NAME;
+        Domain domain = mProv.createDomain(domainName, new HashMap<String, Object>());
+        
+        int numAccts = 5000;
+        for (int a=0; a<numAccts; a++) {
+            String acctName = "acct-" + (a+1) + "@" + domainName;
+            System.out.println("creating account" + acctName);
+            Account acct = mProv.createAccount(acctName, PASSWORD, new HashMap<String, Object>());
+        }
+    }
+    
     private String execute() throws Exception {
         
         // mCustomProvTester.cleanup();
@@ -1579,6 +1598,8 @@ public class TestProvisioning extends TestCase {
         familyTest();
         flushCacheTest();
 
+        // loadTest();
+        
         // ========================================================================
         System.out.println("\nPress enter to delete entries created by the test");
         

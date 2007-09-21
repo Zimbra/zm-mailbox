@@ -40,7 +40,7 @@ import com.zimbra.cs.account.NamedEntry;
 
 public class TestProvisioningUtil extends TestCase {
     
-    private static String NAME_ROOT_DOMAIN     = "ldap-test-domain";
+    private static String NAME_ROOT_DOMAIN     = "ldaptest";
     
     public static String genTestId() {
         Date date = new Date();
