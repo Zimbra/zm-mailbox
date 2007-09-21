@@ -478,6 +478,10 @@ public class AttributeManager {
  	   return mFlagToAttrsMap.get(AttributeFlag.domainAdminModifiable).contains(attr);
     }
     
+    private boolean hasFlag(AttributeFlag flag, String attr) {
+        return mFlagToAttrsMap.get(flag).contains(attr);
+    }
+    
     public Set<String> getAttrsWithFlag(AttributeFlag flag) {
  	   return mFlagToAttrsMap.get(flag);
     }
@@ -609,6 +613,21 @@ public class AttributeManager {
         Option iopt = new Option("i", "input", true,"attrs definition xml input file (can repeat)");
         iopt.setArgs(Option.UNLIMITED_VALUES);
         mOptions.addOption(iopt);
+        
+        /*
+         * options for the listAttrs action
+         */
+        Option copt = new Option("c", "inclass", true, "list attrs in class  (can repeat)");
+        copt.setArgs(Option.UNLIMITED_VALUES);
+        mOptions.addOption(copt);
+        
+        Option nopt = new Option("n", "notinclass", true, "not list attrs in class  (can repeat)");
+        nopt.setArgs(Option.UNLIMITED_VALUES);
+        mOptions.addOption(nopt);
+        
+        Option fopt = new Option("f", "flags", true, "flags to print  (can repeat)");
+        fopt.setArgs(Option.UNLIMITED_VALUES);
+        mOptions.addOption(fopt);
     }
     
     private static void usage(String errmsg) {
@@ -640,7 +659,11 @@ public class AttributeManager {
         return cl;
     }
 
-    private enum Action { generateLdapSchema, generateGlobalConfigLdif, generateDefaultCOSLdif, dump }
+    private enum Action { generateLdapSchema, 
+                          generateGlobalConfigLdif, 
+                          generateDefaultCOSLdif, 
+                          dump,
+                          listAttrs}
     
     public static void main(String[] args) throws IOException, ServiceException {
         CliUtil.toolSetup();
@@ -656,7 +679,7 @@ public class AttributeManager {
         }
 
         AttributeManager am = null;
-        if (action != Action.dump) {
+        if (action != Action.dump && action != Action.listAttrs) {
             if (!cl.hasOption('i')) usage("no input attribute xml files specified");
             am = new AttributeManager(cl.getOptionValue('i'));
             if (am.hasErrors()) {
@@ -686,6 +709,9 @@ public class AttributeManager {
             break;
         case dump:
             dumpSchema(pw);
+            break;
+        case listAttrs:
+            listAttrs(pw, cl.getOptionValues('c'), cl.getOptionValues('n'), cl.getOptionValues('f'));
             break;
         }
 
@@ -1041,6 +1067,52 @@ public class AttributeManager {
         } finally {
             LdapUtil.closeContext(dc);
         }
+    }
+    
+    private static void listAttrs(PrintWriter pw, String[] inClass, String[] notInClass, String[] printFlags) throws ServiceException {
+        AttributeManager am = AttributeManager.getInstance();
+        
+        if (inClass == null)
+            usage("no class specified");
+        
+        Set<String> attrsInClass = new HashSet<String>();
+        for (String c : inClass) {
+            AttributeClass ac = AttributeClass.valueOf(c);
+            SetUtil.union(attrsInClass, am.getAttrsInClass(ac));
+        }
+        
+        Set<String> attrsNotInClass = new HashSet<String>();
+        if (notInClass != null) {
+            for (String c : notInClass) {
+                AttributeClass ac = AttributeClass.valueOf(c);
+                SetUtil.union(attrsNotInClass, am.getAttrsInClass(ac));
+            }
+        }
+        
+        attrsInClass = SetUtil.subtract(attrsInClass, attrsNotInClass);
+        
+        List<String> list = new ArrayList<String>(attrsInClass);
+        Collections.sort(list);
+        
+        for (String a : list) {
+            StringBuffer flags = new StringBuffer();
+            if (printFlags != null) {
+                for (String f : printFlags) {
+                    AttributeFlag af = AttributeFlag.valueOf(f);
+                    if (am.hasFlag(af, a)) {
+                        if (flags.length()>0)
+                            flags.append(", ");
+                        flags.append(af.name());
+                    }
+                }
+                
+                if (flags.length() > 0) {
+                    flags.insert(0, "(").append(")");
+                }
+            }
+            System.out.println(a + " " + flags);
+        }
+            
     }
     
     static class CLOptions { 
