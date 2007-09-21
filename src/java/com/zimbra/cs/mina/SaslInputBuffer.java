@@ -67,7 +67,7 @@ public class SaslInputBuffer {
     
     public byte[] unwrap(SaslServer server) throws SaslException {
         if (!isComplete()) {
-            throw new IllegalStateException("Buffer is not complete");
+            throw new IllegalStateException("input not complete");
         }
         return server.unwrap(mDataBuffer.array(), 0,
                              mDataBuffer.position());

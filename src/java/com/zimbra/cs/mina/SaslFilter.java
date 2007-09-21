@@ -163,7 +163,9 @@ public class SaslFilter extends IoFilterAdapter {
     @Override
     public void filterClose(NextFilter nextFilter, IoSession session)
             throws IOException {
+        debug("filterClose: enter");
         mSaslServer.dispose();
+        nextFilter.filterClose(session);
     }
     
     private static void debug(String format, Object... args) {
