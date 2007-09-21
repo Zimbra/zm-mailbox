@@ -28,7 +28,6 @@ package com.zimbra.qa.unittest;
 import java.util.ArrayList;
 import java.util.List;
 
-import junit.framework.Test;
 import junit.framework.TestResult;
 import junit.framework.TestSuite;
 
@@ -44,7 +43,7 @@ import com.zimbra.common.util.ZimbraLog;
  */
 public class ZimbraSuite extends TestSuite
 {
-    private static final List<Class> sClasses = new ArrayList<Class>();
+    private static final List<Class<?>> sClasses = new ArrayList<Class<?>>();
     
     static {
         sClasses.add(TestWaitSet.class);
@@ -81,7 +80,6 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestDataSource.class);
         sClasses.add(TestPurge.class);
         sClasses.add(TestImapImport.class);
-        sClasses.add(TestImapImport.TearDown.class);
         sClasses.add(TestNotification.class);
         sClasses.add(TestMaxMessageSize.class);
         sClasses.add(TestMetadata.class);
@@ -90,11 +88,11 @@ public class ZimbraSuite extends TestSuite
     /**
      * Used by extensions to add additional tests to the main test suite.
      */
-    public static void addTest(Class clazz) {
+    public static void addTest(Class<?> clazz) {
         sClasses.add(clazz);
     }
     
-    public static void removeTest(Class clazz) {
+    public static void removeTest(Class<?> clazz) {
         sClasses.remove(clazz);
     }
 
@@ -106,7 +104,7 @@ public class ZimbraSuite extends TestSuite
                 if (test.indexOf('.') < 0) {
                     // short name...check the suite
                     boolean found = false;
-                    for (Class<Test> c : ZimbraSuite.sClasses) {
+                    for (Class<?> c : ZimbraSuite.sClasses) {
                         if (test.equals(c.getSimpleName())) {
                             suite.addTest(new TestSuite(c));
                         }
@@ -134,7 +132,7 @@ public class ZimbraSuite extends TestSuite
     public static TestResult runTestSuite(Element response) {
         TestSuite suite = new TestSuite();
         
-        for (Class c : ZimbraSuite.sClasses) {
+        for (Class<?> c : ZimbraSuite.sClasses) {
             suite.addTest(new TestSuite(c));
         }
         

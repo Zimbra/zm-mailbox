@@ -55,7 +55,7 @@ public class DbImapFolder {
         try {
             conn = DbPool.getConnection();
             stmt = conn.prepareStatement(
-                "SELECT item_id, local_path, remote_path " +
+                "SELECT item_id, local_path, remote_path, uid_validity " +
                 "FROM " + getTableName(mbox) +
                 " WHERE mailbox_id = ? AND data_source_id = ?");
 
@@ -67,8 +67,12 @@ public class DbImapFolder {
                 int itemId = rs.getInt("item_id");
                 String localPath = rs.getString("local_path");
                 String remotePath = rs.getString("remote_path");
+                Long uidValidity = rs.getLong("uid_validity");
+                if (rs.wasNull()) {
+                    uidValidity = null;
+                }
                 ImapFolder imapFolder =
-                    new ImapFolder(mbox.getId(), itemId, ds.getId(), localPath, remotePath);
+                    new ImapFolder(mbox.getId(), itemId, ds.getId(), localPath, remotePath, uidValidity);
                 imapFolders.add(imapFolder);
             }
             rs.close();
@@ -85,7 +89,8 @@ public class DbImapFolder {
         return imapFolders;
     }
     
-    public static ImapFolder createImapFolder(Mailbox mbox, DataSource ds, int itemId, String localPath, String remotePath)
+    public static ImapFolder createImapFolder(Mailbox mbox, DataSource ds, int itemId,
+                                              String localPath, String remotePath, long uidValidity)
     throws ServiceException
     {
         Connection conn = null;
@@ -95,17 +100,18 @@ public class DbImapFolder {
             conn = DbPool.getConnection();
             stmt = conn.prepareStatement(
                 "INSERT INTO " + getTableName(mbox) +
-                " (mailbox_id, item_id, data_source_id, local_path, remote_path) " +
-                "VALUES (?, ?, ?, ?, ?)");
+                " (mailbox_id, item_id, data_source_id, local_path, remote_path, uid_validity) " +
+                "VALUES (?, ?, ?, ?, ?, ?)");
             stmt.setInt(1, mbox.getId());
             stmt.setInt(2, itemId);
             stmt.setString(3, ds.getId());
             stmt.setString(4, localPath);
             stmt.setString(5, remotePath);
+            stmt.setLong(6, uidValidity);
             stmt.executeUpdate();
             conn.commit();
             
-            return new ImapFolder(mbox.getId(), itemId, ds.getId(), localPath, remotePath);
+            return new ImapFolder(mbox.getId(), itemId, ds.getId(), localPath, remotePath, uidValidity);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("Unable to store IMAP message data", e);
         } finally {
@@ -128,13 +134,14 @@ public class DbImapFolder {
             conn = DbPool.getConnection();
             stmt = conn.prepareStatement(
                 "UPDATE " + getTableName(mbox) +
-                " SET local_path = ?, remote_path = ?) " +
+                " SET local_path = ?, remote_path = ?, uid_validity = ? " +
                 "WHERE mailbox_id = ? AND data_source_id = ? AND item_id = ?");
             stmt.setString(1, imapFolder.getLocalPath());
             stmt.setString(2, imapFolder.getRemotePath());
-            stmt.setInt(3, mbox.getId());
-            stmt.setString(4, imapFolder.getDataSourceId());
-            stmt.setInt(5, imapFolder.getItemId());
+            stmt.setLong(3, imapFolder.getUidValidity());
+            stmt.setInt(4, mbox.getId());
+            stmt.setString(5, imapFolder.getDataSourceId());
+            stmt.setInt(6, imapFolder.getItemId());
             int numRows = stmt.executeUpdate();
             if (numRows != 1) {
                 throw ServiceException.FAILURE(

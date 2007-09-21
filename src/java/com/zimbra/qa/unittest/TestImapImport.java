@@ -112,7 +112,7 @@ extends TestCase {
     public void testImapImport()
     throws Exception {
         // Remote: add 1 message
-        ZimbraLog.test.debug("Testing adding message to remote inbox.");
+        ZimbraLog.test.info("Testing adding message to remote inbox.");
         String remoteQuery = "in:inbox msg1";
         TestUtil.insertMessage(mRemoteMbox, 1, NAME_PREFIX + " msg1");
         checkMsgCount(mRemoteMbox, remoteQuery, 1);
@@ -124,8 +124,9 @@ extends TestCase {
         checkMsgCount(mLocalMbox, localInboxQuery, 1);
         compare();
         
+        
         // Remote: flag message
-        ZimbraLog.test.debug("Testing flag.");
+        ZimbraLog.test.info("Testing flag.");
         List<ZMessage> msgs = TestUtil.search(mRemoteMbox, remoteQuery);
         assertEquals("Message count in remote inbox", 1, msgs.size());
         String remoteId = msgs.get(0).getId();
@@ -144,8 +145,9 @@ extends TestCase {
         assertTrue("Local message is flagged", msgs.get(0).isFlagged());
         compare();
         
+        
         // Remote: move to trash
-        ZimbraLog.test.debug("Testing remote move to trash.");
+        ZimbraLog.test.info("Testing remote move to trash.");
         mRemoteMbox.trashMessage(remoteId);
         checkMsgCount(mRemoteMbox, "in:trash", 1);
         checkMsgCount(mLocalMbox, "in:trash", 0);
@@ -153,8 +155,9 @@ extends TestCase {
         checkMsgCount(mLocalMbox, "in:" + DS_FOLDER_ROOT + "/Trash", 1);
         compare();
 
+        
         // Create folders on both sides
-        ZimbraLog.test.debug("Testing folder creation.");
+        ZimbraLog.test.info("Testing folder creation.");
         TestUtil.createFolder(mRemoteMbox, REMOTE_PATH_F1);
         TestUtil.createFolder(mRemoteMbox, REMOTE_PATH_F2);
         TestUtil.createFolder(mLocalMbox, LOCAL_PATH_F3);
@@ -168,12 +171,37 @@ extends TestCase {
         assertNotNull("Remote folder " + REMOTE_PATH_F4, mRemoteMbox.getFolderByPath(REMOTE_PATH_F4));
         compare();
         
+        
+        // Test UIDVALIDITY change
+        ZimbraLog.test.info("Testing UIDVALIDITY change.");
+        ZFolder localFolder1 = mLocalMbox.getFolderByPath(LOCAL_PATH_F1);
+        ZFolder remoteFolder1 = mRemoteMbox.getFolderByPath(REMOTE_PATH_F1);
+        
+        // Insert message into folder1 and remember original id
+        String subject = NAME_PREFIX + " msg2";
+        String originalId = TestUtil.insertMessage(mLocalMbox, 2, subject, localFolder1.getId());
+        msgs = TestUtil.search(mLocalMbox, subject);
+        assertEquals(1, msgs.size());
+        assertEquals(originalId, msgs.get(0).getId());
+        
+        // Rename remote folder twice to force UIDVALIDITY change and sync.
+        mRemoteMbox.renameFolder(remoteFolder1.getId(), NAME_PREFIX + "-renamed");
+        mRemoteMbox.renameFolder(remoteFolder1.getId(), NAME_PREFIX + "-f1");
+        importImap();
+        
+        // Make sure the original message is still there, and was synced to
+        // the remote mailbox and back.
+        msgs = TestUtil.search(mLocalMbox, subject);
+        assertEquals(1, msgs.size());
+        assertFalse("Message id did not change: " + originalId, originalId.equals(msgs.get(0).getId()));
+        
+        
         // Add message to remote folder and delete local folder at the same time
-        ZimbraLog.test.debug("Testing simultaneous message add and folder delete 1.");
+        ZimbraLog.test.info("Testing simultaneous message add and folder delete 1.");
         ZFolder remoteFolder2 = mRemoteMbox.getFolderByPath(REMOTE_PATH_F2); 
-        TestUtil.insertMessage(mRemoteMbox, 2, NAME_PREFIX + " msg2", remoteFolder2.getId());
-        ZFolder localFolder1 = mLocalMbox.getFolderByPath(LOCAL_PATH_F3);
-        mLocalMbox.deleteFolder(localFolder1.getId());
+        TestUtil.insertMessage(mRemoteMbox, 3, NAME_PREFIX + " msg3", remoteFolder2.getId());
+        ZFolder localFolder3 = mLocalMbox.getFolderByPath(LOCAL_PATH_F3);
+        mLocalMbox.deleteFolder(localFolder3.getId());
         checkMsgCount(mLocalMbox, "in:" + LOCAL_PATH_F2, 0);
         importImap();
         
@@ -183,11 +211,12 @@ extends TestCase {
         checkMsgCount(mLocalMbox, "in:" + LOCAL_PATH_F2, 1);
         compare();
         
+        
         // Add message to a local folder and delete the same folder in remote mailbox
-        ZimbraLog.test.debug("Testing simultaneous message add and folder delete 2.");
+        ZimbraLog.test.info("Testing simultaneous message add and folder delete 2.");
         ZFolder localFolder = mLocalMbox.getFolderByPath(LOCAL_PATH_F2);
-        TestUtil.insertMessage(mLocalMbox, 3, NAME_PREFIX + " msg3", localFolder.getId());
-        ZFolder remoteFolder1 = mRemoteMbox.getFolderByPath(REMOTE_PATH_F1);
+        TestUtil.insertMessage(mLocalMbox, 4, NAME_PREFIX + " msg4", localFolder.getId());
+        remoteFolder1 = mRemoteMbox.getFolderByPath(REMOTE_PATH_F1);
         mRemoteMbox.deleteFolder(remoteFolder1.getId());
         importImap();
         
@@ -197,12 +226,13 @@ extends TestCase {
         assertNull("Remote folder 1", mRemoteMbox.getFolderByPath(REMOTE_PATH_F1));
         assertNull("Remote folder 2", mRemoteMbox.getFolderByPath(REMOTE_PATH_F2));
         compare();
+
         
         // Add message to local inbox
-        ZimbraLog.test.debug("Testing sync from local to remote.");
+        ZimbraLog.test.info("Testing sync from local to remote.");
         checkMsgCount(mLocalMbox, "in:" + LOCAL_PATH_INBOX, 0);
         ZFolder localInbox = mLocalMbox.getFolderByPath(LOCAL_PATH_INBOX);
-        TestUtil.insertMessage(mLocalMbox, 4, NAME_PREFIX + " msg4", localInbox.getId());
+        TestUtil.insertMessage(mLocalMbox, 5, NAME_PREFIX + " msg5", localInbox.getId());
         checkMsgCount(mLocalMbox, "in:" + LOCAL_PATH_INBOX, 1);
         checkMsgCount(mRemoteMbox, "in:inbox", 0);
 
@@ -215,7 +245,7 @@ extends TestCase {
         importImap();
         
         // Make sure that local changes got propagated to remote server
-        checkMsgCount(mRemoteMbox, "in:inbox msg4", 1);
+        checkMsgCount(mRemoteMbox, "in:inbox msg5", 1);
         checkMsgCount(mRemoteMbox, "in:trash", 0);
         compare();
     }
@@ -320,7 +350,7 @@ extends TestCase {
     
     public void tearDown()
     throws Exception {
-        // cleanUp();
+        cleanUp();
         TestUtil.setServerAttr(
             Provisioning.A_zimbraImapCleartextLoginEnabled, mOriginalCleartextValue);
     }
@@ -328,43 +358,16 @@ extends TestCase {
     public void cleanUp()
     throws Exception {
         if (TestUtil.accountExists(REMOTE_USER_NAME)) {
-            TestUtil.deleteTestData(REMOTE_USER_NAME, NAME_PREFIX);
+            TestUtil.deleteAccount(REMOTE_USER_NAME);
         }
         if (TestUtil.accountExists(LOCAL_USER_NAME)) {
-            ZMailbox mbox = TestUtil.getZMailbox(LOCAL_USER_NAME);
-            for (ZDataSource ds : mbox.getAllDataSources()) {
-                if (ds.getName().contains(NAME_PREFIX)) {
-                    mbox.deleteDataSource(ds);
-                }
-            }
-
-            TestUtil.deleteTestData(LOCAL_USER_NAME, NAME_PREFIX);
-        }
-    }
-    
-    /**
-     * Separate class for teardown, since adding/deleting the mailboxes
-     * takes a long time.
-     */
-    public static class TearDown
-    extends TestCase {
-        
-        public void testTeardown()
-        throws Exception {
-            if (TestUtil.accountExists(LOCAL_USER_NAME)) {
-                TestUtil.deleteAccount(LOCAL_USER_NAME);
-            }
-            if (TestUtil.accountExists(REMOTE_USER_NAME)) {
-                TestUtil.deleteAccount(REMOTE_USER_NAME);
-            }
+            TestUtil.deleteAccount(LOCAL_USER_NAME);
         }
     }
     
     public static void main(String[] args)
     throws Exception {
         TestUtil.cliSetup();
-        TestUtil.runTest(new TestSuite(TestImapImport.TearDown.class));
         TestUtil.runTest(new TestSuite(TestImapImport.class));
-        TestUtil.runTest(new TestSuite(TestImapImport.TearDown.class));
     }
 }

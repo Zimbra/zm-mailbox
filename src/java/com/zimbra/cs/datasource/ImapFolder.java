@@ -31,13 +31,15 @@ public class ImapFolder {
     private String mDataSourceId;
     private String mLocalPath;
     private String mRemotePath;
+    private Long mUidValidity;
     
-    public ImapFolder(int mailboxId, int id, String dataSourceId, String localPath, String remotePath) {
+    public ImapFolder(int mailboxId, int id, String dataSourceId, String localPath, String remotePath, Long uidValidity) {
         mMailboxId = mailboxId;
         mItemId = id;
         mDataSourceId = dataSourceId;
         mLocalPath = localPath;
         mRemotePath = remotePath;
+        mUidValidity = uidValidity;
     }
     
     public int getMailboxId() { return mMailboxId; }
@@ -45,11 +47,13 @@ public class ImapFolder {
     public String getDataSourceId() { return mDataSourceId; }
     public String getLocalPath() { return mLocalPath; }
     public String getRemotePath() { return mRemotePath; }
+    public Long getUidValidity() { return mUidValidity; }
     
     void setLocalPath(String localPath) { mLocalPath = localPath; }
+    void setUidValidity(Long uidValidity) { mUidValidity = uidValidity; }
     
     public String toString() {
-        return String.format("ImapFolder: { mailboxId=%d, itemId=%d, dataSourceId=%s, localPath=%s, remotePath=%s }",
-            mMailboxId, mItemId, mDataSourceId, mLocalPath, mRemotePath);
+        return String.format("ImapFolder: { mailboxId=%d, itemId=%d, dataSourceId=%s, localPath=%s, remotePath=%s, uidValidity=%d }",
+            mMailboxId, mItemId, mDataSourceId, mLocalPath, mRemotePath, mUidValidity);
     }
 }
