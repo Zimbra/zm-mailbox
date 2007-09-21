@@ -44,7 +44,7 @@ public class TestSasl extends TestCase {
     private static final int SIZE = 23456;
     
     public void testSaslInputBuffer() throws SaslException {
-        SaslInputBuffer buffer = new SaslInputBuffer();
+        SaslInputBuffer buffer = new SaslInputBuffer(SIZE);
         ByteBuffer data = fill(ByteBuffer.allocate(SIZE + 4).putInt(SIZE));
         for (int n = 2; data.hasRemaining(); n *= 2) {
             ByteBuffer bb = data.slice();
