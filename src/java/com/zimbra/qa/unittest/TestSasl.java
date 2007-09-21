@@ -25,12 +25,19 @@
 
 package com.zimbra.qa.unittest;
 
+import com.zimbra.cs.account.krb5.Krb5Login;
 import com.zimbra.cs.mina.SaslInputBuffer;
 import com.zimbra.cs.mina.SaslOutputBuffer;
 import junit.framework.TestCase;
+import org.ietf.jgss.GSSCredential;
+import org.ietf.jgss.GSSManager;
+import org.ietf.jgss.GSSName;
+import org.ietf.jgss.Oid;
 
+import javax.security.auth.login.LoginContext;
 import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
+import java.io.File;
 import java.nio.ByteBuffer;
 
 public class TestSasl extends TestCase {
@@ -75,6 +82,23 @@ public class TestSasl extends TestCase {
         assertFalse(buffer.isFull());
     }
 
+    /*
+    public void testGssCredentials() throws Exception {
+        String host = "localhost";
+        String principle = "imap@" + host;
+//        LoginContext lc = Krb5Login.withKeyTab(principle, "/opt/zimbra/conf/krb5.keytab");
+//        lc.login();
+        GSSManager mgr = GSSManager.getInstance();
+        Oid krb5Oid = new Oid("1.2.840.113554.1.2.2");
+	GSSName serviceName = mgr.createName("imap@nomad.local",
+		GSSName.NT_HOSTBASED_SERVICE, krb5Oid);
+        GSSCredential cred = mgr.createCredential(serviceName,
+		GSSCredential.INDEFINITE_LIFETIME,
+		krb5Oid, GSSCredential.ACCEPT_ONLY);
+        System.out.println("Cred = " + cred);
+    }
+    */
+    
     private static ByteBuffer fill(ByteBuffer bb) {
         for (int i = 0; bb.hasRemaining(); i++) {
             bb.put((byte) i);

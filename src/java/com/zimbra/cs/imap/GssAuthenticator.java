@@ -62,14 +62,20 @@ public class GssAuthenticator extends Authenticator {
     private static final String QOP_AUTH_INT = "auth-int";
     private static final String QOP_AUTH_CONF = "auth-conf";
 
+    private static final int MAX_RECEIVE_SIZE = 4096;
+    private static final int MAX_SEND_SIZE = 4096;
+
     private static final boolean DEBUG = true;
 
     // SASL properties to enable encryption
-    private static final Map<String, String> QOP_PROPS =
+    private static final Map<String, String> ENCRYPTION_PROPS =
         new HashMap<String, String>();
     
     static {
-        QOP_PROPS.put(Sasl.QOP, QOP_AUTH + "," + QOP_AUTH_INT + "," + QOP_AUTH_CONF);
+        ENCRYPTION_PROPS.put(Sasl.QOP, QOP_AUTH + "," + QOP_AUTH_INT + "," +
+                                       QOP_AUTH_CONF);
+        ENCRYPTION_PROPS.put(Sasl.MAX_BUFFER, String.valueOf(MAX_RECEIVE_SIZE));
+        ENCRYPTION_PROPS.put(Sasl.RAW_SEND_SIZE, String.valueOf(MAX_SEND_SIZE));
         if (DEBUG) {
             System.setProperty("sun.security.krb5.debug", "true");
             System.setProperty("sun.security.jgss.debug", "true");
@@ -114,6 +120,7 @@ public class GssAuthenticator extends Authenticator {
                 });
         } catch (PrivilegedActionException e) {
             sendFailed();
+            e.printStackTrace();
             ZimbraLog.imap.warn("Could not create SaslServer", e.getCause());
             logout();
             return false;
@@ -121,9 +128,9 @@ public class GssAuthenticator extends Authenticator {
         return true;
     }
 
-    private Map<String, String> getSaslProperties() {
+    protected Map<String, String> getSaslProperties() {
         // Don't enable encryption if SSL is being used
-        return mHandler.isSSLEnabled() ? null : QOP_PROPS;
+        return mHandler.isSSLEnabled() ? null : ENCRYPTION_PROPS;
     }
     
     @Override
@@ -142,10 +149,12 @@ public class GssAuthenticator extends Authenticator {
         }
         if (isComplete()) {
             // Authentication successful
-            debug("Negitiated QOP = %s",
-                mSaslServer.getNegotiatedProperty(Sasl.QOP));
-            debug("Raw send size = %s",
-                mSaslServer.getNegotiatedProperty(Sasl.RAW_SEND_SIZE));
+            if (DEBUG) {
+                for (String name : getSaslProperties().keySet()) {
+                    debug("Negotiated property %s = %s", name,
+                          mSaslServer.getNegotiatedProperty(name));
+                }
+            }
             logout();
         } else {
             assert !mSaslServer.isComplete();
@@ -160,7 +169,7 @@ public class GssAuthenticator extends Authenticator {
         return QOP_AUTH_INT.equals(qop) || QOP_AUTH_CONF.equals(qop);
     }
 
-    @Override
+    @Override                       
     public InputStream unwrap(InputStream is) {
         return new SaslInputStream(is, mSaslServer);
     }
@@ -202,7 +211,7 @@ public class GssAuthenticator extends Authenticator {
 
     private static void debug(String format, Object... args) {
         if (DEBUG) {
-            System.out.printf("[DEBUG] " + format + "\n", args);
+            System.out.printf("[DEBUG GssAuthenticator] " + format + "\n", args);
         }
     }
 }

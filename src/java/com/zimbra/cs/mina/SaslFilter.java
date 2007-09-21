@@ -43,6 +43,9 @@ public class SaslFilter extends IoFilterAdapter {
     private final SaslInputBuffer mInputBuffer;
     private final SaslOutputBuffer mOutputBuffer;
 
+    private static final int MAX_SEND_SIZE = 4096;
+    private static final int MAX_RECV_SIZE = 4096;
+    
     private static final boolean DEBUG = true;
 
     /** When set, encryption is disabled for the first write */
@@ -51,12 +54,28 @@ public class SaslFilter extends IoFilterAdapter {
 
     public SaslFilter(SaslServer server) {
         mSaslServer = server;
-        mInputBuffer = new SaslInputBuffer();
-        int maxSize = Integer.parseInt(
-            (String) server.getNegotiatedProperty(Sasl.RAW_SEND_SIZE));
-        mOutputBuffer = new SaslOutputBuffer(maxSize);
+        mInputBuffer = new SaslInputBuffer(getMaxRecvSize(mSaslServer));
+        mOutputBuffer = new SaslOutputBuffer(getMaxSendSize(mSaslServer));
     }
 
+    private static int getMaxSendSize(SaslServer server) {
+        String s = (String) server.getNegotiatedProperty(Sasl.RAW_SEND_SIZE);
+        try {
+            return Integer.parseInt(s);
+        } catch (Exception e) {
+            return MAX_SEND_SIZE;
+        }
+    }
+
+    private static int getMaxRecvSize(SaslServer server) {
+        String s = (String) server.getNegotiatedProperty(Sasl.MAX_BUFFER);
+        try {
+            return Integer.parseInt(s);
+        } catch (Exception e) {
+            return MAX_RECV_SIZE;
+        }
+    }
+    
     @Override
     public void messageReceived(NextFilter nextFilter, IoSession session,
                                 Object message) throws IOException {
@@ -65,8 +84,12 @@ public class SaslFilter extends IoFilterAdapter {
         synchronized (mInputBuffer) {
             // Read and decrypt cipher blocks from input buffer
             while (buf.hasRemaining()) {
+                debug("messageReceived: remaining = %d", buf.remaining());
                 mInputBuffer.read(buf);
+                debug("messageReceived: remaining = %d", buf.remaining());
+                debug("messageReceived: length = %d", mInputBuffer.getLength());
                 if (mInputBuffer.isComplete()) {
+                    debug("messageReceived: input complete");
                     byte[] b = mInputBuffer.unwrap(mSaslServer);
                     nextFilter.messageReceived(session, ByteBuffer.wrap(b));
                     mInputBuffer.clear();

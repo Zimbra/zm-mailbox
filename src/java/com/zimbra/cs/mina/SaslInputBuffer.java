@@ -30,10 +30,12 @@ import javax.security.sasl.SaslServer;
 import java.nio.ByteBuffer;
 
 public class SaslInputBuffer {
+    private final int mMaxSize;
     private final ByteBuffer mLenBuffer;
     private ByteBuffer mDataBuffer;
 
-    public SaslInputBuffer() {
+    public SaslInputBuffer(int maxSize) {
+        mMaxSize = maxSize;
         mLenBuffer = ByteBuffer.allocate(4);
     }
     
@@ -44,7 +46,7 @@ public class SaslInputBuffer {
     
     public void read(ByteBuffer bb) throws SaslException {
         if (isComplete()) return;
-        if (mLenBuffer.hasRemaining() && !parseLength(bb)) return;
+        if (mLenBuffer.hasRemaining() && !readLength(bb)) return;
         int len = Math.min(mDataBuffer.remaining(), bb.remaining());
         int pos = mDataBuffer.position();
         bb.get(mDataBuffer.array(), pos, len);
@@ -55,6 +57,14 @@ public class SaslInputBuffer {
         return mDataBuffer != null && !mDataBuffer.hasRemaining();
     }
 
+    public int getLength() {
+        return mDataBuffer != null ? mDataBuffer.limit() : -1;
+    }
+
+    public int getRemaining() {
+        return mDataBuffer != null ? mDataBuffer.remaining() : -1;
+    }
+    
     public byte[] unwrap(SaslServer server) throws SaslException {
         if (!isComplete()) {
             throw new IllegalStateException("Buffer is not complete");
@@ -68,20 +78,22 @@ public class SaslInputBuffer {
         if (mDataBuffer != null) mDataBuffer.clear();
     }
     
-    private boolean parseLength(ByteBuffer bb) throws SaslException {
+    private boolean readLength(ByteBuffer bb) throws SaslException {
         // Copy rest of length bytes
         while (mLenBuffer.hasRemaining()) {
             if (!bb.hasRemaining()) return false;
             mLenBuffer.put(bb.get());
         }
         int len = mLenBuffer.getInt(0);
-        if (len < 0) {
+        if (len < 0 || len > mMaxSize) {
             throw new SaslException(
-                "Invalid length " + len + " in received buffer");
+                "Invalid receive buffer size '" + len + "' (max size = " +
+                 mMaxSize + ")");
         }
         if (mDataBuffer == null || mDataBuffer.capacity() < len) {
             mDataBuffer = ByteBuffer.allocate(len);
         }
+        mDataBuffer.limit(len);
         return true;
     }
 }
