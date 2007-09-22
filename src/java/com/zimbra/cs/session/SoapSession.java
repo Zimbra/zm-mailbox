@@ -105,7 +105,7 @@ public class SoapSession extends Session {
     private long mPreviousAccess = -1;
     private long mLastWrite      = -1;
 
-    private boolean mForceRefresh;
+    private int mForceRefresh;
     private LinkedList<QueuedNotifications> mSentChanges = new LinkedList<QueuedNotifications>();
     private QueuedNotifications mChanges = new QueuedNotifications(1);
 
@@ -321,30 +321,32 @@ public class SoapSession extends Session {
 
     private synchronized void cacheNotifications(PendingModifications pms, boolean fromThisSession) {
         // if we're going to be sending a <refresh> anyway, there's no need to record these changes
-        if (mForceRefresh && !fromThisSession)
+        int currentSequence = getCurrentNotificationSequence();
+        if (mForceRefresh == currentSequence && !fromThisSession)
             return;
 
         // XXX: should constrain to folders, tags, and stuff relevant to the current query?
 
         // determine whether this set of notifications would cause the cached set to overflow
-        if (!mForceRefresh && MAX_QUEUED_NOTIFICATIONS > 0) {
+        if (mForceRefresh != currentSequence && MAX_QUEUED_NOTIFICATIONS > 0) {
             // XXX: more accurate would be to combine pms and mChanges and take the count...
             int count = pms.getNotificationCount() + mChanges.getNotificationCount();
-            if (!mSentChanges.isEmpty()) {
-                for (QueuedNotifications ntfn : mSentChanges)
-                    count += ntfn.getNotificationCount();
+            if (count > MAX_QUEUED_NOTIFICATIONS) {
+                // if we've overflowed, jettison the pending change set
+                mChanges.clearMailboxChanges();
+                mForceRefresh = currentSequence;
             }
 
-            // if we've overflowed, jettison the pending change set
-            if (count > MAX_QUEUED_NOTIFICATIONS) {
-                mChanges.clearMailboxChanges();
-                for (QueuedNotifications ntfn : mSentChanges)
+            for (QueuedNotifications ntfn : mSentChanges) {
+                count += ntfn.getNotificationCount();
+                if (count > MAX_QUEUED_NOTIFICATIONS) {
                     ntfn.clearMailboxChanges();
-                mForceRefresh = true;
+                    mForceRefresh = Math.max(mForceRefresh, ntfn.getSequence());
+                }
             }
         }
 
-        if (mForceRefresh && !fromThisSession)
+        if (mForceRefresh == currentSequence && !fromThisSession)
             return;
         // if we're here, these changes either
         //   a) do not cause the session's notification cache to overflow, or
@@ -375,8 +377,11 @@ public class SoapSession extends Session {
     }
 
 
-    public boolean requiresRefresh(int sequence) {
-        return mForceRefresh;
+    public boolean requiresRefresh(int lastSequence) {
+        if (lastSequence <= 0)
+            return mForceRefresh == getCurrentNotificationSequence();
+        else
+            return mForceRefresh > Math.min(lastSequence, getCurrentNotificationSequence());
     }
 
     private static final String A_ID = "id";
@@ -396,7 +401,8 @@ public class SoapSession extends Session {
         synchronized (this) {
             if (mMailbox == null)
                 return;
-            mSentChanges.clear();
+            for (QueuedNotifications ntfn : mSentChanges)
+                ntfn.clearMailboxChanges();
         }
 
         Element eRefresh = ctxt.addUniqueElement(ZimbraNamespace.E_REFRESH);
@@ -438,14 +444,20 @@ public class SoapSession extends Session {
     }
 
     public void acknowledgeNotifications(int sequence) {
-        if (sequence <= 0 || mSentChanges == null || mSentChanges.isEmpty())
+        if (mSentChanges == null || mSentChanges.isEmpty())
             return;
 
-        for (Iterator<QueuedNotifications> it = mSentChanges.iterator(); it.hasNext(); ) {
-            if (it.next().getSequence() <= sequence)
-                it.remove();
-            else
-                break;
+        if (sequence <= 0) {
+            // if the client didn't send a valid "last sequence number", *don't* keep old changes around
+            mSentChanges.clear();
+        } else {
+            // clear any notifications we now know the client has received
+            for (Iterator<QueuedNotifications> it = mSentChanges.iterator(); it.hasNext(); ) {
+                if (it.next().getSequence() <= sequence)
+                    it.remove();
+                else
+                    break;
+            }
         }
     }
 
@@ -500,42 +512,29 @@ public class SoapSession extends Session {
                 ctxt.addUniqueElement(HeaderConstants.E_CHANGE)
                     .addAttribute(HeaderConstants.A_CHANGE_ID, mMailbox.getLastChangeID())
                     .addAttribute(HeaderConstants.A_ACCOUNT_ID, explicitAcct);
-                
+
+                // clear any notifications we now know the client has received
+                acknowledgeNotifications(lastSequence);
+
+                // cover ourselves in case a client is doing something really stupid...
                 if (mSentChanges.size() > 20) {
-                    // cover ourselves in case a client is doing something really stupid...
                     ZimbraLog.session.warn("clearing abnormally long notification change list due to misbehaving client");
                     mSentChanges.clear();
                 }
 
-                if (lastSequence <= 0) {
-                    // if the client didn't send a valid "last sequence number", *don't* keep old changes around
-                    mSentChanges.clear();
-                } else {
-                    // clear any PM's we now know the client has received
-                    for (Iterator<QueuedNotifications> it = mSentChanges.iterator(); it.hasNext(); ) {
-                        QueuedNotifications ntfn = it.next();
-                        if (ntfn.getSequence() <= lastSequence)
-                            it.remove();
-                        // assert(pms.getSequence() > lastSequence);
-                    }
-                }
-
-                if (mChanges.hasNotifications() || mForceRefresh) {
+                if (mChanges.hasNotifications() || requiresRefresh(lastSequence)) {
                     assert(mChanges.getSequence() >= 1);
                     int newSequence = mChanges.getSequence() + 1;
                     mSentChanges.add(mChanges);
                     mChanges = new QueuedNotifications(newSequence); 
                 }
 
-                // we're sending <refresh> and <notify>, so our force-refresh obligation is done
-                mForceRefresh = false;
+                // mChanges must be empty at this point (everything moved into the mSentChanges list)
+                assert(!mChanges.hasNotifications());
 
                 // drop out if notify is off or if there is nothing to send
                 if (mSentChanges.isEmpty())
                     return ctxt;
-
-                // mChanges must be empty at this point (everything moved into the mSentChanges list)
-                assert(!mChanges.hasNotifications());
 
                 // send all the old changes
                 QueuedNotifications last = mSentChanges.getLast();
