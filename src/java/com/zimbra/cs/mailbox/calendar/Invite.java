@@ -718,9 +718,12 @@ public class Invite {
                     Object mmInvContent = mmInv.getContent();
                     Reader reader = null;
                     try {
-                        if (mmInvContent instanceof InputStream)
-                            reader = new InputStreamReader((InputStream) mmInvContent);
-                        else if (mmInvContent instanceof String)
+                        if (mmInvContent instanceof InputStream) {
+                            String charset = mmCt.getParameter(Mime.P_CHARSET);
+                            if (charset == null)
+                                charset = Mime.P_CHARSET_UTF8;
+                            reader = new InputStreamReader((InputStream) mmInvContent, charset);
+                        } else if (mmInvContent instanceof String)
                             reader = new StringReader((String) mmInvContent);
                         if (reader != null) {
                             ZVCalendar iCal = ZCalendarBuilder.build(reader);
