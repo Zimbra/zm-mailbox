@@ -28,6 +28,9 @@ package com.zimbra.cs.imap;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.krb5.Krb5Login;
+import com.zimbra.cs.security.kerberos.Krb5Keytab;
+import com.zimbra.cs.security.sasl.SaslInputStream;
+import com.zimbra.cs.security.sasl.SaslOutputStream;
 import org.apache.commons.codec.binary.Base64;
 
 import javax.security.auth.Subject;

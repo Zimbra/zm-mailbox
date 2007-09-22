@@ -23,7 +23,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.imap;
+package com.zimbra.cs.security.sasl;
 
 import javax.security.sasl.Sasl;
 import javax.security.sasl.SaslServer;

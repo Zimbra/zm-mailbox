@@ -23,7 +23,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.mina;
+package com.zimbra.cs.security.sasl;
 
 import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;

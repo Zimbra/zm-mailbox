@@ -25,19 +25,12 @@
 
 package com.zimbra.qa.unittest;
 
-import com.zimbra.cs.account.krb5.Krb5Login;
-import com.zimbra.cs.mina.SaslInputBuffer;
-import com.zimbra.cs.mina.SaslOutputBuffer;
+import com.zimbra.cs.security.sasl.SaslInputBuffer;
+import com.zimbra.cs.security.sasl.SaslOutputBuffer;
 import junit.framework.TestCase;
-import org.ietf.jgss.GSSCredential;
-import org.ietf.jgss.GSSManager;
-import org.ietf.jgss.GSSName;
-import org.ietf.jgss.Oid;
 
-import javax.security.auth.login.LoginContext;
 import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
-import java.io.File;
 import java.nio.ByteBuffer;
 
 public class TestSasl extends TestCase {
@@ -86,19 +79,47 @@ public class TestSasl extends TestCase {
     public void testGssCredentials() throws Exception {
         String host = "localhost";
         String principle = "imap@" + host;
-//        LoginContext lc = Krb5Login.withKeyTab(principle, "/opt/zimbra/conf/krb5.keytab");
-//        lc.login();
+        LoginContext lc = Krb5Login.withKeyTab(
+            "imap/localhost", "/opt/zimbra/conf/krb5.keytab");
+        lc.login();
         GSSManager mgr = GSSManager.getInstance();
         Oid krb5Oid = new Oid("1.2.840.113554.1.2.2");
-	GSSName serviceName = mgr.createName("imap@nomad.local",
+	GSSName serviceName = mgr.createName(principle,
 		GSSName.NT_HOSTBASED_SERVICE, krb5Oid);
         GSSCredential cred = mgr.createCredential(serviceName,
 		GSSCredential.INDEFINITE_LIFETIME,
 		krb5Oid, GSSCredential.ACCEPT_ONLY);
         System.out.println("Cred = " + cred);
     }
+
+    public void testKeytab() throws Exception {
+        System.setProperty("sun.security.krb5.debug", "true");
+        System.setProperty("sun.security.jgss.debug", "true");
+        Krb5Keytab keytab = new Krb5Keytab("/opt/zimbra/conf/krb5.keytab");
+        KerberosPrincipal kp = new KerberosPrincipal("imap/localhost");
+        List<KerberosKey> keys = keytab.getKeys(kp);
+        System.out.println("len = " + keys.size());
+        Subject subject = new Subject();
+        subject.getPrincipals().add(kp);
+        subject.getPrivateCredentials().addAll(keys);
+        subject.setReadOnly();
+        System.out.println("subject = " + subject);
+        final CallbackHandler cbh = new CallbackHandler() {
+            public void handle(Callback[] cbs) {
+                ((AuthorizeCallback) cbs[0]).setAuthorized(true);
+            }
+        };
+        SaslServer server = (SaslServer) Subject.doAs(subject,
+            new PrivilegedExceptionAction() {
+                public Object run() throws SaslException {
+                    return Sasl.createSaslServer("GSSAPI", "imap", "localhost", null, cbh);
+                }
+            });
+        System.out.println("server = " + server);
+    }
     */
-    
+
+
     private static ByteBuffer fill(ByteBuffer bb) {
         for (int i = 0; bb.hasRemaining(); i++) {
             bb.put((byte) i);

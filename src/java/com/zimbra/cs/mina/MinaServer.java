@@ -31,6 +31,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.cs.server.Server;
 import com.zimbra.cs.server.ServerConfig;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.security.sasl.SaslFilter;
 import org.apache.mina.common.DefaultIoFilterChainBuilder;
 import org.apache.mina.common.IoHandler;
 import org.apache.mina.common.IoSession;

@@ -23,7 +23,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.mina;
+package com.zimbra.cs.security.sasl;
 
 import org.apache.mina.common.ByteBuffer;
 import org.apache.mina.common.IoFilterAdapter;
@@ -31,7 +31,6 @@ import org.apache.mina.common.IoFilterChain;
 import org.apache.mina.common.IoSession;
 
 import javax.security.sasl.Sasl;
-import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
 import java.io.IOException;
 import java.util.ArrayList;
