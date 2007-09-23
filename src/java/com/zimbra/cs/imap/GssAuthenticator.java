@@ -42,7 +42,6 @@ import javax.security.sasl.AuthorizeCallback;
 import javax.security.sasl.Sasl;
 import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -89,14 +88,13 @@ public class GssAuthenticator extends Authenticator {
 
     @Override
     public boolean initialize() throws IOException {
-        File ktf = new File(LC.krb5_keytab.value());
-        if (!ktf.exists()) {
+        Krb5Keytab keytab = getKeytab(LC.krb5_keytab.value());
+        if (keytab == null) {
             sendFailed();
-            ZimbraLog.imap.warn("Keytab file '" + ktf + "' not found");
             return false;
         }
-        Krb5Keytab keytab = Krb5Keytab.getInstance(ktf);
         debug("keytab file = %s", keytab.getFile());
+        
         final String host = LC.zimbra_server_hostname.value();
         KerberosPrincipal kp = new KerberosPrincipal(PROTOCOL + '/' + host);
         debug("kerberos principle = %s", kp);
@@ -106,11 +104,13 @@ public class GssAuthenticator extends Authenticator {
             return false;
         }
         debug("subject = %s", subject);
+        
         final Map<String, String> props = getSaslProperties();
         if (DEBUG && props != null) {
             String qop = props.get(Sasl.QOP);
             debug("Sent QOP = " + (qop != null ? qop : "auth"));
         }
+        
         try {
             mSaslServer = (SaslServer) Subject.doAs(subject,
                 new PrivilegedExceptionAction() {
@@ -128,6 +128,15 @@ public class GssAuthenticator extends Authenticator {
         return true;
     }
 
+    private static Krb5Keytab getKeytab(String path) {
+        try {
+            return Krb5Keytab.getInstance(path);
+        } catch (IOException e) {
+            ZimbraLog.imap.warn("Error accessing keytab file '" + path + '"');
+            return null;
+        }
+    }
+    
     private static Subject getSubject(Krb5Keytab keytab, KerberosPrincipal kp)
             throws IOException {
         List<KerberosKey> keys = keytab.getKeys(kp);

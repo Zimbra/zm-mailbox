@@ -126,7 +126,7 @@ public class Krb5Login {
          * useTicketCache=true
          */
         Krb5Config kc = Krb5Config.getInstance();
-        kc.setDebug(true);
+        // kc.setDebug(true);
         kc.setPrincipal(principal);
         kc.setKeyTab(keytab);
         kc.setStoreKey(true);

@@ -715,7 +715,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         String nologin  = mStartedTLS || authenticated || mConfig.allowCleartextLogins() ? "" : " LOGINDISABLED";
         String starttls = mStartedTLS || authenticated || !extensionEnabled("STARTTLS")     ? "" : " STARTTLS";
         String plain    = !mStartedTLS || authenticated || !extensionEnabled("AUTH=PLAIN")  ? "" : " AUTH=PLAIN";
-        String gss      = authenticated || !gssEnabled() ? "" : " AUTH=GSSAPI";
+        String gss      = authenticated || !isGssAuthEnabled() ? "" : " AUTH=GSSAPI";
         StringBuilder capability = new StringBuilder("CAPABILITY IMAP4rev1" + nologin + starttls + plain + gss);
         for (String extension : SUPPORTED_EXTENSIONS)
             if (extensionEnabled(extension))
@@ -727,8 +727,9 @@ public abstract class ImapHandler extends ProtocolHandler {
     // TODO Remove this debugging option for final release
     private static final Boolean GSS_ENABLED = Boolean.getBoolean("ZimbraGssEnabled");
     
-    private boolean gssEnabled() {
-        if (!GSS_ENABLED || !extensionEnabled("AUTH=GSSAPI")) return false;
+    private boolean isGssAuthEnabled() {
+        if (!GSS_ENABLED && !mConfig.isSaslGssapiEnabled()) return false;
+        if (!extensionEnabled("AUTH=GSSAPI")) return false;
         File keytab = new File(LC.krb5_keytab.value());
         if (!keytab.exists()) {
             ZimbraLog.imap.warn(
@@ -794,7 +795,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                 return CONTINUE_PROCESSING;
             }
             mAuthenticator = new PlainAuthenticator(this, tag);
-        } else if (m == Mechanism.GSSAPI && gssEnabled()) {
+        } else if (m == Mechanism.GSSAPI && isGssAuthEnabled()) {
             mAuthenticator = new GssAuthenticator(this, tag);
         } else {
             // no other AUTHENTICATE mechanisms are supported yet

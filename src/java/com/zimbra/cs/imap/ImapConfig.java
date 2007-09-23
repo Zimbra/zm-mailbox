@@ -42,6 +42,7 @@ public class ImapConfig extends ServerConfig {
     private String mBanner;
     private String mGoodbye;
     private Set<String> mDisabledExtensions;
+    private boolean mSaslGssapiEnabled;
 
     private static final int DEFAULT_NUM_THREADS = 10;
     private static final int DEFAULT_BIND_PORT = Config.D_IMAP_BIND_PORT;
@@ -81,6 +82,8 @@ public class ImapConfig extends ServerConfig {
             mDisabledExtensions = getDisabledExtensions(
                 server.getMultiAttr(A_zimbraImapDisabledCapability));
         }
+        mSaslGssapiEnabled = server.getBooleanAttr(
+            A_zimbraImapSaslGssapiEnabled, false);
         validate();
     }
 
@@ -116,6 +119,10 @@ public class ImapConfig extends ServerConfig {
     
     public boolean isExtensionDisabled(String name) {
         return mDisabledExtensions.contains(name.toUpperCase());
+    }
+
+    public boolean isSaslGssapiEnabled() {
+        return mSaslGssapiEnabled;
     }
     
     // TODO can this value be cached?

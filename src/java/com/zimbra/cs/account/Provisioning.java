@@ -1023,6 +1023,7 @@ public abstract class Provisioning {
     public static final String A_zimbraImapEnabled = "zimbraImapEnabled";
     public static final String A_zimbraImapProxyBindPort = "zimbraImapProxyBindPort";
     public static final String A_zimbraImapSSLProxyBindPort = "zimbraImapSSLProxyBindPort";
+    public static final String A_zimbraImapSaslGssapiEnabled = "zimbraImapSaslGssapiEnabled";
 
     public static final String A_zimbraPop3AdvertisedName = "zimbraPop3AdvertisedName";
     public static final String A_zimbraPop3BindPort = "zimbraPop3BindPort";
@@ -1038,7 +1039,8 @@ public abstract class Provisioning {
     public static final String A_zimbraPop3Enabled = "zimbraPop3Enabled";
     public static final String A_zimbraPop3ProxyBindPort = "zimbraPop3ProxyBindPort";
     public static final String A_zimbraPop3SSLProxyBindPort = "zimbraPop3SSLProxyBindPort";
-
+    public static final String A_zimbraPop3SaslGssapiEnabled = "zimbraPop3SaslGssapiEnabled";
+    
     public static final String A_zimbraNotifyServerEnabled = "zimbraNotifyServerEnabled";
     public static final String A_zimbraNotifyBindAddress = "zimbraNotifyBindAddress";
     public static final String A_zimbraNotifyBindPort = "zimbraNotifyBindPort";
