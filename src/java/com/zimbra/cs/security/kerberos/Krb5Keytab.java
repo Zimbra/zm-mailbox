@@ -29,6 +29,7 @@ import javax.security.auth.kerberos.KerberosKey;
 import javax.security.auth.kerberos.KerberosPrincipal;
 import java.io.EOFException;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.RandomAccessFile;
@@ -44,7 +45,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Utility class to parse Kerberos 5 keytab file format.
+ * Utility class to parse Kerberos 5 keytab file format.<p>
+ *
+ * See <a href="http://www.ioplex.com/utilities/keytab.txt">The Kerberos Keytab Binary File Format</a>
+ * for more details.
  */
 public class Krb5Keytab {
     private final File file;
@@ -58,6 +62,15 @@ public class Krb5Keytab {
     private static Map<File, Krb5Keytab> keytabs =
         new HashMap<File, Krb5Keytab>();
 
+    /**
+     * Returns the Krb5Keytab instance for the specified keytab file path.
+     *
+     * @param path the file path of the keytab file
+     * @return the Krb5Keytab representing the keytab contents
+     * @throws FileNotFoundException if the keytab file was not found
+     * @throws IOException if the keytab file format was invalid, or an I/O
+     *                     error ocurred
+     */
     public static synchronized Krb5Keytab getInstance(String path)
             throws IOException {
         File file = new File(path).getCanonicalFile();
@@ -69,6 +82,15 @@ public class Krb5Keytab {
         return keytab;
     }
 
+    /**
+     * Returns the Krb5Keytab instance for the specified keytab file.
+     *
+     * @param file the keytab file
+     * @return the Krb5Keytab representing the keytab contents
+     * @throws FileNotFoundException if the keytab file was not found
+     * @throws IOException if the keytab file format was invalid, or an I/O
+     *                     error occurred
+     */
     public static Krb5Keytab getInstance(File file) throws IOException {
         return getInstance(file.getPath());
     }
@@ -79,35 +101,50 @@ public class Krb5Keytab {
         loadKeytab();
     }
 
-    public List<KerberosKey> getKeys(KerberosPrincipal kp) throws IOException {
-        checkReload();
+    /**
+     * Returns the list of Kerberos keys for the specified principal in the
+     * keytab. Returns null if principal was not found.
+     * 
+     * @param kp the KerberosPrincipal to look up in the keytab
+     * @return the KerberosKey for the principal, or null if not found
+     * @throws IOException if the keytab file required reloading and was
+     *                     invalid or an I/O error occurred
+     */
+    public synchronized List<KerberosKey> getKeys(KerberosPrincipal kp)
+            throws IOException {
+        checkLastModified();
         return Collections.unmodifiableList(keyMap.get(kp));
     }
 
-    public List<KerberosKey> getKey(String name) throws IOException {
-        return getKeys(new KerberosPrincipal(name));
-    }
-
+    /**
+     * Returns the keytab file.
+     *
+     * @return the File for the keytab
+     */
     public File getFile() {
         return file;
     }
     
     // Reload keytab file is last modified time changed
-    private synchronized void checkReload() throws IOException {
+    private void checkLastModified() throws IOException {
         if (file.lastModified() != lastModified) loadKeytab();
     }
-    
+
     private void loadKeytab() throws IOException {
         RandomAccessFile raf = new RandomAccessFile(file, "r");
-        lastModified = file.lastModified();
-        version = readVersion(raf);
-        if (version != VERSION_1 && version != VERSION_2) {
-            throw formatError(
-                "Unsupported format version 0x" + Integer.toHexString(version));
+        try {
+            lastModified = file.lastModified();
+            version = readVersion(raf);
+            if (version != VERSION_1 && version != VERSION_2) {
+                throw formatError("Unsupported file format version 0x" +
+                                  Integer.toHexString(version));
+            }
+            keyMap.clear();
+            FileChannel fc = raf.getChannel();
+            while (fc.position() < fc.size()) readEntry(fc);
+        } finally {
+            raf.close();
         }
-        keyMap.clear();
-        FileChannel fc = raf.getChannel();
-        while (fc.position() < fc.size()) readEntry(fc);
     }
 
     private static int readVersion(RandomAccessFile raf) throws IOException {
@@ -211,7 +248,12 @@ public class Krb5Keytab {
     private IOException formatError(String s) {
         return new IOException("Invalid keytab file '" + file + "': " + s);
     }
-    
+
+    /**
+     * Prints contents of keytab to specified stream.
+     *
+     * @param ps The PrintStream to which the keytab contents are written
+     */
     public void dump(PrintStream ps) {
         ps.printf("Keytab name: %s\n", file);
         ps.printf("Keytab version: 0x%x\n", version);
