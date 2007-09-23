@@ -55,8 +55,26 @@ public class Krb5Keytab {
     private static final int VERSION_1 = 0x0501;    // DCE compatible
     private static final int VERSION_2 = 0x0502;    // Standard
 
-    public Krb5Keytab(String name) throws IOException {
-        file = new File(name);
+    private static Map<File, Krb5Keytab> keytabs =
+        new HashMap<File, Krb5Keytab>();
+
+    public static synchronized Krb5Keytab getInstance(String path)
+            throws IOException {
+        File file = new File(path).getCanonicalFile();
+        Krb5Keytab keytab = keytabs.get(file);
+        if (keytab == null) {
+            keytab = new Krb5Keytab(file);
+            keytabs.put(file, keytab);
+        }
+        return keytab;
+    }
+
+    public static Krb5Keytab getInstance(File file) throws IOException {
+        return getInstance(file.getPath());
+    }
+    
+    private Krb5Keytab(File file) throws IOException {
+        this.file = file;
         keyMap = new HashMap<KerberosPrincipal, List<KerberosKey>>();
         loadKeytab();
     }
@@ -70,8 +88,12 @@ public class Krb5Keytab {
         return getKeys(new KerberosPrincipal(name));
     }
 
+    public File getFile() {
+        return file;
+    }
+    
     // Reload keytab file is last modified time changed
-    private void checkReload() throws IOException {
+    private synchronized void checkReload() throws IOException {
         if (file.lastModified() != lastModified) loadKeytab();
     }
     
@@ -226,6 +248,6 @@ public class Krb5Keytab {
     }
     
     public static void main(String... args) throws Exception {
-        new Krb5Keytab(args[0]).dump(System.out);
+        getInstance(args[0]).dump(System.out);
     }
 }

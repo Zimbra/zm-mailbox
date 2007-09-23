@@ -27,7 +27,6 @@ package com.zimbra.cs.imap;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.krb5.Krb5Login;
 import com.zimbra.cs.security.kerberos.Krb5Keytab;
 import com.zimbra.cs.security.sasl.SaslInputStream;
 import com.zimbra.cs.security.sasl.SaslOutputStream;
@@ -37,8 +36,8 @@ import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.callback.UnsupportedCallbackException;
-import javax.security.auth.login.LoginContext;
-import javax.security.auth.login.LoginException;
+import javax.security.auth.kerberos.KerberosKey;
+import javax.security.auth.kerberos.KerberosPrincipal;
 import javax.security.sasl.AuthorizeCallback;
 import javax.security.sasl.Sasl;
 import javax.security.sasl.SaslException;
@@ -50,11 +49,11 @@ import java.io.OutputStream;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class GssAuthenticator extends Authenticator {
     private SaslServer mSaslServer;
-    private LoginContext mLoginContext;
     private boolean mEncryptionEnabled;
 
     private static final String MECHANISM = "GSSAPI";
@@ -90,30 +89,30 @@ public class GssAuthenticator extends Authenticator {
 
     @Override
     public boolean initialize() throws IOException {
+        File ktf = new File(LC.krb5_keytab.value());
+        if (!ktf.exists()) {
+            sendFailed();
+            ZimbraLog.imap.warn("Keytab file '" + ktf + "' not found");
+            return false;
+        }
+        Krb5Keytab keytab = Krb5Keytab.getInstance(ktf);
+        debug("keytab file = %s", keytab.getFile());
         final String host = LC.zimbra_server_hostname.value();
-        String principle = PROTOCOL + "/" + host;
-        debug("kerberos principle = %s", principle);
-        File keytab = new File(LC.krb5_keytab.value());
-        if (!keytab.exists()) {
+        KerberosPrincipal kp = new KerberosPrincipal(PROTOCOL + '/' + host);
+        debug("kerberos principle = %s", kp);
+        Subject subject = getSubject(keytab, kp);
+        if (subject == null) {
             sendFailed();
-            ZimbraLog.imap.warn("Keytab file '" + keytab + "' not found");
             return false;
         }
-        try {
-            mLoginContext = Krb5Login.withKeyTab(principle, keytab.getPath());
-            mLoginContext.login();
-        } catch (LoginException e) {
-            sendFailed();
-            ZimbraLog.imap.warn("Login failed", e);
-            return false;
-        }
+        debug("subject = %s", subject);
         final Map<String, String> props = getSaslProperties();
         if (DEBUG && props != null) {
             String qop = props.get(Sasl.QOP);
             debug("Sent QOP = " + (qop != null ? qop : "auth"));
         }
         try {
-            mSaslServer = (SaslServer) Subject.doAs(mLoginContext.getSubject(),
+            mSaslServer = (SaslServer) Subject.doAs(subject,
                 new PrivilegedExceptionAction() {
                     public Object run() throws SaslException {
                         return Sasl.createSaslServer(
@@ -124,12 +123,25 @@ public class GssAuthenticator extends Authenticator {
             sendFailed();
             e.printStackTrace();
             ZimbraLog.imap.warn("Could not create SaslServer", e.getCause());
-            logout();
             return false;
         }
         return true;
     }
 
+    private static Subject getSubject(Krb5Keytab keytab, KerberosPrincipal kp)
+            throws IOException {
+        List<KerberosKey> keys = keytab.getKeys(kp);
+        if (keys == null) {
+            ZimbraLog.imap.warn(
+                "Key not found in keystore for service principal '" + kp + "'");
+            return null;
+        }
+        Subject subject = new Subject();
+        subject.getPrincipals().add(kp);
+        subject.getPrivateCredentials().addAll(keys);
+        return subject;
+    }
+    
     protected Map<String, String> getSaslProperties() {
         // Don't offer encryption if SSL is enabled
         return mHandler.isSSLEnabled() ? null : ENCRYPTION_PROPS;
@@ -147,7 +159,6 @@ public class GssAuthenticator extends Authenticator {
         } catch (SaslException e) {
             ZimbraLog.imap.warn("SaslServer.evaluateResponse() failed", e);
             sendBadRequest();
-            logout();
             return;
         }
         // If exchange not complete, send additional challenge
@@ -165,8 +176,6 @@ public class GssAuthenticator extends Authenticator {
                     mSaslServer.getNegotiatedProperty(name));
             }
         }
-        // Log ourselves out of the KDC
-        logout();
         // If authentication failed, dispose of SaslServer instance
         if (!isAuthenticated()) {
             debug("Authentication failed");
@@ -210,14 +219,6 @@ public class GssAuthenticator extends Authenticator {
             mSaslServer.dispose();
         } catch (SaslException e) {
             ZimbraLog.imap.warn("SaslServer.dispose() failed", e);
-        }
-    }
-    
-    private void logout() {
-        try {
-            mLoginContext.logout();
-        } catch (LoginException e) {
-            ZimbraLog.imap.warn("Logout unsuccessful", e);
         }
     }
     
