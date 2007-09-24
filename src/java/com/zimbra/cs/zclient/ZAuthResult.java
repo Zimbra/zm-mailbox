@@ -50,7 +50,10 @@ public class ZAuthResult {
         if (re != null) mRefer = re.getText();
         mAttrs = ZGetInfoResult.getMap(e, AccountConstants.E_ATTRS, AccountConstants.E_ATTR);
         mPrefs = ZGetInfoResult.getMap(e, AccountConstants.E_PREFS, AccountConstants.E_PREF);
-		mSkin = e.getAttribute(AccountConstants.A_SKIN, null);
+		Element skinEl = e.getOptionalElement(AccountConstants.E_SKIN);
+		if (skinEl != null) {
+			mSkin = skinEl.getText();
+		}
 	}
 
     public String getAuthToken() {

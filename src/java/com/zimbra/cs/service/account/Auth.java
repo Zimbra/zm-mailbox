@@ -173,7 +173,7 @@ public class Auth extends AccountDocumentHandler {
 		if (skinRequest != null) {
 			String skin = SkinUtil.chooseSkin(acct, skinRequest.getText());
 			if (skin != null) {
-				response.addAttribute(AccountConstants.A_SKIN, skin);
+				response.addElement(AccountConstants.E_SKIN).setText(skin);
 			}
 		}	
 

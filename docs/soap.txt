@@ -325,16 +325,18 @@ global soap/system errors used with zimbra:Error/Code:
    [<authToken>...</authToken>]
    [<virtualHost>{virtual-host}</virtualHost>]
    [<prefs>[<pref name="..."/>...]</prefs>]
-   [<attrs>[<attr name="..."/>...]</attrs>]  
+   [<attrs>[<attr name="..."/>...]</attrs>]
+   [<requestedSkin>{skin}</requestedSkin>]
  </AuthRequest>
  
- <AuthResponse>
+ <AuthResponse">
    <authToken>...</authToken>
    <lifetime>...</lifetime>
    <sessionId .../>
    <refer>{mail-host}</refer>  
    [<prefs><pref name="{name}" modified="{modified-time}">{value}</pref>...</prefs>]
    [<attrs><attr name="{name}">{value}</a>...</attrs>]
+   [<skin>{skin-name}</skin>]
  </AuthResponse>
 
 Note:
@@ -352,6 +354,10 @@ an authToken can be passed instead of account/password/preauth to validate an ex
 
   only attrs that are allowed to be returned by GetInfo will be returned by this call
   
+  {requested-skin} = if specified the name of the skin requested by client
+  
+  {skin-name} = if requested-skin specified, the name of the skin to use
+
 ---------
 
  <ChangePasswordRequest>
