@@ -724,14 +724,15 @@ public abstract class ImapHandler extends ProtocolHandler {
         // [X-DRAFT-I05-SEARCHRES]  draft-melnikov-imap-search-res-05: IMAP extension for referencing the last SEARCH result
 
         boolean authenticated = isAuthenticated();
-        String nologin  = mStartedTLS || authenticated || mConfig.allowCleartextLogins() ? "" : " LOGINDISABLED";
-        String starttls = mStartedTLS || authenticated || !extensionEnabled("STARTTLS")     ? "" : " STARTTLS";
-        String plain    = !mStartedTLS || authenticated || !extensionEnabled("AUTH=PLAIN")  ? "" : " AUTH=PLAIN";
+        String nologin  = mStartedTLS || authenticated || mConfig.allowCleartextLogins()  ? "" : " LOGINDISABLED";
+        String starttls = mStartedTLS || authenticated || !extensionEnabled("STARTTLS")   ? "" : " STARTTLS";
+        String plain    = !mStartedTLS || authenticated || !extensionEnabled("AUTH=PLAIN")? "" : " AUTH=PLAIN";
         String gss      = authenticated || !isGssAuthEnabled() ? "" : " AUTH=GSSAPI";
         StringBuilder capability = new StringBuilder("CAPABILITY IMAP4rev1" + nologin + starttls + plain + gss);
-        for (String extension : SUPPORTED_EXTENSIONS)
+        for (String extension : SUPPORTED_EXTENSIONS) {
             if (extensionEnabled(extension))
                 capability.append(' ').append(extension);
+        }
 
         sendUntagged(capability.toString());
     }
@@ -740,12 +741,13 @@ public abstract class ImapHandler extends ProtocolHandler {
     private static final Boolean GSS_ENABLED = Boolean.getBoolean("ZimbraGssEnabled");
     
     private boolean isGssAuthEnabled() {
-        if (!GSS_ENABLED && !mConfig.isSaslGssapiEnabled()) return false;
-        if (!extensionEnabled("AUTH=GSSAPI")) return false;
+        if (!GSS_ENABLED && !mConfig.isSaslGssapiEnabled())
+            return false;
+        if (!extensionEnabled("AUTH=GSSAPI"))
+            return false;
         File keytab = new File(LC.krb5_keytab.value());
         if (!keytab.exists()) {
-            ZimbraLog.imap.warn(
-                "GSS authentication disabled because keytab file '" + keytab + "' not found.");
+            ZimbraLog.imap.warn("GSS authentication disabled because keytab file '" + keytab + "' not found.");
             return false;
         }
         return true;
@@ -797,8 +799,13 @@ public abstract class ImapHandler extends ProtocolHandler {
     boolean doAUTHENTICATE(String tag, String mechanism, byte[] response) throws IOException {
         if (!checkState(tag, State.NOT_AUTHENTICATED))
             return CONTINUE_PROCESSING;
+
         AuthenticatorUser authUser = new ImapAuthenticatorUser(this, tag);
-        Mechanism m = Mechanism.valueOf(mechanism);
+        Mechanism m = null;
+        try {
+            m = Mechanism.valueOf(mechanism);
+        } catch (IllegalArgumentException iae) { }
+
         if (m == Mechanism.PLAIN && mechanismEnabled(m)) {
             // RFC 2595 6: "The PLAIN SASL mechanism MUST NOT be advertised or used
             //              unless a strong encryption layer (such as the provided by TLS)
@@ -875,9 +882,12 @@ public abstract class ImapHandler extends ProtocolHandler {
             Account account = mechanism == Mechanism.GSSAPI ?
                 authenticateKrb5(authenticateId, tag) :
                 authenticate(username, authenticateId, password, command, tag);
-            if (account == null) return CONTINUE_PROCESSING;
+            if (account == null)
+                return CONTINUE_PROCESSING;
+
             ImapCredentials session = startSession(account, enabledHack, command, tag);
-            if (session == null) return CONTINUE_PROCESSING;
+            if (session == null)
+                return CONTINUE_PROCESSING;
         } catch (ServiceException e) {
             ZimbraLog.imap.warn(command + " failed", e);
             if (e.getCode().equals(AccountServiceException.CHANGE_PASSWORD))
