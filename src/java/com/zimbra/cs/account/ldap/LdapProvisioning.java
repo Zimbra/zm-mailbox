@@ -1038,6 +1038,7 @@ public class LdapProvisioning extends Provisioning {
         boolean needObjectClass = true;        
         boolean needAliasTargetId = (flags & Provisioning.SA_ALIAS_FLAG) != 0;
         boolean needCalendarUserType = true;
+        boolean needDomainName = true;
         
         for (int i=0; i < returnAttrs.length; i++) {
             if (Provisioning.A_uid.equalsIgnoreCase(returnAttrs[i]))
@@ -1052,9 +1053,17 @@ public class LdapProvisioning extends Provisioning {
                 needObjectClass = false;            
             else if (Provisioning.A_zimbraAccountCalendarUserType.equalsIgnoreCase(returnAttrs[i]))
             	needCalendarUserType = false;
+            else if (Provisioning.A_zimbraDomainName.equalsIgnoreCase(returnAttrs[i]))
+                needDomainName = false;
         }
         
-        int num = (needUID ? 1 : 0) + (needID ? 1 : 0) + (needCOSId ? 1 : 0) + (needAliasTargetId ? 1 : 0) + (needObjectClass ? 1 :0) + (needCalendarUserType ? 1 : 0);
+        int num = (needUID ? 1 : 0) + 
+                  (needID ? 1 : 0) + 
+                  (needCOSId ? 1 : 0) + 
+                  (needAliasTargetId ? 1 : 0) + 
+                  (needObjectClass ? 1 :0) + 
+                  (needCalendarUserType ? 1 : 0) + 
+                  (needDomainName ? 1 : 0);
         
         if (num == 0) return returnAttrs;
        
@@ -1066,6 +1075,7 @@ public class LdapProvisioning extends Provisioning {
         if (needAliasTargetId) result[i++] = Provisioning.A_zimbraAliasTargetId;
         if (needObjectClass) result[i++] = Provisioning.A_objectClass;
         if (needCalendarUserType) result[i++] = Provisioning.A_zimbraAccountCalendarUserType;
+        if (needDomainName) result[i++] = Provisioning.A_zimbraDomainName;
         System.arraycopy(returnAttrs, 0, result, i, returnAttrs.length);
         return result;
     }

@@ -45,7 +45,10 @@ public class Domain extends NamedEntry {
  
     protected Domain(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults) {
         super(name, id, attrs, defaults);
-        mUnicodeName = IDNUtil.toUnicodeDomainName(name);
+        if (name == null)
+            mUnicodeName = name;
+        else
+            mUnicodeName = IDNUtil.toUnicodeDomainName(name);
     }
     
     public String getUnicodeName() {
