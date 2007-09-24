@@ -43,6 +43,7 @@ import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.session.Session;
+import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
 import java.util.Iterator;
@@ -167,7 +168,16 @@ public class Auth extends AccountDocumentHandler {
                 }
             }
         }
-        return response;
+
+		Element skinRequest = request.getOptionalElement(AccountConstants.E_REQUESTED_SKIN);
+		if (skinRequest != null) {
+			String skin = SkinUtil.chooseSkin(acct, skinRequest.getText());
+			if (skin != null) {
+				response.addAttribute(AccountConstants.A_SKIN, skin);
+			}
+		}	
+
+		return response;
     }
 
     public boolean needsAuth(Map<String, Object> context) {

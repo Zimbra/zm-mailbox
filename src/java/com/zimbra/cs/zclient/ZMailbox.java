@@ -190,8 +190,9 @@ public class ZMailbox {
         private ZEventHandler mHandler;
         private List<String> mAttrs;
         private List<String> mPrefs;
+		private String mRequestedSkin;
 
-        public Options() {
+		public Options() {
         }
 
         public Options(String account, AccountBy accountBy, String password, String uri) {
@@ -287,7 +288,10 @@ public class ZMailbox {
 
         public List<String> getAttrs() { return mAttrs; }
         public void setAttrs(List<String> attrs) { mAttrs = attrs; }
-    }
+
+		public String getRequestedSkin() { return mRequestedSkin; }
+		public void setRequestedSkin(String skin) { mRequestedSkin = skin; }
+	}
 
 	private static class VoiceStorePrincipal {
 		private String mId;
@@ -451,7 +455,10 @@ public class ZMailbox {
         req.addElement(AccountConstants.E_PASSWORD).setText(password);
         if (options.getVirtualHost() != null)
             req.addElement(AccountConstants.E_VIRTUAL_HOST).setText(options.getVirtualHost());
-        addAttrsAndPrefs(req, options);
+		if (options.getRequestedSkin() != null) {
+			req.addElement(AccountConstants.E_REQUESTED_SKIN).setText(options.getRequestedSkin());
+		}
+		addAttrsAndPrefs(req, options);
         ZAuthResult r = new ZAuthResult(invoke(req));
         r.setSessionId(mTransport.getSessionId());
         return r;
@@ -462,7 +469,10 @@ public class ZMailbox {
         XMLElement req = new XMLElement(AccountConstants.AUTH_REQUEST);
         Element authTokenEl = req.addElement(AccountConstants.E_AUTH_TOKEN);
         authTokenEl.setText(options.getAuthToken());
-        addAttrsAndPrefs(req, options);
+		if (options.getRequestedSkin() != null) {
+			req.addElement(AccountConstants.E_REQUESTED_SKIN).setText(options.getRequestedSkin());
+		}
+		addAttrsAndPrefs(req, options);
         ZAuthResult r = new ZAuthResult(invoke(req));
         r.setSessionId(mTransport.getSessionId());
         return r;

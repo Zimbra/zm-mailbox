@@ -40,6 +40,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ClassLoaderUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Cos;
 
 public class SkinUtil {
 
@@ -124,7 +125,42 @@ public class SkinUtil {
         }
         return availSkins;
     }
-        
 
+	public static String chooseSkin(Account acct, String requestedSkin) throws ServiceException {
+		String[] installedSkins = getAllInstalledSkinsSorted();
+
+		// If the requested skin is intalled and allowed, return it.
+		Set<String> allowedSkins = acct.getMultiAttrSet(Provisioning.A_zimbraAvailableSkin);
+		if (checkSkin(requestedSkin, installedSkins, allowedSkins)) {
+			return requestedSkin;
+		}
+
+		// If the account's skin is intalled and allowed, return it.
+		String accountSkin = acct.getAttr(Provisioning.A_zimbraPrefSkin);
+		if (checkSkin(accountSkin, installedSkins, allowedSkins)) {
+			return accountSkin;
+		}
+
+		// If the cos default skin is intalled and allowed, return it.
+		String cosSkin = Provisioning.getInstance().getCOS(acct).getAttr(Provisioning.A_zimbraPrefSkin);
+		if (checkSkin(cosSkin, installedSkins, allowedSkins)) {
+			return cosSkin;
+		}
+
+		throw ServiceException.FAILURE("No valid skins", null);
+	}
+        
+	private static boolean checkSkin(String requestedSkin, String[] installedSkins, Set<String> allowedSkins) {
+		if (requestedSkin != null) {
+			for (String skin : installedSkins) {
+				if (requestedSkin.equals(skin)) {
+					if (allowedSkins.size() == 0 || allowedSkins.contains(skin)) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
     
 }

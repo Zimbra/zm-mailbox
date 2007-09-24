@@ -40,6 +40,7 @@ public class ZAuthResult {
     private String mSessionId;
     private Map<String, List<String>> mAttrs;
     private Map<String, List<String>> mPrefs;
+	private String mSkin;
 
     public ZAuthResult(Element e) throws ServiceException {
         mAuthToken = e.getElement(AccountConstants.E_AUTH_TOKEN).getText();
@@ -49,7 +50,8 @@ public class ZAuthResult {
         if (re != null) mRefer = re.getText();
         mAttrs = ZGetInfoResult.getMap(e, AccountConstants.E_ATTRS, AccountConstants.E_ATTR);
         mPrefs = ZGetInfoResult.getMap(e, AccountConstants.E_PREFS, AccountConstants.E_PREF);
-    }
+		mSkin = e.getAttribute(AccountConstants.A_SKIN, null);
+	}
 
     public String getAuthToken() {
         return mAuthToken;
@@ -81,5 +83,9 @@ public class ZAuthResult {
 
     public Map<String, List<String>> getPrefs() {
         return mPrefs;
+    }
+
+    public String getSkin() {
+        return mSkin;
     }
 }
