@@ -133,6 +133,7 @@ public class AccountConstants {
     public static final String E_CHILD_ACCOUNTS = "childAccounts";
     public static final String E_CHILD_ACCOUNT = "childAccount";
     public static final String E_CONTENT = "content";
+    public static final String E_REQUESTED_SKIN = "requestedSkin";
     public static final String E_CSV = "csv";
     public static final String A_N = "n";
     public static final String A_NAME = "name";
@@ -151,7 +152,8 @@ public class AccountConstants {
     public static final String A_SORT_BY = "sortBy";
     public static final String A_SORT_ASCENDING = "sortAscending";
     public static final String A_VISIBLE = "visible";
-    
+	public static final String A_SKIN = "skin";
+
     // calendar resource search
     public static final String A_ENTRY_SEARCH_FILTER_OR = "or";
     public static final String A_ENTRY_SEARCH_FILTER_NEGATION = "not";
