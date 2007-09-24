@@ -25,12 +25,17 @@
 
 package com.zimbra.cs.service.account;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.KeyValuePair;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.EntrySearchFilter;
+import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.EntrySearchFilter.Multi;
 import com.zimbra.cs.account.EntrySearchFilter.Single;
 import com.zimbra.cs.account.EntrySearchFilter.Visitor;
@@ -101,6 +106,13 @@ public class ToXML {
     }
 
     private static void addAccountAttrs(Element e, Map attrs, String key) {
+        AttributeManager attrMgr = null;
+        try {
+            attrMgr = AttributeManager.getInstance();
+        } catch (ServiceException se) {
+            ZimbraLog.account.warn("failed to get AttributeManager instance", se);
+        }
+        
         for (Iterator iter = attrs.entrySet().iterator(); iter.hasNext(); ) {
             Map.Entry entry = (Entry) iter.next();
             String name = (String) entry.getKey();
@@ -113,18 +125,30 @@ public class ToXML {
             // Never return password.
             if (name.equalsIgnoreCase(Provisioning.A_userPassword))
                 value = "VALUE-BLOCKED";
+            
+            boolean isIDN = (attrMgr==null)? false: attrMgr.isEmailOrIDN(name);
 
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;
-                for (int i = 0; i < sv.length; i++)
-                    e.addKeyValuePair(name, sv[i], AccountConstants.E_A, key);
+                for (int i = 0; i < sv.length; i++) {
+                    // e.addKeyValuePair(name, sv[i], AccountConstants.E_A, key);
+                    encodeAttr(e, name, sv[i], AccountConstants.E_A, key, isIDN);
+                }
             } else if (value instanceof String) {
-                e.addKeyValuePair(name, (String) value, AccountConstants.E_A, key);
+                // e.addKeyValuePair(name, (String) value, AccountConstants.E_A, key);
+                encodeAttr(e, name, (String) value, AccountConstants.E_A, key, isIDN);
             }
         }       
     }
 
     private static void addAccountAttrsOld(Element e, Map attrs, String key, Set<String> reqAttrs) {
+        AttributeManager attrMgr = null;
+        try {
+            attrMgr = AttributeManager.getInstance();
+        } catch (ServiceException se) {
+            ZimbraLog.account.warn("failed to get AttributeManager instance", se);
+        }
+        
         for (Iterator iter = attrs.entrySet().iterator(); iter.hasNext(); ) {
             Map.Entry entry = (Entry) iter.next();
             String name = (String) entry.getKey();
@@ -141,18 +165,26 @@ public class ToXML {
             // only returns requested attrs
             if (reqAttrs != null && !reqAttrs.contains(name))
                 continue;
+            
+            boolean isIDN = (attrMgr==null)? false: attrMgr.isEmailOrIDN(name);
 
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;
                 for (int i = 0; i < sv.length; i++) {
+                    /*
                     Element pref = e.addElement(AccountConstants.E_A);
                     pref.addAttribute(key, name);
                     pref.setText(sv[i]);
+                    */
+                    encodeAttrOld(e, name, sv[i], AccountConstants.E_A, key, isIDN);
                 }
             } else if (value instanceof String) {
+                /*
                 Element pref = e.addElement(AccountConstants.E_A);
                 pref.addAttribute(key, name);
                 pref.setText((String) value);
+                */
+                encodeAttrOld(e, name, (String) value, AccountConstants.E_A, key, isIDN);
             }
         }       
     }
@@ -235,6 +267,25 @@ public class ToXML {
         e.addAttribute(AccountConstants.A_ID, ds.getId());
         e.addAttribute(AccountConstants.A_TYPE, ds.getType().name());
         addAccountAttrs(e, ds.getAttrs(), AccountConstants.A_N);
+        return e;
+    }
+    
+    public static void encodeAttr(Element parent, String key, String value, String eltname, String attrname, boolean isIDN) {
+        KeyValuePair kvPair = parent.addKeyValuePair(key, value, eltname, attrname);
+        if (isIDN) {
+            kvPair.addAttribute(AccountConstants.A_UTF8, IDNUtil.toUnicode(value));
+        }
+    }
+    
+    public static Element encodeAttrOld(Element parent, String key, String value, String eltname, String attrname, boolean isIDN) {
+        Element e = parent.addElement(eltname);
+        e.addAttribute(attrname, key);
+        e.setText(value);
+        
+        if (isIDN) {
+            e.addAttribute(AccountConstants.A_UTF8, IDNUtil.toUnicode(value));
+        }
+        
         return e;
     }
 }

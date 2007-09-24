@@ -35,6 +35,7 @@ import java.util.Map.Entry;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -51,16 +52,19 @@ public class GetAllConfig extends AdminDocumentHandler {
 	    Map attrs = prov.getConfig().getAttrs();
 
 	    Element response = lc.createElement(AdminConstants.GET_ALL_CONFIG_RESPONSE);
-	    
+	    AttributeManager attrMgr = AttributeManager.getInstance();
         for (Iterator mit = attrs.entrySet().iterator(); mit.hasNext(); ) {
             Map.Entry entry = (Entry) mit.next();
             String name = (String) entry.getKey();
             Object value = entry.getValue();
+            
+            boolean isIDN = attrMgr.isEmailOrIDN(name);
+            
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;
-                GetConfig.doConfig(response, name, sv);
+                GetConfig.doConfig(response, name, sv, isIDN);
             } else if (value instanceof String){
-                GetConfig.doConfig(response, name, (String) value);
+                GetConfig.doConfig(response, name, (String) value, isIDN);
             }
         }
 	    return response;

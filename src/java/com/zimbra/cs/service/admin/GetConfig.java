@@ -33,7 +33,9 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -44,29 +46,29 @@ public class GetConfig extends AdminDocumentHandler {
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
         ZimbraSoapContext lc = getZimbraSoapContext(context);
-	    Provisioning prov = Provisioning.getInstance();
+        Provisioning prov = Provisioning.getInstance();
 
         Element a = request.getElement(AdminConstants.E_A);
-	    String name = a.getAttribute(AdminConstants.A_N);
+        String name = a.getAttribute(AdminConstants.A_N);
 
         String value[] = prov.getConfig().getMultiAttr(name);
 
-	    Element response = lc.createElement(AdminConstants.GET_CONFIG_RESPONSE);
-        doConfig(response, name, value);
+        Element response = lc.createElement(AdminConstants.GET_CONFIG_RESPONSE);
+        doConfig(response, name, value, AttributeManager.getInstance().isEmailOrIDN(name));
 
-	    return response;
+        return response;
 	}
 
-	public static void doConfig(Element e, String name, String[] value) {
-	    if (value == null)
-	        return;
-	    for (int i = 0; i < value.length; i++)
-            e.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText(value[i]);
+    public static void doConfig(Element e, String name, String[] value, boolean isIDN) {
+        if (value == null)
+            return;
+        for (int i = 0; i < value.length; i++)
+            ToXML.encodeAttrOld(e, name, value[i], AdminConstants.E_A, AdminConstants.A_N, isIDN);
     }
 
-	public static void doConfig(Element e, String name, String value) {
-	    if (value == null)
-	        return;
-        e.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText(value);
+    public static void doConfig(Element e, String name, String value, boolean isIDN) {
+        if (value == null)
+            return;
+        ToXML.encodeAttrOld(e, name, value, AdminConstants.E_A, AdminConstants.A_N, isIDN);
     }
 }

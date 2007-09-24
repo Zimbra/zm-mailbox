@@ -78,12 +78,27 @@ public class IDNUtil {
         return emailAddress;
     }
     
-    
-    /*
-    private static boolean isACE(String name) {
-         return name.startsWith(ACE_PREFIX);
+    public static String toAscii(String name) {
+        try {
+            if (name.contains("@"))
+                return toAsciiEmail(name);
+            else
+                return toAsciiDomainName(name);
+        } catch (ServiceException e) {
+            return name;
+        }
     }
-    */
+    
+    public static String toUnicode(String name) {
+        try {
+            if (name.contains("@"))
+                return toUnicodeEmail(name);
+            else
+                return toUnicodeDomainName(name);
+        } catch (ServiceException e) {
+            return name;
+        }
+    }
     
     public static void main(String arsg[]) {
         String u1 = "abc.\u5f35\u611b\u73b2" + ".jp";

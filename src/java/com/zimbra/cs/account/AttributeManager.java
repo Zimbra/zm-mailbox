@@ -478,6 +478,16 @@ public class AttributeManager {
  	   return mFlagToAttrsMap.get(AttributeFlag.domainAdminModifiable).contains(attr);
     }
     
+    public boolean isEmailOrIDN(String attr) {
+        AttributeInfo ai = mAttrs.get(attr.toLowerCase());
+        if (ai != null) {
+            AttributeType at = ai.getType();
+            return (at == AttributeType.TYPE_EMAIL || at == AttributeType.TYPE_EMAILP ||
+                    mFlagToAttrsMap.get(AttributeFlag.idn).contains(attr));
+        } else
+            return false;
+    }
+    
     private boolean hasFlag(AttributeFlag flag, String attr) {
         return mFlagToAttrsMap.get(flag).contains(attr);
     }

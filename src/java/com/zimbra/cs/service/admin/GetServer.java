@@ -34,9 +34,11 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -79,15 +81,19 @@ public class GetServer extends AdminDocumentHandler {
         server.addAttribute(AdminConstants.A_NAME, s.getName());
         server.addAttribute(AdminConstants.A_ID, s.getId());
         Map<String, Object> attrs = s.getAttrs(applyConfig);
+        AttributeManager attrMgr = AttributeManager.getInstance();
         for (Map.Entry<String, Object> entry : attrs.entrySet()) {
             String name = entry.getKey();
             Object value = entry.getValue();
+            
+            boolean isIDN = attrMgr.isEmailOrIDN(name);
+            
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;
                 for (int i = 0; i < sv.length; i++)
-                    server.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText(sv[i]);
+                    ToXML.encodeAttrOld(server, name, sv[i], AdminConstants.E_A, AdminConstants.A_N, isIDN);
             } else if (value instanceof String)
-                server.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText((String) value);
+                ToXML.encodeAttrOld(server, name, (String)value, AdminConstants.E_A, AdminConstants.A_N, isIDN);
         }
     }
 }

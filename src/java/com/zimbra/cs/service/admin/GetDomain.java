@@ -32,12 +32,13 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
 
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -92,6 +93,7 @@ public class GetDomain extends AdminDocumentHandler {
         domain.addAttribute(AdminConstants.A_NAME,d.getUnicodeName());
         domain.addAttribute(AdminConstants.A_ID,d.getId());
         Map attrs = d.getAttrs(applyConfig);
+        AttributeManager attrMgr = AttributeManager.getInstance();
         for (Iterator mit = attrs.entrySet().iterator(); mit.hasNext(); ) {
             Map.Entry entry = (Entry) mit.next();
             String name = (String) entry.getKey();
@@ -100,12 +102,14 @@ public class GetDomain extends AdminDocumentHandler {
             if (!applyConfig && (reqAttrs != null && !reqAttrs.contains(name)))
                 continue;
             
+            boolean isIDN = attrMgr.isEmailOrIDN(name);
+            
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;
                 for (int i = 0; i < sv.length; i++)
-                    domain.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText(sv[i]);
+                    ToXML.encodeAttrOld(domain, name, sv[i], AdminConstants.E_A, AdminConstants.A_N, isIDN);
             } else if (value instanceof String)
-                domain.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText((String) value);
+                ToXML.encodeAttrOld(domain, name, (String)value, AdminConstants.E_A, AdminConstants.A_N, isIDN);
         }
     }
 }

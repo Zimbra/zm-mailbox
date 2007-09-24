@@ -245,6 +245,17 @@ public class TestIDN extends TestCase {
         }
     }
     
+    private void setAddressAttrsTest(EntryType entryType, NamedEntry entry, IDNName name) throws Exception {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        
+        attrs.put(Provisioning.A_zimbraMailCanonicalAddress, "canonical-" + name.uName());
+        attrs.put("+" + Provisioning.A_zimbraMailForwardingAddress, "extra-1-forwarding-" + name.uName());
+        attrs.put("+" + Provisioning.A_zimbraMailForwardingAddress, "extra-2-forwarding-" + name.uName());
+        attrs.put("+" + Provisioning.A_zimbraMailDeliveryAddress, "extra-1-delivery-" + name.uName());
+        attrs.put("+" + Provisioning.A_zimbraMailDeliveryAddress, "extra-2-delivery-" + name.uName());
+        mProv.modifyAttrs(entry, attrs);
+    }
+    
     Domain domainTest() throws Exception {
         IDNName d1Name = new IDNName(makeDomainName("domain-1."));
         IDNName d2Name = new IDNName(makeDomainName("domain-2."));
@@ -289,6 +300,9 @@ public class TestIDN extends TestCase {
         // get by name test
         getTest(EntryType.ACCOUNT, acct1, acct1Name);
         getTest(EntryType.ACCOUNT, acct2, acct2Name);
+        
+        // set address attrs tets
+        setAddressAttrsTest(EntryType.ACCOUNT, acct1, acct1Name);
         
         // add aliases
         mProv.addAlias(acct1, alias1Name.uName());  // add alias by uname

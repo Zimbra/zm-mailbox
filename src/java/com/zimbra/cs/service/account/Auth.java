@@ -158,13 +158,14 @@ public class Auth extends AccountDocumentHandler {
         Element attrsRequest = request.getOptionalElement(AccountConstants.E_ATTRS);
         if (attrsRequest != null) {
             Element attrsResponse = response.addUniqueElement(AccountConstants.E_ATTRS);
-            Set<String> attrList = AttributeManager.getInstance().getAttrsWithFlag(AttributeFlag.accountInfo);
+            AttributeManager attrMgr = AttributeManager.getInstance();
+            Set<String> attrList = attrMgr.getAttrsWithFlag(AttributeFlag.accountInfo);
             for (Iterator it = attrsRequest.elementIterator(AccountConstants.E_ATTR); it.hasNext(); ) {
                 Element e = (Element) it.next();
                 String name = e.getAttribute(AccountConstants.A_NAME);
                 if (name != null && attrList.contains(name)) {
                     Object v = acct.getMultiAttr(name);
-                    if (v != null) GetInfo.doAttr(attrsResponse, name, v);
+                    if (v != null) GetInfo.doAttr(attrsResponse, name, v, attrMgr.isEmailOrIDN(name));
                 }
             }
         }

@@ -120,6 +120,15 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     accountInherited.......if not set on account, inherit from COS
     domainInherited........if not set on domain, inherit from global config
     serverInherited........if not set on server, inherit from global config
+    idn....................can contain Internationalized Domain Names (IDN) 
+                           in ACE(ASCII Compatible Encoding) form.
+                           For attributes that are either:
+	                           - of type email or emailp, or
+	                           - has idn flag
+                           server will also include the utf8 values in an 
+                           utf8="..." attribute in SOAP responses,
+                           in addition to the ACE values that are stored in 
+                           ldap.
 
   deprecatedSince:
   	version since which the attribute had been deprecated.  Deprecated
@@ -155,7 +164,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr name="l" type="string" optionalIn="account" flags="domainAdminModifiable"/>
 
-<attr name="mail" type="string" immutable="1" optionalIn="account,distributionList"/>
+<attr name="mail" type="string" immutable="1" optionalIn="account,distributionList" flags="idn"/>
 
 <attr name="objectClass" type="string"/>
 
@@ -246,7 +255,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>mail signature enabled (deprecatedSince 5.0 in identity)</desc>
 </attr>
 
-<attr id="19" name="zimbraDomainName" type="string" max="256" immutable="1" cardinality="single" requiredIn="domain">
+<attr id="19" name="zimbraDomainName" type="string" max="256" immutable="1" cardinality="single" requiredIn="domain" flags="idn">
   <desc>name of the domain</desc>
 </attr>
 
@@ -822,7 +831,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <deprecateDesc>We now maintain all tables unconditionally.  See bug 19145</deprecateDesc>
 </attr>
 
-<attr id="172" name="zimbraDefaultDomainName" type="string" max="256" cardinality="single" optionalIn="globalConfig">
+<attr id="172" name="zimbraDefaultDomainName" type="string" max="256" cardinality="single" optionalIn="globalConfig" flags="idn">
   <desc>name of the default domain for accounts when authenticating without a domain</desc>
 </attr>
 
