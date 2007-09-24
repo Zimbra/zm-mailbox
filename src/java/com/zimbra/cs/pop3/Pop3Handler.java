@@ -28,12 +28,6 @@
  */
 package com.zimbra.cs.pop3;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PushbackInputStream;
-import java.net.InetAddress;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -44,10 +38,21 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.security.sasl.Authenticator;
+import com.zimbra.cs.security.sasl.AuthenticatorUser;
+import com.zimbra.cs.security.sasl.GssAuthenticator;
+import com.zimbra.cs.security.sasl.PlainAuthenticator;
 import com.zimbra.cs.stats.ActivityTracker;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.util.Config;
+import org.apache.commons.codec.binary.Base64;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PushbackInputStream;
+import java.net.InetAddress;
 
 /**
  * @author schemers
@@ -62,6 +67,9 @@ public abstract class Pop3Handler extends ProtocolHandler {
     private static final int TERMINATOR_C = '.';    
     private static final byte[] TERMINATOR_BYTE = { '.' };
 
+    private static final String MECHANISM_PLAIN = PlainAuthenticator.MECHANISM;
+    private static final String MECHANISM_GSSAPI = GssAuthenticator.MECHANISM;
+    
     // Connection specific data
     protected Pop3Config mConfig;
     protected OutputStream mOutputStream;
@@ -74,11 +82,11 @@ public abstract class Pop3Handler extends ProtocolHandler {
     private Pop3Mailbox mMbx;
     private String mCommand;
     private long mStartTime;
-    
     protected int mState;
                       
     protected boolean dropConnection;
-    
+    protected Authenticator mAuthenticator;
+
     protected static final int STATE_AUTHORIZATION = 1;
     protected static final int STATE_TRANSACTION = 2;
     protected static final int STATE_UPDATE = 3;
@@ -131,6 +139,10 @@ public abstract class Pop3Handler extends ProtocolHandler {
     
     protected boolean processCommand(String line) throws IOException {
         // TODO: catch IOException too?
+        if (mAuthenticator != null && !mAuthenticator.isComplete()) {
+            return continueAuthentication(line);
+        }
+        
         mCommand = null;
         mStartTime = 0;
         mCurrentCommandLine = line;
@@ -188,12 +200,12 @@ public abstract class Pop3Handler extends ProtocolHandler {
             arg = mCommand.substring(space + 1); 
             mCommand = mCommand.substring(0, space);
         }
-        
+
         if (ZimbraLog.pop.isDebugEnabled()) {
             String darg = "PASS".equals(mCommand) ? "<BLOCKED>" : arg;
             ZimbraLog.pop.debug("command=%s arg=%s", mCommand, darg);
         }
-                
+
         if (mCommand.length() < 1)
             throw new Pop3CmdException("invalid request. please specify a command");
 
@@ -214,6 +226,12 @@ public abstract class Pop3Handler extends ProtocolHandler {
         // command handler reported a syntax error or failed otherwise)
         
         switch (ch) {
+        case 'a':
+        case 'A':
+            if ("AUTH".equalsIgnoreCase(mCommand)) {
+                doAUTH(arg);
+                return true;
+            }
         case 'c':
         case 'C':
             if ("CAPA".equalsIgnoreCase(mCommand)) {
@@ -309,7 +327,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
 
     }
 
-    private void sendERR(String response) throws IOException {
+    protected void sendERR(String response) throws IOException {
         sendResponse("-ERR", response, true);
     }
 
@@ -321,6 +339,10 @@ public abstract class Pop3Handler extends ProtocolHandler {
         sendResponse("+OK", response, flush);        
     }
 
+    protected void sendContinuation(String s) throws IOException {
+        sendResponse("+", s, true);
+    }
+    
     private void sendResponse(String status, String msg, boolean flush) throws IOException {
         String cl = mCurrentCommandLine != null ? mCurrentCommandLine : "<none>";
         String response = (msg == null || msg.length() == 0) ? status : status+" "+msg;
@@ -450,7 +472,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
         sendOK("hello "+mUser+", please enter your password");
     }
     
-    private void doPASS(String password) throws Pop3CmdException, IOException, ServiceException {
+    private void doPASS(String password) throws Pop3CmdException, IOException {
         checkIfLoginPermitted();
         
         if (mState != STATE_AUTHORIZATION)
@@ -464,15 +486,90 @@ public abstract class Pop3Handler extends ProtocolHandler {
 
         if (password.length() > 1024)
             throw new Pop3CmdException("password length too long");
-        
+
+        authenticate(mUser, password, null);
+        sendOK("server ready");
+    }
+
+    private void doAUTH(String arg) throws IOException {
+        if (isAuthenticated()) {
+            sendERR("command only valid in AUTHORIZATION state");
+            return;
+        }
+        int i = arg.indexOf(' ');
+        String mechanism = i > 0 ? arg.substring(0, i) : arg;
+        String initialResponse = i > 0 ? arg.substring(i + 1) : null;
+        AuthenticatorUser authUser = new Pop3AuthenticatorUser(this);
+        if (MECHANISM_PLAIN.equals(mechanism)) {
+            if (!isSSLEnabled() || !mStartedTLS) {
+                sendERR("cleartext logins disabled");
+                return;
+            }
+            mAuthenticator = new PlainAuthenticator(authUser);
+        } else if (MECHANISM_GSSAPI.equals(mechanism) && isGssAuthEnabled()) {
+            mAuthenticator = new GssAuthenticator(authUser);
+        } else {
+            sendERR("mechanism not supported");
+            return;
+        }
+        if (!mAuthenticator.initialize()) {
+            mAuthenticator = null;
+            return;
+        }
+        if (initialResponse != null) {
+            continueAuthentication(initialResponse);
+        } else {
+            sendContinuation("");
+        }
+    }
+
+    private boolean continueAuthentication(String response) throws IOException {
+        byte[] b = Base64.decodeBase64(response.getBytes("us-ascii"));
+        mAuthenticator.handle(b);
+        if (mAuthenticator.isComplete()) {
+            if (mAuthenticator.isAuthenticated()) {
+                completeAuthentication();
+            } else {
+                mAuthenticator = null;
+            }
+        }
+        return true;
+    }
+
+    private boolean isAuthenticated() {
+        return mState != STATE_AUTHORIZATION && mAccountId != null;
+    }
+
+    // TODO Remove this debugging option for final release
+    private static final Boolean GSS_ENABLED = Boolean.getBoolean("ZimbraGssEnabled");
+
+    private boolean isGssAuthEnabled() {
+        return GSS_ENABLED || mConfig.isSaslGssapiEnabled();
+    }
+    
+    protected void authenticate(String username,
+                                String password,
+                                String mechanism)
+            throws Pop3CmdException, IOException {
         try {
-            Provisioning prov = Provisioning.getInstance();            
-            Account acct = prov.get(AccountBy.name, mUser);
-            if (acct == null)
-                throw new Pop3CmdException("invalid username/password");
+            Provisioning prov = Provisioning.getInstance();
+            Account acct;
+            if (MECHANISM_GSSAPI.equals(mechanism)) {
+                acct = prov.get(AccountBy.krb5Principal, username);
+                if (acct == null) {
+                    throw new Pop3CmdException("invalid user principle '" + username + "'");
+                }
+            } else {
+                acct = prov.get(AccountBy.name, username);
+                if (acct == null) {
+                    throw new Pop3CmdException("invalid username/password");
+                }
+            }
             if (!acct.getBooleanAttr(Provisioning.A_zimbraPop3Enabled, false))
-                throw new Pop3CmdException("pop access not enabled for account");                
-            prov.authAccount(acct, password, "pop3");
+                throw new Pop3CmdException("pop access not enabled for account");
+            if (!MECHANISM_GSSAPI.equals(mechanism)) {
+                prov.authAccount(acct, password, "pop3");
+            }
             mAccountId = acct.getId();
             mAccountName = acct.getName();
             Mailbox mailbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
@@ -480,8 +577,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
             mState = STATE_TRANSACTION;
             mExpire = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailMessageLifetime, 0) / (1000*60*60*24));
             if (mExpire > 0 && mExpire < MIN_EXPIRE_DAYS) mExpire = MIN_EXPIRE_DAYS;
-            sendOK("server ready");
-        } catch (AccountServiceException e) {
+        } catch (ServiceException e) {
             // need to catch and mask these two
             if (e.getCode().equals(AccountServiceException.NO_SUCH_ACCOUNT) ||
                 e.getCode().equals(AccountServiceException.AUTH_FAILED)) {
@@ -495,16 +591,16 @@ public abstract class Pop3Handler extends ProtocolHandler {
             }
         }
     }
-    
-    private void checkIfLoginPermitted()
-    throws Pop3CmdException, ServiceException {
-        if (mConfig.isSSLEnabled()) {
-            return;
-        }
-        if (!mStartedTLS && !mConfig.allowCleartextLogins())
+
+    private void checkIfLoginPermitted() throws Pop3CmdException {
+        if (!isSSLEnabled() && !mStartedTLS && !mConfig.allowCleartextLogins())
             throw new Pop3CmdException("only valid after entering TLS mode");        
     }
-    
+
+    protected boolean isSSLEnabled() {
+        return mConfig.isSSLEnabled();
+    }
+        
     private void doSTAT() throws Pop3CmdException, IOException {
         if (mState != STATE_TRANSACTION) 
             throw new Pop3CmdException("this command is only valid after a login");
@@ -630,8 +726,13 @@ public abstract class Pop3Handler extends ProtocolHandler {
         sendLine("TOP", false);
         sendLine("USER", false);
         sendLine("UIDL", false);
-        if (!mConfig.isSSLEnabled())
-            sendLine("STLS", false);        
+        if (!mConfig.isSSLEnabled()) {
+            sendLine("STLS", false);
+        }
+        String sasl = getSaslCapabilities();
+        if (sasl != null) {
+            sendLine("SASL" + sasl, false);
+        }
         if (mState != STATE_TRANSACTION) {
             sendLine("EXPIRE "+MIN_EXPIRE_DAYS+" USER", false);
         } else {
@@ -645,5 +746,14 @@ public abstract class Pop3Handler extends ProtocolHandler {
         sendLine(TERMINATOR);
     }
 
+    private String getSaslCapabilities() {
+        StringBuilder sb = new StringBuilder();
+        if (isSSLEnabled() || mStartedTLS) sb.append(" PLAIN");
+        if (isGssAuthEnabled()) sb.append(" GSSAPI");
+        return sb.toString();
+    }
+    
     protected abstract void startTLS() throws IOException;
+
+    protected abstract void completeAuthentication() throws IOException;
 }

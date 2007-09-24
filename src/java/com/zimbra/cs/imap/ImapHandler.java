@@ -24,7 +24,6 @@
  */
 package com.zimbra.cs.imap;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ArrayUtil;
@@ -66,7 +65,6 @@ import com.zimbra.cs.security.sasl.Authenticator;
 import com.zimbra.cs.security.sasl.AuthenticatorUser;
 import com.zimbra.cs.security.sasl.GssAuthenticator;
 import com.zimbra.cs.security.sasl.PlainAuthenticator;
-import com.zimbra.cs.security.sasl.Mechanism;
 import com.zimbra.cs.service.mail.FolderAction;
 import com.zimbra.cs.service.mail.ItemActionHelper;
 import com.zimbra.cs.service.util.ItemId;
@@ -84,7 +82,6 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -118,6 +115,9 @@ public abstract class ImapHandler extends ProtocolHandler {
 
     static final char[] LINE_SEPARATOR       = { '\r', '\n' };
     static final byte[] LINE_SEPARATOR_BYTES = { '\r', '\n' };
+
+    private static final String MECHANISM_PLAIN  = PlainAuthenticator.MECHANISM;
+    private static final String MECHANISM_GSSAPI = GssAuthenticator.MECHANISM;
 
     private DateFormat mTimeFormat   = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss Z", Locale.US);
     private DateFormat mDateFormat   = new SimpleDateFormat("dd-MMM-yyyy", Locale.US);
@@ -200,7 +200,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         if (mAuthenticator.isComplete()) {
             if (mAuthenticator.isAuthenticated()) {
                 // Authentication successful
-                completeAuthentication(mAuthenticator);
+                completeAuthentication();
                 return CONTINUE_PROCESSING;
             }
             // Authentication failed
@@ -741,16 +741,8 @@ public abstract class ImapHandler extends ProtocolHandler {
     private static final Boolean GSS_ENABLED = Boolean.getBoolean("ZimbraGssEnabled");
     
     private boolean isGssAuthEnabled() {
-        if (!GSS_ENABLED && !mConfig.isSaslGssapiEnabled())
-            return false;
-        if (!extensionEnabled("AUTH=GSSAPI"))
-            return false;
-        File keytab = new File(LC.krb5_keytab.value());
-        if (!keytab.exists()) {
-            ZimbraLog.imap.warn("GSS authentication disabled because keytab file '" + keytab + "' not found.");
-            return false;
-        }
-        return true;
+        return (GSS_ENABLED || mConfig.isSaslGssapiEnabled()) &&
+               extensionEnabled("AUTH=GSSAPI");
     }
     
     boolean extensionEnabled(String extension) {
@@ -801,12 +793,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             return CONTINUE_PROCESSING;
 
         AuthenticatorUser authUser = new ImapAuthenticatorUser(this, tag);
-        Mechanism m = null;
-        try {
-            m = Mechanism.valueOf(mechanism);
-        } catch (IllegalArgumentException iae) { }
-
-        if (m == Mechanism.PLAIN && mechanismEnabled(m)) {
+        if (MECHANISM_PLAIN.equals(mechanism) && mechanismEnabled(mechanism)) {
             // RFC 2595 6: "The PLAIN SASL mechanism MUST NOT be advertised or used
             //              unless a strong encryption layer (such as the provided by TLS)
             //              is active or backwards compatibility dictates otherwise."
@@ -815,7 +802,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                 return CONTINUE_PROCESSING;
             }
             mAuthenticator = new PlainAuthenticator(authUser);
-        } else if (m == Mechanism.GSSAPI && isGssAuthEnabled()) {
+        } else if (MECHANISM_GSSAPI.equals(mechanism) && isGssAuthEnabled()) {
             mAuthenticator = new GssAuthenticator(authUser);
         } else {
             // no other AUTHENTICATE mechanisms are supported yet
@@ -840,8 +827,8 @@ public abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    private boolean mechanismEnabled(Mechanism mechanism) {
-        return extensionEnabled("AUTH=" + mechanism.name());
+    private boolean mechanismEnabled(String mechanism) {
+        return extensionEnabled("AUTH=" + mechanism);
     }
     
     boolean doLOGIN(String tag, String username, String password) throws IOException {
@@ -865,7 +852,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
     
     boolean authenticate(String username, String authenticateId, String password,
-                         String command, String tag, Mechanism mechanism) throws IOException {
+                         String command, String tag, String mechanism) throws IOException {
         // the Windows Mobile 5 hacks are enabled by appending "/wm" to the username, etc.
         // TODO For GSSAPI, should enabled hack be applied to authenticateId
         // instead?
@@ -879,7 +866,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         }
 
         try {
-            Account account = mechanism == Mechanism.GSSAPI ?
+            Account account = MECHANISM_GSSAPI.equals(mechanism) ?
                 authenticateKrb5(authenticateId, tag) :
                 authenticate(username, authenticateId, password, command, tag);
             if (account == null)
@@ -929,7 +916,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     private Account authenticateKrb5(String principle, String tag)
             throws ServiceException, IOException {
         Account account = Provisioning.getInstance().get(
-            Provisioning.AccountBy.krb5Principal, principle);
+            AccountBy.krb5Principal, principle);
         if (account == null) sendNO(tag, "authentication failed");
         return account;
     }
@@ -3214,7 +3201,7 @@ public abstract class ImapHandler extends ProtocolHandler {
 
     abstract protected void enableInactivityTimer();
 
-    abstract protected void completeAuthentication(Authenticator auth) throws IOException;
+    abstract protected void completeAuthentication() throws IOException;
     
     void sendIdleUntagged() throws IOException                   { sendUntagged("NOOP", true); }
 

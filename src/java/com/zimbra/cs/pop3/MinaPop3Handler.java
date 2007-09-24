@@ -96,4 +96,12 @@ public class MinaPop3Handler extends Pop3Handler implements MinaHandler {
     protected boolean processCommand() {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    protected void completeAuthentication() throws IOException {
+        if (mAuthenticator.isEncryptionEnabled()) {
+            MinaServer.addSaslFilter(mSession, mAuthenticator.getSaslServer());
+        }
+        mAuthenticator.sendSuccess();
+    }
 }

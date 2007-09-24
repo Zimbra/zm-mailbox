@@ -31,8 +31,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public class PlainAuthenticator extends Authenticator {
+    public static final String MECHANISM = "PLAIN";
+    
     public PlainAuthenticator(AuthenticatorUser user) {
-        super(Mechanism.PLAIN, user);
+        super(MECHANISM, user);
     }
 
     public boolean initialize() { return true; }

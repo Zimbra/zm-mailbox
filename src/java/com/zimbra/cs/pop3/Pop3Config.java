@@ -37,6 +37,7 @@ import static com.zimbra.cs.util.Config.*;
 public class Pop3Config extends ServerConfig {
     private String mBanner;
     private String mGoodbye;
+    private boolean mSaslGssapiEnabled;
 
     private static final int DEFAULT_NUM_THREADS = 10;
     private static final int DEFAULT_MAX_IDLE_SECONDS = 600;
@@ -66,6 +67,8 @@ public class Pop3Config extends ServerConfig {
             setBindPort(server.getIntAttr(A_zimbraPop3BindPort,
                                           DEFAULT_BIND_PORT));
         }
+        mSaslGssapiEnabled = server.getBooleanAttr(
+            A_zimbraPop3SaslGssapiEnabled, false);
         validate();
     }
 
@@ -91,4 +94,6 @@ public class Pop3Config extends ServerConfig {
     public String getGoodbye() { return mGoodbye; }
 
     public String getBanner() { return mBanner; }
+
+    public boolean isSaslGssapiEnabled() { return mSaslGssapiEnabled; }
 }

@@ -63,6 +63,8 @@ public class GssAuthenticator extends Authenticator {
 
     private static final boolean DEBUG = true;
 
+    public static final String MECHANISM = "GSSAPI";
+    
     // SASL properties to enable encryption
     private static final Map<String, String> ENCRYPTION_PROPS =
         new HashMap<String, String>();
@@ -79,14 +81,14 @@ public class GssAuthenticator extends Authenticator {
     }
 
     public GssAuthenticator(AuthenticatorUser user) {
-        super(Mechanism.GSSAPI, user);
+        super(MECHANISM, user);
     }
 
     @Override
     public boolean initialize() throws IOException {
         Krb5Keytab keytab = getKeytab(LC.krb5_keytab.value());
         if (keytab == null) {
-            sendFailed();
+            sendFailed("mechanism not supported");
             return false;
         }
         debug("keytab file = %s", keytab.getFile());
@@ -112,7 +114,7 @@ public class GssAuthenticator extends Authenticator {
                 new PrivilegedExceptionAction() {
                     public Object run() throws SaslException {
                         return Sasl.createSaslServer(
-                            getMechanism().name(), getProtocol(), host, props,
+                            getMechanism(), getProtocol(), host, props,
                             new GssCallbackHandler());
                     }
                 });
@@ -129,7 +131,7 @@ public class GssAuthenticator extends Authenticator {
         try {
             return Krb5Keytab.getInstance(path);
         } catch (IOException e) {
-            getLog().warn("Error accessing keytab file '" + path + '"');
+            getLog().warn("Keytab file '" + path + "' not found");
             return null;
         }
     }
@@ -159,7 +161,8 @@ public class GssAuthenticator extends Authenticator {
             bytes = mSaslServer.evaluateResponse(data);
         } catch (SaslException e) {
             ZimbraLog.imap.warn("SaslServer.evaluateResponse() failed", e);
-            sendBadRequest();
+            // Only send if the callback hadn't already sent an error response
+            if (!isComplete()) sendBadRequest();
             return;
         }
         // If exchange not complete, send additional challenge

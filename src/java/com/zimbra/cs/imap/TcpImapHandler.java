@@ -29,7 +29,6 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.security.sasl.Authenticator;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.TcpServerInputStream;
@@ -268,14 +267,14 @@ public class TcpImapHandler extends ImapHandler {
     }
 
     @Override
-    protected void completeAuthentication(Authenticator auth) throws IOException {
+    protected void completeAuthentication() throws IOException {
         sendCapability();
-        auth.sendSuccess();
-        if (auth.isEncryptionEnabled()) {
+        mAuthenticator.sendSuccess();
+        if (mAuthenticator.isEncryptionEnabled()) {
             // Switch to encrypted streams
             mInputStream = new TcpServerInputStream(
-                auth.unwrap(mConnection.getInputStream()));
-            mOutputStream = auth.wrap(mConnection.getOutputStream());
+                mAuthenticator.unwrap(mConnection.getInputStream()));
+            mOutputStream = mAuthenticator.wrap(mConnection.getOutputStream());
         }
     }
     

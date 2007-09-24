@@ -34,16 +34,16 @@ import java.io.OutputStream;
 
 public abstract class Authenticator {
     protected final String mProtocol;
-    protected final Mechanism mMechanism;
+    protected final String mMechanism;
     protected final AuthenticatorUser mAuthUser;
     protected boolean mComplete;
     protected boolean mAuthenticated;
 
-    protected Authenticator(Mechanism mechanism,
+    protected Authenticator(String mechanism,
                             AuthenticatorUser authUser) {
-        mProtocol = authUser.getProtocol();
+        mProtocol  = authUser.getProtocol();
         mMechanism = mechanism;
-        mAuthUser = authUser;
+        mAuthUser  = authUser;
     }
 
     public abstract boolean initialize() throws IOException;
@@ -72,7 +72,7 @@ public abstract class Authenticator {
         return mProtocol;
     }
 
-    public Mechanism getMechanism() {
+    public String getMechanism() {
         return mMechanism;
     }
 
@@ -84,12 +84,16 @@ public abstract class Authenticator {
         mAuthUser.sendSuccessful(description() + " successful");
     }
     
-    protected void sendFailed() throws IOException {
+    public void sendFailed() throws IOException {
         mAuthUser.sendFailed(description() + " failed");
         mComplete = true;
     }
 
-    protected void sendBadRequest() throws IOException {
+    public void sendFailed(String msg) throws IOException {
+        mAuthUser.sendFailed(description() + " failed: " + msg);
+    }
+    
+    public void sendBadRequest() throws IOException {
         mAuthUser.sendBadRequest("malformed " + description() + " request");
         mComplete = true;
     }

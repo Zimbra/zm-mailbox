@@ -85,4 +85,15 @@ public class TcpPop3Handler extends Pop3Handler {
         mInputStream = new TcpServerInputStream(sock.getInputStream());
         mOutputStream = new BufferedOutputStream(sock.getOutputStream());
     }
+
+    @Override
+    protected void completeAuthentication() throws IOException {
+        mAuthenticator.sendSuccess();
+        if (mAuthenticator.isEncryptionEnabled()) {
+            // Switch to encrypted streams
+            mInputStream = new TcpServerInputStream(
+                mAuthenticator.unwrap(mConnection.getInputStream()));
+            mOutputStream = mAuthenticator.wrap(mConnection.getOutputStream());
+        }
+    }
 }

@@ -232,12 +232,12 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
     }
 
     @Override
-    protected void completeAuthentication(Authenticator auth) throws IOException {
+    protected void completeAuthentication() throws IOException {
         sendCapability();
-        if (auth.isEncryptionEnabled()) {
-            MinaServer.addSaslFilter(mSession, auth.getSaslServer());
+        if (mAuthenticator.isEncryptionEnabled()) {
+            MinaServer.addSaslFilter(mSession, mAuthenticator.getSaslServer());
         }
-        auth.sendSuccess();
+        mAuthenticator.sendSuccess();
     }
 
     @Override
