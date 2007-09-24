@@ -700,7 +700,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         // [IMAP4rev1]        RFC 3501: Internet Message Access Protocol - Version 4rev1
         // [LOGINDISABLED]    RFC 3501: Internet Message Access Protocol - Version 4rev1
         // [STARTTLS]         RFC 3501: Internet Message Access Protocol - Version 4rev1
-        // [AUTH=PLAIN]       RFC 2595: Using TLS with IMAP, POP3 and ACAP
+        // [AUTH=PLAIN]       RFC 4616: The PLAIN Simple Authentication and Security Layer (SASL) Mechanism
         // [AUTH=GSSAPI]      RFC 1731: IMAP4 Authentication Mechanisms
         // [ACL]              RFC 4314: IMAP4 Access Control List (ACL) Extension
         // [BINARY]           RFC 3516: IMAP4 Binary Content Extension
@@ -717,7 +717,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         // [NAMESPACE]        RFC 2342: IMAP4 Namespace
         // [QUOTA]            RFC 2087: IMAP4 QUOTA extension
         // [RIGHTS=ektx]      RFC 4314: IMAP4 Access Control List (ACL) Extension
-        // [SASL-IR]          draft-siemborski-imap-sasl-initial-response-06: IMAP Extension for SASL Initial Client Response
+        // [SASL-IR]          RFC 4959: IMAP Extension for Simple Authentication and Security Layer (SASL) Initial Client Response
         // [UIDPLUS]          RFC 4315: Internet Message Access Protocol (IMAP) - UIDPLUS extension
         // [UNSELECT]         RFC 3691: IMAP UNSELECT command
         // [WITHIN]           RFC 5032: WITHIN Search Extension to the IMAP Protocol
