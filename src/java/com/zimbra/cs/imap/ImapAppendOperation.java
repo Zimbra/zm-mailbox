@@ -34,6 +34,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.imap.ImapSession.EnabledHack;
 import com.zimbra.cs.mailbox.Flag;
@@ -115,6 +116,12 @@ public class ImapAppendOperation extends Operation  {
                 boolean idxAttach = mMailbox.attachmentsIndexingEnabled();
                 ParsedMessage pm = mDate != null ? new ParsedMessage(mContent, mDate.getTime(), idxAttach) :
                                                    new ParsedMessage(mContent, idxAttach);
+                try {
+                    pm.analyze();
+                } catch (ServiceException e) {
+                    ZimbraLog.imap.warn("could not completely extract text from APPENDed message; continuing", e);
+                }
+
                 try {
                     if (!pm.getSender().equals("")) {
                         InternetAddress ia = new InternetAddress(pm.getSender());
