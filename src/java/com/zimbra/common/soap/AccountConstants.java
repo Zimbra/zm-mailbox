@@ -152,7 +152,6 @@ public class AccountConstants {
     public static final String A_SORT_BY = "sortBy";
     public static final String A_SORT_ASCENDING = "sortAscending";
     public static final String A_VISIBLE = "visible";
-	public static final String A_SKIN = "skin";
 
     // calendar resource search
     public static final String A_ENTRY_SEARCH_FILTER_OR = "or";
