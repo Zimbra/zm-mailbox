@@ -24,6 +24,19 @@
  */
 package com.zimbra.cs.imap;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.security.sasl.Authenticator;
+import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.stats.ZimbraPerf;
+import com.zimbra.cs.tcpserver.TcpServerInputStream;
+import com.zimbra.cs.util.Config;
+
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -33,19 +46,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
-
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.session.SessionCache;
-import com.zimbra.cs.stats.ZimbraPerf;
-import com.zimbra.cs.tcpserver.TcpServerInputStream;
-import com.zimbra.cs.util.Config;
 
 public class TcpImapHandler extends ImapHandler {
     private Socket mConnection;

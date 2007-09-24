@@ -40,7 +40,6 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.imap.Authenticator.Mechanism;
 import com.zimbra.cs.imap.ImapCredentials.ActivatedExtension;
 import com.zimbra.cs.imap.ImapCredentials.EnabledHack;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
@@ -63,6 +62,11 @@ import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.security.sasl.Authenticator;
+import com.zimbra.cs.security.sasl.AuthenticatorUser;
+import com.zimbra.cs.security.sasl.GssAuthenticator;
+import com.zimbra.cs.security.sasl.PlainAuthenticator;
+import com.zimbra.cs.security.sasl.Mechanism;
 import com.zimbra.cs.service.mail.FolderAction;
 import com.zimbra.cs.service.mail.ItemActionHelper;
 import com.zimbra.cs.service.util.ItemId;
@@ -165,7 +169,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     boolean continueAuthentication(ImapRequest req) throws IOException {
-        String tag = mAuthenticator.getTag();
+        String tag = getTag(mAuthenticator);
         try {
             // use the tag from the original AUTHENTICATE command
             req.setTag(tag);
@@ -200,7 +204,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                 return CONTINUE_PROCESSING;
             }
             // Authentication failed
-            boolean canContinue = mAuthenticator.canContinue();
+            boolean canContinue = canContinue(mAuthenticator);
             mAuthenticator = null;
             return canContinue;
         }
@@ -209,6 +213,14 @@ public abstract class ImapHandler extends ProtocolHandler {
     
     boolean isIdle() {
         return mIdleTag != null;
+    }
+
+    private static String getTag(Authenticator auth) {
+        return ((ImapAuthenticatorUser) auth.getAuthenticatorUser()).getTag();
+    }
+
+    private static boolean canContinue(Authenticator auth) {
+        return ((ImapAuthenticatorUser) auth.getAuthenticatorUser()).canContinue();
     }
 
     boolean executeRequest(ImapRequest req) throws IOException, ImapParseException {
@@ -785,6 +797,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     boolean doAUTHENTICATE(String tag, String mechanism, byte[] response) throws IOException {
         if (!checkState(tag, State.NOT_AUTHENTICATED))
             return CONTINUE_PROCESSING;
+        AuthenticatorUser authUser = new ImapAuthenticatorUser(this, tag);
         Mechanism m = Mechanism.valueOf(mechanism);
         if (m == Mechanism.PLAIN && mechanismEnabled(m)) {
             // RFC 2595 6: "The PLAIN SASL mechanism MUST NOT be advertised or used
@@ -794,9 +807,9 @@ public abstract class ImapHandler extends ProtocolHandler {
                 sendNO(tag, "cleartext logins disabled");
                 return CONTINUE_PROCESSING;
             }
-            mAuthenticator = new PlainAuthenticator(this, tag);
+            mAuthenticator = new PlainAuthenticator(authUser);
         } else if (m == Mechanism.GSSAPI && isGssAuthEnabled()) {
-            mAuthenticator = new GssAuthenticator(this, tag);
+            mAuthenticator = new GssAuthenticator(authUser);
         } else {
             // no other AUTHENTICATE mechanisms are supported yet
             sendNO(tag, "mechanism not supported");

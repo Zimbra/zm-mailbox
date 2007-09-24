@@ -23,41 +23,37 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.imap;
+package com.zimbra.cs.security.sasl;
 
+import com.zimbra.cs.security.kerberos.Krb5Keytab;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.security.kerberos.Krb5Keytab;
-import com.zimbra.cs.security.sasl.SaslInputStream;
-import com.zimbra.cs.security.sasl.SaslOutputStream;
-import org.apache.commons.codec.binary.Base64;
 
-import javax.security.auth.Subject;
-import javax.security.auth.callback.Callback;
-import javax.security.auth.callback.CallbackHandler;
-import javax.security.auth.callback.UnsupportedCallbackException;
-import javax.security.auth.kerberos.KerberosKey;
-import javax.security.auth.kerberos.KerberosPrincipal;
-import javax.security.sasl.AuthorizeCallback;
+import javax.security.sasl.SaslServer;
 import javax.security.sasl.Sasl;
 import javax.security.sasl.SaslException;
-import javax.security.sasl.SaslServer;
+import javax.security.sasl.AuthorizeCallback;
+import javax.security.auth.kerberos.KerberosPrincipal;
+import javax.security.auth.kerberos.KerberosKey;
+import javax.security.auth.Subject;
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.UnsupportedCallbackException;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.security.PrivilegedActionException;
+
+import org.apache.commons.codec.binary.Base64;
 
 public class GssAuthenticator extends Authenticator {
     private SaslServer mSaslServer;
     private boolean mEncryptionEnabled;
 
-    private static final String MECHANISM = "GSSAPI";
-    private static final String PROTOCOL = "imap";
-    
     private static final String QOP_AUTH = "auth";
     private static final String QOP_AUTH_INT = "auth-int";
     private static final String QOP_AUTH_CONF = "auth-conf";
@@ -70,7 +66,7 @@ public class GssAuthenticator extends Authenticator {
     // SASL properties to enable encryption
     private static final Map<String, String> ENCRYPTION_PROPS =
         new HashMap<String, String>();
-    
+
     static {
         ENCRYPTION_PROPS.put(Sasl.QOP,
             QOP_AUTH + "," + QOP_AUTH_INT + "," + QOP_AUTH_CONF);
@@ -81,10 +77,10 @@ public class GssAuthenticator extends Authenticator {
             System.setProperty("sun.security.jgss.debug", "true");
         }
     }
-    
-    GssAuthenticator(ImapHandler handler, String tag) {
-        super(handler, tag, Mechanism.GSSAPI);
-    }                                    
+
+    public GssAuthenticator(AuthenticatorUser user) {
+        super(Mechanism.GSSAPI, user);
+    }
 
     @Override
     public boolean initialize() throws IOException {
@@ -94,9 +90,9 @@ public class GssAuthenticator extends Authenticator {
             return false;
         }
         debug("keytab file = %s", keytab.getFile());
-        
+
         final String host = LC.zimbra_server_hostname.value();
-        KerberosPrincipal kp = new KerberosPrincipal(PROTOCOL + '/' + host);
+        KerberosPrincipal kp = new KerberosPrincipal(getProtocol() + '/' + host);
         debug("kerberos principle = %s", kp);
         Subject subject = getSubject(keytab, kp);
         if (subject == null) {
@@ -104,44 +100,45 @@ public class GssAuthenticator extends Authenticator {
             return false;
         }
         debug("subject = %s", subject);
-        
+
         final Map<String, String> props = getSaslProperties();
         if (DEBUG && props != null) {
             String qop = props.get(Sasl.QOP);
             debug("Sent QOP = " + (qop != null ? qop : "auth"));
         }
-        
+
         try {
             mSaslServer = (SaslServer) Subject.doAs(subject,
                 new PrivilegedExceptionAction() {
                     public Object run() throws SaslException {
                         return Sasl.createSaslServer(
-                            MECHANISM, PROTOCOL, host, props, new GssCallbackHandler());
+                            getMechanism().name(), getProtocol(), host, props,
+                            new GssCallbackHandler());
                     }
                 });
         } catch (PrivilegedActionException e) {
             sendFailed();
-            e.printStackTrace();
-            ZimbraLog.imap.warn("Could not create SaslServer", e.getCause());
+            getLog().warn("Could not create SaslServer", e.getCause());
             return false;
         }
         return true;
     }
 
-    private static Krb5Keytab getKeytab(String path) {
+
+    private Krb5Keytab getKeytab(String path) {
         try {
             return Krb5Keytab.getInstance(path);
         } catch (IOException e) {
-            ZimbraLog.imap.warn("Error accessing keytab file '" + path + '"');
+            getLog().warn("Error accessing keytab file '" + path + '"');
             return null;
         }
     }
-    
-    private static Subject getSubject(Krb5Keytab keytab, KerberosPrincipal kp)
+
+    private Subject getSubject(Krb5Keytab keytab, KerberosPrincipal kp)
             throws IOException {
         List<KerberosKey> keys = keytab.getKeys(kp);
         if (keys == null) {
-            ZimbraLog.imap.warn(
+            getLog().warn(
                 "Key not found in keystore for service principal '" + kp + "'");
             return null;
         }
@@ -150,12 +147,7 @@ public class GssAuthenticator extends Authenticator {
         subject.getPrivateCredentials().addAll(keys);
         return subject;
     }
-    
-    protected Map<String, String> getSaslProperties() {
-        // Don't offer encryption if SSL is enabled
-        return mHandler.isSSLEnabled() ? null : ENCRYPTION_PROPS;
-    }
-    
+
     @Override
     public void handle(final byte[] data) throws IOException {
         if (isComplete()) {
@@ -174,7 +166,7 @@ public class GssAuthenticator extends Authenticator {
         if (!isComplete()) {
             assert !mSaslServer.isComplete();
             String s = new String(Base64.encodeBase64(bytes), "US-ASCII");
-            mHandler.sendContinuation(s);
+            sendContinuation(s);
             return;
         }
         // Authentication complete, so finish up
@@ -201,12 +193,17 @@ public class GssAuthenticator extends Authenticator {
         }
     }
 
+    private Map<String, String> getSaslProperties() {
+        // Don't offer encryption if SSL is enabled
+        return mAuthUser.isSSLEnabled() ? null : ENCRYPTION_PROPS;
+    }
+
     @Override
     public boolean isEncryptionEnabled() {
         return mEncryptionEnabled;
     }
 
-    @Override                       
+    @Override
     public InputStream unwrap(InputStream is) {
         return new SaslInputStream(is, mSaslServer);
     }
@@ -230,10 +227,10 @@ public class GssAuthenticator extends Authenticator {
             ZimbraLog.imap.warn("SaslServer.dispose() failed", e);
         }
     }
-    
+
     private class GssCallbackHandler implements CallbackHandler {
         public void handle(Callback[] cbs)
-                throws IOException, UnsupportedCallbackException {
+            throws IOException, UnsupportedCallbackException {
             if (cbs == null || cbs.length != 1) {
                 throw new IOException("Bad callback");
             }

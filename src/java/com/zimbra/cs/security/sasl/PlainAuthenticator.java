@@ -23,22 +23,30 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.imap;
+package com.zimbra.cs.security.sasl;
 
+import javax.security.sasl.SaslServer;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
-class PlainAuthenticator extends Authenticator {
-    PlainAuthenticator(ImapHandler handler, String tag)  {
-        super(handler, tag, Mechanism.PLAIN);
+public class PlainAuthenticator extends Authenticator {
+    public PlainAuthenticator(AuthenticatorUser user) {
+        super(Mechanism.PLAIN, user);
     }
 
     public boolean initialize() { return true; }
-    
+    public void dispose() {}
+    public boolean isEncryptionEnabled() { return false; }
+    public InputStream unwrap(InputStream is) { return null; }
+    public OutputStream wrap(OutputStream os) { return null; }
+    public SaslServer getSaslServer() { return null; }
+
     public void handle(byte[] data) throws IOException {
         if (isComplete()) {
             throw new IllegalStateException("Authentication already completed");
         }
-        
+
         // RFC 2595 6: "Non-US-ASCII characters are permitted as long as they are
         //              represented in UTF-8 [UTF-8]."
         String message = new String(data, "utf-8");

@@ -34,6 +34,7 @@ import com.zimbra.cs.mina.MinaIoSessionOutputStream;
 import com.zimbra.cs.mina.MinaRequest;
 import com.zimbra.cs.mina.MinaServer;
 import com.zimbra.cs.mina.MinaUtil;
+import com.zimbra.cs.security.sasl.Authenticator;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.Config;
