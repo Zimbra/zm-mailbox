@@ -340,7 +340,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
     }
 
     protected void sendContinuation(String s) throws IOException {
-        sendResponse("+", s, true);
+        sendLine("+ " + s, true);
     }
     
     private void sendResponse(String status, String msg, boolean flush) throws IOException {
