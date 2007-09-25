@@ -877,7 +877,7 @@ Email addresses:
    
 MimeParts:
  
-  <mp part="{mime-part-name}" body="{is-body}" s="{size-in-bytes} mid="{message-id} cid="{conv-id}"
+  <mp part="{mime-part-name}" body="{is-body}" s="{size-in-bytes} mid="{message-id} cid="{conv-id}" [truncated="1"]
        ct="{content-type}" name="{name}" cd="{content-disposition}" filename="{filename} ci="{content-id} cl="{content-location}">
     [<content>{content}</content>]
     <mp part="..." ...>
@@ -887,6 +887,7 @@ MimeParts:
   </mp>
 
    {mime-part-name} = MIME part, "" means top-level part, 1 first part, 1.1 first part of a multipart inside of 1.
+   truncated="1"  = the caller requested a maximum length (max="...") for inlined <content>, and this part's content was truncated down to that length
 
    {content-type} = MIME Content-Type. The mime type is the content of the element.
    {name}         = name attribute from the Content-Type param list
@@ -898,8 +899,8 @@ MimeParts:
    {content} = the content of the part, if requested
    {is-body} = set to 1, if this part is considered to be the "body" of the message for display
                purposes.
-  {message-id} = message id. only present if <mp> is not enclosed within a <m> element
-  
+   {message-id} = item id of the enclosing message, only present if <mp> is not enclosed within a <m> element
+ 
 Messages: 
  
   <m id="{message-id}" f="{flags}" s="{size}" d="{date}" cid="{conv-id}" l="{folder} origid="{original-id}">
@@ -1020,8 +1021,8 @@ Tags:
 ----------
 
 <SearchRequest [limit="..."] [offset="..."] [sortBy="{sort-by}"] [groupBy="{group-by}"]
-               [types="{types}"] [recip="*0|1"] [fetch="1|all|{item-id}"] [html="*0|1"]
-               [read="*0|1"] [neuter="0|*1"] [field={default_field}]
+               [types="{types}"] [recip="*0|1"] [fetch="1|all|{item-id}"] [read="*0|1"]
+               [max="{max-inlined-length}"] [html="*0|1"] [neuter="0|*1"] [field={default_field}]
                [calExpandInstStart=TIME_IN_MSEC] [calExpandInstEnd=TIME_IN_MSEC]
                >
   *(<header n="{header-name}/>)
@@ -1029,7 +1030,7 @@ Tags:
           // sortVal should be set to the value of the 'sf' (SortField) attribute of the last
           // hit on the previous 'page' of search results.
           // end val is NON-INCLUSIVE
-  
+
   [   // OPTIONAL: client timezone identification (necessary to time-correct a user-specified date/time query)
   
       <tz id="timezonename"/>    // References an existing server-known timezone by ID
@@ -1100,6 +1101,8 @@ if fetch="all", all hits are expanded inline
     + if read="1" is also specified, inlined hits will be marked as read
     + if neuter="0" is also specified, images in inlined HTML parts will not be "neutered"
     + if <header>s are requested, any matching headers are included in inlined message hits
+    + if max="{max-inlined-length}" is specified, inlined body content in limited to the given length;
+         if the part is truncated, truncated="1" is specified on the <mp> in question
 
 if recip="1" is specified
     + returned sent messages will contain the set of "To:" recipients instead of the sender
@@ -1119,7 +1122,7 @@ if recip="1" is specified
                     dateDesc|dateAsc|subjDesc|subjAsc|nameDesc|nameAsc
                SPECIAL SORTING FOR TASKS, valid only if types="task" (and task alone):
                     taskDueAsc|taskDueDesc|taskStatusAsc|taskStatusDesc|taskPercCompletedAsc|taskPercCompletedDesc
-                    
+
   {more-flag} = 1 if there are more search results remaining. 
   {content-matched} = 1 if the content of the message matched
   <mp> elements will be set for the first response if fetch=1
@@ -1296,7 +1299,7 @@ message-part result:
 -----------
 
 <SearchConvRequest cid="conversation-id" [limit="..."] [offset="..."] [sortBy="{sort-by}"] [types="{types}"] [nest="0|1"]
-				   [fetch="1|hits|all|{item-id}"] [html="1"] [read="1"] [neuter="0"]>
+				   [fetch="1|hits|all|{item-id}"] [max="{max-inlined-length}"] [html="1"] [read="1"] [neuter="0"]>
   *(<header n="{header-name}/>)
   <query>{query-string}</query>
 </SearchConvRequest>
@@ -1420,7 +1423,7 @@ folder ID that folder element will represent the virtual root folder.
 ----------
 
 <GetConvRequest>
-  <c id="{conv-id}" [fetch="1|all|{item-id}" html="0|1"]>
+  <c id="{conv-id}" [fetch="1|all|{item-id}" max="{max-inlined-length}" html="0|1"]>
     *(<header n="{header-name}/>)
   </c>
 </GetConvRequest>
@@ -1448,7 +1451,7 @@ if <header>s are requested, any matching headers are inlined into the response
 ------------
 
 <GetMsgRequest>
-  <m id="{msg-id}" [read="1"] [raw="1"] [html="1"] [neuter="0"] [part="{part}"]>
+  <m id="{msg-id}" [read="1"] [raw="1"] [max="{max-inlined-length}"] [html="1"] [neuter="0"] [part="{part}"]>
     *(<header n="{header-name}/>)
   </m>
 </GetMsgRequest>
@@ -1461,6 +1464,8 @@ read="1" to mark the message as read, "0" to leave the read status unchanged.
 	(default is 0.)
 raw="1" to return the raw message content rather than a parsed mime structure;
     (default is "0".  if message too big or not ASCII, a content servlet URL is returned)
+max="{max-inlined-length}" to limit the length of the text inlined into body <content> when raw="0"
+    (default is "0", meaning no limit.)
 html="1" to return defanged HTML content by default.
     (default is 0.)
 neuter="1" to "neuter" <IMG> tags returned in HTML content; this involves switching

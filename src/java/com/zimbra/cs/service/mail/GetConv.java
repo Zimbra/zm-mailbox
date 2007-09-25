@@ -65,6 +65,7 @@ public class GetConv extends MailDocumentHandler  {
         params.setInlineRule(ExpandResults.valueOf(econv.getAttribute(MailConstants.A_FETCH, null), zsc));
         if (params.getInlineRule() != ExpandResults.NONE) {
             params.setWantHtml(econv.getAttributeBool(MailConstants.A_WANT_HTML, false));
+            params.setMaxInlinedLength((int) econv.getAttributeLong(MailConstants.A_MAX_INLINED_LENGTH, -1));
 //          params.setMarkRead(econv.getAttributeBool(MailConstants.A_MARK_READ, false));
             for (Element eHdr : econv.listElements(MailConstants.A_HEADER))
                 params.addInlinedHeader(eHdr.getAttribute(MailConstants.A_ATTRIBUTE_NAME));

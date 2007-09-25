@@ -732,7 +732,8 @@ public class Mime {
     /**
       * Returns a reader that will decode the specified InputStream.
       * contentType must of type "text/*". If a charset parameter is present,
-      * it is used as the charset for decoding the text, otherwise us-ascii is.
+      * it is used as the charset for decoding the text, otherwise the
+      * platform default is used.
       * 
       * @param input InputStream to decode
       * @param contentType The Content-Type of the stream, which must be "text/*"

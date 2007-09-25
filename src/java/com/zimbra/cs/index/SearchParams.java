@@ -32,6 +32,8 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.swing.plaf.basic.BasicInternalFrameTitlePane.MaximizeAction;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -116,6 +118,7 @@ public final class SearchParams implements Cloneable {
     public MailboxIndex.SortBy getSortBy() { return mSortBy; }
     public ExpandResults getInlineRule() { return mInlineRule; }
     public boolean getMarkRead() { return mMarkRead; }
+    public int getMaxInlinedLength() { return mMaxInlinedLength; }
     public boolean getWantHtml() { return mWantHtml; }
     public boolean getNeuterImages() { return mNeuterImages; }
     public Set<String> getInlinedHeaders() { return mInlinedHeaders; }
@@ -203,6 +206,7 @@ public final class SearchParams implements Cloneable {
     }
     public void setInlineRule(ExpandResults fetch) { mInlineRule = fetch; }
     public void setMarkRead(boolean read) { mMarkRead = read; }
+    public void setMaxInlinedLength(int maxSize) { mMaxInlinedLength = maxSize; }
     public void setWantHtml(boolean html) { mWantHtml = html; }
     public void setNeuterImages(boolean neuter) { mNeuterImages = neuter; }
     public void addInlinedHeader(String name) {
@@ -275,6 +279,7 @@ public final class SearchParams implements Cloneable {
         if (getInlineRule() != null) 
             searchElt.addAttribute(MailConstants.A_FETCH, getInlineRule().toString());
         searchElt.addAttribute(MailConstants.A_MARK_READ, getMarkRead());
+        searchElt.addAttribute(MailConstants.A_MAX_INLINED_LENGTH, getMaxInlinedLength());
         searchElt.addAttribute(MailConstants.A_WANT_HTML, getWantHtml());
         searchElt.addAttribute(MailConstants.A_NEUTER, getNeuterImages());
         if (getInlinedHeaders() != null) {
@@ -324,9 +329,11 @@ public final class SearchParams implements Cloneable {
         params.setQueryStr(query);
         params.setTypesStr(request.getAttribute(MailConstants.A_SEARCH_TYPES, request.getAttribute(MailConstants.A_GROUPBY, Search.DEFAULT_SEARCH_TYPES)));
         params.setSortByStr(request.getAttribute(MailConstants.A_SORTBY, MailboxIndex.SortBy.DATE_DESCENDING.toString()));
+
         params.setInlineRule(ExpandResults.valueOf(request.getAttribute(MailConstants.A_FETCH, null), zsc));
         if (params.getInlineRule() != ExpandResults.NONE) {
             params.setMarkRead(request.getAttributeBool(MailConstants.A_MARK_READ, false));
+            params.setMaxInlinedLength((int) request.getAttributeLong(MailConstants.A_MAX_INLINED_LENGTH, -1));
             params.setWantHtml(request.getAttributeBool(MailConstants.A_WANT_HTML, false));
             params.setNeuterImages(request.getAttributeBool(MailConstants.A_NEUTER, true));
             for (Element elt : request.listElements(MailConstants.A_HEADER))
@@ -479,6 +486,7 @@ public final class SearchParams implements Cloneable {
         o.mLimit = mLimit;
         o.mInlineRule = mInlineRule;
         o.mMarkRead = mMarkRead;
+        o.mMaxInlinedLength = mMaxInlinedLength;
         o.mWantHtml = mWantHtml;
         o.mNeuterImages = mNeuterImages;
         o.mInlinedHeaders = mInlinedHeaders;
@@ -511,6 +519,7 @@ public final class SearchParams implements Cloneable {
     private int mLimit;
     private ExpandResults mInlineRule = null;
     private boolean mMarkRead = false;
+    private int mMaxInlinedLength;
     private boolean mWantHtml = false;
     private boolean mNeuterImages = false;
     private Set<String> mInlinedHeaders = null;

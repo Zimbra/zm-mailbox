@@ -67,12 +67,14 @@ public class GetMsg extends MailDocumentHandler {
 
         Element eMsg = request.getElement(MailConstants.E_MSG);
         ItemId iid = new ItemId(eMsg.getAttribute(MailConstants.A_ID), zsc);
-        boolean raw = eMsg.getAttributeBool(MailConstants.A_RAW, false);
-        boolean read = eMsg.getAttributeBool(MailConstants.A_MARK_READ, false);
-        boolean neuter = eMsg.getAttributeBool(MailConstants.A_NEUTER, true);
         String part = eMsg.getAttribute(MailConstants.A_PART, null);
 
+        boolean raw = eMsg.getAttributeBool(MailConstants.A_RAW, false);
+        boolean read = eMsg.getAttributeBool(MailConstants.A_MARK_READ, false);
+        int maxSize = (int) eMsg.getAttributeLong(MailConstants.A_MAX_INLINED_LENGTH, 0);
+
         boolean wantHTML = eMsg.getAttributeBool(MailConstants.A_WANT_HTML, false);
+        boolean neuter = eMsg.getAttributeBool(MailConstants.A_NEUTER, true);
 
         Set<String> headers = null;
         for (Element eHdr : eMsg.listElements(MailConstants.A_HEADER)) {
@@ -87,14 +89,14 @@ public class GetMsg extends MailDocumentHandler {
             if (raw) {
                 throw ServiceException.INVALID_REQUEST("Cannot request RAW formatted subpart message", null);
             } else {
-                ToXML.encodeInviteAsMP(response, ifmt, octxt, calItem, iid, part, wantHTML, neuter, headers, false);
+                ToXML.encodeInviteAsMP(response, ifmt, octxt, calItem, iid, part, maxSize, wantHTML, neuter, headers, false);
             }
         } else {
             Message msg = getMsg(octxt, mbox, iid, read);
             if (raw) {
                 ToXML.encodeMessageAsMIME(response, ifmt, msg, part, false);
             } else {
-                ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, part, wantHTML, neuter, headers, false);
+                ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, part, maxSize, wantHTML, neuter, headers, false);
             }
         }
         return response;

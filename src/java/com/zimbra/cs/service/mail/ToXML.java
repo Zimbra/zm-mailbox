@@ -481,7 +481,7 @@ public class ToXML {
             if (msg.isTagged(mbox.mDeletedFlag))
                 continue;
             if (expand == ExpandResults.FIRST || expand == ExpandResults.ALL || expand.matches(msg)) {
-                encodeMessageAsMP(c, ifmt, octxt, msg, null, params.getWantHtml(), params.getNeuterImages(), params.getInlinedHeaders(), true);
+                encodeMessageAsMP(c, ifmt, octxt, msg, null, params.getMaxInlinedLength(), params.getWantHtml(), params.getNeuterImages(), params.getInlinedHeaders(), true);
                 if (expand == ExpandResults.FIRST)
                     expand = ExpandResults.NONE;
             } else {
@@ -627,6 +627,7 @@ public class ToXML {
      * @param msg     The Message to serialize.
      * @param part    If non-null, we'll serialuize this message/rfc822 subpart
      *                of the specified Message instead of the Message itself.
+     * @param maxSize TODO
      * @param wantHTML  <tt>true</tt> to prefer HTML parts as the "body",
      *                  <tt>false</tt> to prefer text/plain parts.
      * @param neuter  Whether to rename "src" attributes on HTML <img> tags.
@@ -637,7 +638,7 @@ public class ToXML {
      *         been added as a child to the passed-in <tt>parent</tt>.
      * @throws ServiceException */
     public static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Message msg, String part,
-                                            boolean wantHTML, boolean neuter, Set<String> headers, boolean serializeType)
+                                            int maxSize, boolean wantHTML, boolean neuter, Set<String> headers, boolean serializeType)
     throws ServiceException {
         boolean wholeMessage = (part == null || part.trim().equals(""));
 
@@ -719,7 +720,7 @@ public class ToXML {
             List<MPartInfo> parts = Mime.getParts(mm);
             if (parts != null && !parts.isEmpty()) {
                 Set<MPartInfo> bodies = Mime.getBody(parts, wantHTML);
-                addParts(m, m, parts.get(0), bodies, part, neuter, false);
+                addParts(m, m, parts.get(0), bodies, part, maxSize, neuter, false);
             }
         } catch (IOException ex) {
             throw ServiceException.FAILURE(ex.getMessage(), ex);
@@ -817,7 +818,7 @@ public class ToXML {
                 throw ServiceException.FAILURE(ex.getMessage(), ex);
             }
             if (parts != null && !parts.isEmpty())
-                addParts(ie, ie, parts.get(0), null, "", false, true);
+                addParts(ie, ie, parts.get(0), null, "", -1, false, true);
         }
 
         return ie;
@@ -895,6 +896,7 @@ public class ToXML {
      *                pick the Invite out of the calendar item's blob & metadata.
      * @param part    If non-null, we'll serialuize this message/rfc822 subpart
      *                of the specified Message instead of the Message itself.
+     * @param maxSize The maximum amount of content to inline (<=0 is unlimited).
      * @param wantHTML  <tt>true</tt> to prefer HTML parts as the "body",
      *                  <tt>false</tt> to prefer text/plain parts.
      * @param neuter  Whether to rename "src" attributes on HTML <img> tags.
@@ -906,7 +908,8 @@ public class ToXML {
      * @throws ServiceException */
     public static Element encodeInviteAsMP(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
                                            CalendarItem calItem, ItemId iid, String part,
-                                           boolean wantHTML, boolean neuter, Set<String> headers, boolean serializeType)
+                                           int maxSize, boolean wantHTML, boolean neuter,
+                                           Set<String> headers, boolean serializeType)
     throws ServiceException {
         int invId = iid.getSubpartId();
 
@@ -1000,7 +1003,7 @@ public class ToXML {
                 List<MPartInfo> parts = Mime.getParts(mm);
                 if (parts != null && !parts.isEmpty()) {
                     Set<MPartInfo> bodies = Mime.getBody(parts, wantHTML);
-                    addParts(m, m, parts.get(0), bodies, part, neuter, true);
+                    addParts(m, m, parts.get(0), bodies, part, maxSize, neuter, true);
                 }
             }
         } catch (IOException ex) {
@@ -1433,7 +1436,8 @@ public class ToXML {
         return ie;
     }
 
-    private static void addParts(Element parent, Element root, MPartInfo mpi, Set<MPartInfo> bodies, String prefix, boolean neuter, boolean excludeCalendarParts) {
+    private static void addParts(Element parent, Element root, MPartInfo mpi, Set<MPartInfo> bodies, String prefix,
+                                 int maxSize, boolean neuter, boolean excludeCalendarParts) {
         String ctype = StringUtil.stripControlCharacters(mpi.getContentType());
 
         if (excludeCalendarParts && Mime.CT_TEXT_CALENDAR.equalsIgnoreCase(ctype))
@@ -1450,7 +1454,7 @@ public class ToXML {
             // the <shr> share info goes underneath the top-level <m>
             Element shr = root.addElement(MailConstants.E_SHARE_NOTIFICATION);
             try {
-                addContent(shr, mpi);
+                addContent(shr, mpi, maxSize);
             } catch (IOException e) {
                 if (mLog.isWarnEnabled())
                     mLog.warn("error writing body part: ", e);
@@ -1468,8 +1472,9 @@ public class ToXML {
             if (size >= 0) {
                 if ("base64".equalsIgnoreCase(mp.getEncoding()))
                     size = (int) ((size * 0.75) - (size / 76));
-            } else
+            } else {
                 size = 0;  // sometimes size can be -1; force to 0
+            }
             elem.addAttribute(MailConstants.A_SIZE, size);
         } catch (MessagingException me) {
             // don't put out size if we get exception
@@ -1522,7 +1527,7 @@ public class ToXML {
             if (bodies != null)
                 elem.addAttribute(MailConstants.A_BODY, true);
             try {
-                addContent(elem, mpi, neuter);
+                addContent(elem, mpi, maxSize, neuter);
             } catch (IOException ioe) {
                 if (mLog.isWarnEnabled())
                     mLog.warn("error writing body part: ", ioe);
@@ -1534,7 +1539,7 @@ public class ToXML {
         if (mpi.hasChildren()) {
             for (Iterator it = mpi.getChildren().iterator(); it.hasNext();) {
                 MPartInfo cp = (MPartInfo) it.next();
-                addParts(elem, root, cp, bodies, prefix, neuter, excludeCalendarParts);
+                addParts(elem, root, cp, bodies, prefix, maxSize, neuter, excludeCalendarParts);
             }
         }
     }
@@ -1545,10 +1550,11 @@ public class ToXML {
      *  <b>text/*</b> or <b>xml/*</b> message part.</i> 
      * @param elt  The element to add the <tt>&lt;content></tt> to.
      * @param mpi  The message part to extract the content from.
+     * @param maxSize The maximum amount of content to inline (<=0 is unlimited).
      * @throws MessagingException when message parsing or CTE-decoding fails
      * @throws IOException on error during parsing or defanging */
-    private static void addContent(Element elt, MPartInfo mpi) throws IOException, MessagingException {
-        addContent(elt, mpi, true);
+    private static void addContent(Element elt, MPartInfo mpi, int maxSize) throws IOException, MessagingException {
+        addContent(elt, mpi, maxSize, true);
     }
 
     /** Adds the decoded text content of a message part to the {@link Element}.
@@ -1557,11 +1563,12 @@ public class ToXML {
      *  <b>text/*</b> or <b>xml/*</b> message part.</i> 
      * @param elt     The element to add the <tt>&lt;content></tt> to.
      * @param mpi     The message part to extract the content from.
+     * @param maxSize The maximum amount of content to inline (<=0 is unlimited).
      * @param neuter  Whether to "neuter" image <tt>src</tt> attributes.
      * @throws MessagingException when message parsing or CTE-decoding fails
      * @throws IOException on error during parsing or defanging
      * @see HtmlDefang#defang(String, boolean) */
-    private static void addContent(Element elt, MPartInfo mpi, boolean neuter) throws IOException, MessagingException {
+    private static void addContent(Element elt, MPartInfo mpi, int maxSize, boolean neuter) throws IOException, MessagingException {
         // TODO: support other parts
         String ctype = mpi.getContentType();
         if (!ctype.matches(Mime.CT_TEXT_WILD) && !ctype.matches(Mime.CT_XML_WILD))
@@ -1604,6 +1611,10 @@ public class ToXML {
 
         if (data != null) {
             data = StringUtil.stripControlCharacters(data);
+            if (maxSize > 0 && data.length() > maxSize) {
+                data = data.substring(0, maxSize);
+                elt.addAttribute(MailConstants.A_TRUNCATED_CONTENT, true);
+            }
             elt.addAttribute(MailConstants.E_CONTENT, data, Element.Disposition.CONTENT);
         }
         // TODO: CDATA worth the effort?
