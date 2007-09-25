@@ -722,6 +722,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
     }    
 
     private void doCAPA() throws IOException {
+        // [SASL]       RFC 5034: POP3 Simple Authentication and Security Layer (SASL) Authentication Mechanism
         sendOK("Capability list follows", false);
         sendLine("TOP", false);
         sendLine("USER", false);

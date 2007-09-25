@@ -42,7 +42,7 @@ public class TestSasl extends TestCase {
         for (int n = 2; data.hasRemaining(); n *= 2) {
             ByteBuffer bb = data.slice();
             if (bb.remaining() > n) bb.limit(n);
-            buffer.read(bb);
+            buffer.put(bb);
             assertFalse(bb.hasRemaining());
             data.position(data.position() + bb.position());
             if (data.hasRemaining()) assertFalse(buffer.isComplete());
@@ -60,14 +60,14 @@ public class TestSasl extends TestCase {
         for (int n = 2; data.hasRemaining(); n *= 2) {
             ByteBuffer bb = data.slice();
             if (bb.remaining() > n) bb.limit(n);
-            buffer.write(bb);
+            buffer.put(bb);
             assertFalse(bb.hasRemaining());
             data.position(data.position() + bb.position());
             if (data.hasRemaining()) assertFalse(buffer.isFull());
         }
         assertTrue(buffer.isFull());
         ByteBuffer bb = ByteBuffer.allocate(100);
-        buffer.write(bb);
+        buffer.put(bb);
         assertEquals(100, bb.remaining());
         byte[] wrapped = buffer.wrap(new TestSaslServer());
         checkData(wrapped, SIZE);

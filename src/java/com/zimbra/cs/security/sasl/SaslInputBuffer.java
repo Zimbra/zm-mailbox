@@ -39,12 +39,12 @@ public class SaslInputBuffer {
         mLenBuffer = ByteBuffer.allocate(4);
     }
     
-    public void read(org.apache.mina.common.ByteBuffer bb)
+    public void put(org.apache.mina.common.ByteBuffer bb)
             throws SaslException {
-        read(bb.buf());
+        put(bb.buf());
     }
     
-    public void read(ByteBuffer bb) throws SaslException {
+    public void put(ByteBuffer bb) throws SaslException {
         if (isComplete()) return;
         if (mLenBuffer.hasRemaining() && !readLength(bb)) return;
         int len = Math.min(mDataBuffer.remaining(), bb.remaining());

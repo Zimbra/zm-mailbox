@@ -30,7 +30,6 @@ import org.apache.mina.common.IoFilterAdapter;
 import org.apache.mina.common.IoFilterChain;
 import org.apache.mina.common.IoSession;
 
-import javax.security.sasl.Sasl;
 import javax.security.sasl.SaslServer;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,10 +43,7 @@ public class SaslFilter extends IoFilterAdapter {
     private final SaslInputBuffer mInputBuffer;
     private final SaslOutputBuffer mOutputBuffer;
 
-    private static final int MAX_SEND_SIZE = 4096;
-    private static final int MAX_RECV_SIZE = 4096;
-    
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 
     /** When set, encryption is disabled for the first write */
     public static final String DISABLE_ENCRYPTION_ONCE =
@@ -55,28 +51,10 @@ public class SaslFilter extends IoFilterAdapter {
 
     public SaslFilter(SaslServer server) {
         mSaslServer = server;
-        mInputBuffer = new SaslInputBuffer(getMaxRecvSize(mSaslServer));
-        mOutputBuffer = new SaslOutputBuffer(getMaxSendSize(mSaslServer));
+        mInputBuffer = new SaslInputBuffer(SaslUtil.getMaxRecvSize(mSaslServer));
+        mOutputBuffer = new SaslOutputBuffer(SaslUtil.getMaxSendSize(mSaslServer));
     }
 
-    private static int getMaxSendSize(SaslServer server) {
-        String s = (String) server.getNegotiatedProperty(Sasl.RAW_SEND_SIZE);
-        try {
-            return Integer.parseInt(s);
-        } catch (Exception e) {
-            return MAX_SEND_SIZE;
-        }
-    }
-
-    private static int getMaxRecvSize(SaslServer server) {
-        String s = (String) server.getNegotiatedProperty(Sasl.MAX_BUFFER);
-        try {
-            return Integer.parseInt(s);
-        } catch (Exception e) {
-            return MAX_RECV_SIZE;
-        }
-    }
-    
     @Override
     public void messageReceived(NextFilter nextFilter, IoSession session,
                                 Object message) throws IOException {
@@ -86,7 +64,7 @@ public class SaslFilter extends IoFilterAdapter {
             // Read and decrypt cipher blocks from input buffer
             while (buf.hasRemaining()) {
                 debug("messageReceived: remaining = %d", buf.remaining());
-                mInputBuffer.read(buf);
+                mInputBuffer.put(buf);
                 debug("messageReceived: remaining = %d", buf.remaining());
                 debug("messageReceived: length = %d", mInputBuffer.getLength());
                 if (mInputBuffer.isComplete()) {
@@ -149,7 +127,7 @@ public class SaslFilter extends IoFilterAdapter {
         synchronized (mOutputBuffer) {
             // May loop more than once if RAW_SEND_SIZE is exceeded 
             do {
-                mOutputBuffer.write(bb);
+                mOutputBuffer.put(bb);
                 byte[] b = mOutputBuffer.wrap(mSaslServer);
                 debug("encrypt wrap: encrypted buffer size = %d", b.length);
                 buffers.add(ByteBuffer.allocate(4).putInt(b.length).flip());

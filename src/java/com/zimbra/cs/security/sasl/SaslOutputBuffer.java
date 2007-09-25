@@ -49,11 +49,11 @@ public class SaslOutputBuffer {
         mMaxSize = maxSize;
     }
 
-    public void write(org.apache.mina.common.ByteBuffer bb) {
-        write(bb.buf());
+    public void put(org.apache.mina.common.ByteBuffer bb) {
+        put(bb.buf());
     }
     
-    public void write(ByteBuffer bb) {
+    public void put(ByteBuffer bb) {
         if (isFull()) return;
         if (bb.remaining() > mBuffer.remaining()) {
             int minSize = Math.min(bb.remaining(), mMaxSize);
@@ -65,6 +65,18 @@ public class SaslOutputBuffer {
         mBuffer.position(pos + len);
     }
 
+    public void put(byte b) {
+        if (isFull()) return;
+        if (!mBuffer.hasRemaining()) {
+            mBuffer = MinaUtil.expand(mBuffer, 1, mMaxSize);   
+        }
+        mBuffer.put(b);
+    }
+
+    public int size() {
+        return mBuffer.position();
+    }
+    
     public boolean isFull() {
         return mBuffer.position() >= mMaxSize;
     }

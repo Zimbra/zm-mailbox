@@ -69,4 +69,8 @@ public class MinaTextLineRequest implements MinaRequest {
     public String getLine() {
         return mBuffer.isComplete() ? mBuffer.toString() : null;
     }
+
+    public String toString() {
+        return getLine();
+    }
 }

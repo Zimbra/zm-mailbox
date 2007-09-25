@@ -25,7 +25,6 @@
 
 package com.zimbra.cs.security.sasl;
 
-import javax.security.sasl.Sasl;
 import javax.security.sasl.SaslServer;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -35,16 +34,14 @@ import java.nio.ByteBuffer;
 public class SaslOutputStream extends OutputStream {
     private final DataOutputStream mOutputStream;
     private final SaslServer mSaslServer;
-    private final ByteBuffer mBuffer;
+    private final SaslOutputBuffer mBuffer;
 
     private static final boolean DEBUG = false;
 
     public SaslOutputStream(OutputStream os, SaslServer server) {
         mOutputStream = new DataOutputStream(os);
         mSaslServer = server;
-        int size = Integer.parseInt((String)
-            server.getNegotiatedProperty(Sasl.RAW_SEND_SIZE));
-        mBuffer = ByteBuffer.allocate(size);
+        mBuffer = new SaslOutputBuffer(SaslUtil.getMaxSendSize(mSaslServer));
     }
 
     public void write(byte[] b, int off, int len) throws IOException {
@@ -71,26 +68,25 @@ public class SaslOutputStream extends OutputStream {
     
     private int writeBytes(byte[] b, int off, int len) throws IOException {
         ensureBuffer();
-        if (len > mBuffer.remaining()) len = mBuffer.remaining();
-        mBuffer.put(b, off, len);
-        return len;
+        ByteBuffer bb = ByteBuffer.wrap(b, off, len);
+        mBuffer.put(bb);
+        return bb.position();
     }
 
     private void ensureBuffer() throws IOException {
-        if (!mBuffer.hasRemaining()) flushBuffer();
+        if (mBuffer.isFull()) flushBuffer();
     }
 
     private void flushBuffer() throws IOException {
-        debug("flushBuffer: enter len = %d", mBuffer.position());
-        byte[] b = mSaslServer.wrap(mBuffer.array(), 0, mBuffer.position());
+        byte[] b = mBuffer.wrap(mSaslServer);
         mOutputStream.writeInt(b.length);
         mOutputStream.write(b);
         mBuffer.clear();
     }
 
     public void flush() throws IOException {
-        debug("flush: enter");
-        if (mBuffer.position() > 0) flushBuffer();
+        if (DEBUG) debug("flushBuffer: size = %d", mBuffer.size());
+        if (mBuffer.size() > 0) flushBuffer();
         mOutputStream.flush();
     }
 
