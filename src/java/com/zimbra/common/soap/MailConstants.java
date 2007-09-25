@@ -303,11 +303,13 @@ public class MailConstants {
     public static final String A_CONTENT_NAME = "name";
     public static final String A_CONTENT_FILENAME = "filename";
     public static final String A_NO_ICAL = "noICal";
-    public static final String A_WANT_HTML = "html";
     public static final String A_RAW = "raw";
     public static final String A_HEADER = "header";
+    public static final String A_WANT_HTML = "html";
     public static final String A_MARK_READ = "read";
     public static final String A_NEUTER = "neuter";
+    public static final String A_MAX_INLINED_LENGTH = "max";
+    public static final String A_TRUNCATED_CONTENT = "truncated";
 
     // send/save draft
     public static final String E_ATTACH = "attach";
