@@ -46,6 +46,8 @@ public class SoapHttpTransport extends SoapTransport {
 
 //	private static Log mLog = LogFactory.getLog(SoapHttpTransport.class);
 	
+    public static final String X_ORIGINATING_IP = "X-Originating-IP";
+    
     private boolean mKeepAlive;
     private int mRetryCount;
     private int mTimeout;
@@ -178,7 +180,7 @@ public class SoapHttpTransport extends SoapTransport {
     	PostMethod method = new PostMethod(mUri);
     	method.setRequestHeader("Content-type", getSoapProtocol().getContentType());
         if (getClientIp() != null)
-            method.setRequestHeader("X-Originating-IP", getClientIp());
+            method.setRequestHeader(X_ORIGINATING_IP, getClientIp());
         
         String soapMessage = generateSoapMessage(document, raw, noSession, noNotify, requestedAccountId);
     	method.setRequestBody(soapMessage);
