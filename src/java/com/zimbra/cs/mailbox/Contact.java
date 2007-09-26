@@ -105,6 +105,7 @@ public class Contact extends MailItem {
     public static final String A_homeURL = "homeURL";
     public static final String A_image = "image";
     public static final String A_initials = "initials";
+    public static final String A_isMyCard = "isMyCard";
     public static final String A_jobTitle = "jobTitle";
     public static final String A_lastName = "lastName";
     public static final String A_middleName = "middleName";

@@ -79,6 +79,7 @@ import com.zimbra.cs.zclient.event.ZModifyTaskEvent;
 import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemEvent;
 import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemFolderEvent;
 import com.zimbra.cs.zclient.event.ZRefreshEvent;
+import com.zimbra.cs.mailbox.Contact;
 import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
@@ -323,8 +324,10 @@ public class ZMailbox {
     private Map<String, ZPhoneAccount> mPhoneAccountMap;
 	private VoiceStorePrincipal mVoiceStorePrincipal;
 	private long mSize;
+	private boolean mHasMyCard;
+	private ZContact mMyCard;
 
-    private List<ZEventHandler> mHandlers = new ArrayList<ZEventHandler>();
+	private List<ZEventHandler> mHandlers = new ArrayList<ZEventHandler>();
 
     public static ZMailbox getMailbox(Options options) throws ServiceException {
     	return new ZMailbox(options);
@@ -1251,7 +1254,42 @@ public class ZMailbox {
         return doAction(contactAction(tag ? "tag" : "!tag", ids).addAttribute(MailConstants.A_TAG, tagId));
     }
 
-    /**
+	public synchronized ZContact getMyCard() throws ServiceException {
+/* TODO: This technique for determining the my card is great for me testing the ui, but
+   not exactly zippy. Need to work out a better solution. 
+		if (!mHasMyCard) {
+			List<ZContact> contacts = getContacts(null, null, false, Arrays.asList(Contact.A_isMyCard));
+			for (ZContact contact : contacts) {
+				String isMyCard = contact.getAttrs().get(Contact.A_isMyCard);
+				if (isMyCard != null && isMyCard.equals("true")) {
+					mMyCard = getContact(contact.getId());
+					break;
+				}
+			}
+			mHasMyCard = true;
+		}
+*/
+		return mMyCard;
+	}
+
+	/**
+	 *
+	 * @param ids comma-separated list of contact ids
+	 * @return true if one of the ids belongs to the my card 
+	 * @throws ServiceException
+	 */
+	public boolean getIsMyCard(String ids) throws ServiceException {
+		ZContact myCard = getMyCard();
+		if (myCard != null) {
+			for (String id : sCOMMA.split(ids)) {
+				if (id.equals(myCard.getId())) {
+					return true;
+				}
+			}
+		}
+		return false;
+	};
+	/**
      * update items(s)
      * @param ids list of contact ids to update
      * @param destFolderId optional destination folder
