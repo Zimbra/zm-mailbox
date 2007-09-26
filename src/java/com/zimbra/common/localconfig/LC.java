@@ -207,6 +207,7 @@ public class LC {
     public static final KnownKey wiki_user;
 
     public static final KnownKey calendar_outlook_compatible_allday_events;
+    public static final KnownKey calendar_entourage_compatible_timezones;
 
     public static final KnownKey nio_imap_enable;
     public static final KnownKey nio_imap_debug_logging;
@@ -812,6 +813,11 @@ public class LC {
         calendar_outlook_compatible_allday_events.setDefault("true");
         calendar_outlook_compatible_allday_events.setDoc
         ("Use Outlook-compatible all-day events.  True by default.");
+
+        calendar_entourage_compatible_timezones = new KnownKey("calendar_entourage_compatible_timezones");
+        calendar_entourage_compatible_timezones.setDefault("true");
+        calendar_entourage_compatible_timezones.setDoc(
+                "Quote TZID parameter in iCalendar properties, to workaround bug in MS Entourage.  True by default.");
 
         nio_imap_enable = new KnownKey("nio_imap_enable");
         nio_imap_enable.setDefault("false");
