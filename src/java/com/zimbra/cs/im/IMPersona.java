@@ -149,6 +149,7 @@ public class IMPersona extends ClassLogger {
         assert (addr != null);
         mAddr = addr;
         mMailbox = lock;
+        ZimbraLog.im.info("Creating IMPersona "+toString()+" at addr "+System.identityHashCode(this)+" mailbox is "+System.identityHashCode(mMailbox));
     }
 
     /**
@@ -391,6 +392,8 @@ public class IMPersona extends ClassLogger {
             Participant part;
             part = new IMChat.Participant(fromAddress);
             try {
+                if (thread == null)
+                    throw new IllegalArgumentException("Cannot create a chat with a NULL threadId");
                 toRet = new IMChat(getMailbox(), this, thread, part);
                 mChats.put(thread, toRet);
             } catch (ServiceException e) {
@@ -525,7 +528,7 @@ public class IMPersona extends ClassLogger {
         
         switch (iq.getType()) {
             case error:
-                ZimbraLog.im.info("Ignoring IQ error packet: "+iq);
+                ZimbraLog.im.debug("Ignoring IQ error packet: "+iq);
                 return;
             case result:
             {
@@ -539,7 +542,7 @@ public class IMPersona extends ClassLogger {
                     }
                 }
                 if (!handled)
-                    ZimbraLog.im.info("Ignoring IQ result packet: "+iq);
+                    ZimbraLog.im.debug("Ignoring IQ result packet: "+iq);
                 return;
             }
             case set:
@@ -581,7 +584,7 @@ public class IMPersona extends ClassLogger {
     
     private void handlePrivacyResult(IQ iq) {
         org.dom4j.Element child = iq.getChildElement();        
-        ZimbraLog.im.info("Received Privacy List Packet: "+iq);
+        ZimbraLog.im.debug("Received Privacy List Packet: "+iq);
         String idParts[] = iq.getID().split("-");
         boolean handled = false; 
         if (idParts.length > 0) {
@@ -589,7 +592,7 @@ public class IMPersona extends ClassLogger {
                 //
                 // we got a response to our request for the LIST of privacy lists
                 //
-                ZimbraLog.im.info("It's a list of our privacy lists!");
+                ZimbraLog.im.debug("It's a list of our privacy lists!");
                 mDefaultPrivacyListName = null;
                 
                 // find the default list
@@ -612,7 +615,7 @@ public class IMPersona extends ClassLogger {
                 //
                 // we got a response to our request for the DEFAULT privacy list
                 //
-                ZimbraLog.im.info("Received default privacy list: "+iq);
+                ZimbraLog.im.debug("Received default privacy list: "+iq);
                 handled = true;
                 
                 /*
@@ -686,7 +689,7 @@ public class IMPersona extends ClassLogger {
         } 
             
         if (!handled)
-            ZimbraLog.im.info("Ignoring unknown privacy IQ response: "+iq);
+            ZimbraLog.im.debug("Ignoring unknown privacy IQ response: "+iq);
     }
     
 
@@ -739,11 +742,19 @@ public class IMPersona extends ClassLogger {
                         break;
                     }
                 }
-                // as a final try, just use the remove addr of this message
+                
+                // try to use use the remote node of this message
                 if (threadId == null || threadId.length() == 0) {
-//                    threadId = (toMe ? msg.getFrom() : msg.getTo()).getNode();
                     threadId = (toMe ? msg.getFrom() : msg.getTo()).getNode();
+                    
+                    // finally: just use the full remote JID (coming from a domain, e.g. 
+                    // a transport agent
+                    if (threadId == null || threadId.length() == 0) {
+                        threadId = (toMe ? msg.getFrom() : msg.getTo()).toBareJID();
+                    }
                 }
+                
+                
             }
             chat = getChat(true, threadId, new IMAddr(remoteJID));
         }
@@ -984,6 +995,8 @@ public class IMPersona extends ClassLogger {
 //    }
 
     public void joinChat(String addr, String threadId) throws ServiceException {
+        if (threadId == null) 
+            throw new IllegalArgumentException("Cannot joing a chat with a NULL threadId");
         IMChat chat = mChats.get(threadId);
         if (chat == null) {
 //            throw ServiceException.FAILURE("Couldn't find chat: "+ threadId, null);
@@ -1156,6 +1169,7 @@ public class IMPersona extends ClassLogger {
                 IMChat.Participant part;
                 part = new IMChat.Participant(toAddr);
                 chat = new IMChat(getMailbox(), this, threadId, part);
+                assert(threadId != null);
                 mChats.put(threadId, chat);
             }
         }
