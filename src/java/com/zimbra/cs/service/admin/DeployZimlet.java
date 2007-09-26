@@ -65,8 +65,11 @@ public class DeployZimlet extends AdminDocumentHandler {
 				return;
 			}
 			List<Server> servers = prov.getAllServers();
-			for (Server s : servers)
-				mStatus.put(s.getName(), sPENDING);
+			for (Server s : servers) {
+			    boolean hasMailboxService = s.getMultiAttrSet(Provisioning.A_zimbraServiceEnabled).contains("mailbox");
+			    if (hasMailboxService)
+			        mStatus.put(s.getName(), sPENDING);
+            }
 		}
 		public void markFinished(Server s) {
 			mStatus.put(s.getName(), sSUCCEEDED);
