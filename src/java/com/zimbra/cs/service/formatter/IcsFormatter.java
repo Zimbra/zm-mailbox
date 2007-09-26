@@ -100,7 +100,8 @@ public class IcsFormatter extends Formatter {
                     !context.opContext.isDelegatedRequest(context.targetMailbox));
             ByteArrayOutputStream buf = new ByteArrayOutputStream();
             OutputStreamWriter wout = new OutputStreamWriter(buf, Mime.P_CHARSET_UTF8);
-            cal.toICalendar(wout);
+            boolean forceOlsonTZID = Browser.APPLE_ICAL.equals(browser);  // bug 15549
+            cal.toICalendar(wout, forceOlsonTZID);
             wout.flush();
             context.resp.getOutputStream().write(buf.toByteArray());
 //        } catch (ValidationException e) {

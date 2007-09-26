@@ -36,6 +36,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import com.zimbra.common.calendar.TZIDMapper;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -170,15 +172,19 @@ public class ZCalendar {
             toRet.append("END:VCALENDAR");
             return toRet.toString();
         }
-        
+
         public void toICalendar(Writer w) throws IOException {
+            toICalendar(w, false);
+        }
+
+        public void toICalendar(Writer w, boolean forceOlsonTZID) throws IOException {
             w.write("BEGIN:VCALENDAR");
             w.write(LINE_BREAK);
             for (ZProperty prop : mProperties)
-                prop.toICalendar(w);
+                prop.toICalendar(w, forceOlsonTZID);
             
             for (ZComponent comp : mComponents)
-                comp.toICalendar(w);
+                comp.toICalendar(w, forceOlsonTZID);
 
             w.write("END:VCALENDAR");
         }
@@ -289,18 +295,22 @@ public class ZCalendar {
             toRet.append(INDENT).append("END:").append(mName).append('\n');
             return toRet.toString();
         }
-        
+
         public void toICalendar(Writer w) throws IOException {
+            toICalendar(w, false);
+        }
+
+        public void toICalendar(Writer w, boolean forceOlsonTZID) throws IOException {
             w.write("BEGIN:");
             String name = escape(mName);
             w.write(name);
             w.write(LINE_BREAK);
             
             for (ZProperty prop : mProperties) 
-                prop.toICalendar(w);
+                prop.toICalendar(w, forceOlsonTZID);
 
             for (ZComponent comp : mComponents) 
-                comp.toICalendar(w);
+                comp.toICalendar(w, forceOlsonTZID);
             
             w.write("END:");
             w.write(name);
@@ -469,14 +479,19 @@ public class ZCalendar {
         private static final int CHARS_PER_FOLDED_LINE = 76;
 
         public void toICalendar(Writer w) throws IOException {
+            toICalendar(w, false);
+        }
+
+        public void toICalendar(Writer w, boolean forceOlsonTZID) throws IOException {
             StringWriter sw = new StringWriter();
             
             sw.write(escape(mName));
             for (ZParameter param: mParameters)
-                param.toICalendar(sw);
+                param.toICalendar(sw, forceOlsonTZID);
 
             sw.write(':');
             if (mValue != null) {
+                String value = mValue;
                 boolean noEscape = false;
                 if (mTok != null) {
                     switch (mTok) {
@@ -487,11 +502,15 @@ public class ZCalendar {
                         noEscape = true;
                         break;
                     }
+                    if (forceOlsonTZID && mTok.equals(ICalTok.TZID)) {
+                        // bug 15549: Apple iCal refuses to work with anything other than Olson TZIDs.
+                        value = TZIDMapper.toOlson(value);
+                    }
                 }
                 if (noEscape)
-                	sw.write(mValue);
+                	sw.write(value);
                 else
-    	            sw.write(escape(mValue));
+    	            sw.write(escape(value));
             }
 
             // Write with folding.
@@ -559,7 +578,12 @@ public class ZCalendar {
             StringBuffer toRet = new StringBuffer(INDENT).append("PARAM:").append(mName).append('(').append(mTok).append(')').append(':').append(maValue).append('\n');
             return toRet.toString();
         }
+
         public void toICalendar(Writer w) throws IOException {
+            toICalendar(w, false);
+        }
+
+        public void toICalendar(Writer w, boolean forceOlsonTZID) throws IOException {
             w.write(';');
             w.write(escape(mName));
             w.write('=');
@@ -576,13 +600,24 @@ public class ZCalendar {
                 w.write(escape(maValue.substring(1, maValue.length()-1)));
                 w.write('\"');
             } else if (ICalTok.TZID.equals(mTok)) {
+                String value = maValue;
+                if (forceOlsonTZID) {
+                    // bug 15549: Apple iCal refuses to work with anything other than Olson TZIDs.
+                    value = TZIDMapper.toOlson(value);
+                }
+
                 // Microsoft Entourage 2004 (Outlook-like program for Mac)
                 // insists on quoting TZID parameter value (but not TZID
                 // property value).  It's an Entourage bug, but we have to
                 // keep it happy with a hacky quoting policy.
-                w.write('\"');
-                w.write(maValue);
-                w.write('\"');
+                boolean entourageCompat = LC.calendar_entourage_compatible_timezones.booleanValue();
+                if (entourageCompat) {
+                    w.write('\"');
+                    w.write(value);
+                    w.write('\"');
+                } else {
+                    w.write(quote(value));
+                }
             } else {
                 w.write(quote(maValue));
             }
