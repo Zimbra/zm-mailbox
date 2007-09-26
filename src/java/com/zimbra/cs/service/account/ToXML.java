@@ -273,7 +273,7 @@ public class ToXML {
     public static void encodeAttr(Element parent, String key, String value, String eltname, String attrname, boolean isIDN) {
         KeyValuePair kvPair = parent.addKeyValuePair(key, value, eltname, attrname);
         if (isIDN) {
-            kvPair.addAttribute(AccountConstants.A_UTF8, IDNUtil.toUnicode(value));
+            // kvPair.addAttribute(AccountConstants.A_UTF8, IDNUtil.toUnicode(value));
         }
     }
     
@@ -283,7 +283,7 @@ public class ToXML {
         e.setText(value);
         
         if (isIDN) {
-            e.addAttribute(AccountConstants.A_UTF8, IDNUtil.toUnicode(value));
+            // e.addAttribute(AccountConstants.A_UTF8, IDNUtil.toUnicode(value));
         }
         
         return e;
