@@ -41,10 +41,12 @@ import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.mail.GetFolder.FolderNode;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.Element;
@@ -406,6 +408,7 @@ public class SoapSession extends Session {
         }
 
         Element eRefresh = ctxt.addUniqueElement(ZimbraNamespace.E_REFRESH);
+        eRefresh.addAttribute(AccountConstants.E_VERSION, BuildInfo.FULL_VERSION, Element.Disposition.CONTENT);
 
         OperationContext octxt = DocumentHandler.getOperationContext(zsc, this);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
