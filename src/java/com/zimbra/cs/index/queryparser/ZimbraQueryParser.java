@@ -99,17 +99,17 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
 
         sIsStrMap.put("anywhere",
                       new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
-                          return ZimbraQuery.InQuery.Create(mbx, analyze, modifier, ZimbraQuery.InQuery.IN_ANY_FOLDER);
+                          return ZimbraQuery.InQuery.Create(mbx, analyze, modifier, ZimbraQuery.InQuery.IN_ANY_FOLDER, false);
                       } } );
 
         sIsStrMap.put("local",
                       new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
-                          return ZimbraQuery.InQuery.Create(mbx, analyze, modifier, ZimbraQuery.InQuery.IN_LOCAL_FOLDER);
+                          return ZimbraQuery.InQuery.Create(mbx, analyze, modifier, ZimbraQuery.InQuery.IN_LOCAL_FOLDER, false);
                       } } );
 
         sIsStrMap.put("remote",
                       new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
-                          return ZimbraQuery.InQuery.Create(mbx, analyze, modifier, ZimbraQuery.InQuery.IN_REMOTE_FOLDER);
+                          return ZimbraQuery.InQuery.Create(mbx, analyze, modifier, ZimbraQuery.InQuery.IN_REMOTE_FOLDER, true);
                       } } );
 
         sIsStrMap.put("solo",
@@ -173,6 +173,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
             return new ZimbraQuery.TypeQuery(mAnalyzer, modifier,tok);
           case ITEM:
             return ZimbraQuery.ItemQuery.Create(mMailbox, mAnalyzer, modifier, tok);
+          case UNDERID:
           case INID:
           {
               ItemId iid = null;
@@ -186,15 +187,16 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
                   iidStr = tok;
               }
               iid = new ItemId(iidStr, (String)null);
-              return ZimbraQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, iid, subfolderPath);
+              return ZimbraQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, iid, subfolderPath, (target == UNDERID));
           }
+          case UNDER:
           case IN:
           {
               Integer folderId = sFolderStrMap.get(tok.toLowerCase());
               if (folderId != null) {
-                  return ZimbraQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, folderId);
+                  return ZimbraQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, folderId, (target == UNDER));
               } else {
-                  return ZimbraQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, tok);
+                  return ZimbraQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, tok, (target == UNDER));
               }
           }
           case TAG:
@@ -652,7 +654,9 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
     case FROMCC:
     case TOFROMCC:
     case IN:
+    case UNDER:
     case INID:
+    case UNDERID:
     case HAS:
     case FILENAME:
     case TYPE:
@@ -703,7 +707,9 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
       case FROMCC:
       case TOFROMCC:
       case IN:
+      case UNDER:
       case INID:
+      case UNDERID:
       case HAS:
       case FILENAME:
       case TYPE:
@@ -773,6 +779,12 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
           break;
         case INID:
           t = jj_consume_token(INID);
+          break;
+        case UNDER:
+          t = jj_consume_token(UNDER);
+          break;
+        case UNDERID:
+          t = jj_consume_token(UNDERID);
           break;
         case TYPE:
           t = jj_consume_token(TYPE);
@@ -958,7 +970,9 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
       case FROMCC:
       case TOFROMCC:
       case IN:
+      case UNDER:
       case INID:
+      case UNDERID:
       case HAS:
       case FILENAME:
       case TYPE:
@@ -1019,10 +1033,10 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
     clauses = Query();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case 0:
-    case 73:
+    case 75:
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 73:
-        jj_consume_token(73);
+      case 75:
+        jj_consume_token(75);
         break;
       case 0:
         jj_consume_token(0);
@@ -1056,13 +1070,13 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
       jj_la1_2();
    }
    private static void jj_la1_0() {
-      jj_la1_0 = new int[] {0x60,0x80,0x80,0x0,0x0,0x1e0,0x0,0x100,0x1e0,0x0,0x100,0x1e0,0x0,0x0,0x0,0x100,0x3ffffc00,0xc0000000,0x0,0xfffffc00,0xfffffd00,0xfffffde0,0x1,0x1,};
+      jj_la1_0 = new int[] {0x60,0x80,0x80,0x0,0x0,0x1e0,0x0,0x100,0x1e0,0x0,0x100,0x1e0,0x0,0x0,0x0,0x100,0xfffffc00,0x0,0x0,0xfffffc00,0xfffffd00,0xfffffde0,0x1,0x1,};
    }
    private static void jj_la1_1() {
-      jj_la1_1 = new int[] {0x0,0xc0000000,0x0,0x30000000,0x30000000,0xc0000000,0x0,0x0,0xc0000000,0x0,0x0,0xc0000000,0xc0000000,0x0,0x0,0xc0000000,0x7c3fe60,0x3c001f,0x0,0xffffe7f,0xffffe7f,0xcffffe7f,0x0,0x0,};
+      jj_la1_1 = new int[] {0x0,0x0,0x0,0xc0000000,0xc0000000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1f0ff980,0xf0007f,0x0,0x3ffff9ff,0x3ffff9ff,0x3ffff9ff,0x0,0x0,};
    }
    private static void jj_la1_2() {
-      jj_la1_2 = new int[] {0x0,0x0,0x0,0x0,0x0,0x101,0x101,0x101,0x121,0x121,0x121,0x101,0x0,0x101,0x101,0x101,0x0,0x0,0x101,0x101,0x101,0x101,0x200,0x200,};
+      jj_la1_2 = new int[] {0x0,0x3,0x0,0x0,0x0,0x407,0x404,0x404,0x487,0x484,0x484,0x407,0x3,0x404,0x404,0x407,0x0,0x0,0x404,0x404,0x404,0x407,0x800,0x800,};
    }
 
   public ZimbraQueryParser(java.io.InputStream stream) {
@@ -1167,8 +1181,8 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
 
   public ParseException generateParseException() {
     jj_expentries.removeAllElements();
-    boolean[] la1tokens = new boolean[74];
-    for (int i = 0; i < 74; i++) {
+    boolean[] la1tokens = new boolean[76];
+    for (int i = 0; i < 76; i++) {
       la1tokens[i] = false;
     }
     if (jj_kind >= 0) {
@@ -1190,7 +1204,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
         }
       }
     }
-    for (int i = 0; i < 74; i++) {
+    for (int i = 0; i < 76; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;

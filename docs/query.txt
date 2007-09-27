@@ -8,7 +8,8 @@ Tim's short-short summary of the query grammar as of now (updated)
    envto:{TEXT|EMAIL_ADDR|DOMAIN} // x-envelope-to mime header
    envfrom:{TEXT|EMAIL|DOMAIN}    // x-envelope-from mime-header 
    subject:[>,<,>=,<=]{TEXT}
-   in:{FOLDER_LABEL}   // or whatever we call folders nowadays
+   in:{FOLDER_LABEL}   // search in a specific folder
+   under:{FOLDER_LABEL} // in specified folder AND ALL SUBFOLERS
    has:{"attachment"|OBJECT_TYPE}
    filename:{FILENAME}
    type:{RAW_MIME_TYPE|FRIENDLY_MIME_TYPE}

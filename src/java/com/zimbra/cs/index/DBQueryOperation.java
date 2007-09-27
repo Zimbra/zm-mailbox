@@ -373,7 +373,7 @@ class DBQueryOperation extends QueryOperation
     /**
      * Handles query clause that resolves to a remote folder.
      */
-    void addInRemoteFolderClause(ItemId remoteFolderId, String subfolderPath, boolean truth)
+    void addInRemoteFolderClause(ItemId remoteFolderId, String subfolderPath, boolean includeSubfolders, boolean truth)
     {
         mAllResultsQuery = false;
 
@@ -381,7 +381,7 @@ class DBQueryOperation extends QueryOperation
             throw new IllegalArgumentException("Cannot addInClause b/c DBQueryOperation already has an incompatible remote target");
 
         mQueryTarget = new QueryTarget(remoteFolderId.getAccountId());
-        topLevelAndedConstraint().addInRemoteFolderClause(remoteFolderId, subfolderPath, truth);
+        topLevelAndedConstraint().addInRemoteFolderClause(remoteFolderId, subfolderPath, includeSubfolders, truth);
     }
 
     /**

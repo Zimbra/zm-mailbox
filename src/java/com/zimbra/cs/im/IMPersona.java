@@ -1256,21 +1256,6 @@ public class IMPersona extends ClassLogger {
     private void updateXMPPPresence(JID sendTo, IMPresence pres) {
         if (mXMPPSession != null) {
             Presence xmppPresence = pres.getXMPPPresence();
-//            if (pres.getShow() == Show.OFFLINE) {
-//                xmppPresence = new Presence(Presence.Type.unavailable);
-//            } else {
-//                xmppPresence = new Presence();
-//                if (pres.getShow() == Show.CHAT)
-//                    xmppPresence.setShow(Presence.Show.chat);
-//                else if (pres.getShow() == Show.AWAY)
-//                    xmppPresence.setShow(Presence.Show.away);
-//                else if (pres.getShow() == Show.XA)
-//                    xmppPresence.setShow(Presence.Show.xa);
-//                else if (pres.getShow() == Show.DND)
-//                    xmppPresence.setShow(Presence.Show.dnd);
-//            }
-//            if (pres.getStatus() != null && pres.getStatus().length() > 0)
-//                xmppPresence.setStatus(pres.getStatus());
             
             if (sendTo == null) {
                 for (IMChat chat : mChats.values()) {

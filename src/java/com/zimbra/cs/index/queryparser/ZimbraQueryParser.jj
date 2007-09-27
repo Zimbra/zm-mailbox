@@ -136,17 +136,17 @@ public final class ZimbraQueryParser {
                       
         sIsStrMap.put("anywhere",
                       new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
-                          return ZimbraQuery.InQuery.Create(mbx, analyze, modifier, ZimbraQuery.InQuery.IN_ANY_FOLDER);
+                          return ZimbraQuery.InQuery.Create(mbx, analyze, modifier, ZimbraQuery.InQuery.IN_ANY_FOLDER, false);
                       } } );
                       
         sIsStrMap.put("local", 
                       new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
-                          return ZimbraQuery.InQuery.Create(mbx, analyze, modifier, ZimbraQuery.InQuery.IN_LOCAL_FOLDER);
+                          return ZimbraQuery.InQuery.Create(mbx, analyze, modifier, ZimbraQuery.InQuery.IN_LOCAL_FOLDER, false);
                       } } );
 
         sIsStrMap.put("remote",
                       new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
-                          return ZimbraQuery.InQuery.Create(mbx, analyze, modifier, ZimbraQuery.InQuery.IN_REMOTE_FOLDER);
+                          return ZimbraQuery.InQuery.Create(mbx, analyze, modifier, ZimbraQuery.InQuery.IN_REMOTE_FOLDER, true);
                       } } );
 
         sIsStrMap.put("solo",
@@ -210,6 +210,7 @@ public final class ZimbraQueryParser {
             return new ZimbraQuery.TypeQuery(mAnalyzer, modifier,tok);
           case ITEM:
             return ZimbraQuery.ItemQuery.Create(mMailbox, mAnalyzer, modifier, tok);
+          case UNDERID:
           case INID:
           {
               ItemId iid = null;
@@ -223,15 +224,16 @@ public final class ZimbraQueryParser {
                   iidStr = tok;
               }
               iid = new ItemId(iidStr, (String)null);
-              return ZimbraQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, iid, subfolderPath);
+              return ZimbraQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, iid, subfolderPath, (target == UNDERID));
           }
+          case UNDER:
           case IN:
           {
               Integer folderId = sFolderStrMap.get(tok.toLowerCase());
               if (folderId != null) {
-                  return ZimbraQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, folderId);
+                  return ZimbraQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, folderId, (target == UNDER));
               } else {
-                  return ZimbraQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, tok);
+                  return ZimbraQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, tok, (target == UNDER));
               }
           }
           case TAG:
@@ -390,7 +392,9 @@ PARSER_END(ZimbraQueryParser)
 |  <TOFROMCC:   "tofromcc:">         
 
 |  <IN:         "in:">  
+|  <UNDER:      "under:">  
 |  <INID:         "inid:">  
+|  <UNDERID:      "underid:">  
 |  <HAS:        "has:">
 |  <FILENAME:   "filename:">
 |  <TYPE:       "type:">
@@ -614,7 +618,7 @@ ZimbraQuery.BaseQuery Clause() throws ServiceException :
           (
   	           t=<MSGID>|t=<ENVFROM>|t=<ENVTO>|t=<FROM>|t=<TO>|t=<CC>|t=<CONTACT>
   	          | t=<TOFROM>|t=<TOCC>|t=<FROMCC>|t=<TOFROMCC> 
-  		      | t=<CONTENT>|t=<MESSAGE>|t=<SUBJECT>|t=<IN>|t=<INID>
+  		      | t=<CONTENT>|t=<MESSAGE>|t=<SUBJECT>|t=<IN>|t=<INID>|t=<UNDER>|t=<UNDERID>
        		  |  t=<TYPE>|t=<ATTACHMENT>|t=<HAS>|t=<FILENAME>|t=<AUTHOR>|t=<TITLE>|t=<KEYWORDS>|t=<COMPANY>|t=<METADATA>
 	     	  | t=<MY>|t=<IS>|t=<TAG>|t=<CONV>|t=<CONV_COUNT>|t=<CONV_MINM>|t=<CONV_MAXM>
 	  	      | t=<SIZE>|t=<BIGGER>|t=<SMALLER>|t=<MODSEQ>

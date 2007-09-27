@@ -428,7 +428,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
     }
     
     private static class RemoteFolderPrinter {
-        void run(StringBuilder str, boolean truthiness, Collection<RemoteFolderDescriptor> collect, String intro) {
+        void run(StringBuilder str, boolean truthiness, Collection<RemoteFolderDescriptor> collect) {
             if (!ListUtil.isEmpty(collect)) {
                 str.append("(");
                 boolean atFirst = true;
@@ -438,6 +438,9 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
 
                     if (!truthiness)
                         str.append("-");
+                    
+                    String intro = rf.getIncludeSubfolders() ? "UNDERID" : "INID";
+                    
                     str.append(intro).append(":\"").append(rf.getFolderId().toString());
                     if (rf.getSubfolderPath() != null && rf.getSubfolderPath().length() > 0) 
                         str.append('/').append(rf.getSubfolderPath());
@@ -492,8 +495,8 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         fp.run(retVal, false, excludeFolders);
 
         // remote folders
-        rfp.run(retVal, true, remoteFolders, "INID");
-        rfp.run(retVal, false, excludeRemoteFolders, "INID");
+        rfp.run(retVal, true, remoteFolders);
+        rfp.run(retVal, false, excludeRemoteFolders);
         
         // convId
         if (convId != 0) {
@@ -675,16 +678,22 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         // remoteFolders
         //
         {
-            // if both sets are empty going in, then an empty set means 
-            // "no constraint"....on the other hand if either set is nonempty
-            // going in, then an empty set coming out means "no results".
-            // ugly.  Should modify this so folders=null means "no constraint" and
-            // folders=[] means "no results".  TODO...
-            if (remoteFolders.size() >  0 ||  other.remoteFolders.size() > 0) {
-                remoteFolders = SetHelper.intersectIfNonempty(remoteFolders, other.remoteFolders);
-                if (remoteFolders.size() == 0)
-                    noResults = true;
-            }
+//            // if both sets are empty going in, then an empty set means 
+//            // "no constraint"....on the other hand if either set is nonempty
+//            // going in, then an empty set coming out means "no results".
+//            // ugly.  Should modify this so folders=null means "no constraint" and
+//            // folders=[] means "no results".  TODO...
+//            if (remoteFolders.size() >  0 ||  other.remoteFolders.size() > 0) {
+//                remoteFolders = SetHelper.intersectIfNonempty(remoteFolders, other.remoteFolders);
+//                if (remoteFolders.size() == 0)
+//                    noResults = true;
+//            }
+            
+            // bug 20640
+            // include-remote-folders searches cannot be properly intersected,
+            // so don't try to intersect the sets right now -- just union (bug 
+            remoteFolders = SetHelper.union(remoteFolders, other.remoteFolders);
+            
         }
         excludeRemoteFolders = SetHelper.union(excludeRemoteFolders, other.excludeRemoteFolders);
         
@@ -842,15 +851,12 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
     }
 
     public static final class RemoteFolderDescriptor {
-        public RemoteFolderDescriptor(ItemId iidFolder, String subpath) {
+        public RemoteFolderDescriptor(ItemId iidFolder, String subpath, boolean includeSubfolders) {
+            this.includeSubfolders = includeSubfolders;
             this.folderId = iidFolder;
             this.subfolderPath = subpath;
             if (this.subfolderPath == null)
                 this.subfolderPath = "";
-        }
-        
-        public RemoteFolderDescriptor(ItemId iidFolder) {
-            this(iidFolder, "");
         }
         
         /** @return the folderId */
@@ -861,6 +867,11 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         public String getSubfolderPath() {
             return subfolderPath;
         }
+        
+        public boolean getIncludeSubfolders() {
+            return includeSubfolders;
+        }
+        
         /* @see java.lang.Object#hashCode() */
         @Override
         public int hashCode() {
@@ -880,6 +891,8 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
             if (getClass() != obj.getClass())
                 return false;
             final RemoteFolderDescriptor other = (RemoteFolderDescriptor) obj;
+            if (other.includeSubfolders != includeSubfolders)
+                return false;
             if (folderId == null) {
                 if (other.folderId != null)
                     return false;
@@ -895,6 +908,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         
         private ItemId folderId;
         private String subfolderPath;
+        private boolean includeSubfolders;
     }
 
 
