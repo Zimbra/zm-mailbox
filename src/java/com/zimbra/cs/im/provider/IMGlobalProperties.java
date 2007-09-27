@@ -28,22 +28,24 @@ import java.util.HashMap;
 import org.jivesoftware.util.JiveProperties;
 import org.jivesoftware.util.PropertyProvider;
 
+import com.zimbra.common.localconfig.LC;
+
 public class IMGlobalProperties implements PropertyProvider {
     
     private HashMap<String, String> mProvMap = new HashMap<String, String>();
     private JiveProperties mJiveProps;
     
     public IMGlobalProperties() {
-        mProvMap.put("xmpp.socket.ssl.keystore", "tomcat/conf/keystore");
+        mProvMap.put("xmpp.socket.ssl.keystore", LC.mailboxd_keystore.value());
         mProvMap.put("xmpp.socket.ssl.keypass", "zimbra");
-        mProvMap.put("xmpp.socket.ssl.truststore", "tomcat/conf/keystore");
+        mProvMap.put("xmpp.socket.ssl.truststore", LC.mailboxd_keystore.value());
         mProvMap.put("xmpp.socket.ssl.trustpass", "zimbra");
         mProvMap.put("xmpp.socket.blocking", "false");
         mProvMap.put("xmpp.server.certificate.verify", "false");
         
-        if (false) { // UNCOMMENT ME TO DISABLE TLS FOR DEBUGGING!
-            mProvMap.put("xmpp.client.tls.policy", "disabled");
-        }
+//        if (true) { // UNCOMMENT ME TO DISABLE TLS FOR DEBUGGING!
+//            mProvMap.put("xmpp.client.tls.policy", "disabled");
+//        }
                 
 //      mProvMap.put("xmpp.server.read.timeout", Integer.toString(60 * 60 * 1000));        
 //        provMap.put("", "");
