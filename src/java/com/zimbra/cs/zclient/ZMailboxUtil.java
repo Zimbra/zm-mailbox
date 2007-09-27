@@ -285,36 +285,36 @@ public class ZMailboxUtil implements DebugListener {
         return new Option(shortName, longName, hasArgs, help);
     }
 
-    private static Option O_AFTER = new Option("a", "after", true, "add after filter-name");
-    private static Option O_BEFORE = new Option("b", "before", true, "add before filter-name");
-    private static Option O_COLOR = new Option("c", "color", true, "color");
-    private static Option O_CONTENT_TYPE = new Option("c", "contentType", true, "content-type");
-    private static Option O_CURRENT = new Option("c", "current", false, "current page of search results");
-    private static Option O_DATE = new Option("d", "date", true,  "received date (msecs since epoch)");
-    private static Option O_FIRST = new Option("f", "first", false, "add as first filter rule");
-    private static Option O_FLAGS = new Option("F", "flags", true, "flags");
-    private static Option O_FOLDER = new Option("f", "folder", true, "folder-path-or-id");
-    private static Option O_IGNORE = new Option("i", "ignore", false, "ignore unknown contact attrs");
-    private static Option O_IGNORE_ERROR = new Option("i", "ignore", false, "ignore and continue on error during ics import");
-    private static Option O_LAST = new Option("l", "last", false, "add as last filter rule");    
-    private static Option O_LIMIT = new Option("l", "limit", true, "max number of results to return");
-    private static Option O_NEXT = new Option("n", "next", false, "next page of search results");
-    private static Option O_OUTPUT_FILE = new Option("o", "output", true, "output filename");
-    private static Option O_PREVIOUS = new Option("p", "previous", false,  "previous page of search results");
-    private static Option O_SORT = new Option("s", "sort", true, "sort order TODO");
-    private static Option O_REPLACE = new Option("r", "replace", false, "replace contact (default is to merge)");
-    private static Option O_TAGS = new Option("T", "tags", true, "list of tag ids/names");
-    private static Option O_TYPES = new Option("t", "types", true, "list of types to search for (message,conversation,contact,appointment,wiki)");
-    private static Option O_URL = new Option("u", "url", true, "url to connect to");
-    private static Option O_VERBOSE = new Option("v", "verbose", false, "verbose output");
-    private static Option O_VIEW = new Option("V", "view", true, "default type for folder (conversation,message,contact,appointment,wiki)");
+    static Option O_AFTER = new Option("a", "after", true, "add after filter-name");
+    static Option O_BEFORE = new Option("b", "before", true, "add before filter-name");
+    static Option O_COLOR = new Option("c", "color", true, "color");
+    static Option O_CONTENT_TYPE = new Option("c", "contentType", true, "content-type");
+    static Option O_CURRENT = new Option("c", "current", false, "current page of search results");
+    static Option O_DATE = new Option("d", "date", true,  "received date (msecs since epoch)");
+    static Option O_FIRST = new Option("f", "first", false, "add as first filter rule");
+    static Option O_FLAGS = new Option("F", "flags", true, "flags");
+    static Option O_FOLDER = new Option("f", "folder", true, "folder-path-or-id");
+    static Option O_IGNORE = new Option("i", "ignore", false, "ignore unknown contact attrs");
+    static Option O_IGNORE_ERROR = new Option("i", "ignore", false, "ignore and continue on error during ics import");
+    static Option O_LAST = new Option("l", "last", false, "add as last filter rule");    
+    static Option O_LIMIT = new Option("l", "limit", true, "max number of results to return");
+    static Option O_NEXT = new Option("n", "next", false, "next page of search results");
+    static Option O_OUTPUT_FILE = new Option("o", "output", true, "output filename");
+    static Option O_PREVIOUS = new Option("p", "previous", false,  "previous page of search results");
+    static Option O_SORT = new Option("s", "sort", true, "sort order TODO");
+    static Option O_REPLACE = new Option("r", "replace", false, "replace contact (default is to merge)");
+    static Option O_TAGS = new Option("T", "tags", true, "list of tag ids/names");
+    static Option O_TYPES = new Option("t", "types", true, "list of types to search for (message,conversation,contact,appointment,wiki)");
+    static Option O_URL = new Option("u", "url", true, "url to connect to");
+    static Option O_VERBOSE = new Option("v", "verbose", false, "verbose output");
+    static Option O_VIEW = new Option("V", "view", true, "default type for folder (conversation,message,contact,appointment,wiki)");
 
     enum Command {
         AUTHENTICATE("authenticate", "a", "{name} {password}", "authenticate as account and open mailbox", Category.MISC, 2, 2, O_URL),
         AUTO_COMPLETE("autoComplete", "ac", "{query}", "contact auto autocomplete", Category.CONTACT,  1, 1, O_VERBOSE),
         AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{query}", "gal auto autocomplete", Category.CONTACT,  1, 1, O_VERBOSE),
         ADD_FILTER_RULE("addFilterRule", "afrl", "{name}  [*active|inactive] [any|*all] {conditions}+ {actions}+", "add filter rule", Category.FILTER,  2, Integer.MAX_VALUE, O_AFTER, O_BEFORE, O_FIRST, O_LAST),
-        ADD_MESSAGE("addMessage", "am", "{dest-folder-path} {filename-or-dir} [{filename-or-dir} ...]", "add a message to a folder", Category.MESSAGE, 2, Integer.MAX_VALUE, O_TAGS, O_DATE),
+        ADD_MESSAGE("addMessage", "am", "{dest-folder-path} {filename-or-dir} [{filename-or-dir} ...]", "add a message to a folder", Category.MESSAGE, 2, Integer.MAX_VALUE, O_TAGS, O_DATE, O_FLAGS),
         ADMIN_AUTHENTICATE("adminAuthenticate", "aa", "{admin-name} {admin-password}", "authenticate as an admin. can only be used by an admin", Category.ADMIN, 2, 2, O_URL),
         CREATE_CONTACT("createContact", "cct", "[attr1 value1 [attr2 value2...]]", "create contact", Category.CONTACT, 2, Integer.MAX_VALUE, O_FOLDER, O_IGNORE, O_TAGS),
         CREATE_FOLDER("createFolder", "cf", "{folder-name}", "create folder", Category.FOLDER, 1, 1, O_VIEW, O_COLOR, O_FLAGS, O_URL),
@@ -362,14 +362,16 @@ public class ZMailboxUtil implements DebugListener {
         MARK_MESSAGE_SPAM("markMessageSpam", "mms", "{msg} [0|1*] [{dest-folder-path}]", "mark a message as spam/not-spam, and optionally move", Category.MESSAGE, 1, 3),
         MARK_TAG_READ("markTagRead", "mtr", "{tag-name}", "mark all items with this tag as read", Category.TAG, 1, 1),
         MODIFY_CONTACT("modifyContactAttrs", "mcta", "{contact-id} [attr1 value1 [attr2 value2...]]", "modify a contact", Category.CONTACT, 3, Integer.MAX_VALUE, O_REPLACE, O_IGNORE),
-        MODIFY_FILTER_RULE("modifyFilterRule", "mfrl", "{name}  [*active|inactive] [any|*all] {conditions}+ {actions}+", "add filter rule", Category.FILTER,  2, Integer.MAX_VALUE),        
+        MODIFY_FILTER_RULE("modifyFilterRule", "mfrl", "{name} [*active|inactive] [any|*all] {conditions}+ {actions}+", "add filter rule", Category.FILTER,  2, Integer.MAX_VALUE),        
         MODIFY_FOLDER_CHECKED("modifyFolderChecked", "mfch", "{folder-path} [0|1*]", "modify whether a folder is checked in the UI", Category.FOLDER, 1, 2),
         MODIFY_FOLDER_COLOR("modifyFolderColor", "mfc", "{folder-path} {new-color}", "modify a folder's color", Category.FOLDER, 2, 2),
         MODIFY_FOLDER_EXCLUDE_FREE_BUSY("modifyFolderExcludeFreeBusy", "mfefb", "{folder-path} [0|1*]", "change whether folder is excluded from free-busy", Category.FOLDER, 1, 2),
+        MODIFY_FOLDER_FLAGS("modifyFolderFlags", "mff", "{folder-path} {folder-flags}", "replaces the flags on the folder (subscribed, checked, etc.)", Category.FOLDER, 2, 2),
         MODIFY_FOLDER_GRANT("modifyFolderGrant", "mfg", "{folder-path} {account {name}|group {name}|domain {name}|all|public|guest {email} {password}] {permissions|none}}", "add/remove a grant to a folder", Category.FOLDER, 3, 5),
         MODIFY_FOLDER_URL("modifyFolderURL", "mfu", "{folder-path} {url}", "modify a folder's URL", Category.FOLDER, 2, 2),
-        MODIFY_SIGNATURE("modifySignature", "msig", "{signature-name|signature-id} {value}", "modify signature value", Category.ACCOUNT, 2, 2),
         MODIFY_IDENTITY("modifyIdentity", "mid", "{identity-name} [attr1 value1 [attr2 value2...]]", "modify an identity", Category.ACCOUNT, 1, Integer.MAX_VALUE),
+        MODIFY_ITEM_FLAGS("modifyItemFlags", "mif", "{item-ids} {item-flags}", "replaces the flags on the items (answered, unread, flagged, etc.)", Category.ITEM, 2, 2),
+        MODIFY_SIGNATURE("modifySignature", "msig", "{signature-name|signature-id} {value}", "modify signature value", Category.ACCOUNT, 2, 2),
         MODIFY_TAG_COLOR("modifyTagColor", "mtc", "{tag-name} {tag-color}", "modify a tag's color", Category.TAG, 2, 2),
         MOVE_CONTACT("moveContact", "mct", "{contact-ids} {dest-folder-path}", "move contact(s) to a new folder", Category.CONTACT, 2, 2),
         MOVE_CONVERSATION("moveConversation", "mc", "{conv-ids} {dest-folder-path}", "move conversation(s) to a new folder", Category.CONVERSATION, 2, 2),
@@ -582,7 +584,7 @@ public class ZMailboxUtil implements DebugListener {
                 s.numUnread);
     }
 
-    public void initMailbox() throws ServiceException, IOException {
+    public void initMailbox() throws ServiceException {
         if (mPassword == null) return;
 
         if (mAdminAccountName != null) {
@@ -744,20 +746,20 @@ public class ZMailboxUtil implements DebugListener {
 
     private String flagsOpt()    { return mCommandLine.getOptionValue(O_FLAGS.getOpt()); }
 
-    private String urlOpt(boolean admin) throws SoapFaultException {
+    private String urlOpt(boolean admin) {
         String url = mCommandLine.getOptionValue(O_URL.getOpt());
         return (url == null && admin) ? mUrl : url;
     }
 
-    private String outputFileOpt() throws SoapFaultException {
+    private String outputFileOpt() {
         return mCommandLine.getOptionValue(O_OUTPUT_FILE.getOpt());
     }
 
-    private String contentTypeOpt() throws SoapFaultException {
+    private String contentTypeOpt() {
         return mCommandLine.getOptionValue(O_CONTENT_TYPE.getOpt());
     }
 
-    private boolean ignoreAndContinueOnErrorOpt() throws SoapFaultException {
+    private boolean ignoreAndContinueOnErrorOpt() {
         return mCommandLine.hasOption(O_IGNORE_ERROR.getOpt());
     }
 
@@ -1012,11 +1014,17 @@ public class ZMailboxUtil implements DebugListener {
         case MODIFY_FOLDER_GRANT:
             doModifyFolderGrant(args);
             break;
+        case MODIFY_FOLDER_FLAGS:
+            mMbox.updateFolder(lookupFolderId(args[0]), null, null, null, args[1], null);
+            break;
         case MODIFY_FOLDER_URL:
             mMbox.modifyFolderURL(lookupFolderId(args[0]), args[1]);
             break;
         case MODIFY_IDENTITY:
             mMbox.modifyIdentity(new ZIdentity(args[0], getMultiMap(args, 1)));
+            break;
+        case MODIFY_ITEM_FLAGS:
+            mMbox.updateItem(id(args[0]), null, null, args[1], null);
             break;
         case MODIFY_SIGNATURE:
             doModifySignature(args);
@@ -1085,23 +1093,19 @@ public class ZMailboxUtil implements DebugListener {
 
     private static class TraceHandler extends ZEventHandler {
 
-    	@Override
-    	public void handleRefresh(ZRefreshEvent refreshEvent, ZMailbox mailbox) throws ServiceException {
+    	@Override public void handleRefresh(ZRefreshEvent refreshEvent, ZMailbox mailbox) {
     		System.out.println("ZRefreshEvent: "+refreshEvent);
     	}
 
-    	@Override
-    	public void handleModify(ZModifyEvent event, ZMailbox mailbox) throws ServiceException {
+    	@Override public void handleModify(ZModifyEvent event, ZMailbox mailbox) {
     		System.out.println(event.getClass().getSimpleName()+": "+event);
     	}
 
-       	@Override
-    	public void handleCreate(ZCreateEvent event, ZMailbox mailbox) throws ServiceException {
+       	@Override public void handleCreate(ZCreateEvent event, ZMailbox mailbox) {
     		System.out.println(event.getClass().getSimpleName()+": "+ event);
     	}
 
-       	@Override
-       	public void handleDelete(ZDeleteEvent event, ZMailbox mailbox) throws ServiceException {
+       	@Override public void handleDelete(ZDeleteEvent event, ZMailbox mailbox) {
        		System.out.println("ZDeleteEvent: "+event);
        	}
     }
@@ -1623,7 +1627,7 @@ public class ZMailboxUtil implements DebugListener {
         return i;
     }
 
-    private void dumpSearch(ZSearchResult sr, boolean verbose) throws ServiceException {
+    private void dumpSearch(ZSearchResult sr, boolean verbose) {
         if (verbose) {
             System.out.println(sr);
             return;
@@ -1717,7 +1721,7 @@ public class ZMailboxUtil implements DebugListener {
         else return "<none>";
     }
 
-    private void dumpConvSearch(ZSearchResult sr, boolean verbose) throws ServiceException {
+    private void dumpConvSearch(ZSearchResult sr, boolean verbose) {
         mConvSearchResult =  sr;
         if (verbose) {
             System.out.println(sr);
@@ -1846,7 +1850,7 @@ public class ZMailboxUtil implements DebugListener {
         }
     }
     
-    private void dumpIdentities(List<ZIdentity> identities) throws ServiceException {
+    private void dumpIdentities(List<ZIdentity> identities) {
         if (verboseOpt()) {
             System.out.println(identities);
         } else {
@@ -1861,7 +1865,7 @@ public class ZMailboxUtil implements DebugListener {
         dumpIdentities(mMbox.getIdentities());
     }
 
-    private void dumpSignatures(List<ZSignature> signatures) throws ServiceException {
+    private void dumpSignatures(List<ZSignature> signatures) {
         if (verboseOpt()) {
             System.out.println(signatures);
         } else {
@@ -2139,7 +2143,7 @@ public class ZMailboxUtil implements DebugListener {
         }
     }
 
-    public static void main(String args[]) throws IOException, ParseException, ServiceException {
+    public static void main(String args[]) throws IOException, ServiceException {
         CliUtil.toolSetup();
 
         ZMailboxUtil pu = new ZMailboxUtil();
