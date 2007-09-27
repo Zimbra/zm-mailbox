@@ -25,7 +25,9 @@
 
 package com.zimbra.soap;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -48,6 +50,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.Zimbra;
@@ -206,17 +209,45 @@ public class SoapServlet extends ZimbraServlet {
         buffer = (byte[])req.getAttribute("com.zimbra.request.buffer");
         if (buffer == null) {
             isResumed = false;
-            if (len == -1) {
-                buffer = readUntilEOF(req.getInputStream());
-            } else {
-                buffer = new byte[len];
-                readFully(req.getInputStream(), buffer, 0, len);             
+            
+            // Look up max request size
+            int maxSize = 0;
+            try {
+                maxSize = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraSoapRequestMaxSize, 0);
+            } catch (ServiceException e) {
+                ZimbraLog.soap.warn("Unable to look up %s.  Not limiting the request size.", Provisioning.A_zimbraSoapRequestMaxSize, e);
             }
+            if (maxSize <= 0) {
+                maxSize = Integer.MAX_VALUE;
+            }
+            
+            // Read the request
+            boolean success;
+            if (len > maxSize) {
+                success = false;
+            } else {
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                success = readRequest(req.getInputStream(), baos, maxSize, len);
+                buffer = baos.toByteArray();
+            }
+            
+            // Handle requests that exceed the size limit
+            if (!success) {
+                String sizeString = (len < 0 ? "" : " size " + len);
+                String msg = String.format("Request%s exceeded limit of %d bytes set for %s.",
+                    sizeString, maxSize, Provisioning.A_zimbraSoapRequestMaxSize);
+                ServiceException e = ServiceException.INVALID_REQUEST(msg, null);
+                ZimbraLog.soap.warn(null, e);
+                Element fault = SoapProtocol.Soap12.soapFault(e);
+                Element envelope = SoapProtocol.Soap12.soapEnvelope(fault);
+                sendResponse(resp, envelope);
+                ZimbraLog.clearContext();
+                return;
+            }
+            
             req.setAttribute("com.zimbra.request.buffer", buffer);
         }
 
-        ZimbraLog.clearContext();
-        
         boolean loggedRequest = false;
         if (ZimbraLog.soap.isDebugEnabled()) {
             loggedRequest = true;
@@ -245,22 +276,51 @@ public class SoapServlet extends ZimbraServlet {
             envelope = SoapProtocol.Soap12.soapEnvelope(fault);
         }
 
-        SoapProtocol soapProto = SoapProtocol.determineProtocol(envelope);
-        int statusCode = soapProto.hasFault(envelope) ?
-                HttpServletResponse.SC_INTERNAL_SERVER_ERROR : HttpServletResponse.SC_OK;
-        
-        byte[] soapBytes = envelope.toUTF8();
         if (ZimbraLog.soap.isDebugEnabled()) {
             ZimbraLog.soap.debug("SOAP response: \n" + envelope.prettyPrint());
         }
+        sendResponse(resp, envelope);
         
+        ZimbraLog.clearContext();
+        ZimbraPerf.STOPWATCH_SOAP.stop(startTime);
+    }
+    
+    private void sendResponse(HttpServletResponse resp, Element envelope)
+    throws IOException {
+        SoapProtocol soapProto = SoapProtocol.determineProtocol(envelope);
+        int statusCode = soapProto.hasFault(envelope) ?
+            HttpServletResponse.SC_INTERNAL_SERVER_ERROR : HttpServletResponse.SC_OK;
+        byte[] soapBytes = envelope.toUTF8();
         resp.setContentType(soapProto.getContentType());
         resp.setBufferSize(soapBytes.length + 2048);
         resp.setContentLength(soapBytes.length);
         resp.setStatus(statusCode);
         resp.getOutputStream().write(soapBytes);
-        
-        ZimbraLog.clearContext();
-        ZimbraPerf.STOPWATCH_SOAP.stop(startTime);
+    }
+
+    /**
+     * Reads from the <tt>InputStream</tt> and writes to the <tt>ByteArrayOutputStream</tt> until
+     * either EOF or the maximum number of bytes have been read.
+     * @param sizeHint the buffer size used for each read from the <tt>InputStream</tt>
+     * 
+     * @return <tt>true</tt> if successful, or <tt>false</tt> if the number of bytes read
+     * exceeded <tt>maxBytes</tt> 
+     */
+    private boolean readRequest(InputStream input, ByteArrayOutputStream baos, int maxBytes, int sizeHint)
+    throws IOException {
+        if (sizeHint <= 0) {
+            sizeHint = 2048;
+        }
+        byte[] buffer = new byte[sizeHint];
+
+        int numRead = 0;
+        while ((numRead = input.read(buffer)) > 0) {
+            baos.write(buffer, 0, numRead);
+            if (baos.size() > maxBytes) {
+                return false;
+            }
+        }
+        return true;
     }
 }
+

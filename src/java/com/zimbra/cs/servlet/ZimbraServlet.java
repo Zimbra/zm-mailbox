@@ -28,6 +28,27 @@
  */
 package com.zimbra.cs.servlet;
 
+import java.io.IOException;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.httpclient.Cookie;
+import org.apache.commons.httpclient.Header;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.HttpRecoverableException;
+import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
+import org.apache.commons.httpclient.methods.PostMethod;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapProtocol;
@@ -40,32 +61,11 @@ import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.util.Zimbra;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.httpclient.Cookie;
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpRecoverableException;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
-import org.apache.commons.httpclient.methods.PostMethod;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author jhahm
@@ -176,32 +176,6 @@ public class ZimbraServlet extends HttpServlet {
         	return;
         }
         super.service(request, response);
-    }
-
-    /**
-     * read until EOF is reached
-     */
-    protected byte[] readUntilEOF(InputStream input) throws IOException {
-        final int SIZE = 2048;
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(SIZE);
-        byte[] buffer = new byte[SIZE];
-
-        int n = 0;
-        while ((n = input.read(buffer, 0, SIZE)) > 0)
-            baos.write(buffer, 0, n);
-        return baos.toByteArray();
-    }
-
-    protected void readFully(InputStream in, byte b[], int off, int len) throws IOException {
-        if (len < 0)
-            throw new IndexOutOfBoundsException();
-        int n = 0;
-        while (n < len) {
-            int count = in.read(b, off + n, len - n);
-            if (count < 0)
-            throw new java.io.EOFException();
-            n += count;
-        }
     }
 
     public static AuthToken getAuthTokenFromCookie(HttpServletRequest req, HttpServletResponse resp)

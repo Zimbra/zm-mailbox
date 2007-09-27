@@ -1155,6 +1155,7 @@ public abstract class Provisioning {
     
     public static final String A_zimbraForeignPrincipal = "zimbraForeignPrincipal";
     public static final String A_zimbraFileUploadMaxSize = "zimbraFileUploadMaxSize";
+    public static final String A_zimbraSoapRequestMaxSize = "zimbraSoapRequestMaxSize";
 
     public static final String A_zimbraHttpProxyURL = "zimbraHttpProxyURL";
     

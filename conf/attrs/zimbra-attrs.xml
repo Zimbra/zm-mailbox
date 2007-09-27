@@ -2645,6 +2645,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether to log IM chats to the Chats folder</desc>
 </attr>  
 
+<attr id="557" name="zimbraSoapRequestMaxSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>15360000</globalConfigValue>
+  <desc>Maximum size in bytes for incoming SOAP requests.  0 means no limit.</desc>
+</attr>
 
 </attrs>
 
