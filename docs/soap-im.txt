@@ -37,7 +37,8 @@ IMAuthorizeSubscribe -- used to OK another user adding you to their buddy list
 --------------------    send this in response to a <subscribe> notification
                         Optionally, add this user to my buddy list as well
 
-<IMAuthorizeSubscribeRequest addr="foo@bar.com" authorized="true|false" [add="true|false" groups="group,group..."]/>
+<IMAuthorizeSubscribeRequest addr="foo@bar.com" authorized="true|false"
+                             [add="true|false" name="nickname" groups="group,group..."]/>
 <IMAuthorizeSubscribeResponse/>
 
 
