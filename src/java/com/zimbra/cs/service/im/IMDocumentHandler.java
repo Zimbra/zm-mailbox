@@ -28,6 +28,7 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.im.IMRouter;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -69,7 +70,13 @@ public abstract class IMDocumentHandler extends DocumentHandler {
     }
 
     static IMPersona getRequestedPersona(OperationContext octxt, Object lock) throws ServiceException {
-        return IMRouter.getInstance().findPersona(octxt, (Mailbox) lock);
+        IMPersona toRet = IMRouter.getInstance().findPersona(octxt, (Mailbox) lock);
+        assert(toRet.getLock() == lock);
+        if (toRet.getLock() != lock) { // bug 18668 debugging
+            ZimbraLog.im.error("Returned persona lock not equal to requested lock");  
+        }
+        
+        return toRet;
     }
     
 }

@@ -1026,8 +1026,12 @@ public class IMPersona extends ClassLogger {
     
     private void postIMNotification(IMNotification not, Session s) {
         if (s == null) { 
-            for (Session session : mListeners)
+            for (Session session : mListeners) {
+                assert(session.getMailbox() == mMailbox);
+                if (session.getMailbox() != mMailbox) 
+                    ZimbraLog.im.error("Session_Mailbox != Mailbox for persona "+toString()+" session: "+toString());
                 session.notifyIM(not);
+            }
         } else {
             s.notifyIM(not);
         }
