@@ -42,6 +42,8 @@ import java.io.IOException;
 
 public class SoapHttpTransport extends SoapTransport {
 
+    public static final String X_ORIGINATING_IP = "X-Originating-IP";
+    
     private boolean mKeepAlive;
     private int mRetryCount;
     private int mTimeout;
@@ -214,7 +216,7 @@ public class SoapHttpTransport extends SoapTransport {
             method = new PostMethod(mUri);
             method.setRequestHeader("Content-Type", getRequestProtocol().getContentType());
             if (getClientIp() != null)
-                method.setRequestHeader("X-Originating-IP", getClientIp());
+            method.setRequestHeader(X_ORIGINATING_IP, getClientIp());
 
             String soapMessage = generateSoapMessage(document, raw, noSession, requestedAccountId, changeToken, tokenType);
             method.setRequestBody(soapMessage);
