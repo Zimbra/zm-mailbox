@@ -78,7 +78,7 @@ public class AtomFormatter extends Formatter {
                     if (itItem instanceof CalendarItem) {
                         // Don't return private appointments/tasks if the requester is not the mailbox owner.
                         CalendarItem calItem = (CalendarItem) itItem;
-                        if (!context.opContext.isDelegatedRequest(context.targetMailbox) || calItem.isPublic())
+                        if (calItem.isPublic() || calItem.allowPrivateAccess(context.authAccount))
                             addCalendarItem(calItem, feed, context);                
                     } else if (itItem instanceof Message) {
                         addMessage((Message) itItem, feed, context);

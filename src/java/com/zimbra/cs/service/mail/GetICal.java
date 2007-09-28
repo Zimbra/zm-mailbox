@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Map;
 
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -56,7 +57,9 @@ public class GetICal extends MailDocumentHandler {
      */
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Account authAccount = getAuthenticatedAccount(zsc);
         Mailbox mbx = getRequestedMailbox(zsc);
+        boolean allowPrivateAccess = CalendarItem.allowPrivateAccess(authAccount, mbx.getAccount());
         OperationContext octxt = getOperationContext(zsc, context);
 
         String iidStr = request.getAttribute(MailConstants.A_ID, null);
@@ -81,10 +84,10 @@ public class GetICal extends MailDocumentHandler {
                     if (inv == null) {
                         throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
                     }
-                    cal = inv.newToICalendar(useOutlookCompatMode, !octxt.isDelegatedRequest(mbx));
+                    cal = inv.newToICalendar(useOutlookCompatMode, allowPrivateAccess);
                 } else {
                     cal = mbx.getZCalendarForRange(octxt, rangeStart, rangeEnd, Mailbox.ID_FOLDER_CALENDAR,
-                                                   useOutlookCompatMode, !octxt.isDelegatedRequest(mbx));
+                                                   useOutlookCompatMode, allowPrivateAccess);
                 }
                 
                 ByteArrayOutputStream buf = new ByteArrayOutputStream();

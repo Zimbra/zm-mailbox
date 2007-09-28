@@ -36,6 +36,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
@@ -770,7 +771,7 @@ public class ToXML {
                 if (!inv.isPublic())
                     isPublic = false;
             }
-            if (isPublic || isCalendarItemOwner(octxt, calItem))
+            if (isPublic || allowPrivateAccess(octxt, calItem))
                 encodeCalendarReplies(calItemElem, calItem, null);
         }
     }
@@ -804,7 +805,7 @@ public class ToXML {
 
         encodeInviteComponent(ie, ifmt, octxt, cal, inv, NOTIFY_FIELDS);
 
-        if (includeContent && (inv.isPublic() || isCalendarItemOwner(octxt, cal))) {
+        if (includeContent && (inv.isPublic() || allowPrivateAccess(octxt, cal))) {
             int invId = inv.getMailItemId();
             MimeMessage mm = cal.getSubpartMessage(invId);
             if (mm == null)
@@ -927,7 +928,7 @@ public class ToXML {
         } else
             isPublic = false;
 
-        boolean showAll = isPublic || isCalendarItemOwner(octxt, calItem);
+        boolean showAll = isPublic || allowPrivateAccess(octxt, calItem);
 
         boolean wholeMessage = (part == null || part.trim().equals(""));
 
@@ -1176,8 +1177,10 @@ public class ToXML {
         }
     }
 
-    private static boolean isCalendarItemOwner(OperationContext octxt, CalendarItem calItem) {
-        return octxt != null ? !octxt.isDelegatedRequest(calItem.getMailbox()) : false;
+    private static boolean allowPrivateAccess(OperationContext octxt, CalendarItem calItem)
+    throws ServiceException {
+        Account authAccount = octxt != null ? octxt.getAuthenticatedUser() : null;
+        return calItem.allowPrivateAccess(authAccount);
     }
 
     public static Element encodeInviteComponent(Element parent,
@@ -1196,7 +1199,6 @@ public class ToXML {
             }
         }
 
-        boolean isOwner = isCalendarItemOwner(octxt, calItem);
         Element e = parent.addElement(MailConstants.E_INVITE_COMPONENT);
 
         e.addAttribute(MailConstants.A_CAL_COMPONENT_NUM, invite.getComponentNum());
@@ -1204,7 +1206,7 @@ public class ToXML {
         e.addAttribute(MailConstants.A_CAL_RSVP, invite.getRsvp());
         
         if (allFields) {
-            if (isOwner || invite.isPublic()) {
+            if (invite.isPublic() || allowPrivateAccess(octxt, calItem)) {
                 String priority = invite.getPriority();
                 if (priority != null)
                     e.addAttribute(MailConstants.A_CAL_PRIORITY, priority);

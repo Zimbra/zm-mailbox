@@ -47,6 +47,7 @@ import javax.mail.internet.MimeMultipart;
 
 import org.apache.lucene.document.Field;
 
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.db.DbMailItem;
@@ -689,6 +690,39 @@ public abstract class CalendarItem extends MailItem {
     }
 
     /**
+     * Returns true if authAccount should be allowed access to private data in this appointment.
+     * Returns true if authAccount is the account that owns the appointment, or authAccount has
+     * admin rights over the owner account.
+     * @param authAccount
+     * @return
+     * @throws ServiceException
+     */
+    public boolean allowPrivateAccess(Account authAccount) throws ServiceException {
+        Account targetAccount = getAccount();
+        return allowPrivateAccess(authAccount, targetAccount);
+    }
+
+    /**
+     * Returns true if authAccount should be allowed access to private data in appointments owned
+     * by targetAccount.  Returns true if authAccount and targetAccount are the same account or if
+     * authAccount has admin rights over targetAccount.
+     * @param authAccount
+     * @param targetAccount
+     * @return
+     * @throws ServiceException
+     */
+    public static boolean allowPrivateAccess(Account authAccount, Account targetAccount)
+    throws ServiceException {
+        if (authAccount != null && targetAccount != null) {
+            if (authAccount.getId().equalsIgnoreCase(targetAccount.getId()))
+                return true;
+            if (AccessManager.getInstance().canAccessAccount(authAccount, targetAccount))
+                return true;
+        }
+        return false;
+    }
+
+    /**
      * @param pm
      * @param invite
      * @param force
@@ -757,8 +791,9 @@ public abstract class CalendarItem extends MailItem {
         // unless that other user is a calendar resource.
         boolean isCalendarResource = getMailbox().getAccount() instanceof CalendarResource;
         OperationContext octxt = getMailbox().getOperationContext();
-        boolean onBehalfOf = octxt != null ? octxt.isDelegatedRequest(getMailbox()) : false;
-        if (onBehalfOf && !newInvite.isPublic() && !isCalendarResource)
+        Account authAccount = octxt != null ? octxt.getAuthenticatedUser() : null;
+        boolean denyPrivateAccess = authAccount != null && !allowPrivateAccess(authAccount);
+        if (denyPrivateAccess && !newInvite.isPublic() && !isCalendarResource)
             throw ServiceException.PERM_DENIED("private appointment/task cannot be created/edited on behalf of another user");
 
         boolean organizerChanged = organizerChangeCheck(newInvite, isCancel);
@@ -858,7 +893,7 @@ public abstract class CalendarItem extends MailItem {
 
             // Don't allow creating/editing a private appointment on behalf of another user,
             // unless that other user is a calendar resource.
-            if (onBehalfOf && prev != null && !prev.isPublic() && !isCalendarResource)
+            if (denyPrivateAccess && prev != null && !prev.isPublic() && !isCalendarResource)
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this appointment/task");
 
             if (prev!=null && !newInvite.isOrganizer() && newInvite.sentByMe()) {
@@ -912,10 +947,10 @@ public abstract class CalendarItem extends MailItem {
                 }
             }
 
-            modifyBlob(toRemove, replaceExistingInvites, toUpdate, pm, newInvite, volumeId, isCancel);
+            modifyBlob(toRemove, replaceExistingInvites, toUpdate, pm, newInvite, volumeId, isCancel, !denyPrivateAccess);
             modifiedCalItem = true;
         } else {
-            modifyBlob(toRemove, replaceExistingInvites, toUpdate, null, null, volumeId, isCancel);
+            modifyBlob(toRemove, replaceExistingInvites, toUpdate, null, null, volumeId, isCancel, !denyPrivateAccess);
         }
         
         // now remove the inviteid's from our list  
@@ -1212,7 +1247,8 @@ public abstract class CalendarItem extends MailItem {
                             ParsedMessage invPm,
                             Invite newInv,
                             short volumeId,
-                            boolean isCancel)
+                            boolean isCancel,
+                            boolean allowPrivateAccess)
     throws ServiceException
     {
         // TODO - as an optimization, should check to see if the invite's MM is already in here! (ie
@@ -1313,10 +1349,7 @@ public abstract class CalendarItem extends MailItem {
                 if (icalPartNum != -1) {
                     updated = true;
                     multi.removeBodyPart(icalPartNum);
-                    Mailbox mbx = getMailbox();
-                    OperationContext octxt = mbx.getOperationContext();
-                    boolean isOwner = octxt != null ? !octxt.isDelegatedRequest(mbx) : false;
-                    ZVCalendar cal = inv.newToICalendar(isOwner);
+                    ZVCalendar cal = inv.newToICalendar(allowPrivateAccess);
                     MimeBodyPart icalPart = CalendarMailSender.makeICalIntoMimePart(inv.getUid(), cal);
                     multi.addBodyPart(icalPart, icalPartNum);
                     // Courtesy of JavaMail.  All three lines are necessary.
@@ -1800,12 +1833,12 @@ public abstract class CalendarItem extends MailItem {
     void appendRawCalendarData(ZVCalendar cal,
                                boolean useOutlookCompatMode,
                                boolean ignoreErrors,
-                               boolean isOwner)
+                               boolean allowPrivateAccess)
     throws ServiceException {
         for (Iterator invIter = mInvites.iterator(); invIter.hasNext();) {
             Invite inv = (Invite)invIter.next();
             try {
-                cal.addComponent(inv.newToVComponent(useOutlookCompatMode, isOwner));
+                cal.addComponent(inv.newToVComponent(useOutlookCompatMode, allowPrivateAccess));
             } catch (ServiceException e) {
                 if (ignoreErrors) {
                     ZimbraLog.calendar.warn(

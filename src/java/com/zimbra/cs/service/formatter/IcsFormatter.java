@@ -97,7 +97,7 @@ public class IcsFormatter extends Formatter {
 //        try {
             ZVCalendar cal = context.targetMailbox.getZCalendarForCalendarItems(
                     calItems, useOutlookCompatMode, true,
-                    !context.opContext.isDelegatedRequest(context.targetMailbox));
+                    CalendarItem.allowPrivateAccess(context.authAccount, context.targetAccount));
             ByteArrayOutputStream buf = new ByteArrayOutputStream();
             OutputStreamWriter wout = new OutputStreamWriter(buf, Mime.P_CHARSET_UTF8);
             boolean forceOlsonTZID = Browser.APPLE_ICAL.equals(browser);  // bug 15549

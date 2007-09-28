@@ -32,6 +32,7 @@ import java.util.Iterator;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.caldav.Filter;
@@ -69,11 +70,13 @@ public class CalendarObject extends MailItemResource {
 		setProperty(DavElements.P_GETCONTENTTYPE, Mime.CT_TEXT_CALENDAR);
 		setProperty(DavElements.P_GETCONTENTLENGTH, Integer.toString(calItem.getSize()));
 		addProperty(CalDavProperty.getCalendarData(this));
+		mAccount = calItem.getAccount();
 	}
 	
 	private String mUid;
 	private Invite[] mInvites;
 	private TimeZoneMap mTzmap;
+	private Account mAccount;
 	
 	protected static String getCalendarPath(CalendarItem calItem) throws ServiceException {
 		return getCalendarPath(calItem.getPath(), calItem.getUid());
@@ -122,7 +125,8 @@ public class CalendarObject extends MailItemResource {
 				continue;
 			CharArrayWriter wr = new CharArrayWriter();
 			try {
-				inv.newToVComponent(false, false).toICalendar(wr);
+			    boolean allowPrivateAccess = CalendarItem.allowPrivateAccess(ctxt.getAuthAccount(), mAccount);
+				inv.newToVComponent(false, allowPrivateAccess).toICalendar(wr);
 			} catch (ServiceException se) {
 				ZimbraLog.dav.error("cannot convert to ICalendar", se);
 			}

@@ -95,7 +95,8 @@ public class GetCalendarItemSummaries extends CalendarRequest {
     {
         EncodeCalendarItemResult toRet = new EncodeCalendarItemResult();
         ItemIdFormatter ifmt = new ItemIdFormatter(lc);
-        boolean isOwner = !lc.isDelegatedRequest();
+        Account authAccount = getAuthenticatedAccount(lc);
+        boolean hidePrivate = !calItem.allowPrivateAccess(authAccount);
 
         try {
             boolean expandRanges = (rangeStart > 0 && rangeEnd > 0 && rangeStart < rangeEnd);
@@ -134,7 +135,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                     try {
                         InviteInfo invId = inst.getInviteInfo();
                         Invite inv = calItem.getInvite(invId.getMsgId(), invId.getComponentId());
-                        boolean showAll = isOwner || inv.isPublic();
+                        boolean showAll = !hidePrivate || inv.isPublic();
                         
                         // figure out which fields are different from the default and put their data here...
                         ParsedDuration invDuration = inv.getEffectiveDuration();
@@ -284,7 +285,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
 
             
             if (!expandRanges || numInRange > 0) { // if we found any calItems at all, we have to encode the "Default" data here
-                boolean showAll = isOwner || defaultInvite.isPublic();
+                boolean showAll = !hidePrivate || defaultInvite.isPublic();
                 if (calItemElem == null) {
                     calItemElem = lc.createElement(isAppointment ? MailConstants.E_APPOINTMENT : MailConstants.E_TASK);
 

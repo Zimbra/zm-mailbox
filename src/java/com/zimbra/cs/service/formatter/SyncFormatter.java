@@ -123,7 +123,7 @@ public class SyncFormatter extends Formatter {
             } else if (context.target instanceof CalendarItem) {
                 // Don't return private appointments/tasks if the requester is not the mailbox owner.
                 CalendarItem calItem = (CalendarItem) context.target;
-                if (!context.opContext.isDelegatedRequest(context.targetMailbox) || calItem.isPublic())
+                if (calItem.isPublic() || calItem.allowPrivateAccess(context.authAccount))
                     handleCalendarItem(context, calItem);
                 else
                     context.resp.sendError(HttpServletResponse.SC_FORBIDDEN, "permission denied");

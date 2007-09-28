@@ -139,8 +139,9 @@ public class SendInviteReply extends CalendarRequest {
 
             // Don't allow creating/editing a private appointment on behalf of another user,
             // unless that other user is a calendar resource.
+            boolean hidePrivate = !calItem.allowPrivateAccess(authAcct);
             boolean isCalendarResource = acct instanceof CalendarResource;
-            if (onBehalfOf && !oldInv.isPublic() && !isCalendarResource)
+            if (hidePrivate && !oldInv.isPublic() && !isCalendarResource)
                 throw ServiceException.PERM_DENIED("Cannot reply to a private appointment/task on behalf of another user");
 
             // see if there is a specific Exception being referenced by this reply...
@@ -167,7 +168,7 @@ public class SendInviteReply extends CalendarRequest {
                 else
                     locale = !onBehalfOf ? acct.getLocale() : authAcct.getLocale();
                 String subject;
-                if (onBehalfOf && !oldInv.isPublic())
+                if (hidePrivate && !oldInv.isPublic())
                     subject = L10nUtil.getMessage(MsgKey.calendarSubjectWithheld, locale);
                 else
                     subject = oldInv.getName();
@@ -179,7 +180,7 @@ public class SendInviteReply extends CalendarRequest {
                 csd.mReplyType = MailSender.MSGTYPE_REPLY;
                 csd.mInvite = CalendarMailSender.replyToInvite(acct, authAcct, onBehalfOf, oldInv, verb, replySubject, exceptDt);
                 
-                ZVCalendar iCal = csd.mInvite.newToICalendar();
+                ZVCalendar iCal = csd.mInvite.newToICalendar(true);
                 
                 ParseMimeMessage.MimeMessageData parsedMessageData = new ParseMimeMessage.MimeMessageData();
                 

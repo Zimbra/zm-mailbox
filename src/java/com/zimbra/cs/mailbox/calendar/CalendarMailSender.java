@@ -125,6 +125,7 @@ public class CalendarMailSender {
     }
 
     public static MimeMessage createOrganizerChangeMessage(Account fromAccount,
+                                                           Account authAccount,
                                                            CalendarItem calItem,
                                                            Invite inv,
                                                            List<Address> rcpts)
@@ -136,7 +137,7 @@ public class CalendarMailSender {
 
         Locale locale = fromAccount.getLocale();
 
-        boolean hidePrivate = onBehalfOf && !calItem.isPublic();
+        boolean hidePrivate = !calItem.isPublic() && !calItem.allowPrivateAccess(authAccount);
         String subject;
         if (hidePrivate)
             subject = L10nUtil.getMessage(MsgKey.calendarSubjectWithheld, locale);
@@ -151,7 +152,7 @@ public class CalendarMailSender {
                 attachInviteSummary(sb, mmInv, locale);
         }
 
-        ZVCalendar iCal = inv.newToICalendar();
+        ZVCalendar iCal = inv.newToICalendar(true);
 
         Address from = AccountUtil.getFriendlyEmailAddress(fromAccount);
         Address sender = null;
@@ -223,7 +224,7 @@ public class CalendarMailSender {
             replyText.append(additionalMsgBody).append("\r\n");
         }
 
-        boolean hidePrivate = onBehalfOf && !inv.isPublic();
+        boolean hidePrivate = !inv.isPublic() && !calItem.allowPrivateAccess(authAccount);
         if (!hidePrivate && mmInv != null)
             attachInviteSummary(replyText, mmInv, lc);
 
@@ -300,7 +301,7 @@ public class CalendarMailSender {
         Locale locale = !onBehalfOf ? fromAccount.getLocale() : senderAccount.getLocale();
         Invite defaultInv = calItem.getDefaultInviteOrNull();
 
-        boolean hidePrivate = onBehalfOf && !calItem.isPublic();
+        boolean hidePrivate = !calItem.isPublic() && !calItem.allowPrivateAccess(senderAccount);
         String defaultSubject;
         if (hidePrivate)
             defaultSubject = L10nUtil.getMessage(MsgKey.calendarSubjectWithheld, locale);
@@ -343,7 +344,7 @@ public class CalendarMailSender {
         String subject = inv.getName();
         String text = inv.getDescription();
         String uid = inv.getUid();
-        ZVCalendar cal = inv.newToICalendar();
+        ZVCalendar cal = inv.newToICalendar(true);
         return createCalendarMessage(null, null, null, subject, text, uid, cal);
     }
 
@@ -470,7 +471,7 @@ public class CalendarMailSender {
             reply.addAttendee(meReply);
         }
 
-        boolean hidePrivate = onBehalfOf && !oldInv.isPublic();
+        boolean hidePrivate = !oldInv.isPublic() && !CalendarItem.allowPrivateAccess(authAcct, acct);
         reply.setClassProp(oldInv.getClassProp());
 
         // DTSTART, DTEND, LOCATION (outlook seems to require these,
@@ -553,7 +554,7 @@ public class CalendarMailSender {
             lc = organizer.getLocale();
         else
             lc = authAcct.getLocale();
-        boolean hidePrivate = onBehalfOf && !inv.isPublic();
+        boolean hidePrivate = !inv.isPublic() && !calItem.allowPrivateAccess(authAcct);
         String subject;
         if (hidePrivate)
             subject = L10nUtil.getMessage(MsgKey.calendarSubjectWithheld, lc);
@@ -565,7 +566,7 @@ public class CalendarMailSender {
         // TODO: Handle Exception ID. (last arg of replyToInvite)
         Invite replyInv = replyToInvite(acct, authAcct, onBehalfOf, inv, verb, replySubject, null);
 
-        ZVCalendar iCal = replyInv.newToICalendar();
+        ZVCalendar iCal = replyInv.newToICalendar(true);
         MimeMessage mm = createDefaultReply(acct, authAcct, onBehalfOf, calItem, inv, mmInv,
                                             replySubject, verb, additionalMsgBody, iCal);
 

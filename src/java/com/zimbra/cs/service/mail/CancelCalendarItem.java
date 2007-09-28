@@ -130,13 +130,13 @@ public class CancelCalendarItem extends CalendarRequest {
             sLog.debug("Sending cancellation message for \"" + defaultInv.getName() + "\" for instance " + recurId + " of invite " + defaultInv);
         }
 
-        Invite cancelInvite = CalendarUtils.buildCancelInstanceCalendar(acct, authAcct.getName(), onBehalfOf, defaultInv, text, recurId);
+        Invite cancelInvite = CalendarUtils.buildCancelInstanceCalendar(acct, authAcct, onBehalfOf, defaultInv, text, recurId);
         CalSendData dat = new CalSendData();
         dat.mOrigId = defaultInv.getMailItemId();
         dat.mReplyType = MailSender.MSGTYPE_REPLY;
         dat.mInvite = cancelInvite;
 
-        ZVCalendar iCal = dat.mInvite.newToICalendar();
+        ZVCalendar iCal = dat.mInvite.newToICalendar(true);
 
         // did they specify a custom <m> message?  If so, then we don't have to build one...
         Element msgElem = request.getOptionalElement(MailConstants.E_MSG);
@@ -188,9 +188,9 @@ public class CancelCalendarItem extends CalendarRequest {
         CalSendData csd = new CalSendData();
         csd.mOrigId = inv.getMailItemId();
         csd.mReplyType = MailSender.MSGTYPE_REPLY;
-        csd.mInvite = CalendarUtils.buildCancelInviteCalendar(acct, authAcct.getName(), onBehalfOf, inv, text);
+        csd.mInvite = CalendarUtils.buildCancelInviteCalendar(acct, authAcct, onBehalfOf, inv, text);
         
-        ZVCalendar iCal = csd.mInvite.newToICalendar();
+        ZVCalendar iCal = csd.mInvite.newToICalendar(true);
 
         // did they specify a custom <m> message?  If so, then we don't have to build one...
         Element msgElem = request.getOptionalElement(MailConstants.E_MSG);

@@ -398,6 +398,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             CalendarItem calItem, Account acct, Mailbox mbox,
             Element response)
     throws ServiceException {
+        Account authAccount = getAuthenticatedAccount(zsc);
         Invite[] invites = calItem.getInvites();
         for (Invite inv : invites) {
             List<Address> rcpts = CalendarMailSender.toListFromAttendees(inv.getAttendees());
@@ -405,7 +406,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 CalSendData csd = new CalSendData();
                 csd.mInvite = inv;
                 csd.mOrigId = inv.getMailItemId();
-                csd.mMm = CalendarMailSender.createOrganizerChangeMessage(acct, calItem, csd.mInvite, rcpts);
+                csd.mMm = CalendarMailSender.createOrganizerChangeMessage(acct, authAccount, calItem, csd.mInvite, rcpts);
                 sendCalendarMessageInternal(zsc, octxt, calItem.getFolderId(), acct, mbox, csd,
                                             response, true, true, false);
             }
@@ -450,8 +451,8 @@ public abstract class CalendarRequest extends MailDocumentHandler {
 
         List<Address> rcpts = CalendarMailSender.toListFromAttendees(toCancel);
         try {
-            dat.mInvite = CalendarUtils.buildCancelInviteCalendar(acct, authAcct.getName(), onBehalfOf, inv, text, toCancel);
-            ZVCalendar cal = dat.mInvite.newToICalendar();
+            dat.mInvite = CalendarUtils.buildCancelInviteCalendar(acct, authAcct, onBehalfOf, inv, text, toCancel);
+            ZVCalendar cal = dat.mInvite.newToICalendar(true);
             dat.mMm = CalendarMailSender.createCancelMessage(acct, rcpts, onBehalfOf, authAcct, calItem, inv, text, cal);
             sendCalendarCancelMessage(zsc, octxt, calItem.getFolderId(), acct, mbox, dat, false);
         } catch (ServiceException ex) {

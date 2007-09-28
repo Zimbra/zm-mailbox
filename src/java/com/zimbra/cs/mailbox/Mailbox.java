@@ -2881,7 +2881,7 @@ public class Mailbox {
 
     public synchronized ZVCalendar getZCalendarForCalendarItems(
             Collection<CalendarItem> calItems,
-            boolean useOutlookCompatMode, boolean ignoreErrors, boolean isOwner)
+            boolean useOutlookCompatMode, boolean ignoreErrors, boolean allowPrivateAccess)
     throws ServiceException {
         ZVCalendar cal = new ZVCalendar();
 
@@ -2906,20 +2906,20 @@ public class Mailbox {
 
         // build all the event components and add them to the Calendar
         for (CalendarItem calItem : calItems)
-            calItem.appendRawCalendarData(cal, useOutlookCompatMode, ignoreErrors, isOwner);
+            calItem.appendRawCalendarData(cal, useOutlookCompatMode, ignoreErrors, allowPrivateAccess);
         return cal;
     }
 
     public synchronized ZVCalendar getZCalendarForRange(
             OperationContext octxt,
             long start, long end, int folderId,
-            boolean useOutlookCompatMode, boolean isOwner)
+            boolean useOutlookCompatMode, boolean allowPrivateAccess)
     throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("getCalendarForRange", octxt);
             Collection<CalendarItem> calItems = getCalendarItemsForRange(octxt, start, end, folderId, null);
-            return getZCalendarForCalendarItems(calItems, useOutlookCompatMode, false, isOwner);
+            return getZCalendarForCalendarItems(calItems, useOutlookCompatMode, false, allowPrivateAccess);
         } finally {
             endTransaction(success);
         }
@@ -3562,7 +3562,7 @@ public class Mailbox {
                         StringWriter sr = null;
                         try {
                             sr = new StringWriter();
-                            inv.newToICalendar().toICalendar(sr);
+                            inv.newToICalendar(true).toICalendar(sr);
                             ical = sr.toString();
                         } finally {
                             if (sr != null)
@@ -4657,11 +4657,12 @@ public class Mailbox {
     CalendarItem createCalendarItem(int folderId, short volumeId, int flags, long tags, String uid, ParsedMessage pm, Invite invite)
     throws ServiceException {
         OperationContext octxt = getOperationContext();
-        boolean onBehalfOf = octxt != null ? octxt.isDelegatedRequest(this) : false;
+        Account authAccount = octxt != null ? octxt.getAuthenticatedUser() : null;
+        boolean denyPrivateAccess = authAccount != null && !CalendarItem.allowPrivateAccess(authAccount, getAccount());
         boolean isCalendarResource = getAccount() instanceof CalendarResource;
         // Don't allow creating a private appointment on behalf of another user,
         // unless that other user is a calendar resource.
-        if (onBehalfOf && !invite.isPublic() && !isCalendarResource)
+        if (denyPrivateAccess && !invite.isPublic() && !isCalendarResource)
             throw ServiceException.PERM_DENIED("private appointment/task cannot be created on behalf of another user");
 
         // FIXME: assuming that we're in the middle of a AddInvite op

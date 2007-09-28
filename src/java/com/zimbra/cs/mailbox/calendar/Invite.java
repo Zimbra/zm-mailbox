@@ -1385,15 +1385,11 @@ public class Invite {
     
     public TimeZoneMap getTimeZoneMap() { return mTzMap; }
 
-    public ZVCalendar newToICalendar() throws ServiceException {
-        return newToICalendar(OUTLOOK_COMPAT_ALLDAY, true);
+    public ZVCalendar newToICalendar(boolean includePrivateData) throws ServiceException {
+        return newToICalendar(OUTLOOK_COMPAT_ALLDAY, includePrivateData);
     }
 
-    public ZVCalendar newToICalendar(boolean isOwner) throws ServiceException {
-        return newToICalendar(OUTLOOK_COMPAT_ALLDAY, isOwner);
-    }
-
-    public ZVCalendar newToICalendar(boolean useOutlookCompatMode, boolean isOwner)
+    public ZVCalendar newToICalendar(boolean useOutlookCompatMode, boolean includePrivateData)
     throws ServiceException {
         ZVCalendar vcal = new ZVCalendar();
         
@@ -1412,7 +1408,7 @@ public class Invite {
         }
         
         
-        vcal.addComponent(newToVComponent(useOutlookCompatMode, isOwner));
+        vcal.addComponent(newToVComponent(useOutlookCompatMode, includePrivateData));
         return vcal;
     }
 
@@ -1770,7 +1766,7 @@ public class Invite {
                 e);
     }
     
-    public ZComponent newToVComponent(boolean useOutlookCompatMode, boolean isOwner)
+    public ZComponent newToVComponent(boolean useOutlookCompatMode, boolean includePrivateData)
     throws ServiceException {
         ICalTok compTok;
         if (mItemType == MailItem.TYPE_TASK) {
@@ -1819,7 +1815,7 @@ public class Invite {
         }
         
 
-        if (isOwner || isPublic()) {
+        if (includePrivateData || isPublic()) {
             // SUMMARY (aka Name or Subject)
             String name = getName();
             if (name != null && name.length()>0)

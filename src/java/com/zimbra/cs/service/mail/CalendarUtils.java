@@ -30,6 +30,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
 import com.zimbra.cs.mailbox.calendar.Alarm;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -134,7 +135,7 @@ public class CalendarUtils {
         if (uid != null && uid.length() > 0)
             create.setUid(uid);
 
-        ZVCalendar iCal = create.newToICalendar();
+        ZVCalendar iCal = create.newToICalendar(true);
 
         String summaryStr = create.getName() != null ? create.getName() : "";
 
@@ -173,7 +174,7 @@ public class CalendarUtils {
                             ? new ZOrganizer(defaultInv.getOrganizer()) : null);
         create.setIsOrganizer(account);
 
-        ZVCalendar iCal = create.newToICalendar();
+        ZVCalendar iCal = create.newToICalendar(true);
 
         String summaryStr = create.getName() != null ? create.getName() : "";
 
@@ -223,7 +224,7 @@ public class CalendarUtils {
         mod.setOrganizer(oldInv.hasOrganizer() ? new ZOrganizer(oldInv.getOrganizer()) : null);
         mod.setIsOrganizer(account);
 
-        ZVCalendar iCal = mod.newToICalendar();
+        ZVCalendar iCal = mod.newToICalendar(true);
 
         String summaryStr = "";
         if (mod.getName() != null) {
@@ -263,7 +264,7 @@ public class CalendarUtils {
         sanitized.setInviteId(cancel.getMailItemId()); //zdsync
         sanitized.setDtStamp(cancel.getDTStamp()); //zdsync
 
-        ZVCalendar iCal = sanitized.newToICalendar();
+        ZVCalendar iCal = sanitized.newToICalendar(true);
 
         String summaryStr = sanitized.getName() != null ? sanitized.getName() : "";
 
@@ -1001,21 +1002,21 @@ public class CalendarUtils {
     }
 
     public static Invite buildCancelInviteCalendar(
-            Account acct, String senderAddr, boolean onBehalfOf, Invite inv,
+            Account acct, Account senderAcct, boolean onBehalfOf, Invite inv,
             String comment, List<ZAttendee> forAttendees) throws ServiceException {
-        return cancelInvite(acct, senderAddr, onBehalfOf, inv, comment, forAttendees, null);
+        return cancelInvite(acct, senderAcct, onBehalfOf, inv, comment, forAttendees, null);
     }
 
     public static Invite buildCancelInviteCalendar(
-            Account acct, String senderAddr, boolean onBehalfOf, Invite inv,
+            Account acct, Account senderAcct, boolean onBehalfOf, Invite inv,
             String comment) throws ServiceException {
-        return cancelInvite(acct, senderAddr, onBehalfOf, inv, comment, null, null);
+        return cancelInvite(acct, senderAcct, onBehalfOf, inv, comment, null, null);
     }
 
     public static Invite buildCancelInstanceCalendar(
-            Account acct, String senderAddr, boolean onBehalfOf, Invite inv,
+            Account acct, Account senderAcct, boolean onBehalfOf, Invite inv,
             String comment, RecurId recurId) throws ServiceException {
-        return cancelInvite(acct, senderAddr, onBehalfOf, inv, comment, null, recurId);
+        return cancelInvite(acct, senderAcct, onBehalfOf, inv, comment, null, recurId);
     }
 
     /**
@@ -1052,16 +1053,16 @@ public class CalendarUtils {
      * @throws ServiceException
      */
     static Invite cancelInvite(
-            Account acct, String senderAddr, boolean onBehalfOf,
+            Account acct, Account senderAcct, boolean onBehalfOf,
             Invite inv, String comment,
             List<ZAttendee> forAttendees, RecurId recurId)
     throws ServiceException {
-        return cancelInvite(acct, senderAddr, onBehalfOf,
+        return cancelInvite(acct, senderAcct, onBehalfOf,
                             inv, comment, forAttendees, recurId, true);
     }
 
     private static Invite cancelInvite(
-            Account acct, String senderAddr, boolean onBehalfOf,
+            Account acct, Account senderAcct, boolean onBehalfOf,
             Invite inv, String comment,
             List<ZAttendee> forAttendees, RecurId recurId,
             boolean incrementSeq)
@@ -1072,8 +1073,8 @@ public class CalendarUtils {
         // ORGANIZER
         if (inv.hasOrganizer()) {
             ZOrganizer org = new ZOrganizer(inv.getOrganizer());
-            if (onBehalfOf)
-                org.setSentBy(senderAddr);
+            if (onBehalfOf && senderAcct != null)
+                org.setSentBy(senderAcct.getName());
             cancel.setOrganizer(org);
         }
 
@@ -1084,7 +1085,7 @@ public class CalendarUtils {
             cancel.addAttendee(a);
 
         cancel.setClassProp(inv.getClassProp());
-        boolean hidePrivate = onBehalfOf && !inv.isPublic();
+        boolean hidePrivate = !inv.isPublic() && !CalendarItem.allowPrivateAccess(senderAcct, acct);
         Locale locale = acct.getLocale();
         if (hidePrivate) {
             // SUMMARY
