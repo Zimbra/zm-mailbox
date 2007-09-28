@@ -125,6 +125,8 @@ public class LC {
     public static final KnownKey ldap_connect_pool_maxsize;
     public static final KnownKey ldap_connect_pool_prefsize;
     public static final KnownKey ldap_connect_pool_timeout;
+    public static final KnownKey ldap_replication_password;
+    public static final KnownKey ldap_postfix_password;
 
     public static final KnownKey ldap_cache_account_maxsize;
     public static final KnownKey ldap_cache_account_maxage;
@@ -523,6 +525,14 @@ public class LC {
         ldap_connect_pool_timeout.setDefault("120000");
         ldap_connect_pool_timeout.setDoc("Milliseconds of idle time before an idle connection is bumped" +
                     " from the pool.");
+        
+        ldap_replication_password = new KnownKey("ldap_replication_password");
+        ldap_replication_password.setDefault("");
+        ldap_replication_password.setDoc("Password used by the syncrepl user to authenticate to the ldap master.");
+        
+        ldap_postfix_password = new KnownKey("ldap_postfix_password");
+        ldap_postfix_password.setDefault("");
+        ldap_postfix_password.setDoc("Password used by postfix to authenticate to ldap.");
 
         ldap_cache_account_maxsize = 
             new KnownKey("ldap_cache_account_maxsize", "20000", "Maximum number of account objects to cache.");
