@@ -248,12 +248,10 @@ public class Search extends MailDocumentHandler  {
     throws ServiceException {
         
         CalendarItem calItem = ah.getCalendarItem();
-        if (!calItem.isPublic()) {
-            // bug 18620: don't return private appointments when searching as not-user
-            if (zsc.isDelegatedRequest() && !zsc.getAuthToken().isAdmin()) {
-                return null;
-            }
-        }
+//        if (!calItem.isPublic() && !calItem.allowPrivateAccess(getAuthenticatedAccount(zsc))) {
+//            // bug 18620: don't return private appointments when searching as not-user
+//            return null;
+//        }
         
         Element calElement = null;
         int fields = PendingModifications.Change.ALL_FIELDS;
