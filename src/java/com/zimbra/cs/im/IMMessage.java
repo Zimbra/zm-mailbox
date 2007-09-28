@@ -1,3 +1,4 @@
+/*
  * ***** BEGIN LICENSE BLOCK *****
  * 
  * Zimbra Collaboration Suite Server
