@@ -98,7 +98,10 @@ public class DbMailbox {
 
     public static final int CI_METADATA_MAILBOX_ID = 1;
     public static final int CI_METADATA_SECTION    = 2;
-    public static final int CI_METADATA_METADATA    = 3;
+    public static final int CI_METADATA_METADATA   = 3;
+
+    public static final int CI_SCHEDULED_TASK_MAILBOX_ID = 3;
+    public static final int CI_OUT_OF_OFFICE_MAILBOX_ID = 1;
 
     static String DB_PREFIX_MAILBOX_GROUP = "mboxgroup";
 
@@ -230,7 +233,10 @@ public class DbMailbox {
             DbMailItem.TABLE_MAIL_ITEM,
             DbMailItem.TABLE_OPEN_CONVERSATION,
             DbMailItem.TABLE_APPOINTMENT,
+            DbMailItem.TABLE_REVISION,
             DbMailItem.TABLE_TOMBSTONE,
+            DbImapFolder.TABLE_IMAP_FOLDER,
+            DbImapMessage.TABLE_IMAP_MESSAGE,
             DbPop3Message.TABLE_POP3_MESSAGE
         };
     }
