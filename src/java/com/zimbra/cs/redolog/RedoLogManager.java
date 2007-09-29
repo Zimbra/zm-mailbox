@@ -87,6 +87,8 @@ public class RedoLogManager {
     private boolean mInCrashRecovery;
     private final Object mInCrashRecoveryGuard = new Object();
     private boolean mShuttingDown;
+    private final Object mShuttingDownGuard = new Object();
+    private boolean mInPostStartupCrashRecovery;  // also protected by mShuttingDownGuard
 	private boolean mSupportsCrashRecovery;
 	private boolean mRecoveryMode;	// Are we in crash-recovery mode?
 	private File mArchiveDir;		// where log files are archived as they get rolled over
@@ -266,6 +268,9 @@ public class RedoLogManager {
             // Recovery of these ops will occur in parallel with new client
             // requests.
             if (postStartupRecoveryOps.size() > 0) {
+                synchronized (mShuttingDownGuard) {
+                    mInPostStartupCrashRecovery = true;
+                }
                 Thread psrThread =
                     new PostStartupCrashRecoveryThread(postStartupRecoveryOps);
                 psrThread.start();
@@ -284,7 +289,14 @@ public class RedoLogManager {
 
         public void run() {
             mLog.info("Starting post-startup crash recovery");
+            boolean interrupted = false;
             for (Iterator iter = mOps.iterator(); iter.hasNext(); ) {
+                synchronized (mShuttingDownGuard) {
+                    if (mShuttingDown) {
+                        interrupted = true;
+                        break;
+                    }
+                }
             	RedoableOp op = (RedoableOp) iter.next();
                 try {
                     mLog.info("REDOING: " + op);
@@ -314,20 +326,34 @@ public class RedoLogManager {
             // Flush out all uncommitted Lucene index writes.
             MailboxIndex.flushAllWriters();
 
-            mLog.info("Finished post-startup crash recovery");
+            if (!interrupted)
+                mLog.info("Finished post-startup crash recovery");
 
             // Being paranoid...
             mOps.clear();
             mOps = null;
-        }
 
+            synchronized (mShuttingDownGuard) {
+                mInPostStartupCrashRecovery = false;
+                if (mShuttingDown)
+                    mShuttingDownGuard.notifyAll();  // signals wait() in stop() method
+            }
+        }
     }
 
 	public synchronized void stop() {
 		if (!mEnabled)
 			return;
 
-        mShuttingDown = true;
+		synchronized (mShuttingDownGuard) {
+            mShuttingDown = true;
+		    if (mInPostStartupCrashRecovery) {
+		        // Wait for PostStartupCrashRecoveryThread to signal us.
+		        try {
+                    mShuttingDownGuard.wait();
+                } catch (InterruptedException e) {}
+		    }
+		}
 
 		try {
             forceRollover();
@@ -468,10 +494,12 @@ public class RedoLogManager {
 				readLock.release();
 			}
 		} catch (InterruptedException e) {
-            if (!mShuttingDown)
-    			mLog.warn("InterruptedException while logging", e);
-            else
-                mLog.info("Thread interrupted for shutdown");
+		    synchronized (mShuttingDownGuard) {
+                if (!mShuttingDown)
+        			mLog.warn("InterruptedException while logging", e);
+                else
+                    mLog.info("Thread interrupted for shutdown");
+		    }
 		}
 	}
 
@@ -540,10 +568,12 @@ public class RedoLogManager {
 		try {
 			writeLock.acquire();
 		} catch (InterruptedException e) {
-            if (!mShuttingDown)
-    			mLog.error("InterruptedException during log rollover", e);
-            else
-                mLog.debug("Rollover interrupted during shutdown");
+		    synchronized (mShuttingDownGuard) {
+                if (!mShuttingDown)
+        			mLog.error("InterruptedException during log rollover", e);
+                else
+                    mLog.debug("Rollover interrupted during shutdown");
+		    }
 			return rolledOverFile;
 		}
 
@@ -634,9 +664,7 @@ public class RedoLogManager {
 	}
 
 	protected void signalFatalError(Throwable e) {
-        mShuttingDown = true;
-        // TODO: Do we need a more graceful shutdown?  Or is it better to die
-        // before any further damage is done?
+        // Die before any further damage is done.
         Zimbra.halt("Aborting process", e);
 	}
 
@@ -671,10 +699,12 @@ public class RedoLogManager {
         try {
             readLock.acquire();
         } catch (InterruptedException e) {
-            if (!mShuttingDown)
-                mLog.error("InterruptedException during redo log scan for CommitId", e);
-            else
-                mLog.debug("Redo log scan for CommitId interrupted for shutdown");
+            synchronized (mShuttingDownGuard) {
+                if (!mShuttingDown)
+                    mLog.error("InterruptedException during redo log scan for CommitId", e);
+                else
+                    mLog.debug("Redo log scan for CommitId interrupted for shutdown");
+            }
             return null;
         }
 
