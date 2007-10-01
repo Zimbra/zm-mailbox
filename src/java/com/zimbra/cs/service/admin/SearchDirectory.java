@@ -25,7 +25,6 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Alias;
-import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
@@ -152,7 +151,7 @@ public class SearchDirectory extends AdminDocumentHandler {
         return response;
     }
 
-    static void doDistributionList(Element e, DistributionList list) throws ServiceException {
+    static void doDistributionList(Element e, DistributionList list) {
         Element elist = e.addElement(AdminConstants.E_DL);
         elist.addAttribute(AdminConstants.A_NAME, list.getUnicodeName());
         elist.addAttribute(AdminConstants.A_ID, list.getId());
@@ -171,21 +170,17 @@ public class SearchDirectory extends AdminDocumentHandler {
         doAttrs(ealias, attrs);
     }
 
-    static void doAttrs(Element e, Map attrs) throws ServiceException {
-        AttributeManager attrMgr = AttributeManager.getInstance();
+    static void doAttrs(Element e, Map attrs) {
         for (Iterator mit = attrs.entrySet().iterator(); mit.hasNext(); ) {
             Map.Entry entry = (Entry) mit.next();
             String name = (String) entry.getKey();
             Object value = entry.getValue();
-            
-            boolean isIDN = attrMgr.isEmailOrIDN(name);
-            
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;
                 for (int i = 0; i < sv.length; i++)
-                    ToXML.encodeAttrOld(e, name, sv[i], AdminConstants.E_A, AdminConstants.A_N, isIDN);
+                    e.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText(sv[i]);
             } else if (value instanceof String)
-                ToXML.encodeAttrOld(e, name, (String)value, AdminConstants.E_A, AdminConstants.A_N, isIDN);
+                e.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText((String) value);
         }       
     }   
 }
