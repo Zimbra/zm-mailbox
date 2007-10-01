@@ -28,7 +28,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -73,12 +72,11 @@ public class GetPrefs extends AccountDocumentHandler  {
         }
     }
     
-    public static void doPrefs(Account acct, String locale, Element prefs, Map<String, Object> attrsMap, HashSet<String> specificPrefs) throws ServiceException {
+	public static void doPrefs(Account acct, String locale, Element prefs, Map<String, Object> attrsMap, HashSet<String> specificPrefs) {
         boolean needLocale = (specificPrefs == null || specificPrefs.contains(Provisioning.A_zimbraPrefLocale));
         if (needLocale)
             prefs.addKeyValuePair(Provisioning.A_zimbraPrefLocale, locale, AccountConstants.E_PREF, AccountConstants.A_NAME);
 
-        AttributeManager attrMgr = AttributeManager.getInstance();
         for (Map.Entry<String, Object> entry : attrsMap.entrySet()) {
             String key = entry.getKey();
 
@@ -87,14 +85,13 @@ public class GetPrefs extends AccountDocumentHandler  {
             if (!key.startsWith("zimbraPref") || key.equals(Provisioning.A_zimbraPrefLocale))
                 continue;
 
-            boolean isIDN = attrMgr.isEmailOrIDN(key);
             Object value = entry.getValue();
             if (value instanceof String[]) {
                 String sa[] = (String[]) value;
                 for (int i = 0; i < sa.length; i++)
-                    ToXML.encodeAttr(prefs, key, sa[i], AccountConstants.E_PREF, AccountConstants.A_NAME, isIDN);
+                    prefs.addKeyValuePair(key, sa[i], AccountConstants.E_PREF, AccountConstants.A_NAME);
             } else {
-                ToXML.encodeAttr(prefs, key, (String) value, AccountConstants.E_PREF, AccountConstants.A_NAME, isIDN);
+                prefs.addKeyValuePair(key, (String) value, AccountConstants.E_PREF, AccountConstants.A_NAME);
             }
         }
     }   

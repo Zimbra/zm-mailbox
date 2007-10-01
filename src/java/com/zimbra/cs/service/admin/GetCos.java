@@ -33,7 +33,6 @@ import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CosBy;
-import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -73,19 +72,21 @@ public class GetCos extends AdminDocumentHandler {
             String name = (String) entry.getKey();
             Object value = entry.getValue();
             boolean isCosAttr = !attrMgr.isAccountInherited(name);
-            boolean isIDN = attrMgr.isEmailOrIDN(name);
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;
                 for (int i = 0; i < sv.length; i++) {
-                    Element attr = ToXML.encodeAttrOld(cos, name, sv[i], AdminConstants.E_A, AdminConstants.A_N, isIDN);
-                    
+                    Element attr = cos.addElement(AdminConstants.E_A);
+                    attr.addAttribute(AdminConstants.A_N, name);
                     if (isCosAttr) 
                         attr.addAttribute(AdminConstants.A_C, "1");
+                    attr.setText(sv[i]);
                 }
             } else if (value instanceof String){
-                Element attr = ToXML.encodeAttrOld(cos, name, (String)value, AdminConstants.E_A, AdminConstants.A_N, isIDN);
+                Element attr = cos.addElement(AdminConstants.E_A);
+                attr.addAttribute(AdminConstants.A_N, name);
                 if (isCosAttr) 
                     attr.addAttribute(AdminConstants.A_C, "1");
+                attr.setText((String) value);
             }
         }
     }

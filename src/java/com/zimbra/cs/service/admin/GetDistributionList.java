@@ -27,11 +27,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetDistributionList extends AdminDocumentHandler {
@@ -107,9 +105,7 @@ public class GetDistributionList extends AdminDocumentHandler {
         return distributionList;
     }
 
-    static void doAttrs(Element e, Map attrs) throws ServiceException {
-        AttributeManager attrMgr = AttributeManager.getInstance();
-        
+    static void doAttrs(Element e, Map attrs) {
         for (Iterator mit = attrs.entrySet().iterator(); mit.hasNext(); ) {
            Map.Entry entry = (Entry) mit.next();
            String name = (String) entry.getKey();
@@ -120,14 +116,12 @@ public class GetDistributionList extends AdminDocumentHandler {
         	   continue;
            }
            
-           boolean isIDN = attrMgr.isEmailOrIDN(name);
-
            if (value instanceof String[]) {
                String sv[] = (String[]) value;
                for (int i = 0; i < sv.length; i++)
-                   ToXML.encodeAttrOld(e, name, sv[i], AdminConstants.E_A, AdminConstants.A_N, isIDN);
+                   e.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText(sv[i]);
            } else if (value instanceof String) {
-               ToXML.encodeAttrOld(e, name, (String)value, AdminConstants.E_A, AdminConstants.A_N, isIDN);
+               e.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText((String) value);
            }
        }       
    }

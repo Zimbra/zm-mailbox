@@ -156,23 +156,22 @@ public class GetInfo extends AccountDocumentHandler  {
     }
 
     static void doAttrs(Account acct, String locale, Element response, Map attrsMap) throws ServiceException {
-        AttributeManager attrMgr = AttributeManager.getInstance();
-        Set<String> attrList = attrMgr.getAttrsWithFlag(AttributeFlag.accountInfo);
+        Set<String> attrList = AttributeManager.getInstance().getAttrsWithFlag(AttributeFlag.accountInfo);
         for (String key : attrList)
-            doAttr(response, key, key.equals(Provisioning.A_zimbraLocale) ? locale : attrsMap.get(key), attrMgr.isEmailOrIDN(key));
+            doAttr(response, key, key.equals(Provisioning.A_zimbraLocale) ? locale : attrsMap.get(key));
     }
     
-    static void doAttr(Element response, String key, Object value, boolean isIDN) {
+    static void doAttr(Element response, String key, Object value) {
         if (value instanceof String[]) {
             String sa[] = (String[]) value;
             for (int i = 0; i < sa.length; i++) {
                 // FIXME: change to "a"/"n" rather than "attr"/"name"
                 if (sa[i] != null && !sa[i].equals(""))
-                    ToXML.encodeAttr(response, key, sa[i], AccountConstants.E_ATTR, AccountConstants.A_NAME, isIDN);
+                    response.addKeyValuePair(key, sa[i], AccountConstants.E_ATTR, AccountConstants.A_NAME);
             }
         } else {
             if (value != null && !value.equals(""))
-                ToXML.encodeAttr(response, key, (String) value, AccountConstants.E_ATTR, AccountConstants.A_NAME, isIDN);
+                response.addKeyValuePair(key, (String) value, AccountConstants.E_ATTR, AccountConstants.A_NAME);
         }        
     }
 
