@@ -133,7 +133,7 @@ public class SearchAccounts extends AdminDocumentHandler {
         Element elist = e.addElement(AdminConstants.E_DL);
         elist.addAttribute(AdminConstants.A_NAME, list.getName());
         elist.addAttribute(AdminConstants.A_ID, list.getId());
-        Map attrs = list.getAttrs();
+        Map attrs = list.getUnicodeAttrs();
         doAttrs(elist, attrs);
     }
 
@@ -141,7 +141,7 @@ public class SearchAccounts extends AdminDocumentHandler {
         Element ealias = e.addElement(AdminConstants.E_ALIAS);
         ealias.addAttribute(AdminConstants.A_NAME, a.getName());
         ealias.addAttribute(AdminConstants.A_ID, a.getId());
-        Map attrs = a.getAttrs();
+        Map attrs = a.getUnicodeAttrs();
         doAttrs(ealias, attrs);
     }
 

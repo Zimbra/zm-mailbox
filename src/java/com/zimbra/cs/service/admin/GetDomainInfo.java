@@ -64,7 +64,7 @@ public class GetDomainInfo extends AdminDocumentHandler {
         domain.addAttribute(AdminConstants.A_NAME,d.getUnicodeName());
         domain.addAttribute(AdminConstants.A_ID,d.getId());
         Set<String> attrList = AttributeManager.getInstance().getAttrsWithFlag(AttributeFlag.domainInfo);
-        Map attrsMap = d.getAttrs(applyConfig);
+        Map attrsMap = d.getUnicodeAttrs(applyConfig);
         
         for (String name : attrList) {
             Object value = attrsMap.get(name);

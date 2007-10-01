@@ -155,7 +155,7 @@ public class SearchDirectory extends AdminDocumentHandler {
         Element elist = e.addElement(AdminConstants.E_DL);
         elist.addAttribute(AdminConstants.A_NAME, list.getUnicodeName());
         elist.addAttribute(AdminConstants.A_ID, list.getId());
-        Map attrs = list.getAttrs();
+        Map attrs = list.getUnicodeAttrs();
         doAttrs(elist, attrs);
     }
 
@@ -166,7 +166,7 @@ public class SearchDirectory extends AdminDocumentHandler {
         ealias.addAttribute(AdminConstants.A_TARGETNAME, a.getTargetUnicodeName());
         ealias.addAttribute(AdminConstants.A_TYPE, a.getTargetType());
         
-        Map attrs = a.getAttrs();
+        Map attrs = a.getUnicodeAttrs();
         doAttrs(ealias, attrs);
     }
 

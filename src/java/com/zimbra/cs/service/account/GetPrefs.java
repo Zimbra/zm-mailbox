@@ -65,7 +65,7 @@ public class GetPrefs extends AccountDocumentHandler  {
             specificPrefs.add(epref.getAttribute(AccountConstants.A_NAME));
         }
 
-        Map<String, Object> map = acct.getAttrs();
+        Map<String, Object> map = acct.getUnicodeAttrs();
         if (map != null) {
             Locale locale = Provisioning.getInstance().getLocale(acct);
             doPrefs(acct, locale.toString(), response, map, specificPrefs);

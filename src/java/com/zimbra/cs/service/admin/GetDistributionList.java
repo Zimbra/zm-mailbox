@@ -101,7 +101,7 @@ public class GetDistributionList extends AdminDocumentHandler {
         Element distributionList = e.addElement(AdminConstants.E_DL);
         distributionList.addAttribute(AdminConstants.A_NAME, d.getName());
         distributionList.addAttribute(AdminConstants.A_ID,d.getId());
-        doAttrs(distributionList, d.getAttrs());
+        doAttrs(distributionList, d.getUnicodeAttrs());
         return distributionList;
     }
 

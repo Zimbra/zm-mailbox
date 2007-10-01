@@ -49,7 +49,7 @@ public class ToXML {
         Element acctElem = parent.addElement(AccountConstants.E_ACCOUNT);
         acctElem.addAttribute(AccountConstants.A_NAME, account.getUnicodeName());
         acctElem.addAttribute(AccountConstants.A_ID, account.getId());
-        Map attrs = account.getAttrs(applyCos);
+        Map attrs = account.getUnicodeAttrs(applyCos);
         addAccountAttrs(acctElem, attrs, AccountConstants.A_N);
         return acctElem;
     }
@@ -62,7 +62,7 @@ public class ToXML {
         Element acctElem = parent.addElement(AccountConstants.E_ACCOUNT);
         acctElem.addAttribute(AccountConstants.A_NAME, account.getUnicodeName());
         acctElem.addAttribute(AccountConstants.A_ID, account.getId());
-        Map attrs = account.getAttrs(applyCos);
+        Map attrs = account.getUnicodeAttrs(applyCos);
         addAccountAttrsOld(acctElem, attrs, AccountConstants.A_N, applyCos?null:reqAttrs);
         return acctElem;
     }
@@ -75,7 +75,7 @@ public class ToXML {
         Element resElem = parent.addElement(AccountConstants.E_CALENDAR_RESOURCE);
         resElem.addAttribute(AccountConstants.A_NAME, resource.getUnicodeName());
         resElem.addAttribute(AccountConstants.A_ID, resource.getId());
-        Map attrs = resource.getAttrs(applyCos);
+        Map attrs = resource.getUnicodeAttrs(applyCos);
         addAccountAttrs(resElem, attrs, AccountConstants.A_N);
         return resElem;
     }
@@ -88,7 +88,7 @@ public class ToXML {
         Element resElem = parent.addElement(AccountConstants.E_CALENDAR_RESOURCE);
         resElem.addAttribute(AccountConstants.A_NAME, resource.getUnicodeName());
         resElem.addAttribute(AccountConstants.A_ID, resource.getId());
-        Map attrs = resource.getAttrs(applyCos);
+        Map attrs = resource.getUnicodeAttrs(applyCos);
         addAccountAttrsOld(resElem, attrs, AccountConstants.A_N, applyCos?null:reqAttrs);
         return resElem;
     }
@@ -237,7 +237,7 @@ public class ToXML {
         Element e = parent.addElement(AccountConstants.E_IDENTITY);
         e.addAttribute(AccountConstants.A_NAME, identity.getName());
         e.addAttribute(AccountConstants.A_ID, identity.getId());
-        addAccountAttrs(e, identity.getAttrs(), AccountConstants.A_NAME);
+        addAccountAttrs(e, identity.getUnicodeAttrs(), AccountConstants.A_NAME);
         return e;
     }
     
@@ -258,7 +258,7 @@ public class ToXML {
         e.addAttribute(AccountConstants.A_NAME, ds.getName());
         e.addAttribute(AccountConstants.A_ID, ds.getId());
         e.addAttribute(AccountConstants.A_TYPE, ds.getType().name());
-        addAccountAttrs(e, ds.getAttrs(), AccountConstants.A_N);
+        addAccountAttrs(e, ds.getUnicodeAttrs(), AccountConstants.A_N);
         return e;
     }
     

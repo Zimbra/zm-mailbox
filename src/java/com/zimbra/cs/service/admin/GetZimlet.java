@@ -48,7 +48,7 @@ public class GetZimlet extends AdminDocumentHandler {
 	}
 	
 	static Element doZimlet(Element response, Zimlet zimlet) throws ServiceException {
-	    Map<String,Object> attrs = zimlet.getAttrs();
+	    Map<String,Object> attrs = zimlet.getUnicodeAttrs();
 	    
         Element zim = response.addElement(AdminConstants.E_ZIMLET);
     	zim.addAttribute(AdminConstants.A_NAME, zimlet.getName());

@@ -82,7 +82,7 @@ public class GetDomain extends AdminDocumentHandler {
         Element domain = e.addElement(AdminConstants.E_DOMAIN);
         domain.addAttribute(AdminConstants.A_NAME,d.getUnicodeName());
         domain.addAttribute(AdminConstants.A_ID,d.getId());
-        Map attrs = d.getAttrs(applyConfig);
+        Map attrs = d.getUnicodeAttrs(applyConfig);
         for (Iterator mit = attrs.entrySet().iterator(); mit.hasNext(); ) {
             Map.Entry entry = (Entry) mit.next();
             String name = (String) entry.getKey();

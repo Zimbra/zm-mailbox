@@ -115,7 +115,7 @@ public class GetInfo extends AccountDocumentHandler  {
             } catch (ServiceException e) { }
         }
 
-        Map<String, Object> attrMap = account.getAttrs();
+        Map<String, Object> attrMap = account.getUnicodeAttrs();
         Locale locale = Provisioning.getInstance().getLocale(account);
 
         if (sections.contains(Section.PREFS)) {

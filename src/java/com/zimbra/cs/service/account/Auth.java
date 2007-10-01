@@ -155,7 +155,7 @@ public class Auth extends AccountDocumentHandler {
                 Element e = (Element) it.next();
                 String name = e.getAttribute(AccountConstants.A_NAME);
                 if (name != null && attrList.contains(name)) {
-                    Object v = acct.getMultiAttr(name);
+                    Object v = acct.getUnicodeMultiAttr(name);
                     if (v != null) GetInfo.doAttr(attrsResponse, name, v);
                 }
             }

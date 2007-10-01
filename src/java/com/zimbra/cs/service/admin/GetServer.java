@@ -70,7 +70,7 @@ public class GetServer extends AdminDocumentHandler {
         Element server = e.addElement(AdminConstants.E_SERVER);
         server.addAttribute(AdminConstants.A_NAME, s.getName());
         server.addAttribute(AdminConstants.A_ID, s.getId());
-        Map<String, Object> attrs = s.getAttrs(applyConfig);
+        Map<String, Object> attrs = s.getUnicodeAttrs(applyConfig);
         for (Map.Entry<String, Object> entry : attrs.entrySet()) {
             String name = entry.getKey();
             Object value = entry.getValue();

@@ -29,6 +29,7 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.ZimbraLog;
 
 public abstract class Entry {
 
@@ -95,6 +96,45 @@ public abstract class Entry {
         return null;
     }
     
+    /*
+     * utility function to mask ServiceException thrown by AttributeManager.getInstance()
+     */
+    private AttributeManager getAttributeManager() {
+        AttributeManager attrMgr = null;
+        try {
+            attrMgr = AttributeManager.getInstance();
+        } catch (ServiceException se) {
+            ZimbraLog.account.warn("failed to get AttributeManager instance", se);
+        }
+        return attrMgr;
+    }
+    
+    /*
+     * convert attr values to unicode and put back the converted value to the same attr map
+     * We are modifying a copy of the map created in getAttrs, not the mAttrs/mDefaults data member
+     */
+    private Map<String, Object> toUnicode(Map<String, Object> attrs) {
+        AttributeManager attrMgr = getAttributeManager();
+                
+        Set<String> keySet = new HashSet<String>(attrs.keySet());
+        for (String key : keySet) {
+            boolean isIDN = (attrMgr==null)? false: attrMgr.isEmailOrIDN(key);
+            if (isIDN) {
+                Object value = attrs.get(key);
+                if (value instanceof String[]) {
+                    String sv[] = (String[]) value;
+                    for (int i=0; i<sv.length; i++) {
+                        sv[i] = IDNUtil.toUnicode(sv[i]);
+                    }
+                } else if (value instanceof String){
+                    attrs.put(key, IDNUtil.toUnicode((String)value));
+                }
+            }
+        }
+        
+        return attrs;
+    }
+    
     public String getAttr(String name) {
         return getAttr(name, true);
     }
@@ -123,6 +163,11 @@ public abstract class Entry {
     public Map<String, Object> getAttrs() {
         return getAttrs(true);
     }
+    
+    public Map<String, Object> getUnicodeAttrs() {
+        Map<String, Object> attrs = getAttrs(true);
+        return toUnicode(attrs);
+    }
 
     public Map<String, Object> getAttrs(boolean applyDefaults) {
         if (applyDefaults && mDefaults != null) {
@@ -135,6 +180,11 @@ public abstract class Entry {
         } else {
             return mAttrs;
         }
+    }
+    
+    public Map<String, Object> getUnicodeAttrs(boolean applyDefaults) {
+        Map<String, Object> attrs = getAttrs(applyDefaults);
+        return toUnicode(attrs);
     }
 
     /**
@@ -212,6 +262,20 @@ public abstract class Entry {
 
     public String[] getMultiAttr(String name) {
         return getMultiAttr(name, true);
+    }
+    
+    public String[] getUnicodeMultiAttr(String name) {
+        String[] values = getMultiAttr(name, true);
+        
+        AttributeManager attrMgr = getAttributeManager();
+        boolean isIDN = (attrMgr==null)? false: attrMgr.isEmailOrIDN(name);
+        if (isIDN && values != null) {
+            String[] unicodeValues = new String[values.length];
+            for (int i=0; i<values.length; i++)
+                unicodeValues[i] = IDNUtil.toUnicode(values[i]);
+            return unicodeValues;
+        } else
+            return values;
     }
 
     public String[] getMultiAttr(String name, boolean applyDefaults) {

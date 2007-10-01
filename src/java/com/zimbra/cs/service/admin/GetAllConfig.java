@@ -40,7 +40,7 @@ public class GetAllConfig extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
-	    Map attrs = prov.getConfig().getAttrs();
+	    Map attrs = prov.getConfig().getUnicodeAttrs();
 
 	    Element response = lc.createElement(AdminConstants.GET_ALL_CONFIG_RESPONSE);
 	    
