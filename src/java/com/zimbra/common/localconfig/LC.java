@@ -120,6 +120,7 @@ public class LC {
     public static final KnownKey ldap_is_master;
     public static final KnownKey ldap_root_password;
     public static final KnownKey ldap_connect_timeout;
+    public static final KnownKey ldap_connect_pool_master;
     public static final KnownKey ldap_connect_pool_debug;
     public static final KnownKey ldap_connect_pool_initsize;
     public static final KnownKey ldap_connect_pool_maxsize;
@@ -503,6 +504,10 @@ public class LC {
         ldap_connect_timeout.setDefault("30000");
         ldap_connect_timeout.setDoc("Milliseconds after which a connection attempt is aborted.");
 
+        ldap_connect_pool_master = new KnownKey("ldap_connect_pool_master");
+        ldap_connect_pool_master.setDefault("false");
+        ldap_connect_pool_master.setDoc("Whether to use JNDI connection pooling for LDAP master.");
+        
         ldap_connect_pool_debug = new KnownKey("ldap_connect_pool_debug");
         ldap_connect_pool_debug.setDefault("false");
         ldap_connect_pool_debug.setDoc("Whether to debug LDAP connection pooling.");
