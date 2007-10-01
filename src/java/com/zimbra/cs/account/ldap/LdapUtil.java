@@ -171,8 +171,14 @@ public class LdapUtil {
             
         // wait at most 10 seconds for a connection
         sEnv.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
+        
         // enable connection pooling
-        sEnv.put("com.sun.jndi.ldap.connect.pool", "true");
+        if (master)
+            sEnv.put("com.sun.jndi.ldap.connect.pool", LC.ldap_connect_pool_master.value());
+        else
+            sEnv.put("com.sun.jndi.ldap.connect.pool", "true");
+        
+        
         // env.put("java.naming.ldap.derefAliases", "never");
         //
         // default: env.put("java.naming.ldap.version", "3");
