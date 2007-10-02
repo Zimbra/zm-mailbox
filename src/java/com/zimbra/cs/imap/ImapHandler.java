@@ -175,6 +175,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                     sendBAD(tag, "AUTHENTICATE aborted");
                 else
                     sendBAD(tag, "AUTHENTICATE failed; invalid base64 input");
+                mAuthenticator = null;
                 return CONTINUE_PROCESSING;
             }
 
@@ -183,6 +184,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             return continueAuthentication(response);
         } catch (ImapParseException ipe) {
             sendBAD(tag, ipe.getMessage());
+            mAuthenticator = null;
             return CONTINUE_PROCESSING;
         }
     }
