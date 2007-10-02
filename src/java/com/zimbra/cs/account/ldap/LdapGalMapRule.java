@@ -23,6 +23,11 @@ import java.util.Map;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.IDNUtil;
+
 /*
  * maps LDAP attrs into contact attrs. 
  */
@@ -71,6 +76,13 @@ class LdapGalMapRule {
     }
     
     void apply(Attributes ldapAttrs, Map<String,Object> contactAttrs) {
+        AttributeManager attrMgr = null;
+        try {
+            attrMgr = AttributeManager.getInstance();
+        } catch (ServiceException se) {
+            ZimbraLog.account.warn("failed to get AttributeManager instance", se);
+        }
+        
         int index = 0; // index into mContactAttrs
         for (String ldapAttr: mLdapAttrs) {
             if (index >= mContactAttrs.length) return;
@@ -78,8 +90,10 @@ class LdapGalMapRule {
             try { val = LdapUtil.getMultiAttrString(ldapAttrs, ldapAttr); } 
             catch (NamingException e) { return; }
             
+            boolean isIDN = (attrMgr==null)?false:attrMgr.isEmailOrIDN(ldapAttr);
+            
             if (val.length == 1) {
-                index = addToContactAttrs(contactAttrs, val[0], index);
+                index = addToContactAttrs(contactAttrs, isIDN?IDNUtil.toUnicode(val[0]):val[0], index);
             } else if (val.length > 1) {
                 if (mContactAttrs.length == 1) {
                     index = addToContactAttrs(contactAttrs, val, index);
@@ -87,7 +101,7 @@ class LdapGalMapRule {
                 } else {
                     for (int i=0; i < val.length; i++) {
                         if (index >= mContactAttrs.length) return;
-                        index = addToContactAttrs(contactAttrs, val[i], index);                        
+                        index = addToContactAttrs(contactAttrs, isIDN?IDNUtil.toUnicode(val[i]):val[i], index);                        
                     }
                 }
             }
