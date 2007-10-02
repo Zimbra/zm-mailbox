@@ -26,12 +26,12 @@ import com.zimbra.cs.mina.MinaIoSessionOutputStream;
 import com.zimbra.cs.mina.MinaRequest;
 import com.zimbra.cs.mina.MinaServer;
 import com.zimbra.cs.mina.MinaUtil;
-import com.zimbra.cs.security.sasl.Authenticator;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.Config;
 import org.apache.mina.common.IdleStatus;
 import org.apache.mina.common.IoSession;
+import org.apache.mina.common.WriteFuture;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -39,6 +39,11 @@ import java.nio.ByteBuffer;
 
 public class MinaImapHandler extends ImapHandler implements MinaHandler {
     private IoSession mSession;
+    private WriteFuture mFuture;
+
+    // Maximum number of milliseconds to wait for last write operation to
+    // complete before we force close the session.
+    private static final long WRITE_TIMEOUT = 5000;
 
     MinaImapHandler(MinaImapServer server, IoSession session) {
         super(server);
@@ -174,20 +179,26 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
      */
     @Override
     protected void dropConnection(boolean sendBanner) {
+        if (mSession.isClosing()) return; // Already being closed
         ZimbraLog.imap.debug("dropConnection: sendBanner = %s\n", sendBanner);
         if (mSelectedFolder != null) {
             mSelectedFolder.setHandler(null);
             SessionCache.clearSession(mSelectedFolder);
             mSelectedFolder = null;
         }
-        if (mSession == null) return; // Already closed...
         try {
             if (sendBanner && !mGoodbyeSent) {
                 sendUntagged(mConfig.getGoodbye(), true);
                 mGoodbyeSent = true;
             }
+            if (mFuture != null) {
+                // Wait for last write to complete before closing session
+                mFuture.join(WRITE_TIMEOUT);
+                if (!mFuture.isReady()) {
+                    ZimbraLog.imap.warn("Force closing session because write timed out: " + mSession);
+                }
+            }
             mSession.close();
-            mSession = null;
         } catch (IOException e) {
             info("exception while closing connection", e);
         }
@@ -239,9 +250,9 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
     
     @Override
     void sendLine(String line, boolean flush) throws IOException {
-        if (mSession == null) throw new IOException("Stream is closed");
+        if (mSession.isClosing()) throw new IOException("Stream is closed");
         ByteBuffer bb = MinaUtil.toByteBuffer(line + "\r\n");
-        mSession.write(MinaUtil.toMinaByteBuffer(bb));
+        mFuture = mSession.write(MinaUtil.toMinaByteBuffer(bb));
     }
 
     private void info(String msg, Throwable e) {
