@@ -20,6 +20,8 @@
  */
 package com.zimbra.cs.index;
 
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.ServerBy;
@@ -29,11 +31,7 @@ import com.zimbra.cs.service.util.ParseMailboxID;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.*;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.common.soap.SoapHttpTransport;
-import com.zimbra.common.soap.SoapProtocol;
-import com.zimbra.common.soap.SoapTransport;
+import com.zimbra.soap.ZimbraSoapContext;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -68,7 +66,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
     protected String mServer;
     protected String mAuthToken;
     protected String mTargetAcctId = null;
-    protected SoapTransport mTransport = null;
+//    protected SoapTransport mTransport = null;
     protected SoapProtocol mResponseProto = null;
 
     private SearchParams mSearchParams;
@@ -163,7 +161,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
 
 
     public void doneWithSearchResults() throws ServiceException {
-        mTransport = null;
+//        mTransport = null;
     }
 
     public ZimbraHit skipToHit(int hitNo) throws ServiceException {
@@ -214,19 +212,6 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
     String getServer() { return mServer; }
 
 
-
-    private SoapTransport getTransport() throws ServiceException {
-        if (mTransport != null) {
-            return mTransport;
-        }
-        Server server = Provisioning.getInstance().get(ServerBy.name, mServer);
-        String url = URLUtil.getAdminURL(server);
-        SoapTransport toRet = new SoapHttpTransport(url);
-        toRet.setAuthToken(mAuthToken);
-        toRet.setTargetAcctId(mTargetAcctId);
-        return toRet;
-    }
-    
     public String toString() {
         String url;
         try {
@@ -247,7 +232,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
      */
     private boolean bufferNextHits() throws ServiceException 
     {
-        if (mAtEndOfList) {
+        if (mAtEndOfList || mSearchParams.getHopCount() > ZimbraSoapContext.MAX_HOP_COUNT) {
             return false;
         }
 
@@ -263,8 +248,6 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
         mHitBuffer = new ArrayList<ProxiedHit>(chunkSizeToUse);
 
         try {
-            SoapTransport transp = getTransport();
-
             Element searchElt;
             if (isMultipleMailboxes) {
                 searchElt = Element.create(mResponseProto, AdminConstants.SEARCH_MULTIPLE_MAILBOXES_REQUEST);
@@ -294,24 +277,39 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
             }
 
             // call the remote server now!
-            transp.setRequestProtocol(searchElt instanceof Element.JSONElement ? SoapProtocol.SoapJS : SoapProtocol.Soap12);
-            Element searchResp  = null;            
+            SoapProtocol proto = searchElt instanceof Element.JSONElement ? SoapProtocol.SoapJS : SoapProtocol.Soap12;
+            ZimbraSoapContext zsc = null;            
             try {
-                if (ZimbraLog.index.isDebugEnabled()) ZimbraLog.index.debug("Fetching remote search results from "+transp.toString());
-                
-                searchResp = transp.invokeWithoutSession(searchElt);
+                zsc = new ZimbraSoapContext(AuthToken.getAuthToken(mAuthToken), mTargetAcctId, proto, proto, mSearchParams.getHopCount()+1);
+            } catch (AuthTokenException ex) {
+                throw ServiceException.FAILURE("Caught AuthToken exception: ", ex);
+            }
+
+            Element envelope = proto.soapEnvelope(searchElt, zsc.toProxyCtxt());
+            Element searchResp  = null;
+            SoapHttpTransport transport = null;
+
+            try {
+                Server server = Provisioning.getInstance().get(ServerBy.name, mServer);
+                String url = URLUtil.getAdminURL(server);
+                transport = new SoapHttpTransport(url);
+
+                if (ZimbraLog.index.isDebugEnabled()) ZimbraLog.index.debug("Fetching remote search results from "+transport);
+
+                searchResp = transport.invokeRaw(envelope);
+                searchResp = transport.extractBodyElement(searchResp); 
             } catch (SoapFaultException ex) {
-                ZimbraLog.index.warn("Unable to ("+ex.toString()+") fetch search results from remote server "+transp.toString());
+                ZimbraLog.index.warn("Unable to ("+ex.toString()+") fetch search results from remote server "+transport);
                 mAtEndOfList = true;
                 mBufferEndOffset = mIterOffset;
                 return false;
             } catch (java.net.ConnectException ex) {
-                ZimbraLog.index.warn("Unable to ("+ex.toString()+") fetch search results from remote server "+transp.toString());
+                ZimbraLog.index.warn("Unable to ("+ex.toString()+") fetch search results from remote server "+transport);
                 mAtEndOfList = true;
                 mBufferEndOffset = mIterOffset;
                 return false;
             }
-            
+
             int hitOffset = (int) searchResp.getAttributeLong(MailConstants.A_QUERY_OFFSET);
             boolean hasMore = searchResp.getAttributeBool(MailConstants.A_QUERY_MORE);
 
@@ -352,17 +350,17 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
         } catch (IOException e) {
             throw ServiceException.FAILURE("IOException ", e);
         }
-//        catch (ServiceException e) {
-//            if (!isMultipleMailboxes) {
-//                //throw ServiceException.FAILURE("ServiceException ", e);
-//                e.setArgument(ServiceException.PROXIED_FROM_ACCT, mTargetAcctId);
-//            }
-//            throw e;
+//      catch (ServiceException e) {
+//      if (!isMultipleMailboxes) {
+//      //throw ServiceException.FAILURE("ServiceException ", e);
+//      e.setArgument(ServiceException.PROXIED_FROM_ACCT, mTargetAcctId);
+//      }
+//      throw e;
 //      }
     }
 
     private List<QueryInfo> mInfo = new ArrayList<QueryInfo>();
     public List<QueryInfo> getResultInfo() { return mInfo; }
-    
+
     public int estimateResultSize() throws ServiceException { return 0; }
 }

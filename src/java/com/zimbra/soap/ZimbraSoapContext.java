@@ -88,7 +88,7 @@ public class ZimbraSoapContext {
 
     private static Log sLog = LogFactory.getLog(ZimbraSoapContext.class);
 
-    private static final int MAX_HOP_COUNT = 5;
+    public static final int MAX_HOP_COUNT = 5;
 
     private String    mRawAuthToken;
     private AuthToken mAuthToken;
@@ -118,19 +118,28 @@ public class ZimbraSoapContext {
 
     //zdsync: for parsing locally constructed soap requests
     public ZimbraSoapContext(AuthToken authToken, String accountId, SoapProtocol reqProtocol, SoapProtocol respProtocol) throws ServiceException {
-    	mAuthToken = authToken;
-    	try {
-    		mRawAuthToken = authToken.getEncoded();
-    	} catch (AuthTokenException x) {
-    		throw ServiceException.FAILURE("AuthTokenExcepiton", x);
-    	}
-    	mAuthTokenAccountId = authToken.getAccountId();
-    	mRequestedAccountId = accountId;
-    	mRequestProtocol = reqProtocol;
-    	mResponseProtocol = respProtocol;
-    	
-    	mSessionSuppressed = true;
+        this(authToken, accountId, reqProtocol, respProtocol, 0);
     }
+    
+    /**
+     * For Search-Proxying, allows us to manually specify the HopCount to use
+     */
+    public ZimbraSoapContext(AuthToken authToken, String accountId, SoapProtocol reqProtocol, SoapProtocol respProtocol, int hopCount) throws ServiceException {
+        mAuthToken = authToken;
+        try {
+            mRawAuthToken = authToken.getEncoded();
+        } catch (AuthTokenException x) {
+            throw ServiceException.FAILURE("AuthTokenExcepiton", x);
+        }
+        mAuthTokenAccountId = authToken.getAccountId();
+        mRequestedAccountId = accountId;
+        mRequestProtocol = reqProtocol;
+        mResponseProtocol = respProtocol;
+        
+        mSessionSuppressed = true;
+        mHopCount = hopCount;
+    }
+    
     
     /** Creates a <code>ZimbraSoapContext</code> from another existing
      *  <code>ZimbraSoapContext</code> for use in proxying. */
@@ -424,7 +433,7 @@ public class ZimbraSoapContext {
      *  attributes encapsulated by the <code>ZimbraContext</code> -- the
      *  response protocol, the auth token, etc. -- are carried forward.
      *  Notification is expressly declined. */
-    Element toProxyCtxt() {
+    public Element toProxyCtxt() {
         return toProxyCtxt(mRequestProtocol);
     }
 
@@ -432,7 +441,7 @@ public class ZimbraSoapContext {
      *  attributes encapsulated by the <code>ZimbraContext</code> -- the
      *  response protocol, the auth token, etc. -- are carried forward.
      *  Notification is expressly declined. */
-    Element toProxyCtxt(SoapProtocol proto) {
+    public Element toProxyCtxt(SoapProtocol proto) {
         Element ctxt = proto.getFactory().createElement(HeaderConstants.CONTEXT);
         if (mRawAuthToken != null)
             ctxt.addAttribute(HeaderConstants.E_AUTH_TOKEN, mRawAuthToken, Element.Disposition.CONTENT);
@@ -517,5 +526,9 @@ public class ZimbraSoapContext {
 
     public boolean wantsUnqualifiedIds() {
         return mUnqualifiedItemIds;
+    }
+    
+    public int getHopCount() {
+        return mHopCount;
     }
 }

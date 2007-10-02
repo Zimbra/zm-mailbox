@@ -24,8 +24,6 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.swing.plaf.basic.BasicInternalFrameTitlePane.MaximizeAction;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -101,6 +99,7 @@ public final class SearchParams implements Cloneable {
         public String toString()  { return mRep; }
     };
 
+    public int getHopCount() { return mHopCount; }
     public long getCalItemExpandStart() { return mCalItemExpandStart; }
     public long getCalItemExpandEnd() { return mCalItemExpandEnd; }
     public String getQueryStr() { return mQueryStr; }
@@ -136,6 +135,7 @@ public final class SearchParams implements Cloneable {
     public long getEndSortValueLong() { return mEndSortValueLong; }
     
 
+    public void setHopCount(int hopCount) { mHopCount = hopCount; }
     public void setQueryStr(String queryStr) { mQueryStr = queryStr; }
     public void setOffset(int offset) { mOffset = offset; if (mOffset > MAX_OFFSET) mOffset = MAX_OFFSET; }
     public void setLimit(int limit) { mLimit = limit; if (mLimit > MAX_LIMIT) mLimit = MAX_LIMIT; }
@@ -313,6 +313,7 @@ public final class SearchParams implements Cloneable {
     public static SearchParams parse(Element request, ZimbraSoapContext zsc, String defaultQueryStr) throws ServiceException {
         SearchParams params = new SearchParams();
         
+        params.setHopCount(zsc.getHopCount());
         params.setCalItemExpandStart(request.getAttributeLong(MailConstants.A_CAL_EXPAND_INST_START, -1));
         params.setCalItemExpandEnd(request.getAttributeLong(MailConstants.A_CAL_EXPAND_INST_END, -1));
         String query = request.getAttribute(MailConstants.E_QUERY, defaultQueryStr);
@@ -471,7 +472,8 @@ public final class SearchParams implements Cloneable {
     
     public Object clone() {
         SearchParams o = new SearchParams();
-        
+
+        o.mHopCount = mHopCount;
         o.mDefaultField = mDefaultField;
         o.mQueryStr = mQueryStr;
         o.mOffset = mOffset;
@@ -504,6 +506,8 @@ public final class SearchParams implements Cloneable {
         
         return o;
     }
+    
+    private int mHopCount = 0; // this parameter is intentionally NOT encoded into XML, it is encoded manually by the ProxiedQueryResults proxying code
     
     private String mDefaultField = "content:";
     private String mQueryStr;
