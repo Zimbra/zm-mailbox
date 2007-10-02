@@ -58,8 +58,10 @@ http://bugzilla.zimbra.com/show_bug.cgi?id=14225
         conversion functions.
           
           
-2.2 Stored in LDAP
+2.2 Stored values in LDAP
         IDN domain names and email addresses are converted to ACE and stored in LDAP in ACE.  
+        (Note, for domain names and email addresses that do not contain non-ASCII characters, i.e., 
+         not containing IDN, their ACE value is identical to the unicode value.)
         For the following reasons:
         1. Each domain label are stored in the dc attribute in LDAP.  dc is of syntax IA5String, 
            which is "ASCII character set 7-bit" and does not allow non-ASCII characters.
@@ -71,54 +73,53 @@ http://bugzilla.zimbra.com/show_bug.cgi?id=14225
            attributes that contain domain names or email addresses.   
 
 
-2.3 Support in SOAP Request/Response
+2.3 Support in account/admin SOAP Request/Response
         1. SOAP Request
-              Both Unicode names and ACE names will be honored by all our SOAP requests that 
-              identify accounts, calendar resources, distribution lists, aliases, and domains by 
-              name.  (Note, this is supported in LdapProvisioning via the Provisioning interface.  
-              The names be opaque to callers of Provisioning.)
+               Both Unicode names and ACE names will be honored by all our SOAP requests that 
+               identify accounts, calendar resources, distribution lists, aliases, and domains by 
+               name.  (Note, this is supported in LdapProvisioning via the Provisioning interface.  
+               The names be opaque to callers of Provisioning.)
               
-              e.g. <domain by="name">my.中文.cn</domain> equals to
-                   <domain by="name">my.xn--fiq228c.cn</domain>
+                   e.g. 
+                   (a) <domain by="name">my.中文.cn</domain> equals to
+                       <domain by="name">my.xn--fiq228c.cn</domain>
             
-                   <account by="name">user1@my.中文.cn</domain> equals to
-                   <account by="name">user1@my.xn--fiq228c.cn</domain>
+                   (b) <account by="name">user1@my.中文.cn</domain> equals to
+                       <account by="name">user1@my.xn--fiq228c.cn</domain>
                    
         2. SOAP Response
-           (A) name attribute and element in all SOAP responses are always returned in unicode
-               e.g. 
-                    (a) <GetDomainResponse xmlns="urn:zimbraAdmin">
-                            <domain id="..." name="my.中文.cn">
+           (A) name attribute and element in all SOAP responses are always returned in unicode(in utf8 encoding)
+                   e.g. 
+                   (a) <GetDomainResponse xmlns="urn:zimbraAdmin">
+                           <domain id="..." name="my.中文.cn">
                             ...
-                        </GetDomainResponse>
+                       </GetDomainResponse>
                         
-                    (b) <GetAccountResponse xmlns="urn:zimbraAdmin">
-                            <account id="..." name="user1@my.中文.cn">
-                            ...
-                        </GetAccountResponse>  
+                   (b) <GetAccountResponse xmlns="urn:zimbraAdmin">
+                           <account id="..." name="user1@my.中文.cn">
+                           ...
+                       </GetAccountResponse>  
                     
-                    (c) <GetInfoResponse xmlns="urn:zimbraAccount">
-                            <id>...</id>
-                            <name>user1@my.中文.cn</name>
-                            ...
+                   (c) <GetInfoResponse xmlns="urn:zimbraAccount">
+                           <id>...</id>
+                           <name>user1@my.中文.cn</name>
+                           ...
                        </GetInfoResponse>    
            
-           (B) attributes contain IDN domain names or email addresses are returned in:
-               - ACE in attribute element content  (this is the actual value stored in LDAP)
-               - unicode in the utf8="" attribute of attribute element  
-                   
-               The list of LDAP attributes for which server will return utf8 are those attributes that are either:
-               - of type email or emailp, or
-               - has idn flag (in zimbra-attrs.xml)
+           (B) attributes containing IDN domain names or email addresses are always returned in unicode(in utf8 encoding)
+                   Server will convert the values from ACE to unicode and return unicode values in SOAP responses for 
+                   attributes that are either:
+                       - of type email or emailp, (declared in zimbra-attrs.xml) or
+                       - has idn flag (in zimbra-attrs.xml)
    
-               e.g.
+                   e.g.
                    (a) <GetDomainResponse xmlns="urn:zimbraAdmin">
                            <domain id="0eef5297-b212-4990-aad0-79e30825bf83" name="my.中文.cn">
-                               <a n="o">my.xn--fiq228c.cn domain</a>                             <=== not an IDN attribute
+                               <a n="o">my.xn--fiq228c.cn domain</a>                    <=== not an idn flagged or email attribute
                                <a n="objectClass">dcObject</a>
                                <a n="objectClass">organization</a>
                                <a n="objectClass">zimbraDomain</a>
-                               <a n="zimbraDomainName" utf8="my.中文.cn">my.xn--fiq228c.cn</a>    <=== an IDN attribute
+                               <a n="zimbraDomainName">my.中文.cn</a>                    <=== an idn flagged attribute, stored LDAP value is my.xn--fiq228c.cn
                                <a n="zimbraId">0eef5297-b212-4990-aad0-79e30825bf83</a>
                                <a n="zimbraDomainType">local</a>
                                <a n="dc">my</a>
@@ -131,22 +132,65 @@ http://bugzilla.zimbra.com/show_bug.cgi?id=14225
                            <account id="a019a48a-87d1-4ae7-a97b-2a1411da0616" name="user1@my.中文.cn">
                                <a n="zimbraPrefGalAutoCompleteEnabled">FALSE</a>
                                ...
-                               <a n="mail" utf8="user1@my.中文.cn">user1@my.xn--fiq228c.cn</a>                    <=== an IDN attribute
-                               <a n="mail" utf8="alias-of-user1@my.中文.cn">alias-of-user1@my.xn--fiq228c.cn</a>  <=== an IDN attribute
-                               <a n="zimbraPrefOutOfOfficeDirectAddress" utf8="ooo@yahoo.com">ooo@yahoo.com</a>  <=== an IDN attribute
+                               <a n="mail">user1@my.中文.cn</a>                              <=== an email attribute, stored LDAP value is user1@my.xn--fiq228c.cn
+                               <a n="mail">alias-of-user1@my.中文.cn</a>                     <=== an email attribute, stored LDAP value is alias-of-user1@my.xn--fiq228c.cn
+                               <a n="zimbraPrefOutOfOfficeDirectAddress">ooo@yahoo.com</a>  <=== an email attribute, stored LDAP value is ooo@yahoo.com
                            </account>
                        </GetAccountResponse>
                        
                    (c) <GetConfigResponse xmlns="urn:zimbraAdmin">
-                           <a utf8="mydomain.local" n="zimbraDefaultDomainName">mydomain.local</a>               <=== an IDN attribute
+                           <a n="zimbraDefaultDomainName">mydomain.local</a>            <=== an idn flagged attribute, stored LDAP value is mydomain.local
                        </GetConfigResponse>
                    
                    (d) <GetConfigResponse xmlns="urn:zimbraAdmin">
-                           <a n="zimbraDefaultDomainName" utf8="my.中文.cn">my.xn--fiq228c.cn</a>                 <=== an IDN attribute
+                           <a n="zimbraDefaultDomainName">my.中文.cn</a>                 <=== an idn flagged attribute, stored LDAP value is my.xn--fiq228c.cn
                        </GetConfigResponse>
+
+
+2.4 Support in mailing (messages, calendar invites, etc) SOAP Request/Response
+        1. SOAP Request
+               Both Unicode email addresses and ACE email addresses will be honored by all our SOAP requests 
+               that takes email address in:
+               <e [t="{type}"] p="{personal-name}" a="{email-address}" d="{display-name}">{content}</e>
+           
+               Server will convert the value specified by the a attribute and convert it to ACE before handing the 
+               email address to any down stream code/components, since ACE is the encoding that can be resolved 
+               and routed.
+              
+                   e.g. 
+                   (a) <SendMsgRequest xmlns="urn:zimbraMail" suid="...">
+                           <m idnt="...">
+                               <e t="t" a="user2@my.中文.cn/>
+                               <e t="f" a="user1@my.中文.cn"/>
+                               <su>...</su>
+                               <mp ct="text/plain">
+                                   <content>...</content>
+                              </mp>
+                          </m>
+                       </SendMsgRequest>
+                   
+        2. SOAP Response
+               Email addresses in the a attribute in 
+               <e [t="{type}"] p="{personal-name}" a="{email-address}" d="{display-name}">{content}</e>
+               are always returned in Unicode(in utf8 encoding).
+               
+               Server will convert email values obtained from up stream code/components from ACE to unicode 
+               and return unicode when it encodes the SOAP response after all the handling is done for the 
+               request.
+               
+                   e.g.
+                   (a) <SearchResponse xmlns="urn:zimbraMail" more="0" sortBy="dateDesc" offset="0">
+                           <c d="1191365996000" sf="1191365996000" f="su" id="259" score="1.0" n="2">
+                               <su>A subject</su>
+                               <fr>good day</fr>
+                               <e a="user1@my.中文.cn" t="f" d="user1"></e>
+                               <m id="258"></m>
+                           </c>
+                       </SearchResponse>
+               
+               
      
-     
-2.4 LDAP Search Filters 
+2.5 LDAP Search Filters 
     TODO
     
 
@@ -154,11 +198,11 @@ http://bugzilla.zimbra.com/show_bug.cgi?id=14225
 3. Client Behavior
 ===================
 
-In Web client, admin console, and zmprov, we need to support:
+In Web client, admin console, and zmprov:
     - Input: all email addresses and/or domain names can be entered and recognized
              in both unicode or ACE(ASCII Compatible Encoding).
     
-    - Output: all email addresses and/or domain names should be displayed in unicode.
+    - Output: all email addresses and domain names should be displayed in unicode.
 
 3.1 Web Client
     http://bugzilla.zimbra.com/show_bug.cgi?id=20428
