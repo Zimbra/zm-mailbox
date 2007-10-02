@@ -71,6 +71,9 @@ public class IDNUtil {
     }
     
     public static String toAscii(String name) {
+        if (name == null)
+            return null;
+        
         try {
             if (name.contains("@"))
                 return toAsciiEmail(name);
@@ -82,6 +85,9 @@ public class IDNUtil {
     }
     
     public static String toUnicode(String name) {
+        if (name == null)
+            return null;
+        
         try {
             if (name.contains("@"))
                 return toUnicodeEmail(name);
