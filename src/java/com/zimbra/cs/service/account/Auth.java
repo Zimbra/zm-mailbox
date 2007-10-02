@@ -161,13 +161,12 @@ public class Auth extends AccountDocumentHandler {
             }
         }
 
-		Element skinRequest = request.getOptionalElement(AccountConstants.E_REQUESTED_SKIN);
-		if (skinRequest != null) {
-			String skin = SkinUtil.chooseSkin(acct, skinRequest.getText());
-			if (skin != null) {
-				response.addElement(AccountConstants.E_SKIN).setText(skin);
-			}
-		}	
+		Element requestedSkinEl = request.getOptionalElement(AccountConstants.E_REQUESTED_SKIN);
+		String requestedSkin = requestedSkinEl != null ? requestedSkinEl.getText() : null;  
+		String skin = SkinUtil.chooseSkin(acct, requestedSkin);
+		if (skin != null) {
+			response.addElement(AccountConstants.E_SKIN).setText(skin);
+		}
 
 		return response;
     }

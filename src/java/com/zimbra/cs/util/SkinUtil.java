@@ -60,9 +60,14 @@ public class SkinUtil {
         if (url != null) {
             Properties props = new Properties();
             try {
-                props.load(new FileInputStream(new File(url.getFile())));
-                skinName = props.getProperty("SkinName");
-            } catch (IOException e) {
+				FileInputStream stream = new FileInputStream(new File(url.getFile()));
+				try {
+					props.load(stream);
+					skinName = props.getProperty("SkinName");
+				} finally {
+					stream.close();
+				}
+			} catch (IOException e) {
                 // no such property
             }
         }
@@ -139,11 +144,12 @@ public class SkinUtil {
 			return cosSkin;
 		}
 
-		throw ServiceException.FAILURE("No valid skins", null);
+		// Didn't find an acceptable skin. Return null and hope the client doesn't need it.
+		return null;
 	}
         
 	private static boolean checkSkin(String requestedSkin, String[] installedSkins, Set<String> allowedSkins) {
-		if (requestedSkin != null) {
+		if (requestedSkin != null && requestedSkin.length() > 0) {
 			for (String skin : installedSkins) {
 				if (requestedSkin.equals(skin)) {
 					if (allowedSkins.size() == 0 || allowedSkins.contains(skin)) {
@@ -154,5 +160,4 @@ public class SkinUtil {
 		}
 		return false;
 	}
-    
 }
