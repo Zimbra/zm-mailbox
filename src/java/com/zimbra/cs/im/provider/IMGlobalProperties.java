@@ -30,9 +30,9 @@ public class IMGlobalProperties implements PropertyProvider {
     
     public IMGlobalProperties() {
         mProvMap.put("xmpp.socket.ssl.keystore", LC.mailboxd_keystore.value());
-        mProvMap.put("xmpp.socket.ssl.keypass", "zimbra");
+        mProvMap.put("xmpp.socket.ssl.keypass", LC.mailboxd_keystore_password.value());
         mProvMap.put("xmpp.socket.ssl.truststore", LC.mailboxd_keystore.value());
-        mProvMap.put("xmpp.socket.ssl.trustpass", "zimbra");
+        mProvMap.put("xmpp.socket.ssl.trustpass", LC.mailboxd_truststore_password.value());
         mProvMap.put("xmpp.socket.blocking", "false");
         mProvMap.put("xmpp.server.certificate.verify", "false");
         
