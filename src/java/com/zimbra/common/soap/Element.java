@@ -450,8 +450,8 @@ public abstract class Element {
         }
 
         private final class JSONKeyValuePair implements KeyValuePair {
-            private final Element mTarget;
-            JSONKeyValuePair(String key, String value)  { mTarget = new JSONElement(key).setText(value); }
+            private final JSONElement mTarget;
+            JSONKeyValuePair(String key, String value)  { (mTarget = new JSONElement(key)).setText(value); }
 
             public KeyValuePair setValue(String value) throws ContainerException   { mTarget.setText(value);  return this; }
             public KeyValuePair addAttribute(String key, String value) throws ContainerException   { mTarget.addAttribute(key, value);  return this; }
@@ -460,7 +460,7 @@ public abstract class Element {
             public KeyValuePair addAttribute(String key, boolean value) throws ContainerException  { mTarget.addAttribute(key, value);  return this; }
 
             public String getKey() throws ContainerException    { return mTarget.getName(); }
-            public String getValue() throws ContainerException  { return mTarget.getText(); }
+            public String getValue() throws ContainerException  { return mTarget.getRawText(); }
 
             public String toString() {
                 if (mTarget.mAttributes.isEmpty())
@@ -664,6 +664,7 @@ public abstract class Element {
         }
 
         public String getText()  { return getAttribute(A_CONTENT, ""); }
+        String getRawText()      { return getAttribute(A_CONTENT, null); }
 
         public String getAttribute(String key, String defaultValue) {
             Object obj = mAttributes.get(key);
@@ -931,11 +932,12 @@ public abstract class Element {
         }
 
         private final class XMLKeyValuePair implements KeyValuePair {
-            private final Element mTarget;
+            private final XMLElement mTarget;
             private final String mAttrName;
             XMLKeyValuePair(String key, String value, String eltname, String attrname)  { this(key, value, eltname, attrname, true); }
             XMLKeyValuePair(String key, String value, String eltname, String attrname, boolean register)  {
-                (mTarget = (register ? addElement(eltname) : new XMLElement(eltname))).addAttribute(mAttrName = attrname, key).setText(value);
+                (mTarget = new XMLElement(eltname)).addAttribute(mAttrName = attrname, key).setText(value);
+                if (register)  addElement(mTarget);
             }
 
             public KeyValuePair setValue(String value) throws ContainerException   { mTarget.setText(value);  return this; }
@@ -945,7 +947,7 @@ public abstract class Element {
             public KeyValuePair addAttribute(String key, boolean value) throws ContainerException  { mTarget.addAttribute(key, value);  return this; }
 
             public String getKey() throws ContainerException    { return mTarget.getAttribute(mAttrName, null); }
-            public String getValue() throws ContainerException  { return mTarget.getText(); }
+            public String getValue() throws ContainerException  { return mTarget.getRawText(); }
 
             public String toString()  { return mTarget.toString(); }
         }
@@ -1084,7 +1086,8 @@ public abstract class Element {
             return pairs;
         }
 
-        public String getText() { return (mText == null ? "" : mText); }
+        public String getText()  { return (mText == null ? "" : mText); }
+        String getRawText()      { return mText; }
 
         public String getAttribute(String key, String defaultValue) {
             if (key == null)
