@@ -335,6 +335,11 @@ public class MailboxManager {
     
     private Mailbox getMailboxById(int mailboxId, FetchMode fetchMode, boolean skipMailHostCheck)
     throws ServiceException {
+        
+        // see bug 19088 - we do NOT want to call this while holding the mgr lock, because
+        // we need the Mailbox instantiation code to run w/o the lock held.
+        assert(!Thread.holdsLock(this));
+        
         if (mailboxId <= 0)
             throw MailServiceException.NO_SUCH_MBOX(mailboxId);
 
