@@ -23,6 +23,7 @@ package com.zimbra.common.soap;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -169,6 +170,9 @@ public abstract class Element {
     /** Returns all the sub-elements with the given name.  If <tt>name></tt>
      *  is <tt>null</tt>, returns <u>all</u> sub-elements. */
     public abstract List<Element> listElements(String name);
+
+    public List<KeyValuePair> listKeyValuePairs()  { return listKeyValuePairs(null, null); }
+    public abstract List<KeyValuePair> listKeyValuePairs(String eltname, String attrname);
 
     /** Returns all attributes as an <tt>Iterator</tt>. */
     public Iterator<Attribute> attributeIterator()         { return listAttributes().iterator(); }
@@ -413,6 +417,9 @@ public abstract class Element {
         public KeyValuePair addAttribute(String key, long value) throws ContainerException;
         public KeyValuePair addAttribute(String key, double value) throws ContainerException;
         public KeyValuePair addAttribute(String key, boolean value) throws ContainerException;
+
+        public String getKey() throws ContainerException;
+        public String getValue() throws ContainerException;
     }
 
     public static class Attribute {
@@ -443,7 +450,7 @@ public abstract class Element {
         }
 
         private final class JSONKeyValuePair implements KeyValuePair {
-            private Element mTarget;
+            private final Element mTarget;
             JSONKeyValuePair(String key, String value)  { mTarget = new JSONElement(key).setText(value); }
 
             public KeyValuePair setValue(String value) throws ContainerException   { mTarget.setText(value);  return this; }
@@ -451,6 +458,10 @@ public abstract class Element {
             public KeyValuePair addAttribute(String key, long value) throws ContainerException     { mTarget.addAttribute(key, value);  return this; }
             public KeyValuePair addAttribute(String key, double value) throws ContainerException   { mTarget.addAttribute(key, value);  return this; }
             public KeyValuePair addAttribute(String key, boolean value) throws ContainerException  { mTarget.addAttribute(key, value);  return this; }
+
+            public String getKey() throws ContainerException    { return mTarget.getName(); }
+            public String getValue() throws ContainerException  { return mTarget.getText(); }
+
             public String toString() {
                 if (mTarget.mAttributes.isEmpty())
                     return "null";
@@ -634,6 +645,24 @@ public abstract class Element {
             return list;
         }
 
+        public List<KeyValuePair> listKeyValuePairs(String eltname, String attrname) {
+            Element attrs = getOptionalElement(E_ATTRS);
+            if (attrs == null || !(attrs instanceof JSONElement))
+                return Collections.emptyList();
+
+            List<KeyValuePair> pairs = new ArrayList<KeyValuePair>();
+            for (Map.Entry<String, Object> entry : attrs.mAttributes.entrySet()) {
+                List values = (entry.getValue() instanceof List ? (List) entry.getValue() : Arrays.asList(entry.getValue()));
+                for (Object multi : values) {
+                    if (multi instanceof KeyValuePair)
+                        pairs.add((KeyValuePair) multi);
+                    else if (multi instanceof String)
+                        pairs.add(new JSONKeyValuePair(entry.getKey(), (String) multi));
+                }
+            }
+            return pairs;
+        }
+
         public String getText()  { return getAttribute(A_CONTENT, ""); }
 
         public String getAttribute(String key, String defaultValue) {
@@ -779,15 +808,15 @@ public abstract class Element {
             jsr.skipChar('{');
             while (jsr.peekChar() != '}') {
                 String key = jsr.readString();
-                Object value;
                 switch (jsr.readChar()) {
                     case ':':  break;
                     case '=':  if (jsr.peekChar() == '>')  jsr.skipChar();  break;
                     default:   throw new SoapParseException("missing expected ':'", jsr.js);
                 }
-                if (isAttrs)
+                if (isAttrs) {
                     parseKeyValuePair(jsr, key, parent);
-                else
+                } else {
+                    Object value;
                     switch (jsr.peekChar()) {
                         case '{':  elt.addUniqueElement(parseElement(jsr, key, factory, elt));  break;
                         case '[':  jsr.skipChar();
@@ -808,6 +837,7 @@ public abstract class Element {
                                    else                                    elt.addAttribute(key, value.toString());
                                    break;
                     }
+                }
                 switch (jsr.peekChar()) {
                     case '}':  break;
                     case ',':
@@ -901,14 +931,22 @@ public abstract class Element {
         }
 
         private final class XMLKeyValuePair implements KeyValuePair {
-            private Element mTarget;
-            XMLKeyValuePair(String key, String value, String eltname, String attrname)  { (mTarget = addElement(eltname)).addAttribute(attrname, key).setText(value); }
+            private final Element mTarget;
+            private final String mAttrName;
+            XMLKeyValuePair(String key, String value, String eltname, String attrname)  { this(key, value, eltname, attrname, true); }
+            XMLKeyValuePair(String key, String value, String eltname, String attrname, boolean register)  {
+                (mTarget = (register ? addElement(eltname) : new XMLElement(eltname))).addAttribute(mAttrName = attrname, key).setText(value);
+            }
 
             public KeyValuePair setValue(String value) throws ContainerException   { mTarget.setText(value);  return this; }
             public KeyValuePair addAttribute(String key, String value) throws ContainerException   { mTarget.addAttribute(key, value);  return this; }
             public KeyValuePair addAttribute(String key, long value) throws ContainerException     { mTarget.addAttribute(key, value);  return this; }
             public KeyValuePair addAttribute(String key, double value) throws ContainerException   { mTarget.addAttribute(key, value);  return this; }
             public KeyValuePair addAttribute(String key, boolean value) throws ContainerException  { mTarget.addAttribute(key, value);  return this; }
+
+            public String getKey() throws ContainerException    { return mTarget.getAttribute(mAttrName, null); }
+            public String getValue() throws ContainerException  { return mTarget.getText(); }
+
             public String toString()  { return mTarget.toString(); }
         }
 
@@ -1002,10 +1040,11 @@ public abstract class Element {
         }
 
         public Element getOptionalElement(QName qname) {
-            if (mChildren != null && qname != null)
+            if (mChildren != null && qname != null) {
                 for (Element elt : mChildren)
                     if (elt.getQName().equals(qname))
                         return elt;
+            }
             return null;
         }
 
@@ -1022,13 +1061,27 @@ public abstract class Element {
             if (mChildren == null)
                 return Collections.emptyList();
             ArrayList<Element> list = new ArrayList<Element>();
-            if (name == null || name.trim().equals(""))
+            if (name == null || name.trim().equals("")) {
                 list.addAll(mChildren);
-            else
+            } else {
                 for (Element elt : mChildren)
                     if (elt.getName().equals(name))
                         list.add(elt);
+            }
             return list;
+        }
+
+        public List<KeyValuePair> listKeyValuePairs(String eltname, String attrname) {
+            eltname = eltname == null ? E_ATTRIBUTE : validateName(eltname);
+            attrname = attrname == null ? A_ATTR_NAME : validateName(attrname);
+
+            List<KeyValuePair> pairs = new ArrayList<KeyValuePair>();
+            for (Element elt : listElements(eltname)) {
+                String key = elt.getAttribute(attrname, null);
+                if (key != null)
+                    pairs.add(new XMLKeyValuePair(key, elt.getText(), eltname, attrname, false));
+            }
+            return pairs;
         }
 
         public String getText() { return (mText == null ? "" : mText); }
@@ -1145,14 +1198,17 @@ public abstract class Element {
         Element e = testContacts(new JSONElement(MailConstants.GET_CONTACTS_RESPONSE));
         System.out.println(e);
         System.out.println(e.prettyPrint());
+        testKeyValuePairs(e);
 
         System.out.println(Element.parseJSON(e.toString()));
+        testKeyValuePairs(Element.parseJSON(e.toString()));
         System.out.println(Element.parseJSON(e.toString(), XMLElement.mFactory).prettyPrint());
 
         e = testContacts(new XMLElement(MailConstants.GET_CONTACTS_RESPONSE));
         System.out.println(e.prettyPrint());
         for (Element elt : e.listElements())
             System.out.println("  found: id=" + elt.getAttribute("ID", null));
+        testKeyValuePairs(e);
 
 //        System.out.println(com.zimbra.common.soap.SoapProtocol.toString(e.toXML(), true));
         System.out.println(new XMLElement("test").setText("  this\t    is\nthe\rway ").getTextTrim() + "|");
@@ -1188,5 +1244,12 @@ public abstract class Element {
         cn.addKeyValuePair("lastName", "Dharmaraj");
         cn.addKeyValuePair("foo=bar", "baz=whop");
         return parent;
+    }
+
+    private static void testKeyValuePairs(Element parent) {
+        for (Element cn : parent.listElements())
+            for (KeyValuePair kvp : cn.listKeyValuePairs("pm", "name"))
+                System.out.print("   " + kvp.getKey() + ": " + kvp.getValue());
+        System.out.println();
     }
 }
