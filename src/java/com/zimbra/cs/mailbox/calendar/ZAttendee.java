@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.mailbox.calendar;
 
+import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
@@ -242,7 +243,7 @@ public class ZAttendee extends CalendarUser {
     public Element toXml(Element parent) {
         Element atElt = parent.addElement(MailConstants.E_CAL_ATTENDEE);
         // address
-        atElt.addAttribute(MailConstants.A_ADDRESS, getAddress());
+        atElt.addAttribute(MailConstants.A_ADDRESS, IDNUtil.toUnicode(getAddress()));
         atElt.addAttribute(MailConstants.A_URL, getAddress());  // for backward compatibility
         // CN
         if (hasCn())
@@ -281,7 +282,7 @@ public class ZAttendee extends CalendarUser {
     }
 
     public static ZAttendee parse(Element element) throws ServiceException {
-        String address = element.getAttribute(MailConstants.A_ADDRESS, null);
+        String address = IDNUtil.toAscii(element.getAttribute(MailConstants.A_ADDRESS, null));
         if (address == null) {
         	address = element.getAttribute(MailConstants.A_URL, null); //4.5 back compat
         	if (address == null) {

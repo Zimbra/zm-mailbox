@@ -31,6 +31,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -160,7 +161,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                                 ZOrganizer org = inv.getOrganizer();
                                 Element orgElt = calItemElem.addUniqueElement(MailConstants.E_CAL_ORGANIZER);
                                 String str = org.getAddress();
-                                orgElt.addAttribute(MailConstants.A_ADDRESS, str);
+                                orgElt.addAttribute(MailConstants.A_ADDRESS, IDNUtil.toUnicode(str));
                                 if (org.hasCn())
                                     orgElt.addAttribute(MailConstants.A_DISPLAY, org.getCn());
                                 if (org.hasSentBy())

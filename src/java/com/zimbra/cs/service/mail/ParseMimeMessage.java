@@ -25,6 +25,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ExceptionToString;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.Fragment;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -707,7 +708,7 @@ public class ParseMimeMessage {
 
         @SuppressWarnings("unchecked")
         public void add(Element elem, String defaultCharset) throws ServiceException, UnsupportedEncodingException {
-            String emailAddress = elem.getAttribute(MailConstants.A_ADDRESS);
+            String emailAddress = IDNUtil.toAscii(elem.getAttribute(MailConstants.A_ADDRESS));
             String personalName = elem.getAttribute(MailConstants.A_PERSONAL, null);
             String addressType = elem.getAttribute(MailConstants.A_ADDRESS_TYPE);
 

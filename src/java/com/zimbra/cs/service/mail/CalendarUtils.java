@@ -21,6 +21,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
@@ -873,14 +874,14 @@ public class CalendarUtils {
                 throw ServiceException.INVALID_REQUEST(
                         "missing organizer when attendees are present", null);
         } else {
-            String address = orgElt.getAttribute(MailConstants.A_ADDRESS, null);
+            String address = IDNUtil.toAscii(orgElt.getAttribute(MailConstants.A_ADDRESS, null));
             if (address == null) {
             	address = orgElt.getAttribute(MailConstants.A_URL, null); //4.5 back compat
             	if (address == null) {
                     throw ServiceException.INVALID_REQUEST(
                             "missing organizer address", null);
             	}
-            }
+            } 
             String cn = orgElt.getAttribute(MailConstants.A_DISPLAY, null);
             String sentBy = orgElt.getAttribute(MailConstants.A_CAL_SENTBY, null);
             String dir = orgElt.getAttribute(MailConstants.A_CAL_DIR, null);

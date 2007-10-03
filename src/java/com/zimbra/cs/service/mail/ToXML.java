@@ -30,6 +30,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.html.HtmlDefang;
@@ -1267,7 +1268,7 @@ public class ToXML {
                 ZOrganizer org = invite.getOrganizer();
                 Element orgElt = e.addUniqueElement(MailConstants.E_CAL_ORGANIZER);
                 String str = org.getAddress();
-                orgElt.addAttribute(MailConstants.A_ADDRESS, str);
+                orgElt.addAttribute(MailConstants.A_ADDRESS, IDNUtil.toUnicode(str));
                 orgElt.addAttribute(MailConstants.A_URL, str);  // for backward compatibility
                 if (org.hasCn())
                     orgElt.addAttribute(MailConstants.A_DISPLAY, org.getCn());
@@ -1644,7 +1645,7 @@ public class ToXML {
 
     public static Element encodeEmail(Element parent, ParsedAddress pa, EmailType type) {
         Element elem = parent.addElement(MailConstants.E_EMAIL);
-        elem.addAttribute(MailConstants.A_ADDRESS, pa.emailPart);
+        elem.addAttribute(MailConstants.A_ADDRESS, IDNUtil.toUnicode(pa.emailPart));
         elem.addAttribute(MailConstants.A_DISPLAY, pa.firstName);
         elem.addAttribute(MailConstants.A_PERSONAL, pa.personalPart);
         elem.addAttribute(MailConstants.A_ADDRESS_TYPE, type.toString());
