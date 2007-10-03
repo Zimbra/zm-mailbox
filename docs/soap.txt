@@ -645,6 +645,16 @@ import and export of addressbook.
  
  <ModifyPrefsResponse/>
 
+ Notes:
+   For multi-value prefs, just add the same attribute with 'n' different values:
+      <ModifyPrefsRequest>
+          <pref name="foo">value1</pref>
+          <pref name="foo">value2</pref>
+          .
+          .
+          .
+      </ModifyPrefsRequest>
+
 ---------
 
 <CreateIdentityRequest>
