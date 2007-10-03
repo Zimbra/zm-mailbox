@@ -341,9 +341,15 @@ public class Message extends MailItem {
 
             try {
                 components = Invite.createFromCalendar(acct, pm.getFragment(), cal, sentByMe, mbox, id);
-                methodStr = cal.getPropVal(ICalTok.METHOD, ICalTok.PUBLISH.toString());
+                methodStr = cal.getPropVal(ICalTok.METHOD, ICalTok.PUBLISH.toString()).toUpperCase();
                 if (components != null) {
                     flags |= Flag.BITMASK_INVITE;
+                    if (ICalTok.PUBLISH.toString().equals(methodStr)) {
+                        // If method is PUBLISH, we don't process the calendar part.  Mark it as
+                        // a regular attachment instead.
+                        flags |= Flag.BITMASK_ATTACHED;
+                        components = null;
+                    }
                 }
             } catch (Exception e) {
                 ZimbraLog.calendar.warn("Unable to process iCalendar attachment", e);
@@ -375,7 +381,7 @@ public class Message extends MailItem {
         // process the components in this invite (must do this last so blob is created, etc)
         if (components != null) {
             try {
-                msg.processInvitesAfterCreate(methodStr.toUpperCase(), folder.getId(), volumeId, !noICal, pm, components);
+                msg.processInvitesAfterCreate(methodStr, folder.getId(), volumeId, !noICal, pm, components);
             } catch (Exception e) {
                 ZimbraLog.calendar.warn("Unable to process iCalendar attachment", e);
             }
