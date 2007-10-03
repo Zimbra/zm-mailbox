@@ -26,6 +26,8 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.KeyValuePair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -37,20 +39,19 @@ public class ModifyPrefs extends AccountDocumentHandler {
 
     public static final String PREF_PREFIX = "zimbraPref";
 
-	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-		ZimbraSoapContext zsc = getZimbraSoapContext(context);
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getRequestedAccount(zsc);
 
         if (!canModifyOptions(zsc, account))
             throw ServiceException.PERM_DENIED("can not modify options");
-        
-        HashMap<String, String> prefs = new HashMap<String, String>();
-        for (Element e : request.listElements(AccountConstants.E_PREF)) {
-            String name = e.getAttribute(AccountConstants.A_NAME);
-            String value = e.getText();
-		    if (!name.startsWith(PREF_PREFIX))
-		        throw ServiceException.INVALID_REQUEST("pref name must start with " + PREF_PREFIX, null);
-		    prefs.put(name, value);
+
+        HashMap<String, Object> prefs = new HashMap<String, Object>();
+        for (KeyValuePair kvp : request.listKeyValuePairs(AccountConstants.E_PREF, AccountConstants.A_NAME)) {
+            String name = kvp.getKey(), value = kvp.getValue();
+            if (!name.startsWith(PREF_PREFIX))
+                throw ServiceException.INVALID_REQUEST("pref name must start with " + PREF_PREFIX, null);
+            StringUtil.addToMultiMap(prefs, name, value);
         }
 
         if (prefs.containsKey(Provisioning.A_zimbraPrefMailForwardingAddress)) {
@@ -63,5 +64,5 @@ public class ModifyPrefs extends AccountDocumentHandler {
 
         Element response = zsc.createElement(AccountConstants.MODIFY_PREFS_RESPONSE);
         return response;
-	}
+    }
 }
