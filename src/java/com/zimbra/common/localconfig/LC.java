@@ -202,6 +202,7 @@ public class LC {
     public static final KnownKey mailboxd_truststore_password;
     public static final KnownKey mailboxd_output_file;
     public static final KnownKey mailboxd_output_rotate_interval;
+    public static final KnownKey mailboxd_thread_stack_size;
     
     public static final KnownKey ssl_allow_untrusted_certs;
 
@@ -819,7 +820,11 @@ public class LC {
         mailboxd_output_rotate_interval = new KnownKey("mailboxd_output_rotate_interval");
         mailboxd_output_rotate_interval.setDefault("86400");
         mailboxd_output_rotate_interval.setDoc("Period, in seconds, at which mailboxd output file is rotated.  If <= 0, no rotation is performed.");
-        
+      
+        mailboxd_thread_stack_size = new KnownKey("mailboxd_thread_stack_size");
+        mailboxd_thread_stack_size.setDefault("256k");
+        mailboxd_thread_stack_size.setDoc("Thread stack size for Mailboxd");
+
         ssl_allow_untrusted_certs = new KnownKey("ssl_allow_untrusted_certs");
         ssl_allow_untrusted_certs.setDefault("false");
         ssl_allow_untrusted_certs.setDoc("If true, allow self-signed SSL certificates.");
