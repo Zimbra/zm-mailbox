@@ -2649,17 +2649,17 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Maximum size in bytes for incoming SOAP requests.  0 means no limit.</desc>
 </attr>
 
-<attr id="558" name="zimbraPrefIMReportIdle" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="558" name="zimbraPrefIMReportIdle" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether to report IM idle status</desc>
 </attr>
 
-<attr id="559" name="zimbraPrefIMIdleTimeout" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="559" name="zimbraPrefIMIdleTimeout" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>10</defaultCOSValue>
   <desc>IM session idle timeout in minutes</desc>
 </attr>   
 
-<attr id="560" name="zimbraPrefIMIdleStatus" type="enum" value="away,xa,invisible,offline" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="560" name="zimbraPrefIMIdleStatus" type="enum" value="away,xa,invisible,offline" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>away</defaultCOSValue>
   <desc>IM idle status</desc>
 </attr>
