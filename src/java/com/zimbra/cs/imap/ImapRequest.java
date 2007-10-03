@@ -43,7 +43,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 abstract class ImapRequest {
-    static final boolean[] TAG_CHARS              = new boolean[128];
+    private static final boolean[] TAG_CHARS      = new boolean[128];
     private static final boolean[] ATOM_CHARS     = new boolean[128];
     private static final boolean[] ASTRING_CHARS  = new boolean[128];
     private static final boolean[] PATTERN_CHARS  = new boolean[128];
@@ -146,7 +146,6 @@ abstract class ImapRequest {
             mOffset++;
         else
             throw new ImapParseException(mTag, "end of line or wrong character; expected '" + c + '\'');
-
     }                                       
 
     void skipNIL() throws ImapParseException { skipAtom("NIL"); }
@@ -164,34 +163,25 @@ abstract class ImapRequest {
 
 
     String readContent(boolean[] acceptable) throws ImapParseException {
-        String result = readContent(getCurrentLine(), mOffset, mTag, acceptable);
-        mOffset += result.length();
-        return result;
+        return readContent(acceptable, false);
     }
-
-    static String readContent(String content, int offset, String tag, boolean[] acceptable) throws ImapParseException {
+    String readContent(boolean[] acceptable, boolean emptyOK) throws ImapParseException {
+        String content = getCurrentLine();
         int i;
-        for (i = offset; i < content.length(); i++) {
+        for (i = mOffset; i < content.length(); i++) {
             char c = content.charAt(i);
             if (c > 0x7F || !acceptable[c])
                 break;
         }
-        // An empty request is possible during GSSAPI authentication exchange,
-        // so this check as been moved to readTag() below.
-        // if (i == offset)
-        //    throw new ImapParseException(tag, "zero-length content");
-        return content.substring(offset, i);
+        if (i == mOffset && !emptyOK)
+            throw new ImapParseException(mTag, "zero-length content");
+
+        String result = content.substring(mOffset, i);
+        mOffset += result.length();
+        return result;
     }
 
-    String readTag() throws ImapParseException   {
-        String tag = readContent(TAG_CHARS);
-        if (tag.length() == 0) {
-            throw new ImapParseException(mTag, "zero-length content");
-        }
-        mTag = tag;
-        return mTag;
-    }
-    
+    String readTag() throws ImapParseException   { return mTag = readContent(TAG_CHARS); }
     String readAtom() throws ImapParseException  { return readContent(ATOM_CHARS); }
     String readATOM() throws ImapParseException  { return readContent(ATOM_CHARS).toUpperCase(); }
 
@@ -224,7 +214,7 @@ abstract class ImapRequest {
             skipChar('=');  return null;
         }
 
-        String encoded = readContent(BASE64_CHARS);
+        String encoded = readContent(BASE64_CHARS, true);
         int padding = (4 - (encoded.length() % 4)) % 4;
         if (padding == 3)
             throw new ImapParseException(mTag, "invalid base64-encoded content");
@@ -283,9 +273,9 @@ abstract class ImapRequest {
         boolean escaped = false;
         for (int i = mOffset; i < content.length(); i++) {
             char c = content.charAt(i);
-            if (c > 0x7F || c == 0x00 || c == '\r' || c == '\n' || (escaped && c != '\\' && c != '"'))
+            if (c > 0x7F || c == 0x00 || c == '\r' || c == '\n' || (escaped && c != '\\' && c != '"')) {
                 throw new ImapParseException(mTag, "illegal character '" + c + "' in quoted string");
-            else if (!escaped && c == '\\') {
+            } else if (!escaped && c == '\\') {
                 if (result == null)
                     result = new StringBuffer();
                 result.append(content.substring(backslash + 1, i));
@@ -295,8 +285,9 @@ abstract class ImapRequest {
                 mOffset = i + 1;
                 String range = content.substring(backslash + 1, i);
                 return (result == null ? range : result.append(range).toString());
-            } else
+            } else {
                 escaped = false;
+            }
         }
         throw new ImapParseException(mTag, "unexpected end of line in quoted string");
     }
