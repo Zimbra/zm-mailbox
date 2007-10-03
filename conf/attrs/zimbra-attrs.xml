@@ -120,15 +120,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     accountInherited.......if not set on account, inherit from COS
     domainInherited........if not set on domain, inherit from global config
     serverInherited........if not set on server, inherit from global config
-    idn....................can contain Internationalized Domain Names (IDN) 
-                           in ACE(ASCII Compatible Encoding) form.
+    idn....................can contain Internationalized Domain Names (IDN). 
                            For attributes that are either:
 	                           - of type email or emailp, or
 	                           - has idn flag
-                           server will also include the utf8 values in an 
-                           utf8="..." attribute in SOAP responses,
-                           in addition to the ACE values that are stored in 
-                           ldap.
+                           server will convert the values to unicode in utf8
+                           encoding in SOAP responses.
 
   deprecatedSince:
   	version since which the attribute had been deprecated.  Deprecated
@@ -2650,6 +2647,21 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="557" name="zimbraSoapRequestMaxSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
   <globalConfigValue>15360000</globalConfigValue>
   <desc>Maximum size in bytes for incoming SOAP requests.  0 means no limit.</desc>
+</attr>
+
+<attr id="558" name="zimbraPrefIMReportIdle" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether to report IM idle status</desc>
+</attr>
+
+<attr id="559" name="zimbraPrefIMIdleTimeout" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <defaultCOSValue>10</defaultCOSValue>
+  <desc>IM session idle timeout in minutes</desc>
+</attr>   
+
+<attr id="560" name="zimbraPrefIMIdleStatus" type="enum" value="away,xa,invisible,offline" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <defaultCOSValue>away</defaultCOSValue>
+  <desc>IM idle status</desc>
 </attr>
 
 </attrs>
