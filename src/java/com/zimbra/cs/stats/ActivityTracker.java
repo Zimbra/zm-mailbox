@@ -33,11 +33,13 @@ public class ActivityTracker {
 
     private static Map<String, ActivityTracker> sAllTrackers =
         new ConcurrentHashMap<String, ActivityTracker>();
-    
+
     static {
-        (new Thread(new LoggerThread())).start();
+        Thread logger = new Thread(new LoggerThread());
+        logger.setDaemon(true);
+        logger.start();
     }
-    
+
     private String mFilename;
     private ConcurrentHashMap<String, Counter> mCounterMap =
         new ConcurrentHashMap<String, Counter>();
