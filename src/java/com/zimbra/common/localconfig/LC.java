@@ -128,6 +128,8 @@ public class LC {
     public static final KnownKey ldap_connect_pool_timeout;
     public static final KnownKey ldap_replication_password;
     public static final KnownKey ldap_postfix_password;
+    public static final KnownKey ldap_require_tls;
+    
 
     public static final KnownKey ldap_cache_account_maxsize;
     public static final KnownKey ldap_cache_account_maxage;
@@ -538,6 +540,10 @@ public class LC {
         ldap_postfix_password = new KnownKey("ldap_postfix_password");
         ldap_postfix_password.setDefault("");
         ldap_postfix_password.setDoc("Password used by postfix to authenticate to ldap.");
+        
+        ldap_require_tls = new KnownKey("ldap_require_tls");
+        ldap_require_tls.setDefault("false");
+        ldap_require_tls.setDoc("Whether TLS is required for LDAP clients.");
 
         ldap_cache_account_maxsize = 
             new KnownKey("ldap_cache_account_maxsize", "20000", "Maximum number of account objects to cache.");
