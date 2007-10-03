@@ -1338,7 +1338,7 @@ public class TestProvisioning extends TestCase {
     }
     
     private void familyTest() throws Exception {
-        System.out.println("Testing family accounts");
+        System.out.println("Testing family");
         
         Set<String> visibleCids = new HashSet<String>();
         Set<String> invisibleCids = new HashSet<String>();
@@ -1399,13 +1399,21 @@ public class TestProvisioning extends TestCase {
         attrs.put("+" + Provisioning.A_zimbraPrefChildVisibleAccount, idsNotChild);
         mProv.modifyAttrs(parent, attrs);
         
-        // remove a child, it should be automaticatlly removed from the visible children
+        // remove a child, it should be automatically removed from the visible children
         attrs.clear();    
         attrs.put("-" + Provisioning.A_zimbraChildAccount, idsNotChild);
         mProv.modifyAttrs(parent, attrs);
         // verify it
         Set<String> curAttrs = parent.getMultiAttrSet(Provisioning.A_zimbraPrefChildVisibleAccount);
         assertFalse(curAttrs.contains(idsNotChild));
+        
+        // remove all visible children
+        attrs.clear();    
+        attrs.put(Provisioning.A_zimbraChildAccount, "");
+        mProv.modifyAttrs(parent, attrs);
+        // verify it
+        curAttrs = parent.getMultiAttrSet(Provisioning.A_zimbraPrefChildVisibleAccount);
+        assertEquals(0, curAttrs.size());
         
         // delete all accounts
         for (String childId : cids)
