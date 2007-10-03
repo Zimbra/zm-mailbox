@@ -246,10 +246,6 @@
     <servlet-name>jsp</servlet-name>
     <servlet-class>org.apache.jasper.servlet.JspServlet</servlet-class>
     <init-param>
-        <param-name>logVerbosityLevel</param-name>
-        <param-value>DEBUG</param-value>
-    </init-param>
-    <init-param>
         <param-name>fork</param-name>
         <param-value>false</param-value>
     </init-param>
