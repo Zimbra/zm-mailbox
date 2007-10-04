@@ -861,11 +861,12 @@ public abstract class ImapHandler extends ProtocolHandler {
 
         try {
             Account account = MECHANISM_GSSAPI.equals(mechanism) ?
-                authenticateKrb5(authenticateId, tag) :
-                authenticate(username, authenticateId, password, command, tag);
-            if (account == null)
+                authenticateKrb5(username, authenticateId) :
+                authenticate(username, authenticateId, password);
+            if (account == null) {
+                sendNO(tag, command + " failed");
                 return CONTINUE_PROCESSING;
-
+            }
             ImapCredentials session = startSession(account, enabledHack, command, tag);
             if (session == null)
                 return CONTINUE_PROCESSING;
@@ -883,15 +884,13 @@ public abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    private Account authenticate(String username, String authenticateId,
-                                 String password, String command, String tag)
+    private Account authenticate(String username, String authenticateId, String password)
             throws ServiceException, IOException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(AccountBy.name, username);
-        Account authacct = authenticateId.equals("") ?
-            account : prov.get(AccountBy.name, authenticateId);
+        Account authacct = authenticateId == null || authenticateId.equals("") ?
+                account : prov.get(AccountBy.name, authenticateId);
         if (account == null || authacct == null) {
-            sendNO(tag, command + " failed");
             return null;
         }
         // authenticate the authentication principal
@@ -900,18 +899,23 @@ public abstract class ImapHandler extends ProtocolHandler {
         if (!account.getId().equals(authacct.getId())) {
             // check domain/global admin if auth credentials != target account
             if (!AccessManager.getInstance().canAccessAccount(authacct, account)) {
-                sendNO(tag, command + " failed");
                 return null;
             }
         }
         return account;
     }
 
-    private Account authenticateKrb5(String principle, String tag)
+    private Account authenticateKrb5(String username, String principle)
             throws ServiceException, IOException {
-        Account account = Provisioning.getInstance().get(
-            AccountBy.krb5Principal, principle);
-        if (account == null) sendNO(tag, "authentication failed");
+        Provisioning prov = Provisioning.getInstance();
+        Account account = prov.get(AccountBy.krb5Principal, principle);
+        if (account == null) return null;
+        if (username != null && !username.equals(principle)) {
+            Account userAcct = prov.get(AccountBy.name, username);
+            if (userAcct == null) return null;
+            AccessManager am = AccessManager.getInstance();
+            if (!am.canAccessAccount(account, userAcct)) return null;
+        }
         return account;
     }
     
