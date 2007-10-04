@@ -188,9 +188,10 @@ public class LC {
     public static final KnownKey tomcat_java_home;
     public static final KnownKey tomcat_pidfile;
     public static final KnownKey tomcat_keystore;
-
     public static final KnownKey tomcat_keystore_password;
     public static final KnownKey tomcat_truststore_password;
+    public static final KnownKey tomcat_thread_stack_size;
+    
     public static final KnownKey ssl_allow_untrusted_certs;
 
     public static final KnownKey zimlet_directory;
@@ -783,6 +784,10 @@ public class LC {
         tomcat_truststore_password = new KnownKey("tomcat_truststore_password");
         tomcat_truststore_password.setDefault("changeit");
         tomcat_truststore_password.setDoc("Password to be used with the TrustManager keystore.");
+
+        tomcat_thread_stack_size = new KnownKey("tomcat_thread_stack_size");
+        tomcat_thread_stack_size.setDefault("256k");
+        tomcat_thread_stack_size.setDoc("Thread stack size for Tomcat.");
 
         ssl_allow_untrusted_certs = new KnownKey("ssl_allow_untrusted_certs");
         ssl_allow_untrusted_certs.setDefault("false");
