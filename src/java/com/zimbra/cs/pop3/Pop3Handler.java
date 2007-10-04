@@ -26,6 +26,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -479,7 +480,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
         if (password.length() > 1024)
             throw new Pop3CmdException("password length too long");
 
-        authenticate(mUser, password, null);
+        authenticate(mUser, "", password, null);
         sendOK("server ready");
     }
 
@@ -493,7 +494,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
         String initialResponse = i > 0 ? arg.substring(i + 1) : null;
         AuthenticatorUser authUser = new Pop3AuthenticatorUser(this);
         if (MECHANISM_PLAIN.equals(mechanism)) {
-            if (!isSSLEnabled() || !mStartedTLS) {
+            if (!allowCleartextLogins()) {
                 sendERR("cleartext logins disabled");
                 return;
             }
@@ -515,6 +516,10 @@ public abstract class Pop3Handler extends ProtocolHandler {
         }
     }
 
+    private boolean allowCleartextLogins() {
+        return mStartedTLS || mConfig.allowCleartextLogins() || mConfig.isSSLEnabled();
+    }
+    
     private boolean continueAuthentication(String response) throws IOException {
         byte[] b = Base64.decodeBase64(response.getBytes("us-ascii"));
         mAuthenticator.handle(b);
@@ -540,28 +545,19 @@ public abstract class Pop3Handler extends ProtocolHandler {
     }
     
     protected void authenticate(String username,
+                                String authenticateId,
                                 String password,
                                 String mechanism)
             throws Pop3CmdException, IOException {
+        String type = mechanism != null ? "authentication" : "login";
         try {
-            Provisioning prov = Provisioning.getInstance();
-            Account acct;
-            if (MECHANISM_GSSAPI.equals(mechanism)) {
-                acct = prov.get(AccountBy.krb5Principal, username);
-                if (acct == null) {
-                    throw new Pop3CmdException("invalid user principle '" + username + "'");
-                }
-            } else {
-                acct = prov.get(AccountBy.name, username);
-                if (acct == null) {
-                    throw new Pop3CmdException("invalid username/password");
-                }
-            }
+            Account acct = MECHANISM_GSSAPI.equals(mechanism) ?
+                authenticateKrb5(username, authenticateId) :
+                authenticate(username, authenticateId, password);
+            if (acct == null)
+                throw new Pop3CmdException(type + " failed");
             if (!acct.getBooleanAttr(Provisioning.A_zimbraPop3Enabled, false))
                 throw new Pop3CmdException("pop access not enabled for account");
-            if (!MECHANISM_GSSAPI.equals(mechanism)) {
-                prov.authAccount(acct, password, "pop3");
-            }
             mAccountId = acct.getId();
             mAccountName = acct.getName();
             Mailbox mailbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
@@ -571,12 +567,13 @@ public abstract class Pop3Handler extends ProtocolHandler {
             if (mExpire > 0 && mExpire < MIN_EXPIRE_DAYS) mExpire = MIN_EXPIRE_DAYS;
         } catch (ServiceException e) {
             // need to catch and mask these two
-            if (e.getCode().equals(AccountServiceException.NO_SUCH_ACCOUNT) ||
-                e.getCode().equals(AccountServiceException.AUTH_FAILED)) {
+            String code = e.getCode();
+            if (code.equals(AccountServiceException.NO_SUCH_ACCOUNT) ||
+                code.equals(AccountServiceException.AUTH_FAILED)) {
                 throw new Pop3CmdException("invalid username/password");
-            } else if (e.getCode().equals(AccountServiceException.CHANGE_PASSWORD)) {
+            } else if (code.equals(AccountServiceException.CHANGE_PASSWORD)) {
                 throw new Pop3CmdException("your password has expired");
-            } else if (e.getCode().equals(AccountServiceException.MAINTENANCE_MODE)) {
+            } else if (code.equals(AccountServiceException.MAINTENANCE_MODE)) {
                 throw new Pop3CmdException("your account is having maintenance peformed. please try again later");
             } else {
                 throw new Pop3CmdException(e.getMessage());
@@ -584,8 +581,43 @@ public abstract class Pop3Handler extends ProtocolHandler {
         }
     }
 
+    private Account authenticate(String username, String authenticateId, String password)
+            throws ServiceException, IOException {
+        Provisioning prov = Provisioning.getInstance();
+        Account account = prov.get(AccountBy.name, username);
+        Account authacct = authenticateId == null || authenticateId.equals("") ?
+                account : prov.get(AccountBy.name, authenticateId);
+        if (account == null || authacct == null) {
+            return null;
+        }
+        // authenticate the authentication principal
+        prov.authAccount(authacct, password, "pop3");
+        // authorize as the target user
+        if (!account.getId().equals(authacct.getId())) {
+            // check domain/global admin if auth credentials != target account
+            if (!AccessManager.getInstance().canAccessAccount(authacct, account)) {
+                return null;
+            }
+        }
+        return account;
+    }
+
+    private Account authenticateKrb5(String username, String principle)
+            throws ServiceException, IOException {
+        Provisioning prov = Provisioning.getInstance();
+        Account account = prov.get(AccountBy.krb5Principal, principle);
+        if (account == null) return null;
+        if (username != null && !username.equals(principle)) {
+            Account userAcct = prov.get(AccountBy.name, username);
+            if (userAcct == null) return null;
+            AccessManager am = AccessManager.getInstance();
+            if (!am.canAccessAccount(account, userAcct)) return null;
+        }
+        return account;
+    }
+
     private void checkIfLoginPermitted() throws Pop3CmdException {
-        if (!isSSLEnabled() && !mStartedTLS && !mConfig.allowCleartextLogins())
+        if (!allowCleartextLogins())
             throw new Pop3CmdException("only valid after entering TLS mode");        
     }
 
@@ -741,7 +773,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
 
     private String getSaslCapabilities() {
         StringBuilder sb = new StringBuilder();
-        if (isSSLEnabled() || mStartedTLS) sb.append(" PLAIN");
+        if (allowCleartextLogins()) sb.append(" PLAIN");
         if (isGssAuthEnabled()) sb.append(" GSSAPI");
         return sb.toString();
     }

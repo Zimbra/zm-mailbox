@@ -73,20 +73,20 @@ public abstract class Authenticator {
     }
     
     public void sendSuccess() throws IOException {
-        mAuthUser.sendSuccessful(description() + " successful");
+        mAuthUser.sendSuccessful("authentication successful");
     }
     
     public void sendFailed() throws IOException {
-        mAuthUser.sendFailed(description() + " failed");
+        mAuthUser.sendFailed("authentication failed");
         mComplete = true;
     }
 
     public void sendFailed(String msg) throws IOException {
-        mAuthUser.sendFailed(description() + " failed: " + msg);
+        mAuthUser.sendFailed("authentication failed: " + msg);
     }
     
     public void sendBadRequest() throws IOException {
-        mAuthUser.sendBadRequest("malformed " + description() + " request");
+        mAuthUser.sendBadRequest("malformed authentication request");
         mComplete = true;
     }
 
@@ -94,10 +94,6 @@ public abstract class Authenticator {
         mAuthUser.sendContinuation(s);
     }
 
-    private String description() {
-        return getMechanism() + " authentication";
-    }
-    
     protected Log getLog() {
         return mAuthUser.getLog();
     }

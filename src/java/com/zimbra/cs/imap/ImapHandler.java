@@ -720,7 +720,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         boolean authenticated = isAuthenticated();
         String nologin  = mStartedTLS || authenticated || mConfig.allowCleartextLogins()  ? "" : " LOGINDISABLED";
         String starttls = mStartedTLS || authenticated || !extensionEnabled("STARTTLS")   ? "" : " STARTTLS";
-        String plain    = !mStartedTLS || authenticated || !extensionEnabled("AUTH=PLAIN")? "" : " AUTH=PLAIN";
+        String plain    = !allowCleartextLogins() || authenticated || !extensionEnabled("AUTH=PLAIN") ? "" : " AUTH=PLAIN";
         String gss      = authenticated || !isGssAuthEnabled() ? "" : " AUTH=GSSAPI";
         StringBuilder capability = new StringBuilder("CAPABILITY IMAP4rev1" + nologin + starttls + plain + gss);
         for (String extension : SUPPORTED_EXTENSIONS) {
@@ -791,7 +791,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             // RFC 2595 6: "The PLAIN SASL mechanism MUST NOT be advertised or used
             //              unless a strong encryption layer (such as the provided by TLS)
             //              is active or backwards compatibility dictates otherwise."
-            if (!mStartedTLS) {
+            if (!allowCleartextLogins()) {
                 sendNO(tag, "cleartext logins disabled");
                 return CONTINUE_PROCESSING;
             }
@@ -824,11 +824,15 @@ public abstract class ImapHandler extends ProtocolHandler {
     private boolean mechanismEnabled(String mechanism) {
         return extensionEnabled("AUTH=" + mechanism);
     }
+
+    private boolean allowCleartextLogins() {
+        return mStartedTLS || mConfig.allowCleartextLogins();
+    }
     
     boolean doLOGIN(String tag, String username, String password) throws IOException {
         if (!checkState(tag, State.NOT_AUTHENTICATED))
             return CONTINUE_PROCESSING;
-        else if (!mStartedTLS && !mConfig.allowCleartextLogins()) {
+        else if (!allowCleartextLogins()) {
             sendNO(tag, "cleartext logins disabled");
             return CONTINUE_PROCESSING;
         }
@@ -836,7 +840,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     private boolean login(String username, String password, String tag) throws IOException {
-        boolean cont = authenticate(username, "", password, "LOGIN", tag, null);
+        boolean cont = authenticate(username, "", password, tag, null);
         if (isAuthenticated()) {
             sendCapability();
             sendOK(tag, "LOGIN completed");
@@ -846,7 +850,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
     
     boolean authenticate(String username, String authenticateId, String password,
-                         String command, String tag, String mechanism) throws IOException {
+                         String tag, String mechanism) throws IOException {
         // the Windows Mobile 5 hacks are enabled by appending "/wm" to the username, etc.
         // TODO For GSSAPI, should enabled hack be applied to authenticateId
         // instead?
@@ -858,26 +862,26 @@ public abstract class ImapHandler extends ProtocolHandler {
                 break;
             }
         }
-
+        String type = mechanism != null ? "authentication" : "login";
         try {
             Account account = MECHANISM_GSSAPI.equals(mechanism) ?
                 authenticateKrb5(username, authenticateId) :
                 authenticate(username, authenticateId, password);
             if (account == null) {
-                sendNO(tag, command + " failed");
+                sendNO(tag, type + " failed");
                 return CONTINUE_PROCESSING;
             }
-            ImapCredentials session = startSession(account, enabledHack, command, tag);
+            ImapCredentials session = startSession(account, enabledHack, tag, mechanism);
             if (session == null)
                 return CONTINUE_PROCESSING;
         } catch (ServiceException e) {
-            ZimbraLog.imap.warn(command + " failed", e);
+            ZimbraLog.imap.warn(type + " failed", e);
             if (e.getCode().equals(AccountServiceException.CHANGE_PASSWORD))
                 sendNO(tag, "[ALERT] password must be changed before IMAP login permitted");
             else if (e.getCode().equals(AccountServiceException.MAINTENANCE_MODE))
                 sendNO(tag, "[ALERT] account undergoing maintenance; please try again later");
             else
-                sendNO(tag, command + " failed");
+                sendNO(tag, type + " failed");
             return canContinue(e);
         }
 
@@ -919,18 +923,20 @@ public abstract class ImapHandler extends ProtocolHandler {
         return account;
     }
     
-    private ImapCredentials startSession(Account account, EnabledHack hack, String command, String tag) throws ServiceException, IOException {
+    private ImapCredentials startSession(Account account, EnabledHack hack,
+                                         String tag, String mechanism) throws ServiceException, IOException {
+        String type = mechanism != null ? "authentication" : "login";
         // make sure we can actually login via IMAP on this host
         if (!account.getBooleanAttr(Provisioning.A_zimbraImapEnabled, false)) {
             sendNO(tag, "account does not have IMAP access enabled");
             return null;
         } else if (!Provisioning.onLocalServer(account)) { 
             String correctHost = account.getAttr(Provisioning.A_zimbraMailHost);
-            ZimbraLog.imap.info(command + " failed; should be on host " + correctHost);
+            ZimbraLog.imap.info(type + " failed; should be on host " + correctHost);
             if (correctHost == null || correctHost.trim().equals("") || !extensionEnabled("LOGIN_REFERRALS"))
-                sendNO(tag, command + " failed [wrong host]");
+                sendNO(tag, type + " failed [wrong host]");
             else
-                sendNO(tag, "[REFERRAL imap://" + URLEncoder.encode(account.getName(), "utf-8") + '@' + correctHost + "/] " + command + " failed");
+                sendNO(tag, "[REFERRAL imap://" + URLEncoder.encode(account.getName(), "utf-8") + '@' + correctHost + "/] " + type + " failed");
             return null;
         }
 
