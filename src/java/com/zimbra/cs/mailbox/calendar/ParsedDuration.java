@@ -133,9 +133,6 @@ public final class ParsedDuration
     
     public static ParsedDuration parse(boolean negative, int weeks, int days, int hours, int mins, int secs) {
         ParsedDuration toRet = new ParsedDuration();
-        assert(hours < 24);
-        assert(mins < 60);
-        assert(secs < 60);
         if (negative) {
             toRet.mNegative = true;
         } else {
@@ -284,9 +281,6 @@ public final class ParsedDuration
                 throw ServiceException.INVALID_REQUEST("Could not parse DURATION string: "+durationStr, null);
             }
         }
-        assert(retVal.mHours < 24);
-        assert(retVal.mMins < 60);
-        assert(retVal.mSecs < 60);
         
         return retVal;
     }

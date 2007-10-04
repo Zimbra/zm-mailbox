@@ -23,7 +23,6 @@ package com.zimbra.cs.mailbox;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -36,6 +35,7 @@ import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.FreeBusy;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
@@ -198,13 +198,12 @@ public class Appointment extends CalendarItem {
         if (et < now)
             return null;
 
-        Collection instances = expandInstances(st, et);
+        Collection<Instance> instances = expandInstances(st, et);
         List<Availability> list = new ArrayList<Availability>(instances.size());
         int numConflicts = 0;
-        for (Iterator iter = instances.iterator(); iter.hasNext(); ) {
+        for (Instance inst : instances) {
             if (numConflicts > Availability.MAX_CONFLICT_LIST_SIZE)
                 break;
-            Instance inst = (Instance) iter.next();
             long start = inst.getStart();
             long end = inst.getEnd();
             FreeBusy fb =
@@ -272,10 +271,38 @@ public class Appointment extends CalendarItem {
                     if (avail != null && !Availability.isAvailable(avail)) {
                         partStat = IcalXmlStrMap.PARTSTAT_DECLINED;
                         if (invite.hasOrganizer()) {
+                            // Figure out the timezone to use for expressing start/end times for
+                            // conflicting meetings.  Do our best to use a timezone familiar to the
+                            // organizer.
+                            ICalTimeZone tz = invite.getStartTime().getTimeZone();
+                            if (tz == null && invite.isAllDayEvent()) {
+                                // floating time: use resource's timezone
+                                tz = ICalTimeZone.getAccountTimeZone(account);
+                                if (tz == null)
+                                    ICalTimeZone.getUTC();
+                            } else {
+                                // tz != null || !allday
+                                if (tz == null || tz.sameAsUTC()) {
+                                    if (organizer != null) {
+                                        // For this case, let's assume the sender didn't really mean UTC.
+                                        // This happens with Outlook and possibly more clients.
+                                        tz = ICalTimeZone.getAccountTimeZone(organizer);
+                                    } else {
+                                        // If organizer is not a local user, use resource's timezone.
+                                        tz = ICalTimeZone.getAccountTimeZone(account);
+                                        if (tz == null)
+                                            ICalTimeZone.getUTC();
+                                    }
+                                } else {
+                                    // Timezone is not UTC.  We can safely assume the client sent the
+                                    // correct local timezone.
+                                }
+                            }
+
                             String msg =
                                 L10nUtil.getMessage(MsgKey.calendarResourceDeclineReasonConflict, lc) +
                                 "\r\n\r\n" +
-                                Availability.getBusyTimesString(avail, invite.getStartTime().getTimeZone(), lc);
+                                Availability.getBusyTimesString(avail, tz, lc);
                             CalendarMailSender.sendReply(
                                     octxt, mbox, false,
                                     CalendarMailSender.VERB_DECLINE,

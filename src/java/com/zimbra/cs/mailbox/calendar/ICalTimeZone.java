@@ -144,6 +144,7 @@ public class ICalTimeZone extends SimpleTimeZone {
     
     private static final String DEFAULT_DTSTART = "16010101T000000";
 
+    private boolean mSameAsUTC = false;  // true if this timezone is equivalent to UTC/GMT
     protected boolean mHasDaylight = false;
 
     protected int    mStandardOffset = 0;
@@ -237,6 +238,7 @@ public class ICalTimeZone extends SimpleTimeZone {
     public String getStandardRule()    { return mDayToStdRule; }
     public String getDaylightDtStart() { return mStdToDayDtStart; }
     public String getDaylightRule()    { return mStdToDayRule; }
+    public boolean sameAsUTC()         { return mSameAsUTC; }
 
     public static ICalTimeZone decodeFromMetadata(Metadata m) throws ServiceException {
         String tzId;
@@ -264,6 +266,7 @@ public class ICalTimeZone extends SimpleTimeZone {
     }
     
     private void initFromICalData(boolean fromMetadata) {
+        mSameAsUTC = mStandardOffset == mDaylightOffset && mStandardOffset == 0;
         if (mDaylightOffset - mStandardOffset < 0) {
             // Must be an error in the TZ definition.  Swap the offsets.
             // (Saw this with Windows TZ for Windhoek, Namibia)
@@ -513,6 +516,7 @@ public class ICalTimeZone extends SimpleTimeZone {
         super(0, tzId);
         mStandardOffset = standardOffset;
         mDaylightOffset = daylightOffset;
+        mSameAsUTC = mStandardOffset == mDaylightOffset && mStandardOffset == 0;
         setRawOffset(mStandardOffset);
         if (mDaylightOffset != mStandardOffset &&
             standardOnset != null && daylightOnset != null) {
