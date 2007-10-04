@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.security.sasl;
 
+import javax.security.sasl.SaslClient;
 import javax.security.sasl.SaslServer;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -25,15 +26,23 @@ import java.nio.ByteBuffer;
 
 public class SaslOutputStream extends OutputStream {
     private final DataOutputStream mOutputStream;
-    private final SaslServer mSaslServer;
+    private final SaslSecurityLayer mSecurityLayer;
     private final SaslOutputBuffer mBuffer;
 
     private static final boolean DEBUG = false;
 
     public SaslOutputStream(OutputStream os, SaslServer server) {
+        this(os, SaslSecurityLayer.getInstance(server));
+    }
+
+    public SaslOutputStream(OutputStream os, SaslClient client) {
+        this(os, SaslSecurityLayer.getInstance(client));
+    }
+    
+    public SaslOutputStream(OutputStream os, SaslSecurityLayer securityLayer) {
         mOutputStream = new DataOutputStream(os);
-        mSaslServer = server;
-        mBuffer = new SaslOutputBuffer(SaslUtil.getMaxSendSize(mSaslServer));
+        mSecurityLayer = securityLayer;
+        mBuffer = new SaslOutputBuffer(securityLayer.getMaxSendSize());
     }
 
     public void write(byte[] b, int off, int len) throws IOException {
@@ -70,7 +79,7 @@ public class SaslOutputStream extends OutputStream {
     }
 
     private void flushBuffer() throws IOException {
-        byte[] b = mBuffer.wrap(mSaslServer);
+        byte[] b = mBuffer.wrap(mSecurityLayer);
         mOutputStream.writeInt(b.length);
         mOutputStream.write(b);
         mBuffer.clear();

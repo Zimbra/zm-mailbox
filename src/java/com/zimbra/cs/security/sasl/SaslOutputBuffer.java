@@ -20,7 +20,6 @@ package com.zimbra.cs.security.sasl;
 import com.zimbra.cs.mina.MinaUtil;
 
 import javax.security.sasl.SaslException;
-import javax.security.sasl.SaslServer;
 import java.nio.ByteBuffer;
 
 public class SaslOutputBuffer {
@@ -73,8 +72,8 @@ public class SaslOutputBuffer {
         return mBuffer.position() >= mMaxSize;
     }
 
-    public byte[] wrap(SaslServer server) throws SaslException {
-        return server.wrap(mBuffer.array(), 0, mBuffer.position());
+    public byte[] wrap(SaslSecurityLayer security) throws SaslException {
+        return security.wrap(mBuffer.array(), 0, mBuffer.position());
     }
 
     public void clear() {

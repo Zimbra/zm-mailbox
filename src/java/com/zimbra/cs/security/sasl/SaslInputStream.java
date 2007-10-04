@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.security.sasl;
 
+import javax.security.sasl.SaslClient;
 import javax.security.sasl.SaslServer;
 import java.io.DataInputStream;
 import java.io.EOFException;
@@ -26,16 +27,24 @@ import java.nio.ByteBuffer;
 
 public class SaslInputStream extends InputStream {
     private final DataInputStream mInputStream;
-    private final SaslServer mSaslServer;
+    private final SaslSecurityLayer mSecurityLayer;
     private ByteBuffer mBuffer;
 
     private static final boolean DEBUG = false;
 
     public SaslInputStream(InputStream is, SaslServer server) {
-        mInputStream = new DataInputStream(is);
-        mSaslServer = server;
+        this(is, SaslSecurityLayer.getInstance(server));
     }
 
+    public SaslInputStream(InputStream is, SaslClient client) {
+        this(is, SaslSecurityLayer.getInstance(client));
+    }
+
+    public SaslInputStream(InputStream is, SaslSecurityLayer securityLayer) {
+        mInputStream = new DataInputStream(is);
+        mSecurityLayer = securityLayer;
+    }
+    
     public int read(byte[] b, int off, int len) throws IOException {
         debug("read: enter len = %d", len);
         if ((off | len | (off + len) | (b.length - (off + len))) < 0) {
@@ -77,7 +86,7 @@ public class SaslInputStream extends InputStream {
         }
         byte[] b = new byte[len];
         mInputStream.readFully(b);
-        mBuffer = ByteBuffer.wrap(mSaslServer.unwrap(b, 0, len));
+        mBuffer = ByteBuffer.wrap(mSecurityLayer.unwrap(b, 0, len));
         debug("fillBuffer: read finished");
         return true;
     }

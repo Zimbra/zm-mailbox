@@ -57,12 +57,12 @@ public class SaslInputBuffer {
         return mDataBuffer != null ? mDataBuffer.remaining() : -1;
     }
     
-    public byte[] unwrap(SaslServer server) throws SaslException {
+    public byte[] unwrap(SaslSecurityLayer securityLayer) throws SaslException {
         if (!isComplete()) {
             throw new IllegalStateException("input not complete");
         }
-        return server.unwrap(mDataBuffer.array(), 0,
-                             mDataBuffer.position());
+        return securityLayer.unwrap(mDataBuffer.array(), 0,
+                                    mDataBuffer.position());
     }
 
     public void clear() {

@@ -22,6 +22,7 @@ import org.apache.mina.common.IoFilterAdapter;
 import org.apache.mina.common.IoFilterChain;
 import org.apache.mina.common.IoSession;
 
+import javax.security.sasl.SaslClient;
 import javax.security.sasl.SaslServer;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,7 +32,7 @@ import java.util.List;
  * MINA SASL filter implementation.
  */
 public class SaslFilter extends IoFilterAdapter {
-    private final SaslServer mSaslServer;
+    private final SaslSecurityLayer mSecurityLayer;
     private final SaslInputBuffer mInputBuffer;
     private final SaslOutputBuffer mOutputBuffer;
 
@@ -42,9 +43,17 @@ public class SaslFilter extends IoFilterAdapter {
         SaslFilter.class.getName() + ".DisableEncryptionOnce"; 
 
     public SaslFilter(SaslServer server) {
-        mSaslServer = server;
-        mInputBuffer = new SaslInputBuffer(SaslUtil.getMaxRecvSize(mSaslServer));
-        mOutputBuffer = new SaslOutputBuffer(SaslUtil.getMaxSendSize(mSaslServer));
+        this(SaslSecurityLayer.getInstance(server));
+    }
+
+    public SaslFilter(SaslClient client) {
+        this(SaslSecurityLayer.getInstance(client));
+    }
+    
+    public SaslFilter(SaslSecurityLayer securityLayer) {
+        mSecurityLayer = securityLayer;
+        mInputBuffer = new SaslInputBuffer(securityLayer.getMaxRecvSize());
+        mOutputBuffer = new SaslOutputBuffer(securityLayer.getMaxSendSize());
     }
 
     @Override
@@ -61,7 +70,7 @@ public class SaslFilter extends IoFilterAdapter {
                 debug("messageReceived: length = %d", mInputBuffer.getLength());
                 if (mInputBuffer.isComplete()) {
                     debug("messageReceived: input complete");
-                    byte[] b = mInputBuffer.unwrap(mSaslServer);
+                    byte[] b = mInputBuffer.unwrap(mSecurityLayer);
                     nextFilter.messageReceived(session, ByteBuffer.wrap(b));
                     mInputBuffer.clear();
                 }
@@ -120,7 +129,7 @@ public class SaslFilter extends IoFilterAdapter {
             // May loop more than once if RAW_SEND_SIZE is exceeded 
             do {
                 mOutputBuffer.put(bb);
-                byte[] b = mOutputBuffer.wrap(mSaslServer);
+                byte[] b = mOutputBuffer.wrap(mSecurityLayer);
                 debug("encrypt wrap: encrypted buffer size = %d", b.length);
                 buffers.add(ByteBuffer.allocate(4).putInt(b.length).flip());
                 buffers.add(ByteBuffer.wrap(b));
@@ -135,7 +144,7 @@ public class SaslFilter extends IoFilterAdapter {
     public void onPostRemove(IoFilterChain parent, String name,
                              NextFilter nextFilter) throws IOException {
         debug("onPostRemove: enter");
-        mSaslServer.dispose();
+        mSecurityLayer.dispose();
     }
 
     private static void debug(String format, Object... args) {

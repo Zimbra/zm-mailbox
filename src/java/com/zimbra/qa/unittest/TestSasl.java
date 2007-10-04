@@ -19,10 +19,10 @@ package com.zimbra.qa.unittest;
 
 import com.zimbra.cs.security.sasl.SaslInputBuffer;
 import com.zimbra.cs.security.sasl.SaslOutputBuffer;
+import com.zimbra.cs.security.sasl.SaslSecurityLayer;
 import junit.framework.TestCase;
 
 import javax.security.sasl.SaslException;
-import javax.security.sasl.SaslServer;
 import java.nio.ByteBuffer;
 
 public class TestSasl extends TestCase {
@@ -40,7 +40,7 @@ public class TestSasl extends TestCase {
             if (data.hasRemaining()) assertFalse(buffer.isComplete());
         }
         assertTrue(buffer.isComplete());
-        byte[] unwrapped = buffer.unwrap(new TestSaslServer());
+        byte[] unwrapped = buffer.unwrap(new SecurityLayer());
         checkData(unwrapped, SIZE);
         buffer.clear();
         assertFalse(buffer.isComplete());
@@ -61,12 +61,15 @@ public class TestSasl extends TestCase {
         ByteBuffer bb = ByteBuffer.allocate(100);
         buffer.put(bb);
         assertEquals(100, bb.remaining());
-        byte[] wrapped = buffer.wrap(new TestSaslServer());
+        byte[] wrapped = buffer.wrap(new SecurityLayer());
         checkData(wrapped, SIZE);
         buffer.clear();
         assertFalse(buffer.isFull());
     }
 
+    public void testKrb5Auth() throws Exception {
+        
+    }
     /*
     public void testGssCredentials() throws Exception {
         String host = "localhost";
@@ -128,11 +131,8 @@ public class TestSasl extends TestCase {
         }
     }
     
-    private static class TestSaslServer implements SaslServer {
+    private static class SecurityLayer extends SaslSecurityLayer {
         public String getMechanismName() { return "TEST"; }
-        public byte[] evaluateResponse(byte[] b) { return b; }
-        public boolean isComplete() { return true; }
-        public String getAuthorizationID() { return "TEST"; }
         public byte[] wrap(byte[] b, int off, int len) {
             byte[] r = new byte[len];
             System.arraycopy(b, off, r, 0, len);
