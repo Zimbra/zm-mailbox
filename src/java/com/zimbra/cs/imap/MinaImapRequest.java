@@ -51,7 +51,8 @@ public class MinaImapRequest extends ImapRequest implements MinaRequest {
                 try {
                     parseLine(bb);
                 } catch (ImapParseException e) {
-                    mHandler.sendBAD(mTag, e.toString());
+                    mHandler.handleImapParseException(e);
+                    throw new IllegalArgumentException("Bad request line", e);
                 }
                 break;
             case LITERAL:
@@ -102,17 +103,26 @@ public class MinaImapRequest extends ImapRequest implements MinaRequest {
             --j;
         } else {
             mBlocking = true;
-            mHandler.sendContinuation("send literal data");
         }
         mState = State.LITERAL;
         mLiteralCount = parseNumber(line, i + 1, j);
         if (mLiteralCount == -1) {
-            throw new ImapParseException(mTag, "Bad literal format: " + line);
+            throw new ImapParseException(getTag(line), "bad literal format");
         }
         incrementSize(mLiteralCount);
         mBuffer = ByteBuffer.allocate(mLiteralCount);
+        if (mBlocking) {
+            mHandler.sendContinuation("send literal data");
+        }
     }
 
+    private static String getTag(String line) {
+        int i = line.indexOf(' ');
+        if (i == -1) return null;
+        String s = line.substring(0, i);
+        return s.equals("") || s.equals("*") || s.equals("+") ? null : s;
+    }
+    
     private void incrementSize(int increment) throws ImapParseException {
         // TODO Make sure this cannot wrap around
         mSize += increment;
@@ -123,6 +133,7 @@ public class MinaImapRequest extends ImapRequest implements MinaRequest {
     }
     
     private static int parseNumber(String s, int i, int j) {
+        if (i > j) return -1;
         int result = 0;
         while (i <= j) {
             int n = Character.digit(s.charAt(i++), 10);

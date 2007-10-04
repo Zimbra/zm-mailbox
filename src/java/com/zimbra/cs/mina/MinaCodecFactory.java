@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.mina;
 
+import com.zimbra.common.util.ZimbraLog;
 import org.apache.mina.common.ByteBuffer;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
@@ -66,7 +67,14 @@ class MinaCodecFactory implements ProtocolCodecFactory {
                 if (req == null) {
                     req = mServer.createRequest(MinaIoHandler.getHandler(session));
                 }
-                req.parse(bb);
+                try {
+                    req.parse(bb);
+                } catch (IllegalArgumentException e) {
+                    // Drop bad request
+                    ZimbraLog.imap.debug("Dropping bad request", e.getCause());
+                    req = null;
+                    break;
+                }
                 if (!req.isComplete()) break;
                 out.write(req);
                 req = null;

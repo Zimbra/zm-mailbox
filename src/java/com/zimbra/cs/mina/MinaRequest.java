@@ -29,6 +29,7 @@ public interface MinaRequest {
      * in the specified buffer.
      * 
      * @param bb the byte buffer containing the request bytes
+     * @throws IllegalArgumentException if the request could not be parsed
      * @throws IOException if an I/O error occurs
      */
     void parse(ByteBuffer bb) throws IOException;

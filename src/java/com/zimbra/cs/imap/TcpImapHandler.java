@@ -153,14 +153,7 @@ public class TcpImapHandler extends ImapHandler {
             keepGoing = STOP_PROCESSING;
         } catch (ImapParseException ipe) {
             mIncompleteRequest = null;
-            if (ipe.mTag == null)
-                sendUntagged("BAD " + ipe.getMessage(), true);
-            else if (ipe.mCode != null)
-                sendNO(ipe.mTag, '[' + ipe.mCode + "] " + ipe.getMessage());
-            else if (ipe.mNO)
-                sendNO(ipe.mTag, ipe.getMessage());
-            else
-                sendBAD(ipe.mTag, ipe.getMessage());
+            handleImapParseException(ipe);
         } finally {
             ZimbraLog.clearContext();
         }

@@ -154,7 +154,18 @@ public abstract class ImapHandler extends ProtocolHandler {
     public boolean isSSLEnabled() { return mConfig.isSSLEnabled(); }
     
     static final boolean STOP_PROCESSING = false, CONTINUE_PROCESSING = true;
-    
+
+    protected void handleImapParseException(ImapParseException e) throws IOException {
+        if (e.mTag == null)
+            sendUntagged("BAD " + e.getMessage(), true);
+        else if (e.mCode != null)
+            sendNO(e.mTag, '[' + e.mCode + "] " + e.getMessage());
+        else if (e.mNO)
+            sendNO(e.mTag, e.getMessage());
+        else
+            sendBAD(e.mTag, e.getMessage());
+    }
+
     void checkEOF(String tag, ImapRequest req) throws ImapParseException {
         if (!req.eof())
             throw new ImapParseException(tag, "excess characters at end of command");
@@ -3206,7 +3217,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     abstract protected void enableInactivityTimer();
 
     abstract protected void completeAuthentication() throws IOException;
-    
+
     void sendIdleUntagged() throws IOException                   { sendUntagged("NOOP", true); }
 
     void sendOK(String tag, String response) throws IOException  { sendResponse(tag, response.equals("") ? "OK" : "OK " + response, true); }
