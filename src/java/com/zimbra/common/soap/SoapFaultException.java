@@ -24,7 +24,9 @@ import com.zimbra.common.util.StringUtil;
 
 public class SoapFaultException extends ServiceException {
 
-    /**
+	private static final long serialVersionUID = 2021293100288028461L;
+
+	/**
      * used for default value and when we get a fault without a detail code
      */
     public static final String UNKNOWN = "soap.UNKNOWN";     
@@ -35,7 +37,10 @@ public class SoapFaultException extends ServiceException {
     private Element mDetail;
     private Element mFault;
     private boolean mIsLocal;
-
+    
+    // in case catcher of SoapFaultException wants to see the request/response
+    private String mRequest;
+    private String mResponse;
     
     public SoapFaultException(String message, String code, boolean isReceiversFault, Throwable cause) {
         super(message, code, isReceiversFault);
@@ -189,6 +194,38 @@ public class SoapFaultException extends ServiceException {
      */
     public boolean isSourceLocal() {
         return mIsLocal;
+    }
+    
+    /**
+     * Attache the request that caused this exception for downstream consumption
+     * @param request
+     */
+    public void setFaultRequest(String request) {
+    	mRequest = request;
+    }
+    
+    /**
+     * Attache the response that contains this exception for downstream consumption
+     * @param response
+     */
+    public void setFaultResponse(String response) {
+    	mResponse = response;
+    }
+    
+    /**
+     * Retrieves the request that caused this exception
+     * @return the request, null if not available
+     */
+    public String getFaultRequest() {
+    	return mRequest;
+    }
+    
+    /**
+     * Retrieves the response that contains this exception
+     * @return the response, null if not available
+     */
+    public String getFaultResponse() {
+    	return mResponse;
     }
 
     /**

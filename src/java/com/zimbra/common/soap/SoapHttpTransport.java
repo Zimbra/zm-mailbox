@@ -239,13 +239,18 @@ public class SoapHttpTransport extends SoapTransport {
             // Read the response body.
             byte[] responseBody = method.getResponseBody();
 
-
-
             // Deal with the response.
             // Use caution: ensure correct character encoding and is not binary data
             String responseStr = SoapProtocol.toString(responseBody);
 
-            return parseSoapResponse(responseStr, raw);
+            try {
+            	return parseSoapResponse(responseStr, raw);
+            } catch (SoapFaultException x) {
+            	//attach request/response to the exception and rethrow for downstream consumption
+            	x.setFaultRequest(soapMessage);
+            	x.setFaultResponse(responseStr);
+            	throw x;
+            }
         } finally {
             // Release the connection.
             if (method != null)
