@@ -24,7 +24,6 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.NamedEntry;
@@ -55,6 +54,7 @@ import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.security.sasl.Authenticator;
 import com.zimbra.cs.security.sasl.AuthenticatorUser;
+import com.zimbra.cs.security.sasl.AuthenticatorUtil;
 import com.zimbra.cs.security.sasl.GssAuthenticator;
 import com.zimbra.cs.security.sasl.PlainAuthenticator;
 import com.zimbra.cs.service.mail.FolderAction;
@@ -876,8 +876,8 @@ public abstract class ImapHandler extends ProtocolHandler {
         String type = mechanism != null ? "authentication" : "login";
         try {
             Account account = MECHANISM_GSSAPI.equals(mechanism) ?
-                authenticateKrb5(username, authenticateId) :
-                authenticate(username, authenticateId, password);
+                AuthenticatorUtil.authenticateKrb5(username, authenticateId) :
+                AuthenticatorUtil.authenticate(username, authenticateId, password, "imap");
             if (account == null) {
                 sendNO(tag, type + " failed");
                 return CONTINUE_PROCESSING;
@@ -899,41 +899,6 @@ public abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    private Account authenticate(String username, String authenticateId, String password)
-            throws ServiceException, IOException {
-        Provisioning prov = Provisioning.getInstance();
-        Account account = prov.get(AccountBy.name, username);
-        Account authacct = authenticateId == null || authenticateId.equals("") ?
-                account : prov.get(AccountBy.name, authenticateId);
-        if (account == null || authacct == null) {
-            return null;
-        }
-        // authenticate the authentication principal
-        prov.authAccount(authacct, password, "imap");
-        // authorize as the target user
-        if (!account.getId().equals(authacct.getId())) {
-            // check domain/global admin if auth credentials != target account
-            if (!AccessManager.getInstance().canAccessAccount(authacct, account)) {
-                return null;
-            }
-        }
-        return account;
-    }
-
-    private Account authenticateKrb5(String username, String principle)
-            throws ServiceException, IOException {
-        Provisioning prov = Provisioning.getInstance();
-        Account account = prov.get(AccountBy.krb5Principal, principle);
-        if (account == null) return null;
-        if (username != null && !username.equals(principle)) {
-            Account userAcct = prov.get(AccountBy.name, username);
-            if (userAcct == null) return null;
-            AccessManager am = AccessManager.getInstance();
-            if (!am.canAccessAccount(account, userAcct)) return null;
-        }
-        return account;
-    }
-    
     private ImapCredentials startSession(Account account, EnabledHack hack,
                                          String tag, String mechanism) throws ServiceException, IOException {
         String type = mechanism != null ? "authentication" : "login";

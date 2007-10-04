@@ -23,16 +23,17 @@ package com.zimbra.cs.pop3;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.security.sasl.Authenticator;
 import com.zimbra.cs.security.sasl.AuthenticatorUser;
+import com.zimbra.cs.security.sasl.AuthenticatorUtil;
 import com.zimbra.cs.security.sasl.GssAuthenticator;
 import com.zimbra.cs.security.sasl.PlainAuthenticator;
 import com.zimbra.cs.stats.ActivityTracker;
@@ -552,8 +553,8 @@ public abstract class Pop3Handler extends ProtocolHandler {
         String type = mechanism != null ? "authentication" : "login";
         try {
             Account acct = MECHANISM_GSSAPI.equals(mechanism) ?
-                authenticateKrb5(username, authenticateId) :
-                authenticate(username, authenticateId, password);
+                AuthenticatorUtil.authenticateKrb5(username, authenticateId) :
+                AuthenticatorUtil.authenticate(username, authenticateId, password, "pop3");
             if (acct == null)
                 throw new Pop3CmdException(type + " failed");
             if (!acct.getBooleanAttr(Provisioning.A_zimbraPop3Enabled, false))
@@ -579,41 +580,6 @@ public abstract class Pop3Handler extends ProtocolHandler {
                 throw new Pop3CmdException(e.getMessage());
             }
         }
-    }
-
-    private Account authenticate(String username, String authenticateId, String password)
-            throws ServiceException, IOException {
-        Provisioning prov = Provisioning.getInstance();
-        Account account = prov.get(AccountBy.name, username);
-        Account authacct = authenticateId == null || authenticateId.equals("") ?
-                account : prov.get(AccountBy.name, authenticateId);
-        if (account == null || authacct == null) {
-            return null;
-        }
-        // authenticate the authentication principal
-        prov.authAccount(authacct, password, "pop3");
-        // authorize as the target user
-        if (!account.getId().equals(authacct.getId())) {
-            // check domain/global admin if auth credentials != target account
-            if (!AccessManager.getInstance().canAccessAccount(authacct, account)) {
-                return null;
-            }
-        }
-        return account;
-    }
-
-    private Account authenticateKrb5(String username, String principle)
-            throws ServiceException, IOException {
-        Provisioning prov = Provisioning.getInstance();
-        Account account = prov.get(AccountBy.krb5Principal, principle);
-        if (account == null) return null;
-        if (username != null && !username.equals(principle)) {
-            Account userAcct = prov.get(AccountBy.name, username);
-            if (userAcct == null) return null;
-            AccessManager am = AccessManager.getInstance();
-            if (!am.canAccessAccount(account, userAcct)) return null;
-        }
-        return account;
     }
 
     private void checkIfLoginPermitted() throws Pop3CmdException {
