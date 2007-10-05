@@ -4650,7 +4650,7 @@ public class Mailbox {
     throws ServiceException {
         OperationContext octxt = getOperationContext();
         Account authAccount = octxt != null ? octxt.getAuthenticatedUser() : null;
-        boolean denyPrivateAccess = authAccount != null && !CalendarItem.allowPrivateAccess(authAccount, getAccount());
+        boolean denyPrivateAccess = authAccount != null && !Account.allowPrivateAccess(authAccount, getAccount());
         boolean isCalendarResource = getAccount() instanceof CalendarResource;
         // Don't allow creating a private appointment on behalf of another user,
         // unless that other user is a calendar resource.

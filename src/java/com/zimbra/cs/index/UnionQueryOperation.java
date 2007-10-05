@@ -221,7 +221,6 @@ class UnionQueryOperation extends QueryOperation
         boolean hasRemoteOps = false;
         
         Set<Folder> visibleFolders = mbox.getVisibleFolders(octxt);
-        
 
         // Since optimize() has already been run, we know that each of our ops
         // only has one target (or none).  Find those operations which have

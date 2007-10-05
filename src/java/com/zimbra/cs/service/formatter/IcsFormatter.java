@@ -20,6 +20,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.HttpUtil.Browser;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -89,7 +90,7 @@ public class IcsFormatter extends Formatter {
 //        try {
             ZVCalendar cal = context.targetMailbox.getZCalendarForCalendarItems(
                     calItems, useOutlookCompatMode, true,
-                    CalendarItem.allowPrivateAccess(context.authAccount, context.targetAccount));
+                    Account.allowPrivateAccess(context.authAccount, context.targetAccount));
             ByteArrayOutputStream buf = new ByteArrayOutputStream();
             OutputStreamWriter wout = new OutputStreamWriter(buf, Mime.P_CHARSET_UTF8);
             boolean forceOlsonTZID = Browser.APPLE_ICAL.equals(browser);  // bug 15549

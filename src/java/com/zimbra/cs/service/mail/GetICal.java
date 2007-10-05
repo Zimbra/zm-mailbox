@@ -51,7 +51,7 @@ public class GetICal extends MailDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account authAccount = getAuthenticatedAccount(zsc);
         Mailbox mbx = getRequestedMailbox(zsc);
-        boolean allowPrivateAccess = CalendarItem.allowPrivateAccess(authAccount, mbx.getAccount());
+        boolean allowPrivateAccess = Account.allowPrivateAccess(authAccount, mbx.getAccount());
         OperationContext octxt = getOperationContext(zsc, context);
 
         String iidStr = request.getAttribute(MailConstants.A_ID, null);

@@ -23,7 +23,6 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.ldap.LdapUtil;
-import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
 import com.zimbra.cs.mailbox.calendar.Alarm;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -1078,7 +1077,7 @@ public class CalendarUtils {
             cancel.addAttendee(a);
 
         cancel.setClassProp(inv.getClassProp());
-        boolean hidePrivate = !inv.isPublic() && !CalendarItem.allowPrivateAccess(senderAcct, acct);
+        boolean hidePrivate = !inv.isPublic() && !Account.allowPrivateAccess(senderAcct, acct);
         Locale locale = acct.getLocale();
         if (hidePrivate) {
             // SUMMARY

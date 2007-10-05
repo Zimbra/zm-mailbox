@@ -115,6 +115,38 @@ public class Account extends MailTarget {
     }
     
     /**
+     * Returns true if authAccount should be allowed access to private data in this appointment.
+     * Returns true if authAccount is the same as this account, or authAccount has
+     * admin rights over this account.
+     * @param authAccount
+     * @return
+     * @throws ServiceException
+     */
+    public boolean allowPrivateAccess(Account authAccount) throws ServiceException {
+        return Account.allowPrivateAccess(authAccount, this);
+    }
+    
+    /**
+     * Returns true if authAccount should be allowed access to private data in appointments owned
+     * by targetAccount.  Returns true if authAccount and targetAccount are the same account or if
+     * authAccount has admin rights over targetAccount.
+     * @param authAccount
+     * @param targetAccount
+     * @return
+     * @throws ServiceException
+     */
+    public static boolean allowPrivateAccess(Account authAccount, Account targetAccount)
+    throws ServiceException {
+        if (authAccount != null && targetAccount != null) {
+            if (authAccount.getId().equalsIgnoreCase(targetAccount.getId()))
+                return true;
+            if (AccessManager.getInstance().canAccessAccount(authAccount, targetAccount))
+                return true;
+        }
+        return false;
+    }
+
+    /**
      * 
      * @param id account id to lookup
      * @param nameKey name key to add to context if account lookup is ok

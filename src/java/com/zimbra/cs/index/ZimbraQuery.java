@@ -2499,23 +2499,23 @@ public final class ZimbraQuery {
                 UnionQueryOperation union = (UnionQueryOperation)mOp;
                 mOp = union.runRemoteSearches(proto, mMbox, octxt, mbidx, mParams);
             } else {
-                if (targets.hasExternalTargets()) {
-                    RemoteQueryOperation remote = new RemoteQueryOperation();
-                    remote.tryAddOredOperation(mOp);
-                    SearchParams params = (SearchParams)mParams.clone();
-                    params.setLimit(mChunkSize);
-                    remote.setup(proto, octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges(), params);
-                    mOp = remote;
-                } else {
+//                if (targets.hasExternalTargets()) {
+//                    RemoteQueryOperation remote = new RemoteQueryOperation();
+//                    remote.tryAddOredOperation(mOp);
+//                    SearchParams params = (SearchParams)mParams.clone();
+//                    params.setLimit(mChunkSize);
+//                    remote.setup(proto, octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges(), params);
+//                    mOp = remote;
+//                } else {
                     // 1 local target...HACK: for now we'll temporarily wrap it in a UnionQueryOperation,
                     // then call union.runRemoteSearches() --- that way we don't have to duplicate the
                     // important code there (permissions checks).  FIXME!
                     UnionQueryOperation union = new UnionQueryOperation();
                     union.add(mOp);
                     mOp = union.runRemoteSearches(proto, mMbox, octxt, mbidx, mParams);
-                    mOp = mOp.optimize(mMbox);
+                    mOp = mOp.optimize(mMbox); // why is this here??
                 }
-            }
+//            }
         }
         
         //

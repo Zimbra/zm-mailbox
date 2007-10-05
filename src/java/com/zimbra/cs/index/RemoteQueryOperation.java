@@ -36,7 +36,8 @@ class RemoteQueryOperation extends QueryOperation {
     
     RemoteQueryOperation() {}
 
-    private UnionQueryOperation mOp = null;
+//    private UnionQueryOperation mOp = null;
+    private QueryOperation mOp = null;
     private ProxiedQueryResults mResults = null;
     private QueryTarget mTarget = null;
 
@@ -61,7 +62,7 @@ class RemoteQueryOperation extends QueryOperation {
         if (mOp == null)
             mOp = new UnionQueryOperation();
 
-        mOp.add(op);
+        ((UnionQueryOperation)mOp).add(op);
         return true;
     }
 
@@ -100,7 +101,10 @@ class RemoteQueryOperation extends QueryOperation {
     }
 
     QueryOperation optimize(Mailbox mbox) throws ServiceException {
-        return mOp.optimize(mbox);
+        // optimize our sub-op, but *don't* optimize us out -- the RemoteQueryOperation wrapper
+        // is important
+        mOp = mOp.optimize(mbox);
+        return this;
     }
 
     protected QueryOperation combineOps(QueryOperation other, boolean union) {

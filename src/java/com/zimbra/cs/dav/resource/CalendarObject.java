@@ -117,7 +117,7 @@ public class CalendarObject extends MailItemResource {
 				continue;
 			CharArrayWriter wr = new CharArrayWriter();
 			try {
-			    boolean allowPrivateAccess = CalendarItem.allowPrivateAccess(ctxt.getAuthAccount(), mAccount);
+			    boolean allowPrivateAccess = Account.allowPrivateAccess(ctxt.getAuthAccount(), mAccount);
 				inv.newToVComponent(false, allowPrivateAccess).toICalendar(wr);
 			} catch (ServiceException se) {
 				ZimbraLog.dav.error("cannot convert to ICalendar", se);

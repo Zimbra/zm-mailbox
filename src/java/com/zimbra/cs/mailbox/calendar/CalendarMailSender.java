@@ -463,7 +463,7 @@ public class CalendarMailSender {
             reply.addAttendee(meReply);
         }
 
-        boolean hidePrivate = !oldInv.isPublic() && !CalendarItem.allowPrivateAccess(authAcct, acct);
+        boolean hidePrivate = !oldInv.isPublic() && !Account.allowPrivateAccess(authAcct, acct);
         reply.setClassProp(oldInv.getClassProp());
 
         // DTSTART, DTEND, LOCATION (outlook seems to require these,

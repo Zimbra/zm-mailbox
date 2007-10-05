@@ -39,7 +39,6 @@ import javax.mail.internet.MimeMultipart;
 
 import org.apache.lucene.document.Field;
 
-import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.db.DbMailItem;
@@ -705,28 +704,7 @@ public abstract class CalendarItem extends MailItem {
      * @throws ServiceException
      */
     public boolean allowPrivateAccess(Account authAccount) throws ServiceException {
-        Account targetAccount = getAccount();
-        return allowPrivateAccess(authAccount, targetAccount);
-    }
-
-    /**
-     * Returns true if authAccount should be allowed access to private data in appointments owned
-     * by targetAccount.  Returns true if authAccount and targetAccount are the same account or if
-     * authAccount has admin rights over targetAccount.
-     * @param authAccount
-     * @param targetAccount
-     * @return
-     * @throws ServiceException
-     */
-    public static boolean allowPrivateAccess(Account authAccount, Account targetAccount)
-    throws ServiceException {
-        if (authAccount != null && targetAccount != null) {
-            if (authAccount.getId().equalsIgnoreCase(targetAccount.getId()))
-                return true;
-            if (AccessManager.getInstance().canAccessAccount(authAccount, targetAccount))
-                return true;
-        }
-        return false;
+        return getAccount().allowPrivateAccess(authAccount);
     }
 
     /**
