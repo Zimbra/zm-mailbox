@@ -44,6 +44,8 @@ import com.sun.mail.imap.IMAPMessage;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.CustomSSLSocketFactory;
+import com.zimbra.common.util.DummySSLSocketFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -66,15 +68,22 @@ public class ImapImport implements MailItemImport {
     private static Session sSelfSignedCertSession;
     private static FetchProfile FETCH_PROFILE;
 
-    static {
+    static {        
         Properties props = new Properties();
         props.setProperty("mail.imap.connectiontimeout", Long.toString(TIMEOUT));
         props.setProperty("mail.imap.timeout", Long.toString(TIMEOUT));
+        props.setProperty("mail.imaps.connectiontimeout", Long.toString(TIMEOUT));
+        props.setProperty("mail.imaps.timeout", Long.toString(TIMEOUT));    	
+		props.setProperty("mail.imaps.socketFactory.class", CustomSSLSocketFactory.class.getName());
+        props.setProperty("mail.imaps.socketFactory.fallback", "false");
         sSession = Session.getInstance(props);
 
-        props.put("mail.imap.socketFactory.class",
-            com.zimbra.common.util.DummySSLSocketFactory.class.getName());
-        sSelfSignedCertSession = Session.getInstance(props);
+        Properties sscProps = new Properties();
+        sscProps.setProperty("mail.imaps.connectiontimeout", Long.toString(TIMEOUT));
+        sscProps.setProperty("mail.imaps.timeout", Long.toString(TIMEOUT));    	
+        sscProps.setProperty("mail.imaps.socketFactory.class", DummySSLSocketFactory.class.getName());
+        sscProps.setProperty("mail.imaps.socketFactory.fallback", "false");
+        sSelfSignedCertSession = Session.getInstance(sscProps);
 
         FETCH_PROFILE = new FetchProfile();
         FETCH_PROFILE.add(UIDFolder.FetchProfileItem.UID);
