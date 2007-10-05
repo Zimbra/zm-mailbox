@@ -305,10 +305,10 @@ public class ZimbraAnalyzer extends StandardAnalyzer
                     addCharToFieldName(fieldName, ch);
                 }
                 
-                assert(mFieldName != null);
-                
                 if (c < 0)
                     return false; // EOL
+
+                assert(mFieldName != null);
                 
                 StringBuilder curWord = new StringBuilder();
                 int wordStart = mOffset;
