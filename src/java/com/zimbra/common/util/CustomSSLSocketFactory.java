@@ -26,21 +26,17 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 
 /**
- * Allows Java code to make SSL connections without certificates.  This
- * class is insecure and should only be used for testing.  See SSLNOTES.txt
- * in the JavaMail distribution for more details.
+ * Override SSLSocketFactory to provide a createSocket() interface
  *  
- * @author bburtin
+ * @author jjzhuang
  */
-public class DummySSLSocketFactory extends SSLSocketFactory {
+public class CustomSSLSocketFactory extends SSLSocketFactory {
     private SSLSocketFactory factory;
     
-    public DummySSLSocketFactory() {
+    public CustomSSLSocketFactory() {
         try {
             SSLContext sslcontext = SSLContext.getInstance("TLS");
-            sslcontext.init(null,
-                            new TrustManager[] { new DummyTrustManager()},
-                            null);
+            sslcontext.init(null, new TrustManager[] { new CustomTrustManager() }, null);
             factory = sslcontext.getSocketFactory();
         } catch(Exception ex) {
             // Use System.out here instead of Log4j, since this class is likely
@@ -50,7 +46,7 @@ public class DummySSLSocketFactory extends SSLSocketFactory {
     }
     
     public static SocketFactory getDefault() {
-        return new DummySSLSocketFactory();
+        return new CustomSSLSocketFactory();
     }
     
     public Socket createSocket(Socket socket, String s, int i, boolean flag) throws IOException {
