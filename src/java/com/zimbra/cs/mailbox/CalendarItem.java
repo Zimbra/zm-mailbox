@@ -87,6 +87,11 @@ import com.zimbra.common.util.LogFactory;
  */
 public abstract class CalendarItem extends MailItem {
 
+    // these are special values indexed in the L_FIELD structured index field, they allow us to 
+    // restrict lucene searches keyed off of public/private settings
+    public static final String INDEX_FIELD_ITEM_CLASS_PUBLIC = "_CalendarItemClass:public"; 
+    public static final String INDEX_FIELD_ITEM_CLASS_PRIVATE = "_CalendarItemClass:private"; 
+    
     static Log sLog = LogFactory.getLog(CalendarItem.class);
 
     private String mUid;
@@ -214,6 +219,16 @@ public abstract class CalendarItem extends MailItem {
             } catch(MessagingException e) {
                 throw ServiceException.FAILURE("Failure Indexing: " + toString(), e);
             }
+        }
+        
+        // set the "public" flag in the index for this appointment
+        String itemClass;
+        if (this.isPublic())
+            itemClass = INDEX_FIELD_ITEM_CLASS_PUBLIC;
+        else
+            itemClass = INDEX_FIELD_ITEM_CLASS_PRIVATE;
+        for (org.apache.lucene.document.Document doc : toRet) {
+            doc.add(new Field(LuceneFields.L_FIELD, itemClass, Field.Store.NO, Field.Index.TOKENIZED));
         }
         
         return toRet;

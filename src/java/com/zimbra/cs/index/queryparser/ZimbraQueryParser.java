@@ -158,6 +158,12 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
                       } } );
     }
 
+    public ZimbraQuery.BaseQuery GetFieldQuery(int modifier, int target, String targetImg, String tok) throws ParseException, ServiceException, MailServiceException
+    {
+        return ZimbraQuery.FieldQuery.Create(mMailbox, mAnalyzer, modifier,target,targetImg, tok);
+    }
+
+
     public ZimbraQuery.BaseQuery GetQuery(int modifier, int target, String tok) throws ParseException, ServiceException, MailServiceException
     {
         switch(target) {
@@ -531,21 +537,20 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
 
 /***
  *
- * special date target (because dates allow starting - (minus) signs, and we don't want to interpret those as a NOT, like
- * we do in other cases
+ * Like Rhs_Text but allows field parameter for field:
  *
  **/
-  final public ZimbraQuery.BaseQuery Rhs_Date(int target) throws ParseException, ServiceException {
+  final public ZimbraQuery.BaseQuery Rhs_Field(int target, String img) throws ParseException, ServiceException {
     ArrayList clauses = new ArrayList();
-    Token t,u;
+    Token t;
     int modifier = 0;
     ZimbraQuery.BaseQuery clause = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case LPAREN:
       jj_consume_token(LPAREN);
-      modifier = DateModifier();
-      clause = Rhs_Date(target);
-                                                                   if (modifier == NOT_TOKEN) { clause.setModifier(MINUS); } AddClause(clauses,clause);
+      modifier = Modifier();
+      clause = Rhs_Field(target, img);
+                                                                     clause.setModifier(modifier);  AddClause(clauses,clause);
       label_3:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -562,6 +567,73 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
         default:
           jj_la1[11] = jj_gen;
           break label_3;
+        }
+        clause = Conjunction();
+                                   AddClause(clauses,clause);
+        modifier = Modifier();
+        clause = Rhs_Field(target, img);
+                                                                clause.setModifier(modifier); AddClause(clauses,clause);
+      }
+      jj_consume_token(RPAREN);
+                   {if (true) return new ZimbraQuery.SubQuery(mAnalyzer, 0,clauses);}
+      break;
+    case TEXT_TOK:
+    case QUOTED_TOK:
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case TEXT_TOK:
+        t = jj_consume_token(TEXT_TOK);
+        break;
+      case QUOTED_TOK:
+        t = jj_consume_token(QUOTED_TOK);
+        break;
+      default:
+        jj_la1[12] = jj_gen;
+        jj_consume_token(-1);
+        throw new ParseException();
+      }
+                                       {if (true) return GetFieldQuery(modifier, target, img, t.image);}
+      break;
+    default:
+      jj_la1[13] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+/***
+ *
+ * special date target (because dates allow starting - (minus) signs, and we don't want to interpret those as a NOT, like
+ * we do in other cases
+ *
+ **/
+  final public ZimbraQuery.BaseQuery Rhs_Date(int target) throws ParseException, ServiceException {
+    ArrayList clauses = new ArrayList();
+    Token t,u;
+    int modifier = 0;
+    ZimbraQuery.BaseQuery clause = null;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case LPAREN:
+      jj_consume_token(LPAREN);
+      modifier = DateModifier();
+      clause = Rhs_Date(target);
+                                                                   if (modifier == NOT_TOKEN) { clause.setModifier(MINUS); } AddClause(clauses,clause);
+      label_4:
+      while (true) {
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case AND_TOKEN:
+        case OR_TOKEN:
+        case NOT_TOKEN:
+        case LPAREN:
+        case PLUS:
+        case MINUS:
+        case TEXT_TOK:
+        case QUOTED_TOK:
+          ;
+          break;
+        default:
+          jj_la1[14] = jj_gen;
+          break label_4;
         }
         clause = Conjunction();
                                    AddClause(clauses,clause);
@@ -582,7 +654,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
         u = jj_consume_token(PLUS);
         break;
       default:
-        jj_la1[12] = jj_gen;
+        jj_la1[15] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -594,7 +666,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
         t = jj_consume_token(QUOTED_TOK);
         break;
       default:
-        jj_la1[13] = jj_gen;
+        jj_la1[16] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -610,14 +682,14 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
         t = jj_consume_token(QUOTED_TOK);
         break;
       default:
-        jj_la1[14] = jj_gen;
+        jj_la1[17] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
                                        {if (true) return GetQuery(0, target, t.image);}
       break;
     default:
-      jj_la1[15] = jj_gen;
+      jj_la1[18] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -640,6 +712,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
       jj_consume_token(RPAREN);
                                        {if (true) return new ZimbraQuery.SubQuery(mAnalyzer, 0, subExp);}
       break;
+    case TEXT_TOK:
     case CONTENT:
     case SUBJECT:
     case MSGID:
@@ -690,7 +763,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
     case COMPANY:
     case METADATA:
     case ITEM:
-    case TEXT_TOK:
+    case FIELD:
     case QUOTED_TOK:
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case CONTENT:
@@ -847,11 +920,15 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
           t = jj_consume_token(MODSEQ);
           break;
         default:
-          jj_la1[16] = jj_gen;
+          jj_la1[19] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
         q = Rhs_Text(t.kind);
+        break;
+      case FIELD:
+        t = jj_consume_token(FIELD);
+        q = Rhs_Field(t.kind, t.image);
         break;
       case ITEM:
         t = jj_consume_token(ITEM);
@@ -903,7 +980,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
           t = jj_consume_token(APPT_END);
           break;
         default:
-          jj_la1[17] = jj_gen;
+          jj_la1[20] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
@@ -919,21 +996,21 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
           t = jj_consume_token(QUOTED_TOK);
           break;
         default:
-          jj_la1[18] = jj_gen;
+          jj_la1[21] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
                                           {if (true) return GetQuery(0,mDefaultField,t.image);}
         break;
       default:
-        jj_la1[19] = jj_gen;
+        jj_la1[22] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
        {if (true) return q;}
       break;
     default:
-      jj_la1[20] = jj_gen;
+      jj_la1[23] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -949,13 +1026,16 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
     clause = Clause();
     SortBy();
                                                             if (clause != null) { clause.setModifier(modifier); AddClause(clauses,clause); }
-    label_4:
+    label_5:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case AND_TOKEN:
       case OR_TOKEN:
       case NOT_TOKEN:
       case LPAREN:
+      case PLUS:
+      case MINUS:
+      case TEXT_TOK:
       case CONTENT:
       case SUBJECT:
       case MSGID:
@@ -1006,15 +1086,13 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
       case COMPANY:
       case METADATA:
       case ITEM:
-      case PLUS:
-      case MINUS:
-      case TEXT_TOK:
+      case FIELD:
       case QUOTED_TOK:
         ;
         break;
       default:
-        jj_la1[21] = jj_gen;
-        break label_4;
+        jj_la1[24] = jj_gen;
+        break label_5;
       }
       clause = Conjunction();
                                AddClause(clauses,clause);
@@ -1033,22 +1111,22 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
     clauses = Query();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case 0:
-    case 75:
+    case 78:
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 75:
-        jj_consume_token(75);
+      case 78:
+        jj_consume_token(78);
         break;
       case 0:
         jj_consume_token(0);
         break;
       default:
-        jj_la1[22] = jj_gen;
+        jj_la1[25] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
       break;
     default:
-      jj_la1[23] = jj_gen;
+      jj_la1[26] = jj_gen;
       ;
     }
         {if (true) return clauses;}
@@ -1060,7 +1138,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
   public Token token, jj_nt;
   private int jj_ntk;
   private int jj_gen;
-  final private int[] jj_la1 = new int[24];
+  final private int[] jj_la1 = new int[27];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
   static private int[] jj_la1_2;
@@ -1070,13 +1148,13 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
       jj_la1_2();
    }
    private static void jj_la1_0() {
-      jj_la1_0 = new int[] {0x60,0x80,0x80,0x0,0x0,0x1e0,0x0,0x100,0x1e0,0x0,0x100,0x1e0,0x0,0x0,0x0,0x100,0xfffffc00,0x0,0x0,0xfffffc00,0xfffffd00,0xfffffde0,0x1,0x1,};
+      jj_la1_0 = new int[] {0x60,0xc80,0x80,0x0,0x0,0x1de0,0x1000,0x1100,0x1de0,0x1000,0x1100,0x1de0,0x1000,0x1100,0x1de0,0xc00,0x1000,0x1000,0x1d00,0xffff8000,0x0,0x1000,0xffff9000,0xffff9100,0xffff9de0,0x1,0x1,};
    }
    private static void jj_la1_1() {
-      jj_la1_1 = new int[] {0x0,0x0,0x0,0xc0000000,0xc0000000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1f0ff980,0xf0007f,0x0,0x3ffff9ff,0x3ffff9ff,0x3ffff9ff,0x0,0x0,};
+      jj_la1_1 = new int[] {0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0xe1ff301f,0x1e000fe0,0x0,0xffff3fff,0xffff3fff,0xffff3fff,0x0,0x0,};
    }
    private static void jj_la1_2() {
-      jj_la1_2 = new int[] {0x0,0x3,0x0,0x0,0x0,0x407,0x404,0x404,0x487,0x484,0x484,0x407,0x3,0x404,0x404,0x407,0x0,0x0,0x404,0x404,0x404,0x407,0x800,0x800,};
+      jj_la1_2 = new int[] {0x0,0x0,0x0,0x18,0x18,0x2000,0x2000,0x2000,0x2400,0x2400,0x2400,0x2000,0x2000,0x2000,0x2000,0x0,0x2000,0x2000,0x2000,0x3,0x0,0x2000,0x2027,0x2027,0x2027,0x4000,0x4000,};
    }
 
   public ZimbraQueryParser(java.io.InputStream stream) {
@@ -1088,7 +1166,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 24; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 27; i++) jj_la1[i] = -1;
   }
 
   public void ReInit(java.io.InputStream stream) {
@@ -1100,7 +1178,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 24; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 27; i++) jj_la1[i] = -1;
   }
 
   public ZimbraQueryParser(java.io.Reader stream) {
@@ -1109,7 +1187,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 24; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 27; i++) jj_la1[i] = -1;
   }
 
   public void ReInit(java.io.Reader stream) {
@@ -1118,7 +1196,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 24; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 27; i++) jj_la1[i] = -1;
   }
 
   public ZimbraQueryParser(ZimbraQueryParserTokenManager tm) {
@@ -1126,7 +1204,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 24; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 27; i++) jj_la1[i] = -1;
   }
 
   public void ReInit(ZimbraQueryParserTokenManager tm) {
@@ -1134,7 +1212,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 24; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 27; i++) jj_la1[i] = -1;
   }
 
   final private Token jj_consume_token(int kind) throws ParseException {
@@ -1181,15 +1259,15 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
 
   public ParseException generateParseException() {
     jj_expentries.removeAllElements();
-    boolean[] la1tokens = new boolean[76];
-    for (int i = 0; i < 76; i++) {
+    boolean[] la1tokens = new boolean[79];
+    for (int i = 0; i < 79; i++) {
       la1tokens[i] = false;
     }
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 24; i++) {
+    for (int i = 0; i < 27; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {
@@ -1204,7 +1282,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
         }
       }
     }
-    for (int i = 0; i < 76; i++) {
+    for (int i = 0; i < 79; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;

@@ -1950,15 +1950,17 @@ public final class MailboxIndex
                 int indexId = contact.getIndexId();
                 
                 StringBuffer contentText = new StringBuffer();
-                Map m = contact.getFields();
-                for (Iterator it = m.values().iterator(); it.hasNext(); )
-                {
-                    String cur = (String)it.next();
-
-                    contentText.append(cur);
-                    contentText.append(' ');
+                StringBuffer fieldText = new StringBuffer();
+                
+                Map<String, String> m = contact.getFields();
+                for (Map.Entry<String, String> entry : m.entrySet()) {
+                    contentText.append(entry.getValue()).append(' ');
+                    
+                    String fieldTextToAdd = entry.getKey() + ":" + entry.getValue() + "\n";
+//                    fieldText.append(entry.getKey()).append(':').append(entry.getValue()).append('\n');
+                    fieldText.append(fieldTextToAdd);
                 }
-
+                
                 Document doc = new Document();
 
                 StringBuilder searchText = new StringBuilder();
@@ -1988,6 +1990,9 @@ public final class MailboxIndex
                 doc.add(new Field(LuceneFields.L_CONTENT, contentText.toString(), Field.Store.NO, Field.Index.TOKENIZED));
                 doc.add(new Field(LuceneFields.L_H_SUBJECT, contact.getSubject(), Field.Store.NO, Field.Index.TOKENIZED));
                 doc.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_CONTACT, Field.Store.YES, Field.Index.UN_TOKENIZED));
+                
+                /* add key:value pairs to the structured FIELD lucene field */
+                doc.add(new Field(LuceneFields.L_FIELD, fieldText.toString(), Field.Store.NO, Field.Index.TOKENIZED));
                 
                 addDocument(redo, doc, indexId, contact.getDate(), contact, deleteFirst);
 

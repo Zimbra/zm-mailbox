@@ -44,11 +44,14 @@ Tim's short-short summary of the query grammar as of now (updated)
 *   conv-end:{DATE}
    author:{TEXT}
    title:{TEXT}
-   keywords: {TEXT}
-   company: {TEXT}
-   metadata: {TEXT}
-   contact: {TEXT}  // special-case searching for contact picker (matches type=contact documents only)
-   msgid: {TEXT}   // Message-Id: field from mime header 
+   keywords:{TEXT}
+   company:{TEXT}
+   metadata:{TEXT}
+   contact:{TEXT}  // special-case searching for contact picker (matches type=contact documents only)
+   msgid:{TEXT}   // Message-Id: field from mime header
+
+   // Structured-Data search operator (see below):
+   field[FIELDNAME]:{TEXT} or #FIELDNAME:{TEXT}
    
    sort:(score|dateasc|datedesc|subjasc|subjdesc|nameasc|namedesc)
       -- overrides the sort field specified in the <SearchRequest> 
@@ -264,4 +267,27 @@ other-mime-specific fields
    
    do we want to try and promote certain fields that we can share between mulitple types? (title, author, keywords)
 
+
+
+   
+Structured-Data Searching
+--------------------------------
+Search/Indexing now has the ability to analyze and store data in
+Name-Value pairs in such a way that they can be searched for in a
+structured way by the query language.
+
+For example, Contact name-value pairs are indexed this way.
+
+Structured data is stored in the "l.field" lucene field, and it should be added to the index document in a format like this: 
+      "fieldOne:value1 value2 value3 value4\nFieldTwo:value2 value3 value4"
+      
+The search language has been extended to allow field searches to be expressed like this:
+     #FieldName:value
+     
+For example, to find a contact with the last name "Davis" you would use a search query like:
+     #lastname:davis
+OR
+     FIELD[lastname]:davis
+     
+     
 

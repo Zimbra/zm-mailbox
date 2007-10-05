@@ -26,6 +26,7 @@ package com.zimbra.cs.index;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -159,6 +160,11 @@ public class ZimbraAnalyzer extends StandardAnalyzer
         if (fieldName.equals(LuceneFields.L_H_MESSAGE_ID))
             return new DontTokenizer(reader);
         
+        if (fieldName.equals(LuceneFields.L_FIELD))
+            return new FieldTokenStream(reader);
+            
+            
+        
         if (fieldName.equals(LuceneFields.L_ATTACHMENTS) ||
                     fieldName.equals(LuceneFields.L_MIMETYPE)) 
         {
@@ -178,6 +184,167 @@ public class ZimbraAnalyzer extends StandardAnalyzer
         } else {
             return super.tokenStream(fieldName, reader);
         }
+    }
+    
+    
+    /**
+     * Special Analyzer for structured-data field (see LuceneFields.L_FIELD )
+     *
+     *  "fieldname=Val1 val2 val3" becomes  "fieldname:Val1 fieldname:val2 fieldname:val3"
+     *  
+     */
+    protected static class FieldTokenStream extends Tokenizer {
+        
+        int mOffset = 0;
+        String mFieldName = null;
+        List<org.apache.lucene.analysis.Token> mValues = new ArrayList<org.apache.lucene.analysis.Token>();
+        protected static final char FIELD_SEPARATOR = ':';
+        protected static final char EOL = '\n';
+        
+        public FieldTokenStream(Reader r) { 
+            super(r);
+        }
+        
+        protected boolean isWhitespace(char ch) {
+            switch (ch) {
+                case ' ':
+                case '\t':
+                    return true;
+            }
+            return false;
+        }
+        
+        protected String stripFieldName(String fieldName) {
+            return fieldName;
+        }
+        
+        protected String stripValue(String fieldName, String value) {
+            return value;
+        }
+
+        /* @see org.apache.lucene.analysis.TokenStream#next() */
+        @Override
+        public Token next() throws IOException {
+            LOOP: while  (mValues.size() == 0 || mFieldName == null || mFieldName.length() == 0)
+                if (!bufferNextLine()) {
+                    if (mValues.size() == 0)
+                        return null; // done
+                    else 
+                        break LOOP; //out of while
+                }
+            
+            return mValues.remove(0);
+        }
+        
+        protected void addCharToValue(StringBuilder val, char ch) {
+            if (ch == ':')
+                return;
+            if (!Character.isISOControl(ch))
+                val.append(Character.toLowerCase(ch));
+        }
+        
+        protected void addCharToFieldName(StringBuilder val, char ch) {
+            if (ch == ':')
+                return;
+            if (!Character.isISOControl(ch))
+                val.append(Character.toLowerCase(ch));
+        }
+        
+        protected void addToken(String curWord, int wordStart, int wordEnd) {
+            if (mFieldName.length() > 0) {
+                String toAdd = stripValue(mFieldName, curWord.toString());
+                if (toAdd.length() > 0) {
+                    mValues.add(new org.apache.lucene.analysis.Token(mFieldName+":"+toAdd, wordStart, wordEnd));
+                }
+            }
+        }
+        
+        /**
+         * @return FALSE at EOF for input
+         */
+        protected boolean bufferNextLine() {
+            //
+            // 1) fieldName=null
+            // 2) get next char
+            // 3) if find '='
+            //       - save fieldName
+            //       - goto 6
+            // 3.5) if find EOL
+            //       - no values, goto END
+            // 4) buffer char in fieldName
+            // 5) goto 2
+            // 6) curWord = null
+            // 7) get next char
+            // 8) if find whitespace then 
+            //       - save fieldName:curWord pair if not empty
+            //       - curWord = null
+            //       - goto 7
+            // 9) if find EOL then
+            //       - save fieldName:curWord pair if not empty
+            //       - goto END
+            //10) save char in curWord
+            //11) goto 7
+            //
+            //
+            int c = 0;
+            
+            mFieldName = null;
+            mValues.clear();
+            
+            try {
+                // 1-5
+                StringBuilder fieldName = new StringBuilder();
+                while (mFieldName == null && (c = input.read()) >= 0) {
+                    mOffset++;
+                    char ch = (char)c;
+                    if (ch == FIELD_SEPARATOR) {
+                        mFieldName = stripFieldName(fieldName.toString());  
+                    } else if (ch == '\n') {
+                        return true;
+                    }
+                    addCharToFieldName(fieldName, ch);
+                }
+                
+                assert(mFieldName != null);
+                
+                if (c < 0)
+                    return false; // EOL
+                
+                StringBuilder curWord = new StringBuilder();
+                int wordStart = mOffset;
+                
+                // 7 - 11
+                while(true) {
+                    c = input.read();
+                    mOffset++;
+                    
+                    // at EOF?  Finish current word if one exists...
+                    if (c < 0) {
+                        addToken(curWord.toString(), wordStart, mOffset);
+                        return false;
+                    }
+
+                    char ch = (char)c;
+                    if (isWhitespace(ch)) {
+                        addToken(curWord.toString(), wordStart, mOffset);
+                        curWord = new StringBuilder();                        
+                    } else if (ch == EOL) {
+                        addToken(curWord.toString(), wordStart, mOffset);
+                        return true;
+                    } else {
+                        addCharToValue(curWord, ch);
+                    }
+                }
+                
+                // notreached
+                
+            } catch (IOException e) {
+                mFieldName = null;
+                mValues.clear();
+                return false;
+            }
+        }
+        
     }
 
     /**
@@ -307,6 +474,11 @@ public class ZimbraAnalyzer extends StandardAnalyzer
     }
 
 
+    /**
+     * Handles situations where a single string needs to be inserted multiple times
+     * into the index -- e.g. "text/plain" gets inserted as "text/plain" and "text" and "plain",
+     * "foo@bar.com" as "foo@bar.com" and "foo" and "@bar.com"
+     */
     public static abstract class MultiTokenFilter extends TokenFilter{
         MultiTokenFilter(TokenStream in) {
             super(in);
@@ -715,6 +887,25 @@ public class ZimbraAnalyzer extends StandardAnalyzer
                 }
             } while(tok != null);
         }
+        
+        {
+            str = "test1:val1 val2 val3    val4-test\t  val5" +
+            		"\r\n#test2:2val1 2val2:_123 2val3\ntest3:zzz\n#calendarItemClass:public";
+            System.out.println("\nFieldTokenStream:\n-------------------------");
+            StringReader reader = new StringReader(str);
+            TokenStream filter1 = la.tokenStream(LuceneFields.L_FIELD, reader);
+
+//          int  i = 1;
+            Token tok = null;
+            do {
+                try {
+                    tok = filter1.next();
+                } catch (IOException e) {}
+                if (tok!=null) {
+                    System.out.println("    "+tok.termText());
+                }
+            } while(tok != null);
+        }        
 
     }
 }

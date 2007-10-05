@@ -9,69 +9,72 @@ public interface ZimbraQueryParserConstants {
   int NOT_TOKEN = 7;
   int LPAREN = 8;
   int RPAREN = 9;
-  int CONTENT = 10;
-  int SUBJECT = 11;
-  int MSGID = 12;
-  int ENVTO = 13;
-  int ENVFROM = 14;
-  int CONTACT = 15;
-  int TO = 16;
-  int FROM = 17;
-  int CC = 18;
-  int TOFROM = 19;
-  int TOCC = 20;
-  int FROMCC = 21;
-  int TOFROMCC = 22;
-  int IN = 23;
-  int UNDER = 24;
-  int INID = 25;
-  int UNDERID = 26;
-  int HAS = 27;
-  int FILENAME = 28;
-  int TYPE = 29;
-  int ATTACHMENT = 30;
-  int IS = 31;
-  int DATE = 32;
-  int DAY = 33;
-  int WEEK = 34;
-  int MONTH = 35;
-  int YEAR = 36;
-  int AFTER = 37;
-  int BEFORE = 38;
-  int SIZE = 39;
-  int BIGGER = 40;
-  int BIGGER_STR = 41;
-  int LARGER = 42;
-  int SMALLER = 43;
-  int TAG = 44;
-  int MESSAGE = 45;
-  int MY = 46;
-  int MODSEQ = 47;
-  int CONV = 48;
-  int CONV_COUNT = 49;
-  int CONV_MINM = 50;
-  int CONV_MAXM = 51;
-  int CONV_START = 52;
-  int CONV_END = 53;
-  int APPT_START = 54;
-  int APPT_END = 55;
-  int AUTHOR = 56;
-  int TITLE = 57;
-  int KEYWORDS = 58;
-  int COMPANY = 59;
-  int METADATA = 60;
-  int ITEM = 61;
-  int SORTBY = 62;
-  int SORT = 63;
-  int PLUS = 64;
-  int MINUS = 65;
-  int TEXT_TOK = 66;
-  int INITIAL_TERM_CHAR = 67;
-  int SUBSEQUENT_TERM_CHAR = 68;
-  int ERROR_BRACES_WITH_NEWLINE = 70;
-  int BRACES_TOK = 71;
-  int ERROR_QUOTE_WITH_NEWLINE = 73;
-  int QUOTED_TOK = 74;
+  int PLUS = 10;
+  int MINUS = 11;
+  int TEXT_TOK = 12;
+  int INITIAL_TERM_CHAR = 13;
+  int SUBSEQUENT_TERM_CHAR = 14;
+  int CONTENT = 15;
+  int SUBJECT = 16;
+  int MSGID = 17;
+  int ENVTO = 18;
+  int ENVFROM = 19;
+  int CONTACT = 20;
+  int TO = 21;
+  int FROM = 22;
+  int CC = 23;
+  int TOFROM = 24;
+  int TOCC = 25;
+  int FROMCC = 26;
+  int TOFROMCC = 27;
+  int IN = 28;
+  int UNDER = 29;
+  int INID = 30;
+  int UNDERID = 31;
+  int HAS = 32;
+  int FILENAME = 33;
+  int TYPE = 34;
+  int ATTACHMENT = 35;
+  int IS = 36;
+  int DATE = 37;
+  int DAY = 38;
+  int WEEK = 39;
+  int MONTH = 40;
+  int YEAR = 41;
+  int AFTER = 42;
+  int BEFORE = 43;
+  int SIZE = 44;
+  int BIGGER = 45;
+  int BIGGER_STR = 46;
+  int LARGER = 47;
+  int SMALLER = 48;
+  int TAG = 49;
+  int MESSAGE = 50;
+  int MY = 51;
+  int MODSEQ = 52;
+  int CONV = 53;
+  int CONV_COUNT = 54;
+  int CONV_MINM = 55;
+  int CONV_MAXM = 56;
+  int CONV_START = 57;
+  int CONV_END = 58;
+  int APPT_START = 59;
+  int APPT_END = 60;
+  int AUTHOR = 61;
+  int TITLE = 62;
+  int KEYWORDS = 63;
+  int COMPANY = 64;
+  int METADATA = 65;
+  int ITEM = 66;
+  int SORTBY = 67;
+  int SORT = 68;
+  int FIELD = 69;
+  int FIELD1 = 70;
+  int FIELD2 = 71;
+  int ERROR_BRACES_WITH_NEWLINE = 73;
+  int BRACES_TOK = 74;
+  int ERROR_QUOTE_WITH_NEWLINE = 76;
+  int QUOTED_TOK = 77;
 
   int DEFAULT = 0;
   int BRACES_STATE = 1;
@@ -88,6 +91,11 @@ public interface ZimbraQueryParserConstants {
     "<NOT_TOKEN>",
     "\"(\"",
     "\")\"",
+    "\"+\"",
+    "\"-\"",
+    "<TEXT_TOK>",
+    "<INITIAL_TERM_CHAR>",
+    "<SUBSEQUENT_TERM_CHAR>",
     "\"content:\"",
     "\"subject:\"",
     "\"msgid:\"",
@@ -142,11 +150,9 @@ public interface ZimbraQueryParserConstants {
     "\"item:\"",
     "\"sortby:\"",
     "\"sort:\"",
-    "\"+\"",
-    "\"-\"",
-    "<TEXT_TOK>",
-    "<INITIAL_TERM_CHAR>",
-    "<SUBSEQUENT_TERM_CHAR>",
+    "<FIELD>",
+    "<FIELD1>",
+    "<FIELD2>",
     "\"}\"",
     "<ERROR_BRACES_WITH_NEWLINE>",
     "<BRACES_TOK>",

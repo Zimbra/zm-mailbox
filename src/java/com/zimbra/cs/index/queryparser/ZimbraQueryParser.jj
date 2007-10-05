@@ -186,6 +186,12 @@ public final class ZimbraQueryParser {
                           return ZimbraQuery.MeQuery.create(mbx, analyze, modifier, ZimbraQuery.ADDR_BITMASK_TO | ZimbraQuery.ADDR_BITMASK_FROM | ZimbraQuery.ADDR_BITMASK_CC);
                       } } );
     }
+    
+    public ZimbraQuery.BaseQuery GetFieldQuery(int modifier, int target, String targetImg, String tok) throws ParseException, ServiceException, MailServiceException
+    {
+        return ZimbraQuery.FieldQuery.Create(mMailbox, mAnalyzer, modifier,target,targetImg, tok);
+    }
+    
 
     public ZimbraQuery.BaseQuery GetQuery(int modifier, int target, String tok) throws ParseException, ServiceException, MailServiceException
     {
@@ -368,6 +374,16 @@ PARSER_END(ZimbraQueryParser)
 
 <DEFAULT>TOKEN :
 {
+    <PLUS: "+">
+ |  <MINUS: "-">
+ |  <TEXT_TOK:  <INITIAL_TERM_CHAR> (<SUBSEQUENT_TERM_CHAR>)*>
+ |  <#INITIAL_TERM_CHAR: ~["{", "}", " ", "\t", "\n", "\r", ":", "+", "-", "\"", "(", ")"]>
+ |  <#SUBSEQUENT_TERM_CHAR:  <INITIAL_TERM_CHAR> | "-" | "+" | "@" >
+}
+
+
+<DEFAULT>TOKEN :
+{
    <CONTENT:   "content:"> 
 |  <SUBJECT:    "subject:">
 |  <MSGID:      "msgid:">
@@ -424,15 +440,9 @@ PARSER_END(ZimbraQueryParser)
 |  <ITEM:       "item:">
 |  <SORTBY:     "sortby:">
 |  <SORT:       "sort:">
-}
-
-<DEFAULT>TOKEN :
-{
-    <PLUS: "+">
- |  <MINUS: "-">
- |  <TEXT_TOK:  <INITIAL_TERM_CHAR> (<SUBSEQUENT_TERM_CHAR>)*>
- |  <#INITIAL_TERM_CHAR: ~["{", "}", " ", "\t", "\n", "\r", ":", "+", "-", "\"", "(", ")"]>
- |  <#SUBSEQUENT_TERM_CHAR:  <INITIAL_TERM_CHAR> | "-" | "+" | "@" >
+|  <FIELD: <FIELD1> | <FIELD2>>
+|  <#FIELD1:      "field" ("[" <INITIAL_TERM_CHAR> (<SUBSEQUENT_TERM_CHAR>)* "]")? ":">
+|  <#FIELD2:     "#" <INITIAL_TERM_CHAR> (<SUBSEQUENT_TERM_CHAR>)* ":">
 }
 
 <BRACES_STATE>SKIP:
@@ -562,6 +572,32 @@ ZimbraQuery.BaseQuery Rhs_Item(int target) throws ServiceException :
     |  (t=<TEXT_TOK>|t=<QUOTED_TOK>|t=<BRACES_TOK>) { return GetQuery(modifier, target, t.image); }
 }
 
+/***
+ *
+ * Like Rhs_Text but allows field parameter for field:
+ *
+ **/
+ZimbraQuery.BaseQuery Rhs_Field(int target, String img) throws ServiceException :
+{
+    ArrayList clauses = new ArrayList();
+    Token t;
+    int modifier = 0;
+    ZimbraQuery.BaseQuery clause = null;
+}
+{
+    (
+        <LPAREN> modifier=Modifier() clause=Rhs_Field(target, img) { clause.setModifier(modifier);  AddClause(clauses,clause); }
+        (
+            clause=Conjunction() { AddClause(clauses,clause); }
+            modifier=Modifier() clause=Rhs_Field(target, img) { clause.setModifier(modifier); AddClause(clauses,clause); }
+         )*
+        <RPAREN> { return new ZimbraQuery.SubQuery(mAnalyzer, 0,clauses); }
+    )   
+    
+    |  (t=<TEXT_TOK>|t=<QUOTED_TOK>) { return GetFieldQuery(modifier, target, img, t.image); }
+}
+
+
 
 /***
  *
@@ -616,7 +652,7 @@ ZimbraQuery.BaseQuery Clause() throws ServiceException :
 	  	      | t=<SIZE>|t=<BIGGER>|t=<SMALLER>|t=<MODSEQ>
            ) q = Rhs_Text(t.kind)
       
-      
+        | (t=<FIELD>) q = Rhs_Field(t.kind, t.image) 
         | (t=<ITEM>) q = Rhs_Item(t.kind)
         | (t=<DATE>|t=<DAY>|t=<MONTH>|t=<WEEK>|t=<YEAR>|t=<AFTER>|t=<BEFORE>|t=<CONV_START>|t=<CONV_END>|t=<APPT_START>|t=<APPT_END>) q = Rhs_Date(t.kind)
         | (t=<TEXT_TOK>|t=<QUOTED_TOK>) { return GetQuery(0,mDefaultField,t.image); }

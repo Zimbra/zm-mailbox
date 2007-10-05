@@ -1575,6 +1575,33 @@ public final class ZimbraQuery {
         }
     }
 
+    
+    public static class FieldQuery {
+        public static TextQuery Create(Mailbox mbox, Analyzer analyzer, int modifier, int qType, String targetImg, String text) throws ServiceException {
+            // targetImg can be:
+            //      field:
+            //      #something:
+            //      field[something]:
+            
+            int open = targetImg.indexOf('[');
+            if (open >= 0) { 
+                String fieldName = null;
+                int close = targetImg.indexOf(']');
+                if (close >= 0 && close > open) {
+                    fieldName = targetImg.substring(open+1, close);
+                    System.out.println("Field is: \""+fieldName+"\"");
+                }
+                text = fieldName + ":" + text;
+            } else {
+                if (targetImg.charAt(0) == '#') {
+                    String fieldName = targetImg.substring(1);
+                    text = fieldName + text;
+                }
+            }
+             
+            return new TextQuery(mbox, analyzer, modifier, qType, text);
+        }
+    }
     public static class TextQuery extends BaseQuery
     {
         private ArrayList<String> mTokens;
@@ -1681,11 +1708,13 @@ public final class ZimbraQuery {
 
             MailboxIndex mbidx = mbox.getMailboxIndex();
             if (mbidx != null) {
-                for (String token : mTokens) {
-                    List<SpellSuggestQueryInfo.Suggestion> suggestions = mbidx.suggestSpelling(QueryTypeString(qType), token);
-                    if (suggestions != null) 
-                        mQueryInfo.add(new SpellSuggestQueryInfo(token, suggestions));
-                }
+                // don't check spelling for structured-data searches
+                if (qType != ZimbraQueryParser.FIELD) 
+                    for (String token : mTokens) {
+                        List<SpellSuggestQueryInfo.Suggestion> suggestions = mbidx.suggestSpelling(QueryTypeString(qType), token);
+                        if (suggestions != null) 
+                            mQueryInfo.add(new SpellSuggestQueryInfo(token, suggestions));
+                    }
             }
         }
 
@@ -2013,6 +2042,7 @@ public final class ZimbraQuery {
             case ZimbraQueryParser.COMPANY:    return "COMPANY";
             case ZimbraQueryParser.METADATA:   return "METADATA";
             case ZimbraQueryParser.ITEM:       return "ITEMID";
+            case ZimbraQueryParser.FIELD:      return LuceneFields.L_FIELD;
         }
         return "UNKNOWN:(" + qType + ")";
     }

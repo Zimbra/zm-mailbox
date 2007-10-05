@@ -145,4 +145,6 @@ public class LuceneFields {
     /** Message-Id: */
     public static final String L_H_MESSAGE_ID = "msg_id";
     
+    /** field operator: structured data storage */
+    public static final String L_FIELD = "l.field";
 }
