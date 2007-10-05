@@ -335,50 +335,26 @@ public abstract class CalendarRequest extends MailDocumentHandler {
 
             ItemId msgId = null;
 
-//            String html = getOrigHtml(csd.mMm);
-//            if (html != null && html.indexOf("href=\"@@ACCEPT@@\"") >= 0) {
-//                try {
-//                    String localURL = ZimbraServlet.getURLForServer(Provisioning.getInstance().getLocalServer());
-//                    
-//                    Address[] addrs = csd.mMm.getAllRecipients();
-//                    for (int i = 0; i < addrs.length; i++) {
-//                        InternetAddress ia = (InternetAddress)addrs[i];
-//                        if (html != null) {
-//                            patchCalendarURLs(csd.mMm, html, 
-//                                    localURL,
-//                                    csd.mInvite.getOrganizer().getCalAddress().getSchemeSpecificPart(),
-//                                    csd.mInvite.getUid(),
-//                                    ia.getAddress(),
-//                                    ids[0]+"-"+ids[1]);
-//                        }
-//                        
-//                        Address[] sendAddrs = new Address[1];
-//                        sendAddrs[0] = ia;
-//                        csd.mMm.setRecipients(Message.RecipientType.TO, sendAddrs);
-//                        
-//                        msgId = sendMimeMessage(octxt, mbox, acct, saveFolderId, csd, csd.mMm, csd.mOrigId, csd.mReplyType, ignoreFailedAddresses);                  
-//                    }
-//                } catch (MessagingException e) { }
-//            } else {
+            int[] ids = null;
+            // First, update my own appointment.
+            if (updateOwnAppointment)
+                ids = mbox.addInvite(octxt, csd.mInvite, apptFolderId, false, pm);
+
+            // Next, notify any attendees.
             if (!csd.mDontNotifyAttendees)
                 msgId = mbox.getMailSender().sendMimeMessage(
                         octxt, mbox, csd.mMm, csd.newContacts, csd.uploads,
                         csd.mOrigId, csd.mReplyType, csd.mIdentityId, ignoreFailedAddresses, true);
-//            }
 
-            if (updateOwnAppointment) {
-                int[] ids = mbox.addInvite(octxt, csd.mInvite, apptFolderId, false, pm);
-    
-                if (response != null && ids != null) {
-                    ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
-                    String id = ifmt.formatItemId(ids[0]);
-                    response.addAttribute(MailConstants.A_CAL_ID, id);
-                    if (csd.mInvite.isEvent())
-                        response.addAttribute(MailConstants.A_APPT_ID_DEPRECATE_ME, id);  // for backward compat
-                    response.addAttribute(MailConstants.A_CAL_INV_ID, ifmt.formatItemId(ids[0], ids[1]));
-                    if (msgId != null)
-                        response.addUniqueElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ID, ifmt.formatItemId(msgId));
-                }
+            if (updateOwnAppointment && response != null && ids != null) {
+                ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
+                String id = ifmt.formatItemId(ids[0]);
+                response.addAttribute(MailConstants.A_CAL_ID, id);
+                if (csd.mInvite.isEvent())
+                    response.addAttribute(MailConstants.A_APPT_ID_DEPRECATE_ME, id);  // for backward compat
+                response.addAttribute(MailConstants.A_CAL_INV_ID, ifmt.formatItemId(ids[0], ids[1]));
+                if (msgId != null)
+                    response.addUniqueElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ID, ifmt.formatItemId(msgId));
             }
         }
         

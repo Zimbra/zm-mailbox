@@ -146,9 +146,9 @@ public class Invite {
         mPartStat = partStat;
         mRsvp = rsvp;
         mRecurrenceId = recurrenceId;
-        mDTStamp = dtstamp;
         mSeqNo = seqno;
-        
+        setDtStamp(dtstamp);
+
         mMailboxId = mailboxId;
         mMailItemId = mailItemId;
         mComponentNum = componentNum;
@@ -890,9 +890,7 @@ public class Invite {
     public RecurId getRecurId() { return mRecurrenceId; }
     public void setRecurId(RecurId rid) { mRecurrenceId = rid; }
     public boolean hasRecurId() { return mRecurrenceId != null; }
-    public long getDTStamp() { return mDTStamp; }
     public long getCompleted() { return mCompleted; }
-    public void setDtStamp(long stamp) { mDTStamp = stamp; }
     public void setCompleted(long completed) { mCompleted = completed; }
     public int getSeqNo() { return mSeqNo; }
     public void setSeqNo(int seqNo) { mSeqNo = seqNo; } 
@@ -906,6 +904,11 @@ public class Invite {
     public void setPriority(String prio) { mPriority = prio; }
     public String getPercentComplete() { return mPercentComplete; }
     public void setPercentComplete(String pct) { mPercentComplete = pct; }
+
+    public long getDTStamp() { return mDTStamp; }
+    public void setDtStamp(long stamp) {
+        mDTStamp = stamp / 1000 * 1000;  // IMPORTANT: Remove millis resolution. (bug 20641)
+    }
 
     public boolean isPublic() {
         return IcalXmlStrMap.CLASS_PUBLIC.equals(mClass);
