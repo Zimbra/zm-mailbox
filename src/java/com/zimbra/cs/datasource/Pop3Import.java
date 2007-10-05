@@ -38,6 +38,8 @@ import com.sun.mail.pop3.POP3Message;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.CustomSSLSocketFactory;
+import com.zimbra.common.util.DummySSLSocketFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -67,10 +69,18 @@ implements MailItemImport {
         Properties props = new Properties();
         props.setProperty("mail.pop3.connectiontimeout", Long.toString(TIMEOUT));
         props.setProperty("mail.pop3.timeout", Long.toString(TIMEOUT));
+        props.setProperty("mail.pop3s.connectiontimeout", Long.toString(TIMEOUT));
+        props.setProperty("mail.pop3s.timeout", Long.toString(TIMEOUT));    	
+		props.setProperty("mail.pop3s.socketFactory.class", CustomSSLSocketFactory.class.getName());
+        props.setProperty("mail.pop3s.socketFactory.fallback", "false");
         sSession = Session.getInstance(props);
         
-        props.put("mail.pop3.socketFactory.class", com.zimbra.common.util.DummySSLSocketFactory.class.getName());
-        sSelfSignedCertSession = Session.getInstance(props);
+        Properties sscProps = new Properties();
+        sscProps.setProperty("mail.pop3s.connectiontimeout", Long.toString(TIMEOUT));
+        sscProps.setProperty("mail.pop3s.timeout", Long.toString(TIMEOUT));    	
+        sscProps.setProperty("mail.pop3s.socketFactory.class", DummySSLSocketFactory.class.getName());
+        sscProps.setProperty("mail.pop3s.socketFactory.fallback", "false");
+        sSelfSignedCertSession = Session.getInstance(sscProps);
         
         UID_PROFILE = new FetchProfile();
         UID_PROFILE.add(UIDFolder.FetchProfileItem.UID);
