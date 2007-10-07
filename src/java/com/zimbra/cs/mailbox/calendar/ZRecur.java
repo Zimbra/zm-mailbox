@@ -510,8 +510,9 @@ public class ZRecur {
 
         if (rangeEndDate.before(earliestDate))
             return toRet;
-        
+
         GregorianCalendar cur = dtStart.getCalendarCopy();
+        int baseMonthDay = cur.get(Calendar.DAY_OF_MONTH);
         
         // until we hit rangeEnd, or we've SAVED count entries:
         //
@@ -703,8 +704,15 @@ public class ZRecur {
                     continue;
                 
                 addList.add((Calendar)(cur.clone()));
-                
+
+                Date d1 = cur.getTime();
+                cur.set(Calendar.DAY_OF_MONTH, 1);
+                Date d2 = cur.getTime();
                 cur.add(Calendar.MONTH, interval);
+                Date d3 = cur.getTime();
+                int daysInMonth = cur.getActualMaximum(Calendar.DAY_OF_MONTH);
+                cur.set(Calendar.DAY_OF_MONTH, Math.min(baseMonthDay, daysInMonth));
+                Date d4 = cur.getTime();
                 
                 addList = expandMonthDayList(addList);
                 addList = expandDayListForMonthlyYearly(addList);
@@ -1088,20 +1096,29 @@ public class ZRecur {
         
         for (Calendar cur : list) { 
             int curMonth = cur.get(Calendar.MONTH);
+            int lastMonthDay = cur.getActualMaximum(Calendar.DAY_OF_MONTH);
+            boolean seenLastMonthDay = false;
             for (Integer moday: mByMonthDayList) {
                 if (moday != 0) {
-                    if (moday > 0) 
+                    if (moday > 0) {
+                        if (moday >= lastMonthDay) {
+                            if (seenLastMonthDay)
+                                continue;
+                            seenLastMonthDay = true;
+                            moday = lastMonthDay;
+                        }
                         cur.set(Calendar.DAY_OF_MONTH, moday);
-                    else {
+                    } else {
+                        if (moday == -1) {
+                            if (seenLastMonthDay)
+                                continue;
+                            seenLastMonthDay = true;
+                        }
                         cur.set(Calendar.DAY_OF_MONTH, 1);
                         cur.roll(Calendar.DAY_OF_MONTH, moday);
                     }
-                    
-                    // unfortunately, cal.set seems to roll the month fwd if the
-                    // day is out of range (e.g. June 31) -- so check to see if that
-                    // happened, and if it did then we'll just skip this date
-                    if (cur.get(Calendar.MONTH) == curMonth)
-                        toRet.add((Calendar)(cur.clone()));
+                    assert(cur.get(Calendar.MONTH) == curMonth);
+                    toRet.add((Calendar)(cur.clone()));
                 }
             }
         }
