@@ -124,7 +124,7 @@ public class DataSourceManager {
      * Executes the data source's <code>MailItemImport</code> implementation
      * to import data in the current thread.
      */
-    public static void importData(Account account, DataSource ds) {
+    public static void importData(Account account, DataSource ds) throws ServiceException {
         ImportStatus importStatus = getImportStatus(account, ds);
         
         synchronized (importStatus) {
@@ -149,16 +149,13 @@ public class DataSourceManager {
             mii.importData(account, ds);
             ZimbraLog.datasource.info("Import completed.");
             success = true;
-        } catch (Throwable t) {
-            // Catch Throwable, so that we don't lose track of runtime exceptions 
-            if (t instanceof OutOfMemoryError) {
-                Zimbra.halt("DataSourceManager.importDataInternal()", t);
-            }
-            ZimbraLog.datasource.warn("Import failed", t);
-            error = t.getMessage();
+        } catch (ServiceException x) {
+            ZimbraLog.datasource.warn("Import failed", x);
+            error = x.getMessage();
             if (error == null) {
-                error = t.toString();
+                error = x.toString();
             }
+            throw x;
         } finally {
             synchronized (importStatus) {
                 importStatus.mSuccess = success;
