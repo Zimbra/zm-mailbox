@@ -535,11 +535,11 @@ public class LC {
                     " from the pool.");
         
         ldap_replication_password = new KnownKey("ldap_replication_password");
-        ldap_replication_password.setDefault("");
+        ldap_replication_password.setDefault("zmreplica");
         ldap_replication_password.setDoc("Password used by the syncrepl user to authenticate to the ldap master.");
         
         ldap_postfix_password = new KnownKey("ldap_postfix_password");
-        ldap_postfix_password.setDefault("");
+        ldap_postfix_password.setDefault("zmpostfix");
         ldap_postfix_password.setDoc("Password used by postfix to authenticate to ldap.");
         
         ldap_require_tls = new KnownKey("ldap_require_tls");
