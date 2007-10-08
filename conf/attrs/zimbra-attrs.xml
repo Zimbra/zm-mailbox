@@ -2587,7 +2587,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="545" name="zimbraReverseProxyDomainNameQuery" type="string" cardinality="single" optionalIn="globalConfig">
-  <globalConfigValue>(&amp;(zimbraVirtualHostname=${HOSTNAME})(objectClass=zimbraDomain))</globalConfigValue>
+  <globalConfigValue>(&amp;(zimbraVirtualIPAddress=${IPADDR})(objectClass=zimbraDomain))</globalConfigValue>
   <desc>LDAP query to find a domain</desc>
 </attr>
 
@@ -2667,6 +2667,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="561" name="zimbraPrefAutoSaveDraftInterval" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>30s</defaultCOSValue>
   <desc>time to wait before auto saving a draft(nnnnn[hmsd])</desc>
+</attr>
+
+<attr id="562" name="zimbraVirtualIPAddress" type="string" max="256" cardinality="multi" optionalIn="domain">
+  <desc>An virtual IP address for this domain, used to determine domain based on an IP address</desc>
 </attr>
 
 </attrs>
