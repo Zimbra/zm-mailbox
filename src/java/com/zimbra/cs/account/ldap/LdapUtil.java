@@ -1189,4 +1189,14 @@ public class LdapUtil {
         return (String)Rdn.unescapeValue(rdn);
     }
 
+    public static String formatMultipleMatchedEntries(SearchResult first, NamingEnumeration rest) throws NamingException {
+        StringBuffer dups = new StringBuffer();
+        dups.append("[" + first.getNameInNamespace() + "] ");
+        while (rest.hasMore()) {
+            SearchResult dup = (SearchResult) rest.next();
+            dups.append("[" + dup.getNameInNamespace() + "] ");
+        }
+        
+        return new String(dups);
+    }
  }

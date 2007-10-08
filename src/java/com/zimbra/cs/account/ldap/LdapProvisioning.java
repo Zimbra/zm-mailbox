@@ -446,7 +446,7 @@ public class LdapProvisioning extends Provisioning {
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 if (ne.hasMore()) {
-                    String dups = formatMultipleMatchedEntries(sr, ne);
+                    String dups = LdapUtil.formatMultipleMatchedEntries(sr, ne);
                     throw AccountServiceException.MULTIPLE_ACCOUNTS_MATCHED("getAccountByQuery: "+query+" returned multiple entries at "+dups);
                 }
                 ne.close();
@@ -1383,17 +1383,6 @@ public class LdapProvisioning extends Provisioning {
             LdapUtil.closeContext(ctxt);
         }
     }
-
-    private String formatMultipleMatchedEntries(SearchResult first, NamingEnumeration rest) throws NamingException {
-        StringBuffer dups = new StringBuffer();
-        dups.append("[" + first.getNameInNamespace() + "] ");
-        while (rest.hasMore()) {
-            SearchResult dup = (SearchResult) rest.next();
-            dups.append("[" + dup.getNameInNamespace() + "] ");
-        }
-        
-        return new String(dups);
-    }
     
     private LdapDomain getDomainByQuery(String query, DirContext initCtxt) throws ServiceException {
         DirContext ctxt = initCtxt;
@@ -1404,7 +1393,7 @@ public class LdapProvisioning extends Provisioning {
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 if (ne.hasMore()) {
-                    String dups = formatMultipleMatchedEntries(sr, ne);
+                    String dups = LdapUtil.formatMultipleMatchedEntries(sr, ne);
                     throw AccountServiceException.MULTIPLE_DOMAINS_MATCHED("getDomainByQuery: "+query+" returned multiple entries at "+dups);
                 }
                 ne.close();
