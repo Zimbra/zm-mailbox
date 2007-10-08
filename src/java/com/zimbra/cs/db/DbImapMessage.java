@@ -154,9 +154,9 @@ public class DbImapMessage {
             stmt.setInt(i++, imapFolder.getItemId());
             rs = stmt.executeQuery();
             while (rs.next()) {
-                long uid = rs.getLong("imap.uid");
-                int itemId = rs.getInt("imap.item_id");
-                int flags = rs.getInt("mi.flags");
+                long uid = rs.getLong("uid");
+                int itemId = rs.getInt("item_id");
+                int flags = rs.getInt("flags");
                 imapMessages.add(new ImapMessage(uid, itemId, flags));
             }
             rs.close();
