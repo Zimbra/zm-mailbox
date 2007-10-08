@@ -32,6 +32,7 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Account.CalendarUserType;
+import com.zimbra.cs.account.EntrySearchFilter.Term;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Alias;
@@ -3525,7 +3526,24 @@ public class LdapProvisioning extends Provisioning {
                 base = bs;
         }
         
-        return searchObjects(options.getQuery(), options.getReturnAttrs(), options.getSortAttr(), options.isSortAscending(), base, options.getFlags(), options.getMaxResults());
+        String query = options.getQuery();
+        
+        if (options.getConvertIDNToAscii() && query != null && query.length()>0) {
+            String asciiQuery = query;
+            try {
+                Term term = LdapFilterParser.parse(query); 
+                EntrySearchFilter filter = new EntrySearchFilter(term);
+                asciiQuery = LdapEntrySearchFilter.toLdapIDNFilter(filter);
+                ZimbraLog.account.debug("original query=[" + query + "], converted ascii query=[" + asciiQuery + "]");
+            } catch (ServiceException e) {
+                ZimbraLog.account.warn("unable to convert query to ascii, using original query: " + query, e);
+                asciiQuery = query;
+            }
+            query = asciiQuery;
+        }
+
+        
+        return searchObjects(query, options.getReturnAttrs(), options.getSortAttr(), options.isSortAscending(), base, options.getFlags(), options.getMaxResults());
     }
 
     @Override

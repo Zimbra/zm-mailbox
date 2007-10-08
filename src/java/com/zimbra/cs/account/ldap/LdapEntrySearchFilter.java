@@ -18,7 +18,10 @@
 package com.zimbra.cs.account.ldap;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.EntrySearchFilter;
+import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.EntrySearchFilter.Multi;
 import com.zimbra.cs.account.EntrySearchFilter.Operator;
@@ -64,7 +67,7 @@ public class LdapEntrySearchFilter {
             if (negation) mLdapFilter.append("(!");
 
             String attr = term.getLhs();
-            String val = LdapUtil.escapeSearchFilterArg(term.getRhs());
+            String val = getVal(term);
             if (op.equals(Operator.has)) {
                 mLdapFilter.append('(').append(attr);
                 mLdapFilter.append("=*").append(val).append("*)");
@@ -103,6 +106,27 @@ public class LdapEntrySearchFilter {
             if (term.getTerms().size() > 1) mLdapFilter.append(')');
             if (term.isNegation()) mLdapFilter.append(')');
         }
+        
+        protected String getVal(Single term) {
+            return LdapUtil.escapeSearchFilterArg(term.getRhs());
+        }
+    }
+    
+    private static class LdapQueryVisitorIDN extends LdapQueryVisitor implements Visitor {
+        protected String getVal(Single term) {
+            String rhs = term.getRhs();
+            
+            AttributeManager attrMgr = null;
+            try {
+                attrMgr = AttributeManager.getInstance();
+            } catch (ServiceException e) {
+                ZimbraLog.account.warn("failed to get AttributeManager instance", e);
+            }
+            if (attrMgr != null && attrMgr.isEmailOrIDN(term.getLhs()))
+                rhs = IDNUtil.toAscii(rhs);
+            
+            return rhs;
+        }
     }
 
     public static EntrySearchFilter sCalendarResourcesFilter;
@@ -115,12 +139,17 @@ public class LdapEntrySearchFilter {
         sCalendarResourcesFilter = new EntrySearchFilter(calResType);
     }
 
-    public static String toLdapFilter(EntrySearchFilter filter)
+    /*
+     * serialize EntrySearchFilter to LDAP filter string
+     */
+    public static String toLdapIDNFilter(EntrySearchFilter filter)
     throws ServiceException {
+        /*
         if (!filter.usesIndex())
             throw ServiceException.INVALID_REQUEST(
                     "Search referring to no indexed attribute is not allowed: " + filter.toString(), null);
-        LdapQueryVisitor visitor = new LdapQueryVisitor();
+        */
+        LdapQueryVisitor visitor = new LdapQueryVisitorIDN();
         filter.traverse(visitor);
         return visitor.getFilter();
     }

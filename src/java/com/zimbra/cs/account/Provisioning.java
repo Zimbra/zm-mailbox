@@ -1964,6 +1964,7 @@ public abstract class Provisioning {
         private boolean mSortAscending;
         private int mFlags;
         private int mMaxResults;
+        private boolean mConvertIDNToAscii;
         
 
         public Domain getDomain() {
@@ -2028,6 +2029,14 @@ public abstract class Provisioning {
 
         public void setMaxResults(int maxResults) {
             mMaxResults = maxResults;
+        }
+        
+        public boolean getConvertIDNToAscii() {
+            return mConvertIDNToAscii;
+        }
+        
+        public void setConvertIDNToAscii(boolean convertIDNToAscii) {
+            mConvertIDNToAscii = convertIDNToAscii;
         }
     }
 

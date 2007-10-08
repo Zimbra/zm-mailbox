@@ -63,6 +63,7 @@ class AccountSearchParams {
         mOptions.setReturnAttrs(mAttrs);
         mOptions.setSortAscending(mSortAscending);
         mOptions.setSortAttr(mSortBy);
+        mOptions.setConvertIDNToAscii(true);
     }
     
     public boolean equals(Object o) {
