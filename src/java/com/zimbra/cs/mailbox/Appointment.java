@@ -275,7 +275,7 @@ public class Appointment extends CalendarItem {
                             ICalTimeZone tz = invite.getStartTime().getTimeZone();
                             if (tz == null && invite.isAllDayEvent()) {
                                 // floating time: use resource's timezone
-                                tz = ICalTimeZone.getAccountTimeZone(account);
+                                tz = account.getTimeZone();
                                 if (tz == null)
                                     ICalTimeZone.getUTC();
                             } else {
@@ -284,10 +284,10 @@ public class Appointment extends CalendarItem {
                                     if (organizer != null) {
                                         // For this case, let's assume the sender didn't really mean UTC.
                                         // This happens with Outlook and possibly more clients.
-                                        tz = ICalTimeZone.getAccountTimeZone(organizer);
+                                        tz = organizer.getTimeZone();
                                     } else {
                                         // If organizer is not a local user, use resource's timezone.
-                                        tz = ICalTimeZone.getAccountTimeZone(account);
+                                        tz = account.getTimeZone();
                                         if (tz == null)
                                             ICalTimeZone.getUTC();
                                     }
