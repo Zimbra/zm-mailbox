@@ -50,6 +50,7 @@ import com.zimbra.cs.index.queryparser.Token;
 import com.zimbra.cs.index.queryparser.ZimbraQueryParser;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.index.queryparser.ZimbraQueryParserConstants;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -2485,7 +2486,7 @@ public final class ZimbraQuery {
      * @throws ServiceException
      * @throws IOException
      */
-    public ZimbraQueryResults execute(OperationContext octxt, SoapProtocol proto) throws ServiceException, IOException
+    final public ZimbraQueryResults execute(OperationContext octxt, SoapProtocol proto) throws ServiceException, IOException
     {
         // 
         // STEP 1: use the OperationContext to update the set of visible referenced folders, local AND remote
@@ -2495,27 +2496,15 @@ public final class ZimbraQuery {
             assert(mOp instanceof UnionQueryOperation || targets.countExplicitTargets() <=1);
             MailboxIndex mbidx = mMbox.getMailboxIndex();
 
-            if (targets.size() > 1) {
-                UnionQueryOperation union = (UnionQueryOperation)mOp;
-                mOp = union.runRemoteSearches(proto, mMbox, octxt, mbidx, mParams);
+            UnionQueryOperation union = null;
+            if (mOp instanceof UnionQueryOperation) { 
+                union = (UnionQueryOperation)mOp;
             } else {
-//                if (targets.hasExternalTargets()) {
-//                    RemoteQueryOperation remote = new RemoteQueryOperation();
-//                    remote.tryAddOredOperation(mOp);
-//                    SearchParams params = (SearchParams)mParams.clone();
-//                    params.setLimit(mChunkSize);
-//                    remote.setup(proto, octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges(), params);
-//                    mOp = remote;
-//                } else {
-                    // 1 local target...HACK: for now we'll temporarily wrap it in a UnionQueryOperation,
-                    // then call union.runRemoteSearches() --- that way we don't have to duplicate the
-                    // important code there (permissions checks).  FIXME!
-                    UnionQueryOperation union = new UnionQueryOperation();
-                    union.add(mOp);
-                    mOp = union.runRemoteSearches(proto, mMbox, octxt, mbidx, mParams);
-                    mOp = mOp.optimize(mMbox); // why is this here??
-                }
-//            }
+                union = new UnionQueryOperation();
+                union.add(mOp);
+            }
+            
+            mOp = handlePermissionChecks(union, proto, mMbox, octxt, mbidx, mParams);
         }
         
         //
@@ -2551,11 +2540,137 @@ public final class ZimbraQuery {
             return mResults;
         } else {
             mLog.debug("Operation optimized to nothing.  Returning no results");
+            return new EmptyQueryResults(mParams.getTypes(), mParams.getSortBy(), mParams.getMode());
         }
-
-        return new EmptyQueryResults(mParams.getTypes(), mParams.getSortBy(), mParams.getMode());
     }
+    
+    /**
+     * Callback -- adds a "-l.field:_calendaritemclass:private" term to all Lucene search parts: to exclude
+     *             text data from searches in private appointments 
+     */
+    private static final class excludePrivateCalendarItems implements QueryOperation.RecurseCallback {
+        public void recurseCallback(QueryOperation op) {
+            if (op instanceof LuceneQueryOperation) {
+                ((LuceneQueryOperation)op).addAndedClause(new TermQuery(new Term(LuceneFields.L_FIELD, CalendarItem.INDEX_FIELD_ITEM_CLASS_PRIVATE)), false);
+            }
+        }
+    }
+    
+    /**
+     * Go through the top-level query Union, look at the specific QueryTarget 
+     * (local or remote server) for each Op in the union, wrap the remote 
+     * targets in RemoteQueryOperations, and set them up.
+     *
+     * For the local targets, look at all the text-operations and figure 
+     * out if private appointments need to be excluded 
+     */
+    private static QueryOperation handlePermissionChecks(UnionQueryOperation union, SoapProtocol proto, Mailbox mbox, OperationContext octxt, MailboxIndex mbidx, SearchParams params) 
+    throws ServiceException, IOException {
 
+        boolean hasRemoteOps = false;
+        
+        Set<Folder> visibleFolders = mbox.getVisibleFolders(octxt);
+        
+        //
+        // Check to see if we need to filter out private appointment data
+        boolean allowPrivateAccess = true;
+        if (octxt != null) 
+            mbox.getAccount().allowPrivateAccess(octxt.getAuthenticatedUser());
+
+        // Since optimize() has already been run, we know that each of our ops
+        // only has one target (or none).  Find those operations which have
+        // an external target and wrap them in RemoteQueryOperations
+        for (int i = union.mQueryOperations.size()-1; i >= 0; i--) { // iterate backwards so we can remove/add w/o screwing iteration
+            QueryOperation op = union.mQueryOperations.get(i);
+
+            QueryTargetSet targets = op.getQueryTargets();
+            
+            // this assertion OK because we have already distributed multi-target query ops
+            // during the optimize() step
+            assert(targets.countExplicitTargets() <= 1);
+            
+            // the assertion above is critical: the code below all assumes
+            // that we only have ONE target (ie we've already distributed if necessary)
+
+            if (targets.hasExternalTargets()) {
+                union.mQueryOperations.remove(i);   
+
+                hasRemoteOps = true;
+                boolean foundOne = false;
+
+                // find a remoteOp to add this one to
+                for (QueryOperation tryIt : union.mQueryOperations) {
+                    if (tryIt instanceof RemoteQueryOperation) {
+                        if (((RemoteQueryOperation)tryIt).tryAddOredOperation(op)) {
+                            foundOne = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!foundOne) {
+                    RemoteQueryOperation remoteOp = new RemoteQueryOperation();
+                    remoteOp.tryAddOredOperation(op);
+                    union.mQueryOperations.add(i, remoteOp);
+                }
+            } else {
+                // local target
+                if (!allowPrivateAccess) 
+                    op.depthFirstRecurse(new excludePrivateCalendarItems());
+                
+                if (visibleFolders != null) {
+                    if (visibleFolders.size() == 0) {
+                        union.mQueryOperations.remove(i);
+                        ZimbraLog.index.debug("Query changed to NULL_QUERY_OPERATION, no visible folders");
+                        union.mQueryOperations.add(i, new NullQueryOperation());
+                    } else {
+                        union.mQueryOperations.remove(i);
+                        
+                        // build a "and (in:visible1 or in:visible2 or in:visible3...)" query tree here!
+                        IntersectionQueryOperation intersect = new IntersectionQueryOperation();
+                        intersect.addQueryOp(op);
+                        
+                        UnionQueryOperation newUnion = new UnionQueryOperation();
+                        intersect.addQueryOp(newUnion);
+                        
+                        for (Folder f : visibleFolders) {
+                            DBQueryOperation newOp = DBQueryOperation.Create();
+                            newUnion.add(newOp);
+                            newOp.addInClause(f, true);
+                        }
+                        
+                        union.mQueryOperations.add(i, intersect);
+                    }
+                }
+            }
+        }
+        
+        if (hasRemoteOps) {
+            // if we actually have remote operations, then we need to call setup() on each
+            for (QueryOperation toSetup : union.mQueryOperations) {
+                if (toSetup instanceof RemoteQueryOperation) {
+                    try {
+                        RemoteQueryOperation remote = (RemoteQueryOperation) toSetup;
+                        remote.setup(proto, octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges(), params);
+                    } catch(Exception e) {
+                        ZimbraLog.index.info("Ignoring "+e+" during RemoteQuery generation for "+union.toString());
+                    }
+                }
+            }
+        }
+        
+        assert(union.mQueryOperations.size() > 0);
+        
+        if (union.mQueryOperations.size() == 1) {
+            // this can happen if we replaced ALL of our operations with a single remote op...
+            return union.mQueryOperations.get(0).optimize(mbox);
+        }
+        
+        
+        return union.optimize(mbox);
+    }
+    
+    
     public String toString() {
         String ret = "ZQ:\n";
 

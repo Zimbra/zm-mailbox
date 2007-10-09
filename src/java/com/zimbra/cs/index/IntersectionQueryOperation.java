@@ -879,5 +879,12 @@ class IntersectionQueryOperation extends QueryOperation {
         return maxValue;
     }
     
-
+    protected void depthFirstRecurse(RecurseCallback cb) {
+        for (int i = 0; i < mQueryOperations.size(); i++) {
+            QueryOperation op = (QueryOperation) mQueryOperations.get(i);
+            op.depthFirstRecurse(cb);
+        }
+        cb.recurseCallback(this);
+    }
+    
 }

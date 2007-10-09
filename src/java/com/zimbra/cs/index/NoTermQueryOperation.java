@@ -118,5 +118,8 @@ public class NoTermQueryOperation extends QueryOperation {
     public List<QueryInfo> getResultInfo() { return new ArrayList<QueryInfo>(); }
     
     public int estimateResultSize() throws ServiceException { return 0; }
+    
+    protected void depthFirstRecurse(RecurseCallback cb) {}
+    
 
 }

@@ -170,4 +170,10 @@ class RemoteQueryOperation extends QueryOperation {
     public int estimateResultSize() throws ServiceException {
         return 0;
     }
+    
+    protected void depthFirstRecurse(RecurseCallback cb) {
+        mOp.depthFirstRecurse(cb);
+        cb.recurseCallback(this);
+    }
+
 }

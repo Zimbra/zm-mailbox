@@ -1195,4 +1195,9 @@ class DBQueryOperation extends QueryOperation
         return mSizeEstimate;
     }
     
+    protected void depthFirstRecurse(RecurseCallback cb) {
+        if (mLuceneOp != null) 
+            mLuceneOp.depthFirstRecurseInternal(cb);
+        cb.recurseCallback(this);
+    }
 }

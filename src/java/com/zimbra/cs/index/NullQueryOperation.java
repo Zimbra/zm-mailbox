@@ -143,5 +143,5 @@ class NullQueryOperation extends QueryOperation {
     
     public int estimateResultSize() throws ServiceException { return 0; }
     
-
+    protected void depthFirstRecurse(RecurseCallback cb) {}
 }

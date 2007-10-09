@@ -590,4 +590,17 @@ class LuceneQueryOperation extends QueryOperation
             return 0;
         }
     }
+    
+    protected void depthFirstRecurseInternal(RecurseCallback cb) {
+        cb.recurseCallback(this);
+    }
+
+    
+    protected void depthFirstRecurse(RecurseCallback cb) {
+        if (mDBOp != null) 
+            mDBOp.depthFirstRecurse(cb);
+        else 
+            depthFirstRecurseInternal(cb);
+    }
+    
 }

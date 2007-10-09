@@ -88,8 +88,11 @@ public abstract class CalendarItem extends MailItem {
 
     // these are special values indexed in the L_FIELD structured index field, they allow us to 
     // restrict lucene searches keyed off of public/private settings
-    public static final String INDEX_FIELD_ITEM_CLASS_PUBLIC = "_CalendarItemClass:public"; 
-    public static final String INDEX_FIELD_ITEM_CLASS_PRIVATE = "_CalendarItemClass:private"; 
+    //
+    // the constants should be all-lowercase if possible, saves us doing a toLower if we need to
+    // manually build a query to search for them w/o using our custom FieldTokenStream 
+    public static final String INDEX_FIELD_ITEM_CLASS_PUBLIC = "_calendaritemclass:public"; 
+    public static final String INDEX_FIELD_ITEM_CLASS_PRIVATE = "_calendaritemclass:private"; 
     
     static Log sLog = LogFactory.getLog(CalendarItem.class);
 

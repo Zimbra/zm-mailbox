@@ -77,7 +77,6 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
     {
         mParams = params;
         mIsToplevelQueryOp = true;
-        //mSortOrder = searchOrder;
 
         chunkSize++; // one extra for checking the "more" flag at the end of the results
 
@@ -268,5 +267,11 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
      * not be combined.
      */
     protected abstract QueryOperation combineOps(QueryOperation other, boolean union);
+    
+    interface RecurseCallback {
+        void recurseCallback(QueryOperation op); 
+    }
+    
+    protected abstract void depthFirstRecurse(RecurseCallback cb);
     
 }
