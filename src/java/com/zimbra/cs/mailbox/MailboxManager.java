@@ -722,7 +722,11 @@ public class MailboxManager {
             }
         }
 
-        notifyMailboxCreated(mailbox);
+        // now, make sure the mailbox is initialized -- we do this after releasing 
+        // the Mgr lock so that filesystem IO and other longer operations don't 
+        // block the system
+        if (mailbox.finishInitialization())
+            notifyMailboxCreated(mailbox);
         
         return mailbox;
     }
