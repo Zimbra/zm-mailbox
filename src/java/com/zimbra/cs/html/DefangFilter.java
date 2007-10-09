@@ -568,7 +568,13 @@ public class DefangFilter extends DefaultFilter {
                 attributes.addAttribute(new QName("", "dfsrcf", "dfsrc", null), "DFSRC", srcValue);
             }
             attributes.removeAttributeAt(srcIndex);
-        }         
+            // remove dups if there are multiple src attributes
+            srcIndex = attributes.getIndex("src");
+            while (srcIndex != -1) {
+                attributes.removeAttributeAt(srcIndex);
+                srcIndex = attributes.getIndex("src");
+            }
+        }
     }
 
     /**
