@@ -1330,11 +1330,30 @@ public class Invite {
     throws ServiceException {
         return createFromCalendar(account, fragment, cal, sentByMe, null, 0);
     }
-    
+
     public static List<Invite> createFromCalendar(Account account, String fragment, ZVCalendar cal, boolean sentByMe, Mailbox mbx, int mailItemId)
     throws ServiceException {
-        List<Invite> toRet = new ArrayList<Invite>();
-        
+        List<Invite> list = new ArrayList<Invite>();
+        createFromCalendar(list, account, fragment, cal, sentByMe, mbx, mailItemId);
+        return list;
+    }
+
+    public static List<Invite> createFromCalendar(Account account, String fragment, List<ZVCalendar> cals, boolean sentByMe)
+    throws ServiceException {
+        return createFromCalendar(account, fragment, cals, sentByMe, null, 0);
+    }
+
+    public static List<Invite> createFromCalendar(Account account, String fragment, List<ZVCalendar> cals, boolean sentByMe, Mailbox mbx, int mailItemId)
+    throws ServiceException {
+        List<Invite> list = new ArrayList<Invite>();
+        for (ZVCalendar cal : cals) {
+            createFromCalendar(list, account, fragment, cal, sentByMe, mbx, mailItemId);
+        }
+        return list;
+    }
+
+    private static void createFromCalendar(List<Invite> toAdd, Account account, String fragment, ZVCalendar cal, boolean sentByMe, Mailbox mbx, int mailItemId)
+    throws ServiceException {
         TimeZoneMap tzmap = new TimeZoneMap(Provisioning.getInstance().getTimeZone(account));
         
         String methodStr = cal.getPropVal(ICalTok.METHOD, ICalTok.PUBLISH.toString());
@@ -1369,7 +1388,7 @@ public class Invite {
                 try {
                     Invite newInv = new Invite(type, methodStr, tzmap, false);
 
-                    toRet.add(newInv);
+                    toAdd.add(newInv);
 
                     List<Object> addRecurs = new ArrayList<Object>();
                     List<Object> subRecurs = new ArrayList<Object>();
@@ -1584,8 +1603,6 @@ public class Invite {
                 break;
             }
         }
-        
-        return toRet;
     }
     
     

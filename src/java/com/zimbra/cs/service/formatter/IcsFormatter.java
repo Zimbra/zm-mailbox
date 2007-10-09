@@ -5,7 +5,7 @@
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
+ * compliance with the License. You may obtain a copy of the License at
  * http://www.zimbra.com/license.
  * 
  * Software distributed under the License is distributed on an "AS IS"
@@ -115,8 +115,8 @@ public class IcsFormatter extends Formatter {
         // TODO: Modify Formatter.save() API to pass in charset of body, then
         // use that charset in String() constructor.
         Reader reader = new StringReader(new String(body, Mime.P_CHARSET_UTF8));
-        ZVCalendar ical = ZCalendarBuilder.build(reader);
-        List<Invite> invites = Invite.createFromCalendar(context.targetAccount, null, ical, false);
+        List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(reader);
+        List<Invite> invites = Invite.createFromCalendar(context.targetAccount, null, icals, false);
         for (Invite inv : invites) {
             // handle missing UIDs on remote calendars by generating them as needed
             if (inv.getUid() == null)
