@@ -390,20 +390,23 @@ public class MailboxManager {
             // avoid the race condition by re-checking the cache and using that data (if any)
             Object cached = retrieveFromCache(mailboxId, false);
             if (cached instanceof Mailbox) {
-                ZimbraPerf.STOPWATCH_MBOX_GET.stop(startTime);
-                return (Mailbox) cached;
+            	mbox = (Mailbox)cached;
+            } else {
+                // cache the newly-created Mailbox object
+                if (cached instanceof MailboxLock)
+                    ((MailboxLock) cached).cacheMailbox(mbox);
+                else
+                    cacheMailbox(mbox);
             }
-
-            // cache the newly-created Mailbox object
-            if (cached instanceof MailboxLock)
-                ((MailboxLock) cached).cacheMailbox(mbox);
-            else
-                cacheMailbox(mbox);
         }
 
-        // this is only reached if the mailbox wasn't found in the cache
-        mbox.checkUpgrade();
-        notifyMailboxLoaded(mbox);
+        // now, make sure the mailbox is initialized -- we do this after releasing 
+        // the Mgr lock so that filesystem IO and other longer operations don't 
+        // block the system
+        if (mbox.finishInitialization())
+            // if TRUE, then this was the mailbox's first initialization, so we need to
+            // notify listeners of the mailbox being loaded
+            notifyMailboxLoaded(mbox);
 
         ZimbraPerf.STOPWATCH_MBOX_GET.stop(startTime);
         return mbox;

@@ -405,18 +405,70 @@ public class Mailbox {
     /** the full set of message flags, in order */
     final Flag[] mFlags = new Flag[31];
 
+    /** used by checkInitialization() to make sure the init steps happen only once */
+    private boolean mInitializationComplete = false;
 
+
+    /**
+     * Constructor
+     * 
+     * @param data
+     * @throws ServiceException
+     */
     Mailbox(MailboxData data) throws ServiceException {
         mId   = data.id;
         mData = data;
         mData.lastChangeDate = System.currentTimeMillis();
         initFlags();
-        if (!DebugConfig.disableIndexing)
-            mMailboxIndex = new MailboxIndex(this, null);
-
-        Metadata md = getConfig(null, MD_CONFIG_VERSION);
-        mVersion = MailboxVersion.fromMetadata(md);
+        // version init done in checkInitialization()
+        // index init done in checkInitialization()
     }
+    
+    /**
+     * Called by the MailboxManager before returning the mailbox, this
+     * function makes sure the Mailbox is fully initialized (index initialized,
+     * version check, etc etc).  
+     * 
+     * Any mailbox-initialization steps that require I/O should be done in this 
+     * API and not in the Mailbox constructor since the Mailbox constructor can
+     * conceivably be run twice in a race (even though the MailboxMgr makes sure 
+     * only one instance of a particular mailbox "wins")
+     *
+     * @return TRUE if we did some work (this was the mailbox's first init) or
+     *         FALSE if mailbox was already initialized
+     * @throws ServiceException
+     */
+    synchronized boolean finishInitialization() throws ServiceException {
+    	if (!mInitializationComplete) {
+    		// init the index
+            if (!DebugConfig.disableIndexing)
+                mMailboxIndex = new MailboxIndex(this, null);
+            
+            // read the mailbox version from config
+            Metadata md = getConfig(null, MD_CONFIG_VERSION);
+            mVersion = MailboxVersion.fromMetadata(md);
+            
+            // check for mailbox upgrade
+    		if (!getVersion().atLeast(1, 2)) {
+    			// Version (1.0,1.1)->1.2 Re-Index all contacts 
+    			Set<Byte> types = new HashSet<Byte>();
+    			types.add(MailItem.TYPE_CONTACT);
+    			reIndex(null, types, null, COMPLETED_REINDEX_CONTACTS_V1_2); 
+    		}
+    		
+            // same prescription for both the 1.2 -> 1.3 and 1.3 -> 1.4 migrations
+            if (!getVersion().atLeast(1, 4)) {
+                recalculateFolderAndTagCounts();
+                updateVersion(new MailboxVersion((short) 1, (short) 4));
+            }
+
+    		// done!
+    		mInitializationComplete = true;
+    		return true;
+    	}
+    	return false;
+    }
+    
 
     /** Returns the server-local numeric ID for this mailbox.  To get a
      *  system-wide, persistent unique identifier for the mailbox, use
@@ -1427,23 +1479,10 @@ public class Mailbox {
     }
     
     
-    /** Called once when this mailbox is first instantiated in the system. */
-    synchronized void checkUpgrade() throws ServiceException {
-        if (!getVersion().atLeast(1, 2)) {
-            // Version (1.0,1.1)->1.2 Re-Index all contacts 
-            Set<Byte> types = new HashSet<Byte>();
-            types.add(MailItem.TYPE_CONTACT);
-            reIndex(null, types, null, COMPLETED_REINDEX_CONTACTS_V1_2); 
-        }
-
-        // same prescription for both the 1.2 -> 1.3 and 1.3 -> 1.4 migrations
-        if (!getVersion().atLeast(1, 4)) {
-            recalculateFolderAndTagCounts();
-            updateVersion(new MailboxVersion((short) 1, (short) 4));
-        }
-    }
-
-
+    /**
+     * Status of current reindexing operation for this mailbox, or NULL 
+     * if a re-index is not in progress
+     */
     public static class ReIndexStatus {
         public int mNumProcessed = 0;
         public int mNumToProcess = 0;
