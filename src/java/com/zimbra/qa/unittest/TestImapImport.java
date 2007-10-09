@@ -33,7 +33,6 @@ import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZImapDataSource;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
-import com.zimbra.cs.zclient.ZMailbox.ZImportStatus;
 
 public class TestImapImport
 extends TestCase {
@@ -250,27 +249,7 @@ extends TestCase {
     
     private void importImap()
     throws Exception {
-        List<ZDataSource> dataSources = new ArrayList<ZDataSource>();
-        dataSources.add(mDataSource);
-        mLocalMbox.importData(dataSources);
-        
-        // Wait for import to complete
-        ZImportStatus status = null;
-        while (true) {
-            Thread.sleep(500);
-            List<ZImportStatus> statusList = mLocalMbox.getImportStatus();
-            assertEquals("Unexpected number of imports running", 1, statusList.size());
-            status = statusList.get(0);
-            assertEquals("Unexpected data source type", status.getType(), DataSource.Type.imap.name());
-            if (!status.isRunning()) {
-                break;
-            }
-        }
-        assertTrue("Import failed: " + status.getError(), status.getSuccess());
-        
-        // Get any state changes from the server 
-        mLocalMbox.noOp();
-        mRemoteMbox.noOp();
+        TestUtil.importDataSource(mDataSource, mLocalMbox, mRemoteMbox);
     }
 
     private void compare()

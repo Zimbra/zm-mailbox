@@ -60,6 +60,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.zclient.ZDataSource;
 import com.zimbra.cs.zclient.ZEmailAddress;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZGetMessageParams;
@@ -68,14 +69,15 @@ import com.zimbra.cs.zclient.ZMessage;
 import com.zimbra.cs.zclient.ZSearchHit;
 import com.zimbra.cs.zclient.ZSearchParams;
 import com.zimbra.cs.zclient.ZTag;
+import com.zimbra.cs.zclient.ZMailbox.ZImportStatus;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.MessagePart;
-
 
 /**
  * @author bburtin
  */
-public class TestUtil {
+public class TestUtil
+extends Assert {
     
     public static final String DEFAULT_PASSWORD = "test123";
 
@@ -202,7 +204,7 @@ public class TestUtil {
         return getTestMessage(messageNum, subject, null, null, null);
     }
 
-    private static String getTestMessage(int messageNum, String subject, String recipient, String sender, Date date)
+    public static String getTestMessage(int messageNum, String subject, String recipient, String sender, Date date)
     throws ServiceException {
         if (recipient == null) {
             recipient = "user1";
@@ -560,4 +562,35 @@ public class TestUtil {
         
         return mbox.createFolder(parentId, name, null, null, null, null);
     }
+    
+    /**
+     * Imports data from the given data source and updates state on both the local
+     * and remote mailboxes.
+     */
+    public static void importDataSource(ZDataSource dataSource, ZMailbox localMbox, ZMailbox remoteMbox)
+    throws Exception {
+        List<ZDataSource> dataSources = new ArrayList<ZDataSource>();
+        dataSources.add(dataSource);
+        localMbox.importData(dataSources);
+        String type = dataSource.getType().toString();
+        
+        // Wait for import to complete
+        ZImportStatus status = null;
+        while (true) {
+            Thread.sleep(500);
+            List<ZImportStatus> statusList = localMbox.getImportStatus();
+            assertEquals("Unexpected number of imports running", 1, statusList.size());
+            status = statusList.get(0);
+            assertEquals("Unexpected data source type", type, status.getType());
+            if (!status.isRunning()) {
+                break;
+            }
+        }
+        assertTrue("Import failed: " + status.getError(), status.getSuccess());
+        
+        // Get any state changes from the server 
+        localMbox.noOp();
+        remoteMbox.noOp();
+    }
+
 }

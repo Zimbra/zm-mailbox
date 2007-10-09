@@ -207,9 +207,12 @@ implements MailItemImport {
                 }
             }
 
-            // Add message to mailbox
+            // Add message to mailbox.  Validate the timestamp to avoid out-of-range
+            // error in the database (see bug 17031).
             ParsedMessage pm = null;
-            if (pop3Msg.getSentDate() != null) {
+            if (pop3Msg.getSentDate() != null &&
+                pop3Msg.getSentDate().getTime() >= 0 &&
+                pop3Msg.getSentDate().getTime() <= 4294967295L) {
                 // Set received date to the original message's date
                 pm = new ParsedMessage(pop3Msg, pop3Msg.getSentDate().getTime(),
                     mbox.attachmentsIndexingEnabled());

@@ -16,11 +16,16 @@
  */
 package com.zimbra.qa.unittest;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.mail.internet.MailDateFormat;
+
+import junit.framework.TestCase;
 
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
@@ -33,16 +38,16 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.zclient.ZDataSource;
 import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.cs.zclient.ZMessage;
 import com.zimbra.cs.zclient.ZPop3DataSource;
-
-import junit.framework.TestCase;
 
 
 public class TestPop3Import extends TestCase {
 
     private static final String USER_NAME = "user1";
-    private static final String DATA_SOURCE_NAME = "TestPop3Import";
-    private static final String TEMP_USER_NAME = "temppop3";
+    private static final String NAME_PREFIX = TestPop3Import.class.getSimpleName();
+    private static final String DATA_SOURCE_NAME = NAME_PREFIX;
+    private static final String TEMP_USER_NAME = NAME_PREFIX + "Temp";
 
     @Override
     public void setUp()
@@ -98,17 +103,17 @@ public class TestPop3Import extends TestCase {
     public void testModifyDataSource()
     throws Exception {
         // Test modifying host
-        ZPop3DataSource zds = (ZPop3DataSource) getZDataSource();
+        ZPop3DataSource zds = getZDataSource();
         zds.setHost(zds.getHost() + "2");
         modifyAndCheck(zds);
         
         // Test modifying username
-        zds = (ZPop3DataSource) getZDataSource();
+        zds = getZDataSource();
         zds.setUsername(zds.getUsername() + "2");
         modifyAndCheck(zds);
         
         // Test modifying leave on server
-        zds = (ZPop3DataSource) getZDataSource();
+        zds = getZDataSource();
         zds.setLeaveOnServer(!zds.leaveOnServer());
         modifyAndCheck(zds);
     }
@@ -127,6 +132,34 @@ public class TestPop3Import extends TestCase {
         // Store bogus POP3 message row and delete mailbox
         DbPop3Message.storeUid(mbox, "TestPop3Import", "uid1", Mailbox.ID_FOLDER_INBOX);
         mbox.deleteMailbox();
+    }
+    
+    public void testBogusDate()
+    throws Exception {
+        // Create source account
+        Provisioning.getInstance().createAccount(TestUtil.getAddress(TEMP_USER_NAME), "test123", null);
+        
+        // Add message with bogus date to source mailbox
+        MailDateFormat format = new MailDateFormat();
+        Date date = format.parse("Thu, 31  Aug 2039 10:29:46 +0800");
+        String message = TestUtil.getTestMessage(1, NAME_PREFIX + " testBogusDate", null, null, date);
+        ZMailbox remoteMbox = TestUtil.getZMailbox(TEMP_USER_NAME);
+        String folderId = Integer.toString(Mailbox.ID_FOLDER_INBOX);
+        remoteMbox.addMessage(folderId, null, null, 0, message, true);
+        
+        // Update the data source, import data
+        ZMailbox localMbox = TestUtil.getZMailbox(USER_NAME);
+        ZPop3DataSource ds = getZDataSource();
+        ds.setUsername(TEMP_USER_NAME);
+        ds.setEnabled(true);
+        localMbox.modifyDataSource(ds);
+        
+        // Import data and make sure the message was imported
+        List<ZMessage> messages = TestUtil.search(localMbox, "in:inbox " + NAME_PREFIX);
+        assertEquals("Found unexpected message in local inbox", 0, messages.size());
+        TestUtil.importDataSource(ds, localMbox, remoteMbox);
+        messages = TestUtil.search(localMbox, "in:inbox " + NAME_PREFIX);
+        assertEquals("Imported message not found", 1, messages.size());
     }
     
     private void modifyAndCheck(ZPop3DataSource zds)
@@ -149,13 +182,13 @@ public class TestPop3Import extends TestCase {
         assertEquals("matching UID's: " + StringUtil.join(",", matchingUids), 0, matchingUids.size());
     }
 
-    private ZDataSource getZDataSource()
+    private ZPop3DataSource getZDataSource()
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         List<ZDataSource> dataSources = mbox.getAllDataSources();
         for (ZDataSource ds : dataSources) {
             if (ds.getName().equals(DATA_SOURCE_NAME)) {
-                return ds;
+                return (ZPop3DataSource) ds;
             }
         }
         fail("Could not find data source " + DATA_SOURCE_NAME);
@@ -172,12 +205,13 @@ public class TestPop3Import extends TestCase {
     throws Exception {
         Provisioning prov = Provisioning.getInstance();
         Account account = TestUtil.getAccount(USER_NAME);
+        int port = Integer.parseInt(TestUtil.getServerAttr(Provisioning.A_zimbraPop3BindPort));
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraDataSourceEnabled, Provisioning.FALSE);
-        attrs.put(Provisioning.A_zimbraDataSourceHost, "host");
-        attrs.put(Provisioning.A_zimbraDataSourcePort, "1");
+        attrs.put(Provisioning.A_zimbraDataSourceHost, "localhost");
+        attrs.put(Provisioning.A_zimbraDataSourcePort, Integer.toString(port));
         attrs.put(Provisioning.A_zimbraDataSourceUsername, "user1");
-        attrs.put(Provisioning.A_zimbraDataSourcePassword, "password");
+        attrs.put(Provisioning.A_zimbraDataSourcePassword, "test123");
         attrs.put(Provisioning.A_zimbraDataSourceFolderId, Integer.toString(Mailbox.ID_FOLDER_INBOX));
         attrs.put(Provisioning.A_zimbraDataSourceConnectionType, "cleartext");
         attrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer, Provisioning.FALSE);
@@ -208,5 +242,7 @@ public class TestPop3Import extends TestCase {
         if (account != null) {
             prov.deleteAccount(account.getId());
         }
+        
+        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
     }
 }
