@@ -912,7 +912,8 @@
             zimbraSmtpHostname ${zimbra.smtp.host} \
             zimbraMailPort 7070 \
             zimbraMailMode http \
-            zimbraImapCleartextLoginEnabled TRUE
+            zimbraImapCleartextLoginEnabled TRUE \
+        	zimbraPop3CleartextLoginEnabled TRUE
             ModifyServer ${zimbra.server.hostname} \
             zimbraServiceInstalled ldap \
             zimbraServiceInstalled mta \
