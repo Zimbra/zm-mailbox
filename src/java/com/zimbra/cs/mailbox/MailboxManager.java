@@ -289,33 +289,34 @@ public class MailboxManager {
             // avoid the race condition by re-checking the cache and using that data (if any)
             Object cached = retrieveFromCache(mailboxId, false);
             if (cached instanceof Mailbox) {
-                ZimbraPerf.STOPWATCH_MBOX_GET.stop(startTime);
-                return (Mailbox) cached;
+            	mbox = (Mailbox)cached;
+            } else {
+            	mbox = instantiateMailbox(data);
+
+            	if (!skipMailHostCheck) {
+            		// The host check here makes sure that sessions that were
+            		// already connected at the time of mailbox move are not
+            		// allowed to continue working with this mailbox which is
+            		// essentially a soft-deleted copy.  The WRONG_HOST
+            		// exception forces the clients to reconnect to the new
+            		// server.
+            		Account account = mbox.getAccount();
+            		if (!Provisioning.onLocalServer(account))
+            			throw ServiceException.WRONG_HOST(account.getAttr(Provisioning.A_zimbraMailHost), null);
+            	}
+            	
+            	// cache the newly-created Mailbox object
+            	if (cached instanceof MailboxLock)
+            		((MailboxLock) cached).cacheMailbox(mbox);
+            	else
+            		cacheMailbox(mbox);
             }
-
-            mbox = instantiateMailbox(data);
-
-            if (!skipMailHostCheck) {
-                // The host check here makes sure that sessions that were
-                // already connected at the time of mailbox move are not
-                // allowed to continue working with this mailbox which is
-                // essentially a soft-deleted copy.  The WRONG_HOST
-                // exception forces the clients to reconnect to the new
-                // server.
-                Account account = mbox.getAccount();
-                if (!Provisioning.onLocalServer(account))
-                    throw ServiceException.WRONG_HOST(account.getAttr(Provisioning.A_zimbraMailHost), null);
-            }
-
-            // cache the newly-created Mailbox object
-            if (cached instanceof MailboxLock)
-                ((MailboxLock) cached).cacheMailbox(mbox);
-            else
-                cacheMailbox(mbox);
         }
 
-        // this is only reached if the mailbox wasn't found in the cache
-        mbox.checkUpgrade();
+        // now, make sure the mailbox is initialized -- we do this after releasing 
+        // the Mgr lock so that filesystem IO and other longer operations don't 
+        // block the system
+        mbox.finishInitialization();
 
         ZimbraPerf.STOPWATCH_MBOX_GET.stop(startTime);
         return mbox;
