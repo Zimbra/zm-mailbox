@@ -36,9 +36,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeBodyPart;
-
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
 
@@ -91,49 +88,69 @@ public class ByteUtil {
 		return buffer;
 	}
 
-	/**
-	 * Get the content of the specified part using getRawInputStream.
-	 * @param part
-	 * @return raw content for part
-	 * @throws MessagingException
-	 * @throws IOException
-	 */
-    public static byte[] getRawContent(MimeBodyPart part) throws MessagingException, IOException {
-    	return getContent(part.getRawInputStream(), part.getSize());
-    }
 
+    /** Reads all data from the <code>InputStream</code> into a <tt>byte[]</tt>
+     *  array.  Closes the stream, regardless of whether an error occurs.
+     * @param is        The stream to read from.
+     * @param sizeHint  A (no-binding) hint as to the size of the resulting
+     *                  <tt>byte[]</tt> array. */
     public static byte[] getContent(InputStream is, int sizeHint) throws IOException {
         return getContent(is, sizeHint, -1);
     }
 
-    /**
-     * read all data from specified InputStream. InputStream
-     * is closed.
-     * @param is
-     * @param sizeHint estimated size of content.
-     * @return content from stream
-     * @throws MessagingException
-     * @throws IOException
-     */
+    /** Reads all data from the <code>InputStream</code> into a <tt>byte[]</tt>
+     *  array.  Closes the stream, regardless of whether an error occurs.  If
+     *  a positive <code>sizeLimit</code> is specified and the stream is
+     *  larger than that limit, an <code>IOException</code> is thrown.
+     * @param is        The stream to read from.
+     * @param sizeHint  A (non-binding) hint as to the size of the resulting
+     *                  <tt>byte[]</tt> array.
+     * @param sizeLimit The maximum number of bytes that can be copied from the
+     *                  stream before an <code>IOException</code> is thrown. */
     public static byte[] getContent(InputStream is, int sizeHint, long sizeLimit) throws IOException {
+        return getContent(is, -1, sizeHint, sizeLimit);
+    }
+
+    /** Reads a certain quantity of data from the <code>InputStream</code> into
+     *  a <tt>byte[]</tt> array.  Closes the stream, regardless of whether an
+     *  error occurs.  If a nonnegative <code>length</code> is specified, the
+     *  amount of data read into the array is capped by that value; otherwise,
+     *  the method behaves exactly as {@link #getContent(InputStream, int)}.
+     * @param is        The stream to read from.
+     * @param length    The maximum number of bytes that will be copied from
+     *                  the stream.
+     * @param sizeHint  A (non-binding) hint as to the size of the resulting
+     *                  <tt>byte[]</tt> array. */
+    public static byte[] getPartialContent(InputStream is, int length, int sizeHint) throws IOException {
+        return getContent(is, length, sizeHint, -1);
+    }
+
+    private static byte[] getContent(InputStream is, int length, int sizeHint, long sizeLimit) throws IOException {
+        if (length == 0)
+            return new byte[0];
+
         ByteArrayOutputStream baos = null;
-    	try {
-    		if (sizeHint < 0)
-    			sizeHint = 0; 
-    		baos = new ByteArrayOutputStream(sizeHint);
-    		byte[] buffer = new byte[8192];
-    		int num;
-    		while ((num = is.read(buffer)) != -1) {
-    			baos.write(buffer, 0, num);
+        try {
+            if (length > 0 && (sizeHint > length || sizeHint < 0))
+                sizeHint = length;
+            baos = new ByteArrayOutputStream(Math.max(sizeHint, 0));
+
+            byte[] buffer = new byte[8192];
+            int num, limit = length > 0 ? Math.min(buffer.length, length - baos.size()) : buffer.length;
+            while ((num = is.read(buffer, 0, limit)) != -1) {
+                baos.write(buffer, 0, num);
+
                 if (sizeLimit > 0 && baos.size() > sizeLimit)
                     throw new IOException("stream too large");
-    		}
-    		return baos.toByteArray();
-    	} finally {
-    		closeStream(is);
-    	    if (baos != null)
-                baos.close();
-    	}
+                if (length > 0 && baos.size() >= length)
+                    break;
+
+                limit = length > 0 ? Math.min(buffer.length, length - baos.size()) : buffer.length;
+            }
+            return baos.toByteArray();
+        } finally {
+            closeStream(is);
+        }
     }
 
     // When this method is called from SendMsg SOAP command path
