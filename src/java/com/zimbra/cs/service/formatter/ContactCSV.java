@@ -223,6 +223,15 @@ public class ContactCSV {
             for (String field : mFields) {
                 addField(field, csv, field, contact);
             }
+        } else if (format.hasNoHeaders()) {
+            int end = csv.size();
+            end = (end > format.columns.size()) ? format.columns.size() : end;
+            for (int i = 0; i < end; i++) {
+                String key = format.columns.get(i).field;
+                String val = csv.get(i);
+                if (key != null && val != null)
+                    contact.put(key, val);
+            }
         } else {
             for (CsvColumn col : format.columns) {
                 if (col.multivalue) {
