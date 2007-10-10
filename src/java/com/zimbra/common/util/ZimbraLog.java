@@ -41,6 +41,11 @@ public class ZimbraLog {
     private static final String C_IP = "ip";
     
     /**
+     * "oip" key for context. originating IP of request
+     */
+    private static final String C_OIP = "oip";
+    
+    /**
      * "id" key for context. Id of the target account
      */
     public static final String C_ID = "id";
@@ -431,6 +436,13 @@ public class ZimbraLog {
     public static void addIpToContext(String ipAddress) {
         ZimbraLog.addToContext(C_IP, ipAddress);
     }  
+    
+    /**
+     * Adds oip (originating IP) to the current thread's logging context.
+     */
+    public static void addOrigIpToContext(String ipAddress) {
+        ZimbraLog.addToContext(C_OIP, ipAddress);
+    } 
     
     /**
      * Adds connection id to the current thread's logging context.
