@@ -97,7 +97,11 @@ public class TcpImapHandler extends ImapHandler {
             if (mSelectedFolder != null)
                 ZimbraLog.addMboxToContext(mSelectedFolder.getMailbox().getId());
             ZimbraLog.addIpToContext(mRemoteAddress);
-
+            
+            String origRemoteIp = getOrigRemoteIpAddr();
+            if (origRemoteIp != null)
+                ZimbraLog.addOrigIpToContext(origRemoteIp);
+            
             req = mIncompleteRequest;
             if (req == null)
                 req = new TcpImapRequest(mInputStream, this);

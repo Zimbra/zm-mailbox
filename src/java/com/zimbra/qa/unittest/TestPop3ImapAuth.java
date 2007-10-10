@@ -50,6 +50,8 @@ extends TestCase {
     private static final String POP3_CLEARTEXT_FAILED_RESPONSE = "-ERR only valid after entering TLS mode";
     private static final String POP3_QUIT = "QUIT" + CRLF;
     private static final String POP3_QUIT_RESPONSE = "\\+OK .* closing connection";
+    private static final String POP3_X_ORIGINATING_IP = "X-ORIGINATING-IP 100.99.98.97" + CRLF;
+    private static final String POP3_X_ORIGINATING_IP_RESPONSE = "\\+OK";
     
     private static final String IMAP_CONNECT_RESPONSE = "\\* OK .* Zimbra IMAP4rev1 service ready";
     private static final String IMAP_LOGIN = "1 LOGIN user1 test123" + CRLF;
@@ -61,6 +63,9 @@ extends TestCase {
     private static final String IMAP_LOGOUT = "3 LOGOUT" + CRLF;
     private static final String IMAP_LOGOUT_RESPONSE1 = "\\* BYE.*IMAP4rev1 server terminating connection";
     private static final String IMAP_LOGOUT_RESPONSE2 = "3 OK LOGOUT completed";
+    private static final String IMAP_ID = "4 ID (\"X-ORIGINATING-IP\" \"100.99.98.97\")" + CRLF;
+    private static final String IMAP_ID_RESPONSE1 = "\\* ID.*";
+    private static final String IMAP_ID_RESPONSE2 = "4 OK ID completed";
     
     private Provisioning mProv;
     private boolean mOrigPop3CleartextLoginEnabled;
@@ -204,6 +209,35 @@ extends TestCase {
         send(socket, IMAP_STARTTLS, IMAP_STARTTLS_RESPONSE);
         SSLSocketFactory factory = (SSLSocketFactory) DummySSLSocketFactory.getDefault();
         socket = factory.createSocket(socket, HOSTNAME, mImapCleartextPort, true);
+        send(socket, IMAP_LOGIN, IMAP_LOGIN_RESPONSE1);
+        send(socket, null, IMAP_LOGIN_RESPONSE2);
+        send(socket, IMAP_LOGOUT, IMAP_LOGOUT_RESPONSE1);
+        send(socket, null, IMAP_LOGOUT_RESPONSE2);
+    }
+    
+    public void testPop3X_ORIGINATING_IP()
+    throws Exception {
+        setPop3Cleartext(true);
+        
+        // Test cleartext
+        Socket socket = new Socket(HOSTNAME, mPop3CleartextPort);
+        send(socket, "", POP3_CONNECT_RESPONSE);
+        send(socket, POP3_X_ORIGINATING_IP, POP3_X_ORIGINATING_IP_RESPONSE);
+        send(socket, POP3_USER, POP3_USER_RESPONSE);
+        send(socket, POP3_PASS, POP3_PASS_RESPONSE);
+        send(socket, POP3_QUIT, POP3_QUIT_RESPONSE);
+        socket.close();
+    }
+    
+    public void testImapID()
+    throws Exception {
+        setImapCleartext(true);
+        
+        // Test cleartext
+        Socket socket = new Socket(HOSTNAME, mImapCleartextPort);
+        send(socket, null, IMAP_CONNECT_RESPONSE);
+        send(socket, IMAP_ID, IMAP_ID_RESPONSE1);
+        send(socket, null, IMAP_ID_RESPONSE2);
         send(socket, IMAP_LOGIN, IMAP_LOGIN_RESPONSE1);
         send(socket, null, IMAP_LOGIN_RESPONSE2);
         send(socket, IMAP_LOGOUT, IMAP_LOGOUT_RESPONSE1);

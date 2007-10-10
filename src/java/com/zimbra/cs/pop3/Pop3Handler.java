@@ -80,6 +80,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
                       
     protected boolean dropConnection;
     protected Authenticator mAuthenticator;
+    private String mOrigRemoteAddress;
 
     protected static final int STATE_AUTHORIZATION = 1;
     protected static final int STATE_TRANSACTION = 2;
@@ -110,7 +111,10 @@ public abstract class Pop3Handler extends ProtocolHandler {
         initActivityTracker();
     }
 
-   
+    protected String getOrigRemoteIpAddr() { return mOrigRemoteAddress; }
+    
+    protected void setOrigRemoteIpAddr(String ip) { mOrigRemoteAddress = ip; }
+    
     protected boolean authenticate() {
         // we auth with the USER/PASS commands
         return true;
@@ -143,6 +147,11 @@ public abstract class Pop3Handler extends ProtocolHandler {
         
         try {
             if (mAccountName != null) ZimbraLog.addAccountNameToContext(mAccountName);
+            
+            String origRemoteIp = getOrigRemoteIpAddr();
+            if (origRemoteIp != null)
+                ZimbraLog.addOrigIpToContext(origRemoteIp);
+            
             boolean result = processCommandInternal();
 
             // Track stats if the command completed successfully
@@ -305,7 +314,13 @@ public abstract class Pop3Handler extends ProtocolHandler {
                 return true;            
             }
             break;
-            
+        case 'x':
+        case 'X':
+            if ("X-ORIGINATING-IP".equalsIgnoreCase(mCommand)) {
+                doX_ORIGINATING_IP(arg);
+                return true;
+            }
+            break;           
         default:
             break;
         }
@@ -732,9 +747,29 @@ public abstract class Pop3Handler extends ProtocolHandler {
             else
                 sendLine("EXPIRE "+mExpire, false);
         }
+        sendLine("X-ORIGINATING-IP", false);
         // TODO: VERSION INFO
         sendLine("IMPLEMENTATION ZimbraInc", false);
         sendLine(TERMINATOR);
+    }
+    
+    private void doX_ORIGINATING_IP(String origIp) throws Pop3CmdException, IOException {
+        if (origIp == null)
+            throw new Pop3CmdException("please specify an ip address");
+        
+        String curOrigRemoteIp = getOrigRemoteIpAddr();
+        if (curOrigRemoteIp == null) {
+            setOrigRemoteIpAddr(origIp);
+            ZimbraLog.addOrigIpToContext(origIp);
+            ZimbraLog.pop.info("POP3 client identified as: " + origIp);
+        } else {
+            if (curOrigRemoteIp.equals(origIp))
+                ZimbraLog.pop.warn("POP3 X-ORIGINATING-IP is allowed only once per session, command ignored");
+            else
+                ZimbraLog.pop.error("POP3 X-ORIGINATING-IP is allowed only once per session, received different IP: " + origIp + ", command ignored");
+        }
+        
+        sendOK("");
     }
 
     private String getSaslCapabilities() {

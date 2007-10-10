@@ -124,6 +124,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     protected ImapFolder      mSelectedFolder;
     private   String          mIdleTag;
     protected boolean         mGoodbyeSent;
+    private String            mOrigRemoteAddress;
     
     protected static ActivityTracker sActivityTracker;
 
@@ -152,6 +153,10 @@ public abstract class ImapHandler extends ProtocolHandler {
     ImapCredentials getCredentials()  { return mCredentials; }
 
     public boolean isSSLEnabled() { return mConfig.isSSLEnabled(); }
+    
+    protected String getOrigRemoteIpAddr() { return mOrigRemoteAddress; }
+    
+    protected void setOrigRemoteIpAddr(String ip) { mOrigRemoteAddress = ip; }
     
     static final boolean STOP_PROCESSING = false, CONTINUE_PROCESSING = true;
 
@@ -776,8 +781,23 @@ public abstract class ImapHandler extends ProtocolHandler {
     //              to exchange information on their implementations for the purposes of
     //              statistical analysis and problem determination."
     boolean doID(String tag, Map<String, String> attrs) throws IOException {
-        if (attrs != null)
-            ZimbraLog.imap.info("IMAP client identified as: " + attrs);
+        if (attrs != null) {
+            String origIp = attrs.get("X-ORIGINATING-IP");
+            if (origIp != null) {
+                String curOrigRemoteIp = getOrigRemoteIpAddr();
+                if (curOrigRemoteIp == null) {
+                    setOrigRemoteIpAddr(origIp);
+                    ZimbraLog.addOrigIpToContext(origIp);
+                    ZimbraLog.imap.info("IMAP client identified as: " + attrs);
+                } else {
+                    if (curOrigRemoteIp.equals(origIp))
+                        ZimbraLog.imap.warn("IMAP ID with X-ORIGINATING-IP is allowed only once per session, command ignored");
+                    else
+                        ZimbraLog.imap.error("IMAP ID with X-ORIGINATING-IP is allowed only once per session, received different IP: " + origIp + ", command ignored");
+                }
+           } else
+                ZimbraLog.imap.info("IMAP client identified as: " + attrs);
+        }
 
         sendUntagged("ID (\"NAME\" \"Zimbra\" \"VERSION\" \"" + BuildInfo.VERSION + "\" \"RELEASE\" \"" + BuildInfo.RELEASE + "\")");
         sendOK(tag, "ID completed");

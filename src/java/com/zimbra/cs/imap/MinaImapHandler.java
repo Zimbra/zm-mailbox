@@ -93,6 +93,11 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
             mSelectedFolder.updateAccessTime();
         }
         ZimbraLog.addIpToContext(mSession.getRemoteAddress().toString());
+        
+        String origRemoteIp = getOrigRemoteIpAddr();
+        if (origRemoteIp != null)
+            ZimbraLog.addOrigIpToContext(origRemoteIp);
+        
         long start = ZimbraPerf.STOPWATCH_IMAP.start();
         try {
             if (!processRequest((MinaImapRequest) req)) dropConnection();
