@@ -336,7 +336,7 @@ public class UserServlet extends ZimbraServlet {
             // or basic auth, authAccount is set to anonymous account.
             if (context.authAccount != null)
                 ZimbraLog.addAccountNameToContext(context.authAccount.getName());
-            ZimbraLog.addIpToContext(context.req.getRemoteAddr());
+            addRemoteIpToLoggingContext(req);
 
             doAuthGet(req, resp, context);
 
@@ -460,7 +460,7 @@ public class UserServlet extends ZimbraServlet {
 
             if (context.authAccount != null)
                 ZimbraLog.addAccountNameToContext(context.authAccount.getName());
-            ZimbraLog.addIpToContext(context.req.getRemoteAddr());
+            addRemoteIpToLoggingContext(req);
 
             Mailbox mbox = getTargetMailbox(context);
             ZimbraLog.addMboxToContext(mbox.getId());

@@ -87,7 +87,7 @@ public class DavServlet extends ZimbraServlet {
 	
 	public void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		ZimbraLog.clearContext();
-		ZimbraLog.addIpToContext(req.getRemoteAddr());
+		addRemoteIpToLoggingContext(req);
 		ZimbraLog.addUserAgentToContext(req.getHeader(DavProtocol.HEADER_USER_AGENT));
 		
 		if (!isRequestOnAllowedPort(req)) {

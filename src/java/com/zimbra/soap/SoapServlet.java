@@ -42,6 +42,7 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.TrustedNetwork;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -56,7 +57,6 @@ public class SoapServlet extends ZimbraServlet {
     private static final long serialVersionUID = 38710345271877593L;
 
     private static final String PARAM_ENGINE_HANDLER = "engine.handler.";
-    private static final String IP_LOCALHOST = "127.0.0.1"; 
 
     /** context name of auth token extracted from cookie */
     public static final String ZIMBRA_AUTH_TOKEN = "zimbra.authToken";    
@@ -254,11 +254,15 @@ public class SoapServlet extends ZimbraServlet {
         // Set the requester IP.  If the request was made by the HTML client,
         // set it to the value of the X-Originating-IP header.
         String remoteAddr = req.getRemoteAddr();
+        context.put(SoapEngine.SOAP_REQUEST_IP, remoteAddr); 
+        
         String origIp = req.getHeader(SoapHttpTransport.X_ORIGINATING_IP);
-        if (origIp != null && IP_LOCALHOST.equals(remoteAddr)) {
+        if (TrustedNetwork.isIpTrusted(remoteAddr)) {
+            context.put(SoapEngine.ORIG_REQUEST_IP, origIp);
             remoteAddr = origIp;
-        }
-        context.put(SoapEngine.REQUEST_IP, remoteAddr);            
+        } 
+        context.put(SoapEngine.REQUEST_IP, remoteAddr); 
+        
         //checkAuthToken(req.getCookies(), context);
         if (isResumed) 
             context.put(IS_RESUMED_REQUEST, "1");

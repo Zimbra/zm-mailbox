@@ -118,7 +118,7 @@ public class ContentServlet extends ZimbraServlet {
             Account.addAccountToLogContext(accountId, ZimbraLog.C_NAME, ZimbraLog.C_ID);
             if (!accountId.equalsIgnoreCase(authId))
                 ZimbraLog.addToContext(ZimbraLog.C_AID, authId);
-            ZimbraLog.addIpToContext(req.getRemoteAddr());
+            addRemoteIpToLoggingContext(req);
 
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(accountId);
             if (mbox == null) {

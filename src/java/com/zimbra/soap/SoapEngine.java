@@ -32,6 +32,7 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.TrustedNetwork;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -64,8 +65,20 @@ public class SoapEngine {
     public static final String ZIMBRA_ENGINE  = "zimbra.engine";
     public static final String ZIMBRA_SESSION = "zimbra.session";
 
-    /** context name of request IP */
+    /** context name of request IP
+     * 
+     *  It can be the IP of the SOAP client, or in the presence of a 
+     *  real origin IP address http header(X-ORIGINATING-IP) the IP 
+     *  of the real origin client if the SOAP client is in a trusted 
+     *  network.
+     */
     public static final String REQUEST_IP = "request.ip";
+    
+    /** context name of IP of the SOAP client */
+    public static final String SOAP_REQUEST_IP = "soap.request.ip";
+    
+    /** context name of IP of the origin client */
+    public static final String ORIG_REQUEST_IP = "orig.request.ip";
     
     private static ActivityTracker sActivityTracker;
     
@@ -146,9 +159,17 @@ public class SoapEngine {
             else if (zsc.getAuthToken().getAdminAccountId() != null)
                 Account.addAccountToLogContext(zsc.getAuthToken().getAdminAccountId(), ZimbraLog.C_ANAME, ZimbraLog.C_AID);                        
         }
-        String ip = (String) context.get(REQUEST_IP);
-        if (ip != null)
+        
+        String ip = (String) context.get(SOAP_REQUEST_IP);
+        String origip = (String) context.get(ORIG_REQUEST_IP);
+        
+        // don't log ip if oip is present and ip is localhost
+        if (ip != null && (!TrustedNetwork.isLocalhost(ip) || origip == null))
             ZimbraLog.addIpToContext(ip);
+        
+        if (origip != null)
+            ZimbraLog.addOrigIpToContext(origip);
+        
         if (zsc.getUserAgent() != null)
             ZimbraLog.addUserAgentToContext(zsc.getUserAgent());
 

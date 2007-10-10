@@ -47,6 +47,8 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.TrustedNetwork;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
@@ -80,6 +82,8 @@ public class ZimbraServlet extends HttpServlet {
 
     protected static final String WWW_AUTHENTICATE_HEADER = "WWW-Authenticate";
     protected String getRealmHeader()  { return "BASIC realm=\"Zimbra\""; }
+    
+    protected static final String X_ORIGINATING_IP_HEADER = "X-Originating-IP";
     
     protected static final String ZIMBRA_FAULT_CODE_HEADER    = "X-Zimbra-Fault-Code";
     protected static final String ZIMBRA_FAULT_MESSAGE_HEADER = "X-Zimbra-Fault-Message";
@@ -437,5 +441,20 @@ public class ZimbraServlet extends HttpServlet {
     	resp.setHeader(ZIMBRA_FAULT_CODE_HEADER, e.getCode());
     	resp.setHeader(ZIMBRA_FAULT_MESSAGE_HEADER, e.getMessage());
     	resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+    }
+    
+    protected void addRemoteIpToLoggingContext(HttpServletRequest req) {
+        String remoteAddr = req.getRemoteAddr();
+                
+        String origIp = null;
+        if (TrustedNetwork.isIpTrusted(remoteAddr)) {
+            origIp = req.getHeader(X_ORIGINATING_IP_HEADER);
+            if (origIp != null)
+                ZimbraLog.addOrigIpToContext(origIp);
+        }
+        
+        // don't log ip if oip is present and ip is localhost
+        if (!TrustedNetwork.isLocalhost(remoteAddr) || origIp == null)
+            ZimbraLog.addIpToContext(remoteAddr);
     }
 }
